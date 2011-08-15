@@ -1,0 +1,8 @@
+INSTALLING
+ $ sudo python3 setup.py install
+
+USING
+ $ livestreamer --help
+
+NOTES
+Justin.tv plugin requires rtmpdump with jtv token support (recent git).

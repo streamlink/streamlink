@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+
+from livestreamer.plugins import Plugin, register_plugin
+from livestreamer.utils import CommandLine
+
+import urllib.request, urllib.error, urllib.parse
+import xml.dom.minidom, re
+
+class RelativeRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def http_error_302(self, req, fp, code, msg, headers):
+        if "location" in headers and headers["location"][0] == "/":
+            absurl = ("{scheme}://{host}{path}").format(
+                      scheme=req.get_type(), host=req.get_host(),
+                      path=headers["location"])
+            del headers["location"]
+            headers["location"] = absurl
+
+        return urllib.request.HTTPRedirectHandler.http_error_301(
+               self, req, fp, code, msg, headers)
+
+urlopener = urllib.request.build_opener(RelativeRedirectHandler)
+
+
+class OwnedTV(Plugin):
+    ConfigURL = "http://www.own3d.tv/livecfg/{0}"
+    RTMPURL = "rtmp://owned.fc.llnwd.net:1935/owned/"
+
+    def can_handle_url(self, url):
+        return "own3d.tv" in url
+
+    def get_channel_id(self, url):
+        fd = urlopener.open(url)
+        data = fd.read()
+        fd.close()
+
+        match = re.search(b"own3d.tv\/livestreamfb\/(\d+)", data)
+        if match:
+            return int(match.group(1))
+
+    def get_streams(self, url):
+        channelid = self.get_channel_id(url)
+
+        if not channelid:
+            return False
+
+        fd = urllib.request.urlopen(self.ConfigURL.format(channelid))
+        data = fd.read()
+        fd.close()
+
+        streams = {}
+        dom = xml.dom.minidom.parseString(data)
+        channels = dom.getElementsByTagName("channels")[0]
+        clip = channels.getElementsByTagName("clip")[0]
+
+        streams = {}
+        for item in clip.getElementsByTagName("item"):
+            base = item.getAttribute("base")
+            if base == "${cdn2}":
+                for streamel in item.getElementsByTagName("stream"):
+                    name = streamel.getAttribute("label").lower()
+                    playpath = streamel.getAttribute("name")
+
+                    streams[name] = {
+                        "name": name,
+                        "playpath": playpath
+                    }
+
+        return streams
+
+
+    def stream_cmdline(self, stream, filename):
+        cmd = CommandLine("rtmpdump")
+        cmd.arg("rtmp", ("{0}/{1}").format(self.RTMPURL, stream["playpath"]))
+        cmd.arg("live", True)
+        cmd.arg("flv", filename)
+
+        return cmd.format()
+
+
+register_plugin("own3dtv", OwnedTV)
