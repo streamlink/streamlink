@@ -4,5 +4,14 @@ INSTALLING
 USING
  $ livestreamer --help
 
+EXAMPLE USAGE
+ $ livestreamer http://www.twitch.tv/ignproleague
+Found streams: 240p, 360p, 480p, 720p, iphonehigh, iphonelow, live
+ $ livestreamer http://www.twitch.tv/ignproleague 720p
+
+
+Stream now playbacks in default player (VLC).
+
+
 NOTES
 Justin.tv plugin requires rtmpdump with jtv token support (recent git).
