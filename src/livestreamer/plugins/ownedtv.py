@@ -23,7 +23,11 @@ urlopener = urllib.request.build_opener(RelativeRedirectHandler)
 
 class OwnedTV(Plugin):
     ConfigURL = "http://www.own3d.tv/livecfg/{0}"
-    RTMPURL = "rtmp://owned.fc.llnwd.net:1935/owned/"
+    CDN = {
+        "cdn1": "rtmp://fml.2010.edgecastcdn.net/202010",
+        "cdn2": "rtmp://owned.fc.llnwd.net:1935/owned",
+        "cdn3": "http://hwcdn.net/u4k2r7c4/fls",
+    }
 
     def can_handle_url(self, url):
         return "own3d.tv" in url
@@ -55,22 +59,29 @@ class OwnedTV(Plugin):
         streams = {}
         for item in clip.getElementsByTagName("item"):
             base = item.getAttribute("base")
-            if base == "${cdn2}":
-                for streamel in item.getElementsByTagName("stream"):
-                    name = streamel.getAttribute("label").lower()
-                    playpath = streamel.getAttribute("name")
+            if not base:
+                continue
 
-                    streams[name] = {
-                        "name": name,
-                        "playpath": playpath
-                    }
+            if base[0] == "$":
+                ref = re.match("\${(.+)}", base).group(1)
+                base = self.CDN[ref]
+
+            for streamel in item.getElementsByTagName("stream"):
+                name = streamel.getAttribute("label").lower().replace(" ", "_")
+                playpath = streamel.getAttribute("name")
+
+                streams[name] = {
+                    "base": base,
+                    "name": name,
+                    "playpath": playpath
+                }
 
         return streams
 
 
     def stream_cmdline(self, stream, filename):
         cmd = CommandLine("rtmpdump")
-        cmd.arg("rtmp", ("{0}/{1}").format(self.RTMPURL, stream["playpath"]))
+        cmd.arg("rtmp", ("{0}/{1}").format(stream["base"], stream["playpath"]))
         cmd.arg("live", True)
         cmd.arg("flv", filename)
 
