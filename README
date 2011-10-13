@@ -1,5 +1,7 @@
 INSTALLING
- $ sudo python3 setup.py install
+ $ sudo python setup.py install
+
+livestreamer is compatible with python version >= 2.6 and 3.0.
 
 USING
  $ livestreamer --help

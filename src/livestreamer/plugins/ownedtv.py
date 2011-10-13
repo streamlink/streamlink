@@ -2,11 +2,11 @@
 
 from livestreamer.plugins import Plugin, register_plugin
 from livestreamer.utils import CommandLine
+from livestreamer.compat import urllib
 
-import urllib.request, urllib.error, urllib.parse
 import xml.dom.minidom, re
 
-class RelativeRedirectHandler(urllib.request.HTTPRedirectHandler):
+class RelativeRedirectHandler(urllib.HTTPRedirectHandler):
     def http_error_302(self, req, fp, code, msg, headers):
         if "location" in headers and headers["location"][0] == "/":
             absurl = ("{scheme}://{host}{path}").format(
@@ -15,10 +15,10 @@ class RelativeRedirectHandler(urllib.request.HTTPRedirectHandler):
             del headers["location"]
             headers["location"] = absurl
 
-        return urllib.request.HTTPRedirectHandler.http_error_301(
+        return urllib.HTTPRedirectHandler.http_error_301(
                self, req, fp, code, msg, headers)
 
-urlopener = urllib.request.build_opener(RelativeRedirectHandler)
+urlopener = urllib.build_opener(RelativeRedirectHandler)
 
 
 class OwnedTV(Plugin):
@@ -47,7 +47,7 @@ class OwnedTV(Plugin):
         if not channelid:
             return False
 
-        fd = urllib.request.urlopen(self.ConfigURL.format(channelid))
+        fd = urllib.urlopen(self.ConfigURL.format(channelid))
         data = fd.read()
         fd.close()
 

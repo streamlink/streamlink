@@ -2,9 +2,9 @@
 
 from livestreamer.plugins import Plugin, register_plugin
 from livestreamer.utils import CommandLine
+from livestreamer.compat import urllib, str
 
-import urllib.request, urllib.error, urllib.parse
-import xml.dom.minidom, re
+import xml.dom.minidom, re, sys
 
 class JustinTV(object):
     StreamInfoURL = "http://usher.justin.tv/find/%s.xml?type=any"
@@ -14,7 +14,7 @@ class JustinTV(object):
         return ("justin.tv" in url) or ("twitch.tv" in url)
 
     def get_channel_name(self, url):
-        fd = urllib.request.urlopen(url)
+        fd = urllib.urlopen(url)
         data = fd.read()
         fd.close()
 
@@ -42,7 +42,7 @@ class JustinTV(object):
         if not channelname:
             return False
 
-        fd = urllib.request.urlopen(self.StreamInfoURL % channelname)
+        fd = urllib.urlopen(self.StreamInfoURL % channelname)
         data = fd.read()
         fd.close()
 

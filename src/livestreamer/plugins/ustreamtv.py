@@ -2,8 +2,8 @@
 
 from livestreamer.plugins import Plugin, register_plugin
 from livestreamer.utils import CommandLine
+from livestreamer.compat import urllib, str, bytes
 
-import urllib.request, urllib.error, urllib.parse
 import xml.dom.minidom, re
 
 
@@ -15,7 +15,7 @@ class UStreamTV(Plugin):
         return "ustream.tv" in url
 
     def get_channel_id(self, url):
-        fd = urllib.request.urlopen(url)
+        fd = urllib.urlopen(url)
         data = fd.read()
         fd.close()
 
@@ -35,7 +35,7 @@ class UStreamTV(Plugin):
         if not channelid:
             return False
 
-        fd = urllib.request.urlopen(self.AMFURL.format(channelid))
+        fd = urllib.urlopen(self.AMFURL.format(channelid))
         data = fd.read()
         fd.close()
 
