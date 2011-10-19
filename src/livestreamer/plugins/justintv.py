@@ -4,10 +4,10 @@ from livestreamer.plugins import Plugin, register_plugin
 from livestreamer.utils import CommandLine
 from livestreamer.compat import urllib, str
 
-import xml.dom.minidom, re, sys
+import xml.dom.minidom, re, sys, random
 
 class JustinTV(object):
-    StreamInfoURL = "http://usher.justin.tv/find/%s.xml?type=any"
+    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
     def can_handle_url(self, url):
@@ -37,12 +37,13 @@ class JustinTV(object):
             else:
                 return tag
 
+        randomp = int(random.random() * 999999)
         channelname = self.get_channel_name(url)
 
         if not channelname:
             return False
 
-        fd = urllib.urlopen(self.StreamInfoURL % channelname)
+        fd = urllib.urlopen(self.StreamInfoURL.format(channelname, randomp))
         data = fd.read()
         fd.close()
 
