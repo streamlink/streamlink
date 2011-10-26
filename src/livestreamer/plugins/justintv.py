@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from livestreamer.plugins import Plugin, register_plugin
-from livestreamer.utils import CommandLine
+from livestreamer.utils import CommandLine, swfverify
 from livestreamer.compat import urllib, str
 
 import xml.dom.minidom, re, sys, random
@@ -66,9 +66,13 @@ class JustinTV(object):
         return streams
 
     def stream_cmdline(self, stream, filename):
+        swfhash, swfsize = swfverify(self.SWFURL)
+
         cmd = CommandLine("rtmpdump")
         cmd.arg("rtmp", ("{0}/{1}").format(stream["connect"], stream["play"]))
         cmd.arg("swfUrl", self.SWFURL)
+        cmd.arg("swfhash", swfhash)
+        cmd.arg("swfsize", swfsize)
         cmd.arg("live", True)
         cmd.arg("flv", filename)
 

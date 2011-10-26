@@ -4,7 +4,7 @@ import sys
 
 orig_str = str
 
-def str(s, enc=None):
+def str(s, enc="ascii"):
     if sys.version_info[0] == 3:
         return orig_str(s, enc)
     else:
@@ -13,7 +13,7 @@ def str(s, enc=None):
 
 orig_bytes = bytes
 
-def bytes(s, enc=None):
+def bytes(s, enc="ascii"):
     if sys.version_info[0] == 3:
         return orig_bytes(s, enc)
     else:
