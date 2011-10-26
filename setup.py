@@ -13,6 +13,6 @@ setup(name="livestreamer",
       packages=["livestreamer", "livestreamer/plugins"],
       package_dir={'': 'src'},
       entry_points={
-          "console_scripts": ['livestreamer=livestreamer:main']
+          "console_scripts": ['livestreamer=livestreamer.cli:main']
       }
 )

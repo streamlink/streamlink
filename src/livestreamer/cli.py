@@ -3,7 +3,7 @@
 import argparse
 import sys, os
 
-from livestreamer import plugins
+import livestreamer
 
 parser = argparse.ArgumentParser(description="Util to play various livestreaming services in a custom player")
 parser.add_argument("url", help="URL to stream", nargs="?")
@@ -18,14 +18,8 @@ def exit(msg):
     sys.stderr.write("error: " + msg + "\n")
     sys.exit()
 
-def get_plugin_for_url(url):
-    for name, plugin in plugins.get_plugins().items():
-        if plugin.can_handle_url(url):
-            return (name, plugin)
-    return None
-
 def handle_url(args):
-    (pluginname, plugin) = get_plugin_for_url(args.url)
+    (pluginname, plugin) = livestreamer.resolve_url(args.url)
 
     if not plugin:
         exit(("No plugin can handle url: {0}").format(args.url))
@@ -60,13 +54,11 @@ def handle_url(args):
 
 
 def print_plugins():
-    pluginlist = list(plugins.get_plugins().keys())
+    pluginlist = list(livestreamer.get_plugins().keys())
     print(("Installed plugins: {0}").format(", ".join(pluginlist)))
 
 
 def main():
-    plugins.load_plugins(plugins)
-
     args = parser.parse_args()
 
     if args.url:
