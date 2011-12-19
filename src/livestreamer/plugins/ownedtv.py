@@ -70,11 +70,12 @@ class OwnedTV(Plugin):
                 name = streamel.getAttribute("label").lower().replace(" ", "_")
                 playpath = streamel.getAttribute("name")
 
-                streams[name] = {
-                    "base": base,
-                    "name": name,
-                    "playpath": playpath
-                }
+                if not name in streams:
+                    streams[name] = {
+                        "base": base,
+                        "name": name,
+                        "playpath": playpath
+                    }
 
         return streams
 
