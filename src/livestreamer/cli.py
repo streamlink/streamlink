@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 
-import argparse
 import sys, os
 
 import livestreamer
 
-parser = argparse.ArgumentParser(description="Util to play various livestreaming services in a custom player")
+parser = livestreamer.utils.ArgumentParser(description="Util to play various livestreaming services in a custom player",
+                                           fromfile_prefix_chars="@")
 parser.add_argument("url", help="URL to stream", nargs="?")
 parser.add_argument("stream", help="stream to play", nargs="?")
-parser.add_argument("player", help="commandline for player", nargs="?", default="vlc")
+parser.add_argument("-p", "--player", metavar="player", help="commandline for player", default="vlc")
 parser.add_argument("-o", "--output", metavar="filename", help="write stream to file instead of playing it")
 parser.add_argument("-c", "--cmdline", action="store_true", help="print commandline used internally to play stream")
-parser.add_argument("-p", "--plugins", action="store_true", help="print installed plugins")
+parser.add_argument("-l", "--plugins", action="store_true", help="print installed plugins")
 
 
 def exit(msg):
@@ -59,7 +59,12 @@ def print_plugins():
 
 
 def main():
-    args = parser.parse_args()
+    arglist = sys.argv[1:]
+
+    if os.path.exists(livestreamer.RCFILE):
+        arglist.insert(0, "@" + livestreamer.RCFILE)
+
+    args = parser.parse_args(arglist)
 
     if args.url:
         handle_url(args)

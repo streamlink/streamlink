@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from livestreamer.compat import urllib, bytes
-import hmac, hashlib, zlib
+import hmac, hashlib, zlib, argparse
 
 SWF_KEY = b"Genuine Adobe Flash Player 001"
 
@@ -28,6 +28,10 @@ class CommandLine(object):
 
         return cmdline
 
+class ArgumentParser(argparse.ArgumentParser):
+    def convert_arg_line_to_args(self, line):
+        arg = line.split("=")
+        yield "--%s=%s" % (arg[0].strip(), arg[1].strip())
 
 def swfverify(url):
     fd = urllib.urlopen(url)
