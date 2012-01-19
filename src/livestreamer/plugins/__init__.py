@@ -15,6 +15,12 @@ class Plugin(object):
     def stream_cmdline(self, stream, filename):
         raise NotImplementedError
 
+    def handle_parser(self, parser):
+        pass
+
+    def handle_args(self, args):
+        self.args = args
+
 
 def load_plugins(plugins):
     for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):

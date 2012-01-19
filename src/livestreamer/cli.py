@@ -59,12 +59,18 @@ def print_plugins():
 
 
 def main():
+    for name, plugin in livestreamer.get_plugins().items():
+        plugin.handle_parser(parser)
+
     arglist = sys.argv[1:]
 
     if os.path.exists(livestreamer.RCFILE):
         arglist.insert(0, "@" + livestreamer.RCFILE)
 
     args = parser.parse_args(arglist)
+
+    for name, plugin in livestreamer.get_plugins().items():
+        plugin.handle_args(args)
 
     if args.url:
         handle_url(args)
