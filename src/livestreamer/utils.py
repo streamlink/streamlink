@@ -30,8 +30,10 @@ class CommandLine(object):
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
-        arg = line.split("=")
-        yield "--%s=%s" % (arg[0].strip(), arg[1].strip())
+        split = line.find("=")
+        key = line[:split].strip()
+        val = line[split+1:].strip()
+        yield "--%s=%s" % (key, val)
 
 def swfverify(url):
     fd = urllib.urlopen(url)
