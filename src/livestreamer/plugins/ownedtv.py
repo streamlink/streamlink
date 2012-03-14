@@ -37,7 +37,7 @@ class OwnedTV(Plugin):
         data = fd.read()
         fd.close()
 
-        match = re.search(b"document.location.hash='/live/(\d+)'", data)
+        match = re.search(b"xajax_load_live_config\((\d+),", data)
         if match:
             return int(match.group(1))
 
