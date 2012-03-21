@@ -47,3 +47,26 @@ Currently supported sites are:
 
 Justin.tv plugin requires rtmpdump with jtv token support (recent git).
 
+
+Using livestreamer as a library
+-------------------------------
+Livestreamer is also a library. Short example:
+
+    import livestreamer
+
+    url = "http://twitch.tv/day9tv"
+    channel = livestreamer.resolve_url(url)
+    streams = channel.get_streams()
+
+    stream = streams["720p"]
+    stream.open()
+
+    while True:
+        data = stream.read(1024)
+        if len(data) == 0:
+            break
+
+        # do something with data
+
+    stream.close()
+

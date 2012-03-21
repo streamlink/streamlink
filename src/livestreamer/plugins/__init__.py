@@ -8,6 +8,7 @@ plugins_loaded = {}
 class Plugin(object):
     def __init__(self, url):
         self.url = url
+        self.args = None
 
     @classmethod
     def can_handle_url(self, url):

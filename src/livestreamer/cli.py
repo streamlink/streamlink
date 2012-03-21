@@ -19,12 +19,12 @@ def exit(msg):
     sys.exit()
 
 def handle_url(args):
-    (pluginname, plugin) = livestreamer.resolve_url(args.url)
+    channel = livestreamer.resolve_url(args.url)
 
-    if not plugin:
+    if not channel:
         exit(("No plugin can handle url: {0}").format(args.url))
 
-    streams = plugin.get_streams()
+    streams = channel.get_streams()
 
     if not streams:
         exit(("No streams found on url: {0}").format(args.url))

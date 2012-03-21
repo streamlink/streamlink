@@ -13,6 +13,8 @@ class JustinTV(Plugin):
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
+    cookie = None
+
     @classmethod
     def can_handle_url(self, url):
         return ("justin.tv" in url) or ("twitch.tv" in url)
@@ -20,6 +22,10 @@ class JustinTV(Plugin):
     @classmethod
     def handle_parser(self, parser):
         parser.add_argument("--jtv-cookie", metavar="cookie", help="JustinTV cookie to allow access to subscription channels")
+
+    @classmethod
+    def handle_args(self, args):
+        self.cookie = args.jtv_cookie
 
     def _get_channel_name(self, url):
         fd = urllib.urlopen(url)
@@ -30,9 +36,9 @@ class JustinTV(Plugin):
         if match:
             return str(match.group(1), "ascii")
 
-    def _get_metadata(self, channel, cookie=None):
-        if cookie:
-            headers = {"Cookie": cookie}
+    def _get_metadata(self, channel):
+        if self.cookie:
+            headers = {"Cookie": self.cookie}
             req = urllib.Request(self.MetadataURL.format(channel), headers=headers)
         else:
             req = urllib.Request(self.MetadataURL.format(channel))
@@ -76,7 +82,7 @@ class JustinTV(Plugin):
         if not channelname:
             return False
 
-        metadata = self._get_metadata(channelname, self.args.jtv_cookie)
+        metadata = self._get_metadata(channelname)
 
         if "chansub_guid" in metadata:
             fd = urllib.urlopen(self.StreamInfoURLSub.format(channelname, randomp, metadata["chansub_guid"]))
