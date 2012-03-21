@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
 from livestreamer.plugins import Plugin, register_plugin
-from livestreamer.utils import CommandLine, swfverify
+from livestreamer.stream import RTMPStream
+from livestreamer.utils import swfverify
 from livestreamer.compat import urllib, str
 
 import xml.dom.minidom, re, sys, random
@@ -93,31 +94,27 @@ class JustinTV(Plugin):
         dom = xml.dom.minidom.parseString(data)
         nodes = dom.getElementsByTagName("nodes")[0]
 
+        swfhash, swfsize = swfverify(self.SWFURL)
+
         for node in nodes.childNodes:
-            stream = {}
+            info = {}
             for child in node.childNodes:
-                stream[child.tagName] = self._get_node_text(child)
+                info[child.tagName] = self._get_node_text(child)
+
+            stream = RTMPStream({
+                "rtmp": ("{0}/{1}").format(info["connect"], info["play"]),
+                "swfUrl": self.SWFURL,
+                "swfhash": swfhash,
+                "swfsize": swfsize,
+                "live": 1
+            })
+
+            if "token" in info:
+                stream.params["jtv"] = info["token"]
 
             sname = clean_tag(node.tagName)
             streams[sname] = stream
 
         return streams
-
-    def stream_cmdline(self, stream, filename):
-        swfhash, swfsize = swfverify(self.SWFURL)
-
-        cmd = CommandLine("rtmpdump")
-        cmd.arg("rtmp", ("{0}/{1}").format(stream["connect"], stream["play"]))
-        cmd.arg("swfUrl", self.SWFURL)
-        cmd.arg("swfhash", swfhash)
-        cmd.arg("swfsize", swfsize)
-        cmd.arg("live", True)
-        cmd.arg("flv", filename)
-
-        if "token" in stream:
-            cmd.arg("jtv", stream["token"])
-
-        return cmd.format()
-
 
 register_plugin("justintv", JustinTV)

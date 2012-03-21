@@ -36,19 +36,19 @@ def handle_url(args):
     if args.stream:
         if args.stream in streams:
             stream = streams[args.stream]
-            cmdline = plugin.stream_cmdline(stream, args.output or "-")
+            cmdline = stream.cmdline(args.output or "-")
 
             if args.cmdline:
-                print(cmdline)
+                print(cmdline.format())
                 sys.exit()
             else:
                 if not args.output:
-                    cmdline = ("{0} | {1} -").format(cmdline, args.player)
-                os.system(cmdline)
+                    cmdline.pipe = ("{0} -").format(args.player)
+
+                os.system(cmdline.format())
         else:
             print(("This channel does not have stream: {0}").format(args.stream))
             print(("Valid streams: {0}").format(validstreams))
-            sys.exit()
     else:
         print(("Found streams: {0}").format(validstreams))
 

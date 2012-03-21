@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from livestreamer.plugins import Plugin, register_plugin
-from livestreamer.utils import CommandLine
+from livestreamer.stream import RTMPStream
 from livestreamer.compat import urllib
 
 import xml.dom.minidom, re
@@ -76,22 +76,11 @@ class OwnedTV(Plugin):
                 playpath = streamel.getAttribute("name")
 
                 if not name in streams:
-                    streams[name] = {
-                        "base": base,
-                        "name": name,
-                        "playpath": playpath
-                    }
+                    streams[name] = RTMPStream({
+                        "rtmp": ("{0}/{1}").format(base, playpath),
+                        "live": 1
+                    })
 
         return streams
-
-
-    def stream_cmdline(self, stream, filename):
-        cmd = CommandLine("rtmpdump")
-        cmd.arg("rtmp", ("{0}/{1}").format(stream["base"], stream["playpath"]))
-        cmd.arg("live", True)
-        cmd.arg("flv", filename)
-
-        return cmd.format()
-
 
 register_plugin("own3dtv", OwnedTV)

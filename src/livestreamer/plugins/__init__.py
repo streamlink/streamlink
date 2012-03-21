@@ -24,9 +24,6 @@ class Plugin(object):
     def get_streams(self):
         raise NotImplementedError
 
-    def stream_cmdline(self, stream, filename):
-        raise NotImplementedError
-
 def load_plugins(plugins):
     for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):
         file, pathname, desc = imp.find_module(name, plugins.__path__)

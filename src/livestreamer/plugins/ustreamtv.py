@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 
 from livestreamer.plugins import Plugin, register_plugin
-from livestreamer.utils import CommandLine
+from livestreamer.stream import RTMPStream
 from livestreamer.compat import urllib, str, bytes
 
 import xml.dom.minidom, re
-
 
 class UStreamTV(Plugin):
     AMFURL = "http://cgw.ustream.tv/Viewer/getStream/1/{0}.amf"
@@ -40,8 +39,6 @@ class UStreamTV(Plugin):
         data = fd.read()
         fd.close()
 
-        stream = {}
-
         playpath = get_amf_value(data, "streamName")
         cdnurl = get_amf_value(data, "cdnUrl")
         fmsurl = get_amf_value(data, "fmsUrl")
@@ -49,22 +46,13 @@ class UStreamTV(Plugin):
         if not playpath:
             return False
 
-        stream["playpath"] = playpath
-        stream["rtmp"] = cdnurl or fmsurl
-        stream["url"] = self.url
+        stream = RTMPStream({
+            "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
+            "pageUrl": self.url,
+            "swfUrl": self.SWFURL,
+            "live": 1
+        })
 
         return {"live": stream}
-
-
-    def stream_cmdline(self, stream, filename):
-        cmd = CommandLine("rtmpdump")
-        cmd.arg("rtmp", ("{0}/{1}").format(stream["rtmp"], stream["playpath"]))
-        cmd.arg("swfUrl", self.SWFURL)
-        cmd.arg("pageUrl", stream["url"])
-        cmd.arg("live", True)
-        cmd.arg("flv", filename)
-
-        return cmd.format()
-
 
 register_plugin("ustreamtv", UStreamTV)

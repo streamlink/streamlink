@@ -9,9 +9,7 @@ class CommandLine(object):
     def __init__(self, command):
         self.command = command
         self.args = {}
-
-    def arg(self, key, value):
-        self.args[key] = value
+        self.pipe = None
 
     def format(self):
         args = []
@@ -25,6 +23,9 @@ class CommandLine(object):
 
         args = (" ").join(args)
         cmdline = ("{0} {1}").format(self.command, args)
+
+        if self.pipe:
+            cmdline += (" | {0}").format(self.pipe)
 
         return cmdline
 
