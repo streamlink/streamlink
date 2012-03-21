@@ -12,9 +12,11 @@ class JustinTV(Plugin):
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
+    @classmethod
     def can_handle_url(self, url):
         return ("justin.tv" in url) or ("twitch.tv" in url)
 
+    @classmethod
     def handle_parser(self, parser):
         parser.add_argument("--jtv-cookie", metavar="cookie", help="JustinTV cookie to allow access to subscription channels")
 
@@ -60,7 +62,7 @@ class JustinTV(Plugin):
                 res.append(node.data)
         return "".join(res)
 
-    def get_streams(self, url):
+    def get_streams(self):
         def clean_tag(tag):
             if tag[0] == "_":
                 return tag[1:]
@@ -68,7 +70,7 @@ class JustinTV(Plugin):
                 return tag
 
         randomp = int(random.random() * 999999)
-        channelname = self._get_channel_name(url)
+        channelname = self._get_channel_name(self.url)
 
         if not channelname:
             return False

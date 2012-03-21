@@ -29,10 +29,11 @@ class OwnedTV(Plugin):
         "cdn3": "http://hwcdn.net/u4k2r7c4/fls",
     }
 
+    @classmethod
     def can_handle_url(self, url):
         return "own3d.tv" in url
 
-    def get_channel_id(self, url):
+    def _get_channel_id(self, url):
         fd = urlopener.open(url)
         data = fd.read()
         fd.close()
@@ -45,8 +46,8 @@ class OwnedTV(Plugin):
         if match:
             return int(match.group(1))
 
-    def get_streams(self, url):
-        channelid = self.get_channel_id(url)
+    def get_streams(self):
+        channelid = self._get_channel_id(self.url)
 
         if not channelid:
             return False

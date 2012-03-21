@@ -24,3 +24,7 @@ try:
 except ImportError:
     import urllib2 as urllib
 
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse

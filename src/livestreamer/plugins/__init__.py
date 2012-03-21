@@ -6,21 +6,26 @@ import imp
 plugins_loaded = {}
 
 class Plugin(object):
-    def can_handle_url(self, url):
-        raise NotImplementedError
+    def __init__(self, url):
+        self.url = url
 
-    def get_streams(self, channel):
+    @classmethod
+    def can_handle_url(self, url):
+       raise NotImplementedError
+
+    @classmethod
+    def handle_parser(self, parser):
+        pass
+
+    @classmethod
+    def handle_args(self, args):
+        self.args = args
+
+    def get_streams(self):
         raise NotImplementedError
 
     def stream_cmdline(self, stream, filename):
         raise NotImplementedError
-
-    def handle_parser(self, parser):
-        pass
-
-    def handle_args(self, args):
-        self.args = args
-
 
 def load_plugins(plugins):
     for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):
@@ -33,5 +38,4 @@ def get_plugins():
     return plugins_loaded
 
 def register_plugin(name, klass):
-    obj = klass()
-    plugins_loaded[name] = obj
+    plugins_loaded[name] = klass

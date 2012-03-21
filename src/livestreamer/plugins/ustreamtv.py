@@ -11,10 +11,11 @@ class UStreamTV(Plugin):
     AMFURL = "http://cgw.ustream.tv/Viewer/getStream/1/{0}.amf"
     SWFURL = "http://cdn1.ustream.tv/swf/4/viewer.rsl.210.swf"
 
+    @classmethod
     def can_handle_url(self, url):
         return "ustream.tv" in url
 
-    def get_channel_id(self, url):
+    def _get_channel_id(self, url):
         fd = urllib.urlopen(url)
         data = fd.read()
         fd.close()
@@ -23,14 +24,14 @@ class UStreamTV(Plugin):
         if match:
             return int(match.group(1))
 
-    def get_streams(self, url):
+    def get_streams(self):
         def get_amf_value(data, key):
             pattern = ("{0}\W\W\W(.+?)\x00").format(key)
             match = re.search(bytes(pattern, "ascii"), data)
             if match:
                 return str(match.group(1), "ascii")
 
-        channelid = self.get_channel_id(url)
+        channelid = self._get_channel_id(self.url)
 
         if not channelid:
             return False
@@ -50,7 +51,7 @@ class UStreamTV(Plugin):
 
         stream["playpath"] = playpath
         stream["rtmp"] = cdnurl or fmsurl
-        stream["url"] = url
+        stream["url"] = self.url
 
         return {"live": stream}
 

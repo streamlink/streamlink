@@ -24,7 +24,7 @@ def handle_url(args):
     if not plugin:
         exit(("No plugin can handle url: {0}").format(args.url))
 
-    streams = plugin.get_streams(args.url)
+    streams = plugin.get_streams()
 
     if not streams:
         exit(("No streams found on url: {0}").format(args.url))
