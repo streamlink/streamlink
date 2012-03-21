@@ -1,10 +1,6 @@
 from livestreamer import plugins
 from livestreamer.compat import urlparse
 
-import os.path
-
-RCFILE = os.path.expanduser("~/.livestreamerrc")
-
 def resolve_url(url):
     parsed = urlparse(url)
 

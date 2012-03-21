@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import sys, os
-
 import livestreamer
 
 parser = livestreamer.utils.ArgumentParser(description="Util to play various livestreaming services in a custom player",
@@ -13,6 +12,7 @@ parser.add_argument("-o", "--output", metavar="filename", help="write stream to 
 parser.add_argument("-c", "--cmdline", action="store_true", help="print commandline used internally to play stream")
 parser.add_argument("-l", "--plugins", action="store_true", help="print installed plugins")
 
+RCFILE = os.path.expanduser("~/.livestreamerrc")
 
 def exit(msg):
     sys.stderr.write("error: " + msg + "\n")
@@ -64,8 +64,8 @@ def main():
 
     arglist = sys.argv[1:]
 
-    if os.path.exists(livestreamer.RCFILE):
-        arglist.insert(0, "@" + livestreamer.RCFILE)
+    if os.path.exists(RCFILE):
+        arglist.insert(0, "@" + RCFILE)
 
     args = parser.parse_args(arglist)
 
