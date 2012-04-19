@@ -23,7 +23,7 @@ class UStreamTV(Plugin):
         if match:
             return int(match.group(1))
 
-    def get_streams(self):
+    def _get_streams(self):
         def get_amf_value(data, key):
             pattern = ("{0}\W\W\W(.+?)\x00").format(key)
             match = re.search(bytes(pattern, "ascii"), data)

@@ -46,7 +46,7 @@ class OwnedTV(Plugin):
         if match:
             return int(match.group(1))
 
-    def get_streams(self):
+    def _get_streams(self):
         channelid = self._get_channel_id(self.url)
 
         if not channelid:
