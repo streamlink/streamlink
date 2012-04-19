@@ -14,5 +14,8 @@ setup(name="livestreamer",
       package_dir={'': 'src'},
       entry_points={
           "console_scripts": ['livestreamer=livestreamer.cli:main']
-      }
+      },
+      install_requires=[
+          'argparse',
+          ],
 )
