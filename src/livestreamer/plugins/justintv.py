@@ -69,7 +69,7 @@ class JustinTV(Plugin):
                 res.append(node.data)
         return "".join(res)
 
-    def get_streams(self):
+    def _get_streams(self):
         def clean_tag(tag):
             if tag[0] == "_":
                 return tag[1:]
