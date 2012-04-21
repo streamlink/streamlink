@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-from livestreamer.plugins import Plugin, register_plugin
+from livestreamer.plugins import Plugin, PluginError, register_plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import swfverify
+from livestreamer.utils import swfverify, urlget
 from livestreamer.compat import urllib, str
 
 import xml.dom.minidom, re, sys, random
@@ -28,11 +28,9 @@ class JustinTV(Plugin):
         self.cookie = args.jtv_cookie
 
     def _get_channel_name(self, url):
-        fd = urllib.urlopen(url)
-        data = fd.read()
-        fd.close()
-
+        data = urlget(url)
         match = re.search(b"live_facebook_embed_player\.swf\?channel=(\w+)", data)
+
         if match:
             return str(match.group(1), "ascii")
 
@@ -43,12 +41,13 @@ class JustinTV(Plugin):
         else:
             req = urllib.Request(self.MetadataURL.format(channel))
 
+        data = urlget(req)
 
-        fd = urllib.urlopen(req)
-        data = fd.read()
-        fd.close()
+        try:
+            dom = xml.dom.minidom.parseString(data)
+        except Exception as err:
+            raise PluginError(("Unable to parse config XML: {0})").format(err))
 
-        dom = xml.dom.minidom.parseString(data)
         meta = dom.getElementsByTagName("meta")[0]
         metadata = {}
 
@@ -80,19 +79,23 @@ class JustinTV(Plugin):
         randomp = int(random.random() * 999999)
 
         if "chansub_guid" in metadata:
-            fd = urllib.urlopen(self.StreamInfoURLSub.format(channelname, randomp, metadata["chansub_guid"]))
+            url = self.StreamInfoURLSub.format(channelname, randomp, metadata["chansub_guid"])
         else:
-            fd = urllib.urlopen(self.StreamInfoURL.format(channelname, randomp))
+            url = self.StreamInfoURL.format(channelname, randomp)
 
-        data = fd.read()
-        fd.close()
+        data = urlget(url)
 
         # fix invalid xml
         data = re.sub(b"<(\d+)", b"<_\g<1>", data)
         data = re.sub(b"</(\d+)", b"</_\g<1>", data)
 
         streams = {}
-        dom = xml.dom.minidom.parseString(data)
+
+        try:
+            dom = xml.dom.minidom.parseString(data)
+        except Exception as err:
+            raise PluginError(("Unable to parse config XML: {0})").format(err))
+
         nodes = dom.getElementsByTagName("nodes")[0]
 
         swfhash, swfsize = swfverify(self.SWFURL)

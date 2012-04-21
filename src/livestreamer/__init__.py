@@ -16,4 +16,7 @@ def resolve_url(url):
 def get_plugins():
     return plugins.get_plugins()
 
+
+PluginError = plugins.PluginError
+
 plugins.load_plugins(plugins)

@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from livestreamer.plugins import Plugin, register_plugin
-from livestreamer.stream import RTMPStream
 from livestreamer.compat import urllib
+from livestreamer.plugins import Plugin, PluginError, register_plugin
+from livestreamer.stream import RTMPStream
+from livestreamer.utils import urlget
 
 import xml.dom.minidom, re
 
@@ -34,9 +35,7 @@ class OwnedTV(Plugin):
         return "own3d.tv" in url
 
     def _get_channel_id(self, url):
-        fd = urlopener.open(url)
-        data = fd.read()
-        fd.close()
+        data = urlget(url, opener=urlopener)
 
         match = re.search(b"document.location.hash='/live/(\d+)'", data)
         if match:
@@ -51,11 +50,13 @@ class OwnedTV(Plugin):
         streams = {}
 
         if channelid:
-            fd = urllib.urlopen(self.ConfigURL.format(channelid))
-            data = fd.read()
-            fd.close()
+            data = urlget(self.ConfigURL.format(channelid))
 
-            dom = xml.dom.minidom.parseString(data)
+            try:
+                dom = xml.dom.minidom.parseString(data)
+            except Exception as err:
+                raise PluginError(("Unable to parse config XML: {0})").format(err))
+
             channels = dom.getElementsByTagName("channels")[0]
             clip = channels.getElementsByTagName("clip")[0]
 

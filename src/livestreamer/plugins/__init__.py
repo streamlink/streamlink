@@ -35,6 +35,9 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
+class PluginError(Exception):
+    pass
+
 def load_plugins(plugins):
     for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):
         file, pathname, desc = imp.find_module(name, plugins.__path__)

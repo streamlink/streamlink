@@ -24,7 +24,10 @@ def handle_url(args):
     if not channel:
         exit(("No plugin can handle url: {0}").format(args.url))
 
-    streams = channel.get_streams()
+    try:
+        streams = channel.get_streams()
+    except livestreamer.PluginError as err:
+        exit(("Error from plugin while retrieving streams: {0}").format(err))
 
     if len(streams) == 0:
         exit(("No streams found on url: {0}").format(args.url))

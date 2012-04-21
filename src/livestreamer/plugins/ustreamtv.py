@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-from livestreamer.plugins import Plugin, register_plugin
+from livestreamer.compat import str, bytes
+from livestreamer.plugins import Plugin, PluginError, register_plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.compat import urllib, str, bytes
+from livestreamer.utils import urlget
 
 import xml.dom.minidom, re
 
@@ -15,9 +16,7 @@ class UStreamTV(Plugin):
         return "ustream.tv" in url
 
     def _get_channel_id(self, url):
-        fd = urllib.urlopen(url)
-        data = fd.read()
-        fd.close()
+        data = urlget(url)
 
         match = re.search(b"channelId=(\d+)", data)
         if match:
@@ -34,9 +33,7 @@ class UStreamTV(Plugin):
         channelid = self._get_channel_id(self.url)
 
         if channelid:
-            fd = urllib.urlopen(self.AMFURL.format(channelid))
-            data = fd.read()
-            fd.close()
+            data = urlget(self.AMFURL.format(channelid))
 
             playpath = get_amf_value(data, "streamName")
             cdnurl = get_amf_value(data, "cdnUrl")
