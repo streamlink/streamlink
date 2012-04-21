@@ -30,29 +30,27 @@ class UStreamTV(Plugin):
             if match:
                 return str(match.group(1), "ascii")
 
+        streams = {}
         channelid = self._get_channel_id(self.url)
 
-        if not channelid:
-            return False
+        if channelid:
+            fd = urllib.urlopen(self.AMFURL.format(channelid))
+            data = fd.read()
+            fd.close()
 
-        fd = urllib.urlopen(self.AMFURL.format(channelid))
-        data = fd.read()
-        fd.close()
+            playpath = get_amf_value(data, "streamName")
+            cdnurl = get_amf_value(data, "cdnUrl")
+            fmsurl = get_amf_value(data, "fmsUrl")
 
-        playpath = get_amf_value(data, "streamName")
-        cdnurl = get_amf_value(data, "cdnUrl")
-        fmsurl = get_amf_value(data, "fmsUrl")
+            if playpath:
+                stream = RTMPStream({
+                    "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
+                    "pageUrl": self.url,
+                    "swfUrl": self.SWFURL,
+                    "live": 1
+                })
+                streams["live"] = stream
 
-        if not playpath:
-            return False
-
-        stream = RTMPStream({
-            "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
-            "pageUrl": self.url,
-            "swfUrl": self.SWFURL,
-            "live": 1
-        })
-
-        return {"live": stream}
+        return streams
 
 register_plugin("ustreamtv", UStreamTV)

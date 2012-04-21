@@ -48,38 +48,35 @@ class OwnedTV(Plugin):
 
     def _get_streams(self):
         channelid = self._get_channel_id(self.url)
-
-        if not channelid:
-            return False
-
-        fd = urllib.urlopen(self.ConfigURL.format(channelid))
-        data = fd.read()
-        fd.close()
-
         streams = {}
-        dom = xml.dom.minidom.parseString(data)
-        channels = dom.getElementsByTagName("channels")[0]
-        clip = channels.getElementsByTagName("clip")[0]
 
-        streams = {}
-        for item in clip.getElementsByTagName("item"):
-            base = item.getAttribute("base")
-            if not base:
-                continue
+        if channelid:
+            fd = urllib.urlopen(self.ConfigURL.format(channelid))
+            data = fd.read()
+            fd.close()
 
-            if base[0] == "$":
-                ref = re.match("\${(.+)}", base).group(1)
-                base = self.CDN[ref]
+            dom = xml.dom.minidom.parseString(data)
+            channels = dom.getElementsByTagName("channels")[0]
+            clip = channels.getElementsByTagName("clip")[0]
 
-            for streamel in item.getElementsByTagName("stream"):
-                name = streamel.getAttribute("label").lower().replace(" ", "_")
-                playpath = streamel.getAttribute("name")
+            for item in clip.getElementsByTagName("item"):
+                base = item.getAttribute("base")
+                if not base:
+                    continue
 
-                if not name in streams:
-                    streams[name] = RTMPStream({
-                        "rtmp": ("{0}/{1}").format(base, playpath),
-                        "live": 1
-                    })
+                if base[0] == "$":
+                    ref = re.match("\${(.+)}", base).group(1)
+                    base = self.CDN[ref]
+
+                for streamel in item.getElementsByTagName("stream"):
+                    name = streamel.getAttribute("label").lower().replace(" ", "_")
+                    playpath = streamel.getAttribute("name")
+
+                    if not name in streams:
+                        streams[name] = RTMPStream({
+                            "rtmp": ("{0}/{1}").format(base, playpath),
+                            "live": 1
+                        })
 
         return streams
 

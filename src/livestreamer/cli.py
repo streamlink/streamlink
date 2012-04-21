@@ -26,7 +26,7 @@ def handle_url(args):
 
     streams = channel.get_streams()
 
-    if not streams:
+    if len(streams) == 0:
         exit(("No streams found on url: {0}").format(args.url))
 
     keys = list(streams.keys())

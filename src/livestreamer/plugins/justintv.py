@@ -69,20 +69,15 @@ class JustinTV(Plugin):
                 res.append(node.data)
         return "".join(res)
 
-    def _get_streams(self):
+    def _get_streaminfo(self, channelname):
         def clean_tag(tag):
             if tag[0] == "_":
                 return tag[1:]
             else:
                 return tag
 
-        randomp = int(random.random() * 999999)
-        channelname = self._get_channel_name(self.url)
-
-        if not channelname:
-            return False
-
         metadata = self._get_metadata(channelname)
+        randomp = int(random.random() * 999999)
 
         if "chansub_guid" in metadata:
             fd = urllib.urlopen(self.StreamInfoURLSub.format(channelname, randomp, metadata["chansub_guid"]))
@@ -122,5 +117,13 @@ class JustinTV(Plugin):
             streams[sname] = stream
 
         return streams
+
+    def _get_streams(self):
+        channelname = self._get_channel_name(self.url)
+
+        if not channelname:
+            return {}
+
+        return self._get_streaminfo(channelname)
 
 register_plugin("justintv", JustinTV)
