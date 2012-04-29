@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 from sys import version_info
 
-version = "0.1"
+version = "1.0.0"
 deps = []
 
 # require argparse on Python <2.7 and <3.2
