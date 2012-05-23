@@ -2,22 +2,18 @@
 
 import sys
 
-orig_str = str
+is_py2 = (sys.version_info[0] == 2)
+is_py3 = (sys.version_info[0] == 3)
 
-def str(s, enc="ascii"):
-    if sys.version_info[0] == 3:
-        return orig_str(s, enc)
-    else:
-        return orig_str(s)
+if is_py2:
+    str = unicode
 
+    def bytes(b, enc="ascii"):
+        return str(b)
 
-orig_bytes = bytes
-
-def bytes(s, enc="ascii"):
-    if sys.version_info[0] == 3:
-        return orig_bytes(s, enc)
-    else:
-        return orig_bytes(s)
+elif is_py3:
+    str = str
+    bytes = bytes
 
 try:
     import urllib.request as urllib
@@ -25,6 +21,6 @@ except ImportError:
     import urllib2 as urllib
 
 try:
-    from urllib.parse import urlparse
+    from urllib.parse import urlparse, parse_qs
 except ImportError:
-    from urlparse import urlparse
+    from urlparse import urlparse, parse_qs
