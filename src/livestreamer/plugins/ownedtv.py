@@ -36,7 +36,10 @@ class OwnedTV(Plugin):
 
     def _get_channel_id(self, url):
         data = urlget(url, opener=urlopener)
-
+        match = re.search(b'flashvars.config = "livecfg/(\d+)', data)
+        if match:
+            return int(match.group(1))
+            
         match = re.search(b"document.location.hash='/live/(\d+)'", data)
         if match:
             return int(match.group(1))
