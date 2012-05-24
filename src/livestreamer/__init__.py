@@ -11,12 +11,15 @@ def resolve_url(url):
         if plugin.can_handle_url(url):
             obj = plugin(url)
             return obj
-    return None
+
+    raise plugins.NoPluginError()
 
 def get_plugins():
     return plugins.get_plugins()
 
 
 PluginError = plugins.PluginError
+NoStreamsError = plugins.NoStreamsError
+NoPluginError = plugins.NoPluginError
 
 plugins.load_plugins(plugins)

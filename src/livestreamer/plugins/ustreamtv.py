@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from livestreamer.compat import str, bytes
-from livestreamer.plugins import Plugin, PluginError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget
 
@@ -32,21 +32,23 @@ class UStreamTV(Plugin):
         streams = {}
         channelid = self._get_channel_id(self.url)
 
-        if channelid:
-            data = urlget(self.AMFURL.format(channelid))
+        if not channelid:
+            raise NoStreamsError(self.url)
 
-            playpath = get_amf_value(data, "streamName")
-            cdnurl = get_amf_value(data, "cdnUrl")
-            fmsurl = get_amf_value(data, "fmsUrl")
+        data = urlget(self.AMFURL.format(channelid))
 
-            if playpath:
-                stream = RTMPStream({
-                    "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
-                    "pageUrl": self.url,
-                    "swfUrl": self.SWFURL,
-                    "live": 1
-                })
-                streams["live"] = stream
+        playpath = get_amf_value(data, "streamName")
+        cdnurl = get_amf_value(data, "cdnUrl")
+        fmsurl = get_amf_value(data, "fmsUrl")
+
+        if playpath:
+            stream = RTMPStream({
+                "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
+                "pageUrl": self.url,
+                "swfUrl": self.SWFURL,
+                "live": 1
+            })
+            streams["live"] = stream
 
         return streams
 

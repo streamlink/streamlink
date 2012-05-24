@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from livestreamer.compat import urllib
-from livestreamer.plugins import Plugin, PluginError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget
 
@@ -36,10 +36,11 @@ class OwnedTV(Plugin):
 
     def _get_channel_id(self, url):
         data = urlget(url, opener=urlopener)
+
         match = re.search(b'flashvars.config = "livecfg/(\d+)', data)
         if match:
             return int(match.group(1))
-            
+
         match = re.search(b"document.location.hash='/live/(\d+)'", data)
         if match:
             return int(match.group(1))
@@ -50,37 +51,39 @@ class OwnedTV(Plugin):
 
     def _get_streams(self):
         channelid = self._get_channel_id(self.url)
+
+        if not channelid:
+            raise NoStreamsError(self.url)
+
+        data = urlget(self.ConfigURL.format(channelid))
+
+        try:
+            dom = xml.dom.minidom.parseString(data)
+        except Exception as err:
+            raise PluginError(("Unable to parse config XML: {0})").format(err))
+
         streams = {}
+        channels = dom.getElementsByTagName("channels")[0]
+        clip = channels.getElementsByTagName("clip")[0]
 
-        if channelid:
-            data = urlget(self.ConfigURL.format(channelid))
+        for item in clip.getElementsByTagName("item"):
+            base = item.getAttribute("base")
+            if not base:
+                continue
 
-            try:
-                dom = xml.dom.minidom.parseString(data)
-            except Exception as err:
-                raise PluginError(("Unable to parse config XML: {0})").format(err))
+            if base[0] == "$":
+                ref = re.match("\${(.+)}", base).group(1)
+                base = self.CDN[ref]
 
-            channels = dom.getElementsByTagName("channels")[0]
-            clip = channels.getElementsByTagName("clip")[0]
+            for streamel in item.getElementsByTagName("stream"):
+                name = streamel.getAttribute("label").lower().replace(" ", "_")
+                playpath = streamel.getAttribute("name")
 
-            for item in clip.getElementsByTagName("item"):
-                base = item.getAttribute("base")
-                if not base:
-                    continue
-
-                if base[0] == "$":
-                    ref = re.match("\${(.+)}", base).group(1)
-                    base = self.CDN[ref]
-
-                for streamel in item.getElementsByTagName("stream"):
-                    name = streamel.getAttribute("label").lower().replace(" ", "_")
-                    playpath = streamel.getAttribute("name")
-
-                    if not name in streams:
-                        streams[name] = RTMPStream({
-                            "rtmp": ("{0}/{1}").format(base, playpath),
-                            "live": 1
-                        })
+                if not name in streams:
+                    streams[name] = RTMPStream({
+                        "rtmp": ("{0}/{1}").format(base, playpath),
+                        "live": 1
+                    })
 
         return streams
 

@@ -30,6 +30,7 @@ class Plugin(object):
             if rank in streams:
                 streams["best"] = streams[rank]
                 break
+
         return streams
 
     def _get_streams(self):
@@ -38,12 +39,18 @@ class Plugin(object):
 class PluginError(Exception):
     pass
 
+class NoStreamsError(PluginError):
+    def __init__(self, url):
+        PluginError.__init__(self, ("No streams found on this URL: {0}").format(url))
+
+class NoPluginError(PluginError):
+    pass
+
 def load_plugins(plugins):
     for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):
         file, pathname, desc = imp.find_module(name, plugins.__path__)
         imp.load_module(name, file, pathname, desc)
     return plugins_loaded
-
 
 def get_plugins():
     return plugins_loaded

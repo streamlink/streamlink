@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from livestreamer.plugins import Plugin, PluginError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import swfverify, urlget
 from livestreamer.compat import urllib, str
@@ -125,7 +125,7 @@ class JustinTV(Plugin):
         channelname = self._get_channel_name(self.url)
 
         if not channelname:
-            return {}
+            raise NoStreamsError(self.url)
 
         return self._get_streaminfo(channelname)
 
