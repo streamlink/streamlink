@@ -7,6 +7,7 @@ is_py3 = (sys.version_info[0] == 3)
 
 if is_py2:
     str = unicode
+    input = raw_input
 
     def bytes(b, enc="ascii"):
         return str(b)
@@ -14,6 +15,7 @@ if is_py2:
 elif is_py3:
     str = str
     bytes = bytes
+    input = input
 
 try:
     import urllib.request as urllib

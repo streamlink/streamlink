@@ -46,7 +46,7 @@ class UStreamTV(Plugin):
                 "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
                 "pageUrl": self.url,
                 "swfUrl": self.SWFURL,
-                "live": 1
+                "live": True
             })
             streams["live"] = stream
 

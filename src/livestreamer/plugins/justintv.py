@@ -110,7 +110,7 @@ class JustinTV(Plugin):
                 "swfUrl": self.SWFURL,
                 "swfhash": swfhash,
                 "swfsize": swfsize,
-                "live": 1
+                "live": True
             })
 
             if "token" in info:

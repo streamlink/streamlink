@@ -82,7 +82,7 @@ class OwnedTV(Plugin):
                 if not name in streams:
                     streams[name] = RTMPStream({
                         "rtmp": ("{0}/{1}").format(base, playpath),
-                        "live": 1
+                        "live": True
                     })
 
         return streams

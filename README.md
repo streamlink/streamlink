@@ -59,14 +59,14 @@ Livestreamer is also a library. Short example:
     streams = channel.get_streams()
 
     stream = streams["720p"]
-    stream.open()
+    fd = stream.open()
 
     while True:
-        data = stream.read(1024)
+        data = fd.read(1024)
         if len(data) == 0:
             break
 
         # do something with data
 
-    stream.close()
+    fd.close()
 
