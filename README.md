@@ -44,6 +44,7 @@ Currently supported sites are:
 * Justin.tv/Twitch.tv
 * Own3D.tv
 * UStream
+* YouTube
 
 Justin.tv plugin requires rtmpdump with jtv token support (recent git).
 
