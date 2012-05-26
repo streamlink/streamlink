@@ -10,6 +10,7 @@ parser.add_argument("url", help="URL to stream", nargs="?")
 parser.add_argument("stream", help="stream to play", nargs="?")
 parser.add_argument("-p", "--player", metavar="player", help="commandline for player", default="vlc")
 parser.add_argument("-o", "--output", metavar="filename", help="write stream to file instead of playing it, use - for stdout")
+parser.add_argument("-f", "--force", action="store_true", help="always write to output file even if it already exists")
 parser.add_argument("-O", "--stdout", action="store_true", help="write stream to stdout instead of playing it")
 parser.add_argument("-l", "--plugins", action="store_true", help="print installed plugins")
 
@@ -47,10 +48,15 @@ def write_stream(fd, out, progress):
     if out != stdout:
         out.close()
 
-def check_output(output):
-    if os.path.isfile(output):
+def check_output(output, force):
+    if os.path.isfile(output) and not force:
         sys.stderr.write(("File output {0} already exists! Overwrite it? [y/N] ").format(output))
-        answer = input()
+
+        try:
+            answer = input()
+        except:
+            sys.exit()
+
         answer = answer.strip().lower()
 
         if answer != "y":
@@ -96,7 +102,7 @@ def handle_url(args):
                 if args.output == "-":
                     out = stdout
                 else:
-                    out = check_output(args.output)
+                    out = check_output(args.output, args.force)
                     progress = True
             elif args.stdout:
                 out = stdout
