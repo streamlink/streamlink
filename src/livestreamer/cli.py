@@ -16,8 +16,7 @@ parser.add_argument("-l", "--plugins", action="store_true", help="print installe
 RCFILE = os.path.expanduser("~/.livestreamerrc")
 
 def exit(msg):
-    sys.stderr.write("error: " + msg + "\n")
-    sys.exit()
+    sys.exit(("error: {0}").format(msg))
 
 def msg(msg):
     sys.stderr.write(msg + "\n")
