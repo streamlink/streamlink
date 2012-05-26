@@ -6,16 +6,18 @@ is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
 
 if is_py2:
-    str = unicode
     input = raw_input
+    stdout = sys.stdout
+    str = unicode
 
     def bytes(b, enc="ascii"):
         return str(b)
 
 elif is_py3:
-    str = str
     bytes = bytes
     input = input
+    stdout = sys.stdout.buffer
+    str = str
 
 try:
     import urllib.request as urllib
