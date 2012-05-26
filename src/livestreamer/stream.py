@@ -1,5 +1,6 @@
 from livestreamer.utils import urlopen
 
+import os
 import pbs
 
 class StreamError(Exception):
@@ -21,6 +22,7 @@ class RTMPStream(Stream):
 
         self.params["flv"] = "-"
         self.params["_bg"] = True
+        self.params["_err"] = open(os.devnull, "w")
 
         stream = rtmpdump(**self.params)
 
