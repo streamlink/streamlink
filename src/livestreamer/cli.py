@@ -4,16 +4,16 @@ import sys, os, pbs
 import livestreamer
 from livestreamer.compat import input, stdout
 
-parser = livestreamer.utils.ArgumentParser(description="Util to play various livestreaming services in a custom player",
+parser = livestreamer.utils.ArgumentParser(description="CLI program that launches streams from various streaming services in a custom video player",
                                            fromfile_prefix_chars="@")
 parser.add_argument("url", help="URL to stream", nargs="?")
-parser.add_argument("stream", help="stream to play", nargs="?")
-parser.add_argument("-p", "--player", metavar="player", help="commandline for player", default="vlc")
-parser.add_argument("-o", "--output", metavar="filename", help="write stream to file instead of playing it, use - for stdout")
-parser.add_argument("-f", "--force", action="store_true", help="always write to output file even if it already exists")
-parser.add_argument("-O", "--stdout", action="store_true", help="write stream to stdout instead of playing it")
-parser.add_argument("-c", "--cmdline", action="store_true", help="print commandline used internally to play stream, this may not be available on all streams")
-parser.add_argument("-l", "--plugins", action="store_true", help="print installed plugins")
+parser.add_argument("stream", help="Stream quality to play, use 'best' for highest quality available", nargs="?")
+parser.add_argument("-p", "--player", metavar="player", help="Command-line for player, default is 'vlc'", default="vlc")
+parser.add_argument("-o", "--output", metavar="filename", help="Write stream to file instead of playing it, use - for stdout")
+parser.add_argument("-f", "--force", action="store_true", help="Always write to file even if it already exists")
+parser.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
+parser.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
+parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
 
 RCFILE = os.path.expanduser("~/.livestreamerrc")
 
@@ -51,7 +51,7 @@ def write_stream(fd, out, progress):
 
 def check_output(output, force):
     if os.path.isfile(output) and not force:
-        sys.stderr.write(("File output {0} already exists! Overwrite it? [y/N] ").format(output))
+        sys.stderr.write(("File {0} already exists! Overwrite it? [y/N] ").format(output))
 
         try:
             answer = input()
@@ -126,11 +126,11 @@ def handle_url(args):
                 if isinstance(stream, livestreamer.stream.StreamProcess):
                     msg(stream.cmdline())
                 else:
-                    exit("Stream does not use a commandline")
+                    exit("Stream does not use a command-line")
             else:
                 output_stream(stream, args)
         else:
-            msg(("This channel does not have stream: {0}").format(args.stream))
+            msg(("Invalid stream quality: {0}").format(args.stream))
             msg(("Valid streams: {0}").format(validstreams))
     else:
         msg(("Found streams: {0}").format(validstreams))
