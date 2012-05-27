@@ -21,7 +21,7 @@ def exit(msg):
     sys.exit(("error: {0}").format(msg))
 
 def msg(msg):
-    sys.stderr.write(msg + "\n")
+    sys.stdout.write(msg + "\n")
 
 def write_stream(fd, out, progress):
     written = 0
