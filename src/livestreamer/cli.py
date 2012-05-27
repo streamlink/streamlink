@@ -12,6 +12,7 @@ parser.add_argument("-p", "--player", metavar="player", help="commandline for pl
 parser.add_argument("-o", "--output", metavar="filename", help="write stream to file instead of playing it, use - for stdout")
 parser.add_argument("-f", "--force", action="store_true", help="always write to output file even if it already exists")
 parser.add_argument("-O", "--stdout", action="store_true", help="write stream to stdout instead of playing it")
+parser.add_argument("-c", "--cmdline", action="store_true", help="print commandline used internally to play stream, this may not be available on all streams")
 parser.add_argument("-l", "--plugins", action="store_true", help="print installed plugins")
 
 RCFILE = os.path.expanduser("~/.livestreamerrc")
@@ -69,6 +70,36 @@ def check_output(output, force):
 
     return out
 
+def output_stream(stream, args):
+    progress = False
+    out = None
+
+    try:
+        fd = stream.open()
+    except livestreamer.StreamError as err:
+        exit(("Could not open stream - {0}").format(err))
+
+    if args.output:
+        if args.output == "-":
+            out = stdout
+        else:
+            out = check_output(args.output, args.force)
+            progress = True
+    elif args.stdout:
+        out = stdout
+    else:
+        cmd = args.player + " -"
+        player = pbs.sh("-c", cmd, _bg=True, _out=sys.stdout, _err=sys.stderr)
+        out = player.process.stdin
+
+    if not out:
+        exit("Failed to open a valid stream output")
+
+    try:
+        write_stream(fd, out, progress)
+    except KeyboardInterrupt:
+        sys.exit()
+
 def handle_url(args):
     try:
         channel = livestreamer.resolve_url(args.url)
@@ -90,34 +121,14 @@ def handle_url(args):
     if args.stream:
         if args.stream in streams:
             stream = streams[args.stream]
-            progress = False
-            out = None
 
-            try:
-                fd = stream.open()
-            except livestreamer.StreamError as err:
-                exit(("Could not open stream - {0}").format(err))
-
-            if args.output:
-                if args.output == "-":
-                    out = stdout
+            if args.cmdline:
+                if isinstance(stream, livestreamer.stream.StreamProcess):
+                    msg(stream.cmdline())
                 else:
-                    out = check_output(args.output, args.force)
-                    progress = True
-            elif args.stdout:
-                out = stdout
+                    exit("Stream does not use a commandline")
             else:
-                cmd = args.player + " -"
-                player = pbs.sh("-c", cmd, _bg=True, _out=sys.stdout, _err=sys.stderr)
-                out = player.process.stdin
-
-            if not out:
-                exit("Failed to open a valid stream output")
-
-            try:
-                write_stream(fd, out, progress)
-            except KeyboardInterrupt:
-                sys.exit()
+                output_stream(stream, args)
         else:
             msg(("This channel does not have stream: {0}").format(args.stream))
             msg(("Valid streams: {0}").format(validstreams))

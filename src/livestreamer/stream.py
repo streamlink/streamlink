@@ -10,23 +10,30 @@ class Stream(object):
     def open(self):
        raise NotImplementedError
 
-class RTMPStream(Stream):
+class StreamProcess(Stream):
     def __init__(self, params):
         self.params = params or {}
 
+    def cmdline(self):
+        return str(self.cmd.bake(**self.params))
+
     def open(self):
-        try:
-            rtmpdump = pbs.rtmpdump
-        except pbs.CommandNotFound:
-            raise StreamError("Unable to find 'rtmpdump' command")
+        stream = self.cmd(**self.params)
+
+        return stream.process.stdout
+
+class RTMPStream(StreamProcess):
+    def __init__(self, params):
+        StreamProcess.__init__(self, params)
 
         self.params["flv"] = "-"
         self.params["_bg"] = True
         self.params["_err"] = open(os.devnull, "w")
 
-        stream = rtmpdump(**self.params)
-
-        return stream.process.stdout
+        try:
+            self.cmd = pbs.rtmpdump
+        except pbs.CommandNotFound:
+            raise StreamError("Unable to find 'rtmpdump' command")
 
 class HTTPStream(Stream):
     def __init__(self, url):
