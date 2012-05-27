@@ -1,12 +1,13 @@
 Livestreamer
 ============
-CLI program that helps launch various streaming services in a real player instead of flash.
+Livestreamer is a CLI program that launches streams from various
+streaming services in a custom video player.
 
 
 Installing
 ----------
     $ sudo python setup.py install
-Livestreamer is compatible with Python version >= 2.6 and 3.0.
+Livestreamer is compatible with Python version >= 2.6 and >= 3.0.
 
 
 Using
