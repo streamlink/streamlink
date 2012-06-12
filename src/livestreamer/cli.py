@@ -13,6 +13,7 @@ parser.add_argument("-o", "--output", metavar="filename", help="Write stream to 
 parser.add_argument("-f", "--force", action="store_true", help="Always write to file even if it already exists")
 parser.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
 parser.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
+parser.add_argument("-e", "--errorlog", action="store_true", help="Log possible errors from internal command-line to a temporary file, use when debugging")
 parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
 
 RCFILE = os.path.expanduser("~/.livestreamerrc")
@@ -75,7 +76,7 @@ def output_stream(stream, args):
     out = None
 
     try:
-        fd = stream.open()
+        fd = stream.open(errorlog=args.errorlog)
     except livestreamer.StreamError as err:
         exit(("Could not open stream - {0}").format(err))
 
