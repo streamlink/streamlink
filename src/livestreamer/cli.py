@@ -12,9 +12,11 @@ parser.add_argument("-p", "--player", metavar="player", help="Command-line for p
 parser.add_argument("-o", "--output", metavar="filename", help="Write stream to file instead of playing it, use - for stdout")
 parser.add_argument("-f", "--force", action="store_true", help="Always write to file even if it already exists")
 parser.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
+parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
 parser.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
 parser.add_argument("-e", "--errorlog", action="store_true", help="Log possible errors from internal command-line to a temporary file, use when debugging")
-parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
+parser.add_argument("-r", "--rtmpdump", metavar="path", help="Specify location of rtmpdump")
+parser.add_argument("-j", "--jtv-cookie", metavar="cookie", help="Specify JustinTV cookie to allow access to subscription channels")
 
 RCFILE = os.path.expanduser("~/.livestreamerrc")
 
@@ -76,7 +78,7 @@ def output_stream(stream, args):
     out = None
 
     try:
-        fd = stream.open(errorlog=args.errorlog)
+        fd = stream.open()
     except livestreamer.StreamError as err:
         exit(("Could not open stream - {0}").format(err))
 
@@ -109,6 +111,8 @@ def handle_url(args):
 
     try:
         streams = channel.get_streams()
+    except livestreamer.StreamError as err:
+        exit(str(err))
     except livestreamer.PluginError as err:
         exit(str(err))
 
@@ -143,9 +147,6 @@ def print_plugins():
 
 
 def main():
-    for name, plugin in livestreamer.get_plugins().items():
-        plugin.handle_parser(parser)
-
     arglist = sys.argv[1:]
 
     if os.path.exists(RCFILE):
@@ -153,8 +154,9 @@ def main():
 
     args = parser.parse_args(arglist)
 
-    for name, plugin in livestreamer.get_plugins().items():
-        plugin.handle_args(args)
+    livestreamer.options.set("errorlog", args.errorlog)
+    livestreamer.options.set("rtmpdump", args.rtmpdump)
+    livestreamer.options.set("jtvcookie", args.jtv_cookie)
 
     if args.url:
         handle_url(args)

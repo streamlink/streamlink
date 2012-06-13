@@ -18,7 +18,6 @@ def resolve_url(url):
 def get_plugins():
     return plugins.get_plugins()
 
-
 PluginError = plugins.PluginError
 NoStreamsError = plugins.NoStreamsError
 NoPluginError = plugins.NoPluginError

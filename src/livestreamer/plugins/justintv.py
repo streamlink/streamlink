@@ -4,6 +4,7 @@ from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_p
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import swfverify, urlget
 from livestreamer.compat import urllib, str
+from livestreamer import options
 
 import xml.dom.minidom, re, sys, random
 
@@ -13,19 +14,9 @@ class JustinTV(Plugin):
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
-    cookie = None
-
     @classmethod
     def can_handle_url(self, url):
         return ("justin.tv" in url) or ("twitch.tv" in url)
-
-    @classmethod
-    def handle_parser(self, parser):
-        parser.add_argument("--jtv-cookie", metavar="cookie", help="JustinTV cookie to allow access to subscription channels")
-
-    @classmethod
-    def handle_args(self, args):
-        self.cookie = args.jtv_cookie
 
     def _get_channel_name(self, url):
         data = urlget(url)
@@ -35,8 +26,10 @@ class JustinTV(Plugin):
             return str(match.group(1), "ascii")
 
     def _get_metadata(self, channel):
-        if self.cookie:
-            headers = {"Cookie": self.cookie}
+        cookie = options.get("jtvcookie")
+
+        if cookie:
+            headers = {"Cookie": cookie}
             req = urllib.Request(self.MetadataURL.format(channel), headers=headers)
         else:
             req = urllib.Request(self.MetadataURL.format(channel))

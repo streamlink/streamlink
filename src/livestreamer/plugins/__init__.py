@@ -14,14 +14,6 @@ class Plugin(object):
     def can_handle_url(self, url):
        raise NotImplementedError
 
-    @classmethod
-    def handle_parser(self, parser):
-        pass
-
-    @classmethod
-    def handle_args(self, args):
-        self.args = args
-
     def get_streams(self):
         ranking = ["iphonelow", "iphonehigh", "240p", "360p", "480p", "720p",
                    "hd", "1080p", "live"]
