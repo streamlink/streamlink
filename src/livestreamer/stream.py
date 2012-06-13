@@ -48,14 +48,11 @@ class RTMPStream(StreamProcess):
     def __init__(self, params):
         StreamProcess.__init__(self, params)
 
-        self.rtmpdump = options.get("rtmpdump")
+        self.rtmpdump = options.get("rtmpdump") or "rtmpdump"
         self.params["flv"] = "-"
 
         try:
-            if self.rtmpdump:
-                self.cmd = pbs.Command._create(self.rtmpdump)
-            else:
-                self.cmd = pbs.rtmpdump
+            self.cmd = getattr(pbs, self.rtmpdump)
         except pbs.CommandNotFound as err:
             raise StreamError(("Unable to find {0} command").format(str(err)))
 
