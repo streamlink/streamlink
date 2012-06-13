@@ -1,23 +1,45 @@
 #!/usr/bin/env python3
 
-import sys, os, pbs
+import sys, os, pbs, argparse
 import livestreamer
 from livestreamer.compat import input, stdout
 
+exampleusage = """
+example usage:
+
+$ livestreamer twitch.tv/onemoregametv
+Found streams: 240p, 360p, 480p, 720p, best, iphonehigh, iphonelow, live
+$ livestreamer twitch.tv/onemoregametv 720p
+
+Stream now playbacks in player (default is VLC).
+
+"""
+
 parser = livestreamer.utils.ArgumentParser(description="CLI program that launches streams from various streaming services in a custom video player",
-                                           fromfile_prefix_chars="@")
+                                           fromfile_prefix_chars="@",
+                                           formatter_class=argparse.RawDescriptionHelpFormatter,
+                                           epilog=exampleusage, add_help=False)
+
 parser.add_argument("url", help="URL to stream", nargs="?")
 parser.add_argument("stream", help="Stream quality to play, use 'best' for highest quality available", nargs="?")
-parser.add_argument("-p", "--player", metavar="player", help="Command-line for player, default is 'vlc'", default="vlc")
-parser.add_argument("-o", "--output", metavar="filename", help="Write stream to file instead of playing it, use - for stdout")
-parser.add_argument("-f", "--force", action="store_true", help="Always write to file even if it already exists")
-parser.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
+
+parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
 parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
-parser.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
-parser.add_argument("-q", "--quiet-player", action="store_true", help="Hide all player console output, default is to display it")
-parser.add_argument("-e", "--errorlog", action="store_true", help="Log possible errors from internal command-line to a temporary file, use when debugging")
-parser.add_argument("-r", "--rtmpdump", metavar="path", help="Specify location of rtmpdump")
-parser.add_argument("-j", "--jtv-cookie", metavar="cookie", help="Specify JustinTV cookie to allow access to subscription channels")
+
+playeropt = parser.add_argument_group("player options")
+playeropt.add_argument("-p", "--player", metavar="player", help="Command-line for player, default is 'vlc'", default="vlc")
+playeropt.add_argument("-q", "--quiet-player", action="store_true", help="Hide all player console output")
+
+outputopt = parser.add_argument_group("file output options")
+outputopt.add_argument("-o", "--output", metavar="filename", help="Write stream to file instead of playing it")
+outputopt.add_argument("-f", "--force", action="store_true", help="Always write to file even if it already exists")
+outputopt.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
+
+pluginopt = parser.add_argument_group("plugin options")
+pluginopt.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
+pluginopt.add_argument("-e", "--errorlog", action="store_true", help="Log possible errors from internal command-line to a temporary file, use when debugging")
+pluginopt.add_argument("-r", "--rtmpdump", metavar="path", help="Specify location of rtmpdump")
+pluginopt.add_argument("-j", "--jtv-cookie", metavar="cookie", help="Specify JustinTV cookie to allow access to subscription channels")
 
 RCFILE = os.path.expanduser("~/.livestreamerrc")
 
