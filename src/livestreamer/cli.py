@@ -14,6 +14,7 @@ parser.add_argument("-f", "--force", action="store_true", help="Always write to 
 parser.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
 parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
 parser.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
+parser.add_argument("-q", "--quiet-player", action="store_true", help="Hide all player console output, default is to display it")
 parser.add_argument("-e", "--errorlog", action="store_true", help="Log possible errors from internal command-line to a temporary file, use when debugging")
 parser.add_argument("-r", "--rtmpdump", metavar="path", help="Specify location of rtmpdump")
 parser.add_argument("-j", "--jtv-cookie", metavar="cookie", help="Specify JustinTV cookie to allow access to subscription channels")
@@ -92,7 +93,16 @@ def output_stream(stream, args):
         out = stdout
     else:
         cmd = args.player + " -"
-        player = pbs.sh("-c", cmd, _bg=True, _out=sys.stdout, _err=sys.stderr)
+
+        if args.quiet_player:
+            pout = open(os.devnull, "w")
+            perr = open(os.devnull, "w")
+        else:
+            pout = sys.stderr
+            perr = sys.stdout
+
+        player = pbs.sh("-c", cmd, _bg=True, _out=pout, _err=perr)
+
         out = player.process.stdin
 
     if not out:
