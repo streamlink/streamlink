@@ -8,10 +8,16 @@ SWF_KEY = b"Genuine Adobe Flash Player 001"
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
+        if line[0] == "#":
+            return
+
         split = line.find("=")
-        key = line[:split].strip()
-        val = line[split+1:].strip()
-        yield "--%s=%s" % (key, val)
+        if split > 0:
+            key = line[:split].strip()
+            val = line[split+1:].strip()
+            yield "--%s=%s" % (key, val)
+        else:
+            yield "--%s" % line
 
 def urlopen(url, data=None, timeout=None, opener=None):
     try:
