@@ -1,5 +1,6 @@
 from livestreamer import options
 from livestreamer.utils import urlopen
+from livestreamer.compat import str
 
 import os
 import pbs
@@ -65,7 +66,10 @@ class RTMPStream(StreamProcess):
         return StreamProcess.open(self)
 
     def _has_jtv_support(self):
-        help = self.cmd(help=True, _err_to_out=True)
+        try:
+            help = self.cmd(help=True, _err_to_out=True)
+        except pbs.ErrorReturnCode as err:
+            raise StreamError(("Error while checking rtmpdump compatibility: {0}").format(str(err.stdout, "ascii")))
 
         for line in help.split("\n"):
             if line[:5] == "--jtv":
