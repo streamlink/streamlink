@@ -1,6 +1,6 @@
 from livestreamer import options
 from livestreamer.utils import urlopen
-from livestreamer.compat import str
+from livestreamer.compat import str, is_win32
 
 import os
 import pbs
@@ -48,7 +48,7 @@ class RTMPStream(StreamProcess):
     def __init__(self, params):
         StreamProcess.__init__(self, params)
 
-        self.rtmpdump = options.get("rtmpdump") or "rtmpdump"
+        self.rtmpdump = options.get("rtmpdump") or (is_win32 and "rtmpdump.exe" or "rtmpdump")
         self.params["flv"] = "-"
 
         try:

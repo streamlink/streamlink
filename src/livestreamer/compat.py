@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-import sys
+import sys, os
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
+is_win32 = os.name == "nt"
 
 if is_py2:
     input = raw_input
