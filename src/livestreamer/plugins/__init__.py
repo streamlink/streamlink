@@ -15,8 +15,8 @@ class Plugin(object):
        raise NotImplementedError
 
     def get_streams(self):
-        ranking = ["iphonelow", "iphonehigh", "240p", "360p", "480p", "720p",
-                   "hd", "1080p", "live"]
+        ranking = ["iphonelow", "iphonehigh", "240p", "320k", "360p", "850k",
+                   "480p", "1400k", "720p", "2400k", "hd", "1080p", "live"]
         streams = self._get_streams()
         for rank in reversed(ranking):
             if rank in streams:

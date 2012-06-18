@@ -44,6 +44,7 @@ Currently supported sites are:
 
 * Justin.tv/Twitch.tv
 * Own3D.tv
+* SVTPlay
 * UStream
 * YouTube
 
