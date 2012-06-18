@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import sys, os, pbs, argparse
+import sys, os, argparse, subprocess
 import livestreamer
 from livestreamer.compat import input, stdout
 
@@ -123,9 +123,9 @@ def output_stream(stream, args):
             pout = sys.stderr
             perr = sys.stdout
 
-        player = pbs.sh("-c", cmd, _bg=True, _out=pout, _err=perr)
-
-        out = player.process.stdin
+        player = subprocess.Popen(cmd, shell=True, stdout=pout, stderr=perr,
+                                  stdin=subprocess.PIPE)
+        out = player.stdin
 
     if not out:
         exit("Failed to open a valid stream output")
