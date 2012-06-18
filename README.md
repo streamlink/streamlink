@@ -35,6 +35,7 @@ Installing (Windows)
   * [VLC/mplayer/other path]\ (or specify full path with --player option)
 
 5. Open a command prompt and change directory to livestreamer source, then run:
+
     python setup.py install
 
 Note: If you want to use VLC be aware there is currently a bug in version 2.0.1
