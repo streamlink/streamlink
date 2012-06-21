@@ -2,7 +2,7 @@
 
 import sys, os, argparse, subprocess
 import livestreamer
-from livestreamer.compat import input, stdout
+from livestreamer.compat import input, stdout, is_win32
 
 exampleusage = """
 example usage:
@@ -129,6 +129,10 @@ def output_stream(stream, args):
 
     if not out:
         exit("Failed to open a valid stream output")
+
+    if is_win32:
+        import msvcrt
+        msvcrt.setmode(out.fileno(), os.O_BINARY)
 
     try:
         write_stream(fd, out, progress)
