@@ -3,7 +3,7 @@
 from livestreamer.compat import str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, swfverify
+from livestreamer.utils import urlget, swfverify, verifyjson
 
 import json, re
 
@@ -37,11 +37,9 @@ class SVTPlay(Plugin):
         except ValueError as err:
             raise PluginError(("Unable to parse JSON: {0})").format(err))
 
-        if not ("video" in info and "videoReferences" in info["video"]):
-            raise PluginError("Missing 'video' or 'videoReferences' key in JSON")
-
         streams = {}
-        videos = info["video"]["videoReferences"]
+        video = verifyjson(info, "video")
+        videos = verifyjson(video, "videoReferences")
         swfhash, swfsize = swfverify(self.SWFURL)
 
         for video in videos:

@@ -58,3 +58,8 @@ def swfverify(url):
 
     return h.hexdigest(), len(swf)
 
+def verifyjson(json, key):
+    if not key in json:
+        raise PluginError(("Missing '{0}' key in JSON").format(key))
+
+    return json[key]

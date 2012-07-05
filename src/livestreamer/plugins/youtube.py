@@ -3,7 +3,7 @@
 from livestreamer.compat import str, bytes, parse_qs
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget
+from livestreamer.utils import urlget, verifyjson
 
 import re
 import json
@@ -61,20 +61,18 @@ class Youtube(Plugin):
         if not info:
             raise NoStreamsError(self.url)
 
-        if "args" in info:
-            args = info["args"]
-        else:
-            raise PluginError("JSON data is missing 'args' key")
+        args = verifyjson(info, "args")
 
         if not "live_playback" in args or args["live_playback"] == "0":
             raise NoStreamsError(self.url)
 
-        if not ("url_encoded_fmt_stream_map" in args and "fmt_list" in args):
-            raise PluginError("JSON data is missing 'url_encoded_fmt_stream_map' or 'fmt_list' keys")
-
         streams = {}
-        streammap = self._parse_stream_map(args["url_encoded_fmt_stream_map"])
-        formatmap = self._parse_format_map(args["fmt_list"])
+
+        uestreammap = verifyjson(args, "url_encoded_fmt_stream_map")
+        fmtlist = verifyjson(args, "fmt_list")
+
+        streammap = self._parse_stream_map(uestreammap)
+        formatmap = self._parse_format_map(fmtlist)
 
         for streaminfo in streammap:
             if not "url" in streaminfo:
