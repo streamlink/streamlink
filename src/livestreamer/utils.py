@@ -22,7 +22,7 @@ class ArgumentParser(argparse.ArgumentParser):
 def urlopen(url, data=None, timeout=None, opener=None):
     try:
         if opener is not None:
-            fd = opener.open(url)
+            fd = opener.open(url, data, timeout)
         else:
             fd = urllib.urlopen(url, data, timeout)
 
@@ -34,7 +34,7 @@ def urlopen(url, data=None, timeout=None, opener=None):
 
     return fd
 
-def urlget(url, data=None, timeout=None, opener=None):
+def urlget(url, data=None, timeout=15, opener=None):
     fd = urlopen(url, data, timeout, opener)
 
     try:
