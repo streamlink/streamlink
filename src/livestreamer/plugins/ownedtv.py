@@ -3,7 +3,7 @@
 from livestreamer.compat import urllib
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget
+from livestreamer.utils import urlget, swfverify
 
 import xml.dom.minidom, re
 
@@ -24,6 +24,7 @@ urlopener = urllib.build_opener(RelativeRedirectHandler)
 
 class OwnedTV(Plugin):
     ConfigURL = "http://www.own3d.tv/livecfg/{0}"
+    SWFURL = "http://static.ec.own3d.tv/player/Own3dPlayerV2_94.swf"
     CDN = {
         "cdn1": "rtmp://fml.2010.edgecastcdn.net/202010",
         "cdn2": "rtmp://owned.fc.llnwd.net:1935/owned",
@@ -66,6 +67,8 @@ class OwnedTV(Plugin):
         channels = dom.getElementsByTagName("channels")[0]
         clip = channels.getElementsByTagName("clip")[0]
 
+        swfhash, swfsize = swfverify(self.SWFURL)
+
         for item in clip.getElementsByTagName("item"):
             base = item.getAttribute("base")
             if not base:
@@ -82,7 +85,10 @@ class OwnedTV(Plugin):
                 if not name in streams:
                     streams[name] = RTMPStream({
                         "rtmp": ("{0}/{1}").format(base, playpath),
-                        "live": True
+                        "live": True,
+                        "swfhash": swfhash,
+                        "swfsize": swfsize,
+                        "pageUrl": self.url
                     })
 
         return streams
