@@ -9,8 +9,7 @@ from livestreamer import options
 import xml.dom.minidom, re, sys, random
 
 class JustinTV(Plugin):
-    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}"
-    StreamInfoURLSub = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}&b_id=true&chansub_guid={2}&private_code=null&group=&channel_subscription={2}"
+    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}&b_id=true&chansub_guid={2}&private_code=null&group=&channel_subscription={2}"
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
@@ -68,13 +67,13 @@ class JustinTV(Plugin):
             else:
                 return tag
 
-        metadata = self._get_metadata(channelname)
-        randomp = int(random.random() * 999999)
+        chansub = None
+        if options.get("cookie"):
+            metadata = self._get_metadata(channelname)
+            chansub = metadata["chansub_guid"]
 
-        if "chansub_guid" in metadata:
-            url = self.StreamInfoURLSub.format(channelname, randomp, metadata["chansub_guid"])
-        else:
-            url = self.StreamInfoURL.format(channelname, randomp)
+        randomp = int(random.random() * 999999)
+        url = self.StreamInfoURL.format(channelname, randomp, chansub)
 
         data = urlget(url)
 
