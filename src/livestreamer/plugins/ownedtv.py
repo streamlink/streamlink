@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from livestreamer.compat import urllib
+from livestreamer.compat import urllib, bytes, str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, swfverify
@@ -24,7 +24,6 @@ urlopener = urllib.build_opener(RelativeRedirectHandler)
 
 class OwnedTV(Plugin):
     ConfigURL = "http://www.own3d.tv/livecfg/{0}"
-    SWFURL = "http://static.ec.own3d.tv/player/Own3dPlayerV2_94.swf"
     CDN = {
         "cdn1": "rtmp://fml.2010.edgecastcdn.net/202010",
         "cdn2": "rtmp://owned.fc.llnwd.net:1935/owned",
@@ -35,23 +34,33 @@ class OwnedTV(Plugin):
     def can_handle_url(self, url):
         return "own3d.tv" in url
 
-    def _get_channel_id(self, url):
+    def _get_channel_info(self, url):
         data = urlget(url, opener=urlopener)
+
+        channelid = None
+        swfurl = None
 
         match = re.search(b'flashvars.config = "livecfg/(\d+)', data)
         if match:
-            return int(match.group(1))
+            channelid = int(match.group(1))
 
         match = re.search(b"document.location.hash='/live/(\d+)'", data)
         if match:
-            return int(match.group(1))
+            channelid = int(match.group(1))
 
         match = re.search(b"xajax_load_live_config\((\d+),", data)
         if match:
-            return int(match.group(1))
+            channelid = int(match.group(1))
+
+        match = re.search(b"""swfobject.embedSWF\(\n.+"(.+)", "player",""", data)
+        if match:
+            swfurl = str(match.group(1), "utf8")
+
+        return (channelid, swfurl)
+
 
     def _get_streams(self):
-        channelid = self._get_channel_id(self.url)
+        (channelid, swfurl) = self._get_channel_info(self.url)
 
         if not channelid:
             raise NoStreamsError(self.url)
@@ -67,7 +76,7 @@ class OwnedTV(Plugin):
         channels = dom.getElementsByTagName("channels")[0]
         clip = channels.getElementsByTagName("clip")[0]
 
-        swfhash, swfsize = swfverify(self.SWFURL)
+        swfhash, swfsize = swfverify(swfurl)
 
         for item in clip.getElementsByTagName("item"):
             base = item.getAttribute("base")
