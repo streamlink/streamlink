@@ -44,7 +44,7 @@ class JustinTV(Plugin):
         metadata = {}
 
         metadata["title"] = self._get_node_if_exists(dom, "title")
-        metadata["chansub_guid"] = self._get_node_if_exists(dom, "chansub_guid")
+        metadata["access_guid"] = self._get_node_if_exists(dom, "access_guid")
 
         return metadata
 
@@ -68,9 +68,9 @@ class JustinTV(Plugin):
                 return tag
 
         chansub = None
-        if options.get("cookie"):
+        if options.get("jtvcookie"):
             metadata = self._get_metadata(channelname)
-            chansub = metadata["chansub_guid"]
+            chansub = metadata["access_guid"]
 
         randomp = int(random.random() * 999999)
         url = self.StreamInfoURL.format(channelname, randomp, chansub)
