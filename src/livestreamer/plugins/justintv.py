@@ -18,11 +18,7 @@ class JustinTV(Plugin):
         return ("justin.tv" in url) or ("twitch.tv" in url)
 
     def _get_channel_name(self, url):
-        data = urlget(url)
-        match = re.search(b"live_facebook_embed_player\.swf\?channel=(\w+)", data)
-
-        if match:
-            return str(match.group(1), "ascii")
+        return url.rstrip("/").rpartition("/")[2]
 
     def _get_metadata(self, channel):
         cookie = options.get("jtvcookie")
