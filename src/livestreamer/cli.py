@@ -60,14 +60,19 @@ def write_stream(fd, out, progress):
     written = 0
 
     while True:
-        data = fd.read(8192)
+        try:
+            data = fd.read(8192)
+        except IOError:
+            logger.error("Error when reading from stream")
+            break
+
         if len(data) == 0:
             break
 
         try:
             out.write(data)
         except IOError:
-            logger.error("Error when reading from stream")
+            logger.error("Error when writing to output")
             break
 
         written += len(data)
@@ -161,10 +166,13 @@ def output_stream(stream, args):
     try:
         write_stream(fd, out, progress)
     except KeyboardInterrupt:
-        sys.exit()
+        pass
 
     if player:
-        player.kill()
+        try:
+            player.kill()
+        except:
+            pass
 
 def handle_url(args):
     try:
