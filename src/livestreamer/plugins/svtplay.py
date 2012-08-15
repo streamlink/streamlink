@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from livestreamer.compat import str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
@@ -18,6 +16,8 @@ class SVTPlay(Plugin):
         return "svtplay.se" in url
 
     def _get_channel_id(self, url):
+        self.logger.debug("Fetching channel id")
+
         data = urlget(url)
 
         match = re.search(b'data-json-href="/live/(\d+)"', data)
@@ -30,6 +30,7 @@ class SVTPlay(Plugin):
         if not channelid:
             raise NoStreamsError(self.url)
 
+        self.logger.debug("Fetching stream info")
         data = urlget(self.JSONURL.format(channelid))
 
         try:
@@ -40,6 +41,8 @@ class SVTPlay(Plugin):
         streams = {}
         video = verifyjson(info, "video")
         videos = verifyjson(video, "videoReferences")
+
+        self.logger.debug("Verifying SWF: {0}", self.SWFURL)
         swfhash, swfsize = swfverify(self.SWFURL)
 
         for video in videos:

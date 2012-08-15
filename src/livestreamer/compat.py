@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys, os
 
 is_py2 = (sys.version_info[0] == 2)
@@ -29,3 +27,6 @@ try:
     from urllib.parse import urlparse, parse_qs
 except ImportError:
     from urlparse import urlparse, parse_qs
+
+__all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "str",
+           "bytes", "urllib", "urlparse", "parse_qs"]

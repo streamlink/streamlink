@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 options = {
     "rtmpdump": None,
     "errorlog": False,
@@ -13,3 +11,4 @@ def get(key):
     if key in options:
         return options[key]
 
+__all__ = ["get", "set"]

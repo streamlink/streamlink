@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
+from .compat import urllib
+from .plugins import PluginError
 
-from livestreamer.compat import urllib
-from livestreamer.plugins import PluginError
 import hmac, hashlib, zlib, argparse
 
 SWF_KEY = b"Genuine Adobe Flash Player 001"
@@ -63,3 +62,5 @@ def verifyjson(json, key):
         raise PluginError(("Missing '{0}' key in JSON").format(key))
 
     return json[key]
+
+__all__ = ["ArgumentParser", "urlopen", "urlget", "swfverify", "verifyjson"]

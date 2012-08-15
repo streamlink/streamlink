@@ -1,6 +1,5 @@
-from livestreamer import plugins
-from livestreamer import stream
-from livestreamer.compat import urlparse
+from . import plugins, stream
+from .compat import urlparse
 
 def resolve_url(url):
     parsed = urlparse(url)
@@ -24,3 +23,7 @@ NoPluginError = plugins.NoPluginError
 StreamError = stream.StreamError
 
 plugins.load_plugins(plugins)
+
+__all__ = ["resolve_url", "get_plugins",
+           "PluginError", "NoStreamsError", "NoPluginError",
+           "StreamError"]

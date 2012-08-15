@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from livestreamer.compat import str, bytes
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
@@ -35,6 +33,7 @@ class UStreamTV(Plugin):
         if not channelid:
             raise NoStreamsError(self.url)
 
+        self.logger.debug("Fetching stream info")
         data = urlget(self.AMFURL.format(channelid))
 
         playpath = get_amf_value(data, "streamName")

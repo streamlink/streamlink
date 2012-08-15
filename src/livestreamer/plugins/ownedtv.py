@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from livestreamer.compat import urllib, bytes, str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import RTMPStream
@@ -35,6 +33,8 @@ class OwnedTV(Plugin):
         return "own3d.tv" in url
 
     def _get_channel_info(self, url):
+        self.logger.debug("Fetching channel info")
+
         data = urlget(url, opener=urlopener)
 
         channelid = None
@@ -65,6 +65,7 @@ class OwnedTV(Plugin):
         if not channelid:
             raise NoStreamsError(self.url)
 
+        self.logger.debug("Fetching stream info")
         data = urlget(self.ConfigURL.format(channelid))
 
         try:
@@ -76,6 +77,7 @@ class OwnedTV(Plugin):
         channels = dom.getElementsByTagName("channels")[0]
         clip = channels.getElementsByTagName("clip")[0]
 
+        self.logger.debug("Verifying SWF: {0}", swfurl)
         swfhash, swfsize = swfverify(swfurl)
 
         for item in clip.getElementsByTagName("item"):

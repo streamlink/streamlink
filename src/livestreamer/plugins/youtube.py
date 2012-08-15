@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from livestreamer.compat import str, bytes, parse_qs
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
 from livestreamer.stream import HTTPStream

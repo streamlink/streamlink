@@ -1,6 +1,6 @@
-from livestreamer import options
-from livestreamer.utils import urlopen
-from livestreamer.compat import str, is_win32
+from . import options
+from .utils import urlopen
+from .compat import str, is_win32
 
 import os
 import pbs
@@ -81,3 +81,5 @@ class HTTPStream(Stream):
     def open(self):
         return urlopen(self.url)
 
+
+__all__ = ["StreamError", "Stream", "StreamProcess", "RTMPStream", "HTTPStream"]

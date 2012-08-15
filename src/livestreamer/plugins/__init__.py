@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
-
 import pkgutil
 import imp
+
+from livestreamer.logger import Logger
 
 plugins_loaded = {}
 
@@ -9,6 +9,7 @@ class Plugin(object):
     def __init__(self, url):
         self.url = url
         self.args = None
+        self.logger = Logger("plugin." + self.module)
 
     @classmethod
     def can_handle_url(self, url):
@@ -49,3 +50,7 @@ def get_plugins():
 
 def register_plugin(name, klass):
     plugins_loaded[name] = klass
+    klass.module = name
+
+__all__ = ["Plugin", "PluginError", "NoStreamsError", "NoPluginError",
+           "load_plugins", "get_plugins", "register_plugin"]

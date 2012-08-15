@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-
 import sys, os, argparse, subprocess
 import livestreamer
+
 from livestreamer.compat import input, stdout, is_win32
+from livestreamer.logger import Logger
 
 exampleusage = """
 example usage:
@@ -15,6 +15,8 @@ Stream now playbacks in player (default is VLC).
 
 """
 
+logger = Logger("cli")
+msg_output = sys.stdout
 parser = livestreamer.utils.ArgumentParser(description="CLI program that launches streams from various streaming services in a custom video player",
                                            fromfile_prefix_chars="@",
                                            formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -24,7 +26,8 @@ parser.add_argument("url", help="URL to stream", nargs="?")
 parser.add_argument("stream", help="Stream quality to play, use 'best' for highest quality available", nargs="?")
 
 parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
-parser.add_argument("-l", "--plugins", action="store_true", help="Print all currently installed plugins")
+parser.add_argument("-u", "--plugins", action="store_true", help="Print all currently installed plugins")
+parser.add_argument("-l", "--loglevel", metavar="level", help="Set log level, valid levels: none, error, warning, info, debug", default="info")
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="player", help="Command-line for player, default is 'vlc'", default="vlc")
@@ -47,7 +50,11 @@ def exit(msg):
     sys.exit(("error: {0}").format(msg))
 
 def msg(msg):
-    sys.stdout.write(msg + "\n")
+    msg_output.write(msg + "\n")
+
+def set_msg_output(output):
+    msg_output = output
+    logger.set_output(output)
 
 def write_stream(fd, out, progress):
     written = 0
@@ -60,6 +67,7 @@ def write_stream(fd, out, progress):
         try:
             out.write(data)
         except IOError:
+            logger.error("Error when reading from stream")
             break
 
         written += len(data)
@@ -70,6 +78,7 @@ def write_stream(fd, out, progress):
     if progress and written > 0:
         sys.stderr.write("\n")
 
+    logger.info("Closing stream")
     fd.close()
 
     if out != stdout:
@@ -100,15 +109,20 @@ def output_stream(stream, args):
     progress = False
     out = None
 
+    logger.info("Opening stream {0}", args.stream)
+
     try:
         fd = stream.open()
     except livestreamer.StreamError as err:
         exit(("Could not open stream - {0}").format(err))
 
+    logger.debug("Pre-buffering 8192 bytes")
     try:
         prebuffer = fd.read(8192)
     except IOError:
         exit("Failed to read data from stream")
+
+    logger.debug("Checking output")
 
     if args.output:
         if args.output == "-":
@@ -128,6 +142,7 @@ def output_stream(stream, args):
             pout = sys.stderr
             perr = sys.stdout
 
+        logger.info("Starting player: {0}", args.player)
         player = subprocess.Popen(cmd, shell=True, stdout=pout, stderr=perr,
                                   stdin=subprocess.PIPE)
         out = player.stdin
@@ -139,6 +154,7 @@ def output_stream(stream, args):
         import msvcrt
         msvcrt.setmode(out.fileno(), os.O_BINARY)
 
+    logger.debug("Writing stream to output")
     out.write(prebuffer)
 
     try:
@@ -151,6 +167,8 @@ def handle_url(args):
         channel = livestreamer.resolve_url(args.url)
     except livestreamer.NoPluginError:
         exit(("No plugin can handle URL: {0}").format(args.url))
+
+    logger.info("Found matching plugin {0} for URL {1}", channel.module, args.url)
 
     try:
         streams = channel.get_streams()
@@ -197,9 +215,13 @@ def main():
 
     args = parser.parse_args(arglist)
 
+    if args.stdout or args.output == "-":
+        set_msg_output(sys.stderr)
+
     livestreamer.options.set("errorlog", args.errorlog)
     livestreamer.options.set("rtmpdump", args.rtmpdump)
     livestreamer.options.set("jtvcookie", args.jtv_cookie)
+    logger.set_level(args.loglevel)
 
     if args.url:
         handle_url(args)
