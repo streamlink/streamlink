@@ -108,6 +108,7 @@ def check_output(output, force):
 def output_stream(stream, args):
     progress = False
     out = None
+    player = None
 
     logger.info("Opening stream {0}", args.stream)
 
@@ -161,6 +162,9 @@ def output_stream(stream, args):
         write_stream(fd, out, progress)
     except KeyboardInterrupt:
         sys.exit()
+
+    if player:
+        player.kill()
 
 def handle_url(args):
     try:
