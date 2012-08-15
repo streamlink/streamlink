@@ -105,6 +105,11 @@ def output_stream(stream, args):
     except livestreamer.StreamError as err:
         exit(("Could not open stream - {0}").format(err))
 
+    try:
+        prebuffer = fd.read(8192)
+    except IOError:
+        exit("Failed to read data from stream")
+
     if args.output:
         if args.output == "-":
             out = stdout
@@ -133,6 +138,8 @@ def output_stream(stream, args):
     if is_win32:
         import msvcrt
         msvcrt.setmode(out.fileno(), os.O_BINARY)
+
+    out.write(prebuffer)
 
     try:
         write_stream(fd, out, progress)
