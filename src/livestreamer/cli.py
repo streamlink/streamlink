@@ -128,6 +128,9 @@ def output_stream(stream, args):
     except IOError:
         exit("Failed to read data from stream")
 
+    if len(prebuffer) == 0:
+        exit("Failed to read data from stream")
+
     logger.debug("Checking output")
 
     if args.output:
