@@ -58,11 +58,10 @@ class OwnedTV(Plugin):
 
         return (channelid, swfurl)
 
-
     def _get_streams(self):
         (channelid, swfurl) = self._get_channel_info(self.url)
 
-        if not channelid:
+        if not (channelid and swfurl):
             raise NoStreamsError(self.url)
 
         self.logger.debug("Fetching stream info")
@@ -90,17 +89,27 @@ class OwnedTV(Plugin):
                 base = self.CDN[ref]
 
             for streamel in item.getElementsByTagName("stream"):
+                altcount = 1
                 name = streamel.getAttribute("label").lower().replace(" ", "_")
                 playpath = streamel.getAttribute("name")
 
+                stream = RTMPStream({
+                    "rtmp": ("{0}/{1}").format(base, playpath),
+                    "live": True,
+                    "swfhash": swfhash,
+                    "swfsize": swfsize,
+                    "pageUrl": self.url
+                })
+
                 if not name in streams:
-                    streams[name] = RTMPStream({
-                        "rtmp": ("{0}/{1}").format(base, playpath),
-                        "live": True,
-                        "swfhash": swfhash,
-                        "swfsize": swfsize,
-                        "pageUrl": self.url
-                    })
+                    streams[name] = stream
+                else:
+                    if altcount == 1:
+                        streams[name + "_alt"] = stream
+                    else:
+                        streams[name + "_alt" + str(altcount)] = stream
+
+                    altcount += 1
 
         return streams
 
