@@ -83,7 +83,7 @@ def write_stream(fd, out, progress):
     if progress and written > 0:
         sys.stderr.write("\n")
 
-    logger.info("Closing stream")
+    logger.info("Stream ended")
     fd.close()
 
     if out != stdout:
@@ -115,7 +115,7 @@ def output_stream(stream, args):
     out = None
     player = None
 
-    logger.info("Opening stream {0}", args.stream)
+    logger.info("Opening stream: {0}", args.stream)
 
     try:
         fd = stream.open()
