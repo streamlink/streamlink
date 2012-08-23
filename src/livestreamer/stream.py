@@ -1,4 +1,3 @@
-from . import options
 from .utils import urlopen
 from .compat import str, is_win32
 
@@ -11,15 +10,20 @@ class StreamError(Exception):
     pass
 
 class Stream(object):
+    def __init__(self, session):
+        self.session = session
+
     def open(self):
        raise NotImplementedError
 
 class StreamProcess(Stream):
-    def __init__(self, params):
-        self.params = params or {}
+    def __init__(self, session, params={}):
+        Stream.__init__(self, session)
+
+        self.params = params
         self.params["_bg"] = True
         self.params["_err"] = open(os.devnull, "w")
-        self.errorlog = options.get("errorlog")
+        self.errorlog = self.session.options.get("errorlog")
 
     def cmdline(self):
         return str(self.cmd.bake(**self.params))
@@ -45,10 +49,10 @@ class StreamProcess(Stream):
         return stream.process.stdout
 
 class RTMPStream(StreamProcess):
-    def __init__(self, params):
-        StreamProcess.__init__(self, params)
+    def __init__(self, session, params):
+        StreamProcess.__init__(self, session, params)
 
-        self.rtmpdump = options.get("rtmpdump") or (is_win32 and "rtmpdump.exe" or "rtmpdump")
+        self.rtmpdump = self.session.options.get("rtmpdump") or (is_win32 and "rtmpdump.exe" or "rtmpdump")
         self.params["flv"] = "-"
 
         try:
@@ -75,7 +79,9 @@ class RTMPStream(StreamProcess):
         return False
 
 class HTTPStream(Stream):
-    def __init__(self, url):
+    def __init__(self, session, url):
+        Stream.__init__(self, session)
+
         self.url = url
 
     def open(self):

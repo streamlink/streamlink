@@ -60,9 +60,10 @@ Using livestreamer as a library
 -------------------------------
 Livestreamer is also a library. Short example:
 
-    import livestreamer
+    from livestreamer import *
 
     url = "http://twitch.tv/day9tv"
+    livestreamer = Livestreamer()
     channel = livestreamer.resolve_url(url)
     streams = channel.get_streams()
 

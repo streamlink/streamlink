@@ -1,14 +1,12 @@
-options = {
-    "rtmpdump": None,
-    "errorlog": False,
-    "jtvcookie": None
-}
+class Options(object):
+    def __init__(self, defaults={}):
+        self.options = defaults
 
-def set(key, value):
-    options[key] = value
+    def set(self, key, value):
+        self.options[key] = value
 
-def get(key):
-    if key in options:
-        return options[key]
+    def get(self, key):
+        if key in self.options:
+            return self.options[key]
 
-__all__ = ["get", "set"]
+__all__ = ["Options"]

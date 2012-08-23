@@ -1,5 +1,5 @@
 from livestreamer.compat import str, bytes, parse_qs
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
 from livestreamer.utils import urlget, verifyjson
 
@@ -76,7 +76,7 @@ class Youtube(Plugin):
             if not "url" in streaminfo:
                 continue
 
-            stream = HTTPStream(streaminfo["url"][0])
+            stream = HTTPStream(self.session, streaminfo["url"][0])
 
             if streaminfo["itag"][0] in formatmap:
                 quality = formatmap[streaminfo["itag"][0]]
@@ -87,4 +87,4 @@ class Youtube(Plugin):
 
         return streams
 
-register_plugin("youtube", Youtube)
+__plugin__ = Youtube

@@ -1,8 +1,12 @@
-import sys, os, argparse, subprocess
-import livestreamer
+import argparse
+import os
+import sys
+import subprocess
 
+from livestreamer import *
 from livestreamer.compat import input, stdout, is_win32
-from livestreamer.logger import Logger
+from livestreamer.stream import StreamProcess
+from livestreamer.utils import ArgumentParser
 
 exampleusage = """
 example usage:
@@ -15,34 +19,51 @@ Stream now playbacks in player (default is VLC).
 
 """
 
-logger = Logger("cli")
+livestreamer = Livestreamer()
+logger = livestreamer.logger.new_module("cli")
+
 msg_output = sys.stdout
-parser = livestreamer.utils.ArgumentParser(description="CLI program that launches streams from various streaming services in a custom video player",
-                                           fromfile_prefix_chars="@",
-                                           formatter_class=argparse.RawDescriptionHelpFormatter,
-                                           epilog=exampleusage, add_help=False)
+parser = ArgumentParser(description="CLI program that launches streams from various streaming services in a custom video player",
+                        fromfile_prefix_chars="@",
+                        formatter_class=argparse.RawDescriptionHelpFormatter,
+                        epilog=exampleusage, add_help=False)
 
 parser.add_argument("url", help="URL to stream", nargs="?")
-parser.add_argument("stream", help="Stream quality to play, use 'best' for highest quality available", nargs="?")
+parser.add_argument("stream", help="Stream quality to play, use 'best' for highest quality available",
+                    nargs="?")
 
-parser.add_argument("-h", "--help", action="store_true", help="Show this help message and exit")
-parser.add_argument("-u", "--plugins", action="store_true", help="Print all currently installed plugins")
-parser.add_argument("-l", "--loglevel", metavar="level", help="Set log level, valid levels: none, error, warning, info, debug", default="info")
+parser.add_argument("-h", "--help", action="store_true",
+                    help="Show this help message and exit")
+parser.add_argument("-u", "--plugins", action="store_true",
+                    help="Print all currently installed plugins")
+parser.add_argument("-l", "--loglevel", metavar="level",
+                    help="Set log level, valid levels: none, error, warning, info, debug",
+                    default="info")
 
 playeropt = parser.add_argument_group("player options")
-playeropt.add_argument("-p", "--player", metavar="player", help="Command-line for player, default is 'vlc'", default="vlc")
-playeropt.add_argument("-q", "--quiet-player", action="store_true", help="Hide all player console output")
+playeropt.add_argument("-p", "--player", metavar="player",
+                       help="Command-line for player, default is 'vlc'",
+                       default="vlc")
+playeropt.add_argument("-q", "--quiet-player", action="store_true",
+                       help="Hide all player console output")
 
 outputopt = parser.add_argument_group("file output options")
-outputopt.add_argument("-o", "--output", metavar="filename", help="Write stream to file instead of playing it")
-outputopt.add_argument("-f", "--force", action="store_true", help="Always write to file even if it already exists")
-outputopt.add_argument("-O", "--stdout", action="store_true", help="Write stream to stdout instead of playing it")
+outputopt.add_argument("-o", "--output", metavar="filename",
+                       help="Write stream to file instead of playing it")
+outputopt.add_argument("-f", "--force", action="store_true",
+                       help="Always write to file even if it already exists")
+outputopt.add_argument("-O", "--stdout", action="store_true",
+                       help="Write stream to stdout instead of playing it")
 
 pluginopt = parser.add_argument_group("plugin options")
-pluginopt.add_argument("-c", "--cmdline", action="store_true", help="Print command-line used internally to play stream, this may not be available on all streams")
-pluginopt.add_argument("-e", "--errorlog", action="store_true", help="Log possible errors from internal command-line to a temporary file, use when debugging")
-pluginopt.add_argument("-r", "--rtmpdump", metavar="path", help="Specify location of rtmpdump")
-pluginopt.add_argument("-j", "--jtv-cookie", metavar="cookie", help="Specify JustinTV cookie to allow access to subscription channels")
+pluginopt.add_argument("-c", "--cmdline", action="store_true",
+                       help="Print command-line used internally to play stream, this may not be available on all streams")
+pluginopt.add_argument("-e", "--errorlog", action="store_true",
+                       help="Log possible errors from internal command-line to a temporary file, use when debugging")
+pluginopt.add_argument("-r", "--rtmpdump", metavar="path",
+                       help="Specify location of rtmpdump")
+pluginopt.add_argument("-j", "--jtv-cookie", metavar="cookie",
+                       help="Specify JustinTV cookie to allow access to subscription channels")
 
 RCFILE = os.path.expanduser("~/.livestreamerrc")
 
@@ -54,7 +75,7 @@ def msg(msg):
 
 def set_msg_output(output):
     msg_output = output
-    logger.set_output(output)
+    livestreamer.set_logoutput(output)
 
 def write_stream(fd, out, progress):
     written = 0
@@ -119,7 +140,7 @@ def output_stream(stream, args):
 
     try:
         fd = stream.open()
-    except livestreamer.StreamError as err:
+    except StreamError as err:
         exit(("Could not open stream - {0}").format(err))
 
     logger.debug("Pre-buffering 8192 bytes")
@@ -180,16 +201,16 @@ def output_stream(stream, args):
 def handle_url(args):
     try:
         channel = livestreamer.resolve_url(args.url)
-    except livestreamer.NoPluginError:
+    except NoPluginError:
         exit(("No plugin can handle URL: {0}").format(args.url))
 
     logger.info("Found matching plugin {0} for URL {1}", channel.module, args.url)
 
     try:
         streams = channel.get_streams()
-    except livestreamer.StreamError as err:
+    except StreamError as err:
         exit(str(err))
-    except livestreamer.PluginError as err:
+    except PluginError as err:
         exit(str(err))
 
     if len(streams) == 0:
@@ -204,7 +225,7 @@ def handle_url(args):
             stream = streams[args.stream]
 
             if args.cmdline:
-                if isinstance(stream, livestreamer.stream.StreamProcess):
+                if isinstance(stream, StreamProcess):
                     msg(stream.cmdline())
                 else:
                     exit("Stream does not use a command-line")
@@ -233,10 +254,10 @@ def main():
     if args.stdout or args.output == "-":
         set_msg_output(sys.stderr)
 
-    livestreamer.options.set("errorlog", args.errorlog)
-    livestreamer.options.set("rtmpdump", args.rtmpdump)
-    livestreamer.options.set("jtvcookie", args.jtv_cookie)
-    logger.set_level(args.loglevel)
+    livestreamer.set_option("errorlog", args.errorlog)
+    livestreamer.set_option("rtmpdump", args.rtmpdump)
+    livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)
+    livestreamer.set_loglevel(args.loglevel)
 
     if args.url:
         handle_url(args)

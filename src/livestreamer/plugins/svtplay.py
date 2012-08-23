@@ -1,5 +1,5 @@
 from livestreamer.compat import str
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, swfverify, verifyjson
 
@@ -49,7 +49,7 @@ class SVTPlay(Plugin):
             if not ("url" in video and "playerType" in video and video["playerType"] == "flash"):
                 continue
 
-            stream = RTMPStream({
+            stream = RTMPStream(self.session, {
                 "rtmp": video["url"],
                 "pageUrl": self.PageURL,
                 "swfhash": swfhash,
@@ -61,4 +61,4 @@ class SVTPlay(Plugin):
 
         return streams
 
-register_plugin("svtplay", SVTPlay)
+__plugin__ = SVTPlay

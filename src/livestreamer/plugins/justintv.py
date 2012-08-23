@@ -1,12 +1,16 @@
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import swfverify, urlget
 from livestreamer.compat import urllib, str
-from livestreamer import options
+from livestreamer.options import Options
 
 import xml.dom.minidom, re, sys, random
 
 class JustinTV(Plugin):
+    options = Options({
+        "cookie": None
+    })
+
     StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}&b_id=true&chansub_guid={2}&private_code=null&group=&channel_subscription={2}"
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
@@ -19,7 +23,7 @@ class JustinTV(Plugin):
         return url.rstrip("/").rpartition("/")[2]
 
     def _get_metadata(self, channel):
-        cookie = options.get("jtvcookie")
+        cookie = self.options.get("cookie")
 
         if cookie:
             headers = {"Cookie": cookie}
@@ -64,7 +68,7 @@ class JustinTV(Plugin):
 
 
         chansub = None
-        if options.get("jtvcookie"):
+        if self.options.get("cookie") is not None:
             self.logger.debug("Attempting to authenticate using cookie")
 
             metadata = self._get_metadata(channelname)
@@ -101,7 +105,7 @@ class JustinTV(Plugin):
             for child in node.childNodes:
                 info[child.tagName] = self._get_node_text(child)
 
-            stream = RTMPStream({
+            stream = RTMPStream(self.session, {
                 "rtmp": ("{0}/{1}").format(info["connect"], info["play"]),
                 "swfUrl": self.SWFURL,
                 "swfhash": swfhash,
@@ -128,4 +132,5 @@ class JustinTV(Plugin):
 
         return self._get_streaminfo(channelname)
 
-register_plugin("justintv", JustinTV)
+
+__plugin__ = JustinTV

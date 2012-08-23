@@ -4,47 +4,50 @@ class Logger(object):
     Levels = ["none", "error", "warning", "info", "debug"]
     Format = "[{module}][{level}] {msg}\n"
 
-    output = sys.stdout
-    level = 0
+    def __init__(self):
+        self.output = sys.stdout
+        self.level = 0
 
-    @classmethod
-    def set_level(cls, level):
+    def new_module(self, module):
+        return LoggerModule(self, module)
+
+    def set_level(self, level):
         try:
             index = Logger.Levels.index(level)
         except ValueError:
             return
 
-        cls.level = index
+        self.level = index
 
-    @classmethod
-    def set_output(cls, output):
-        cls.output = output
+    def set_output(self, output):
+        self.output = output
 
-    def __init__(self, module):
-        self.module = module
-
-    def msg(self, level, msg, *args):
-        if Logger.level < level or level > len(Logger.Levels):
+    def msg(self, module, level, msg, *args):
+        if self.level < level or level > len(Logger.Levels):
             return
 
         msg = msg.format(*args)
 
-        self.output.write(Logger.Format.format(module=self.module,
+        self.output.write(Logger.Format.format(module=module,
                                                level=Logger.Levels[level],
                                                msg=msg))
         self.output.flush()
 
+class LoggerModule(object):
+    def __init__(self, manager, module):
+        self.manager = manager
+        self.module = module
+
     def error(self, msg, *args):
-        self.msg(1, msg, *args)
+        self.manager.msg(self.module, 1, msg, *args)
 
     def warning(self, msg, *args):
-        self.msg(2, msg, *args)
+        self.manager.msg(self.module, 2, msg, *args)
 
     def info(self, msg, *args):
-        self.msg(3, msg, *args)
+        self.manager.msg(self.module, 3, msg, *args)
 
     def debug(self, msg, *args):
-        self.msg(4, msg, *args)
-
+        self.manager.msg(self.module, 4, msg, *args)
 
 __all__ = ["Logger"]

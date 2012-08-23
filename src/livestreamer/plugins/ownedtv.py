@@ -1,5 +1,5 @@
 from livestreamer.compat import urllib, bytes, str
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, swfverify
 
@@ -93,7 +93,7 @@ class OwnedTV(Plugin):
                 name = streamel.getAttribute("label").lower().replace(" ", "_")
                 playpath = streamel.getAttribute("name")
 
-                stream = RTMPStream({
+                stream = RTMPStream(self.session, {
                     "rtmp": ("{0}/{1}").format(base, playpath),
                     "live": True,
                     "swfhash": swfhash,
@@ -113,4 +113,4 @@ class OwnedTV(Plugin):
 
         return streams
 
-register_plugin("own3dtv", OwnedTV)
+__plugin__ = OwnedTV

@@ -1,5 +1,5 @@
 from livestreamer.compat import str, bytes
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError, register_plugin
+from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget
 
@@ -41,7 +41,7 @@ class UStreamTV(Plugin):
         fmsurl = get_amf_value(data, "fmsUrl")
 
         if playpath:
-            stream = RTMPStream({
+            stream = RTMPStream(self.session, {
                 "rtmp": ("{0}/{1}").format(cdnurl or fmsurl, playpath),
                 "pageUrl": self.url,
                 "swfUrl": self.SWFURL,
@@ -51,4 +51,4 @@ class UStreamTV(Plugin):
 
         return streams
 
-register_plugin("ustreamtv", UStreamTV)
+__plugin__ = UStreamTV

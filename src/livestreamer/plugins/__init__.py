@@ -1,19 +1,23 @@
-import pkgutil
-import imp
-
-from livestreamer.logger import Logger
-
-plugins_loaded = {}
+from livestreamer.options import Options
 
 class Plugin(object):
+    options = Options()
+
     def __init__(self, url):
         self.url = url
-        self.args = None
-        self.logger = Logger("plugin." + self.module)
+        self.logger = self.session.logger.new_module("plugin." + self.module)
 
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
        raise NotImplementedError
+
+    @classmethod
+    def set_option(cls, key, value):
+        cls.options.set(key, value)
+
+    @classmethod
+    def get_option(cls, key):
+        return cls.options.get(key)
 
     def get_streams(self):
         ranking = ["iphonelow", "iphonehigh", "240p", "320k", "360p", "850k",
@@ -39,18 +43,4 @@ class NoStreamsError(PluginError):
 class NoPluginError(PluginError):
     pass
 
-def load_plugins(plugins):
-    for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):
-        file, pathname, desc = imp.find_module(name, plugins.__path__)
-        imp.load_module(name, file, pathname, desc)
-    return plugins_loaded
-
-def get_plugins():
-    return plugins_loaded
-
-def register_plugin(name, klass):
-    plugins_loaded[name] = klass
-    klass.module = name
-
-__all__ = ["Plugin", "PluginError", "NoStreamsError", "NoPluginError",
-           "load_plugins", "get_plugins", "register_plugin"]
+__all__ = ["Plugin", "PluginError", "NoStreamsError", "NoPluginError"]
