@@ -57,7 +57,11 @@ class JustinTV(Plugin):
         for node in element.childNodes:
             if node.nodeType == node.TEXT_NODE:
                 res.append(node.data)
-        return "".join(res)
+
+        if len(res) == 0:
+            return None
+        else:
+            return "".join(res)
 
     def _get_streaminfo(self, channelname):
         def clean_tag(tag):
@@ -74,7 +78,7 @@ class JustinTV(Plugin):
             metadata = self._get_metadata(channelname)
             chansub = metadata["access_guid"]
 
-            if "login" in metadata:
+            if "login" in metadata and metadata["login"] is not None:
                 self.logger.debug("Successfully logged in as {0}", metadata["login"])
 
 
