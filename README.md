@@ -49,7 +49,7 @@ Using
 
 Saving arguments AKA config file
 --------------------------------
-Livestreamer can read arguments from the file ~/.livestreamerrc.
+Livestreamer can read arguments from the file ~/.livestreamerrc (POSIX) or %APPDATA%\livestreamer\livestreamerrc (Windows).
 A example file:
 
     player=mplayer

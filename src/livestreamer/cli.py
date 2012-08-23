@@ -65,7 +65,10 @@ pluginopt.add_argument("-r", "--rtmpdump", metavar="path",
 pluginopt.add_argument("-j", "--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
 
-RCFILE = os.path.expanduser("~/.livestreamerrc")
+if is_win32:
+    RCFILE = os.path.join(os.environ["APPDATA"], "livestreamer", "livestreamerrc")
+else:
+    RCFILE = os.path.expanduser("~/.livestreamerrc")
 
 def exit(msg):
     sys.exit(("error: {0}").format(msg))
