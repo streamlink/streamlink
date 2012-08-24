@@ -58,24 +58,6 @@ A example file:
 
 Using livestreamer as a library
 -------------------------------
-Livestreamer is also a library. Short example:
 
-    from livestreamer import *
-
-    url = "http://twitch.tv/day9tv"
-    livestreamer = Livestreamer()
-    channel = livestreamer.resolve_url(url)
-    streams = channel.get_streams()
-
-    stream = streams["720p"]
-    fd = stream.open()
-
-    while True:
-        data = fd.read(1024)
-        if len(data) == 0:
-            break
-
-        # do something with data
-
-    fd.close()
+http://livestreamer.readthedocs.org/
 

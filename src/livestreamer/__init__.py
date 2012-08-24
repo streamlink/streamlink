@@ -10,7 +10,8 @@ import imp
 
 class Livestreamer(object):
     """
-        A Livestreamer session is used to keep track of plugins, options, log settings.
+        A Livestreamer session is used to keep track of plugins,
+        options and log settings.
 
     """
 
