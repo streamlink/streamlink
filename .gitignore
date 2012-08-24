@@ -19,3 +19,5 @@ dist
 *.pyc
 *.pyo
 *.tmp*
+*.swp
+docs/_build

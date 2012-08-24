@@ -10,11 +10,21 @@ class StreamError(Exception):
     pass
 
 class Stream(object):
+    """
+        This is a base class that should be inherited when implementing
+        different stream types. Should only be used directly from plugins.
+    """
+
     def __init__(self, session):
         self.session = session
 
     def open(self):
-       raise NotImplementedError
+        """
+            Opens a connection to the stream.
+            Returns a file-like object than can be used to read data.
+            Raises :exc:`StreamError` on failure.
+        """
+        raise NotImplementedError
 
 class StreamProcess(Stream):
     def __init__(self, session, params={}):

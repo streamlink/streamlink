@@ -1,6 +1,10 @@
 from livestreamer.options import Options
 
 class Plugin(object):
+    """
+        A plugin can retrieve stream information from the *url* specified.
+    """
+
     options = Options()
 
     def __init__(self, url):
@@ -20,6 +24,16 @@ class Plugin(object):
         return cls.options.get(key)
 
     def get_streams(self):
+        """
+            Retrieves and returns a :class:`dict` containing the streams.
+
+            The key is the name of the stream, most commonly the quality.
+            The value is a :class:`Stream` object.
+
+            The stream with key *best* is a reference to the stream most likely
+            to be of highest quality.
+        """
+
         ranking = ["iphonelow", "iphonehigh", "240p", "320k", "360p", "850k",
                    "480p", "1400k", "720p", "2400k", "hd", "1080p", "live"]
         streams = self._get_streams()

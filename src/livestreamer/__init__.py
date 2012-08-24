@@ -9,6 +9,11 @@ import pkgutil
 import imp
 
 class Livestreamer(object):
+    """
+        A Livestreamer session is used to keep track of plugins, options, log settings.
+
+    """
+
     def __init__(self):
         self.options = Options({
             "rtmpdump": None,
@@ -19,28 +24,44 @@ class Livestreamer(object):
         self.load_builtin_plugins()
 
     def set_option(self, key, value):
+        """Set option *key* to *value*."""
         self.options.set(key, value)
 
     def get_option(self, key):
+        """Return option *key*"""
         return self.options.get(key)
 
     def set_plugin_option(self, plugin, key, value):
+        """Set plugin option *key* to *value* for the plugin *plugin*."""
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             plugin.set_option(key, value)
 
     def get_plugin_option(self, plugin, key):
+        """Return plugin option *key* for the plugin *plugin*."""
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             return plugin.get_option(key)
 
     def set_loglevel(self, level):
+        """
+            Set the log level to *level*.
+            Valid levels are: none, error, warning, info, debug.
+        """
         self.logger.set_level(level)
 
     def set_logoutput(self, output):
+        """
+            Set the log output to *output*. Expects a file like
+            object with a write method.
+        """
         self.logger.set_output(output)
 
     def resolve_url(self, url):
+        """
+            Attempt to find the correct plugin for *url* and return it.
+            Raises :exc:`NoPluginError` on failure.
+        """
         parsed = urlparse(url)
 
         if len(parsed.scheme) == 0:
@@ -54,6 +75,9 @@ class Livestreamer(object):
         raise NoPluginError
 
     def get_plugins(self):
+        """
+            Returns the loaded plugins for the session.
+        """
         return self.plugins
 
     def load_builtin_plugins(self):
@@ -62,6 +86,9 @@ class Livestreamer(object):
             self.load_plugin(name, file, pathname, desc)
 
     def load_plugins(self, path):
+        """
+            Attempt to load plugins from the *path* directory.
+        """
         for loader, name, ispkg in pkgutil.iter_modules(path):
             file, pathname, desc = imp.find_module(name, path)
             self.load_plugin(name, file, pathname, desc)
