@@ -7,10 +7,11 @@ is_win32 = os.name == "nt"
 if is_py2:
     input = raw_input
     stdout = sys.stdout
+    _str = str
     str = unicode
 
     def bytes(b, enc="ascii"):
-        return str(b)
+        return _str(b)
 
 elif is_py3:
     bytes = bytes
@@ -25,9 +26,13 @@ except ImportError:
 
 try:
     from urllib.parse import urlparse, parse_qs, urlencode
+    import http.cookies as cookies
+    import http.cookiejar as cookiejar
 except ImportError:
     from urlparse import urlparse, parse_qs
     from urllib import urlencode
+    import Cookie as cookies
+    import cookielib as cookiejar
 
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "str",
-           "bytes", "urllib", "urlparse", "parse_qs"]
+           "bytes", "urllib", "urlparse", "parse_qs", "cookies", "cookiejar"]
