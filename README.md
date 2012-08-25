@@ -5,6 +5,7 @@ streaming services in a custom video player.
 
 Currently supported sites are:
 
+* GOMTV.net
 * Justin.tv/Twitch.tv
 * Own3d.tv
 * SVTPlay
