@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import subprocess
+import getpass
 
 from livestreamer import *
 from livestreamer.compat import input, stdout, is_win32
@@ -64,6 +65,13 @@ pluginopt.add_argument("-r", "--rtmpdump", metavar="path",
                        help="Specify location of rtmpdump")
 pluginopt.add_argument("-j", "--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
+pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
+                       help="Specify GOMTV cookie to allow access to streams")
+pluginopt.add_argument("--gomtv-username", metavar="username",
+                       help="Specify GOMTV username to allow access to streams")
+pluginopt.add_argument("--gomtv-password", metavar="password",
+                       help="Specify GOMTV password to allow access to streams (If left blank you will be prompted)", 
+                       nargs="?", const=True, default=None)
 
 if is_win32:
     RCFILE = os.path.join(os.environ["APPDATA"], "livestreamer", "livestreamerrc")
@@ -257,9 +265,17 @@ def main():
     if args.stdout or args.output == "-":
         set_msg_output(sys.stderr)
 
+    if args.gomtv_password is True:
+        gomtv_password = getpass.getpass("GOMTV Password:")
+    else:
+        gomtv_password = args.gomtv_password
+
     livestreamer.set_option("errorlog", args.errorlog)
     livestreamer.set_option("rtmpdump", args.rtmpdump)
     livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)
+    livestreamer.set_plugin_option("gomtv", "cookie", args.gomtv_cookie)
+    livestreamer.set_plugin_option("gomtv", "username", args.gomtv_username)
+    livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
     livestreamer.set_loglevel(args.loglevel)
 
     if args.url:
