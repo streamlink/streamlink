@@ -21,7 +21,7 @@ limitations under the License.
 
 """
 
-from livestreamer.compat import str, bytes, urlencode, urllib, cookies, cookiejar
+from livestreamer.compat import str, bytes, urlencode, urllib, urlparse, cookies, cookiejar
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
 from livestreamer.utils import urlget
@@ -30,6 +30,11 @@ from livestreamer.options import Options
 import xml.dom.minidom, re
 
 class GomTV(Plugin):
+    BaseURL = "http://www.gomtv.net"
+    LiveURL = BaseURL + "/main/goLive.gom"
+    LoginURL = "https://ssl.gomtv.net/userinfo/loginProcess.gom"
+    LoginCheckURL = BaseURL + "/forum/list.gom?m=my"
+
     options = Options({
         "cookie": None,
         "username": None,
@@ -39,6 +44,15 @@ class GomTV(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return "gomtv.net" in url
+
+    def __init__(self, url):
+        parsed = urlparse(url)
+
+        # Attempt to resolve current live URL if main page is passed
+        if len(parsed.path) <= 1:
+            url = self.LiveURL
+
+        Plugin.__init__(self, url)
 
     def _get_streams(self):
         options = self.options
@@ -98,11 +112,11 @@ class GomTV(Plugin):
                 "mb_password": password
             }
             data = bytes(urlencode(values), "ascii")
-            headers = {"Referer": "http://www.gomtv.net/"}
-            request = urllib.Request("https://ssl.gomtv.net/userinfo/loginProcess.gom", data, headers)
+            headers = {"Referer": self.BaseURL}
+            request = urllib.Request(self.LoginURL, data, headers)
             urlget(request, opener=self.opener)
 
-        req = urllib.Request("http://www.gomtv.net/forum/list.gom?m=my")
+        req = urllib.Request(self.LoginCheckURL)
         if b"Please need login" in urlget(req, opener=self.opener):
             raise PluginError("Authentication failed")
 
