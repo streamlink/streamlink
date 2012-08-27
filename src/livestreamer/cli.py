@@ -265,8 +265,8 @@ def main():
     if args.stdout or args.output == "-":
         set_msg_output(sys.stderr)
 
-    if args.gomtv_password is True:
-        gomtv_password = getpass.getpass("GOMTV Password:")
+    if args.gomtv_username and (args.gomtv_password is None or (len(args.gomtv_password) < 1)):
+        gomtv_password = getpass.getpass("Enter GOMTV password: ")
     else:
         gomtv_password = args.gomtv_password
 

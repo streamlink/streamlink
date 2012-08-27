@@ -21,7 +21,7 @@ limitations under the License.
 
 """
 
-from livestreamer.compat import str, bytes, urlencode, urllib, urlparse, cookies, cookiejar
+from livestreamer.compat import str, bytes, urlencode, urllib, urlparse, cookiejar
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
 from livestreamer.utils import urlget
@@ -57,7 +57,7 @@ class GomTV(Plugin):
     def _get_streams(self):
         options = self.options
         # Setting urllib up so that we can store cookies
-        self.cookiejar = cookiejar.LWPCookieJar()
+        self.cookiejar = cookiejar.CookieJar()
         self.opener = urllib.build_opener(urllib.HTTPCookieProcessor(self.cookiejar))
 
         if options.get("cookie"):
@@ -89,7 +89,6 @@ class GomTV(Plugin):
         if (username is None or password is None) and cookies is None:
             raise PluginError("GOMTV.net Requires a username and password or cookie")
 
-
         if cookies is not None:
             for cookie in cookies.split(";"):
                 try:
@@ -97,13 +96,15 @@ class GomTV(Plugin):
                 except ValueError:
                     continue
 
-                c = cookiejar.Cookie(version=0, name=name, value=value,
+                c = cookiejar.Cookie(version=0, name=name.strip(), value=value.strip(),
                                      port=None, port_specified=False, domain="gomtv.net",
                                      domain_specified=False, domain_initial_dot=False, path="/",
                                      path_specified=True, secure=False, expires=None, discard=True,
                                      comment=None, comment_url=None, rest={"HttpOnly": None},
                                      rfc2109=False)
                 self.cookiejar.set_cookie(c)
+
+            self.logger.info("Attempting to authenticate with cookies")
         else:
             values = {
                 "cmd": "login",
@@ -114,11 +115,19 @@ class GomTV(Plugin):
             data = bytes(urlencode(values), "ascii")
             headers = {"Referer": self.BaseURL}
             request = urllib.Request(self.LoginURL, data, headers)
+
+            self.logger.info("Attempting to authenticate with username/password")
             urlget(request, opener=self.opener)
+
 
         req = urllib.Request(self.LoginCheckURL)
         if b"Please need login" in urlget(req, opener=self.opener):
             raise PluginError("Authentication failed")
+
+        for cookie in self.cookiejar:
+            if cookie.name == "SES_USERNICK":
+                self.logger.info(("Successfully logged in as {0}").format(cookie.value))
+                break
 
     def getEventLivePageURL(self, gomtvLiveURL, response):
         match = re.search(' \"(.*)\";', response)

@@ -73,13 +73,13 @@ class JustinTV(Plugin):
 
         chansub = None
         if self.options.get("cookie") is not None:
-            self.logger.debug("Attempting to authenticate using cookie")
+            self.logger.info("Attempting to authenticate using cookies")
 
             metadata = self._get_metadata(channelname)
             chansub = metadata["access_guid"]
 
             if "login" in metadata and metadata["login"] is not None:
-                self.logger.debug("Successfully logged in as {0}", metadata["login"])
+                self.logger.info("Successfully logged in as {0}", metadata["login"])
 
 
         randomp = int(random.random() * 999999)
