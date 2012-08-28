@@ -101,6 +101,9 @@ class JustinTV(Plugin):
 
         nodes = dom.getElementsByTagName("nodes")[0]
 
+        if len(nodes.childNodes) == 0:
+            return streams
+
         self.logger.debug("Verifying SWF: {0}", self.SWFURL)
         swfhash, swfsize = swfverify(self.SWFURL)
 
