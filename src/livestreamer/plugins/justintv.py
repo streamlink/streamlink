@@ -11,7 +11,7 @@ class JustinTV(Plugin):
         "cookie": None
     })
 
-    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}&b_id=true&chansub_guid={2}&private_code=null&group=&channel_subscription={2}"
+    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}&b_id=true&private_code=null&group=&channel_subscription={2}"
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
@@ -83,7 +83,7 @@ class JustinTV(Plugin):
 
 
         randomp = int(random.random() * 999999)
-        url = self.StreamInfoURL.format(channelname, randomp, chansub)
+        url = self.StreamInfoURL.format(channelname.lower(), randomp, chansub)
 
         self.logger.debug("Fetching stream info")
         data = urlget(url)
