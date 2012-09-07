@@ -12,20 +12,21 @@ class Youtube(Plugin):
         return "youtube.com" in url
 
     def _get_stream_info(self, url):
-        data = urlget(url)
+        res = urlget(url)
+        data = res.text
         config = None
 
-        match = re.search(b"'PLAYER_CONFIG': (.+)\n.+}\);", data)
+        match = re.search("'PLAYER_CONFIG': (.+)\n.+}\);", data)
         if match:
             config = match.group(1)
 
-        match = re.search(b"yt.playerConfig = (.+)\;\n", data)
+        match = re.search("yt.playerConfig = (.+)\;\n", data)
         if match:
             config = match.group(1)
 
         if config:
             try:
-                parsed = json.loads(str(config, "utf8"))
+                parsed = json.loads(config)
             except ValueError as err:
                 raise PluginError(("Unable to parse config JSON: {0})").format(err))
 

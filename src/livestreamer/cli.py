@@ -116,7 +116,6 @@ def write_stream(fd, out, progress):
         sys.stderr.write("\n")
 
     logger.info("Stream ended")
-    fd.close()
 
     if out != stdout:
         out.close()

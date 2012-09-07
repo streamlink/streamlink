@@ -1,5 +1,5 @@
-from .utils import urlopen
 from .compat import str, is_win32
+from .utils import urlopen
 
 import os
 import pbs
@@ -89,13 +89,18 @@ class RTMPStream(StreamProcess):
         return False
 
 class HTTPStream(Stream):
-    def __init__(self, session, url):
+    def __init__(self, session, url, **args):
         Stream.__init__(self, session)
 
         self.url = url
+        self.args = args
 
     def open(self):
-        return urlopen(self.url)
+        try:
+            res = urlopen(self.url, prefetch=False, **self.args)
+        except Exception as err:
+            raise StreamError(str(err))
 
+        return res.raw
 
 __all__ = ["StreamError", "Stream", "StreamProcess", "RTMPStream", "HTTPStream"]

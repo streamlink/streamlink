@@ -1,24 +1,10 @@
-from livestreamer.compat import urllib, bytes, str
+from livestreamer.compat import bytes, str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, swfverify
 
-import xml.dom.minidom, re
-
-class RelativeRedirectHandler(urllib.HTTPRedirectHandler):
-    def http_error_302(self, req, fp, code, msg, headers):
-        if "location" in headers and headers["location"][0] == "/":
-            absurl = ("{scheme}://{host}{path}").format(
-                      scheme=req.get_type(), host=req.get_host(),
-                      path=headers["location"])
-            del headers["location"]
-            headers["location"] = absurl
-
-        return urllib.HTTPRedirectHandler.http_error_301(
-               self, req, fp, code, msg, headers)
-
-urlopener = urllib.build_opener(RelativeRedirectHandler)
-
+import re
+import xml.dom.minidom
 
 class OwnedTV(Plugin):
     ConfigURL = "http://www.own3d.tv/livecfg/{0}"
@@ -35,26 +21,27 @@ class OwnedTV(Plugin):
     def _get_channel_info(self, url):
         self.logger.debug("Fetching channel info")
 
-        data = urlget(url, opener=urlopener)
+        res = urlget(url)
+        data = res.text
 
         channelid = None
         swfurl = None
 
-        match = re.search(b'flashvars.config = "livecfg/(\d+)', data)
+        match = re.search('flashvars.config = "livecfg/(\d+)', data)
         if match:
             channelid = int(match.group(1))
 
-        match = re.search(b"document.location.hash='/live/(\d+)'", data)
+        match = re.search("document.location.hash='/live/(\d+)'", data)
         if match:
             channelid = int(match.group(1))
 
-        match = re.search(b"xajax_load_live_config\((\d+),", data)
+        match = re.search("xajax_load_live_config\((\d+),", data)
         if match:
             channelid = int(match.group(1))
 
-        match = re.search(b"""swfobject.embedSWF\(\n.+"(.+)", "player",""", data)
+        match = re.search("""swfobject.embedSWF\(\n.+"(.+)", "player",""", data)
         if match:
-            swfurl = str(match.group(1), "utf8")
+            swfurl = match.group(1)
 
         return (channelid, swfurl)
 
@@ -65,10 +52,10 @@ class OwnedTV(Plugin):
             raise NoStreamsError(self.url)
 
         self.logger.debug("Fetching stream info")
-        data = urlget(self.ConfigURL.format(channelid))
+        res = urlget(self.ConfigURL.format(channelid))
 
         try:
-            dom = xml.dom.minidom.parseString(data)
+            dom = xml.dom.minidom.parseString(res.text)
         except Exception as err:
             raise PluginError(("Unable to parse config XML: {0})").format(err))
 

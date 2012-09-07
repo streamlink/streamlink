@@ -1,9 +1,13 @@
-from .compat import urllib
 from .plugins import PluginError
 
-import hmac, hashlib, zlib, argparse
+import argparse
+import hashlib
+import hmac
+import requests
+import zlib
 
-SWF_KEY = b"Genuine Adobe Flash Player 001"
+SWFKey = b"Genuine Adobe Flash Player 001"
+RequestsConfig = { "danger_mode": True }
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
@@ -18,42 +22,28 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             yield "--%s" % line
 
-def urlopen(url, data=None, timeout=None, opener=None):
-    try:
-        if opener is not None:
-            fd = opener.open(url, data, timeout)
-        else:
-            fd = urllib.urlopen(url, data, timeout)
-
-    except IOError as err:
-        if type(err) is urllib.URLError:
-            raise PluginError(err.reason)
-        else:
-            raise PluginError(err)
-
-    return fd
-
-def urlget(url, data=None, timeout=15, opener=None):
-    fd = urlopen(url, data, timeout, opener)
+def urlopen(url, method="get", **args):
+    if "data" in args and args["data"] is not None:
+        method = "post"
 
     try:
-        data = fd.read()
-        fd.close()
-    except IOError as err:
-        if type(err) is urllib.URLError:
-            raise PluginError(err.reason)
-        else:
-            raise PluginError(err)
+        res = requests.request(method, url, config=RequestsConfig, timeout=15, **args)
+    except requests.exceptions.RequestException as err:
+        raise PluginError(("Unable to open URL: {url} ({err})").format(url=url, err=str(err)))
 
-    return data
+    return res
+
+def urlget(url, **args):
+    return urlopen(url, method="get", **args)
 
 def swfverify(url):
-    swf = urlget(url)
+    res = urlopen(url)
+    swf = res.content
 
     if swf[:3] == b"CWS":
         swf = b"F" + swf[1:8] + zlib.decompress(swf[8:])
 
-    h = hmac.new(SWF_KEY, swf, hashlib.sha256)
+    h = hmac.new(SWFKey, swf, hashlib.sha256)
 
     return h.hexdigest(), len(swf)
 

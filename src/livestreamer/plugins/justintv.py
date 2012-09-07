@@ -1,17 +1,19 @@
+from livestreamer.compat import str
+from livestreamer.options import Options
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import swfverify, urlget
-from livestreamer.compat import urllib, str
-from livestreamer.options import Options
 
-import xml.dom.minidom, re, sys, random
+import re
+import random
+import xml.dom.minidom
 
 class JustinTV(Plugin):
     options = Options({
         "cookie": None
     })
 
-    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml?type=any&p={1}&b_id=true&private_code=null&group=&channel_subscription={2}"
+    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml"
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
@@ -20,21 +22,21 @@ class JustinTV(Plugin):
         return ("justin.tv" in url) or ("twitch.tv" in url)
 
     def _get_channel_name(self, url):
-        return url.rstrip("/").rpartition("/")[2]
+        return url.rstrip("/").rpartition("/")[2].lower()
 
-    def _get_metadata(self, channel):
+    def _get_metadata(self):
+        url = self.MetadataURL.format(self.channelname)
+
+        headers = {}
         cookie = self.options.get("cookie")
 
         if cookie:
-            headers = {"Cookie": cookie}
-            req = urllib.Request(self.MetadataURL.format(channel), headers=headers)
-        else:
-            req = urllib.Request(self.MetadataURL.format(channel))
+            headers["Cookie"] = cookie
 
-        data = urlget(req)
+        res = urlget(url, headers=headers)
 
         try:
-            dom = xml.dom.minidom.parseString(data)
+            dom = xml.dom.minidom.parseString(res.text)
         except Exception as err:
             raise PluginError(("Unable to parse config XML: {0})").format(err))
 
@@ -63,34 +65,41 @@ class JustinTV(Plugin):
         else:
             return "".join(res)
 
-    def _get_streaminfo(self, channelname):
+    def _authenticate(self):
+        chansub = None
+
+        if self.options.get("cookie") is not None:
+            self.logger.info("Attempting to authenticate using cookies")
+
+            metadata = self._get_metadata()
+            chansub = metadata["access_guid"]
+
+            if "login" in metadata and metadata["login"] is not None:
+                self.logger.info("Successfully logged in as {0}", metadata["login"])
+
+        return chansub
+
+    def _get_streaminfo(self):
         def clean_tag(tag):
             if tag[0] == "_":
                 return tag[1:]
             else:
                 return tag
 
+        chansub = self._authenticate()
 
-        chansub = None
-        if self.options.get("cookie") is not None:
-            self.logger.info("Attempting to authenticate using cookies")
-
-            metadata = self._get_metadata(channelname)
-            chansub = metadata["access_guid"]
-
-            if "login" in metadata and metadata["login"] is not None:
-                self.logger.info("Successfully logged in as {0}", metadata["login"])
-
-
-        randomp = int(random.random() * 999999)
-        url = self.StreamInfoURL.format(channelname.lower(), randomp, chansub)
+        url = self.StreamInfoURL.format(self.channelname)
+        params = dict(b_id="true", group="", private_code="null",
+                      p=int(random.random() * 999999),
+                      channel_subscription=chansub, type="any")
 
         self.logger.debug("Fetching stream info")
-        data = urlget(url)
+        res = urlget(url, params=params)
+        data = res.text
 
         # fix invalid xml
-        data = re.sub(b"<(\d+)", b"<_\g<1>", data)
-        data = re.sub(b"</(\d+)", b"</_\g<1>", data)
+        data = re.sub("<(\d+)", "<_\g<1>", data)
+        data = re.sub("</(\d+)", "</_\g<1>", data)
 
         streams = {}
 
@@ -132,12 +141,12 @@ class JustinTV(Plugin):
         return streams
 
     def _get_streams(self):
-        channelname = self._get_channel_name(self.url)
+        self.channelname = self._get_channel_name(self.url)
 
-        if not channelname:
+        if not self.channelname:
             raise NoStreamsError(self.url)
 
-        return self._get_streaminfo(channelname)
+        return self._get_streaminfo()
 
 
 __plugin__ = JustinTV

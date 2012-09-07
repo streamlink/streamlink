@@ -1,4 +1,5 @@
-import sys, os
+import os
+import sys
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
@@ -20,17 +21,11 @@ elif is_py3:
     str = str
 
 try:
-    import urllib.request as urllib
+    from urllib.parse import urlparse, urljoin, quote, unquote, parse_qs
 except ImportError:
-    import urllib2 as urllib
+    from urlparse import urlparse, urljoin, parse_qs
+    from urllib import quote, unquote
 
-try:
-    from urllib.parse import urlparse, parse_qs, urlencode
-    import http.cookiejar as cookiejar
-except ImportError:
-    from urlparse import urlparse, parse_qs
-    from urllib import urlencode
-    import cookielib as cookiejar
-
-__all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "str",
-           "bytes", "urllib", "urlparse", "parse_qs", "cookiejar"]
+__all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
+           "str", "bytes", "urlparse", "urljoin", "parse_qs",
+           "quote", "unquote"]

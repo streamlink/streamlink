@@ -14,9 +14,9 @@ class UStreamTV(Plugin):
         return "ustream.tv" in url
 
     def _get_channel_id(self, url):
-        data = urlget(url)
+        res = urlget(url)
 
-        match = re.search(b"channelId=(\d+)", data)
+        match = re.search("channelId=(\d+)", res.text)
         if match:
             return int(match.group(1))
 
@@ -34,7 +34,8 @@ class UStreamTV(Plugin):
             raise NoStreamsError(self.url)
 
         self.logger.debug("Fetching stream info")
-        data = urlget(self.AMFURL.format(channelid))
+        res = urlget(self.AMFURL.format(channelid))
+        data = res.content
 
         playpath = get_amf_value(data, "streamName")
         cdnurl = get_amf_value(data, "cdnUrl")
