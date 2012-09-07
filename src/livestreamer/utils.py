@@ -22,14 +22,14 @@ class ArgumentParser(argparse.ArgumentParser):
         else:
             yield "--%s" % line
 
-def urlopen(url, method="get", **args):
+def urlopen(url, method="get", exception=PluginError, **args):
     if "data" in args and args["data"] is not None:
         method = "post"
 
     try:
         res = requests.request(method, url, config=RequestsConfig, timeout=15, **args)
     except requests.exceptions.RequestException as err:
-        raise PluginError(("Unable to open URL: {url} ({err})").format(url=url, err=str(err)))
+        raise exception(("Unable to open URL: {url} ({err})").format(url=url, err=str(err)))
 
     return res
 

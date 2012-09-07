@@ -1,5 +1,5 @@
 from .compat import str, is_win32
-from .utils import urlopen
+from .utils import urlget
 
 import os
 import pbs
@@ -96,10 +96,9 @@ class HTTPStream(Stream):
         self.args = args
 
     def open(self):
-        try:
-            res = urlopen(self.url, prefetch=False, **self.args)
-        except Exception as err:
-            raise StreamError(str(err))
+        res = urlget(self.url, prefetch=False,
+                     exception=StreamError,
+                     **self.args)
 
         return res.raw
 
