@@ -22,11 +22,11 @@ class Logger(object):
     def set_output(self, output):
         self.output = output
 
-    def msg(self, module, level, msg, *args):
+    def msg(self, module, level, msg, *args, **kw):
         if self.level < level or level > len(Logger.Levels):
             return
 
-        msg = msg.format(*args)
+        msg = msg.format(*args, **kw)
 
         self.output.write(Logger.Format.format(module=module,
                                                level=Logger.Levels[level],
@@ -38,16 +38,16 @@ class LoggerModule(object):
         self.manager = manager
         self.module = module
 
-    def error(self, msg, *args):
-        self.manager.msg(self.module, 1, msg, *args)
+    def error(self, msg, *args, **kw):
+        self.manager.msg(self.module, 1, msg, *args, **kw)
 
-    def warning(self, msg, *args):
-        self.manager.msg(self.module, 2, msg, *args)
+    def warning(self, msg, *args, **kw):
+        self.manager.msg(self.module, 2, msg, *args, **kw)
 
-    def info(self, msg, *args):
-        self.manager.msg(self.module, 3, msg, *args)
+    def info(self, msg, *args, **kw):
+        self.manager.msg(self.module, 3, msg, *args, **kw)
 
-    def debug(self, msg, *args):
-        self.manager.msg(self.module, 4, msg, *args)
+    def debug(self, msg, *args, **kw):
+        self.manager.msg(self.module, 4, msg, *args, **kw)
 
 __all__ = ["Logger"]
