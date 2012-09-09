@@ -33,8 +33,9 @@ def urlopen(url, method="get", exception=PluginError, **args):
 
     return res
 
-def urlget(url, **args):
-    return urlopen(url, method="get", **args)
+def urlget(url, prefetch=True, **args):
+    return urlopen(url, method="get", prefetch=prefetch,
+                   **args)
 
 def swfverify(url):
     res = urlopen(url)
