@@ -28,7 +28,7 @@ def urlopen(url, method="get", exception=PluginError, **args):
 
     try:
         res = requests.request(method, url, config=RequestsConfig, timeout=15, **args)
-    except requests.exceptions.RequestException as err:
+    except (requests.exceptions.RequestException, IOError) as err:
         raise exception(("Unable to open URL: {url} ({err})").format(url=url, err=str(err)))
 
     return res
