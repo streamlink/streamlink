@@ -121,6 +121,9 @@ class JustinTV(Plugin):
             for child in node.childNodes:
                 info[child.tagName] = self._get_node_text(child)
 
+            if not ("connect" in info and "play" in info):
+                continue
+
             stream = RTMPStream(self.session, {
                 "rtmp": ("{0}/{1}").format(info["connect"], info["play"]),
                 "swfUrl": self.SWFURL,

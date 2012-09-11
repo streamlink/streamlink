@@ -137,7 +137,7 @@ def check_output(output, force):
     try:
         out = open(output, "wb")
     except IOError as err:
-        exit(("Failed to open file {0} - ").format(output, err))
+        exit(("Failed to open file {0} - {1}").format(output, err))
 
     return out
 
