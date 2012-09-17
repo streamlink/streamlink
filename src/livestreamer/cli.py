@@ -47,6 +47,8 @@ playeropt.add_argument("-p", "--player", metavar="player",
                        default="vlc")
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help="Hide all player console output")
+playeropt.add_argument("-n", "--fifo", action="store_true",
+                       help="Play file using a named pipe instead of stdin (Can help with incompatible media players)")
 
 outputopt = parser.add_argument_group("file output options")
 outputopt.add_argument("-o", "--output", metavar="filename",
@@ -70,7 +72,7 @@ pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
 pluginopt.add_argument("--gomtv-username", metavar="username",
                        help="Specify GOMTV username to allow access to streams")
 pluginopt.add_argument("--gomtv-password", metavar="password",
-                       help="Specify GOMTV password to allow access to streams (If left blank you will be prompted)", 
+                       help="Specify GOMTV password to allow access to streams (If left blank you will be prompted)",
                        nargs="?", const=True, default=None)
 
 if is_win32:
@@ -88,10 +90,25 @@ def set_msg_output(output):
     msg_output = output
     livestreamer.set_logoutput(output)
 
-def write_stream(fd, out, progress):
+def do_write(stream_out, stream_data):
+    if is_win32 and type(stream_out) is not file:
+        from ctypes import windll, cast, c_ulong, c_void_p, byref
+        windll.kernel32.ConnectNamedPipe(stream_out, None)
+        written = c_ulong(0)
+        windll.kernel32.WriteFile(stream_out, cast(stream_data, c_void_p), len(stream_data), byref(written), None)
+    else:
+        stream_out.write(stream_data)
+
+def write_stream(fd, out, progress, player):
     written = 0
 
     while True:
+        if player:
+            player.poll()
+            if player.returncode is not None:
+                logger.info("Player closed")
+                break
+
         try:
             data = fd.read(8192)
         except IOError:
@@ -102,7 +119,7 @@ def write_stream(fd, out, progress):
             break
 
         try:
-            out.write(data)
+            do_write(out, data)
         except IOError:
             logger.error("Error when writing to output")
             break
@@ -117,7 +134,10 @@ def write_stream(fd, out, progress):
 
     logger.info("Stream ended")
 
-    if out != stdout:
+    if is_win32:
+        from ctypes import *
+        windll.kernel32.DisconnectNamedPipe(out)
+    elif out != stdout:
         out.close()
 
 def check_output(output, force):
@@ -146,6 +166,12 @@ def output_stream(stream, args):
     out = None
     player = None
 
+    if is_win32:
+        pipename = "\\\\.\\pipe\\livestreamerpipe"
+    else:
+        import tempfile
+        pipename = "{0}/livestreamerpipe".format(tempfile.gettempdir())
+
     logger.info("Opening stream: {0}", args.stream)
 
     try:
@@ -173,7 +199,41 @@ def output_stream(stream, args):
     elif args.stdout:
         out = stdout
     else:
-        cmd = args.player + " -"
+        if args.fifo:
+            cmd = args.player + " " + pipename
+            if is_win32:
+                from ctypes import windll
+                PIPE_ACCESS_OUTBOUND = 0x00000002
+                PIPE_TYPE_BYTE = 0x00000000
+                PIPE_READMODE_BYTE = 0x00000000
+                PIPE_WAIT = 0x00000000
+                PIPE_UNLIMITED_INSTANCES = 255
+                INVALID_HANDLE_VALUE = -1
+                bufsize = 8192
+
+                out = windll.kernel32.CreateNamedPipeA(pipename,
+                                                       PIPE_ACCESS_OUTBOUND,
+                                                       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                                                       PIPE_UNLIMITED_INSTANCES,
+                                                       bufsize,
+                                                       bufsize,
+                                                       0,
+                                                       None)
+
+                if out == INVALID_HANDLE_VALUE:
+                    exit("Failed to create pipe {0} - error code 0x{1:08X}".format(pipename, windll.kernel32.GetLastError()));
+            else:
+                os.mkfifo(pipename, 0660)
+                try:
+                    out = open(pipename, "wb")
+                except IOError as err:
+                    exit(("Failed to open pipe {0} - {1}").format(pipename, err))
+
+            pin = sys.stdin
+
+        else:
+            cmd = args.player + " -"
+            pin = subprocess.PIPE
 
         if args.quiet_player:
             pout = open(os.devnull, "w")
@@ -183,22 +243,26 @@ def output_stream(stream, args):
             perr = sys.stdout
 
         logger.info("Starting player: {0}", args.player)
+
         player = subprocess.Popen(cmd, shell=True, stdout=pout, stderr=perr,
-                                  stdin=subprocess.PIPE)
-        out = player.stdin
+                                  stdin=pin)
+
+        if not args.fifo:
+            out = player.stdin
 
     if not out:
         exit("Failed to open a valid stream output")
 
-    if is_win32:
+    if is_win32 and type(out) is file:
         import msvcrt
         msvcrt.setmode(out.fileno(), os.O_BINARY)
 
     logger.debug("Writing stream to output")
-    out.write(prebuffer)
+
+    do_write(out, prebuffer)
 
     try:
-        write_stream(fd, out, progress)
+        write_stream(fd, out, progress, player)
     except KeyboardInterrupt:
         pass
 
@@ -207,6 +271,15 @@ def output_stream(stream, args):
             player.kill()
         except:
             pass
+
+    if args.fifo and not args.output and not args.stdout:
+        if is_win32:
+            from ctypes import windll
+            windll.kernel32.DisconnectNamedPipe(out)
+            windll.kernel32.CloseHandle(out)
+        else:
+            out.close()
+            os.unlink(pipename)
 
 def handle_url(args):
     try:
