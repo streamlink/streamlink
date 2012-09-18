@@ -85,7 +85,6 @@ class NamedPipe(object):
         if self.pipe:
             windll.kernel32.DisconnectNamedPipe(self.pipe)
         else:
-            self.fifo.close()
             os.unlink(self.path)
 
 def urlopen(url, method="get", exception=PluginError, **args):
