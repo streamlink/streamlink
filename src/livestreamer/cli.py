@@ -1,13 +1,13 @@
 import argparse
+import getpass
 import os
 import sys
 import subprocess
-import getpass
 
 from livestreamer import *
 from livestreamer.compat import input, stdout, is_win32
 from livestreamer.stream import StreamProcess
-from livestreamer.utils import ArgumentParser
+from livestreamer.utils import ArgumentParser, NamedPipe
 
 exampleusage = """
 example usage:
@@ -90,15 +90,6 @@ def set_msg_output(output):
     msg_output = output
     livestreamer.set_logoutput(output)
 
-def do_write(stream_out, stream_data):
-    if is_win32 and type(stream_out) is not file:
-        from ctypes import windll, cast, c_ulong, c_void_p, byref
-        windll.kernel32.ConnectNamedPipe(stream_out, None)
-        written = c_ulong(0)
-        windll.kernel32.WriteFile(stream_out, cast(stream_data, c_void_p), len(stream_data), byref(written), None)
-    else:
-        stream_out.write(stream_data)
-
 def write_stream(fd, out, progress, player):
     written = 0
 
@@ -119,7 +110,7 @@ def write_stream(fd, out, progress, player):
             break
 
         try:
-            do_write(out, data)
+            out.write(data)
         except IOError:
             logger.error("Error when writing to output")
             break
@@ -134,16 +125,9 @@ def write_stream(fd, out, progress, player):
 
     logger.info("Stream ended")
 
-    if is_win32 and type(out) is not file:
-        from ctypes import windll
-        windll.kernel32.DisconnectNamedPipe(out)
-    elif out != stdout:
-        try:
-            out.close()
-        except:
-            pass
-
 def check_output(output, force):
+    logger.debug("Checking output")
+
     if os.path.isfile(output) and not force:
         sys.stderr.write(("File {0} already exists! Overwrite it? [y/N] ").format(output))
 
@@ -169,20 +153,12 @@ def output_stream(stream, args):
     out = None
     player = None
 
-    if is_win32:
-        pipeprefix = "\\\\.\\pipe\\"
-    else:
-        import tempfile
-        pipeprefix = tempfile.gettempdir() + "/"
-
-    pipename = pipeprefix + "livestreamerpipe-" + str(os.getpid())
-
     logger.info("Opening stream: {0}", args.stream)
 
     try:
         fd = stream.open()
     except StreamError as err:
-        exit(("Could not open stream - {0}").format(err))
+        exit(("Could not open stream: {0}").format(err))
 
     logger.debug("Pre-buffering 8192 bytes")
     try:
@@ -192,8 +168,6 @@ def output_stream(stream, args):
 
     if len(prebuffer) == 0:
         exit("Failed to read data from stream")
-
-    logger.debug("Checking output")
 
     if args.output:
         if args.output == "-":
@@ -205,33 +179,16 @@ def output_stream(stream, args):
         out = stdout
     else:
         if args.fifo:
+            pipename = "livestreamerpipe-" + str(os.getpid())
+
             logger.info("Creating pipe {0}", pipename)
 
-            cmd = args.player + " " + pipename
-            if is_win32:
-                from ctypes import windll
-                PIPE_ACCESS_OUTBOUND = 0x00000002
-                PIPE_TYPE_BYTE = 0x00000000
-                PIPE_READMODE_BYTE = 0x00000000
-                PIPE_WAIT = 0x00000000
-                PIPE_UNLIMITED_INSTANCES = 255
-                INVALID_HANDLE_VALUE = -1
-                bufsize = 8192
+            try:
+                out = NamedPipe(pipename)
+            except IOError as err:
+                exit(("Failed to create pipe: {0}").format(err))
 
-                out = windll.kernel32.CreateNamedPipeA(pipename,
-                                                       PIPE_ACCESS_OUTBOUND,
-                                                       PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                                                       PIPE_UNLIMITED_INSTANCES,
-                                                       bufsize,
-                                                       bufsize,
-                                                       0,
-                                                       None)
-
-                if out == INVALID_HANDLE_VALUE:
-                    exit(("Failed to create pipe {0} - error code 0x{1:08X}").format(pipename, windll.kernel32.GetLastError()))
-            else:
-                os.mkfifo(pipename, 0o660)
-
+            cmd = args.player + " " + out.path
             pin = sys.stdin
         else:
             cmd = args.player + " -"
@@ -249,11 +206,10 @@ def output_stream(stream, args):
                                   stdin=pin)
 
         if args.fifo:
-            if not is_win32:
-                try:
-                    out = open(pipename, "wb")
-                except IOError as err:
-                    exit(("Failed to open pipe {0} - {1}").format(pipename, err))
+            try:
+                out.open("wb")
+            except IOError as err:
+                exit(("Failed to open pipe {0} - {1}").format(pipename, err))
         else:
             out = player.stdin
 
@@ -265,7 +221,7 @@ def output_stream(stream, args):
         msvcrt.setmode(out.fileno(), os.O_BINARY)
 
     logger.debug("Writing stream to output")
-    do_write(out, prebuffer)
+    out.write(prebuffer)
 
     try:
         write_stream(fd, out, progress, player)
@@ -278,12 +234,12 @@ def output_stream(stream, args):
         except:
             pass
 
-    if args.fifo and not args.output and not args.stdout:
-        if is_win32:
-            from ctypes import windll
-            windll.kernel32.CloseHandle(out)
-        else:
-            os.unlink(pipename)
+    if out != stdout:
+        try:
+            out.close()
+        except:
+            pass
+
 
 def handle_url(args):
     try:
