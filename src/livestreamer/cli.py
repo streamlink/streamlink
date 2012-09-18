@@ -138,7 +138,10 @@ def write_stream(fd, out, progress, player):
         from ctypes import windll
         windll.kernel32.DisconnectNamedPipe(out)
     elif out != stdout:
-        out.close()
+        try:
+            out.close()
+        except:
+            pass
 
 def check_output(output, force):
     if os.path.isfile(output) and not force:
@@ -167,10 +170,12 @@ def output_stream(stream, args):
     player = None
 
     if is_win32:
-        pipename = "\\\\.\\pipe\\livestreamerpipe"
+        pipeprefix = "\\\\.\\pipe\\"
     else:
         import tempfile
-        pipename = ("{0}/livestreamerpipe").format(tempfile.gettempdir())
+        pipeprefix = tempfile.gettempdir() + "/"
+
+    pipename = pipeprefix + "livestreamerpipe-" + str(os.getpid())
 
     logger.info("Opening stream: {0}", args.stream)
 
@@ -200,6 +205,8 @@ def output_stream(stream, args):
         out = stdout
     else:
         if args.fifo:
+            logger.info("Creating pipe {0}", pipename)
+
             cmd = args.player + " " + pipename
             if is_win32:
                 from ctypes import windll
@@ -224,13 +231,8 @@ def output_stream(stream, args):
                     exit(("Failed to create pipe {0} - error code 0x{1:08X}").format(pipename, windll.kernel32.GetLastError()))
             else:
                 os.mkfifo(pipename, 0o660)
-                try:
-                    out = open(pipename, "wb")
-                except IOError as err:
-                    exit(("Failed to open pipe {0} - {1}").format(pipename, err))
 
             pin = sys.stdin
-
         else:
             cmd = args.player + " -"
             pin = subprocess.PIPE
@@ -245,7 +247,14 @@ def output_stream(stream, args):
         logger.info("Starting player: {0}", args.player)
         player = subprocess.Popen(cmd, shell=True, stdout=pout, stderr=perr,
                                   stdin=pin)
-        if not args.fifo:
+
+        if args.fifo:
+            if not is_win32:
+                try:
+                    out = open(pipename, "wb")
+                except IOError as err:
+                    exit(("Failed to open pipe {0} - {1}").format(pipename, err))
+        else:
             out = player.stdin
 
     if not out:
