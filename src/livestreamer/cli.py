@@ -134,7 +134,7 @@ def write_stream(fd, out, progress, player):
 
     logger.info("Stream ended")
 
-    if is_win32:
+    if is_win32 and type(out) is not file:
         from ctypes import *
         windll.kernel32.DisconnectNamedPipe(out)
     elif out != stdout:
@@ -243,10 +243,8 @@ def output_stream(stream, args):
             perr = sys.stdout
 
         logger.info("Starting player: {0}", args.player)
-
         player = subprocess.Popen(cmd, shell=True, stdout=pout, stderr=perr,
                                   stdin=pin)
-
         if not args.fifo:
             out = player.stdin
 
@@ -258,7 +256,6 @@ def output_stream(stream, args):
         msvcrt.setmode(out.fileno(), os.O_BINARY)
 
     logger.debug("Writing stream to output")
-
     do_write(out, prebuffer)
 
     try:
@@ -275,10 +272,8 @@ def output_stream(stream, args):
     if args.fifo and not args.output and not args.stdout:
         if is_win32:
             from ctypes import windll
-            windll.kernel32.DisconnectNamedPipe(out)
             windll.kernel32.CloseHandle(out)
         else:
-            out.close()
             os.unlink(pipename)
 
 def handle_url(args):
