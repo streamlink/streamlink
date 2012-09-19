@@ -35,6 +35,7 @@ parser.add_argument("stream", help="Stream quality to play, use 'best' for highe
 
 parser.add_argument("-h", "--help", action="store_true",
                     help="Show this help message and exit")
+parser.add_argument("-V", "--version", action="version", version="%(prog)s " + livestreamer.version)
 parser.add_argument("-u", "--plugins", action="store_true",
                     help="Print all currently installed plugins")
 parser.add_argument("-l", "--loglevel", metavar="level",

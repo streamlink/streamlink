@@ -106,6 +106,10 @@ class Livestreamer(object):
         if file:
             file.close()
 
+    @property
+    def version(self):
+        return __version__
 
 __all__ = ["PluginError", "NoStreamsError", "NoPluginError", "StreamError",
            "Livestreamer"]
+__version__ = "1.3"
