@@ -1,4 +1,4 @@
-from . import Stream
+from . import Stream, StreamError
 from ..utils import urlget
 
 class HTTPStream(Stream):

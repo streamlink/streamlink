@@ -1,4 +1,4 @@
-from . import StreamProcess
+from . import StreamProcess, StreamError
 from ..compat import str, is_win32
 
 import pbs
