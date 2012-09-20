@@ -1,5 +1,4 @@
-from .compat import str, is_win32
-from .utils import urlget
+from ..compat import str
 
 import os
 import pbs
@@ -58,48 +57,9 @@ class StreamProcess(Stream):
 
         return stream.process.stdout
 
-class RTMPStream(StreamProcess):
-    def __init__(self, session, params):
-        StreamProcess.__init__(self, session, params)
 
-        self.rtmpdump = self.session.options.get("rtmpdump") or (is_win32 and "rtmpdump.exe" or "rtmpdump")
-        self.params["flv"] = "-"
+from .http import HTTPStream
+from .rtmpdump import RTMPStream
 
-        try:
-            self.cmd = getattr(pbs, self.rtmpdump)
-        except pbs.CommandNotFound as err:
-            raise StreamError(("Unable to find {0} command").format(str(err)))
-
-    def open(self):
-        if "jtv" in self.params and not self._has_jtv_support():
-            raise StreamError("Installed rtmpdump does not support --jtv argument")
-
-        return StreamProcess.open(self)
-
-    def _has_jtv_support(self):
-        try:
-            help = self.cmd(help=True, _err_to_out=True)
-        except pbs.ErrorReturnCode as err:
-            raise StreamError(("Error while checking rtmpdump compatibility: {0}").format(str(err.stdout, "ascii")))
-
-        for line in help.split("\n"):
-            if line[:5] == "--jtv":
-                return True
-
-        return False
-
-class HTTPStream(Stream):
-    def __init__(self, session, url, **args):
-        Stream.__init__(self, session)
-
-        self.url = url
-        self.args = args
-
-    def open(self):
-        res = urlget(self.url, prefetch=False,
-                     exception=StreamError,
-                     **self.args)
-
-        return res.raw
-
-__all__ = ["StreamError", "Stream", "StreamProcess", "RTMPStream", "HTTPStream"]
+__all__ = ["StreamError", "Stream", "StreamProcess",
+           "RTMPStream", "HTTPStream"]
