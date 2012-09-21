@@ -58,6 +58,7 @@ class StreamProcess(Stream):
         return stream.process.stdout
 
 
+from .hls import HLSStream
 from .http import HTTPStream
 from .rtmpdump import RTMPStream
 
