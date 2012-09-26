@@ -10,6 +10,7 @@ if is_py2:
     stdout = sys.stdout
     _str = str
     str = unicode
+    file = file
 
     def bytes(b, enc="ascii"):
         return _str(b)
@@ -19,6 +20,7 @@ elif is_py3:
     input = input
     stdout = sys.stdout.buffer
     str = str
+    from io import IOBase as file
 
 try:
     from urllib.parse import urlparse, urljoin, quote, unquote, parse_qs

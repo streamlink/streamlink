@@ -5,7 +5,7 @@ import sys
 import subprocess
 
 from livestreamer import *
-from livestreamer.compat import input, stdout, is_win32
+from livestreamer.compat import input, stdout, file, is_win32
 from livestreamer.stream import StreamProcess
 from livestreamer.utils import ArgumentParser, NamedPipe
 
@@ -217,7 +217,7 @@ def output_stream(stream, args):
     if not out:
         exit("Failed to open a valid stream output")
 
-    if is_win32 and type(out) is file:
+    if is_win32 and isinstance(out, file):
         import msvcrt
         msvcrt.setmode(out.fileno(), os.O_BINARY)
 
