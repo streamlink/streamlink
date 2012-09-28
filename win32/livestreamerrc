@@ -1,0 +1,29 @@
+# Path to a video player that can read from standard input (e.g VLC, mplayer)
+
+# Important: You must use a quoted path if there are spaces in the path. This only
+# applies to the player and not the rtmpdump path since the player command is passed
+# through the "shell" to allow parameters to be passed to the player.
+
+player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe"
+#player="C:\Program Files\VideoLAN\VLC\vlc.exe"
+
+# Hides console output from video player
+quiet-player
+
+# Full path to rtmpdump (ony needed for RTMP based streams)
+rtmpdump=@INSTDIR@\rtmpdump\rtmpdump.exe
+
+# Log level, default is info
+#loglevel=debug
+
+# A cookie from your web browser to allow access to Twitch/JustinTV streams that require authentication
+#jtv-cookie=
+
+# A cookie from your web browser to allow access to GOMTV.net streams
+#gomtv-cookie=
+
+# A username and password to allow access to GOMTV.net streams
+#gomtv-username=
+#gomtv-password=
+
+
