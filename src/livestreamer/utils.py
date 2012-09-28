@@ -17,6 +17,9 @@ RequestsConfig = { "danger_mode": True }
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
+        if len(line) == 0:
+            return
+
         if line[0] == "#":
             return
 
