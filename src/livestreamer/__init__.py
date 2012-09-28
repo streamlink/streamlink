@@ -112,4 +112,4 @@ class Livestreamer(object):
 
 __all__ = ["PluginError", "NoStreamsError", "NoPluginError", "StreamError",
            "Livestreamer"]
-__version__ = "1.3"
+__version__ = "1.3.1"

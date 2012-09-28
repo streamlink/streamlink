@@ -5,6 +5,7 @@
 *.EGG-INFO
 bin
 build
+build-win32
 develop-eggs
 downloads
 eggs
