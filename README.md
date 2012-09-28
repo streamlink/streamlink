@@ -36,23 +36,31 @@ Make sure you have at least Python and python-setuptools then run:
 This should install any missing Python dependencies automatically if they are missing.
 
 
-Installing (Windows)
---------------------
+Installing (Windows installer)
+-----------------------------
+1. Download installer from downloads and run it
+2. Once installed, open  %APPDATA%\livestreamer\livestreamerrc in a text editor and make sure everything is correct
+3. Use livestreamer from command prompt
+
+*Note!* Installer has only been tested on Windows 7 (x64) as of now. Also, if you have previously installed manually you may need to remove livestreamer.exe from PYTHONPATH\Scripts.
+
+
+Installing (Windows manual install)
+---------------------------------
 1. Install Python
 2. Install Python setuptools
 3. Get rtmpdump and unpack it somewhere (rtmpdump-20110925-git-6230845-win32.zip from the downloads section should work)
 4. Add these paths to your Path environment variable:
- * [Python path]\
- * [Python path]\scripts\
- * [rtmpdump path]\ (or specify full path with --rtmpdump option)
- * [VLC/mplayer/other path]\ (or specify full path with --player option)
+ * PYTHONPATH\
+ * PYTHONPATH\Scripts\
+ * RTMPDUMPPATH\ (or specify full path with --rtmpdump option)
+ * PLAYERPATH\ (or specify full path with --player option)
 
 5. Open a command prompt and change directory to livestreamer source, then run:
 
     python setup.py install
 
 This should install any missing Python dependencies automatically if they are missing.
-
 
 
 Using
