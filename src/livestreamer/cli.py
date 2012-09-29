@@ -60,13 +60,15 @@ outputopt.add_argument("-O", "--stdout", action="store_true",
                        help="Write stream to stdout instead of playing it")
 
 pluginopt = parser.add_argument_group("plugin options")
+pluginopt.add_argument("--plugin-dirs", metavar="directory",
+                       help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a ;.")
 pluginopt.add_argument("-c", "--cmdline", action="store_true",
                        help="Print command-line used internally to play stream, this may not be available on all streams")
 pluginopt.add_argument("-e", "--errorlog", action="store_true",
                        help="Log possible errors from internal command-line to a temporary file, use when debugging")
 pluginopt.add_argument("-r", "--rtmpdump", metavar="path",
                        help="Specify location of rtmpdump executable, eg. /usr/local/bin/rtmpdump")
-pluginopt.add_argument("-j", "--jtv-cookie", metavar="cookie",
+pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to streams")
@@ -241,7 +243,6 @@ def output_stream(stream, args):
         except:
             pass
 
-
 def handle_url(args):
     try:
         channel = livestreamer.resolve_url(args.url)
@@ -281,11 +282,17 @@ def handle_url(args):
     else:
         msg(("Found streams: {0}").format(validstreams))
 
-
 def print_plugins():
     pluginlist = list(livestreamer.get_plugins().keys())
     msg(("Installed plugins: {0}").format(", ".join(pluginlist)))
 
+def load_plugins(dirs):
+    dirs = [os.path.expanduser(d) for d in dirs.split(";")]
+    for directory in dirs:
+        if os.path.isdir(directory):
+            livestreamer.load_plugins(directory)
+        else:
+            logger.warning("Plugin directory {0} does not exist!", directory)
 
 def main():
     arglist = sys.argv[1:]
@@ -310,6 +317,9 @@ def main():
     livestreamer.set_plugin_option("gomtv", "username", args.gomtv_username)
     livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
     livestreamer.set_loglevel(args.loglevel)
+
+    if args.plugin_dirs:
+        load_plugins(args.plugin_dirs)
 
     if args.url:
         handle_url(args)

@@ -82,16 +82,14 @@ class Livestreamer(object):
         return self.plugins
 
     def load_builtin_plugins(self):
-        for loader, name, ispkg in pkgutil.iter_modules(plugins.__path__):
-            file, pathname, desc = imp.find_module(name, plugins.__path__)
-            self.load_plugin(name, file, pathname, desc)
+        self.load_plugins(plugins.__path__[0])
 
     def load_plugins(self, path):
         """
             Attempt to load plugins from the *path* directory.
         """
-        for loader, name, ispkg in pkgutil.iter_modules(path):
-            file, pathname, desc = imp.find_module(name, path)
+        for loader, name, ispkg in pkgutil.iter_modules([path]):
+            file, pathname, desc = imp.find_module(name, [path])
             self.load_plugin(name, file, pathname, desc)
 
     def load_plugin(self, name, file, pathname, desc):
