@@ -74,10 +74,11 @@ class Youtube(Plugin):
         formatmap = self._parse_format_map(fmtlist)
 
         for streaminfo in streammap:
-            if not "url" in streaminfo:
+            if not ("url" in streaminfo and "sig" in streaminfo):
                 continue
 
-            stream = HTTPStream(self.session, streaminfo["url"][0])
+            stream = HTTPStream(self.session, streaminfo["url"][0],
+                                params=dict(signature=streaminfo["sig"][0]))
 
             if streaminfo["itag"][0] in formatmap:
                 quality = formatmap[streaminfo["itag"][0]]
