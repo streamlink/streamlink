@@ -1,5 +1,35 @@
 from livestreamer.options import Options
 
+SpecialQualityWeights = {
+    "live": 1080,
+    "hd": 1080,
+    "hq": 576,
+    "hqtest": 576,
+    "sd": 576,
+    "sq": 360,
+    "sqtest": 240,
+    "iphonehigh": 240,
+    "iphonelow": 180,
+}
+
+def qualityweight(quality):
+    if quality.endswith("k"):
+        bitrate = int(quality[:-1])
+
+        # These calculations are very rough
+        if bitrate > 2000:
+            return bitrate / 3.4
+        elif bitrate > 1000:
+            return bitrate / 2.6
+        else:
+            return bitrate / 1.7
+    elif quality.endswith("p"):
+        return int(quality[:-1])
+    elif quality in SpecialQualityWeights:
+        return SpecialQualityWeights[quality]
+
+    return 1
+
 class Plugin(object):
     """
         A plugin can retrieve stream information from the *url* specified.
@@ -34,13 +64,17 @@ class Plugin(object):
             to be of highest quality.
         """
 
-        ranking = ["iphonelow", "iphonehigh", "240p", "320k", "360p", "sd", "SQTest", "SQ", "850k",
-                   "480p", "HQTest", "HQ", "1400k", "720p", "2400k", "hd", "1080p", "live"]
         streams = self._get_streams()
-        for rank in reversed(ranking):
-            if rank in streams:
-                streams["best"] = streams[rank]
-                break
+
+        best = (0, None)
+        for name, stream in streams.items():
+            weight = qualityweight(name)
+
+            if weight > best[0]:
+                best = (weight, stream)
+
+        if best[1] is not None:
+            streams["best"] = best[1]
 
         return streams
 

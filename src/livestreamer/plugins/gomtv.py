@@ -89,8 +89,8 @@ class GomTV(Plugin):
                 # The response for the GOX XML if an incorrect stream quality is chosen is 1002.
                 if res.text != "1002" and len(res.text) > 0:
                     streamurl = self._parse_gox_file(res.text)
-                    streams[quality] = HTTPStream(self.session, streamurl,
-                                                  headers=self.StreamHeaders)
+                    streams[quality.lower()] = HTTPStream(self.session, streamurl,
+                                                          headers=self.StreamHeaders)
 
         return streams
 
