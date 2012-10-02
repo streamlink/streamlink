@@ -16,7 +16,7 @@ class UStreamTV(Plugin):
     def _get_channel_id(self, url):
         res = urlget(url)
 
-        match = re.search("channelId=(\d+)", res.text)
+        match = re.search("\"cid\":(\d+)", res.text)
         if match:
             return int(match.group(1))
 
