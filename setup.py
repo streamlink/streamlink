@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 from sys import version_info
 
-version = "1.3.1"
+version = "1.3.2"
 deps = ["pbs", "requests>=0.12.1"]
 
 # require argparse on Python <2.7 and <3.2

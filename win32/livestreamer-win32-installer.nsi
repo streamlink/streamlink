@@ -4,15 +4,15 @@
 SetCompressor lzma
 
 ###
-### --- The PROGRAM_VERSION !define need to be updated with new Deluge versions ---
+### --- The PROGRAM_VERSION !define need to be updated with new Livestreamer versions ---
 ###
 
 # Script version; displayed when running the installer
 !define LIVESTREAMER_INSTALLER_VERSION "0.1"
 
-# Deluge program information
+# Livestreamer program information
 !define PROGRAM_NAME "Livestreamer"
-!define PROGRAM_VERSION "1.3.1"
+!define PROGRAM_VERSION "1.3.2"
 !define PROGRAM_WEB_SITE "http://github.com/chrippa/livestreamer"
 
 # Python files generated with bbfreeze

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-build_version = "1.3.1"
+build_version = "1.3.2"
 python_path = "C:\\Python27\\"
 
 import os
