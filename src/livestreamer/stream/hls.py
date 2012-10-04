@@ -1,8 +1,10 @@
 from . import Stream, StreamError
 from ..utils import urlget
+from ..compat import urljoin
 
 from time import time, sleep
 
+import os.path
 import re
 
 try:
@@ -75,6 +77,9 @@ class HLSStream(Stream):
         Stream.__init__(self, session)
 
         self.url = url
+        self.logger = session.logger.new_module("stream.hls")
+
+    def open(self):
         self.playlist = {}
         self.playlist_reload_time = 0
         self.playlist_minimal_reload_time = 15
@@ -83,11 +88,8 @@ class HLSStream(Stream):
         self.decryptor = None
         self.decryptor_key = None
         self.decryptor_iv = None
-        self.fd = None
         self.sequence = 0
-        self.logger = session.logger.new_module("stream.hls")
 
-    def open(self):
         return self
 
     def read(self, size=-1):
@@ -97,7 +99,7 @@ class HLSStream(Stream):
             except IOError:
                 return b""
 
-        data = self.fd.read(size)
+        data = self.entry.read(size)
 
         if len(data) == 0:
             self._next_entry()
@@ -111,6 +113,8 @@ class HLSStream(Stream):
     def _next_entry(self):
         if len(self.playlist) == 0:
             self._reload_playlist()
+
+        self._open_playlist_fds()
 
         # Periodic reload is not fatal if it fails
         elapsed = time() - self.playlist_reload_time
@@ -129,14 +133,10 @@ class HLSStream(Stream):
                 sleep(1)
                 return self._next_entry()
 
+
         self.entry = self.playlist[self.sequence]
 
         self.logger.debug("Next entry: {0}", self.entry)
-
-        res = urlget(self.entry["url"], prefetch=False,
-                     exception=IOError)
-
-        self.playlist[self.sequence] = None
 
         if self.decryptor_key:
             if not self.decryptor_iv:
@@ -146,7 +146,6 @@ class HLSStream(Stream):
 
             self.decryptor = AES.new(self.decryptor_key, AES.MODE_CBC, iv)
 
-        self.fd = res.raw
         self.sequence += 1
 
     def _reload_playlist(self):
@@ -184,16 +183,40 @@ class HLSStream(Stream):
             self.decryptor_key = res.content
 
         for i, entry in enumerate(entries):
-            self.playlist[sequence + i] = entry
+            entry["sequence"] = sequence + i
 
-            if entry["tag"][0] == "EXTINF":
-                duration = entry["tag"][1][0]
-                self.playlist_minimal_reload_time = duration
+        self.entries = entries
 
         if self.sequence == 0:
             self.sequence = sequence
 
         self.playlist_reload_time = time()
+
+    def _open_playlist_fds(self):
+        maxseq = self.sequence + 5
+
+        for entry in self.entries:
+            if entry["sequence"] > maxseq:
+                break
+
+            if not entry["sequence"] in self.playlist:
+                url = self._relative_url(entry["url"])
+                self.logger.debug("Opening fd: {0}", url)
+                res = urlget(url, prefetch=False,
+                             exception=IOError)
+
+                self.playlist[entry["sequence"]] = res.raw
+
+                if entry["tag"][0] == "EXTINF":
+                    duration = entry["tag"][1][0]
+                    self.playlist_minimal_reload_time = duration
+
+    def _relative_url(self, url):
+        if url[0] == "/":
+            return urljoin(os.path.dirname(self.url), url)
+        else:
+            return url
+
 
     @classmethod
     def parse_variant_playlist(cls, session, url):
@@ -202,16 +225,20 @@ class HLSStream(Stream):
 
         (tags, entries) = parse_m3u(res.text)
 
+
         for entry in entries:
             (tag, value) = entry["tag"]
 
             if tag != "EXT-X-STREAM-INF":
                 continue
 
-            if not "RESOLUTION" in value:
+            if "RESOLUTION" in value:
+                quality = value["RESOLUTION"].split("x")[1] + "p"
+            elif "BANDWIDTH" in value:
+                quality = str(int(int(value["BANDWIDTH"]) / 1000)) + "k"
+            else:
                 continue
 
-            quality = value["RESOLUTION"].split("x")[1] + "p"
             stream = HLSStream(session, entry["url"])
 
             streams[quality] = stream
