@@ -6,7 +6,8 @@ Currently supported sites are:
 
 * GOMTV.net
 * Justin.tv/Twitch.tv
-* Ongamenet
+* Livestream.com
+* Ongamenet.com
 * Own3d.tv
 * SVTPlay
 * UStream
