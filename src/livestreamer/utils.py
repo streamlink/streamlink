@@ -90,6 +90,28 @@ class NamedPipe(object):
         else:
             os.unlink(self.path)
 
+class RingBuffer(object):
+    def __init__(self):
+        self.buffer = b""
+
+    def read(self, size=0):
+        if size < 1:
+            ret = self.buffer[:]
+            self.buffer = b""
+        else:
+            ret = self.buffer[:size]
+            self.buffer = self.buffer[size:]
+
+        return ret
+
+    def write(self, data):
+        self.buffer += data
+
+    @property
+    def length(self):
+        return len(self.buffer)
+
+
 def urlopen(url, method="get", exception=PluginError, **args):
     if "data" in args and args["data"] is not None:
         method = "post"
@@ -105,12 +127,15 @@ def urlget(url, prefetch=True, **args):
     return urlopen(url, method="get", prefetch=prefetch,
                    **args)
 
+def swfdecompress(data):
+    if data[:3] == b"CWS":
+        data = b"F" + data[1:8] + zlib.decompress(data[8:])
+
+    return data
+
 def swfverify(url):
     res = urlopen(url)
-    swf = res.content
-
-    if swf[:3] == b"CWS":
-        swf = b"F" + swf[1:8] + zlib.decompress(swf[8:])
+    swf = swfdecompress(res.content)
 
     h = hmac.new(SWFKey, swf, hashlib.sha256)
 
@@ -122,4 +147,5 @@ def verifyjson(json, key):
 
     return json[key]
 
-__all__ = ["ArgumentParser", "urlopen", "urlget", "swfverify", "verifyjson"]
+__all__ = ["ArgumentParser", "NamedPipe", "RingBuffer",
+           "urlopen", "urlget", "swfdecompress", "swfverify", "verifyjson"]

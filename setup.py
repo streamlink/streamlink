@@ -5,6 +5,11 @@ from sys import version_info
 
 version = "1.3.2"
 deps = ["pbs", "requests>=0.12.1"]
+packages = ["livestreamer",
+            "livestreamer.stream",
+            "livestreamer.plugins",
+            "livestreamer.packages",
+            "livestreamer.packages.flashmedia"]
 
 # require argparse on Python <2.7 and <3.2
 if (version_info[0] == 2 and version_info[1] < 7) or \
@@ -18,7 +23,7 @@ setup(name="livestreamer",
       author="Christopher Rosell",
       author_email="chrippa@tanuki.se",
       license="BSD",
-      packages=["livestreamer", "livestreamer.stream", "livestreamer.plugins"],
+      packages=packages,
       package_dir={'': 'src'},
       entry_points={
           "console_scripts": ['livestreamer=livestreamer.cli:main']
