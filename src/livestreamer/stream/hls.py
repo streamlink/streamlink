@@ -212,8 +212,8 @@ class HLSStream(Stream):
                     self.playlist_minimal_reload_time = duration
 
     def _relative_url(self, url):
-        if url[0] == "/":
-            return urljoin(os.path.dirname(self.url), url)
+        if not url.startswith("http"):
+            return "{0}/{1}".format(os.path.dirname(self.url), url)
         else:
             return url
 
