@@ -1,8 +1,12 @@
 Livestreamer
 ============
-Livestreamer is a CLI program that launches live streams from various streaming services in a custom video player.
+Livestreamer is a CLI program that launches live streams from various streaming
+services in a custom video player and also a Python library that allows you to
+interact with the stream data in your own application.
 
-Currently supported sites are:
+Current release: **1.3.2** (2012-10-03)
+
+Currently includes plugins for these sites:
 
 * GOMTV.net
 * Justin.tv/Twitch.tv
@@ -18,8 +22,10 @@ Dependencies
 ------------
 Livestreamer and it's plugins currently depends on these software:
 
-* Python version >= 2.6 and >= 3.0 (currently CPython and PyPy is known to work)
+* Python version >= 2.6 or >= 3.0 (currently CPython and PyPy is known to work)
 * python-setuptools or python-distribute
+
+These will be installed automatically by the setup script if they are missing:
 * python-requests (at least version 0.12.1)
 * python-pbs
 * python-argparse (only needed for Python version < 2.7)
@@ -29,15 +35,22 @@ For RTMP based plugins:
 
 
 Installing (Linux, OS X etc)
-----------
-Make sure you have at least Python and python-setuptools then run:
+---------------------------
+**Release version**
+
+Pip is a tool to install Python packages from a central repository.
+
+    $ sudo pip install livestreamer
+
+
+**Git version**
+
+Clone or download an archive of the repository then run:
 
     $ sudo python setup.py install
 
-This should install any missing Python dependencies automatically if they are missing.
 
-
-Installing (Windows installer)
+Installing (Windows - Installer)
 -----------------------------
 1. Download installer from downloads and run it
 2. Once installed, open  %APPDATA%\livestreamer\livestreamerrc in a text editor and make sure everything is correct
@@ -46,22 +59,26 @@ Installing (Windows installer)
 *Note!* Installer has only been tested on Windows 7 (x64) as of now. Also, if you have previously installed manually you may need to remove livestreamer.exe from PYTHONPATH\Scripts.
 
 
-Installing (Windows manual install)
+Installing (Windows - Manual install)
 ---------------------------------
 1. Install Python
 2. Install Python setuptools
 3. Get rtmpdump and unpack it somewhere (rtmpdump-20110925-git-6230845-win32.zip from the downloads section should work)
-4. Add these paths to your Path environment variable:
+4. Add these paths to your Path environment variable (separate with a semicolon):
  * PYTHONPATH\
  * PYTHONPATH\Scripts\
  * RTMPDUMPPATH\ (or specify full path with --rtmpdump option)
  * PLAYERPATH\ (or specify full path with --player option)
 
-5. Open a command prompt and change directory to livestreamer source, then run:
+5. **Release version** Open a command prompt and run:
 
-    python setup.py install
+        pip install livestreamer
 
-This should install any missing Python dependencies automatically if they are missing.
+   **Git version** Open a command prompt and change directory to livestreamer source, then run:
+
+       python setup.py install
+
+    This should install any missing Python dependencies automatically if they are missing.
 
 
 Using
