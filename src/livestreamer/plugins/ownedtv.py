@@ -1,7 +1,7 @@
 from livestreamer.compat import bytes, str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, swfverify
+from livestreamer.utils import urlget
 
 import re
 import xml.dom.minidom
@@ -63,9 +63,6 @@ class OwnedTV(Plugin):
         channels = dom.getElementsByTagName("channels")[0]
         clip = channels.getElementsByTagName("clip")[0]
 
-        self.logger.debug("Verifying SWF: {0}", swfurl)
-        swfhash, swfsize = swfverify(swfurl)
-
         for item in clip.getElementsByTagName("item"):
             base = item.getAttribute("base")
             if not base:
@@ -83,8 +80,7 @@ class OwnedTV(Plugin):
                 stream = RTMPStream(self.session, {
                     "rtmp": ("{0}/{1}").format(base, playpath),
                     "live": True,
-                    "swfhash": swfhash,
-                    "swfsize": swfsize,
+                    "swfVfy": swfurl,
                     "pageUrl": self.url
                 })
 

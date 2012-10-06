@@ -253,9 +253,7 @@ def handle_url(args):
 
     try:
         streams = channel.get_streams()
-    except StreamError as err:
-        exit(str(err))
-    except PluginError as err:
+    except (StreamError, PluginError) as err:
         exit(str(err))
 
     if len(streams) == 0:

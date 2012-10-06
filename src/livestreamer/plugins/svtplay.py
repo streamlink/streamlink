@@ -1,7 +1,7 @@
 from livestreamer.compat import str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, swfverify, verifyjson
+from livestreamer.utils import urlget, verifyjson
 
 import re
 
@@ -23,7 +23,6 @@ class SVTPlay(Plugin):
         streams = {}
         video = verifyjson(res.json, "video")
         videos = verifyjson(video, "videoReferences")
-        swfhash, swfsize = (None, None)
 
         for video in videos:
             if not ("url" in video and "playerType" in video):
@@ -31,15 +30,10 @@ class SVTPlay(Plugin):
 
             if video["playerType"] == "flash":
                 if video["url"].startswith("rtmp"):
-                    if not swfhash:
-                        self.logger.debug("Verifying SWF: {0}", self.SWFURL)
-                        swfhash, swfsize = swfverify(self.SWFURL)
-
                     stream = RTMPStream(self.session, {
                         "rtmp": video["url"],
                         "pageUrl": self.PageURL,
-                        "swfhash": swfhash,
-                        "swfsize": swfsize,
+                        "swfVfy": self.SWFURL,
                         "live": True
                     })
                     streams[str(video["bitrate"]) + "k"] = stream

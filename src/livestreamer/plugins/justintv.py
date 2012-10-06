@@ -2,7 +2,7 @@ from livestreamer.compat import str
 from livestreamer.options import Options
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import swfverify, urlget
+from livestreamer.utils import urlget, urlresolve
 
 import re
 import random
@@ -113,8 +113,7 @@ class JustinTV(Plugin):
         if len(nodes.childNodes) == 0:
             return streams
 
-        self.logger.debug("Verifying SWF: {0}", self.SWFURL)
-        swfhash, swfsize = swfverify(self.SWFURL)
+        swfurl = urlresolve(self.SWFURL)
 
         for node in nodes.childNodes:
             info = {}
@@ -126,9 +125,7 @@ class JustinTV(Plugin):
 
             stream = RTMPStream(self.session, {
                 "rtmp": ("{0}/{1}").format(info["connect"], info["play"]),
-                "swfUrl": self.SWFURL,
-                "swfhash": swfhash,
-                "swfsize": swfsize,
+                "swfVfy": swfurl,
                 "live": True
             })
 

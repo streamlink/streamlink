@@ -127,6 +127,14 @@ def urlget(url, prefetch=True, **args):
     return urlopen(url, method="get", prefetch=prefetch,
                    **args)
 
+def urlresolve(url):
+    res = urlget(url, prefetch=False, allow_redirects=False)
+
+    if res.status_code == 302 and "location" in res.headers:
+        return res.headers["location"]
+    else:
+        return url
+
 def swfdecompress(data):
     if data[:3] == b"CWS":
         data = b"F" + data[1:8] + zlib.decompress(data[8:])
@@ -148,4 +156,5 @@ def verifyjson(json, key):
     return json[key]
 
 __all__ = ["ArgumentParser", "NamedPipe", "RingBuffer",
-           "urlopen", "urlget", "swfdecompress", "swfverify", "verifyjson"]
+           "urlopen", "urlget", "urlresolve", "swfdecompress",
+           "swfverify", "verifyjson"]
