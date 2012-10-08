@@ -8,6 +8,7 @@ import xml.dom.minidom
 
 class OwnedTV(Plugin):
     ConfigURL = "http://www.own3d.tv/livecfg/{0}"
+    StatusAPIURL = "http://api.own3d.tv/rest/live/status.xml?liveid={0}"
     CDN = {
         "cdn1": "rtmp://fml.2010.edgecastcdn.net/202010",
         "cdn2": "rtmp://owned.fc.llnwd.net:1935/owned",
@@ -24,35 +25,64 @@ class OwnedTV(Plugin):
         res = urlget(url)
         data = res.text
 
-        channelid = None
+        liveid = None
         swfurl = None
 
         match = re.search('flashvars.config = "livecfg/(\d+)', data)
         if match:
-            channelid = int(match.group(1))
+            liveid = int(match.group(1))
 
         match = re.search("document.location.hash='/live/(\d+)'", data)
         if match:
-            channelid = int(match.group(1))
+            liveid = int(match.group(1))
 
         match = re.search("xajax_load_live_config\((\d+),", data)
         if match:
-            channelid = int(match.group(1))
+            liveid = int(match.group(1))
 
         match = re.search("""swfobject.embedSWF\(\n.+"(.+)", "player",""", data)
         if match:
             swfurl = match.group(1)
 
-        return (channelid, swfurl)
+        return (liveid, swfurl)
+
+    def _is_live(self, liveid):
+        res = urlget(self.StatusAPIURL.format(liveid))
+
+        try:
+            dom = xml.dom.minidom.parseString(res.text)
+        except Exception as err:
+            raise PluginError(("Unable to parse status XML: {0})").format(err))
+
+        live = dom.getElementsByTagName("live_is_live")
+
+        if len(live) > 0:
+            return self._get_node_text(live[0]) == "1"
+
+        return False
+
+    def _get_node_text(self, element):
+        res = []
+        for node in element.childNodes:
+            if node.nodeType == node.TEXT_NODE:
+                res.append(node.data)
+
+        if len(res) == 0:
+            return None
+        else:
+            return "".join(res)
 
     def _get_streams(self):
-        (channelid, swfurl) = self._get_channel_info(self.url)
+        (liveid, swfurl) = self._get_channel_info(self.url)
 
-        if not (channelid and swfurl):
+        if not (liveid and swfurl):
+            raise NoStreamsError(self.url)
+
+        if not self._is_live(liveid):
             raise NoStreamsError(self.url)
 
         self.logger.debug("Fetching stream info")
-        res = urlget(self.ConfigURL.format(channelid))
+        res = urlget(self.ConfigURL.format(liveid))
 
         try:
             dom = xml.dom.minidom.parseString(res.text)

@@ -114,12 +114,6 @@ VLC version 2.0.1 and 2.0.2 contains a bug that prevents it from reading data fr
 This has been fixed in version 2.0.3.
 
 
-**Own3d streams fail to play**
-
-Due to a flaw in Own3d's API livestreamer has no way of figuring out if these streams are online or offline
-before starting the stream, so if it does not play it's probably offline.
-
-
 Saving arguments AKA config file
 --------------------------------
 Livestreamer can read arguments from the file ~/.livestreamerrc (POSIX) or %APPDATA%\livestreamer\livestreamerrc (Windows).
