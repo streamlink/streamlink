@@ -105,8 +105,8 @@ def write_stream(fd, out, progress, player):
 
         try:
             data = fd.read(8192)
-        except IOError:
-            logger.error("Error when reading from stream")
+        except IOError as err:
+            logger.error("Error when reading from stream: {0}", str(err))
             break
 
         if len(data) == 0:
@@ -114,8 +114,8 @@ def write_stream(fd, out, progress, player):
 
         try:
             out.write(data)
-        except IOError:
-            logger.error("Error when writing to output")
+        except IOError as err:
+            logger.error("Error when writing to output: {0}", str(err))
             break
 
         written += len(data)

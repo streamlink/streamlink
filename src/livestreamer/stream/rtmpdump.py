@@ -1,7 +1,7 @@
 from . import StreamProcess, StreamError
 from ..compat import str, is_win32
 
-import pbs
+import sh
 
 class RTMPStream(StreamProcess):
     def __init__(self, session, params):
@@ -11,8 +11,8 @@ class RTMPStream(StreamProcess):
         self.params["flv"] = "-"
 
         try:
-            self.cmd = getattr(pbs, self.rtmpdump)
-        except pbs.CommandNotFound as err:
+            self.cmd = getattr(sh, self.rtmpdump)
+        except sh.CommandNotFound as err:
             raise StreamError(("Unable to find {0} command").format(str(err)))
 
     def open(self):
@@ -24,7 +24,7 @@ class RTMPStream(StreamProcess):
     def _has_jtv_support(self):
         try:
             help = self.cmd(help=True, _err_to_out=True)
-        except pbs.ErrorReturnCode as err:
+        except sh.ErrorReturnCode as err:
             raise StreamError(("Error while checking rtmpdump compatibility: {0}").format(str(err.stdout, "ascii")))
 
         for line in help.split("\n"):
