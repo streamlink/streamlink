@@ -1,7 +1,5 @@
 from . import StreamProcess, StreamError
-from ..compat import str, is_win32
-
-import sh
+from ..compat import str, sh, is_win32
 
 class RTMPStream(StreamProcess):
     def __init__(self, session, params):

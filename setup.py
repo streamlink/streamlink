@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 from sys import version_info
 
 version = "1.3.2"
-deps = ["sh", "requests>=0.12.1"]
+deps = ["pbs", "requests>=0.12.1"]
 packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugins",

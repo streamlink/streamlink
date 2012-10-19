@@ -28,6 +28,10 @@ except ImportError:
     from urlparse import urlparse, urljoin, parse_qs
     from urllib import quote, unquote
 
+import pbs as sh
+
+pbs_compat = True
+
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
            "str", "bytes", "urlparse", "urljoin", "parse_qs",
-           "quote", "unquote"]
+           "quote", "unquote", "sh", "pbs_compat"]
