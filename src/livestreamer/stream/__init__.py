@@ -41,9 +41,10 @@ class StreamProcess(Stream):
         return str(self.cmd.bake(**self.params))
 
     def open(self):
-        def write_callback(data):
+        def write_callback(data, queue, process):
             self.last_data_time = time.time()
             self.fd.write(data)
+            self.process_alive = process.alive
 
         self.fd = RingBuffer()
         self.last_data_time = time.time()
@@ -60,7 +61,9 @@ class StreamProcess(Stream):
         # Wait 0.5 seconds to see if program exited prematurely
         time.sleep(0.5)
 
-        if not stream.process.alive:
+        self.process_alive = stream.process.alive
+
+        if not self.process_alive:
             if self.errorlog:
                 raise StreamError(("Error while executing subprocess, error output logged to: {0}").format(tmpfile.name))
             else:
@@ -72,7 +75,7 @@ class StreamProcess(Stream):
         if not self.fd:
             return b""
 
-        while self.fd.length < size:
+        while self.fd.length < size and self.process_alive:
             elapsed_since_read = time.time() - self.last_data_time
 
             if elapsed_since_read > self.timeout:
