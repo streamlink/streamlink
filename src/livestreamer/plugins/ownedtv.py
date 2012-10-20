@@ -92,8 +92,9 @@ class OwnedTV(Plugin):
         streams = {}
         channels = dom.getElementsByTagName("channels")[0]
         clip = channels.getElementsByTagName("clip")[0]
+        items = clip.getElementsByTagName("item")
 
-        for item in clip.getElementsByTagName("item"):
+        for item in items:
             base = item.getAttribute("base")
             if not base:
                 continue
@@ -103,7 +104,6 @@ class OwnedTV(Plugin):
                 base = self.CDN[ref]
 
             for streamel in item.getElementsByTagName("stream"):
-                altcount = 1
                 name = streamel.getAttribute("label").lower().replace(" ", "_")
                 playpath = streamel.getAttribute("name")
 
@@ -117,12 +117,12 @@ class OwnedTV(Plugin):
                 if not name in streams:
                     streams[name] = stream
                 else:
-                    if altcount == 1:
+                    index = items.index(item)
+
+                    if index == 1:
                         streams[name + "_alt"] = stream
                     else:
-                        streams[name + "_alt" + str(altcount)] = stream
-
-                    altcount += 1
+                        streams[name + "_alt" + str(index)] = stream
 
         return streams
 
