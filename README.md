@@ -27,8 +27,8 @@ Livestreamer and it's plugins currently depends on these software:
 
 These will be installed automatically by the setup script if they are missing:
 * python-requests (at least version 0.12.1)
-* python-pbs
-* python-argparse (only needed for Python version < 2.7)
+* python-sh (*nix) or python-pbs (Windows)
+* python-argparse (only needed for Python version 2.6)
 
 For RTMP based plugins:
 * librtmp/rtmpdump (git clone after 2011-07-31 is needed for Twitch/JustinTV plugin)
