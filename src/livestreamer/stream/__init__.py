@@ -31,7 +31,7 @@ class StreamProcess(Stream):
 
         self.params = params
         self.params["_bg"] = True
-        self.params["_err"] = open(os.devnull, "w")
+        self.params["_err"] = open(os.devnull, "wb")
         self.errorlog = self.session.options.get("errorlog")
 
         if not pbs_compat:
@@ -43,7 +43,7 @@ class StreamProcess(Stream):
         return str(self.cmd.bake(**self.params))
 
     def open(self):
-        def write_callback(data, queue, process):
+        def out_callback(data, queue, process):
             self.last_data_time = time.time()
             self.fd.write(data)
             self.process_alive = process.alive
@@ -56,7 +56,7 @@ class StreamProcess(Stream):
         if not pbs_compat:
             self.fd = RingBuffer()
             self.last_data_time = time.time()
-            self.params["_out"] = write_callback
+            self.params["_out"] = out_callback
 
         stream = self.cmd(**self.params)
 

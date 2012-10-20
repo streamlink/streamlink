@@ -2,9 +2,11 @@
 
 from setuptools import setup, find_packages
 from sys import version_info
+from os import name as os_name
+import os
 
 version = "1.3.2"
-deps = ["pbs", "requests>=0.12.1"]
+deps = ["requests>=0.12.1"]
 packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugins",
@@ -15,6 +17,11 @@ packages = ["livestreamer",
 if (version_info[0] == 2 and version_info[1] < 7) or \
    (version_info[0] == 3 and version_info[1] < 2):
     deps.append("argparse")
+
+if os_name == "nt":
+    deps.append("pbs")
+else:
+    deps.append("sh")
 
 setup(name="livestreamer",
       version=version,
