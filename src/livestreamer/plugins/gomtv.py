@@ -78,19 +78,22 @@ class GomTV(Plugin):
         qualities = ["HQ", "SQ", "HQTest", "SQTest"]
 
         res = self._get_live_page(self.url)
-        urls = self._find_stream_urls(res.text)
+        goxurl = self._find_gox_url(res.text)
+
+        if not goxurl:
+            raise PluginError("Unable to find GOX URL")
 
         for quality in qualities:
-            for url in urls:
-                # Grab the response of the URL listed on the Live page for a stream
-                url = url.format(quality=quality)
-                res = urlget(url, session=self.rsession)
+            # Grab the response of the URL listed on the Live page for a stream
+            url = goxurl.format(quality=quality)
+            res = urlget(url, session=self.rsession)
 
-                # The response for the GOX XML if an incorrect stream quality is chosen is 1002.
-                if res.text != "1002" and len(res.text) > 0:
-                    streamurl = self._parse_gox_file(res.text)
-                    streams[quality.lower()] = HTTPStream(self.session, streamurl,
-                                                          headers=self.StreamHeaders)
+            # The response for the GOX XML if an incorrect stream quality is chosen is 1002.
+            if res.text != "1002" and len(res.text) > 0:
+                streamurl = self._parse_gox_file(res.text)
+                streams[quality.lower()] = HTTPStream(self.session, streamurl,
+                                                      headers=self.StreamHeaders)
+
 
         return streams
 
@@ -151,7 +154,7 @@ class GomTV(Plugin):
 
         return res
 
-    def _find_stream_urls(self, data):
+    def _find_gox_url(self, data):
         url = None
 
         # Parsing through the live page for a link to the gox XML file.
@@ -174,26 +177,7 @@ class GomTV(Plugin):
         except AttributeError:
             raise PluginError("Unable to find the stream title on the Live page")
 
-        # Check for multiple streams going at the same time, and extract the conid and the title
-        # Those streams have the class "live_now"
-        patternlive = '<a\shref=\"/live/index.gom\?conid=(?P<conid>\d+)\"\sclass=\"live_now\"\stitle=\"(?P<title>[^\"]+)'
-        streams = re.findall(patternlive, data)
-
-        if len(streams) > 1:
-            urls = []
-            for stream in streams:
-                # Modify the urlFromHTML according to the user
-                singleurl = re.sub("conid=\d+", "conid=" + stream[0], url)
-                singletitlehtml = "+".join(stream[0].split(" "))
-                singleurl = re.sub("title=[\w|.|+]*", "title=" + singletitlehtml, singleurl)
-                urls.append(singleurl)
-
-            return urls
-        else:
-            if url is None:
-                return []
-            else:
-                return [url]
+        return url
 
     def _parse_gox_file(self, data):
         # Grabbing the gomcmd URL
