@@ -39,10 +39,22 @@ class StreamProcess(Stream):
             self.timeout = timeout
             self.params["_out_bufsize"] = 8192
 
+    def _check_cmd(self):
+        try:
+            cmd = getattr(sh, self.cmd)
+        except sh.CommandNotFound as err:
+            raise StreamError(("Unable to find {0} command").format(str(err)))
+
+        return cmd
+
     def cmdline(self):
-        return str(self.cmd.bake(**self.params))
+        cmd = self._check_cmd()
+
+        return str(cmd.bake(**self.params))
 
     def open(self):
+        cmd = self._check_cmd()
+
         def out_callback(data, queue, process):
             self.last_data_time = time.time()
             self.fd.write(data)
@@ -58,7 +70,7 @@ class StreamProcess(Stream):
             self.last_data_time = time.time()
             self.params["_out"] = out_callback
 
-        stream = self.cmd(**self.params)
+        stream = cmd(**self.params)
 
         # Wait 0.5 seconds to see if program exited prematurely
         time.sleep(0.5)
@@ -95,6 +107,16 @@ class StreamProcess(Stream):
             time.sleep(0.05)
 
         return self.fd.read(size)
+
+    @classmethod
+    def is_usable(cls, cmd):
+        try:
+            cmd = getattr(sh, cmd)
+        except sh.CommandNotFound as err:
+            return False
+
+        return True
+
 
 from .akamaihd import AkamaiHDStream
 from .hls import HLSStream

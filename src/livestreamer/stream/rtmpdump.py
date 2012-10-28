@@ -2,16 +2,13 @@ from . import StreamProcess, StreamError
 from ..compat import str, sh, is_win32
 
 class RTMPStream(StreamProcess):
+    DefaultPath = is_win32 and "rtmpdump.exe" or "rtmpdump"
+
     def __init__(self, session, params):
         StreamProcess.__init__(self, session, params)
 
-        self.rtmpdump = self.session.options.get("rtmpdump") or (is_win32 and "rtmpdump.exe" or "rtmpdump")
+        self.cmd = self.session.options.get("rtmpdump") or self.DefaultPath
         self.params["flv"] = "-"
-
-        try:
-            self.cmd = getattr(sh, self.rtmpdump)
-        except sh.CommandNotFound as err:
-            raise StreamError(("Unable to find {0} command").format(str(err)))
 
     def open(self):
         if "jtv" in self.params and not self._has_jtv_support():
@@ -20,8 +17,10 @@ class RTMPStream(StreamProcess):
         return StreamProcess.open(self)
 
     def _has_jtv_support(self):
+        cmd = self._check_cmd()
+
         try:
-            help = self.cmd(help=True, _err_to_out=True)
+            help = cmd(help=True, _err_to_out=True)
         except sh.ErrorReturnCode as err:
             raise StreamError(("Error while checking rtmpdump compatibility: {0}").format(str(err.stdout, "ascii")))
 
@@ -30,4 +29,11 @@ class RTMPStream(StreamProcess):
                 return True
 
         return False
+
+    @classmethod
+    def is_usable(cls, session):
+        cmd = session.options.get("rtmpdump") or cls.DefaultPath
+
+        return StreamProcess.is_usable(cmd)
+
 

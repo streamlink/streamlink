@@ -269,7 +269,12 @@ def handle_url(args):
 
             if args.cmdline:
                 if isinstance(stream, StreamProcess):
-                    msg(stream.cmdline())
+                    try:
+                        cmdline = stream.cmdline()
+                    except StreamError as err:
+                        exit(err)
+
+                    msg(cmdline)
                 else:
                     exit("Stream does not use a command-line")
             else:
