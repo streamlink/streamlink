@@ -21,7 +21,7 @@ except ImportError:
 
 
 def parse_m3u_attributes(data):
-    attr = re.findall("([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+)\"|[0-9A-z\-]+)", data)
+    attr = re.findall("([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)", data)
     rval = {}
 
     for key, val, strval in attr:
@@ -64,7 +64,11 @@ def parse_m3u(data):
                 else:
                     value = parse_m3u_attributes(value)
 
-            tags[key] = value
+            if key in tags:
+                tags[key].append(value)
+            else:
+                tags[key] = [value]
+
             lasttag = (key, value)
         else:
             entry = { "url": line, "tag": lasttag }
@@ -162,24 +166,24 @@ class HLSStream(Stream):
             self.playlist_end = True
 
         if "EXT-X-MEDIA-SEQUENCE" in tags:
-            sequence = int(tags["EXT-X-MEDIA-SEQUENCE"])
+            sequence = int(tags["EXT-X-MEDIA-SEQUENCE"][0])
         else:
             sequence = 0
 
-        if "EXT-X-KEY" in tags and tags["EXT-X-KEY"]["METHOD"] != "NONE":
+        if "EXT-X-KEY" in tags and tags["EXT-X-KEY"][0]["METHOD"][0] != "NONE":
             if not CAN_DECRYPT:
                 self.logger.error("Need pyCrypto installed to decrypt data")
                 raise IOError
 
-            if tags["EXT-X-KEY"]["METHOD"] != "AES-128":
-                self.logger.error("Unable to decrypt cipher {0}", tags["EXT-X-KEY"]["METHOD"])
+            if tags["EXT-X-KEY"][0]["METHOD"][0] != "AES-128":
+                self.logger.error("Unable to decrypt cipher {0}", tags["EXT-X-KEY"][0]["METHOD"][0])
                 raise IOError
 
-            if not "URI" in tags["EXT-X-KEY"]:
+            if not "URI" in tags["EXT-X-KEY"][0]:
                 self.logger.error("Missing URI to decryption key")
                 raise IOError
 
-            res = urlget(tags["EXT-X-KEY"]["URI"], exception=IOError)
+            res = urlget(tags["EXT-X-KEY"][0]["URI"][0], exception=IOError)
             self.decryptor_key = res.content
 
         for i, entry in enumerate(entries):
@@ -217,14 +221,12 @@ class HLSStream(Stream):
         else:
             return url
 
-
     @classmethod
-    def parse_variant_playlist(cls, session, url):
-        res = urlget(url, exception=IOError)
+    def parse_variant_playlist(cls, session, url, **params):
+        res = urlget(url, exception=IOError, **params)
         streams = {}
 
         (tags, entries) = parse_m3u(res.text)
-
 
         for entry in entries:
             (tag, value) = entry["tag"]
@@ -232,7 +234,16 @@ class HLSStream(Stream):
             if tag != "EXT-X-STREAM-INF":
                 continue
 
-            if "RESOLUTION" in value:
+            if "EXT-X-MEDIA" in tags:
+                for media in tags["EXT-X-MEDIA"]:
+                    key = media["TYPE"]
+
+                    if key in value and value[key] == media["GROUP-ID"]:
+                        value.update(media)
+
+            if "NAME" in value:
+                quality = value["NAME"]
+            elif "RESOLUTION" in value:
                 quality = value["RESOLUTION"].split("x")[1] + "p"
             elif "BANDWIDTH" in value:
                 quality = str(int(int(value["BANDWIDTH"]) / 1000)) + "k"

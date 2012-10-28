@@ -1,21 +1,30 @@
-from livestreamer.compat import str
+from livestreamer.compat import str, bytes
 from livestreamer.options import Options
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
-from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, urlresolve
+from livestreamer.stream import RTMPStream, HLSStream
+from livestreamer.utils import urlget, urlresolve, verifyjson
 
+from hashlib import sha1
+
+import hmac
 import re
 import random
 import xml.dom.minidom
+
 
 class JustinTV(Plugin):
     options = Options({
         "cookie": None
     })
 
-    StreamInfoURL = "http://usher.justin.tv/find/{0}.xml"
+    APIBaseURL = "http://usher.justin.tv"
+    StreamInfoURL = APIBaseURL + "/find/{0}.xml"
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
+
+    HLSStreamTokenKey = b"Wd75Yj9sS26Lmhve"
+    HLSStreamTokenURL = APIBaseURL + "/stream/iphone_token/{0}.json"
+    HLSSPlaylistURL = APIBaseURL + "/stream/multi_playlist/{0}.m3u8"
 
     @classmethod
     def can_handle_url(self, url):
@@ -79,7 +88,7 @@ class JustinTV(Plugin):
 
         return chansub
 
-    def _get_streaminfo(self):
+    def _get_rtmp_streams(self):
         def clean_tag(tag):
             if tag[0] == "_":
                 return tag[1:]
@@ -140,13 +149,67 @@ class JustinTV(Plugin):
 
         return streams
 
+    def _get_hls_streams(self):
+        url = self.HLSStreamTokenURL.format(self.channelname)
+
+        try:
+            res = urlget(url, params=dict(type="any", connection="wifi"),
+                         exception=IOError)
+        except IOError:
+            return {}
+
+        if not isinstance(res.json, list):
+            raise PluginError("Stream info response is not JSON")
+
+        if len(res.json) == 0:
+            raise PluginError("No stream token in JSON")
+
+        streams = {}
+
+        token = verifyjson(res.json[0], "token")
+        hashed = hmac.new(self.HLSStreamTokenKey, bytes(token, "utf8"), sha1)
+        fulltoken = hashed.hexdigest() + ":" + token
+        url = self.HLSSPlaylistURL.format(self.channelname)
+
+        try:
+            params = dict(token=fulltoken, hd="true")
+            playlist = HLSStream.parse_variant_playlist(self.session, url,
+                                                        params=params)
+        except IOError as err:
+            raise PluginError(err)
+
+        return playlist
+
     def _get_streams(self):
         self.channelname = self._get_channel_name(self.url)
 
         if not self.channelname:
             raise NoStreamsError(self.url)
 
-        return self._get_streaminfo()
+        streams = {}
+
+        if RTMPStream.is_usable(self.session):
+            try:
+                rtmpstreams = self._get_rtmp_streams()
+                streams.update(rtmpstreams)
+            except PluginError as err:
+                self.logger.error("Error when fetching RTMP stream info: {0}", str(err))
+        else:
+            self.logger.warning("rtmpdump is not usable, only HLS streams will be available")
+
+        try:
+            hlsstreams = self._get_hls_streams()
+            if len(streams) > 0:
+                hlssuffix = "_hls"
+            else:
+                hlssuffix = ""
+
+            for name, stream in hlsstreams.items():
+                streams[name + hlssuffix] = stream
+        except PluginError as err:
+            self.logger.error("Error when fetching HLS stream info: {0}", str(err))
+
+        return streams
 
 
 __plugin__ = JustinTV
