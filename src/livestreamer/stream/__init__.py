@@ -95,7 +95,7 @@ class StreamProcess(Stream):
         if not self.fd:
             return b""
 
-        while self.fd.length < size and self.process_alive:
+        while self.fd.length == 0 and self.process_alive:
             elapsed_since_read = time.time() - self.last_data_time
 
             if elapsed_since_read > self.timeout:
