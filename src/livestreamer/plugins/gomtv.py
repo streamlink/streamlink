@@ -106,6 +106,16 @@ class GomTV(Plugin):
             if res.text != "1002" and len(res.text) > 0:
                 gox = self._parse_gox_file(res.text)
                 entry = gox[0]
+
+                nokey = False
+                for var in ("NODEIP", "NODEID", "UNO", "USERIP"):
+                    if not var in entry:
+                        nokey = True
+
+                if nokey:
+                    self.logger.warning("Unable to fetch key, make sure that you have access to this VOD")
+                    continue
+
                 key = self._check_vod_key(entry["NODEIP"], entry["NODEID"], entry["UNO"],
                                           entry["USERIP"])
 
