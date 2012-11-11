@@ -202,6 +202,8 @@ class GomTV(Plugin):
         if len(res) == 0:
             raise PluginError("Empty response from key check server")
 
+        conn.close()
+
         res = str(res, "ascii").strip().split(",")
 
         return res[-1]
@@ -284,6 +286,7 @@ class GomTV(Plugin):
                         # SQ and SQTest streams can be gomp2p links, with actual stream address passed as a parameter.
                         if href.startswith("gomp2p://"):
                             href, n = re.subn("^.*LiveAddr=", "", href)
+                            href = unquote(href)
 
                         entry[child.tagName] = href
                     else:
