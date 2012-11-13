@@ -1,5 +1,5 @@
 from . import plugins
-from .compat import urlparse
+from .compat import urlparse, is_win32
 from .logger import Logger
 from .options import Options
 from .plugins import PluginError, NoStreamsError, NoPluginError
@@ -17,7 +17,8 @@ class Livestreamer(object):
 
     def __init__(self):
         self.options = Options({
-            "rtmpdump": None,
+            "rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
+            "rtmpdump-proxy": None,
             "errorlog": False
         })
         self.plugins = {}

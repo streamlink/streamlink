@@ -59,15 +59,19 @@ outputopt.add_argument("-f", "--force", action="store_true",
 outputopt.add_argument("-O", "--stdout", action="store_true",
                        help="Write stream to stdout instead of playing it")
 
+streamopt = parser.add_argument_group("stream options")
+streamopt.add_argument("-c", "--cmdline", action="store_true",
+                       help="Print command-line used internally to play stream, this may not be available on all streams")
+streamopt.add_argument("-e", "--errorlog", action="store_true",
+                       help="Log possible errors from internal command-line to a temporary file, use when debugging")
+streamopt.add_argument("-r", "--rtmpdump", metavar="path",
+                       help="Specify location of rtmpdump executable, eg. /usr/local/bin/rtmpdump")
+streamopt.add_argument("--rtmpdump-proxy", metavar="host:port",
+                       help="Specify a proxy (SOCKS) that rtmpdump will use")
+
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory",
                        help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a ;.")
-pluginopt.add_argument("-c", "--cmdline", action="store_true",
-                       help="Print command-line used internally to play stream, this may not be available on all streams")
-pluginopt.add_argument("-e", "--errorlog", action="store_true",
-                       help="Log possible errors from internal command-line to a temporary file, use when debugging")
-pluginopt.add_argument("-r", "--rtmpdump", metavar="path",
-                       help="Specify location of rtmpdump executable, eg. /usr/local/bin/rtmpdump")
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
@@ -297,6 +301,34 @@ def load_plugins(dirs):
         else:
             logger.warning("Plugin directory {0} does not exist!", directory)
 
+def set_options(args):
+    if args.gomtv_username and (args.gomtv_password is None or (len(args.gomtv_password) < 1)):
+        gomtv_password = getpass.getpass("Enter GOMTV password: ")
+    else:
+        gomtv_password = args.gomtv_password
+
+    livestreamer.set_option("errorlog", args.errorlog)
+
+    if args.rtmpdump:
+        livestreamer.set_option("rtmpdump", args.rtmpdump)
+
+    if args.rtmpdump_proxy:
+        livestreamer.set_option("rtmpdump-proxy", args.rtmpdump_proxy)
+
+    if args.jtv_cookie:
+        livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)
+
+    if args.gomtv_cookie:
+        livestreamer.set_plugin_option("gomtv", "cookie", args.gomtv_cookie)
+
+    if args.gomtv_username:
+        livestreamer.set_plugin_option("gomtv", "username", args.gomtv_username)
+
+    if gomtv_password:
+        livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
+
+    livestreamer.set_loglevel(args.loglevel)
+
 def main():
     arglist = sys.argv[1:]
 
@@ -308,18 +340,7 @@ def main():
     if args.stdout or args.output == "-":
         set_msg_output(sys.stderr)
 
-    if args.gomtv_username and (args.gomtv_password is None or (len(args.gomtv_password) < 1)):
-        gomtv_password = getpass.getpass("Enter GOMTV password: ")
-    else:
-        gomtv_password = args.gomtv_password
-
-    livestreamer.set_option("errorlog", args.errorlog)
-    livestreamer.set_option("rtmpdump", args.rtmpdump)
-    livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)
-    livestreamer.set_plugin_option("gomtv", "cookie", args.gomtv_cookie)
-    livestreamer.set_plugin_option("gomtv", "username", args.gomtv_username)
-    livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
-    livestreamer.set_loglevel(args.loglevel)
+    set_options(args)
 
     if args.plugin_dirs:
         load_plugins(args.plugin_dirs)
