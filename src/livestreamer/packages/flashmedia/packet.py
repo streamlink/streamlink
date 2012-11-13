@@ -344,7 +344,7 @@ class PacketIO(object):
 
         val = self.read(length)
 
-        return str(val, "utf8")
+        return val.decode("utf8", "ignore")
 
     def read_script_object(self, container):
         while True:
