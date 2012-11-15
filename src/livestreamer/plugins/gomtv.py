@@ -184,6 +184,13 @@ class GomTV(Plugin):
             username = self.rsession.cookies["SES_USERNICK"]
             self.logger.info(("Successfully logged in as {0}").format(username))
 
+        if username and password:
+            cookie = ""
+            for v in ("SES_USERNO", "SES_STATE", "SES_MEMBERNICK", "SES_USERNICK"):
+                if v in self.rsession.cookies:
+                    cookie += "{0}={1}; ".format(v, self.rsession.cookies[v])
+            self.logger.info("Cookie for reusing this session: {0}", cookie)
+
     def _check_vod_key(self, nodeip, nodeid, userno, userip):
         try:
             conn = socket.create_connection((nodeip, self.KeyCheckPort), timeout=15)
