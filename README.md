@@ -8,12 +8,13 @@ Current release: **1.3.2** (2012-10-03)
 
 Currently includes plugins for these sites:
 
-* GOMTV.net
+* Dailymotion
+* GOMTV.net (live and VOD)
 * Justin.tv/Twitch.tv
 * Livestream.com
 * Ongamenet.com
 * Own3d.tv
-* SVTPlay
+* SVTPlay (live and VOD)
 * UStream
 * YouTube
 
