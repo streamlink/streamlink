@@ -77,7 +77,7 @@ Installing (Windows - Manual install)
 
    **Git version** Open a command prompt and change directory to livestreamer source, then run:
 
-       python setup.py install
+        python setup.py install
 
     This should install any missing Python dependencies automatically if they are missing.
 
@@ -85,6 +85,17 @@ Installing (Windows - Manual install)
 Using
 -----
     $ livestreamer --help
+
+
+Saving arguments AKA config file
+--------------------------------
+Livestreamer can read arguments from the file ~/.livestreamerrc (POSIX) or %APPDATA%\livestreamer\livestreamerrc (Windows).
+A example file:
+
+    player=mplayer -cache 2048
+    gomtv-username=username
+    gomtv-password=password
+
 
 Plugin specific usage
 ---------------------
@@ -115,15 +126,20 @@ VLC version 2.0.1 and 2.0.2 contains a bug that prevents it from reading data fr
 This has been fixed in version 2.0.3.
 
 
-Saving arguments AKA config file
---------------------------------
-Livestreamer can read arguments from the file ~/.livestreamerrc (POSIX) or %APPDATA%\livestreamer\livestreamerrc (Windows).
-A example file:
+**Streams are buffering/lagging**
 
-    player=mplayer
-    gomtv-username=username
-    gomtv-password=password
+By default most players do not cache the input from stdin, here is a few command arguments you can pass to some common players:
 
+MPlayer
+
+    mplayer --cache <kbytes> (between 1024 and 8192 is recommended)
+
+
+VLC
+
+    vlc --file-caching <milliseconds> (between 1000 and 10000 is recommended)
+
+These arguments can be used by passing --player to livestreamer.
 
 Using livestreamer as a library
 -------------------------------
