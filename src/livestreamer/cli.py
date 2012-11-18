@@ -44,8 +44,8 @@ parser.add_argument("-l", "--loglevel", metavar="level",
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="player",
-                       help="Command-line for player, default is 'vlc'",
-                       default="vlc")
+                       help="Command-line for player, default is 'vlc --file-caching=5000'",
+                       default="vlc --file-caching=5000")
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help="Hide all player console output")
 playeropt.add_argument("-n", "--fifo", action="store_true",
