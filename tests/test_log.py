@@ -1,7 +1,15 @@
 import unittest
 
 from livestreamer.logger import Logger
-from io import StringIO
+from livestreamer.compat import is_py2
+
+# Docs says StringIO is suppose to take non-unicode strings
+# but it doesn't, so let's use BytesIO instead there...
+
+if is_py2:
+    from io import BytesIO as StringIO
+else:
+    from io import StringIO
 
 class TestSession(unittest.TestCase):
     def setUp(self):

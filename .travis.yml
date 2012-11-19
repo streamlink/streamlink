@@ -7,4 +7,4 @@ python:
 script: python setup.py test
 install:
  - sudo apt-get install rtmpdump
- - sudo pip install requests sh argparse
+ - sudo pip install requests==0.14.1 sh argparse

@@ -31,8 +31,8 @@ class TestSession(unittest.TestCase):
     def test_resolve_url(self):
         plugins = self.session.get_plugins()
         channel = self.session.resolve_url("http://test.se/channel")
-        self.assertIsInstance(channel, Plugin)
-        self.assertIsInstance(channel, plugins["testplugin"])
+        self.assertTrue(isinstance(channel, Plugin))
+        self.assertTrue(isinstance(channel, plugins["testplugin"]))
 
     def test_options(self):
         self.session.set_option("test_option", "option")
@@ -50,11 +50,11 @@ class TestSession(unittest.TestCase):
         streams = channel.get_streams()
 
         self.assertTrue("best" in streams)
-        self.assertIs(streams["best"], streams["1080p"])
-        self.assertIsInstance(streams["rtmp"], RTMPStream)
-        self.assertIsInstance(streams["http"], HTTPStream)
-        self.assertIsInstance(streams["hls"], HLSStream)
-        self.assertIsInstance(streams["akamaihd"], AkamaiHDStream)
+        self.assertTrue(streams["best"] is streams["1080p"])
+        self.assertTrue(isinstance(streams["rtmp"], RTMPStream))
+        self.assertTrue(isinstance(streams["http"], HTTPStream))
+        self.assertTrue(isinstance(streams["hls"], HLSStream))
+        self.assertTrue(isinstance(streams["akamaihd"], AkamaiHDStream))
 
 if __name__ == "__main__":
     unittest.main()
