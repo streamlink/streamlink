@@ -31,7 +31,8 @@ class Logger(object):
         self.output.write(Logger.Format.format(module=module,
                                                level=Logger.Levels[level],
                                                msg=msg))
-        self.output.flush()
+        if hasattr(self.output, "flush"):
+            self.output.flush()
 
 class LoggerModule(object):
     def __init__(self, manager, module):
