@@ -32,7 +32,6 @@ class StreamProcess(Stream):
 
         self.params = params
         self.params["_bg"] = True
-        self.params["_err"] = open(os.devnull, "wb")
         self.errorlog = self.session.options.get("errorlog")
 
         if not pbs_compat:
@@ -67,6 +66,8 @@ class StreamProcess(Stream):
             tmpfile = tempfile.NamedTemporaryFile(prefix="livestreamer",
                                                   suffix=".err", delete=False)
             self.params["_err"] = tmpfile
+        else:
+            self.params["_err"] = open(os.devnull, "wb")
 
         if not pbs_compat:
             self.fd = RingBuffer()
