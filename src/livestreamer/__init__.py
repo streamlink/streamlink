@@ -96,11 +96,12 @@ class Livestreamer(object):
     def load_plugin(self, name, file, pathname, desc):
         module = imp.load_module(name, file, pathname, desc)
 
-        plugin = module.__plugin__
-        plugin.module = module.__name__
-        plugin.session = self
+        if hasattr(module, "__plugin__"):
+            plugin = getattr(module, "__plugin__")
+            plugin.module = getattr(module, "__name__")
+            plugin.session = self
 
-        self.plugins[module.__name__] = plugin
+            self.plugins[plugin.module] = plugin
 
         if file:
             file.close()
