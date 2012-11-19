@@ -1,5 +1,7 @@
 from livestreamer.options import Options
 
+import re
+
 SpecialQualityWeights = {
     "live": 1080,
     "hd": 1080,
@@ -13,20 +15,26 @@ SpecialQualityWeights = {
 }
 
 def qualityweight(quality):
-    if quality.endswith("k"):
-        bitrate = int(quality[:-1])
-
-        # These calculations are very rough
-        if bitrate > 2000:
-            return bitrate / 3.4
-        elif bitrate > 1000:
-            return bitrate / 2.6
-        else:
-            return bitrate / 1.7
-    elif quality.endswith("p"):
-        return int(quality[:-1])
-    elif quality in SpecialQualityWeights:
+    if quality in SpecialQualityWeights:
         return SpecialQualityWeights[quality]
+
+    match = re.match("^(\d+)([k]|[p])$", quality)
+
+    if match:
+        if match.group(2) == "k":
+            bitrate = int(match.group(1))
+
+            # These calculations are very rough
+            if bitrate > 2000:
+                return bitrate / 3.4
+            elif bitrate > 1000:
+                return bitrate / 2.6
+            else:
+                return bitrate / 1.7
+
+        elif match.group(2) == "p":
+            return int(match.group(1))
+
 
     return 1
 
