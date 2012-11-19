@@ -36,6 +36,7 @@ setup(name="livestreamer",
           "console_scripts": ['livestreamer=livestreamer.cli:main']
       },
       install_requires=deps,
+      test_suite="tests",
       classifiers=["Operating System :: POSIX",
                    "Operating System :: Microsoft :: Windows",
                    "Environment :: Console",
