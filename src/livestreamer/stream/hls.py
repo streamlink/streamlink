@@ -246,12 +246,16 @@ class HLSStream(Stream):
             elif "RESOLUTION" in value:
                 quality = value["RESOLUTION"].split("x")[1] + "p"
             elif "BANDWIDTH" in value:
-                quality = str(int(int(value["BANDWIDTH"]) / 1000)) + "k"
+                bw = int(value["BANDWIDTH"])
+
+                if bw > 1000:
+                    quality = str(int(bw/1000)) + "k"
+                else:
+                    quality = str(bw/1000) + "k"
             else:
                 continue
 
             stream = HLSStream(session, entry["url"])
-
             streams[quality] = stream
 
         return streams
