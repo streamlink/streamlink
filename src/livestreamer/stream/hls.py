@@ -249,9 +249,9 @@ class HLSStream(Stream):
                 bw = int(value["BANDWIDTH"])
 
                 if bw > 1000:
-                    quality = str(int(bw/1000)) + "k"
+                    quality = str(int(bw/1000.0)) + "k"
                 else:
-                    quality = str(bw/1000) + "k"
+                    quality = str(bw/1000.0) + "k"
             else:
                 continue
 
