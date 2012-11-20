@@ -10,11 +10,11 @@ Currently includes plugins for these sites:
 
 * Dailymotion
 * GOMTV.net (live and VOD)
-* Justin.tv/Twitch.tv
-* Livestream.com
-* Ongamenet.com
-* Own3d.tv
+* livestream.com and new.livestream.com
+* ongamenet.com
+* own3D.tv
 * SVTPlay (live and VOD)
+* Twitch/Justin.tv
 * UStream
 * YouTube
 
