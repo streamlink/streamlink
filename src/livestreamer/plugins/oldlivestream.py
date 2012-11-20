@@ -11,6 +11,7 @@ class OldLivestream(Plugin):
 
     def _get_streams(self):
         channelname = self.url.rstrip("/").rpartition("/")[2].lower()
+        channelname = chanelname.replace("_", "-")
 
         try:
             streams = HLSStream.parse_variant_playlist(self.session,
