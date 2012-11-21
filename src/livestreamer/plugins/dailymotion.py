@@ -22,7 +22,8 @@ class DailyMotion(Plugin):
     def can_handle_url(self, url):
         # valid urls are of the form dailymotion.com/video/[a-z]{5}.*
         # but we make "video/" optional and allow for dai.ly as shortcut
-        return ("dailymotion.com" in url) or ("dai.ly" in url)
+        # Gamecreds uses Dailymotion as backend so we support it through this plugin.
+        return ("dailymotion.com" in url) or ("dai.ly" in url) or ("video.gamecreds.com" in url)
 
     def _check_channel_live(self, channelname):
         url = self.MetadataURL.format(channelname)
@@ -36,8 +37,16 @@ class DailyMotion(Plugin):
         return mode == "live"
 
     def _get_channel_name(self, url):
-        rpart = url.rstrip("/").rpartition("/")[2].lower()
-        name = re.sub("_.*", "", rpart)
+        name = None
+        if ("dailymotion.com" in url) or ("dai.ly" in url):
+            rpart = url.rstrip("/").rpartition("/")[2].lower()
+            name = re.sub("_.*", "", rpart)
+        elif ("video.gamecreds.com" in url):
+            res = urlget(url)
+            # The HTML is broken (unclosed meta tags) and minidom fails to parse.
+            # Since we are not manipulating the DOM, we get away with a simple grep instead of fixing it.
+            match = re.search("<meta property=\"og:video\" content=\"http://www.dailymotion.com/swf/video/([a-z0-9]{6})", res.text)
+            if match: name = match.group(1)
 
         return name
 
