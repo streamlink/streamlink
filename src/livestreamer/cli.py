@@ -87,8 +87,9 @@ if is_win32:
 else:
     RCFILE = os.path.expanduser("~/.livestreamerrc")
 
-def exit(msg):
-    sys.exit(("error: {0}").format(msg))
+def exit(*args, **kw):
+    logger.error(*args, **kw)
+    sys.exit()
 
 def msg(msg):
     msg_output.write(msg + "\n")
@@ -151,30 +152,33 @@ def check_output(output, force):
     try:
         out = open(output, "wb")
     except IOError as err:
-        exit(("Failed to open file {0} - {1}").format(output, err))
+        exit("Failed to open file {0} - {1}", output, err)
 
     return out
 
-def output_stream(stream, args):
+def output_stream(stream, streamname, args):
     progress = False
     out = None
     player = None
 
-    logger.info("Opening stream: {0}", args.stream)
+    logger.info("Opening stream: {0}", streamname)
 
     try:
         fd = stream.open()
     except StreamError as err:
-        exit(("Could not open stream: {0}").format(err))
+        logger.error("Could not open stream: {0}", err)
+        return
 
     logger.debug("Pre-buffering 8192 bytes")
     try:
         prebuffer = fd.read(8192)
-    except IOError:
-        exit("Failed to read data from stream")
+    except IOError as err:
+        logger.error("Failed to read data from stream: {0}", str(err))
+        return
 
     if len(prebuffer) == 0:
-        exit("Failed to read data from stream")
+        logger.error("Failed to read data from stream")
+        return
 
     if args.output:
         if args.output == "-":
@@ -193,7 +197,7 @@ def output_stream(stream, args):
             try:
                 out = NamedPipe(pipename)
             except IOError as err:
-                exit(("Failed to create pipe: {0}").format(err))
+                exit("Failed to create pipe: {0}", err)
 
             cmd = args.player + " " + out.path
             pin = sys.stdin
@@ -216,7 +220,7 @@ def output_stream(stream, args):
             try:
                 out.open("wb")
             except IOError as err:
-                exit(("Failed to open pipe {0} - {1}").format(pipename, err))
+                exit("Failed to open pipe {0} - {1}", pipename, err)
         else:
             out = player.stdin
 
@@ -247,11 +251,44 @@ def output_stream(stream, args):
         except:
             pass
 
+    return True
+
+def handle_stream(args, streams):
+    streamname = args.stream
+    stream = streams[streamname]
+
+    if args.cmdline:
+        if isinstance(stream, StreamProcess):
+            try:
+                cmdline = stream.cmdline()
+            except StreamError as err:
+                exit(err)
+
+            msg(cmdline)
+        else:
+            exit("Stream does not use a command-line")
+    else:
+        success = False
+        altcount = 0
+
+        while not success:
+            success = output_stream(stream, streamname, args)
+
+            if altcount == 0:
+                streamname = args.stream + "_alt"
+            else:
+                streamname = args.stream + "_alt{0}".format(altcount)
+
+            if streamname in streams:
+                stream = streams[streamname]
+            else:
+                break
+
 def handle_url(args):
     try:
         channel = livestreamer.resolve_url(args.url)
     except NoPluginError:
-        exit(("No plugin can handle URL: {0}").format(args.url))
+        exit("No plugin can handle URL: {0}", args.url)
 
     logger.info("Found matching plugin {0} for URL {1}", channel.module, args.url)
 
@@ -261,28 +298,20 @@ def handle_url(args):
         exit(str(err))
 
     if len(streams) == 0:
-        exit(("No streams found on this URL: {0}").format(args.url))
+        exit("No streams found on this URL: {0}", args.url)
 
     keys = list(streams.keys())
     keys.sort()
     validstreams = (", ").join(keys)
 
     if args.stream:
+        if args.stream == "best":
+            for name, stream in streams.items():
+                if stream is streams["best"] and name != "best":
+                    args.stream = name
+
         if args.stream in streams:
-            stream = streams[args.stream]
-
-            if args.cmdline:
-                if isinstance(stream, StreamProcess):
-                    try:
-                        cmdline = stream.cmdline()
-                    except StreamError as err:
-                        exit(err)
-
-                    msg(cmdline)
-                else:
-                    exit("Stream does not use a command-line")
-            else:
-                output_stream(stream, args)
+            handle_stream(args, streams)
         else:
             msg(("Invalid stream quality: {0}").format(args.stream))
             msg(("Valid streams: {0}").format(validstreams))
