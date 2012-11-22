@@ -1,6 +1,7 @@
 from ..compat import str, sh, pbs_compat
 from ..utils import RingBuffer
 from threading import Lock
+from distutils.version import LooseVersion
 
 import os
 import time
@@ -38,6 +39,10 @@ class StreamProcess(Stream):
             self.fd = None
             self.timeout = timeout
             self.params["_out_bufsize"] = 8192
+
+            if LooseVersion(sh.__version__) >= LooseVersion("1.07"):
+                self.params["_no_out"] = True
+                self.params["_no_pipe"] = True
 
     def _check_cmd(self):
         try:
