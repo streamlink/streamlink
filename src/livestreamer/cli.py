@@ -273,12 +273,12 @@ def handle_stream(args, streams):
             exit("Stream does not use a command-line")
     else:
         success = False
-        altcount = 0
+        altcount = 1
 
         while not success:
             success = output_stream(stream, streamname, args)
 
-            if altcount == 0:
+            if altcount == 1:
                 streamname = args.stream + "_alt"
             else:
                 streamname = args.stream + "_alt{0}".format(altcount)
@@ -287,6 +287,8 @@ def handle_stream(args, streams):
                 stream = streams[streamname]
             else:
                 break
+
+            altcount += 1
 
 def handle_url(args):
     try:
