@@ -232,7 +232,11 @@ def output_stream(stream, streamname, args):
         msvcrt.setmode(out.fileno(), os.O_BINARY)
 
     logger.debug("Writing stream to output")
-    out.write(prebuffer)
+
+    try:
+        out.write(prebuffer)
+    except IOError as err:
+        exit("Error when writing to output: {0}", str(err))
 
     try:
         write_stream(fd, out, progress, player)
