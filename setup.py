@@ -5,7 +5,7 @@ from sys import version_info
 from os import name as os_name
 import os
 
-version = "1.3.2"
+version = "1.4"
 deps = ["requests>=0.12.1"]
 packages = ["livestreamer",
             "livestreamer.stream",

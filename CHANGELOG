@@ -1,0 +1,24 @@
+Version 1.4
+-----------
+
+    CLI:
+     - Added --rtmpdump-proxy
+     - Added --plugin-dirs
+     - Now automatically attempts to use secondary stream CDNs when primary fails
+
+    Plugins:
+     - Added Dailymotion plugin by Gaspard Jankowiak
+     - Added livestream.com plugin
+     - Added VOD support to GOMTV plugin
+     - Twitch plugin now finds HLS streams
+     - own3D.tv plugin now finds more CDNs
+     - Fixed bugs in Youtube and GOMTV plugin
+     - Refactored UStream plugin
+
+    Streams:
+     - Added support for AkamaiHD HTTP streams
+
+    General:
+     - Added unit tests, still fairly small coverage though
+     - Added travis-ci integration
+     - Now using python-sh on *nix since python-pbs is deprecated

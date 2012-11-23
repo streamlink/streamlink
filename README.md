@@ -4,7 +4,7 @@ Livestreamer is a CLI program that launches live streams from various streaming
 services in a custom video player and also a Python library that allows you to
 interact with the stream data in your own application.
 
-Current release: **1.3.2** (2012-10-03)
+Current release: **1.4** (2012-11-23). See CHANGELOG for release notes.
 
 Currently includes plugins for these sites:
 
@@ -57,7 +57,7 @@ Installing (Windows - Installer)
 2. Once installed, open  %APPDATA%\livestreamer\livestreamerrc in a text editor and make sure everything is correct
 3. Use livestreamer from command prompt
 
-*Note!* Installer has only been tested on Windows 7 (x64) as of now. Also, if you have previously installed manually you may need to remove livestreamer.exe from PYTHONPATH\Scripts.
+*Note!* If you have previously installed manually you may need to remove livestreamer.exe from PYTHONPATH\Scripts.
 
 
 Installing (Windows - Manual install)
