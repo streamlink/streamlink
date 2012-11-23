@@ -151,11 +151,12 @@ class AkamaiHDStream(Stream):
         if not self.flv:
             return b""
 
-        if self.buffer.length == 0:
+        while self.buffer.length < size:
             try:
                 tag = next(self.flv)
             except StopIteration:
-                return b""
+                self.flv = None
+                break
 
             self.process_tag(tag)
 
