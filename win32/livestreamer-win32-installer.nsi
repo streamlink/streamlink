@@ -7,12 +7,9 @@ SetCompressor lzma
 ### --- The PROGRAM_VERSION !define need to be updated with new Livestreamer versions ---
 ###
 
-# Script version; displayed when running the installer
-!define LIVESTREAMER_INSTALLER_VERSION "0.1"
-
 # Livestreamer program information
 !define PROGRAM_NAME "Livestreamer"
-!define PROGRAM_VERSION "1.3.2"
+!define PROGRAM_VERSION "1.4"
 !define PROGRAM_WEB_SITE "http://github.com/chrippa/livestreamer"
 
 # Python files generated with bbfreeze
@@ -39,6 +36,7 @@ SetCompressor lzma
 # --- Start of Modern User Interface ---
 
 # Welcome page
+!define MUI_WELCOMEPAGE_TITLE_3LINES
 !insertmacro MUI_PAGE_WELCOME
 
 # License page
@@ -54,10 +52,16 @@ SetCompressor lzma
 !insertmacro MUI_PAGE_INSTFILES
 
 # Display 'finished' page
+!define MUI_FINISHPAGE_NOREBOOTSUPPORT
+!define MUI_FINISHPAGE_RUN "notepad.exe"
+!define MUI_FINISHPAGE_RUN_TEXT "Edit configuration file"
+!define MUI_FINISHPAGE_RUN_PARAMETERS "$APPDATA\livestreamer\livestreamerrc"
 !insertmacro MUI_PAGE_FINISH
 
 # Uninstaller pages
+!insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
+!insertmacro MUI_UNPAGE_FINISH
 
 # Language files
 !insertmacro MUI_LANGUAGE "English"
@@ -85,7 +89,7 @@ FunctionEnd
 !define PROGRAM_UNINST_ROOT_KEY "HKLM"
 
 # Branding text
-BrandingText "Livestreamer Installer v${LIVESTREAMER_INSTALLER_VERSION}"
+BrandingText "Livestreamer"
 
 Name "${PROGRAM_NAME} ${PROGRAM_VERSION}"
 OutFile "..\build-win32\livestreamer-${PROGRAM_VERSION}-win32-setup.exe"
@@ -95,13 +99,13 @@ InstallDir "$PROGRAMFILES\Livestreamer"
 ShowInstDetails show
 ShowUnInstDetails show
 
+SectionGroup /e "Livestreamer"
 # Install main application
-Section "Livestreamer" Section1
+Section "Livestreamer CLI" Section1
   SectionIn RO
 
   SetOutPath $INSTDIR
   File /r "${LIVESTREAMER_PYTHON_BBFREEZE_OUTPUT_DIR}\*.*"
-  File /r "rtmpdump"
 
   SetOutPath "$APPDATA\livestreamer"
 
@@ -118,6 +122,12 @@ Section "Livestreamer" Section1
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR"
 SectionEnd
 
+Section "RTMPDump" Section2
+  SetOutPath $INSTDIR
+  File /r "rtmpdump"
+SectionEnd
+SectionGroupEnd
+
 Section -Uninstaller
   WriteUninstaller "$INSTDIR\Livestreamer-uninst.exe"
   WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "DisplayName" "$(^Name)"
@@ -125,10 +135,12 @@ Section -Uninstaller
 SectionEnd
 
 
-LangString DESC_Section1 ${LANG_ENGLISH} "Install Livestreamer."
+LangString DESC_Section1 ${LANG_ENGLISH} "Install the Livestreamer CLI"
+LangString DESC_Section2 ${LANG_ENGLISH} "Install RTMPDump, which is needed for RTMP streams"
 
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${Section1} $(DESC_Section1)
+  !insertmacro MUI_DESCRIPTION_TEXT ${Section2} $(DESC_Section2)
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 
