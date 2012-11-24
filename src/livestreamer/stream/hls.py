@@ -217,7 +217,7 @@ class HLSStream(Stream):
 
     def _relative_url(self, url):
         if not url.startswith("http"):
-            return "{0}/{1}".format(os.path.dirname(self.url), url)
+            return urljoin(self.url, url)
         else:
             return url
 
