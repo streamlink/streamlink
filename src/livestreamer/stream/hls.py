@@ -125,8 +125,8 @@ class HLSStream(Stream):
         if elapsed > self.playlist_minimal_reload_time:
             try:
                 self._reload_playlist()
-            except IOError:
-                pass
+            except IOError as err:
+                self.logger.error("Failed to reload playlist: {0}", str(err))
 
         if not self.sequence in self.playlist:
             if self.playlist_end:
@@ -192,7 +192,11 @@ class HLSStream(Stream):
         self.entries = entries
 
         if self.sequence == 0:
-            self.sequence = sequence
+            totalentries = len(entries)
+            if totalentries > 3:
+                self.sequence = sequence + (totalentries - 3)
+            else:
+                self.sequence = sequence
 
         self.playlist_reload_time = time()
 
@@ -202,6 +206,9 @@ class HLSStream(Stream):
         for entry in self.entries:
             if entry["sequence"] > maxseq:
                 break
+
+            if entry["sequence"] < self.sequence:
+                continue
 
             if not entry["sequence"] in self.playlist:
                 url = self._relative_url(entry["url"])
