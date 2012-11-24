@@ -213,8 +213,13 @@ class HLSStream(Stream):
             if not entry["sequence"] in self.playlist:
                 url = self._relative_url(entry["url"])
                 self.logger.debug("Opening fd: {0}", url)
-                res = urlget(url, prefetch=False,
-                             exception=IOError)
+
+                try:
+                    res = urlget(url, prefetch=False,
+                                 exception=IOError)
+                except IOError as err:
+                    self.logger.error("Failed to open segment: {0}", str(err))
+                    continue
 
                 self.playlist[entry["sequence"]] = res.raw
 
