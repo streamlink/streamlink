@@ -1,6 +1,5 @@
 from ..compat import str, sh, pbs_compat
 from ..utils import RingBuffer
-from threading import Lock
 from distutils.version import LooseVersion
 
 import os
@@ -64,8 +63,7 @@ class StreamProcess(Stream):
             self.last_data_time = time.time()
             self.process_alive = process.alive
 
-            with self.lock:
-                self.fd.write(data)
+            self.fd.write(data)
 
         if self.errorlog:
             tmpfile = tempfile.NamedTemporaryFile(prefix="livestreamer",
@@ -79,7 +77,6 @@ class StreamProcess(Stream):
             self.last_data_time = time.time()
             self.params["_out"] = out_callback
 
-        self.lock = Lock()
         stream = cmd(**self.params)
 
         # Wait 0.5 seconds to see if program exited prematurely
@@ -116,10 +113,7 @@ class StreamProcess(Stream):
 
             time.sleep(0.05)
 
-        with self.lock:
-            data = self.fd.read(size)
-
-        return data
+        return self.fd.read(size)
 
     @classmethod
     def is_usable(cls, cmd):

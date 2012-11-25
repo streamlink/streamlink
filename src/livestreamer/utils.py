@@ -1,6 +1,8 @@
 from .compat import is_win32
 from .plugins import PluginError
 
+from threading import Lock
+
 import argparse
 import hashlib
 import hmac
@@ -93,9 +95,10 @@ class NamedPipe(object):
 class RingBuffer(object):
     def __init__(self):
         self.buffer = b""
+        self.lock = Lock()
 
-    def read(self, size=0):
-        if size < 1:
+    def _read(self, size):
+        if size < 0:
             ret = self.buffer[:]
             self.buffer = b""
         else:
@@ -104,8 +107,13 @@ class RingBuffer(object):
 
         return ret
 
+    def read(self, size=-1):
+        with self.lock:
+            return self._read(size)
+
     def write(self, data):
-        self.buffer += data
+        with self.lock:
+            self.buffer += data
 
     @property
     def length(self):
