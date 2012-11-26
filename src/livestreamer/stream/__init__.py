@@ -60,9 +60,7 @@ class StreamProcess(Stream):
         cmd = self._check_cmd()
 
         def out_callback(data, queue, process):
-            self.last_data_time = time.time()
             self.process_alive = process.alive
-
             self.fd.write(data)
 
         if self.errorlog:
@@ -74,7 +72,6 @@ class StreamProcess(Stream):
 
         if not pbs_compat:
             self.fd = RingBuffer()
-            self.last_data_time = time.time()
             self.params["_out"] = out_callback
 
         stream = cmd(**self.params)
@@ -102,14 +99,9 @@ class StreamProcess(Stream):
         if not self.fd:
             return b""
 
-        while self.fd.length < size and self.process_alive:
-            elapsed_since_read = time.time() - self.last_data_time
-
-            if elapsed_since_read > self.timeout:
-                if self.fd.length == 0:
-                    raise IOError("Read timeout")
-                else:
-                    break
+        while self.fd.length == 0 and self.process_alive:
+            if self.fd.elapsed_since_write() > self.timeout:
+                raise IOError("Read timeout")
 
             time.sleep(0.05)
 
