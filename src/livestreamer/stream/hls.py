@@ -132,11 +132,13 @@ class HLSStreamFiller(Thread):
         self.stream.playlist_timer.cancel()
 
 class HLSStream(Stream):
-    def __init__(self, session, url):
+    def __init__(self, session, url, timeout=60):
         Stream.__init__(self, session)
 
         self.url = url
+        self.timeout = timeout
         self.logger = session.logger.new_module("stream.hls")
+        self.buffer = None
 
     def open(self):
         self.playlist_end = None
@@ -155,7 +157,13 @@ class HLSStream(Stream):
         return self
 
     def read(self, size=-1):
-        while self.buffer.length < size and self.filler.is_alive():
+        if not self.buffer:
+            return b""
+
+        while self.buffer.length == 0 and self.filler.is_alive():
+            if self.buffer.elapsed_since_write() > self.timeout:
+                raise IOError("Read timeout")
+
             sleep(0.10)
 
         return self.buffer.read(size)
@@ -220,7 +228,7 @@ class HLSStream(Stream):
         if "EXT-X-ENDLIST" in tags:
             self.playlist_end = entries[-1]["sequence"]
 
-        if self.sequence < entries[0]["sequence"]:
+        if self.sequence < entries[0]["sequence"] or (self.sequence-1) > entries[-1]["sequence"]:
             totalentries = len(entries)
 
             if totalentries > 3 and self.playlist_end is None:
