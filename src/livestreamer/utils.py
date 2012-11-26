@@ -2,6 +2,7 @@ from .compat import is_win32
 from .plugins import PluginError
 
 from threading import Lock
+from time import time
 
 import argparse
 import hashlib
@@ -96,6 +97,7 @@ class RingBuffer(object):
     def __init__(self):
         self.buffer = b""
         self.lock = Lock()
+        self.last_write = 0
 
     def _read(self, size):
         if size < 0:
@@ -114,6 +116,13 @@ class RingBuffer(object):
     def write(self, data):
         with self.lock:
             self.buffer += data
+            self.last_write = time()
+
+    def elapsed_since_write(self):
+        if self.last_write > 0:
+            return time() - self.last_write
+        else:
+            return 0
 
     @property
     def length(self):
