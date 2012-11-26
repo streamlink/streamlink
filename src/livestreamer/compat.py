@@ -24,9 +24,11 @@ elif is_py3:
 
 try:
     from urllib.parse import urlparse, urljoin, quote, unquote, parse_qs
+    import queue
 except ImportError:
     from urlparse import urlparse, urljoin, parse_qs
     from urllib import quote, unquote
+    import Queue as queue
 
 if is_win32:
     import pbs as sh
@@ -37,4 +39,4 @@ else:
 
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
            "str", "bytes", "urlparse", "urljoin", "parse_qs",
-           "quote", "unquote", "sh", "pbs_compat"]
+           "quote", "unquote", "sh", "pbs_compat", "queue"]

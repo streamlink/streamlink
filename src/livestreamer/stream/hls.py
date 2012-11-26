@@ -1,8 +1,9 @@
 from . import Stream, StreamError
-from ..utils import urlget
-from ..compat import urljoin
+from ..utils import urlget, RingBuffer
+from ..compat import urljoin, queue
 
 from time import time, sleep
+from threading import Lock, Thread, Timer
 
 import os.path
 import re
@@ -76,6 +77,60 @@ def parse_m3u(data):
 
     return (tags, entries)
 
+
+class HLSStreamFiller(Thread):
+    def __init__(self, stream):
+        Thread.__init__(self)
+
+        self.daemon = True
+        self.queue = queue.Queue()
+        self.stream = stream
+
+    def download_sequence(self, entry):
+        try:
+            res = urlget(entry["url"], prefetch=False,
+                         exception=IOError)
+        except IOError as err:
+            self.stream.logger.error("Failed to open sequence {0}: {1}",
+                                     entry["sequence"], str(err))
+            return
+
+        if self.stream.decryptor_key:
+            iv = num_to_iv(entry["sequence"])
+            decryptor = AES.new(self.stream.decryptor_key, AES.MODE_CBC, iv)
+        else:
+            decryptor = None
+
+        while True:
+            try:
+                chunk = res.raw.read(8192)
+            except IOError as err:
+                self.stream.logger.error("Failed to read sequence {0}: {1}",
+                                         entry["sequence"], str(err))
+                break
+
+            if len(chunk) == 0:
+                self.stream.logger.debug("Download of sequence {0} complete", entry["sequence"])
+                break
+
+            if decryptor:
+                chunk = decryptor.decrypt(chunk)
+
+            self.stream.buffer.write(chunk)
+
+    def run(self):
+        self.stream.logger.debug("Starting buffer filler thread")
+
+        while True:
+            entry = self.queue.get()
+            self.download_sequence(entry)
+
+            if entry["sequence"] == self.stream.playlist_end:
+                break
+
+        self.stream.logger.debug("Buffer filler thread completed")
+        self.stream.playlist_timer.cancel()
+
 class HLSStream(Stream):
     def __init__(self, session, url):
         Stream.__init__(self, session)
@@ -84,148 +139,109 @@ class HLSStream(Stream):
         self.logger = session.logger.new_module("stream.hls")
 
     def open(self):
-        self.playlist = {}
-        self.playlist_reload_time = 0
+        self.playlist_end = None
+        self.playlist_lock = Lock()
         self.playlist_minimal_reload_time = 15
-        self.playlist_end = False
-        self.entry = None
-        self.decryptor = None
+        self.playlist_reload_time = 0
+
         self.decryptor_key = None
-        self.decryptor_iv = None
-        self.sequence = 0
+        self.sequence = -1
+
+        self.buffer = RingBuffer()
+        self.filler = HLSStreamFiller(self)
+        self.filler.start()
+        self.check_playlist(silent=False)
 
         return self
 
     def read(self, size=-1):
-        if self.entry is None:
-            try:
-                self._next_entry()
-            except IOError:
-                return b""
+        while self.buffer.length < size and self.filler.is_alive():
+            sleep(0.10)
 
-        data = self.entry.read(size)
+        return self.buffer.read(size)
 
-        if len(data) == 0:
-            self._next_entry()
-            return self.read(size)
-
-        if self.decryptor:
-            data = self.decryptor.decrypt(data)
-
-        return data
-
-    def _next_entry(self):
-        if len(self.playlist) == 0:
-            self._reload_playlist()
-
-        self._open_playlist_fds()
-
-        # Periodic reload is not fatal if it fails
-        elapsed = time() - self.playlist_reload_time
-        if elapsed > self.playlist_minimal_reload_time:
-            try:
-                self._reload_playlist()
-            except IOError as err:
-                self.logger.error("Failed to reload playlist: {0}", str(err))
-
-        if not self.sequence in self.playlist:
-            if self.playlist_end:
-                # Last playlist is over
-                raise IOError("End of stream")
-            else:
-                self.logger.debug("Next sequence not available yet")
-                sleep(1)
-                return self._next_entry()
-
-
-        self.entry = self.playlist[self.sequence]
-
-        self.logger.debug("Next entry: {0}", self.entry)
-
-        if self.decryptor_key:
-            if not self.decryptor_iv:
-                iv = num_to_iv(self.sequence)
-            else:
-                iv = num_to_iv(self.decryptor_iv)
-
-            self.decryptor = AES.new(self.decryptor_key, AES.MODE_CBC, iv)
-
-        self.sequence += 1
-
-    def _reload_playlist(self):
-        if self.playlist_end:
+    def check_playlist(self, silent=True):
+        if self.playlist_end is not None:
             return
 
+        next_check_time = 1
+
+        with self.playlist_lock:
+            # Periodic reload is not fatal if it fails
+            elapsed = time() - self.playlist_reload_time
+            if elapsed > self.playlist_minimal_reload_time:
+                if silent:
+                    try:
+                        self._reload_playlist()
+                    except IOError as err:
+                        self.logger.error("Failed to reload playlist: {0}", str(err))
+                        next_check_time = self.playlist_minimal_reload_time
+                else:
+                    self._reload_playlist()
+
+            self.playlist_timer = Timer(next_check_time, self.check_playlist)
+            self.playlist_timer.daemon = True
+            self.playlist_timer.start()
+
+    def _reload_playlist(self):
         self.logger.debug("Reloading playlist")
+        self.playlist_reload_time = time()
 
         res = urlget(self.url, exception=IOError)
-
         (tags, entries) = parse_m3u(res.text)
-
-        if "EXT-X-ENDLIST" in tags:
-            self.playlist_end = True
 
         if "EXT-X-MEDIA-SEQUENCE" in tags:
             sequence = int(tags["EXT-X-MEDIA-SEQUENCE"][0])
         else:
             sequence = 0
 
-        if "EXT-X-KEY" in tags and tags["EXT-X-KEY"][0]["METHOD"][0] != "NONE":
-            if not CAN_DECRYPT:
-                self.logger.error("Need pyCrypto installed to decrypt data")
-                raise IOError
+        if "EXT-X-KEY" in tags and tags["EXT-X-KEY"][0]["METHOD"] != "NONE":
+            self.logger.debug("Sequences in this playlist are encrypted")
 
-            if tags["EXT-X-KEY"][0]["METHOD"][0] != "AES-128":
-                self.logger.error("Unable to decrypt cipher {0}", tags["EXT-X-KEY"][0]["METHOD"][0])
-                raise IOError
+            if not CAN_DECRYPT:
+                raise StreamError("Need pyCrypto installed to decrypt data")
+
+            if tags["EXT-X-KEY"][0]["METHOD"] != "AES-128":
+                raise StreamError("Unable to decrypt cipher {0}", tags["EXT-X-KEY"][0]["METHOD"][0])
 
             if not "URI" in tags["EXT-X-KEY"][0]:
-                self.logger.error("Missing URI to decryption key")
-                raise IOError
+                raise StreamError("Missing URI to decryption key")
 
-            res = urlget(tags["EXT-X-KEY"][0]["URI"][0], exception=IOError)
+            res = urlget(tags["EXT-X-KEY"][0]["URI"], exception=StreamError)
             self.decryptor_key = res.content
+
+        if len(entries) == 0:
+            return
 
         for i, entry in enumerate(entries):
             entry["sequence"] = sequence + i
+            entry["url"] = self._relative_url(entry["url"])
 
-        self.entries = entries
+        if "EXT-X-ENDLIST" in tags:
+            self.playlist_end = entries[-1]["sequence"]
 
-        if self.sequence == 0:
+        if self.sequence < entries[0]["sequence"]:
             totalentries = len(entries)
-            if totalentries > 3:
+
+            if totalentries > 3 and self.playlist_end is None:
                 self.sequence = sequence + (totalentries - 3)
             else:
                 self.sequence = sequence
 
-        self.playlist_reload_time = time()
+        playlistchanged = False
+        for entry in entries:
+            if entry["sequence"] == self.sequence:
+                self.logger.debug("Adding sequence {0} to queue", entry["sequence"])
+                self.filler.queue.put(entry)
+                self.sequence += 1
+                playlistchanged = True
 
-    def _open_playlist_fds(self):
-        maxseq = self.sequence + 5
+            if entry["tag"][0] == "EXTINF":
+                duration = entry["tag"][1][0]
+                self.playlist_minimal_reload_time = duration
 
-        for entry in self.entries:
-            if entry["sequence"] > maxseq:
-                break
-
-            if entry["sequence"] < self.sequence:
-                continue
-
-            if not entry["sequence"] in self.playlist:
-                url = self._relative_url(entry["url"])
-                self.logger.debug("Opening fd: {0}", url)
-
-                try:
-                    res = urlget(url, prefetch=False,
-                                 exception=IOError)
-                except IOError as err:
-                    self.logger.error("Failed to open segment: {0}", str(err))
-                    continue
-
-                self.playlist[entry["sequence"]] = res.raw
-
-                if entry["tag"][0] == "EXTINF":
-                    duration = entry["tag"][1][0]
-                    self.playlist_minimal_reload_time = duration
+        if not playlistchanged:
+            self.playlist_minimal_reload_time /= 2
 
     def _relative_url(self, url):
         if not url.startswith("http"):
