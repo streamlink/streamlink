@@ -25,7 +25,7 @@ class StreamURL(Plugin):
     def _parse_params(self, params):
         rval = {}
 
-        matches = re.findall("(\w+)=(\d+|\d+.\d+|'(.+)'|\"(.+)\"|.+)", params)
+        matches = re.findall("(\w+)=(\d+|\d+.\d+|'(.+)'|\"(.+)\"|\S+)", params)
 
         for key, val, strval, ex in matches:
             if len(strval) > 0:
