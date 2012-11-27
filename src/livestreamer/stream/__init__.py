@@ -60,7 +60,6 @@ class StreamProcess(Stream):
         cmd = self._check_cmd()
 
         def out_callback(data, queue, process):
-            self.process_alive = process.alive
             self.fd.write(data)
 
         if self.errorlog:
@@ -80,11 +79,11 @@ class StreamProcess(Stream):
         time.sleep(0.5)
 
         if pbs_compat:
-            self.process_alive = stream.process.returncode is None
+            process_alive = stream.process.returncode is None
         else:
-            self.process_alive = stream.process.alive
+            process_alive = stream.process.alive
 
-        if not self.process_alive:
+        if not process_alive:
             if self.errorlog:
                 raise StreamError(("Error while executing subprocess, error output logged to: {0}").format(tmpfile.name))
             else:
@@ -93,13 +92,14 @@ class StreamProcess(Stream):
         if pbs_compat:
             return stream.process.stdout
         else:
+            self.process = stream.process
             return self
 
     def read(self, size=0):
         if not self.fd:
             return b""
 
-        while self.fd.length == 0 and self.process_alive:
+        while self.fd.length == 0 and self.process.alive:
             if self.fd.elapsed_since_write() > self.timeout:
                 raise IOError("Read timeout")
 

@@ -53,7 +53,7 @@ class TestPluginStream(unittest.TestCase):
                         "rtmp://hostname.se/stream", dict(live=True, num=47))
 
         self._test_rtmp("rtmp://hostname.se/stream live=1 qarg='a \'string' noq=test",
-                        "rtmp://hostname.se/stream", dict(live=True, qarg="a \'string", noq="test"))
+                        "rtmp://hostname.se/stream", dict(live=True, qarg='a \'string', noq="test"))
 
         self._test_hls("hls://http://hostname.se/playlist.m3u8",
                        "http://hostname.se/playlist.m3u8")

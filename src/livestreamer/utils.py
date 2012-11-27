@@ -119,10 +119,10 @@ class RingBuffer(object):
             self.last_write = time()
 
     def elapsed_since_write(self):
-        if self.last_write > 0:
-            return time() - self.last_write
-        else:
-            return 0
+        if self.last_write == 0:
+            self.last_write = time()
+
+        return time() - self.last_write
 
     @property
     def length(self):
