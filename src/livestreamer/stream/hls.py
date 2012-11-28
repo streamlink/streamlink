@@ -1,5 +1,5 @@
 from . import Stream, StreamError
-from ..utils import urlget, RingBuffer
+from ..utils import urlget, RingBuffer, absolute_url
 from ..compat import urljoin, queue
 
 from time import time, sleep
@@ -223,7 +223,7 @@ class HLSStream(Stream):
 
         for i, entry in enumerate(entries):
             entry["sequence"] = sequence + i
-            entry["url"] = self._relative_url(entry["url"])
+            entry["url"] = absolute_url(self.url, entry["url"])
 
         if "EXT-X-ENDLIST" in tags:
             self.playlist_end = entries[-1]["sequence"]
@@ -250,12 +250,6 @@ class HLSStream(Stream):
 
         if not playlistchanged:
             self.playlist_minimal_reload_time /= 2
-
-    def _relative_url(self, url):
-        if not url.startswith("http"):
-            return urljoin(self.url, url)
-        else:
-            return url
 
     @classmethod
     def parse_variant_playlist(cls, session, url, **params):
@@ -291,7 +285,7 @@ class HLSStream(Stream):
             else:
                 continue
 
-            stream = HLSStream(session, entry["url"])
+            stream = HLSStream(session, absolute_url(url, entry["url"]))
             streams[quality] = stream
 
         return streams

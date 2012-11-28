@@ -1,4 +1,4 @@
-from .compat import is_win32
+from .compat import is_win32, urljoin
 from .plugins import PluginError
 
 from threading import Lock
@@ -172,6 +172,12 @@ def verifyjson(json, key):
 
     return json[key]
 
+def absolute_url(baseurl, url):
+    if not url.startswith("http"):
+        return urljoin(baseurl, url)
+    else:
+        return url
+
 __all__ = ["ArgumentParser", "NamedPipe", "RingBuffer",
            "urlopen", "urlget", "urlresolve", "swfdecompress",
-           "swfverify", "verifyjson"]
+           "swfverify", "verifyjson", "absolute_url"]
