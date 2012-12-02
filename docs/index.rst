@@ -80,7 +80,9 @@ Fetching a streams data::
 
         # do something with data
 
-    fd.close()
+    # All streams are not guaranteed to support .close()
+    if hasattr(fd, "close"):
+        fd.close()
 
 
 
