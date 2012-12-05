@@ -1,5 +1,6 @@
-from livestreamer.stream import RTMPStream
+from livestreamer.compat import urlparse
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
+from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget
 
 import re
@@ -14,7 +15,7 @@ class Mips(Plugin):
         return "mips.tv" in url
 
     def _get_streams(self):
-        channelname = self.url.rstrip("/").rpartition("/")[2].lower()
+        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
 
         self.logger.debug("Fetching stream info")
 
@@ -23,29 +24,25 @@ class Mips(Plugin):
         }
 
         res = urlget(self.PlayerURL.format(channelname), headers=headers)
-
         match = re.search("'FlashVars', '(id=\d+)&", res.text)
         if not match:
             raise NoStreamsError(self.url)
 
         channelname += "?" + match.group(1)
-
         res = urlget(self.BalancerURL, headers=headers)
 
         match = re.search("redirect=(.+)", res.text)
         if not match:
-            raise PluginError("Error retrieving rtmp address from loadbalancer")
+            raise PluginError("Error retrieving RTMP address from loadbalancer")
 
         rtmp = match.group(1)
-
         streams = {}
-
         streams["live"] = RTMPStream(self.session, {
             "rtmp": "rtmp://{0}/live/{1}".format(rtmp, channelname),
             "pageUrl": self.url,
             "swfVfy": self.SWFURL,
             "live": True
-            })
+        })
 
         return streams
 

@@ -1,4 +1,4 @@
-from livestreamer.compat import str, bytes
+from livestreamer.compat import str, bytes, urlparse
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, verifyjson
@@ -39,7 +39,7 @@ class DailyMotion(Plugin):
     def _get_channel_name(self, url):
         name = None
         if ("dailymotion.com" in url) or ("dai.ly" in url):
-            rpart = url.rstrip("/").rpartition("/")[2].lower()
+            rpart = urlparse(url).path.rstrip("/").rpartition("/")[-1].lower()
             name = re.sub("_.*", "", rpart)
         elif ("video.gamecreds.com" in url):
             res = urlget(url)

@@ -1,3 +1,4 @@
+from livestreamer.compat import urlparse
 from livestreamer.stream import HLSStream
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.utils import urlget
@@ -13,26 +14,20 @@ class Streamingvideoprovider(Plugin):
         return "streamingvideoprovider.co.uk" in url
 
     def _get_streams(self):
-        channelname = self.url.rstrip("/").rpartition("/")[2].lower()
+        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
         streams = {}
 
-        try:
-            options = dict(l="info", a="ajax_video_info", file=channelname,
-                           rid=time())
+        options = dict(l="info", a="ajax_video_info", file=channelname,
+                       rid=time())
+        res = urlget(self.HLSStreamURL, params=options)
+        match = re.search("'(http://.+\.m3u8)'", res.text)
 
-            res = urlget(self.HLSStreamURL, params=options, exception=IOError)
-            match = re.search("'(http://.+\.m3u8)'", res.text)
-
-            if not match:
-                raise PluginError("Failed to find HLS playlist in result")
-
-            playlisturl = match.group(1)
-
-            self.logger.debug("Playlist URL is {0}", playlisturl)
-
-            streams["live"] = HLSStream(self.session, playlisturl)
-        except IOError:
+        if not match:
             raise NoStreamsError(self.url)
+
+        playlisturl = match.group(1)
+        self.logger.debug("Playlist URL is {0}", playlisturl)
+        streams["live"] = HLSStream(self.session, playlisturl)
 
         return streams
 

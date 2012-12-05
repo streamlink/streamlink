@@ -1,3 +1,4 @@
+from livestreamer.compat import urlparse
 from livestreamer.stream import HLSStream
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.utils import urlget
@@ -10,7 +11,7 @@ class OldLivestream(Plugin):
         return "livestream.com" in url and not "new.livestream.com" in url
 
     def _get_streams(self):
-        channelname = self.url.rstrip("/").rpartition("/")[2].lower()
+        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
         channelname = channelname.replace("_", "-")
 
         try:

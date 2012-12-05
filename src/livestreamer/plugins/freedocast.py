@@ -31,15 +31,13 @@ class Freedocast(Plugin):
             raise NoStreamsError(self.url)
 
         rtmp = match.group(1)
-
         streams = {}
-
         streams["live"] = RTMPStream(self.session, {
             "rtmp": rtmp,
             "pageUrl": self.url,
             "swfVfy": self.SWFURL,
             "live": True
-            })
+        })
 
         return streams
 

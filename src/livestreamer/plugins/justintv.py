@@ -1,4 +1,4 @@
-from livestreamer.compat import str, bytes
+from livestreamer.compat import str, bytes, urlparse
 from livestreamer.options import Options
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream, HLSStream
@@ -31,7 +31,7 @@ class JustinTV(Plugin):
         return ("justin.tv" in url) or ("twitch.tv" in url)
 
     def _get_channel_name(self, url):
-        return url.rstrip("/").rpartition("/")[2].lower()
+        return urlparse(url).path.rstrip("/").rpartition("/")[-1].lower()
 
     def _get_metadata(self):
         url = self.MetadataURL.format(self.channelname)
