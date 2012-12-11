@@ -101,7 +101,7 @@ class HLSStreamFiller(Thread):
         else:
             decryptor = None
 
-        while True:
+        while self.running:
             try:
                 chunk = res.raw.read(8192)
             except IOError as err:
@@ -120,8 +120,9 @@ class HLSStreamFiller(Thread):
 
     def run(self):
         self.stream.logger.debug("Starting buffer filler thread")
+        self.running = True
 
-        while True:
+        while self.running:
             entry = self.queue.get()
             self.download_sequence(entry)
 
@@ -129,9 +130,10 @@ class HLSStreamFiller(Thread):
                 break
 
         self.stream.logger.debug("Buffer filler thread completed")
-        self.stream.playlist_timer.cancel()
+        if self.stream.playlist_timer:
+            self.stream.playlist_timer.cancel()
 
-class HLSStream(Stream):
+class HLSStreamFD(Stream):
     def __init__(self, session, url, timeout=60):
         Stream.__init__(self, session)
 
@@ -145,6 +147,7 @@ class HLSStream(Stream):
         self.playlist_lock = Lock()
         self.playlist_minimal_reload_time = 15
         self.playlist_reload_time = 0
+        self.playlist_timer = None
 
         self.decryptor_key = None
         self.sequence = -1
@@ -155,6 +158,10 @@ class HLSStream(Stream):
         self.check_playlist(silent=False)
 
         return self
+
+    def close(self):
+        self.filler.running = False
+        self.buffer = None
 
     def read(self, size=-1):
         if not self.buffer:
@@ -250,6 +257,17 @@ class HLSStream(Stream):
 
         if not playlistchanged:
             self.playlist_minimal_reload_time /= 2
+
+class HLSStream(Stream):
+    def __init__(self, session, url):
+        Stream.__init__(self, session)
+
+        self.url = url
+
+    def open(self):
+        fd = HLSStreamFD(self.session, self.url)
+
+        return fd.open()
 
     @classmethod
     def parse_variant_playlist(cls, session, url, **params):

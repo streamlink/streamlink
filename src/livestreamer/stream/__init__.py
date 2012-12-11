@@ -26,54 +26,77 @@ class Stream(object):
         """
         raise NotImplementedError
 
+class StreamProcessFD(Stream):
+    def __init__(self, session, cmd, params, timeout=30):
+        Stream.__init__(self, session)
+
+        self.params = params
+
+        self.cmd = cmd
+        self.fd = RingBuffer()
+        self.timeout = timeout
+        self.params["_out_bufsize"] = 8192
+
+        if LooseVersion(sh.__version__) >= LooseVersion("1.07"):
+            self.params["_no_out"] = True
+            self.params["_no_pipe"] = True
+
+    def open(self):
+        def read_callback(data):
+            self.fd.write(data)
+
+        self.params["_out"] = read_callback
+        self.stream = self.cmd(**self.params)
+        self.process = self.stream.process
+
+        return self
+
+    def read(self, size=0):
+        if not self.fd:
+            return b""
+
+        while self.fd.length == 0 and self.process.alive:
+            if self.fd.elapsed_since_write() > self.timeout:
+                raise IOError("Read timeout")
+
+            time.sleep(0.05)
+
+        return self.fd.read(size)
+
+    def close(self):
+        try:
+            self.process.kill()
+        except:
+            pass
+
+        self.fd = None
+
 class StreamProcess(Stream):
     def __init__(self, session, params={}, timeout=30):
         Stream.__init__(self, session)
 
         self.params = params
-        self.params["_bg"] = True
         self.errorlog = self.session.options.get("errorlog")
-
-        if not pbs_compat:
-            self.fd = None
-            self.timeout = timeout
-            self.params["_out_bufsize"] = 8192
-
-            if LooseVersion(sh.__version__) >= LooseVersion("1.07"):
-                self.params["_no_out"] = True
-                self.params["_no_pipe"] = True
-
-    def _check_cmd(self):
-        try:
-            cmd = getattr(sh, self.cmd)
-        except sh.CommandNotFound as err:
-            raise StreamError(("Unable to find {0} command").format(str(err)))
-
-        return cmd
-
-    def cmdline(self):
-        cmd = self._check_cmd()
-
-        return str(cmd.bake(**self.params))
+        self.timeout = timeout
 
     def open(self):
         cmd = self._check_cmd()
-
-        def out_callback(data, queue, process):
-            self.fd.write(data)
+        params = self.params.copy()
+        params["_bg"] = True
 
         if self.errorlog:
             tmpfile = tempfile.NamedTemporaryFile(prefix="livestreamer",
                                                   suffix=".err", delete=False)
-            self.params["_err"] = tmpfile
+            params["_err"] = tmpfile
         else:
-            self.params["_err"] = open(os.devnull, "wb")
+            params["_err"] = open(os.devnull, "wb")
 
-        if not pbs_compat:
-            self.fd = RingBuffer()
-            self.params["_out"] = out_callback
-
-        stream = cmd(**self.params)
+        if pbs_compat:
+            stream = cmd(**params)
+        else:
+            stream = StreamProcessFD(self.session, cmd, params,
+                                     timeout=self.timeout)
+            stream.open()
 
         # Wait 0.5 seconds to see if program exited prematurely
         time.sleep(0.5)
@@ -92,20 +115,20 @@ class StreamProcess(Stream):
         if pbs_compat:
             return stream.process.stdout
         else:
-            self.process = stream.process
-            return self
+            return stream
 
-    def read(self, size=0):
-        if not self.fd:
-            return b""
+    def _check_cmd(self):
+        try:
+            cmd = getattr(sh, self.cmd)
+        except sh.CommandNotFound as err:
+            raise StreamError(("Unable to find {0} command").format(str(err)))
 
-        while self.fd.length == 0 and self.process.alive:
-            if self.fd.elapsed_since_write() > self.timeout:
-                raise IOError("Read timeout")
+        return cmd
 
-            time.sleep(0.05)
+    def cmdline(self):
+        cmd = self._check_cmd()
 
-        return self.fd.read(size)
+        return str(cmd.bake(**self.params))
 
     @classmethod
     def is_usable(cls, cmd):
@@ -115,7 +138,6 @@ class StreamProcess(Stream):
             return False
 
         return True
-
 
 from .akamaihd import AkamaiHDStream
 from .hls import HLSStream

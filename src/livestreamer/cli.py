@@ -131,6 +131,9 @@ def write_stream(fd, out, progress, player):
     if progress and written > 0:
         sys.stderr.write("\n")
 
+    if hasattr(fd, "close"):
+        fd.close()
+
     logger.info("Stream ended")
 
 def check_output(output, force):

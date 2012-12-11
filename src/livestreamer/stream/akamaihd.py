@@ -46,7 +46,7 @@ def cache_bust_string(length):
 
     return rval
 
-class AkamaiHDStream(Stream):
+class AkamaiHDStreamFD(Stream):
     Version = "2.5.8"
     FlashVersion = "LNX 11,1,102,63"
 
@@ -220,5 +220,20 @@ class AkamaiHDStream(Stream):
 
             self.send_token(sessiontoken)
             self.completed_handshake = True
+
+
+class AkamaiHDStream(Stream):
+    def __init__(self, session, url, swf=None, seek=None):
+        Stream.__init__(self, session)
+
+        self.seek = seek
+        self.swf = swf
+        self.url = url
+
+    def open(self):
+        stream = AkamaiHDStreamFD(self.session, self.url,
+                                  self.swf, self.seek)
+
+        return stream.open()
 
 __all__ = ["AkamaiHDStream"]
