@@ -13,7 +13,7 @@ class TestPluginStream(unittest.TestCase):
         for key, value in a.items():
             self.assertEqual(b[key], value)
 
-    def _test_akamaihd(self, surl, host, streamname):
+    def _test_akamaihd(self, surl, url):
         channel = self.session.resolve_url(surl)
         streams = channel.get_streams()
 
@@ -21,8 +21,7 @@ class TestPluginStream(unittest.TestCase):
 
         stream = streams["live"]
         self.assertTrue(isinstance(stream, AkamaiHDStream))
-        self.assertEqual(stream.host, host)
-        self.assertEqual(stream.streamname, streamname)
+        self.assertEqual(stream.url, url)
 
     def _test_hls(self, surl, url):
         channel = self.session.resolve_url(surl)
@@ -59,7 +58,7 @@ class TestPluginStream(unittest.TestCase):
                        "http://hostname.se/playlist.m3u8")
 
         self._test_akamaihd("akamaihd://http://hostname.se/stream",
-                            "http://hostname.se", "stream")
+                            "http://hostname.se/stream")
 
 if __name__ == "__main__":
     unittest.main()
