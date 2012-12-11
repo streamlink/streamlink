@@ -69,8 +69,6 @@ class StreamProcessFD(Stream):
         except:
             pass
 
-        self.fd = None
-
 class StreamProcess(Stream):
     def __init__(self, session, params={}, timeout=30):
         Stream.__init__(self, session)

@@ -161,7 +161,6 @@ class HLSStreamFD(Stream):
 
     def close(self):
         self.filler.running = False
-        self.buffer = None
 
     def read(self, size=-1):
         if not self.buffer:
