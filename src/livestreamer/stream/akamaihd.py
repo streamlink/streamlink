@@ -2,7 +2,7 @@
 
 from . import Stream, StreamError
 from ..compat import str, bytes, urlparse
-from ..utils import RingBuffer, swfdecompress, swfverify, urlget, urlopen
+from ..utils import Buffer, swfdecompress, swfverify, urlget, urlopen
 
 from ..packages.flashmedia import FLV, FLVError
 from ..packages.flashmedia.tag import ScriptData
@@ -87,7 +87,7 @@ class AkamaiHDStreamFD(Stream):
         self.sessionid = None
         self.flv = None
 
-        self.buffer = RingBuffer()
+        self.buffer = Buffer()
         self.completed_handshake = False
 
         url = self.StreamURLFormat.format(host=self.host, streamname=self.streamname)
@@ -151,7 +151,7 @@ class AkamaiHDStreamFD(Stream):
         if not self.flv:
             return b""
 
-        while self.buffer.length < size:
+        while self.buffer.length < size and self.flv:
             try:
                 tag = next(self.flv)
             except StopIteration:

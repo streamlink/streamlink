@@ -55,13 +55,8 @@ class StreamProcessFD(Stream):
         if not self.fd:
             return b""
 
-        while self.fd.length == 0 and self.process.alive:
-            if self.fd.elapsed_since_write() > self.timeout:
-                raise IOError("Read timeout")
-
-            time.sleep(0.05)
-
-        return self.fd.read(size)
+        return self.fd.read(size, block=self.process.alive,
+                            timeout=self.timeout)
 
     def close(self):
         try:

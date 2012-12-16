@@ -1,8 +1,7 @@
-from .compat import is_win32, urljoin
+from .compat import bytes, is_win32, urljoin
 from .plugins import PluginError
 
-from threading import Lock
-from time import time
+from threading import Event, Lock
 
 import argparse
 import hashlib
@@ -93,40 +92,113 @@ class NamedPipe(object):
         else:
             os.unlink(self.path)
 
-class RingBuffer(object):
+class Buffer(object):
+    """ Simple buffer for use in single-threaded consumer/filler """
+
     def __init__(self):
-        self.buffer = b""
-        self.lock = Lock()
-        self.last_write = 0
-
-    def _read(self, size):
-        if size < 0:
-            ret = self.buffer[:]
-            self.buffer = b""
-        else:
-            ret = self.buffer[:size]
-            self.buffer = self.buffer[size:]
-
-        return ret
+        self.buffer = bytearray()
+        self.closed = False
 
     def read(self, size=-1):
-        with self.lock:
-            return self._read(size)
+        if size < 0:
+            size = len(self.buffer)
+
+        data = self.buffer[:size]
+        del self.buffer[:len(data)]
+
+        return bytes(data)
 
     def write(self, data):
-        with self.lock:
-            self.buffer += data
-            self.last_write = time()
+        if not self.closed:
+            self.buffer.extend(data)
 
-    def elapsed_since_write(self):
-        if self.last_write == 0:
-            self.last_write = time()
-
-        return time() - self.last_write
+    def close(self):
+        self.closed = True
 
     @property
     def length(self):
         return len(self.buffer)
+
+class RingBuffer(Buffer):
+    """ Circular buffer for use in multi-threaded consumer/filler """
+
+    def __init__(self, size=8192*4):
+        Buffer.__init__(self)
+
+        self.buffer_size = size
+        self.buffer_size_usable = size
+        self.buffer_lock = Lock()
+
+        self.event_free = Event()
+        self.event_free.set()
+        self.event_used = Event()
+
+    def _read(self, size=-1):
+        with self.buffer_lock:
+            data = Buffer.read(self, size)
+
+            if not self.is_full:
+                self.event_free.set()
+
+            if self.length == 0:
+                self.event_used.clear()
+
+        return data
+
+    def read(self, size=-1, block=True, timeout=None):
+        if block:
+            self.event_used.wait(timeout)
+
+            # If the event is still not set it's a timeout
+            if not self.event_used.is_set() and self.length == 0:
+                raise IOError("Read timeout")
+
+        return self._read(size)
+
+    def write(self, data):
+        data_left = len(data)
+        data_total = len(data)
+
+        while data_left > 0:
+            self.event_free.wait()
+
+            if self.closed:
+                return
+
+            with self.buffer_lock:
+                write_len = min(self.free, data_left)
+                written = data_total - data_left
+
+                Buffer.write(self, data[written:written+write_len])
+
+                if self.length > 0:
+                    self.event_used.set()
+
+                if self.is_full:
+                    self.event_free.clear()
+
+                data_left -= write_len
+
+    def wait_free(self, timeout=None):
+        self.event_free.wait(timeout)
+
+    def wait_used(self, timeout=None):
+        self.event_used.wait(timeout)
+
+    def close(self):
+        Buffer.close(self)
+
+        # Make sure we don't let a .write() and .read() block forever
+        self.event_free.set()
+        self.event_used.set()
+
+    @property
+    def free(self):
+        return self.buffer_size - self.length
+
+    @property
+    def is_full(self):
+        return self.free == 0
 
 
 def urlopen(url, method="get", exception=PluginError, **args):
@@ -178,6 +250,6 @@ def absolute_url(baseurl, url):
     else:
         return url
 
-__all__ = ["ArgumentParser", "NamedPipe", "RingBuffer",
+__all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer",
            "urlopen", "urlget", "urlresolve", "swfdecompress",
            "swfverify", "verifyjson", "absolute_url"]

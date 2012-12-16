@@ -129,9 +129,11 @@ class HLSStreamFiller(Thread):
             if entry["sequence"] == self.stream.playlist_end:
                 break
 
-        self.stream.logger.debug("Buffer filler thread completed")
         if self.stream.playlist_timer:
             self.stream.playlist_timer.cancel()
+
+        self.stream.buffer.close()
+        self.stream.logger.debug("Buffer filler thread completed")
 
 class HLSStreamFD(Stream):
     def __init__(self, session, url, timeout=60):
@@ -166,13 +168,8 @@ class HLSStreamFD(Stream):
         if not self.buffer:
             return b""
 
-        while self.buffer.length == 0 and self.filler.is_alive():
-            if self.buffer.elapsed_since_write() > self.timeout:
-                raise IOError("Read timeout")
-
-            sleep(0.10)
-
-        return self.buffer.read(size)
+        return self.buffer.read(size, block=self.filler.is_alive(),
+                                timeout=self.timeout)
 
     def check_playlist(self, silent=True):
         if self.playlist_end is not None:
@@ -193,6 +190,8 @@ class HLSStreamFD(Stream):
                 else:
                     self._reload_playlist()
 
+            # Wait until buffer has room before requesting a new playlist
+            self.buffer.wait_free()
             self.playlist_timer = Timer(next_check_time, self.check_playlist)
             self.playlist_timer.daemon = True
             self.playlist_timer.start()
