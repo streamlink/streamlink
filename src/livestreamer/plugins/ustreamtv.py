@@ -1,4 +1,4 @@
-from livestreamer.compat import str, bytes
+from livestreamer.compat import str, bytes, urlparse
 from livestreamer.packages.flashmedia import AMF0Packet, AMFError
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HLSStream, RTMPStream
@@ -24,8 +24,9 @@ class UStreamTV(Plugin):
             return int(match.group(1))
 
     def _create_stream(self, cdn, streamname):
-        url = "{0}/{1}".format(cdn, streamname)
-        options = dict(rtmp=url, pageUrl=self.url,
+        parsed = urlparse(cdn)
+        options = dict(rtmp=cdn, app=parsed.path[1:],
+                       playpath=streamname, pageUrl=self.url,
                        swfUrl=self.SWFURL, live=True)
         return RTMPStream(self.session, options)
 
