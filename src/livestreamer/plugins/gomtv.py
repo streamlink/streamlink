@@ -24,7 +24,7 @@ limitations under the License.
 from livestreamer.compat import str, bytes, urlparse, urljoin, unquote, parse_qs
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget, urlopen
+from livestreamer.utils import urlget, urlopen, parsexml, get_node_text
 from livestreamer.options import Options
 
 import socket
@@ -264,23 +264,8 @@ class GomTV(Plugin):
 
         return url
 
-    def _get_node_text(self, element):
-        res = []
-        for node in element.childNodes:
-            if node.nodeType == node.TEXT_NODE:
-                res.append(node.data)
-
-        if len(res) == 0:
-            return None
-        else:
-            return "".join(res)
-
     def _parse_gox_file(self, data):
-        try:
-            dom = xml.dom.minidom.parseString(data)
-        except Exception as err:
-            raise PluginError(("Unable to parse gox file: {0})").format(err))
-
+        dom = parsexml(data, "GOX XML")
         entries = []
 
         for xentry in dom.getElementsByTagName("ENTRY"):
@@ -297,7 +282,7 @@ class GomTV(Plugin):
 
                         entry[child.tagName] = href
                     else:
-                        entry[child.tagName] = self._get_node_text(child)
+                        entry[child.tagName] = get_node_text(child)
 
             entries.append(entry)
 

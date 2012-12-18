@@ -2,14 +2,14 @@ from livestreamer.compat import str, bytes, urlparse
 from livestreamer.options import Options
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, urlresolve, verifyjson
+from livestreamer.utils import urlget, urlresolve, verifyjson, \
+                               parsexml, get_node_text
 
 from hashlib import sha1
 
 import hmac
 import re
 import random
-import xml.dom.minidom
 
 
 class JustinTV(Plugin):
@@ -43,11 +43,7 @@ class JustinTV(Plugin):
             headers["Cookie"] = cookie
 
         res = urlget(url, headers=headers)
-
-        try:
-            dom = xml.dom.minidom.parseString(res.text)
-        except Exception as err:
-            raise PluginError(("Unable to parse config XML: {0})").format(err))
+        dom = parsexml(res.text, "metadata XML")
 
         meta = dom.getElementsByTagName("meta")[0]
         metadata = {}
@@ -61,18 +57,7 @@ class JustinTV(Plugin):
     def _get_node_if_exists(self, dom, name):
         elements = dom.getElementsByTagName(name)
         if elements and len(elements) > 0:
-            return self._get_node_text(elements[0])
-
-    def _get_node_text(self, element):
-        res = []
-        for node in element.childNodes:
-            if node.nodeType == node.TEXT_NODE:
-                res.append(node.data)
-
-        if len(res) == 0:
-            return None
-        else:
-            return "".join(res)
+            return get_node_text(elements[0])
 
     def _authenticate(self):
         chansub = None
@@ -112,10 +97,7 @@ class JustinTV(Plugin):
 
         streams = {}
 
-        try:
-            dom = xml.dom.minidom.parseString(data)
-        except Exception as err:
-            raise PluginError(("Unable to parse config XML: {0})").format(err))
+        dom = parsexml(data, "config XML")
 
         nodes = dom.getElementsByTagName("nodes")[0]
 
@@ -127,7 +109,7 @@ class JustinTV(Plugin):
         for node in nodes.childNodes:
             info = {}
             for child in node.childNodes:
-                info[child.tagName] = self._get_node_text(child)
+                info[child.tagName] = get_node_text(child)
 
             if not ("connect" in info and "play" in info):
                 continue

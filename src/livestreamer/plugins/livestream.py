@@ -1,10 +1,9 @@
 from livestreamer.stream import AkamaiHDStream
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
-from livestreamer.utils import urlget, verifyjson
+from livestreamer.utils import urlget, verifyjson, parsexml
 
 import json
 import re
-import xml.dom.minidom
 
 class Livestream(Plugin):
     @classmethod
@@ -28,11 +27,7 @@ class Livestream(Plugin):
 
     def _parse_smil(self, url):
         res = urlget(url)
-
-        try:
-            dom = xml.dom.minidom.parseString(res.text)
-        except Exception as err:
-            raise PluginError(("Unable to parse config XML: {0})").format(err))
+        dom = parsexml(res.text, "config XML")
 
         httpbase = None
         streams = {}

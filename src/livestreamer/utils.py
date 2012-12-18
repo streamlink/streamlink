@@ -9,6 +9,7 @@ import hmac
 import os
 import requests
 import tempfile
+import xml.dom.minidom
 import zlib
 
 if is_win32:
@@ -250,6 +251,31 @@ def absolute_url(baseurl, url):
     else:
         return url
 
+def parsexml(data, xmltype="XML", exception=PluginError):
+    try:
+        dom = xml.dom.minidom.parseString(data)
+    except Exception as err:
+        if len(data) > 35:
+            snippet = data[:35] + "..."
+        else:
+            snippet = data
+
+        raise exception(("Unable to parse {0}: {1} ({2})").format(xmltype, err, snippet))
+
+    return dom
+
+def get_node_text(element):
+    res = []
+    for node in element.childNodes:
+        if node.nodeType == node.TEXT_NODE:
+            res.append(node.data)
+
+    if len(res) == 0:
+        return None
+    else:
+        return "".join(res)
+
 __all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer",
            "urlopen", "urlget", "urlresolve", "swfdecompress",
-           "swfverify", "verifyjson", "absolute_url"]
+           "swfverify", "verifyjson", "absolute_url", "parsexml",
+           "get_node_text"]
