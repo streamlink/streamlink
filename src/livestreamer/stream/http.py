@@ -9,7 +9,7 @@ class HTTPStream(Stream):
         self.args = args
 
     def open(self):
-        res = urlget(self.url, prefetch=False,
+        res = urlget(self.url, stream=True,
                      exception=StreamError,
                      **self.args)
 

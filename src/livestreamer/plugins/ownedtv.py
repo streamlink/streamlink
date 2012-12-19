@@ -1,7 +1,7 @@
 from livestreamer.compat import bytes, str
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, parsexml, get_node_text
+from livestreamer.utils import urlget, res_xml, get_node_text
 
 import re
 
@@ -48,7 +48,7 @@ class OwnedTV(Plugin):
     def _is_live(self, liveid):
         res = urlget(self.StatusAPIURL.format(liveid))
 
-        dom = parsexml(res.text, "status XML")
+        dom = res_xml(res, "status XML")
 
         live = dom.getElementsByTagName("live_is_live")
 
@@ -69,7 +69,7 @@ class OwnedTV(Plugin):
         self.logger.debug("Fetching stream info")
         res = urlget(self.ConfigURL.format(liveid))
 
-        dom = parsexml(res.text, "config XML")
+        dom = res_xml(res, "config XML")
 
         streams = {}
         channels = dom.getElementsByTagName("channels")[0]

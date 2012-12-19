@@ -1,6 +1,6 @@
 from livestreamer.stream import AkamaiHDStream
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
-from livestreamer.utils import urlget, verifyjson, parsexml
+from livestreamer.utils import urlget, verifyjson, res_xml, parse_json
 
 import json
 import re
@@ -18,16 +18,11 @@ class Livestream(Plugin):
         if match:
             config = match.group(1)
 
-            try:
-                parsed = json.loads(config)
-            except ValueError as err:
-                raise PluginError(("Unable to parse config JSON: {0})").format(err))
-
-            return parsed
+            return parse_json(config, "config JSON")
 
     def _parse_smil(self, url):
         res = urlget(url)
-        dom = parsexml(res.text, "config XML")
+        dom = res_xml(res, "config XML")
 
         httpbase = None
         streams = {}

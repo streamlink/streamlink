@@ -1,10 +1,9 @@
 from livestreamer.compat import str, bytes, urlparse
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, verifyjson
+from livestreamer.utils import urlget, verifyjson, res_json
 
 import re
-import json
 
 class DailyMotion(Plugin):
     QualityMap = {
@@ -28,11 +27,12 @@ class DailyMotion(Plugin):
     def _check_channel_live(self, channelname):
         url = self.MetadataURL.format(channelname)
         res = urlget(url, params=dict(fields="mode"))
+        json = res_json(res)
 
-        if len(res.json) == 0:
-            raise PluginError("Error retrieving stream live status")
+        if not isinstance(json, dict):
+            raise PluginError("Invalid JSON response")
 
-        mode = verifyjson(res.json, "mode")
+        mode = verifyjson(json, "mode")
 
         return mode == "live"
 
@@ -67,17 +67,16 @@ class DailyMotion(Plugin):
         self.logger.debug("JSON data url: {0}", url)
 
         res = urlget(url)
+        json = res_json(res)
 
-        if not isinstance(res.json, dict):
-            raise PluginError("Stream info response is not JSON")
+        if not isinstance(json, dict):
+            raise PluginError("Invalid JSON response")
 
-        if len(res.json) == 0:
+        if len(json) == 0:
             raise PluginError("JSON is empty")
 
-        chan_info_json = res.json
-
         # This is ugly, not sure how to fix it.
-        back_json_node = chan_info_json["sequence"][0]["layerList"][0]
+        back_json_node = json["sequence"][0]["layerList"][0]
         if back_json_node["name"] != "background":
             raise PluginError("JSON data has unexpected structure")
 
@@ -126,16 +125,22 @@ class DailyMotion(Plugin):
 
                 streams[sname] = stream
         else:
-            res = urlget(feeds_params["customURL"])
+            url = feeds_params["customURL"]
 
-            rtmpurl = res.text
+            if url.startswith("http"):
+                res = urlget(url)
+                rtmpurl = res.text
+            elif url.startswith("rtmp"):
+                rtmpurl = url
+            else:
+                raise PluginError("Invalid stream URL found: {0}", url)
+
             stream = RTMPStream(self.session, {
                 "rtmp": rtmpurl,
                 "swfVfy": swfurl,
                 "live": True
             })
 
-            self.logger.debug("Adding URL: {0}", feeds_params["customURL"])
             streams["live"] = stream
 
         return streams

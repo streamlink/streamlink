@@ -1,7 +1,7 @@
 from livestreamer.compat import str, bytes, parse_qs
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget, verifyjson
+from livestreamer.utils import urlget, verifyjson, parse_json
 
 import re
 import json
@@ -25,12 +25,7 @@ class Youtube(Plugin):
             config = match.group(1)
 
         if config:
-            try:
-                parsed = json.loads(config)
-            except ValueError as err:
-                raise PluginError(("Unable to parse config JSON: {0})").format(err))
-
-            return parsed
+            return parse_json(config, "config JSON")
 
     def _parse_stream_map(self, streammap):
         streams = []

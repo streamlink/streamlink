@@ -24,7 +24,7 @@ limitations under the License.
 from livestreamer.compat import str, bytes, urlparse, urljoin, unquote, parse_qs
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget, urlopen, parsexml, get_node_text
+from livestreamer.utils import urlget, urlopen, parse_xml, get_node_text
 from livestreamer.options import Options
 
 import socket
@@ -69,7 +69,7 @@ class GomTV(Plugin):
         Plugin.__init__(self, url)
 
     def _get_streams(self):
-        self.rsession = requests.session(prefetch=True)
+        self.rsession = requests.session()
 
         options = self.options
         if options.get("cookie"):
@@ -265,7 +265,7 @@ class GomTV(Plugin):
         return url
 
     def _parse_gox_file(self, data):
-        dom = parsexml(data, "GOX XML")
+        dom = parse_xml(data, "GOX XML")
         entries = []
 
         for xentry in dom.getElementsByTagName("ENTRY"):

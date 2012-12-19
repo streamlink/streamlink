@@ -1,6 +1,6 @@
 from livestreamer.stream import RTMPStream, HLSStream
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
-from livestreamer.utils import urlget
+from livestreamer.utils import urlget, res_json
 
 from time import time
 import re
@@ -32,13 +32,14 @@ class Livestation(Plugin):
             raise PluginError(("Missing channel item-id on URL {0}").format(self.url))
 
         res = urlget(self.APIURL.format(match.group(1), time()), params=dict(output="json"))
+        json = res_json(res)
 
-        if not isinstance(res.json, list):
-            raise PluginError("Stream info response is not JSON")
+        if not isinstance(json, list):
+            raise PluginError("Invalid JSON response")
 
         rtmplist = {}
 
-        for jdata in res.json:
+        for jdata in json:
             if "stream_name" not in jdata or "type" not in jdata:
                 continue
 
@@ -50,7 +51,7 @@ class Livestation(Plugin):
             if "token" in jdata and jdata["token"]:
                 playpath += jdata["token"]
 
-            if len(res.json) == 1:
+            if len(json) == 1:
                 stream_name = "live"
             else:
                 stream_name = jdata["stream_name"]

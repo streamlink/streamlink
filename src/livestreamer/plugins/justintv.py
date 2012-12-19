@@ -3,7 +3,7 @@ from livestreamer.options import Options
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import RTMPStream, HLSStream
 from livestreamer.utils import urlget, urlresolve, verifyjson, \
-                               parsexml, get_node_text
+                               res_json, res_xml, parse_xml, get_node_text
 
 from hashlib import sha1
 
@@ -43,7 +43,7 @@ class JustinTV(Plugin):
             headers["Cookie"] = cookie
 
         res = urlget(url, headers=headers)
-        dom = parsexml(res.text, "metadata XML")
+        dom = res_xml(res, "metadata XML")
 
         meta = dom.getElementsByTagName("meta")[0]
         metadata = {}
@@ -97,8 +97,7 @@ class JustinTV(Plugin):
 
         streams = {}
 
-        dom = parsexml(data, "config XML")
-
+        dom = parse_xml(data, "config XML")
         nodes = dom.getElementsByTagName("nodes")[0]
 
         if len(nodes.childNodes) == 0:
@@ -138,17 +137,20 @@ class JustinTV(Plugin):
             res = urlget(url, params=dict(type="any", connection="wifi"),
                          exception=IOError)
         except IOError:
+            self.logger.debug("HLS streams not available")
             return {}
 
-        if not isinstance(res.json, list):
-            raise PluginError("Stream info response is not JSON")
+        json = res_json(res, "stream token JSON")
 
-        if len(res.json) == 0:
+        if not isinstance(json, list):
+            raise PluginError("Invalid JSON response")
+
+        if len(json) == 0:
             raise PluginError("No stream token in JSON")
 
         streams = {}
 
-        token = verifyjson(res.json[0], "token")
+        token = verifyjson(json[0], "token")
         hashed = hmac.new(self.HLSStreamTokenKey, bytes(token, "utf8"), sha1)
         fulltoken = hashed.hexdigest() + ":" + token
         url = self.HLSSPlaylistURL.format(self.channelname)

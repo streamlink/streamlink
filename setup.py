@@ -6,7 +6,7 @@ from os import name as os_name
 import os
 
 version = "1.4"
-deps = ["requests>=0.12.1,<0.14.2"]
+deps = ["requests>=1.0,<2.0"]
 packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugins",
@@ -21,7 +21,7 @@ if (version_info[0] == 2 and version_info[1] < 7) or \
 if os_name == "nt":
     deps.append("pbs")
 else:
-    deps.append("sh")
+    deps.append("sh>=1.07,<2.0")
 
 setup(name="livestreamer",
       version=version,
@@ -43,5 +43,6 @@ setup(name="livestreamer",
                    "Development Status :: 5 - Production/Stable",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
+                   "Topic :: Multimedia :: Video",
                    "Topic :: Utilities"]
 )

@@ -96,7 +96,7 @@ class AkamaiHDStreamFD(Stream):
         self.logger.debug("Opening host={host} streamname={streamname}", host=self.host, streamname=self.streamname)
 
         try:
-            res = urlget(url, prefetch=False, params=params)
+            res = urlget(url, stream=True, params=params)
         except Exception as err:
             raise StreamError(str(err))
 

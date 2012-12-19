@@ -88,7 +88,7 @@ class HLSStreamFiller(Thread):
 
     def download_sequence(self, entry):
         try:
-            res = urlget(entry["url"], prefetch=False,
+            res = urlget(entry["url"], stream=True,
                          exception=IOError)
         except IOError as err:
             self.stream.logger.error("Failed to open sequence {0}: {1}",

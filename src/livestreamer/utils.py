@@ -6,6 +6,7 @@ from threading import Event, Lock
 import argparse
 import hashlib
 import hmac
+import json
 import os
 import requests
 import tempfile
@@ -16,7 +17,6 @@ if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref
 
 SWFKey = b"Genuine Adobe Flash Player 001"
-RequestsConfig = { "danger_mode": True }
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
@@ -202,23 +202,31 @@ class RingBuffer(Buffer):
         return self.free == 0
 
 
-def urlopen(url, method="get", exception=PluginError, **args):
-    if "data" in args and args["data"] is not None:
+def urlopen(url, method="get", exception=PluginError, session=None,
+            timeout=20, *args, **kw):
+    if "data" in kw and kw["data"] is not None:
         method = "post"
 
     try:
-        res = requests.request(method, url, config=RequestsConfig, timeout=15, **args)
-    except (requests.exceptions.RequestException, IOError) as err:
-        raise exception(("Unable to open URL: {url} ({err})").format(url=url, err=str(err)))
+        if session:
+            res = session.request(method, url, timeout=timeout, *args, **kw)
+        else:
+            res = requests.request(method, url, timeout=timeout, *args, **kw)
+
+        res.raise_for_status()
+    except (requests.exceptions.RequestException, IOError) as rerr:
+        err = exception(("Unable to open URL: {url} ({err})").format(url=url, err=str(rerr)))
+        err.err = rerr
+        raise err
 
     return res
 
-def urlget(url, prefetch=True, **args):
-    return urlopen(url, method="get", prefetch=prefetch,
-                   **args)
+def urlget(url, stream=False, *args, **kw):
+    return urlopen(url, method="get", stream=stream,
+                   *args, **kw)
 
 def urlresolve(url):
-    res = urlget(url, prefetch=False, allow_redirects=False)
+    res = urlget(url, stream=True, allow_redirects=False)
 
     if res.status_code == 302 and "location" in res.headers:
         return res.headers["location"]
@@ -251,7 +259,33 @@ def absolute_url(baseurl, url):
     else:
         return url
 
-def parsexml(data, xmltype="XML", exception=PluginError):
+def parse_json(data, jsontype="JSON", exception=PluginError):
+    try:
+        jsondata = json.loads(data)
+    except ValueError as err:
+        if len(res.text) > 35:
+            snippet = data[:35] + "..."
+        else:
+            snippet = data
+
+        raise exception(("Unable to parse {0}: {1} ({2})").format(jsontype, err, snippet))
+
+    return jsondata
+
+def res_json(res, jsontype="JSON", exception=PluginError):
+    try:
+        jsondata = res.json()
+    except ValueError as err:
+        if len(res.text) > 35:
+            snippet = res.text[:35] + "..."
+        else:
+            snippet = res.text
+
+        raise exception(("Unable to parse {0}: {1} ({2})").format(jsontype, err, snippet))
+
+    return jsondata
+
+def parse_xml(data, xmltype="XML", exception=PluginError):
     try:
         dom = xml.dom.minidom.parseString(data)
     except Exception as err:
@@ -264,6 +298,9 @@ def parsexml(data, xmltype="XML", exception=PluginError):
 
     return dom
 
+def res_xml(res, *args, **kw):
+    return parse_xml(res.text, *args, **kw)
+
 def get_node_text(element):
     res = []
     for node in element.childNodes:
@@ -275,7 +312,9 @@ def get_node_text(element):
     else:
         return "".join(res)
 
+
 __all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer",
            "urlopen", "urlget", "urlresolve", "swfdecompress",
-           "swfverify", "verifyjson", "absolute_url", "parsexml",
+           "swfverify", "verifyjson", "absolute_url",
+           "parse_json", "res_json", "parse_xml", "res_xml",
            "get_node_text"]
