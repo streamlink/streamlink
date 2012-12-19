@@ -6,7 +6,7 @@ from os import name as os_name
 import os
 
 version = "1.4"
-deps = ["requests>=0.12.1"]
+deps = ["requests>=0.12.1,<0.14.2"]
 packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugins",
