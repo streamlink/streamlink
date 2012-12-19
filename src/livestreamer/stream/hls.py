@@ -154,7 +154,7 @@ class HLSStreamFD(Stream):
         self.decryptor_key = None
         self.sequence = -1
 
-        self.buffer = RingBuffer()
+        self.buffer = RingBuffer(self.session.get_option("ringbuffer-size"))
         self.filler = HLSStreamFiller(self)
         self.filler.start()
         self.check_playlist(silent=False)

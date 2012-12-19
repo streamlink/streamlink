@@ -68,6 +68,9 @@ streamopt.add_argument("-r", "--rtmpdump", metavar="path",
                        help="Specify location of rtmpdump executable, eg. /usr/local/bin/rtmpdump")
 streamopt.add_argument("--rtmpdump-proxy", metavar="host:port",
                        help="Specify a proxy (SOCKS) that rtmpdump will use")
+streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
+                       help="Specify a maximum size (bytes) for the ringbuffer used by some stream types, default is 32768.")
+
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory",
@@ -352,6 +355,9 @@ def set_options(args):
 
     if args.rtmpdump_proxy:
         livestreamer.set_option("rtmpdump-proxy", args.rtmpdump_proxy)
+
+    if args.ringbuffer_size:
+        livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 
     if args.jtv_cookie:
         livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)

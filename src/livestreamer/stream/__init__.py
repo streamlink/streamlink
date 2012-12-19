@@ -33,7 +33,7 @@ class StreamProcessFD(Stream):
         self.params = params
 
         self.cmd = cmd
-        self.fd = RingBuffer()
+        self.fd = RingBuffer(self.session.get_option("ringbuffer-size"))
         self.timeout = timeout
         self.params["_out_bufsize"] = 8192
 
