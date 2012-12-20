@@ -9,7 +9,7 @@ SetCompressor lzma
 
 # Livestreamer program information
 !define PROGRAM_NAME "Livestreamer"
-!define PROGRAM_VERSION "1.4"
+!define PROGRAM_VERSION "1.4.1"
 !define PROGRAM_WEB_SITE "http://github.com/chrippa/livestreamer"
 
 # Python files generated with bbfreeze

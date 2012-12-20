@@ -1,3 +1,26 @@
+Version 1.4.1
+-------------
+
+    CLI:
+     - Added --ringbuffer-size
+
+    Plugins:
+     - Fixed problem with UStream plugin and latest RTMPDump
+     - Added freedocast.com plugin by Athanasios Oikonomou
+     - Added livestation.com plugin by Athanasios Oikonomou
+     - Added mips.tv plugin by Athanasios Oikonomou
+     - Added streamingvideoprovider.co.uk plugin by Athanasios Oikonomou
+     - Added stream plugin that handles URLs such as hls://, rtmp:// etc
+     - Added yycast.com plugin by Athanasios Oikonomou
+
+    Streams:
+     - Refactored the HLS stream support
+
+    General:
+     - Bumped requests version requirement to 1.0
+     - Bumped sh version requirement to 1.07
+
+
 Version 1.4
 -----------
 

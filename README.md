@@ -4,7 +4,7 @@ Livestreamer is a CLI program that launches live streams from various streaming
 services in a custom video player and also a Python library that allows you to
 interact with the stream data in your own application.
 
-Current release: **1.4** (2012-11-23). See [CHANGELOG](https://github.com/chrippa/livestreamer/blob/master/CHANGELOG) for release notes.
+Current release: **1.4.1** (2012-12-20). See [CHANGELOG](https://github.com/chrippa/livestreamer/blob/master/CHANGELOG) for release notes.
 
 Currently includes plugins for these sites:
 

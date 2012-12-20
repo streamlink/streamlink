@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 
-from setuptools import setup, find_packages
+from setuptools import setup
 from sys import version_info
 from os import name as os_name
-import os
 
-version = "1.4"
+version = "1.4.1"
 deps = ["requests>=1.0,<2.0"]
 packages = ["livestreamer",
             "livestreamer.stream",
@@ -31,9 +30,9 @@ setup(name="livestreamer",
       author_email="chrippa@tanuki.se",
       license="BSD",
       packages=packages,
-      package_dir={'': 'src'},
+      package_dir={ "": "src" },
       entry_points={
-          "console_scripts": ['livestreamer=livestreamer.cli:main']
+          "console_scripts": ["livestreamer=livestreamer.cli:main"]
       },
       install_requires=deps,
       test_suite="tests",
