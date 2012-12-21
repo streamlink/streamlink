@@ -72,7 +72,10 @@ class Plugin(object):
             to be of highest quality.
         """
 
-        streams = self._get_streams()
+        try:
+            streams = self._get_streams()
+        except NoStreamsError:
+            return {}
 
         best = (0, None)
         for name, stream in streams.items():
