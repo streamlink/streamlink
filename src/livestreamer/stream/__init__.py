@@ -2,12 +2,15 @@ from ..compat import str, sh, pbs_compat
 from ..utils import RingBuffer
 from distutils.version import LooseVersion
 
+import io
 import os
 import time
 import tempfile
 
+
 class StreamError(Exception):
     pass
+
 
 class Stream(object):
     """
@@ -26,15 +29,29 @@ class Stream(object):
         """
         raise NotImplementedError
 
-class StreamProcessFD(Stream):
+
+class StreamIOWrapper(io.IOBase):
+    """Wraps file-like objects that are not inheriting from IOBase"""
+
+    def __init__(self, fd):
+        self.fd = fd
+
+    def read(self, size=-1):
+        return self.fd.read(size)
+
+    def close(self):
+        if hasattr(self.fd, "close"):
+            self.fd.close()
+
+
+class StreamProcessIO(io.IOBase):
     def __init__(self, session, cmd, params, timeout=30):
-        Stream.__init__(self, session)
-
-        self.params = params
-
         self.cmd = cmd
-        self.fd = RingBuffer(self.session.get_option("ringbuffer-size"))
+        self.params = params
+        self.session = session
         self.timeout = timeout
+
+        self.fd = RingBuffer(self.session.get_option("ringbuffer-size"))
         self.params["_out_bufsize"] = 8192
 
         if LooseVersion(sh.__version__) >= LooseVersion("1.07"):
@@ -64,6 +81,7 @@ class StreamProcessFD(Stream):
         except:
             pass
 
+
 class StreamProcess(Stream):
     def __init__(self, session, params={}, timeout=30):
         Stream.__init__(self, session)
@@ -87,7 +105,7 @@ class StreamProcess(Stream):
         if pbs_compat:
             stream = cmd(**params)
         else:
-            stream = StreamProcessFD(self.session, cmd, params,
+            stream = StreamProcessIO(self.session, cmd, params,
                                      timeout=self.timeout)
             stream.open()
 
@@ -137,5 +155,5 @@ from .hls import HLSStream
 from .http import HTTPStream
 from .rtmpdump import RTMPStream
 
-__all__ = ["StreamError", "Stream", "StreamProcess",
+__all__ = ["StreamError", "Stream", "StreamProcess", "StreamIOWrapper",
            "AkamaiHDStream", "HLSStream", "HTTPStream", "RTMPStream"]

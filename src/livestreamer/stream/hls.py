@@ -5,6 +5,7 @@ from ..compat import urljoin, queue
 from time import time, sleep
 from threading import Lock, Thread, Timer
 
+import io
 import os.path
 import re
 
@@ -135,12 +136,12 @@ class HLSStreamFiller(Thread):
         self.stream.buffer.close()
         self.stream.logger.debug("Buffer filler thread completed")
 
-class HLSStreamFD(Stream):
+class HLSStreamIO(io.IOBase):
     def __init__(self, session, url, timeout=60):
-        Stream.__init__(self, session)
-
+        self.session = session
         self.url = url
         self.timeout = timeout
+
         self.logger = session.logger.new_module("stream.hls")
         self.buffer = None
 
@@ -263,7 +264,7 @@ class HLSStream(Stream):
         self.url = url
 
     def open(self):
-        fd = HLSStreamFD(self.session, self.url)
+        fd = HLSStreamIO(self.session, self.url)
 
         return fd.open()
 

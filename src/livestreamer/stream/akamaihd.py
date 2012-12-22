@@ -8,6 +8,7 @@ from ..packages.flashmedia import FLV, FLVError
 from ..packages.flashmedia.tag import ScriptData
 
 import base64
+import io
 import hashlib
 import hmac
 import random
@@ -46,7 +47,7 @@ def cache_bust_string(length):
 
     return rval
 
-class AkamaiHDStreamFD(Stream):
+class AkamaiHDStreamIO(io.IOBase):
     Version = "2.5.8"
     FlashVersion = "LNX 11,1,102,63"
 
@@ -71,10 +72,9 @@ class AkamaiHDStreamFD(Stream):
     }
 
     def __init__(self, session, url, swf=None, seek=None):
-        Stream.__init__(self, session)
-
         parsed = urlparse(url)
 
+        self.session = session
         self.logger = self.session.logger.new_module("stream.akamaihd")
         self.host = ("{scheme}://{netloc}").format(scheme=parsed.scheme, netloc=parsed.netloc)
         self.streamname = parsed.path[1:]
@@ -147,7 +147,7 @@ class AkamaiHDStreamFD(Stream):
         return urlopen(url, headers=headers, params=params,
                        data=self.ControlData, exception=StreamError)
 
-    def read(self, size=0):
+    def read(self, size=-1):
         if not self.flv:
             return b""
 
@@ -231,7 +231,7 @@ class AkamaiHDStream(Stream):
         self.url = url
 
     def open(self):
-        stream = AkamaiHDStreamFD(self.session, self.url,
+        stream = AkamaiHDStreamIO(self.session, self.url,
                                   self.swf, self.seek)
 
         return stream.open()

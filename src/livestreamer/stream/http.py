@@ -1,4 +1,4 @@
-from . import Stream, StreamError
+from . import Stream, StreamIOWrapper, StreamError
 from ..utils import urlget
 
 class HTTPStream(Stream):
@@ -13,5 +13,5 @@ class HTTPStream(Stream):
                      exception=StreamError,
                      **self.args)
 
-        return res.raw
+        return StreamIOWrapper(res.raw)
 
