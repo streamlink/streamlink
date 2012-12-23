@@ -4,7 +4,11 @@
 # applies to the player and not the rtmpdump path since the player command is passed
 # through the "shell" to allow parameters to be passed to the player.
 
-player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" --file-caching=5000
+player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe"
+#player="C:\Program Files\VideoLAN\VLC\vlc.exe"
+
+# Using --file-caching is recommended, but is only supported in VLC 2.0+
+#player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" --file-caching=5000
 #player="C:\Program Files\VideoLAN\VLC\vlc.exe" --file-caching=5000
 
 # Hides console output from video player
