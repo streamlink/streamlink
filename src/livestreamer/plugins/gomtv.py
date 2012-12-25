@@ -21,10 +21,10 @@ limitations under the License.
 
 """
 
-from livestreamer.compat import str, bytes, urlparse, urljoin, unquote, parse_qs
+from livestreamer.compat import str, bytes, urlparse, urljoin, unquote
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget, urlopen, parse_xml, get_node_text
+from livestreamer.utils import urlget, urlopen, parse_xml, get_node_text, parse_qsd
 from livestreamer.options import Options
 
 import socket
@@ -89,7 +89,7 @@ class GomTV(Plugin):
         if not flashvars:
             raise PluginError("Unable to find flashvars on page")
 
-        flashvars = parse_qs(flashvars.group(1))
+        flashvars = parse_qsd(flashvars.group(1))
         for var in ("vjoinid", "conid", "leagueid"):
             if not var in flashvars:
                 raise PluginError(("Missing key '{0}' in flashvars").format(var))
@@ -98,8 +98,8 @@ class GomTV(Plugin):
         qualities = ["SQ", "HQ"]
 
         for quality in qualities:
-            params = dict(leagueid=flashvars["leagueid"][0], vjoinid=flashvars["vjoinid"][0],
-                          conid=flashvars["conid"][0], title="", ref="",
+            params = dict(leagueid=flashvars["leagueid"], vjoinid=flashvars["vjoinid"],
+                          conid=flashvars["conid"], title="", ref="",
                           tmpstamp=int(time.time()), strLevel=quality)
             res = urlget(self.GOXVODURL, params=params, session=self.rsession)
 

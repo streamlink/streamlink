@@ -1,4 +1,4 @@
-from .compat import bytes, is_win32, urljoin
+from .compat import bytes, is_win32, urljoin, parse_qsl
 from .plugins import PluginError
 
 from threading import Event, Lock
@@ -298,6 +298,9 @@ def parse_xml(data, xmltype="XML", exception=PluginError):
 
     return dom
 
+def parse_qsd(*args, **kwargs):
+    return dict(parse_qsl(*args, **kwargs))
+
 def res_xml(res, *args, **kw):
     return parse_xml(res.text, *args, **kw)
 
@@ -312,9 +315,8 @@ def get_node_text(element):
     else:
         return "".join(res)
 
-
 __all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer",
            "urlopen", "urlget", "urlresolve", "swfdecompress",
-           "swfverify", "verifyjson", "absolute_url",
+           "swfverify", "verifyjson", "absolute_url", "parse_qsd",
            "parse_json", "res_json", "parse_xml", "res_xml",
            "get_node_text"]

@@ -1,7 +1,7 @@
-from livestreamer.compat import str, bytes, parse_qs
+from livestreamer.compat import str, bytes
 from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget, verifyjson, parse_json
+from livestreamer.utils import urlget, verifyjson, parse_json, parse_qsd
 
 import re
 import json
@@ -31,7 +31,7 @@ class Youtube(Plugin):
         streams = []
 
         for stream_qs in streammap.split(","):
-            stream = parse_qs(stream_qs)
+            stream = parse_qsd(stream_qs)
             streams.append(stream)
 
         return streams
@@ -72,11 +72,11 @@ class Youtube(Plugin):
             if not ("url" in streaminfo and "sig" in streaminfo):
                 continue
 
-            stream = HTTPStream(self.session, streaminfo["url"][0],
-                                params=dict(signature=streaminfo["sig"][0]))
+            stream = HTTPStream(self.session, streaminfo["url"],
+                                params=dict(signature=streaminfo["sig"]))
 
-            if streaminfo["itag"][0] in formatmap:
-                quality = formatmap[streaminfo["itag"][0]]
+            if streaminfo["itag"] in formatmap:
+                quality = formatmap[streaminfo["itag"]]
             else:
                 quality = streaminfo["quality"]
 

@@ -23,10 +23,10 @@ elif is_py3:
     from io import IOBase as file
 
 try:
-    from urllib.parse import urlparse, urljoin, quote, unquote, parse_qs
+    from urllib.parse import urlparse, urljoin, quote, unquote, parse_qsl
     import queue
 except ImportError:
-    from urlparse import urlparse, urljoin, parse_qs
+    from urlparse import urlparse, urljoin, parse_qsl
     from urllib import quote, unquote
     import Queue as queue
 
@@ -38,5 +38,5 @@ else:
     pbs_compat = False
 
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
-           "str", "bytes", "urlparse", "urljoin", "parse_qs",
+           "str", "bytes", "urlparse", "urljoin", "parse_qsl",
            "quote", "unquote", "sh", "pbs_compat", "queue"]
