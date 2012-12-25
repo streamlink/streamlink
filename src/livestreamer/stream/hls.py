@@ -124,7 +124,11 @@ class HLSStreamFiller(Thread):
         self.running = True
 
         while self.running:
-            entry = self.queue.get()
+            try:
+                entry = self.queue.get(True, 5)
+            except queue.Empty:
+                continue
+
             self.download_sequence(entry)
 
             if entry["sequence"] == self.stream.playlist_end:
