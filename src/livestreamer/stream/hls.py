@@ -84,7 +84,8 @@ class HLSStreamFiller(Thread):
         Thread.__init__(self)
 
         self.daemon = True
-        self.queue = queue.Queue()
+        self.queue = queue.Queue(maxsize=5)
+        self.running = False
         self.stream = stream
 
     def download_sequence(self, entry):
@@ -121,7 +122,6 @@ class HLSStreamFiller(Thread):
 
     def run(self):
         self.stream.logger.debug("Starting buffer filler thread")
-        self.running = True
 
         while self.running:
             try:
@@ -137,8 +137,18 @@ class HLSStreamFiller(Thread):
         if self.stream.playlist_timer:
             self.stream.playlist_timer.cancel()
 
+        self.running = False
         self.stream.buffer.close()
         self.stream.logger.debug("Buffer filler thread completed")
+
+    def start(self):
+        self.running = True
+
+        return Thread.start(self)
+
+    def stop(self):
+        self.running = False
+
 
 class HLSStreamIO(io.IOBase):
     def __init__(self, session, url, timeout=60):
@@ -150,7 +160,9 @@ class HLSStreamIO(io.IOBase):
         self.buffer = None
 
     def open(self):
+        self.playlist_changed = False
         self.playlist_end = None
+        self.playlist_entries = []
         self.playlist_lock = Lock()
         self.playlist_minimal_reload_time = 15
         self.playlist_reload_time = 0
@@ -162,12 +174,12 @@ class HLSStreamIO(io.IOBase):
         self.buffer = RingBuffer(self.session.get_option("ringbuffer-size"))
         self.filler = HLSStreamFiller(self)
         self.filler.start()
-        self.check_playlist(silent=False)
+        self.reload_playlist(silent=False, fillqueue=True)
 
         return self
 
     def close(self):
-        self.filler.running = False
+        self.filler.stop()
 
     def read(self, size=-1):
         if not self.buffer:
@@ -176,30 +188,32 @@ class HLSStreamIO(io.IOBase):
         return self.buffer.read(size, block=self.filler.is_alive(),
                                 timeout=self.timeout)
 
-    def check_playlist(self, silent=True):
-        if self.playlist_end is not None:
+    def reload_playlist(self, silent=True, fillqueue=False):
+        if not self.filler.running:
             return
 
-        next_check_time = 1
+        if self.playlist_end and self.sequence > self.playlist_end:
+            return
 
-        with self.playlist_lock:
-            # Periodic reload is not fatal if it fails
-            elapsed = time() - self.playlist_reload_time
-            if elapsed > self.playlist_minimal_reload_time:
+        # Wait until buffer has room before requesting a new playlist
+        self.buffer.wait_free()
+
+        elapsed = time() - self.playlist_reload_time
+        if elapsed > self.playlist_minimal_reload_time:
+            try:
+                self._reload_playlist()
+            except IOError as err:
                 if silent:
-                    try:
-                        self._reload_playlist()
-                    except IOError as err:
-                        self.logger.error("Failed to reload playlist: {0}", str(err))
-                        next_check_time = self.playlist_minimal_reload_time
+                    self.logger.error("Failed to reload playlist: {0}", str(err))
                 else:
-                    self._reload_playlist()
+                    raise StreamError(str(err))
 
-            # Wait until buffer has room before requesting a new playlist
-            self.buffer.wait_free()
-            self.playlist_timer = Timer(next_check_time, self.check_playlist)
-            self.playlist_timer.daemon = True
-            self.playlist_timer.start()
+        if self.playlist_changed:
+            self._queue_sequences(fillqueue)
+
+        self.playlist_timer = Timer(1, self.reload_playlist)
+        self.playlist_timer.daemon = True
+        self.playlist_timer.start()
 
     def _reload_playlist(self):
         self.logger.debug("Reloading playlist")
@@ -228,17 +242,27 @@ class HLSStreamIO(io.IOBase):
             res = urlget(tags["EXT-X-KEY"][0]["URI"], exception=StreamError)
             self.decryptor_key = res.content
 
-        if len(entries) == 0:
-            return
-
         for i, entry in enumerate(entries):
             entry["sequence"] = sequence + i
             entry["url"] = absolute_url(self.url, entry["url"])
 
-        if "EXT-X-ENDLIST" in tags:
-            self.playlist_end = entries[-1]["sequence"]
+        self.playlist_entries = entries
 
-        if self.sequence < entries[0]["sequence"] or (self.sequence-1) > entries[-1]["sequence"]:
+        if len(entries) == 0:
+            return
+
+        firstentry = entries[0]
+        lastentry = entries[-1]
+
+        if "EXT-X-ENDLIST" in tags:
+            self.playlist_end = lastentry["sequence"]
+
+        self.playlist_changed = (self.sequence - 1) != lastentry["sequence"]
+
+        if not self.playlist_changed:
+            self.playlist_minimal_reload_time = max(self.playlist_minimal_reload_time / 2, 1)
+
+        if self.sequence < firstentry["sequence"] or (self.sequence - 1) > lastentry["sequence"]:
             totalentries = len(entries)
 
             if totalentries > 3 and self.playlist_end is None:
@@ -246,20 +270,32 @@ class HLSStreamIO(io.IOBase):
             else:
                 self.sequence = sequence
 
-        playlistchanged = False
-        for entry in entries:
+    def _queue_sequences(self, fillqueue=False):
+        if len(self.playlist_entries) == 0:
+            return
+
+        for i, entry in enumerate(self.playlist_entries):
+            if fillqueue and i == self.filler.queue.maxsize:
+                break
+
             if entry["sequence"] == self.sequence:
                 self.logger.debug("Adding sequence {0} to queue", entry["sequence"])
-                self.filler.queue.put(entry)
+
+                while self.filler.running:
+                    try:
+                        self.filler.queue.put(entry, True, 5)
+                        break
+                    except queue.Full:
+                        continue
+
                 self.sequence += 1
-                playlistchanged = True
 
             if entry["tag"][0] == "EXTINF":
                 duration = entry["tag"][1][0]
                 self.playlist_minimal_reload_time = duration
 
-        if not playlistchanged:
-            self.playlist_minimal_reload_time /= 2
+        self.playlist_changed = (self.sequence - 1) != self.playlist_entries[-1]["sequence"]
+
 
 class HLSStream(Stream):
     def __init__(self, session, url):
