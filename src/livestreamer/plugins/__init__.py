@@ -10,8 +10,8 @@ SpecialQualityWeights = {
     "sd": 576,
     "sq": 360,
     "sqtest": 240,
-    "iphonehigh": 240,
-    "iphonelow": 180,
+    "iphonehigh": 230,
+    "iphonelow": 170,
 }
 
 
@@ -36,8 +36,7 @@ def qualityweight(quality):
         elif match.group(2) == "p":
             return int(match.group(1))
 
-
-    return 1
+    return 0
 
 
 class Plugin(object):
@@ -53,7 +52,7 @@ class Plugin(object):
 
     @classmethod
     def can_handle_url(cls, url):
-       raise NotImplementedError
+        raise NotImplementedError
 
     @classmethod
     def set_option(cls, key, value):
@@ -91,7 +90,6 @@ class Plugin(object):
 
             return p
 
-
         for name, stream in ostreams.items():
             if isinstance(stream, list):
                 sstream = sorted(stream, key=sort_priority)
@@ -107,12 +105,14 @@ class Plugin(object):
             else:
                 streams[name] = stream
 
-        if len(streams) > 0:
-            sort = sorted(streams.keys(),
-                          key=lambda k: qualityweight(k))
+        sort = sorted(filter(qualityweight, streams.keys()),
+                      key=qualityweight)
 
+        if len(sort) > 0:
             best = sort[-1]
+            worst = sort[0]
             streams["best"] = streams[best]
+            streams["worst"] = streams[worst]
 
         return streams
 

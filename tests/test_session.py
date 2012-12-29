@@ -50,7 +50,9 @@ class TestSession(unittest.TestCase):
         streams = channel.get_streams(priority=["http", "rtmp"])
 
         self.assertTrue("best" in streams)
+        self.assertTrue("worst" in streams)
         self.assertTrue(streams["best"] is streams["1080p"])
+        self.assertTrue(streams["worst"] is streams["350k"])
         self.assertTrue(isinstance(streams["rtmp"], RTMPStream))
         self.assertTrue(isinstance(streams["http"], HTTPStream))
         self.assertTrue(isinstance(streams["hls"], HLSStream))

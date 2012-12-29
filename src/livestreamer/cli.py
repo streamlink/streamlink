@@ -30,7 +30,7 @@ parser = ArgumentParser(description="CLI program that launches streams from vari
                         epilog=exampleusage, add_help=False)
 
 parser.add_argument("url", help="URL to stream", nargs="?")
-parser.add_argument("stream", help="Stream quality to play, use 'best' for highest quality available",
+parser.add_argument("stream", help="Stream quality to play, use 'best' or 'worst' for highest or lowest quality available",
                     nargs="?")
 
 parser.add_argument("-h", "--help", action="store_true",
@@ -319,9 +319,9 @@ def handle_url(args):
     validstreams = (", ").join(keys)
 
     if args.stream:
-        if args.stream == "best":
+        if args.stream == "best" or args.stream == "worst":
             for name, stream in streams.items():
-                if stream is streams["best"] and name != "best":
+                if stream is streams[args.stream] and name != args.stream:
                     args.stream = name
 
         if args.stream in streams:
