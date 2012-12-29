@@ -75,6 +75,10 @@ streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory",
                        help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a ;.")
+pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,hls,http,akamaihd",
+                       type=lambda v: [p.strip() for p in v.split(",")],
+                       help=("When there are multiple streams with the same name but different streaming types, these priorities will be used. "
+                             "Should be specified as a comma-delimited list, default is rtmp,hls,http,akamaihd."))
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
@@ -303,7 +307,7 @@ def handle_url(args):
     logger.info("Found matching plugin {0} for URL {1}", channel.module, args.url)
 
     try:
-        streams = channel.get_streams()
+        streams = channel.get_streams(args.stream_priority)
     except (StreamError, PluginError) as err:
         exit(str(err))
 

@@ -183,13 +183,13 @@ class JustinTV(Plugin):
 
         try:
             hlsstreams = self._get_hls_streams()
-            if len(streams) > 0:
-                hlssuffix = "_hls"
-            else:
-                hlssuffix = ""
 
             for name, stream in hlsstreams.items():
-                streams[name + hlssuffix] = stream
+                if name in streams:
+                    streams[name] = [streams[name], stream]
+                else:
+                    streams[name] = stream
+
         except PluginError as err:
             self.logger.error("Error when fetching HLS stream info: {0}", str(err))
 

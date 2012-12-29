@@ -13,6 +13,8 @@ class StreamError(Exception):
 
 
 class Stream(object):
+    __shortname__ = "stream"
+
     """
         This is a base class that should be inherited when implementing
         different stream types. Should only be used directly from plugins.
@@ -29,6 +31,9 @@ class Stream(object):
         """
         raise NotImplementedError
 
+    @classmethod
+    def shortname(cls):
+        return cls.__shortname__
 
 class StreamIOWrapper(io.IOBase):
     """Wraps file-like objects that are not inheriting from IOBase"""

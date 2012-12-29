@@ -47,7 +47,7 @@ class TestSession(unittest.TestCase):
 
     def test_plugin(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams()
+        streams = channel.get_streams(priority=["http", "rtmp"])
 
         self.assertTrue("best" in streams)
         self.assertTrue(streams["best"] is streams["1080p"])
@@ -55,6 +55,18 @@ class TestSession(unittest.TestCase):
         self.assertTrue(isinstance(streams["http"], HTTPStream))
         self.assertTrue(isinstance(streams["hls"], HLSStream))
         self.assertTrue(isinstance(streams["akamaihd"], AkamaiHDStream))
+
+    def test_plugin_stream_priority(self):
+        channel = self.session.resolve_url("http://test.se/channel")
+        streams = channel.get_streams(priority=["http", "rtmp"])
+
+        self.assertTrue(isinstance(streams["480p"], HTTPStream))
+        self.assertTrue(isinstance(streams["480p_rtmp"], RTMPStream))
+
+        streams = channel.get_streams(priority=["rtmp", "http"])
+
+        self.assertTrue(isinstance(streams["480p"], RTMPStream))
+        self.assertTrue(isinstance(streams["480p_http"], HTTPStream))
 
 if __name__ == "__main__":
     unittest.main()

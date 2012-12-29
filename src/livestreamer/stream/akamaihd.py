@@ -223,6 +223,8 @@ class AkamaiHDStreamIO(io.IOBase):
 
 
 class AkamaiHDStream(Stream):
+    __shortname__ = "akamaihd"
+
     def __init__(self, session, url, swf=None, seek=None):
         Stream.__init__(self, session)
 

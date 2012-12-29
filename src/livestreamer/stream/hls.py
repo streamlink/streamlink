@@ -298,6 +298,8 @@ class HLSStreamIO(io.IOBase):
 
 
 class HLSStream(Stream):
+    __shortname__ = "hls"
+
     def __init__(self, session, url):
         Stream.__init__(self, session)
 

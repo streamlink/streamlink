@@ -20,13 +20,15 @@ class TestPlugin(Plugin):
 
         streams["240p"] = HTTPStream(self.session, "http://test.se/stream")
         streams["360p"] = HTTPStream(self.session, "http://test.se/stream")
-        streams["480p"] = HTTPStream(self.session, "http://test.se/stream")
         streams["1080p"] = HTTPStream(self.session, "http://test.se/stream")
 
         streams["350k"] = HTTPStream(self.session, "http://test.se/stream")
         streams["800k"] = HTTPStream(self.session, "http://test.se/stream")
         streams["1500k"] = HTTPStream(self.session, "http://test.se/stream")
         streams["3000k"] = HTTPStream(self.session, "http://test.se/stream")
+
+        streams["480p"] = [HTTPStream(self.session, "http://test.se/stream"),
+                           RTMPStream(self.session, dict(rtmp="rtmp://test.se"))]
 
         return streams
 

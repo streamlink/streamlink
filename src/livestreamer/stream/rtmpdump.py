@@ -6,6 +6,8 @@ from time import sleep
 import re
 
 class RTMPStream(StreamProcess):
+    __shortname__ = "rtmp"
+
     def __init__(self, session, params, redirect=False, timeout=30):
         StreamProcess.__init__(self, session, params, timeout)
 

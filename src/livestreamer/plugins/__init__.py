@@ -14,6 +14,7 @@ SpecialQualityWeights = {
     "iphonelow": 180,
 }
 
+
 def qualityweight(quality):
     if quality in SpecialQualityWeights:
         return SpecialQualityWeights[quality]
@@ -38,6 +39,7 @@ def qualityweight(quality):
 
     return 1
 
+
 class Plugin(object):
     """
         A plugin can retrieve stream information from the *url* specified.
@@ -61,7 +63,8 @@ class Plugin(object):
     def get_option(cls, key):
         return cls.options.get(key)
 
-    def get_streams(self):
+    def get_streams(self, priority=["rtmp", "hls", "http",
+                                    "akamaihd"]):
         """
             Retrieves and returns a :class:`dict` containing the streams.
 
@@ -73,31 +76,58 @@ class Plugin(object):
         """
 
         try:
-            streams = self._get_streams()
+            ostreams = self._get_streams()
         except NoStreamsError:
             return {}
 
-        best = (0, None)
-        for name, stream in streams.items():
-            weight = qualityweight(name)
+        streams = {}
 
-            if weight > best[0]:
-                best = (weight, stream)
+        def sort_priority(s):
+            n = type(s).shortname()
+            try:
+                p = priority.index(n)
+            except ValueError:
+                p = 99
 
-        if best[1] is not None:
-            streams["best"] = best[1]
+            return p
+
+
+        for name, stream in ostreams.items():
+            if isinstance(stream, list):
+                sstream = sorted(stream, key=sort_priority)
+
+                for i, stream in enumerate(sstream):
+                    if i == 0:
+                        sname = name
+                    else:
+                        sname = type(stream).shortname()
+                        sname = "{0}_{1}".format(name, sname)
+
+                    streams[sname] = stream
+            else:
+                streams[name] = stream
+
+        if len(streams) > 0:
+            sort = sorted(streams.keys(),
+                          key=lambda k: qualityweight(k))
+
+            best = sort[-1]
+            streams["best"] = streams[best]
 
         return streams
 
     def _get_streams(self):
         raise NotImplementedError
 
+
 class PluginError(Exception):
     pass
+
 
 class NoStreamsError(PluginError):
     def __init__(self, url):
         PluginError.__init__(self, ("No streams found on this URL: {0}").format(url))
+
 
 class NoPluginError(PluginError):
     pass
