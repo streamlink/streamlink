@@ -280,23 +280,15 @@ def handle_stream(args, streams):
         else:
             exit("Stream does not use a command-line")
     else:
-        success = False
-        altcount = 1
+        altstreams = list(filter(lambda k: args.stream + "_alt" in k,
+                          sorted(streams.keys())))
 
-        while not success:
+        for streamname in [args.stream] + altstreams:
+            stream = streams[streamname]
             success = output_stream(stream, streamname, args)
 
-            if altcount == 1:
-                streamname = args.stream + "_alt"
-            else:
-                streamname = args.stream + "_alt{0}".format(altcount)
-
-            if streamname in streams:
-                stream = streams[streamname]
-            else:
+            if success:
                 break
-
-            altcount += 1
 
 def handle_url(args):
     try:
@@ -321,7 +313,7 @@ def handle_url(args):
     if args.stream:
         if args.stream == "best" or args.stream == "worst":
             for name, stream in streams.items():
-                if stream is streams[args.stream] and name != args.stream:
+                if stream is streams[args.stream] and name not in ("best", "worst"):
                     args.stream = name
 
         if args.stream in streams:
