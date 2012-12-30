@@ -85,8 +85,10 @@ class UStreamTV(Plugin):
                 if "streamVersionCdn" in info:
                     for name, cdn in info["streamVersionCdn"].items():
                         if "cdnStreamUrl" in cdn and "cdnStreamName" in cdn:
-                            streams["cdn_" + name] = self._create_stream(cdn["cdnStreamUrl"],
-                                                                         cdn["cdnStreamName"])
+                            cdnname = "live_alt_{0}".format(name)
+                            streams[cdnname] = self._create_stream(cdn["cdnStreamUrl"],
+                                                                   cdn["cdnStreamName"])
+
 
 
         return streams
