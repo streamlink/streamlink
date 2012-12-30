@@ -19,6 +19,11 @@ class RTMPStream(StreamProcess):
         if self.session.options.get("rtmpdump-proxy"):
             self.params["socks"] = self.session.options.get("rtmpdump-proxy")
 
+    def __repr__(self):
+        return ("<RTMPStream({0!r}, redirect={1!r}, "
+                "timeout={2!r})>").format(self.params, self.redirect,
+                                          self.timeout)
+
     def open(self):
         if "jtv" in self.params and not self._supports_param("jtv"):
             raise StreamError("Installed rtmpdump does not support --jtv argument")

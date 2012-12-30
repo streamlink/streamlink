@@ -23,6 +23,9 @@ class Stream(object):
     def __init__(self, session):
         self.session = session
 
+    def __repr__(self):
+        return "<Stream()>"
+
     def open(self):
         """
             Opens a connection to the stream.
