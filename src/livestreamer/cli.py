@@ -13,7 +13,7 @@ exampleusage = """
 example usage:
 
 $ livestreamer twitch.tv/onemoregametv
-Found streams: 240p, 360p, 480p, 720p, best, iphonehigh, iphonelow, live
+Found streams: 240p, 360p, 480p, 720p, iphonehigh, iphonelow (worst), live (best)
 $ livestreamer twitch.tv/onemoregametv 720p
 
 Stream now playbacks in player (default is VLC).
@@ -306,9 +306,21 @@ def handle_url(args):
     if len(streams) == 0:
         exit("No streams found on this URL: {0}", args.url)
 
-    keys = list(streams.keys())
-    keys.sort()
-    validstreams = (", ").join(keys)
+    validstreams = []
+    for name, stream in sorted(streams.items()):
+        if name in ("best", "worst"):
+            continue
+
+        synonymfilter = lambda n: stream is streams[n] and n is not name
+        synonyms = list(filter(synonymfilter, streams.keys()))
+
+        if len(synonyms) > 0:
+            joined = ", ".join(synonyms)
+            name = "{0} ({1})".format(name, joined)
+
+        validstreams.append(name)
+
+    validstreams = ", ".join(validstreams)
 
     if args.stream:
         if args.stream == "best" or args.stream == "worst":
