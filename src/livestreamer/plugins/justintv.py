@@ -31,7 +31,10 @@ class JustinTV(Plugin):
         return ("justin.tv" in url) or ("twitch.tv" in url)
 
     def _get_channel_name(self, url):
-        return urlparse(url).path.rstrip("/").rpartition("/")[-1].lower()
+        parts = urlparse(url).path.split("/")
+
+        if len(parts) >= 2 and len(parts[1]) > 0:
+            return parts[1].lower()
 
     def _get_metadata(self):
         url = self.MetadataURL.format(self.channelname)
