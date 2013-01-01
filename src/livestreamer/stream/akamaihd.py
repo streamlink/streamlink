@@ -236,6 +236,10 @@ class AkamaiHDStream(Stream):
         return ("<AkamaiHDStream({0!r}, "
                 "swf={1!r})>".format(self.url, self.swf))
 
+    def __json__(self):
+        return dict(type=AkamaiHDStream.shortname(),
+                    url=self.url, swf=self.swf)
+
     def open(self):
         stream = AkamaiHDStreamIO(self.session, self.url,
                                   self.swf, self.seek)

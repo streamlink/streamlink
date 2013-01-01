@@ -1,5 +1,6 @@
 import argparse
 import getpass
+import json
 import os
 import sys
 import subprocess
@@ -7,7 +8,7 @@ import subprocess
 from livestreamer import *
 from livestreamer.compat import input, stdout, file, is_win32
 from livestreamer.stream import StreamProcess
-from livestreamer.utils import ArgumentParser, NamedPipe
+from livestreamer.utils import ArgumentParser, JSONEncoder, NamedPipe
 
 exampleusage = """
 example usage:
@@ -41,6 +42,9 @@ parser.add_argument("-u", "--plugins", action="store_true",
 parser.add_argument("-l", "--loglevel", metavar="level",
                     help="Set log level, valid levels: none, error, warning, info, debug",
                     default="info")
+parser.add_argument("-j", "--json", action="store_true",
+                    help="Output JSON instead of the normal text output and disable log output, useful for external scripting")
+
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="player",
@@ -49,7 +53,7 @@ playeropt.add_argument("-p", "--player", metavar="player",
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help="Hide all player console output")
 playeropt.add_argument("-n", "--fifo", action="store_true",
-                       help="Play file using a named pipe instead of stdin (Can help with incompatible media players)")
+                       help="Play file using a named pipe instead of stdin (can help with incompatible media players)")
 
 outputopt = parser.add_argument_group("file output options")
 outputopt.add_argument("-o", "--output", metavar="filename",
@@ -69,7 +73,7 @@ streamopt.add_argument("-r", "--rtmpdump", metavar="path",
 streamopt.add_argument("--rtmpdump-proxy", metavar="host:port",
                        help="Specify a proxy (SOCKS) that rtmpdump will use")
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
-                       help="Specify a maximum size (bytes) for the ringbuffer used by some stream types, default is 32768.")
+                       help="Specify a maximum size (bytes) for the ringbuffer used by some stream types, default is 32768")
 
 
 pluginopt = parser.add_argument_group("plugin options")
@@ -78,7 +82,7 @@ pluginopt.add_argument("--plugin-dirs", metavar="directory",
 pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,hls,http,akamaihd",
                        type=lambda v: [p.strip() for p in v.split(",")],
                        help=("When there are multiple streams with the same name but different streaming types, these priorities will be used. "
-                             "Should be specified as a comma-delimited list, default is rtmp,hls,http,akamaihd."))
+                             "Should be specified as a comma-delimited list, default is rtmp,hls,http,akamaihd"))
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
@@ -94,12 +98,26 @@ if is_win32:
 else:
     RCFILE = os.path.expanduser("~/.livestreamerrc")
 
-def exit(*args, **kw):
-    logger.error(*args, **kw)
+def exit(fmt, *args, **kw):
+    if "json" in kw:
+        del kw["json"]
+
+        err = fmt.format(*args, **kw)
+        msg_json({}, error=err)
+    else:
+        logger.error(fmt, *args, **kw)
+
     sys.exit()
 
 def msg(msg):
     msg_output.write(msg + "\n")
+
+def msg_json(obj, error=None):
+    if error:
+        obj["error"] = error
+
+    msg(json.dumps(obj, cls=JSONEncoder,
+        indent=2))
 
 def set_msg_output(output):
     msg_output = output
@@ -279,6 +297,8 @@ def handle_stream(args, streams):
             msg(cmdline)
         else:
             exit("Stream does not use a command-line")
+    elif args.json:
+        msg_json(stream.__json__())
     else:
         altstreams = list(filter(lambda k: args.stream + "_alt" in k,
                           sorted(streams.keys())))
@@ -292,19 +312,19 @@ def handle_stream(args, streams):
 
 def handle_url(args):
     try:
-        channel = livestreamer.resolve_url(args.url)
+        plugin = livestreamer.resolve_url(args.url)
     except NoPluginError:
-        exit("No plugin can handle URL: {0}", args.url)
+        exit("No plugin can handle URL: {0}", args.url, json=args.json)
 
-    logger.info("Found matching plugin {0} for URL {1}", channel.module, args.url)
+    logger.info("Found matching plugin {0} for URL {1}", plugin.module, args.url)
 
     try:
-        streams = channel.get_streams(args.stream_priority)
+        streams = plugin.get_streams(args.stream_priority)
     except (StreamError, PluginError) as err:
-        exit(str(err))
+        exit(str(err), json=args.json)
 
     if len(streams) == 0:
-        exit("No streams found on this URL: {0}", args.url)
+        exit("No streams found on this URL: {0}", args.url, json=args.json)
 
     validstreams = []
     for name, stream in sorted(streams.items()):
@@ -331,14 +351,26 @@ def handle_url(args):
         if args.stream in streams:
             handle_stream(args, streams)
         else:
-            msg(("Invalid stream quality: {0}").format(args.stream))
-            msg(("Valid streams: {0}").format(validstreams))
-    else:
-        msg(("Found streams: {0}").format(validstreams))
+            err = "Invalid stream quality: {0}".format(args.stream)
 
-def print_plugins():
+            if args.json:
+                msg_json(dict(streams=streams, plugin=plugin.module),
+                         error=err)
+            else:
+                msg(err)
+                msg(("Valid streams: {0}").format(validstreams))
+    else:
+        if args.json:
+            msg_json(dict(streams=streams, plugin=plugin.module))
+        else:
+            msg(("Found streams: {0}").format(validstreams))
+
+def print_plugins(args):
     pluginlist = list(livestreamer.get_plugins().keys())
-    msg(("Installed plugins: {0}").format(", ".join(pluginlist)))
+    if args.json:
+        msg_json(pluginlist)
+    else:
+        msg(("Installed plugins: {0}").format(", ".join(pluginlist)))
 
 def load_plugins(dirs):
     dirs = [os.path.expanduser(d) for d in dirs.split(";")]
@@ -377,7 +409,8 @@ def set_options(args):
     if gomtv_password:
         livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
 
-    livestreamer.set_loglevel(args.loglevel)
+    if not args.json:
+        livestreamer.set_loglevel(args.loglevel)
 
 def main():
     arglist = sys.argv[1:]
@@ -398,6 +431,6 @@ def main():
     if args.url:
         handle_url(args)
     elif args.plugins:
-        print_plugins()
+        print_plugins(args)
     else:
         parser.print_help()

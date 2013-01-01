@@ -201,6 +201,12 @@ class RingBuffer(Buffer):
     def is_full(self):
         return self.free == 0
 
+class JSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if hasattr(obj, "__json__"):
+            return obj.__json__()
+        else:
+            return json.JSONEncoder.default(self, obj)
 
 def urlopen(url, method="get", exception=PluginError, session=None,
             timeout=20, *args, **kw):
@@ -315,7 +321,7 @@ def get_node_text(element):
     else:
         return "".join(res)
 
-__all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer",
+__all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer", "JSONEncoder",
            "urlopen", "urlget", "urlresolve", "swfdecompress",
            "swfverify", "verifyjson", "absolute_url", "parse_qsd",
            "parse_json", "res_json", "parse_xml", "res_xml",

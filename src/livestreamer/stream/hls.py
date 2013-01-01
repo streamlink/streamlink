@@ -308,6 +308,10 @@ class HLSStream(Stream):
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
 
+    def __json__(self):
+        return dict(type=HLSStream.shortname(),
+                    url=self.url)
+
     def open(self):
         fd = HLSStreamIO(self.session, self.url)
 

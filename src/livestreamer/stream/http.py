@@ -1,6 +1,8 @@
 from . import Stream, StreamIOWrapper, StreamError
 from ..utils import urlget
 
+from requests import Request
+
 class HTTPStream(Stream):
     __shortname__ = "http"
 
@@ -12,6 +14,13 @@ class HTTPStream(Stream):
 
     def __repr__(self):
         return "<HTTPStream({0!r})>".format(self.url)
+
+    def __json__(self):
+        req = Request(url=self.url, **self.args).prepare()
+
+        return dict(type=HTTPStream.shortname(),
+                    url=req.url, headers=req.headers,
+                    body=req.body, method=req.method or "GET")
 
     def open(self):
         res = urlget(self.url, stream=True,

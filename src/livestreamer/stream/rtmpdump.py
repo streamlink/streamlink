@@ -14,25 +14,30 @@ class RTMPStream(StreamProcess):
         self.cmd = self.session.options.get("rtmpdump")
         self.redirect = redirect
         self.logger = session.logger.new_module("stream.rtmp")
-        self.params["flv"] = "-"
-
-        if self.session.options.get("rtmpdump-proxy"):
-            self.params["socks"] = self.session.options.get("rtmpdump-proxy")
 
     def __repr__(self):
         return ("<RTMPStream({0!r}, redirect={1!r}, "
                 "timeout={2!r})>").format(self.params, self.redirect,
                                           self.timeout)
 
+    def __json__(self):
+        return dict(type=RTMPStream.shortname(),
+                    params=self.params)
+
     def open(self):
+        if self.session.options.get("rtmpdump-proxy"):
+            if not self._supports_param("socks"):
+                raise StreamError("Installed rtmpdump does not support --socks argument")
+
+            self.params["socks"] = self.session.options.get("rtmpdump-proxy")
+
         if "jtv" in self.params and not self._supports_param("jtv"):
             raise StreamError("Installed rtmpdump does not support --jtv argument")
 
-        if "socks" in self.params and not self._supports_param("socks"):
-            raise StreamError("Installed rtmpdump does not support --socks argument")
-
         if self.redirect:
             self._check_redirect()
+
+        self.params["flv"] = "-"
 
         return StreamProcess.open(self)
 

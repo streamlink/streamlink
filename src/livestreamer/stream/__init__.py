@@ -3,6 +3,7 @@ from ..utils import RingBuffer
 from distutils.version import LooseVersion
 
 import io
+import json
 import os
 import time
 import tempfile
@@ -26,6 +27,9 @@ class Stream(object):
     def __repr__(self):
         return "<Stream()>"
 
+    def __json__(self):
+        return dict(type=Stream.shortname())
+
     def open(self):
         """
             Opens a connection to the stream.
@@ -33,6 +37,11 @@ class Stream(object):
             Raises :exc:`StreamError` on failure.
         """
         raise NotImplementedError
+
+    @property
+    def json(self):
+        obj = self.__json__()
+        return json.dumps(obj)
 
     @classmethod
     def shortname(cls):
