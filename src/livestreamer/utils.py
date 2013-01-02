@@ -1,4 +1,4 @@
-from .compat import bytes, is_win32, urljoin, parse_qsl
+from .compat import bytes, is_win32, urljoin, urlparse, parse_qsl
 from .plugins import PluginError
 
 from threading import Event, Lock
@@ -321,8 +321,34 @@ def get_node_text(element):
     else:
         return "".join(res)
 
+
+def rtmpparse(url):
+    parse = urlparse(url)
+
+    hostname = parse.hostname
+    port = parse.port or 1935
+    netloc = "{hostname}:{port}".format(hostname=parse.hostname,
+                                        port=parse.port or 1935)
+
+    split = parse.path.split("/")
+    app = "/".join(split[1:2])
+
+    if len(split) > 2:
+        playpath = "/".join(split[2:])
+
+        if len(parse.query) > 0:
+            playpath += "?" + parse.query
+    else:
+        playpath = ""
+
+    tcurl = "{scheme}://{netloc}/{app}".format(scheme=parse.scheme,
+                                               netloc=netloc,
+                                               app=app)
+
+
+    return (tcurl, playpath)
+
 __all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer", "JSONEncoder",
-           "urlopen", "urlget", "urlresolve", "swfdecompress",
-           "swfverify", "verifyjson", "absolute_url", "parse_qsd",
-           "parse_json", "res_json", "parse_xml", "res_xml",
-           "get_node_text"]
+           "urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
+           "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
+           "parse_xml", "res_xml", "get_node_text", "rtmpparse"]

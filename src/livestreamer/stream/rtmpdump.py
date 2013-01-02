@@ -1,5 +1,6 @@
 from . import StreamProcess, StreamError
-from ..compat import str, sh, pbs_compat
+from ..compat import str, sh, pbs_compat, urljoin
+from ..utils import rtmpparse
 
 from time import sleep
 
@@ -41,7 +42,7 @@ class RTMPStream(StreamProcess):
 
         return StreamProcess.open(self)
 
-    def _check_redirect(self, timeout=5):
+    def _check_redirect(self, timeout=20):
         cmd = self._check_cmd()
 
         params = self.params.copy()
@@ -79,19 +80,17 @@ class RTMPStream(StreamProcess):
         tcurl, redirect = None, None
         stderr = str(stderr, "utf8")
 
-        m = re.search("DEBUG: tcUrl\s+: (.+)\n", stderr)
-        if m:
-            tcurl = m.group(1)
-
         m = re.search("DEBUG: Property: <Name:\s+redirect,\s+STRING:\s+(\w+://.+?)>", stderr)
         if m:
             redirect = m.group(1)
 
-        if tcurl and redirect:
+        if redirect:
             self.logger.debug("Found redirect tcUrl: {0}", redirect)
 
             if "rtmp" in self.params:
-                self.params["rtmp"] = self.params["rtmp"].replace(tcurl, redirect)
+                tcurl, playpath = rtmpparse(self.params["rtmp"])
+                rtmp = urljoin(redirect, playpath)
+                self.params["rtmp"] = rtmp
 
             if "tcUrl" in self.params:
                 self.params["tcUrl"] = redirect
