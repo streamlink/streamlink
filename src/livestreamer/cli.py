@@ -100,8 +100,12 @@ else:
 
 def exit(fmt, *args, **kw):
     if "json" in kw:
+        isjson = kw["json"]
         del kw["json"]
+    else:
+        isjson = False
 
+    if isjson:
         err = fmt.format(*args, **kw)
         msg_json({}, error=err)
     else:
