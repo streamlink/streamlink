@@ -137,8 +137,7 @@ class HLSStreamFiller(Thread):
         if self.stream.playlist_timer:
             self.stream.playlist_timer.cancel()
 
-        self.running = False
-        self.stream.buffer.close()
+        self.stop()
         self.stream.logger.debug("Buffer filler thread completed")
 
     def start(self):
@@ -148,6 +147,7 @@ class HLSStreamFiller(Thread):
 
     def stop(self):
         self.running = False
+        self.stream.buffer.close()
 
 
 class HLSStreamIO(io.IOBase):
@@ -174,12 +174,20 @@ class HLSStreamIO(io.IOBase):
         self.buffer = RingBuffer(self.session.get_option("ringbuffer-size"))
         self.filler = HLSStreamFiller(self)
         self.filler.start()
-        self.reload_playlist(silent=False, fillqueue=True)
+
+        try:
+            self.reload_playlist(silent=False, fillqueue=True)
+        except StreamError:
+            self.close()
+            raise
 
         return self
 
     def close(self):
         self.filler.stop()
+
+        if self.filler.is_alive():
+            self.filler.join()
 
     def read(self, size=-1):
         if not self.buffer:
@@ -275,7 +283,7 @@ class HLSStreamIO(io.IOBase):
             return
 
         for i, entry in enumerate(self.playlist_entries):
-            if fillqueue and i == self.filler.queue.maxsize:
+            if (not self.filler.running) or (fillqueue and i == self.filler.queue.maxsize):
                 break
 
             if entry["sequence"] == self.sequence:
