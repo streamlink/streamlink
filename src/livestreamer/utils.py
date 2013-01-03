@@ -147,7 +147,7 @@ class RingBuffer(Buffer):
         return data
 
     def read(self, size=-1, block=True, timeout=None):
-        if block:
+        if block and not self.closed:
             self.event_used.wait(timeout)
 
             # If the event is still not set it's a timeout
@@ -157,6 +157,9 @@ class RingBuffer(Buffer):
         return self._read(size)
 
     def write(self, data):
+        if self.closed:
+            return
+
         data_left = len(data)
         data_total = len(data)
 
