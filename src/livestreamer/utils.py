@@ -58,7 +58,7 @@ class NamedPipe(object):
         INVALID_HANDLE_VALUE = -1
         bufsize = 8192
 
-        pipe = windll.kernel32.CreateNamedPipeA(path,
+        pipe = windll.kernel32.CreateNamedPipeW(path,
                                                 PIPE_ACCESS_OUTBOUND,
                                                 PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
                                                 PIPE_UNLIMITED_INSTANCES,
