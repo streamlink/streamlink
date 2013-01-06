@@ -6,10 +6,9 @@ from livestreamer.utils import urlget
 import re
 
 class Ongamenet(Plugin):
-    PlayerURL = "http://www.tooniland.com/ongame/ognLive.tl"
+    PlayerURL = "http://dostream.lab.so/stream.php?from=ongamenet"
     SWFURL = "http://www.ongamenet.com/front/ongame/live/CJPlayer.swf"
     PageURL = "http://www.ongamenet.com"
-    Streams = ["sd", "hd"]
 
     @classmethod
     def can_handle_url(self, url):
@@ -17,21 +16,27 @@ class Ongamenet(Plugin):
 
     def _get_streams(self):
         res = urlget(self.PlayerURL)
-        urls = re.findall("return \"(rtmp://.+)\"", res.text)
+
+        match = re.search("var stream = \"(.+?)\";", res.text)
+        if not match:
+            raise NoStreamsError(self.url)
+
+        stream = match.group(1)
+
+        match = re.search("var server = \"(.+?)\";", res.text)
+        if not match:
+            raise NoStreamsError(self.url)
+
+        server = match.group(1)
+
         streams = {}
-
-        for i, url in enumerate(urls):
-            if i >= len(self.Streams):
-                name = "stream_" + str(i)
-            else:
-                name = self.Streams[i]
-
-            streams[name] = RTMPStream(self.session, {
-                "rtmp": url,
-                "swfUrl": self.SWFURL,
-                "pageUrl": self.PageURL,
-                "live": True,
-            })
+        streams["live"] = RTMPStream(self.session, {
+            "rtmp": server,
+            "playpath": stream,
+            "swfUrl": self.SWFURL,
+            "pageUrl": self.PageURL,
+            "live": True,
+        })
 
         return streams
 
