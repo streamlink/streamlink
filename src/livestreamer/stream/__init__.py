@@ -1,6 +1,8 @@
-from ..compat import str, sh, pbs_compat
+from ..compat import bytes, str, sh, pbs_compat
 from ..utils import RingBuffer
+
 from distutils.version import LooseVersion
+from locale import getpreferredencoding
 
 import io
 import json
@@ -8,6 +10,7 @@ import os
 import time
 import tempfile
 
+DefaultEncoding = getpreferredencoding() or "utf-8"
 
 class StreamError(Exception):
     pass
@@ -77,6 +80,10 @@ class StreamProcessIO(io.IOBase):
 
     def open(self):
         def read_callback(data):
+            # Work around inconsistent sh behaviour
+            if isinstance(data, str):
+                data = bytes(data, DefaultEncoding)
+
             self.fd.write(data)
 
         self.params["_out"] = read_callback

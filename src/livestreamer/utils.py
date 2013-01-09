@@ -111,7 +111,7 @@ class Buffer(object):
 
     def write(self, data):
         if not self.closed:
-            self.buffer.extend(data)
+            self.buffer += data
 
     def close(self):
         self.closed = True
