@@ -23,7 +23,7 @@ class Box(Packet):
         return size
 
     @classmethod
-    def _deserialize(cls, io):
+    def _deserialize(cls, io, strict=False, preload=True):
         size = io.read_u32()
         type_ = io.read_padded(4)
         header_size = 8
@@ -38,11 +38,17 @@ class Box(Packet):
             parent_data_left = io.data_left
             io.data_left = size - header_size
 
-            payload = PayloadTypes[type_].deserialize(io=io)
+            payloadcls = PayloadTypes[type_]
+
+            if issubclass(payloadcls, RawPayload):
+                payload = payloadcls.deserialize(io=io,
+                                                 preload=preload)
+            else:
+                payload = payloadcls.deserialize(io=io)
 
             if parent_data_left is not None:
                 io.data_left = parent_data_left - payload.size
-            else:
+            elif preload:
                 io.data_left = None
         else:
             if size == 0:
@@ -52,7 +58,12 @@ class Box(Packet):
 
             payload = RawPayload(data)
 
-        return cls(type_, size, payload, extended_size)
+        box = cls(type_, size, payload, extended_size)
+
+        if strict and box.size != size:
+            raise F4VError("Data size mismatch when deserialising tag")
+
+        return box
 
     def _serialize(self, packet):
         size = self.payload.size
@@ -134,12 +145,10 @@ class BoxContainerSingle(BoxPayload):
 
         return cls(box)
 
-
-
-
 class RawPayload(BoxPayload):
-    def __init__(self, data):
+    def __init__(self, data, io=None):
         self.data = data
+        self.io = io
 
     def __repr__(self):
         return "<RawPayload size={0}>".format(self.size)
@@ -149,10 +158,20 @@ class RawPayload(BoxPayload):
         return len(self.data)
 
     @classmethod
-    def _deserialize(cls, io):
-        data = io.read()
+    def _deserialize(cls, io, preload=True):
+        if preload:
+            data = io.read()
+            return cls(data)
+        else:
+            data = bytearray(io.data_left)
+            return cls(data, io=io)
 
-        return cls(data)
+    def read(self, size=-1):
+        offset = len(self.data) - self.io.data_left
+        data = self.io.read(size)
+        self.data[offset:offset+len(data)] = data
+
+        return data
 
     def _serialize(self, packet):
         packet.write(self.data)

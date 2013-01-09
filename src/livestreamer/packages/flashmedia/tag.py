@@ -91,7 +91,8 @@ class Header(Packet):
 
 
 class Tag(Packet):
-    def __init__(self, typ=TAG_TYPE_SCRIPT, timestamp=0, data=None, streamid=0, filter=False):
+    def __init__(self, typ=TAG_TYPE_SCRIPT, timestamp=0, data=None,
+                 streamid=0, filter=False, padding=b""):
         self.flags = TagFlags()
         self.flags.bit.rsv = 0
         self.flags.bit.type = typ
@@ -100,6 +101,7 @@ class Tag(Packet):
         self.data = data
         self.streamid = streamid
         self.timestamp = timestamp
+        self.padding = padding
 
     def __repr__(self):
         reprformat = "<Tag type={type} timestamp={timestamp} streamid={streamid} filter={filter} data={data}>"
@@ -116,10 +118,10 @@ class Tag(Packet):
 
     @property
     def tag_size(self):
-        return 11 + self.data_size
+        return 11 + self.data_size + len(self.padding)
 
     @classmethod
-    def _deserialize(cls, io):
+    def _deserialize(cls, io, strict=False):
         flags  = TagFlags()
         flags.byte = io.read_u8()
         data_size = io.read_u24()
@@ -137,29 +139,32 @@ class Tag(Packet):
         if data_size > 0:
             io.data_left = data_size
             data = datacls.deserialize(io=io)
+            padding = io.read()
             io.data_left = None
         else:
-            data = EmptyData()
+            data = RawData()
+            padding = b""
 
         tag = Tag(flags.bit.type, timestamp, data,
-                  streamid, bool(flags.bit.filter))
+                  streamid, bool(flags.bit.filter), padding)
 
         tag_size = io.read_u32()
 
-        if tag.tag_size != tag_size:
+        if strict and tag.tag_size != tag_size:
             raise FLVError("Data size mismatch when deserialising tag")
 
         return tag
 
-    def _serialize(self, packet):
+    def _serialize(self, packet, strict=True):
         packet.write_u8(self.flags.byte)
         packet.write_u24(self.data_size)
         packet.write_s32e(self.timestamp)
         packet.write_u24(self.streamid)
 
         self.data.serialize(packet)
+        packet.write(self.padding)
 
-        if self.tag_size != packet.written:
+        if strict and self.tag_size != packet.written:
             raise FLVError("Data size mismatch when serialising tag")
 
         packet.write_u32(packet.written)
@@ -195,20 +200,19 @@ class FrameData(TagData):
         packet.write(self.data)
 
 
-class EmptyData(TagData):
-    def __init__(self):
-        self.data = b""
+class RawData(TagData):
+    def __init__(self, data=b""):
+        self.data = data
 
     def __repr__(self):
-        return "<EmptyData>"
+        return "<RawData>"
 
     @classmethod
     def _deserialize(cls, io):
-        return EmptyData()
+        return cls()
 
     def _serialize(self, packet):
         packet.write(self.data)
-
 
 class AudioData(TagData):
     def __init__(self, codec=0, rate=0, bits=0, type=0, data=None):
