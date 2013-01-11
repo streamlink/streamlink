@@ -7,6 +7,7 @@ import re
 class StreamURL(Plugin):
     ProtocolMap = {
         "akamaihd": AkamaiHDStream,
+        "hds": HDSStream.parse_manifest,
         "hls": HLSStream,
         "hlsvariant": HLSStream.parse_variant_playlist,
         "rtmp": RTMPStream,
@@ -68,7 +69,7 @@ class StreamURL(Plugin):
                     params[boolkey] = bool(params[boolkey])
 
             stream = cls(self.session, params)
-        elif cls == HLSStream.parse_variant_playlist:
+        elif cls == HLSStream.parse_variant_playlist or cls == HDSStream.parse_manifest:
             return cls(self.session, urlnoproto, **params)
         else:
             stream = cls(self.session, urlnoproto, **params)
