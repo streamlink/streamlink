@@ -175,9 +175,10 @@ class StreamProcess(Stream):
         return True
 
 from .akamaihd import AkamaiHDStream
+from .hds import HDSStream
 from .hls import HLSStream
 from .http import HTTPStream
 from .rtmpdump import RTMPStream
 
 __all__ = ["StreamError", "Stream", "StreamProcess", "StreamIOWrapper",
-           "AkamaiHDStream", "HLSStream", "HTTPStream", "RTMPStream"]
+           "AkamaiHDStream", "HLSStream", "HDSStream", "HTTPStream", "RTMPStream"]

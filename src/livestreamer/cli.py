@@ -72,17 +72,23 @@ streamopt.add_argument("-r", "--rtmpdump", metavar="path",
                        help="Specify location of rtmpdump executable, eg. /usr/local/bin/rtmpdump")
 streamopt.add_argument("--rtmpdump-proxy", metavar="host:port",
                        help="Specify a proxy (SOCKS) that rtmpdump will use")
+streamopt.add_argument("--hds-live-edge", type=float, metavar="seconds",
+                       help="Specify the time live HDS streams will start from the edge of stream, default is 10.0.")
+streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
+                       help=("Specify the maximum amount of fragments to buffer, this "
+                             "controls the maximum size of the ringbuffer, default is 10."))
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
-                       help="Specify a maximum size (bytes) for the ringbuffer used by some stream types, default is 32768")
+                       help=("Specify a maximum size (bytes) for the ringbuffer, default is 32768."
+                              "Used by RTMP and HLS. Use --hds-fragmentbuffer for HDS."))
 
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory",
                        help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a ;.")
-pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,hls,http,akamaihd",
+pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,hls,hds,http,akamaihd",
                        type=lambda v: [p.strip() for p in v.split(",")],
                        help=("When there are multiple streams with the same name but different streaming types, these priorities will be used. "
-                             "Should be specified as a comma-delimited list, default is rtmp,hls,http,akamaihd"))
+                             "Should be specified as a comma-delimited list, default is rtmp,hls,hds,http,akamaihd"))
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
@@ -398,6 +404,12 @@ def set_options(args):
     if args.rtmpdump_proxy:
         livestreamer.set_option("rtmpdump-proxy", args.rtmpdump_proxy)
 
+    if args.hds_live_edge is not None:
+        livestreamer.set_option("hds-live-edge", args.hds_live_edge)
+
+    if args.hds_fragment_buffer is not None:
+        livestreamer.set_option("hds-fragment-buffer", args.hds_fragment_buffer)
+
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 
@@ -427,12 +439,11 @@ def main():
     if args.stdout or args.output == "-":
         set_msg_output(sys.stderr)
 
-    set_options(args)
-
     if args.plugin_dirs:
         load_plugins(args.plugin_dirs)
 
     if args.url:
+        set_options(args)
         handle_url(args)
     elif args.plugins:
         print_plugins(args)

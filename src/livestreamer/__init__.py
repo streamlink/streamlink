@@ -19,8 +19,10 @@ class Livestreamer(object):
         self.options = Options({
             "rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmpdump-proxy": None,
+            "ringbuffer-size": 8192*4,
+            "hds-live-edge": 10.0,
+            "hds-fragment-buffer": 10,
             "errorlog": False,
-            "ringbuffer-size": 8192*4
         })
         self.plugins = {}
         self.logger = Logger()
