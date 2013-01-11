@@ -127,22 +127,28 @@ class RingBuffer(Buffer):
         Buffer.__init__(self)
 
         self.buffer_size = size
-        self.buffer_size_usable = size
         self.buffer_lock = Lock()
 
         self.event_free = Event()
         self.event_free.set()
         self.event_used = Event()
 
+    def _check_events(self):
+        if self.length > 0:
+            self.event_used.set()
+        else:
+            self.event_used.clear()
+
+        if self.is_full:
+            self.event_free.clear()
+        else:
+            self.event_free.set()
+
     def _read(self, size=-1):
         with self.buffer_lock:
             data = Buffer.read(self, size)
 
-            if not self.is_full:
-                self.event_free.set()
-
-            if self.length == 0:
-                self.event_used.clear()
+            self._check_events()
 
         return data
 
@@ -174,14 +180,15 @@ class RingBuffer(Buffer):
                 written = data_total - data_left
 
                 Buffer.write(self, data[written:written+write_len])
-
-                if self.length > 0:
-                    self.event_used.set()
-
-                if self.is_full:
-                    self.event_free.clear()
-
                 data_left -= write_len
+
+                self._check_events()
+
+    def resize(self, size):
+        with self.buffer_lock:
+            self.buffer_size = size
+
+            self._check_events()
 
     def wait_free(self, timeout=None):
         self.event_free.wait(timeout)
@@ -198,7 +205,7 @@ class RingBuffer(Buffer):
 
     @property
     def free(self):
-        return self.buffer_size - self.length
+        return max(self.buffer_size - self.length, 0)
 
     @property
     def is_full(self):
