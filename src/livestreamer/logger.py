@@ -1,5 +1,7 @@
 import sys
 
+from threading import Lock
+
 class Logger(object):
     Levels = ["none", "error", "warning", "info", "debug"]
     Format = "[{module}][{level}] {msg}\n"
@@ -7,6 +9,7 @@ class Logger(object):
     def __init__(self):
         self.output = sys.stdout
         self.level = 0
+        self.lock = Lock()
 
     def new_module(self, module):
         return LoggerModule(self, module)
@@ -28,11 +31,12 @@ class Logger(object):
 
         msg = msg.format(*args, **kw)
 
-        self.output.write(Logger.Format.format(module=module,
-                                               level=Logger.Levels[level],
-                                               msg=msg))
-        if hasattr(self.output, "flush"):
-            self.output.flush()
+        with self.lock:
+            self.output.write(Logger.Format.format(module=module,
+                                                   level=Logger.Levels[level],
+                                                   msg=msg))
+            if hasattr(self.output, "flush"):
+                self.output.flush()
 
 class LoggerModule(object):
     def __init__(self, manager, module):
