@@ -11,6 +11,7 @@ if is_py2:
     _str = str
     str = unicode
     file = file
+    range = xrange
 
     def bytes(b, enc="ascii"):
         return _str(b)
@@ -20,6 +21,7 @@ elif is_py3:
     input = input
     stdout = sys.stdout.buffer
     str = str
+    range = range
     from io import IOBase as file
 
 try:
@@ -39,4 +41,5 @@ else:
 
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
            "str", "bytes", "urlparse", "urljoin", "parse_qsl",
-           "quote", "unquote", "sh", "pbs_compat", "queue"]
+           "quote", "unquote", "sh", "pbs_compat", "queue",
+           "range"]
