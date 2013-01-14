@@ -107,6 +107,8 @@ class JustinTV(Plugin):
             return streams
 
         swfurl = urlresolve(self.SWFURL)
+        if "?" in swfurl:
+            swfurl = swfurl[:swfurl.find("?")]
 
         for node in nodes.childNodes:
             info = {}
