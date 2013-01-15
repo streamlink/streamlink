@@ -6,7 +6,7 @@ interact with the stream data in your own application.
 
 Current release: **1.4.1** (2012-12-20). See [CHANGELOG](https://github.com/chrippa/livestreamer/blob/master/CHANGELOG) for release notes.
 
-Currently includes plugins for these sites:
+Currently includes plugins for these sites (only supports live streams unless otherwise noted):
 
 * Dailymotion
 * GOMTV.net (live and VOD)
@@ -114,7 +114,6 @@ Livestreamer and it's plugins currently depends on these software:
 
 These will be installed automatically by the setup script if they are missing:
 * ```python-requests``` (version >= 1.0)
-* ```python-sh``` (*nix, version >= 1.07) or ```python-pbs``` (Windows)
 * ```python-argparse``` (only needed on Python version 2.6, 3.0 and 3.1)
 
 For RTMP based plugins:
