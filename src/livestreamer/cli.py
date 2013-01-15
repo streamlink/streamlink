@@ -21,7 +21,7 @@ elif "win32" in sys.platform:
         if var in os.environ:
             path = os.path.join(os.environ[var], exepath)
             if os.path.exists(path):
-                default_player = path
+                default_player = '"{0}"'.format(path)
                 break
 
 
