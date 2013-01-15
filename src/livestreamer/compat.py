@@ -32,14 +32,6 @@ except ImportError:
     from urllib import quote, unquote
     import Queue as queue
 
-if is_win32:
-    import pbs as sh
-    pbs_compat = True
-else:
-    import sh
-    pbs_compat = False
-
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
            "str", "bytes", "urlparse", "urljoin", "parse_qsl",
-           "quote", "unquote", "sh", "pbs_compat", "queue",
-           "range"]
+           "quote", "unquote", "queue", "range"]

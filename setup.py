@@ -17,11 +17,6 @@ if (version_info[0] == 2 and version_info[1] < 7) or \
    (version_info[0] == 3 and version_info[1] < 2):
     deps.append("argparse")
 
-if os_name == "nt":
-    deps.append("pbs")
-else:
-    deps.append("sh>=1.07,<2.0")
-
 setup(name="livestreamer",
       version=version,
       description="CLI program that launches streams from various streaming services in a custom video player",

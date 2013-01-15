@@ -1,6 +1,7 @@
 from . import StreamProcess, StreamError
-from ..compat import str, sh, pbs_compat, urljoin
+from ..compat import str, urljoin
 from ..utils import rtmpparse
+from ..packages import pbs as sh
 
 from time import sleep
 
@@ -57,10 +58,7 @@ class RTMPStream(StreamProcess):
         process_alive = True
 
         while elapsed < timeout and process_alive:
-            if pbs_compat:
-                process_alive = stream.process.returncode is None
-            else:
-                process_alive = stream.process.alive
+            process_alive = stream.process.returncode is None
 
             sleep(0.25)
             elapsed += 0.25

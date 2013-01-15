@@ -1,16 +1,11 @@
-from ..compat import bytes, str, sh, pbs_compat
-from ..utils import RingBuffer
-
-from distutils.version import LooseVersion
-from locale import getpreferredencoding
+from ..compat import bytes, str
+from ..packages import pbs as sh
 
 import io
 import json
 import os
 import time
 import tempfile
-
-DefaultEncoding = getpreferredencoding() or "utf-8"
 
 class StreamError(Exception):
     pass
@@ -64,48 +59,6 @@ class StreamIOWrapper(io.IOBase):
             self.fd.close()
 
 
-class StreamProcessIO(io.IOBase):
-    def __init__(self, session, cmd, params, timeout=30):
-        self.cmd = cmd
-        self.params = params
-        self.session = session
-        self.timeout = timeout
-
-        self.fd = RingBuffer(self.session.get_option("ringbuffer-size"))
-        self.params["_out_bufsize"] = 8192
-
-        if LooseVersion(sh.__version__) >= LooseVersion("1.07"):
-            self.params["_no_out"] = True
-            self.params["_no_pipe"] = True
-
-    def open(self):
-        def read_callback(data):
-            # Work around inconsistent sh behaviour
-            if isinstance(data, str):
-                data = bytes(data, DefaultEncoding)
-
-            self.fd.write(data)
-
-        self.params["_out"] = read_callback
-        self.stream = self.cmd(**self.params)
-        self.process = self.stream.process
-
-        return self
-
-    def read(self, size=0):
-        if not self.fd:
-            return b""
-
-        return self.fd.read(size, block=self.process.alive,
-                            timeout=self.timeout)
-
-    def close(self):
-        try:
-            self.process.kill()
-        except:
-            pass
-
-
 class StreamProcess(Stream):
     def __init__(self, session, params={}, timeout=30):
         Stream.__init__(self, session)
@@ -126,20 +79,12 @@ class StreamProcess(Stream):
         else:
             params["_err"] = open(os.devnull, "wb")
 
-        if pbs_compat:
-            stream = cmd(**params)
-        else:
-            stream = StreamProcessIO(self.session, cmd, params,
-                                     timeout=self.timeout)
-            stream.open()
+        stream = cmd(**params)
 
         # Wait 0.5 seconds to see if program exited prematurely
         time.sleep(0.5)
 
-        if pbs_compat:
-            process_alive = stream.process.returncode is None
-        else:
-            process_alive = stream.process.alive
+        process_alive = stream.process.returncode is None
 
         if not process_alive:
             if self.errorlog:
@@ -147,10 +92,7 @@ class StreamProcess(Stream):
             else:
                 raise StreamError("Error while executing subprocess")
 
-        if pbs_compat:
-            return stream.process.stdout
-        else:
-            return stream
+        return stream.process.stdout
 
     def _check_cmd(self):
         try:
