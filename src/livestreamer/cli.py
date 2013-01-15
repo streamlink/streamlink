@@ -10,6 +10,21 @@ from livestreamer.compat import input, stdout, file, is_win32
 from livestreamer.stream import StreamProcess
 from livestreamer.utils import ArgumentParser, JSONEncoder, NamedPipe
 
+default_player = "vlc"
+
+if "darwin" in sys.platform:
+    default_player = "/Applications/VLC.app/Contents/MacOS/VLC"
+elif "win32" in sys.platform:
+    exepath = "VideoLAN\\VLC\\vlc.exe"
+    envvars = ["PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"]
+    for var in envvars:
+        if var in os.environ:
+            path = os.path.join(os.environ[var], exepath)
+            if os.path.exists(path):
+                default_player = path
+                break
+
+
 exampleusage = """
 example usage:
 
@@ -17,9 +32,9 @@ $ livestreamer twitch.tv/onemoregametv
 Found streams: 240p, 360p, 480p, 720p, iphonehigh, iphonelow (worst), live (best)
 $ livestreamer twitch.tv/onemoregametv 720p
 
-Stream now playbacks in player (default is VLC).
+Stream now playbacks in player (default is {0}).
 
-"""
+""".format(default_player)
 
 livestreamer = Livestreamer()
 logger = livestreamer.logger.new_module("cli")
@@ -48,8 +63,8 @@ parser.add_argument("-j", "--json", action="store_true",
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="player",
-                       help="Command-line for player, default is 'vlc --file-caching=5000'",
-                       default="vlc --file-caching=5000")
+                       help="Command-line for player, default is '{0}'".format(default_player),
+                       default=default_player)
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help="Hide all player console output")
 playeropt.add_argument("-n", "--fifo", action="store_true",
