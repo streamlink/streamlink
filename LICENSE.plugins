@@ -1,0 +1,4 @@
+All plugins are under the same license as livestreamer, with the follwing
+exceptions:
+
+GOMTV.net plugin: See the src/livestreamer/plugins/gomtv.py file for details.
