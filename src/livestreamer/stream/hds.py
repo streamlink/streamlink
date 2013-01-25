@@ -8,6 +8,7 @@ from threading import Lock, Thread, Timer
 from time import sleep, time
 
 import base64
+import re
 import requests
 import os.path
 import xml.dom.minidom
@@ -107,12 +108,12 @@ class HDSStreamFiller(Thread):
             self.stream.buffer.resize(size)
 
         try:
-            f4v = F4V(res.raw, preload=False)
+            f4v = F4V(res.raw)
 
             # Fast forward to mdat box
             for box in f4v:
                 if box.type == "mdat":
-                    fd = box.payload
+                    fd = BytesIO(box.payload.data)
                     break
 
         except F4VError as err:
@@ -213,7 +214,7 @@ class HDSStreamFiller(Thread):
 
 
 class HDSStreamIO(IOBase):
-    FragmentURL = "{baseurl}{url}{identifier}{quality}Seg{segment}-Frag{fragment}"
+    FragmentURL = "{url}{identifier}{quality}Seg{segment}-Frag{fragment}"
 
     def __init__(self, session, baseurl, url, bootstrap, metadata=None,
                  timeout=60, rsession=None):
@@ -282,9 +283,12 @@ class HDSStreamIO(IOBase):
                                 timeout=self.timeout)
 
     def fragment_url(self, segment, fragment):
-        return self.FragmentURL.format(baseurl=self.baseurl, url=self.url,
-                                       identifier=self.identifier, quality="",
-                                       segment=segment, fragment=fragment)
+        url = absolute_url(self.baseurl, self.url)
+
+        return self.FragmentURL.format(url=url, identifier=self.identifier,
+                                       quality="", segment=segment,
+                                       fragment=fragment)
+
 
     def update_bootstrap(self, silent=True, fillqueue=False):
         if not self.filler.running:
@@ -335,7 +339,7 @@ class HDSStreamIO(IOBase):
         self.segmentruntable = bootstrap.payload.segment_run_table_entries[0]
         self.fragmentruntable = bootstrap.payload.fragment_run_table_entries[0]
 
-        max_fragments, fragment_duration = self._fragment_from_timestamp(self.timestamp)
+        max_fragments, fragment_duration = self._fragment_from_timestamp(self.timestamp - 1)
 
         if max_fragments != self.max_fragments:
             self.bootstrap_changed = True
@@ -382,7 +386,7 @@ class HDSStreamIO(IOBase):
                 break
 
             self.current_fragment = fragment + 1
-            self.current_segment = self._segment_from_fragment(i)
+            self.current_segment = self._segment_from_fragment(fragment)
 
             self.logger.debug("[Fragment {0}-{1}] Adding to queue",
                                self.current_segment, fragment)
@@ -403,21 +407,37 @@ class HDSStreamIO(IOBase):
         return Box.deserialize(BytesIO(res.content))
 
     def _segment_from_fragment(self, fragment):
-        if len(self.segmentruntable.payload.segment_run_entry_table) > 1:
-            for segment, segment_start, segment_end in self._segment_fragment_pairs():
-                if fragment >= segment_start and fragment <= segment_end:
-                    return segment
-        else:
-            return 1
+        table = self.segmentruntable.payload.segment_run_entry_table
+        segment = 1
 
-    def _segment_fragment_pairs(self):
-        segmentruntable = self.segmentruntable.payload.segment_run_entry_table
+        # For some reason servers seem to lie about the amount of fragments
+        # per segment when there is only 1 segment run, so it's probably best
+        # to only depend on that when there is multiple segment runs available
+        # and return 1 otherwise.
+        if len(table) > 1:
+            prev_end = None
 
-        for segmentrun in segmentruntable:
-            start = ((segmentrun.first_segment - 1) * segmentrun.fragments_per_segment)
-            end = start + segmentrun.fragments_per_segment
+            for segmentrun in table:
+                if prev_end is None:
+                    end = (segmentrun.first_segment) * segmentrun.fragments_per_segment
+                    start = (end - segmentrun.fragments_per_segment) + 1
+                else:
+                    start = prev_end + 1
+                    end = (start + segmentrun.fragments_per_segment) - 1
 
-            yield segmentrun.first_segment, start + 1, end
+                if fragment >= start:
+                    segment = segmentrun.first_segment
+
+                    # Calculate the correct segment offset incase there is a gap
+                    # in the segment run table.
+                    if fragment > end:
+                        distance = fragment - end
+                        offset = ceil(float(distance) / float(segmentrun.fragments_per_segment))
+                        segment += offset
+
+                prev_end = end
+
+        return int(segment)
 
     def _debug_fragment_table(self):
         fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
@@ -496,8 +516,10 @@ class HDSStream(Stream):
         return fd.open()
 
     @classmethod
-    def parse_manifest(cls, session, url, timeout=60):
-        rsession = requests.session()
+    def parse_manifest(cls, session, url, timeout=60, rsession=None):
+        if not rsession:
+            rsession = requests.session()
+
         res = urlget(url, params=dict(hdcore="2.9.4"),
                      exception=IOError, session=rsession)
 
@@ -509,7 +531,8 @@ class HDSStream(Stream):
         baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
 
         for baseurl in dom.getElementsByTagName("baseURL"):
-            pass
+            baseurl = get_node_text(baseurl)
+
 
         for bootstrap in dom.getElementsByTagName("bootstrapInfo"):
             if not bootstrap.hasAttribute("id"):
@@ -526,32 +549,51 @@ class HDSStream(Stream):
 
             bootstraps[name] = box
 
+
         for media in dom.getElementsByTagName("media"):
-            if not (media.hasAttribute("bitrate") and media.hasAttribute("url")
-                    and media.hasAttribute("bootstrapInfoId")):
-                continue
+            if media.hasAttribute("url") and media.hasAttribute("bootstrapInfoId"):
+                bootstrapid = media.getAttribute("bootstrapInfoId")
 
-            bootstrapid = media.getAttribute("bootstrapInfoId")
+                if not bootstrapid in bootstraps:
+                    continue
 
-            if not bootstrapid in bootstraps:
-                continue
+                if media.hasAttribute("bitrate"):
+                    quality = media.getAttribute("bitrate") + "k"
+                elif media.hasAttribute("streamId"):
+                    quality = media.getAttribute("streamId")
+                else:
+                    continue
 
-            bootstrap = bootstraps[bootstrapid]
-            quality = media.getAttribute("bitrate") + "k"
-            url = media.getAttribute("url")
-            metadatas = media.getElementsByTagName("metadata")
+                bootstrap = bootstraps[bootstrapid]
+                url = media.getAttribute("url")
+                metadatas = media.getElementsByTagName("metadata")
 
-            if len(metadatas) > 0:
-                metadata = media.getElementsByTagName("metadata")[0]
-                metadata = get_node_text(metadata)
-                metadata = base64.b64decode(bytes(metadata, "utf8"))
-                metadata = ScriptData.deserialize(BytesIO(metadata))
-            else:
-                metadata = None
+                if len(metadatas) > 0:
+                    metadata = media.getElementsByTagName("metadata")[0]
+                    metadata = get_node_text(metadata)
+                    metadata = base64.b64decode(bytes(metadata, "utf8"))
+                    metadata = ScriptData.deserialize(BytesIO(metadata))
+                else:
+                    metadata = None
 
-            stream = HDSStream(session, baseurl, url, bootstrap,
-                               metadata=metadata, timeout=timeout,
-                               rsession=rsession)
-            streams[quality] = stream
+                stream = HDSStream(session, baseurl, url, bootstrap,
+                                   metadata=metadata, timeout=timeout,
+                                   rsession=rsession)
+                streams[quality] = stream
+
+            elif media.hasAttribute("href"):
+                href = media.getAttribute("href")
+                url = absolute_url(baseurl, href)
+                child_streams = cls.parse_manifest(session, url,
+                                                   timeout=timeout,
+                                                   rsession=rsession)
+
+                for name, stream in child_streams.items():
+                    # Override stream name if bitrate is available in parent
+                    # manifest but not the child one.
+                    if media.hasAttribute("bitrate") and not re.match("^(\d+)k$", name):
+                        name = media.getAttribute("bitrate") + "k"
+
+                    streams[name] = stream
 
         return streams
