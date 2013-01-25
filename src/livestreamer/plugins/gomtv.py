@@ -97,6 +97,11 @@ class GomTV(Plugin):
             except NoStreamsError:
                 pass
 
+            try:
+                streams.update(hds.get_alt_live_streams())
+            except NoStreamsError:
+                pass
+
             if len(streams) == 0:
                 streams.update(legacy.get_live_streams())
 
@@ -171,6 +176,7 @@ class GomTVHDS(GomTV):
     GOXLiveURL = BaseURL + "/gox_live.cgi"
     GOXVODURL = BaseURL + "/gox_vod.cgi"
     GetUserIPURL = "http://www.gomtv.net/webPlayer/getIP.gom"
+    GetStreamURL = "http://www.gomtv.net/live/ajaxGetUrl.gom"
 
     VODQualityLevels = [65, 60, 6]
     GOXHashKey = "qoaEl"
@@ -215,7 +221,6 @@ class GomTVHDS(GomTV):
                                                         url)
 
         params = parse_qsd(urlparse(self.url).query)
-
         currentset = int(params.get("set", "1"))
         lang = int(params.get("lang", "0"))
 
@@ -275,6 +280,45 @@ class GomTVHDS(GomTV):
                     self.logger.warning("Unable to parse manifest")
 
                 break
+
+        return streams
+
+    def get_alt_live_streams(self):
+        res = self._get_live_page(self.res)
+
+        match = re.search('jQuery.post\("/live/ajaxGetUrl.gom", ({.+?}),',
+                          res.text)
+        if not match:
+            raise NoStreamsError(self.url)
+
+        ajaxparams = match.group(1)
+        ajaxparams = dict(re.findall("(\w+):(\d+)", ajaxparams))
+
+        levels = re.findall("setFlashLevel\((\d+)\);", res.text)
+        streams = {}
+
+        for level in levels:
+            params = ajaxparams.copy()
+            params["level"] = level
+
+            res = urlopen(self.GetStreamURL, data=params, session=self.rsession)
+            url = unquote(res.text)
+
+            if not urlparse(url).path.endswith(".f4m"):
+                continue
+
+            try:
+                s = HDSStream.parse_manifest(self.session, url)
+                streams.update(s)
+            except IOError:
+                self.logger.warning("Unable to parse manifest")
+
+        # Hack to rename incorrect bitrate specified by GOM to something
+        # more sane.
+        for name, stream in streams.items():
+            if name == "1k":
+                streams["1000k"] = stream
+                del streams[name]
 
         return streams
 
