@@ -317,7 +317,7 @@ def handle_stream(args, streams):
             try:
                 cmdline = stream.cmdline()
             except StreamError as err:
-                exit(err)
+                exit("{0}", err)
 
             msg(cmdline)
         else:
@@ -346,7 +346,7 @@ def handle_url(args):
     try:
         streams = plugin.get_streams(args.stream_priority)
     except (StreamError, PluginError) as err:
-        exit(str(err), json=args.json)
+        exit("{0}", str(err), json=args.json)
 
     if len(streams) == 0:
         exit("No streams found on this URL: {0}", args.url, json=args.json)
