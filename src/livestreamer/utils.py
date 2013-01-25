@@ -279,7 +279,7 @@ def parse_json(data, jsontype="JSON", exception=PluginError):
     try:
         jsondata = json.loads(data)
     except ValueError as err:
-        if len(res.text) > 35:
+        if len(data) > 35:
             snippet = data[:35] + "..."
         else:
             snippet = data
