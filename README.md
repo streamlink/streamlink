@@ -29,9 +29,11 @@ Pip is a tool to install Python packages from a central repository.
     sudo pip install livestreamer
 
 **Windows**
-Download the installer from the [Downloads](https://github.com/chrippa/livestreamer/downloads) section.
+~~Download the installer from the [Downloads](https://github.com/chrippa/livestreamer/downloads) section.~~
 
-*Note!* If you have previously installed manually you may need to remove ```livestreamer.exe``` from ```PYTHONPATH\Scripts```.
+~~*Note!* If you have previously installed manually you may need to remove ```livestreamer.exe``` from ```PYTHONPATH\Scripts```.~~
+
+Github have recently deprecated the downloads section and the installer available is out of date, installing from source is recommended for now.
 
 
 Using
@@ -84,7 +86,7 @@ By default most players do not cache the input from stdin, here is a few command
 These arguments can be used by passing --player to livestreamer.
 
 
-Installing (Manual)
+Installing (from source)
 ---------------------------------
 
 **UNIX like OSes** From the source tree run:
@@ -95,14 +97,16 @@ Installing (Manual)
 
 1. Install Python
 2. Install Python setuptools
-3. Get rtmpdump and unpack it somewhere (rtmpdump-20110925-git-6230845-win32.zip from the downloads section should work)
+3. (optional, but needed for most plugins) Get rtmpdump and unpack it somewhere (rtmpdump-20110925-git-6230845-win32.zip from the [Downloads](https://github.com/chrippa/livestreamer/downloads) section should work)
 4. Add these paths to your Path environment variable (separate with a semicolon):
- * ```PYTHONPATH\```
- * ```PYTHONPATH\Scripts\```
- * ```RTMPDUMPPATH\``` (or specify full path with --rtmpdump option)
- * ```PLAYERPATH\``` (or specify full path with --player option)
+ * ```<Python directory>\```
+ * ```<Python directory>\Scripts\```
+ * ```<Directory containing rtmpdump exe>\``` (or specify full path with --rtmpdump option)
+ * ```<Directory containing your player exe>\``` (or specify full path with --player option)
 5. From the source tree run ```python setup.py install```.
-This should install any missing Python dependencies automatically.
+   This should install any missing Python dependencies automatically.
+6. (optional) Copy the win32/livestreamerrc file to %APPDATA%/livestreamer/ and edit it to your liking.
+
 
 
 Dependencies
