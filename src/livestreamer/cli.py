@@ -1,4 +1,5 @@
 import argparse
+import errno
 import getpass
 import json
 import os
@@ -170,8 +171,11 @@ def write_stream(fd, out, progress, player):
         try:
             out.write(data)
         except IOError as err:
-            logger.error("Error when writing to output: {0}", str(err))
-            break
+            if player and err.errno == errno.EPIPE:
+                pass
+            else:
+                logger.error("Error when writing to output: {0}", str(err))
+                break
 
         written += len(data)
 
