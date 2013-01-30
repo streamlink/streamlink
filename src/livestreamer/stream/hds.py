@@ -451,7 +451,7 @@ class HDSStreamIO(IOBase):
 
     def _fragment_from_timestamp(self, timestamp):
         fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
-        time_scale = self.fragmentruntable.payload.time_scale
+        time_scale = float(self.fragmentruntable.payload.time_scale)
 
         fragment = 0
         for i, fragmentrun in enumerate(fragmentruntable):
