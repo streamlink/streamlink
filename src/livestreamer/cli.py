@@ -153,12 +153,6 @@ def write_stream(fd, out, progress, player):
     written = 0
 
     while True:
-        if player:
-            player.poll()
-            if player.returncode is not None:
-                logger.info("Player closed")
-                break
-
         try:
             data = fd.read(8192)
         except IOError as err:
@@ -172,7 +166,8 @@ def write_stream(fd, out, progress, player):
             out.write(data)
         except IOError as err:
             if player and err.errno == errno.EPIPE:
-                pass
+                logger.info("Player closed")
+                break
             else:
                 logger.error("Error when writing to output: {0}", str(err))
                 break
