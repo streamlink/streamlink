@@ -167,10 +167,10 @@ def write_stream(fd, out, progress, player):
         except IOError as err:
             if player and err.errno == errno.EPIPE:
                 logger.info("Player closed")
-                break
             else:
                 logger.error("Error when writing to output: {0}", str(err))
-                break
+
+            break
 
         written += len(data)
 
