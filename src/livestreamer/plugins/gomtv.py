@@ -39,6 +39,10 @@ import xml.dom.minidom
 
 
 class GomTV(Plugin):
+    """
+        Implements authentication to the GomTV website.
+    """
+
     BaseURL = "http://www.gomtv.net"
     LiveURL = BaseURL + "/main/goLive.gom"
     LoginURL = "https://ssl.gomtv.net/userinfo/loginProcess.gom"
@@ -69,41 +73,30 @@ class GomTV(Plugin):
 
     def _get_streams(self):
         self.rsession = requests.session()
-
         options = self.options
+
         if options.get("cookie"):
             self._authenticate(cookies=options.get("cookie"))
         else:
             self._authenticate(options.get("username"),
                                options.get("password"))
 
-        self.res = urlget(self.url, session=self.rsession)
-
-        hds = GomTVHDS(self.url, self)
-        legacy = GomTVLegacy(self.url, self)
+        res = urlget(self.url, session=self.rsession)
+        player = GomTV3(self.url, res, self.rsession)
         streams = {}
 
         if "/vod/" in self.url:
-            try:
-                streams.update(hds.get_vod_streams())
-            except NoStreamsError:
-                pass
-
-            if len(streams) == 0:
-                streams.update(legacy.get_vod_streams())
+            return player.get_vod_streams()
         else:
             try:
-                streams.update(hds.get_live_streams())
+                streams.update(player.get_live_streams())
             except NoStreamsError:
                 pass
 
             try:
-                streams.update(hds.get_alt_live_streams())
+                streams.update(player.get_alt_live_streams())
             except NoStreamsError:
                 pass
-
-            if len(streams) == 0:
-                streams.update(legacy.get_live_streams())
 
         return streams
 
@@ -171,21 +164,34 @@ class GomTV(Plugin):
         return res
 
 
-class GomTVHDS(GomTV):
+class GomTV3(GomTV):
+    """
+        Implements concepts and APIs used in the version 0.3.x
+        flash player by GomTV.
+    """
+
     BaseURL = "http://gox.gomtv.net/cgi-bin"
     GOXLiveURL = BaseURL + "/gox_live.cgi"
-    GOXVODURL = BaseURL + "/gox_vod.cgi"
+    GOXVODURL = BaseURL + "/gox_vod_sfile.cgi"
     GetUserIPURL = "http://www.gomtv.net/webPlayer/getIP.gom"
     GetStreamURL = "http://www.gomtv.net/live/ajaxGetUrl.gom"
 
-    VODQualityLevels = [65, 60, 6]
+    VODQualityLevels = {
+        65: "ehq",
+        60: "hq",
+         6: "sq",
+         5: "sq"
+    }
+
     GOXHashKey = "qoaEl"
+    VODStreamKeySalt = b"gngngnt" 
+    VODStreamKeyCheckPort = 63800
 
     Lang = ["ENG", "KOR"]
 
-    def __init__(self, url, parent):
-        self.res = parent.res
-        self.rsession = parent.rsession
+    def __init__(self, url, res, rsession):
+        self.res = res
+        self.rsession = rsession
 
         GomTV.__init__(self, url)
 
@@ -229,7 +235,7 @@ class GomTVHDS(GomTV):
 
         streams = {}
 
-        for level in self.VODQualityLevels:
+        for level, levelname in self.VODQualityLevels.items():
             params = self._create_gox_params(flashvars, level)
 
             res = urlget(self.GOXVODURL, params=params,
@@ -239,11 +245,25 @@ class GomTVHDS(GomTV):
             entries = gox.filter_entries("vod")
 
             for entry in entries:
-                try:
-                    s = HDSStream.parse_manifest(self.session, entry.ref[0])
-                    streams.update(s)
-                except IOError:
-                    self.logger.warning("Unable to parse manifest")
+                streamurl = entry.ref[0]
+                params = {}
+
+                # Legacy VODs using key check server
+                if level == 5:
+                    try:
+                        params["key"] = self._create_legacy_stream_key(streamurl)
+                    except PluginError as err:
+                        self.logger.warning("{0}", str(err))
+                        continue
+
+                else:
+                    streamkey = self._create_stream_key(streamurl)
+
+                    if streamkey:
+                        params["at"] = streamkey
+
+                streams[levelname] = HTTPStream(self.session, streamurl,
+                                                params=params)
 
         if len(streams) == 0:
             self.logger.warning(("Unable to access any streams, "
@@ -351,129 +371,37 @@ class GomTVHDS(GomTV):
 
         return params
 
+    def _create_stream_key(self, url):
+        parsed = urlparse(url)
+        params = parse_qsd(parsed.query)
 
-class GomTVLegacy(GomTV):
-    BaseURL = "http://www.gomtv.net"
-    GOXURL = BaseURL + "/gox/ggox.gom"
+        if "key" in params:
+            key = params["key"]
+            md5 = hashlib.md5()
+            md5.update(bytes(key, "ascii"))
+            md5.update(self.VODStreamKeySalt)
+            return md5.hexdigest()
 
-    VODQualityLevels = ["SQ", "HQ"]
-    LiveQualityLevels = ["HQ", "HQTest", "SQ", "SQTest"]
-
-    StreamHeaders = {
-        "User-Agent": "KPeerClient"
-    }
-
-    KeyCheckPort = 63800
-
-    def __init__(self, url, parent):
-        self.res = parent.res
-        self.rsession = parent.rsession
-
-        GomTV.__init__(self, url)
-
-    def get_vod_streams(self):
-        flashvars = re.search("FlashVars=\"(.+?)\"", self.res.text)
-
-        if not flashvars:
-            raise NoStreamsError(self.url)
-
-        flashvars = parse_qsd(flashvars.group(1))
-        streams = {}
-
-        for strlevel in self.VODQualityLevels:
-            params = self._create_gox_params(flashvars, strlevel, "vod")
-            res = urlget(self.GOXURL, params=params, session=self.rsession)
-
-            gox = GOXFile(res.text)
-
-            for entry in gox.entries:
-                nokey = False
-
-                for attr in ("nodeip", "nodeip", "uno", "userip"):
-                    if not hasattr(entry, attr):
-                        nokey = True
-
-                if nokey:
-                    continue
-
-                try:
-                    key = self._check_vod_key(entry.nodeip, entry.nodeid,
-                                              entry.uno, entry.userip)
-                except PluginError as err:
-                    self.logger.warning(err)
-                    continue
-
-                streams[strlevel.lower()] = HTTPStream(self.session, entry.ref[0],
-                                                       params=dict(key=key),
-                                                       headers=self.StreamHeaders)
-
-                break
-
-        if len(streams) == 0:
-            self.logger.warning(("Unable to access any streams, "
-                                 "make sure you have access to this VOD"))
-
-        return streams
-
-    def get_live_streams(self):
-        res = self._get_live_page(self.res)
-
-        match = re.search("this\.playObj = ({.+?})", res.text, re.DOTALL)
-        if not match:
-            raise NoStreamsError(self.url)
-
-        flashvars = parse_json(match.group(1), "playObj JSON")
-
-        match = re.search("goxkey=([A-z0-9]+)", res.text)
-        if not match:
-            raise NoStreamsError(self.url)
-
-        flashvars["goxkey"] = match.group(1)
-        flashvars["target"] = "live"
-
-        streams = {}
-
-        for strlevel in self.LiveQualityLevels:
-            params = self._create_gox_params(flashvars, strlevel, "live")
-            res = urlget(self.GOXURL, params=params, session=self.rsession)
-
-            gox = GOXFile(res.text)
-
-            for entry in gox.entries:
-                streams[strlevel.lower()] = HTTPStream(self.session, entry.ref[0],
-                                                       headers=self.StreamHeaders)
-
-                break
-
-        return streams
-
-    def _create_gox_params(self, flashvars, level, videotype="live"):
-        params = dict(strLevel=level, title="", ref="",
-                      tmpstamp=int(time.time()))
-        keys = ["conid", "leagueid"]
-
-        if videotype == "vod":
-            keys += ["vjoinid"]
-        elif videotype == "live":
-            keys += ["goxkey", "target"]
+    def _create_legacy_stream_key(self, url):
+        parsed = urlparse(url)
+        params = parse_qsd(parsed.query)
+        keys = ["uno", "nodeid"]
 
         for key in keys:
-            if not key in flashvars:
-                raise PluginError(("Missing key '{0}' in flashvars").format(key))
+            if not key in params:
+                raise PluginError(("Missing key '{0}' in key check params").format(key))
 
-            params[key] = flashvars[key]
+        userip = self._get_user_ip()
+        nodeip = parsed.netloc
 
-        return params
-
-    def _check_vod_key(self, nodeip, nodeid, userno, userip):
         try:
-            conn = socket.create_connection((nodeip, self.KeyCheckPort),
+            conn = socket.create_connection((nodeip, self.VODStreamKeyCheckPort),
                                             timeout=30)
         except socket.error as err:
             raise PluginError(("Failed to connect to key check server: {0}").format(str(err)))
 
-        msg = "Login,0,{userno},{nodeid},{userip}\n".format(nodeid=nodeid,
-                                                            userno=userno,
+        msg = "Login,0,{userno},{nodeid},{userip}\n".format(nodeid=params["nodeid"],
+                                                            userno=params["uno"],
                                                             userip=userip)
 
         try:

@@ -5,11 +5,10 @@ import re
 SpecialQualityWeights = {
     "live": 1080,
     "hd": 1080,
+    "ehq": 720,
     "hq": 576,
-    "hqtest": 576,
     "sd": 576,
     "sq": 360,
-    "sqtest": 240,
     "iphonehigh": 230,
     "iphonelow": 170,
 }
