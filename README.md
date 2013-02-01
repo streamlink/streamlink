@@ -9,14 +9,13 @@ Current release: **1.4.1** (2012-12-20). See [CHANGELOG](https://github.com/chri
 Currently includes plugins for these sites (only supports live streams unless otherwise noted):
 
 * Dailymotion
-* GOMTV.net (live and VOD) (partially broken in 1.4.x, use latest git)
+* GOMTV.net (live and VOD) (broken in 1.4.x, use latest git)
 * livestream.com and new.livestream.com
 * ongamenet.com
-* own3D.tv
 * SVTPlay (live and VOD)
-* Twitch/Justin.tv  (broken in 1.4.x, use latest git)
+* Twitch/Justin.tv (broken in 1.4.x, use latest git)
 * UStream
-* YouTube
+* YouTube Live
 
 ... and many more. See ```livestreamer --plugins``` for the full list!
 
