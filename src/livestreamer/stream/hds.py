@@ -16,46 +16,15 @@ import xml.dom.minidom
 from ..packages.flashmedia import F4VError
 from ..packages.flashmedia.box import Box
 from ..packages.flashmedia.f4v import F4V
-from ..packages.flashmedia.packet import Packet
 from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
                                        AVCVideoData, VideoCommandFrame,
-                                       ScriptData, Header, Tag, TagDataTypes,
-                                       RawData, TAG_TYPE_SCRIPT,
-                                       TAG_TYPE_AUDIO, TAG_TYPE_VIDEO)
-
+                                       ScriptData, Header, Tag, RawData,
+                                       TAG_TYPE_SCRIPT, TAG_TYPE_AUDIO,
+                                       TAG_TYPE_VIDEO)
 
 AAC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_END = 0x02
-
-
-class Frame(Packet):
-    def __init__(self, type, size, timestamp, data):
-        self.type = type
-        self.size = size
-        self.timestamp = timestamp
-        self.data = data
-
-    @classmethod
-    def _deserialize(cls, io):
-        type_ = io.read_u8()
-        size = io.read_u24()
-        timestamp = io.read_s32e()
-        n = io.read_u24()
-
-        io.data_left = size
-
-        if type_ in TagDataTypes:
-            data = TagDataTypes[type_].deserialize(io=io)
-        else:
-            data = io.read(size)
-            data = RawData(data)
-
-        io.data_left = None
-        last_tag_size = io.read_u32()
-
-        return cls(type_, size, timestamp, data)
-
 
 class HDSStreamFiller(Thread):
     def __init__(self, stream):
@@ -139,16 +108,16 @@ class HDSStreamFiller(Thread):
                                  fragment)
 
     def add_flv_tag(self, fd):
-        frame = Frame.deserialize(fd)
+        tag = Tag.deserialize(fd)
 
-        if isinstance(frame.data, RawData):
+        if isinstance(tag.data, RawData):
             self.stop()
-            self.error = IOError("Unhandled frame, probably encrypted")
+            self.error = IOError("Unhandled tag, probably encrypted")
             raise self.error
 
-        if isinstance(frame.data, AudioData):
-            if isinstance(frame.data.data, AACAudioData):
-                if frame.data.data.type == AAC_SEQUENCE_HEADER:
+        if isinstance(tag.data, AudioData):
+            if isinstance(tag.data.data, AACAudioData):
+                if tag.data.data.type == AAC_SEQUENCE_HEADER:
                     if self.aac_header_written:
                         return
 
@@ -157,9 +126,9 @@ class HDSStreamFiller(Thread):
                     if not self.aac_header_written:
                         return self.stream.logger.debug("Skipping AAC data before header")
 
-        if isinstance(frame.data, VideoData):
-            if isinstance(frame.data.data, AVCVideoData):
-                if frame.data.data.type == AVC_SEQUENCE_HEADER:
+        if isinstance(tag.data, VideoData):
+            if isinstance(tag.data.data, AVCVideoData):
+                if tag.data.data.type == AVC_SEQUENCE_HEADER:
                     if self.avc_header_written:
                         return
 
@@ -168,17 +137,14 @@ class HDSStreamFiller(Thread):
                     if not self.avc_header_written:
                         return self.stream.logger.debug("Skipping AVC data before header")
 
-            elif isinstance(frame.data.data, VideoCommandFrame):
+            elif isinstance(tag.data.data, VideoCommandFrame):
                 return self.stream.logger.debug("Skipping video command frame")
 
-        tag = Tag(frame.type, timestamp=frame.timestamp,
-                  data=frame.data)
-
-        if type(frame.data) in self.timestamps:
-            if self.timestamps[type(frame.data)] is None:
-                self.timestamps[type(frame.data)] = frame.timestamp
+        if type(tag.data) in self.timestamps:
+            if self.timestamps[type(tag.data)] is None:
+                self.timestamps[type(tag.data)] = tag.timestamp
             else:
-                tag.timestamp = max(0, tag.timestamp - self.timestamps[type(frame.data)])
+                tag.timestamp = max(0, tag.timestamp - self.timestamps[type(tag.data)])
 
         data = tag.serialize()
         self.stream.buffer.write(data)
@@ -349,13 +315,11 @@ class HDSStreamIO(IOBase):
 
         if self.current_fragment < 0:
             if self.live:
-                self.logger.debug("Current timestamp: {0}", self.timestamp)
-                current_fragment, fragment_duration = self._fragment_from_timestamp(self.timestamp)
-
+                current_fragment = max_fragments
                 fragment_buffer = int(ceil(self.buffer_time / fragment_duration))
 
                 # Less likely to hit edge if we don't start with last fragment
-                self.logger.debug("Fragment buffer {0} sec is {1} fragments",
+                self.logger.debug("Live edge buffer {0} sec is {1} fragments",
                                   self.buffer_time, fragment_buffer)
 
                 if current_fragment > fragment_buffer and fragment_buffer > 0:
@@ -365,6 +329,7 @@ class HDSStreamIO(IOBase):
 
             self.current_fragment = current_fragment
 
+        self.logger.debug("Current timestamp: {0}", self.timestamp)
         self.logger.debug("Current segment: {0}", self.current_segment)
         self.logger.debug("Current fragment: {0}", self.current_fragment)
         self.logger.debug("Max fragments: {0}", self.max_fragments)
