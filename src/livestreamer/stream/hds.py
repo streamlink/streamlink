@@ -299,13 +299,14 @@ class HDSStreamIO(IOBase):
 
         self.live = bootstrap.payload.live
         self.profile = bootstrap.payload.profile
-        self.timestamp = (bootstrap.payload.current_media_time / bootstrap.payload.time_scale) - 1
+        self.timestamp = bootstrap.payload.current_media_time
         self.identifier = bootstrap.payload.movie_identifier
-
+        self.time_scale = float(bootstrap.payload.time_scale)
         self.segmentruntable = bootstrap.payload.segment_run_table_entries[0]
         self.fragmentruntable = bootstrap.payload.fragment_run_table_entries[0]
 
-        max_fragments, fragment_duration = self._fragment_from_timestamp(self.timestamp - 1)
+        max_fragments = self._fragment_count()
+        fragment_duration = self._fragment_duration(max_fragments)
 
         if max_fragments != self.max_fragments:
             self.bootstrap_changed = True
@@ -325,11 +326,11 @@ class HDSStreamIO(IOBase):
                 if current_fragment > fragment_buffer and fragment_buffer > 0:
                     current_fragment -= (fragment_buffer - 1)
             else:
-                current_fragment, fragment_duration = self._fragment_from_timestamp(0)
+                current_fragment = 1
 
             self.current_fragment = current_fragment
 
-        self.logger.debug("Current timestamp: {0}", self.timestamp)
+        self.logger.debug("Current timestamp: {0}", self.timestamp / self.time_scale)
         self.logger.debug("Current segment: {0}", self.current_segment)
         self.logger.debug("Current fragment: {0}", self.current_fragment)
         self.logger.debug("Max fragments: {0}", self.max_fragments)
@@ -406,7 +407,6 @@ class HDSStreamIO(IOBase):
 
     def _debug_fragment_table(self):
         fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
-        time_scale = self.fragmentruntable.payload.time_scale
 
         prev_fragmentrun = None
         iterator = enumerate(fragmentruntable)
@@ -414,28 +414,69 @@ class HDSStreamIO(IOBase):
             print(fragmentrun.first_fragment, fragmentrun.first_fragment_timestamp,
                   fragmentrun.fragment_duration, fragmentrun.discontinuity_indicator)
 
-    def _fragment_from_timestamp(self, timestamp):
-        fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
-        time_scale = float(self.fragmentruntable.payload.time_scale)
+    def _fragment_count(self):
+        segmentruntable = self.segmentruntable.payload.segment_run_entry_table
 
-        fragment = 0
-        for i, fragmentrun in enumerate(fragmentruntable):
+        if len(segmentruntable) > 1:
+            return self._fragment_count_from_segment_table()
+        else:
+            return self._fragment_count_from_fragment_table()
+
+    def _fragment_count_from_fragment_table(self):
+        last_valid_fragmentrun = None
+        table = self.fragmentruntable.payload.fragment_run_entry_table
+
+        for i, fragmentrun in enumerate(table):
             if fragmentrun.discontinuity_indicator is not None:
                 if fragmentrun.discontinuity_indicator == 0:
-                    prev = fragmentruntable[i-1]
-                    self.last_fragment = prev.first_fragment
                     break
                 elif fragmentrun.discontinuity_indicator > 0:
                     continue
 
-            ftimestamp = fragmentrun.first_fragment_timestamp / time_scale
-            fduration = fragmentrun.fragment_duration / time_scale
+            last_valid_fragmentrun = fragmentrun
 
-            if timestamp >= ftimestamp:
-                offset = floor((timestamp - ftimestamp) / fduration)
-                fragment = int(fragmentrun.first_fragment + offset)
+        if last_valid_fragmentrun:
+            return last_valid_fragmentrun.first_fragment
+        else:
+            return 0
 
-        return (fragment, fduration)
+    def _fragment_count_from_segment_table(self):
+        last_frag = None
+        table = self.segmentruntable.payload.segment_run_entry_table
+
+        for segmentrun in table:
+            if last_frag is None:
+                end = (segmentrun.first_segment) * segmentrun.fragments_per_segment
+                start = (end - segmentrun.fragments_per_segment) + 1
+            else:
+                start = last_frag + 1
+                end = (start + segmentrun.fragments_per_segment) - 1
+
+            last_frag = end
+
+        return last_frag
+
+    def _fragment_duration(self, fragment):
+        fragment_duration = 0
+        table = self.fragmentruntable.payload.fragment_run_entry_table
+        time_scale = float(self.fragmentruntable.payload.time_scale)
+
+        for i, fragmentrun in enumerate(table):
+            if fragmentrun.discontinuity_indicator is not None:
+                # Check for the last fragment of the stream
+                if fragmentrun.discontinuity_indicator == 0:
+                    if i > 0:
+                        prev = table[i-1]
+                        self.last_fragment = prev.first_fragment
+
+                    break
+                elif fragmentrun.discontinuity_indicator > 0:
+                    continue
+
+            if fragment >= fragmentrun.first_fragment:
+                fragment_duration = fragmentrun.fragment_duration / time_scale
+
+        return fragment_duration
 
 
 class HDSStream(Stream):
