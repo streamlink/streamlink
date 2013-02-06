@@ -164,7 +164,7 @@ class StreamProcess(Stream):
 
     def _check_cmd(self):
         try:
-            cmd = getattr(sh, self.cmd)
+            cmd = sh.create_command(self.cmd)
         except sh.CommandNotFound as err:
             raise StreamError(("Unable to find {0} command").format(str(err)))
 
@@ -178,7 +178,7 @@ class StreamProcess(Stream):
     @classmethod
     def is_usable(cls, cmd):
         try:
-            cmd = getattr(sh, cmd)
+            cmd = sh.create_command(cmd)
         except sh.CommandNotFound as err:
             return False
 
