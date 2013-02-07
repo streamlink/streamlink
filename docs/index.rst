@@ -22,11 +22,6 @@ The :mod:`livstreamer` module defines four exceptions:
     Common base class for the plugin related exceptions. It inherits
     :exc:`Exception`.
 
-.. exception:: NoStreamsError
-
-    This exception is triggered when no streams can be found by a plugin.
-    It inherits :exc:`PluginError`.
-
 .. exception:: NoPluginError
 
     This exception is triggered when no plugin can found when calling :meth:`Livestreamer.resolve_url`.

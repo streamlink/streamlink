@@ -61,7 +61,7 @@ class Plugin(object):
     def get_option(cls, key):
         return cls.options.get(key)
 
-    def get_streams(self, priority=["rtmp", "hls", "http",
+    def get_streams(self, priority=["rtmp", "hls", "hds", "http",
                                     "akamaihd"]):
         """
             Retrieves and returns a :class:`dict` containing the streams.
@@ -69,8 +69,13 @@ class Plugin(object):
             The key is the name of the stream, most commonly the quality.
             The value is a :class:`Stream` object.
 
-            The stream with key *best* is a reference to the stream most likely
-            to be of highest quality.
+            Can contain the synonyms *best* and *worst* which points to the streams
+            which are likely to be of highest respecticly lowest quality.
+
+            The *priority* argument decides which stream type to use
+            when there is multiple streams with the same name.
+
+            *Changed in version 1.4.2:* Added *priority* argument.
         """
 
         try:
