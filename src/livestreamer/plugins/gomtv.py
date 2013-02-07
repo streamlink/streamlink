@@ -166,7 +166,7 @@ class GomTV(Plugin):
 
 class GomTV3(GomTV):
     """
-        Implements concepts and APIs used in the version 0.3.x
+        Implements concepts and APIs used in the version 0.3.1
         flash player by GomTV.
     """
 
@@ -184,7 +184,6 @@ class GomTV3(GomTV):
     }
 
     GOXHashKey = "qoaEl"
-    VODStreamKeySalt = b"gngngnt" 
     VODStreamKeyCheckPort = 63800
 
     Lang = ["ENG", "KOR"]
@@ -248,19 +247,11 @@ class GomTV3(GomTV):
                 streamurl = entry.ref[0]
                 params = {}
 
-                # Legacy VODs using key check server
-                if level == 5:
-                    try:
-                        params["key"] = self._create_legacy_stream_key(streamurl)
-                    except PluginError as err:
-                        self.logger.warning("{0}", str(err))
-                        continue
-
-                else:
-                    streamkey = self._create_stream_key(streamurl)
-
-                    if streamkey:
-                        params["at"] = streamkey
+                try:
+                    params["key"] = self._create_stream_key(streamurl)
+                except PluginError as err:
+                    self.logger.warning("{0}", str(err))
+                    continue
 
                 streams[levelname] = HTTPStream(self.session, streamurl,
                                                 params=params)
@@ -372,17 +363,6 @@ class GomTV3(GomTV):
         return params
 
     def _create_stream_key(self, url):
-        parsed = urlparse(url)
-        params = parse_qsd(parsed.query)
-
-        if "key" in params:
-            key = params["key"]
-            md5 = hashlib.md5()
-            md5.update(bytes(key, "ascii"))
-            md5.update(self.VODStreamKeySalt)
-            return md5.hexdigest()
-
-    def _create_legacy_stream_key(self, url):
         parsed = urlparse(url)
         params = parse_qsd(parsed.query)
         keys = ["uno", "nodeid"]
