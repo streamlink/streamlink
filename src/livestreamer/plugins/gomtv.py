@@ -23,11 +23,12 @@ limitations under the License.
 """
 
 from livestreamer.compat import str, bytes, urlparse, urljoin, unquote
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError
+from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.options import Options
+from livestreamer.plugin import Plugin
 from livestreamer.stream import HDSStream, HTTPStream
 from livestreamer.utils import (urlget, urlopen, parse_json, parse_xml,
                                 parse_qsd, get_node_text)
-from livestreamer.options import Options
 
 import hashlib
 import json

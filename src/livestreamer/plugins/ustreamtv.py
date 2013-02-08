@@ -1,6 +1,7 @@
 from livestreamer.compat import str, bytes, urlparse
 from livestreamer.packages.flashmedia import AMF0Packet, AMFError
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError
+from livestreamer.plugin import Plugin
+from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.stream import HLSStream, RTMPStream
 from livestreamer.utils import urlget
 

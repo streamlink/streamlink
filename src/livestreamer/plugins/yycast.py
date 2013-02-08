@@ -1,6 +1,7 @@
 from livestreamer.compat import urlparse
+from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError
 from livestreamer.utils import urlget
 
 import re

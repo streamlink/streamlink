@@ -1,6 +1,8 @@
 from livestreamer.compat import urlparse
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError
-from livestreamer.stream import *
+from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.plugin import Plugin
+from livestreamer.stream import (AkamaiHDStream, HDSStream, HLSStream,
+                                 RTMPStream)
 
 import re
 

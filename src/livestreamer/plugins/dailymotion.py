@@ -1,5 +1,6 @@
 from livestreamer.compat import str, bytes, urlparse
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError
+from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, verifyjson, res_json
 

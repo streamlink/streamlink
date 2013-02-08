@@ -1,9 +1,10 @@
 from livestreamer.compat import str, bytes, urlparse
+from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
-from livestreamer.plugins import Plugin, PluginError, NoStreamsError
+from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, urlresolve, verifyjson, \
-                               res_json, res_xml, parse_xml, get_node_text
+from livestreamer.utils import (urlget, urlresolve, verifyjson,
+                               res_json, res_xml, parse_xml, get_node_text)
 
 from hashlib import sha1
 
