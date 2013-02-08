@@ -1,7 +1,6 @@
-#!/usr/bin/env python
-
-from . import Stream, StreamError
+from .stream import Stream
 from ..compat import str, bytes, urlparse
+from ..exceptions import StreamError
 from ..utils import Buffer, swfdecompress, swfverify, urlget, urlopen
 
 from ..packages.flashmedia import FLV, FLVError
@@ -136,7 +135,10 @@ class AkamaiHDStreamIO(io.IOBase):
         self.send_control("sendingNewToken", headers=headers,
                           swf=self.swf)
 
-    def send_control(self, cmd, headers={}, **params):
+    def send_control(self, cmd, headers=None, **params):
+        if not headers:
+            headers = {}
+
         url = self.ControlURLFormat.format(host=self.host,
                                            streamname=self.streamname)
 

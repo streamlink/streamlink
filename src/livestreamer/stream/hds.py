@@ -1,5 +1,6 @@
-from . import Stream, StreamError
+from .stream import Stream
 from ..compat import urljoin, urlparse, bytes, queue, range
+from ..exceptions import StreamError
 from ..utils import absolute_url, urlget, res_xml, get_node_text, RingBuffer
 
 from io import BytesIO, IOBase

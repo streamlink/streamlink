@@ -1,5 +1,5 @@
 from .compat import bytes, is_win32, urljoin, urlparse, parse_qsl
-from .plugins import PluginError
+from .exceptions import PluginError
 
 from threading import Event, Lock
 

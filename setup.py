@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 from setuptools import setup
-from sys import version_info
-from os import name as os_name
+from sys import version_info, path as sys_path
+from os.path import abspath, dirname, join
 
-version = "1.4.1"
 deps = ["requests>=1.0,<2.0"]
 packages = ["livestreamer",
             "livestreamer.stream",
@@ -17,13 +16,19 @@ if (version_info[0] == 2 and version_info[1] < 7) or \
    (version_info[0] == 3 and version_info[1] < 2):
     deps.append("argparse")
 
+
+srcdir = join(dirname(abspath(__file__)), "src/")
+sys_path.insert(0, srcdir)
+
+import livestreamer
+
 setup(name="livestreamer",
-      version=version,
-      description="CLI program that launches streams from various streaming services in a custom video player",
+      version=livestreamer.__version__,
+      description="CLI program that launches streams from various streaming services in a custom video player.",
       url="https://github.com/chrippa/livestreamer",
       author="Christopher Rosell",
       author_email="chrippa@tanuki.se",
-      license="BSD",
+      license="Simplified BSD",
       packages=packages,
       package_dir={ "": "src" },
       entry_points={

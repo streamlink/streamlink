@@ -1,4 +1,7 @@
-from . import Stream, StreamIOWrapper, StreamError
+from .stream import Stream
+from .wrappers import StreamIOWrapper
+
+from ..exceptions import StreamError
 from ..utils import urlget
 
 from requests import Request

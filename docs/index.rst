@@ -6,31 +6,16 @@
 livestreamer documentation
 ==================================
 
-Livestreamer is a library that can be used to retrieve information and stream data from
-various livestreaming services, such as Twitch, Own3D or UStream.
-
-
 .. automodule:: livestreamer
 
 Exceptions
 ----------
 
-The :mod:`livstreamer` module defines four exceptions:
+The :mod:`livstreamer` module defines three exceptions:
 
-.. exception:: PluginError
-
-    Common base class for the plugin related exceptions. It inherits
-    :exc:`Exception`.
-
-.. exception:: NoPluginError
-
-    This exception is triggered when no plugin can found when calling :meth:`Livestreamer.resolve_url`.
-    It inherits :exc:`PluginError`.
-
-.. exception:: StreamError
-
-    Common base class for stream related exceptions. It inherits
-    :exc:`Exception`.
+.. autoexception:: PluginError
+.. autoexception:: NoPluginError
+.. autoexception:: StreamError
 
 The livestreamer session
 ------------------------

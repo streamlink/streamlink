@@ -6,7 +6,8 @@ import os
 import sys
 import subprocess
 
-from livestreamer import *
+from livestreamer import (Livestreamer, StreamError, PluginError,
+                          NoPluginError)
 from livestreamer.compat import input, stdout, file, is_win32
 from livestreamer.stream import StreamProcess
 from livestreamer.utils import ArgumentParser, JSONEncoder, NamedPipe

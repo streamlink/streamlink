@@ -1,6 +1,7 @@
-from . import Stream, StreamError
-from ..utils import urlget, RingBuffer, absolute_url
+from .stream import Stream
 from ..compat import urljoin, queue
+from ..exceptions import StreamError
+from ..utils import urlget, RingBuffer, absolute_url
 
 from time import time, sleep
 from threading import Lock, Thread, Timer
