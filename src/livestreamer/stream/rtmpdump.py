@@ -71,7 +71,7 @@ class RTMPStream(StreamProcess):
                 pass
 
         try:
-            stderr = stream.stderr
+            stderr = stream.stderr()
         except sh.ErrorReturnCode as err:
             self._update_redirect(err.stderr)
 

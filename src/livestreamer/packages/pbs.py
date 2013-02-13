@@ -68,7 +68,8 @@ class ErrorReturnCode(Exception):
                 tstderr += ("... (%d more, please see e.stderr)" % err_delta).encode()
 
         msg = "\n\nRan: %r\n\nSTDOUT:\n\n  %s\n\nSTDERR:\n\n  %s" %\
-            (full_cmd, tstdout.decode(), tstderr.decode())
+            (full_cmd, tstdout.decode("utf8", "replace"),
+             tstderr.decode("utf8", "replace"))
         super(ErrorReturnCode, self).__init__(msg)
 
 class CommandNotFound(Exception): pass
@@ -192,12 +193,10 @@ class RunningCommand(object):
     def __int__(self):
         return int(str(self).strip())
 
-    @property
     def stdout(self):
         if self.call_args["bg"]: self.wait()
         return self._stdout.decode("utf8", "replace")
 
-    @property
     def stderr(self):
         if self.call_args["bg"]: self.wait()
         return self._stderr.decode("utf8", "replace")
