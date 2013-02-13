@@ -164,7 +164,7 @@ class RunningCommand(object):
     def __unicode__(self):
         if self.process:
             if self.call_args["bg"]: self.wait()
-            if self._stdout: return self.stdout
+            if self._stdout: return self.stdout()
             else: return ""
 
     def __eq__(self, other):
@@ -384,7 +384,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
                     call_args["bg"] = True
                     stdin = first_arg.process.stdout
                 else:
-                    actual_stdin = first_arg.stdout
+                    actual_stdin = first_arg.stdout()
             else: args.insert(0, first_arg)
 
         processed_args = self._compile_args(args, kwargs)
