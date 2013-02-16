@@ -1,7 +1,7 @@
 from livestreamer.compat import str, bytes
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
-from livestreamer.stream import HTTPStream
+from livestreamer.stream import HTTPStream, HLSStream
 from livestreamer.utils import urlget, verifyjson, parse_json, parse_qsd
 
 import re
@@ -82,6 +82,15 @@ class Youtube(Plugin):
                 quality = streaminfo["quality"]
 
             streams[quality] = stream
+
+        if "hlsvp" in args:
+            url = args["hlsvp"]
+
+            try:
+                hlsstreams = HLSStream.parse_variant_playlist(self.session, url)
+                streams.update(hlsstreams)
+            except IOError as err:
+                self.logger.warning("Failed to get variant playlist: {0}", err)
 
         return streams
 
