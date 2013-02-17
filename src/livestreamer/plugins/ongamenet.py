@@ -7,7 +7,7 @@ from livestreamer.utils import urlget
 import re
 
 class Ongamenet(Plugin):
-    PlayerURL = "http://dostream.lab.so/stream.php?from=ongamenet"
+    StreamURL = "http://dostream.lab.so/stream.php"
     SWFURL = "http://www.ongamenet.com/front/ongame/live/CJPlayer.swf"
     PageURL = "http://www.ongamenet.com"
 
@@ -16,7 +16,7 @@ class Ongamenet(Plugin):
         return "ongamenet.com" in url
 
     def _get_streams(self):
-        res = urlget(self.PlayerURL)
+        res = urlget(self.StreamURL, data={"from": "ongamenet"})
 
         match = re.search("var stream = \"(.+?)\";", res.text)
         if not match:
