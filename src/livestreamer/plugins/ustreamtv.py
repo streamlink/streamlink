@@ -18,6 +18,10 @@ class UStreamTV(Plugin):
         return "ustream.tv" in url
 
     def _get_channel_id(self, url):
+        match = re.search("ustream.tv/embed/(\d+)", url)
+        if match:
+            return int(match.group(1))
+
         res = urlget(url)
 
         match = re.search("\"cid\":(\d+)", res.text)
