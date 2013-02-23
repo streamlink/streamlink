@@ -440,7 +440,7 @@ def set_options(args):
     if gomtv_password:
         livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
 
-    if not args.json:
+    if not (args.json or args.cmdline):
         livestreamer.set_loglevel(args.loglevel)
 
 def main():
