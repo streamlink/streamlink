@@ -14,7 +14,7 @@ class Livestream(Plugin):
     def _get_stream_info(self):
         res = urlget(self.url)
 
-        match = re.search("var initialData = ({.+})", res.text)
+        match = re.search("initialData : ({.+})", res.text)
 
         if match:
             config = match.group(1)
