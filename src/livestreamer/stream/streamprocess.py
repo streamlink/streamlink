@@ -1,12 +1,29 @@
 from .stream import Stream
 from .wrappers import StreamIOThreadWrapper
-from ..compat import bytes, str
+from ..compat import str
 from ..exceptions import StreamError
 from ..packages import pbs as sh
 
 import os
 import time
 import tempfile
+
+class StreamProcessIO(StreamIOThreadWrapper):
+    def __init__(self, session, process, **kwargs):
+        self.process = process
+
+        StreamIOThreadWrapper.__init__(self, session,
+                                       process.stdout,
+                                       **kwargs)
+
+    def close(self):
+        try:
+            self.process.kill()
+        except Exception:
+            pass
+
+        StreamIOThreadWrapper.close(self)
+
 
 class StreamProcess(Stream):
     def __init__(self, session, params=None, timeout=30):
@@ -44,8 +61,8 @@ class StreamProcess(Stream):
             else:
                 raise StreamError("Error while executing subprocess")
 
-        return StreamIOThreadWrapper(self.session, stream.process.stdout,
-                                     timeout=self.timeout)
+        return StreamProcessIO(self.session, stream.process,
+                               timeout=self.timeout)
 
     def _check_cmd(self):
         try:
@@ -64,7 +81,7 @@ class StreamProcess(Stream):
     def is_usable(cls, cmd):
         try:
             cmd = sh.create_command(cmd)
-        except sh.CommandNotFound as err:
+        except sh.CommandNotFound:
             return False
 
         return True
