@@ -22,18 +22,17 @@ The livestreamer session
 .. autoclass:: Livestreamer
     :members:
 
-.. automodule:: livestreamer.plugins
 
 Plugins
 -------
+.. module:: livestreamer.plugins
 .. autoclass:: Plugin
     :members:
-
-.. automodule:: livestreamer.stream
 
 
 Streams
 -------
+.. module:: livestreamer.stream
 .. autoclass:: Stream
     :members:
 
@@ -63,8 +62,6 @@ Fetching a streams data::
     # All streams are not guaranteed to support .close()
     if hasattr(fd, "close"):
         fd.close()
-
-
 
 
 

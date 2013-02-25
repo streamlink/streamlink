@@ -10,8 +10,8 @@ import imp
 
 class Livestreamer(object):
     """
-        A Livestreamer session is used to keep track of plugins,
-        options and log settings.
+    A Livestreamer session is used to keep track of plugins,
+    options and log settings.
 
     """
 
@@ -29,44 +29,84 @@ class Livestreamer(object):
         self.load_builtin_plugins()
 
     def set_option(self, key, value):
-        """Set option *key* to *value*."""
+        """
+        Sets general options used by plugins and streams originating
+        from this session object.
+
+        :param key: key of the option
+        :param value: value to set the option to
+
+        """
+
         self.options.set(key, value)
 
     def get_option(self, key):
-        """Return option *key*"""
+        """
+        Returns current value of option
+
+        :param key: key of the option
+
+        """
+
         return self.options.get(key)
 
     def set_plugin_option(self, plugin, key, value):
-        """Set plugin option *key* to *value* for the plugin *plugin*."""
+        """
+        Sets plugin specific options used by plugins originating
+        from this session object.
+
+        :param plugin: name of the plugin
+        :param key: key of the option
+        :param value: value to set the option to
+
+        """
+
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             plugin.set_option(key, value)
 
     def get_plugin_option(self, plugin, key):
-        """Return plugin option *key* for the plugin *plugin*."""
+        """
+        Returns current value of plugin specific option
+
+        :param plugin: name of the plugin
+        :param key: key of the option
+
+        """
+
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             return plugin.get_option(key)
 
     def set_loglevel(self, level):
         """
-            Set the log level to *level*.
-            Valid levels are: none, error, warning, info, debug.
+        Sets the log level used by this session.
+        Valid levels are: "none", "error", "warning", "info" and "debug".
+
+        :param level: level of logging to output
+
         """
+
         self.logger.set_level(level)
 
     def set_logoutput(self, output):
         """
-            Set the log output to *output*. Expects a file like
-            object with a write method.
+        Sets the log output used by this session.
+
+        :param output: a file-like object with a write method
+
         """
         self.logger.set_output(output)
 
     def resolve_url(self, url):
         """
-            Attempt to find the correct plugin for *url* and return it.
+        Attempts to find a plugin that can use this URL.
+        The default protocol (http) will be prefixed to the URL if not specified.
 
-            Raises :exc:`NoPluginError` on failure.
+        Raises :exc:`NoPluginError` on failure.
+
+        :param url: a URL to match against loaded plugins
+
         """
         parsed = urlparse(url)
 
@@ -81,9 +121,8 @@ class Livestreamer(object):
         raise NoPluginError
 
     def get_plugins(self):
-        """
-            Returns the loaded plugins for the session.
-        """
+        """Returns the loaded plugins for the session."""
+
         return self.plugins
 
     def load_builtin_plugins(self):
@@ -91,8 +130,12 @@ class Livestreamer(object):
 
     def load_plugins(self, path):
         """
-            Attempt to load plugins from the *path* directory.
+        Attempt to load plugins from the path specified.
+
+        :param path: full path to a directory where to look for plugins
+
         """
+
         for loader, name, ispkg in pkgutil.iter_modules([path]):
             file, pathname, desc = imp.find_module(name, [path])
             self.load_plugin(name, file, pathname, desc)

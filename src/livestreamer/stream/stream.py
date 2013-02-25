@@ -4,8 +4,8 @@ class Stream(object):
     __shortname__ = "stream"
 
     """
-        This is a base class that should be inherited when implementing
-        different stream types. Should only be created by plugins.
+    This is a base class that should be inherited when implementing
+    different stream types. Should only be created by plugins.
     """
 
     def __init__(self, session):
@@ -19,10 +19,10 @@ class Stream(object):
 
     def open(self):
         """
-            Opens a connection to the stream.
-            Returns a file-like object that can be used to read data.
+        Attemps to open a connection to the stream.
+        Returns a file-like object that can be used to read the stream data.
 
-            Raises :exc:`StreamError` on failure.
+        Raises :exc:`StreamError` on failure.
         """
         raise NotImplementedError
 

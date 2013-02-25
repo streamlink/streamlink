@@ -41,7 +41,9 @@ def qualityweight(quality):
 
 class Plugin(object):
     """
-        A plugin can retrieve stream information from the *url* specified.
+    A plugin can retrieve stream information from the URL specified.
+
+    :param url: URL that the plugin will operate on
     """
 
     options = Options()
@@ -65,18 +67,21 @@ class Plugin(object):
     def get_streams(self, priority=["rtmp", "hls", "hds", "http",
                                     "akamaihd"]):
         """
-            Retrieves and returns a :class:`dict` containing the streams.
+        Attempts to retrieves any available streams. Returns a :class:`dict` containing the streams, e.g:
 
-            The key is the name of the stream, most commonly the quality.
-            The value is a :class:`Stream` object.
+            {'720p': <livestreamer.stream.rtmpdump.RTMPStream object at 0x7fd94eb02050>, ... }
 
-            Can contain the synonyms *best* and *worst* which points to the streams
-            which are likely to be of highest and lowest quality respectively.
+        The key is the name of the stream, most commonly the quality.
+        The value is a :class:`Stream` object.
 
-            The *priority* argument decides which stream type to use
-            when there is multiple streams with the same name.
+        Can contain the synonyms *best* and *worst* which points to the streams
+        which are likely to be of highest and lowest quality respectively.
 
-            *Changed in version 1.4.2:* Added *priority* argument.
+        *Changed in version 1.4.2:* Added *priority* argument.
+
+        :param priority: decides which stream type to prefer when there is multiple streams with the same name
+
+
         """
 
         try:
