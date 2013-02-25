@@ -46,7 +46,14 @@ class Plugin(object):
     :param url: URL that the plugin will operate on
     """
 
+    module = "unknown"
     options = Options()
+    session = None
+
+    @classmethod
+    def bind(cls, session, module):
+        cls.session = session
+        cls.module = module
 
     def __init__(self, url):
         self.url = url

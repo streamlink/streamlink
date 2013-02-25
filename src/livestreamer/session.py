@@ -144,9 +144,10 @@ class Livestreamer(object):
         module = imp.load_module(name, file, pathname, desc)
 
         if hasattr(module, "__plugin__"):
+            module_name = getattr(module, "__name__")
+
             plugin = getattr(module, "__plugin__")
-            plugin.module = getattr(module, "__name__")
-            plugin.session = self
+            plugin.bind(self, module_name)
 
             self.plugins[plugin.module] = plugin
 
