@@ -3,6 +3,7 @@ import sys
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
+is_py33 = (sys.version_info[0] == 3 and sys.version_info[1] == 3)
 is_win32 = os.name == "nt"
 
 if is_py2:
@@ -32,6 +33,6 @@ except ImportError:
     from urllib import quote, unquote
     import Queue as queue
 
-__all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout",
+__all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "input", "stdout",
            "str", "bytes", "urlparse", "urljoin", "parse_qsl",
            "quote", "unquote", "queue", "range"]

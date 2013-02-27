@@ -1,25 +1,23 @@
 from .stream import Stream
-from ..compat import urljoin, urlparse, bytes, queue, range
+from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
 from ..exceptions import StreamError
 from ..utils import absolute_url, urlget, res_xml, get_node_text, RingBuffer
 
 from io import BytesIO, IOBase
-from math import ceil, floor
+from math import ceil
 from threading import Lock, Thread, Timer
-from time import sleep, time
+from time import time
 
 import base64
 import re
 import requests
 import os.path
-import xml.dom.minidom
 
-from ..packages.flashmedia import F4VError
+from ..packages.flashmedia import F4V, F4VError, FLVError
 from ..packages.flashmedia.box import Box
-from ..packages.flashmedia.f4v import F4V
 from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
                                        AVCVideoData, VideoCommandFrame,
-                                       ScriptData, Header, Tag, RawData,
+                                       ScriptData, Header, Tag,
                                        TAG_TYPE_SCRIPT, TAG_TYPE_AUDIO,
                                        TAG_TYPE_VIDEO)
 
@@ -41,10 +39,18 @@ class HDSStreamFiller(Thread):
         self.aac_header_written = False
 
         self.timestamps = {
-            AudioData: None,
-            ScriptData: None,
-            VideoData: None
+            TAG_TYPE_AUDIO: None,
+            TAG_TYPE_VIDEO: None,
+            TAG_TYPE_SCRIPT: None
         }
+
+        self.create_tag_buffer(8182 * 8)
+
+    def create_tag_buffer(self, size):
+        if is_py33:
+            self.tag_buffer = memoryview(bytearray(size))
+        else:
+            self.tag_buffer = bytearray(size)
 
     def download_fragment(self, segment, fragment):
         url = self.stream.fragment_url(segment, fragment)
@@ -69,51 +75,65 @@ class HDSStreamFiller(Thread):
         if not res:
             return
 
-        fd = None
-
         size = int(res.headers.get("content-length", "0"))
         size = size * self.stream.buffer_fragments
 
         if size > self.stream.buffer.buffer_size:
             self.stream.buffer.resize(size)
 
+        return self.convert_fragment(segment, fragment, res.raw)
+
+    def convert_fragment(self, segment, fragment, fd):
+        mdat = None
+
         try:
-            f4v = F4V(res.raw)
+            f4v = F4V(fd, raw_payload=True)
 
             # Fast forward to mdat box
             for box in f4v:
                 if box.type == "mdat":
-                    fd = BytesIO(box.payload.data)
+                    mdat = box.payload.data
                     break
 
         except F4VError as err:
-            self.stream.logger.error("[Fragment {0}-{1}] Failed to parse: {2}",
+            self.stream.logger.error("[Fragment {0}-{1}] Failed to deserialize: {2}",
                                      segment, fragment, str(err))
             return
 
-        if not fd:
+        if not mdat:
             self.stream.logger.error("[Fragment {0}-{1}] No mdat box found",
                                      segment, fragment)
             return
 
-        self.stream.logger.debug(("[Fragment {0}-{1}] Converting mdat box "
-                                  "to FLV tags"), segment, fragment)
+        self.stream.logger.debug(("[Fragment {0}-{1}] Extracting FLV tags from"
+                                  " MDAT box"), segment, fragment)
 
-        while self.running:
+        mdat_size = len(mdat)
+
+        if mdat_size > len(self.tag_buffer):
+            self.create_tag_buffer(mdat_size)
+
+        self.mdat_offset = 0
+        self.tag_offset = 0
+
+        while self.running and self.mdat_offset < mdat_size:
             try:
-                self.add_flv_tag(fd)
-            except Exception as err:
+                self.extract_flv_tag(mdat)
+            except (FLVError, IOError) as err:
+                self.stream.logger.error(("Failed to extract FLV tag from MDAT"
+                                          " box: {0}").format(str(err)))
                 break
 
-        self.stream.logger.debug("[Fragment {0}-{1}] Download complete", segment,
-                                 fragment)
+        self.stream.buffer.write(self.tag_buffer[:self.tag_offset])
 
-    def add_flv_tag(self, fd):
-        tag = Tag.deserialize(fd)
+        return True
 
-        if isinstance(tag.data, RawData):
+    def extract_flv_tag(self, mdat):
+        tag, self.mdat_offset = Tag.deserialize_from(mdat, self.mdat_offset)
+
+        if tag.filter:
             self.stop()
-            self.error = IOError("Unhandled tag, probably encrypted")
+            self.error = IOError("Tag has filter flag set, probably encrypted")
             raise self.error
 
         if isinstance(tag.data, AudioData):
@@ -125,7 +145,8 @@ class HDSStreamFiller(Thread):
                     self.aac_header_written = True
                 else:
                     if not self.aac_header_written:
-                        return self.stream.logger.debug("Skipping AAC data before header")
+                        self.stream.logger.debug("Skipping AAC data before header")
+                        return
 
         if isinstance(tag.data, VideoData):
             if isinstance(tag.data.data, AVCVideoData):
@@ -136,30 +157,39 @@ class HDSStreamFiller(Thread):
                     self.avc_header_written = True
                 else:
                     if not self.avc_header_written:
-                        return self.stream.logger.debug("Skipping AVC data before header")
+                        self.stream.logger.debug("Skipping AVC data before header")
+                        return
 
             elif isinstance(tag.data.data, VideoCommandFrame):
-                return self.stream.logger.debug("Skipping video command frame")
+                self.stream.logger.debug("Skipping video command frame")
+                return
 
-        if type(tag.data) in self.timestamps:
-            if self.timestamps[type(tag.data)] is None:
-                self.timestamps[type(tag.data)] = tag.timestamp
+
+        if tag.type in self.timestamps:
+            if self.timestamps[tag.type] is None:
+                self.timestamps[tag.type] = tag.timestamp
             else:
-                tag.timestamp = max(0, tag.timestamp - self.timestamps[type(tag.data)])
+                tag.timestamp = max(0, tag.timestamp - self.timestamps[tag.type])
 
-        data = tag.serialize()
-        self.stream.buffer.write(data)
+        self.tag_offset = tag.serialize_into(self.tag_buffer, self.tag_offset)
 
     def run(self):
         self.stream.logger.debug("Starting buffer filler thread")
 
         while self.running:
             try:
-                segment, fragment = self.queue.get(True, 5)
+                segment, fragment, fragment_duration = self.queue.get(True, 5)
             except queue.Empty:
                 continue
 
-            self.download_fragment(segment, fragment)
+            # Make sure timestamps don't get out of sync when
+            # a fragment is missing or failed to download.
+            if not self.download_fragment(segment, fragment):
+                for key, value in self.timestamps.items():
+                    if value is not None:
+                        self.timestamps[key] += fragment_duration
+                    else:
+                        self.timestamps[key] = fragment_duration
 
             if fragment == self.stream.last_fragment:
                 break
@@ -318,14 +348,14 @@ class HDSStreamIO(IOBase):
         if self.current_fragment < 0:
             if self.live:
                 current_fragment = max_fragments
-                fragment_buffer = int(ceil(self.buffer_time / fragment_duration))
 
-                # Less likely to hit edge if we don't start with last fragment
+                # Less likely to hit edge if we don't start with last fragment,
+                # default buffer is 10 sec.
+                fragment_buffer = int(ceil(self.buffer_time / fragment_duration))
+                current_fragment = max(1, current_fragment - (fragment_buffer - 1))
+
                 self.logger.debug("Live edge buffer {0} sec is {1} fragments",
                                   self.buffer_time, fragment_buffer)
-
-                if current_fragment > fragment_buffer and fragment_buffer > 0:
-                    current_fragment -= (fragment_buffer - 1)
             else:
                 current_fragment = 1
 
@@ -354,11 +384,11 @@ class HDSStreamIO(IOBase):
 
             self.current_fragment = fragment + 1
             self.current_segment = self._segment_from_fragment(fragment)
+            fragment_duration = int(self._fragment_duration(fragment) * 1000)
+            entry = (self.current_segment, fragment, fragment_duration)
 
             self.logger.debug("[Fragment {0}-{1}] Adding to queue",
-                               self.current_segment, fragment)
-
-            entry = (self.current_segment, fragment)
+                               entry[0], entry[1])
 
             while self.filler.running:
                 try:
@@ -409,9 +439,7 @@ class HDSStreamIO(IOBase):
     def _debug_fragment_table(self):
         fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
 
-        prev_fragmentrun = None
-        iterator = enumerate(fragmentruntable)
-        for i, fragmentrun in iterator:
+        for i, fragmentrun in enumerate(fragmentruntable):
             print(fragmentrun.first_fragment, fragmentrun.first_fragment_timestamp,
                   fragmentrun.fragment_duration, fragmentrun.discontinuity_indicator)
 
