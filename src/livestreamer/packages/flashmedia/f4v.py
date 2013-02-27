@@ -4,29 +4,21 @@ from .box import Box, RawPayload
 from .compat import is_py2
 
 class F4V(object):
-    def __init__(self, fd, strict=False, preload=True):
+    def __init__(self, fd, strict=False, raw_payload=False):
         self.fd = fd
-        self.prev_box = None
-        self.preload = preload
+        self.raw_payload = raw_payload
         self.strict = strict
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        # Consume previous box payload if needed
-        if not self.preload and self.prev_box and \
-           isinstance(self.prev_box.payload, RawPayload):
-            self.prev_box.payload.read()
-
         try:
             box = Box.deserialize(self.fd,
                                   strict=self.strict,
-                                  preload=self.preload)
+                                  raw_payload=self.raw_payload)
         except IOError:
             raise StopIteration
-
-        self.prev_box = box
 
         return box
 

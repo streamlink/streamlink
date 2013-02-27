@@ -1,14 +1,16 @@
 from ctypes import BigEndianStructure, Union, c_uint8, c_uint16, c_uint32
+from io import BytesIO
 
 from .compat import *
 from .error import *
 from .packet import *
+from .types import *
 from .util import *
 
+
 class Box(Packet):
-    def __init__(self, type, total_size, payload, extended_size=False):
+    def __init__(self, type, payload, extended_size=False):
         self.type = type
-        self.total_size = total_size
         self.payload = payload
         self.extended_size = extended_size
 
@@ -23,42 +25,30 @@ class Box(Packet):
         return size
 
     @classmethod
-    def _deserialize(cls, io, strict=False, preload=True):
-        size = io.read_u32()
-        type_ = io.read_padded(4)
+    def _deserialize(cls, io, strict=False, raw_payload=False):
+        size = U32BE.read(io)
+        type_ = FourCC.read(io)
         header_size = 8
         extended_size = False
 
         if size == 1:
-            size = io.read_u64()
+            size = U64BE.read(io)
             header_size += 8
             extended_size = True
 
-        if type_ in PayloadTypes:
-            parent_data_left = io.data_left
-            io.data_left = size - header_size
-
-            payloadcls = PayloadTypes[type_]
-
-            if issubclass(payloadcls, RawPayload):
-                payload = payloadcls.deserialize(io=io,
-                                                 preload=preload)
-            else:
-                payload = payloadcls.deserialize(io=io)
-
-            if parent_data_left is not None:
-                io.data_left = parent_data_left - payload.size
-            elif preload:
-                io.data_left = None
+        if size == 0:
+            data = io.read()
         else:
-            if size == 0:
-                data = io.read()
-            else:
-                data = io.read(size - header_size)
+            data = chunked_read(io, size - header_size, exception=F4VError)
 
+        if type_ in PayloadTypes and not raw_payload:
+            payloadcls = PayloadTypes[type_]
+            payloadio = BytesIO(data)
+            payload = payloadcls.deserialize(payloadio)
+        else:
             payload = RawPayload(data)
 
-        box = cls(type_, size, payload, extended_size)
+        box = cls(type_, payload, extended_size)
 
         if strict and box.size != size:
             raise F4VError("Data size mismatch when deserialising tag")
@@ -69,19 +59,19 @@ class Box(Packet):
         size = self.payload.size
 
         if size > 0xFFFFFFFF or self.extended_size:
-            packet.write_u32(1)
+            packet += U32BE(1)
         else:
-            packet.write_u32(size + 8)
+            packet += U32BE(size + 8)
 
-        packet.write_padded(self.type, 4)
+        packet += FourCC(self.type)
 
         if size > 0xFFFFFFFF or self.extended_size:
-            packet.write_u64(size + 16)
+            packet += U64BE(size + 16)
 
         if isinstance(self.payload, BoxPayload):
             self.payload.serialize(packet)
         else:
-            packet.write(self.payload)
+            packetwrite(self.payload)
 
 class BoxPayload(Packet):
     @property
@@ -121,8 +111,12 @@ class BoxContainer(BoxPayload):
     def _deserialize(cls, io):
         boxes = []
 
-        while io.data_left > 0:
-            box = Box.deserialize(io=io)
+        while True:
+            try:
+                box = Box.deserialize(io)
+            except IOError:
+                break
+
             boxes.append(box)
 
         return cls(boxes)
@@ -141,14 +135,13 @@ class BoxContainerSingle(BoxPayload):
 
     @classmethod
     def _deserialize(cls, io):
-        box = Box.deserialize(io=io)
+        box = Box.deserialize(io)
 
         return cls(box)
 
 class RawPayload(BoxPayload):
-    def __init__(self, data, io=None):
+    def __init__(self, data):
         self.data = data
-        self.io = io
 
     def __repr__(self):
         return "<RawPayload size={0}>".format(self.size)
@@ -158,23 +151,12 @@ class RawPayload(BoxPayload):
         return len(self.data)
 
     @classmethod
-    def _deserialize(cls, io, preload=True):
-        if preload:
-            data = io.read()
-            return cls(data)
-        else:
-            data = bytearray(io.data_left)
-            return cls(data, io=io)
-
-    def read(self, size=-1):
-        offset = len(self.data) - self.io.data_left
-        data = self.io.read(size)
-        self.data[offset:offset+len(data)] = data
-
-        return data
+    def _deserialize(cls, io):
+        data = io.read()
+        return cls(data)
 
     def _serialize(self, packet):
-        packet.write(self.data)
+        packet += self.data
 
 class BoxPayloadFTYP(BoxPayload):
     def __init__(self, major_brand="f4v", minor_version=0,
@@ -188,20 +170,24 @@ class BoxPayloadFTYP(BoxPayload):
         return 4+4+(len(self.compatible_brands)*4)
 
     def _serialize(self, packet):
-        packet.write_padded(self.major_brand, 4)
-        packet.write_u32(self.minor_version)
+        packet += FourCC(self.major_brand)
+        packet += U32BE(self.minor_version)
 
         for brand in self.compatible_brands:
-            packet.write_padded(brand, 4)
+            packet += FourCC(brand)
 
     @classmethod
     def _deserialize(cls, io):
-        major_brand = io.read_padded(4)
-        minor_version = io.read_u32()
+        major_brand = FourCC.read(io)
+        minor_version = U32BE.read(io)
         compatible_brands = []
 
-        while io.data_left > 0:
-            brand = io.read_padded(4)
+        while True:
+            try:
+                brand = FourCC.read(io)
+            except IOError:
+                break
+
             compatible_brands.append(brand)
 
         return cls(major_brand, minor_version,
@@ -235,54 +221,54 @@ class BoxPayloadMVHD(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
 
-        packet.write_u3264(self.version, self.creation_time)
-        packet.write_u3264(self.version, self.modification_time)
-        packet.write_u32(self.time_scale)
-        packet.write_u3264(self.version, self.duration)
+        packet += U3264(self.creation_time, self.version)
+        packet += U3264(self.modification_time, self.version)
+        packet += U32BE(self.time_scale)
+        packet += U3264(self.duration, self.version)
 
-        packet.write_s16_16(self.rate)
-        packet.write_s8_8(self.volume)
+        packet += S16BE_16(self.rate)
+        packet += S8_8BE(self.volume)
 
-        packet.write_u16(0) # Reserved
-        packet.write_u32(0) # Reserved
-        packet.write_u32(0) # Reserved
+        packet += U16BE(0) # Reserved
+        packet += U32BE(0) # Reserved
+        packet += U32BE(0) # Reserved
 
         for m in self.matrix:
-            packet.write_u32(m)
+            packet += U32BE(m)
 
         for i in range(6):
-            packet.write_u32(0) # Reserved
+            packet += U32BE(0) # Reserved
 
-        packet.write_u32(self.next_track_id)
+        packet += U32BE(self.next_track_id)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        io.read_u24() # Reserved
+        version = U8.read(io)
+        U24BE.read(io) # Reserved
 
-        creation_time = io.read_u3264(version)
-        modification_time = io.read_u3264(version)
-        time_scale = io.read_u32()
-        duration = io.read_u3264(version)
+        creation_time = U3264.read(io, version)
+        modification_time = U3264.read(io, version)
+        time_scale = U32BE.read(io)
+        duration = U3264.read(io, version)
 
-        rate = io.read_s16_16()
-        volume = io.read_s8_8()
+        rate = S16_16.read(io)
+        volume = S8_8BE.read(io)
 
-        io.read_u16() # Reserved
-        io.read_u32() # Reserved
-        io.read_u32() # Reserved
+        U16BE.read(io) # Reserved
+        U32BE.read(io) # Reserved
+        U32BE.read(io) # Reserved
 
         matrix = []
         for i in range(9):
-            matrix.append(io.read_u32())
+            matrix.append(U32BE.read(io))
 
         for i in range(6):
-            io.read_u32() # Reserved
+            U32BE.read(io) # Reserved
 
-        next_track_id = io.read_u32()
+        next_track_id = U32BE.read(io)
 
         return cls(version, creation_time,
                    modification_time, time_scale, duration,
@@ -320,12 +306,12 @@ class SampleFlags(BoxPayload):
         return 4
 
     def _serialize(self, packet):
-        packet.write_u32(self.flags.byte)
+        packet += U32BE(self.flags.byte)
 
     @classmethod
     def _deserialize(cls, io):
         flags = cls.Flags()
-        flags.byte = io.read_u32()
+        flags.byte = U32BE.read(io)
 
         return cls(flags.bit.sample_depends_on, flags.bit.sample_is_depended_on,
                    flags.bit.sample_has_redundancy, flags.bit.sample_padding_value,
@@ -349,23 +335,23 @@ class BoxPayloadTREX(BoxPayload):
         return 1+3+4+4+4+4+self.default_sample_flags.size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
-        packet.write_u32(self.track_id)
-        packet.write_u32(self.default_sample_description_index)
-        packet.write_u32(self.default_sample_duration)
-        packet.write_u32(self.default_sample_size)
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
+        packet += U32BE(self.track_id)
+        packet += U32BE(self.default_sample_description_index)
+        packet += U32BE(self.default_sample_duration)
+        packet += U32BE(self.default_sample_size)
         self.default_sample_flags.serialize(packet)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
-        track_id = io.read_u32()
-        default_sample_description_index = io.read_u32()
-        default_sample_duration = io.read_u32()
-        default_sample_size = io.read_u32()
-        default_sample_flags = SampleFlags.deserialize(io=io)
+        version = U8.read(io)
+        flags = U24BE.read(io)
+        track_id = U32BE.read(io)
+        default_sample_description_index = U32BE.read(io)
+        default_sample_duration = U32BE.read(io)
+        default_sample_size = U32BE.read(io)
+        default_sample_flags = SampleFlags.deserialize(io)
 
         return cls(version, track_id,
                    default_sample_description_index,
@@ -401,54 +387,54 @@ class BoxPayloadTKHD(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(self.flags)
+        packet += U8(self.version)
+        packet += U24BE(self.flags)
 
-        packet.write_u3264(self.version, self.creation_time)
-        packet.write_u3264(self.version, self.modification_time)
-        packet.write_u32(self.track_id)
-        packet.write_u32(0) # Reserved
-        packet.write_u3264(self.version, self.duration)
+        packet += U3264(self.creation_time, self.version)
+        packet += U3264(self.modification_time, self.version)
+        packet += U32BE(self.track_id)
+        packet += U32BE(0) # Reserved
+        packet += U3264(self.duration, self.version)
 
         for i in range(2):
-            packet.write_u32(0) # Reserved
+            packet += U32BE(0) # Reserved
 
-        packet.write_s16(self.layer)
-        packet.write_s16(self.alternate_group)
-        packet.write_s8_8(self.volume)
-        packet.write_u16(0) # Reserved
+        packet += S16BE(self.layer)
+        packet += S16BE(self.alternate_group)
+        packet += S8_8BE(self.volume)
+        packet += U16BE(0) # Reserved
 
         for i in range(9):
-            packet.write_u32(self.transform_matrix[i])
+            packet += U32BE(self.transform_matrix[i])
 
-        packet.write_s16_16(self.width)
-        packet.write_s16_16(self.height)
+        packet += S16BE_16(self.width)
+        packet += S16BE_16(self.height)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
+        version = U8.read(io)
+        flags = U24BE.read(io)
 
-        creation_time = io.read_u3264(version)
-        modification_time = io.read_u3264(version)
-        track_id = io.read_u32()
-        io.read_u32() # Reserved
-        duration = io.read_u3264(version)
+        creation_time = U3264.read(io, version)
+        modification_time = U3264.read(io, version)
+        track_id = U32BE.read(io)
+        U32BE.read(io) # Reserved
+        duration = U3264.read(io, version)
 
         for i in range(2):
-            io.read_u32() # Reserved
+            U32BE.read(io) # Reserved
 
-        layer = io.read_s16()
-        alternate_group = io.read_s16()
-        volume = io.read_s8_8()
-        io.read_u16() # Reserved
+        layer = S16BE.read(io)
+        alternate_group = S16BE.read(io)
+        volume = S8_8BE.read(io)
+        U16BE.read(io) # Reserved
 
         transform_matrix = []
         for i in range(9):
-            transform_matrix.append(io.read_s32())
+            transform_matrix.append(S32BE.read(io))
 
-        width = io.read_s16_16()
-        height = io.read_s16_16()
+        width = S16_16.read(io)
+        height = S16_16.read(io)
 
         return cls(version, flags, creation_time, modification_time,
                    track_id, duration, layer, alternate_group, volume,
@@ -475,29 +461,29 @@ class BoxPayloadMDHD(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
 
-        packet.write_u3264(self.version, self.creation_time)
-        packet.write_u3264(self.version, self.modification_time)
-        packet.write_u32(self.time_scale)
-        packet.write_u3264(self.version, self.duration)
+        packet += U3264(self.creation_time, self.version)
+        packet += U3264(self.modification_time, self.version)
+        packet += U32BE(self.time_scale)
+        packet += U3264(self.duration, self.version)
 
-        packet.write_s16(iso639_to_lang(self.language))
-        packet.write_u16(0) # Reserved
+        packet += S16BE(iso639_to_lang(self.language))
+        packet += U16BE(0) # Reserved
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        io.read_u24() # Reserved
+        version = U8.read(io)
+        U24BE.read(io) # Reserved
 
-        creation_time = io.read_u3264(version)
-        modification_time = io.read_u3264(version)
-        time_scale = io.read_u32()
-        duration = io.read_u3264(version)
+        creation_time = U3264.read(io, version)
+        modification_time = U3264.read(io, version)
+        time_scale = U32BE.read(io)
+        duration = U3264.read(io, version)
 
-        language = lang_to_iso639(io.read_u16())
-        io.read_u16() # Reserved
+        language = lang_to_iso639(U16BE.read(io))
+        U16BE.read(io) # Reserved
 
         return cls(version, creation_time, modification_time,
                    time_scale, duration, language)
@@ -519,29 +505,29 @@ class BoxPayloadHDLR(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
-        packet.write_u32(self.predefined)
-        packet.write_padded(self.handler_type, 4)
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
+        packet += U32BE(self.predefined)
+        packet += FourCC(self.handler_type)
 
         for i in range(3):
-            packet.write_u32(0) # Reserved
+            packet += U32BE(0) # Reserved
 
-        packet.write(bytes(self.name, "utf8"))
-        #packet.write_string(self.name)
+        #packet += self.name.encode("utf8", "ignore")
+        packet += CString(self.name)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24() # Reserved
+        version = U8.read(io)
+        flags = U24BE.read(io) # Reserved
 
-        predefined = io.read_u32()
-        handler_type = io.read_padded(4)
+        predefined = U32BE.read(io)
+        handler_type = FourCC.read(io)
 
         for i in range(3):
-            io.read_u32() # Reserved
+            U32BE.read(io) # Reserved
 
-        name = io.read_string()
+        name = CString.read(io)
 
         return cls(version, predefined, handler_type,
                    name)
@@ -559,22 +545,22 @@ class BoxPayloadVMHD(BoxPayload):
         return 1+3+2+(3*2)
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(self.flags)
-        packet.write_u16(self.graphics_mode)
+        packet += U8(self.version)
+        packet += U24BE(self.flags)
+        packet += U16BE(self.graphics_mode)
 
         for i in range(3):
-            packet.write_u16(self.op_color[i])
+            packet += U16BE(self.op_color[i])
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
+        version = U8.read(io)
+        flags = U24BE.read(io)
 
-        graphics_mode = io.read_u16()
+        graphics_mode = U16BE.read(io)
         op_color = []
         for i in range(3):
-            op_color.append(io.read_u16())
+            op_color.append(U16BE.read(io))
 
         return cls(version, flags, graphics_mode, op_color)
 
@@ -594,22 +580,22 @@ class BoxPayloadDREF(BoxContainer):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
-        packet.write_u32(len(self.boxes))
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
+        packet += U32BE(len(self.boxes))
 
         for box in self.boxes:
             box.serialize(packet)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
+        version = U8.read(io)
+        flags = U24BE.read(io)
 
-        entry_count = io.read_u32()
+        entry_count = U32BE.read(io)
         boxes = []
         for i in range(entry_count):
-            box = Box.deserialize(io=io)
+            box = Box.deserialize(io)
             boxes.append(box)
 
         return cls(version, boxes)
@@ -624,13 +610,13 @@ class BoxPayloadURL(BoxPayload):
         return 4
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(self.flags)
+        packet += U8(self.version)
+        packet += U24BE(self.flags)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
+        version = U8.read(io)
+        flags = U24BE.read(io)
 
         return cls(version, flags)
 
@@ -653,22 +639,22 @@ class BoxPayloadSTSD(BoxContainer):
         return self.descriptions
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
-        packet.write_u32(len(self.descriptions))
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
+        packet += U32BE(len(self.descriptions))
 
         for description in self.descriptions:
             description.serialize(packet)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
-        count = io.read_u32()
+        version = U8.read(io)
+        flags = U24BE.read(io)
+        count = U32BE.read(io)
 
         descriptions = []
         for i in range(count):
-            box = Box.deserialize(io=io)
+            box = Box.deserialize(io)
             descriptions.append(box)
 
         return cls(version, descriptions)
@@ -692,13 +678,13 @@ class BoxPayloadVisualSample(BoxContainer):
         return 4
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(self.flags)
+        packet += U8(self.version)
+        packet += U24BE(self.flags)
 
     @classmethod
     def _deserialize(cls, io):
         for i in range(4):
-            io.read_u8()
+            U8.read(io)
 
 
         return cls(version, flags)
@@ -783,75 +769,75 @@ class BoxPayloadABST(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(0) # Reserved
-        packet.write_u32(self.bootstrap_info_version)
-        packet.write_u8(self.flags.byte)
-        packet.write_u32(self.time_scale)
-        packet.write_u64(self.current_media_time)
-        packet.write_u64(self.smpte_time_code_offset)
-        packet.write_string(self.movie_identifier)
+        packet += U8(self.version)
+        packet += U24BE(0) # Reserved
+        packet += U32BE(self.bootstrap_info_version)
+        packet += U8(self.flags.byte)
+        packet += U32BE(self.time_scale)
+        packet += U64BE(self.current_media_time)
+        packet += U64BE(self.smpte_time_code_offset)
+        packet += CString(self.movie_identifier)
 
-        packet.write_u8(len(self.server_entry_table))
+        packet += U8(len(self.server_entry_table))
         for server_entry in self.server_entry_table:
-            packet.write_string(server_entry)
+            packet += CString(server_entry)
 
-        packet.write_u8(len(self.quality_entry_table))
+        packet += U8(len(self.quality_entry_table))
         for quality_entry in self.quality_entry_table:
-            packet.write_string(quality_entry)
+            packet += CString(quality_entry)
 
-        packet.write_string(self.drm_data)
-        packet.write_string(self.metadata)
+        packet += CString(self.drm_data)
+        packet += CString(self.metadata)
 
-        packet.write_u8(len(self.segment_run_table_entries))
+        packet += U8(len(self.segment_run_table_entries))
         for segment_run_table in self.segment_run_table_entries:
             segment_run_table.serialize(packet)
 
-        packet.write_u8(len(self.fragment_run_table_entries))
+        packet += U8(len(self.fragment_run_table_entries))
         for fragment_run_table in self.fragment_run_table_entries:
             fragment_run_table.serialize(packet)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        io.read_u24() # Reserved
-        bootstrap_info_version = io.read_u32()
+        version = U8.read(io)
+        U24BE.read(io) # Reserved
+        bootstrap_info_version = U32BE.read(io)
         flags = cls.Flags()
-        flags.byte = io.read_u8()
-        time_scale = io.read_u32()
-        current_media_time = io.read_u64()
-        smpte_time_code_offset = io.read_u64()
-        movie_identifier = io.read_string()
+        flags.byte = U8.read(io)
+        time_scale = U32BE.read(io)
+        current_media_time = U64BE.read(io)
+        smpte_time_code_offset = U64BE.read(io)
+        movie_identifier = CString.read(io)
 
         server_entry_table = []
-        server_entry_count = io.read_u8()
+        server_entry_count = U8.read(io)
 
         for i in range(server_entry_count):
-            server_entry = io.read_string()
+            server_entry = CString.read(io)
             server_entry_table.append(server)
 
         quality_entry_table = []
-        quality_entry_count = io.read_u8()
+        quality_entry_count = U8.read(io)
 
         for i in range(quality_entry_count):
-            quality_entry = io.read_string()
+            quality_entry = CString.read(io)
             quality_entry_table.append(quality)
 
-        drm_data = io.read_string()
-        metadata = io.read_string()
+        drm_data = CString.read(io)
+        metadata = CString.read(io)
 
         segment_run_table_entries = []
-        segment_run_table_count = io.read_u8()
+        segment_run_table_count = U8.read(io)
 
         for i in range(segment_run_table_count):
-            segment_run_table = Box.deserialize(io=io)
+            segment_run_table = Box.deserialize(io)
             segment_run_table_entries.append(segment_run_table)
 
         fragment_run_table_entries = []
-        fragment_run_table_count = io.read_u8()
+        fragment_run_table_count = U8.read(io)
 
         for i in range(fragment_run_table_count):
-            fragment_run_table = Box.deserialize(io=io)
+            fragment_run_table = Box.deserialize(io)
             fragment_run_table_entries.append(fragment_run_table)
 
         return cls(version, bootstrap_info_version, flags.bit.profile,
@@ -871,13 +857,13 @@ class SegmentRunEntry(BoxPayload):
         return 8
 
     def _serialize(self, packet):
-        packet.write_u32(self.first_segment)
-        packet.write_u32(self.fragments_per_segment)
+        packet += U32BE(self.first_segment)
+        packet += U32BE(self.fragments_per_segment)
 
     @classmethod
     def _deserialize(cls, io):
-        first_segment = io.read_u32()
-        fragments_per_segment = io.read_u32()
+        first_segment = U32BE.read(io)
+        fragments_per_segment = U32BE.read(io)
 
         return cls(first_segment, fragments_per_segment)
 
@@ -903,34 +889,34 @@ class BoxPayloadASRT(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(self.flags)
-        packet.write_u8(len(self.quality_segment_url_modifiers))
+        packet += U8(self.version)
+        packet += U24BE(self.flags)
+        packet += U8(len(self.quality_segment_url_modifiers))
 
         for quality in self.quality_segment_url_modifiers:
-            packet.write_string(quality)
+            packet += CString(quality)
 
-        packet.write_u32(len(self.segment_run_entry_table))
+        packet += U32BE(len(self.segment_run_entry_table))
         for segment_run_entry in self.segment_run_entry_table:
             segment_run_entry.serialize(packet)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
+        version = U8.read(io)
+        flags = U24BE.read(io)
 
         quality_segment_url_modifiers = []
-        quality_entry_count = io.read_u8()
+        quality_entry_count = U8.read(io)
 
         for i in range(quality_entry_count):
-            quality = io.read_string()
+            quality = CString.read(io)
             quality_segment_url_modifiers.append(quality)
 
-        segment_run_entry_count = io.read_u32()
+        segment_run_entry_count = U32BE.read(io)
         segment_run_entry_table = []
 
         for i in range(segment_run_entry_count):
-            segment_run_entry = SegmentRunEntry.deserialize(io=io)
+            segment_run_entry = SegmentRunEntry.deserialize(io)
             segment_run_entry_table.append(segment_run_entry)
 
         return cls(version, flags, quality_segment_url_modifiers,
@@ -955,21 +941,21 @@ class FragmentRunEntry(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u32(self.first_fragment)
-        packet.write_u64(self.first_fragment_timestamp)
-        packet.write_u32(self.fragment_duration)
+        packet += U32BE(self.first_fragment)
+        packet += U64BE(self.first_fragment_timestamp)
+        packet += U32BE(self.fragment_duration)
 
         if self.fragment_duration == 0:
-            packet.write_u8(self.discontinuity_indicator)
+            packet += U8(self.discontinuity_indicator)
 
     @classmethod
     def _deserialize(cls, io):
-        first_fragment = io.read_u32()
-        first_fragment_timestamp = io.read_u64()
-        fragment_duration = io.read_u32()
+        first_fragment = U32BE.read(io)
+        first_fragment_timestamp = U64BE.read(io)
+        fragment_duration = U32BE.read(io)
 
         if fragment_duration == 0:
-            discontinuity_indicator = io.read_u8()
+            discontinuity_indicator = U8.read(io)
         else:
             discontinuity_indicator = None
 
@@ -1000,36 +986,36 @@ class BoxPayloadAFRT(BoxPayload):
         return size
 
     def _serialize(self, packet):
-        packet.write_u8(self.version)
-        packet.write_u24(self.flags)
-        packet.write_u32(self.time_scale)
-        packet.write_u8(len(self.quality_segment_url_modifiers))
+        packet += U8(self.version)
+        packet += U24BE(self.flags)
+        packet += U32BE(self.time_scale)
+        packet += U8(len(self.quality_segment_url_modifiers))
 
         for quality in self.quality_segment_url_modifiers:
-            packet.write_string(quality)
+            packet += CString(quality)
 
-        packet.write_u32(len(self.fragment_run_entry_table))
+        packet += U32BE(len(self.fragment_run_entry_table))
         for fragment_run_entry in self.fragment_run_entry_table:
             fragment_run_entry.serialize(packet)
 
     @classmethod
     def _deserialize(cls, io):
-        version = io.read_u8()
-        flags = io.read_u24()
-        time_scale = io.read_u32()
+        version = U8.read(io)
+        flags = U24BE.read(io)
+        time_scale = U32BE.read(io)
 
         quality_segment_url_modifiers = []
-        quality_entry_count = io.read_u8()
+        quality_entry_count = U8.read(io)
 
         for i in range(quality_entry_count):
-            quality = io.read_string()
+            quality = CString.read(io)
             quality_segment_url_modifiers.append(quality)
 
-        fragment_run_entry_count = io.read_u32()
+        fragment_run_entry_count = U32BE.read(io)
         fragment_run_entry_table = []
 
         for i in range(fragment_run_entry_count):
-            fragment_run_entry = FragmentRunEntry.deserialize(io=io)
+            fragment_run_entry = FragmentRunEntry.deserialize(io)
             fragment_run_entry_table.append(fragment_run_entry)
 
         return cls(version, flags, time_scale,

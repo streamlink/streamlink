@@ -2,9 +2,11 @@
 
 from .compat import bytes, is_py2
 
+import struct
+
 def isstring(val):
     if is_py2:
-        return isinstance(val, str) or isinstance(val, unicode)
+        return isinstance(val, (str, unicode))
     else:
         return isinstance(val, str)
 
@@ -53,5 +55,50 @@ def iso639_to_lang(iso639):
 
     return res
 
-__all__ = ["byte", "isstring", "flagproperty", "lang_to_iso639", "iso639_to_lang"]
+
+def pack_many_into(buf, offset, types, values):
+    for packer, value in zip(types, values):
+        packer.pack_into(buf, offset, value)
+        offset += packer.size
+
+    return offset
+
+def pack_bytes_into(buf, offset, data):
+    size = len(data)
+    fmt = str(size) + "s"
+    struct.pack_into(fmt, buf, offset, data)
+
+    return offset + size
+
+def unpack_many_from(buf, offset, types):
+    rval = tuple()
+
+    for unpacker in types:
+        rval += unpacker.unpack_from(buf, offset)
+        offset += unpacker.size
+
+    return rval
+
+def chunked_read(fd, length, chunk_size=8192, exception=IOError):
+    chunks = []
+    data_left = length
+
+    while data_left > 0:
+        try:
+            data = fd.read(min(8192, data_left))
+        except IOError as err:
+            raise exception("Failed to read data: {0}".format(str(err)))
+
+        if not data:
+            raise exception("End of stream before requied data could be read")
+
+        data_left -= len(data)
+        chunks.append(data)
+
+    return b"".join(chunks)
+
+
+__all__ = ["byte", "isstring", "flagproperty", "lang_to_iso639",
+           "iso639_to_lang", "pack_many_into", "pack_bytes_into",
+           "unpack_many_from", "chunked_read"]
 
