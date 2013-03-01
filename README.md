@@ -4,16 +4,16 @@ Livestreamer is a CLI program that launches live streams from various streaming
 services in a custom video player and also a Python library that allows you to
 interact with the stream data in your own application.
 
-Current release: **1.4.1** (2012-12-20). See [CHANGELOG](https://github.com/chrippa/livestreamer/blob/master/CHANGELOG) for release notes.
+Current release: **1.4.2** (2013-03-01). See [CHANGELOG](https://github.com/chrippa/livestreamer/blob/master/CHANGELOG) for release notes.
 
 Currently includes plugins for these sites (only supports live streams unless otherwise noted):
 
 * Dailymotion
-* GOMTV.net (live and VOD) (broken in 1.4.x, use latest git)
-* livestream.com and new.livestream.com
+* GOMTV.net (live and VOD)
+* livestream.com/new.livestream.com
 * ongamenet.com
 * SVTPlay (live and VOD)
-* Twitch/Justin.tv (broken in 1.4.x, use latest git)
+* Twitch/Justin.tv
 * UStream
 * YouTube Live
 
@@ -28,11 +28,9 @@ Pip is a tool to install Python packages from a central repository.
     sudo pip install livestreamer
 
 **Windows**
-~~Download the installer from the [Downloads](https://github.com/chrippa/livestreamer/downloads) section.~~
+Download the installer from the [Python Package Index](https://pypi.python.org/pypi/livestreamer).
 
-~~*Note!* If you have previously installed manually you may need to remove ```livestreamer.exe``` from ```PYTHONPATH\Scripts```.~~
-
-Github have recently deprecated the downloads section and the installer available is out of date, installing from source is recommended for now.
+*Note!* If you have previously installed manually you may need to remove ```livestreamer.exe``` from ```PYTHONPATH\Scripts```.
 
 
 Using
