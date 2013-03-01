@@ -1,7 +1,7 @@
 from .stream import Stream
 from ..compat import str, bytes, urlparse
 from ..exceptions import StreamError
-from ..utils import Buffer, swfdecompress, swfverify, urlget, urlopen
+from ..utils import Buffer, swfdecompress, urlget, urlopen
 
 from ..packages.flashmedia import FLV, FLVError
 from ..packages.flashmedia.tag import ScriptData
@@ -11,7 +11,6 @@ import io
 import hashlib
 import hmac
 import random
-import zlib
 
 class TokenGenerator(object):
     def __init__(self, stream):
@@ -116,15 +115,15 @@ class AkamaiHDStreamIO(io.IOBase):
             if i == 10:
                 raise StreamError("No OnEdge metadata in FLV after 10 tags, probably not a AkamaiHD stream")
 
-            self.process_tag(tag)
+            self.process_tag(tag, exception=StreamError)
 
             if self.completed_handshake:
                 self.logger.debug("Handshake successful")
                 break
 
-    def process_tag(self, tag):
+    def process_tag(self, tag, exception=IOError):
         if isinstance(tag.data, ScriptData) and tag.data.name == "onEdge":
-            self._on_edge(tag.data.value)
+            self._on_edge(tag.data.value, exception=exception)
 
         self.buffer.write(tag.serialize())
 
@@ -184,7 +183,7 @@ class AkamaiHDStreamIO(io.IOBase):
         else:
             raise StreamError(("No token generator available for hash '{0}'").format(hash))
 
-    def _on_edge(self, data):
+    def _on_edge(self, data, exception=IOError):
         def updateattr(attr, key):
             if key in data:
                 setattr(self, attr, data[key])
@@ -212,7 +211,7 @@ class AkamaiHDStreamIO(io.IOBase):
             else:
                 msg = "Unknown error"
 
-            raise StreamError(msg)
+            raise exception("onEdge error: " + msg)
 
         if not self.completed_handshake:
             if "data64" in data:
