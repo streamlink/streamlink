@@ -1,3 +1,43 @@
+Version 1.4.2
+-------------
+
+    CLI:
+     - Attempt to find VLC locations on OS X and Windows
+     - Added --stream-priority parameter
+     - Added --json parameter which makes livestreamer output JSON,
+       useful for scripting in other languages
+     - Handle player exit cleaner by using SIGPIPE
+
+    Plugins:
+     - UStream: Now falls back on alternative CDNs when neccessary and added
+       support for embed URLs
+     - Added ilive.to plugin by Athanasios Oikonomou
+     - Added cast3d.tv plugin by Athanasios Oikonomou
+     - streamingvideoprovider.co.uk: Added support for RTMP streams
+     - GOMTV.net: Major refactoring and also added support Adobe HDS streams
+     - SVTPlay: Added support for Adobe HDS streams
+     - Twitch/Justin.tv: Some minor tweaks and fixes
+     - Ongamenet: Update to URL and HTML changes
+     - Livestream.com: Update for HTML changes
+
+    Streams:
+     - Minor improvements and fixes to HLS
+     - Added support for Adobe HDS streams
+
+    General:
+     - Removed cache parameter from default player, since they do not work
+       on older versions of VLC
+     - Added meta-stream "worst"
+     - Removed sh dependancy and embeded pbs instead
+
+    Bug fixes:
+     - Fix named pipes on Windows x64
+
+    API:
+     - Added optional priority argument to Plugin.get_streams
+     - Improved docstrings
+
+
 Version 1.4.1
 -------------
 
