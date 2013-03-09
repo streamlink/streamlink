@@ -86,30 +86,30 @@ streamopt.add_argument("-c", "--cmdline", action="store_true",
 streamopt.add_argument("-e", "--errorlog", action="store_true",
                        help="Log possible errors from internal command-line to a temporary file, use when debugging")
 streamopt.add_argument("-r", "--rtmpdump", metavar="path",
-                       help="Specify location of rtmpdump executable, eg. /usr/local/bin/rtmpdump")
+                       help="Specify location of rtmpdump executable, e.g. /usr/local/bin/rtmpdump")
 streamopt.add_argument("--rtmpdump-proxy", metavar="host:port",
                        help="Specify a proxy (SOCKS) that rtmpdump will use")
 streamopt.add_argument("--hds-live-edge", type=float, metavar="seconds",
-                       help="Specify the time live HDS streams will start from the edge of stream, default is 10.0.")
+                       help="Specify the time live HDS streams will start from the edge of stream, default is 10.0")
 streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
                        help=("Specify the maximum amount of fragments to buffer, this "
-                             "controls the maximum size of the ringbuffer, default is 10."))
+                             "controls the maximum size of the ringbuffer, default is 10"))
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
                        help=("Specify a maximum size (bytes) for the ringbuffer, default is 32768."
-                              "Used by RTMP and HLS. Use --hds-fragmentbuffer for HDS."))
+                              "Used by RTMP and HLS. Use --hds-fragmentbuffer for HDS"))
 
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory",
-                       help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a ;.")
+                       help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a semicolon (;)")
 pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,hls,hds,http,akamaihd",
                        type=lambda v: [p.strip() for p in v.split(",")],
                        help=("When there are multiple streams with the same name but different streaming types, these priorities will be used. "
                              "Should be specified as a comma-delimited list, default is rtmp,hls,hds,http,akamaihd"))
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
-                       help="Specify JustinTV cookie to allow access to subscription channels")
+                       help="Specify JustinTV cookie to allow access to subscription channels, e.g. '_twitch_session_id=xxxxxx; persistent=xxxxx;'")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
-                       help="Specify GOMTV cookie to allow access to streams")
+                       help="Specify GOMTV cookie to allow access to streams, e.g. 'SES_USERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'")
 pluginopt.add_argument("--gomtv-username", metavar="username",
                        help="Specify GOMTV username to allow access to streams")
 pluginopt.add_argument("--gomtv-password", metavar="password",

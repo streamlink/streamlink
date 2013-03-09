@@ -7,6 +7,17 @@ from ..utils import urlget
 from requests import Request
 
 class HTTPStream(Stream):
+    """
+    Regular HTTP stream
+
+    *Attributes:*
+
+    - :attr:`url` URL to the stream
+    - :attr:`args` A :class:`dict` containing keyword arguments passed to
+      :meth:`requests.request`
+
+    """
+
     __shortname__ = "http"
 
     def __init__(self, session, url, **args):

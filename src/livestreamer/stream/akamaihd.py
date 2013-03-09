@@ -224,6 +224,16 @@ class AkamaiHDStreamIO(io.IOBase):
 
 
 class AkamaiHDStream(Stream):
+    """
+    Implements the AkamaiHD Adaptive Streaming protocol
+
+    *Attributes:*
+
+    - :attr:`url` URL to the stream
+    - :attr:`swf` URL to a SWF used by the handshake protocol
+    - :attr:`seek` Position to seek to when opening the stream
+    """
+
     __shortname__ = "akamaihd"
 
     def __init__(self, session, url, swf=None, seek=None):

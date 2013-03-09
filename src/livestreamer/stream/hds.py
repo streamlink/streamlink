@@ -509,6 +509,19 @@ class HDSStreamIO(IOBase):
 
 
 class HDSStream(Stream):
+    """
+    Implements the Adobe HTTP Dynamic Streaming protocol
+
+    *Attributes:*
+
+    - :attr:`baseurl` Base URL
+    - :attr:`url` Base path of the stream, joined with the base URL when fetching fragments
+    - :attr:`bootstrap` Either a URL pointing to the bootstrap or a bootstrap :class:`Box` object
+      used for initial information about the stream
+    - :attr:`metadata` Either `None` or a :class:`ScriptData` object that contains metadata about
+      the stream, such as height, width and bitrate
+    """
+
     __shortname__ = "hds"
 
     def __init__(self, session, baseurl, url, bootstrap, metadata=None,

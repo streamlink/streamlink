@@ -1,13 +1,12 @@
 from .stream import Stream
-from ..compat import urljoin, queue
+from ..compat import queue
 from ..exceptions import StreamError
 from ..utils import urlget, RingBuffer, absolute_url
 
-from time import time, sleep
+from time import time
 from threading import Lock, Thread, Timer
 
 import io
-import os.path
 import re
 
 try:
@@ -307,6 +306,15 @@ class HLSStreamIO(io.IOBase):
 
 
 class HLSStream(Stream):
+    """
+    Implementation of the Apple HTTP Live Streaming protocol
+
+    *Attributes:*
+
+    - :attr:`url` URL to the m3u8 playlist
+
+    """
+
     __shortname__ = "hls"
 
     def __init__(self, session, url):

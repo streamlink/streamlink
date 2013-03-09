@@ -9,6 +9,14 @@ from time import sleep
 import re
 
 class RTMPStream(StreamProcess):
+    """
+    RTMP stream handler using rtmpdump.
+
+    *Attributes:*
+
+    - :attr:`params` A :class:`dict` containing parameters passed to rtmpdump
+    """
+
     __shortname__ = "rtmp"
 
     def __init__(self, session, params, redirect=False, timeout=30):
