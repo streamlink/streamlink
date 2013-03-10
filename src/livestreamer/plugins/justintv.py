@@ -3,7 +3,7 @@ from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import (urlget, urlresolve, verifyjson,
+from livestreamer.utils import (urlget, swfverify, urlresolve, verifyjson,
                                res_json, res_xml, parse_xml, get_node_text)
 
 from hashlib import sha1
@@ -49,9 +49,7 @@ class JustinTV(Plugin):
         res = urlget(url, headers=headers)
         dom = res_xml(res, "metadata XML")
 
-        meta = dom.getElementsByTagName("meta")[0]
         metadata = {}
-
         metadata["title"] = self._get_node_if_exists(dom, "title")
         metadata["access_guid"] = self._get_node_if_exists(dom, "access_guid")
         metadata["login"] = self._get_node_if_exists(dom, "login")
@@ -76,6 +74,25 @@ class JustinTV(Plugin):
                 self.logger.info("Successfully logged in as {0}", metadata["login"])
 
         return chansub
+
+    # The HTTP support in rtmpdump's SWF verification is extremly
+    # basic, therefore we have to work around it.
+    #
+    # At first it seemed like resolving the 302 redirect was enough,
+    # but it seems the resolved URLs also redirects sometimes causing
+    # rtmpdump to fail. Safest to just to do the verification ourself.
+    def _verify_swf(self):
+        swfurl = urlresolve(self.SWFURL)
+        cachekey = "swf:{0}".format(swfurl)
+        swfhash, swfsize = self.cache.get(cachekey, (None, None))
+
+        if not (swfhash and swfsize):
+            self.logger.debug("Verifying SWF")
+            swfhash, swfsize = swfverify(self.SWFURL)
+
+            self.cache.set(cachekey, (swfhash, swfsize))
+
+        return swfurl, swfhash, swfsize
 
     def _get_rtmp_streams(self):
         def clean_tag(tag):
@@ -107,9 +124,7 @@ class JustinTV(Plugin):
         if len(nodes.childNodes) == 0:
             return streams
 
-        swfurl = urlresolve(self.SWFURL)
-        if "?" in swfurl:
-            swfurl = swfurl[:swfurl.find("?")]
+        swfurl, swfhash, swfsize = self._verify_swf()
 
         for node in nodes.childNodes:
             info = {}
@@ -121,7 +136,9 @@ class JustinTV(Plugin):
 
             stream = RTMPStream(self.session, {
                 "rtmp": ("{0}/{1}").format(info["connect"], info["play"]),
-                "swfVfy": swfurl,
+                "swfUrl": swfurl,
+                "swfhash": swfhash,
+                "swfsize": swfsize,
                 "live": True
             })
 
@@ -153,8 +170,6 @@ class JustinTV(Plugin):
 
         if len(json) == 0:
             raise PluginError("No stream token in JSON")
-
-        streams = {}
 
         token = verifyjson(json[0], "token")
         hashed = hmac.new(self.HLSStreamTokenKey, bytes(token, "utf8"), sha1)
