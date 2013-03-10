@@ -1,3 +1,4 @@
+from .cache import Cache
 from .exceptions import NoStreamsError
 from .options import Options
 
@@ -58,6 +59,8 @@ class Plugin(object):
     def __init__(self, url):
         self.url = url
         self.logger = self.session.logger.new_module("plugin." + self.module)
+        self.cache = Cache(filename="plugin-cache.json",
+                           key_prefix=self.module)
 
     @classmethod
     def can_handle_url(cls, url):
