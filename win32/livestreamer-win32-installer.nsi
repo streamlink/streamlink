@@ -10,7 +10,7 @@ SetCompressor lzma
 # Livestreamer program information
 !define PROGRAM_NAME "Livestreamer"
 !define PROGRAM_VERSION "1.4.2"
-!define PROGRAM_WEB_SITE "http://github.com/chrippa/livestreamer"
+!define PROGRAM_WEB_SITE "http://livestreamer.tanuki.se/"
 
 # Python files generated with bbfreeze
 !define LIVESTREAMER_PYTHON_BBFREEZE_OUTPUT_DIR "..\build-win32\livestreamer-bbfreeze-${PROGRAM_VERSION}"
