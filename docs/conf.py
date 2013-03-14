@@ -28,7 +28,7 @@ from livestreamer import __version__ as livestreamer_version
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.programoutput']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -43,12 +43,13 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'livestreamer'
-copyright = '2011-2012, Christopher Rosell'
+project = 'Livestreamer'
+copyright = '2011-2013, Christopher Rosell'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
+
 #
 # The short X.Y version.
 version = livestreamer_version
@@ -84,13 +85,19 @@ exclude_patterns = ['_build']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+#pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
 
 # -- Options for HTML output ---------------------------------------------------
+
+sys.path.append(os.path.abspath('_themes'))
+
+html_theme_path = ['_themes']
+html_theme = 'cr_small'
+#html_theme = 'korean'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -99,7 +106,7 @@ pygments_style = 'sphinx'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+# html_theme_options = { "github_fork": "chrippa/livestreamer" }
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -136,12 +143,18 @@ html_static_path = ['_static']
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 
+#html_sidebars = {
+#    'index': ['sidebarintro.html', 'sourcelink.html', 'searchbox.html'],
+#    '**': ['sidebarlogo.html', 'localtoc.html', 'relations.html',
+#           'sourcelink.html', 'searchbox.html']
+#}
+
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
 
 # If false, no module index is generated.
-#html_domain_indices = True
+html_domain_indices = False
 
 # If false, no index is generated.
 #html_use_index = True
@@ -150,7 +163,7 @@ html_static_path = ['_static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = False
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 #html_show_sphinx = True
@@ -216,7 +229,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'livestreamer', 'livestreamer Documentation',
+    ('cli', 'livestreamer', 'livestreamer Documentation',
      ['Christopher Rosell'], 1)
 ]
 

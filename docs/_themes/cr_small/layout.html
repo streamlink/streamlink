@@ -1,0 +1,28 @@
+{% extends "basic/layout.html" %}
+{% block header %}
+  <div class="headerwrapper">
+	<a href="{{ pathto(master_doc) }}">
+		<h1>Livestreamer</h1>
+	</a>
+
+	<ul class="menu">
+	  <li><a href="http://pypi.python.org/pypi/livestreamer">PyPI</a> ~ </li>
+	  <li><a href="http://github.com/chrippa/livestreamer">GitHub</a> ~ </li>
+	  <li><a href="http://github.com/chrippa/livestreamer/issues">Issue Tracker</a></li>
+	</ul>
+
+  </div>
+  {{ super() }}
+{% endblock %}
+{% block footer %}
+{% endblock %}
+{# do not display relbars #}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}
+  {% if theme_github_fork != '' %}
+    <a href="http://github.com/{{ theme_github_fork }}"><img style="position: fixed; top: 0; right: 0; border: 0;"
+    src="http://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  {% endif %}
+{% endblock %}
+{% block sidebar1 %}{% endblock %}
+{% block sidebar2 %}{% endblock %}

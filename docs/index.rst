@@ -3,72 +3,60 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-livestreamer documentation
-==================================
 
-.. automodule:: livestreamer
+What is Livestreamer?
+---------------------
 
-Exceptions
-----------
+Livestreamer is a :ref:`cli` that pipes video streams from various services into a video player,
+such as `VLC <http://videolan.org/>`_. The main purpose of Livestreamer is to allow the user to avoid buggy
+and CPU heavy flash plugins but still be able to enjoy various streamed content.
 
-The :mod:`livstreamer` module defines three exceptions:
-
-.. autoexception:: PluginError
-.. autoexception:: NoPluginError
-.. autoexception:: StreamError
-
-The livestreamer session
-------------------------
-.. autoclass:: Livestreamer
-    :members:
+There is also an :ref:`api` available for developers who want access to the video stream data.
 
 
-Plugins
--------
-.. module:: livestreamer.plugins
-.. autoclass:: Plugin
-    :members:
+Latest release: v\ |version| (:ref:`changelog`)
 
-
-Streams
--------
-.. module:: livestreamer.stream
-.. autoclass:: Stream
-    :members:
-
-
-Examples
+Features
 --------
 
-Fetching a streams data::
+Livestreamer is built upon a plugin system which allows support for new services to be easily added.
+Currently most of the big streaming services are supported, such as:
 
-    from livestreamer import Livestreamer
+- `Dailymotion <http://dailymotion.com/live/>`_
+- `Livestream <http://livestream.com>`_
+- `Twitch <http://twitch.tv/>`_/`Justin.tv <http://justin.tv>`_
+- `YouTube Live <http://youtube.com/live/>`_
+- `UStream <http://ustream.tv>`_
 
-    url = "http://twitch.tv/day9tv"
-    livestreamer = Livestreamer()
-    channel = livestreamer.resolve_url(url)
-    streams = channel.get_streams()
+And many more, including more specialized content providers such as `GOMTV.net <http://gomtv.net>`_.
+A full list of plugins currently included can be found in the :ref:`plugin_matrix`.
 
-    stream = streams["720p"]
-    fd = stream.open()
+Quickstart
+-----------
 
-    while True:
-        data = fd.read(1024)
-        if len(data) == 0:
-            break
+The default behaviour of Livestreamer is to playback a stream in the default player (`VLC <http://videolan.org/>`_).
 
-        # do something with data
+.. sourcecode:: console
 
-    # All streams are not guaranteed to support .close()
-    if hasattr(fd, "close"):
-        fd.close()
+    # pip install livestreamer
+    $ livestreamer twitch.tv/day9tv best
+    [cli][info] Found matching plugin justintv for URL twitch.tv/day9tv
+    [cli][info] Opening stream: 720p
+    [cli][info] Starting player: vlc
+
+For more in-depth usage and install instructions see the `User guide`_.
+
+User guide
+----------
+
+Livestreamer is made up of two parts, a basic :ref:`cli` and a library :ref:`api`.
+See their respective sections for more information on how to use them.
+
+.. toctree::
+    :maxdepth: 2
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+    install
+    cli
+    api
 
