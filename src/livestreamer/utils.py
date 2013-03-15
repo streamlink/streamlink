@@ -1,97 +1,16 @@
-from .compat import bytes, is_win32, urljoin, urlparse, parse_qsl
+from .compat import bytes, urljoin, urlparse, parse_qsl
 from .exceptions import PluginError
 
 from threading import Event, Lock
 
-import argparse
 import hashlib
 import hmac
 import json
-import os
 import requests
-import tempfile
 import xml.dom.minidom
 import zlib
 
-if is_win32:
-    from ctypes import windll, cast, c_ulong, c_void_p, byref
-
-SWFKey = b"Genuine Adobe Flash Player 001"
-
-class ArgumentParser(argparse.ArgumentParser):
-    def convert_arg_line_to_args(self, line):
-        if len(line) == 0:
-            return
-
-        if line[0] == "#":
-            return
-
-        split = line.find("=")
-        if split > 0:
-            key = line[:split].strip()
-            val = line[split+1:].strip()
-            yield "--%s=%s" % (key, val)
-        else:
-            yield "--%s" % line
-
-class NamedPipe(object):
-    def __init__(self, name):
-        self.fifo = None
-        self.pipe = None
-
-        if is_win32:
-            self.path = os.path.join("\\\\.\\pipe", name)
-            self.pipe = self._create_named_pipe(self.path)
-        else:
-            self.path = os.path.join(tempfile.gettempdir(), name)
-            self._create_fifo(self.path)
-
-    def _create_fifo(self, name):
-        os.mkfifo(name, 0o660)
-
-    def _create_named_pipe(self, path):
-        PIPE_ACCESS_OUTBOUND = 0x00000002
-        PIPE_TYPE_BYTE = 0x00000000
-        PIPE_READMODE_BYTE = 0x00000000
-        PIPE_WAIT = 0x00000000
-        PIPE_UNLIMITED_INSTANCES = 255
-        INVALID_HANDLE_VALUE = -1
-        bufsize = 8192
-
-        pipe = windll.kernel32.CreateNamedPipeW(path,
-                                                PIPE_ACCESS_OUTBOUND,
-                                                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                                                PIPE_UNLIMITED_INSTANCES,
-                                                bufsize,
-                                                bufsize,
-                                                0,
-                                                None)
-
-        if pipe == INVALID_HANDLE_VALUE:
-            raise IOError(("error code 0x{0:08X}").format(windll.kernel32.GetLastError()))
-
-        return pipe
-
-    def open(self, mode):
-        if not self.pipe:
-            self.fifo = open(self.path, mode)
-
-    def write(self, data):
-        if self.pipe:
-            windll.kernel32.ConnectNamedPipe(self.pipe, None)
-            written = c_ulong(0)
-            windll.kernel32.WriteFile(self.pipe, cast(data, c_void_p),
-                                      len(data), byref(written),
-                                      None)
-            return written
-        else:
-            return self.fifo.write(data)
-
-    def close(self):
-        if self.pipe:
-            windll.kernel32.DisconnectNamedPipe(self.pipe)
-        else:
-            os.unlink(self.path)
+SWF_KEY = b"Genuine Adobe Flash Player 001"
 
 class Buffer(object):
     """ Simple buffer for use in single-threaded consumer/filler """
@@ -211,13 +130,6 @@ class RingBuffer(Buffer):
     def is_full(self):
         return self.free == 0
 
-class JSONEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if hasattr(obj, "__json__"):
-            return obj.__json__()
-        else:
-            return json.JSONEncoder.default(self, obj)
-
 def urlopen(url, method="get", exception=PluginError, session=None,
             timeout=20, *args, **kw):
     if "data" in kw and kw["data"] is not None:
@@ -259,7 +171,7 @@ def swfverify(url):
     res = urlopen(url)
     swf = swfdecompress(res.content)
 
-    h = hmac.new(SWFKey, swf, hashlib.sha256)
+    h = hmac.new(SWF_KEY, swf, hashlib.sha256)
 
     return h.hexdigest(), len(swf)
 
@@ -334,12 +246,8 @@ def get_node_text(element):
 
 def rtmpparse(url):
     parse = urlparse(url)
-
-    hostname = parse.hostname
-    port = parse.port or 1935
     netloc = "{hostname}:{port}".format(hostname=parse.hostname,
                                         port=parse.port or 1935)
-
     split = parse.path.split("/")
     app = "/".join(split[1:2])
 
@@ -355,10 +263,9 @@ def rtmpparse(url):
                                                netloc=netloc,
                                                app=app)
 
-
     return (tcurl, playpath)
 
-__all__ = ["ArgumentParser", "NamedPipe", "Buffer", "RingBuffer", "JSONEncoder",
+__all__ = ["Buffer", "RingBuffer",
            "urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
            "parse_xml", "res_xml", "get_node_text", "rtmpparse"]

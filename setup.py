@@ -9,7 +9,8 @@ packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugins",
             "livestreamer.packages",
-            "livestreamer.packages.flashmedia"]
+            "livestreamer.packages.flashmedia",
+            "livestreamer_cli"]
 
 # require argparse on Python <2.7 and <3.2
 if (version_info[0] == 2 and version_info[1] < 7) or \
@@ -32,7 +33,7 @@ setup(name="livestreamer",
       packages=packages,
       package_dir={ "": "src" },
       entry_points={
-          "console_scripts": ["livestreamer=livestreamer.cli:main"]
+          "console_scripts": ["livestreamer=livestreamer_cli.main:main"]
       },
       install_requires=deps,
       test_suite="tests",

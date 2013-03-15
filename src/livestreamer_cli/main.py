@@ -6,11 +6,12 @@ import os
 import sys
 import subprocess
 
+from .compat import input, stdout, file, is_win32
+from .utils import ArgumentParser, JSONEncoder, NamedPipe
+
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
-from livestreamer.compat import input, stdout, file, is_win32
 from livestreamer.stream import StreamProcess
-from livestreamer.utils import ArgumentParser, JSONEncoder, NamedPipe
 
 default_player = "vlc"
 
