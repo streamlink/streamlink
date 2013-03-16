@@ -47,20 +47,22 @@ class Plugin(object):
     :param url: URL that the plugin will operate on
     """
 
+    cache = None
+    logger = None
     module = "unknown"
     options = Options()
     session = None
 
     @classmethod
     def bind(cls, session, module):
-        cls.session = session
+        cls.cache = Cache(filename="plugin-cache.json",
+                          key_prefix=module)
+        cls.logger = session.logger.new_module("plugin." + module)
         cls.module = module
+        cls.session = session
 
     def __init__(self, url):
         self.url = url
-        self.logger = self.session.logger.new_module("plugin." + self.module)
-        self.cache = Cache(filename="plugin-cache.json",
-                           key_prefix=self.module)
 
     @classmethod
     def can_handle_url(cls, url):
