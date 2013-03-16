@@ -122,6 +122,8 @@ if is_win32:
 else:
     RCFILE = os.path.expanduser("~/.livestreamerrc")
 
+SYNONYMS = ["best", "worst"]
+
 def exit(fmt, *args, **kw):
     if "json" in kw:
         isjson = kw["json"]
@@ -354,7 +356,7 @@ def handle_url(args):
 
     validstreams = []
     for name, stream in sorted(streams.items()):
-        if name in ("best", "worst"):
+        if name in SYNONYMS:
             continue
 
         synonymfilter = lambda n: stream is streams[n] and n is not name
@@ -369,12 +371,12 @@ def handle_url(args):
     validstreams = ", ".join(validstreams)
 
     if args.stream:
-        if args.stream == "best" or args.stream == "worst":
-            for name, stream in streams.items():
-                if stream is streams[args.stream] and name not in ("best", "worst"):
-                    args.stream = name
-
         if args.stream in streams:
+            if args.stream in SYNONYMS:
+                for name, stream in streams.items():
+                    if stream is streams[args.stream] and name not in SYNONYMS:
+                        args.stream = name
+
             handle_stream(args, streams)
         else:
             err = "Invalid stream quality: {0}".format(args.stream)
