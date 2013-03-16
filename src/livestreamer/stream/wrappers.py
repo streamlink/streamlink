@@ -1,4 +1,4 @@
-from ..utils import RingBuffer
+from ..buffers import RingBuffer
 
 from threading import Thread
 

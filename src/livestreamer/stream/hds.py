@@ -1,17 +1,18 @@
-from .stream import Stream
-from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
-from ..exceptions import StreamError
-from ..utils import absolute_url, urlget, res_xml, get_node_text, RingBuffer
+import base64
+import re
+import requests
+import os.path
 
 from io import BytesIO, IOBase
 from math import ceil
 from threading import Lock, Thread, Timer
 from time import time
 
-import base64
-import re
-import requests
-import os.path
+from .stream import Stream
+from ..buffers import RingBuffer
+from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
+from ..exceptions import StreamError
+from ..utils import absolute_url, urlget, res_xml, get_node_text
 
 from ..packages.flashmedia import F4V, F4VError, FLVError
 from ..packages.flashmedia.box import Box

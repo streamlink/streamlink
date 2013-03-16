@@ -1,16 +1,17 @@
-from .stream import Stream
-from ..compat import str, bytes, urlparse
-from ..exceptions import StreamError
-from ..utils import Buffer, swfdecompress, urlget, urlopen
-
-from ..packages.flashmedia import FLV, FLVError
-from ..packages.flashmedia.tag import ScriptData
-
 import base64
 import io
 import hashlib
 import hmac
 import random
+
+from .stream import Stream
+from ..buffers import Buffer
+from ..compat import str, bytes, urlparse
+from ..exceptions import StreamError
+from ..utils import swfdecompress, urlget, urlopen
+
+from ..packages.flashmedia import FLV, FLVError
+from ..packages.flashmedia.tag import ScriptData
 
 class TokenGenerator(object):
     def __init__(self, stream):

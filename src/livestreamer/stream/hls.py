@@ -1,16 +1,18 @@
-from .stream import Stream
-from ..compat import queue
-from ..exceptions import StreamError
-from ..utils import urlget, RingBuffer, absolute_url
+import io
+import re
 
 from time import time
 from threading import Lock, Thread, Timer
 
-import io
-import re
+from .stream import Stream
+from ..buffers import RingBuffer
+from ..compat import queue
+from ..exceptions import StreamError
+from ..utils import urlget, absolute_url
 
 try:
     from Crypto.Cipher import AES
+
     import struct
 
     def num_to_iv(n):
