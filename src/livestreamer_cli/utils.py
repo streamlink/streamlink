@@ -1,6 +1,5 @@
 from .compat import is_win32
 
-import argparse
 import json
 import os
 import tempfile
@@ -14,23 +13,6 @@ if is_win32:
     PIPE_WAIT = 0x00000000
     PIPE_UNLIMITED_INSTANCES = 255
     INVALID_HANDLE_VALUE = -1
-
-
-class ArgumentParser(argparse.ArgumentParser):
-    def convert_arg_line_to_args(self, line):
-        if len(line) == 0:
-            return
-
-        if line[0] == "#":
-            return
-
-        split = line.find("=")
-        if split > 0:
-            key = line[:split].strip()
-            val = line[split+1:].strip()
-            yield "--%s=%s" % (key, val)
-        else:
-            yield "--%s" % line
 
 
 class NamedPipe(object):
@@ -94,4 +76,4 @@ class JSONEncoder(json.JSONEncoder):
         else:
             return json.JSONEncoder.default(self, obj)
 
-__all__ = ["ArgumentParser", "NamedPipe", "JSONEncoder"]
+__all__ = ["NamedPipe", "JSONEncoder"]
