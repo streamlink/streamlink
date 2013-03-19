@@ -47,8 +47,6 @@ def create_output(args):
 
     """
 
-    namedpipe = None
-
     if args.output:
         if args.output == "-":
             out = FileOutput(fd=stdout)
@@ -57,6 +55,8 @@ def create_output(args):
     elif args.stdout:
         out = FileOutput(fd=stdout)
     else:
+        namedpipe = None
+
         if args.fifo:
             pipename = "livestreamerpipe-" + str(os.getpid())
             console.logger.info("Creating pipe {0}", pipename)

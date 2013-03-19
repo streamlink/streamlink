@@ -23,7 +23,7 @@ class HangulizeStyle(Style):
         Number:              '#ce6049',      # class: 'm'
         String:              '#8db269',      # class: 's'
         String.Escape:       '#9e7da2',      # class: 'se'
-        Generic.Output:      'bold #568',    # class: 'go'
+        Generic.Output:      '#b8ad9d',      # class: 'go'
         Generic.Prompt:      '#78c3c0',      # class: 'gp'
     }
 

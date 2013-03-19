@@ -35,7 +35,7 @@ In this case the ``best`` stream is a reference to the stream that is considered
     [cli][info] Starting player: vlc
 
 The default player is `VLC <http://videolan.org/>`_, but it can be easily changed using the ``--player`` argument.
-It is recommended to create a `Configuration file`_ for arguments you wish to be used everytime.
+It is recommended to create a `Configuration file`_ for arguments you wish to be used every time.
 
 Full list of command line arguments
 -----------------------------------
@@ -169,9 +169,9 @@ Full list of command line arguments
 Configuration file
 ------------------
 
-Writing the command line arguments everytime is painful, that's why Livestreamer
+Writing the command line arguments every time is painful, that's why Livestreamer
 is capable of reading arguments from a file instead, a sort of configuration file.
-Livestreamer will look for this file in different locations depending on platform:
+Livestreamer will look for this file in different locations depending on your platform:
 
 **Unix-like OSs**
   ``~/.livestreamerrc``
@@ -180,13 +180,13 @@ Livestreamer will look for this file in different locations depending on platfor
   ``%APPDATA%\livestreamer\livestreamerrc``
 
 
-The file should contain one argument per line, like this:
+The file should contain one argument per line in the format ``option=value``, like this:
 
 .. code-block:: console
 
     player=mplayer -cache 2048
-    gomtv-username=username
-    gomtv-password=password
+    jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
+    gomtv-cookie=SES_USERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
 
 
 Common issues
@@ -211,7 +211,54 @@ By default most players do not cache the input from stdin, here is a few command
 - ``mplayer --cache <kbytes>`` (between 1024 and 8192 is recommended)
 - ``vlc --file-caching <milliseconds>`` (between 1000 and 10000 is recommended)
 
-These options can be used by passing ``--player`` to livestreamer.
+These options can be used by passing ``--player`` to ``livestreamer``.
+
+
+Plugin specific usage
+---------------------
+
+Authenticating with Twitch/Justin.tv
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It's possible to access subscription based content on Twitch/Justin.tv by letting Livestreamer use your web browser sessions cookies.
+
+Cookies should be specified in a key value list separated by a semicolon. In this case only the `_twitch_session_id` and `persistent` keys are required by Twitch/Justin.tv. For example:
+
+.. sourcecode:: console
+
+    $ livestreamer --jtv-cookie "_twitch_session_id=xxxxxx; persistent=xxxxx;" twitch.tv/ignproleague
+    [plugin.justintv][info] Attempting to authenticate using cookies
+    [plugin.justintv][info] Successfully logged in as <username>
+
+
+Extracting cookies from your web browser varies from browser to browser, try googling "<brower name> view cookies".
+It's recommended to save these cookies in your `Configuration file`_ rather than specifying them manually every time.
+
+
+Authenticating with GOMTV.net
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+GOMTV.net requires authenticating with an account before allowing you to access any of their content.
+This is done easiest by following these steps:
+
+.. sourcecode:: console
+
+    $ livestreamer --gomtv-username user@email.com gomtv.net
+
+This will cause Livestreamer to prompt you for your password and then attempt to login, giving you an output similar to this when successful:
+
+.. sourcecode:: console
+
+    $ livestreamer --gomtv-username user@email.com gomtv.net
+    Enter GOMTV password:
+    [plugin.gomtv][info] Attempting to authenticate with username and password
+    [plugin.gomtv][info] Successfully logged in as <username>
+    [plugin.gomtv][info] Cookie for reusing this session: SES_USERNO=xxxxxxxxxx; SES_STATE=xxxxxxxxxxx; SES_MEMBERNICK=xxxxxx; SES_USERNICK=username;
+
+
+The important part of this output is the last line, that's the cookies used to access this login session. To use these cookies pass them to the ``--gomtv-cookie`` option. It's recommended to save these cookies in your `Configuration file`_ rather than specifying them manually every time.
+
+These instructions are for authenticating with a regular user account, if you are using a `Facebook <http://facebook.com/>`_ or `Twitter <http://twitter.com/>`_ account to authenticate you'll need to extract your cookies from your web browser instead. Extracting cookies from your web browser varies from browser to browser, try googling "<brower name> view cookies".
 
 
 Advanced usage
@@ -221,7 +268,7 @@ Playing built-in streaming protocols directly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are many types of streaming protocols used by services today and Livestreamer
-implements most of them. It is possible to tell livestreamer to access a streaming
+implements most of them. It is possible to tell Livestreamer to access a streaming
 protocol directly instead of relying on a plugin to find the information for you.
 
 A protocol can be accessed directly by specifying it in the URL format: `protocol://path key=value`.
