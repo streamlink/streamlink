@@ -195,9 +195,18 @@ Common issues
 **Livestreamer exits with error "Unable to read from stream" or "Error while executing subprocess" on Twitch/Justin.tv streams**
 
 When building rtmpdump from source it may link with a already existing (probably older) librtmp version instead of using it's
-own version. On Debian/Ubuntu it is recommended to use the official packages of *librtmp0* and *rtmpdump* version
+own version.
+
+On Debian/Ubuntu it is recommended to use the official packages of *librtmp0* and *rtmpdump* version
 *2.4+20111222.git4e06e21* or newer. This version contains the necessary code to play Twitch/Justin.tv streams and
-avoids any conflicts. It should be available in the testing or unstable repositories if it's not available in stable yet.
+avoids any conflicts. It should be available in the testing or unstable repositories.
+
+If you still want to build it yourself you can avoid the linking problem by building a static build of rtmpdump.
+
+.. code-block:: console
+
+    $ make SHARED=
+
 
 **VLC fails to play with a error message**
 
