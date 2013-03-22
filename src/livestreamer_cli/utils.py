@@ -1,4 +1,4 @@
-from .compat import is_win32
+from .compat import is_win32, is_32bit
 
 import json
 import os
@@ -33,14 +33,16 @@ class NamedPipe(object):
     def _create_named_pipe(self, path):
         bufsize = 8192
 
-        pipe = windll.kernel32.CreateNamedPipeW(path,
-                                                PIPE_ACCESS_OUTBOUND,
-                                                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                                                PIPE_UNLIMITED_INSTANCES,
-                                                bufsize,
-                                                bufsize,
-                                                0,
-                                                None)
+        if is_32bit:
+            create_named_pipe = windll.kernel32.CreateNamedPipeA
+        else:
+            create_named_pipe = windll.kernel32.CreateNamedPipeW
+
+        pipe = create_named_pipe(path, PIPE_ACCESS_OUTBOUND,
+                                 PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                                 PIPE_UNLIMITED_INSTANCES,
+                                 bufsize, bufsize,
+                                 0, None)
 
         if pipe == INVALID_HANDLE_VALUE:
             raise IOError(("error code 0x{0:08X}").format(windll.kernel32.GetLastError()))
