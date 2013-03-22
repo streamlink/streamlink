@@ -2,9 +2,11 @@ class PluginError(Exception):
     """ Plugin related errors. """
 
 
-class NoStreamsError(PluginError):
+class NoStreamsError(Exception):
     def __init__(self, url):
-        PluginError.__init__(self, ("No streams found on this URL: {0}").format(url))
+        self.url = url
+
+        Exception.__init__(self, ("No streams found on this URL: {0}").format(url))
 
 
 class NoPluginError(PluginError):
