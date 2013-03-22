@@ -3,7 +3,7 @@ import os
 import sys
 
 from .argparser import parser
-from .compat import stdout
+from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import RCFILE, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
@@ -127,6 +127,7 @@ def read_stream(stream, output):
     """Reads data from stream and then writes it to the output."""
 
     is_player = isinstance(output, PlayerOutput)
+    is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout
     written = 0
 
@@ -140,10 +141,20 @@ def read_stream(stream, output):
         if len(data) == 0:
             break
 
+        # We need to check if the player process still exists when
+        # using named pipes on Windows since the named pipe is not
+        # automatically closed by the player.
+        if is_win32 and is_fifo:
+            output.player.poll()
+
+            if output.player.returncode is not None:
+                console.logger.info("Player closed")
+                break
+
         try:
             output.write(data)
         except IOError as err:
-            if is_player and err.errno == errno.EPIPE:
+            if is_player and err.errno in (errno.EPIPE, errno.EINVAL):
                 console.logger.info("Player closed")
             else:
                 console.logger.error("Error when writing to output: {0}", str(err))
