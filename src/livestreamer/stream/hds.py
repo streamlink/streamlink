@@ -243,6 +243,7 @@ class HDSStreamIO(IOBase):
         self.bootstrap_minimal_reload_time = 2.0
         self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
         self.bootstrap_reload_timestamp = 0
+        self.invalid_fragments = {}
 
         self.buffer = RingBuffer()
 
@@ -383,6 +384,9 @@ class HDSStreamIO(IOBase):
             if not self.filler.running or (fillqueue and i == self.filler.queue.maxsize):
                 break
 
+            if fragment in self.invalid_fragments:
+                continue
+
             self.current_fragment = fragment + 1
             self.current_segment = self._segment_from_fragment(fragment)
             fragment_duration = int(self._fragment_duration(fragment) * 1000)
@@ -493,6 +497,8 @@ class HDSStreamIO(IOBase):
 
         for i, fragmentrun in enumerate(table):
             if fragmentrun.discontinuity_indicator is not None:
+                self.invalid_fragments[fragmentrun.first_fragment] = True
+
                 # Check for the last fragment of the stream
                 if fragmentrun.discontinuity_indicator == 0:
                     if i > 0:
