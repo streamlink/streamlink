@@ -20,7 +20,7 @@ def qualityweight(quality):
     if quality in SpecialQualityWeights:
         return SpecialQualityWeights[quality]
 
-    match = re.match("^(\d+)([k]|[p])$", quality)
+    match = re.match("^(\d+)([k]|[p])?([\+])?$", quality)
 
     if match:
         if match.group(2) == "k":
@@ -35,7 +35,12 @@ def qualityweight(quality):
                 return bitrate / 1.7
 
         elif match.group(2) == "p":
-            return int(match.group(1))
+            weight = int(match.group(1))
+
+            if match.group(3) == "+":
+                weight += 1
+
+            return weight
 
     return 0
 
