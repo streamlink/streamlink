@@ -136,7 +136,7 @@ class GomTV(Plugin):
 
         if username and password:
             cookie = ""
-            for v in ("SES_USERNO", "SES_STATE", "SES_MEMBERNICK", "SES_USERNICK"):
+            for v in ("SES_MEMBERNO", "SES_STATE", "SES_MEMBERNICK", "SES_USERNICK"):
                 if v in self.rsession.cookies:
                     cookie += "{0}={1}; ".format(v, self.rsession.cookies[v])
 

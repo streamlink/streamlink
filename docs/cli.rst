@@ -262,7 +262,7 @@ This will cause Livestreamer to prompt you for your password and then attempt to
     Enter GOMTV password:
     [plugin.gomtv][info] Attempting to authenticate with username and password
     [plugin.gomtv][info] Successfully logged in as <username>
-    [plugin.gomtv][info] Cookie for reusing this session: SES_USERNO=xxxxxxxxxx; SES_STATE=xxxxxxxxxxx; SES_MEMBERNICK=xxxxxx; SES_USERNICK=username;
+    [plugin.gomtv][info] Cookie for reusing this session: SES_MEMBERNO=xxxxxxxxxx; SES_STATE=xxxxxxxxxxx; SES_MEMBERNICK=xxxxxx; SES_USERNICK=username;
 
 
 The important part of this output is the last line, that's the cookies used to access this login session. To use these cookies pass them to the ``--gomtv-cookie`` option. It's recommended to save these cookies in your `Configuration file`_ rather than specifying them manually every time.
