@@ -4,12 +4,11 @@ from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream
 from livestreamer.utils import (urlget, swfverify, urlresolve, verifyjson,
-                               res_json, res_xml, parse_xml, get_node_text)
+                               res_json, res_xml, get_node_text)
 
 from hashlib import sha1
 
 import hmac
-import re
 import random
 
 
@@ -19,7 +18,7 @@ class JustinTV(Plugin):
     })
 
     APIBaseURL = "http://usher.justin.tv"
-    StreamInfoURL = APIBaseURL + "/find/{0}.xml"
+    StreamInfoURL = APIBaseURL + "/find/{0}.json"
     MetadataURL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
     SWFURL = "http://www.justin.tv/widgets/live_embed_player.swf"
 
@@ -95,12 +94,6 @@ class JustinTV(Plugin):
         return swfurl, swfhash, swfsize
 
     def _get_rtmp_streams(self):
-        def clean_tag(tag):
-            if tag[0] == "_":
-                return tag[1:]
-            else:
-                return tag
-
         chansub = self._authenticate()
 
         url = self.StreamInfoURL.format(self.channelname)
@@ -110,28 +103,21 @@ class JustinTV(Plugin):
 
         self.logger.debug("Fetching stream info")
         res = urlget(url, params=params)
-        data = res.text
+        json = res_json(res, "stream info JSON")
 
-        # fix invalid xml
-        data = re.sub("<(\d+)", "<_\g<1>", data)
-        data = re.sub("</(\d+)", "</_\g<1>", data)
+        if not isinstance(json, list):
+            raise PluginError("Invalid JSON response")
+
+        if len(json) == 0:
+            raise NoStreamsError(self.url)
 
         streams = {}
-
-        dom = parse_xml(data, "config XML")
-        nodes = dom.getElementsByTagName("nodes")[0]
-
-        if len(nodes.childNodes) == 0:
-            return streams
-
         swfurl, swfhash, swfsize = self._verify_swf()
 
-        for node in nodes.childNodes:
-            info = {}
-            for child in node.childNodes:
-                info[child.tagName] = get_node_text(child)
+        for info in json:
+            if not ("connect" in info and "play" in info
+                    and "type" in info):
 
-            if not ("connect" in info and "play" in info):
                 continue
 
             stream = RTMPStream(self.session, {
@@ -142,7 +128,10 @@ class JustinTV(Plugin):
                 "live": True
             })
 
-            sname = clean_tag(node.tagName)
+            if "display" in info:
+                sname = info["display"]
+            else:
+                sname = info["type"]
 
             if "token" in info:
                 stream.params["jtv"] = info["token"]
