@@ -87,7 +87,7 @@ class JustinTV(Plugin):
 
         if not (swfhash and swfsize):
             self.logger.debug("Verifying SWF")
-            swfhash, swfsize = swfverify(self.SWFURL)
+            swfhash, swfsize = swfverify(swfurl)
 
             self.cache.set(cachekey, (swfhash, swfsize))
 
