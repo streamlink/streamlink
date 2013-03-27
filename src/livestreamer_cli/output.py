@@ -3,6 +3,7 @@ import subprocess
 import sys
 
 from .compat import is_win32, stdout
+from .utils import ignored
 
 if is_win32:
     import msvcrt
@@ -89,10 +90,8 @@ class PlayerOutput(Output):
             self.namedpipe.open("wb")
 
     def _close(self):
-        try:
+        with ignored(Exception):
             self.player.kill()
-        except:
-            pass
 
         if self.namedpipe:
             self.namedpipe.close()

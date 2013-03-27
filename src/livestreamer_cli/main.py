@@ -7,7 +7,7 @@ from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import RCFILE, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe
+from .utils import NamedPipe, ignored
 
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
@@ -113,10 +113,8 @@ def output_stream(args, stream):
     except IOError as err:
         console.exit("Error when writing to output: {0}", err)
 
-    try:
+    with ignored(KeyboardInterrupt):
         read_stream(streamfd, output)
-    except KeyboardInterrupt:
-        pass
 
     output.close()
 

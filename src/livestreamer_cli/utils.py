@@ -1,8 +1,10 @@
-from .compat import is_win32, is_32bit
-
 import json
 import os
 import tempfile
+
+from contextlib import contextmanager
+
+from .compat import is_win32, is_32bit
 
 if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref
@@ -78,4 +80,12 @@ class JSONEncoder(json.JSONEncoder):
         else:
             return json.JSONEncoder.default(self, obj)
 
-__all__ = ["NamedPipe", "JSONEncoder"]
+
+@contextmanager
+def ignored(*exceptions):
+    try:
+        yield
+    except exceptions:
+        pass
+
+__all__ = ["NamedPipe", "JSONEncoder", "ignored"]
