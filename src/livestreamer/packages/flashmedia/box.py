@@ -814,14 +814,14 @@ class BoxPayloadABST(BoxPayload):
 
         for i in range(server_entry_count):
             server_entry = CString.read(io)
-            server_entry_table.append(server)
+            server_entry_table.append(server_entry)
 
         quality_entry_table = []
         quality_entry_count = U8.read(io)
 
         for i in range(quality_entry_count):
             quality_entry = CString.read(io)
-            quality_entry_table.append(quality)
+            quality_entry_table.append(quality_entry)
 
         drm_data = CString.read(io)
         metadata = CString.read(io)
