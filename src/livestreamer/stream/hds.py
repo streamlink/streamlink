@@ -5,7 +5,7 @@ import os.path
 
 from io import BytesIO, IOBase
 from math import ceil
-from threading import Lock, Thread, Timer
+from threading import Thread, Timer
 from time import time
 
 from .stream import Stream
@@ -192,7 +192,7 @@ class HDSStreamFiller(Thread):
                     else:
                         self.timestamps[key] = fragment_duration
 
-            if fragment == self.stream.last_fragment:
+            if fragment == self.stream.end_fragment:
                 break
 
         self.stop()
@@ -231,19 +231,20 @@ class HDSStreamIO(IOBase):
         if rsession:
             self.rsession = rsession
         else:
-            self.rsession = requests.session(prefetch=False)
+            self.rsession = requests.session()
 
     def open(self):
         self.current_segment = -1
         self.current_fragment = -1
-        self.last_fragment = None
-        self.max_fragments = -1
-        self.bootstrap_lock = Lock()
+        self.first_fragment = 1
+        self.last_fragment = -1
+        self.end_fragment = None
+
         self.bootstrap_timer = None
         self.bootstrap_minimal_reload_time = 2.0
         self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
         self.bootstrap_reload_timestamp = 0
-        self.invalid_fragments = {}
+        self.invalid_fragments = set()
 
         self.buffer = RingBuffer()
 
@@ -293,7 +294,7 @@ class HDSStreamIO(IOBase):
         if not self.filler.running:
             return
 
-        if self.last_fragment and self.current_fragment > self.last_fragment:
+        if self.end_fragment and self.current_fragment > self.end_fragment:
             return
 
         # Wait until buffer has room before requesting a new bootstrap
@@ -338,36 +339,37 @@ class HDSStreamIO(IOBase):
         self.segmentruntable = bootstrap.payload.segment_run_table_entries[0]
         self.fragmentruntable = bootstrap.payload.fragment_run_table_entries[0]
 
-        max_fragments = self._fragment_count()
-        fragment_duration = self._fragment_duration(max_fragments)
+        self.first_fragment, last_fragment = self._fragment_count()
+        fragment_duration = self._fragment_duration(last_fragment)
 
-        if max_fragments != self.max_fragments:
+        if last_fragment != self.last_fragment:
             self.bootstrap_changed = True
-            self.max_fragments = max_fragments
+            self.last_fragment = last_fragment
         else:
             self.bootstrap_changed = False
 
         if self.current_fragment < 0:
             if self.live:
-                current_fragment = max_fragments
+                current_fragment = last_fragment
 
                 # Less likely to hit edge if we don't start with last fragment,
                 # default buffer is 10 sec.
                 fragment_buffer = int(ceil(self.buffer_time / fragment_duration))
-                current_fragment = max(1, current_fragment - (fragment_buffer - 1))
+                current_fragment = max(self.first_fragment, current_fragment - (fragment_buffer - 1))
 
                 self.logger.debug("Live edge buffer {0} sec is {1} fragments",
                                   self.buffer_time, fragment_buffer)
             else:
-                current_fragment = 1
+                current_fragment = self.first_fragment
 
             self.current_fragment = current_fragment
 
         self.logger.debug("Current timestamp: {0}", self.timestamp / self.time_scale)
         self.logger.debug("Current segment: {0}", self.current_segment)
         self.logger.debug("Current fragment: {0}", self.current_fragment)
-        self.logger.debug("Max fragments: {0}", self.max_fragments)
+        self.logger.debug("First fragment: {0}", self.first_fragment)
         self.logger.debug("Last fragment: {0}", self.last_fragment)
+        self.logger.debug("End fragment: {0}", self.end_fragment)
 
         self.bootstrap_reload_timestamp = time()
         self.bootstrap_reload_time = fragment_duration
@@ -380,7 +382,7 @@ class HDSStreamIO(IOBase):
             self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
 
     def _queue_fragments(self, fillqueue=False):
-        for i, fragment in enumerate(range(self.current_fragment, self.max_fragments + 1)):
+        for i, fragment in enumerate(range(self.current_fragment, self.last_fragment + 1)):
             if not self.filler.running or (fillqueue and i == self.filler.queue.maxsize):
                 break
 
@@ -402,7 +404,7 @@ class HDSStreamIO(IOBase):
                 except queue.Full:
                     continue
 
-        self.bootstrap_changed = self.current_fragment != self.max_fragments
+        self.bootstrap_changed = self.current_fragment != self.last_fragment
 
     def _fetch_bootstrap(self, url):
         res = urlget(url, exception=IOError)
@@ -410,36 +412,40 @@ class HDSStreamIO(IOBase):
 
     def _segment_from_fragment(self, fragment):
         table = self.segmentruntable.payload.segment_run_entry_table
-        segment = 1
 
-        # For some reason servers seem to lie about the amount of fragments
-        # per segment when there is only 1 segment run, so it's probably best
-        # to only depend on that when there is multiple segment runs available
-        # and return 1 otherwise.
-        if len(table) > 1:
-            prev_end = None
+        for segment, start, end in self._iterate_segments(table):
+            if fragment >= start and fragment <= end:
+                break
+        else:
+            segment = 1
+
+        return segment
+
+    def _iterate_segments(self, table):
+        # If the first segment in the table starts at the beginning we can go from there,
+        # otherwise we start from the end and use the total fragment count to figure
+        # out where the last segment ends.
+
+        if table[0].first_segment == 1:
+            prev_frag = self.first_fragment - 1
 
             for segmentrun in table:
-                if prev_end is None:
-                    end = (segmentrun.first_segment) * segmentrun.fragments_per_segment
-                    start = (end - segmentrun.fragments_per_segment) + 1
-                else:
-                    start = prev_end + 1
-                    end = (start + segmentrun.fragments_per_segment) - 1
+                start = prev_frag + 1
+                end = prev_frag + segmentrun.fragments_per_segment
 
-                if fragment >= start:
-                    segment = segmentrun.first_segment
+                yield segmentrun.first_segment, start, end
 
-                    # Calculate the correct segment offset incase there is a gap
-                    # in the segment run table.
-                    if fragment > end:
-                        distance = fragment - end
-                        offset = ceil(float(distance) / float(segmentrun.fragments_per_segment))
-                        segment += offset
+                prev_frag = end
+        else:
+            prev_frag = self.last_fragment + 1
 
-                prev_end = end
+            for segmentrun in reversed(table):
+                start = prev_frag - segmentrun.fragments_per_segment
+                end = prev_frag - 1
 
-        return int(segment)
+                yield segmentrun.first_segment, start, end
+
+                prev_frag = start
 
     def _debug_fragment_table(self):
         fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
@@ -449,16 +455,8 @@ class HDSStreamIO(IOBase):
                   fragmentrun.fragment_duration, fragmentrun.discontinuity_indicator)
 
     def _fragment_count(self):
-        segmentruntable = self.segmentruntable.payload.segment_run_entry_table
-
-        if len(segmentruntable) > 1:
-            return self._fragment_count_from_segment_table()
-        else:
-            return self._fragment_count_from_fragment_table()
-
-    def _fragment_count_from_fragment_table(self):
-        last_valid_fragmentrun = None
         table = self.fragmentruntable.payload.fragment_run_entry_table
+        first_fragment, end_fragment = None, None
 
         for i, fragmentrun in enumerate(table):
             if fragmentrun.discontinuity_indicator is not None:
@@ -467,28 +465,18 @@ class HDSStreamIO(IOBase):
                 elif fragmentrun.discontinuity_indicator > 0:
                     continue
 
-            last_valid_fragmentrun = fragmentrun
+            if first_fragment is None:
+                first_fragment = fragmentrun.first_fragment
 
-        if last_valid_fragmentrun:
-            return last_valid_fragmentrun.first_fragment
-        else:
-            return 0
+            end_fragment = fragmentrun.first_fragment
 
-    def _fragment_count_from_segment_table(self):
-        last_frag = None
-        table = self.segmentruntable.payload.segment_run_entry_table
+        if first_fragment is None:
+            first_fragment = 1
 
-        for segmentrun in table:
-            if last_frag is None:
-                end = (segmentrun.first_segment) * segmentrun.fragments_per_segment
-                start = (end - segmentrun.fragments_per_segment) + 1
-            else:
-                start = last_frag + 1
-                end = (start + segmentrun.fragments_per_segment) - 1
+        if end_fragment is None:
+            end_fragment = 1
 
-            last_frag = end
-
-        return last_frag
+        return first_fragment, end_fragment
 
     def _fragment_duration(self, fragment):
         fragment_duration = 0
@@ -497,13 +485,13 @@ class HDSStreamIO(IOBase):
 
         for i, fragmentrun in enumerate(table):
             if fragmentrun.discontinuity_indicator is not None:
-                self.invalid_fragments[fragmentrun.first_fragment] = True
+                self.invalid_fragments.add(fragmentrun.first_fragment)
 
                 # Check for the last fragment of the stream
                 if fragmentrun.discontinuity_indicator == 0:
                     if i > 0:
                         prev = table[i-1]
-                        self.last_fragment = prev.first_fragment
+                        self.end_fragment = prev.first_fragment
 
                     break
                 elif fragmentrun.discontinuity_indicator > 0:
