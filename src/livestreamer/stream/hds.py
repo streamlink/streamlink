@@ -1,3 +1,5 @@
+from __future__ import division
+
 import base64
 import re
 import requests
@@ -218,7 +220,7 @@ class HDSStreamIO(IOBase):
                  timeout=60, rsession=None):
 
         self.buffer = None
-        self.buffer_time = float(session.options.get("hds-live-edge"))
+        self.buffer_time = session.options.get("hds-live-edge")
         self.buffer_fragments = int(session.options.get("hds-fragment-buffer"))
         self.baseurl = baseurl
         self.bootstrap = bootstrap
@@ -335,7 +337,7 @@ class HDSStreamIO(IOBase):
         self.profile = bootstrap.payload.profile
         self.timestamp = bootstrap.payload.current_media_time
         self.identifier = bootstrap.payload.movie_identifier
-        self.time_scale = float(bootstrap.payload.time_scale)
+        self.time_scale = bootstrap.payload.time_scale
         self.segmentruntable = bootstrap.payload.segment_run_table_entries[0]
         self.fragmentruntable = bootstrap.payload.fragment_run_table_entries[0]
 
@@ -469,6 +471,11 @@ class HDSStreamIO(IOBase):
                 first_fragment = fragmentrun.first_fragment
 
             end_fragment = fragmentrun.first_fragment
+            fragment_duration = fragmentrun.first_fragment_timestamp + fragmentrun.fragment_duration
+
+            if self.timestamp > fragment_duration:
+                offset = (self.timestamp - fragment_duration) / fragmentrun.fragment_duration
+                end_fragment += int(offset)
 
         if first_fragment is None:
             first_fragment = 1
@@ -481,7 +488,7 @@ class HDSStreamIO(IOBase):
     def _fragment_duration(self, fragment):
         fragment_duration = 0
         table = self.fragmentruntable.payload.fragment_run_entry_table
-        time_scale = float(self.fragmentruntable.payload.time_scale)
+        time_scale = self.fragmentruntable.payload.time_scale
 
         for i, fragmentrun in enumerate(table):
             if fragmentrun.discontinuity_indicator is not None:
