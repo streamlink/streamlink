@@ -249,13 +249,7 @@ class HDSStreamIO(IOBase):
         self.invalid_fragments = set()
 
         self.buffer = RingBuffer()
-
-        flvheader = Header(has_video=True, has_audio=True)
-        self.buffer.write(flvheader.serialize())
-
-        if self.metadata:
-            tag = Tag(TAG_TYPE_SCRIPT, timestamp=0, data=self.metadata)
-            self.buffer.write(tag.serialize())
+        self.header_written = False
 
         self.filler = HDSStreamFiller(self)
         self.filler.start()
@@ -314,6 +308,21 @@ class HDSStreamIO(IOBase):
                                       str(err))
                 else:
                     raise StreamError(str(err))
+
+        if not self.header_written:
+            flvheader = Header(has_video=True, has_audio=True)
+            self.buffer.write(flvheader.serialize())
+
+            if self.metadata:
+                # Remove duration from metadata when it's a livestream
+                # since it will just confuse players anyway.
+                if self.live and "duration" in self.metadata.value:
+                    del self.metadata.value["duration"]
+
+                tag = Tag(TAG_TYPE_SCRIPT, timestamp=0, data=self.metadata)
+                self.buffer.write(tag.serialize())
+
+            self.header_written = True
 
         if self.bootstrap_changed:
             self._queue_fragments(fillqueue)
