@@ -26,9 +26,9 @@ from livestreamer.compat import str, bytes, urlparse, urljoin, unquote
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
-from livestreamer.stream import HDSStream, HTTPStream
+from livestreamer.stream import HDSStream, HTTPStream, RTMPStream
 from livestreamer.utils import (urlget, urlopen, parse_json, parse_xml,
-                                parse_qsd, get_node_text)
+                                res_xml, parse_qsd, get_node_text)
 
 import hashlib
 import json
@@ -96,6 +96,11 @@ class GomTV(Plugin):
 
             try:
                 streams.update(player.get_alt_live_streams())
+            except NoStreamsError:
+                pass
+
+            try:
+                streams.update(player.get_limelight_live_streams())
             except NoStreamsError:
                 pass
 
@@ -176,6 +181,8 @@ class GomTV3(GomTV):
     GOXVODURL = BaseURL + "/gox_vod_sfile.cgi"
     GetUserIPURL = "http://www.gomtv.net/webPlayer/getIP.gom"
     GetStreamURL = "http://www.gomtv.net/live/ajaxGetUrl.gom"
+    GetLimelightStreamURL = "http://www.gomtv.net/live/ajaxGetLimelight.gom"
+    LimelightSOAPURL = "http://production.ps.delve.cust.lldns.net/PlaylistService"
 
     VODQualityLevels = {
         65: "ehq",
@@ -334,6 +341,41 @@ class GomTV3(GomTV):
 
         return streams
 
+    def get_limelight_live_streams(self):
+        res = self._get_live_page(self.res)
+
+        match = re.search('jQuery.post\("/live/ajaxGetLimelight.gom", ({.+?}),',
+                          res.text)
+
+        if not match:
+            raise NoStreamsError(self.url)
+
+        ajaxparams = match.group(1)
+        ajaxparams = dict(re.findall("(\w+):(\d+)", ajaxparams))
+
+        levels = re.findall("setFlashLevel\((\d+)\);", res.text)
+        streams = {}
+
+        for level in levels:
+            params = ajaxparams.copy()
+            params["level"] = level
+
+            res = urlopen(self.GetLimelightStreamURL, data=params, session=self.rsession)
+            url = unquote(res.text)
+
+            if url.startswith("http"):
+                continue
+
+            try:
+                playlist_entries = self._limelight_soap_playlist_items(url)
+                streams.update(playlist_entries)
+            except PluginError as err:
+                self.logger.warning("Unable to access Limelight playlist: {0}", err)
+                continue
+
+        return streams
+
+
     def _get_user_ip(self):
         res = urlget(self.GetUserIPURL)
 
@@ -399,6 +441,52 @@ class GomTV3(GomTV):
         res = str(res, "ascii").strip().split(",")
 
         return res[-1]
+
+    def _limelight_soap_playlist_items(self, channelid):
+        payload = """<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                                         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                       <SOAP-ENV:Body>
+                         <tns:getPlaylistWithNItemsByChannelId xmlns:tns="http://service.data.media.pluggd.com">
+                           <tns:in0>{0}</tns:in0>
+                           <tns:in1>0</tns:in1>
+                           <tns:in2>7</tns:in2>
+                         </tns:getPlaylistWithNItemsByChannelId>
+                       </SOAP-ENV:Body>
+                     </SOAP-ENV:Envelope>""".format(channelid)
+
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+            "Referer": "http://assets.delvenetworks.com/player/loader.swf",
+            "x-page-url": self.url
+        }
+
+        res = urlopen(self.LimelightSOAPURL, data=payload, headers=headers)
+        dom = res_xml(res)
+
+        streams = {}
+        for item in dom.getElementsByTagName("PlaylistItem"):
+            for stream in dom.getElementsByTagName("Stream"):
+                for url in stream.getElementsByTagName("url"):
+                    url = get_node_text(url)
+                    break
+                else:
+                    continue
+
+                for height in stream.getElementsByTagName("videoHeightInPixels"):
+                    height = get_node_text(height)
+                    break
+                else:
+                    continue
+
+                streamname = "{0}p".format(height)
+                parsed = urlparse(url)
+
+                if parsed.scheme.startswith("rtmp"):
+                    params = dict(rtmp=url, live=True)
+                    streams[streamname] = RTMPStream(self.session, params)
+
+        return streams
 
 
 class GOXFile(object):
