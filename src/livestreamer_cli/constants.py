@@ -3,6 +3,7 @@ import sys
 
 from .compat import is_win32
 
+DEFAULT_PLAYER = "vlc"
 
 if "darwin" in sys.platform:
     DEFAULT_PLAYER = "/Applications/VLC.app/Contents/MacOS/VLC"
@@ -18,19 +19,19 @@ elif "win32" in sys.platform:
             if os.path.exists(path):
                 DEFAULT_PLAYER = '"{0}"'.format(path)
                 break
-else:
-    DEFAULT_PLAYER = "vlc"
-
 
 if is_win32:
-    RCFILE = os.path.join(os.environ["APPDATA"], "livestreamer", "livestreamerrc")
+    CONFIG_FILE = os.path.join(os.environ["APPDATA"], "livestreamer", "livestreamerrc")
+    PLUGINS_DIR = os.path.join(os.environ["APPDATA"], "livestreamer", "plugins")
 else:
-	XDGCONFIGHOME=os.environ.get('XDG_CONFIG_HOME')
-	if not XDGCONFIGHOME:
-		XDGCONFIGHOME="~/.config"
-	RCFILE = os.path.expanduser(XDGCONFIGHOME + "/livestreamer/config")
-	if not os.path.isfile(RCFILE):
-		RCFILE = os.path.expanduser("~/.livestreamerrc")
+    XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME",
+                                     "~/.config")
+
+    CONFIG_FILE = os.path.expanduser(XDG_CONFIG_HOME + "/livestreamer/config")
+    PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/livestreamer/plugins")
+
+    if not os.path.isfile(CONFIG_FILE):
+        CONFIG_FILE = os.path.expanduser("~/.livestreamerrc")
 
 
 EXAMPLE_USAGE = """
@@ -46,4 +47,4 @@ Stream now playbacks in player (default is {0}).
 
 STREAM_SYNONYMS = ["best", "worst"]
 
-__all__ = ["DEFAULT_PLAYER", "EXAMPLE_USAGE", "RCFILE", "STREAM_SYNONYMS"]
+__all__ = ["DEFAULT_PLAYER", "EXAMPLE_USAGE", "CONFIG_FILE", "PLUGINS_DIR", "STREAM_SYNONYMS"]

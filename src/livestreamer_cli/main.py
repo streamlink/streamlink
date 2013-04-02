@@ -5,7 +5,7 @@ import sys
 from .argparser import parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
-from .constants import RCFILE, STREAM_SYNONYMS
+from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, ignored
 
@@ -368,8 +368,8 @@ def main():
     arglist = sys.argv[1:]
 
     # Load additional arguments from livestreamerrc
-    if os.path.exists(RCFILE):
-        arglist.insert(0, "@" + RCFILE)
+    if os.path.exists(CONFIG_FILE):
+        arglist.insert(0, "@" + CONFIG_FILE)
 
     args = parser.parse_args(arglist)
 
@@ -380,6 +380,9 @@ def main():
 
     if args.json:
         console.json = True
+
+    if os.path.isdir(PLUGINS_DIR):
+        load_plugins(PLUGINS_DIR)
 
     if args.plugin_dirs:
         load_plugins(args.plugin_dirs)
