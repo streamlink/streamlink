@@ -25,7 +25,12 @@ else:
 if is_win32:
     RCFILE = os.path.join(os.environ["APPDATA"], "livestreamer", "livestreamerrc")
 else:
-    RCFILE = os.path.expanduser("~/.livestreamerrc")
+	XDGCONFIGHOME=os.environ.get('XDG_CONFIG_HOME')
+	if not XDGCONFIGHOME:
+		XDGCONFIGHOME="~/.config"
+	RCFILE = os.path.expanduser(XDGCONFIGHOME + "/livestreamer/config")
+	if not os.path.isfile(RCFILE):
+		RCFILE = os.path.expanduser("~/.livestreamerrc")
 
 
 EXAMPLE_USAGE = """

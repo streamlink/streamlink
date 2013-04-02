@@ -174,6 +174,7 @@ is capable of reading arguments from a file instead, a sort of configuration fil
 Livestreamer will look for this file in different locations depending on your platform:
 
 **Unix-like OSs**
+  ``~/.config/livestreamer/config``
   ``~/.livestreamerrc``
 
 **Windows**
