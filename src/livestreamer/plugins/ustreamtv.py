@@ -1,5 +1,5 @@
-from livestreamer.compat import str, bytes, urlparse
-from livestreamer.packages.flashmedia import AMF0Packet, AMFError
+from livestreamer.compat import str, urlparse
+from livestreamer.packages.flashmedia import AMFPacket, AMFError
 from livestreamer.plugin import Plugin
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.stream import HLSStream, RTMPStream
@@ -46,7 +46,7 @@ class UStreamTV(Plugin):
         res = urlget(self.AMFURL.format(channelid))
 
         try:
-            packet = AMF0Packet.deserialize(BytesIO(res.content))
+            packet = AMFPacket.deserialize(BytesIO(res.content))
         except (IOError, AMFError) as err:
             raise PluginError(("Failed to parse AMF packet: {0}").format(str(err)))
 

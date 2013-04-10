@@ -1,8 +1,9 @@
-from .compat import *
+from .compat import OrderedDict, is_py2, str, bytes
 from .util import isstring, pack_bytes_into
 
 from collections import namedtuple
 from struct import Struct, error as struct_error
+from inspect import getargspec
 
 (SCRIPT_DATA_TYPE_NUMBER, SCRIPT_DATA_TYPE_BOOLEAN,
  SCRIPT_DATA_TYPE_STRING, SCRIPT_DATA_TYPE_OBJECT,
@@ -11,6 +12,22 @@ from struct import Struct, error as struct_error
  SCRIPT_DATA_TYPE_ECMAARRAY, SCRIPT_DATA_TYPE_OBJECTEND,
  SCRIPT_DATA_TYPE_STRICTARRAY, SCRIPT_DATA_TYPE_DATE,
  SCRIPT_DATA_TYPE_LONGSTRING) = range(13)
+
+SCRIPT_DATA_TYPE_AMF3 = 0x11
+
+(AMF3_TYPE_UNDEFINED, AMF3_TYPE_NULL, AMF3_TYPE_FALSE, AMF3_TYPE_TRUE,
+ AMF3_TYPE_INTEGER, AMF3_TYPE_DOUBLE, AMF3_TYPE_STRING, AMF3_TYPE_XML_DOC,
+ AMF3_TYPE_DATE, AMF3_TYPE_ARRAY, AMF3_TYPE_OBJECT, AMF3_TYPE_XML,
+ AMF3_TYPE_BYTE_ARRAY, AMF3_TYPE_VECTOR_INT, AMF3_TYPE_VECTOR_UINT,
+ AMF3_TYPE_VECTOR_DOUBLE, AMF3_TYPE_VECTOR_OBJECT, AMF3_TYPE_DICT) = range(0x12)
+
+AMF3_EMPTY_STRING = 0x01
+AMF3_DYNAMIC_OBJECT = 0x0b
+AMF3_CLOSE_DYNAMIC_OBJECT = 0x01
+AMF3_CLOSE_DYNAMIC_ARRAY = 0x01
+AMF3_MIN_INTEGER = -268435456
+AMF3_MAX_INTEGER = 268435455
+
 
 class PrimitiveType(Struct):
     def __call__(self, *args):
@@ -221,7 +238,7 @@ class FixedPoint(PrimitiveType):
 
         return (val,)
 
-    def unpack(self, buf, offset):
+    def unpack_from(self, buf, offset):
         val = PrimitiveType.unpack_from(self, buf, offset)[0]
         val /= self.divider
 
@@ -246,8 +263,8 @@ class PaddedBytes(PrimitiveType):
         return rval
 
     def pack_into(self, buf, offset, val):
-        offset = pack_bytes_into(buf, offset,
-                                 bytes(val[:self.size], "ascii"))
+        rval = bytes(val[:self.size], "ascii")
+        offset = pack_bytes_into(buf, offset, rval)
 
         if len(rval) < self.size:
             paddinglen = self.size - len(rval)
@@ -259,6 +276,7 @@ class PaddedBytes(PrimitiveType):
     def unpack_from(self, buf, offset):
         data = buf[offset:offset + self.padded_size]
         return (str(data.rstrip(self.padding), "ascii"),)
+
 
 """ 8-bit integer """
 
@@ -356,7 +374,7 @@ class U3264(DynamicType):
             return U32BE.read(fd)
 
     @classmethod
-    def unpack_from(cls, buf, offset):
+    def unpack_from(cls, buf, offset, version):
         if version == 1:
             prim = U64BE
         else:
@@ -573,14 +591,14 @@ class ScriptDataECMAArray(ScriptDataObject):
 
     @classmethod
     def read(cls, fd):
-        length = U32BE.read(fd)
+        U32BE.read(fd) # Length
         val = ScriptDataObject.read(fd)
 
         return cls(val)
 
     @classmethod
     def unpack_from(cls, buf, offset):
-        length = U32BE.unpack_from(buf, offset)
+        U32BE.unpack_from(buf, offset) # Length
         offset += U32BE.size
 
         val, offset = ScriptDataObject.unpack_from(buf, offset)
@@ -699,6 +717,10 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             packer = cls.__packer__
             size += packer.size
 
+        elif isinstance(val, AMF3ObjectBase):
+            size += U8.size
+            size += AMF3Value.size(val)
+
         return size
 
     @classmethod
@@ -739,6 +761,10 @@ class ScriptDataValue(DynamicType, ScriptDataType):
 
             rval += U8(cls.__identifier__)
             rval += packer.pack(val)
+
+        elif isinstance(val, AMF3ObjectBase):
+            rval += U8(SCRIPT_DATA_TYPE_AMF3)
+            rval += AMF3Value.pack(val)
 
         else:
             raise ValueError("Unable to pack value of type {0}".format(type(val)))
@@ -801,10 +827,16 @@ class ScriptDataValue(DynamicType, ScriptDataType):
         return offset
 
     @classmethod
-    def read(cls, fd):
-        type_ = U8.read(fd)
+    def read(cls, fd, marker=None):
+        if marker is None:
+            type_ = U8.read(fd)
+        else:
+            type_ = marker
 
-        if type_ in ScriptDataValue.Readers:
+        if type_ == SCRIPT_DATA_TYPE_AMF3:
+            return AMF3Value.read(fd)
+
+        elif type_ in ScriptDataValue.Readers:
             return ScriptDataValue.Readers[type_].read(fd)
 
         elif type_ == SCRIPT_DATA_TYPE_OBJECTEND:
@@ -842,7 +874,731 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             return (None, offset)
 
         else:
-            raise IOError("Unhandled script data type: {0}".format(type_))
+            raise IOError("Unhandled script data type: {0}".format(hex(type_)))
 
 
+class AMF0Value(ScriptDataValue):
+    pass
+
+class AMF0String(ScriptDataString):
+    pass
+
+AMF0Number = ScriptDataNumber
+
+AMF3Double = ScriptDataNumber
+
+class AMF3Type(ScriptDataType):
+    pass
+
+class AMF3Integer(DynamicType, AMF3Type):
+    __identifier__ = AMF3_TYPE_INTEGER
+
+    @classmethod
+    def size(cls, val):
+        val &= 0x1fffffff
+
+        if val < 0x80:
+            return 1
+        elif val < 0x4000:
+            return 2
+        elif val < 0x200000:
+            return 3
+        elif val < 0x40000000:
+            return 4
+
+    @classmethod
+    def pack(cls, val):
+        size = cls.size(val)
+        buf = bytearray(size)
+        offset = cls.pack_into(buf, 0, val)
+
+        return bytes(buf[:offset])
+
+    @classmethod
+    def pack_into(cls, buf, offset, val):
+        val &= 0x1fffffff
+
+        if val < 0x80:
+            buf[offset] = val
+            offset += 1
+        elif val < 0x4000:
+            buf[offset] = (val >> 7 & 0x7f) | 0x80
+            buf[offset+1] = val & 0x7f
+            offset += 2
+        elif val < 0x200000:
+            buf[offset] = (val >> 14 & 0x7f) | 0x80
+            buf[offset+1] = (val >> 7 & 0x7f) | 0x80
+            buf[offset+2] = val & 0x7f
+            offset += 3
+        elif val < 0x40000000:
+            buf[offset] = (val >> 22 & 0x7f) | 0x80
+            buf[offset+1] = (val >> 15 & 0x7f) | 0x80
+            buf[offset+2] = (val >> 8 & 0x7f) | 0x80
+            buf[offset+3] = val & 0xff
+            offset += 4
+
+        return offset
+
+    @classmethod
+    def read(cls, fd):
+        rval, byte_count = 0, 0
+        byte = U8.read(fd)
+
+        while (byte & 0x80) != 0 and byte_count < 3:
+            rval <<= 7
+            rval |= byte & 0x7f
+
+            byte = U8.read(fd)
+            byte_count += 1
+
+        if byte_count < 3:
+            rval <<= 7
+            rval |= byte & 0x7F
+        else:
+            rval <<= 8
+            rval |= byte & 0xff
+
+        if (rval & 0x10000000) != 0:
+            rval -= 0x20000000
+
+        return rval
+
+
+class AMF3String(String):
+    @classmethod
+    def size(cls, val, cache):
+        data = String.pack(val, "utf8", "ignore")
+        size = len(data)
+
+        if size == 0:
+            return U8.size
+        elif val in cache:
+            index = cache.index(val)
+            return AMF3Integer.size(index << 1)
+        else:
+            cache.append(val)
+            return AMF3Integer.size(size << 1 | 1) + size
+
+    @classmethod
+    def pack(cls, val, cache):
+        data = String.pack(val, "utf8", "ignore")
+        size = len(data)
+
+        if size == 0:
+            return U8(AMF3_EMPTY_STRING)
+        elif val in cache:
+            index = cache.index(val)
+            return AMF3Integer(index << 1)
+        else:
+            cache.append(val)
+
+            chunks = []
+            chunks.append(AMF3Integer(size << 1 | 1))
+            chunks.append(data)
+
+            return b"".join(chunks)
+
+    @classmethod
+    def read(cls, fd, cache):
+        header = AMF3Integer.read(fd)
+
+        if (header & 1) == 0:
+            index = header >> 1
+
+            return cache[index]
+        else:
+            size = header >> 1
+            data = fd.read(size)
+            rval = data.decode("utf8", "ignore")
+
+            if len(data) > 0:
+                cache.append(rval)
+
+            return rval
+
+
+class AMF3ObjectBase(object):
+    __dynamic__ = False
+    __externalizable__ = False
+    __members__ = []
+
+    _registry = {}
+
+    def __init__(self, *args, **kwargs):
+        for key, value in kwargs.items():
+            setattr(self, key, value)
+
+    def __repr__(self):
+        return "<{0} {1!r}".format(self.__class__.__name__, self.__dict__)
+
+    @classmethod
+    def register(cls, name):
+        def deco(amfcls):
+            amfcls.__name__ = name
+
+            if not amfcls.__members__:
+                amfcls.__members__ = getargspec(amfcls.__init__).args[1:]
+
+            cls._registry[name] = amfcls
+
+            return amfcls
+
+        return deco
+
+    @classmethod
+    def lookup(cls, name):
+        return cls._registry.get(name, None)
+
+    @classmethod
+    def create(cls, name, externalizable, dynamic, members):
+        if is_py2:
+            name = name.encode("utf8")
+
+        amfcls = type(name, (cls,), {})
+        amfcls.__externalizable__ = externalizable
+        amfcls.__members__ = members
+
+        return amfcls
+
+
+class AMF3Object(OrderedDict, AMF3ObjectBase):
+    __dynamic__ = True
+
+
+class AMF3ObjectPacker(DynamicType, AMF3Type):
+    __identifier__ = AMF3_TYPE_OBJECT
+
+    @classmethod
+    def size(cls, val, str_cache, object_cache, traits_cache):
+        if val in object_cache:
+            index = object_cache.index(val)
+            return AMF3Integer.size(index << 1)
+        else:
+            object_cache.append(val)
+            size = 0
+            traits = type(val)
+
+            if traits in traits_cache:
+                index = traits_cache.index(traits)
+                size += AMF3Integer.size(index << 2 | 0x01)
+            else:
+                header = 0x03
+
+                if traits.__dynamic__:
+                    header |= 0x02 << 2
+
+                if traits.__externalizable__:
+                    header |= 0x01 << 2
+
+                header |= (len(traits.__members__)) << 4
+                size += AMF3Integer.size(header)
+
+                if isinstance(val, AMF3Object):
+                    size += U8.size
+                else:
+                    size += AMF3String.size(traits.__name__, cache=str_cache)
+                    traits_cache.append(traits)
+
+                for member in traits.__members__:
+                    size += AMF3String.size(member, cache=str_cache)
+
+
+            for member in traits.__members__:
+                value = getattr(val, member)
+                size += AMF3Value.size(value, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+
+            if traits.__dynamic__:
+                if isinstance(val, AMF3Object):
+                    iterator = val.items()
+                else:
+                    iterator = val.__dict__.items()
+
+                for key, value in iterator:
+                    if key in traits.__members__:
+                        continue
+
+                    size += AMF3String.size(key, cache=str_cache)
+                    size += AMF3Value.size(value, str_cache=str_cache,
+                                           object_cache=object_cache,
+                                           traits_cache=traits_cache)
+
+                size += U8.size
+
+            return size
+
+    @classmethod
+    def pack(cls, val, str_cache, object_cache, traits_cache):
+        chunks = []
+
+        if val in object_cache:
+            index = object_cache.index(val)
+            return AMF3Integer(index << 1)
+        else:
+            object_cache.append(val)
+            chunks = []
+            traits = type(val)
+
+            if traits in traits_cache:
+                index = traits_cache.index(traits)
+                chunks.append(AMF3Integer(index << 2 | 0x01))
+            else:
+                header = 0x03
+
+                if traits.__dynamic__:
+                    header |= 0x02 << 2
+
+                if traits.__externalizable__:
+                    header |= 0x01 << 2
+
+                header |= (len(traits.__members__)) << 4
+                chunks.append(AMF3Integer(header))
+
+                if isinstance(val, AMF3Object):
+                    chunks.append(U8(AMF3_EMPTY_STRING))
+                else:
+                    chunks.append(AMF3String(traits.__name__, cache=str_cache))
+                    traits_cache.append(traits)
+
+                for member in traits.__members__:
+                    chunks.append(AMF3String(member, cache=str_cache))
+
+
+            for member in traits.__members__:
+                value = getattr(val, member)
+                value = AMF3Value.pack(value, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+                chunks.append(value)
+
+
+            if traits.__dynamic__:
+                if isinstance(val, AMF3Object):
+                    iterator = val.items()
+                else:
+                    iterator = val.__dict__.items()
+
+                for key, value in iterator:
+                    if key in traits.__members__:
+                        continue
+
+                    key = AMF3String(key, cache=str_cache)
+                    value = AMF3Value.pack(value, str_cache=str_cache,
+                                           object_cache=object_cache,
+                                           traits_cache=traits_cache)
+
+                    chunks.append(key)
+                    chunks.append(value)
+
+                # Empty string is end of dynamic values
+                chunks.append(U8(AMF3_CLOSE_DYNAMIC_ARRAY))
+
+            return b"".join(chunks)
+
+    @classmethod
+    def read(cls, fd, str_cache, object_cache, traits_cache):
+        header = AMF3Integer.read(fd)
+        obj = None
+
+        if (header & 1) == 0:
+            index = header >> 1
+            obj = object_cache[index]
+        else:
+            header >>= 1
+
+            if (header & 1) == 0:
+                index = header >> 1
+                traits = traits_cache[index]
+            else:
+                externalizable = (header & 2) != 0
+                dynamic = (header & 4) != 0
+                members_len = header >> 3
+                class_name = AMF3String.read(fd, cache=str_cache)
+                members = []
+
+                for i in range(members_len):
+                    member_name = AMF3String.read(fd, cache=str_cache)
+                    members.append(member_name)
+
+                if len(class_name) == 0:
+                    traits = AMF3Object
+                elif AMF3ObjectBase.lookup(class_name):
+                    traits = AMF3ObjectBase.lookup(class_name)
+                    traits.__members__ = members
+                    traits.__dynamic__ = dynamic
+                    traits_cache.append(traits)
+                else:
+                    traits = AMF3ObjectBase.create(class_name, externalizable,
+                                                   dynamic, members)
+                    traits_cache.append(traits)
+
+            values = OrderedDict()
+
+            for member in traits.__members__:
+                value = AMF3Value.read(fd, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+
+                values[member] = value
+
+            if traits.__dynamic__:
+                key = AMF3String.read(fd, cache=str_cache)
+                while len(key) > 0:
+                    value = AMF3Value.read(fd, str_cache=str_cache,
+                                           object_cache=object_cache,
+                                           traits_cache=traits_cache)
+                    values[key] = value
+                    key = AMF3String.read(fd, cache=str_cache)
+
+            if traits == AMF3Object:
+                obj = traits(values)
+            else:
+                obj = traits(**values)
+
+        return obj
+
+class AMF3Array(OrderedDict):
+    def __init__(self, *args, **kwargs):
+        if args and isinstance(args[0], list):
+            OrderedDict.__init__(self, **kwargs)
+
+            for i, value in enumerate(args[0]):
+                self[i] = value
+        else:
+            OrderedDict.__init__(self, *args, **kwargs)
+
+    def dense_keys(self):
+        dense_keys = []
+
+        for i in range(len(self)):
+            if i in self:
+                dense_keys.append(i)
+
+        return dense_keys
+
+    def dense_values(self):
+        for key in self.dense_keys():
+            yield self[key]
+
+class AMF3ArrayPacker(DynamicType, AMF3Type):
+    __identifier__ = AMF3_TYPE_ARRAY
+
+    @classmethod
+    def size(cls, val, str_cache, object_cache, traits_cache):
+        if val in object_cache:
+            index = object_cache.index(val)
+            return AMF3Integer.size(index << 1)
+        else:
+            object_cache.append(val)
+            size = 0
+
+            if isinstance(val, AMF3Array):
+                dense_keys = val.dense_keys()
+                length = len(dense_keys)
+            else:
+                length = len(val)
+                dense_keys = list(range(length))
+
+            header = length << 1 | 1
+            size += AMF3Integer.size(header)
+
+            if isinstance(val, AMF3Array):
+                for key, value in val.items():
+                    if key in dense_keys:
+                        continue
+
+                    size += AMF3String.size(key, cache=str_cache)
+                    size += AMF3Value.size(value, str_cache=str_cache,
+                                           object_cache=object_cache,
+                                           traits_cache=traits_cache)
+
+            size += U8.size
+
+            for key in dense_keys:
+                value = val[key]
+                size += AMF3Value.size(value, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+
+            return size
+
+    @classmethod
+    def pack(cls, val, str_cache, object_cache, traits_cache):
+        if val in object_cache:
+            index = object_cache.index(val)
+            return AMF3Integer(index << 1)
+        else:
+            object_cache.append(val)
+            chunks = []
+
+            if isinstance(val, AMF3Array):
+                dense_keys = val.dense_keys()
+                length = len(dense_keys)
+            else:
+                length = len(val)
+                dense_keys = list(range(length))
+
+            header = length << 1 | 1
+            chunks.append(AMF3Integer(header))
+
+            if isinstance(val, AMF3Array):
+                for key, value in val.items():
+                    if key in dense_keys:
+                        continue
+
+                    chunks.append(AMF3String(key, cache=str_cache))
+
+                    value = AMF3Value.pack(value, str_cache=str_cache,
+                                           object_cache=object_cache,
+                                           traits_cache=traits_cache)
+                    chunks.append(value)
+
+            # Empty string is end of dynamic values
+            chunks.append(U8(AMF3_CLOSE_DYNAMIC_ARRAY))
+
+            for key in dense_keys:
+                value = val[key]
+                value = AMF3Value.pack(value, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+                chunks.append(value)
+
+            return b"".join(chunks)
+
+    @classmethod
+    def read(cls, fd, str_cache, object_cache, traits_cache):
+        header = AMF3Integer.read(fd)
+        obj = None
+
+        if (header & 1) == 0:
+            index = header >> 1
+            obj = object_cache[index]
+        else:
+            header >>= 1
+            obj = AMF3Array()
+            object_cache.append(obj)
+
+            key = AMF3String.read(fd, cache=str_cache)
+            while len(key) > 0:
+                value = AMF3Value.read(fd, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+                obj[key] = value
+                key = AMF3String.read(fd, cache=str_cache)
+
+            for i in range(header):
+                value = AMF3Value.read(fd, str_cache=str_cache,
+                                       object_cache=object_cache,
+                                       traits_cache=traits_cache)
+                obj[i] = value
+
+        return obj
+
+
+class AMF3Date(object):
+    def __init__(self, time):
+        self.time = time
+
+class AMF3DatePacker(DynamicType, AMF3Type):
+    __identifier__ = AMF3_TYPE_ARRAY
+
+    @classmethod
+    def size(cls, val, cache):
+        if val in cache:
+            index = cache.index(val)
+            return AMF3Integer.size(index << 1)
+        else:
+            cache.append(val)
+
+            return AMF3Double.size + U8.size
+
+    @classmethod
+    def pack(cls, val, cache):
+        if val in cache:
+            index = cache.index(val)
+            return AMF3Integer(index << 1)
+        else:
+            cache.append(val)
+            chunks = [U8(AMF3_TYPE_NULL),
+                      AMF3Double(val.time)]
+
+            return b"".join(chunks)
+
+    @classmethod
+    def read(cls, fd, cache):
+        header = AMF3Integer.read(fd)
+
+        if (header & 1) == 0:
+            index = header >> 1
+            return cache[index]
+        else:
+            time = AMF3Double.read(fd)
+            date = AMF3Date(time)
+            cache.append(date)
+
+            return date
+
+class AMF3Value(DynamicType):
+    PrimitiveReaders = {
+        AMF3_TYPE_DOUBLE: AMF3Double,
+    }
+
+    DynamicReaders = {
+        AMF3_TYPE_INTEGER: AMF3Integer,
+    }
+
+    Readers = PrimitiveReaders.copy()
+    Readers.update(DynamicReaders)
+
+    @classmethod
+    def size(cls, val, str_cache=None, object_cache=None, traits_cache=None):
+        if str_cache is None:
+            str_cache = []
+
+        if object_cache is None:
+            object_cache = []
+
+        if traits_cache is None:
+            traits_cache = []
+
+        size = U8.size
+
+        if isinstance(val, bool) and val in (False, True):
+            pass
+
+        elif val is None:
+            pass
+
+        elif isinstance(val, int):
+            if val < AMF3_MIN_INTEGER or val > AMF3_MAX_INTEGER:
+                size += AMF3Double.size
+            else:
+                size += AMF3Integer.size(val)
+
+        elif isinstance(val, float):
+            size += AMF3Double.size
+
+        elif isinstance(val, (AMF3Array, list)):
+            size += AMF3ArrayPacker.size(val, str_cache=str_cache,
+                                         object_cache=object_cache,
+                                         traits_cache=traits_cache)
+
+        elif isstring(val):
+            size += AMF3String.size(val, cache=str_cache)
+
+        elif isinstance(val, AMF3ObjectBase):
+            size += AMF3ObjectPacker.size(val, str_cache=str_cache,
+                                          object_cache=object_cache,
+                                          traits_cache=traits_cache)
+
+        elif isinstance(val, AMF3Date):
+            size += AMF3DatePacker.size(val, cache=object_cache)
+
+        else:
+            raise ValueError("Unable to pack value of type {0}".format(type(val)))
+
+        return size
+
+    @classmethod
+    def pack(cls, val, str_cache=None, object_cache=None, traits_cache=None):
+        if str_cache is None:
+            str_cache = []
+
+        if object_cache is None:
+            object_cache = []
+
+        if traits_cache is None:
+            traits_cache = []
+
+        chunks = []
+
+        if isinstance(val, bool):
+            if val is False:
+                chunks.append(U8(AMF3_TYPE_FALSE))
+            elif val is True:
+                chunks.append(U8(AMF3_TYPE_TRUE))
+
+        elif val is None:
+            chunks.append(U8(AMF3_TYPE_NULL))
+
+        elif isinstance(val, int):
+            if val < AMF3_MIN_INTEGER or val > AMF3_MAX_INTEGER:
+                chunks.append(U8(AMF3_TYPE_DOUBLE))
+                chunks.append(AMF3Double(val))
+            else:
+                chunks.append(U8(AMF3_TYPE_INTEGER))
+                chunks.append(AMF3Integer(val))
+
+        elif isinstance(val, float):
+            chunks.append(U8(AMF3_TYPE_DOUBLE))
+            chunks.append(AMF3Double(val))
+
+        elif isinstance(val, (AMF3Array, list)):
+            chunks.append(U8(AMF3_TYPE_ARRAY))
+            chunks.append(AMF3ArrayPacker.pack(val, str_cache=str_cache,
+                                              object_cache=object_cache,
+                                              traits_cache=traits_cache))
+
+        elif isstring(val):
+            chunks.append(U8(AMF3_TYPE_STRING))
+            chunks.append(AMF3String.pack(val, cache=str_cache))
+
+        elif isinstance(val, AMF3ObjectBase):
+            chunks.append(U8(AMF3_TYPE_OBJECT))
+            chunks.append(AMF3ObjectPacker.pack(val, str_cache=str_cache,
+                                                object_cache=object_cache,
+                                                traits_cache=traits_cache))
+
+        elif isinstance(val, AMF3Date):
+            chunks.append(U8(AMF3_TYPE_DATE))
+            chunks.append(AMF3DatePacker.pack(val, cache=object_cache))
+
+        else:
+            raise ValueError("Unable to pack value of type {0}".format(type(val)))
+
+        return b"".join(chunks)
+
+    @classmethod
+    def read(cls, fd, str_cache=None, object_cache=None, traits_cache=None):
+        type_ = U8.read(fd)
+
+        if str_cache is None:
+            str_cache = []
+
+        if object_cache is None:
+            object_cache = []
+
+        if traits_cache is None:
+            traits_cache = []
+
+        if type_ == AMF3_TYPE_UNDEFINED or type_ == AMF3_TYPE_NULL:
+            return None
+
+        elif type_ == AMF3_TYPE_FALSE:
+            return False
+
+        elif type_ == AMF3_TYPE_TRUE:
+            return True
+
+        elif type_ == AMF3_TYPE_STRING:
+            return AMF3String.read(fd, cache=str_cache)
+
+        elif type_ == AMF3_TYPE_ARRAY:
+            return AMF3ArrayPacker.read(fd, str_cache=str_cache,
+                                         object_cache=object_cache,
+                                         traits_cache=traits_cache)
+
+        elif type_ == AMF3_TYPE_OBJECT:
+            return AMF3ObjectPacker.read(fd, str_cache=str_cache, object_cache=object_cache,
+                                         traits_cache=traits_cache)
+
+        elif type_ == AMF3_TYPE_DATE:
+            return AMF3DatePacker.read(fd, cache=object_cache)
+
+        elif type_ in cls.Readers:
+            return cls.Readers[type_].read(fd)
+
+        else:
+            raise IOError("Unhandled AMF3 type: {0}".format(hex(type_)))
 
