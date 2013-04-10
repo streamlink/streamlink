@@ -448,7 +448,7 @@ class HDSStreamIO(IOBase):
 
                 prev_frag = end
         else:
-            prev_frag = self.last_fragment + 1
+            prev_frag = self.last_fragment + 2
 
             for segmentrun in reversed(table):
                 start = prev_frag - segmentrun.fragments_per_segment
