@@ -49,7 +49,9 @@ playeropt.add_argument("-p", "--player", metavar="player",
                        help="Command-line for player, default is '{0}'".format(DEFAULT_PLAYER),
                        default=DEFAULT_PLAYER)
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
-                       help="Hide all player console output")
+                       help="Hide all player console output. This option does nothing since version 1.4.3 since it is now the default behaviour")
+playeropt.add_argument("-v", "--verbose-player", action="store_true",
+                       help="Show all player console output")
 playeropt.add_argument("-n", "--fifo", action="store_true",
                        help="Play file using a named pipe instead of stdin (can help with incompatible media players)")
 

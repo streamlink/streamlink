@@ -69,7 +69,7 @@ def create_output(args):
         console.logger.info("Starting player: {0}", args.player)
 
         out = PlayerOutput(args.player, namedpipe=namedpipe,
-                           quiet=args.quiet_player)
+                           quiet=not args.verbose_player)
 
 
     return out
@@ -362,6 +362,12 @@ def set_options(args):
     # We don't want log output when we are printing JSON or a command-line.
     if not (args.json or args.cmdline or args.quiet):
         livestreamer.set_loglevel(args.loglevel)
+
+    if args.quiet_player is True:
+        console.logger.warning("The option --quiet-player is deprecated since version 1.4.3 "
+                               "as hiding player output is now the default.")
+
+
 
 
 def main():
