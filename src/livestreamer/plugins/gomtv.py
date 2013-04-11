@@ -313,12 +313,13 @@ class GomTV3(GomTV):
         ajaxparams = match.group(1)
         ajaxparams = dict(re.findall("(\w+):(\d+)", ajaxparams))
 
-        levels = re.findall("setFlashLevel\((\d+)\);", res.text)
+        levels = re.findall("setFlashLevel\((\d+)\);.+?<span class=\"qtype\">(\w+)</span>", res.text)
         streams = {}
 
-        for level in levels:
+        for level, quality in levels:
             params = ajaxparams.copy()
             params["level"] = level
+            quality = quality.lower()
 
             res = urlopen(self.GetStreamURL, data=params, session=self.rsession)
             url = unquote(res.text)
@@ -328,16 +329,11 @@ class GomTV3(GomTV):
 
             try:
                 s = HDSStream.parse_manifest(self.session, url)
-                streams.update(s)
+                if len(s) > 0:
+                    bitrate, stream = list(s.items())[0]
+                    streams[quality] = stream
             except IOError:
                 self.logger.warning("Unable to parse manifest")
-
-        # Hack to rename incorrect bitrate specified by GOM to something
-        # more sane.
-        for name, stream in streams.items():
-            if name == "1k":
-                streams["1000k"] = stream
-                del streams[name]
 
         return streams
 
