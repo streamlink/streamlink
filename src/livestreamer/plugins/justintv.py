@@ -3,7 +3,7 @@ from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import (urlget, swfverify, urlresolve, verifyjson,
+from livestreamer.utils import (urlget, urlopen, swfverify, urlresolve, verifyjson,
                                res_json, res_xml, get_node_text)
 
 from hashlib import sha1
@@ -146,8 +146,8 @@ class JustinTV(Plugin):
         url = self.HLSStreamTokenURL.format(self.channelname)
 
         try:
-            res = urlget(url, params=dict(type="any", connection="wifi"),
-                         exception=IOError)
+            res = urlget(url, params=dict(type="iphone", connection="wifi",
+                         allow_cdn="true"), exception=IOError)
         except IOError:
             self.logger.debug("HLS streams not available")
             return {}
@@ -166,11 +166,19 @@ class JustinTV(Plugin):
         url = self.HLSSPlaylistURL.format(self.channelname)
 
         try:
-            params = dict(token=fulltoken, hd="true")
+            params = dict(token=fulltoken, hd="true", allow_cdn="true")
             playlist = HLSStream.parse_variant_playlist(self.session, url,
                                                         params=params)
         except IOError as err:
-            raise PluginError(err)
+            if "404" in err:
+                raise PluginError(err)
+            else:
+                self.logger.debug("Requesting mobile transcode")
+
+                payload = dict(channel=self.channelname, type="iphone")
+                urlopen("http://usher.twitch.tv/stream/transcode_iphone.json", data=payload)
+
+                return {}
 
         return playlist
 
@@ -185,7 +193,12 @@ class JustinTV(Plugin):
         if RTMPStream.is_usable(self.session):
             try:
                 rtmpstreams = self._get_rtmp_streams()
-                streams.update(rtmpstreams)
+
+                for name, stream in rtmpstreams.items():
+                    if "iphone" in name:
+                        name = name.replace("iphone", "mobile_")
+
+                    streams[name] = stream
             except PluginError as err:
                 self.logger.error("Error when fetching RTMP stream info: {0}", str(err))
         else:
@@ -195,6 +208,12 @@ class JustinTV(Plugin):
             hlsstreams = self._get_hls_streams()
 
             for name, stream in hlsstreams.items():
+                if name in ("high", "low"):
+                    name = "mobile_{0}".format(name)
+
+                if "iphone" in name:
+                    name = name.replace("iphone", "mobile_")
+
                 if name in streams:
                     streams[name] = [streams[name], stream]
                 else:
