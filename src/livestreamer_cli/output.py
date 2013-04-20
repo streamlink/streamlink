@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+import time
 
 from .compat import is_win32, stdout
 from .utils import ignored
@@ -85,6 +86,14 @@ class PlayerOutput(Output):
         playercmd = "{0} {1}".format(self.cmd, filename)
         self.player = subprocess.Popen(playercmd, shell=True, stdin=self.stdin,
                                        stdout=self.stdout, stderr=self.stderr)
+
+        # Wait 0.5 seconds to see if program exited prematurely
+        time.sleep(0.5)
+        self.player.poll()
+        process_alive = self.player.returncode is None
+
+        if not process_alive:
+            raise IOError("Failed to execute player command: {0}".format(self.cmd))
 
         if self.namedpipe:
             self.namedpipe.open("wb")
