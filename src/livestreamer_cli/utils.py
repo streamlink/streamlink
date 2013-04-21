@@ -4,7 +4,7 @@ import tempfile
 
 from contextlib import contextmanager
 
-from .compat import is_win32, is_32bit
+from .compat import is_win32, is_py3
 
 if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref
@@ -35,10 +35,10 @@ class NamedPipe(object):
     def _create_named_pipe(self, path):
         bufsize = 8192
 
-        if is_32bit:
-            create_named_pipe = windll.kernel32.CreateNamedPipeA
-        else:
+        if is_py3:
             create_named_pipe = windll.kernel32.CreateNamedPipeW
+        else:
+            create_named_pipe = windll.kernel32.CreateNamedPipeA
 
         pipe = create_named_pipe(path, PIPE_ACCESS_OUTBOUND,
                                  PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
