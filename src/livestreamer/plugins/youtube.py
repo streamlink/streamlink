@@ -1,38 +1,38 @@
-from livestreamer.compat import str, bytes
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import HTTPStream, HLSStream
 from livestreamer.utils import urlget, verifyjson, parse_json, parse_qsd
 
 import re
-import json
 
 class Youtube(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return "youtube.com" in url
 
-    def _get_stream_info(self, url):
-        res = urlget(url)
-        data = res.text
-        config = None
-
+    def _find_config(self, data):
         match = re.search("'PLAYER_CONFIG': (.+)\n.+}\);", data)
         if match:
-            config = match.group(1)
+            return match.group(1)
 
         match = re.search("yt.playerConfig = (.+)\;\n", data)
         if match:
-            config = match.group(1)
+            return match.group(1)
 
         match = re.search("ytplayer.config = (.+);</script>", data)
         if match:
-            config = match.group(1)
+            return match.group(1)
 
         match = re.search("data-swf-config=\"(.+)\"", data)
         if match:
             config = match.group(1)
             config = config.replace("&amp;quot;", "\"")
+
+            return config
+
+    def _get_stream_info(self, url):
+        res = urlget(url)
+        config = self._find_config(res.text)
 
         if config:
             return parse_json(config, "config JSON")
