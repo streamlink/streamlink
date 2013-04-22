@@ -38,7 +38,7 @@ EXAMPLE_USAGE = """
 example usage:
 
 $ livestreamer twitch.tv/onemoregametv
-Found streams: 240p, 360p, 480p, 720p, iphonehigh, iphonelow (worst), live (best)
+Found streams: 240p, 360p, 480p, 720p, mobile_high, mobile_low (worst), 1080p+ (best)
 $ livestreamer twitch.tv/onemoregametv 720p
 
 Stream now playbacks in player (default is {0}).
