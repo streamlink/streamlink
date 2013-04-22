@@ -25,6 +25,15 @@ class Youtube(Plugin):
         if match:
             config = match.group(1)
 
+        match = re.search("ytplayer.config = (.+);</script>", data)
+        if match:
+            config = match.group(1)
+
+        match = re.search("data-swf-config=\"(.+)\"", data)
+        if match:
+            config = match.group(1)
+            config = config.replace("&amp;quot;", "\"")
+
         if config:
             return parse_json(config, "config JSON")
 
