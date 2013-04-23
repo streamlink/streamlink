@@ -271,6 +271,13 @@ class Command(object):
     def _format_arg(self, arg):
         if IS_PY3: arg = str(arg)
         else: arg = unicode(arg).encode("utf8")
+        if self._partial:
+            escaped = arg.replace('"', '\\"')
+            escaped = escaped.replace("$", "\$")
+            escaped = escaped.replace("`", "\`")
+
+            arg = '"{0}"'.format(escaped)
+
         return arg
 
     def _compile_args(self, args, kwargs):
@@ -319,7 +326,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         fn._partial_call_args.update(self._partial_call_args)
         fn._partial_call_args.update(pruned_call_args)
         fn._partial_baked_args.extend(self._partial_baked_args)
-        fn._partial_baked_args.extend(self._compile_args(args, kwargs))
+        fn._partial_baked_args.extend(fn._compile_args(args, kwargs))
         return fn
 
     def __str__(self):
