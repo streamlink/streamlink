@@ -1,17 +1,11 @@
 #!/usr/bin/env python
 
-from .compat import bytes, is_py2
+from .compat import bytes, is_py2, string_types
 
 import struct
 
-def isstring(val):
-    if is_py2:
-        return isinstance(val, (str, unicode))
-    else:
-        return isinstance(val, str)
-
 def byte(ordinal):
-    if isstring(ordinal):
+    if isinstance(ordinal, string_types):
         ordinal = ord(ordinal)
 
     return bytes((ordinal,))
@@ -98,7 +92,7 @@ def chunked_read(fd, length, chunk_size=8192, exception=IOError):
     return b"".join(chunks)
 
 
-__all__ = ["byte", "isstring", "flagproperty", "lang_to_iso639",
+__all__ = ["byte", "flagproperty", "lang_to_iso639",
            "iso639_to_lang", "pack_many_into", "pack_bytes_into",
            "unpack_many_from", "chunked_read"]
 

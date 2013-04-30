@@ -9,6 +9,8 @@ if is_py2:
     _str = str
     str = unicode
     range = xrange
+    string_types = (_str, unicode)
+    integer_types = (int, long)
 
     def bytes(b=None, enc="ascii"):
         if b is None:
@@ -22,6 +24,8 @@ elif is_py3:
     bytes = bytes
     str = str
     range = range
+    string_types = (str,)
+    integer_types = (int,)
 
 
 try:
