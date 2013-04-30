@@ -25,4 +25,9 @@ D: Various plugins
 
 N: Christopher Rosell
 G: github.com/chrippa
-D: Primary author of Livestreamer and most of it's plugins
+D: Primary author and maintainer of Livestreamer and most of it's plugins
+
+N: Daniel Wallace
+G: github.com/gtmanfred
+D: Added XDG_CONFIG_HOME support and maintainer of Arch Linux packages.
+

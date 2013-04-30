@@ -91,7 +91,7 @@ pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels, e.g. '_twitch_session_id=xxxxxx; persistent=xxxxx;'")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
-                       help="Specify GOMTV cookie to allow access to streams, e.g. 'SES_USERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'")
+                       help="Specify GOMTV cookie to allow access to streams, e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'")
 pluginopt.add_argument("--gomtv-username", metavar="username",
                        help="Specify GOMTV username to allow access to streams")
 pluginopt.add_argument("--gomtv-password", metavar="password",

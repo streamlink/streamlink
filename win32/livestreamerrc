@@ -11,8 +11,8 @@
 #player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" --file-caching=5000
 #player="C:\Program Files\VideoLAN\VLC\vlc.exe" --file-caching=5000
 
-# Hides console output from video player
-quiet-player
+# Show console output from video player
+# verbose-player
 
 # Full path to rtmpdump (ony needed for RTMP based streams)
 rtmpdump=@INSTDIR@\rtmpdump\rtmpdump.exe
@@ -20,10 +20,10 @@ rtmpdump=@INSTDIR@\rtmpdump\rtmpdump.exe
 # Log level, default is info
 #loglevel=debug
 
-# A cookie from your web browser to allow access to Twitch/JustinTV streams that require authentication
+# Cookies from your web browser to allow access to Twitch/JustinTV streams that require authentication
 #jtv-cookie=
 
-# A cookie from your web browser to allow access to GOMTV.net streams
+# Cookies from your web browser to allow access to GOMTV.net streams
 #gomtv-cookie=
 
 # A username and password to allow access to GOMTV.net streams

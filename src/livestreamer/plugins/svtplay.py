@@ -12,7 +12,7 @@ class SVTPlay(Plugin):
 
     @classmethod
     def can_handle_url(self, url):
-        return "svtplay.se" in url
+        return "svtplay.se" in url or "oppetarkiv.se" in url
 
     def _get_streams(self):
         self.logger.debug("Fetching stream info")

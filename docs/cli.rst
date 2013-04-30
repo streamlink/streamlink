@@ -19,7 +19,7 @@ You do not need to specify the whole URL including ``http://``, just ``twitch.tv
 
     $ livestreamer twitch.tv/day9tv
     [cli][info] Found matching plugin justintv for URL twitch.tv/day9tv
-    Found streams: 240p, 360p, 480p, 720p (best), iphonehigh, iphonelow (worst)
+    Found streams: 240p, 360p, 480p, 720p (best), mobile_high, mobile_low (worst)
 
 Livestreamer will find out what streams are available and print them out for you to choose from. Simply give ``livestreamer``
 the stream as the second argument and playback will start in your video player of choice.
@@ -58,6 +58,10 @@ Full list of command line arguments
 
     Set log level, valid levels: none, error, warning, info, debug
 
+.. cmdoption:: -Q, --quiet
+
+    Alias for --loglevel none
+
 .. cmdoption:: -j, --json
 
     Output JSON instead of the normal text output and
@@ -72,7 +76,13 @@ Full list of command line arguments
 
 .. cmdoption:: -q, --quiet-player
 
-    Hide all player console output
+    Hide all player console output. This option does
+    nothing since version 1.4.3 since it is now the
+    default behaviour
+
+.. cmdoption:: -v, --verbose-player
+
+   Show all player console output
 
 .. cmdoption:: -n, --fifo
 
@@ -128,7 +138,8 @@ Full list of command line arguments
 .. cmdoption:: --ringbuffer-size size
 
     Specify a maximum size (bytes) for the ringbuffer used
-    by some stream types, default is **32768**
+    by some stream types, default is **32768**. Used by RTMP
+    and HLS. Use --hds-fragmentbuffer for HDS.
 
 
 *Plugin options*
@@ -154,7 +165,7 @@ Full list of command line arguments
 .. cmdoption:: --gomtv-cookie cookie
 
     Specify GOMTV cookie to allow access to streams,
-    e.g. 'SES_USERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'
+    e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'
 
 .. cmdoption:: --gomtv-username username
 
@@ -187,7 +198,7 @@ The file should contain one argument per line in the format ``option=value``, li
 
     player=mplayer -cache 2048
     jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
-    gomtv-cookie=SES_USERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
+    gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
 
 
 Common issues
