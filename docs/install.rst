@@ -25,7 +25,7 @@ Windows
 
 Livestreamer is primarily developed for Unix-like operating systems where using a CLI is common. There is however an installer available for brave Windows users who don't mind using the command prompt. This installer contains a precompiled version of Livestreamer that does not require you to install any dependencies.
 
-`livestreamer-1.4.2-win32-setup.exe <https://pypi.python.org/packages/2.7/l/livestreamer/livestreamer-1.4.2-win32-setup.exe>`_ ``MD5: a5fe1eb7415967060f7b48f38621e5d1``
+`livestreamer-1.4.3-win32-setup.exe <https://pypi.python.org/packages/2.7/l/livestreamer/livestreamer-1.4.3-win32-setup.exe>`_ ``MD5: f9686e61bb3da9a0c5a00dbf47b6f915``
 
 Dependencies
 ------------
