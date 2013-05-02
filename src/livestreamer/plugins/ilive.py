@@ -7,8 +7,6 @@ from livestreamer.utils import urlget
 import re
 
 class ILive(Plugin):
-    SWFURL = "http://cdn.static.ilive.to/jwplayer/player.swf"
-
     @classmethod
     def can_handle_url(self, url):
         return "ilive.to" in url
@@ -17,18 +15,20 @@ class ILive(Plugin):
         self.logger.debug("Fetching stream info")
         res = urlget(self.url)
 
-        match = re.search(".+?flashvars=\"&streamer=(.+)?&file=(.+?).flv&.+?\"", res.text)
+        match = re.search("flashplayer: \"(.+.swf)\".+streamer: \"(.+)\".+file: \"(.+).flv\"", res.text, re.DOTALL)
         if not match:
             raise NoStreamsError(self.url)
 
-        rtmp = unquote(match.group(1))
-        playpath = match.group(2)
+        rtmp = match.group(2)
+        playpath = match.group(3)
+        swfurl = match.group(1)
+
 
         streams = {}
         streams["live"] = RTMPStream(self.session, {
             "rtmp": rtmp,
             "pageUrl": self.url,
-            "swfVfy": self.SWFURL,
+            "swfVfy": swfurl,
             "playpath" : playpath,
             "live": True
         }, redirect=True)
