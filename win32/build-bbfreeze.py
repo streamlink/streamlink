@@ -5,7 +5,7 @@ import sys
 
 from bbfreeze import Freezer
 
-build_version = "1.4.3"
+build_version = "1.4.4"
 python_path = sys.prefix
 script = os.path.join(python_path, "Scripts\\livestreamer-script.py")
 script_exe = os.path.join(python_path, "Scripts\\livestreamer.py")

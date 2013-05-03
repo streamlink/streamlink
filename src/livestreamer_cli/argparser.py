@@ -78,7 +78,7 @@ streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
                        help=("Specify the maximum amount of fragments to buffer, this "
                              "controls the maximum size of the ringbuffer, default is 10"))
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
-                       help=("Specify a maximum size (bytes) for the ringbuffer, default is 32768."
+                       help=("Specify a maximum size (bytes) for the ringbuffer, default is 32768. "
                               "Used by RTMP and HLS. Use --hds-fragmentbuffer for HDS"))
 
 pluginopt = parser.add_argument_group("plugin options")
