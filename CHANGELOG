@@ -2,8 +2,8 @@ Version 1.4.4
 -------------
 
 	Plugins:
-		Twitch/Justin.tv: Fixed possible crash on Python 3.
-		Ilive.to: HTML parsing fixes by Sam Edwards.
+     - Twitch/Justin.tv: Fixed possible crash on Python 3.
+     - Ilive.to: HTML parsing fixes by Sam Edwards.
 
 
 Version 1.4.3
