@@ -4,9 +4,14 @@ from .exceptions import PluginError
 import hashlib
 import hmac
 import json
+import re
 import requests
-import xml.dom.minidom
 import zlib
+
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
 SWF_KEY = b"Genuine Adobe Flash Player 001"
 
@@ -93,9 +98,12 @@ def res_json(res, jsontype="JSON", exception=PluginError):
 
     return jsondata
 
-def parse_xml(data, xmltype="XML", exception=PluginError):
+def parse_xml(data, xmltype="XML", ignore_ns=False, exception=PluginError):
+    if ignore_ns:
+        data = re.sub(" xmlns=\"(.+?)\"", "", data)
+
     try:
-        dom = xml.dom.minidom.parseString(data)
+        tree = ET.fromstring(data)
     except Exception as err:
         if len(data) > 35:
             snippet = data[:35] + "..."
@@ -104,25 +112,13 @@ def parse_xml(data, xmltype="XML", exception=PluginError):
 
         raise exception(("Unable to parse {0}: {1} ({2})").format(xmltype, err, snippet))
 
-    return dom
+    return tree
 
 def parse_qsd(*args, **kwargs):
     return dict(parse_qsl(*args, **kwargs))
 
 def res_xml(res, *args, **kw):
     return parse_xml(res.text, *args, **kw)
-
-def get_node_text(element):
-    res = []
-    for node in element.childNodes:
-        if node.nodeType == node.TEXT_NODE:
-            res.append(node.data)
-
-    if len(res) == 0:
-        return None
-    else:
-        return "".join(res)
-
 
 def rtmpparse(url):
     parse = urlparse(url)
@@ -145,6 +141,7 @@ def rtmpparse(url):
 
     return (tcurl, playpath)
 
+
 __all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
-           "parse_xml", "res_xml", "get_node_text", "rtmpparse"]
+           "parse_xml", "res_xml", "rtmpparse"]

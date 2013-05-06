@@ -14,7 +14,7 @@ from .stream import Stream
 from ..buffers import RingBuffer
 from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
 from ..exceptions import StreamError
-from ..utils import absolute_url, urlget, res_xml, get_node_text
+from ..utils import absolute_url, urlget, res_xml
 
 from ..packages.flashmedia import F4V, F4VError, FLVError
 from ..packages.flashmedia.box import Box
@@ -581,55 +581,56 @@ class HDSStream(Stream):
 
         res = urlget(url, params=dict(hdcore="2.9.4"),
                      exception=IOError, session=rsession)
+        manifest = res_xml(res, "manifest XML", ignore_ns=True,
+                           exception=IOError)
 
+        parsed = urlparse(url)
+        baseurl = manifest.findtext("baseURL")
         bootstraps = {}
         streams = {}
 
-        dom = res_xml(res, "manifest XML", exception=IOError)
-        parsed = urlparse(url)
-        baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
+        if not baseurl:
+            baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
 
-        for baseurl in dom.getElementsByTagName("baseURL"):
-            baseurl = get_node_text(baseurl)
+        for bootstrap in manifest.findall("bootstrapInfo"):
+            name = bootstrap.attrib.get("id")
+            url = bootstrap.attrib.get("url")
 
-
-        for bootstrap in dom.getElementsByTagName("bootstrapInfo"):
-            if not bootstrap.hasAttribute("id"):
+            if not name:
                 continue
 
-            name = bootstrap.getAttribute("id")
-
-            if bootstrap.hasAttribute("url"):
-                box = absolute_url(baseurl, bootstrap.getAttribute("url"))
+            if url:
+                box = absolute_url(baseurl, url)
             else:
-                data = get_node_text(bootstrap)
-                data = base64.b64decode(bytes(data, "utf8"))
+                data = base64.b64decode(bytes(bootstrap.text, "utf8"))
                 box = Box.deserialize(BytesIO(data))
 
             bootstraps[name] = box
 
+        for media in manifest.findall("media"):
+            url = media.attrib.get("url")
+            bootstrapid = media.attrib.get("bootstrapInfoId")
+            href = media.attrib.get("href")
 
-        for media in dom.getElementsByTagName("media"):
-            if media.hasAttribute("url") and media.hasAttribute("bootstrapInfoId"):
-                bootstrapid = media.getAttribute("bootstrapInfoId")
+            if url and bootstrapid:
+                bootstrap = bootstraps.get(bootstrapid)
 
-                if not bootstrapid in bootstraps:
+                if not bootstrap:
                     continue
 
-                if media.hasAttribute("bitrate"):
-                    quality = media.getAttribute("bitrate") + "k"
-                elif media.hasAttribute("streamId"):
-                    quality = media.getAttribute("streamId")
+                bitrate = media.attrib.get("bitrate")
+                streamid = media.attrib.get("streamId")
+
+                if bitrate:
+                    quality = bitrate + "k"
+                elif streamid:
+                    quality = streamid
                 else:
                     continue
 
-                bootstrap = bootstraps[bootstrapid]
-                url = media.getAttribute("url")
-                metadatas = media.getElementsByTagName("metadata")
+                metadata = media.findtext("metadata")
 
-                if len(metadatas) > 0:
-                    metadata = media.getElementsByTagName("metadata")[0]
-                    metadata = get_node_text(metadata)
+                if metadata:
                     metadata = base64.b64decode(bytes(metadata, "utf8"))
                     metadata = ScriptData.deserialize(BytesIO(metadata))
                 else:
@@ -640,8 +641,7 @@ class HDSStream(Stream):
                                    rsession=rsession)
                 streams[quality] = stream
 
-            elif media.hasAttribute("href"):
-                href = media.getAttribute("href")
+            elif href:
                 url = absolute_url(baseurl, href)
                 child_streams = cls.parse_manifest(session, url,
                                                    timeout=timeout,
@@ -650,8 +650,10 @@ class HDSStream(Stream):
                 for name, stream in child_streams.items():
                     # Override stream name if bitrate is available in parent
                     # manifest but not the child one.
-                    if media.hasAttribute("bitrate") and not re.match("^(\d+)k$", name):
-                        name = media.getAttribute("bitrate") + "k"
+                    bitrate = media.attrib.get("bitrate")
+
+                    if bitrate and not re.match("^(\d+)k$", name):
+                        name = bitrate + "k"
 
                     streams[name] = stream
 

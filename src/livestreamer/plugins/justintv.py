@@ -4,13 +4,12 @@ from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream
 from livestreamer.utils import (urlget, urlopen, swfverify, urlresolve, verifyjson,
-                               res_json, res_xml, get_node_text)
+                               res_json, res_xml)
 
 from hashlib import sha1
 
 import hmac
 import random
-
 
 class JustinTV(Plugin):
     options = Options({
@@ -24,7 +23,8 @@ class JustinTV(Plugin):
 
     HLSStreamTokenKey = b"Wd75Yj9sS26Lmhve"
     HLSStreamTokenURL = APIBaseURL + "/stream/iphone_token/{0}.json"
-    HLSSPlaylistURL = APIBaseURL + "/stream/multi_playlist/{0}.m3u8"
+    HLSPlaylistURL = APIBaseURL + "/stream/multi_playlist/{0}.m3u8"
+    HLSTranscodeRequest = APIBaseURL + "/stream/transcode_iphone.json"
 
     @classmethod
     def can_handle_url(self, url):
@@ -46,33 +46,27 @@ class JustinTV(Plugin):
             headers["Cookie"] = cookie
 
         res = urlget(url, headers=headers)
-        dom = res_xml(res, "metadata XML")
+        meta = res_xml(res, "metadata XML")
 
         metadata = {}
-        metadata["title"] = self._get_node_if_exists(dom, "title")
-        metadata["access_guid"] = self._get_node_if_exists(dom, "access_guid")
-        metadata["login"] = self._get_node_if_exists(dom, "login")
+        metadata["access_guid"] = meta.findtext("access_guid")
+        metadata["login"] = meta.findtext("login")
+        metadata["title"] = meta.findtext("title")
 
         return metadata
 
-    def _get_node_if_exists(self, dom, name):
-        elements = dom.getElementsByTagName(name)
-        if elements and len(elements) > 0:
-            return get_node_text(elements[0])
-
     def _authenticate(self):
-        chansub = None
-
         if self.options.get("cookie") is not None:
             self.logger.info("Attempting to authenticate using cookies")
 
             metadata = self._get_metadata()
-            chansub = metadata["access_guid"]
+            chansub = metadata.get("access_guid")
+            login = metadata.get("login")
 
-            if "login" in metadata and metadata["login"] is not None:
-                self.logger.info("Successfully logged in as {0}", metadata["login"])
+            if login:
+                self.logger.info("Successfully logged in as {0}", login)
 
-        return chansub
+            return chansub
 
     # The HTTP support in rtmpdump's SWF verification is extremly
     # basic, therefore we have to work around it.
@@ -163,7 +157,7 @@ class JustinTV(Plugin):
         token = verifyjson(json[0], "token")
         hashed = hmac.new(self.HLSStreamTokenKey, bytes(token, "utf8"), sha1)
         fulltoken = hashed.hexdigest() + ":" + token
-        url = self.HLSSPlaylistURL.format(self.channelname)
+        url = self.HLSPlaylistURL.format(self.channelname)
 
         try:
             params = dict(token=fulltoken, hd="true", allow_cdn="true")
@@ -176,7 +170,7 @@ class JustinTV(Plugin):
                 self.logger.debug("Requesting mobile transcode")
 
                 payload = dict(channel=self.channelname, type="iphone")
-                urlopen("http://usher.twitch.tv/stream/transcode_iphone.json", data=payload)
+                urlopen(self.HLSTranscodeRequest, data=payload)
 
                 return {}
 

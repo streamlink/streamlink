@@ -2,7 +2,7 @@ from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, res_xml, get_node_text
+from livestreamer.utils import urlget, res_xml
 
 from time import time
 import re
@@ -35,19 +35,15 @@ class Streamingvideoprovider(Plugin):
         options = dict(l="info", a="xmlClipPath", clip_id=channelname,
                        rid=time())
         res = urlget(self.APIURL, params=options)
+        clip = res_xml(res)
+        rtmpurl = clip.findtext("./info/url")
 
-        dom = res_xml(res)
-        rtmpurl = dom.getElementsByTagName("url")
-        rtmp = None
-
-        if len(rtmpurl) > 0:
-            rtmp = get_node_text(rtmpurl[0])
-        else:
+        if rtmpurl is None:
             raise PluginError(("No RTMP Streams found on URL {0}").format(self.url))
 
         rtmplist = {}
         rtmplist["live"] = RTMPStream(self.session, {
-            "rtmp": rtmp,
+            "rtmp": rtmpurl,
             "swfVfy": self.SWFURL,
             "live": True
         })

@@ -1,9 +1,9 @@
+from livestreamer.compat import urljoin
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import AkamaiHDStream
 from livestreamer.utils import urlget, verifyjson, res_xml, parse_json
 
-import json
 import re
 
 class Livestream(Plugin):
@@ -23,22 +23,24 @@ class Livestream(Plugin):
 
     def _parse_smil(self, url):
         res = urlget(url)
-        dom = res_xml(res, "config XML")
+        smil = res_xml(res, "SMIL config")
 
-        httpbase = None
         streams = {}
+        httpbase = smil.find("{http://www.w3.org/2001/SMIL20/Language}head/"
+                             "{http://www.w3.org/2001/SMIL20/Language}meta[@name='httpBase']")
 
-        for meta in dom.getElementsByTagName("meta"):
-            if meta.getAttribute("name") == "httpBase":
-                httpbase = meta.getAttribute("content")
-                break
-
-        if not httpbase:
+        if not (httpbase is not None and httpbase.attrib.get("content")):
             raise PluginError("Missing HTTP base in SMIL")
 
-        for video in dom.getElementsByTagName("video"):
-            url = "{0}/{1}".format(httpbase, video.getAttribute("src"))
-            bitrate = int(video.getAttribute("system-bitrate"))
+        httpbase = httpbase.attrib.get("content")
+
+        videos = smil.findall("{http://www.w3.org/2001/SMIL20/Language}body/"
+                              "{http://www.w3.org/2001/SMIL20/Language}switch/"
+                              "{http://www.w3.org/2001/SMIL20/Language}video")
+
+        for video in videos:
+            url = urljoin(httpbase, video.attrib.get("src"))
+            bitrate = int(video.attrib.get("system-bitrate"))
             streams[bitrate] = AkamaiHDStream(self.session, url)
 
         return streams
@@ -56,7 +58,6 @@ class Livestream(Plugin):
             raise NoStreamsError(self.url)
 
         qualities = verifyjson(streaminfo, "qualities")
-
         streams = {}
 
         if not streaminfo["is_live"]:
@@ -75,6 +76,5 @@ class Livestream(Plugin):
                 streams[sname] = stream
 
         return streams
-
 
 __plugin__ = Livestream

@@ -28,21 +28,16 @@ from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import HDSStream, HTTPStream, RTMPStream
 from livestreamer.utils import (urlget, urlopen, parse_json, parse_xml,
-                                res_xml, parse_qsd, get_node_text)
+                                res_xml, parse_qsd)
 
 import hashlib
-import json
 import re
 import requests
 import socket
-import time
-import xml.dom.minidom
 
 
 class GomTV(Plugin):
-    """
-        Implements authentication to the GomTV website.
-    """
+    """Implements authentication to the GomTV website."""
 
     BaseURL = "http://www.gomtv.net"
     LiveURL = BaseURL + "/main/goLive.gom"
@@ -164,17 +159,15 @@ class GomTV(Plugin):
 
         if len(res.text) < 200:
             # Grabbing the real live page URL
-            url = self._parse_event_url(url, res.text)
+            url = self._parse_event_url(self.url, res.text)
             res = urlget(url, session=self.rsession)
 
         return res
 
 
 class GomTV3(GomTV):
-    """
-        Implements concepts and APIs used in the version 0.3.1
-        flash player by GomTV.
-    """
+    """Implements concepts and APIs used in the version 0.3.x
+       flash player by GomTV."""
 
     BaseURL = "http://gox.gomtv.net/cgi-bin"
     GOXLiveURL = BaseURL + "/gox_live.cgi"
@@ -458,22 +451,17 @@ class GomTV3(GomTV):
         }
 
         res = urlopen(self.LimelightSOAPURL, data=payload, headers=headers)
-        dom = res_xml(res)
+        playlist = res_xml(res)
 
         streams = {}
-        for item in dom.getElementsByTagName("PlaylistItem"):
-            for stream in dom.getElementsByTagName("Stream"):
-                for url in stream.getElementsByTagName("url"):
-                    url = get_node_text(url)
-                    break
-                else:
-                    continue
+        items = playlist.findall(".//*{http://service.data.media.pluggd.com}playlistItems/")
 
-                for height in stream.getElementsByTagName("videoHeightInPixels"):
-                    height = get_node_text(height)
-                    break
-                else:
-                    continue
+        for item in items:
+            streams_ = item.findall("./{http://service.data.media.pluggd.com}streams/")
+
+            for stream in streams_:
+                url = stream.findtext("{http://service.data.media.pluggd.com}url")
+                height = stream.findtext("{http://service.data.media.pluggd.com}videoHeightInPixels")
 
                 streamname = "{0}p".format(height)
                 parsed = urlparse(url)
@@ -506,7 +494,6 @@ class GOXFile(object):
 
     def _parse(self, data):
         entries = []
-
         errcode = re.search("^(\d+)$", data)
         haserror = errcode or "error.mp4" in data
 
@@ -515,7 +502,7 @@ class GOXFile(object):
             data = data.replace("&", "&amp;")
             dom = parse_xml(data, "GOX XML")
 
-            for entry in dom.getElementsByTagName("ENTRY"):
+            for entry in dom.findall("ENTRY"):
                 entry = GOXFileEntry(entry)
                 entries.append(entry)
 
@@ -526,29 +513,24 @@ class GOXFileEntry(object):
     def __init__(self, dom):
         self._parse(dom)
 
-    def _parse(self, dom):
-        for child in dom.childNodes:
-            if isinstance(child, xml.dom.minidom.Element):
-                if child.tagName == "REF":
-                    href = child.getAttribute("href")
+    def _parse(self, entry):
+        for child in entry:
+            if child.tag == "REF":
+                href = child.attrib.get("href")
+                reftype = child.attrib.get("reftype")
 
-                    if child.hasAttribute("reftype"):
-                        reftype = child.getAttribute("reftype")
-                    else:
-                        reftype = None
+                # Streams can be gomp2p links, with actual stream
+                # URL passed as a parameter
+                if href.startswith("gomp2p://"):
+                    href, n = re.subn("^.*LiveAddr=", "", href)
+                    href = unquote(href)
 
-                    # Streams can be gomp2p links, with actual stream
-                    # URL passed as a parameter
-                    if href.startswith("gomp2p://"):
-                        href, n = re.subn("^.*LiveAddr=", "", href)
-                        href = unquote(href)
+                href = href.replace("&amp;", "&")
+                val = (href, reftype)
+            else:
+                val = child.text
 
-                    href = href.replace("&amp;", "&")
-                    val = (href, reftype)
-                else:
-                    val = get_node_text(child)
-
-                attr = child.tagName.lower()
-                setattr(self, attr, val)
+            attr = child.tag.lower()
+            setattr(self, attr, val)
 
 __plugin__ = GomTV
