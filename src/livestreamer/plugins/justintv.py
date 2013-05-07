@@ -164,7 +164,7 @@ class JustinTV(Plugin):
             playlist = HLSStream.parse_variant_playlist(self.session, url,
                                                         params=params)
         except IOError as err:
-            if "404" in str(err):
+            if "404" not in str(err):
                 raise PluginError(err)
             else:
                 self.logger.debug("Requesting mobile transcode")
