@@ -90,7 +90,7 @@ class AzubuTV(Plugin):
 
         player_id = match.group(1)
 
-        match = re.search("<img src=\"http://image.azubu.tv/static/images/channels/live_check.png\" />",
+        match = re.search("<img src=\".+/static/images/channels/live_check.png\" />",
                           res.text)
         is_live = not not match
 
