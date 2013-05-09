@@ -23,6 +23,8 @@ try:
 except ImportError:
     CAN_DECRYPT = False
 
+class M3UError(Exception):
+    pass
 
 def parse_m3u_attributes(data):
     attr = re.findall("([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)", data)
@@ -54,10 +56,12 @@ def parse_m3u(data):
     lines = [line for line in data.splitlines() if len(line) > 0]
     tags = {}
     entries = []
-
     lasttag = None
 
     for i, line in enumerate(lines):
+        if i == 0 and not line.startswith("#EXTM3U"):
+            raise M3UError("Missing m3u8 magic")
+
         if line.startswith("#EXT"):
             (key, value) = parse_m3u_tag(line)
 
@@ -230,7 +234,11 @@ class HLSStreamIO(io.IOBase):
         self.playlist_reload_time = time()
 
         res = urlget(self.url, exception=IOError)
-        (tags, entries) = parse_m3u(res.text)
+
+        try:
+            (tags, entries) = parse_m3u(res.text)
+        except M3UError as err:
+            raise IOError("Unable to parse playlist: {0}".format(err))
 
         if "EXT-X-MEDIA-SEQUENCE" in tags:
             sequence = int(tags["EXT-X-MEDIA-SEQUENCE"][0])
@@ -341,7 +349,10 @@ class HLSStream(Stream):
         res = urlget(url, exception=IOError, **params)
         streams = {}
 
-        (tags, entries) = parse_m3u(res.text)
+        try:
+            (tags, entries) = parse_m3u(res.text)
+        except M3UError as err:
+            raise IOError("Unable to parse playlist: {0}".format(err))
 
         for entry in entries:
             (tag, value) = entry["tag"]
