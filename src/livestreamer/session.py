@@ -6,6 +6,28 @@ from .options import Options
 
 import pkgutil
 import imp
+import sys
+import traceback
+
+
+def print_small_exception(start_after):
+    type, value, traceback_ = sys.exc_info()
+
+    tb = traceback.extract_tb(traceback_)
+    index = 0
+
+    for i, trace in enumerate(tb):
+        if trace[2] == start_after:
+            index = i+1
+            break
+
+    lines = traceback.format_list(tb[index:])
+    lines += traceback.format_exception_only(type, value)
+
+    for line in lines:
+        sys.stderr.write(line)
+
+    sys.stderr.write("\n")
 
 
 class Livestreamer(object):
@@ -138,7 +160,14 @@ class Livestreamer(object):
 
         for loader, name, ispkg in pkgutil.iter_modules([path]):
             file, pathname, desc = imp.find_module(name, [path])
-            self.load_plugin(name, file, pathname, desc)
+
+            try:
+                self.load_plugin(name, file, pathname, desc)
+            except Exception:
+                sys.stderr.write("Failed to load plugin {0}:\n".format(name))
+                print_small_exception("load_plugin")
+
+                continue
 
     def load_plugin(self, name, file, pathname, desc):
         module = imp.load_module(name, file, pathname, desc)
