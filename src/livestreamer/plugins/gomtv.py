@@ -85,12 +85,7 @@ class GomTV(Plugin):
             return player.get_vod_streams()
         else:
             try:
-                streams.update(player.get_live_streams())
-            except NoStreamsError:
-                pass
-
-            try:
-                streams.update(player.get_alt_live_streams())
+                streams.update(player.get_hds_live_streams())
             except NoStreamsError:
                 pass
 
@@ -263,42 +258,10 @@ class GomTV3(GomTV):
 
         return streams
 
-    def get_live_streams(self):
+    def get_hds_live_streams(self):
         res = self._get_live_page(self.res)
 
-        match = re.search("flashvars\s+=\s+({.+?});", res.text)
-
-        if not match:
-            raise NoStreamsError(self.url)
-
-        flashvars = parse_json(match.group(1), "flashvars JSON")
-        flashvars["uip"] = self._get_user_ip()
-
-        levels = re.findall("setFlashLevel\((\d+)\);", res.text)
-        streams = {}
-
-        for level in levels:
-            params = self._create_gox_params(flashvars, level)
-
-            res = urlget(self.GOXLiveURL, params=params,
-                         session=self.rsession)
-            gox = GOXFile(res.text)
-
-            for entry in gox.filter_entries("live"):
-                try:
-                    s = HDSStream.parse_manifest(self.session, entry.ref[0])
-                    streams.update(s)
-                except IOError:
-                    self.logger.warning("Unable to parse manifest")
-
-                break
-
-        return streams
-
-    def get_alt_live_streams(self):
-        res = self._get_live_page(self.res)
-
-        match = re.search('jQuery.post\("/live/ajaxGetUrl.gom", ({.+?}),',
+        match = re.search('\s+jQuery.post\("/live/ajaxGetUrl.gom", ({.+?}),',
                           res.text)
         if not match:
             raise NoStreamsError(self.url)
@@ -333,7 +296,7 @@ class GomTV3(GomTV):
     def get_limelight_live_streams(self):
         res = self._get_live_page(self.res)
 
-        match = re.search('jQuery.post\("/live/ajaxGetLimelight.gom", ({.+?}),',
+        match = re.search('\s+jQuery.post\("/live/ajaxGetLimelight.gom", ({.+?}),',
                           res.text)
 
         if not match:
