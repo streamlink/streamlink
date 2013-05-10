@@ -4,8 +4,9 @@ import shutil
 import sys
 
 from bbfreeze import Freezer
+from livestreamer import __version__
 
-build_version = "1.5"
+build_version = __version__
 python_path = sys.prefix
 script = os.path.join(python_path, "Scripts\\livestreamer-script.py")
 script_exe = os.path.join(python_path, "Scripts\\livestreamer.py")

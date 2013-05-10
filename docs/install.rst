@@ -25,7 +25,7 @@ Windows
 
 Livestreamer is primarily developed for Unix-like operating systems where using a CLI is common. There is however an installer available for brave Windows users who don't mind using the command prompt. This installer contains a precompiled version of Livestreamer that does not require you to install any dependencies.
 
-`livestreamer-1.4.4-win32-setup.exe <https://pypi.python.org/packages/2.7/l/livestreamer/livestreamer-1.4.4-win32-setup.exe>`_ ``MD5: f1cf4b2ae55d394da0902be56f22e2a4``
+`livestreamer-1.4.5-win32-setup.exe <https://pypi.python.org/packages/2.7/l/livestreamer/livestreamer-1.4.5-win32-setup.exe>`_ ``MD5: 6e41d59792beb89478533f884cd5a06d``
 
 Dependencies
 ------------
@@ -48,7 +48,7 @@ Optional dependencies
 
 For RTMP based plugins:
 
-- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_ (The latest official release is 2.3, but it is not compatible with Twitch/Justin.tv streams, use a git clone after 2011-07-31 if you wish to use the Twitch/Justin.tv plugin)
+- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_ (Twitch/Justin.tv streams require at least version 2.4)
 
 For decrypting encrypted HLS streams:
 

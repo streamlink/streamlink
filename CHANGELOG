@@ -1,3 +1,15 @@
+Version 1.4.5
+-------------
+
+    Plugins:
+     - Twitch/Justin.tv: Fixed mobile transcode request never happening.
+     - GOMTV.net: Fixed issue causing disabled streams to be picked up.
+     - Azubu.tv: Updated for HTML change.
+
+    Streams:
+     - HLS: Fixed potential crash when getting a invalid playlist.
+
+
 Version 1.4.4
 -------------
 
