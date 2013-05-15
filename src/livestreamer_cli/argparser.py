@@ -86,7 +86,8 @@ pluginopt.add_argument("--plugin-dirs", metavar="directory",
                        help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a semicolon (;)")
 pluginopt.add_argument("--stream-priority", metavar="priorities", default="rtmp,hls,hds,http,akamaihd",
                        type=lambda v: [p.strip() for p in v.split(",")],
-                       help=("When there are multiple streams with the same name but different streaming types, these priorities will be used. "
+                       help=("Only the stream types in this list will be available. The priority order will be used "
+                             "to separate streams when there are multiple streams with the same name and different stream types."
                              "Should be specified as a comma-delimited list, default is rtmp,hls,hds,http,akamaihd"))
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to subscription channels, e.g. '_twitch_session_id=xxxxxx; persistent=xxxxx;'")

@@ -152,10 +152,11 @@ Full list of command line arguments
 
 .. cmdoption:: --stream-priority priorities
 
-    When there are multiple streams with the same name but
-    different streaming types, these priorities will be
-    used. Should be specified as a comma-delimited list,
-    default is **rtmp,hls,hds,http,akamaihd**
+    Only the stream types in this list will be available.
+    The priority order will be used to separate streams
+    when there are multiple streams with the same name and
+    different stream types.Should be specified as a comma-
+    delimited list, default is **rtmp,hls,hds,http,akamaihd**
 
 .. cmdoption:: --jtv-cookie cookie
 
