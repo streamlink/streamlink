@@ -130,7 +130,8 @@ class Plugin(object):
 
                     streams[sname] = stream
             else:
-                streams[name] = stream
+                if type(stream).shortname() in priority:
+                    streams[name] = stream
 
         sort = sorted(filter(qualityweight, streams.keys()),
                       key=qualityweight)
