@@ -345,7 +345,8 @@ class HLSStream(Stream):
         return fd.open()
 
     @classmethod
-    def parse_variant_playlist(cls, session, url, **params):
+    def parse_variant_playlist(cls, session, url, namekey="name",
+                               **params):
         res = urlget(url, exception=IOError, **params)
         streams = {}
 
@@ -367,21 +368,30 @@ class HLSStream(Stream):
                     if key in value and value[key] == media["GROUP-ID"]:
                         value.update(media)
 
+            names = dict(name=None, pixels=None, bandwidth=None)
+
             if "NAME" in value:
-                quality = value["NAME"]
-            elif "RESOLUTION" in value:
-                quality = value["RESOLUTION"].split("x")[1] + "p"
-            elif "BANDWIDTH" in value:
+                names["name"] = value["NAME"]
+
+            if "RESOLUTION" in value:
+                width, height = value["RESOLUTION"].split("x")
+                names["pixels"] = height + "p"
+
+            if "BANDWIDTH" in value:
                 bw = int(value["BANDWIDTH"])
 
                 if bw > 1000:
-                    quality = str(int(bw/1000.0)) + "k"
+                    names["bitrate"] = str(int(bw/1000.0)) + "k"
                 else:
-                    quality = str(bw/1000.0) + "k"
-            else:
+                    names["bitrate"] = str(bw/1000.0) + "k"
+
+            streamname = (names.get(namekey) or names.get("name") or
+                          names.get("pixels") or names.get("bitrate"))
+
+            if not streamname:
                 continue
 
             stream = HLSStream(session, absolute_url(url, entry["url"]))
-            streams[quality] = stream
+            streams[streamname] = stream
 
         return streams
