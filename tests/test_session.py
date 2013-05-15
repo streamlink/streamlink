@@ -47,7 +47,7 @@ class TestSession(unittest.TestCase):
 
     def test_plugin(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams(priority=["http", "rtmp"])
+        streams = channel.get_streams()
 
         self.assertTrue("best" in streams)
         self.assertTrue("worst" in streams)
