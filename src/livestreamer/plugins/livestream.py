@@ -7,6 +7,8 @@ from livestreamer.utils import urlget, verifyjson, res_xml, parse_json
 import re
 
 class Livestream(Plugin):
+    SWFURL = "http://cdn.livestream.com/swf/hdplayer-2.0.swf"
+
     @classmethod
     def can_handle_url(self, url):
         return "new.livestream.com" in url
@@ -41,7 +43,8 @@ class Livestream(Plugin):
         for video in videos:
             url = urljoin(httpbase, video.attrib.get("src"))
             bitrate = int(video.attrib.get("system-bitrate"))
-            streams[bitrate] = AkamaiHDStream(self.session, url)
+            streams[bitrate] = AkamaiHDStream(self.session, url,
+                                              swf=self.SWFURL)
 
         return streams
 
