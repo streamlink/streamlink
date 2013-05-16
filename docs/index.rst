@@ -58,5 +58,6 @@ See their respective sections for more information on how to use them.
 
     install
     cli
+    issues
     api
 
