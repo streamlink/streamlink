@@ -201,40 +201,6 @@ The file should contain one argument per line in the format ``option=value``, li
     gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
 
 
-Common issues
--------------
-
-**Livestreamer exits with error "Unable to read from stream" or "Error while executing subprocess" on Twitch/Justin.tv streams**
-
-When building rtmpdump from source it may link with a already existing (probably older) librtmp version instead of using it's
-own version.
-
-On Debian/Ubuntu it is recommended to use the official packages of *librtmp0* and *rtmpdump* version
-*2.4+20111222.git4e06e21* or newer. This version contains the necessary code to play Twitch/Justin.tv streams and
-avoids any conflicts. It should be available in the testing or unstable repositories.
-
-If you still want to build it yourself you can avoid the linking problem by building a static build of rtmpdump.
-
-.. code-block:: console
-
-    $ make SHARED=
-
-
-**VLC fails to play with a error message**
-
-VLC version *2.0.1* and *2.0.2* contains a bug that prevents it from reading data from standard input.
-This has been fixed in version *2.0.3*.
-
-**Streams are buffering/lagging**
-
-By default most players do not cache the input from stdin, here is a few command arguments you can pass to some common players:
-
-- ``mplayer --cache <kbytes>`` (between 1024 and 8192 is recommended)
-- ``vlc --file-caching <milliseconds>`` (between 1000 and 10000 is recommended)
-
-These options can be used by passing ``--player`` to ``livestreamer``.
-
-
 Plugin specific usage
 ---------------------
 
