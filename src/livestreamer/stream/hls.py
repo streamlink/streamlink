@@ -346,7 +346,7 @@ class HLSStream(Stream):
 
     @classmethod
     def parse_variant_playlist(cls, session, url, namekey="name",
-                               **params):
+                               nameprefix="", **params):
         res = urlget(url, exception=IOError, **params)
         streams = {}
 
@@ -392,6 +392,6 @@ class HLSStream(Stream):
                 continue
 
             stream = HLSStream(session, absolute_url(url, entry["url"]))
-            streams[streamname] = stream
+            streams[nameprefix + streamname] = stream
 
         return streams
