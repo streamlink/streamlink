@@ -11,7 +11,8 @@ SpecialQualityWeights = {
     "hq": 576,
     "sd": 576,
     "sq": 360,
-    "mobile_high": 230,
+    "mobile_high": 330,
+    "mobile_medium": 260,
     "mobile_low": 170,
 }
 
