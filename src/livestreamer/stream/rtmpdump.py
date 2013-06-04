@@ -45,6 +45,9 @@ class RTMPStream(StreamProcess):
         if "jtv" in self.params and not self._supports_param("jtv"):
             raise StreamError("Installed rtmpdump does not support --jtv argument")
 
+        if "weeb" in self.params and not self._supports_param("weeb"):
+            raise StreamError("Installed rtmpdump does not support --weeb argument")
+
         if self.redirect:
             self._check_redirect()
 
