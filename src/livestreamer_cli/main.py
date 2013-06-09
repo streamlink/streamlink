@@ -1,6 +1,7 @@
 import errno
 import os
 import sys
+import signal
 
 from .argparser import parser
 from .compat import stdout, is_win32
@@ -372,6 +373,9 @@ def set_options(args):
 
 def main():
     arglist = sys.argv[1:]
+
+    # Handle SIGTERM just like SIGINT
+    signal.signal(signal.SIGTERM, signal.default_int_handler)
 
     # Load additional arguments from livestreamerrc
     if os.path.exists(CONFIG_FILE):
