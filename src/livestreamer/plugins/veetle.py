@@ -12,7 +12,16 @@ class Veetle(Plugin):
         return "veetle.com" in url
 
     def _get_streams(self):
-        channelid = urlparse(self.url).fragment.lower().replace("/", "_")
+        parsed = urlparse(self.url)
+
+        if parsed.fragment:
+            channelid = parsed.fragment.lower().replace("/", "_")
+        else:
+            parts = parsed.path.split("/")
+            channelid = "_".join(parts[-2:])
+
+        if not channelid:
+            raise NoStreamsError(self.url)
 
         self.logger.debug("Fetching stream info")
 
