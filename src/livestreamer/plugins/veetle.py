@@ -15,18 +15,17 @@ class Veetle(Plugin):
         parsed = urlparse(self.url)
 
         if parsed.fragment:
-            channelid = parsed.fragment.lower().replace("/", "_")
+            channelid = parsed.fragment
         else:
-            parts = parsed.path.split("/")
-            channelid = "_".join(parts[-2:])
+            channelid = parsed.path.rpartition("view/")[-1]
 
         if not channelid:
             raise NoStreamsError(self.url)
 
+        channelid = channelid.lower().replace("/", "_")
+
         self.logger.debug("Fetching stream info")
-
         res = urlget(self.APIURL.format(channelid))
-
         json = res_json(res)
 
         if not isinstance(json, dict):
