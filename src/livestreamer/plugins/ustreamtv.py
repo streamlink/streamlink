@@ -6,12 +6,14 @@ from livestreamer.stream import HLSStream, RTMPStream
 from livestreamer.utils import urlget
 
 from io import BytesIO
+from time import sleep
 
 import re
 
 class UStreamTV(Plugin):
     AMFURL = "http://cgw.ustream.tv/Viewer/getStream/1/{0}.amf"
     SWFURL = "http://static-cdn1.ustream.tv/swf/live/viewer3:50.swf"
+    HLSPlaylistURL = "http://iphone-streaming.ustream.tv/uhls/{0}/streams/live/iphone/playlist.m3u8"
 
     @classmethod
     def can_handle_url(self, url):
@@ -61,15 +63,7 @@ class UStreamTV(Plugin):
 
         streams = {}
 
-        if "liveHttpUrl" in result:
-            try:
-                hlsstreams = HLSStream.parse_variant_playlist(self.session,
-                                                              result["liveHttpUrl"])
-                streams.update(hlsstreams)
-            except IOError as err:
-                self.logger.warning("Failed to get variant playlist: {0}", err)
-
-        if "streamName" in result:
+        if RTMPStream.is_usable(self.session) and "streamName" in result:
             if "cdnUrl" in result:
                 cdn = result["cdnUrl"]
             elif "fmsUrl" in result:
@@ -85,7 +79,7 @@ class UStreamTV(Plugin):
 
             streams[streamname] = self._create_stream(cdn, result["streamName"])
 
-        if "streamVersions" in result:
+        if RTMPStream.is_usable(self.session) and "streamVersions" in result:
             for version, info in result["streamVersions"].items():
                 if "streamVersionCdn" in info:
                     for name, cdn in info["streamVersionCdn"].items():
@@ -94,7 +88,26 @@ class UStreamTV(Plugin):
                             streams[cdnname] = self._create_stream(cdn["cdnStreamUrl"],
                                                                    cdn["cdnStreamName"])
 
+        # On some channels the AMF API will not return any streams,
+        # attempt to access the HLS playlist directly instead.
+        #
+        # HLS streams are created on demand, so we may have to wait
+        # for a transcode to be started.
+        attempts = 10
+        playlist_url = result.get("liveHttpUrl",
+                                  self.HLSPlaylistURL.format(channelid))
 
+        while not streams and attempts:
+            try:
+                hls_streams = HLSStream.parse_variant_playlist(self.session,
+                                                               playlist_url)
+                streams.update(hls_streams)
+            except IOError:
+                # Channel is probably offline
+                break
+
+            attempts -= 1
+            sleep(3)
 
         return streams
 
