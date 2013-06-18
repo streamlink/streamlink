@@ -97,13 +97,16 @@ class UStreamTV(Plugin):
         playlist_url = result.get("liveHttpUrl",
                                   self.HLSPlaylistURL.format(channelid))
 
-        while not streams and attempts:
+        while attempts:
             try:
                 hls_streams = HLSStream.parse_variant_playlist(self.session,
                                                                playlist_url)
                 streams.update(hls_streams)
             except IOError:
                 # Channel is probably offline
+                break
+
+            if streams:
                 break
 
             attempts -= 1
