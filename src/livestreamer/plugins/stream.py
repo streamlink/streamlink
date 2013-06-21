@@ -4,6 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.stream import (AkamaiHDStream, HDSStream, HLSStream,
                                  HTTPStream, RTMPStream)
 
+import ast
 import re
 
 class StreamURL(Plugin):
@@ -36,13 +37,8 @@ class StreamURL(Plugin):
                 rval[key] = strval
             else:
                 try:
-                    val = float(val)
-                except ValueError:
-                    pass
-
-                try:
-                    val = int(val)
-                except ValueError:
+                    val = ast.literal_eval(val)
+                except:
                     pass
 
                 rval[key] = val

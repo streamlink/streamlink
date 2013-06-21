@@ -44,6 +44,17 @@ class TestPluginStream(unittest.TestCase):
         self.assertEqual(stream.params["rtmp"], url)
         self.assertDictHas(params, stream.params)
 
+    def _test_http(self, surl, url, params):
+        channel = self.session.resolve_url(surl)
+        streams = channel.get_streams()
+
+        self.assertTrue("live" in streams)
+
+        stream = streams["live"]
+        self.assertTrue(isinstance(stream, HTTPStream))
+        self.assertEqual(stream.url, url)
+        self.assertDictHas(params, stream.args)
+
     def test_plugin(self):
         self._test_rtmp("rtmp://hostname.se/stream",
                          "rtmp://hostname.se/stream", dict())
@@ -59,6 +70,11 @@ class TestPluginStream(unittest.TestCase):
 
         self._test_akamaihd("akamaihd://http://hostname.se/stream",
                             "http://hostname.se/stream")
+
+        self._test_http("httpstream://http://hostname.se/auth.php auth=('test','test2')",
+                        "http://hostname.se/auth.php", dict(auth=("test", "test2")))
+
+
 
 if __name__ == "__main__":
     unittest.main()
