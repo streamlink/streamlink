@@ -2,7 +2,7 @@ import argparse
 
 from livestreamer import __version__ as livestreamer_version
 
-from .constants import DEFAULT_PLAYER, EXAMPLE_USAGE
+from .constants import EXAMPLE_USAGE
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -45,9 +45,9 @@ parser.add_argument("-j", "--json", action="store_true",
                     help="Output JSON instead of the normal text output and disable log output, useful for external scripting")
 
 playeropt = parser.add_argument_group("player options")
-playeropt.add_argument("-p", "--player", metavar="player",
-                       help="Command-line for player, default is '{0}'".format(DEFAULT_PLAYER),
-                       default=DEFAULT_PLAYER)
+playeropt.add_argument("-p", "--player", metavar="command",
+                       help="Player command-line to start, by default Livestreamer will use "
+                            "VLC if it is installed.")
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help="Hide all player console output. This option does nothing since version 1.4.3 since it is now the default behaviour")
 playeropt.add_argument("-v", "--verbose-player", action="store_true",

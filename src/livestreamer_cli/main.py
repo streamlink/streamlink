@@ -8,7 +8,7 @@ from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe, ignored
+from .utils import NamedPipe, ignored, find_default_player
 
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
@@ -57,9 +57,14 @@ def create_output(args):
         out = FileOutput(fd=stdout)
     else:
         namedpipe = None
+        player = args.player or find_default_player()
+
+        if not player:
+            console.exit("The default player (VLC) does not seem to be installed. "
+                         "You must specify the path to a player executable with --player.")
 
         if args.fifo:
-            pipename = "livestreamerpipe-" + str(os.getpid())
+            pipename = "livestreamerpipe-{0}".format(os.getpid())
             console.logger.info("Creating pipe {0}", pipename)
 
             try:
@@ -67,9 +72,9 @@ def create_output(args):
             except IOError as err:
                 console.exit("Failed to create pipe: {0}", err)
 
-        console.logger.info("Starting player: {0}", args.player)
+        console.logger.info("Starting player: {0}", player)
 
-        out = PlayerOutput(args.player, namedpipe=namedpipe,
+        out = PlayerOutput(player, namedpipe=namedpipe,
                            quiet=not args.verbose_player)
 
 
@@ -367,8 +372,6 @@ def set_options(args):
     if args.quiet_player is True:
         console.logger.warning("The option --quiet-player is deprecated since version 1.4.3 "
                                "as hiding player output is now the default.")
-
-
 
 
 def main():
