@@ -12,7 +12,8 @@ class DailyMotion(Plugin):
         "sd": "360p",
         "hq": "480p",
         "hd720": "720p",
-        "hd1080": "1080p"
+        "hd1080": "1080p",
+        "custom": "live"
     }
 
     StreamInfoURL = "http://www.dailymotion.com/sequence/full/{0}"
@@ -100,14 +101,20 @@ class DailyMotion(Plugin):
         # it seems the "live" is absent. We use the single stream available
         # under the "customURL" key.
 
-        if "live" in feeds_params and len(feeds_params["live"]) > 0:
-            quals = feeds_params["live"]
+        if "mode" in feeds_params and feeds_params["mode"] == "live":
 
-            for key, quality in quals.items():
+            for key, quality in self.QualityMap.items():
+
+                url_key = '{0}URL'.format(key)
+                if url_key not in feeds_params:
+                    continue
+                else:
+                    url = feeds_params[url_key]
+
                 info = {}
 
                 try:
-                    res = urlget(quality, exception=IOError)
+                    res = urlget(url, exception=IOError)
                 except IOError:
                     continue
 
@@ -119,30 +126,7 @@ class DailyMotion(Plugin):
                 })
                 self.logger.debug("Adding URL: {0}", rtmpurl)
 
-                if key in self.QualityMap:
-                    sname = self.QualityMap[key]
-                else:
-                    sname = key
-
-                streams[sname] = stream
-        else:
-            url = feeds_params["customURL"]
-
-            if url.startswith("http"):
-                res = urlget(url)
-                rtmpurl = res.text
-            elif url.startswith("rtmp"):
-                rtmpurl = url
-            else:
-                raise PluginError("Invalid stream URL found: {0}", url)
-
-            stream = RTMPStream(self.session, {
-                "rtmp": rtmpurl,
-                "swfVfy": swfurl,
-                "live": True
-            })
-
-            streams["live"] = stream
+                streams[quality] = stream
 
         return streams
 
