@@ -72,7 +72,8 @@ Full list of command line arguments
 
 .. cmdoption:: -p player, --player player
 
-    Command-line for player, default is **vlc**
+    Player command-line to start, by default Livestreamer
+    will use VLC if it is installed
 
 .. cmdoption:: -q, --quiet-player
 
@@ -82,7 +83,7 @@ Full list of command line arguments
 
 .. cmdoption:: -v, --verbose-player
 
-   Show all player console output
+    Show all player console output
 
 .. cmdoption:: -n, --fifo
 
@@ -155,7 +156,7 @@ Full list of command line arguments
     Only the stream types in this list will be available.
     The priority order will be used to separate streams
     when there are multiple streams with the same name and
-    different stream types.Should be specified as a comma-
+    different stream types. Should be specified as a comma-
     delimited list, default is **rtmp,hls,hds,http,akamaihd**
 
 .. cmdoption:: --jtv-cookie cookie
@@ -186,11 +187,11 @@ is capable of reading arguments from a file instead, a sort of configuration fil
 Livestreamer will look for this file in different locations depending on your platform:
 
 **Unix-like OSs**
-  ``~/.config/livestreamer/config``
-  ``~/.livestreamerrc``
+  - ``~/.config/livestreamer/config``
+  - ``~/.livestreamerrc``
 
 **Windows**
-  ``%APPDATA%\livestreamer\livestreamerrc``
+  - ``%APPDATA%\livestreamer\livestreamerrc``
 
 
 The file should contain one argument per line in the format ``option=value``, like this:
