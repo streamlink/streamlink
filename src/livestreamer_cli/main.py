@@ -286,15 +286,15 @@ def handle_url(args):
 
             handle_stream(args, streams)
         else:
-            err = "Invalid stream quality: {0}".format(args.stream)
+            err = "Invalid stream specified: {0}".format(args.stream)
 
             if console.json:
                 console.msg_json(dict(streams=streams, plugin=plugin.module, error=err))
             else:
                 validstreams = format_valid_streams(streams)
 
-                console.msg(err)
                 console.msg("Valid streams: {0}", validstreams)
+                console.exit(err)
     else:
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module))
