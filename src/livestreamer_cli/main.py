@@ -270,7 +270,8 @@ def handle_url(args):
     console.logger.info("Found matching plugin {0} for URL {1}", plugin.module, args.url)
 
     try:
-        streams = plugin.get_streams(args.stream_priority)
+        streams = plugin.get_streams(stream_types=args.stream_types,
+                                     sorting_excludes=args.stream_sorting_excludes)
     except (StreamError, PluginError) as err:
         console.exit("{0}", err)
 

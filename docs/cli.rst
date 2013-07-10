@@ -151,13 +151,20 @@ Full list of command line arguments
     Multiple directories can be used by separating them
     with a semicolon (;)
 
-.. cmdoption:: --stream-priority priorities
 
-    Only the stream types in this list will be available.
-    The priority order will be used to separate streams
-    when there are multiple streams with the same name and
-    different stream types. Should be specified as a comma-
-    delimited list, default is **rtmp,hls,hds,http,akamaihd**
+.. cmdoption:: --stream-types types, --stream-priority types
+
+    A comma-delimited list of stream types to allow. The
+    order will be used to separate streams when there are
+    multiple streams with the same name and different
+    stream types. Default is **rtmp,hls,hds,http,akamaihd**
+
+
+.. cmdoption:: --stream-sorting-excludes streams
+
+    A comma-delimited list of streams to exclude from the
+    sorting used by best/worst synonyms, e.g. 1080p+,1080p
+
 
 .. cmdoption:: --jtv-cookie cookie
 
