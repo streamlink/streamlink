@@ -149,8 +149,8 @@ class Plugin(object):
         sorted_streams = sorted(stream_names, key=qualityweight)
 
         if sorting_excludes:
-            sorted_streams = filter(lambda s: s not in sorting_excludes,
-                                    sorted_streams)
+            sorted_streams = list(filter(lambda s: s not in sorting_excludes,
+                                  sorted_streams))
 
         if len(sorted_streams) > 0:
             best = sorted_streams[-1]
