@@ -15,7 +15,7 @@ __copyright__ = "Copyright 2011-2013 Christopher Rosell"
 __credits__ = ["Christopher Rosell", "Athanasios Oikonomou",
                "Gaspard Jankowiak", "Dominik Dabrowski",
                "Toad King", "Niall McAndrew", "Daniel Wallace",
-               "Sam Edwards", "John Peterson"]
+               "Sam Edwards", "John Peterson", "Kacper"]
 
 
 from .exceptions import (PluginError, NoStreamsError,
