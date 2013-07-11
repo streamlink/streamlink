@@ -58,17 +58,25 @@ class TestSession(unittest.TestCase):
         self.assertTrue(isinstance(streams["hls"], HLSStream))
         self.assertTrue(isinstance(streams["akamaihd"], AkamaiHDStream))
 
-    def test_plugin_stream_priority(self):
+    def test_plugin_stream_types(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams(priority=["http", "rtmp"])
+        streams = channel.get_streams(stream_types=["http", "rtmp"])
 
         self.assertTrue(isinstance(streams["480p"], HTTPStream))
         self.assertTrue(isinstance(streams["480p_rtmp"], RTMPStream))
 
-        streams = channel.get_streams(priority=["rtmp", "http"])
+        streams = channel.get_streams(stream_types=["rtmp", "http"])
 
         self.assertTrue(isinstance(streams["480p"], RTMPStream))
         self.assertTrue(isinstance(streams["480p_http"], HTTPStream))
+
+    def test_plugin_stream_sorted_excludes(self):
+        channel = self.session.resolve_url("http://test.se/channel")
+        streams = channel.get_streams(sorting_excludes=["1080p", "3000k"])
+
+        self.assertTrue("best" in streams)
+        self.assertTrue("worst" in streams)
+        self.assertTrue(streams["best"] is streams["1500k"])
 
 if __name__ == "__main__":
     unittest.main()
