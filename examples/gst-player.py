@@ -75,6 +75,7 @@ class LivestreamerPlayer(object):
         # If data is empty it's the end of stream
         if not data:
             source.emit("end-of-stream")
+            return
 
         # Convert the Python bytes into a GStreamer Buffer
         # and then push it to the appsrc

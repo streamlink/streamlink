@@ -140,7 +140,7 @@ Full list of command line arguments
 
     Specify a maximum size (bytes) for the ringbuffer used
     by some stream types, default is **32768**. Used by RTMP
-    and HLS. Use --hds-fragmentbuffer for HDS.
+    and HLS. Use --hds-fragment-buffer for HDS.
 
 
 *Plugin options*
