@@ -1,3 +1,33 @@
+Version 1.5
+-------------
+
+    CLI:
+     - Handle SIGTERM as SIGINT.
+     - Improved default player (VLC) detection.
+     - --stream-priority renamed to --stream-types and now excludes
+       any stream types not specified.
+     - Added --stream-sorting-excludes which excludes streams
+       from the internal sorting used by best/worst synonyms.
+     - Now returns exit code 1 on errors.
+
+    API:
+     - plugin.get_streams(): Renamed priority parameter to stream_types
+       and changed behaviour slightly.
+     - plugin.get_streams(): Added the parameter sorting_excludes.
+
+    Plugins:
+     - Added plugin for Aliez.tv.
+     - Added plugin for Weeb.tv.
+     - Added plugin for Veetle.
+     - Added plugin for Euronews.
+     - Dailymotion: Updated for JSON result changes.
+     - Livestream: Added SWF verification.
+     - Stream: Added httpstream://.
+     - Stream: Now evaluates parameters as Python values.
+     - Twitch/Justin.tv: Fixed HLS stream names.
+     - Youtube Live: Improved stream names.
+
+
 Version 1.4.5
 -------------
 
