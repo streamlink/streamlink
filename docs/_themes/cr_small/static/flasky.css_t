@@ -162,12 +162,6 @@ div.admonition p.last {
     margin-bottom: 0;
 }
 
-div.highlight {
-  border: 4px solid #eee;
-  margin: 0.25em 0;
-}
-
-
 dt:target, .highlight {
     background: #FAF3E8;
 }
@@ -296,16 +290,12 @@ dl dd {
 dl.class {
 }
 
-dl.class:hover {
-  background-color: #eee;
-}
-
 pre {
     margin: 15px -30px;
     line-height: 1.3em;
-    border-radius: 2px;
-    -moz-border-radius: 2px;
-    -webkit-border-radius: 2px;
+    border-radius: 5px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
 }
 
 span pre {
@@ -313,11 +303,11 @@ span pre {
 }
 
 .highlight pre {
-  font-family: 'Lucida Console', Monaco, monospace;
   color: #ddd;
-  margin: 9px 14px;
-  font-size: 0.7em;
-  line-height: 1.4;
+  line-height: 1.3em;
+  margin: 15px -30px;
+  padding: 7px 30px;
+  background: #333;
 }
 
 dl pre {

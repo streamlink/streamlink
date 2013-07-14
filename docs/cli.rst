@@ -72,7 +72,8 @@ Full list of command line arguments
 
 .. cmdoption:: -p player, --player player
 
-    Command-line for player, default is **vlc**
+    Player command-line to start, by default Livestreamer
+    will use VLC if it is installed
 
 .. cmdoption:: -q, --quiet-player
 
@@ -82,7 +83,7 @@ Full list of command line arguments
 
 .. cmdoption:: -v, --verbose-player
 
-   Show all player console output
+    Show all player console output
 
 .. cmdoption:: -n, --fifo
 
@@ -139,7 +140,7 @@ Full list of command line arguments
 
     Specify a maximum size (bytes) for the ringbuffer used
     by some stream types, default is **32768**. Used by RTMP
-    and HLS. Use --hds-fragmentbuffer for HDS.
+    and HLS. Use --hds-fragment-buffer for HDS.
 
 
 *Plugin options*
@@ -150,12 +151,20 @@ Full list of command line arguments
     Multiple directories can be used by separating them
     with a semicolon (;)
 
-.. cmdoption:: --stream-priority priorities
 
-    When there are multiple streams with the same name but
-    different streaming types, these priorities will be
-    used. Should be specified as a comma-delimited list,
-    default is **rtmp,hls,hds,http,akamaihd**
+.. cmdoption:: --stream-types types, --stream-priority types
+
+    A comma-delimited list of stream types to allow. The
+    order will be used to separate streams when there are
+    multiple streams with the same name and different
+    stream types. Default is **rtmp,hls,hds,http,akamaihd**
+
+
+.. cmdoption:: --stream-sorting-excludes streams
+
+    A comma-delimited list of streams to exclude from the
+    sorting used by best/worst synonyms, e.g. 1080p+,1080p
+
 
 .. cmdoption:: --jtv-cookie cookie
 
@@ -185,11 +194,11 @@ is capable of reading arguments from a file instead, a sort of configuration fil
 Livestreamer will look for this file in different locations depending on your platform:
 
 **Unix-like OSs**
-  ``~/.config/livestreamer/config``
-  ``~/.livestreamerrc``
+  - ``~/.config/livestreamer/config``
+  - ``~/.livestreamerrc``
 
 **Windows**
-  ``%APPDATA%\livestreamer\livestreamerrc``
+  - ``%APPDATA%\livestreamer\livestreamerrc``
 
 
 The file should contain one argument per line in the format ``option=value``, like this:

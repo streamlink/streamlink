@@ -96,7 +96,8 @@ class Youtube(Plugin):
             url = args["hlsvp"]
 
             try:
-                hlsstreams = HLSStream.parse_variant_playlist(self.session, url)
+                hlsstreams = HLSStream.parse_variant_playlist(self.session, url,
+                                                              namekey="pixels")
                 streams.update(hlsstreams)
             except IOError as err:
                 self.logger.warning("Failed to get variant playlist: {0}", err)

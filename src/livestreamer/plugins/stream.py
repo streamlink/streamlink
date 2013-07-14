@@ -2,8 +2,9 @@ from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import (AkamaiHDStream, HDSStream, HLSStream,
-                                 RTMPStream)
+                                 HTTPStream, RTMPStream)
 
+import ast
 import re
 
 class StreamURL(Plugin):
@@ -12,6 +13,7 @@ class StreamURL(Plugin):
         "hds": HDSStream.parse_manifest,
         "hls": HLSStream,
         "hlsvariant": HLSStream.parse_variant_playlist,
+        "httpstream": HTTPStream,
         "rtmp": RTMPStream,
         "rtmpe": RTMPStream,
         "rtmps": RTMPStream,
@@ -35,13 +37,8 @@ class StreamURL(Plugin):
                 rval[key] = strval
             else:
                 try:
-                    val = float(val)
-                except ValueError:
-                    pass
-
-                try:
-                    val = int(val)
-                except ValueError:
+                    val = ast.literal_eval(val)
+                except:
                     pass
 
                 rval[key] = val

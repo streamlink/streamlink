@@ -1,13 +1,14 @@
 import errno
 import os
 import sys
+import signal
 
 from .argparser import parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe, ignored
+from .utils import NamedPipe, ignored, find_default_player
 
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
@@ -56,9 +57,14 @@ def create_output(args):
         out = FileOutput(fd=stdout)
     else:
         namedpipe = None
+        player = args.player or find_default_player()
+
+        if not player:
+            console.exit("The default player (VLC) does not seem to be installed. "
+                         "You must specify the path to a player executable with --player.")
 
         if args.fifo:
-            pipename = "livestreamerpipe-" + str(os.getpid())
+            pipename = "livestreamerpipe-{0}".format(os.getpid())
             console.logger.info("Creating pipe {0}", pipename)
 
             try:
@@ -66,9 +72,9 @@ def create_output(args):
             except IOError as err:
                 console.exit("Failed to create pipe: {0}", err)
 
-        console.logger.info("Starting player: {0}", args.player)
+        console.logger.info("Starting player: {0}", player)
 
-        out = PlayerOutput(args.player, namedpipe=namedpipe,
+        out = PlayerOutput(player, namedpipe=namedpipe,
                            quiet=not args.verbose_player)
 
 
@@ -264,7 +270,8 @@ def handle_url(args):
     console.logger.info("Found matching plugin {0} for URL {1}", plugin.module, args.url)
 
     try:
-        streams = plugin.get_streams(args.stream_priority)
+        streams = plugin.get_streams(stream_types=args.stream_types,
+                                     sorting_excludes=args.stream_sorting_excludes)
     except (StreamError, PluginError) as err:
         console.exit("{0}", err)
 
@@ -280,15 +287,15 @@ def handle_url(args):
 
             handle_stream(args, streams)
         else:
-            err = "Invalid stream quality: {0}".format(args.stream)
+            err = "Invalid stream specified: {0}".format(args.stream)
 
             if console.json:
                 console.msg_json(dict(streams=streams, plugin=plugin.module, error=err))
             else:
                 validstreams = format_valid_streams(streams)
 
-                console.msg(err)
                 console.msg("Valid streams: {0}", validstreams)
+                console.exit(err)
     else:
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module))
@@ -368,10 +375,11 @@ def set_options(args):
                                "as hiding player output is now the default.")
 
 
-
-
 def main():
     arglist = sys.argv[1:]
+
+    # Handle SIGTERM just like SIGINT
+    signal.signal(signal.SIGTERM, signal.default_int_handler)
 
     # Load additional arguments from livestreamerrc
     if os.path.exists(CONFIG_FILE):

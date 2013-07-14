@@ -162,6 +162,7 @@ class JustinTV(Plugin):
         try:
             params = dict(token=fulltoken, hd="true", allow_cdn="true")
             playlist = HLSStream.parse_variant_playlist(self.session, url,
+                                                        nameprefix="mobile_",
                                                         params=params)
         except IOError as err:
             if "404" not in str(err):
@@ -202,9 +203,6 @@ class JustinTV(Plugin):
             hlsstreams = self._get_hls_streams()
 
             for name, stream in hlsstreams.items():
-                if name in ("high", "low"):
-                    name = "mobile_{0}".format(name)
-
                 if "iphone" in name:
                     name = name.replace("iphone", "mobile_")
 

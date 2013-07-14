@@ -16,9 +16,10 @@ shutil.copy(script, script_exe)
 includes = ("requests", "re", "xml", "xml.dom.minidom",
             "zlib", "ctypes", "argparse", "hmac", "tempfile",
             "os", "sys", "subprocess", "getpass", "msvcrt",
-            "urllib", "urlparse", "pkgutil", "imp")
+            "urllib", "urlparse", "pkgutil", "imp", "ast")
 
-dst = "..\\build-win32\\livestreamer-bbfreeze-" + build_version + "\\"
+freezer_path = os.path.dirname(os.path.abspath(__file__))
+dst = "{0}\\..\\build-win32\\livestreamer-bbfreeze-{1}\\".format(freezer_path, build_version)
 
 f = Freezer(dst, includes=includes)
 f.include_py = False

@@ -33,7 +33,7 @@ class HTTPStream(Stream):
         req = Request(url=self.url, **self.args).prepare()
 
         return dict(type=HTTPStream.shortname(),
-                    url=req.url, headers=req.headers,
+                    url=req.url, headers=dict(req.headers),
                     body=req.body, method=req.method or "GET")
 
     def open(self):

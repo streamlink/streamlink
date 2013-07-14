@@ -11,7 +11,8 @@ SpecialQualityWeights = {
     "hq": 576,
     "sd": 576,
     "sq": 360,
-    "mobile_high": 230,
+    "mobile_high": 330,
+    "mobile_medium": 260,
     "mobile_low": 170,
 }
 
@@ -81,23 +82,34 @@ class Plugin(object):
     def get_option(cls, key):
         return cls.options.get(key)
 
-    def get_streams(self, priority=["rtmp", "hls", "hds", "http",
-                                    "akamaihd"]):
-        """
-        Attempts to retrieves any available streams. Returns a :class:`dict` containing the streams, e.g:
+    def get_streams(self, stream_types=["rtmp", "hls", "hds", "http", "akamaihd"],
+                    sorting_excludes=None):
+        """Attempts to retrieve available streams.
 
-            {'720p': <livestreamer.stream.rtmpdump.RTMPStream object at 0x7fd94eb02050>, ... }
+        Returns a :class:`dict` containing the streams, where the key is the
+        name of the stream, most commonly the quality and the value is a
+        :class:`Stream` object.
 
-        The key is the name of the stream, most commonly the quality.
-        The value is a :class:`Stream` object.
+        The result can contain the synonyms **best** and **worst** which points
+        to the streams which are likely to be of highest and lowest quality
+        respectively.
 
-        Can contain the synonyms *best* and *worst* which points to the streams
-        which are likely to be of highest and lowest quality respectively.
+        If multiple streams with the same name are found, the order of streams
+        specified in *stream_types* will determine which stream gets to keep the
+        name while the rest will be renamed to "<name>_<stream type>".
 
-        *Changed in version 1.4.2:* Added *priority* argument.
+        :param stream_types: a list of stream types to return.
+        :param sorting_excludes: a list of streams to exclude when sorting to
+                                 decide best/worst synonyms.
 
-        :param priority: decides which stream type to prefer when there is multiple streams with the same name
+        .. versionchanged:: 1.4.2
+           Added *priority* parameter.
 
+        .. versionchanged:: 1.5
+           Renamed *priority* to *stream_types* and changed behaviour slightly.
+
+        .. versionchanged:: 1.5
+           Added *sorting_excludes* parameter.
 
         """
 
@@ -111,7 +123,7 @@ class Plugin(object):
         def sort_priority(s):
             n = type(s).shortname()
             try:
-                p = priority.index(n)
+                p = stream_types.index(n)
             except ValueError:
                 p = 99
 
@@ -130,14 +142,19 @@ class Plugin(object):
 
                     streams[sname] = stream
             else:
-                streams[name] = stream
+                if type(stream).shortname() in stream_types:
+                    streams[name] = stream
 
-        sort = sorted(filter(qualityweight, streams.keys()),
-                      key=qualityweight)
+        stream_names = filter(qualityweight, streams.keys())
+        sorted_streams = sorted(stream_names, key=qualityweight)
 
-        if len(sort) > 0:
-            best = sort[-1]
-            worst = sort[0]
+        if sorting_excludes:
+            sorted_streams = list(filter(lambda s: s not in sorting_excludes,
+                                  sorted_streams))
+
+        if len(sorted_streams) > 0:
+            best = sorted_streams[-1]
+            worst = sorted_streams[0]
             streams["best"] = streams[best]
             streams["worst"] = streams[worst]
 

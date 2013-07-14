@@ -60,6 +60,9 @@ class ConsoleOutput(object):
                          indent=2)
         self.msg("{0}", msg)
 
+        if isinstance(obj, dict) and obj.get("error"):
+            sys.exit(1)
+
     def exit(self, msg, *args, **kwargs):
         formatted = msg.format(*args, **kwargs)
 
@@ -70,6 +73,6 @@ class ConsoleOutput(object):
             msg = "error: {0}".format(formatted)
             self.msg("{0}", msg)
 
-        sys.exit()
+        sys.exit(1)
 
 __all__ = ["ConsoleOutput"]

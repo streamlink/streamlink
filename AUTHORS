@@ -5,7 +5,7 @@
 
 N: Dominik Dabrowski
 G: github.com/doda
-D: Initial quality ranking feature
+D: Initial quality ranking feature.
 
 N: Sam Edwards
 G: github.com/dotsam
@@ -13,23 +13,31 @@ D: ilive.to plugin fixes.
 
 N: Gaspard Jankowiak
 G: github.com/gapato
-D: DailyMotion plugin
+D: DailyMotion plugin.
+
+N: Kacper
+G: github.com/kasper93
+D: Aliez.tv plugin.
 
 N: Toad King
 G: github.com/ToadKing
-D: Named pipe support
+D: Named pipe support.
 
 N: Niall McAndrew
 G: github.com/niallm90
-D: Original GOMTV plugin
+D: Original GOMTV plugin.
 
 N: Athanasios Oikonomou
 G: github.com/athoik
-D: Various plugins
+D: Various plugins.
+
+N: John Peterson
+G: github.com/john-peterson
+D: Various tweaks and fixes.
 
 N: Christopher Rosell
 G: github.com/chrippa
-D: Primary author and maintainer of Livestreamer and most of it's plugins
+D: Primary author and maintainer of Livestreamer and most of it's plugins.
 
 N: Daniel Wallace
 G: github.com/gtmanfred
