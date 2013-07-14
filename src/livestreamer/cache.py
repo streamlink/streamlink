@@ -27,8 +27,11 @@ class Cache(object):
 
     def _load(self):
         if os.path.exists(self.filename):
-            with open(self.filename, "r") as fd:
-                self._cache = json.load(fd)
+            try:
+                with open(self.filename, "r") as fd:
+                    self._cache = json.load(fd)
+            except:
+                self._cache = {}
         else:
             self._cache = {}
 
