@@ -14,6 +14,9 @@ class ConsoleOutput(object):
         self.json = json
         self.set_output(output)
 
+    def set_level(self, level):
+        self.livestreamer.set_loglevel(level)
+
     def set_output(self, output):
         self.output = output
         self.livestreamer.set_logoutput(output)
