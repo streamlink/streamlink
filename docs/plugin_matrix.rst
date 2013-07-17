@@ -21,6 +21,8 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 +--------------------+--------+------+----------------------------------------+
 | Euronews.com       | Yes    | No   |                                        |
 +--------------------+--------+------+----------------------------------------+
+| Filmon.com         | Yes    | Yes  | Only SD (HD requires authentication)   |
++--------------------+--------+------+----------------------------------------+
 | Freedocast         | Yes    | No   |                                        |
 +--------------------+--------+------+----------------------------------------+
 | GOMTV.net          | Yes    | Yes  | Requires authentication.               |
