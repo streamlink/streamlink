@@ -418,8 +418,17 @@ def setup_options():
         livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
 
 
+def check_root():
+    if hasattr(os, "getuid"):
+        if os.geteuid() == 0 and not args.yes_run_as_root:
+            print("livestreamer is not supposed to be run as root. "
+                  "If you really must you can do it by passing "
+                  "--yes-run-as-root.")
+            sys.exit(1)
+
 def main():
     setup_args()
+    check_root()
     setup_livestreamer()
     setup_console()
     setup_plugins()

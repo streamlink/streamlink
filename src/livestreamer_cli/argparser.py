@@ -44,6 +44,8 @@ parser.add_argument("-Q", "--quiet", action="store_true",
                        help="Alias for --loglevel none")
 parser.add_argument("-j", "--json", action="store_true",
                     help="Output JSON instead of the normal text output and disable log output, useful for external scripting")
+parser.add_argument("--yes-run-as-root", action="store_true",
+                    help=argparse.SUPPRESS)
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",
