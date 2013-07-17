@@ -40,18 +40,22 @@ class Filmon(Plugin):
         streams = {}
 
         for stream in json["streams"]:
-            parsed=urlparse(stream["url"])
-            if parsed.scheme != "rtmp":
+            if not ("url" in stream and "name" in stream):
                 continue
-            name=stream["quality"]
-            playpath=stream["name"]
+
+            parsed = urlparse(stream["url"])
+
+            if not parsed.scheme.startswith("rtmp"):
+                continue
+
+            name = stream["quality"]
             streams[name] = RTMPStream(self.session, {
-                 "rtmp": "rtmp://{0}".format(parsed.netloc),
-                 "pageUrl": self.url,
-                 "swfUrl": self.SWFURL,
-                 "playpath" : playpath,
-                 "app" : parsed.path[1:],
-                 "live": True
+                "rtmp": stream["url"],
+                "pageUrl": self.url,
+                "swfUrl": self.SWFURL,
+                "playpath": stream["name"],
+                "app": "{0}?{1}".format(parsed.path[1:], parsed.query),
+                "live": True
             })
 
         return streams
