@@ -62,7 +62,7 @@ class Cache(object):
 
             shutil.move(tempname, self.filename)
         except (IOError, OSError):
-            pass
+            os.remove(tempname)
 
     def set(self, key, value, expires=60 * 60 * 24 * 7):
         self._load()
