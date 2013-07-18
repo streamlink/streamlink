@@ -48,13 +48,18 @@ class Filmon(Plugin):
             if not parsed.scheme.startswith("rtmp"):
                 continue
 
+            if parsed.query:
+                app = "{0}?{1}".format(parsed.path[1:], parsed.query)
+            else:
+                app = parsed.path[1:]
+
             name = stream["quality"]
             streams[name] = RTMPStream(self.session, {
                 "rtmp": stream["url"],
                 "pageUrl": self.url,
                 "swfUrl": self.SWFURL,
                 "playpath": stream["name"],
-                "app": "{0}?{1}".format(parsed.path[1:], parsed.query),
+                "app": app,
                 "live": True
             })
 
