@@ -39,13 +39,17 @@ class JustinTV(Plugin):
     def _get_metadata(self):
         url = self.MetadataURL.format(self.channelname)
 
-        headers = {}
-        cookie = self.options.get("cookie")
+        cookies = {}
 
-        if cookie:
-            headers["Cookie"] = cookie
+        for cookie in self.options.get("cookie").split(";"):
+            try:
+                name, value = cookie.split("=")
+            except ValueError:
+                continue
 
-        res = urlget(url, headers=headers)
+            cookies[name.strip()] = value.strip()
+
+        res = urlget(url, cookies=cookies)
         meta = res_xml(res, "metadata XML")
 
         metadata = {}
