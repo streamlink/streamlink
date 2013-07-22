@@ -222,7 +222,7 @@ Cookies should be specified in a key value list separated by a semicolon. In thi
 
 .. sourcecode:: console
 
-    $ livestreamer --jtv-cookie "_twitch_session_id=xxxxxx; persistent=xxxxx;" twitch.tv/ignproleague
+    $ livestreamer --jtv-cookie "_twitch_session_id=xxxxxx; persistent=xxxxx" twitch.tv/ignproleague
     [plugin.justintv][info] Attempting to authenticate using cookies
     [plugin.justintv][info] Successfully logged in as <username>
 
