@@ -5,6 +5,12 @@ Livestreamer is a library and a CLI that can be used to retrieve information and
 See http://livestreamer.tanuki.se/ for more information on how to use it.
 
 
+Software based on Livestreamer
+------------------------------
+
+[Alternative interfaces](https://github.com/chrippa/livestreamer/wiki/Alternative-interfaces)
+
+
 Contributing
 ------------
 
@@ -19,3 +25,5 @@ If you wish to contribute to this project please follow these guidelines:
 - When creating a pull request, make sure it's on the correct branch. These branches are currently used:
   - master: Only critical fixes that needs to be released ASAP.
   - develop: Everything else.
+
+
