@@ -4,7 +4,7 @@ from .options import Options
 
 import re
 
-SpecialQualityWeights = {
+QUALITY_WEIGTHS_EXTRA = {
     "live": 1080,
     "hd": 1080,
     "ehq": 720,
@@ -18,8 +18,8 @@ SpecialQualityWeights = {
 
 
 def qualityweight(quality):
-    if quality in SpecialQualityWeights:
-        return SpecialQualityWeights[quality]
+    if quality in QUALITY_WEIGTHS_EXTRA:
+        return QUALITY_WEIGTHS_EXTRA[quality]
 
     match = re.match("^(\d+)([k]|[p])?([\+])?$", quality)
 
@@ -143,20 +143,23 @@ class Plugin(object):
 
             return p
 
+        # Rename streams if needed and exclude unwanted stream types
         for name, stream in ostreams.items():
+            stream_type = type(stream).shortname()
+
             if isinstance(stream, list):
-                sstream = sorted(stream, key=sort_priority)
+                sorted_streams = sorted(stream, key=sort_priority)
 
-                for i, stream in enumerate(sstream):
+                for i, stream in enumerate(sorted_streams):
                     if i == 0:
-                        sname = name
+                        stream_name = name
                     else:
-                        sname = type(stream).shortname()
-                        sname = "{0}_{1}".format(name, sname)
+                        stream_name = "{0}_{1}".format(name, stream_type)
 
-                    streams[sname] = stream
+                    if stream_type in stream_types:
+                        streams[stream_name] = stream
             else:
-                if type(stream).shortname() in stream_types:
+                if stream_type in stream_types:
                     streams[name] = stream
 
         stream_names = filter(qualityweight, streams.keys())
