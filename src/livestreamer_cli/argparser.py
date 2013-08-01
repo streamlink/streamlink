@@ -87,8 +87,7 @@ streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory",
                        help="Attempts to load plugins from these directories. Multiple directories can be used by separating them with a semicolon (;)")
-pluginopt.add_argument("--stream-types", "--stream-priority", metavar="types",
-                       default="rtmp,hls,hds,http,akamaihd", type=list_type,
+pluginopt.add_argument("--stream-types", "--stream-priority", metavar="types", type=list_type,
                        help=("A comma-delimited list of stream types to allow. "
                              "The order will be used to separate streams when there are "
                              "multiple streams with the same name and different stream types. "

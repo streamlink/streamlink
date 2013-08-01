@@ -46,6 +46,18 @@ def qualityweight(quality):
     return 0
 
 
+def default_stream_types(streams):
+    stream_types = ["rtmp", "hls", "hds", "http"]
+
+    for name, stream in streams.items():
+        stream_type = type(stream).shortname()
+
+        if stream_type not in stream_types:
+            stream_types.append(stream_type)
+
+    return stream_types
+
+
 class Plugin(object):
     """
     A plugin can retrieve stream information from the URL specified.
@@ -82,8 +94,7 @@ class Plugin(object):
     def get_option(cls, key):
         return cls.options.get(key)
 
-    def get_streams(self, stream_types=["rtmp", "hls", "hds", "http", "akamaihd"],
-                    sorting_excludes=None):
+    def get_streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to retrieve available streams.
 
         Returns a :class:`dict` containing the streams, where the key is the
@@ -119,6 +130,9 @@ class Plugin(object):
             return {}
 
         streams = {}
+
+        if stream_types is None:
+            stream_types = default_stream_types(ostreams)
 
         def sort_priority(s):
             n = type(s).shortname()
