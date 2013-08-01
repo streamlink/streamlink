@@ -46,16 +46,35 @@ def qualityweight(quality):
     return 0
 
 
+def iterate_streams(streams):
+    for name, stream in streams.items():
+        if isinstance(stream, list):
+            for sub_stream in stream:
+                yield (name, sub_stream)
+        else:
+            yield (name, stream)
+
 def default_stream_types(streams):
     stream_types = ["rtmp", "hls", "hds", "http"]
 
-    for name, stream in streams.items():
+    for name, stream in iterate_streams(streams):
         stream_type = type(stream).shortname()
 
         if stream_type not in stream_types:
             stream_types.append(stream_type)
 
     return stream_types
+
+
+def stream_type_priority(stream_types, stream):
+    stream_type = type(stream).shortname()
+
+    try:
+        prio = stream_types.index(stream_type)
+    except ValueError:
+        prio = 99
+
+    return prio
 
 
 class Plugin(object):
@@ -129,39 +148,32 @@ class Plugin(object):
         except NoStreamsError:
             return {}
 
+        if not ostreams:
+            return {}
+
         streams = {}
 
         if stream_types is None:
             stream_types = default_stream_types(ostreams)
 
-        def sort_priority(s):
-            n = type(s).shortname()
-            try:
-                p = stream_types.index(n)
-            except ValueError:
-                p = 99
 
-            return p
+        # Add streams depending on stream type and priorities
+        sorted_streams = sorted(iterate_streams(ostreams),
+                                key=lambda s: stream_type_priority(stream_types, s[1]))
 
-        # Rename streams if needed and exclude unwanted stream types
-        for name, stream in ostreams.items():
+        for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
-            if isinstance(stream, list):
-                sorted_streams = sorted(stream, key=sort_priority)
+            if stream_type not in stream_types:
+                continue
 
-                for i, stream in enumerate(sorted_streams):
-                    if i == 0:
-                        stream_name = name
-                    else:
-                        stream_name = "{0}_{1}".format(name, stream_type)
+            if name in streams:
+                name = "{0}_{1}".format(name, stream_type)
 
-                    if stream_type in stream_types:
-                        streams[stream_name] = stream
-            else:
-                if stream_type in stream_types:
-                    streams[name] = stream
+            streams[name] = stream
 
+
+        # Create the best/worst synonmys
         stream_names = filter(qualityweight, streams.keys())
         sorted_streams = sorted(stream_names, key=qualityweight)
 
