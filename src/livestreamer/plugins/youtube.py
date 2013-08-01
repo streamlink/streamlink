@@ -67,9 +67,6 @@ class Youtube(Plugin):
 
         args = verifyjson(info, "args")
 
-        if not "live_playback" in args or args["live_playback"] == "0":
-            self.logger.warning("Live playback not detected! VOD is not supported. See: https://github.com/chrippa/livestreamer/issues/125")
-
         streams = {}
 
         uestreammap = verifyjson(args, "url_encoded_fmt_stream_map")
@@ -104,6 +101,9 @@ class Youtube(Plugin):
                 streams.update(hlsstreams)
             except IOError as err:
                 self.logger.warning("Failed to get variant playlist: {0}", err)
+
+        if not streams and args.get("live_playback", "0") == "0":
+            self.logger.warning("VOD support may not be 100% complete. Try youtube-dl instead.")
 
         return streams
 
