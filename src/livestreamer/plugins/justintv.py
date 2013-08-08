@@ -80,6 +80,13 @@ class JustinTV(Plugin):
     # rtmpdump to fail. Safest to just to do the verification ourself.
     def _verify_swf(self):
         swfurl = urlresolve(self.SWFURL)
+
+        # For some reason the URL returned sometimes contain random
+        # user-agent/referer query parameters, let's strip them
+        # so we actually cache.
+        if "?" in swfurl:
+            swfurl = swfurl[:swfurl.find("?")]
+
         cachekey = "swf:{0}".format(swfurl)
         swfhash, swfsize = self.cache.get(cachekey, (None, None))
 
