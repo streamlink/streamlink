@@ -1,8 +1,11 @@
-"""
+"""Livestreamer extracts streams from various services.
 
-Livestreamer is a CLI program that launches live streams from various
-streaming services in a custom video player but also provides an API
-that allows you to interact with the stream data in your own application.
+The main compontent of Livestreamer is a CLI program that launches
+streams the streams in a video player.
+
+An API is also provided that allows direct access to stream data.
+
+Full documentation is available at http://livestreamer.tanuki.se/.
 
 """
 

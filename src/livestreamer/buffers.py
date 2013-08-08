@@ -4,7 +4,7 @@ from .compat import bytes
 
 
 class Buffer(object):
-    """ Simple buffer for use in single-threaded consumer/filler """
+    """Simple buffer for use in single-threaded consumer/filler."""
 
     def __init__(self):
         self.buffer = bytearray()
@@ -32,7 +32,7 @@ class Buffer(object):
 
 
 class RingBuffer(Buffer):
-    """ Circular buffer for use in multi-threaded consumer/filler """
+    """Circular buffer for use in multi-threaded consumer/filler."""
 
     def __init__(self, size=8192*4):
         Buffer.__init__(self)

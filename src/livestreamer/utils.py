@@ -1,11 +1,7 @@
-from .compat import urljoin, urlparse, parse_qsl
-from .exceptions import PluginError
-
 import hashlib
 import hmac
 import json
 import re
-import requests
 import zlib
 
 try:
@@ -13,7 +9,13 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
+import requests
+
+from .compat import urljoin, urlparse, parse_qsl
+from .exceptions import PluginError
+
 SWF_KEY = b"Genuine Adobe Flash Player 001"
+
 
 def urlopen(url, method="get", exception=PluginError, session=None,
             timeout=20, *args, **kw):
@@ -28,15 +30,18 @@ def urlopen(url, method="get", exception=PluginError, session=None,
 
         res.raise_for_status()
     except (requests.exceptions.RequestException, IOError) as rerr:
-        err = exception(("Unable to open URL: {url} ({err})").format(url=url, err=str(rerr)))
+        err = exception("Unable to open URL: {url} ({err})".format(url=url,
+                                                                   err=rerr))
         err.err = rerr
         raise err
 
     return res
 
+
 def urlget(url, stream=False, *args, **kw):
     return urlopen(url, method="get", stream=stream,
                    *args, **kw)
+
 
 def urlresolve(url):
     res = urlget(url, stream=True, allow_redirects=False)
@@ -46,11 +51,13 @@ def urlresolve(url):
     else:
         return url
 
+
 def swfdecompress(data):
     if data[:3] == b"CWS":
         data = b"F" + data[1:8] + zlib.decompress(data[8:])
 
     return data
+
 
 def swfverify(url):
     res = urlopen(url)
@@ -60,17 +67,20 @@ def swfverify(url):
 
     return h.hexdigest(), len(swf)
 
+
 def verifyjson(json, key):
     if not key in json:
-        raise PluginError(("Missing '{0}' key in JSON").format(key))
+        raise PluginError("Missing '{0}' key in JSON".format(key))
 
     return json[key]
+
 
 def absolute_url(baseurl, url):
     if not url.startswith("http"):
         return urljoin(baseurl, url)
     else:
         return url
+
 
 def parse_json(data, jsontype="JSON", exception=PluginError):
     try:
@@ -81,9 +91,11 @@ def parse_json(data, jsontype="JSON", exception=PluginError):
         else:
             snippet = data
 
-        raise exception(("Unable to parse {0}: {1} ({2})").format(jsontype, err, snippet))
+        raise exception("Unable to parse {0}: {1} ({2})".format(jsontype, err,
+                                                                snippet))
 
     return jsondata
+
 
 def res_json(res, jsontype="JSON", exception=PluginError):
     try:
@@ -94,9 +106,11 @@ def res_json(res, jsontype="JSON", exception=PluginError):
         else:
             snippet = res.text
 
-        raise exception(("Unable to parse {0}: {1} ({2})").format(jsontype, err, snippet))
+        raise exception("Unable to parse {0}: {1} ({2})".format(jsontype, err,
+                                                                snippet))
 
     return jsondata
+
 
 def parse_xml(data, xmltype="XML", ignore_ns=False, exception=PluginError):
     if ignore_ns:
@@ -110,15 +124,19 @@ def parse_xml(data, xmltype="XML", ignore_ns=False, exception=PluginError):
         else:
             snippet = data
 
-        raise exception(("Unable to parse {0}: {1} ({2})").format(xmltype, err, snippet))
+        raise exception("Unable to parse {0}: {1} ({2})".format(xmltype, err,
+                                                                snippet))
 
     return tree
+
 
 def parse_qsd(*args, **kwargs):
     return dict(parse_qsl(*args, **kwargs))
 
+
 def res_xml(res, *args, **kw):
     return parse_xml(res.text, *args, **kw)
+
 
 def rtmpparse(url):
     parse = urlparse(url)

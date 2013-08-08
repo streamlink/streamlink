@@ -3,17 +3,16 @@ import os
 import sys
 import signal
 
+from livestreamer import (Livestreamer, StreamError, PluginError,
+                          NoPluginError)
+from livestreamer.stream import StreamProcess
+
 from .argparser import parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, ignored, find_default_player
-
-from livestreamer import (Livestreamer, StreamError, PluginError,
-                          NoPluginError)
-from livestreamer.stream import StreamProcess
-
 
 args = console = livestreamer = None
 
@@ -25,7 +24,8 @@ def check_file_output(filename, force):
     console.logger.debug("Checking file output")
 
     if os.path.isfile(filename) and not force:
-        answer = console.ask("File {0} already exists! Overwrite it? [y/N] ", filename)
+        answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
+                             filename)
 
         if answer.lower() != "y":
             sys.exit()
@@ -56,8 +56,9 @@ def create_output():
         player = args.player or find_default_player()
 
         if not player:
-            console.exit("The default player (VLC) does not seem to be installed. "
-                         "You must specify the path to a player executable with --player.")
+            console.exit("The default player (VLC) does not seem to be "
+                         "installed. You must specify the path to a player "
+                         "executable with --player.")
 
         if args.fifo:
             pipename = "livestreamerpipe-{0}".format(os.getpid())
@@ -72,7 +73,6 @@ def create_output():
 
         out = PlayerOutput(player, namedpipe=namedpipe,
                            quiet=not args.verbose_player)
-
 
     return out
 
@@ -99,7 +99,6 @@ def output_stream(stream):
     if len(prebuffer) == 0:
         console.logger.error("Failed to read data from stream")
         return
-
 
     output = create_output()
 
@@ -135,7 +134,8 @@ def read_stream(stream, output):
         try:
             data = stream.read(8192)
         except IOError as err:
-            console.logger.error("Error when reading from stream: {0}", str(err))
+            console.logger.error("Error when reading from stream: {0}",
+                                 str(err))
             break
 
         if len(data) == 0:
@@ -157,7 +157,8 @@ def read_stream(stream, output):
             if is_player and err.errno in (errno.EPIPE, errno.EINVAL):
                 console.logger.info("Player closed")
             else:
-                console.logger.error("Error when writing to output: {0}", str(err))
+                console.logger.error("Error when writing to output: {0}",
+                                     str(err))
 
             break
 
@@ -227,7 +228,6 @@ def format_valid_streams(streams):
 
     """
 
-
     delimiter = ", "
     validstreams = []
 
@@ -263,7 +263,8 @@ def handle_url():
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
 
-    console.logger.info("Found matching plugin {0} for URL {1}", plugin.module, args.url)
+    console.logger.info("Found matching plugin {0} for URL {1}",
+                        plugin.module, args.url)
 
     try:
         streams = plugin.get_streams(stream_types=args.stream_types,
@@ -286,7 +287,8 @@ def handle_url():
             err = "Invalid stream specified: {0}".format(args.stream)
 
             if console.json:
-                console.msg_json(dict(streams=streams, plugin=plugin.module, error=err))
+                console.msg_json(dict(streams=streams, plugin=plugin.module,
+                                      error=err))
             else:
                 validstreams = format_valid_streams(streams)
 
@@ -315,14 +317,14 @@ def print_plugins():
 def load_plugins(dirs):
     """Attempts to load plugins from a list of directories."""
 
-    dirs = [os.path.expanduser(d) for d in dirs.split(";")]
+    dirs = [os.path.expanduser(d) for d in dirs]
 
     for directory in dirs:
         if os.path.isdir(directory):
             livestreamer.load_plugins(directory)
         else:
-            console.logger.warning("Plugin path {0} does not exist or is not a directory!",
-                                   directory)
+            console.logger.warning("Plugin path {0} does not exist or is not "
+                                   "a directory!", directory)
 
 
 def setup_args():
@@ -367,7 +369,7 @@ def setup_console():
 
 def setup_plugins():
     if os.path.isdir(PLUGINS_DIR):
-        load_plugins(PLUGINS_DIR)
+        load_plugins([PLUGINS_DIR])
 
     if args.plugin_dirs:
         load_plugins(args.plugin_dirs)
@@ -400,22 +402,27 @@ def setup_options():
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
 
     if args.hds_fragment_buffer is not None:
-        livestreamer.set_option("hds-fragment-buffer", args.hds_fragment_buffer)
+        livestreamer.set_option("hds-fragment-buffer",
+                                args.hds_fragment_buffer)
 
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 
     if args.jtv_cookie:
-        livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)
+        livestreamer.set_plugin_option("justintv", "cookie",
+                                       args.jtv_cookie)
 
     if args.gomtv_cookie:
-        livestreamer.set_plugin_option("gomtv", "cookie", args.gomtv_cookie)
+        livestreamer.set_plugin_option("gomtv", "cookie",
+                                       args.gomtv_cookie)
 
     if args.gomtv_username:
-        livestreamer.set_plugin_option("gomtv", "username", args.gomtv_username)
+        livestreamer.set_plugin_option("gomtv", "username",
+                                       args.gomtv_username)
 
     if gomtv_password:
-        livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
+        livestreamer.set_plugin_option("gomtv", "password",
+                                       gomtv_password)
 
 
 def check_root():
@@ -425,6 +432,7 @@ def check_root():
                   "If you really must you can do it by passing "
                   "--yes-run-as-root.")
             sys.exit(1)
+
 
 def main():
     setup_args()
@@ -440,4 +448,3 @@ def main():
         print_plugins()
     else:
         parser.print_help()
-

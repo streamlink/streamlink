@@ -25,7 +25,9 @@ import livestreamer
 
 setup(name="livestreamer",
       version=livestreamer.__version__,
-      description="CLI program that launches streams from various streaming services in a custom video player.",
+      description="Livestreamer is CLI program that extracts streams from "
+                  "various services and pipes them into a video player of "
+                  "choice.",
       url="http://livestreamer.tanuki.se/",
       author="Christopher Rosell",
       author_email="chrippa@tanuki.se",

@@ -27,6 +27,6 @@ except ImportError:
     from urllib import quote, unquote
     import Queue as queue
 
-__all__ = ["is_py2", "is_py3", "is_py33", "is_win32",
-           "str", "bytes", "urlparse", "urljoin", "parse_qsl",
-           "quote", "unquote", "queue", "range"]
+__all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
+           "urlparse", "urljoin", "parse_qsl", "quote", "unquote", "queue",
+           "range"]

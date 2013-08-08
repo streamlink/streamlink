@@ -84,8 +84,10 @@ class PlayerOutput(Output):
             filename = "-"
 
         playercmd = "{0} {1}".format(self.cmd, filename)
-        self.player = subprocess.Popen(playercmd, shell=True, stdin=self.stdin,
-                                       stdout=self.stdout, stderr=self.stderr)
+        self.player = subprocess.Popen(playercmd, shell=True,
+                                       stdin=self.stdin,
+                                       stdout=self.stdout,
+                                       stderr=self.stderr)
 
         # Wait 0.5 seconds to see if program exited prematurely
         time.sleep(0.5)

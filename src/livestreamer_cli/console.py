@@ -6,6 +6,7 @@ from getpass import getpass
 from .compat import input
 from .utils import JSONEncoder
 
+
 class ConsoleOutput(object):
     def __init__(self, output, livestreamer, json=False):
         self.livestreamer = livestreamer
