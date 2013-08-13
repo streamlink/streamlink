@@ -44,6 +44,7 @@ if IS_PY3:
 else:
     pass
 
+DEFAULT_ENCODING = "utf-8"
 
 class ErrorReturnCode(Exception):
     truncate_cap = 200
@@ -68,8 +69,8 @@ class ErrorReturnCode(Exception):
                 tstderr += ("... (%d more, please see e.stderr)" % err_delta).encode()
 
         msg = "\n\nRan: %r\n\nSTDOUT:\n\n  %s\n\nSTDERR:\n\n  %s" %\
-            (full_cmd, tstdout.decode("utf8", "replace"),
-             tstderr.decode("utf8", "replace"))
+            (full_cmd, tstdout.decode(DEFAULT_ENCODING, "replace"),
+             tstderr.decode(DEFAULT_ENCODING, "replace"))
         super(ErrorReturnCode, self).__init__(msg)
 
 class CommandNotFound(Exception): pass
@@ -142,7 +143,7 @@ class RunningCommand(object):
         if self.call_args["with"]: return
 
         # run and block
-        if stdin: stdin = stdin.encode("utf8")
+        if stdin: stdin = stdin.encode(DEFAULT_ENCODING)
         self._stdout, self._stderr = self.process.communicate(stdin)
         self._handle_exit_code(self.process.wait())
 
@@ -159,7 +160,7 @@ class RunningCommand(object):
 
     def __str__(self):
         if IS_PY3: return self.__unicode__()
-        else: return unicode(self).encode("utf8")
+        else: return unicode(self).encode(DEFAULT_ENCODING)
 
     def __unicode__(self):
         if self.process:
@@ -195,11 +196,11 @@ class RunningCommand(object):
 
     def stdout(self):
         if self.call_args["bg"]: self.wait()
-        return self._stdout.decode("utf8", "replace")
+        return self._stdout.decode(DEFAULT_ENCODING, "replace")
 
     def stderr(self):
         if self.call_args["bg"]: self.wait()
-        return self._stderr.decode("utf8", "replace")
+        return self._stderr.decode(DEFAULT_ENCODING, "replace")
 
     def wait(self):
         if self.process.returncode is not None: return
@@ -269,8 +270,14 @@ class Command(object):
 
 
     def _format_arg(self, arg):
-        if IS_PY3: arg = str(arg)
-        else: arg = unicode(arg).encode("utf8")
+        if IS_PY3:
+            arg = str(arg)
+        else:
+            try:
+                arg = unicode(arg, DEFAULT_ENCODING).encode(DEFAULT_ENCODING)
+            except TypeError:
+                arg = unicode(arg).encode(DEFAULT_ENCODING)
+
         if self._partial:
             escaped = arg.replace('"', '\\"')
             escaped = escaped.replace("$", "\$")
@@ -331,7 +338,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
 
     def __str__(self):
         if IS_PY3: return self.__unicode__()
-        else: return unicode(self).encode("utf-8")
+        else: return unicode(self).encode(DEFAULT_ENCODING)
 
     def __repr__(self):
         return str(self)
