@@ -72,8 +72,8 @@ Full list of command line arguments
 
 .. cmdoption:: -p player, --player player
 
-    Player command-line to start, by default Livestreamer
-    will use VLC if it is installed
+    Player command-line to start, by default VLC will be
+    used if it is installed
 
 .. cmdoption:: -q, --quiet-player
 
