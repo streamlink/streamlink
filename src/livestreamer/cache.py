@@ -1,11 +1,10 @@
-from .compat import is_win32
-
-from time import time
-
 import json
 import os
 import shutil
 import tempfile
+
+from time import time
+from .compat import is_win32
 
 if is_win32:
     xdg_cache = os.environ.get("APPDATA",
@@ -15,6 +14,7 @@ else:
                                os.path.expanduser("~/.cache"))
 
 cache_dir = os.path.join(xdg_cache, "livestreamer")
+
 
 class Cache(object):
     """Caches Python values as JSON and prunes expired entries."""
@@ -27,8 +27,11 @@ class Cache(object):
 
     def _load(self):
         if os.path.exists(self.filename):
-            with open(self.filename, "r") as fd:
-                self._cache = json.load(fd)
+            try:
+                with open(self.filename, "r") as fd:
+                    self._cache = json.load(fd)
+            except:
+                self._cache = {}
         else:
             self._cache = {}
 
@@ -59,7 +62,7 @@ class Cache(object):
 
             shutil.move(tempname, self.filename)
         except (IOError, OSError):
-            pass
+            os.remove(tempname)
 
     def set(self, key, value, expires=60 * 60 * 24 * 7):
         self._load()

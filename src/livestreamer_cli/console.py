@@ -6,6 +6,7 @@ from getpass import getpass
 from .compat import input
 from .utils import JSONEncoder
 
+
 class ConsoleOutput(object):
     def __init__(self, output, livestreamer, json=False):
         self.livestreamer = livestreamer
@@ -13,6 +14,9 @@ class ConsoleOutput(object):
 
         self.json = json
         self.set_output(output)
+
+    def set_level(self, level):
+        self.livestreamer.set_loglevel(level)
 
     def set_output(self, output):
         self.output = output

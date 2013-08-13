@@ -1,13 +1,13 @@
+import imp
+import pkgutil
+import sys
+import traceback
+
 from . import plugins, __version__
 from .compat import urlparse, is_win32
 from .exceptions import NoPluginError
 from .logger import Logger
 from .options import Options
-
-import pkgutil
-import imp
-import sys
-import traceback
 
 
 def print_small_exception(start_after):
@@ -31,11 +31,8 @@ def print_small_exception(start_after):
 
 
 class Livestreamer(object):
-    """
-    A Livestreamer session is used to keep track of plugins,
-    options and log settings.
-
-    """
+    """A Livestreamer session is used to keep track of plugins,
+       options and log settings."""
 
     def __init__(self):
         self.options = Options({
@@ -51,8 +48,7 @@ class Livestreamer(object):
         self.load_builtin_plugins()
 
     def set_option(self, key, value):
-        """
-        Sets general options used by plugins and streams originating
+        """Sets general options used by plugins and streams originating
         from this session object.
 
         :param key: key of the option
@@ -63,8 +59,7 @@ class Livestreamer(object):
         self.options.set(key, value)
 
     def get_option(self, key):
-        """
-        Returns current value of option
+        """Returns current value of specified option.
 
         :param key: key of the option
 
@@ -73,8 +68,7 @@ class Livestreamer(object):
         return self.options.get(key)
 
     def set_plugin_option(self, plugin, key, value):
-        """
-        Sets plugin specific options used by plugins originating
+        """Sets plugin specific options used by plugins originating
         from this session object.
 
         :param plugin: name of the plugin
@@ -88,8 +82,7 @@ class Livestreamer(object):
             plugin.set_option(key, value)
 
     def get_plugin_option(self, plugin, key):
-        """
-        Returns current value of plugin specific option
+        """Returns current value of plugin specific option.
 
         :param plugin: name of the plugin
         :param key: key of the option
@@ -101,9 +94,10 @@ class Livestreamer(object):
             return plugin.get_option(key)
 
     def set_loglevel(self, level):
-        """
-        Sets the log level used by this session.
-        Valid levels are: "none", "error", "warning", "info" and "debug".
+        """Sets the log level used by this session.
+
+        Valid levels are: "none", "error", "warning", "info"
+        and "debug".
 
         :param level: level of logging to output
 
@@ -112,8 +106,7 @@ class Livestreamer(object):
         self.logger.set_level(level)
 
     def set_logoutput(self, output):
-        """
-        Sets the log output used by this session.
+        """Sets the log output used by this session.
 
         :param output: a file-like object with a write method
 
@@ -121,9 +114,10 @@ class Livestreamer(object):
         self.logger.set_output(output)
 
     def resolve_url(self, url):
-        """
-        Attempts to find a plugin that can use this URL.
-        The default protocol (http) will be prefixed to the URL if not specified.
+        """Attempts to find a plugin that can use this URL.
+
+        The default protocol (http) will be prefixed to the URL if
+        not specified.
 
         Raises :exc:`NoPluginError` on failure.
 
@@ -151,8 +145,7 @@ class Livestreamer(object):
         self.load_plugins(plugins.__path__[0])
 
     def load_plugins(self, path):
-        """
-        Attempt to load plugins from the path specified.
+        """Attempt to load plugins from the path specified.
 
         :param path: full path to a directory where to look for plugins
 
@@ -164,7 +157,8 @@ class Livestreamer(object):
             try:
                 self.load_plugin(name, file, pathname, desc)
             except Exception:
-                sys.stderr.write("Failed to load plugin {0}:\n".format(name))
+                sys.stderr.write("Failed to load plugin "
+                                 "{0}:\n".format(name))
                 print_small_exception("load_plugin")
 
                 continue

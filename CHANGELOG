@@ -1,4 +1,18 @@
-Version 1.5
+Version 1.5.1
+-------------
+
+
+    Plugins:
+     - Added plugin for Filmon.
+     - Twitch/Justin.tv: Safer cookie and SWF URL handling.
+     - Youtube: Enable VOD support.
+
+    Bug fixes:
+     - Fixed potential crash when invalid UTF-8 is passed as arguments
+       to subprocesses.
+
+
+Version 1.5.0
 -------------
 
     CLI:

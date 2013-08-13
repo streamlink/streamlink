@@ -3,8 +3,10 @@ import os
 from .compat import is_win32
 
 if is_win32:
-    CONFIG_FILE = os.path.join(os.environ["APPDATA"], "livestreamer", "livestreamerrc")
-    PLUGINS_DIR = os.path.join(os.environ["APPDATA"], "livestreamer", "plugins")
+    CONFIG_FILE = os.path.join(os.environ["APPDATA"], "livestreamer",
+                               "livestreamerrc")
+    PLUGINS_DIR = os.path.join(os.environ["APPDATA"], "livestreamer",
+                               "plugins")
 else:
     XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME",
                                      "~/.config")

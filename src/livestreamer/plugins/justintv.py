@@ -39,13 +39,17 @@ class JustinTV(Plugin):
     def _get_metadata(self):
         url = self.MetadataURL.format(self.channelname)
 
-        headers = {}
-        cookie = self.options.get("cookie")
+        cookies = {}
 
-        if cookie:
-            headers["Cookie"] = cookie
+        for cookie in self.options.get("cookie").split(";"):
+            try:
+                name, value = cookie.split("=")
+            except ValueError:
+                continue
 
-        res = urlget(url, headers=headers)
+            cookies[name.strip()] = value.strip()
+
+        res = urlget(url, cookies=cookies)
         meta = res_xml(res, "metadata XML")
 
         metadata = {}
@@ -76,6 +80,13 @@ class JustinTV(Plugin):
     # rtmpdump to fail. Safest to just to do the verification ourself.
     def _verify_swf(self):
         swfurl = urlresolve(self.SWFURL)
+
+        # For some reason the URL returned sometimes contain random
+        # user-agent/referer query parameters, let's strip them
+        # so we actually cache.
+        if "?" in swfurl:
+            swfurl = swfurl[:swfurl.find("?")]
+
         cachekey = "swf:{0}".format(swfurl)
         swfhash, swfsize = self.cache.get(cachekey, (None, None))
 

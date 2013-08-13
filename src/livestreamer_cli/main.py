@@ -3,6 +3,10 @@ import os
 import sys
 import signal
 
+from livestreamer import (Livestreamer, StreamError, PluginError,
+                          NoPluginError)
+from livestreamer.stream import StreamProcess
+
 from .argparser import parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
@@ -10,16 +14,7 @@ from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, ignored, find_default_player
 
-from livestreamer import (Livestreamer, StreamError, PluginError,
-                          NoPluginError)
-from livestreamer.stream import StreamProcess
-
-
-# The Livestreamer session
-livestreamer = Livestreamer()
-
-# All console related operations is handled via the ConsoleOutput class
-console = ConsoleOutput(sys.stdout, livestreamer)
+args = console = livestreamer = None
 
 
 def check_file_output(filename, force):
@@ -29,7 +24,8 @@ def check_file_output(filename, force):
     console.logger.debug("Checking file output")
 
     if os.path.isfile(filename) and not force:
-        answer = console.ask("File {0} already exists! Overwrite it? [y/N] ", filename)
+        answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
+                             filename)
 
         if answer.lower() != "y":
             sys.exit()
@@ -37,7 +33,7 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output(args):
+def create_output():
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -60,8 +56,9 @@ def create_output(args):
         player = args.player or find_default_player()
 
         if not player:
-            console.exit("The default player (VLC) does not seem to be installed. "
-                         "You must specify the path to a player executable with --player.")
+            console.exit("The default player (VLC) does not seem to be "
+                         "installed. You must specify the path to a player "
+                         "executable with --player.")
 
         if args.fifo:
             pipename = "livestreamerpipe-{0}".format(os.getpid())
@@ -77,11 +74,10 @@ def create_output(args):
         out = PlayerOutput(player, namedpipe=namedpipe,
                            quiet=not args.verbose_player)
 
-
     return out
 
 
-def output_stream(args, stream):
+def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
 
     # Attempts to open the stream
@@ -104,8 +100,7 @@ def output_stream(args, stream):
         console.logger.error("Failed to read data from stream")
         return
 
-
-    output = create_output(args)
+    output = create_output()
 
     try:
         output.open()
@@ -139,7 +134,8 @@ def read_stream(stream, output):
         try:
             data = stream.read(8192)
         except IOError as err:
-            console.logger.error("Error when reading from stream: {0}", str(err))
+            console.logger.error("Error when reading from stream: {0}",
+                                 str(err))
             break
 
         if len(data) == 0:
@@ -161,7 +157,8 @@ def read_stream(stream, output):
             if is_player and err.errno in (errno.EPIPE, errno.EINVAL):
                 console.logger.info("Player closed")
             else:
-                console.logger.error("Error when writing to output: {0}", str(err))
+                console.logger.error("Error when writing to output: {0}",
+                                     str(err))
 
             break
 
@@ -177,7 +174,7 @@ def read_stream(stream, output):
     console.logger.info("Stream ended")
 
 
-def handle_stream(args, streams):
+def handle_stream(streams):
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
@@ -217,7 +214,7 @@ def handle_stream(args, streams):
         for streamname in [args.stream] + altstreams:
             console.logger.info("Opening stream: {0}", streamname)
 
-            success = output_stream(args, streams[streamname])
+            success = output_stream(streams[streamname])
 
             if success:
                 break
@@ -230,7 +227,6 @@ def format_valid_streams(streams):
     the stream they point to.
 
     """
-
 
     delimiter = ", "
     validstreams = []
@@ -251,7 +247,7 @@ def format_valid_streams(streams):
     return delimiter.join(validstreams)
 
 
-def handle_url(args):
+def handle_url():
     """The URL handler.
 
     Attempts to resolve the URL to a plugin and then attempts
@@ -267,7 +263,8 @@ def handle_url(args):
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
 
-    console.logger.info("Found matching plugin {0} for URL {1}", plugin.module, args.url)
+    console.logger.info("Found matching plugin {0} for URL {1}",
+                        plugin.module, args.url)
 
     try:
         streams = plugin.get_streams(stream_types=args.stream_types,
@@ -285,12 +282,13 @@ def handle_url(args):
                     if stream is streams[args.stream] and name not in STREAM_SYNONYMS:
                         args.stream = name
 
-            handle_stream(args, streams)
+            handle_stream(streams)
         else:
             err = "Invalid stream specified: {0}".format(args.stream)
 
             if console.json:
-                console.msg_json(dict(streams=streams, plugin=plugin.module, error=err))
+                console.msg_json(dict(streams=streams, plugin=plugin.module,
+                                      error=err))
             else:
                 validstreams = format_valid_streams(streams)
 
@@ -304,35 +302,90 @@ def handle_url(args):
             console.msg("Found streams: {0}", validstreams)
 
 
-def print_plugins(args):
+def print_plugins():
     """Outputs a list of all plugins Livestreamer has loaded."""
 
     pluginlist = list(livestreamer.get_plugins().keys())
-    pluginlist_formatted = ", ".join(pluginlist)
+    pluginlist_formatted = ", ".join(sorted(pluginlist))
 
     if console.json:
         console.msg_json(pluginlist)
     else:
-        console.msg("Installed plugins: {0}", pluginlist_formatted)
+        console.msg("Loaded plugins: {0}", pluginlist_formatted)
 
 
 def load_plugins(dirs):
     """Attempts to load plugins from a list of directories."""
 
-    dirs = [os.path.expanduser(d) for d in dirs.split(";")]
+    dirs = [os.path.expanduser(d) for d in dirs]
 
     for directory in dirs:
         if os.path.isdir(directory):
             livestreamer.load_plugins(directory)
         else:
-            console.logger.warning("Plugin path {0} does not exist or is not a directory!",
-                                   directory)
+            console.logger.warning("Plugin path {0} does not exist or is not "
+                                   "a directory!", directory)
 
 
-def set_options(args):
-    """Sets various options."""
+def setup_args():
+    """Parses arguments."""
+    global args
 
-    if args.gomtv_username and (args.gomtv_password is None or (len(args.gomtv_password) < 1)):
+    arglist = sys.argv[1:]
+
+    # Load additional arguments from livestreamerrc
+    if os.path.exists(CONFIG_FILE):
+        arglist.insert(0, "@" + CONFIG_FILE)
+
+    args = parser.parse_args(arglist)
+
+
+def setup_console():
+    """Console setup."""
+    global console
+
+    # All console related operations is handled via the ConsoleOutput class
+    console = ConsoleOutput(sys.stdout, livestreamer)
+
+    # Console output should be on stderr if we are outputting
+    # a stream to stdout.
+    if args.stdout or args.output == "-":
+        console.set_output(sys.stderr)
+
+    # We don't want log output when we are printing JSON or a command-line.
+    if not (args.json or args.cmdline or args.quiet):
+        console.set_level(args.loglevel)
+
+    if args.quiet_player:
+        console.logger.warning("The option --quiet-player is deprecated since "
+                               "version 1.4.3 as hiding player output is now "
+                               "the default.")
+
+    console.json = args.json
+
+    # Handle SIGTERM just like SIGINT
+    signal.signal(signal.SIGTERM, signal.default_int_handler)
+
+
+def setup_plugins():
+    if os.path.isdir(PLUGINS_DIR):
+        load_plugins([PLUGINS_DIR])
+
+    if args.plugin_dirs:
+        load_plugins(args.plugin_dirs)
+
+
+def setup_livestreamer():
+    """Creates the Livestreamer session."""
+    global livestreamer
+
+    livestreamer = Livestreamer()
+
+
+def setup_options():
+    """Sets Livestreamer options."""
+
+    if args.gomtv_username and not args.gomtv_password:
         gomtv_password = console.askpass("Enter GOMTV password: ")
     else:
         gomtv_password = args.gomtv_password
@@ -349,64 +402,49 @@ def set_options(args):
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
 
     if args.hds_fragment_buffer is not None:
-        livestreamer.set_option("hds-fragment-buffer", args.hds_fragment_buffer)
+        livestreamer.set_option("hds-fragment-buffer",
+                                args.hds_fragment_buffer)
 
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 
     if args.jtv_cookie:
-        livestreamer.set_plugin_option("justintv", "cookie", args.jtv_cookie)
+        livestreamer.set_plugin_option("justintv", "cookie",
+                                       args.jtv_cookie)
 
     if args.gomtv_cookie:
-        livestreamer.set_plugin_option("gomtv", "cookie", args.gomtv_cookie)
+        livestreamer.set_plugin_option("gomtv", "cookie",
+                                       args.gomtv_cookie)
 
     if args.gomtv_username:
-        livestreamer.set_plugin_option("gomtv", "username", args.gomtv_username)
+        livestreamer.set_plugin_option("gomtv", "username",
+                                       args.gomtv_username)
 
     if gomtv_password:
-        livestreamer.set_plugin_option("gomtv", "password", gomtv_password)
+        livestreamer.set_plugin_option("gomtv", "password",
+                                       gomtv_password)
 
-    # We don't want log output when we are printing JSON or a command-line.
-    if not (args.json or args.cmdline or args.quiet):
-        livestreamer.set_loglevel(args.loglevel)
 
-    if args.quiet_player is True:
-        console.logger.warning("The option --quiet-player is deprecated since version 1.4.3 "
-                               "as hiding player output is now the default.")
+def check_root():
+    if hasattr(os, "getuid"):
+        if os.geteuid() == 0 and not args.yes_run_as_root:
+            print("livestreamer is not supposed to be run as root. "
+                  "If you really must you can do it by passing "
+                  "--yes-run-as-root.")
+            sys.exit(1)
 
 
 def main():
-    arglist = sys.argv[1:]
-
-    # Handle SIGTERM just like SIGINT
-    signal.signal(signal.SIGTERM, signal.default_int_handler)
-
-    # Load additional arguments from livestreamerrc
-    if os.path.exists(CONFIG_FILE):
-        arglist.insert(0, "@" + CONFIG_FILE)
-
-    args = parser.parse_args(arglist)
-
-    # Console output should be on stderr if we are outputting
-    # a stream to stdout.
-    if args.stdout or args.output == "-":
-        console.set_output(sys.stderr)
-
-    if args.json:
-        console.json = True
-
-    if os.path.isdir(PLUGINS_DIR):
-        load_plugins(PLUGINS_DIR)
-
-    if args.plugin_dirs:
-        load_plugins(args.plugin_dirs)
+    setup_args()
+    check_root()
+    setup_livestreamer()
+    setup_console()
+    setup_plugins()
 
     if args.url:
-        set_options(args)
-        handle_url(args)
+        setup_options()
+        handle_url()
     elif args.plugins:
-        print_plugins(args)
+        print_plugins()
     else:
         parser.print_help()
-
-
