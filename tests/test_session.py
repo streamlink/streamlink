@@ -78,5 +78,12 @@ class TestSession(unittest.TestCase):
         self.assertTrue("worst" in streams)
         self.assertTrue(streams["best"] is streams["1500k"])
 
+        streams = channel.get_streams(sorting_excludes=[">=1080p", ">1500k"])
+        self.assertTrue(streams["best"] is streams["1500k"])
+
+        streams = channel.get_streams(sorting_excludes=lambda q: not q.endswith("p"))
+        self.assertTrue(streams["best"] is streams["3000k"])
+
+
 if __name__ == "__main__":
     unittest.main()

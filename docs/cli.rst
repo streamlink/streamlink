@@ -68,7 +68,8 @@ Full list of command line arguments
     disable log output, useful for external scripting
 
 
-*Player options*
+Player options
+^^^^^^^^^^^^^^
 
 .. cmdoption:: -p player, --player player
 
@@ -90,7 +91,8 @@ Full list of command line arguments
     Play file using a named pipe instead of stdin (can
     help with incompatible media players)
 
-*File output options*
+File output options
+^^^^^^^^^^^^^^^^^^^
 
 .. cmdoption::  -o filename, --output filename
 
@@ -104,7 +106,9 @@ Full list of command line arguments
 
     Write stream to stdout instead of playing it
 
-*Stream options*
+
+Stream options
+^^^^^^^^^^^^^^
 
 .. cmdoption:: -c, --cmdline
 
@@ -143,7 +147,8 @@ Full list of command line arguments
     and HLS. Use --hds-fragment-buffer for HDS.
 
 
-*Plugin options*
+Plugin options
+^^^^^^^^^^^^^^
 
 .. cmdoption:: --plugin-dirs directory
 
@@ -162,8 +167,16 @@ Full list of command line arguments
 
 .. cmdoption:: --stream-sorting-excludes streams
 
-    A comma-delimited list of streams to exclude from the
-    sorting used by best/worst synonyms, e.g. 1080p+,1080p
+    Fine tune best/worst synonyms by excluding unwanted
+    streams. Uses a filter expression in the format
+    [operator]<value>. For example the filter '>480p' will
+    exclude streams ranked higher than '480p'. Valid
+    operators are >, >=, < and <=. If no operator is
+    specified then equality is tested.
+
+    Multiple filters can be used by separating each
+    expression with a comma. For example '>480p,>mobile_medium'
+    will exclude streams from two quality types.
 
 
 .. cmdoption:: --jtv-cookie cookie

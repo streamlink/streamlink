@@ -116,10 +116,19 @@ pluginopt.add_argument("--stream-types", "--stream-priority", metavar="types",
                             "and different stream types. Default is "
                             "rtmp,hls,hds,http,akamaihd")
 pluginopt.add_argument("--stream-sorting-excludes", metavar="streams",
-                       type=comma_list, help="A comma-delimited list of "
-                                             "streams to exclude from the "
-                                             "sorting used by best/worst "
-                                             "synonyms, e.g. 1080p+,1080p")
+                       type=comma_list,
+                       help="Fine tune best/worst synonyms by excluding "
+                            "unwanted streams. Uses a filter expression in "
+                            "the format [operator]<value>. For example the "
+                            "filter '>480p' will exclude streams ranked "
+                            "higher than '480p'. Valid operators are >, >=, < "
+                            "and <=. If no operator is specified then "
+                            "equality is tested. Multiple filters can be "
+                            "used by separating each expression with a comma. "
+                            "For example '>480p,>mobile_medium' will exclude "
+                            "streams from two quality types.")
+
+
 pluginopt.add_argument("--jtv-cookie", metavar="cookie",
                        help="Specify JustinTV cookie to allow access to "
                             "subscription channels, e.g. "
