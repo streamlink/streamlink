@@ -84,6 +84,12 @@ class TestSession(unittest.TestCase):
         streams = channel.get_streams(sorting_excludes=lambda q: not q.endswith("p"))
         self.assertTrue(streams["best"] is streams["3000k"])
 
+    def test_plugin_support(self):
+        channel = self.session.resolve_url("http://test.se/channel")
+        streams = channel.get_streams()
+
+        self.assertTrue("support" in streams)
+        self.assertTrue(isinstance(streams["support"], HTTPStream))
 
 if __name__ == "__main__":
     unittest.main()

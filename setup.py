@@ -7,6 +7,8 @@ from os.path import abspath, dirname, join
 deps = ["requests>=1.0,<2.0"]
 packages = ["livestreamer",
             "livestreamer.stream",
+            "livestreamer.plugin",
+            "livestreamer.plugin.api",
             "livestreamer.plugins",
             "livestreamer.packages",
             "livestreamer.packages.flashmedia",

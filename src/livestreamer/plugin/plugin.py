@@ -3,9 +3,9 @@ import re
 
 from functools import partial
 
-from .cache import Cache
-from .exceptions import PluginError, NoStreamsError
-from .options import Options
+from ..cache import Cache
+from ..exceptions import PluginError, NoStreamsError
+from ..options import Options
 
 
 QUALITY_WEIGTHS_EXTRA = {
