@@ -555,6 +555,8 @@ def setup_options():
     if args.jtv_cookie:
         livestreamer.set_plugin_option("justintv", "cookie",
                                        args.jtv_cookie)
+        livestreamer.set_plugin_option("twitch", "cookie",
+                                       args.jtv_cookie)
 
     if args.gomtv_cookie:
         livestreamer.set_plugin_option("gomtv", "cookie",

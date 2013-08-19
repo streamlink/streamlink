@@ -162,11 +162,10 @@ pluginopt.add_argument("--stream-sorting-excludes", metavar="streams",
                             "For example '>480p,>mobile_medium' will exclude "
                             "streams from two quality types.")
 
-
-pluginopt.add_argument("--jtv-cookie", metavar="cookie",
-                       help="Specify JustinTV cookie to allow access to "
-                            "subscription channels, e.g. "
-                            "'_twitch_session_id=xxxxxx; persistent=xxxxx;'")
+pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
+                       help="Specify Twitch/Justin.tv cookies to allow access "
+                            "to subscription channels, e.g. "
+                            "'_twitch_session_id=xxxxxx; persistent=xxxxx'")
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to "
                             "streams, e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; "
