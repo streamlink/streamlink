@@ -43,28 +43,40 @@ and then look for a log file created in ``/tmp`` that will contain any error mes
 from rtmpdump.
 
 
-VLC fails to play with a error message
---------------------------------------
-
-VLC version *2.0.1* and *2.0.2* contains a bug that prevents it from
-reading data from standard input. This has been fixed in version *2.0.3*.
-
-
-VLC hangs when buffering and no playback starts
------------------------------------------------
-
-Some versions of 64-bit VLC seem to be unable to read the stream created by rtmpdump.
-
-Using the 32-bit version of VLC is a workaround until this bug is fixed.
-
-
 Streams are buffering/lagging
 -----------------------------
 
-By default most players do not cache the input from stdin, here is a few command arguments you can pass to some common players:
+By default most players do not cache the input from stdin, here is a few command
+arguments you can pass to some common players:
 
 - ``mplayer --cache <kbytes>`` (between 1024 and 8192 is recommended)
 - ``vlc --file-caching <milliseconds>`` (between 1000 and 10000 is recommended)
 
 These options can be used by passing ``--player`` to ``livestreamer``.
+
+
+Player specific issues
+----------------------
+
+VLC fails to play with a error message
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+VLC version *2.0.1* and *2.0.2* contains a bug that prevents it from
+reading data from standard input. This has been fixed in version *2.0.3*.
+
+VLC hangs when buffering and no playback starts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some versions of 64-bit VLC seem to be unable to read the stream created by rtmpdump.
+Using the 32-bit version of VLC is a workaround until this bug is fixed.
+
+MPC-HC reports "File not found"
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Reading data from standard input is not supported in the current stable
+version of MPC-HC (v1.6.x). However, it was recently added and it looks like
+it will be available in 1.7. Nightly builds of 1.7 are available at
+http://nightly.mpc-hc.org/.
+
+
 
