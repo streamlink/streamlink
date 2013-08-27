@@ -10,7 +10,11 @@ from .options import Options
 
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
-        "live": 1080
+        "live": 1080,
+        "source": 1080,
+        "high": 720,
+        "medium": 480,
+        "low": 240,
     },
     "tv": {
         "hd": 1080,

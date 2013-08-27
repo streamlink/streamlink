@@ -1,6 +1,12 @@
-Version 1.5.1
+Version 1.5.2
 -------------
 
+    Plugins:
+     - Twitch/Justin.tv: Fix stream names.
+
+
+Version 1.5.1
+-------------
 
     Plugins:
      - Added plugin for Filmon.
