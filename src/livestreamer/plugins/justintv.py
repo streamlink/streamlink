@@ -143,7 +143,7 @@ class JustinTV(Plugin):
             else:
                 self.logger.warning("No token found for stream {0}, this stream may fail to play", sname)
 
-            streams[sname] = stream
+            streams[sname.lower()] = stream
 
         return streams
 
@@ -215,7 +215,7 @@ class JustinTV(Plugin):
 
             for name, stream in hlsstreams.items():
                 if "iphone" in name:
-                    name = name.replace("iphone", "mobile_")
+                    name = name.replace("iphone", "")
 
                 if name in streams:
                     streams[name] = [streams[name], stream]
