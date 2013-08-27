@@ -9,11 +9,15 @@ from .options import Options
 
 QUALITY_WEIGTHS_EXTRA = {
     "live": 1080,
+    "source": 1080,
     "hd": 1080,
     "ehq": 720,
     "hq": 576,
     "sd": 576,
     "sq": 360,
+    "high": 720,
+    "medium": 480,
+    "low": 240,
     "mobile_high": 330,
     "mobile_medium": 260,
     "mobile_low": 170,
