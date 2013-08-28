@@ -41,12 +41,13 @@ FILTER_OPERATORS = {
 }
 
 
-def quality_weight(quality):
-    for group, weights in QUALITY_WEIGTHS_EXTRA.items():
-        if quality in weights:
-            return weights[quality], group
 
-    match = re.match("^(\d+)([k]|[p])?([\+])?$", quality)
+def stream_weight(stream):
+    for group, weights in QUALITY_WEIGTHS_EXTRA.items():
+        if stream in weights:
+            return weights[stream], group
+
+    match = re.match("^(\d+)([k]|[p])?([\+])?$", stream)
 
     if match:
         if match.group(2) == "k":
@@ -71,10 +72,6 @@ def quality_weight(quality):
             return weight, "pixels"
 
     return 0, "none"
-
-
-def quality_weight_only(quality):
-    return quality_weight(quality)[0]
 
 
 def iterate_streams(streams):
@@ -109,7 +106,7 @@ def stream_type_priority(stream_types, stream):
     return prio
 
 
-def stream_sorting_filter(expr):
+def stream_sorting_filter(expr, stream_weight):
     match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w\+]+)", expr)
 
     if not match:
@@ -117,10 +114,10 @@ def stream_sorting_filter(expr):
 
     op, value = match.group("op", "value")
     op = FILTER_OPERATORS.get(op, operator.eq)
-    filter_weight, filter_group = quality_weight(value)
+    filter_weight, filter_group = stream_weight(value)
 
     def func(quality):
-        weight, group = quality_weight(quality)
+        weight, group = stream_weight(quality)
 
         if group == filter_group:
             return not op(weight, filter_weight)
@@ -164,6 +161,10 @@ class Plugin(object):
     @classmethod
     def get_option(cls, key):
         return cls.options.get(key)
+
+    @classmethod
+    def stream_weight(cls, stream):
+        return stream_weight(stream)
 
     def get_streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
@@ -247,13 +248,14 @@ class Plugin(object):
             streams[name] = stream
 
         # Create the best/worst synonmys
-        stream_names = filter(quality_weight_only, streams.keys())
-        sorted_streams = sorted(stream_names, key=quality_weight_only)
+        stream_weight_only = lambda s: self.stream_weight(s)[0]
+        stream_names = filter(stream_weight_only, streams.keys())
+        sorted_streams = sorted(stream_names, key=stream_weight_only)
 
         if isinstance(sorting_excludes, list):
             for expr in sorting_excludes:
-                sorted_streams = list(filter(stream_sorting_filter(expr),
-                                             sorted_streams))
+                filter_func = stream_sorting_filter(expr, self.stream_weight)
+                sorted_streams = list(filter(filter_func, sorted_streams))
         elif callable(sorting_excludes):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
