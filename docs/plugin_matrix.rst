@@ -42,7 +42,7 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 | Twitch/Justin.tv   | Yes    | No   | Possible to authenticate for           |
 |                    |        |      | access to protected streams.           |
 +--------------------+--------+------+----------------------------------------+
-| UStream TV         | Yes    | No   |                                        |
+| UStream TV         | Yes    | Yes  |                                        |
 +--------------------+--------+------+----------------------------------------+
 | Veetle.com         | Yes    | Yes  |                                        |
 +--------------------+--------+------+----------------------------------------+
