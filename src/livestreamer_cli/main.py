@@ -1,12 +1,15 @@
 import errno
 import os
+import requests
 import sys
 import signal
 
 from time import sleep
+from distutils.version import StrictVersion
 
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
+from livestreamer.cache import Cache
 from livestreamer.stream import StreamProcess
 
 from .argparser import parser
@@ -585,6 +588,23 @@ def check_root():
                   "--yes-run-as-root.")
             sys.exit(1)
 
+def check_version():
+    cache = Cache(filename="cli.json")
+    latest_version = cache.get("latest_version")
+
+    if not latest_version:
+        res = requests.get("https://pypi.python.org/pypi/livestreamer/json")
+        data = res.json()
+        latest_version = data.get("info").get("version")
+        cache.set("latest_version", latest_version, (60 * 60 * 24))
+
+    installed_version = StrictVersion(livestreamer.version)
+    latest_version = StrictVersion(latest_version)
+
+    if latest_version > installed_version:
+        console.logger.info("A new version of Livestreamer ({0}) is "
+                            "available!".format(latest_version))
+
 
 def main():
     setup_args()
@@ -592,6 +612,9 @@ def main():
     setup_livestreamer()
     setup_console()
     setup_plugins()
+
+    with ignored(Exception):
+        check_version()
 
     if args.url:
         setup_options()
