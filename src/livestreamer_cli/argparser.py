@@ -166,6 +166,10 @@ pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
                        help="Specify Twitch/Justin.tv cookies to allow access "
                             "to subscription channels, e.g. "
                             "'_twitch_session_id=xxxxxx; persistent=xxxxx'")
+pluginopt.add_argument("--jtv-legacy-names", "--twitch-legacy-names",
+                       help="Use the old stream names, e.g 720p, 1080p+. ",
+                       action="store_true")
+
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to "
                             "streams, e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; "

@@ -74,7 +74,8 @@ class UsherService(object):
 
 class JustinTVBase(Plugin):
     options = Options({
-        "cookie": None
+        "cookie": None,
+        "legacy-names": False
     })
 
     def __init__(self, url):
@@ -123,7 +124,15 @@ class JustinTVBase(Plugin):
         swfurl, swfhash, swfsize = self._verify_swf(swf)
 
         for info in filter(valid_rtmp_stream, res):
-            name = info.get("display") or info.get("type")
+            if self.options.get("legacy_names"):
+                video_height = info.get("video_height", 0)
+                name = "{0}p".format(video_height)
+
+                if info.get("type") == "live":
+                    name += "+"
+            else:
+                name = info.get("display") or info.get("type")
+
             url = "{0}/{1}".format(info.get("connect"),
                                    info.get("play"))
 
@@ -146,9 +155,9 @@ class JustinTVBase(Plugin):
                                                        nameprefix="mobile_")
         except IOError as err:
             if "404 Client Error" in str(err):
-                raise PluginError(err)
-            else:
                 raise NoStreamsError(self.url)
+            else:
+                raise PluginError(err)
 
         return streams
 
