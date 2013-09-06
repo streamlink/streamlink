@@ -9,6 +9,10 @@ from io import BytesIO
 
 import re
 
+
+STREAM_NAMES = ["360p", "480p", "720p", "1080p"]
+
+
 @AMF3ObjectBase.register("com.brightcove.experience.ViewerExperienceRequest")
 class ViewerExperienceRequest(AMF3ObjectBase):
     __members__ = ["deliveryType", "TTLToken", "contentOverrides", "playerKey", "experienceId", "URL"]
@@ -109,8 +113,13 @@ class AzubuTV(Plugin):
 
         for i, rendition in player.mediaDTO.renditions.items():
             stream = AkamaiHDStream(self.session, rendition.defaultURL)
-            streamname = "{0}p".format(rendition.frameHeight)
-            streams[streamname] = stream
+
+            try:
+                stream_name = STREAM_NAMES[i]
+            except IndexError:
+                stream_name = "{0}k".format(rendition.encodingRate / 1000)
+
+            streams[stream_name] = stream
 
         return streams
 
