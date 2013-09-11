@@ -5,6 +5,13 @@ from .wrappers import StreamIOWrapper
 from ..exceptions import StreamError
 
 
+def normalize_key(keyval):
+    key, val = keyval
+    key = hasattr(key, "decode") and key.decode("utf8", "ignore") or key
+
+    return key, val
+
+
 class HTTPStream(Stream):
     """A HTTP stream using the requests library.
 
@@ -30,10 +37,11 @@ class HTTPStream(Stream):
 
     def __json__(self):
         req = requests.Request(**self.args).prepare()
+        headers = dict(map(normalize_key, req.headers.items()))
 
-        return dict(type=HTTPStream.shortname(),
-                    url=req.url, headers=dict(req.headers),
-                    body=req.body, method=req.method)
+        return dict(type=HTTPStream.shortname(), url=req.url,
+                    method=req.method, headers=headers,
+                    body=req.body)
 
     @property
     def url(self):
