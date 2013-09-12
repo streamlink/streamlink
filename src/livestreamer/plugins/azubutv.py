@@ -94,8 +94,7 @@ class AzubuTV(Plugin):
 
         player_id = match.group(1)
 
-        match = re.search("<img src=\".+/static/images/channels/live_check.png\" />",
-                          res.text)
+        match = re.search("<!-- live on -->", res.text)
         is_live = not not match
 
         return key, video_player, player_id, is_live
