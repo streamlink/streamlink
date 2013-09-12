@@ -6,6 +6,7 @@ from livestreamer.stream import AkamaiHDStream
 from livestreamer.utils import urlopen
 
 from io import BytesIO
+from operator import attrgetter
 
 import re
 
@@ -110,14 +111,11 @@ class AzubuTV(Plugin):
         if not hasattr(player, "mediaDTO"):
             raise PluginError("Invalid result")
 
-        for i, rendition in player.mediaDTO.renditions.items():
+        renditions = sorted(player.mediaDTO.renditions.values(),
+                            key=attrgetter("encodingRate"))
+
+        for stream_name, rendition in zip(STREAM_NAMES, renditions):
             stream = AkamaiHDStream(self.session, rendition.defaultURL)
-
-            try:
-                stream_name = STREAM_NAMES[i]
-            except IndexError:
-                stream_name = "{0}k".format(rendition.encodingRate / 1000)
-
             streams[stream_name] = stream
 
         return streams
