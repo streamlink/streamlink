@@ -1,4 +1,4 @@
-from livestreamer.exceptions import PluginError, NoStreamsError, StreamError
+from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, urlopen, parse_qsd
@@ -37,7 +37,7 @@ class Weeb(Plugin):
         params = parse_qsd(res.text)
 
         if "0" in params and int(params["0"]) <= 0:
-            raise StreamError("Server refused to send required parameters.")
+            raise PluginError("Server refused to send required parameters.")
 
         rtmp = params["10"]
         playpath = params["11"]
@@ -52,14 +52,14 @@ class Weeb(Plugin):
                 msg = ("You have crossed free viewing limit. ",
                        "You have been blocked for %s minutes. " % blocktime,
                        "Try again in %s minutes." % reconnectiontime)
-                raise StreamError(msg)
+                raise PluginError(msg)
             elif blocktype == 11:
-                raise StreamError("No free slots available.")
+                raise PluginError("No free slots available.")
 
         if "73" in params:
             token = params["73"]
         else:
-            raise StreamError("Server seems busy, please try after some time.")
+            raise PluginError("Server seems busy, please try after some time.")
 
         if not RTMPStream.is_usable(self.session):
             raise PluginError("rtmpdump is not usable and required by Weeb plugin")
