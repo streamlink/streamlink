@@ -21,6 +21,6 @@ __credits__ = ["Christopher Rosell", "Athanasios Oikonomou",
                "Sam Edwards", "John Peterson", "Kacper"]
 
 
-from .exceptions import (PluginError, NoStreamsError,
+from .exceptions import (LivestreamerError, PluginError, NoStreamsError,
                          NoPluginError, StreamError)
 from .session import Livestreamer
