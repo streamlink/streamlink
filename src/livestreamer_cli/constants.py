@@ -2,6 +2,8 @@ import os
 
 from .compat import is_win32
 
+DEFAULT_PLAYER_ARGUMENTS = "{filename}"
+
 if is_win32:
     CONFIG_FILE = os.path.join(os.environ["APPDATA"], "livestreamer",
                                "livestreamerrc")
@@ -30,5 +32,7 @@ Stream is now opened in player (default is VLC, if installed).
 """
 
 STREAM_SYNONYMS = ["best", "worst"]
+STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 
-__all__ = ["EXAMPLE_USAGE", "CONFIG_FILE", "PLUGINS_DIR", "STREAM_SYNONYMS"]
+__all__ = ["EXAMPLE_USAGE", "CONFIG_FILE", "PLUGINS_DIR",
+           "STREAM_SYNONYMS", "STREAM_PASSTHROUGH", "DEFAULT_PLAYER_ARGUMENTS"]

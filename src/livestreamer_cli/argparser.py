@@ -2,7 +2,8 @@ import argparse
 
 from livestreamer import __version__ as livestreamer_version
 
-from .constants import EXAMPLE_USAGE
+from .constants import (EXAMPLE_USAGE, STREAM_PASSTHROUGH,
+                        DEFAULT_PLAYER_ARGUMENTS)
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -24,6 +25,14 @@ class ArgumentParser(argparse.ArgumentParser):
 
 def comma_list(values):
     return [val.strip() for val in values.split(",")]
+
+
+def comma_list_filter(acceptable):
+    def func(p):
+        values = comma_list(p)
+        return list(filter(lambda v: v in acceptable, values))
+
+    return func
 
 
 parser = ArgumentParser(description="Livestreamer is CLI program that "
@@ -60,15 +69,40 @@ playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",
                        help="Player command-line to start, by default VLC "
                             "will be used if it is installed.")
+playeropt.add_argument("-a", "--player-args", metavar="arguments",
+                       default=DEFAULT_PLAYER_ARGUMENTS,
+                       help="The arguments passed to the player. These "
+                            "formatting variables are available: filename. "
+                            "Default is '{0}'".format(DEFAULT_PLAYER_ARGUMENTS))
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help="Hide all player console output. This option does "
                             "nothing since version 1.4.3 since it is now the "
                             "default behaviour")
 playeropt.add_argument("-v", "--verbose-player", action="store_true",
                        help="Show all player console output")
-playeropt.add_argument("-n", "--fifo", action="store_true",
-                       help="Play file using a named pipe instead of stdin "
-                            "(can help with incompatible media players)")
+playeropt.add_argument("-n", "--player-fifo", "--fifo", action="store_true",
+                       help="Make the player read the stream through a named "
+                            "pipe (useful if your player can't read from "
+                            "stdin)")
+playeropt.add_argument("--player-http", action="store_true",
+                       help="Make the player read the stream using HTTP "
+                            "(useful if your player can't read from stdin)")
+playeropt.add_argument("--player-continuous-http", action="store_true",
+                       help="Make the player read the stream using HTTP, but "
+                            "unlike --player-http will continuously try to "
+                            "open the stream if the player requests it. "
+                            "This makes it possible to handle stream "
+                            "disconnects if your player is capable of "
+                            "reconnecting to a HTTP stream, e.g "
+                            "'vlc --repeat'")
+playeropt.add_argument("--player-passthrough", metavar="types",
+                       type=comma_list_filter(STREAM_PASSTHROUGH), default=[],
+                       help="A comma-delimited list of stream types to "
+                            "pass to the player as a filename rather than "
+                            "piping the data. Make sure your player can "
+                            "handle the stream type when using this. "
+                            "Supported stream types are: "
+                            "{0}".format(", ".join(STREAM_PASSTHROUGH)))
 
 outputopt = parser.add_argument_group("file output options")
 outputopt.add_argument("-o", "--output", metavar="filename",

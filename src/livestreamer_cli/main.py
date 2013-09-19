@@ -3,6 +3,8 @@ import os
 import sys
 import signal
 
+from time import sleep
+
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
 from livestreamer.stream import StreamProcess
@@ -12,9 +14,12 @@ from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe, ignored, find_default_player
+from .utils import (NamedPipe, HTTPServer, ignored, find_default_player,
+                    stream_to_url)
 
-args = console = livestreamer = None
+ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
+
+args = console = livestreamer = plugin = None
 
 
 def check_file_output(filename, force):
@@ -52,7 +57,7 @@ def create_output():
     elif args.stdout:
         out = FileOutput(fd=stdout)
     else:
-        namedpipe = None
+        http = namedpipe = None
         player = args.player or find_default_player()
 
         if not player:
@@ -60,7 +65,7 @@ def create_output():
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
-        if args.fifo:
+        if args.player_fifo:
             pipename = "livestreamerpipe-{0}".format(os.getpid())
             console.logger.info("Creating pipe {0}", pipename)
 
@@ -68,71 +73,187 @@ def create_output():
                 namedpipe = NamedPipe(pipename)
             except IOError as err:
                 console.exit("Failed to create pipe: {0}", err)
+        elif args.player_http:
+            http = create_http_server()
 
         console.logger.info("Starting player: {0}", player)
-
-        out = PlayerOutput(player, namedpipe=namedpipe,
-                           quiet=not args.verbose_player)
+        out = PlayerOutput(player, args=args.player_args,
+                           quiet=not args.verbose_player,
+                           namedpipe=namedpipe, http=http)
 
     return out
 
 
-def output_stream(stream):
-    """Open stream, create output and finally write the stream to output."""
+def create_http_server():
+    """Creates a HTTP server listening on a random port."""
+
+    try:
+        http = HTTPServer()
+        http.bind()
+    except OSError as err:
+        console.exit("Failed to create HTTP server: {0}", err)
+
+    return http
+
+
+def iter_http_requests(server, player):
+    """Accept HTTP connections while the player is running."""
+
+    while player.running:
+        try:
+            yield server.open(timeout=2.5)
+        except OSError:
+            continue
+
+
+def output_stream_http(plugin, streams):
+    """Continuously output the stream over HTTP."""
+
+    server = create_http_server()
+    player_cmd = args.player or find_default_player()
+    player = PlayerOutput(player_cmd, args=args.player_args,
+                          filename=server.url,
+                          quiet=not args.verbose_player)
+
+    try:
+        console.logger.info("Starting player: {0}", player_cmd)
+        player.open()
+    except OSError as err:
+        console.exit("Failed to start player: {0} ({1})",
+                     player_cmd, err)
+
+    for req in iter_http_requests(server, player):
+        user_agent = req.headers.get("User-Agent") or "unknown player"
+        console.logger.info("Got HTTP request from {0}".format(user_agent))
+
+        stream = stream_fd = None
+        while not stream_fd:
+            if not player.running:
+                break
+
+            try:
+                streams = streams or fetch_streams(plugin)
+                stream = streams.get(args.stream)
+            except PluginError as err:
+                console.logger.error("Unable to fetch new streams: {0}",
+                                     err)
+
+            if not stream:
+                console.logger.info("Stream not available, will re-fetch "
+                                    "streams in 10 sec")
+                streams = None
+                sleep(10)
+                continue
+
+            try:
+                stream_name = resolve_stream_name(streams, args.stream)
+                console.logger.info("Opening stream: {0}", stream_name)
+                stream_fd, prebuffer = open_stream(stream)
+            except StreamError as err:
+                console.logger.error("{0}", err)
+                stream = streams = None
+        else:
+            console.logger.debug("Writing stream to player")
+            with ignored(KeyboardInterrupt):
+                read_stream(stream_fd, server, prebuffer)
+
+        server.close(True)
+
+    player.close()
+
+
+def output_stream_passthrough(stream):
+    """Prepares a filename to be passed to the player."""
+
+    player = args.player or find_default_player()
+    filename = '"{0}"'.format(stream_to_url(stream))
+    out = PlayerOutput(player, args=args.player_args,
+                       filename=filename, call=True,
+                       quiet=not args.verbose_player)
+
+    try:
+        console.logger.info("Starting player: {0}", player)
+        out.open()
+    except OSError as err:
+        console.exit("Failed to start player: {0} ({1})", player, err)
+        return False
+    except KeyboardInterrupt:
+        pass
+
+    return True
+
+
+def open_stream(stream):
+    """Opens a stream and reads 8192 bytes from it.
+
+    This is useful to check if a stream actually has data
+    before opening the output.
+
+    """
 
     # Attempts to open the stream
     try:
-        streamfd = stream.open()
+        stream_fd = stream.open()
     except StreamError as err:
-        console.logger.error("Could not open stream: {0}", err)
-        return
+        raise StreamError("Could not open stream: {0}".format(err))
 
     # Read 8192 bytes before proceeding to check for errors.
     # This is to avoid opening the output unnecessarily.
     try:
         console.logger.debug("Pre-buffering 8192 bytes")
-        prebuffer = streamfd.read(8192)
+        prebuffer = stream_fd.read(8192)
     except IOError as err:
-        console.logger.error("Failed to read data from stream: {0}", str(err))
-        return
+        raise StreamError("Failed to read data from stream: {0}".format(err))
 
-    if len(prebuffer) == 0:
-        console.logger.error("Failed to read data from stream")
+    if not prebuffer:
+        raise StreamError("No data returned from stream")
+
+    return stream_fd, prebuffer
+
+
+def output_stream(stream):
+    """Open stream, create output and finally write the stream to output."""
+
+    try:
+        stream_fd, prebuffer = open_stream(stream)
+    except StreamError as err:
+        console.logger.error("{0}", err)
         return
 
     output = create_output()
 
     try:
         output.open()
-    except IOError as err:
-        console.exit("Failed to open output: {0}", err)
+    except (IOError, OSError) as err:
+        if isinstance(output, PlayerOutput):
+            console.exit("Failed to start player: {0} ({1})",
+                         args.player, err)
+        else:
+            console.exit("Failed to open output: {0} ({1})",
+                         args.output, err)
 
     console.logger.debug("Writing stream to output")
 
-    try:
-        output.write(prebuffer)
-    except IOError as err:
-        console.exit("Error when writing to output: {0}", err)
-
     with ignored(KeyboardInterrupt):
-        read_stream(streamfd, output)
+        read_stream(stream_fd, output, prebuffer)
 
     output.close()
 
     return True
 
 
-def read_stream(stream, output):
+def read_stream(stream, output, prebuffer):
     """Reads data from stream and then writes it to the output."""
 
     is_player = isinstance(output, PlayerOutput)
+    is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout
     written = 0
 
     while True:
         try:
-            data = stream.read(8192)
+            data = prebuffer or stream.read(8192)
         except IOError as err:
             console.logger.error("Error when reading from stream: {0}",
                                  str(err))
@@ -154,15 +275,18 @@ def read_stream(stream, output):
         try:
             output.write(data)
         except IOError as err:
-            if is_player and err.errno in (errno.EPIPE, errno.EINVAL):
+            if is_player and err.errno in ACCEPTABLE_ERRNO:
                 console.logger.info("Player closed")
+            elif is_http and err.errno in ACCEPTABLE_ERRNO:
+                console.logger.info("HTTP connection closed")
             else:
                 console.logger.error("Error when writing to output: {0}",
-                                     str(err))
+                                     err)
 
             break
 
         written += len(data)
+        prebuffer = None
 
         if show_progress:
             console.msg_inplace("Written {0} bytes", written)
@@ -174,18 +298,19 @@ def read_stream(stream, output):
     console.logger.info("Stream ended")
 
 
-def handle_stream(streams):
+def handle_stream(plugin, streams):
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
      - Output internal command-line
      - Output JSON represenation
+     - Continuously output the stream over HTTP
      - Output stream data to selected output
 
     """
 
-    streamname = args.stream
-    stream = streams[streamname]
+    stream_name = resolve_stream_name(streams, args.stream)
+    stream = streams[stream_name]
 
     # Print internal command-line if this stream
     # uses a subprocess.
@@ -204,20 +329,48 @@ def handle_stream(streams):
     elif console.json:
         console.msg_json(stream)
 
+    # Continuously output the stream over HTTP
+    elif args.player_continuous_http:
+        output_stream_http(plugin, streams)
+
     # Output the stream
     else:
         # Find any streams with a '_alt' suffix and attempt
         # to use these in case the main stream is not usable.
-        altstreams = list(filter(lambda k: args.stream + "_alt" in k,
-                          sorted(streams.keys())))
+        alt_streams = list(filter(lambda k: stream_name + "_alt" in k,
+                                  sorted(streams.keys())))
 
-        for streamname in [args.stream] + altstreams:
-            console.logger.info("Opening stream: {0}", streamname)
+        for stream_name in [stream_name] + alt_streams:
+            console.logger.info("Opening stream: {0}", stream_name)
+            stream = streams[stream_name]
+            stream_type = type(stream).shortname()
 
-            success = output_stream(streams[streamname])
+            if (stream_type in args.player_passthrough and
+                not (args.output or args.stdout)):
+                success = output_stream_passthrough(stream)
+            else:
+                success = output_stream(stream)
 
             if success:
                 break
+
+
+def fetch_streams(plugin):
+    """Fetches streams using correct parameters."""
+
+    return plugin.get_streams(stream_types=args.stream_types,
+                              sorting_excludes=args.stream_sorting_excludes)
+
+
+def resolve_stream_name(streams, stream_name):
+    """Returns the real stream name of a synonym."""
+
+    if stream_name in STREAM_SYNONYMS:
+        for name, stream in streams.items():
+            if stream is streams[stream_name] and name not in STREAM_SYNONYMS:
+                return name
+
+    return stream_name
 
 
 def format_valid_streams(streams):
@@ -260,46 +413,36 @@ def handle_url():
 
     try:
         plugin = livestreamer.resolve_url(args.url)
+        console.logger.info("Found matching plugin {0} for URL {1}",
+                            plugin.module, args.url)
+        streams = fetch_streams(plugin)
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
-
-    console.logger.info("Found matching plugin {0} for URL {1}",
-                        plugin.module, args.url)
-
-    try:
-        streams = plugin.get_streams(stream_types=args.stream_types,
-                                     sorting_excludes=args.stream_sorting_excludes)
-    except (StreamError, PluginError) as err:
+    except PluginError as err:
         console.exit("{0}", err)
 
-    if len(streams) == 0:
+    if not streams:
         console.exit("No streams found on this URL: {0}", args.url)
 
     if args.stream:
         if args.stream in streams:
-            if args.stream in STREAM_SYNONYMS:
-                for name, stream in streams.items():
-                    if stream is streams[args.stream] and name not in STREAM_SYNONYMS:
-                        args.stream = name
-
-            handle_stream(streams)
+            handle_stream(plugin, streams)
         else:
-            err = "Invalid stream specified: {0}".format(args.stream)
+            err = "The specified stream '{0}' could not be found".format(args.stream)
 
             if console.json:
                 console.msg_json(dict(streams=streams, plugin=plugin.module,
                                       error=err))
             else:
                 validstreams = format_valid_streams(streams)
-
-                console.msg("Valid streams: {0}", validstreams)
-                console.exit(err)
+                console.exit("{0}.\n       Available streams: {1}",
+                             err, validstreams)
     else:
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module))
         else:
             validstreams = format_valid_streams(streams)
-            console.msg("Found streams: {0}", validstreams)
+            console.msg("Available streams: {0}", validstreams)
 
 
 def print_plugins():
@@ -368,6 +511,7 @@ def setup_console():
 
 
 def setup_plugins():
+    """Loads any additional plugins."""
     if os.path.isdir(PLUGINS_DIR):
         load_plugins([PLUGINS_DIR])
 

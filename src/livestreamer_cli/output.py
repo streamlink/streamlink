@@ -1,9 +1,12 @@
 import os
+import shlex
 import subprocess
 import sys
-import time
+
+from time import sleep
 
 from .compat import is_win32, stdout
+from .constants import DEFAULT_PLAYER_ARGUMENTS
 from .utils import ignored
 
 if is_win32:
@@ -61,11 +64,18 @@ class FileOutput(Output):
 
 
 class PlayerOutput(Output):
-    def __init__(self, cmd, namedpipe=None, quiet=True):
+    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS,
+                 filename=None, quiet=True, call=False,
+                 http=False, namedpipe=None):
         self.cmd = cmd
-        self.namedpipe = namedpipe
+        self.args = args
+        self.call = call
 
-        if self.namedpipe:
+        self.filename = filename
+        self.namedpipe = namedpipe
+        self.http = http
+
+        if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
         else:
             self.stdin = subprocess.PIPE
@@ -77,28 +87,51 @@ class PlayerOutput(Output):
             self.stdout = sys.stdout
             self.stderr = sys.stderr
 
-    def _open(self):
+    @property
+    def running(self):
+        sleep(0.5)
+        self.player.poll()
+        return self.player.returncode is None
+
+    def _create_arguments(self):
         if self.namedpipe:
             filename = self.namedpipe.path
+        elif self.filename:
+            filename = self.filename
+        elif self.http:
+            filename = self.http.url
         else:
             filename = "-"
 
-        playercmd = "{0} {1}".format(self.cmd, filename)
-        self.player = subprocess.Popen(playercmd, shell=True,
+        args = self.args.format(filename=filename)
+
+        return shlex.split(self.cmd) + shlex.split(args)
+
+    def _open(self):
+        if self.call and self.filename:
+            self._open_call()
+        else:
+            self._open_subprocess()
+
+    def _open_call(self):
+        subprocess.call(self._create_arguments(),
+                        stdout=self.stdout,
+                        stderr=self.stderr)
+
+    def _open_subprocess(self):
+        self.player = subprocess.Popen(self._create_arguments(),
                                        stdin=self.stdin,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
 
         # Wait 0.5 seconds to see if program exited prematurely
-        time.sleep(0.5)
-        self.player.poll()
-        process_alive = self.player.returncode is None
-
-        if not process_alive:
-            raise IOError("Failed to execute player command: {0}".format(self.cmd))
+        if not self.running:
+            raise OSError("Process exited prematurely")
 
         if self.namedpipe:
             self.namedpipe.open("wb")
+        elif self.http:
+            self.http.open()
 
     def _close(self):
         with ignored(Exception):
@@ -106,10 +139,14 @@ class PlayerOutput(Output):
 
         if self.namedpipe:
             self.namedpipe.close()
+        elif self.http:
+            self.http.close()
 
     def _write(self, data):
         if self.namedpipe:
             self.namedpipe.write(data)
+        elif self.http:
+            self.http.write(data)
         else:
             self.player.stdin.write(data)
 
