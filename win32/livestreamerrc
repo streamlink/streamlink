@@ -1,26 +1,41 @@
-# Path to a video player that can read from standard input (e.g VLC, mplayer)
+# Lines starting with a # is considered comments and are ignored.
 
-# Important: You must use a quoted path if there are spaces in the path. This only
-# applies to the player and not the rtmpdump path since the player command is passed
-# through the "shell" to allow parameters to be passed to the player.
+# By default livestreamer will attempt to locate VLC on your system
+# and use that, but you can also specify the location of a player
+# yourself.
 
+# Important: You must use a quoted path if there are spaces in the path. This
+# is because the player command is parsed like a shell command to allow
+# parameters to be passed to the player.
+
+# Here is a few examples of players:
+
+# VLC
 #player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe"
 #player="C:\Program Files\VideoLAN\VLC\vlc.exe"
-
 # Using --file-caching is recommended, but is only supported in VLC 2.0+
 #player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe" --file-caching=5000
 #player="C:\Program Files\VideoLAN\VLC\vlc.exe" --file-caching=5000
 
-# Show console output from video player
-# verbose-player
+# MPC-HC, must be at least version 1.7 to be used
+#player="C:\Program Files (x86)\MPC-HC\mpc-hc.exe"
 
-# Full path to rtmpdump (ony needed for RTMP based streams)
+# MPlayer2
+#player=C:\mplayer2\mplayer2.exe -cache 4096
+
+
+# Show console output from video player
+#verbose-player
+
+# RTMP streams are downloaded using rtmpdump, full path to the rtmpdump exe
+# should be specified here.
 rtmpdump=@INSTDIR@\rtmpdump\rtmpdump.exe
 
 # Log level, default is info
 #loglevel=debug
 
-# Cookies from your web browser to allow access to Twitch/JustinTV streams that require authentication
+# Cookies from your web browser to allow access to Twitch/JustinTV streams
+# that require authentication
 #jtv-cookie=
 
 # Cookies from your web browser to allow access to GOMTV.net streams
