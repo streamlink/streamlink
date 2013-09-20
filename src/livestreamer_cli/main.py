@@ -485,6 +485,10 @@ def setup_args():
 
     args = parser.parse_args(arglist)
 
+    # Force lowercase to allow case-insensitive lookup
+    if args.stream:
+        args.stream = args.stream.lower()
+
 
 def setup_console():
     """Console setup."""
