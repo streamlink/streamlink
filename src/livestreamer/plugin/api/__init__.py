@@ -23,7 +23,7 @@ def load_support_plugin(name):
 
     # importlib is the preferred way of importing a module, but it's
     # only available on Python 3.1+.
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 1:
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 3:
         import importlib
 
         loader = importlib.find_loader(name, [path])
