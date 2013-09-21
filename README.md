@@ -2,7 +2,7 @@ Livestreamer
 ============
 
 [![PyPi Version](https://badge.fury.io/py/livestreamer.png)](http://badge.fury.io/py/livestreamer)
-[![Build Status](https://secure.travis-ci.org/chrippa/livestreamer.png)](http://travis-ci.org/schmich/kappa)
+[![Build Status](https://secure.travis-ci.org/chrippa/livestreamer.png)](http://travis-ci.org/chrippa/livestreamer)
 [![Downloads](https://pypip.in/d/livestreamer/badge.png)](https://crate.io/packages/livestreamer?version=latest)
 
 
