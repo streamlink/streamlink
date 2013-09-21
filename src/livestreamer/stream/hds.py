@@ -1,10 +1,13 @@
 from __future__ import division
 
 import base64
+import hmac
 import re
 import requests
 import os.path
 
+from binascii import unhexlify
+from hashlib import sha256
 from io import BytesIO, IOBase
 from math import ceil
 from threading import Thread, Timer
@@ -13,6 +16,7 @@ from time import time
 from .stream import Stream
 from ..buffers import RingBuffer
 from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
+from ..compat import parse_qsl
 from ..exceptions import StreamError
 from ..utils import absolute_url, urlget, res_xml
 
@@ -23,6 +27,13 @@ from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
                                        ScriptData, Header, Tag,
                                        TAG_TYPE_SCRIPT, TAG_TYPE_AUDIO,
                                        TAG_TYPE_VIDEO)
+
+# Akamai HD player verification key
+# Use unhexlify() rather than bytes.fromhex() for compatibility with before
+# Python 3. However, in Python 3.2 (not 3.3+), unhexlify only accepts a byte
+# string.
+AKAMAIHD_PV_KEY = unhexlify(
+    b"BD938D5EE6D9F42016F9C56577B6FDCF415FE4B184932B785AB32BCADC9BB592")
 
 AAC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_HEADER = 0x00
@@ -579,7 +590,19 @@ class HDSStream(Stream):
         return fd.open()
 
     @classmethod
-    def parse_manifest(cls, session, url, timeout=60, rsession=None):
+    def parse_manifest(cls, session, url, timeout=60, rsession=None,
+    pvhash=None):
+        """
+        :param pvhash: Player hash for Akamai HD player verification. This is
+            the SHA-256 hash of the uncompressed SWF file, base-64 encoded.
+            For example:
+            
+            swf = livestreamer.utils.urlget(url).content
+            hash = hashlib.sha256()
+            hash.update(livestreamer.utils.swfdecompress(swf))
+            pvhash = base64.b64encode(hash.digest()).decode("ascii")
+        """
+        
         if not rsession:
             rsession = requests.session()
 
@@ -609,6 +632,9 @@ class HDSStream(Stream):
                 box = Box.deserialize(BytesIO(data))
 
             bootstraps[name] = box
+        
+        params = cls._pv_params(pvhash, manifest.findtext("pv-2.0"))
+        rsession.params.update(params)
 
         for media in manifest.findall("media"):
             url = media.attrib.get("url")
@@ -651,7 +677,9 @@ class HDSStream(Stream):
                 url = absolute_url(baseurl, href)
                 child_streams = cls.parse_manifest(session, url,
                                                    timeout=timeout,
-                                                   rsession=rsession)
+                                                   rsession=rsession,
+                                                   pvhash=pvhash,
+                )
 
                 for name, stream in child_streams.items():
                     # Override stream name if bitrate is available in parent
@@ -664,3 +692,23 @@ class HDSStream(Stream):
                     streams[name] = stream
 
         return streams
+    
+    @classmethod
+    def _pv_params(cls, pvhash, pv):
+        """Returns any parameters needed for Akamai HD player verification"""
+        if not pv:  # Player verification not used
+            return ()
+        if not pvhash:
+            raise IOError('Missing "pvhash" parameter with HDS stream')
+        (data, hdntl) = pv.split(";")
+        
+        msg = "st=0~exp=9999999999~acl=*~data={0}!{1}".format(data, pvhash)
+        auth = hmac.new(AKAMAIHD_PV_KEY, msg.encode("ascii"), sha256)
+        pvtoken = "{0}~hmac={1}".format(msg, auth.hexdigest())
+    
+        # The "hdntl" parameter can be accepted as a cookie or passed in the
+        # query string, but the "pvtoken" parameter can only be in the query
+        # string
+        params = [("pvtoken", pvtoken)]
+        params.extend(parse_qsl(hdntl, keep_blank_values=True))
+        return params
