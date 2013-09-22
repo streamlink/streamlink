@@ -21,6 +21,13 @@ def load_support_plugin(name):
     prev_frame = stack[0]
     path = os.path.dirname(prev_frame[1])
 
+    # Major hack. If we are frozen by bbfreeze the stack trace will
+    # contain relative paths. We therefore use the __file__ variable
+    # in this module to correct it.
+    if not os.path.isabs(path):
+        prefix = os.path.normpath(__file__ + "../../../../../")
+        path = os.path.join(prefix, path)
+
     # importlib is the preferred way of importing a module, but it's
     # only available on Python 3.1+.
     if sys.version_info[0] == 3 and sys.version_info[1] >= 3:
