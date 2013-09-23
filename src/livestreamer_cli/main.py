@@ -333,7 +333,7 @@ def handle_stream(plugin, streams):
         console.msg_json(stream)
 
     # Continuously output the stream over HTTP
-    elif args.player_continuous_http:
+    elif args.player_continuous_http and not (args.output or args.stdout):
         output_stream_http(plugin, streams)
 
     # Output the stream
