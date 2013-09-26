@@ -65,14 +65,24 @@ class TestPluginStream(unittest.TestCase):
         self._test_rtmp("rtmp://hostname.se/stream live=1 qarg='a \'string' noq=test",
                         "rtmp://hostname.se/stream", dict(live=True, qarg='a \'string', noq="test"))
 
-        self._test_hls("hls://http://hostname.se/playlist.m3u8",
+        self._test_hls("hls://https://hostname.se/playlist.m3u8",
+                       "https://hostname.se/playlist.m3u8")
+
+        self._test_hls("hls://hostname.se/playlist.m3u8",
                        "http://hostname.se/playlist.m3u8")
 
         self._test_akamaihd("akamaihd://http://hostname.se/stream",
                             "http://hostname.se/stream")
 
+        self._test_akamaihd("akamaihd://hostname.se/stream",
+                            "http://hostname.se/stream")
+
         self._test_http("httpstream://http://hostname.se/auth.php auth=('test','test2')",
                         "http://hostname.se/auth.php", dict(auth=("test", "test2")))
+
+        self._test_http("httpstream://hostname.se/auth.php auth=('test','test2')",
+                        "http://hostname.se/auth.php", dict(auth=("test", "test2")))
+
 
 
 
