@@ -4,7 +4,7 @@ from setuptools import setup
 from sys import version_info, path as sys_path
 from os.path import abspath, dirname, join
 
-deps = ["requests>=1.0,<2.0"]
+deps = ["requests>=1.0,<3.0"]
 packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugin",
