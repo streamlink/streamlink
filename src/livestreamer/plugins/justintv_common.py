@@ -5,11 +5,17 @@ from collections import defaultdict
 from hashlib import sha1
 from random import random
 
+try:
+    from itertools import izip
+except ImportError:
+    izip = zip
+
 from livestreamer.compat import bytes, quote, urljoin
-from livestreamer.exceptions import NoStreamsError, PluginError
+from livestreamer.exceptions import NoStreamsError, PluginError, StreamError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
-from livestreamer.stream import RTMPStream, HLSStream
+from livestreamer.stream import (HTTPStream, RTMPStream, HLSStream,
+                                 FLVPlaylist, extract_flv_header_tags)
 from livestreamer.utils import (urlget, urlresolve,
                                 swfverify, res_json, verifyjson)
 
@@ -21,7 +27,8 @@ HLS_TOKEN_PATH = "/stream/iphone_token/{0}.json"
 HLS_PLAYLIST_PATH = "/stream/multi_playlist/{0}.m3u8?token={1}&hd=true&allow_cdn=true"
 USHER_FIND_PATH = "/find/{0}.json"
 REQUIRED_RTMP_KEYS = ("connect", "play", "type", "token")
-URL_PATTERN = r"http(s)?://([\w\.]+)?(?P<domain>twitch.tv|justin.tv)/(?P<channel>\w+)"
+URL_PATTERN = (r"http(s)?://([\w\.]+)?(?P<domain>twitch.tv|justin.tv)/(?P<channel>\w+)"
+               r"(/(?P<video_type>[bc])/(?P<video_id>\d+))?")
 
 
 def valid_rtmp_stream(info):
@@ -84,9 +91,13 @@ class JustinTVBase(Plugin):
         try:
             match = re.match(URL_PATTERN, url).groupdict()
             self.channel = match.get("channel").lower()
+            self.video_type = match.get("video_type")
+            self.video_id = match.get("video_id")
             self.usher = UsherService(match.get("domain"))
         except AttributeError:
             self.channel = None
+            self.video_id = None
+            self.video_type = None
             self.usher = None
 
     # The HTTP support in rtmpdump's SWF verification is extremely
@@ -123,9 +134,9 @@ class JustinTVBase(Plugin):
         streams = dict()
         swfurl, swfhash, swfsize = self._verify_swf(swf)
 
-        for info in filter(valid_rtmp_stream, res):
-            if self.options.get("legacy_names"):
-                video_height = info.get("video_height", 0)
+        for info in res:
+            video_height = info.get("video_height")
+            if self.options.get("legacy_names") and video_height:
                 name = "{0}p".format(video_height)
 
                 if info.get("type") == "live":
@@ -133,14 +144,21 @@ class JustinTVBase(Plugin):
             else:
                 name = info.get("display") or info.get("type")
 
+            name = name.lower()
+            if not valid_rtmp_stream(info):
+                if info.get("needed_info") == "chansub":
+                    self.logger.warning("The quality '{0}' is not available "
+                                        "since it requires a subscription.",
+                                        name)
+                continue
+
             url = "{0}/{1}".format(info.get("connect"),
                                    info.get("play"))
-
             params = dict(rtmp=url, live=True, jtv=info.get("token"),
                           swfUrl=swfurl, swfhash=swfhash, swfsize=swfsize)
 
             stream = RTMPStream(self.session, params)
-            streams[name.lower()] = stream
+            streams[name] = stream
 
         return streams
 
@@ -161,10 +179,111 @@ class JustinTVBase(Plugin):
 
         return streams
 
+    def _create_playlist_streams(self, videos):
+        start_offset = int(videos.get("start_offset", 0))
+        stop_offset = int(videos.get("end_offset", 0))
+        streams = {}
+
+        for quality, chunks in videos.get("chunks").items():
+            # Rename 'live' to 'source'
+            if quality == "live":
+                quality = "source"
+
+            if not chunks:
+                if videos.get("restrictions", {}).get(quality) == "chansub":
+                    self.logger.warning("The quality '{0}' is not available "
+                                        "since it requires a subscription.",
+                                        quality)
+                continue
+
+            chunks_duration = sum(c.get("length") for c in chunks)
+
+            # If it's a full broadcast we just use all the chunks
+            if start_offset == 0 and chunks_duration == stop_offset:
+                # No need to use the FLV concat if it's just one chunk
+                if len(chunks) == 1:
+                    url = chunks[0].get("url")
+                    stream = HTTPStream(self.session, url)
+                else:
+                    chunks = [HTTPStream(self.session, c.get("url")) for c in chunks]
+                    stream = FLVPlaylist(self.session, chunks,
+                                         duration=chunks_duration)
+            else:
+                try:
+                    stream = self._create_video_clip(chunks,
+                                                     start_offset,
+                                                     stop_offset)
+                except StreamError as err:
+                    self.logger.error("Error while creating video clip '{0}': {1}",
+                                      quality, err)
+                    continue
+
+            streams[quality] = stream
+
+        return streams
+
+    def _create_video_clip(self, chunks, start_offset, stop_offset):
+        playlist_duration = stop_offset - start_offset
+        playlist_offset = 0
+        playlist_streams = []
+        playlist_tags = []
+
+        for chunk in chunks:
+            chunk_url = chunk.get("url")
+            chunk_length = chunk.get("length")
+            chunk_start = playlist_offset
+            chunk_stop = chunk_start + chunk_length
+            chunk_stream = HTTPStream(self.session, chunk_url)
+
+            if start_offset >= chunk_start and start_offset <= chunk_stop:
+                headers = extract_flv_header_tags(chunk_stream)
+
+                if not headers.metadata:
+                    raise StreamError("Missing metadata tag in the first chunk")
+
+                metadata = headers.metadata.data.value
+                keyframes = metadata.get("keyframes")
+
+                if not keyframes:
+                    raise StreamError("Missing keyframes info in the first chunk")
+
+                keyframe_offset = None
+                keyframe_offsets = keyframes.get("filepositions")
+                keyframe_times = [playlist_offset + t for t in keyframes.get("times")]
+                for time, offset in izip(keyframe_times, keyframe_offsets):
+                    if time > start_offset:
+                        break
+
+                    keyframe_offset = offset
+
+                if keyframe_offset is None:
+                    raise StreamError("Unable to find a keyframe to seek to "
+                                      "in the first chunk")
+
+                chunk_headers = dict(Range="bytes={0}-".format(int(keyframe_offset)))
+                chunk_stream = HTTPStream(self.session, chunk_url,
+                                          headers=chunk_headers)
+                playlist_streams.append(chunk_stream)
+                for tag in headers:
+                    playlist_tags.append(tag)
+            elif chunk_start >= start_offset and chunk_start < stop_offset:
+                playlist_streams.append(chunk_stream)
+
+            playlist_offset += chunk_length
+
+        return FLVPlaylist(self.session, playlist_streams,
+                           tags=playlist_tags, duration=playlist_duration)
+
     def _get_streams(self):
         if not self.channel:
             raise NoStreamsError(self.url)
 
+        if self.video_id:
+            return self._get_video_streams()
+        else:
+            return self._get_live_streams()
+
+    def _get_live_streams(self):
         streams = defaultdict(list)
 
         if RTMPStream.is_usable(self.session):
@@ -195,3 +314,6 @@ class JustinTVBase(Plugin):
             pass
 
         return streams
+
+    def _get_video_streams(self):
+        pass

@@ -39,7 +39,7 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 +--------------------+--------+------+----------------------------------------+
 | SVT Play           | Yes    | Yes  | Videos may be geo-restricted to Sweden.|
 +--------------------+--------+------+----------------------------------------+
-| Twitch/Justin.tv   | Yes    | No   | Possible to authenticate for           |
+| Twitch/Justin.tv   | Yes    | Yes  | Possible to authenticate for           |
 |                    |        |      | access to protected streams.           |
 +--------------------+--------+------+----------------------------------------+
 | UStream TV         | Yes    | Yes  |                                        |

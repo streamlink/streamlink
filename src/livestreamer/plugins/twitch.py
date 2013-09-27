@@ -60,6 +60,9 @@ class TwitchAPI(object):
     def viewer_info(self):
         return self.call("/api/viewer/info")
 
+    def videos(self, video_id):
+        return self.call("/api/videos/{0}".format(video_id))
+
 
 class Twitch(justintv_common.JustinTVBase):
     options = Options({
@@ -75,7 +78,7 @@ class Twitch(justintv_common.JustinTVBase):
 
         self.api = TwitchAPI()
 
-    def _authorize(self):
+    def _authenticate(self):
         cookies = self.options.get("cookie")
 
         if cookies:
@@ -93,6 +96,7 @@ class Twitch(justintv_common.JustinTVBase):
                 self.logger.error("Failed to authenticate, your cookies may "
                                   "have expired")
 
+    def _access_token(self):
         try:
             sig, token = self.api.channel_access_token(self.channel)
         except PluginError as err:
@@ -104,7 +108,8 @@ class Twitch(justintv_common.JustinTVBase):
         return sig, token
 
     def _get_desktop_streams(self):
-        sig, token = self._authorize()
+        self._authenticate()
+        sig, token = self._access_token()
 
         self.logger.debug("Fetching desktop streams")
         res = self.usher.find(self.channel,
@@ -112,6 +117,22 @@ class Twitch(justintv_common.JustinTVBase):
                               nauth=token)
 
         return self._parse_find_result(res, SWF_URL)
+
+    def _get_video_streams(self):
+        self._authenticate()
+
+        if self.video_type == "b":
+            self.video_type = "a"
+
+        try:
+            videos = self.api.videos(self.video_type + self.video_id)
+        except PluginError as err:
+            if "HTTP/1.1 0 ERROR" in str(err):
+                raise NoStreamsError(self.url)
+            else:
+                raise
+
+        return self._create_playlist_streams(videos)
 
 
 __plugin__ = Twitch
