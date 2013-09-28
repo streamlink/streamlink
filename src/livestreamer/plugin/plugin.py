@@ -245,8 +245,8 @@ class Plugin(object):
             if name in streams:
                 name = "{0}_{1}".format(name, stream_type)
 
-            # Force lowercase name
-            streams[name.lower()] = stream
+            # Force lowercase name and replace space with underscore.
+            streams[name.lower().replace(" ", "_")] = stream
 
         # Create the best/worst synonmys
         stream_weight_only = lambda s: self.stream_weight(s)[0]
