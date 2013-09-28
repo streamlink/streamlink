@@ -106,6 +106,7 @@ class JustinTV(justintv_common.JustinTVBase):
 
         self.logger.debug("Fetching desktop streams")
         res = self.usher.find(self.channel,
+                              password=self.options.get("password"),
                               channel_subscription=chansub)
 
         return self._parse_find_result(res, SWF_URL)

@@ -169,6 +169,10 @@ pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
 pluginopt.add_argument("--jtv-legacy-names", "--twitch-legacy-names",
                        help="Use the old stream names, e.g 720p, 1080p+. ",
                        action="store_true")
+pluginopt.add_argument("--jtv-password", "--twitch-password",
+                       help="Use this to access password protected streams.",
+                       metavar="password")
+
 
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to "

@@ -571,6 +571,12 @@ def setup_options():
         livestreamer.set_plugin_option("twitch", "legacy_names",
                                        True)
 
+    if args.jtv_password:
+        livestreamer.set_plugin_option("justintv", "password",
+                                       args.jtv_password)
+        livestreamer.set_plugin_option("twitch", "password",
+                                       args.jtv_password)
+
     if args.gomtv_cookie:
         livestreamer.set_plugin_option("gomtv", "cookie",
                                        args.gomtv_cookie)

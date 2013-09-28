@@ -43,10 +43,10 @@ class UsherService(object):
         path = path.format(*args, **kwargs)
         return urljoin("http://usher." + self.host, path)
 
-    def find(self, channel, **extra_params):
+    def find(self, channel, password=None, **extra_params):
         url = self.url(USHER_FIND_PATH, channel)
         params = dict(p=int(random() * 999999), type="any",
-                      private_code="null", **extra_params)
+                      private_code=password or "null", **extra_params)
 
         return res_json(urlget(url, params=params),
                         "stream info JSON")
@@ -82,6 +82,7 @@ class UsherService(object):
 class JustinTVBase(Plugin):
     options = Options({
         "cookie": None,
+        "password": None,
         "legacy-names": False
     })
 

@@ -113,6 +113,7 @@ class Twitch(justintv_common.JustinTVBase):
 
         self.logger.debug("Fetching desktop streams")
         res = self.usher.find(self.channel,
+                              password=self.options.get("password"),
                               nauthsig=sig,
                               nauth=token)
 
