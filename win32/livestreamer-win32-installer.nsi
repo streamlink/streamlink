@@ -13,7 +13,7 @@ SetCompressor lzma
 !define PROGRAM_WEB_SITE "http://livestreamer.tanuki.se/"
 
 # Python files generated with bbfreeze
-!define LIVESTREAMER_PYTHON_BBFREEZE_OUTPUT_DIR "..\build-win32\livestreamer-bbfreeze-${PROGRAM_VERSION}"
+!define LIVESTREAMER_PYTHON_BBFREEZE_OUTPUT_DIR "..\build-win32\livestreamer-${PROGRAM_VERSION}-win32"
 
 # EnvVarUpdate
 !include EnvVarUpdate.nsh
@@ -106,6 +106,7 @@ Section "Livestreamer CLI" Section1
 
   SetOutPath $INSTDIR
   File /r "${LIVESTREAMER_PYTHON_BBFREEZE_OUTPUT_DIR}\*.*"
+  File "rtmpdump\librtmp.dll"
 
   SetOutPath "$APPDATA\livestreamer"
 
@@ -123,8 +124,8 @@ Section "Livestreamer CLI" Section1
 SectionEnd
 
 Section "RTMPDump" Section2
-  SetOutPath $INSTDIR
-  File /r "rtmpdump"
+  SetOutPath "$INSTDIR\rtmpdump"
+  File /r "rtmpdump\*.exe"
 SectionEnd
 SectionGroupEnd
 
