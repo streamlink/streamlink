@@ -1,3 +1,39 @@
+Version 1.6.0
+-------------
+
+    General:
+     - All stream names are now forced to lowercase to avoid issues with
+       services renaming streams. (#179)
+     - Updated requests compatibility to 2.0. (#183)
+
+    Plugins:
+     - Added plugin for Hashd.tv by kasper93. (#184)
+     - Azubu.tv: Updated after service changes. (#170)
+     - ILive.to: Updated after service changes. (#182)
+     - Twitch/Justin.tv: Refactored and split into separate plugins.
+        - Added support for archived streams (VOD). (#70)
+        - Added a option to force legacy stream names (720p, 1080p+, etc).
+     - UStream.tv: Refactored plugin and added support for their RTMP API and
+       special streaming technology (UHS). (#144)
+
+    CLI:
+     - Added some more player options: ``--player-args``, ``--player-http``,
+       ``--player-continuous-http`` and ``--player-passthrough``. (#131)
+     - Expanded ``--stream-sorting-excludes`` to support more advanced
+       filtering. (#159)
+     - Now notifies the user if a new version of Livestreamer is available.
+     - Now allows case-insensitive stream name lookup.
+
+    API:
+     - Added a new exception (``LivestreamerError``) that all other exceptions
+       inherit from.
+     - The ``sorting_excludes`` parameter in ``Plugin.get_streams``
+       now supports more advanced filtering. (#159)
+
+    Bug fixes:
+     - Fixed HTTPStream with headers breaking ``--json`` on Python 3.
+
+
 Version 1.5.2
 -------------
 
