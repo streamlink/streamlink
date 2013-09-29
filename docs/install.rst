@@ -1,10 +1,10 @@
 .. _install:
 
-Installation
-============
+Installing
+==========
 
-Unix-like operating systems
----------------------------
+Source
+------
 
 The latest stable version is available to install using `pip <http://www.pip-installer.org/>`_:
 
@@ -20,22 +20,18 @@ But you can also get the development version using `Git <http://git-scm.com/>`_:
     $ cd livestreamer
     # python setup.py install
 
-Windows
--------
-
-Livestreamer is primarily developed for Unix-like operating systems where using a CLI is common. There is however an installer available for brave Windows users who don't mind using the command prompt.
-
-The installer can be `downloaded from Github <https://github.com/chrippa/livestreamer/releases>`_. It contains a precompiled version of Livestreamer that does not require you to install any of the dependencies.
+`The Hitchhiker’s Guide to Python <http://docs.python-guide.org/>`_ has guides
+helping you install Python + pip on the most common operating systems.
 
 Dependencies
-------------
+^^^^^^^^^^^^
 
 Livestreamer currently depends on these libraries/programs to function.
 
 To run the setup script you need:
 
 - `Python <http://python.org/>`_ (at least version 2.6) or `PyPy <http://pypy.org/>`_
-- `python-setuptools <http://pypi.python.org/pypi/setuptools>`_ or `python-distribute <http://pypi.python.org/pypi/distribute>`_
+- `python-setuptools <http://pypi.python.org/pypi/setuptools>`_
 
 
 These will be installed automatically by the setup script if they are missing:
@@ -44,7 +40,7 @@ These will be installed automatically by the setup script if they are missing:
 - `python-requests <http://docs.python-requests.org/>`_ (at least version 1.0)
 
 Optional dependencies
----------------------
+^^^^^^^^^^^^^^^^^^^^^
 
 For RTMP based plugins:
 
@@ -53,4 +49,21 @@ For RTMP based plugins:
 For decrypting encrypted HLS streams:
 
 - `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_
+
+For full UStream.tv support:
+
+- `python-librtmp <https://github.com/chrippa/python-librtmp>`_
+
+Packages
+--------
+
+Livestreamer is also available in the official package repositories for
+`Arch Linux <https://www.archlinux.org/packages/community/any/livestreamer/>`_
+and `OpenBSD <http://openports.se/multimedia/livestreamer>`_.
+
+Windows
+^^^^^^^
+Livestreamer is primarily developed for Unix-like operating systems where using a CLI is common. There is however a installer available for brave Windows users who don't mind using the command prompt.
+
+The installer can be `downloaded from Github <https://github.com/chrippa/livestreamer/releases>`_. It contains a precompiled version of Livestreamer that does not require you to install any of the dependencies.
 

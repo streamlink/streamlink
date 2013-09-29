@@ -81,7 +81,7 @@ Player options
     The arguments passed to the player. These formatting
     variables are available: filename. Default is ``'{filename}'``
 
-    .. versionadded:: 1.6
+    .. versionadded:: 1.6.0
 
 .. cmdoption:: -q, --quiet-player
 
@@ -103,17 +103,17 @@ Player options
     Make the player read the stream using HTTP
     (useful if your player can't read from stdin)
 
-    .. versionadded:: 1.6
+    .. versionadded:: 1.6.0
 
 .. cmdoption:: --player-continuous-http
 
     Make the player read the stream using HTTP, but unlike
-    --player-http will continuously try to open the stream
+    ``--player-http`` will continuously try to open the stream
     if the player requests it. This makes it possible to
     handle stream disconnects if your player is capable of
     reconnecting to a HTTP stream, e.g ``'vlc --repeat'``
 
-    .. versionadded:: 1.6
+    .. versionadded:: 1.6.0
 
 .. cmdoption:: --player-passthrough types
 
@@ -122,7 +122,7 @@ Player options
     sure your player can handle the stream type when using this.
     Supported stream types are: ``hls``, ``http``, ``rtmp``
 
-    .. versionadded:: 1.6
+    .. versionadded:: 1.6.0
 
 
 File output options
@@ -212,11 +212,22 @@ Plugin options
     expression with a comma. For example ``>480p,>mobile_medium``
     will exclude streams from two quality types.
 
+.. cmdoption:: --jtv-cookie cookie, --twitch-cookie cookie
 
-.. cmdoption:: --jtv-cookie cookie
-
-    Specify JustinTV cookie to allow access to
+    Specify Twitch/Justin.tv cookies to allow access to
     subscription channels, e.g ``'_twitch_session_id=xxxxxx; persistent=xxxxx;'``
+
+.. cmdoption:: --jtv-legacy-names, --twitch-legacy-names
+
+    Use the old stream names, e.g 720p, 1080p+.
+
+    .. versionadded:: 1.6.0
+
+.. cmdoption:: --jtv-password password, --twitch-password password
+
+   Use this to access password protected streams.
+
+   .. versionadded:: 1.6.0
 
 .. cmdoption:: --gomtv-cookie cookie
 
