@@ -1,8 +1,13 @@
-class PluginError(Exception):
+class LivestreamerError(Exception):
+    """Any error caused by Livestreamer will be caught
+       with this exception."""
+
+
+class PluginError(LivestreamerError):
     """Plugin related error."""
 
 
-class NoStreamsError(Exception):
+class NoStreamsError(LivestreamerError):
     def __init__(self, url):
         self.url = url
 
@@ -16,13 +21,12 @@ class NoPluginError(PluginError):
     This exception is raised by :meth:`Livestreamer.resolve_url`,
     when no relevant plugin can be found.
 
-    Inherits :exc:`PluginError`.
-
     """
 
 
-class StreamError(Exception):
+class StreamError(LivestreamerError):
     """Stream related error."""
 
 
-__all__ = ["PluginError", "NoPluginError", "NoStreamsError", "StreamError"]
+__all__ = ["LivestreamerError", "PluginError", "NoPluginError",
+           "NoStreamsError", "StreamError"]

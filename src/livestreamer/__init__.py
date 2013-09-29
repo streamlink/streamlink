@@ -11,7 +11,7 @@ Full documentation is available at http://livestreamer.tanuki.se/.
 
 
 __title__ = "livestreamer"
-__version__ = "1.5.2"
+__version__ = "1.6.0"
 __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
 __copyright__ = "Copyright 2011-2013 Christopher Rosell"
@@ -21,6 +21,6 @@ __credits__ = ["Christopher Rosell", "Athanasios Oikonomou",
                "Sam Edwards", "John Peterson", "Kacper"]
 
 
-from .exceptions import (PluginError, NoStreamsError,
+from .exceptions import (LivestreamerError, PluginError, NoStreamsError,
                          NoPluginError, StreamError)
 from .session import Livestreamer

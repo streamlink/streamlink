@@ -1,5 +1,5 @@
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import (AkamaiHDStream, HDSStream, HLSStream,
                                  HTTPStream, RTMPStream)
@@ -56,6 +56,10 @@ class StreamURL(Plugin):
 
         url = split[0]
         urlnoproto = re.match("^\w+://(.+)", url).group(1)
+
+        # Prepend http:// if needed.
+        if cls != RTMPStream and not re.match("^http(s)?://", urlnoproto):
+            urlnoproto = "http://{0}".format(urlnoproto)
 
         params = (" ").join(split[1:])
         params = self._parse_params(params)

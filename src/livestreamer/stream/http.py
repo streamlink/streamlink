@@ -1,20 +1,26 @@
+import requests
+
 from .stream import Stream
 from .wrappers import StreamIOWrapper
-
 from ..exceptions import StreamError
-from ..utils import urlget
 
-from requests import Request
+
+def normalize_key(keyval):
+    key, val = keyval
+    key = hasattr(key, "decode") and key.decode("utf8", "ignore") or key
+
+    return key, val
+
 
 class HTTPStream(Stream):
-    """
-    Regular HTTP stream
+    """A HTTP stream using the requests library.
 
     *Attributes:*
 
-    - :attr:`url` URL to the stream
-    - :attr:`args` A :class:`dict` containing keyword arguments passed to
-      :meth:`requests.request`
+    - :attr:`url`  The URL to the stream, prepared by requests.
+    - :attr:`args` A :class:`dict` containing keyword arguments passed
+                   to :meth:`requests.request`, such as headers and
+                   cookies.
 
     """
 
@@ -23,23 +29,31 @@ class HTTPStream(Stream):
     def __init__(self, session, url, **args):
         Stream.__init__(self, session)
 
-        self.url = url
-        self.args = args
+        self.args = dict(url=url, method=args.pop("method", "GET"),
+                         **args)
 
     def __repr__(self):
         return "<HTTPStream({0!r})>".format(self.url)
 
     def __json__(self):
-        req = Request(url=self.url, **self.args).prepare()
+        req = requests.Request(**self.args).prepare()
+        headers = dict(map(normalize_key, req.headers.items()))
 
-        return dict(type=HTTPStream.shortname(),
-                    url=req.url, headers=dict(req.headers),
-                    body=req.body, method=req.method or "GET")
+        return dict(type=HTTPStream.shortname(), url=req.url,
+                    method=req.method, headers=headers,
+                    body=req.body)
+
+    @property
+    def url(self):
+        return requests.Request(**self.args).prepare().url
 
     def open(self):
-        res = urlget(self.url, stream=True,
-                     exception=StreamError,
-                     **self.args)
+        try:
+            res = requests.request(stream=True, **self.args)
+            res.raise_for_status()
+        except (requests.exceptions.RequestException, IOError) as err:
+            raise StreamError("Unable to open URL: {0} ({1})".format(self.url,
+                                                                     err))
 
         return StreamIOWrapper(res.raw)
 

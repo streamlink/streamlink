@@ -15,7 +15,7 @@ class Stream(object):
         return "<Stream()>"
 
     def __json__(self):
-        return dict(type=Stream.shortname())
+        return dict(type=type(self).shortname())
 
     def open(self):
         """

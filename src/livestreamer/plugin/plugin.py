@@ -1,34 +1,53 @@
+import operator
 import re
 
 from functools import partial
 
-from .cache import Cache
-from .exceptions import NoStreamsError
-from .options import Options
+from ..cache import Cache
+from ..exceptions import PluginError, NoStreamsError
+from ..options import Options
 
 
 QUALITY_WEIGTHS_EXTRA = {
-    "live": 1080,
-    "source": 1080,
-    "hd": 1080,
-    "ehq": 720,
-    "hq": 576,
-    "sd": 576,
-    "sq": 360,
-    "high": 720,
-    "medium": 480,
-    "low": 240,
-    "mobile_high": 330,
-    "mobile_medium": 260,
-    "mobile_low": 170,
+    "other": {
+        "live": 1080,
+        "source": 1080,
+        "high": 720,
+        "medium": 480,
+        "low": 240,
+    },
+    "tv": {
+        "hd": 1080,
+        "sd": 576,
+    },
+    "quality": {
+        "ehq": 720,
+        "hq":  576,
+        "sq":  360,
+    },
+    "mobile": {
+        "mobile_high":   330,
+        "mobile_medium": 260,
+        "mobile_low":    170,
+    }
 }
 
 
-def qualityweight(quality):
-    if quality in QUALITY_WEIGTHS_EXTRA:
-        return QUALITY_WEIGTHS_EXTRA[quality]
+FILTER_OPERATORS = {
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+}
 
-    match = re.match("^(\d+)([k]|[p])?([\+])?$", quality)
+
+
+def stream_weight(stream):
+    for group, weights in QUALITY_WEIGTHS_EXTRA.items():
+        if stream in weights:
+            return weights[stream], group
+
+    match = re.match("^(\d+)([k]|[p])?([\+])?$", stream)
 
     if match:
         if match.group(2) == "k":
@@ -36,11 +55,13 @@ def qualityweight(quality):
 
             # These calculations are very rough
             if bitrate > 2000:
-                return bitrate / 3.4
+                weight = bitrate / 3.4
             elif bitrate > 1000:
-                return bitrate / 2.6
+                weight = bitrate / 2.6
             else:
-                return bitrate / 1.7
+                weight = bitrate / 1.7
+
+            return weight, "bitrate"
 
         elif match.group(2) == "p":
             weight = int(match.group(1))
@@ -48,9 +69,9 @@ def qualityweight(quality):
             if match.group(3) == "+":
                 weight += 1
 
-            return weight
+            return weight, "pixels"
 
-    return 0
+    return 0, "none"
 
 
 def iterate_streams(streams):
@@ -85,8 +106,25 @@ def stream_type_priority(stream_types, stream):
     return prio
 
 
-def stream_sorting_filter(sorting_excludes, stream):
-    return stream not in sorting_excludes
+def stream_sorting_filter(expr, stream_weight):
+    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w\+]+)", expr)
+
+    if not match:
+        raise PluginError("Invalid filter expression: {0}".format(expr))
+
+    op, value = match.group("op", "value")
+    op = FILTER_OPERATORS.get(op, operator.eq)
+    filter_weight, filter_group = stream_weight(value)
+
+    def func(quality):
+        weight, group = stream_weight(quality)
+
+        if group == filter_group:
+            return not op(weight, filter_weight)
+
+        return True
+
+    return func
 
 
 class Plugin(object):
@@ -124,6 +162,10 @@ class Plugin(object):
     def get_option(cls, key):
         return cls.options.get(key)
 
+    @classmethod
+    def stream_weight(cls, stream):
+        return stream_weight(stream)
+
     def get_streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
 
@@ -140,19 +182,39 @@ class Plugin(object):
         gets to keep the name while the rest will be renamed to
         "<name>_<stream type>".
 
-        :param stream_types: a list of stream types to return.
-        :param sorting_excludes: a list of streams to exclude when
-                                 sorting to decide best/worst synonyms.
+        The synonyms can be fine tuned with the *sorting_excludes*
+        parameter. This can be either of these types:
+
+            - A list of filter expressions in the format
+              *[operator]<value>*. For example the filter ">480p" will
+              exclude streams ranked higher than "480p" from the list
+              used in the synonyms ranking. Valid operators are >, >=, <
+              and <=. If no operator is specified then equality will be
+              tested.
+
+            - A function that is passed to filter() with a list of
+              stream names as input.
+
+
+        :param stream_types: A list of stream types to return.
+        :param sorting_excludes: Specify which streams to exclude from
+                                 the best/worst synonyms.
+
 
         .. versionchanged:: 1.4.2
            Added *priority* parameter.
 
-        .. versionchanged:: 1.5
+        .. versionchanged:: 1.5.0
            Renamed *priority* to *stream_types* and changed behaviour
            slightly.
 
-        .. versionchanged:: 1.5
+        .. versionchanged:: 1.5.0
            Added *sorting_excludes* parameter.
+
+        .. versionchanged:: 1.6.0
+           *sorting_excludes* can now be a list of filter expressions
+           or a function that is passed to filter().
+
 
         """
 
@@ -183,16 +245,21 @@ class Plugin(object):
             if name in streams:
                 name = "{0}_{1}".format(name, stream_type)
 
-            streams[name] = stream
+            # Force lowercase name and replace space with underscore.
+            streams[name.lower().replace(" ", "_")] = stream
 
         # Create the best/worst synonmys
-        stream_names = filter(qualityweight, streams.keys())
-        sorted_streams = sorted(stream_names, key=qualityweight)
+        stream_weight_only = lambda s: (self.stream_weight(s)[0] or
+                                        (len(streams) == 1 and 1))
+        stream_names = filter(stream_weight_only, streams.keys())
+        sorted_streams = sorted(stream_names, key=stream_weight_only)
 
-        if sorting_excludes:
-            sorted_streams = list(filter(partial(stream_sorting_filter,
-                                                 sorting_excludes),
-                                         sorted_streams))
+        if isinstance(sorting_excludes, list):
+            for expr in sorting_excludes:
+                filter_func = stream_sorting_filter(expr, self.stream_weight)
+                sorted_streams = list(filter(filter_func, sorted_streams))
+        elif callable(sorting_excludes):
+            sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
         if len(sorted_streams) > 0:
             best = sorted_streams[-1]

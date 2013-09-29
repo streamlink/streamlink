@@ -6,8 +6,13 @@ from livestreamer.stream import AkamaiHDStream
 from livestreamer.utils import urlopen
 
 from io import BytesIO
+from operator import attrgetter
 
 import re
+
+
+STREAM_NAMES = ["360p", "480p", "720p", "1080p"]
+
 
 @AMF3ObjectBase.register("com.brightcove.experience.ViewerExperienceRequest")
 class ViewerExperienceRequest(AMF3ObjectBase):
@@ -90,8 +95,7 @@ class AzubuTV(Plugin):
 
         player_id = match.group(1)
 
-        match = re.search("<img src=\".+/static/images/channels/live_check.png\" />",
-                          res.text)
+        match = re.search("<!-- live on -->", res.text)
         is_live = not not match
 
         return key, video_player, player_id, is_live
@@ -107,10 +111,12 @@ class AzubuTV(Plugin):
         if not hasattr(player, "mediaDTO"):
             raise PluginError("Invalid result")
 
-        for i, rendition in player.mediaDTO.renditions.items():
+        renditions = sorted(player.mediaDTO.renditions.values(),
+                            key=attrgetter("encodingRate"))
+
+        for stream_name, rendition in zip(STREAM_NAMES, renditions):
             stream = AkamaiHDStream(self.session, rendition.defaultURL)
-            streamname = "{0}p".format(rendition.frameHeight)
-            streams[streamname] = stream
+            streams[stream_name] = stream
 
         return streams
 

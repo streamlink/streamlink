@@ -56,11 +56,11 @@ Full list of command line arguments
 
 .. cmdoption:: -l level, --loglevel level
 
-    Set log level, valid levels: none, error, warning, info, debug
+    Set log level, valid levels: ``none``, ``error``, ``warning``, ``info``, ``debug``
 
 .. cmdoption:: -Q, --quiet
 
-    Alias for --loglevel none
+    Alias for ``--loglevel none``
 
 .. cmdoption:: -j, --json
 
@@ -68,12 +68,20 @@ Full list of command line arguments
     disable log output, useful for external scripting
 
 
-*Player options*
+Player options
+^^^^^^^^^^^^^^
 
 .. cmdoption:: -p player, --player player
 
     Player command-line to start, by default VLC will be
     used if it is installed
+
+.. cmdoption:: -a, --player-args
+
+    The arguments passed to the player. These formatting
+    variables are available: filename. Default is ``'{filename}'``
+
+    .. versionadded:: 1.6.0
 
 .. cmdoption:: -q, --quiet-player
 
@@ -85,12 +93,40 @@ Full list of command line arguments
 
     Show all player console output
 
-.. cmdoption:: -n, --fifo
+.. cmdoption:: -n, --player-fifo, --fifo
 
-    Play file using a named pipe instead of stdin (can
-    help with incompatible media players)
+    Make the player read the stream through a named pipe
+    (useful if your player can't read from stdin)
 
-*File output options*
+.. cmdoption:: --player-http
+
+    Make the player read the stream using HTTP
+    (useful if your player can't read from stdin)
+
+    .. versionadded:: 1.6.0
+
+.. cmdoption:: --player-continuous-http
+
+    Make the player read the stream using HTTP, but unlike
+    ``--player-http`` will continuously try to open the stream
+    if the player requests it. This makes it possible to
+    handle stream disconnects if your player is capable of
+    reconnecting to a HTTP stream, e.g ``'vlc --repeat'``
+
+    .. versionadded:: 1.6.0
+
+.. cmdoption:: --player-passthrough types
+
+    A comma-delimited list of stream types to pass to the
+    player as a filename rather than piping the data. Make
+    sure your player can handle the stream type when using this.
+    Supported stream types are: ``hls``, ``http``, ``rtmp``
+
+    .. versionadded:: 1.6.0
+
+
+File output options
+^^^^^^^^^^^^^^^^^^^
 
 .. cmdoption::  -o filename, --output filename
 
@@ -104,7 +140,9 @@ Full list of command line arguments
 
     Write stream to stdout instead of playing it
 
-*Stream options*
+
+Stream options
+^^^^^^^^^^^^^^
 
 .. cmdoption:: -c, --cmdline
 
@@ -119,7 +157,7 @@ Full list of command line arguments
 .. cmdoption:: -r path, --rtmpdump path
 
     Specify location of rtmpdump executable, e.g.
-    /usr/local/bin/rtmpdump
+    ``/usr/local/bin/rtmpdump``
 
 .. cmdoption:: --rtmpdump-proxy host:port
 
@@ -128,22 +166,23 @@ Full list of command line arguments
 .. cmdoption:: --hds-live-edge seconds
 
     Specify the time live HDS streams will start from the
-    edge of stream, default is **10.0**
+    edge of stream, default is ``10.0``
 
 .. cmdoption::  --hds-fragment-buffer fragments
 
     Specify the maximum amount of fragments to buffer,
     this controls the maximum size of the ringbuffer,
-    default is **10**
+    default is ``10``
 
 .. cmdoption:: --ringbuffer-size size
 
     Specify a maximum size (bytes) for the ringbuffer used
-    by some stream types, default is **32768**. Used by RTMP
-    and HLS. Use --hds-fragment-buffer for HDS.
+    by some stream types, default is ``32768``. Used by RTMP
+    and HLS. Use ``--hds-fragment-buffer`` for HDS.
 
 
-*Plugin options*
+Plugin options
+^^^^^^^^^^^^^^
 
 .. cmdoption:: --plugin-dirs directory
 
@@ -157,24 +196,43 @@ Full list of command line arguments
     A comma-delimited list of stream types to allow. The
     order will be used to separate streams when there are
     multiple streams with the same name and different
-    stream types. Default is **rtmp,hls,hds,http,akamaihd**
+    stream types. Default is ``rtmp,hls,hds,http,akamaihd``
 
 
 .. cmdoption:: --stream-sorting-excludes streams
 
-    A comma-delimited list of streams to exclude from the
-    sorting used by best/worst synonyms, e.g. 1080p+,1080p
+    Fine tune best/worst synonyms by excluding unwanted
+    streams. Uses a filter expression in the format
+    ``[operator]<value>``. For example the filter ``>480p`` will
+    exclude streams ranked higher than '480p'. Valid
+    operators are ``>``, ``>=``, ``<`` and ``<=``. If no operator is
+    specified then equality is tested.
 
+    Multiple filters can be used by separating each
+    expression with a comma. For example ``>480p,>mobile_medium``
+    will exclude streams from two quality types.
 
-.. cmdoption:: --jtv-cookie cookie
+.. cmdoption:: --jtv-cookie cookie, --twitch-cookie cookie
 
-    Specify JustinTV cookie to allow access to
-    subscription channels, e.g '_twitch_session_id=xxxxxx; persistent=xxxxx;'
+    Specify Twitch/Justin.tv cookies to allow access to
+    subscription channels, e.g ``'_twitch_session_id=xxxxxx; persistent=xxxxx;'``
+
+.. cmdoption:: --jtv-legacy-names, --twitch-legacy-names
+
+    Use the old stream names, e.g 720p, 1080p+.
+
+    .. versionadded:: 1.6.0
+
+.. cmdoption:: --jtv-password password, --twitch-password password
+
+   Use this to access password protected streams.
+
+   .. versionadded:: 1.6.0
 
 .. cmdoption:: --gomtv-cookie cookie
 
     Specify GOMTV cookie to allow access to streams,
-    e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'
+    e.g. ``'SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'``
 
 .. cmdoption:: --gomtv-username username
 

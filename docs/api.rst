@@ -142,6 +142,7 @@ Exceptions
 
 Livestreamer has three types of exceptions:
 
+.. autoexception:: livestreamer.LivestreamerError
 .. autoexception:: livestreamer.PluginError
 .. autoexception:: livestreamer.NoPluginError
 .. autoexception:: livestreamer.StreamError

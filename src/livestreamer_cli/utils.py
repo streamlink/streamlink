@@ -1,11 +1,19 @@
 import json
 import os
+import socket
 import sys
 import tempfile
 
 from contextlib import contextmanager
+from io import BytesIO
 
 from .compat import is_win32, is_py3
+
+try:
+    from BaseHTTPServer import BaseHTTPRequestHandler
+except ImportError:
+    from http.server import BaseHTTPRequestHandler
+
 
 if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref
@@ -83,6 +91,74 @@ class JSONEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 
+class HTTPRequest(BaseHTTPRequestHandler):
+    def __init__(self, request_text):
+        self.rfile = BytesIO(request_text)
+        self.raw_requestline = self.rfile.readline()
+        self.error_code = self.error_message = None
+        self.parse_request()
+
+    def send_error(self, code, message):
+        self.error_code = code
+        self.error_message = message
+
+
+class HTTPServer(object):
+    def __init__(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.conn = self.host = self.port = None
+        self.bound = False
+
+    @property
+    def url(self):
+        return "http://{0}:{1}/".format(self.host, self.port)
+
+    def bind(self, host="127.0.0.1", port=0):
+        try:
+            self.socket.bind((host, port))
+        except socket.error as err:
+            raise OSError(err)
+
+        self.socket.listen(1)
+        self.bound = True
+        self.host, self.port = self.socket.getsockname()
+
+    def open(self, timeout=30):
+        self.socket.settimeout(timeout)
+
+        try:
+            conn, addr = self.socket.accept()
+        except socket.timeout:
+            raise OSError("Socket accept timed out")
+
+        try:
+            req_data = conn.recv(1024)
+        except socket.error:
+            raise OSError("Failed to read data from socket")
+
+        req = HTTPRequest(req_data)
+
+        conn.send(b"HTTP/1.1 200 OK\r\n")
+        conn.send(b"Server: Livestreamer\r\n")
+        conn.send(b"\r\n")
+        self.conn = conn
+
+        return req
+
+    def write(self, data):
+        if not self.conn:
+            raise IOError("No connection")
+
+        self.conn.sendall(data)
+
+    def close(self, client_only=False):
+        if self.conn:
+            self.conn.close()
+
+        if not client_only:
+            self.socket.close()
+
+
 @contextmanager
 def ignored(*exceptions):
     try:
@@ -127,5 +203,39 @@ def find_default_player():
         return check_paths(("vlc",), paths)
 
 
-__all__ = ["NamedPipe", "JSONEncoder", "ignored",
-           "find_default_player"]
+def stream_to_url(stream):
+    stream_type = type(stream).shortname()
+
+    if stream_type in ("hls", "http"):
+        url = stream.url
+
+    elif stream_type == "rtmp":
+        params = [stream.params.pop("rtmp", "")]
+        stream_params = dict(stream.params)
+
+        if "swfVfy" in stream.params:
+            stream_params["swfUrl"] = stream.params["swfVfy"]
+            stream_params["swfVfy"] = True
+
+        if "swfhash" in stream.params:
+            stream_params["swfVfy"] = True
+            stream_params.pop("swfhash", None)
+            stream_params.pop("swfsize", None)
+
+        for key, value in stream_params.items():
+            if isinstance(value, bool):
+                value = str(int(value))
+
+            # librtmp expects some characters to be escaped
+            value = value.replace("\\", "\\5c")
+            value = value.replace(" ", "\\20")
+            value = value.replace('"', "\\22")
+
+            params.append("{0}={1}".format(key, value))
+
+        url = " ".join(params)
+
+    return url
+
+__all__ = ["NamedPipe", "HTTPServer", "JSONEncoder", "ignored",
+           "find_default_player", "stream_to_url"]

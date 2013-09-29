@@ -96,10 +96,11 @@ class AkamaiHDStreamIO(io.IOBase):
 
         try:
             res = urlget(url, stream=True, params=params)
+            self.fd = res.raw
         except Exception as err:
             raise StreamError(str(err))
 
-        self.handshake(res.raw)
+        self.handshake(self.fd)
 
         return self
 
@@ -150,19 +151,13 @@ class AkamaiHDStreamIO(io.IOBase):
                        data=self.ControlData, exception=StreamError)
 
     def read(self, size=-1):
-        if not self.flv:
+        if not (self.flv and self.fd):
             return b""
 
-        while self.buffer.length < size and self.flv:
-            try:
-                tag = next(self.flv)
-            except StopIteration:
-                self.flv = None
-                break
-
-            self.process_tag(tag)
-
-        return self.buffer.read(size)
+        if self.buffer.length:
+            return self.buffer.read(size)
+        else:
+            return self.fd.read(size)
 
     def _create_params(self, **extra):
         params = dict(v=self.Version, fp=self.FlashVersion,

@@ -1,0 +1,5 @@
+These binaries have been compiled from the unmodified source
+available at git://git.ffmpeg.org/rtmpdump (commit: df6c51884243ef2bd12931e6c617b2be7520ca26).
+
+Cross-compiled using MinGW32 and statically linked with
+PolarSSL v1.2.7 and zlib v1.2.3 on a Linux host.

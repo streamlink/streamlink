@@ -16,6 +16,7 @@ dist
 .mr.developer.cfg
 .hg
 .bzr
+.tox
 .svn
 *.pyc
 *.pyo

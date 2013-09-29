@@ -2,6 +2,8 @@ from livestreamer.plugins import Plugin
 from livestreamer.options import Options
 from livestreamer.stream import *
 
+from livestreamer.plugin.api.support_plugin import testplugin_support
+
 class TestPlugin(Plugin):
     options = Options({
         "a_option": "default"
@@ -29,6 +31,8 @@ class TestPlugin(Plugin):
 
         streams["480p"] = [HTTPStream(self.session, "http://test.se/stream"),
                            RTMPStream(self.session, dict(rtmp="rtmp://test.se"))]
+
+        streams.update(testplugin_support.get_streams(self.session))
 
         return streams
 
