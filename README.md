@@ -10,6 +10,7 @@ Livestreamer is CLI program that extracts streams from various services and pipe
 a video player of choice.
 
 * Documentation: http://livestreamer.tanuki.se/
+* Discussions: https://groups.google.com/forum/#!forum/livestreamer
 * GitHub: https://github.com/chrippa/livestreamer
 * PyPI: https://pypi.python.org/pypi/livestreamer
 * Free software: Simplified BSD license
