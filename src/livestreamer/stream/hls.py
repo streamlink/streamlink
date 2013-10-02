@@ -257,7 +257,8 @@ class HLSStreamIO(io.IOBase):
             if not "URI" in tags["EXT-X-KEY"][0]:
                 raise StreamError("Missing URI to decryption key")
 
-            res = urlget(tags["EXT-X-KEY"][0]["URI"], exception=StreamError)
+            res = urlget(absolute_url(self.url, tags["EXT-X-KEY"][0]["URI"]),
+                         exception=StreamError)
             self.decryptor_key = res.content
 
         for i, entry in enumerate(entries):
