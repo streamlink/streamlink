@@ -103,6 +103,10 @@ playeropt.add_argument("--player-passthrough", metavar="types",
                             "handle the stream type when using this. "
                             "Supported stream types are: "
                             "{0}".format(", ".join(STREAM_PASSTHROUGH)))
+playeropt.add_argument("--player-no-close", action="store_true",
+                       help="By default Livestreamer will close the "
+                            "player when the stream ends. This option "
+                            "will let the player decide when to exit.")
 
 outputopt = parser.add_argument_group("file output options")
 outputopt.add_argument("-o", "--output", metavar="filename",

@@ -124,6 +124,13 @@ Player options
 
     .. versionadded:: 1.6.0
 
+.. cmdoption:: --player-no-close
+
+    By default Livestreamer will close the player when the
+    stream ends. This option will let the player decide
+    when to exit.
+
+    .. versionadded:: 1.7.0
 
 File output options
 ^^^^^^^^^^^^^^^^^^^

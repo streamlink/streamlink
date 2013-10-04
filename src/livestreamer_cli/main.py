@@ -82,6 +82,7 @@ def create_output():
         console.logger.info("Starting player: {0}", player)
         out = PlayerOutput(player, args=args.player_args,
                            quiet=not args.verbose_player,
+                           kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http)
 
     return out

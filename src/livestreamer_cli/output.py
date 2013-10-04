@@ -65,10 +65,11 @@ class FileOutput(Output):
 
 class PlayerOutput(Output):
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS,
-                 filename=None, quiet=True, call=False,
-                 http=False, namedpipe=None):
+                 filename=None, quiet=True, kill=True,
+                 call=False, http=False, namedpipe=None):
         self.cmd = cmd
         self.args = args
+        self.kill = kill
         self.call = call
 
         self.filename = filename
@@ -134,8 +135,9 @@ class PlayerOutput(Output):
             self.http.open()
 
     def _close(self):
-        with ignored(Exception):
-            self.player.kill()
+        if self.kill:
+            with ignored(Exception):
+                self.player.kill()
 
         if self.namedpipe:
             self.namedpipe.close()
