@@ -1,3 +1,11 @@
+Version 1.6.1
+-------------
+
+    Bug fixes:
+     - CLI: Fixed broken ``--player-http`` and ``--player-continuous-http`` on Windows.
+     - CLI: Fixed un-quoted player paths containing backslashes being broken.
+
+
 Version 1.6.0
 -------------
 
