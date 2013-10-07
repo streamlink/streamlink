@@ -128,6 +128,7 @@ class HTTPServer(object):
 
         try:
             conn, addr = self.socket.accept()
+            conn.settimeout(None)
         except socket.timeout:
             raise OSError("Socket accept timed out")
 
