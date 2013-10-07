@@ -104,9 +104,11 @@ class PlayerOutput(Output):
         else:
             filename = "-"
 
+        # shlex removes un-escaped backslashes
+        cmd = self.cmd.replace("\\", "\\\\")
         args = self.args.format(filename=filename)
 
-        return shlex.split(self.cmd) + shlex.split(args)
+        return shlex.split(cmd) + shlex.split(args)
 
     def _open(self):
         if self.call and self.filename:
