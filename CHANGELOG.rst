@@ -21,6 +21,7 @@ Version 1.6.0
      - Twitch/Justin.tv: Refactored and split into separate plugins.
         - Added support for archived streams (VOD). (#70)
         - Added a option to force legacy stream names (720p, 1080p+, etc).
+        - Added a option to access password protected streams.
      - UStream.tv: Refactored plugin and added support for their RTMP API and
        special streaming technology (UHS). (#144)
 
