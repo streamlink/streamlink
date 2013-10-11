@@ -284,12 +284,12 @@ class JustinTVBase(Plugin):
         else:
             return self._get_live_streams()
 
-    def _get_live_streams(self):
+    def _get_live_streams(self, *args, **kwargs):
         streams = defaultdict(list)
 
         if RTMPStream.is_usable(self.session):
             try:
-                for name, stream in self._get_desktop_streams().items():
+                for name, stream in self._get_desktop_streams(*args, **kwargs).items():
                     streams[name].append(stream)
 
             except PluginError as err:
@@ -302,7 +302,7 @@ class JustinTVBase(Plugin):
                                 "only mobile streams may be available")
 
         try:
-            for name, stream in self._get_mobile_streams().items():
+            for name, stream in self._get_mobile_streams(*args, **kwargs).items():
                 # Justin.tv streams have a iphone prefix, so let's
                 # strip it to keep it consistent with Twitch.
                 name = name.replace("iphone", "")
