@@ -81,7 +81,7 @@ class Twitch(justintv_common.JustinTVBase):
     def _authenticate(self):
         cookies = self.options.get("cookie")
 
-        if cookies:
+        if cookies and not self.api.oauth_token:
             self.logger.info("Attempting to authenticate using cookies")
 
             self.api.add_cookies(cookies)
