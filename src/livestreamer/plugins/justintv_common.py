@@ -27,6 +27,12 @@ HLS_TOKEN_PATH = "/stream/iphone_token/{0}.json"
 HLS_PLAYLIST_PATH = "/stream/multi_playlist/{0}.m3u8?token={1}&hd=true&allow_cdn=true"
 USHER_FIND_PATH = "/find/{0}.json"
 REQUIRED_RTMP_KEYS = ("connect", "play", "type", "token")
+QUALITY_WEIGHTS = {
+    "mobile_high": 330,
+    "mobile_medium": 260,
+    "mobile_low": 170,
+    "mobile_mobile": 120
+}
 URL_PATTERN = (r"http(s)?://([\w\.]+)?(?P<domain>twitch.tv|justin.tv)/(?P<channel>\w+)"
                r"(/(?P<video_type>[bc])/(?P<video_id>\d+))?")
 
@@ -85,6 +91,14 @@ class JustinTVBase(Plugin):
         "password": None,
         "legacy-names": False
     })
+
+    @classmethod
+    def stream_weight(cls, key):
+        weight = QUALITY_WEIGHTS.get(key)
+        if weight:
+            return weight, "mobile_justintv"
+
+        return Plugin.stream_weight(key)
 
     def __init__(self, url):
         Plugin.__init__(self, url)
