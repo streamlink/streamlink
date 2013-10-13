@@ -50,7 +50,7 @@ Full list of command line arguments
 
     Show program's version number and exit
 
-.. cmdoption:: -u, --plugins
+.. cmdoption:: --plugins
 
     Print all currently installed plugins
 

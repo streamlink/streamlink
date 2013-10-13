@@ -52,7 +52,7 @@ parser.add_argument("-h", "--help", action="store_true",
                     help="Show this help message and exit")
 parser.add_argument("-V", "--version", action="version",
                     version="%(prog)s " + livestreamer_version)
-parser.add_argument("-u", "--plugins", action="store_true",
+parser.add_argument("--plugins", action="store_true",
                     help="Print all currently installed plugins")
 parser.add_argument("-l", "--loglevel", metavar="level", default="info",
                     help="Set log level, valid levels: none, error, warning, "
