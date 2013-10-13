@@ -312,8 +312,8 @@ class JustinTVBase(Plugin):
             except NoStreamsError:
                 pass
         else:
-            self.logger.warning("rtmpdump is not usable, "
-                                "only mobile streams may be available")
+            self.logger.warning("rtmpdump is required to access the desktop "
+                                "streams, but it could not be found")
 
         try:
             for name, stream in self._get_mobile_streams(*args, **kwargs).items():
