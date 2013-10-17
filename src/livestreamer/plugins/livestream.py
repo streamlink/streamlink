@@ -6,8 +6,9 @@ from livestreamer.utils import urlget, verifyjson, res_xml, parse_json
 
 import re
 
+SWF_URL = "http://cdn.livestream.com/swf/hdplayer-2.0.swf"
+
 class Livestream(Plugin):
-    SWFURL = "http://cdn.livestream.com/swf/hdplayer-2.0.swf"
 
     @classmethod
     def can_handle_url(self, url):
@@ -15,15 +16,12 @@ class Livestream(Plugin):
 
     def _get_stream_info(self):
         res = urlget(self.url)
-
-        match = re.search("initialData : ({.+})", res.text)
-
+        match = re.search("window.config = ({.+})", res.text)
         if match:
             config = match.group(1)
-
             return parse_json(config, "config JSON")
 
-    def _parse_smil(self, url):
+    def _parse_smil(self, url, swfurl):
         res = urlget(url)
         smil = res_xml(res, "SMIL config")
 
@@ -44,7 +42,7 @@ class Livestream(Plugin):
             url = urljoin(httpbase, video.attrib.get("src"))
             bitrate = int(video.attrib.get("system-bitrate"))
             streams[bitrate] = AkamaiHDStream(self.session, url,
-                                              swf=self.SWFURL)
+                                              swf=swfurl)
 
         return streams
 
@@ -55,19 +53,24 @@ class Livestream(Plugin):
         if not info:
             raise NoStreamsError(self.url)
 
-        streaminfo = verifyjson(info, "stream_info")
+        event = verifyjson(info, "event")
+        streaminfo = verifyjson(event, "stream_info")
 
         if not streaminfo:
             raise NoStreamsError(self.url)
 
         qualities = verifyjson(streaminfo, "qualities")
-        streams = {}
 
         if not streaminfo["is_live"]:
             raise NoStreamsError(self.url)
 
+        streams = {}
         if "play_url" in streaminfo:
-            smil = self._parse_smil(streaminfo["play_url"])
+            swfurl = info.get("hdPlayerSwfUrl") or SWF_URL
+            if not swfurl.startswith("http://"):
+                swfurl = "http://" + swfurl
+
+            smil = self._parse_smil(streaminfo["play_url"], swfurl)
 
             for bitrate, stream in smil.items():
                 sname = "{0}k".format(bitrate/1000)
