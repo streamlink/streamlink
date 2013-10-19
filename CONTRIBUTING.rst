@@ -33,6 +33,15 @@ Implement Features
 Look through the GitHub issues for features. Anything tagged with "feature"
 is open to whoever wants to implement it.
 
+Adding Plugins
+~~~~~~~~~~~~~~
+
+Livestreamer can always use more plugins. Look through the GitHub issues
+if you are looking for something to implement.
+
+There is no plugin documentation at the moment, but look at the existing
+plugins to get an idea of how it works. 
+
 Write Documentation
 ~~~~~~~~~~~~~~~~~~~
 
