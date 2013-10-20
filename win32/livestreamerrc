@@ -1,4 +1,5 @@
-# Lines starting with a # is considered comments and are ignored.
+# Format is option=value. Lines starting with a # is considered comments
+# and are ignored.
 
 # By default livestreamer will attempt to locate VLC on your system
 # and use that, but you can also specify the location of a player
@@ -24,25 +25,44 @@
 #player=C:\mplayer2\mplayer2.exe -cache 4096
 
 
-# Show console output from video player
+# Use this if you want to transport the stream to the player via a named pipe.
+#player-fifo
+
+# Use this if you want to transport the stream to the player via HTTP.
+#player-http
+
+# Use this if you want Livestreamer to only pass a URL to your player and
+# let it handle the transport of the stream itself.
+#player-passthrough=http,hls,rtmp
+
+# By default Livestreamer will close the player when stream is over.
+# Use this option to let the player stay or close itself instead.
+#player-no-close
+
+# Use this option if you want Livestreamer to keep trying to access
+# the stream even if it goes offline or disconnects. Your player must
+# support HTTP and it's playlist should be set to repeat mode.
+#player-continuous-http
+
+# Show console output from the video player
 #verbose-player
 
-# RTMP streams are downloaded using rtmpdump, full path to the rtmpdump exe
+# RTMP streams are downloaded using rtmpdump. Full path to the rtmpdump exe
 # should be specified here.
 rtmpdump=@INSTDIR@\rtmpdump\rtmpdump.exe
 
 # Log level, default is info
 #loglevel=debug
 
-# Cookies from your web browser to allow access to Twitch/JustinTV streams
-# that require authentication
-#jtv-cookie=
+# Cookies to authenticate the user to Twitch/JustinTV. Needed for streams
+# that require authentication. Replace with actual values from your browser session.
+#jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
 
-# Cookies from your web browser to allow access to GOMTV.net streams
-#gomtv-cookie=
+# Cookies to authenticate the user to allow access to GOMTV.net streams.
+# Replace with actual values from your browser session.
+#gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
 
-# A username and password to allow access to GOMTV.net streams
+# A username and password to allow access to GOMTV.net streams.
 #gomtv-username=
 #gomtv-password=
-
 
