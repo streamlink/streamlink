@@ -83,18 +83,6 @@ def iterate_streams(streams):
             yield (name, stream)
 
 
-def default_stream_types(streams):
-    stream_types = ["rtmp", "hls", "hds", "http"]
-
-    for name, stream in iterate_streams(streams):
-        stream_type = type(stream).shortname()
-
-        if stream_type not in stream_types:
-            stream_types.append(stream_type)
-
-    return stream_types
-
-
 def stream_type_priority(stream_types, stream):
     stream_type = type(stream[1]).shortname()
 
@@ -166,6 +154,18 @@ class Plugin(object):
     def stream_weight(cls, stream):
         return stream_weight(stream)
 
+    @classmethod
+    def default_stream_types(cls, streams):
+        stream_types = ["rtmp", "hls", "hds", "http"]
+
+        for name, stream in iterate_streams(streams):
+            stream_type = type(stream).shortname()
+
+            if stream_type not in stream_types:
+                stream_types.append(stream_type)
+
+        return stream_types
+
     def get_streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
 
@@ -229,7 +229,7 @@ class Plugin(object):
         streams = {}
 
         if stream_types is None:
-            stream_types = default_stream_types(ostreams)
+            stream_types = self.default_stream_types(ostreams)
 
         # Add streams depending on stream type and priorities
         sorted_streams = sorted(iterate_streams(ostreams),
