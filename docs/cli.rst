@@ -325,6 +325,25 @@ These instructions are for authenticating with a regular user account, if you ar
 Advanced usage
 --------------
 
+Sideloading plugins
+^^^^^^^^^^^^^^^^^^^
+
+Livestreamer will attempt to load plugins from these directories:
+
+**Unix-like OSs**
+  - ``~/.config/livestreamer/plugins``
+
+**Windows**
+  - ``%APPDATA%\livestreamer\plugins``
+
+
+.. note::
+
+    If a plugin is added with the same name as a built-in plugin then
+    the added plugin will take precedence. This is useful if you want
+    to upgrade plugins independently of the Livestreamer version.
+
+
 Playing built-in streaming protocols directly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -362,4 +381,5 @@ Livestreamer currently supports these protocols:
 +-------------------------------+-----------------------------------------------+
 | Real Time Messaging Protocol  | rtmp:// rmpte:// rmpts:// rtmpt:// rtmpte://  |
 +-------------------------------+-----------------------------------------------+
+
 
