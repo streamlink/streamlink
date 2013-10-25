@@ -42,6 +42,7 @@ class Mips(Plugin):
             "rtmp": "rtmp://{0}/live/{1}".format(rtmp, channelname),
             "pageUrl": self.url,
             "swfVfy": self.SWFURL,
+            "conn": "S:OK",
             "live": True
         })
 
