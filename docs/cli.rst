@@ -67,6 +67,22 @@ Full list of command line arguments
     Output JSON instead of the normal text output and
     disable log output, useful for external scripting
 
+.. cmdoption:: --http-proxy proxy
+
+    Specify a HTTP proxy, e.g. ``http://hostname:port/``.
+    This is the same as setting the environment variable
+    ``http_proxy``.
+
+    .. versionadded:: 1.7.0
+
+.. cmdoption:: --https-proxy proxy
+
+    Specify a HTTPS proxy, e.g. ``https://hostname:port/``.
+    This is the same as setting the environment variable
+    ``https_proxy``.
+
+    .. versionadded:: 1.7.0
+
 
 Player options
 ^^^^^^^^^^^^^^

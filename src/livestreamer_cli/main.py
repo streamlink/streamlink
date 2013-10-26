@@ -518,6 +518,15 @@ def setup_console():
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
+def setup_proxies():
+    """Sets the HTTP(S) proxies for this process."""
+    if args.http_proxy:
+        os.environ["http_proxy"] = args.http_proxy
+
+    if args.https_proxy:
+        os.environ["https_proxy"] = args.https_proxy
+
+
 def setup_plugins():
     """Loads any additional plugins."""
     if os.path.isdir(PLUGINS_DIR):
@@ -622,6 +631,7 @@ def main():
     check_root()
     setup_livestreamer()
     setup_console()
+    setup_proxies()
     setup_plugins()
 
     with ignored(Exception):

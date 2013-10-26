@@ -62,6 +62,14 @@ parser.add_argument("-Q", "--quiet", action="store_true",
 parser.add_argument("-j", "--json", action="store_true",
                     help="Output JSON instead of the normal text output and "
                          "disable log output, useful for external scripting")
+parser.add_argument("--http-proxy", metavar="proxy",
+                    help="Specify a HTTP proxy, e.g. "
+                         "'http://hostname:port/'. This is the same as "
+                         "setting the environment variable 'http_proxy'.")
+parser.add_argument("--https-proxy", metavar="proxy",
+                    help="Specify a HTTPS proxy, e.g. "
+                         "'https://hostname:port/'. This is the same as "
+                         "setting the environment variable 'https_proxy'.")
 parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
 
