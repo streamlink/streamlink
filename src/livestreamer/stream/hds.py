@@ -593,11 +593,8 @@ class HDSStream(Stream):
             baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
 
         for bootstrap in manifest.findall("bootstrapInfo"):
-            name = bootstrap.attrib.get("id")
+            name = bootstrap.attrib.get("id") or "_global"
             url = bootstrap.attrib.get("url")
-
-            if not name:
-                continue
 
             if url:
                 box = absolute_url(baseurl, url)
@@ -609,7 +606,7 @@ class HDSStream(Stream):
 
         for media in manifest.findall("media"):
             url = media.attrib.get("url")
-            bootstrapid = media.attrib.get("bootstrapInfoId")
+            bootstrapid = media.attrib.get("bootstrapInfoId", "_global")
             href = media.attrib.get("href")
 
             if url and bootstrapid:
