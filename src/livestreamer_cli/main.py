@@ -637,10 +637,10 @@ def main():
     with ignored(Exception):
         check_version()
 
-    if args.url:
+    if args.plugins:
+        print_plugins()
+    elif args.url:
         setup_options()
         handle_url()
-    elif args.plugins:
-        print_plugins()
     else:
         parser.print_help()
