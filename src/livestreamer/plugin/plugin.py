@@ -53,13 +53,10 @@ def stream_weight(stream):
         if match.group(2) == "k":
             bitrate = int(match.group(1))
 
-            # These calculations are very rough
-            if bitrate > 2000:
-                weight = bitrate / 3.4
-            elif bitrate > 1000:
-                weight = bitrate / 2.6
-            else:
-                weight = bitrate / 1.7
+            # FIXME: This is a crude attempt at making a bitrate's
+            # weight end up similar to the weight of a resolution.
+            # Someone who knows math, please fix.
+            weight = bitrate / 2.8
 
             return weight, "bitrate"
 
