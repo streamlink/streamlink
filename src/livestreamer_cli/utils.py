@@ -87,6 +87,8 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if hasattr(obj, "__json__"):
             return obj.__json__()
+        elif isinstance(obj, bytes):
+            return obj.decode("utf8", "ignore")
         else:
             return json.JSONEncoder.default(self, obj)
 
