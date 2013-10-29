@@ -28,6 +28,10 @@ AAC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_END = 0x02
 
+# Some streams hosted by Akamai seems to require a hdcore parameter
+# to function properly.
+HDCORE_VERSION = "3.1.0"
+
 class HDSStreamFiller(Thread):
     def __init__(self, stream):
         Thread.__init__(self)
@@ -67,6 +71,7 @@ class HDSStreamFiller(Thread):
         while retries > 0 and self.running:
             try:
                 res = urlget(url, stream=True, exception=IOError,
+                             params=dict(hdcore=HDCORE_VERSION),
                              session=self.stream.rsession, timeout=10)
                 break
             except IOError as err:
@@ -418,7 +423,8 @@ class HDSStreamIO(IOBase):
         self.bootstrap_changed = self.current_fragment != self.last_fragment
 
     def _fetch_bootstrap(self, url):
-        res = urlget(url, exception=IOError)
+        res = urlget(url, params=dict(hdcore=HDCORE_VERSION),
+                     exception=IOError)
         return Box.deserialize(BytesIO(res.content))
 
     def _segment_from_fragment(self, fragment):
@@ -579,7 +585,7 @@ class HDSStream(Stream):
         if not rsession:
             rsession = requests.session()
 
-        res = urlget(url, params=dict(hdcore="2.9.4"),
+        res = urlget(url, params=dict(hdcore=HDCORE_VERSION),
                      exception=IOError, session=rsession)
         manifest = res_xml(res, "manifest XML", ignore_ns=True,
                            exception=IOError)
