@@ -158,8 +158,7 @@ def output_stream_http(plugin, streams):
                 stream = streams = None
         else:
             console.logger.debug("Writing stream to player")
-            with ignored(KeyboardInterrupt):
-                read_stream(stream_fd, server, prebuffer)
+            read_stream(stream_fd, server, prebuffer)
 
         server.close(True)
 
@@ -181,8 +180,6 @@ def output_stream_passthrough(stream):
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", player, err)
         return False
-    except KeyboardInterrupt:
-        pass
 
     return True
 
@@ -237,10 +234,7 @@ def output_stream(stream):
                          args.output, err)
 
     console.logger.debug("Writing stream to output")
-
-    with ignored(KeyboardInterrupt):
-        read_stream(stream_fd, output, prebuffer)
-
+    read_stream(stream_fd, output, prebuffer)
     output.close()
 
     return True
@@ -640,7 +634,8 @@ def main():
     if args.plugins:
         print_plugins()
     elif args.url:
-        setup_options()
-        handle_url()
+        with ignored(KeyboardInterrupt):
+            setup_options()
+            handle_url()
     else:
         parser.print_help()
