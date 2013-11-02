@@ -1,3 +1,4 @@
+from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
@@ -14,22 +15,14 @@ class Weeb(Plugin):
         return "weeb.tv" in url
 
     def _get_streams(self):
+        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
         self.logger.debug("Fetching stream info")
-
-        headers = {
-            "Referer": self.url
-        }
-
-        res = urlget(self.url, headers=headers)
-        match = re.search("flashvars.*?cid[^\d]+?(\d+)", res.text)
-        if not match:
-            raise NoStreamsError(self.url)
 
         headers = {
             "Referer": self.SWFURL
         }
 
-        form = dict(cid=match.group(1), watchTime="0",
+        form = dict(cid=channelname, watchTime="0",
                     firstConnect="1", ip="NaN")
 
         res = urlopen(self.APIURL, data=form, headers=headers)
