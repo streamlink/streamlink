@@ -58,9 +58,10 @@ class Weeb(Plugin):
             raise PluginError("rtmpdump is not usable and required by Weeb plugin")
 
         streams = {}
+        stream_name = "sd"
 
         if multibitrate:
-            streams["low"] = RTMPStream(self.session, {
+            streams[stream_name] = RTMPStream(self.session, {
                 "rtmp": "{0}/{1}".format(rtmp, playpath),
                 "pageUrl": self.url,
                 "swfVfy": self.SWFURL,
@@ -68,8 +69,9 @@ class Weeb(Plugin):
                 "live": True
             })
             playpath += "HI"
+            stream_name = "hd"
 
-        streams["live"] = RTMPStream(self.session, {
+        streams[stream_name] = RTMPStream(self.session, {
             "rtmp": "{0}/{1}".format(rtmp, playpath),
             "pageUrl": self.url,
             "swfVfy": self.SWFURL,
