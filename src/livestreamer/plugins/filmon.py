@@ -2,12 +2,14 @@ from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, parse_json
+from livestreamer.utils import urlget, urlopen, parse_json
 
 import re
+import requests
 
 class Filmon(Plugin):
     SWFURL = "http://www.filmon.com/tv/modules/FilmOnTV/files/flashapp/filmon/FilmonPlayer.swf"
+    CHINFO = "http://www.filmon.com/ajax/getChannelInfo"
 
     @classmethod
     def can_handle_url(self, url):
@@ -15,53 +17,63 @@ class Filmon(Plugin):
 
     def _get_streams(self):
         self.logger.debug("Fetching stream info")
-        res = urlget(self.url)
 
-        match = re.search("var current_channel = (.*);", res.text)
+        headers = {
+            "Referer": "http://www.filmon.com",
+            "X-Requested-With": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        self.rsession = requests.session()
+        res = urlget(self.url, session=self.rsession)
+
+        match = re.search("/channels/(\d+)/extra_big_logo.png", res.text)
         if match:
-            json = parse_json(match.group(1))
+            channel_id = match.group(1)
         else:
             raise NoStreamsError(self.url)
 
-        if not isinstance(json, dict):
+        params = dict(channel_id=channel_id, quality="low")
+
+        res = urlopen(self.CHINFO, data=params, headers=headers,
+                      session=self.rsession)
+
+        if res:
+            json = parse_json(res.text)
+        else:
+            raise NoStreamsError(self.url)
+
+        if not isinstance(json, list):
             raise PluginError("Invalid JSON response")
-        elif not "streams" in json:
+        elif not len(json) > 0:
+            raise NoStreamsError(self.url)
+        elif not ("serverURL" in json[0] and "streamName" in json[0]):
             raise NoStreamsError(self.url)
 
         if not RTMPStream.is_usable(self.session):
             raise PluginError("rtmpdump is not usable and required by Filmon plugin")
 
-        match = re.search("var flash_config = (.*);", res.text)
-        if match:
-            config = parse_json(match.group(1))
-            if "streamer" in config:
-                self.SWFURL = urljoin(self.SWFURL, config["streamer"])
+        rtmp = json[0]["serverURL"]
+        playpath = json[0]["streamName"]
+        parsed = urlparse(rtmp)
+
+        if not parsed.scheme.startswith("rtmp"):
+            raise NoStreamsError(self.url)
+
+        if parsed.query:
+            app = "{0}?{1}".format(parsed.path[1:], parsed.query)
+        else:
+            app = parsed.path[1:]
 
         streams = {}
-
-        for stream in json["streams"]:
-            if not ("url" in stream and "name" in stream):
-                continue
-
-            parsed = urlparse(stream["url"])
-
-            if not parsed.scheme.startswith("rtmp"):
-                continue
-
-            if parsed.query:
-                app = "{0}?{1}".format(parsed.path[1:], parsed.query)
-            else:
-                app = parsed.path[1:]
-
-            name = stream["quality"]
-            streams[name] = RTMPStream(self.session, {
-                "rtmp": stream["url"],
-                "pageUrl": self.url,
-                "swfUrl": self.SWFURL,
-                "playpath": stream["name"],
-                "app": app,
-                "live": True
-            })
+        streams["live"] = RTMPStream(self.session, {
+            "rtmp": rtmp,
+            "pageUrl": self.url,
+            "swfUrl": self.SWFURL,
+            "playpath": playpath,
+            "app": app,
+            "live": True
+        })
 
         return streams
 
