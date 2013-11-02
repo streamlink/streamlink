@@ -16,13 +16,11 @@ class Filmon(Plugin):
         return "filmon.com" in url
 
     def _get_streams(self):
-        self.logger.debug("Fetching stream info")
 
-        headers = {
-            "Referer": "http://www.filmon.com",
-            "X-Requested-With": "XMLHttpRequest",
-            "User-Agent": "Mozilla/5.0"
-        }
+        if not RTMPStream.is_usable(self.session):
+            raise PluginError("rtmpdump is not usable and required by Filmon plugin")
+
+        self.logger.debug("Fetching stream info")
 
         self.rsession = requests.session()
         res = urlget(self.url, session=self.rsession)
@@ -33,7 +31,24 @@ class Filmon(Plugin):
         else:
             raise NoStreamsError(self.url)
 
-        params = dict(channel_id=channel_id, quality="low")
+        streams = {}
+        streams.update(self._get_stream(channel_id, "low"))
+        try:
+            streams.update(self._get_stream(channel_id, "high"))
+        except:
+            pass
+
+        return streams
+
+    def _get_stream(self, channel_id, quality):
+
+        headers = {
+            "Referer": "http://www.filmon.com",
+            "X-Requested-With": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        params = dict(channel_id=channel_id, quality=quality)
 
         res = urlopen(self.CHINFO, data=params, headers=headers,
                       session=self.rsession)
@@ -50,9 +65,6 @@ class Filmon(Plugin):
         elif not ("serverURL" in json[0] and "streamName" in json[0]):
             raise NoStreamsError(self.url)
 
-        if not RTMPStream.is_usable(self.session):
-            raise PluginError("rtmpdump is not usable and required by Filmon plugin")
-
         rtmp = json[0]["serverURL"]
         playpath = json[0]["streamName"]
         parsed = urlparse(rtmp)
@@ -65,8 +77,8 @@ class Filmon(Plugin):
         else:
             app = parsed.path[1:]
 
-        streams = {}
-        streams["live"] = RTMPStream(self.session, {
+        stream = {}
+        stream[quality] = RTMPStream(self.session, {
             "rtmp": rtmp,
             "pageUrl": self.url,
             "swfUrl": self.SWFURL,
@@ -75,7 +87,7 @@ class Filmon(Plugin):
             "live": True
         })
 
-        return streams
+        return stream
 
 
 __plugin__ = Filmon
