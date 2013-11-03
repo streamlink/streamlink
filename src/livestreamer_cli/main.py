@@ -118,6 +118,7 @@ def output_stream_http(plugin, streams):
     player = PlayerOutput(player_cmd, args=args.player_args,
                           filename=server.url,
                           quiet=not args.verbose_player)
+    stream_name = resolve_stream_name(streams, args.stream)
 
     try:
         console.logger.info("Starting player: {0}", player_cmd)
@@ -137,7 +138,7 @@ def output_stream_http(plugin, streams):
 
             try:
                 streams = streams or fetch_streams(plugin)
-                stream = streams.get(args.stream)
+                stream = streams.get(stream_name)
             except PluginError as err:
                 console.logger.error("Unable to fetch new streams: {0}",
                                      err)
@@ -150,7 +151,6 @@ def output_stream_http(plugin, streams):
                 continue
 
             try:
-                stream_name = resolve_stream_name(streams, args.stream)
                 console.logger.info("Opening stream: {0}", stream_name)
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
