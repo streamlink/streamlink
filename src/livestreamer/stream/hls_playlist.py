@@ -63,25 +63,6 @@ class M3U8(object):
         self.playlists = []
         self.segments = []
 
-    def add_segment(self, uri, duration, title=None, key=None,
-                    discontinuity=None, byterange=None, date=None,
-                    map=None):
-        segment = Segment(uri, duration, title, key, discontinuity,
-                          byterange, date, map)
-        self.segments.append(segment)
-        self.is_master = False
-
-        if self.target_duration:
-            self.target_duration += duration
-        else:
-            self.target_duration = duration
-
-    def add_playlist(self):
-        pass
-
-    def add_media(self, uri=None, type=None, group_id=None, language=None):
-        pass
-
 
 class M3U8Parser(object):
     def __init__(self, base_uri=None):
