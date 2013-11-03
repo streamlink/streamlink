@@ -1,3 +1,5 @@
+import inspect
+
 import requests
 
 from .stream import Stream
@@ -10,6 +12,12 @@ def normalize_key(keyval):
     key = hasattr(key, "decode") and key.decode("utf8", "ignore") or key
 
     return key, val
+
+
+def valid_args(args):
+    argspec = inspect.getargspec(requests.Request.__init__)
+
+    return dict(filter(lambda kv: kv[0] in argspec.args, args.items()))
 
 
 class HTTPStream(Stream):
@@ -36,16 +44,16 @@ class HTTPStream(Stream):
         return "<HTTPStream({0!r})>".format(self.url)
 
     def __json__(self):
-        req = requests.Request(**self.args).prepare()
+        req = requests.Request(**valid_args(self.args)).prepare()
         headers = dict(map(normalize_key, req.headers.items()))
 
-        return dict(type=HTTPStream.shortname(), url=req.url,
+        return dict(type=type(self).shortname(), url=req.url,
                     method=req.method, headers=headers,
                     body=req.body)
 
     @property
     def url(self):
-        return requests.Request(**self.args).prepare().url
+        return requests.Request(**valid_args(self.args)).prepare().url
 
     def open(self):
         try:
