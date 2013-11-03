@@ -28,6 +28,7 @@ HLS_PLAYLIST_PATH = "/stream/multi_playlist/{0}.m3u8?token={1}&hd=true&allow_cdn
 USHER_FIND_PATH = "/find/{0}.json"
 REQUIRED_RTMP_KEYS = ("connect", "play", "type", "token")
 QUALITY_WEIGHTS = {
+    "mobile_source": 480,
     "mobile_high": 330,
     "mobile_medium": 260,
     "mobile_low": 170,
