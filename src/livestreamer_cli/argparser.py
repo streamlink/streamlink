@@ -44,9 +44,11 @@ parser = ArgumentParser(description="Livestreamer is CLI program that "
                         epilog=EXAMPLE_USAGE, add_help=False)
 
 parser.add_argument("url", help="URL to stream", nargs="?")
-parser.add_argument("stream", nargs="?", help="Stream quality to play, use "
-                                              "'best' or 'worst' for highest "
-                                              "or lowest quality available")
+parser.add_argument("stream", nargs="?", type=comma_list,
+                    help="Stream quality to play, use 'best' or 'worst' for "
+                         "highest or lowest quality available. "
+                         "Fallback streams can be specified by using a "
+                         "comma-separated list, e.g. '720p,480p,best'.")
 
 parser.add_argument("-h", "--help", action="store_true",
                     help="Show this help message and exit")

@@ -118,7 +118,7 @@ def output_stream_http(plugin, streams):
     player = PlayerOutput(player_cmd, args=args.player_args,
                           filename=server.url,
                           quiet=not args.verbose_player)
-    stream_name = resolve_stream_name(streams, args.stream)
+    stream_names = [resolve_stream_name(streams, s) for s in args.stream]
 
     try:
         console.logger.info("Starting player: {0}", player_cmd)
@@ -138,7 +138,12 @@ def output_stream_http(plugin, streams):
 
             try:
                 streams = streams or fetch_streams(plugin)
-                stream = streams.get(stream_name)
+                for stream_name in stream_names:
+                    stream = streams.get(stream_name)
+                    if stream: break
+                else:
+                    stream = None
+
             except PluginError as err:
                 console.logger.error("Unable to fetch new streams: {0}",
                                      err)
@@ -296,7 +301,7 @@ def read_stream(stream, output, prebuffer):
     console.logger.info("Stream ended")
 
 
-def handle_stream(plugin, streams):
+def handle_stream(plugin, streams, stream_name):
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
@@ -307,7 +312,7 @@ def handle_stream(plugin, streams):
 
     """
 
-    stream_name = resolve_stream_name(streams, args.stream)
+    stream_name = resolve_stream_name(streams, stream_name)
     stream = streams[stream_name]
 
     # Print internal command-line if this stream
@@ -423,18 +428,21 @@ def handle_url():
         console.exit("No streams found on this URL: {0}", args.url)
 
     if args.stream:
-        if args.stream in streams:
-            handle_stream(plugin, streams)
-        else:
-            err = "The specified stream '{0}' could not be found".format(args.stream)
+        for stream_name in args.stream:
+            if stream_name in streams:
+                handle_stream(plugin, streams, stream_name)
+                return
 
-            if console.json:
-                console.msg_json(dict(streams=streams, plugin=plugin.module,
-                                      error=err))
-            else:
-                validstreams = format_valid_streams(streams)
-                console.exit("{0}.\n       Available streams: {1}",
-                             err, validstreams)
+        err = ("The specified stream(s) '{0}' could not be "
+               "found".format(", ".join(args.stream)))
+
+        if console.json:
+            console.msg_json(dict(streams=streams, plugin=plugin.module,
+                                  error=err))
+        else:
+            validstreams = format_valid_streams(streams)
+            console.exit("{0}.\n       Available streams: {1}",
+                         err, validstreams)
     else:
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module))
@@ -482,7 +490,7 @@ def setup_args():
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
-        args.stream = args.stream.lower()
+        args.stream = [stream.lower() for stream in args.stream]
 
 
 def setup_console():
@@ -601,6 +609,7 @@ def check_root():
                   "If you really must you can do it by passing "
                   "--yes-run-as-root.")
             sys.exit(1)
+
 
 def check_version():
     cache = Cache(filename="cli.json")
