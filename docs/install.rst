@@ -44,7 +44,7 @@ Optional dependencies
 
 For RTMP based plugins:
 
-- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_ (Twitch/Justin.tv streams require at least version 2.4)
+- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_ (Twitch/Justin.tv streams require at least version 2.4-20111222)
 
 For decrypting encrypted HLS streams:
 
@@ -54,12 +54,14 @@ For full UStream.tv support:
 
 - `python-librtmp <https://github.com/chrippa/python-librtmp>`_
 
-Packages
---------
+Distribution packages
+---------------------
 
-Livestreamer is also available in the official package repositories for
-`Arch Linux <https://www.archlinux.org/packages/community/any/livestreamer/>`_
-and `OpenBSD <http://openports.se/multimedia/livestreamer>`_.
+Livestreamer is also available in these package repositories:
+
+- `Arch Linux <https://www.archlinux.org/packages/community/any/livestreamer/>`_
+- `Gentoo Linux <https://packages.gentoo.org/package/net-misc/livestreamer>`_
+- `OpenBSD <http://openports.se/multimedia/livestreamer>`_
 
 Windows
 ^^^^^^^
