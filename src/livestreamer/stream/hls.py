@@ -307,8 +307,8 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
 
-    def __init__(self, session, url, **args):
-        Stream.__init__(self, session)
+    def __init__(self, session_, url, **args):
+        Stream.__init__(self, session_)
 
         self.args = dict(url=url, **args)
 
