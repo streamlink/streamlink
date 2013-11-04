@@ -141,13 +141,13 @@ class HLSStreamFiller(Thread):
 
 
 class HLSStreamIO(io.IOBase):
-    def __init__(self, session, url, timeout=60, **request_params):
-        self.session = session
+    def __init__(self, session_, url, timeout=60, **request_params):
+        self.session = session_
         self.url = url
         self.timeout = timeout
         self.request_params = request_params
 
-        self.logger = session.logger.new_module("stream.hls")
+        self.logger = session_.logger.new_module("stream.hls")
         self.buffer = None
 
     def open(self):
