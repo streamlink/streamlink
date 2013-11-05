@@ -395,7 +395,7 @@ Livestreamer currently supports these protocols:
 +-------------------------------+-----------------------------------------------+
 | Apple HTTP Live Streaming     | hls:// hlvsvariant://                         |
 +-------------------------------+-----------------------------------------------+
-| Real Time Messaging Protocol  | rtmp:// rmpte:// rmpts:// rtmpt:// rtmpte://  |
+| Real Time Messaging Protocol  | rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://  |
 +-------------------------------+-----------------------------------------------+
 
 
