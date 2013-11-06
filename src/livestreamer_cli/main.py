@@ -1,5 +1,6 @@
 import errno
 import os
+import re
 import requests
 import sys
 import signal
@@ -523,9 +524,13 @@ def setup_console():
 def setup_proxies():
     """Sets the HTTP(S) proxies for this process."""
     if args.http_proxy:
+        if not re.match("^http(s)?://", args.http_proxy):
+            args.http_proxy = "http://" + args.http_proxy
         os.environ["http_proxy"] = args.http_proxy
 
     if args.https_proxy:
+        if not re.match("^http(s)?://", args.https_proxy):
+            args.https_proxy = "https://" + args.https_proxy
         os.environ["https_proxy"] = args.https_proxy
 
 
