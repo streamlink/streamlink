@@ -162,7 +162,7 @@ class JustinTVBase(Plugin):
 
             name = name.lower()
             if not valid_rtmp_stream(info):
-                if info.get("needed_info") == "chansub":
+                if info.get("needed_info") in ("chansub", "channel_subscription"):
                     self.logger.warning("The quality '{0}' is not available "
                                         "since it requires a subscription.",
                                         name)
