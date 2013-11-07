@@ -73,10 +73,6 @@ Using the 32-bit version of VLC is a workaround until this bug is fixed.
 MPC-HC reports "File not found"
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Reading data from standard input is not supported in the current stable
-version of MPC-HC (v1.6.x). However, it was recently added and it looks like
-it will be available in 1.7. Nightly builds of 1.7 are available at
-http://nightly.mpc-hc.org/.
-
-
+Upgrading to version 1.7 or newer will solve this issue since reading data
+from standard input is not supported in version 1.6.x of MPC-HC.
 

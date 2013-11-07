@@ -28,7 +28,7 @@ from livestreamer import __version__ as livestreamer_version
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.issuetracker']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -256,3 +256,6 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+issuetracker = 'github'
+issuetracker_project = 'chrippa/livestreamer'

@@ -1,5 +1,6 @@
 import errno
 import os
+import re
 import requests
 import sys
 import signal
@@ -82,6 +83,7 @@ def create_output():
         console.logger.info("Starting player: {0}", player)
         out = PlayerOutput(player, args=args.player_args,
                            quiet=not args.verbose_player,
+                           kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http)
 
     return out
@@ -117,6 +119,7 @@ def output_stream_http(plugin, streams):
     player = PlayerOutput(player_cmd, args=args.player_args,
                           filename=server.url,
                           quiet=not args.verbose_player)
+    stream_names = [resolve_stream_name(streams, s) for s in args.stream]
 
     try:
         console.logger.info("Starting player: {0}", player_cmd)
@@ -136,7 +139,12 @@ def output_stream_http(plugin, streams):
 
             try:
                 streams = streams or fetch_streams(plugin)
-                stream = streams.get(args.stream)
+                for stream_name in stream_names:
+                    stream = streams.get(stream_name)
+                    if stream: break
+                else:
+                    stream = None
+
             except PluginError as err:
                 console.logger.error("Unable to fetch new streams: {0}",
                                      err)
@@ -149,7 +157,6 @@ def output_stream_http(plugin, streams):
                 continue
 
             try:
-                stream_name = resolve_stream_name(streams, args.stream)
                 console.logger.info("Opening stream: {0}", stream_name)
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
@@ -157,8 +164,7 @@ def output_stream_http(plugin, streams):
                 stream = streams = None
         else:
             console.logger.debug("Writing stream to player")
-            with ignored(KeyboardInterrupt):
-                read_stream(stream_fd, server, prebuffer)
+            read_stream(stream_fd, server, prebuffer)
 
         server.close(True)
 
@@ -180,8 +186,6 @@ def output_stream_passthrough(stream):
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", player, err)
         return False
-    except KeyboardInterrupt:
-        pass
 
     return True
 
@@ -236,10 +240,7 @@ def output_stream(stream):
                          args.output, err)
 
     console.logger.debug("Writing stream to output")
-
-    with ignored(KeyboardInterrupt):
-        read_stream(stream_fd, output, prebuffer)
-
+    read_stream(stream_fd, output, prebuffer)
     output.close()
 
     return True
@@ -301,7 +302,7 @@ def read_stream(stream, output, prebuffer):
     console.logger.info("Stream ended")
 
 
-def handle_stream(plugin, streams):
+def handle_stream(plugin, streams, stream_name):
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
@@ -312,7 +313,7 @@ def handle_stream(plugin, streams):
 
     """
 
-    stream_name = resolve_stream_name(streams, args.stream)
+    stream_name = resolve_stream_name(streams, stream_name)
     stream = streams[stream_name]
 
     # Print internal command-line if this stream
@@ -428,18 +429,21 @@ def handle_url():
         console.exit("No streams found on this URL: {0}", args.url)
 
     if args.stream:
-        if args.stream in streams:
-            handle_stream(plugin, streams)
-        else:
-            err = "The specified stream '{0}' could not be found".format(args.stream)
+        for stream_name in args.stream:
+            if stream_name in streams:
+                handle_stream(plugin, streams, stream_name)
+                return
 
-            if console.json:
-                console.msg_json(dict(streams=streams, plugin=plugin.module,
-                                      error=err))
-            else:
-                validstreams = format_valid_streams(streams)
-                console.exit("{0}.\n       Available streams: {1}",
-                             err, validstreams)
+        err = ("The specified stream(s) '{0}' could not be "
+               "found".format(", ".join(args.stream)))
+
+        if console.json:
+            console.msg_json(dict(streams=streams, plugin=plugin.module,
+                                  error=err))
+        else:
+            validstreams = format_valid_streams(streams)
+            console.exit("{0}.\n       Available streams: {1}",
+                         err, validstreams)
     else:
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module))
@@ -487,7 +491,7 @@ def setup_args():
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
-        args.stream = args.stream.lower()
+        args.stream = [stream.lower() for stream in args.stream]
 
 
 def setup_console():
@@ -515,6 +519,19 @@ def setup_console():
 
     # Handle SIGTERM just like SIGINT
     signal.signal(signal.SIGTERM, signal.default_int_handler)
+
+
+def setup_proxies():
+    """Sets the HTTP(S) proxies for this process."""
+    if args.http_proxy:
+        if not re.match("^http(s)?://", args.http_proxy):
+            args.http_proxy = "http://" + args.http_proxy
+        os.environ["http_proxy"] = args.http_proxy
+
+    if args.https_proxy:
+        if not re.match("^http(s)?://", args.https_proxy):
+            args.https_proxy = "https://" + args.https_proxy
+        os.environ["https_proxy"] = args.https_proxy
 
 
 def setup_plugins():
@@ -598,6 +615,7 @@ def check_root():
                   "--yes-run-as-root.")
             sys.exit(1)
 
+
 def check_version():
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
@@ -621,15 +639,17 @@ def main():
     check_root()
     setup_livestreamer()
     setup_console()
+    setup_proxies()
     setup_plugins()
 
     with ignored(Exception):
         check_version()
 
-    if args.url:
-        setup_options()
-        handle_url()
-    elif args.plugins:
+    if args.plugins:
         print_plugins()
+    elif args.url:
+        with ignored(KeyboardInterrupt):
+            setup_options()
+            handle_url()
     else:
         parser.print_help()

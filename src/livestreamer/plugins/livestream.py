@@ -1,13 +1,20 @@
+import re
+
+from collections import defaultdict
+
 from livestreamer.compat import urljoin
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
-from livestreamer.stream import AkamaiHDStream
+from livestreamer.stream import AkamaiHDStream, HLSStream
 from livestreamer.utils import urlget, verifyjson, res_xml, parse_json
 
-import re
+
+SWF_URL = "http://cdn.livestream.com/swf/hdplayer-2.0.swf"
 
 class Livestream(Plugin):
-    SWFURL = "http://cdn.livestream.com/swf/hdplayer-2.0.swf"
+    @classmethod
+    def default_stream_types(cls, streams):
+        return ["akamaihd", "hls"]
 
     @classmethod
     def can_handle_url(self, url):
@@ -15,15 +22,12 @@ class Livestream(Plugin):
 
     def _get_stream_info(self):
         res = urlget(self.url)
-
-        match = re.search("initialData : ({.+})", res.text)
-
+        match = re.search("window.config = ({.+})", res.text)
         if match:
             config = match.group(1)
-
             return parse_json(config, "config JSON")
 
-    def _parse_smil(self, url):
+    def _parse_smil(self, url, swfurl):
         res = urlget(url)
         smil = res_xml(res, "SMIL config")
 
@@ -44,7 +48,7 @@ class Livestream(Plugin):
             url = urljoin(httpbase, video.attrib.get("src"))
             bitrate = int(video.attrib.get("system-bitrate"))
             streams[bitrate] = AkamaiHDStream(self.session, url,
-                                              swf=self.SWFURL)
+                                              swf=swfurl)
 
         return streams
 
@@ -55,28 +59,36 @@ class Livestream(Plugin):
         if not info:
             raise NoStreamsError(self.url)
 
-        streaminfo = verifyjson(info, "stream_info")
+        event = verifyjson(info, "event")
+        streaminfo = verifyjson(event, "stream_info")
 
-        if not streaminfo:
+        if not streaminfo or not streaminfo.get("is_live"):
             raise NoStreamsError(self.url)
 
-        qualities = verifyjson(streaminfo, "qualities")
-        streams = {}
+        streams = defaultdict(list)
+        play_url = streaminfo.get("play_url")
+        if play_url:
+            swfurl = info.get("hdPlayerSwfUrl") or SWF_URL
+            if not swfurl.startswith("http://"):
+                swfurl = "http://" + swfurl
 
-        if not streaminfo["is_live"]:
-            raise NoStreamsError(self.url)
-
-        if "play_url" in streaminfo:
-            smil = self._parse_smil(streaminfo["play_url"])
-
+            qualities = streaminfo.get("qualities", [])
+            smil = self._parse_smil(streaminfo["play_url"], swfurl)
             for bitrate, stream in smil.items():
-                sname = "{0}k".format(bitrate/1000)
-
+                name = "{0}k".format(bitrate/1000)
                 for quality in qualities:
                     if quality["bitrate"] == bitrate:
-                        sname = "{0}p".format(quality["height"])
+                        name = "{0}p".format(quality["height"])
 
-                streams[sname] = stream
+                streams[name].append(stream)
+
+        m3u8_url = streaminfo.get("m3u8_url")
+        if m3u8_url:
+            hls_streams = HLSStream.parse_variant_playlist(self.session,
+                                                           m3u8_url,
+                                                           namekey="pixels")
+            for name, stream in hls_streams.items():
+                streams[name].append(stream)
 
         return streams
 

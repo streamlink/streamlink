@@ -1,23 +1,26 @@
-from livestreamer.compat import str, bytes, urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
+import re
+
+from livestreamer.compat import urlparse
+from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
 from livestreamer.utils import urlget, verifyjson, res_json
 
-import re
+
+METADATA_URL = "https://api.dailymotion.com/video/{0}"
+QUALITY_MAP = {
+    "ld": "240p",
+    "sd": "360p",
+    "hq": "480p",
+    "hd720": "720p",
+    "hd1080": "1080p",
+    "custom": "live"
+}
+RTMP_SPLIT_REGEX = r"(?P<host>rtmp://[^/]+)/(?P<app>[^/]+)/(?P<playpath>.+)"
+STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
+
 
 class DailyMotion(Plugin):
-    QualityMap = {
-        "ld": "240p",
-        "sd": "360p",
-        "hq": "480p",
-        "hd720": "720p",
-        "hd1080": "1080p",
-        "custom": "live"
-    }
-
-    StreamInfoURL = "http://www.dailymotion.com/sequence/full/{0}"
-    MetadataURL = "https://api.dailymotion.com/video/{0}"
 
     @classmethod
     def can_handle_url(self, url):
@@ -27,7 +30,7 @@ class DailyMotion(Plugin):
         return ("dailymotion.com" in url) or ("dai.ly" in url) or ("video.gamecreds.com" in url)
 
     def _check_channel_live(self, channelname):
-        url = self.MetadataURL.format(channelname)
+        url = METADATA_URL.format(channelname)
         res = urlget(url, params=dict(fields="mode"))
         json = res_json(res)
 
@@ -63,18 +66,13 @@ class DailyMotion(Plugin):
 
     def _get_rtmp_streams(self, channelname):
         self.logger.debug("Fetching stream info")
-
-        url = self.StreamInfoURL.format(channelname)
-
-        self.logger.debug("JSON data url: {0}", url)
-
-        res = urlget(url)
+        res = urlget(STREAM_INFO_URL.format(channelname))
         json = res_json(res)
 
         if not isinstance(json, dict):
             raise PluginError("Invalid JSON response")
 
-        if len(json) == 0:
+        if not json:
             raise PluginError("JSON is empty")
 
         # This is ugly, not sure how to fix it.
@@ -94,38 +92,38 @@ class DailyMotion(Plugin):
         if not (swfurl and feeds_params):
             raise PluginError("Error parsing stream RTMP url")
 
-        streams = {}
 
         # Different feed qualities are available are a dict under "live"
         # In some cases where there's only 1 quality available,
         # it seems the "live" is absent. We use the single stream available
         # under the "customURL" key.
-
+        streams = {}
         if "mode" in feeds_params and feeds_params["mode"] == "live":
-
-            for key, quality in self.QualityMap.items():
-
-                url_key = '{0}URL'.format(key)
-                if url_key not in feeds_params:
+            for key, quality in QUALITY_MAP.items():
+                url = feeds_params.get("{0}URL".format(key))
+                if not url:
                     continue
-                else:
-                    url = feeds_params[url_key]
-
-                info = {}
 
                 try:
                     res = urlget(url, exception=IOError)
                 except IOError:
                     continue
 
-                rtmpurl = res.text
+                match = re.match(RTMP_SPLIT_REGEX, res.text)
+                if not match:
+                    self.logger.warning("Failed to split RTMP URL: {0}",
+                                        res.text)
+                    continue
+
                 stream = RTMPStream(self.session, {
-                    "rtmp": rtmpurl,
+                    "rtmp": match.group("host"),
+                    "app": match.group("app"),
+                    "playpath": match.group("playpath"),
                     "swfVfy": swfurl,
                     "live": True
                 })
-                self.logger.debug("Adding URL: {0}", rtmpurl)
 
+                self.logger.debug("Adding URL: {0}", res.text)
                 streams[quality] = stream
 
         return streams
@@ -133,11 +131,8 @@ class DailyMotion(Plugin):
     def _get_streams(self):
         channelname = self._get_channel_name(self.url)
 
-        if not channelname:
-            raise NoStreamsError(self.url)
-
-        if not self._check_channel_live(channelname):
-            raise NoStreamsError(self.url)
+        if not (channelname and self._check_channel_live(channelname)):
+            return
 
         return self._get_rtmp_streams(channelname)
 

@@ -44,15 +44,17 @@ parser = ArgumentParser(description="Livestreamer is CLI program that "
                         epilog=EXAMPLE_USAGE, add_help=False)
 
 parser.add_argument("url", help="URL to stream", nargs="?")
-parser.add_argument("stream", nargs="?", help="Stream quality to play, use "
-                                              "'best' or 'worst' for highest "
-                                              "or lowest quality available")
+parser.add_argument("stream", nargs="?", type=comma_list,
+                    help="Stream quality to play, use 'best' or 'worst' for "
+                         "highest or lowest quality available. "
+                         "Fallback streams can be specified by using a "
+                         "comma-separated list, e.g. '720p,480p,best'.")
 
 parser.add_argument("-h", "--help", action="store_true",
                     help="Show this help message and exit")
 parser.add_argument("-V", "--version", action="version",
                     version="%(prog)s " + livestreamer_version)
-parser.add_argument("-u", "--plugins", action="store_true",
+parser.add_argument("--plugins", action="store_true",
                     help="Print all currently installed plugins")
 parser.add_argument("-l", "--loglevel", metavar="level", default="info",
                     help="Set log level, valid levels: none, error, warning, "
@@ -62,6 +64,12 @@ parser.add_argument("-Q", "--quiet", action="store_true",
 parser.add_argument("-j", "--json", action="store_true",
                     help="Output JSON instead of the normal text output and "
                          "disable log output, useful for external scripting")
+parser.add_argument("--http-proxy", metavar="http://hostname:port/",
+                    help="Specify a HTTP proxy. This is the same as "
+                         "setting the environment variable 'http_proxy'.")
+parser.add_argument("--https-proxy", metavar="https://hostname:port/",
+                    help="Specify a HTTPS proxy. This is the same as "
+                         "setting the environment variable 'https_proxy'.")
 parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
 
@@ -103,6 +111,10 @@ playeropt.add_argument("--player-passthrough", metavar="types",
                             "handle the stream type when using this. "
                             "Supported stream types are: "
                             "{0}".format(", ".join(STREAM_PASSTHROUGH)))
+playeropt.add_argument("--player-no-close", action="store_true",
+                       help="By default Livestreamer will close the "
+                            "player when the stream ends. This option "
+                            "will let the player decide when to exit.")
 
 outputopt = parser.add_argument_group("file output options")
 outputopt.add_argument("-o", "--output", metavar="filename",

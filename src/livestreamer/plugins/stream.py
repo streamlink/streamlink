@@ -7,53 +7,49 @@ from livestreamer.stream import (AkamaiHDStream, HDSStream, HLSStream,
 import ast
 import re
 
-class StreamURL(Plugin):
-    ProtocolMap = {
-        "akamaihd": AkamaiHDStream,
-        "hds": HDSStream.parse_manifest,
-        "hls": HLSStream,
-        "hlsvariant": HLSStream.parse_variant_playlist,
-        "httpstream": HTTPStream,
-        "rtmp": RTMPStream,
-        "rtmpe": RTMPStream,
-        "rtmps": RTMPStream,
-        "rtmpt": RTMPStream,
-        "rtmpte": RTMPStream
-    }
+PROTOCOL_MAP = {
+    "akamaihd": AkamaiHDStream,
+    "hds": HDSStream.parse_manifest,
+    "hls": HLSStream,
+    "hlsvariant": HLSStream.parse_variant_playlist,
+    "httpstream": HTTPStream,
+    "rtmp": RTMPStream,
+    "rtmpe": RTMPStream,
+    "rtmps": RTMPStream,
+    "rtmpt": RTMPStream,
+    "rtmpte": RTMPStream
+}
+PARAMS_REGEX = r"(\w+)=({.+?}|\[.+?\]|\(.+?\)|'(?:[^'\\]|\\')*'|\"(?:[^\"\\]|\\\")*\"|\S+)"
 
+class StreamURL(Plugin):
     @classmethod
     def can_handle_url(self, url):
         parsed = urlparse(url)
 
-        return parsed.scheme in self.ProtocolMap
+        return parsed.scheme in PROTOCOL_MAP
 
     def _parse_params(self, params):
         rval = {}
+        matches = re.findall(PARAMS_REGEX, params)
 
-        matches = re.findall("(\w+)=(\d+|\d+.\d+|'(.+)'|\"(.+)\"|\S+)", params)
+        for key, value in matches:
+            try:
+                value = ast.literal_eval(value)
+            except Exception:
+                pass
 
-        for key, val, strval, ex in matches:
-            if len(strval) > 0:
-                rval[key] = strval
-            else:
-                try:
-                    val = ast.literal_eval(val)
-                except:
-                    pass
-
-                rval[key] = val
+            rval[key] = value
 
         return rval
 
     def _get_streams(self):
         parsed = urlparse(self.url)
+        cls = PROTOCOL_MAP.get(parsed.scheme)
 
-        if not parsed.scheme in self.ProtocolMap:
-            raise NoStreamsError(self.url)
+        if not cls:
+            return
 
-        cls = self.ProtocolMap[parsed.scheme]
         split = self.url.split(" ")
-
         url = split[0]
         urlnoproto = re.match("^\w+://(.+)", url).group(1)
 

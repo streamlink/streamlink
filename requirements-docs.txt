@@ -1,0 +1,2 @@
+sphinx
+sphinxcontrib-issuetracker

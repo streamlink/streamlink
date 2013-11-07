@@ -10,6 +10,18 @@ class Youtube(Plugin):
     def can_handle_url(self, url):
         return "youtube.com" in url
 
+    @classmethod
+    def stream_weight(cls, stream):
+        match = re.match("(\w+)_3d", stream)
+        if match:
+            weight, group = Plugin.stream_weight(match.group(1))
+            weight -= 1
+            group = "youtube_3d"
+        else:
+            weight, group = Plugin.stream_weight(stream)
+
+        return weight, group
+
     def _find_config(self, data):
         match = re.search("'PLAYER_CONFIG': (.+)\n.+}\);", data)
         if match:
@@ -89,6 +101,9 @@ class Youtube(Plugin):
                 quality = formatmap[streaminfo["itag"]]
             else:
                 quality = streaminfo["quality"]
+
+            if streaminfo.get("stereo3d") == "1":
+                quality += "_3d"
 
             streams[quality] = stream
 

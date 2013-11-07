@@ -2,6 +2,7 @@ import requests
 
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
+from livestreamer.stream import HLSStream
 from livestreamer.utils import res_json, urlget
 
 # Import base class from a support plugin that must exist in the
@@ -11,6 +12,7 @@ from livestreamer.plugin.api.support_plugin import justintv_common
 
 SWF_URL = "http://www-cdn.jtvnw.net/swflibs/TwitchPlayer.swf"
 TWITCH_API_HOST = "https://api.twitch.tv"
+TWITCH_HLS_PLAYLIST = "http://usher.twitch.tv/api/channel/hls/{0}.m3u8?token={1}&sig={2}"
 
 
 class TwitchAPI(object):
@@ -81,7 +83,7 @@ class Twitch(justintv_common.JustinTVBase):
     def _authenticate(self):
         cookies = self.options.get("cookie")
 
-        if cookies:
+        if cookies and not self.api.oauth_token:
             self.logger.info("Attempting to authenticate using cookies")
 
             self.api.add_cookies(cookies)
@@ -107,10 +109,21 @@ class Twitch(justintv_common.JustinTVBase):
 
         return sig, token
 
-    def _get_desktop_streams(self):
-        self._authenticate()
-        sig, token = self._access_token()
+    def _get_mobile_streams(self, sig, token):
+        url = TWITCH_HLS_PLAYLIST.format(self.channel, token, sig)
 
+        try:
+            streams = HLSStream.parse_variant_playlist(self.session, url,
+                                                       nameprefix="mobile_")
+        except IOError as err:
+            if "404 Client Error" in str(err):
+                raise NoStreamsError(self.url)
+            else:
+                raise PluginError(err)
+
+        return streams
+
+    def _get_desktop_streams(self, sig, token):
         self.logger.debug("Fetching desktop streams")
         res = self.usher.find(self.channel,
                               password=self.options.get("password"),
@@ -118,6 +131,13 @@ class Twitch(justintv_common.JustinTVBase):
                               nauth=token)
 
         return self._parse_find_result(res, SWF_URL)
+
+    def _get_live_streams(self):
+        self._authenticate()
+
+        sig, token = self._access_token()
+
+        return justintv_common.JustinTVBase._get_live_streams(self, sig, token)
 
     def _get_video_streams(self):
         self._authenticate()

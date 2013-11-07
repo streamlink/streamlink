@@ -27,6 +27,13 @@ HLS_TOKEN_PATH = "/stream/iphone_token/{0}.json"
 HLS_PLAYLIST_PATH = "/stream/multi_playlist/{0}.m3u8?token={1}&hd=true&allow_cdn=true"
 USHER_FIND_PATH = "/find/{0}.json"
 REQUIRED_RTMP_KEYS = ("connect", "play", "type", "token")
+QUALITY_WEIGHTS = {
+    "mobile_source": 480,
+    "mobile_high": 330,
+    "mobile_medium": 260,
+    "mobile_low": 170,
+    "mobile_mobile": 120
+}
 URL_PATTERN = (r"http(s)?://([\w\.]+)?(?P<domain>twitch.tv|justin.tv)/(?P<channel>\w+)"
                r"(/(?P<video_type>[bc])/(?P<video_id>\d+))?")
 
@@ -85,6 +92,14 @@ class JustinTVBase(Plugin):
         "password": None,
         "legacy-names": False
     })
+
+    @classmethod
+    def stream_weight(cls, key):
+        weight = QUALITY_WEIGHTS.get(key)
+        if weight:
+            return weight, "mobile_justintv"
+
+        return Plugin.stream_weight(key)
 
     def __init__(self, url):
         Plugin.__init__(self, url)
@@ -147,7 +162,7 @@ class JustinTVBase(Plugin):
 
             name = name.lower()
             if not valid_rtmp_stream(info):
-                if info.get("needed_info") == "chansub":
+                if info.get("needed_info") in ("chansub", "channel_subscription"):
                     self.logger.warning("The quality '{0}' is not available "
                                         "since it requires a subscription.",
                                         name)
@@ -284,12 +299,12 @@ class JustinTVBase(Plugin):
         else:
             return self._get_live_streams()
 
-    def _get_live_streams(self):
+    def _get_live_streams(self, *args, **kwargs):
         streams = defaultdict(list)
 
         if RTMPStream.is_usable(self.session):
             try:
-                for name, stream in self._get_desktop_streams().items():
+                for name, stream in self._get_desktop_streams(*args, **kwargs).items():
                     streams[name].append(stream)
 
             except PluginError as err:
@@ -298,11 +313,11 @@ class JustinTVBase(Plugin):
             except NoStreamsError:
                 pass
         else:
-            self.logger.warning("rtmpdump is not usable, "
-                                "only mobile streams may be available")
+            self.logger.warning("rtmpdump is required to access the desktop "
+                                "streams, but it could not be found")
 
         try:
-            for name, stream in self._get_mobile_streams().items():
+            for name, stream in self._get_mobile_streams(*args, **kwargs).items():
                 # Justin.tv streams have a iphone prefix, so let's
                 # strip it to keep it consistent with Twitch.
                 name = name.replace("iphone", "")

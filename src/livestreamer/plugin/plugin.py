@@ -53,13 +53,10 @@ def stream_weight(stream):
         if match.group(2) == "k":
             bitrate = int(match.group(1))
 
-            # These calculations are very rough
-            if bitrate > 2000:
-                weight = bitrate / 3.4
-            elif bitrate > 1000:
-                weight = bitrate / 2.6
-            else:
-                weight = bitrate / 1.7
+            # FIXME: This is a crude attempt at making a bitrate's
+            # weight end up similar to the weight of a resolution.
+            # Someone who knows math, please fix.
+            weight = bitrate / 2.8
 
             return weight, "bitrate"
 
@@ -81,18 +78,6 @@ def iterate_streams(streams):
                 yield (name, sub_stream)
         else:
             yield (name, stream)
-
-
-def default_stream_types(streams):
-    stream_types = ["rtmp", "hls", "hds", "http"]
-
-    for name, stream in iterate_streams(streams):
-        stream_type = type(stream).shortname()
-
-        if stream_type not in stream_types:
-            stream_types.append(stream_type)
-
-    return stream_types
 
 
 def stream_type_priority(stream_types, stream):
@@ -166,6 +151,18 @@ class Plugin(object):
     def stream_weight(cls, stream):
         return stream_weight(stream)
 
+    @classmethod
+    def default_stream_types(cls, streams):
+        stream_types = ["rtmp", "hls", "hds", "http"]
+
+        for name, stream in iterate_streams(streams):
+            stream_type = type(stream).shortname()
+
+            if stream_type not in stream_types:
+                stream_types.append(stream_type)
+
+        return stream_types
+
     def get_streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
 
@@ -229,7 +226,7 @@ class Plugin(object):
         streams = {}
 
         if stream_types is None:
-            stream_types = default_stream_types(ostreams)
+            stream_types = self.default_stream_types(ostreams)
 
         # Add streams depending on stream type and priorities
         sorted_streams = sorted(iterate_streams(ostreams),
@@ -245,8 +242,17 @@ class Plugin(object):
             if name in streams:
                 name = "{0}_{1}".format(name, stream_type)
 
+            # Validate stream name and discard the stream if it's bad.
+            match = re.match("([A-z0-9_+]+)", name)
+            if match:
+                name = match.group(1)
+            else:
+                self.logger.debug("The stream '{0}' has been ignored "
+                                  "since it is badly named.", name)
+                continue
+
             # Force lowercase name and replace space with underscore.
-            streams[name.lower().replace(" ", "_")] = stream
+            streams[name.lower()] = stream
 
         # Create the best/worst synonmys
         stream_weight_only = lambda s: (self.stream_weight(s)[0] or
