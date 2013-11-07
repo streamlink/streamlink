@@ -242,8 +242,17 @@ class Plugin(object):
             if name in streams:
                 name = "{0}_{1}".format(name, stream_type)
 
+            # Validate stream name and discard the stream if it's bad.
+            match = re.match("([A-z0-9_+]+)", name)
+            if match:
+                name = match.group(1)
+            else:
+                self.logger.debug("The stream '{0}' has been ignored "
+                                  "since it is badly named.", name)
+                continue
+
             # Force lowercase name and replace space with underscore.
-            streams[name.lower().replace(" ", "_")] = stream
+            streams[name.lower()] = stream
 
         # Create the best/worst synonmys
         stream_weight_only = lambda s: (self.stream_weight(s)[0] or
