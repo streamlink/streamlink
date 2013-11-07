@@ -31,7 +31,7 @@ includes = ("requests", "re", "xml", "xml.dom.minidom",
             "zlib", "ctypes", "argparse", "hmac", "tempfile",
             "os", "sys", "subprocess", "getpass", "msvcrt",
             "urllib", "urlparse", "pkgutil", "imp", "ast",
-            "singledispatch", "cffi")
+            "singledispatch", "cffi", "Crypto")
 manual_copy = ("librtmp", "librtmp_config", "librtmp_ffi")
 
 freezer_path = os.path.dirname(os.path.abspath(__file__))
