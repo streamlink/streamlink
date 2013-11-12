@@ -12,7 +12,7 @@ from livestreamer.plugin.api.support_plugin import justintv_common
 
 SWF_URL = "http://www-cdn.jtvnw.net/swflibs/TwitchPlayer.swf"
 TWITCH_API_HOST = "https://api.twitch.tv"
-TWITCH_HLS_PLAYLIST = "http://usher.twitch.tv/api/channel/hls/{0}.m3u8?token={1}&sig={2}"
+TWITCH_HLS_PLAYLIST = "http://usher.twitch.tv/api/channel/hls/{0}.m3u8?allow_source=true&token={1}&sig={2}"
 
 
 class TwitchAPI(object):
