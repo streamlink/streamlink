@@ -623,8 +623,11 @@ class HDSStream(Stream):
 
                 bitrate = media.attrib.get("bitrate")
                 streamid = media.attrib.get("streamId")
+                height = media.attrib.get("height")
 
-                if bitrate:
+                if height:
+                    quality = height + "p"
+                elif bitrate:
                     quality = bitrate + "k"
                 elif streamid:
                     quality = streamid
