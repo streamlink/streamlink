@@ -285,7 +285,7 @@ class HDSStreamIO(IOBase):
     def fragment_url(self, segment, fragment):
         url = absolute_url(self.baseurl, self.url)
 
-        return self.FragmentURL.format(url=url, identifier=self.identifier,
+        return self.FragmentURL.format(url=url, identifier="",
                                        quality="", segment=segment,
                                        fragment=fragment)
 
