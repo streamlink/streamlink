@@ -53,11 +53,12 @@ Livestreamer will look for this file in different locations depending on your pl
   - ``%APPDATA%\livestreamer\livestreamerrc``
 
 
-The file should contain one argument per line in the format ``option=value``, like this:
+The file should contain one argument per line in the format ``option[=value]``, like this:
 
 .. code-block:: console
 
     player=mplayer -cache 2048
+    player-no-close
     jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
     gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
 
