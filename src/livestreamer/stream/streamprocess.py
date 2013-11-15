@@ -48,7 +48,8 @@ class StreamProcess(Stream):
         else:
             params["_err"] = open(os.devnull, "wb")
 
-        stream = cmd(**params)
+        with params["_err"]:
+            stream = cmd(**params)
 
         # Wait 0.5 seconds to see if program exited prematurely
         time.sleep(0.5)
