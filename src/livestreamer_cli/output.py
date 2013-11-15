@@ -107,6 +107,7 @@ class PlayerOutput(Output):
         # shlex removes un-escaped backslashes
         cmd = self.cmd.replace("\\", "\\\\")
         args = self.args.format(filename=filename)
+        args = args.replace("\\", "\\\\")
 
         return shlex.split(cmd) + shlex.split(args)
 
