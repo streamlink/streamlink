@@ -5,6 +5,7 @@ import requests
 import sys
 import signal
 
+from contextlib import closing
 from time import sleep
 from distutils.version import StrictVersion
 
@@ -239,9 +240,9 @@ def output_stream(stream):
             console.exit("Failed to open output: {0} ({1})",
                          args.output, err)
 
-    console.logger.debug("Writing stream to output")
-    read_stream(stream_fd, output, prebuffer)
-    output.close()
+    with closing(output):
+        console.logger.debug("Writing stream to output")
+        read_stream(stream_fd, output, prebuffer)
 
     return True
 

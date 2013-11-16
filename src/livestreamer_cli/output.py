@@ -71,6 +71,7 @@ class PlayerOutput(Output):
         self.args = args
         self.kill = kill
         self.call = call
+        self.quiet = quiet
 
         self.filename = filename
         self.namedpipe = namedpipe
@@ -81,7 +82,7 @@ class PlayerOutput(Output):
         else:
             self.stdin = subprocess.PIPE
 
-        if quiet:
+        if self.quiet:
             self.stdout = open(os.devnull, "w")
             self.stderr = open(os.devnull, "w")
         else:
@@ -118,13 +119,18 @@ class PlayerOutput(Output):
             self._open_subprocess()
 
     def _open_call(self):
-        subprocess.call(self._create_arguments(),
-                        stdout=self.stdout,
-                        stderr=self.stderr)
+        try:
+            subprocess.call(self._create_arguments(),
+                            stdout=self.stdout,
+                            stderr=self.stderr)
+        finally:
+            self._close_out()
 
     def _open_subprocess(self):
+        # Force bufsize=0 on all Python versions to avoid writing the
+        # unflushed buffer when closing a broken input pipe
         self.player = subprocess.Popen(self._create_arguments(),
-                                       stdin=self.stdin,
+                                       stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
 
@@ -138,14 +144,26 @@ class PlayerOutput(Output):
             self.http.open()
 
     def _close(self):
-        if self.kill:
-            with ignored(Exception):
-                self.player.kill()
-
+        # Close input to the player first to signal the end of the
+        # stream and allow the player to terminate of its own accord
         if self.namedpipe:
             self.namedpipe.close()
         elif self.http:
             self.http.close()
+        elif not self.filename:
+            self.player.stdin.close()
+
+        if self.kill:
+            with ignored(Exception):
+                self.player.kill()
+
+        self._close_out()
+
+    def _close_out(self):
+        """Close the output streams if needed"""
+        if self.quiet:
+            self.stdout.close()
+            self.stderr.close()
 
     def _write(self, data):
         if self.namedpipe:

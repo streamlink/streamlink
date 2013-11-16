@@ -136,7 +136,10 @@ class RunningCommand(object):
 
         # we're running in the background, return self and let us lazily
         # evaluate
-        if self.call_args["bg"]: return
+        if self.call_args["bg"]:
+            if self.process.stdin:
+                self.process.stdin.close()
+            return
 
         # we're running this command as a with context, don't do anything
         # because nothing was started to run from Command.__call__
@@ -170,6 +173,7 @@ class RunningCommand(object):
 
     def __eq__(self, other):
         return unicode(self) == unicode(other)
+    __hash__ = None  # Avoid DeprecationWarning in Python < 3
 
     def __contains__(self, item):
         return item in str(self)
@@ -351,6 +355,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
     def __eq__(self, other):
         try: return str(self) == str(other)
         except: return False
+    __hash__ = None  # Avoid DeprecationWarning in Python < 3
 
 
     def __enter__(self):
@@ -386,8 +391,8 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         pipe = None if call_args["fg"] else subp.PIPE
 
         # check if we're piping via composition
-        stdin = pipe
-        actual_stdin = None
+        input_stream = pipe
+        input_data = None
         if args:
             first_arg = args.pop(0)
             if isinstance(first_arg, RunningCommand):
@@ -396,9 +401,9 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
                 # background as well
                 if first_arg.call_args["bg"]:
                     call_args["bg"] = True
-                    stdin = first_arg.process.stdout
+                    input_stream = first_arg.process.stdout
                 else:
-                    actual_stdin = first_arg.stdout()
+                    input_data = first_arg.stdout()
             else: args.insert(0, first_arg)
 
         processed_args = self._compile_args(args, kwargs)
@@ -421,7 +426,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         # stdin from string
         input = call_args["in"]
         if input:
-            actual_stdin = input
+            input_data = input
 
         # stdout redirection
         stdout = pipe
@@ -442,9 +447,10 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
 
         # leave shell=False
         process = subp.Popen(cmd, shell=False, env=call_args["env"],
-            cwd=call_args["cwd"], stdin=stdin, stdout=stdout, stderr=stderr)
+            cwd=call_args["cwd"],
+            stdin=input_stream, stdout=stdout, stderr=stderr)
 
-        return RunningCommand(command_ran, process, call_args, actual_stdin)
+        return RunningCommand(command_ran, process, call_args, input_data)
 
 
 
