@@ -261,12 +261,6 @@ class HLSStreamIO(io.IOBase):
                 self.sequence = edge_sequence.num
             else:
                 self.sequence = first_sequence.num
-        elif first_sequence.num == 0 and self.sequence > 0:
-            # The sequence number has wrapped around. This should probably not
-            # happen, but it wasn't until draft-pantos-http-live-streaming-12
-            # that it was explicitly stated that sequence numbers should never
-            # decrease.
-            self.sequence = first_sequence.num
 
     def _queue_sequences(self, fillqueue=False):
         for i, sequence in enumerate(self.playlist_sequences):
