@@ -201,16 +201,16 @@ class JustinTVBase(Plugin):
         streams = {}
 
         for quality, chunks in videos.get("chunks").items():
-            # Rename 'live' to 'source'
-            if quality == "live":
-                quality = "source"
-
             if not chunks:
                 if videos.get("restrictions", {}).get(quality) == "chansub":
                     self.logger.warning("The quality '{0}' is not available "
                                         "since it requires a subscription.",
                                         quality)
                 continue
+
+            # Rename 'live' to 'source'
+            if quality == "live":
+                quality = "source"
 
             chunks_duration = sum(c.get("length") for c in chunks)
 
