@@ -1,6 +1,7 @@
 from __future__ import division
 
 import base64
+import email.utils
 import hmac
 import re
 import requests
@@ -15,10 +16,12 @@ from time import time
 
 from .stream import Stream
 from ..buffers import RingBuffer
+from ..cache import Cache
 from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
 from ..compat import parse_qsl
 from ..exceptions import StreamError
 from ..utils import absolute_url, urlget, res_xml
+from ..utils import swfdecompress
 
 from ..packages.flashmedia import F4V, F4VError, FLVError
 from ..packages.flashmedia.box import Box
@@ -591,16 +594,9 @@ class HDSStream(Stream):
 
     @classmethod
     def parse_manifest(cls, session, url, timeout=60, rsession=None,
-    pvhash=None):
+    pvswf=None):
         """
-        :param pvhash: Player hash for Akamai HD player verification. This is
-            the SHA-256 hash of the uncompressed SWF file, base-64 encoded.
-            For example:
-            
-            swf = livestreamer.utils.urlget(url).content
-            hash = hashlib.sha256()
-            hash.update(livestreamer.utils.swfdecompress(swf))
-            pvhash = base64.b64encode(hash.digest()).decode("ascii")
+        :param pvswf: URL of player SWF for Akamai HD player verification
         """
         
         if not rsession:
@@ -633,7 +629,7 @@ class HDSStream(Stream):
 
             bootstraps[name] = box
         
-        params = cls._pv_params(pvhash, manifest.findtext("pv-2.0"))
+        params = cls._pv_params(pvswf, manifest.findtext("pv-2.0"))
         rsession.params.update(params)
 
         for media in manifest.findall("media"):
@@ -694,15 +690,39 @@ class HDSStream(Stream):
         return streams
     
     @classmethod
-    def _pv_params(cls, pvhash, pv):
+    def _pv_params(cls, pvswf, pv):
         """Returns any parameters needed for Akamai HD player verification"""
         if not pv:  # Player verification not used
             return ()
-        if not pvhash:
-            raise IOError('Missing "pvhash" parameter with HDS stream')
+        if not pvswf:
+            raise IOError('Missing "pvswf" parameter with HDS stream')
         (data, hdntl) = pv.split(";")
         
-        msg = "st=0~exp=9999999999~acl=*~data={0}!{1}".format(data, pvhash)
+        cache = Cache(filename="stream.json")
+        key = "akamaihd-player:" + pvswf
+        cached = cache.get(key)
+        
+        headers = dict()
+        if cached:
+            headers["If-Modified-Since"] = cached["modified"]
+        swf = urlget(pvswf, headers=headers)
+        
+        if cached and swf.status_code == 304:  # Server says not modified
+            hash = cached["hash"]
+        else:
+            # Calculate SHA-256 hash of the uncompressed SWF file, base-64
+            # encoded
+            hash = sha256()
+            hash.update(swfdecompress(swf.content))
+            hash = base64.b64encode(hash.digest()).decode("ascii")
+            
+            modified = swf.headers.get("Last-Modified", "")
+            
+            # Only save in cache if a valid date is given
+            if email.utils.parsedate(modified):
+                cache.set(key, dict(hash=hash, modified=modified))
+        
+        msg = "st=0~exp=9999999999~acl=*~data={0}!{1}".format(data, hash)
         auth = hmac.new(AKAMAIHD_PV_KEY, msg.encode("ascii"), sha256)
         pvtoken = "{0}~hmac={1}".format(msg, auth.hexdigest())
     
