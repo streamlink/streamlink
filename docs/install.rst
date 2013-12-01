@@ -60,6 +60,7 @@ Distribution packages
 Livestreamer is also available in these package repositories:
 
 - `Arch Linux <https://www.archlinux.org/packages/community/any/livestreamer/>`_
+- `FreeBSD <http://www.freshports.org/multimedia/livestreamer>`_
 - `Gentoo Linux <https://packages.gentoo.org/package/net-misc/livestreamer>`_
 - `OpenBSD <http://openports.se/multimedia/livestreamer>`_
 
