@@ -1,7 +1,6 @@
 from __future__ import division
 
 import base64
-import email.utils
 import hmac
 import re
 import requests
@@ -720,11 +719,10 @@ class HDSStream(Stream):
             hash = sha256()
             hash.update(swfdecompress(swf.content))
             hash = base64.b64encode(hash.digest()).decode("ascii")
-
             modified = swf.headers.get("Last-Modified", "")
 
             # Only save in cache if a valid date is given
-            if email.utils.parsedate(modified):
+            if len(modified) < 40:
                 cache.set(key, dict(hash=hash, modified=modified))
 
         msg = "st=0~exp=9999999999~acl=*~data={0}!{1}".format(data, hash)
