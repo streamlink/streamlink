@@ -52,7 +52,7 @@ class Cache(object):
     def _save(self):
         fd, tempname = tempfile.mkstemp()
         fd = os.fdopen(fd, "w")
-        json.dump(self._cache, fd)
+        json.dump(self._cache, fd, indent=2, separators=(",", ": "))
         fd.close()
 
         # Silently ignore errors
