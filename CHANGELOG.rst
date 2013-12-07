@@ -1,3 +1,23 @@
+Version 1.7.1
+-------------
+
+Plugins:
+ - Added FilmOn Social TV plugin by John Peterson. (#225)
+ - twitch: Support mobile_source quality, patch by Andrew Bashore.
+
+Streams:
+ - hds: Will now use video height as stream names if available.
+ - hds: Removed the use of movie identifier in the fragment URLs.
+ - hds: Added support for player verification, patch by Martin Panter. (#222)
+
+Bug fixes:
+ - Fixed various Python warnings, patch by Martin Panter. (#221)
+ - cli: Fixed back-slash issue in ``--player-args``. (#218)
+ - hds: Fixed some streams complaining about the hardcoded hdcore parameter.
+ - hls: Fixed live streams that keep all previous segments in the playlists. (#224)
+ - setup.py now forces requests 1.x on Python <2.6.3. (#219)
+
+
 Version 1.7.0
 -------------
 
@@ -27,7 +47,7 @@ Plugins:
  - weeb: Updated after service changes. Patch by Athanasios Oikonomou. (#207)
  - youtube: Now handles 3D streams properly. (#202)
 
-Stream:
+Streams:
  - hds: Added support for global bootstraps.
  - hls: Rewrote the playlist parser from scratch to be more solid and correct
    in accordance to the latest M3U8 spec.
