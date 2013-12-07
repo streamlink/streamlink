@@ -28,6 +28,12 @@ HLS_PLAYLIST_PATH = "/stream/multi_playlist/{0}.m3u8?token={1}&hd=true&allow_cdn
 USHER_FIND_PATH = "/find/{0}.json"
 REQUIRED_RTMP_KEYS = ("connect", "play", "type", "token")
 QUALITY_WEIGHTS = {
+    "source": 1080,
+    "high": 720,
+    "medium": 480,
+    "low": 240,
+    "mobile": 120,
+
     "mobile_source": 480,
     "mobile_high": 330,
     "mobile_medium": 260,
@@ -97,7 +103,12 @@ class JustinTVBase(Plugin):
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
         if weight:
-            return weight, "mobile_justintv"
+            if key.startswith("mobile_"):
+                group = "mobile_justintv"
+            else:
+                group = "justintv"
+
+            return weight, group
 
         return Plugin.stream_weight(key)
 
@@ -201,16 +212,16 @@ class JustinTVBase(Plugin):
         streams = {}
 
         for quality, chunks in videos.get("chunks").items():
-            # Rename 'live' to 'source'
-            if quality == "live":
-                quality = "source"
-
             if not chunks:
                 if videos.get("restrictions", {}).get(quality) == "chansub":
                     self.logger.warning("The quality '{0}' is not available "
                                         "since it requires a subscription.",
                                         quality)
                 continue
+
+            # Rename 'live' to 'source'
+            if quality == "live":
+                quality = "source"
 
             chunks_duration = sum(c.get("length") for c in chunks)
 

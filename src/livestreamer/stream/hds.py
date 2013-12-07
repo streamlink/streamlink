@@ -1,10 +1,13 @@
 from __future__ import division
 
 import base64
+import hmac
 import re
 import requests
 import os.path
 
+from binascii import unhexlify
+from hashlib import sha256
 from io import BytesIO, IOBase
 from math import ceil
 from threading import Thread, Timer
@@ -12,9 +15,12 @@ from time import time
 
 from .stream import Stream
 from ..buffers import RingBuffer
+from ..cache import Cache
 from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
+from ..compat import parse_qsl
 from ..exceptions import StreamError
 from ..utils import absolute_url, urlget, res_xml
+from ..utils import swfdecompress
 
 from ..packages.flashmedia import F4V, F4VError, FLVError
 from ..packages.flashmedia.box import Box
@@ -23,6 +29,13 @@ from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
                                        ScriptData, Header, Tag,
                                        TAG_TYPE_SCRIPT, TAG_TYPE_AUDIO,
                                        TAG_TYPE_VIDEO)
+
+# Akamai HD player verification key
+# Use unhexlify() rather than bytes.fromhex() for compatibility with before
+# Python 3. However, in Python 3.2 (not 3.3+), unhexlify only accepts a byte
+# string.
+AKAMAIHD_PV_KEY = unhexlify(
+    b"BD938D5EE6D9F42016F9C56577B6FDCF415FE4B184932B785AB32BCADC9BB592")
 
 AAC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_HEADER = 0x00
@@ -71,7 +84,6 @@ class HDSStreamFiller(Thread):
         while retries > 0 and self.running:
             try:
                 res = urlget(url, stream=True, exception=IOError,
-                             params=dict(hdcore=HDCORE_VERSION),
                              session=self.stream.rsession, timeout=10)
                 break
             except IOError as err:
@@ -286,7 +298,7 @@ class HDSStreamIO(IOBase):
     def fragment_url(self, segment, fragment):
         url = absolute_url(self.baseurl, self.url)
 
-        return self.FragmentURL.format(url=url, identifier=self.identifier,
+        return self.FragmentURL.format(url=url, identifier="",
                                        quality="", segment=segment,
                                        fragment=fragment)
 
@@ -423,8 +435,7 @@ class HDSStreamIO(IOBase):
         self.bootstrap_changed = self.current_fragment != self.last_fragment
 
     def _fetch_bootstrap(self, url):
-        res = urlget(url, params=dict(hdcore=HDCORE_VERSION),
-                     exception=IOError)
+        res = urlget(url, session=self.rsession, exception=IOError)
         return Box.deserialize(BytesIO(res.content))
 
     def _segment_from_fragment(self, fragment):
@@ -581,12 +592,24 @@ class HDSStream(Stream):
         return fd.open()
 
     @classmethod
-    def parse_manifest(cls, session, url, timeout=60, rsession=None):
+    def parse_manifest(cls, session, url, timeout=60, rsession=None,
+                       pvswf=None):
+        """Parses a HDS manifest and returns it's substreams.
+
+        :param url: The URL to the manifest.
+        :param timeout: How long to wait for data to be returned from
+                        from the stream before raising an error.
+        :param rsession: requests session used for the streams.
+        :param pvswf: URL of player SWF for Akamai HD player verification.
+        """
+
         if not rsession:
             rsession = requests.session()
 
-        res = urlget(url, params=dict(hdcore=HDCORE_VERSION),
-                     exception=IOError, session=rsession)
+        if "akamaihd" in url:
+            rsession.params["hdcore"] = HDCORE_VERSION
+
+        res = urlget(url, exception=IOError, session=rsession)
         manifest = res_xml(res, "manifest XML", ignore_ns=True,
                            exception=IOError)
 
@@ -610,6 +633,15 @@ class HDSStream(Stream):
 
             bootstraps[name] = box
 
+        pvtoken = manifest.findtext("pv-2.0")
+        if pvtoken:
+            if not pvswf:
+                raise IOError("This manifest requires the 'pvswf' parameter "
+                              "to verify the SWF")
+
+            params = cls._pv_params(pvswf, pvtoken)
+            rsession.params.update(params)
+
         for media in manifest.findall("media"):
             url = media.attrib.get("url")
             bootstrapid = media.attrib.get("bootstrapInfoId", "_global")
@@ -623,8 +655,11 @@ class HDSStream(Stream):
 
                 bitrate = media.attrib.get("bitrate")
                 streamid = media.attrib.get("streamId")
+                height = media.attrib.get("height")
 
-                if bitrate:
+                if height:
+                    quality = height + "p"
+                elif bitrate:
                     quality = bitrate + "k"
                 elif streamid:
                     quality = streamid
@@ -661,3 +696,44 @@ class HDSStream(Stream):
                     streams[name] = stream
 
         return streams
+
+    @classmethod
+    def _pv_params(cls, pvswf, pv):
+        """Returns any parameters needed for Akamai HD player verification"""
+
+        (data, hdntl) = pv.split(";")
+        cache = Cache(filename="stream.json")
+        key = "akamaihd-player:" + pvswf
+        cached = cache.get(key)
+
+        headers = dict()
+        if cached:
+            headers["If-Modified-Since"] = cached["modified"]
+        swf = urlget(pvswf, headers=headers)
+
+        if cached and swf.status_code == 304:  # Server says not modified
+            hash = cached["hash"]
+        else:
+            # Calculate SHA-256 hash of the uncompressed SWF file, base-64
+            # encoded
+            hash = sha256()
+            hash.update(swfdecompress(swf.content))
+            hash = base64.b64encode(hash.digest()).decode("ascii")
+            modified = swf.headers.get("Last-Modified", "")
+
+            # Only save in cache if a valid date is given
+            if len(modified) < 40:
+                cache.set(key, dict(hash=hash, modified=modified))
+
+        msg = "st=0~exp=9999999999~acl=*~data={0}!{1}".format(data, hash)
+        auth = hmac.new(AKAMAIHD_PV_KEY, msg.encode("ascii"), sha256)
+        pvtoken = "{0}~hmac={1}".format(msg, auth.hexdigest())
+
+        # The "hdntl" parameter can be accepted as a cookie or passed in the
+        # query string, but the "pvtoken" parameter can only be in the query
+        # string
+        params = [("pvtoken", pvtoken)]
+        params.extend(parse_qsl(hdntl, keep_blank_values=True))
+
+        return params
+

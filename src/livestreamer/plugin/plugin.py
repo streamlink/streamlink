@@ -11,10 +11,6 @@ from ..options import Options
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
         "live": 1080,
-        "source": 1080,
-        "high": 720,
-        "medium": 480,
-        "low": 240,
     },
     "tv": {
         "hd": 1080,
@@ -25,11 +21,6 @@ QUALITY_WEIGTHS_EXTRA = {
         "hq":  576,
         "sq":  360,
     },
-    "mobile": {
-        "mobile_high":   330,
-        "mobile_medium": 260,
-        "mobile_low":    170,
-    }
 }
 
 

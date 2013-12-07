@@ -3,6 +3,20 @@
 Common issues
 =============
 
+.. _issues-player_caching:
+
+Streams are buffering/lagging
+-----------------------------
+
+By default most players do not cache the input from stdin, here is a few options
+you can pass to some common players:
+
+- MPlayer/mplayer2/mpv: ``--cache <kbytes>`` (between 1024 and 8192 is recommended)
+- VLC: ``--file-caching <milliseconds>`` (between 1000 and 10000 is recommended)
+- MPC-HC: It does not seem possible to configure the cache right now unfortunately
+
+Use the ``--player`` option in Livestreamer to pass these options to the player.
+
 
 "Installed rtmpdump does not support ``--jtv`` argument"
 --------------------------------------------------------
@@ -41,18 +55,6 @@ version of rtmpdump, using this make command:
 If this does not help you can get more information by running with ``--errorlog``,
 and then look for a log file created in ``/tmp`` that will contain any error messages
 from rtmpdump.
-
-
-Streams are buffering/lagging
------------------------------
-
-By default most players do not cache the input from stdin, here is a few command
-arguments you can pass to some common players:
-
-- ``mplayer --cache <kbytes>`` (between 1024 and 8192 is recommended)
-- ``vlc --file-caching <milliseconds>`` (between 1000 and 10000 is recommended)
-
-These options can be used by passing ``--player`` to ``livestreamer``.
 
 
 Player specific issues

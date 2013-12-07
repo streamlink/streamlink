@@ -1,5 +1,5 @@
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import NoStreamsError
+from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import (AkamaiHDStream, HDSStream, HLSStream,
                                  HTTPStream, RTMPStream)
@@ -69,7 +69,12 @@ class StreamURL(Plugin):
 
             stream = cls(self.session, params)
         elif cls == HLSStream.parse_variant_playlist or cls == HDSStream.parse_manifest:
-            return cls(self.session, urlnoproto, **params)
+            try:
+                streams = cls(self.session, urlnoproto, **params)
+            except IOError as err:
+                raise PluginError(err)
+
+            return streams
         else:
             stream = cls(self.session, urlnoproto, **params)
 

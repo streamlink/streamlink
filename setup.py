@@ -4,7 +4,7 @@ from setuptools import setup
 from sys import version_info, path as sys_path
 from os.path import abspath, dirname, join
 
-deps = ["requests>=1.0,<3.0"]
+deps = []
 packages = ["livestreamer",
             "livestreamer.stream",
             "livestreamer.plugin",
@@ -18,6 +18,12 @@ packages = ["livestreamer",
 if (version_info[0] == 2 and version_info[1] < 7) or \
    (version_info[0] == 3 and version_info[1] < 2):
     deps.append("argparse")
+
+# requests 2.0 does not work correctly on Python <2.6.3
+if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
+    deps.append("requests>=1.0,<2.0")
+else:
+    deps.append("requests>=1.0,<3.0")
 
 
 srcdir = join(dirname(abspath(__file__)), "src/")

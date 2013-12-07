@@ -34,15 +34,24 @@ In this case the ``best`` stream is a reference to the stream that is considered
     [cli][info] Opening stream: 720p
     [cli][info] Starting player: vlc
 
-The default player is `VLC <http://videolan.org/>`_, but it can be easily changed using the ``--player`` argument.
-It is recommended to create a `Configuration file`_ for arguments you wish to be used every time.
+The default player is `VLC <http://videolan.org/>`_, but it can be easily changed using the ``--player`` option.
 
+
+Now that you have a basic grasp of how Livestreamer works, you may want to look into
+customizing it to your own needs, such as:
+
+- Creating a :ref:`configuration file <cli-livestreamerrc>` of options you want to use
+- Setting up your player to :ref:`cache some data <issues-player_caching>`
+  before playing the stream to help avoiding lag issues
+
+
+.. _cli-livestreamerrc:
 
 Configuration file
 ------------------
 
-Writing the command line arguments every time is painful, that's why Livestreamer
-is capable of reading arguments from a file instead, a sort of configuration file.
+Writing the command line options every time is painful, that's why Livestreamer
+is capable of reading options from a file instead, a sort of configuration file.
 Livestreamer will look for this file in different locations depending on your platform:
 
 **Unix-like OSs**
@@ -53,14 +62,17 @@ Livestreamer will look for this file in different locations depending on your pl
   - ``%APPDATA%\livestreamer\livestreamerrc``
 
 
-The file should contain one argument per line in the format ``option=value``, like this:
+The file should contain one option per line in the format ``option[=value]``, like this:
 
-.. code-block:: console
+.. code-block:: bash
 
     player=mplayer -cache 2048
+    player-no-close
     jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
     gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
 
+
+For a list of all the supported options see :ref:`cli-options`.
 
 Plugin specific usage
 ---------------------
@@ -80,7 +92,7 @@ Cookies should be specified in a key value list separated by a semicolon. In thi
 
 
 Extracting cookies from your web browser varies from browser to browser, try googling "<brower name> view cookies".
-It's recommended to save these cookies in your `Configuration file`_ rather than specifying them manually every time.
+It's recommended to save these cookies in your :ref:`configuration file <cli-livestreamerrc>` rather than specifying them manually every time.
 
 
 Authenticating with GOMTV.net
@@ -104,7 +116,7 @@ This will cause Livestreamer to prompt you for your password and then attempt to
     [plugin.gomtv][info] Cookie for reusing this session: SES_MEMBERNO=xxxxxxxxxx; SES_STATE=xxxxxxxxxxx; SES_MEMBERNICK=xxxxxx; SES_USERNICK=username;
 
 
-The important part of this output is the last line, that's the cookies used to access this login session. To use these cookies pass them to the ``--gomtv-cookie`` option. It's recommended to save these cookies in your `Configuration file`_ rather than specifying them manually every time.
+The important part of this output is the last line, that's the cookies used to access this login session. To use these cookies pass them to the ``--gomtv-cookie`` option. It's recommended to save these cookies in your :ref:`configuration file <cli-livestreamerrc>` rather than specifying them manually every time.
 
 These instructions are for authenticating with a regular user account, if you are using a `Facebook <http://facebook.com/>`_ or `Twitter <http://twitter.com/>`_ account to authenticate you'll need to extract your cookies from your web browser instead. Extracting cookies from your web browser varies from browser to browser, try googling "<brower name> view cookies".
 
@@ -170,8 +182,10 @@ Livestreamer currently supports these protocols:
 +-------------------------------+-----------------------------------------------+
 
 
-Full list of command line arguments
------------------------------------
+.. _cli-options:
+
+Command line options
+--------------------
 
 .. program:: livestreamer
 
