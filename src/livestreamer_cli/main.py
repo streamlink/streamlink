@@ -174,6 +174,7 @@ def output_stream_http(plugin, streams):
         server.close(True)
 
     player.close()
+    server.close()
 
 
 def output_stream_passthrough(stream):
