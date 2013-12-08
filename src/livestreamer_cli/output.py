@@ -159,6 +159,7 @@ class PlayerOutput(Output):
         if self.kill:
             with ignored(Exception):
                 self.player.kill()
+        self.player.wait()
 
     def _write(self, data):
         if self.namedpipe:
