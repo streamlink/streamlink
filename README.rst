@@ -38,16 +38,33 @@ Currently most of the big streaming services are supported, e.g.
 `UStream <http://ustream.tv>`_ and
 `YouTube Live <http://youtube.com/live/>`_.
 
+Installing
+----------
+
+The latest stable version is available to install using `pip <http://www.pip-installer.org/>`_:
+
+.. code-block:: bash
+
+    $ pip install livestreamer
+
+or installing from a source directory:
+
+.. code-block:: bash
+
+    $ python setup.py install
+
+`The Hitchhiker’s Guide to Python <http://docs.python-guide.org/>`_ has guides
+helping you install Python + pip on the most common operating systems.
+
 
 Usage
 -----
 
-The default behaviour of Livestreamer is to feed a stream to your player
+The default behaviour of Livestreamer is to transport a stream to your player
 software (default is VLC).
 
 .. code-block:: console
 
-    # pip install livestreamer
     $ livestreamer twitch.tv/day9tv best
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
     [cli][info] Opening stream: source
