@@ -7,7 +7,7 @@ import tempfile
 from contextlib import contextmanager
 from io import BytesIO
 
-from .compat import is_win32, is_py3
+from .compat import is_win32, is_py3, shlex_quote
 
 try:
     from BaseHTTPServer import BaseHTTPRequestHandler
@@ -183,9 +183,7 @@ def find_default_player():
     if "darwin" in sys.platform:
         paths = os.environ.get("PATH", "").split(":")
         paths += ["/Applications/VLC.app/Contents/MacOS/"]
-
-        return check_paths(("VLC", "vlc"), paths)
-
+        path = check_paths(("VLC", "vlc"), paths)
     elif "win32" in sys.platform:
         exename = "vlc.exe"
         paths = os.environ.get("PATH", "").split(";")
@@ -197,16 +195,13 @@ def find_default_player():
             paths = filter(None, (os.environ.get(var) for var in envvars))
             paths = (os.path.join(p, subpath) for p in paths)
             path = check_paths((exename,), paths)
-
-        if path:
-            return '"{0}"'.format(path)
-
     else:
         paths = os.environ.get("PATH", "").split(":")
+        path = check_paths(("vlc",), paths)
 
-        # quote command because it can contain space
-        return '"' + check_paths(("vlc",), paths) + '"'
-
+    if path:
+        # Quote command because it can contain space
+        return shlex_quote(path)
 
 def stream_to_url(stream):
     stream_type = type(stream).shortname()
