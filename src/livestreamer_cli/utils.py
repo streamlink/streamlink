@@ -204,7 +204,8 @@ def find_default_player():
     else:
         paths = os.environ.get("PATH", "").split(":")
 
-        return check_paths(("vlc",), paths)
+        # quote command because it can contain space
+        return '"' + check_paths(("vlc",), paths) + '"'
 
 
 def stream_to_url(stream):
