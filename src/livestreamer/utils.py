@@ -82,6 +82,15 @@ def absolute_url(baseurl, url):
         return url
 
 
+# change google.com to www.google.com
+def prepend_www(url):
+	parsed = urlparse(url)	
+	if parsed.netloc.split(".")[0] != 'www':
+		return parsed.scheme + '://www.' + parsed.netloc + parsed.path
+	else:
+		return url
+
+
 def parse_json(data, jsontype="JSON", exception=PluginError):
     try:
         jsondata = json.loads(data)
