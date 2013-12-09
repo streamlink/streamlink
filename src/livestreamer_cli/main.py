@@ -117,6 +117,12 @@ def output_stream_http(plugin, streams):
 
     server = create_http_server()
     player_cmd = args.player or find_default_player()
+
+    if not player_cmd:
+        console.exit("The default player (VLC) does not seem to be "
+                     "installed. You must specify the path to a player "
+                     "executable with --player.")
+
     player = PlayerOutput(player_cmd, args=args.player_args,
                           filename=server.url,
                           quiet=not args.verbose_player)
