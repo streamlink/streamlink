@@ -4,7 +4,7 @@ import requests
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
-from livestreamer.stream import RTMPStream
+from livestreamer.stream import RTMPStream, HTTPStream
 from livestreamer.utils import urlget, urlresolve, prepend_www
 
 RTMP_URL = "rtmp://204.107.26.73/battlecam"
@@ -25,8 +25,11 @@ class Filmon_us(Plugin):
         streams = {}
 
         try:
+            # history video
+            if "filmon.us/history" in self.url or "filmon.us/video/history/hid" in self.url:
+                streams['default'] = self._get_history()
             # uploaded video
-            if "filmon.us/video" in self.url:
+            elif "filmon.us/video" in self.url:
                 streams['default'] = self._get_stream_upload()
             # live video
             else:
@@ -35,6 +38,23 @@ class Filmon_us(Plugin):
             pass
 
         return streams
+
+    def _get_history(self):
+        video_id = self.url.rstrip("/").rpartition("/")[2]
+
+        self.logger.debug("Testing if video exist")
+        history_url = 'http://www.filmon.us/video/history/hid/' + video_id
+        if urlresolve(prepend_www(history_url)) == '/':
+            raise PluginError("history number " + video_id + " don't exist")
+
+        self.logger.debug("Fetching video URL")
+        res = urlget(history_url)
+        match = re.search("http://cloud.battlecam.com/([/\w]+).flv", res.text)
+        if not match:
+            return
+        url = match.group(0)
+
+        return HTTPStream(self.session, url)
 
     def _get_stream_upload(self):
         video = urlparse(self.url).path
