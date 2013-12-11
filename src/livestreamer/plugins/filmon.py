@@ -13,13 +13,25 @@ AJAX_HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
 CHINFO_URL = "http://www.filmon.com/ajax/getChannelInfo"
+QUALITY_WEIGHTS = {
+    "high": 720,
+    "low": 480
+}
 SWF_URL = "http://www.filmon.com/tv/modules/FilmOnTV/files/flashapp/filmon/FilmonPlayer.swf"
 
 
 class Filmon(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return re.match("^http(s)?://(\w+\.)?filmon.com/tv/.+", url)
+
+    @classmethod
+    def stream_weight(cls, key):
+        weight = QUALITY_WEIGHTS.get(key)
+        if weight:
+            return weight, "filmon"
+
+        return Plugin.stream_weight(key)
 
     def _get_streams(self):
         if not RTMPStream.is_usable(self.session):
