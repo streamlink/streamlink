@@ -19,8 +19,7 @@ from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import (NamedPipe, HTTPServer, ignored, find_default_player,
-                    stream_to_url)
+from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 
@@ -63,9 +62,8 @@ def create_output():
         out = FileOutput(fd=stdout)
     else:
         http = namedpipe = None
-        player = args.player or find_default_player()
 
-        if not player:
+        if not args.player:
             console.exit("The default player (VLC) does not seem to be "
                          "installed. You must specify the path to a player "
                          "executable with --player.")
@@ -81,8 +79,8 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
-        console.logger.info("Starting player: {0}", player)
-        out = PlayerOutput(player, args=args.player_args,
+        console.logger.info("Starting player: {0}", args.player)
+        out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http)
@@ -116,24 +114,23 @@ def output_stream_http(plugin, streams):
     """Continuously output the stream over HTTP."""
 
     server = create_http_server()
-    player_cmd = args.player or find_default_player()
 
-    if not player_cmd:
+    if not args.player:
         console.exit("The default player (VLC) does not seem to be "
                      "installed. You must specify the path to a player "
                      "executable with --player.")
 
-    player = PlayerOutput(player_cmd, args=args.player_args,
+    player = PlayerOutput(args.player, args=args.player_args,
                           filename=server.url,
                           quiet=not args.verbose_player)
     stream_names = [resolve_stream_name(streams, s) for s in args.stream]
 
     try:
-        console.logger.info("Starting player: {0}", player_cmd)
+        console.logger.info("Starting player: {0}", args.player)
         player.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})",
-                     player_cmd, err)
+                     args.player, err)
 
     for req in iter_http_requests(server, player):
         user_agent = req.headers.get("User-Agent") or "unknown player"
@@ -181,17 +178,16 @@ def output_stream_http(plugin, streams):
 def output_stream_passthrough(stream):
     """Prepares a filename to be passed to the player."""
 
-    player = args.player or find_default_player()
     filename = '"{0}"'.format(stream_to_url(stream))
-    out = PlayerOutput(player, args=args.player_args,
+    out = PlayerOutput(args.player, args=args.player_args,
                        filename=filename, call=True,
                        quiet=not args.verbose_player)
 
     try:
-        console.logger.info("Starting player: {0}", player)
+        console.logger.info("Starting player: {0}", args.player)
         out.open()
     except OSError as err:
-        console.exit("Failed to start player: {0} ({1})", player, err)
+        console.exit("Failed to start player: {0} ({1})", args.player, err)
         return False
 
     return True

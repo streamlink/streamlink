@@ -4,7 +4,7 @@ from livestreamer import __version__ as livestreamer_version
 
 from .constants import (EXAMPLE_USAGE, STREAM_PASSTHROUGH,
                         DEFAULT_PLAYER_ARGUMENTS)
-
+from .utils import find_default_player
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
@@ -75,6 +75,7 @@ parser.add_argument("--yes-run-as-root", action="store_true",
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",
+                       default=find_default_player(),
                        help="Player command-line to start, by default VLC "
                             "will be used if it is installed.")
 playeropt.add_argument("-a", "--player-args", metavar="arguments",
