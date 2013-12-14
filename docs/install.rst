@@ -44,7 +44,7 @@ Optional dependencies
 
 For RTMP based plugins:
 
-- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_ (Twitch/Justin.tv streams require at least version 2.4-20111222)
+- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_
 
 For decrypting encrypted HLS streams:
 
