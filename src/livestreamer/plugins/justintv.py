@@ -2,22 +2,17 @@ import re
 
 from collections import defaultdict
 
-from livestreamer.exceptions import PluginError, NoStreamsError
-from livestreamer.utils import res_xml, urlget
+from livestreamer.exceptions import PluginError
 
-# Import base class from a support plugin that must exist in the
+# Import base classes from a support plugin that must exist in the
 # same directory as this plugin.
 from livestreamer.plugin.api.support_plugin import justintv_common
 
-
-BROADCAST_URL = "http://api.justin.tv/api/broadcast/by_archive/{0}.xml"
-CLIP_URL = "http://api.justin.tv/api/broadcast/by_chapter/{0}.xml"
-METADATA_URL = "http://www.justin.tv/meta/{0}.xml?on_site=true"
-SWF_URL = "http://www.justin.tv/widgets/live_embed_player.swf"
+JustinTVPluginBase = justintv_common.PluginBase
+JustinTVAPIBase = justintv_common.APIBase
 
 
-def convert_video_xml(res):
-    dom = res_xml(res)
+def convert_video_xml(dom):
     data = dict(play_offset=0, start_offset=0, end_offset=0,
                 chunks=defaultdict(list), restrictions={})
     total_duration = 0
@@ -51,79 +46,42 @@ def convert_video_xml(res):
     return data
 
 
-class JustinTV(justintv_common.JustinTVBase):
+class JustinTVAPI(JustinTVAPIBase):
+    def __init__(self):
+        JustinTVAPIBase.__init__(self, host="justin.tv")
+
+    def video_broadcast(self, broadcast_id):
+        res = self.call("/api/broadcast/by_archive/{0}".format(broadcast_id),
+                        format="xml")
+        return res
+
+    def video_clip(self, clip_id):
+        res = self.call("/api/broadcast/by_chapter/{0}".format(clip_id),
+                        format="xml")
+        return res
+
+
+class JustinTV(JustinTVPluginBase):
     @classmethod
     def can_handle_url(self, url):
         return "justin.tv" in url
 
-    def _get_metadata(self):
-        url = METADATA_URL.format(self.channel)
-        cookies = {}
+    def __init__(self, url):
+        JustinTVPluginBase.__init__(self, url)
 
-        for cookie in self.options.get("cookie").split(";"):
-            try:
-                name, value = cookie.split("=")
-            except ValueError:
-                continue
-
-            cookies[name.strip()] = value.strip()
-
-        res = urlget(url, cookies=cookies)
-        meta = res_xml(res, "metadata XML")
-
-        metadata = {}
-        metadata["access_guid"] = meta.findtext("access_guid")
-        metadata["login"] = meta.findtext("login")
-        metadata["title"] = meta.findtext("title")
-
-        return metadata
-
-    def _authenticate(self):
-        if self.options.get("cookie"):
-            self.logger.info("Attempting to authenticate using cookies")
-
-            try:
-                metadata = self._get_metadata()
-            except PluginError as err:
-                if "404 Client Error" in str(err):
-                    raise NoStreamsError(self.url)
-                else:
-                    raise
-
-            chansub = metadata.get("access_guid")
-            login = metadata.get("login")
-
-            if login:
-                self.logger.info("Successfully logged in as {0}", login)
-            else:
-                self.logger.error("Failed to authenticate, your cookies may "
-                                  "have expired")
-
-            return chansub
-
-    def _get_desktop_streams(self):
-        chansub = self._authenticate()
-
-        self.logger.debug("Fetching desktop streams")
-        res = self.usher.find(self.channel,
-                              password=self.options.get("password"),
-                              channel_subscription=chansub)
-
-        return self._parse_find_result(res, SWF_URL)
+        self.api = JustinTVAPI()
 
     def _get_video_streams(self):
-        if self.video_type == "b":
-            url = BROADCAST_URL.format(self.video_id)
-        elif self.video_type == "c":
-            url = CLIP_URL.format(self.video_id)
-        else:
-            raise NoStreamsError(self.url)
-
         try:
-            res = urlget(url)
+            if self.video_type == "b":
+                res = self.api.video_broadcast(self.video_id)
+            elif self.video_type == "c":
+                res = self.api.video_clip(self.video_id)
+            else:
+                return
         except PluginError as err:
             if "404 Client Error" in str(err):
-                raise NoStreamsError(self.url)
+                return
             else:
                 raise
 
