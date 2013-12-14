@@ -586,10 +586,8 @@ def setup_options():
                                        args.jtv_cookie)
 
     if args.jtv_legacy_names:
-        livestreamer.set_plugin_option("justintv", "legacy_names",
-                                       True)
-        livestreamer.set_plugin_option("twitch", "legacy_names",
-                                       True)
+        console.logger.warning("The option --jtv/twitch-legacy-names is "
+                               "deprecated since version 1.7.2.")
 
     if args.jtv_password:
         livestreamer.set_plugin_option("justintv", "password",

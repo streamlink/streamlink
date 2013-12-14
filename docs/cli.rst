@@ -385,12 +385,6 @@ Plugin options
     Specify Twitch/Justin.tv cookies to allow access to
     subscription channels, e.g ``'_twitch_session_id=xxxxxx; persistent=xxxxx;'``
 
-.. cmdoption:: --jtv-legacy-names, --twitch-legacy-names
-
-    Use the old stream names, e.g 720p, 1080p+.
-
-    .. versionadded:: 1.6.0
-
 .. cmdoption:: --jtv-password password, --twitch-password password
 
    Use this to access password protected streams.

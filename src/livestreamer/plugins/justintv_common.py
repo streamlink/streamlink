@@ -99,7 +99,6 @@ class PluginBase(Plugin):
     options = Options({
         "cookie": None,
         "password": None,
-        "legacy-names": False
     })
 
     @classmethod

@@ -180,8 +180,9 @@ pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
                             "to subscription channels, e.g. "
                             "'_twitch_session_id=xxxxxx; persistent=xxxxx'")
 pluginopt.add_argument("--jtv-legacy-names", "--twitch-legacy-names",
-                       help="Use the old stream names, e.g 720p, 1080p+. ",
-                       action="store_true")
+                       action="store_true",
+                       help="Use the old stream names, e.g 720p, 1080p+. "
+                            "Deprecated since version 1.7.2.")
 pluginopt.add_argument("--jtv-password", "--twitch-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
