@@ -1,3 +1,5 @@
+import re
+
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
 
@@ -7,6 +9,17 @@ from livestreamer.plugin.api.support_plugin import justintv_common
 
 JustinTVPluginBase = justintv_common.PluginBase
 JustinTVAPIBase = justintv_common.APIBase
+
+
+def time_to_offset(t):
+    match = re.match(r"((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?", t)
+    if match:
+        offset = int(match.group("minutes") or "0") * 60
+        offset += int(match.group("seconds") or "0")
+    else:
+        offset = 0
+
+    return offset
 
 
 class TwitchAPI(JustinTVAPIBase):
@@ -74,6 +87,12 @@ class Twitch(JustinTVPluginBase):
                 raise NoStreamsError(self.url)
             else:
                 raise
+
+        # Parse the "t" query parameter on broadcasts and adjust
+        # start offset if needed.
+        time_offset = self.params.get("t")
+        if time_offset and self.video_type == "a":
+            videos["start_offset"] = time_to_offset(self.params.get("t"))
 
         return self._create_playlist_streams(videos)
 

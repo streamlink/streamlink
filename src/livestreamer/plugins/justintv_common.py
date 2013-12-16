@@ -9,14 +9,14 @@ try:
 except ImportError:
     izip = zip
 
-from livestreamer.compat import urljoin
+from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import NoStreamsError, PluginError, StreamError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import (HTTPStream, HLSStream, FLVPlaylist,
                                  extract_flv_header_tags)
-from livestreamer.utils import (parse_json, res_json, res_xml, verifyjson,
-                                urlget)
+from livestreamer.utils import (parse_json, parse_qsd, res_json, res_xml,
+                                verifyjson, urlget)
 
 __all__ = ["PluginBase", "APIBase"]
 
@@ -118,8 +118,12 @@ class PluginBase(Plugin):
             self.video_type = match.get("video_type")
             self.video_id = match.get("video_id")
             self.usher = UsherService(match.get("domain"))
+
+            parsed = urlparse(url)
+            self.params = parse_qsd(parsed.query)
         except AttributeError:
             self.channel = None
+            self.params = None
             self.video_id = None
             self.video_type = None
             self.usher = None
