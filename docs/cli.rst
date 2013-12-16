@@ -281,12 +281,6 @@ Player options
 
     .. versionadded:: 1.6.0
 
-.. cmdoption:: -q, --quiet-player
-
-    Hide all player console output. This option does
-    nothing since version 1.4.3 since it is now the
-    default behaviour
-
 .. cmdoption:: -v, --verbose-player
 
     Show all player console output
