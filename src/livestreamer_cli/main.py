@@ -4,6 +4,7 @@ import re
 import requests
 import sys
 import signal
+import webbrowser
 
 from contextlib import closing
 from time import sleep
@@ -467,6 +468,27 @@ def print_plugins():
         console.msg("Loaded plugins: {0}", pluginlist_formatted)
 
 
+def authenticate_twitch_oauth():
+    """Opens a web browser to allow the user to grant Livestreamer
+       access to their Twitch account."""
+
+    client_id = "ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
+    redirect_uri = "http://livestreamer.tanuki.se/en/develop/twitch_oauth.html"
+    url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
+           "?response_type=token&client_id={0}&redirect_uri="
+           "{1}&scope=user_read").format(client_id, redirect_uri)
+
+    console.msg("Attempting to open a browser to let you authenticate "
+                "Livestreamer with Twitch")
+
+    try:
+        if not webbrowser.open_new_tab(url):
+            raise webbrowser.Error
+    except webbrowser.Error:
+        console.exit("Unable to open a web browser, try accessing this URL "
+                     "manually instead:\n{0}".format(url))
+
+
 def load_plugins(dirs):
     """Attempts to load plugins from a list of directories."""
 
@@ -595,6 +617,10 @@ def setup_options():
         livestreamer.set_plugin_option("twitch", "password",
                                        args.jtv_password)
 
+    if args.twitch_oauth_token:
+        livestreamer.set_plugin_option("twitch", "oauth_token",
+                                       args.twitch_oauth_token)
+
     if args.gomtv_cookie:
         livestreamer.set_plugin_option("gomtv", "cookie",
                                        args.gomtv_cookie)
@@ -652,5 +678,7 @@ def main():
         with ignored(KeyboardInterrupt):
             setup_options()
             handle_url()
+    elif args.twitch_oauth_authenticate:
+        authenticate_twitch_oauth()
     else:
         parser.print_help()

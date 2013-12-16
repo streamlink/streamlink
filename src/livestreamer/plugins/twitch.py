@@ -1,4 +1,5 @@
 from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.options import Options
 
 # Import base classes from a support plugin that must exist in the
 # same directory as this plugin.
@@ -21,11 +22,20 @@ class TwitchAPI(JustinTVAPIBase):
     def channel_viewer_info(self, channel):
         return self.call("/api/channels/{0}/viewer".format(channel))
 
+    def user(self):
+        return self.call("/kraken/user")
+
     def videos(self, video_id):
         return self.call("/api/videos/{0}".format(video_id))
 
 
 class Twitch(JustinTVPluginBase):
+    options = Options({
+        "cookie": None,
+        "oauth_token": None,
+        "password": None
+    })
+
     @classmethod
     def can_handle_url(self, url):
         return "twitch.tv" in url
@@ -34,6 +44,22 @@ class Twitch(JustinTVPluginBase):
         JustinTVPluginBase.__init__(self, url)
 
         self.api = TwitchAPI()
+
+    def _authenticate(self):
+        oauth_token = self.options.get("oauth_token")
+
+        if oauth_token and not self.api.oauth_token:
+            self.logger.info("Attempting to authenticate using OAuth token")
+            self.api.oauth_token = oauth_token
+            user = self.api.user().get("display_name")
+
+            if user:
+                self.logger.info("Successfully logged in as {0}", user)
+            else:
+                self.logger.error("Failed to authenticate, the access token "
+                                  "is not valid")
+        else:
+            return JustinTVPluginBase._authenticate(self)
 
     def _get_video_streams(self):
         self._authenticate()

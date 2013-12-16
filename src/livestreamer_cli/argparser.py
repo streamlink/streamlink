@@ -187,6 +187,13 @@ pluginopt.add_argument("--jtv-password", "--twitch-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
 
+pluginopt.add_argument("--twitch-oauth-token", metavar="token",
+                       help="Specify a OAuth token to allow Livestreamer to "
+                            "access Twitch using your account.")
+
+pluginopt.add_argument("--twitch-oauth-authenticate", action="store_true",
+                       help="Opens a web browser where you can grant "
+                            "Livestreamer access to your Twitch account.")
 
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to "
