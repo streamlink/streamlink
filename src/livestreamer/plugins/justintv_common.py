@@ -1,8 +1,7 @@
-import hmac
 import re
+import requests
 
-from collections import defaultdict
-from hashlib import sha1
+from itertools import starmap
 from random import random
 
 try:
@@ -10,42 +9,27 @@ try:
 except ImportError:
     izip = zip
 
-from livestreamer.compat import bytes, quote, urljoin
+from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import NoStreamsError, PluginError, StreamError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
-from livestreamer.stream import (HTTPStream, RTMPStream, HLSStream,
-                                 FLVPlaylist, extract_flv_header_tags)
-from livestreamer.utils import (urlget, urlresolve,
-                                swfverify, res_json, verifyjson)
+from livestreamer.stream import (HTTPStream, HLSStream, FLVPlaylist,
+                                 extract_flv_header_tags)
+from livestreamer.utils import (parse_json, parse_qsd, res_json, res_xml,
+                                verifyjson, urlget)
 
+__all__ = ["PluginBase", "APIBase"]
 
-__all__ = ["JustinTVBase"]
-
-HLS_TOKEN_KEY = b"Wd75Yj9sS26Lmhve"
-HLS_TOKEN_PATH = "/stream/iphone_token/{0}.json"
-HLS_PLAYLIST_PATH = "/stream/multi_playlist/{0}.m3u8?token={1}&hd=true&allow_cdn=true"
-USHER_FIND_PATH = "/find/{0}.json"
-REQUIRED_RTMP_KEYS = ("connect", "play", "type", "token")
 QUALITY_WEIGHTS = {
     "source": 1080,
     "high": 720,
     "medium": 480,
     "low": 240,
     "mobile": 120,
-
-    "mobile_source": 480,
-    "mobile_high": 330,
-    "mobile_medium": 260,
-    "mobile_low": 170,
-    "mobile_mobile": 120
 }
 URL_PATTERN = (r"http(s)?://([\w\.]+)?(?P<domain>twitch.tv|justin.tv)/(?P<channel>\w+)"
                r"(/(?P<video_type>[bc])/(?P<video_id>\d+))?")
-
-
-def valid_rtmp_stream(info):
-    return all(key in info for key in REQUIRED_RTMP_KEYS)
+USHER_SELECT_PATH = "/select/{0}.json"
 
 
 class UsherService(object):
@@ -56,59 +40,72 @@ class UsherService(object):
         path = path.format(*args, **kwargs)
         return urljoin("http://usher." + self.host, path)
 
-    def find(self, channel, password=None, **extra_params):
-        url = self.url(USHER_FIND_PATH, channel)
+    def select(self, channel, password=None, **extra_params):
+        url = self.url(USHER_SELECT_PATH, channel)
         params = dict(p=int(random() * 999999), type="any",
-                      private_code=password or "null", **extra_params)
+                      allow_source="true", private_code=password or "null",
+                      **extra_params)
 
-        return res_json(urlget(url, params=params),
-                        "stream info JSON")
-
-    def create_playlist_token(self, channel):
-        url = self.url(HLS_TOKEN_PATH, channel)
-        params = dict(type="iphone", allow_cdn="true")
-
-        try:
-            res = urlget(url, params=params, exception=IOError)
-        except IOError:
-            return None
-
-        json = res_json(res, "stream token JSON")
-
-        if not (isinstance(json, list) and json):
-            raise PluginError("Invalid JSON response")
-
-        token = verifyjson(json[0], "token")
-        hashed = hmac.new(HLS_TOKEN_KEY,
-                          bytes(token, "utf8"),
-                          sha1)
-
-        return "{0}:{1}".format(hashed.hexdigest(), token)
-
-    def create_playlist_url(self, channel):
-        token = self.create_playlist_token(channel)
-
-        if token:
-            return self.url(HLS_PLAYLIST_PATH, channel, quote(token))
+        return requests.Request(url=url, params=params).prepare().url
 
 
-class JustinTVBase(Plugin):
+class APIBase(object):
+    def __init__(self, host="justin.tv"):
+        self.host = host
+        self.oauth_token = None
+        self.session = requests.session()
+
+    def add_cookies(self, cookies):
+        for cookie in cookies.split(";"):
+            try:
+                name, value = cookie.split("=")
+            except ValueError:
+                continue
+
+            self.session.cookies[name.strip()] = value.strip()
+
+    def call(self, path, format="json", host=None, **extra_params):
+        params = dict(as3="t", **extra_params)
+
+        if self.oauth_token:
+            params["oauth_token"] = self.oauth_token
+
+        url = "https://api.{0}{1}.{2}".format(host or self.host, path, format)
+        res = urlget(url, params=params, session=self.session)
+
+        if format == "json":
+            return res_json(res)
+        elif format == "xml":
+            return res_xml(res)
+        else:
+            return res
+
+    def channel_access_token(self, channel):
+        res = self.call("/api/channels/{0}/access_token".format(channel),
+                        host="twitch.tv")
+
+        return res.get("sig"), res.get("token")
+
+    def token(self):
+        res = self.call("/api/viewer/token", host="twitch.tv")
+
+        return res.get("token")
+
+    def viewer_info(self):
+        return self.call("/api/viewer/info", host="twitch.tv")
+
+
+class PluginBase(Plugin):
     options = Options({
         "cookie": None,
         "password": None,
-        "legacy-names": False
     })
 
     @classmethod
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
         if weight:
-            if key.startswith("mobile_"):
-                group = "mobile_justintv"
-            else:
-                group = "justintv"
-
-            return weight, group
+            return weight, "justintv"
 
         return Plugin.stream_weight(key)
 
@@ -121,90 +118,15 @@ class JustinTVBase(Plugin):
             self.video_type = match.get("video_type")
             self.video_id = match.get("video_id")
             self.usher = UsherService(match.get("domain"))
+
+            parsed = urlparse(url)
+            self.params = parse_qsd(parsed.query)
         except AttributeError:
             self.channel = None
+            self.params = None
             self.video_id = None
             self.video_type = None
             self.usher = None
-
-    # The HTTP support in rtmpdump's SWF verification is extremely
-    # basic and does not support redirects, so we do the verifiction
-    # ourselves instead. Also caches the result so we don't need
-    # to do this every time.
-    def _verify_swf(self, url):
-        swfurl = urlresolve(url)
-
-        # For some reason the URL returned sometimes contain random
-        # user-agent/referer query parameters, let's strip them
-        # so we actually cache.
-        if "?" in url:
-            swfurl = swfurl[:swfurl.find("?")]
-
-        cache_key = "swf:{0}".format(swfurl)
-        swfhash, swfsize = self.cache.get(cache_key, (None, None))
-
-        if not (swfhash and swfsize):
-            self.logger.debug("Verifying SWF")
-            swfhash, swfsize = swfverify(swfurl)
-
-            self.cache.set(cache_key, (swfhash, swfsize))
-
-        return swfurl, swfhash, swfsize
-
-    def _parse_find_result(self, res, swf):
-        if not res:
-            raise NoStreamsError(self.url)
-
-        if not isinstance(res, list):
-            raise PluginError("Invalid JSON response")
-
-        streams = dict()
-        swfurl, swfhash, swfsize = self._verify_swf(swf)
-
-        for info in res:
-            video_height = info.get("video_height")
-            if self.options.get("legacy_names") and video_height:
-                name = "{0}p".format(video_height)
-
-                if info.get("type") == "live":
-                    name += "+"
-            else:
-                name = info.get("display") or info.get("type")
-
-            name = name.lower()
-            if not valid_rtmp_stream(info):
-                if info.get("needed_info") in ("chansub", "channel_subscription"):
-                    self.logger.warning("The quality '{0}' is not available "
-                                        "since it requires a subscription.",
-                                        name)
-                continue
-
-            url = "{0}/{1}".format(info.get("connect"),
-                                   info.get("play"))
-            params = dict(rtmp=url, live=True, jtv=info.get("token"),
-                          swfUrl=swfurl, swfhash=swfhash, swfsize=swfsize)
-
-            stream = RTMPStream(self.session, params)
-            streams[name] = stream
-
-        return streams
-
-    def _get_mobile_streams(self):
-        url = self.usher.create_playlist_url(self.channel)
-
-        if not url:
-            raise NoStreamsError(self.url)
-
-        try:
-            streams = HLSStream.parse_variant_playlist(self.session, url,
-                                                       nameprefix="mobile_")
-        except IOError as err:
-            if "404 Client Error" in str(err):
-                raise NoStreamsError(self.url)
-            else:
-                raise PluginError(err)
-
-        return streams
 
     def _create_playlist_streams(self, videos):
         start_offset = int(videos.get("start_offset", 0))
@@ -303,44 +225,81 @@ class JustinTVBase(Plugin):
 
     def _get_streams(self):
         if not self.channel:
-            raise NoStreamsError(self.url)
+            return
 
         if self.video_id:
             return self._get_video_streams()
         else:
             return self._get_live_streams()
 
-    def _get_live_streams(self, *args, **kwargs):
-        streams = defaultdict(list)
+    def _authenticate(self):
+        cookies = self.options.get("cookie")
 
-        if RTMPStream.is_usable(self.session):
-            try:
-                for name, stream in self._get_desktop_streams(*args, **kwargs).items():
-                    streams[name].append(stream)
+        if cookies and not self.api.oauth_token:
+            self.logger.info("Attempting to authenticate using cookies")
 
-            except PluginError as err:
-                self.logger.error("Error when fetching desktop streams: {0}",
-                                  err)
-            except NoStreamsError:
-                pass
-        else:
-            self.logger.warning("rtmpdump is required to access the desktop "
-                                "streams, but it could not be found")
+            self.api.add_cookies(cookies)
+            self.api.oauth_token = self.api.token()
+
+            viewer = self.api.viewer_info()
+            login = viewer.get("login")
+
+            if login:
+                self.logger.info("Successfully logged in as {0}", login)
+            else:
+                self.logger.error("Failed to authenticate, your cookies "
+                                  "may have expired")
+
+    def _access_token(self):
+        try:
+            sig, token = self.api.channel_access_token(self.channel)
+        except PluginError as err:
+            if "404 Client Error" in str(err):
+                raise NoStreamsError(self.url)
+            else:
+                raise
+
+        return sig, token
+
+    def _get_live_streams(self):
+        self._authenticate()
+        sig, token = self._access_token()
+        url = self.usher.select(self.channel,
+                                password=self.options.get("password"),
+                                nauthsig=sig,
+                                nauth=token)
 
         try:
-            for name, stream in self._get_mobile_streams(*args, **kwargs).items():
-                # Justin.tv streams have a iphone prefix, so let's
-                # strip it to keep it consistent with Twitch.
-                name = name.replace("iphone", "")
-                streams[name].append(stream)
+            streams = HLSStream.parse_variant_playlist(self.session, url)
+        except ValueError:
+            return
+        except IOError as err:
+            if "404 Client Error" in str(err):
+                return
+            else:
+                raise PluginError(err)
 
-        except PluginError as err:
-            self.logger.error("Error when fetching mobile streams: {0}",
-                              err)
-        except NoStreamsError:
+        try:
+            token = parse_json(token)
+            chansub = verifyjson(token, "chansub")
+            restricted_bitrates = verifyjson(chansub, "restricted_bitrates")
+
+            for name in filter(lambda n: n not in ("archives", "live"),
+                               restricted_bitrates):
+                self.logger.warning("The quality '{0}' is not available "
+                                    "since it requires a subscription.",
+                                    name)
+        except PluginError:
             pass
 
-        return streams
+        return dict(starmap(self._check_stream_name, streams.items()))
 
     def _get_video_streams(self):
         pass
+
+    def _check_stream_name(self, name, stream):
+        if name.startswith("iphone"):
+            name = name.replace("iphone", "")
+
+        return name, stream
+

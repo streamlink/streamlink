@@ -77,22 +77,59 @@ For a list of all the supported options see :ref:`cli-options`.
 Plugin specific usage
 ---------------------
 
-Authenticating with Twitch/Justin.tv
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It's possible to access subscription based content on Twitch/Justin.tv by letting Livestreamer use your web browser sessions cookies.
+Authenticating with Twitch
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Cookies should be specified in a key value list separated by a semicolon. In this case only the `_twitch_session_id` and `persistent` keys are required by Twitch/Justin.tv. For example:
+It's possible to access subscription content on Twitch by giving Livestreamer
+access to your account. There are two methods to authenticate Livestreamer
+to Twitch: Application authorization via OAuth or re-using your web browsers
+cookies.
+
+Using the OAuth method is recommended since it is easier and will never expire
+(unless access is revoked in your Twitch settings or a new access token is
+created), unlike cookies which may stop working if you log out in your browser.
+
+
+**Application authorization via OAuth**
+
+To authenticate Livestreamer with your Twitch account, simply run this command:
 
 .. sourcecode:: console
 
-    $ livestreamer --jtv-cookie "_twitch_session_id=xxxxxx; persistent=xxxxx" twitch.tv/ignproleague
+    $ livestreamer --twitch-oauth-authenticate
+
+
+This will open a web browser where Twitch will ask you if you want to give
+Livestreamer permission to access your account, then forward you to a page
+with further instructions.
+
+
+**Cookies**
+
+Cookies should be specified in a key value list separated by a semicolon.
+In this case only the `_twitch_session_id` and `persistent` keys are required
+by Twitch. For example:
+
+
+.. sourcecode:: console
+
+    $ livestreamer --twitch-cookie "_twitch_session_id=xxxxxx; persistent=xxxxx" twitch.tv/ignproleague
     [plugin.justintv][info] Attempting to authenticate using cookies
     [plugin.justintv][info] Successfully logged in as <username>
 
 
-Extracting cookies from your web browser varies from browser to browser, try googling "<brower name> view cookies".
-It's recommended to save these cookies in your :ref:`configuration file <cli-livestreamerrc>` rather than specifying them manually every time.
+Extracting cookies from your web browser varies from browser to browser, try
+googling "<browser name> view cookies".
+
+It's recommended to save these cookies in your
+:ref:`configuration file <cli-livestreamerrc>` rather than specifying them
+manually every time.
+
+.. note::
+
+    Authenticating with Justin.tv is not possible since their video system
+    overhaul, but may be a unintended bug and could be fixed in the future.
 
 
 Authenticating with GOMTV.net
@@ -118,7 +155,7 @@ This will cause Livestreamer to prompt you for your password and then attempt to
 
 The important part of this output is the last line, that's the cookies used to access this login session. To use these cookies pass them to the ``--gomtv-cookie`` option. It's recommended to save these cookies in your :ref:`configuration file <cli-livestreamerrc>` rather than specifying them manually every time.
 
-These instructions are for authenticating with a regular user account, if you are using a `Facebook <http://facebook.com/>`_ or `Twitter <http://twitter.com/>`_ account to authenticate you'll need to extract your cookies from your web browser instead. Extracting cookies from your web browser varies from browser to browser, try googling "<brower name> view cookies".
+These instructions are for authenticating with a regular user account, if you are using a Facebook or Twitter account to authenticate you'll need to extract your cookies from your web browser instead. Extracting cookies from your web browser varies from browser to browser, try googling "<browser name> view cookies".
 
 
 Advanced usage
@@ -243,12 +280,6 @@ Player options
     variables are available: filename. Default is ``'{filename}'``
 
     .. versionadded:: 1.6.0
-
-.. cmdoption:: -q, --quiet-player
-
-    Hide all player console output. This option does
-    nothing since version 1.4.3 since it is now the
-    default behaviour
 
 .. cmdoption:: -v, --verbose-player
 
@@ -385,17 +416,25 @@ Plugin options
     Specify Twitch/Justin.tv cookies to allow access to
     subscription channels, e.g ``'_twitch_session_id=xxxxxx; persistent=xxxxx;'``
 
-.. cmdoption:: --jtv-legacy-names, --twitch-legacy-names
-
-    Use the old stream names, e.g 720p, 1080p+.
-
-    .. versionadded:: 1.6.0
-
 .. cmdoption:: --jtv-password password, --twitch-password password
 
    Use this to access password protected streams.
 
    .. versionadded:: 1.6.0
+
+.. cmdoption:: --twitch-oauth-token token
+
+   Specify a OAuth token to allow Livestreamer to access Twitch using
+   your account.
+
+   .. versionadded:: 1.7.2
+
+.. cmdoption:: --twitch-oauth-authenticate
+
+   Opens a web browser where you can grant Livestreamer access to your
+   Twitch account.
+
+   .. versionadded:: 1.7.2
 
 .. cmdoption:: --gomtv-cookie cookie
 

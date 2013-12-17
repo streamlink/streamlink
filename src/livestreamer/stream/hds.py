@@ -699,7 +699,11 @@ class HDSStream(Stream):
 
     @classmethod
     def _pv_params(cls, pvswf, pv):
-        """Returns any parameters needed for Akamai HD player verification"""
+        """Returns any parameters needed for Akamai HD player verification.
+
+        Algorithm originally documented by KSV, source:
+        http://stream-recorder.com/forum/showpost.php?p=43761&postcount=13
+        """
 
         (data, hdntl) = pv.split(";")
         cache = Cache(filename="stream.json")

@@ -1,54 +1,30 @@
-import requests
+import re
 
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.options import Options
-from livestreamer.stream import HLSStream
-from livestreamer.utils import res_json, urlget
 
-# Import base class from a support plugin that must exist in the
+# Import base classes from a support plugin that must exist in the
 # same directory as this plugin.
 from livestreamer.plugin.api.support_plugin import justintv_common
 
-
-SWF_URL = "http://www-cdn.jtvnw.net/swflibs/TwitchPlayer.swf"
-TWITCH_API_HOST = "https://api.twitch.tv"
-TWITCH_HLS_PLAYLIST = "http://usher.twitch.tv/api/channel/hls/{0}.m3u8?allow_source=true&token={1}&sig={2}"
+JustinTVPluginBase = justintv_common.PluginBase
+JustinTVAPIBase = justintv_common.APIBase
 
 
-class TwitchAPI(object):
+def time_to_offset(t):
+    match = re.match(r"((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?", t)
+    if match:
+        offset = int(match.group("minutes") or "0") * 60
+        offset += int(match.group("seconds") or "0")
+    else:
+        offset = 0
+
+    return offset
+
+
+class TwitchAPI(JustinTVAPIBase):
     def __init__(self):
-        self.session = requests.session()
-        self.oauth_token = None
-
-    def add_cookies(self, cookies):
-        for cookie in cookies.split(";"):
-            try:
-                name, value = cookie.split("=")
-            except ValueError:
-                continue
-
-            self.session.cookies[name.strip()] = value.strip()
-
-    def call(self, path, **extra_params):
-        params = dict(as3="t", **extra_params)
-
-        if self.oauth_token:
-            params["oauth_token"] = self.oauth_token
-
-        url = "{0}{1}.json".format(TWITCH_API_HOST, path)
-        res = urlget(url, params=params, session=self.session)
-
-        return res_json(res)
-
-    def token(self):
-        res = self.call("/api/viewer/token")
-
-        return res.get("token")
-
-    def channel_access_token(self, channel):
-        res = self.call("/api/channels/{0}/access_token".format(channel))
-
-        return res.get("sig"), res.get("token")
+        JustinTVAPIBase.__init__(self, host="twitch.tv")
 
     def channel_info(self, channel):
         return self.call("/api/channels/{0}".format(channel))
@@ -59,16 +35,18 @@ class TwitchAPI(object):
     def channel_viewer_info(self, channel):
         return self.call("/api/channels/{0}/viewer".format(channel))
 
-    def viewer_info(self):
-        return self.call("/api/viewer/info")
+    def user(self):
+        return self.call("/kraken/user")
 
     def videos(self, video_id):
         return self.call("/api/videos/{0}".format(video_id))
 
 
-class Twitch(justintv_common.JustinTVBase):
+class Twitch(JustinTVPluginBase):
     options = Options({
         "cookie": None,
+        "oauth_token": None,
+        "password": None
     })
 
     @classmethod
@@ -76,68 +54,25 @@ class Twitch(justintv_common.JustinTVBase):
         return "twitch.tv" in url
 
     def __init__(self, url):
-        justintv_common.JustinTVBase.__init__(self, url)
+        JustinTVPluginBase.__init__(self, url)
 
         self.api = TwitchAPI()
 
     def _authenticate(self):
-        cookies = self.options.get("cookie")
+        oauth_token = self.options.get("oauth_token")
 
-        if cookies and not self.api.oauth_token:
-            self.logger.info("Attempting to authenticate using cookies")
+        if oauth_token and not self.api.oauth_token:
+            self.logger.info("Attempting to authenticate using OAuth token")
+            self.api.oauth_token = oauth_token
+            user = self.api.user().get("display_name")
 
-            self.api.add_cookies(cookies)
-            self.api.oauth_token = self.api.token()
-
-            viewer = self.api.viewer_info()
-            login = viewer.get("login")
-
-            if login:
-                self.logger.info("Successfully logged in as {0}", login)
+            if user:
+                self.logger.info("Successfully logged in as {0}", user)
             else:
-                self.logger.error("Failed to authenticate, your cookies may "
-                                  "have expired")
-
-    def _access_token(self):
-        try:
-            sig, token = self.api.channel_access_token(self.channel)
-        except PluginError as err:
-            if "404 Client Error" in str(err):
-                raise NoStreamsError(self.url)
-            else:
-                raise
-
-        return sig, token
-
-    def _get_mobile_streams(self, sig, token):
-        url = TWITCH_HLS_PLAYLIST.format(self.channel, token, sig)
-
-        try:
-            streams = HLSStream.parse_variant_playlist(self.session, url,
-                                                       nameprefix="mobile_")
-        except IOError as err:
-            if "404 Client Error" in str(err):
-                raise NoStreamsError(self.url)
-            else:
-                raise PluginError(err)
-
-        return streams
-
-    def _get_desktop_streams(self, sig, token):
-        self.logger.debug("Fetching desktop streams")
-        res = self.usher.find(self.channel,
-                              password=self.options.get("password"),
-                              nauthsig=sig,
-                              nauth=token)
-
-        return self._parse_find_result(res, SWF_URL)
-
-    def _get_live_streams(self):
-        self._authenticate()
-
-        sig, token = self._access_token()
-
-        return justintv_common.JustinTVBase._get_live_streams(self, sig, token)
+                self.logger.error("Failed to authenticate, the access token "
+                                  "is not valid")
+        else:
+            return JustinTVPluginBase._authenticate(self)
 
     def _get_video_streams(self):
         self._authenticate()
@@ -152,6 +87,12 @@ class Twitch(justintv_common.JustinTVBase):
                 raise NoStreamsError(self.url)
             else:
                 raise
+
+        # Parse the "t" query parameter on broadcasts and adjust
+        # start offset if needed.
+        time_offset = self.params.get("t")
+        if time_offset and self.video_type == "a":
+            videos["start_offset"] = time_to_offset(self.params.get("t"))
 
         return self._create_playlist_streams(videos)
 

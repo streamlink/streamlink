@@ -4,6 +4,7 @@ import re
 import requests
 import sys
 import signal
+import webbrowser
 
 from contextlib import closing
 from time import sleep
@@ -19,8 +20,7 @@ from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import (NamedPipe, HTTPServer, ignored, find_default_player,
-                    stream_to_url)
+from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 
@@ -63,9 +63,8 @@ def create_output():
         out = FileOutput(fd=stdout)
     else:
         http = namedpipe = None
-        player = args.player or find_default_player()
 
-        if not player:
+        if not args.player:
             console.exit("The default player (VLC) does not seem to be "
                          "installed. You must specify the path to a player "
                          "executable with --player.")
@@ -81,8 +80,8 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
-        console.logger.info("Starting player: {0}", player)
-        out = PlayerOutput(player, args=args.player_args,
+        console.logger.info("Starting player: {0}", args.player)
+        out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http)
@@ -116,18 +115,23 @@ def output_stream_http(plugin, streams):
     """Continuously output the stream over HTTP."""
 
     server = create_http_server()
-    player_cmd = args.player or find_default_player()
-    player = PlayerOutput(player_cmd, args=args.player_args,
+
+    if not args.player:
+        console.exit("The default player (VLC) does not seem to be "
+                     "installed. You must specify the path to a player "
+                     "executable with --player.")
+
+    player = PlayerOutput(args.player, args=args.player_args,
                           filename=server.url,
                           quiet=not args.verbose_player)
     stream_names = [resolve_stream_name(streams, s) for s in args.stream]
 
     try:
-        console.logger.info("Starting player: {0}", player_cmd)
+        console.logger.info("Starting player: {0}", args.player)
         player.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})",
-                     player_cmd, err)
+                     args.player, err)
 
     for req in iter_http_requests(server, player):
         user_agent = req.headers.get("User-Agent") or "unknown player"
@@ -175,17 +179,16 @@ def output_stream_http(plugin, streams):
 def output_stream_passthrough(stream):
     """Prepares a filename to be passed to the player."""
 
-    player = args.player or find_default_player()
     filename = '"{0}"'.format(stream_to_url(stream))
-    out = PlayerOutput(player, args=args.player_args,
+    out = PlayerOutput(args.player, args=args.player_args,
                        filename=filename, call=True,
                        quiet=not args.verbose_player)
 
     try:
-        console.logger.info("Starting player: {0}", player)
+        console.logger.info("Starting player: {0}", args.player)
         out.open()
     except OSError as err:
-        console.exit("Failed to start player: {0} ({1})", player, err)
+        console.exit("Failed to start player: {0} ({1})", args.player, err)
         return False
 
     return True
@@ -465,6 +468,27 @@ def print_plugins():
         console.msg("Loaded plugins: {0}", pluginlist_formatted)
 
 
+def authenticate_twitch_oauth():
+    """Opens a web browser to allow the user to grant Livestreamer
+       access to their Twitch account."""
+
+    client_id = "ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
+    redirect_uri = "http://livestreamer.tanuki.se/en/develop/twitch_oauth.html"
+    url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
+           "?response_type=token&client_id={0}&redirect_uri="
+           "{1}&scope=user_read").format(client_id, redirect_uri)
+
+    console.msg("Attempting to open a browser to let you authenticate "
+                "Livestreamer with Twitch")
+
+    try:
+        if not webbrowser.open_new_tab(url):
+            raise webbrowser.Error
+    except webbrowser.Error:
+        console.exit("Unable to open a web browser, try accessing this URL "
+                     "manually instead:\n{0}".format(url))
+
+
 def load_plugins(dirs):
     """Attempts to load plugins from a list of directories."""
 
@@ -584,16 +608,18 @@ def setup_options():
                                        args.jtv_cookie)
 
     if args.jtv_legacy_names:
-        livestreamer.set_plugin_option("justintv", "legacy_names",
-                                       True)
-        livestreamer.set_plugin_option("twitch", "legacy_names",
-                                       True)
+        console.logger.warning("The option --jtv/twitch-legacy-names is "
+                               "deprecated since version 1.7.2.")
 
     if args.jtv_password:
         livestreamer.set_plugin_option("justintv", "password",
                                        args.jtv_password)
         livestreamer.set_plugin_option("twitch", "password",
                                        args.jtv_password)
+
+    if args.twitch_oauth_token:
+        livestreamer.set_plugin_option("twitch", "oauth_token",
+                                       args.twitch_oauth_token)
 
     if args.gomtv_cookie:
         livestreamer.set_plugin_option("gomtv", "cookie",
@@ -652,5 +678,7 @@ def main():
         with ignored(KeyboardInterrupt):
             setup_options()
             handle_url()
+    elif args.twitch_oauth_authenticate:
+        authenticate_twitch_oauth()
     else:
         parser.print_help()

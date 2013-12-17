@@ -82,6 +82,15 @@ def absolute_url(baseurl, url):
         return url
 
 
+def prepend_www(url):
+    """Changes google.com to www.google.com"""
+    parsed = urlparse(url)
+    if parsed.netloc.split(".")[0] != "www":
+        return parsed.scheme + "://www." + parsed.netloc + parsed.path
+    else:
+        return url
+
+
 def parse_json(data, jsontype="JSON", exception=PluginError):
     try:
         jsondata = json.loads(data)
@@ -162,4 +171,4 @@ def rtmpparse(url):
 
 __all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
-           "parse_xml", "res_xml", "rtmpparse"]
+           "parse_xml", "res_xml", "rtmpparse", "prepend_www"]

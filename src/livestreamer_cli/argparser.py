@@ -4,7 +4,7 @@ from livestreamer import __version__ as livestreamer_version
 
 from .constants import (EXAMPLE_USAGE, STREAM_PASSTHROUGH,
                         DEFAULT_PLAYER_ARGUMENTS)
-
+from .utils import find_default_player
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
@@ -75,6 +75,7 @@ parser.add_argument("--yes-run-as-root", action="store_true",
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",
+                       default=find_default_player(),
                        help="Player command-line to start, by default VLC "
                             "will be used if it is installed.")
 playeropt.add_argument("-a", "--player-args", metavar="arguments",
@@ -83,9 +84,7 @@ playeropt.add_argument("-a", "--player-args", metavar="arguments",
                             "formatting variables are available: filename. "
                             "Default is '{0}'".format(DEFAULT_PLAYER_ARGUMENTS))
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
-                       help="Hide all player console output. This option does "
-                            "nothing since version 1.4.3 since it is now the "
-                            "default behaviour")
+                       help=argparse.SUPPRESS)
 playeropt.add_argument("-v", "--verbose-player", action="store_true",
                        help="Show all player console output")
 playeropt.add_argument("-n", "--player-fifo", "--fifo", action="store_true",
@@ -179,12 +178,18 @@ pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
                             "to subscription channels, e.g. "
                             "'_twitch_session_id=xxxxxx; persistent=xxxxx'")
 pluginopt.add_argument("--jtv-legacy-names", "--twitch-legacy-names",
-                       help="Use the old stream names, e.g 720p, 1080p+. ",
-                       action="store_true")
+                       action="store_true", help=argparse.SUPPRESS)
 pluginopt.add_argument("--jtv-password", "--twitch-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
 
+pluginopt.add_argument("--twitch-oauth-token", metavar="token",
+                       help="Specify a OAuth token to allow Livestreamer to "
+                            "access Twitch using your account.")
+
+pluginopt.add_argument("--twitch-oauth-authenticate", action="store_true",
+                       help="Opens a web browser where you can grant "
+                            "Livestreamer access to your Twitch account.")
 
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to "

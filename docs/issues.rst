@@ -18,45 +18,6 @@ you can pass to some common players:
 Use the ``--player`` option in Livestreamer to pass these options to the player.
 
 
-"Installed rtmpdump does not support ``--jtv`` argument"
---------------------------------------------------------
-
-Your rtmpdump/librtmp is not recent enough. Even though it may
-seeem like you have the most recent release (v2.4) it may not be
-the correct version. Because of odd release-cycle by the rtmpdump
-team, distros may be shipping versions of 2.4 that do not support
-the ``--jtv`` parameter.
-
-On Debian/Ubuntu it is recommended to use the official packages
-of *librtmp0* and *rtmpdump* version *2.4+20111222.git4e06e21* or newer.
-
-If the correct version of rtmpdump is installed but it's not in your ``$PATH``
-you can specify the location with ``--rtmpdump /path/to/rtmpdump``.
-
-If upgrading to a more recent version is not an option, most channels
-also have HLS streams available, e.g. *mobile_high*.
-
-
-"Failed to read data from stream" when trying to play Twitch/Justin.tv streams
-------------------------------------------------------------------------------
-
-This may be caused by rtmpdump crashing because of being linked with
-a incorrect version of libtmp. Make sure both librtmp and rtmpdump are
-the same version.
-
-If you are building rtmpdump yourself it may link with a existing
-(probably old) version of librtmp. You can avoid this by building a static
-version of rtmpdump, using this make command:
-
-.. code-block:: console
-
-    $ make SHARED=
-
-If this does not help you can get more information by running with ``--errorlog``,
-and then look for a log file created in ``/tmp`` that will contain any error messages
-from rtmpdump.
-
-
 Player specific issues
 ----------------------
 

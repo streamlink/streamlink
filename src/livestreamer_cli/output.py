@@ -113,18 +113,21 @@ class PlayerOutput(Output):
         return shlex.split(cmd) + shlex.split(args)
 
     def _open(self):
-        if self.call and self.filename:
-            self._open_call()
-        else:
-            self._open_subprocess()
+        try:
+            if self.call and self.filename:
+                self._open_call()
+            else:
+                self._open_subprocess()
+        finally:
+            if self.quiet:
+                # Output streams no longer needed in parent process
+                self.stdout.close()
+                self.stderr.close()
 
     def _open_call(self):
-        try:
-            subprocess.call(self._create_arguments(),
-                            stdout=self.stdout,
-                            stderr=self.stderr)
-        finally:
-            self._close_out()
+        subprocess.call(self._create_arguments(),
+                        stdout=self.stdout,
+                        stderr=self.stderr)
 
     def _open_subprocess(self):
         # Force bufsize=0 on all Python versions to avoid writing the
@@ -156,14 +159,7 @@ class PlayerOutput(Output):
         if self.kill:
             with ignored(Exception):
                 self.player.kill()
-
-        self._close_out()
-
-    def _close_out(self):
-        """Close the output streams if needed"""
-        if self.quiet:
-            self.stdout.close()
-            self.stderr.close()
+        self.player.wait()
 
     def _write(self, data):
         if self.namedpipe:
