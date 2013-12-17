@@ -1,3 +1,25 @@
+Version 1.7.2
+-------------
+
+CLI:
+ - The ``--twitch-legacy-names`` option is now deprecated.
+ - Added ``--twitch-oauth-authenticate`` and ``--twitch-oauth-token`` options.
+
+Plugins:
+ - filmon: Added quality weights. (#239)
+ - filmon_us: Added support for VODs, patch by John Peterson. (#237)
+ - twitch: Updated for service changes. No more RTMP streams, only HLS.
+ - twitch: Removed mobile streams since they are the same as the new desktop streams.
+ - twitch: Removed the legacy names option.
+ - twitch: Added support for OAuth2 authentication.
+ - twitch: Added support for the t=00m0s parameter in VOD URLs.
+
+Bug fixes:
+ - Always wait for the player process to exit, patch by Martin Panter. (#234)
+ - Fixed potential deadlocking when using named pipe, patch by Martin Panter. (#236)
+ - Fixed issue with spaces in default player path, patch by John Peterson. (#237)
+
+
 Version 1.7.1
 -------------
 
