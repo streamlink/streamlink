@@ -59,26 +59,41 @@ class HLSStreamFiller(Thread):
         iv = key.iv or num_to_iv(sequence)
         return AES.new(self.key_data, AES.MODE_CBC, iv)
 
+    def create_request_params(self, sequence):
+        request_params = dict(self.stream.request_params)
+        headers = request_params.pop("headers", {})
+
+        if sequence.segment.byterange:
+            bytes_start = self.byterange_offsets[sequence.segment.uri]
+            if sequence.segment.byterange.offset is not None:
+                bytes_start = sequence.segment.byterange.offset
+
+            bytes_end = bytes_start + min(sequence.segment.byterange.range - 1, 0)
+            headers["Range"] = "bytes={0}-{1}".format(bytes_start,
+                                                      bytes_end)
+            self.byterange_offsets[sequence.segment.uri] = bytes_end + 1
+
+        request_params["headers"] = headers
+
+        return request_params
+
     def download_sequence(self, sequence):
-        try:
-            request_params = dict(self.stream.request_params)
-            headers = request_params.pop("headers", {})
-            if sequence.segment.byterange:
-                bytes_start = self.byterange_offsets[sequence.segment.uri]
-                if sequence.segment.byterange.offset is not None:
-                    bytes_start = sequence.segment.byterange.offset
+        request_params = self.create_request_params(sequence)
+        retries = 3
+        res = None
 
-                bytes_end = bytes_start + min(sequence.segment.byterange.range - 1, 0)
-                headers["Range"] = "bytes={0}-{1}".format(bytes_start,
-                                                          bytes_end)
-                self.byterange_offsets[sequence.segment.uri] = bytes_end + 1
+        while retries and self.running:
+            try:
+                res = urlget(sequence.segment.uri, stream=True,
+                             exception=IOError, timeout=10, **request_params)
+                break
+            except IOError as err:
+                self.stream.logger.error("Failed to open sequence {0}: {1}",
+                                         sequence.num, err)
 
-            request_params["headers"] = headers
-            res = urlget(sequence.segment.uri, stream=True,
-                         exception=IOError, **request_params)
-        except IOError as err:
-            self.stream.logger.error("Failed to open sequence {0}: {1}",
-                                     sequence.num, str(err))
+            retries -= 1
+
+        if not res:
             return
 
         try:
