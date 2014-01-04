@@ -367,7 +367,7 @@ class HLSStream(HTTPStream):
             stream_name = (names.get(namekey) or names.get("name") or
                            names.get("pixels") or names.get("bitrate"))
 
-            if not stream_name:
+            if not stream_name or stream_name in streams:
                 continue
 
             stream = HLSStream(session_, playlist.uri, **request_params)
