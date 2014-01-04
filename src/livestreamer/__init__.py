@@ -14,7 +14,7 @@ __title__ = "livestreamer"
 __version__ = "1.7.2"
 __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
-__copyright__ = "Copyright 2011-2013 Christopher Rosell"
+__copyright__ = "Copyright 2011-2014 Christopher Rosell"
 __credits__ = ["Christopher Rosell", "Athanasios Oikonomou",
                "Gaspard Jankowiak", "Dominik Dabrowski",
                "Toad King", "Niall McAndrew", "Daniel Wallace",
