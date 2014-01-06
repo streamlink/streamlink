@@ -233,7 +233,11 @@ class HLSStreamIO(io.IOBase):
         self.playlist_reload_time = time()
 
         res = urlget(self.url, exception=IOError, **self.request_params)
-        playlist = hls_playlist.load(res.text, base_uri=self.url)
+
+        try:
+            playlist = hls_playlist.load(res.text, base_uri=self.url)
+        except ValueError as err:
+            raise IOError("Failed to parse playlist: {0}".format(err))
 
         media_sequence = playlist.media_sequence or 0
         sequences = [Sequence(media_sequence + i, s)
@@ -342,7 +346,11 @@ class HLSStream(HTTPStream):
     def parse_variant_playlist(cls, session_, url, namekey="name",
                                nameprefix="", **request_params):
         res = urlget(url, exception=IOError, **request_params)
-        parser = hls_playlist.load(res.text, base_uri=url)
+
+        try:
+            parser = hls_playlist.load(res.text, base_uri=url)
+        except ValueError as err:
+            raise IOError("Failed to parse playlist: {0}".format(err))
 
         streams = {}
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):

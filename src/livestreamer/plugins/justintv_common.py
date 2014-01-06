@@ -271,10 +271,9 @@ class PluginBase(Plugin):
 
         try:
             streams = HLSStream.parse_variant_playlist(self.session, url)
-        except ValueError:
-            return
         except IOError as err:
-            if "404 Client Error" in str(err):
+            err = str(err)
+            if "404 Client Error" in err or "Failed to parse playlist" in err:
                 return
             else:
                 raise PluginError(err)
