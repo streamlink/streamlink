@@ -583,6 +583,11 @@ def setup_options():
     else:
         gomtv_password = args.gomtv_password
 
+    if args.crunchyroll_username and not args.crunchyroll_password:
+        crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
+    else:
+        crunchyroll_password = args.crunchyroll_password
+
     livestreamer.set_option("errorlog", args.errorlog)
 
     if args.rtmpdump:
@@ -632,6 +637,17 @@ def setup_options():
     if gomtv_password:
         livestreamer.set_plugin_option("gomtv", "password",
                                        gomtv_password)
+
+    if args.crunchyroll_username:
+        livestreamer.set_plugin_option("crunchyroll", "username",
+                                       args.crunchyroll_username)
+
+    if crunchyroll_password:
+        livestreamer.set_plugin_option("crunchyroll", "password",
+                                       crunchyroll_password)
+    if args.crunchyroll_purge_credentials:
+        livestreamer.set_plugin_option("crunchyroll", "purge_credentials",
+                                       args.crunchyroll_purge_credentials)
 
 
 def check_root():
