@@ -92,8 +92,8 @@ class Twitch(JustinTVPluginBase):
         # Parse the "t" query parameter on broadcasts and adjust
         # start offset if needed.
         time_offset = self.params.get("t")
-        if time_offset and self.video_type == "a":
-            videos["start_offset"] = time_to_offset(self.params.get("t"))
+        if time_offset:
+            videos["start_offset"] += time_to_offset(self.params.get("t"))
 
         return self._create_playlist_streams(videos)
 
