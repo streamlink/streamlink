@@ -259,6 +259,11 @@ class UHSStream(Stream):
         self.provider = provider
         self.stream_index = stream_index
 
+    def __repr__(self):
+        return ("<UHSStream({0!r}, {1!r}, "
+                "{2!r}, {3!r})>").format(self.channel_id, self.page_url,
+                                         self.provider, self.stream_index)
+
     def __json__(self):
         return dict(channel_id=self.channel_id,
                     page_url=self.page_url,
