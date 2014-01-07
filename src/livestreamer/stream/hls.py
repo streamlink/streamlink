@@ -1,5 +1,7 @@
 import io
 
+import requests
+
 from collections import defaultdict, namedtuple
 from time import time
 from threading import Lock, Thread, Timer
@@ -16,7 +18,6 @@ except ImportError:
     CAN_DECRYPT = False
 
 from . import hls_playlist
-from .stream import Stream
 from .http import HTTPStream
 from ..buffers import RingBuffer
 from ..compat import queue
@@ -321,9 +322,7 @@ class HLSStream(HTTPStream):
     __shortname__ = "hls"
 
     def __init__(self, session_, url, **args):
-        Stream.__init__(self, session_)
-
-        self.args = dict(url=url, **args)
+        HTTPStream.__init__(self, session_, url, **args)
 
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
@@ -345,6 +344,9 @@ class HLSStream(HTTPStream):
     @classmethod
     def parse_variant_playlist(cls, session_, url, namekey="name",
                                nameprefix="", **request_params):
+        if "session" not in request_params:
+            request_params["session"] = requests.session()
+
         res = urlget(url, exception=IOError, **request_params)
 
         try:
