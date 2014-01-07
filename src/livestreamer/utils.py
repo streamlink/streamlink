@@ -17,16 +17,23 @@ from .exceptions import PluginError
 SWF_KEY = b"Genuine Adobe Flash Player 001"
 
 
-def urlopen(url, method="get", exception=PluginError, session=None,
-            timeout=20, *args, **kw):
-    if "data" in kw and kw["data"] is not None:
-        method = "post"
+def urlget(url, *args, **kwargs):
+    data = kwargs.pop("data", None)
+    exception = kwargs.pop("exception", PluginError)
+    method = kwargs.pop("method", "GET")
+    session = kwargs.pop("session", None)
+    timeout = kwargs.pop("timeout", 20)
+
+    if data is not None:
+        method = "POST"
 
     try:
         if session:
-            res = session.request(method, url, timeout=timeout, *args, **kw)
+            res = session.request(method, url, timeout=timeout, data=data,
+                                  *args, **kwargs)
         else:
-            res = requests.request(method, url, timeout=timeout, *args, **kw)
+            res = requests.request(method, url, timeout=timeout, data=data,
+                                   *args, **kwargs)
 
         res.raise_for_status()
     except (requests.exceptions.RequestException, IOError) as rerr:
@@ -37,10 +44,8 @@ def urlopen(url, method="get", exception=PluginError, session=None,
 
     return res
 
-
-def urlget(url, stream=False, *args, **kw):
-    return urlopen(url, method="get", stream=stream,
-                   *args, **kw)
+# Keep compatiblity
+urlopen = urlget
 
 
 def urlresolve(url):
