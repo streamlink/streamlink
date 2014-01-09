@@ -112,6 +112,15 @@ class PlayerOutput(Output):
 
         return shlex.split(cmd) + shlex.split(args)
 
+    def _create_env(self):
+        env = dict(os.environ)
+
+        # Make sure we don't pass our proxy settings to the player
+        env.pop("http_proxy", None)
+        env.pop("https_proxy", None)
+
+        return env
+
     def _open(self):
         try:
             if self.call and self.filename:
@@ -133,6 +142,7 @@ class PlayerOutput(Output):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
         self.player = subprocess.Popen(self._create_arguments(),
+                                       env=self._create_env(),
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
