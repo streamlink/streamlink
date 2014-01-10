@@ -203,4 +203,16 @@ pluginopt.add_argument("--gomtv-password", metavar="password",
                             "streams (if left blank you will be prompted)",
                        nargs="?", const=True, default=None)
 
+pluginopt.add_argument("--crunchyroll-username", metavar="username",
+                       help="Specify Crunchyroll username to allow access to "
+                            "restricted streams")
+pluginopt.add_argument("--crunchyroll-password", metavar="password",
+                       help="Specify Crunchyroll password to allow access to "
+                            "restricted streams (if left blank you will be "
+                            "prompted)",
+                       nargs="?", const=True, default=None)
+pluginopt.add_argument("--crunchyroll-purge-credentials", action="store_true",
+                       help="Purge Crunchyroll credentials to initiate a new "
+                       "session and reauthenticate.")
+
 __all__ = ["parser"]
