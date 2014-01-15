@@ -283,7 +283,7 @@ class PluginBase(Plugin):
             chansub = verifyjson(token, "chansub")
             restricted_bitrates = verifyjson(chansub, "restricted_bitrates")
 
-            for name in filter(lambda n: n not in ("archives", "live"),
+            for name in filter(lambda n: not re.match(r"(.+_)?archives|live", n),
                                restricted_bitrates):
                 self.logger.warning("The quality '{0}' is not available "
                                     "since it requires a subscription.",
