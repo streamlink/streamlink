@@ -421,8 +421,10 @@ Stream options
 .. cmdoption:: --ringbuffer-size size
 
     Specify a maximum size (bytes) for the ringbuffer used
-    by some stream types, default is ``32768``. Used by RTMP
-    and HLS. Use ``--hds-fragment-buffer`` for HDS.
+    by some stream types, default is ``16777216`` (16MB).
+
+    HDS streams manages this value automatically, use
+    ``--hds-fragment-buffer`` to change it
 
 
 Plugin options

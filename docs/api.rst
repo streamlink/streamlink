@@ -95,7 +95,7 @@ Session options
   default: ``10``
 
 **ringbuffer-size**
-  The size of the internal ring buffer used for some stream types, default: ``32768``
+  The size of the internal ring buffer used for some stream types, default: ``16777216``
 
 
 Plugins
