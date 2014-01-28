@@ -210,7 +210,16 @@ class Crunchyroll(plugin.Plugin):
             self.cache.get('session_id'), self.cache.get('auth'))
 
         self.logger.debug('Creating session...')
-        expires = api.start_session(self._get_device_id())
+        try:
+            expires = api.start_session(self._get_device_id())
+        except APIError as e:
+            if e.message == 'Unauthenticated request':
+                self.logger.info('Aparently credentials got debunked')
+                api = CrunchyrollAPI()
+                expires = api.start_session(self._get_device_id())
+            else:
+                raise e
+
         self.cache.set(
             'session_id',
             api.session_id,
