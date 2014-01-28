@@ -167,7 +167,7 @@ class Crunchyroll(plugin.Plugin):
             )['stream_data']
         except APIError as e:
             raise exceptions.PluginError(
-                'Media lookup error: {0}'.format(e.message))
+                'Media lookup error: {0}'.format(e.args[0]))
 
         if stream_data:
             streams_raw = stream_data['streams']
@@ -213,7 +213,7 @@ class Crunchyroll(plugin.Plugin):
         try:
             expires = api.start_session(self._get_device_id())
         except APIError as e:
-            if e.message == 'Unauthenticated request':
+            if e.args[0] == 'Unauthenticated request':
                 self.logger.info('Aparently credentials got debunked')
                 api = CrunchyrollAPI()
                 expires = api.start_session(self._get_device_id())
@@ -246,7 +246,7 @@ class Crunchyroll(plugin.Plugin):
                 self.logger.info('Success!')
             except APIError as e:
                 raise exceptions.PluginError(
-                    'Authentication error: {0}'.format(e.message))
+                    'Authentication error: {0}'.format(e.args[0]))
         else:
             self.logger.warning(
                 "No authentication provided, you won't be able to access "
