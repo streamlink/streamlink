@@ -54,7 +54,7 @@ class Hitbox(Plugin):
         streams = {}
         if live:
             for bitrate in bitrates:
-                connection_provider = verifyjson(clip, "connectionProvider")
+                connection_provider = clip.get("connectionProvider", "clustering")
                 plugins = verifyjson(json, "plugins")
                 provider_plugin = verifyjson(plugins, connection_provider)
                 swf = verifyjson(provider_plugin, "url")
