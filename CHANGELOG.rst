@@ -1,3 +1,23 @@
+Version 1.7.3
+-------------
+
+Plugins:
+ - Added plugin for hitbox.tv, patch by t0mm0. (#248)
+ - Added plugin for Cruncyroll, patch by Agustín Carrasco. (#262)
+ - twitch: Added support for hours in ?t=... on VODs.
+ - twitch: Added support for ?t=... on VOD highlights.
+
+Streams:
+ - hls: Now allows retries on failed segment fetch.
+
+Bug fixes:
+ - cli: Don't pass our proxy settings to the player. (#260)
+ - hds: Now uses global height as stream name if needed when parsing manifests.
+ - hls: Always use first stream for each quality in variant playlists. (#256)
+ - hls: Now returns correct exception on playlist parser errors.
+ - hls: Now remembers cookies set by variant playlist response. (#258)
+
+
 Version 1.7.2
 -------------
 
