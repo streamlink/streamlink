@@ -1,34 +1,75 @@
+from collections import deque
+from io import BytesIO
 from threading import Event, Lock
 
-from .compat import bytes
+
+class Chunk(BytesIO):
+    """A single chunk, part of the buffer."""
+
+    def __init__(self, buf):
+        self.length = len(buf)
+        BytesIO.__init__(self, buf)
+
+    @property
+    def empty(self):
+        return self.tell() == self.length
 
 
 class Buffer(object):
-    """Simple buffer for use in single-threaded consumer/filler."""
+    """Simple buffer for use in single-threaded consumer/filler.
+
+    Stores chunks in a deque to avoid inefficient reallocating
+    of large buffers.
+    """
 
     def __init__(self):
-        self.buffer = bytearray()
+        self.chunks = deque()
+        self.current_chunk = None
         self.closed = False
+        self.length = 0
 
-    def read(self, size=-1):
-        if size < 0:
-            size = len(self.buffer)
+    def _iterate_chunks(self, size):
+        bytes_left = size
 
-        data = self.buffer[:size]
-        del self.buffer[:len(data)]
+        while bytes_left:
+            try:
+                current_chunk = (self.current_chunk or
+                                 Chunk(self.chunks.popleft()))
+            except IndexError:
+                break
 
-        return bytes(data)
+            data = current_chunk.read(bytes_left)
+            bytes_left -= len(data)
+
+            if current_chunk.empty:
+                self.current_chunk = None
+            else:
+                self.current_chunk = current_chunk
+
+            yield data
 
     def write(self, data):
         if not self.closed:
-            self.buffer += data
+            if isinstance(data, bytearray):
+                data = bytes(data)
+
+            self.chunks.append(data)
+            self.length += len(data)
+
+    def read(self, size=-1):
+        if size < 0 or size > self.length:
+            size = self.length
+
+        if not size:
+            return b""
+
+        data = b"".join(self._iterate_chunks(size))
+        self.length -= len(data)
+
+        return data
 
     def close(self):
         self.closed = True
-
-    @property
-    def length(self):
-        return len(self.buffer)
 
 
 class RingBuffer(Buffer):

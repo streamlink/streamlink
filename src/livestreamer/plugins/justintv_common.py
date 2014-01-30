@@ -271,10 +271,9 @@ class PluginBase(Plugin):
 
         try:
             streams = HLSStream.parse_variant_playlist(self.session, url)
-        except ValueError:
-            return
         except IOError as err:
-            if "404 Client Error" in str(err):
+            err = str(err)
+            if "404 Client Error" in err or "Failed to parse playlist" in err:
                 return
             else:
                 raise PluginError(err)
@@ -284,7 +283,7 @@ class PluginBase(Plugin):
             chansub = verifyjson(token, "chansub")
             restricted_bitrates = verifyjson(chansub, "restricted_bitrates")
 
-            for name in filter(lambda n: n not in ("archives", "live"),
+            for name in filter(lambda n: not re.match(r"(.+_)?archives|live", n),
                                restricted_bitrates):
                 self.logger.warning("The quality '{0}' is not available "
                                     "since it requires a subscription.",

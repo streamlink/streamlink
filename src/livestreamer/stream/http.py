@@ -34,8 +34,8 @@ class HTTPStream(Stream):
 
     __shortname__ = "http"
 
-    def __init__(self, session, url, **args):
-        Stream.__init__(self, session)
+    def __init__(self, session_, url, **args):
+        Stream.__init__(self, session_)
 
         self.args = dict(url=url, method=args.pop("method", "GET"),
                          **args)
@@ -44,7 +44,15 @@ class HTTPStream(Stream):
         return "<HTTPStream({0!r})>".format(self.url)
 
     def __json__(self):
-        req = requests.Request(**valid_args(self.args)).prepare()
+        req = requests.Request(**valid_args(self.args))
+        session = self.args.get("session")
+
+        # prepare_request is only available in requests 2.0+
+        if session and hasattr(session, "prepare_request"):
+            req = session.prepare_request(req)
+        else:
+            req = req.prepare()
+
         headers = dict(map(normalize_key, req.headers.items()))
 
         return dict(type=type(self).shortname(), url=req.url,

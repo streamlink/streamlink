@@ -157,6 +157,51 @@ The important part of this output is the last line, that's the cookies used to a
 
 These instructions are for authenticating with a regular user account, if you are using a Facebook or Twitter account to authenticate you'll need to extract your cookies from your web browser instead. Extracting cookies from your web browser varies from browser to browser, try googling "<browser name> view cookies".
 
+Authenticating with Crunchyroll
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Crunchyroll requires authenticating with a premiun account to access some of
+their content.
+To do so, the plugins provides a couple of options to input your information:
+``crunchyroll-username`` and ``crunchyroll-password``.
+
+You can login doing the following
+
+.. sourcecode:: console
+
+    $ livestreamer --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link...
+
+.. note::
+
+    If you omit the password, livestreamer gonna ask for it later
+
+Once logged, the plugin makes sure to save the session credentials to avoid
+asking your username and password again.
+
+Neverthless, this credentials are valid for a limited amount of time, so it's 
+recomended to persist your username and password in your 
+:ref:`configuration file <cli-livestreamerrc>` to avoid having to type them
+again each time the credentials expires.
+
+.. warning::
+
+    The API this plugin uses isn't supposed to be available to use it on
+    computers. The plugin tries to blend in as a valid device using custom
+    headers and following the API usual flow (e.g. reusing credentials), but
+    this does not assure that your account will be safe from being spotted for
+    unusual behavior.
+
+HTTP proxy with Crunchyroll
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+You can use livestreamer's ``http-proxy`` **and** ``https-proxy`` options (you
+need both since the plugin uses both protocols) to access the Crunchyroll
+servers through a proxy and be able to stream region locked content. When doing
+this, is very probable that you will get denied to access the stream; this
+occurs because the session and credentials used by the plugin where obtained
+when logged from your own region, and the server still assumes you're in that
+region. For this, the plugin provides the ``crunchyroll-purge-credentials``
+option, which removes your saved session and credentials and tries to log in
+again using your username and password.
 
 Advanced usage
 --------------
@@ -376,8 +421,10 @@ Stream options
 .. cmdoption:: --ringbuffer-size size
 
     Specify a maximum size (bytes) for the ringbuffer used
-    by some stream types, default is ``32768``. Used by RTMP
-    and HLS. Use ``--hds-fragment-buffer`` for HDS.
+    by some stream types, default is ``16777216`` (16MB).
+
+    HDS streams manages this value automatically, use
+    ``--hds-fragment-buffer`` to change it
 
 
 Plugin options
@@ -450,5 +497,14 @@ Plugin options
     Specify GOMTV password to allow access to streams (If
     left blank you will be prompted)
 
+.. cmdoption:: --crunchyroll-username username
 
+    Specify Crunchyroll username to allow access to streams
 
+.. cmdoption:: --crunchyroll-password [password]
+
+    Specify Crunchyroll password to allow access to restricted streams 
+    (if left blank you will be prompted)
+
+.. cmdoption:: --crunchyroll-purge-credentials
+    Purge Crunchyroll credentials to initiate a new session and reauthenticate.

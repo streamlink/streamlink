@@ -11,6 +11,10 @@ N: Dominik Dabrowski
 G: doda
 D: Initial quality ranking feature.
 
+N: Agustín Carrasco
+G: asermax
+D: Crunchyroll plugin.
+
 N: Sam Edwards
 G: dotsam
 D: ilive.to plugin fixes.
@@ -46,6 +50,10 @@ D: Added a FilmOn Social TV plugin and various tweaks and fixes.
 N: Christopher Rosell
 G: chrippa
 D: Primary author and maintainer of Livestreamer and most of its plugins.
+
+N: T0mm0
+G: t0mm0
+D: Hitbox.tv plugin.
 
 N: Daniel Wallace
 G: gtmanfred

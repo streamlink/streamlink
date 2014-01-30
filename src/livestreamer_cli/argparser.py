@@ -145,8 +145,9 @@ streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
                             "ringbuffer, default is 10")
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
                        help="Specify a maximum size (bytes) for the "
-                            "ringbuffer, default is 32768. Used by RTMP and "
-                            "HLS. Use --hds-fragment-buffer for HDS")
+                            "ringbuffer, default is 16777216 (16MB). "
+                            "HDS streams manages this value automatically, "
+                            "use --hds-fragment-buffer to change it")
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory", type=comma_list,
@@ -202,5 +203,17 @@ pluginopt.add_argument("--gomtv-password", metavar="password",
                        help="Specify GOMTV password to allow access to "
                             "streams (if left blank you will be prompted)",
                        nargs="?", const=True, default=None)
+
+pluginopt.add_argument("--crunchyroll-username", metavar="username",
+                       help="Specify Crunchyroll username to allow access to "
+                            "restricted streams")
+pluginopt.add_argument("--crunchyroll-password", metavar="password",
+                       help="Specify Crunchyroll password to allow access to "
+                            "restricted streams (if left blank you will be "
+                            "prompted)",
+                       nargs="?", const=True, default=None)
+pluginopt.add_argument("--crunchyroll-purge-credentials", action="store_true",
+                       help="Purge Crunchyroll credentials to initiate a new "
+                       "session and reauthenticate.")
 
 __all__ = ["parser"]

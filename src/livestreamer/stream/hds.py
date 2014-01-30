@@ -615,8 +615,10 @@ class HDSStream(Stream):
 
         parsed = urlparse(url)
         baseurl = manifest.findtext("baseURL")
+        baseheight = manifest.findtext("height")
         bootstraps = {}
         streams = {}
+
 
         if not baseurl:
             baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
@@ -663,8 +665,10 @@ class HDSStream(Stream):
                     quality = bitrate + "k"
                 elif streamid:
                     quality = streamid
+                elif baseheight:
+                    quality = baseheight + "p"
                 else:
-                    continue
+                    quality = "live"
 
                 metadata = media.findtext("metadata")
 

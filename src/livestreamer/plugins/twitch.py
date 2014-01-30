@@ -12,9 +12,10 @@ JustinTVAPIBase = justintv_common.APIBase
 
 
 def time_to_offset(t):
-    match = re.match(r"((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?", t)
+    match = re.match(r"((?P<hours>\d+)h)?((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?", t)
     if match:
-        offset = int(match.group("minutes") or "0") * 60
+        offset = int(match.group("hours") or "0") * 60 * 60
+        offset += int(match.group("minutes") or "0") * 60
         offset += int(match.group("seconds") or "0")
     else:
         offset = 0
@@ -91,8 +92,8 @@ class Twitch(JustinTVPluginBase):
         # Parse the "t" query parameter on broadcasts and adjust
         # start offset if needed.
         time_offset = self.params.get("t")
-        if time_offset and self.video_type == "a":
-            videos["start_offset"] = time_to_offset(self.params.get("t"))
+        if time_offset:
+            videos["start_offset"] += time_to_offset(self.params.get("t"))
 
         return self._create_playlist_streams(videos)
 

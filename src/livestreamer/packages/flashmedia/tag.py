@@ -465,8 +465,8 @@ class AudioData(TagData):
             data, offset = AACAudioData.deserialize_from(buf, offset,
                                                          buf_size=buf_size)
         else:
-            data = buf[offset:offset + data_size]
-            offset += data_size
+            data = buf[offset:offset + buf_size]
+            offset += buf_size
 
         obj = cls(flags.bit.codec, flags.bit.rate, flags.bit.bits,
                   flags.bit.type, data)

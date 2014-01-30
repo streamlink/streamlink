@@ -1,5 +1,7 @@
 import io
 
+import requests
+
 from collections import defaultdict, namedtuple
 from time import time
 from threading import Lock, Thread, Timer
@@ -16,7 +18,6 @@ except ImportError:
     CAN_DECRYPT = False
 
 from . import hls_playlist
-from .stream import Stream
 from .http import HTTPStream
 from ..buffers import RingBuffer
 from ..compat import queue
@@ -59,26 +60,41 @@ class HLSStreamFiller(Thread):
         iv = key.iv or num_to_iv(sequence)
         return AES.new(self.key_data, AES.MODE_CBC, iv)
 
+    def create_request_params(self, sequence):
+        request_params = dict(self.stream.request_params)
+        headers = request_params.pop("headers", {})
+
+        if sequence.segment.byterange:
+            bytes_start = self.byterange_offsets[sequence.segment.uri]
+            if sequence.segment.byterange.offset is not None:
+                bytes_start = sequence.segment.byterange.offset
+
+            bytes_end = bytes_start + min(sequence.segment.byterange.range - 1, 0)
+            headers["Range"] = "bytes={0}-{1}".format(bytes_start,
+                                                      bytes_end)
+            self.byterange_offsets[sequence.segment.uri] = bytes_end + 1
+
+        request_params["headers"] = headers
+
+        return request_params
+
     def download_sequence(self, sequence):
-        try:
-            request_params = dict(self.stream.request_params)
-            headers = request_params.pop("headers", {})
-            if sequence.segment.byterange:
-                bytes_start = self.byterange_offsets[sequence.segment.uri]
-                if sequence.segment.byterange.offset is not None:
-                    bytes_start = sequence.segment.byterange.offset
+        request_params = self.create_request_params(sequence)
+        retries = 3
+        res = None
 
-                bytes_end = bytes_start + min(sequence.segment.byterange.range - 1, 0)
-                headers["Range"] = "bytes={0}-{1}".format(bytes_start,
-                                                          bytes_end)
-                self.byterange_offsets[sequence.segment.uri] = bytes_end + 1
+        while retries and self.running:
+            try:
+                res = urlget(sequence.segment.uri, stream=True,
+                             exception=IOError, timeout=10, **request_params)
+                break
+            except IOError as err:
+                self.stream.logger.error("Failed to open sequence {0}: {1}",
+                                         sequence.num, err)
 
-            request_params["headers"] = headers
-            res = urlget(sequence.segment.uri, stream=True,
-                         exception=IOError, **request_params)
-        except IOError as err:
-            self.stream.logger.error("Failed to open sequence {0}: {1}",
-                                     sequence.num, str(err))
+            retries -= 1
+
+        if not res:
             return
 
         try:
@@ -218,7 +234,11 @@ class HLSStreamIO(io.IOBase):
         self.playlist_reload_time = time()
 
         res = urlget(self.url, exception=IOError, **self.request_params)
-        playlist = hls_playlist.load(res.text, base_uri=self.url)
+
+        try:
+            playlist = hls_playlist.load(res.text, base_uri=self.url)
+        except ValueError as err:
+            raise IOError("Failed to parse playlist: {0}".format(err))
 
         media_sequence = playlist.media_sequence or 0
         sequences = [Sequence(media_sequence + i, s)
@@ -302,9 +322,7 @@ class HLSStream(HTTPStream):
     __shortname__ = "hls"
 
     def __init__(self, session_, url, **args):
-        Stream.__init__(self, session_)
-
-        self.args = dict(url=url, **args)
+        HTTPStream.__init__(self, session_, url, **args)
 
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
@@ -326,8 +344,15 @@ class HLSStream(HTTPStream):
     @classmethod
     def parse_variant_playlist(cls, session_, url, namekey="name",
                                nameprefix="", **request_params):
+        if "session" not in request_params:
+            request_params["session"] = requests.session()
+
         res = urlget(url, exception=IOError, **request_params)
-        parser = hls_playlist.load(res.text, base_uri=url)
+
+        try:
+            parser = hls_playlist.load(res.text, base_uri=url)
+        except ValueError as err:
+            raise IOError("Failed to parse playlist: {0}".format(err))
 
         streams = {}
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
@@ -352,7 +377,7 @@ class HLSStream(HTTPStream):
             stream_name = (names.get(namekey) or names.get("name") or
                            names.get("pixels") or names.get("bitrate"))
 
-            if not stream_name:
+            if not stream_name or stream_name in streams:
                 continue
 
             stream = HLSStream(session_, playlist.uri, **request_params)
