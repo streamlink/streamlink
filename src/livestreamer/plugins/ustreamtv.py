@@ -41,7 +41,7 @@ def valid_cdn(item):
 
 
 def valid_provider(info):
-    return all(info.get(key) for key in PROVIDER_KEYS)
+    return isinstance(info, dict) and all(info.get(key) for key in PROVIDER_KEYS)
 
 
 def validate_module_info(result):
@@ -133,7 +133,7 @@ class UHSStreamFiller(Thread):
         elif not isinstance(providers, list):
             return
 
-        for provider in providers:
+        for provider in filter(valid_provider, providers):
             if provider.get("name") == self.stream.stream.provider:
                 break
         else:
