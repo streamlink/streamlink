@@ -8,7 +8,7 @@ import re
 class Youtube(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "youtube.com" in url
+        return "youtube.com" in url or "youtu.be" in url
 
     @classmethod
     def stream_weight(cls, stream):
