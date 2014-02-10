@@ -45,6 +45,13 @@ class Youtube(Plugin):
     def _get_stream_info(self, url):
         res = urlget(url)
         config = self._find_config(res.text)
+        
+        if not config:
+            watch_match = re.search("href=\"/(watch\?v=.+?)\"", res.text)
+            if watch_match:
+                watch_url = "http://youtube.com/%s" % watch_match.group(1)
+                res = urlget(watch_url)
+                config = self._find_config(res.text)
 
         if config:
             return parse_json(config, "config JSON")
