@@ -50,9 +50,7 @@ class Buffer(object):
 
     def write(self, data):
         if not self.closed:
-            if isinstance(data, bytearray):
-                data = bytes(data)
-
+            data = bytes(data)  # Copy so that original buffer may be reused
             self.chunks.append(data)
             self.length += len(data)
 
