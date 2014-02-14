@@ -41,7 +41,7 @@
 
 # Use this option if you want Livestreamer to keep trying to access
 # the stream even if it goes offline or disconnects. Your player must
-# support HTTP and it's playlist should be set to repeat mode.
+# support HTTP and its playlist should be set to repeat mode.
 #player-continuous-http
 
 # Show console output from the video player

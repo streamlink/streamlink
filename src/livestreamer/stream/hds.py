@@ -41,7 +41,7 @@ AAC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_END = 0x02
 
-# Some streams hosted by Akamai seems to require a hdcore parameter
+# Some streams hosted by Akamai seem to require a hdcore parameter
 # to function properly.
 HDCORE_VERSION = "3.1.0"
 
@@ -594,7 +594,7 @@ class HDSStream(Stream):
     @classmethod
     def parse_manifest(cls, session, url, timeout=60, rsession=None,
                        pvswf=None):
-        """Parses a HDS manifest and returns it's substreams.
+        """Parses a HDS manifest and returns its substreams.
 
         :param url: The URL to the manifest.
         :param timeout: How long to wait for data to be returned from
