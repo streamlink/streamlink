@@ -627,6 +627,10 @@ def setup_options():
         livestreamer.set_plugin_option("twitch", "oauth_token",
                                        args.twitch_oauth_token)
 
+    if args.ustream_password:
+        livestreamer.set_plugin_option("ustreamtv", "password",
+                                       args.ustream_password)
+
     if args.gomtv_cookie:
         livestreamer.set_plugin_option("gomtv", "cookie",
                                        args.gomtv_cookie)

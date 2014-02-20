@@ -10,6 +10,7 @@ from threading import Thread
 from livestreamer.buffers import RingBuffer
 from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import StreamError, PluginError, NoStreamsError
+from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream, HLSStream, HTTPStream, Stream
 from livestreamer.utils import urlget
@@ -49,8 +50,9 @@ def validate_module_info(result):
         return result[0]
 
 
-def create_ums_connection(app, media_id, page_url, exception=PluginError):
-    params = dict(application=app, media=str(media_id))
+def create_ums_connection(app, media_id, page_url, password,
+                          exception=PluginError):
+    params = dict(application=app, media=str(media_id), password=password)
     conn = librtmp.RTMP(RTMP_URL, connect_data=params,
                         swfurl=SWF_URL, pageurl=page_url)
 
@@ -196,7 +198,8 @@ class UHSStreamFiller(Thread):
             try:
                 self.conn = create_ums_connection("channel",
                                                   self.stream.stream.channel_id,
-                                                  self.stream.stream.page_url)
+                                                  self.stream.stream.page_url,
+                                                  self.stream.stream.password)
             except PluginError as err:
                 self.stream.logger.error("Failed to reconnect: {0}", err)
                 self.stop()
@@ -227,6 +230,7 @@ class UHSStreamIO(IOBase):
         conn = create_ums_connection("channel",
                                      self.stream.channel_id,
                                      self.stream.page_url,
+                                     self.stream.password,
                                      exception=StreamError)
 
         self.filler = UHSStreamFiller(self, conn, self.stream.provider,
@@ -251,24 +255,29 @@ class UHSStream(Stream):
     __shortname__ = "uhs"
 
     def __init__(self, session, channel_id, page_url, provider,
-                 stream_index):
+                 stream_index, password=""):
         Stream.__init__(self, session)
 
         self.channel_id = channel_id
         self.page_url = page_url
         self.provider = provider
         self.stream_index = stream_index
+        self.password = password
 
     def __repr__(self):
         return ("<UHSStream({0!r}, {1!r}, "
-                "{2!r}, {3!r})>").format(self.channel_id, self.page_url,
-                                         self.provider, self.stream_index)
+                "{2!r}, {3!r}, {4!r})>").format(self.channel_id,
+                                                self.page_url,
+                                                self.provider,
+                                                self.stream_index,
+                                                self.password)
 
     def __json__(self):
         return dict(channel_id=self.channel_id,
                     page_url=self.page_url,
                     provider=self.provider,
                     stream_index=self.stream_index,
+                    password=self.password,
                     **Stream.__json__(self))
 
     def open(self):
@@ -279,6 +288,10 @@ class UHSStream(Stream):
 
 
 class UStreamTV(Plugin):
+    options = Options({
+        "password": ""
+    })
+
     @classmethod
     def can_handle_url(cls, url):
         return "ustream.tv" in url
@@ -334,9 +347,9 @@ class UStreamTV(Plugin):
 
         return RTMPStream(self.session, options)
 
-    def _get_module_info(self, app, media_id):
+    def _get_module_info(self, app, media_id, password=""):
         self.logger.debug("Waiting for moduleInfo invoke")
-        conn = create_ums_connection(app, media_id, self.url)
+        conn = create_ums_connection(app, media_id, self.url, password)
 
         attempts = 3
         while conn.connected and attempts:
@@ -357,7 +370,9 @@ class UStreamTV(Plugin):
         return result
 
     def _get_streams_from_rtmp(self):
-        module_info = self._get_module_info("channel", self.channel_id)
+        password = self.options.get("password")
+        module_info = self._get_module_info("channel", self.channel_id,
+                                            password)
         if not module_info:
             raise NoStreamsError(self.url)
 
@@ -387,7 +402,7 @@ class UStreamTV(Plugin):
                 if provider_name.startswith("uhs_"):
                     stream = UHSStream(self.session, self.channel_id,
                                        self.url, provider_name,
-                                       stream_index=stream_index)
+                                       stream_index, password)
                 elif (provider_url.startswith("rtmp") and
                       RTMPStream.is_usable(self.session)):
                         playpath = stream_info.get("streamName")

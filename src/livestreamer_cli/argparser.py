@@ -192,6 +192,10 @@ pluginopt.add_argument("--twitch-oauth-authenticate", action="store_true",
                        help="Opens a web browser where you can grant "
                             "Livestreamer access to your Twitch account.")
 
+pluginopt.add_argument("--ustream-password",
+                       help="Use this to access password protected streams.",
+                       metavar="password")
+
 pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
                        help="Specify GOMTV cookie to allow access to "
                             "streams, e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; "
