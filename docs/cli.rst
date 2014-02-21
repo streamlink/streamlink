@@ -262,6 +262,8 @@ Livestreamer currently supports these protocols:
 +-------------------------------+-----------------------------------------------+
 | Real Time Messaging Protocol  | rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://  |
 +-------------------------------+-----------------------------------------------+
+| Progressive HTTP, HTTPS, etc  | httpstream://                                 |
++-------------------------------+-----------------------------------------------+
 
 
 .. _cli-options:
