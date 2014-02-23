@@ -442,7 +442,7 @@ class HDSStreamIO(IOBase):
         table = self.segmentruntable.payload.segment_run_entry_table
 
         for segment, start, end in self._iterate_segments(table):
-            if fragment >= start and fragment <= end:
+            if fragment >= (start + 1) and fragment <= (end + 1):
                 break
         else:
             segment = 1
