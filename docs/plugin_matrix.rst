@@ -47,6 +47,8 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 +--------------------+--------+------+----------------------------------------+
 | MLG.tv             | Yes    | --   |                                        |
 +--------------------+--------+------+----------------------------------------+
+| NRK TV             | Yes    | Yes  | Videos may be geo-restricted to Norway.|
++--------------------+--------+------+----------------------------------------+
 | Owncast.me         | Yes    | --   |                                        |
 +--------------------+--------+------+----------------------------------------+
 | SVT Play           | Yes    | Yes  | Videos may be geo-restricted to Sweden.|
