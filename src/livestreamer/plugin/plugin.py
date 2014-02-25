@@ -210,6 +210,8 @@ class Plugin(object):
             ostreams = self._get_streams()
         except NoStreamsError:
             return {}
+        except (IOError, OSError, ValueError) as err:
+            raise PluginError(err)
 
         if not ostreams:
             return {}
