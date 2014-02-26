@@ -1,0 +1,9 @@
+include AUTHORS
+include CHANGELOG.rst
+include CONTRIBUTING.rst
+include README.rst
+include LICENSE*
+include requirements-docs.txt
+
+recursive-include docs *
+recursive-include tests *py
