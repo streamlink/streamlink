@@ -17,7 +17,7 @@ API_URL_LIVE = API_BASE + "/gox_live.cgi"
 class GOMeXP(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return re.match(r"http(s)?://(\w\.)?gomexp.com", url)
+        return re.match(r"http(s)?://(www\.)?gomexp.com", url)
 
     def _get_live_cubeid(self):
         res = urlget(API_URL_APP, params=dict(mode="get_live"))
