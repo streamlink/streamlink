@@ -461,10 +461,18 @@ Plugin options
 
     Specify Crunchyroll username to allow access to streams
 
+   .. versionadded:: 1.7.3
+
 .. cmdoption:: --crunchyroll-password [password]
 
     Specify Crunchyroll password to allow access to restricted streams 
     (if left blank you will be prompted)
 
+   .. versionadded:: 1.7.3
+
 .. cmdoption:: --crunchyroll-purge-credentials
+
     Purge Crunchyroll credentials to initiate a new session and reauthenticate.
+
+   .. versionadded:: 1.7.3
+
