@@ -9,7 +9,7 @@ USER_AGENT = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)"
 HEADERS = {"User-Agent": USER_AGENT}
 
 PLAYLIST_URL = "http://m.afreeca.com/live/stream/a/hls/broad_no/{0}"
-CHANNEL_URL = "http://live.afreeca.com:8079/app/index.cgi"
+CHANNEL_URL = "http://afbbs.afreeca.com:8080/api/video/get_bj_liveinfo.php"
 CHANNEL_REGEX = "http(s)?://(\w+\.)?afreeca.com/(?P<username>\w+)"
 
 
@@ -22,8 +22,7 @@ class AfreecaTV(Plugin):
         res = urlget(CHANNEL_URL, headers=HEADERS,
                      params=dict(szBjId=username))
 
-        match = re.search(r"<img id=\"broadImg\" src=\".+\/(\d+)\.gif\"",
-                          res.text)
+        match = re.search(r"<thumb>.+\/(\d+)\.gif</thumb>", res.text)
         if match:
             return match.group(1)
 

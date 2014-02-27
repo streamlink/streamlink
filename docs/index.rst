@@ -28,8 +28,7 @@ Currently most of the big streaming services are supported, such as:
 - `YouTube Live <http://youtube.com/live/>`_
 - `UStream <http://ustream.tv>`_
 
-And many more, including more specialized content providers such as `GOMTV.net <http://gomtv.net>`_.
-A full list of plugins currently included can be found in the :ref:`plugin_matrix`.
+And many more, a full list of plugins currently included can be found in the :ref:`plugin_matrix`.
 
 Quickstart
 -----------

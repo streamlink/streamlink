@@ -46,6 +46,25 @@ class TestBuffer(unittest.TestCase):
         self.buffer.close()
         self.buffer.write(b"2" * 8192)
         self.assertEqual(self.buffer.length, 8192)
+    
+    def test_reuse_input(self):
+        """Objects should be reusable after write()"""
+        
+        original = b"original"
+        tests = [bytearray(original)]
+        try:
+            m = memoryview(bytearray(original))
+        except NameError:  # Python 2.6 does not have "memoryview"
+            pass
+        else:
+            # Python 2.7 doesn't do bytes(memoryview) properly
+            if bytes(m) == original:
+                tests.append(m)
+        
+        for data in tests:
+            self.buffer.write(data)
+            data[:] = b"reused!!"
+            self.assertEqual(self.buffer.read(), original)
 
 
 if __name__ == "__main__":

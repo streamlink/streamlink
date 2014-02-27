@@ -25,11 +25,11 @@ class Mips(Plugin):
         }
 
         res = urlget(self.PlayerURL.format(channelname), headers=headers)
-        match = re.search("'FlashVars', '(id=\d+)&", res.text)
+        match = re.search("'FlashVars', '(id=\d+)&s=(.+?)&", res.text)
         if not match:
             raise NoStreamsError(self.url)
 
-        channelname += "?" + match.group(1)
+        channelname = "{0}?{1}".format(match.group(2), match.group(1))
         res = urlget(self.BalancerURL, headers=headers)
 
         match = re.search("redirect=(.+)", res.text)

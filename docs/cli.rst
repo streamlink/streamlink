@@ -68,8 +68,7 @@ The file should contain one option per line in the format ``option[=value]``, li
 
     player=mplayer -cache 2048
     player-no-close
-    jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
-    gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
+    twitch-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
 
 
 For a list of all the supported options see :ref:`cli-options`.
@@ -131,31 +130,6 @@ manually every time.
     Authenticating with Justin.tv is not possible since their video system
     overhaul, but may be a unintended bug and could be fixed in the future.
 
-
-Authenticating with GOMTV.net
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-GOMTV.net requires authenticating with an account before allowing you to access any of their content.
-This is done easiest by following these steps:
-
-.. sourcecode:: console
-
-    $ livestreamer --gomtv-username user@email.com gomtv.net
-
-This will cause Livestreamer to prompt you for your password and then attempt to login, giving you an output similar to this when successful:
-
-.. sourcecode:: console
-
-    $ livestreamer --gomtv-username user@email.com gomtv.net
-    Enter GOMTV password:
-    [plugin.gomtv][info] Attempting to authenticate with username and password
-    [plugin.gomtv][info] Successfully logged in as <username>
-    [plugin.gomtv][info] Cookie for reusing this session: SES_MEMBERNO=xxxxxxxxxx; SES_STATE=xxxxxxxxxxx; SES_MEMBERNICK=xxxxxx; SES_USERNICK=username;
-
-
-The important part of this output is the last line, that's the cookies used to access this login session. To use these cookies pass them to the ``--gomtv-cookie`` option. It's recommended to save these cookies in your :ref:`configuration file <cli-livestreamerrc>` rather than specifying them manually every time.
-
-These instructions are for authenticating with a regular user account, if you are using a Facebook or Twitter account to authenticate you'll need to extract your cookies from your web browser instead. Extracting cookies from your web browser varies from browser to browser, try googling "<browser name> view cookies".
 
 Authenticating with Crunchyroll
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -261,6 +235,8 @@ Livestreamer currently supports these protocols:
 | Apple HTTP Live Streaming     | hls:// hlvsvariant://                         |
 +-------------------------------+-----------------------------------------------+
 | Real Time Messaging Protocol  | rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://  |
++-------------------------------+-----------------------------------------------+
+| Progressive HTTP, HTTPS, etc  | httpstream://                                 |
 +-------------------------------+-----------------------------------------------+
 
 
@@ -436,14 +412,12 @@ Plugin options
     Multiple directories can be used by separating them
     with a semicolon (;)
 
-
 .. cmdoption:: --stream-types types, --stream-priority types
 
     A comma-delimited list of stream types to allow. The
     order will be used to separate streams when there are
     multiple streams with the same name and different
     stream types. Default is ``rtmp,hls,hds,http,akamaihd``
-
 
 .. cmdoption:: --stream-sorting-excludes streams
 
@@ -483,28 +457,22 @@ Plugin options
 
    .. versionadded:: 1.7.2
 
-.. cmdoption:: --gomtv-cookie cookie
-
-    Specify GOMTV cookie to allow access to streams,
-    e.g. ``'SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'``
-
-.. cmdoption:: --gomtv-username username
-
-    Specify GOMTV username to allow access to streams
-
-.. cmdoption:: --gomtv-password [password]
-
-    Specify GOMTV password to allow access to streams (If
-    left blank you will be prompted)
-
 .. cmdoption:: --crunchyroll-username username
 
     Specify Crunchyroll username to allow access to streams
+
+   .. versionadded:: 1.7.3
 
 .. cmdoption:: --crunchyroll-password [password]
 
     Specify Crunchyroll password to allow access to restricted streams 
     (if left blank you will be prompted)
 
+   .. versionadded:: 1.7.3
+
 .. cmdoption:: --crunchyroll-purge-credentials
+
     Purge Crunchyroll credentials to initiate a new session and reauthenticate.
+
+   .. versionadded:: 1.7.3
+
