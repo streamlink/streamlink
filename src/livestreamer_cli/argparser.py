@@ -83,8 +83,6 @@ playeropt.add_argument("-a", "--player-args", metavar="arguments",
                        help="The arguments passed to the player. These "
                             "formatting variables are available: filename. "
                             "Default is '{0}'".format(DEFAULT_PLAYER_ARGUMENTS))
-playeropt.add_argument("-q", "--quiet-player", action="store_true",
-                       help=argparse.SUPPRESS)
 playeropt.add_argument("-v", "--verbose-player", action="store_true",
                        help="Show all player console output")
 playeropt.add_argument("-n", "--player-fifo", "--fifo", action="store_true",
@@ -178,8 +176,6 @@ pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
                        help="Specify Twitch/Justin.tv cookies to allow access "
                             "to subscription channels, e.g. "
                             "'_twitch_session_id=xxxxxx; persistent=xxxxx'")
-pluginopt.add_argument("--jtv-legacy-names", "--twitch-legacy-names",
-                       action="store_true", help=argparse.SUPPRESS)
 pluginopt.add_argument("--jtv-password", "--twitch-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
@@ -196,18 +192,6 @@ pluginopt.add_argument("--ustream-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
 
-pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
-                       help="Specify GOMTV cookie to allow access to "
-                            "streams, e.g. 'SES_MEMBERNO=xxx; SES_STATE=xxx; "
-                            "SES_MEMBERNICK=xxx; SES_USERNICK=xxx;'")
-pluginopt.add_argument("--gomtv-username", metavar="username",
-                       help="Specify GOMTV username to allow access to "
-                            "streams")
-pluginopt.add_argument("--gomtv-password", metavar="password",
-                       help="Specify GOMTV password to allow access to "
-                            "streams (if left blank you will be prompted)",
-                       nargs="?", const=True, default=None)
-
 pluginopt.add_argument("--crunchyroll-username", metavar="username",
                        help="Specify Crunchyroll username to allow access to "
                             "restricted streams")
@@ -219,5 +203,20 @@ pluginopt.add_argument("--crunchyroll-password", metavar="password",
 pluginopt.add_argument("--crunchyroll-purge-credentials", action="store_true",
                        help="Purge Crunchyroll credentials to initiate a new "
                        "session and reauthenticate.")
+
+
+# Deprecated options
+playeropt.add_argument("-q", "--quiet-player", action="store_true",
+                       help=argparse.SUPPRESS)
+pluginopt.add_argument("--jtv-legacy-names", "--twitch-legacy-names",
+                       action="store_true", help=argparse.SUPPRESS)
+pluginopt.add_argument("--gomtv-cookie", metavar="cookie",
+                       help=argparse.SUPPRESS)
+pluginopt.add_argument("--gomtv-username", metavar="username",
+                       help=argparse.SUPPRESS)
+pluginopt.add_argument("--gomtv-password", metavar="password",
+                       nargs="?", const=True, default=None,
+                       help=argparse.SUPPRESS)
+
 
 __all__ = ["parser"]

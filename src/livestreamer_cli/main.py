@@ -579,16 +579,6 @@ def setup_livestreamer():
 def setup_options():
     """Sets Livestreamer options."""
 
-    if args.gomtv_username and not args.gomtv_password:
-        gomtv_password = console.askpass("Enter GOMTV password: ")
-    else:
-        gomtv_password = args.gomtv_password
-
-    if args.crunchyroll_username and not args.crunchyroll_password:
-        crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
-    else:
-        crunchyroll_password = args.crunchyroll_password
-
     livestreamer.set_option("errorlog", args.errorlog)
 
     if args.rtmpdump:
@@ -613,10 +603,6 @@ def setup_options():
         livestreamer.set_plugin_option("twitch", "cookie",
                                        args.jtv_cookie)
 
-    if args.jtv_legacy_names:
-        console.logger.warning("The option --jtv/twitch-legacy-names is "
-                               "deprecated since version 1.7.2.")
-
     if args.jtv_password:
         livestreamer.set_plugin_option("justintv", "password",
                                        args.jtv_password)
@@ -631,21 +617,14 @@ def setup_options():
         livestreamer.set_plugin_option("ustreamtv", "password",
                                        args.ustream_password)
 
-    if args.gomtv_cookie:
-        livestreamer.set_plugin_option("gomtv", "cookie",
-                                       args.gomtv_cookie)
-
-    if args.gomtv_username:
-        livestreamer.set_plugin_option("gomtv", "username",
-                                       args.gomtv_username)
-
-    if gomtv_password:
-        livestreamer.set_plugin_option("gomtv", "password",
-                                       gomtv_password)
-
     if args.crunchyroll_username:
         livestreamer.set_plugin_option("crunchyroll", "username",
                                        args.crunchyroll_username)
+
+    if args.crunchyroll_username and not args.crunchyroll_password:
+        crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
+    else:
+        crunchyroll_password = args.crunchyroll_password
 
     if crunchyroll_password:
         livestreamer.set_plugin_option("crunchyroll", "password",
@@ -653,6 +632,23 @@ def setup_options():
     if args.crunchyroll_purge_credentials:
         livestreamer.set_plugin_option("crunchyroll", "purge_credentials",
                                        args.crunchyroll_purge_credentials)
+
+    # Deprecated options
+    if args.jtv_legacy_names:
+        console.logger.warning("The option --jtv/twitch-legacy-names is "
+                               "deprecated and will be removed in the future.")
+
+    if args.gomtv_username:
+        console.logger.warning("The option --gomtv-username is deprecated "
+                               "and will be removed in the future.")
+
+    if args.gomtv_password:
+        console.logger.warning("The option --gomtv-password is deprecated "
+                               "and will be removed in the future.")
+
+    if args.gomtv_cookie:
+        console.logger.warning("The option --gomtv-cookie is deprecated "
+                               "and will be removed in the future.")
 
 
 def check_root():
