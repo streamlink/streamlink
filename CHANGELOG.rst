@@ -1,9 +1,32 @@
+Version 1.7.4
+-------------
+
+Plugins:
+ - Added plugin for MLG.tv. (#275)
+ - Added plugin for DMCloud, patch by Athanasios Oikonomou. (#297)
+ - Added plugin for NRK TV, patch by Jon Bergli Heier. (#309)
+ - Added plugin for GOMeXP.com.
+ - Removed GOMTV.net plugin as the service no longer exists.
+ - mips: Fixed issue with case sensitive playpath. (#306)
+ - ilive: Added missing app parameter. (#293)
+ - ustreamtv: Added support for password protected streams via ``--ustream-password``.
+ - youtube: Now handles youtu.be shortcuts, patch by Andy Mikhailenko. (#288)
+ - youtube: Use first available stream found on channel pages, patch by "unintended". (#291)
+
+Streams:
+ - hds: Fixed segmented streams logic, patch by Moritz Blanke.
+
+Bug fixes:
+ - Fixed buffer overwriting issue when passing a memoryview, patch by Martin Panter. (#295)
+ - Avoid a ResourceWarning when using ``--player-continuous-http``, patch by Martin Panter. (#296)
+
+
 Version 1.7.3
 -------------
 
 Plugins:
  - Added plugin for hitbox.tv, patch by t0mm0. (#248)
- - Added plugin for Cruncyroll, patch by Agustín Carrasco. (#262)
+ - Added plugin for Crunchyroll, patch by Agustín Carrasco. (#262)
  - twitch: Added support for hours in ?t=... on VODs.
  - twitch: Added support for ?t=... on VOD highlights.
 
