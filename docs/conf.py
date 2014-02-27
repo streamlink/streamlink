@@ -229,8 +229,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('cli', 'livestreamer', 'livestreamer Documentation',
-     ['Christopher Rosell'], 1)
+    ('cli', 'livestreamer', 'extracts streams from various services and pipes them into a video player of choice', ['Christopher Rosell'], 1)
 ]
 
 # If true, show URL addresses after external links.
