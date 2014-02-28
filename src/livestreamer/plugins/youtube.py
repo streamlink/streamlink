@@ -5,6 +5,11 @@ from livestreamer.utils import urlget, verifyjson, parse_json, parse_qsd
 
 import re
 
+
+def valid_stream(streaminfo):
+    return not not streaminfo.get("url")
+
+
 class Youtube(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -45,11 +50,11 @@ class Youtube(Plugin):
     def _get_stream_info(self, url):
         res = urlget(url)
         config = self._find_config(res.text)
-        
+
         if not config:
             watch_match = re.search("href=\"/(watch\?v=.+?)\"", res.text)
             if watch_match:
-                watch_url = "http://youtube.com/%s" % watch_match.group(1)
+                watch_url = "http://youtube.com/{0}".format(watch_match.group(1))
                 res = urlget(watch_url)
                 config = self._find_config(res.text)
 
@@ -94,15 +99,13 @@ class Youtube(Plugin):
         streammap = self._parse_stream_map(uestreammap)
         formatmap = self._parse_format_map(fmtlist)
 
-        for streaminfo in streammap:
+        for streaminfo in filter(valid_stream, streammap):
+            params = {}
             if "s" in streaminfo and self._decrypt_signature(streaminfo["s"]):
-                streaminfo["sig"] = self._decrypt_signature(streaminfo["s"])
-
-            if not ("url" in streaminfo and "sig" in streaminfo):
-                continue
+                params["signature"] = self._decrypt_signature(streaminfo["s"])
 
             stream = HTTPStream(self.session, streaminfo["url"],
-                                params=dict(signature=streaminfo["sig"]))
+                                params=params)
 
             if streaminfo["itag"] in formatmap:
                 quality = formatmap[streaminfo["itag"]]
