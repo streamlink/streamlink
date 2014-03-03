@@ -154,12 +154,13 @@ class UHSStreamFiller(Thread):
         if not chunk_range:
             return
 
-        self.chunk_id_max = int(result.get("chunkId"))
         self.chunk_ranges.update(map(partial(map, int),
                                      chunk_range.items()))
+        self.chunk_id_min = sorted(self.chunk_ranges)[0]
+        self.chunk_id_max = int(result.get("chunkId"))
 
         if self.chunk_id is None:
-            self.chunk_id = self.chunk_id_max
+            self.chunk_id = max(self.chunk_id_max - 3, self.chunk_id_min)
 
     def format_chunk_url(self, chunk_id):
         chunk_hash = ""
