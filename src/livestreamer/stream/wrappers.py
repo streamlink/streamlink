@@ -1,4 +1,4 @@
-from ..buffers import RingBuffer
+from ..buffers import Buffer, RingBuffer
 
 from threading import Thread
 
@@ -18,12 +18,35 @@ class StreamIOWrapper(io.IOBase):
             self.fd.close()
 
 
-class StreamIOThreadWrapper(io.IOBase):
-    """
-        Wraps a file-like object in a thread.
+class StreamIOIterWrapper(io.IOBase):
+    """Wraps a iterator and turn it into a file-like object"""
 
-        Useful for getting control over read timeout where
-        timeout handling is missing or out of our control.
+    def __init__(self, iterator):
+        self.iterator = iterator
+        self.buffer = Buffer()
+
+    def read(self, size=-1):
+        if size < 0:
+            size = self.buffer.length
+
+        while self.buffer.length < size:
+            try:
+                chunk = next(self.iterator)
+                self.buffer.write(chunk)
+            except StopIteration:
+                break
+
+        return self.buffer.read(size)
+
+    def close(self):
+        pass
+
+
+class StreamIOThreadWrapper(io.IOBase):
+    """Wraps a file-like object in a thread.
+
+    Useful for getting control over read timeout where
+    timeout handling is missing or out of our control.
     """
 
     class Filler(Thread):
@@ -85,4 +108,4 @@ class StreamIOThreadWrapper(io.IOBase):
             self.filler.join()
 
 
-__all__ = ["StreamIOWrapper", "StreamIOThreadWrapper"]
+__all__ = ["StreamIOWrapper", "StreamIOIterWrapper", "StreamIOThreadWrapper"]
