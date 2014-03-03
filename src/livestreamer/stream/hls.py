@@ -108,23 +108,17 @@ class HLSStreamFiller(Thread):
                                      err)
             return self.stop()
 
-        while self.running:
-            try:
-                chunk = res.raw.read(8192)
-            except IOError as err:
-                self.stream.logger.error("Failed to read segment {0}: {1}",
-                                         sequence.num, err)
-                break
-
-            if not chunk:
-                self.stream.logger.debug("Download of segment {0} complete",
-                                         sequence.num)
-                break
-
+        for chunk in res.iter_content(8192):
             if decryptor:
                 chunk = decryptor.decrypt(chunk)
 
             self.stream.buffer.write(chunk)
+
+            if not self.running:
+                break
+        else:
+            self.stream.logger.debug("Download of segment {0} complete",
+                                     sequence.num)
 
     def run(self):
         self.stream.logger.debug("Starting buffer filler thread")
