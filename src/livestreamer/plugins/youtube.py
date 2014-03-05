@@ -6,6 +6,11 @@ from livestreamer.utils import urlget, verifyjson, parse_json, parse_qsd
 import re
 
 
+HLS_HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
+
+
 def valid_stream(streaminfo):
     return not not streaminfo.get("url")
 
@@ -122,6 +127,7 @@ class Youtube(Plugin):
 
             try:
                 hlsstreams = HLSStream.parse_variant_playlist(self.session, url,
+                                                              headers=HLS_HEADERS,
                                                               namekey="pixels")
                 streams.update(hlsstreams)
             except IOError as err:
