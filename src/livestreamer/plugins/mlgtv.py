@@ -1,12 +1,27 @@
+import re
+
+from functools import partial
+
 from livestreamer.plugin import Plugin
 from livestreamer.stream import HDSStream, HLSStream
 from livestreamer.utils import res_json, verifyjson, urlget
 
-import re
 
-CONFIG_URL = "http://www.majorleaguegaming.com/player/config.json"
+CONFIG_API_URL = "http://www.majorleaguegaming.com/player/config.json"
+STREAM_API_URL = "http://streamapi.majorleaguegaming.com/service/streams/playback/{0}"
 STREAM_ID_REGEX = r"<meta content='.+/([\w_-]+).+' property='og:video'>"
+STREAM_TYPES = {
+    "hls": partial(HLSStream.parse_variant_playlist, nameprefix="mobile_"),
+    "hds": HDSStream.parse_manifest
+}
 URL_REGEX = r"http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)"
+
+
+def valid_stream(stream):
+    if not isinstance(stream, dict):
+        return
+
+    return stream.get("url") and stream.get("format") in STREAM_TYPES
 
 
 class MLGTV(Plugin):
@@ -14,51 +29,51 @@ class MLGTV(Plugin):
     def can_handle_url(self, url):
         return re.match(URL_REGEX, url)
 
-    def _find_stream_id(self, text):
+    def _find_channel_id(self, text):
         match = re.search(STREAM_ID_REGEX, text)
         if match:
             return match.group(1)
 
-    def _get_streams(self):
-        res = urlget(self.url)
-        stream_id = self._find_stream_id(res.text)
-
-        if not stream_id:
-            return
-
-        return self._get_streams_from_id(stream_id)
-
-    def _get_streams_from_id(self, stream_id):
-        res = urlget(CONFIG_URL, params=dict(id=stream_id))
+    def _get_stream_id(self, channel_id):
+        res = urlget(CONFIG_API_URL, params=dict(id=channel_id))
         config = res_json(res)
         media = verifyjson(config, "media")
 
         if not (media and isinstance(media, list)):
             return
 
-        streams = {}
         media = media[0]
-        hds_manifest = media.get("name")
-        hls_manifest = media.get("hlsUrl")
+        if not isinstance(media, dict):
+            return
 
-        if hds_manifest:
+        return media.get("channel")
+
+    def _get_streams(self):
+        res = urlget(self.url)
+        channel_id = self._find_channel_id(res.text)
+        if not channel_id:
+            return
+
+        stream_id = self._get_stream_id(channel_id)
+        if not stream_id:
+            return
+
+        res = urlget(STREAM_API_URL.format(stream_id),
+                     params=dict(format="all"))
+        json = res_json(res)
+        data = verifyjson(json, "data")
+        items = verifyjson(data, "items")
+
+        streams = {}
+        for stream in filter(valid_stream, items):
+            parser = STREAM_TYPES[stream["format"]]
+
             try:
-                hds_streams = HDSStream.parse_manifest(self.session,
-                                                       hds_manifest)
-                streams.update(hds_streams)
+                streams.update(parser(self.session, stream["url"]))
             except IOError as err:
                 if not re.search(r"(404|400) Client Error", str(err)):
-                    self.logger.error("Failed to parse HDS manifest: {0}", err)
-
-        if hls_manifest:
-            try:
-                hls_streams = HLSStream.parse_variant_playlist(self.session,
-                                                               hls_manifest,
-                                                               nameprefix="mobile_")
-                streams.update(hls_streams)
-            except IOError as err:
-                if not re.search(r"(404|400) Client Error", str(err)):
-                    self.logger.error("Failed to parse HLS playlist: {0}", err)
+                    self.logger.error("Failed to extract {0} streams: {1}",
+                                      stream["format"].upper(), err)
 
         return streams
 
