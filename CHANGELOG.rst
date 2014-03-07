@@ -1,3 +1,21 @@
+Version 1.7.5
+-------------
+
+Plugins:
+ - filmon: Added VOD support, patch by Athanasios Oikonomou.
+ - ilive: Added support for HLS streams, patch by Athanasios Oikonomou.
+ - mlgtv: Updated for service changes.
+ - veetle: Now handles shortened URLs, patch by Athanasios Oikonomou.
+ - youtube: Updated for service changes.
+
+Bug fixes:
+ - Fixed gzip not getting decoded in streams.
+
+Other:
+ - Added scripts to automatically create Windows builds via Travis CI.
+   Builds are available here: http://livestreamer-builds.s3.amazonaws.com/builds.html
+
+
 Version 1.7.4
 -------------
 
