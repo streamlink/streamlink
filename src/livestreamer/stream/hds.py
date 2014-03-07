@@ -14,6 +14,8 @@ from threading import Thread, Timer
 from time import time
 
 from .stream import Stream
+from .wrappers import StreamIOIterWrapper
+
 from ..buffers import RingBuffer
 from ..cache import Cache
 from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
@@ -101,7 +103,8 @@ class HDSStreamFiller(Thread):
         if size > self.stream.buffer.buffer_size:
             self.stream.buffer.resize(size)
 
-        return self.convert_fragment(segment, fragment, res.raw)
+        fd = StreamIOIterWrapper(res.iter_content(8192))
+        return self.convert_fragment(segment, fragment, fd)
 
     def convert_fragment(self, segment, fragment, fd):
         mdat = None

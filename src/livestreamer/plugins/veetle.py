@@ -16,6 +16,8 @@ class Veetle(Plugin):
 
         if parsed.fragment:
             channelid = parsed.fragment
+        elif "/v/" in parsed.path:
+            channelid = parsed.path.rpartition("/v/")[-1]
         else:
             channelid = parsed.path.rpartition("view/")[-1]
 

@@ -98,23 +98,18 @@ class UHSStreamFiller(Thread):
         else:
             return
 
-        while self.running:
-            try:
-                data = res.raw.read(8192)
-            except IOError as err:
-                self.stream.logger.error("[{0}] Failed to read chunk {1}".format(
-                                         chunk_id, err))
-                break
-
-            if not data:
-                break
-
+        for data in res.iter_content(8192):
             if not self.header_written:
                 flv_header = Header(has_video=True, has_audio=True)
                 self.stream.buffer.write(flv_header.serialize())
                 self.header_written = True
 
             self.stream.buffer.write(data)
+
+            if not self.running:
+                break
+        else:
+            self.stream.logger.debug("[{0}] Downloaded chunk".format(chunk_id))
 
     def process_module_info(self):
         try:
@@ -159,12 +154,13 @@ class UHSStreamFiller(Thread):
         if not chunk_range:
             return
 
-        self.chunk_id_max = int(result.get("chunkId"))
         self.chunk_ranges.update(map(partial(map, int),
                                      chunk_range.items()))
+        self.chunk_id_min = sorted(self.chunk_ranges)[0]
+        self.chunk_id_max = int(result.get("chunkId"))
 
         if self.chunk_id is None:
-            self.chunk_id = self.chunk_id_max
+            self.chunk_id = max(self.chunk_id_max - 3, self.chunk_id_min)
 
     def format_chunk_url(self, chunk_id):
         chunk_hash = ""

@@ -5,6 +5,8 @@ import hmac
 import random
 
 from .stream import Stream
+from .wrappers import StreamIOIterWrapper
+
 from ..buffers import Buffer
 from ..compat import str, bytes, urlparse
 from ..exceptions import StreamError
@@ -96,7 +98,7 @@ class AkamaiHDStreamIO(io.IOBase):
 
         try:
             res = urlget(url, stream=True, params=params)
-            self.fd = res.raw
+            self.fd = StreamIOIterWrapper(res.iter_content(8192))
         except Exception as err:
             raise StreamError(str(err))
 
