@@ -272,6 +272,10 @@ Command line options
     Output JSON instead of the normal text output and
     disable log output, useful for external scripting
 
+.. cmdoption:: --no-version-check
+
+    Do not check for new Livestreamer releases
+
 
 HTTP options
 ^^^^^^^^^^^^

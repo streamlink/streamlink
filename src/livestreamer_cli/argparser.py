@@ -64,6 +64,8 @@ parser.add_argument("-Q", "--quiet", action="store_true",
 parser.add_argument("-j", "--json", action="store_true",
                     help="Output JSON instead of the normal text output and "
                          "disable log output, useful for external scripting")
+parser.add_argument("--no-version-check", action="store_true",
+                    help="Do not check for new Livestreamer releases")
 parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
 
