@@ -129,7 +129,11 @@ class HLSStreamFiller(Thread):
             except queue.Empty:
                 continue
 
-            self.download_sequence(sequence)
+            try:
+                self.download_sequence(sequence)
+            except IOError as err:
+                self.stream.logger.error("Failed to read data from segment {0}: {1}",
+                                         sequence.num, err)
 
             if sequence.num == self.stream.playlist_end:
                 break

@@ -181,7 +181,12 @@ class UHSStreamFiller(Thread):
                 continue
 
             while self.chunk_id <= self.chunk_id_max:
-                self.download_chunk(self.chunk_id)
+                try:
+                    self.download_chunk(self.chunk_id)
+                except IOError as err:
+                    self.stream.logger.debug("[{0}] Failed to read data from chunk: {1}",
+                                             self.chunk_id, err)
+
                 self.chunk_id += 1
 
         self.stop()
