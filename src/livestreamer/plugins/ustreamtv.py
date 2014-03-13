@@ -12,8 +12,8 @@ from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import StreamError, PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream, HTTPStream, Stream
-from livestreamer.utils import urlget
 
 from livestreamer.packages.flashmedia import AMFPacket, AMFError
 from livestreamer.packages.flashmedia.tag import Header
@@ -89,7 +89,7 @@ class UHSStreamFiller(Thread):
         attempts = 3
         while attempts and self.running:
             try:
-                res = urlget(url, stream=True, exception=IOError, timeout=10)
+                res = http.get(url, stream=True, exception=IOError, timeout=10)
                 break
             except IOError as err:
                 self.stream.logger.error("[{0}] Failed to open chunk: {1}".format(
@@ -316,7 +316,7 @@ class UStreamTV(Plugin):
         if match:
             return int(match.group(1))
 
-        match = re.search("\"cid\":(\d+)", urlget(url).text)
+        match = re.search("\"cid\":(\d+)", http.get(url).text)
         if match:
             return int(match.group(1))
 
@@ -419,7 +419,7 @@ class UStreamTV(Plugin):
         if not RTMPStream.is_usable(self.session):
             raise NoStreamsError(self.url)
 
-        res = urlget(AMF_URL.format(self.channel_id))
+        res = http.get(AMF_URL.format(self.channel_id))
 
         try:
             packet = AMFPacket.deserialize(BytesIO(res.content))
