@@ -1,8 +1,8 @@
 import re
 
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
-from livestreamer.utils import urlget
 
 
 USER_AGENT = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)"
@@ -19,8 +19,8 @@ class AfreecaTV(Plugin):
         return re.match(CHANNEL_REGEX, url)
 
     def _find_broadcast(self, username):
-        res = urlget(CHANNEL_URL, headers=HEADERS,
-                     params=dict(szBjId=username))
+        res = http.get(CHANNEL_URL, headers=HEADERS,
+                       params=dict(szBjId=username))
 
         match = re.search(r"<thumb>.+\/(\d+)\.gif</thumb>", res.text)
         if match:
