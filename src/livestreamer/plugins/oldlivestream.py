@@ -1,8 +1,7 @@
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.stream import HLSStream
-from livestreamer.utils import urlget
+
 
 class OldLivestream(Plugin):
     PlaylistURL = "http://x{0}x.api.channel.livestream.com/3.0/playlist.m3u8"
@@ -19,7 +18,7 @@ class OldLivestream(Plugin):
             streams = HLSStream.parse_variant_playlist(self.session,
                                                        self.PlaylistURL.format(channelname))
         except IOError:
-            raise NoStreamsError(self.url)
+            return
 
         return streams
 
