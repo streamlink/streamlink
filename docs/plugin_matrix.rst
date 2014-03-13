@@ -53,9 +53,7 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 +--------------------+--------+------+----------------------------------------+
 | NRK TV             | Yes    | Yes  | Videos may be geo-restricted to Norway.|
 +--------------------+--------+------+----------------------------------------+
-| Owncast.me         | Yes    | --   |                                        |
-+--------------------+--------+------+----------------------------------------+
-+ SpeedRunsLive.com  | Yes    + --   +                                        |
+| SpeedRunsLive.com  | Yes    | --   |                                        |
 +--------------------+--------+------+----------------------------------------+
 | SVT Play           | Yes    | Yes  | Videos may be geo-restricted to Sweden.|
 +--------------------+--------+------+----------------------------------------+
@@ -69,7 +67,5 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 | Weeb.tv            | Yes    | --   | Requires rtmpdump with K-S-V patches.  |
 +--------------------+--------+------+----------------------------------------+
 | YouTube            | Yes    | Yes  |                                        |
-+--------------------+--------+------+----------------------------------------+
-| YYCast             | Yes    | --   |                                        |
 +--------------------+--------+------+----------------------------------------+
 
