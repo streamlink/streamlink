@@ -1,11 +1,11 @@
 import re
-import requests
 
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HTTPStream
-from livestreamer.utils import urlget, urlresolve, prepend_www
+from livestreamer.utils import urlresolve, prepend_www
 
 RTMP_URL = "rtmp://204.107.26.73/battlecam"
 RTMP_UPLOAD_URL = "rtmp://204.107.26.75/streamer"
@@ -48,7 +48,7 @@ class Filmon_us(Plugin):
             raise PluginError("history number " + video_id + " don't exist")
 
         self.logger.debug("Fetching video URL")
-        res = urlget(history_url)
+        res = http.get(history_url)
         match = re.search("http://cloud.battlecam.com/([/\w]+).flv", res.text)
         if not match:
             return
@@ -79,7 +79,7 @@ class Filmon_us(Plugin):
 
     def _get_stream_live(self):
         self.logger.debug("Fetching room_id")
-        res = urlget(self.url)
+        res = http.get(self.url)
         match = re.search("room/id/(\d+)", res.text)
         if not match:
             return
