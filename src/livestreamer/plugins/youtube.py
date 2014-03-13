@@ -1,7 +1,8 @@
 from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HTTPStream, HLSStream
-from livestreamer.utils import urlget, verifyjson, parse_json, parse_qsd
+from livestreamer.utils import verifyjson, parse_json, parse_qsd
 
 import re
 
@@ -53,14 +54,14 @@ class Youtube(Plugin):
             return config
 
     def _get_stream_info(self, url):
-        res = urlget(url)
+        res = http.get(url)
         config = self._find_config(res.text)
 
         if not config:
             watch_match = re.search("href=\"/(watch\?v=.+?)\"", res.text)
             if watch_match:
                 watch_url = "http://youtube.com/{0}".format(watch_match.group(1))
-                res = urlget(watch_url)
+                res = http.get(watch_url)
                 config = self._find_config(res.text)
 
         if config:
