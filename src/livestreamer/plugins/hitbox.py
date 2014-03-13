@@ -1,7 +1,8 @@
 from livestreamer.stream import RTMPStream, HTTPStream
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.exceptions import NoStreamsError
-from livestreamer.utils import urlget, verifyjson, res_json
+from livestreamer.utils import verifyjson
 
 import re
 
@@ -36,8 +37,8 @@ class Hitbox(Plugin):
         stream_name, media_id = match.groups()
 
         if stream_name != "video":
-            res = urlget(LIVE_API.format(stream_name))
-            json = res_json(res)
+            res = http.get(LIVE_API.format(stream_name))
+            json = http.json(res)
             livestream = verifyjson(json, "livestream")
             media_id = verifyjson(livestream[0], "media_id")
             media_is_live = int(verifyjson(livestream[0], "media_is_live"))
@@ -45,8 +46,8 @@ class Hitbox(Plugin):
                 raise NoStreamsError(self.url)
 
         media_type = "live" if media_is_live else "video"
-        res = urlget(PLAYER_API.format(media_type, media_id))
-        json = res_json(res)
+        res = http.get(PLAYER_API.format(media_type, media_id))
+        json = http.json(res)
         clip = verifyjson(json, "clip")
         live = verifyjson(clip, "live")
         bitrates = verifyjson(clip, "bitrates")
