@@ -1,7 +1,7 @@
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, res_json
 
 import math
 
@@ -27,10 +27,10 @@ class Hashd(Plugin):
         d = radius * c
 
         return d
-        
+
     def _choose_server(self, json):
-        res = urlget(self.GEOIPURL)
-        loc = res_json(res)
+        res = http.get(self.GEOIPURL)
+        loc = http.json(res)
         loc = [loc["latitude"], loc["longitude"]]
         sel_dist = float("inf")
         i = 0
@@ -38,8 +38,8 @@ class Hashd(Plugin):
         secondary = -1
 
         for server in json["server"]:
-            res = urlget(self.GEOURL+server["server"]["name"]+"&sensor=false")
-            cord = res_json(res)
+            res = http.get(self.GEOURL+server["server"]["name"]+"&sensor=false")
+            cord = http.json(res)
             cord = [cord["results"][0]["geometry"]["location"]["lat"], cord["results"][0]["geometry"]["location"]["lng"]]
             cur_dist = self._distance(loc, cord)
 
@@ -63,11 +63,11 @@ class Hashd(Plugin):
 
     def _parse_vod(self, json):
         streams = {}
-        
+
         if json["stream_protocol"] != "rtmp":
-            # Just in case. I coudn't find any non-rtmp streams. 
+            # Just in case. I coudn't find any non-rtmp streams.
             raise NoStreamsError(self.url)
-            
+
         streams["vod"] = RTMPStream(self.session, {
             "rtmp": json["stream_url"]+"/"+json["file"],
             "pageUrl": self.url,
@@ -107,23 +107,23 @@ class Hashd(Plugin):
     def _get_streams(self):
         if not RTMPStream.is_usable(self.session):
             raise PluginError("rtmpdump is not usable and required by Hashd plugin")
-        
+
         self.logger.debug("Fetching stream info")
-        res = urlget(self.url.rstrip("/").lower()+".json?first=true")
-        json = res_json(res)
+        res = http.get(self.url.rstrip("/").lower()+".json?first=true")
+        json = http.json(res)
 
         if not isinstance(json, dict):
             raise PluginError("Invalid JSON response")
         elif not ("live" in json or "file" in json):
             raise PluginError("Invalid JSON response")
-     
+
         if "file" in json:
             streams = self._parse_vod(json)
         elif json["live"]:
             streams = self._parse_live(json)
         else:
             raise NoStreamsError(self.url)
-           
+
         return streams
 
 
