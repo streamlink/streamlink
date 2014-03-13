@@ -1,8 +1,9 @@
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HTTPStream, RTMPStream
-from livestreamer.utils import urlget, verifyjson, res_json
+from livestreamer.utils import verifyjson
 
 import random
 import re
@@ -26,8 +27,8 @@ class Bambuser(Plugin):
                       vid=vid, r=random.random())
 
         self.logger.debug("Fetching stream info")
-        res = urlget(PLAYER_URL, params=params)
-        json = res_json(res)
+        res = http.get(PLAYER_URL, params=params)
+        json = http.json(res)
 
         error = json and json.get("errorCode")
         if error:
