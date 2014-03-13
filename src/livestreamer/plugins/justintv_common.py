@@ -13,10 +13,10 @@ from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import NoStreamsError, PluginError, StreamError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import (HTTPStream, HLSStream, FLVPlaylist,
                                  extract_flv_header_tags)
-from livestreamer.utils import (parse_json, parse_qsd, res_json, res_xml,
-                                verifyjson, urlget)
+from livestreamer.utils import parse_json, parse_qsd, verifyjson
 
 __all__ = ["PluginBase", "APIBase"]
 
@@ -46,23 +46,23 @@ class UsherService(object):
                       allow_source="true", private_code=password or "null",
                       **extra_params)
 
-        return requests.Request(url=url, params=params).prepare().url
+        req = requests.Request("GET", url, params=params)
+        # prepare_request is only available in requests 2.0+
+        if hasattr(http, "prepare_request"):
+            req = http.prepare_request(req)
+        else:
+            req = req.prepare()
+
+        return req.url
 
 
 class APIBase(object):
     def __init__(self, host="justin.tv"):
         self.host = host
         self.oauth_token = None
-        self.session = requests.session()
 
     def add_cookies(self, cookies):
-        for cookie in cookies.split(";"):
-            try:
-                name, value = cookie.split("=")
-            except ValueError:
-                continue
-
-            self.session.cookies[name.strip()] = value.strip()
+        http.parse_cookies(cookies, domain=self.host)
 
     def call(self, path, format="json", host=None, **extra_params):
         params = dict(as3="t", **extra_params)
@@ -71,12 +71,12 @@ class APIBase(object):
             params["oauth_token"] = self.oauth_token
 
         url = "https://api.{0}{1}.{2}".format(host or self.host, path, format)
-        res = urlget(url, params=params, session=self.session)
+        res = http.get(url, params=params)
 
         if format == "json":
-            return res_json(res)
+            return http.json(res)
         elif format == "xml":
-            return res_xml(res)
+            return http.xml(res)
         else:
             return res
 
