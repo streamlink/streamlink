@@ -1,7 +1,8 @@
 from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import parse_json, rtmpparse, swfdecompress, urlget
+from livestreamer.utils import parse_json, rtmpparse, swfdecompress
 
 import re
 
@@ -17,14 +18,14 @@ class DMCloud(Plugin):
 
         self.logger.debug("Fetching RTMP stream info")
 
-        res = urlget(swfurl)
+        res = http.get(swfurl)
         swf = swfdecompress(res.content)
         match = re.search("customURL[^h]+(https://.*?)\\\\", swf)
 
         if not match:
             raise NoStreamsError(self.url)
 
-        res = urlget(match.group(1))
+        res = http.get(match.group(1))
         rtmp, playpath = rtmpparse(res.text)
 
         params = {
@@ -42,7 +43,7 @@ class DMCloud(Plugin):
 
     def _get_streams(self):
         self.logger.debug("Fetching stream info")
-        res = urlget(self.url)
+        res = http.get(self.url)
 
         match = re.search("var info = (.*);", res.text)
         if not match:
