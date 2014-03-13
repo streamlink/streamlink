@@ -1,10 +1,10 @@
-from livestreamer.compat import str, bytes
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget
 
 import re
+
 
 class Ongamenet(Plugin):
     StreamURL = "http://dostream.lab.so/stream.php"
@@ -16,7 +16,7 @@ class Ongamenet(Plugin):
         return "ongamenet.com" in url
 
     def _get_streams(self):
-        res = urlget(self.StreamURL, data={"from": "ongamenet"})
+        res = http.get(self.StreamURL, data={"from": "ongamenet"})
 
         match = re.search("var stream = \"(.+?)\";", res.text)
         if not match:
