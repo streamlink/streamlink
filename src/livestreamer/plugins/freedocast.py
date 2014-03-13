@@ -1,7 +1,7 @@
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget
 
 import re
 
@@ -15,7 +15,7 @@ class Freedocast(Plugin):
 
     def _get_streams(self):
         self.logger.debug("Fetching stream info")
-        res = urlget(self.url)
+        res = http.get(self.url)
 
         match = re.search("\"User_channelid\".+?value=\"(.+?)\"", res.text)
         if not match:
@@ -25,7 +25,7 @@ class Freedocast(Plugin):
             "Referer": self.url
         }
 
-        res = urlget(self.PlayerURL.format(match.group(1)), headers=headers)
+        res = http.get(self.PlayerURL.format(match.group(1)), headers=headers)
 
         match = re.search("stream:\s+'(rtmp://.+?)'", res.text)
         if not match:
