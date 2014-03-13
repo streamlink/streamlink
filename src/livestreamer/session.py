@@ -8,6 +8,7 @@ from .compat import urlparse, is_win32
 from .exceptions import NoPluginError
 from .logger import Logger
 from .options import Options
+from .plugin import api
 
 
 def print_small_exception(start_after):
@@ -35,6 +36,7 @@ class Livestreamer(object):
        options and log settings."""
 
     def __init__(self):
+        self.http = api.HTTPSession()
         self.options = Options({
             "rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmpdump-proxy": None,
@@ -157,13 +159,14 @@ class Livestreamer(object):
             try:
                 self.load_plugin(name, file, pathname, desc)
             except Exception:
-                sys.stderr.write("Failed to load plugin "
-                                 "{0}:\n".format(name))
+                sys.stderr.write("Failed to load plugin {0}:\n".format(name))
                 print_small_exception("load_plugin")
 
                 continue
 
     def load_plugin(self, name, file, pathname, desc):
+        # Set the global http session for this plugin
+        api.http = self.http
         module = imp.load_module(name, file, pathname, desc)
 
         if hasattr(module, "__plugin__"):
