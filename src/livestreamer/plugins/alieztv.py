@@ -1,8 +1,8 @@
 from livestreamer.compat import unquote
 from livestreamer.stream import RTMPStream
 from livestreamer.plugin import Plugin
-from livestreamer.exceptions import PluginError, NoStreamsError
-from livestreamer.utils import urlget
+from livestreamer.plugin.api import http
+from livestreamer.exceptions import NoStreamsError
 
 import re
 
@@ -13,7 +13,7 @@ class Aliez(Plugin):
 
     def _get_streams(self):
         self.logger.debug("Fetching stream info")
-        res = urlget(self.url)
+        res = http.get(self.url)
 
         match = re.search("\"file\":[\t]+\"([^\"]+)\".+embedSWF\(\"([^\"]+)\"", res.text, re.DOTALL)
         if not match:
