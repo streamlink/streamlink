@@ -22,7 +22,6 @@ from .http import HTTPStream
 from ..buffers import RingBuffer
 from ..compat import queue
 from ..exceptions import StreamError
-from ..utils import urlget
 
 
 Sequence = namedtuple("Sequence", "num segment")
@@ -52,8 +51,9 @@ class HLSStreamFiller(Thread):
             raise StreamError("Missing URI to decryption key")
 
         if self.key_uri != key.uri:
-            res = urlget(key.uri, exception=StreamError,
-                         **self.stream.request_params)
+            res = self.stream.session.http.get(key.uri,
+                                               exception=StreamError,
+                                               **self.stream.request_params)
             self.key_data = res.content
             self.key_uri = key.uri
 
@@ -85,8 +85,11 @@ class HLSStreamFiller(Thread):
 
         while retries and self.running:
             try:
-                res = urlget(sequence.segment.uri, stream=True,
-                             exception=IOError, timeout=10, **request_params)
+                res = self.stream.session.http.get(sequence.segment.uri,
+                                                   stream=True,
+                                                   exception=IOError,
+                                                   timeout=10,
+                                                   **request_params)
                 break
             except IOError as err:
                 self.stream.logger.error("Failed to open sequence {0}: {1}",
@@ -231,7 +234,9 @@ class HLSStreamIO(io.IOBase):
         self.logger.debug("Reloading playlist")
         self.playlist_reload_time = time()
 
-        res = urlget(self.url, exception=IOError, **self.request_params)
+        res = self.session.http.get(self.url,
+                                    exception=IOError,
+                                    **self.request_params)
 
         try:
             playlist = hls_playlist.load(res.text, base_uri=self.url)
@@ -342,10 +347,7 @@ class HLSStream(HTTPStream):
     @classmethod
     def parse_variant_playlist(cls, session_, url, namekey="name",
                                nameprefix="", **request_params):
-        if "session" not in request_params:
-            request_params["session"] = requests.session()
-
-        res = urlget(url, exception=IOError, **request_params)
+        res = session_.http.get(url, exception=IOError, **request_params)
 
         try:
             parser = hls_playlist.load(res.text, base_uri=url)
