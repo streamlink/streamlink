@@ -1,8 +1,9 @@
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HTTPStream
-from livestreamer.utils import urlget, res_json
+
 
 class Veetle(Plugin):
     APIURL = "http://veetle.com/index.php/stream/ajaxStreamLocation/{0}/flash"
@@ -27,8 +28,8 @@ class Veetle(Plugin):
         channelid = channelid.lower().replace("/", "_")
 
         self.logger.debug("Fetching stream info")
-        res = urlget(self.APIURL.format(channelid))
-        json = res_json(res)
+        res = http.get(self.APIURL.format(channelid))
+        json = http.json(res)
 
         if not isinstance(json, dict):
             raise PluginError("Invalid JSON response")
