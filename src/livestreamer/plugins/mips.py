@@ -1,10 +1,11 @@
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget
 
 import re
+
 
 class Mips(Plugin):
     SWFURL = "http://mips.tv/content/scripts/eplayer.swf"
@@ -24,13 +25,13 @@ class Mips(Plugin):
             "Referer": self.url
         }
 
-        res = urlget(self.PlayerURL.format(channelname), headers=headers)
+        res = http.get(self.PlayerURL.format(channelname), headers=headers)
         match = re.search("'FlashVars', '(id=\d+)&s=(.+?)&", res.text)
         if not match:
             raise NoStreamsError(self.url)
 
         channelname = "{0}?{1}".format(match.group(2), match.group(1))
-        res = urlget(self.BalancerURL, headers=headers)
+        res = http.get(self.BalancerURL, headers=headers)
 
         match = re.search("redirect=(.+)", res.text)
         if not match:
