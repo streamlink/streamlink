@@ -18,11 +18,9 @@ from .wrappers import StreamIOIterWrapper
 
 from ..buffers import RingBuffer
 from ..cache import Cache
-from ..compat import urljoin, urlparse, bytes, queue, range, is_py33
-from ..compat import parse_qsl
+from ..compat import parse_qsl, urljoin, urlparse, bytes, queue, range, is_py33
 from ..exceptions import StreamError
-from ..utils import absolute_url, urlget, res_xml
-from ..utils import swfdecompress
+from ..utils import absolute_url, res_xml, swfdecompress
 
 from ..packages.flashmedia import F4V, F4VError, FLVError
 from ..packages.flashmedia.box import Box
@@ -85,8 +83,11 @@ class HDSStreamFiller(Thread):
 
         while retries > 0 and self.running:
             try:
-                res = urlget(url, stream=True, exception=IOError,
-                             session=self.stream.rsession, timeout=10)
+                res = self.stream.session.http.get(url,
+                                                   stream=True,
+                                                   exception=IOError,
+                                                   session=self.stream.rsession,
+                                                   timeout=10)
                 break
             except IOError as err:
                 self.stream.logger.error("[Fragment {0}-{1}] Failed to open: {2}",
@@ -438,7 +439,8 @@ class HDSStreamIO(IOBase):
         self.bootstrap_changed = self.current_fragment != self.last_fragment
 
     def _fetch_bootstrap(self, url):
-        res = urlget(url, session=self.rsession, exception=IOError)
+        res = self.session.http.get(url, session=self.rsession,
+                                    exception=IOError)
         return Box.deserialize(BytesIO(res.content))
 
     def _segment_from_fragment(self, fragment):
@@ -612,7 +614,7 @@ class HDSStream(Stream):
         if "akamaihd" in url:
             rsession.params["hdcore"] = HDCORE_VERSION
 
-        res = urlget(url, exception=IOError, session=rsession)
+        res = session.http.get(url, exception=IOError, session=rsession)
         manifest = res_xml(res, "manifest XML", ignore_ns=True,
                            exception=IOError)
 
@@ -644,7 +646,7 @@ class HDSStream(Stream):
                 raise IOError("This manifest requires the 'pvswf' parameter "
                               "to verify the SWF")
 
-            params = cls._pv_params(pvswf, pvtoken)
+            params = cls._pv_params(session, pvswf, pvtoken)
             rsession.params.update(params)
 
         for media in manifest.findall("media"):
@@ -705,7 +707,7 @@ class HDSStream(Stream):
         return streams
 
     @classmethod
-    def _pv_params(cls, pvswf, pv):
+    def _pv_params(cls, session, pvswf, pv):
         """Returns any parameters needed for Akamai HD player verification.
 
         Algorithm originally documented by KSV, source:
@@ -720,7 +722,7 @@ class HDSStream(Stream):
         headers = dict()
         if cached:
             headers["If-Modified-Since"] = cached["modified"]
-        swf = urlget(pvswf, headers=headers)
+        swf = session.http.get(pvswf, headers=headers)
 
         if cached and swf.status_code == 304:  # Server says not modified
             hash = cached["hash"]
