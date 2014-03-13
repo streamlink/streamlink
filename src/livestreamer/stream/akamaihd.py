@@ -10,10 +10,11 @@ from .wrappers import StreamIOIterWrapper
 from ..buffers import Buffer
 from ..compat import str, bytes, urlparse
 from ..exceptions import StreamError
-from ..utils import swfdecompress, urlget, urlopen
+from ..utils import swfdecompress
 
 from ..packages.flashmedia import FLV, FLVError
 from ..packages.flashmedia.tag import ScriptData
+
 
 class TokenGenerator(object):
     def __init__(self, stream):
@@ -22,12 +23,14 @@ class TokenGenerator(object):
     def generate(self):
         raise NotImplementedError
 
+
 class Auth3TokenGenerator(TokenGenerator):
     def generate(self):
         if not self.stream.swf:
             raise StreamError("A SWF URL is required to create session token")
 
-        res = urlget(self.stream.swf, exception=StreamError)
+        res = self.stream.session.http.get(self.stream.swf,
+                                           exception=StreamError)
         data = swfdecompress(res.content)
 
         md5 = hashlib.md5()
@@ -40,6 +43,7 @@ class Auth3TokenGenerator(TokenGenerator):
 
         return token
 
+
 def cache_bust_string(length):
     rval = ""
 
@@ -47,6 +51,7 @@ def cache_bust_string(length):
         rval += chr(65 + int(round(random.random() * 25)))
 
     return rval
+
 
 class AkamaiHDStreamIO(io.IOBase):
     Version = "2.5.8"
@@ -94,10 +99,11 @@ class AkamaiHDStreamIO(io.IOBase):
         url = self.StreamURLFormat.format(host=self.host, streamname=self.streamname)
         params = self._create_params(seek=self.seek)
 
-        self.logger.debug("Opening host={host} streamname={streamname}", host=self.host, streamname=self.streamname)
+        self.logger.debug("Opening host={host} streamname={streamname}",
+                          host=self.host, streamname=self.streamname)
 
         try:
-            res = urlget(url, stream=True, params=params)
+            res = self.session.http.get(url, stream=True, params=params)
             self.fd = StreamIOIterWrapper(res.iter_content(8192))
         except Exception as err:
             raise StreamError(str(err))
@@ -149,8 +155,11 @@ class AkamaiHDStreamIO(io.IOBase):
 
         params = self._create_params(cmd=cmd, **params)
 
-        return urlopen(url, headers=headers, params=params,
-                       data=self.ControlData, exception=StreamError)
+        return self.session.http.post(url,
+                                      headers=headers,
+                                      params=params,
+                                      data=self.ControlData,
+                                      exception=StreamError)
 
     def read(self, size=-1):
         if not (self.flv and self.fd):
