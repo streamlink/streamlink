@@ -3,8 +3,9 @@ import re
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, verifyjson, res_json
+from livestreamer.utils import verifyjson
 
 
 METADATA_URL = "https://api.dailymotion.com/video/{0}"
@@ -31,8 +32,8 @@ class DailyMotion(Plugin):
 
     def _check_channel_live(self, channelname):
         url = METADATA_URL.format(channelname)
-        res = urlget(url, params=dict(fields="mode"))
-        json = res_json(res)
+        res = http.get(url, params=dict(fields="mode"))
+        json = http.json(res)
 
         if not isinstance(json, dict):
             raise PluginError("Invalid JSON response")
@@ -47,7 +48,7 @@ class DailyMotion(Plugin):
             rpart = urlparse(url).path.rstrip("/").rpartition("/")[-1].lower()
             name = re.sub("_.*", "", rpart)
         elif ("video.gamecreds.com" in url):
-            res = urlget(url)
+            res = http.get(url)
             # The HTML is broken (unclosed meta tags) and minidom fails to parse.
             # Since we are not manipulating the DOM, we get away with a simple grep instead of fixing it.
             match = re.search("<meta property=\"og:video\" content=\"http://www.dailymotion.com/swf/video/([a-z0-9]{6})", res.text)
@@ -66,8 +67,8 @@ class DailyMotion(Plugin):
 
     def _get_rtmp_streams(self, channelname):
         self.logger.debug("Fetching stream info")
-        res = urlget(STREAM_INFO_URL.format(channelname))
-        json = res_json(res)
+        res = http.get(STREAM_INFO_URL.format(channelname))
+        json = http.json(res)
 
         if not isinstance(json, dict):
             raise PluginError("Invalid JSON response")
@@ -105,7 +106,7 @@ class DailyMotion(Plugin):
                     continue
 
                 try:
-                    res = urlget(url, exception=IOError)
+                    res = http.get(url, exception=IOError)
                 except IOError:
                     continue
 
