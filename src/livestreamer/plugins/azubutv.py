@@ -2,8 +2,8 @@ from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.packages.flashmedia import AMFPacket, AMFMessage
 from livestreamer.packages.flashmedia.types import AMF3ObjectBase
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import AkamaiHDStream
-from livestreamer.utils import urlopen
 
 from io import BytesIO
 from operator import attrgetter
@@ -69,13 +69,13 @@ class AzubuTV(Plugin):
 
     def _send_amf_request(self, req, key):
         headers = { "content-type": "application/x-amf" }
-        res = urlopen(self.AMFGateway, data=bytes(req.serialize()),
-                      headers=headers, params=dict(playerKey=key))
+        res = http.post(self.AMFGateway, data=bytes(req.serialize()),
+                        headers=headers, params=dict(playerKey=key))
 
         return AMFPacket.deserialize(BytesIO(res.content))
 
     def _get_player_params(self):
-        res = urlopen(self.url)
+        res = http.get(self.url)
 
         match = re.search("<param name=\"playerKey\" value=\"(.+)\" />", res.text)
         if not match:
