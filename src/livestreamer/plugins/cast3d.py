@@ -1,8 +1,8 @@
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HTTPStream
-from livestreamer.utils import urlget
 
 import re
 
@@ -27,7 +27,7 @@ class Cast3d(Plugin):
         options = dict(channel=channelname, vw="580", vh="390",
                        domain="www.cast3d.tv")
 
-        res = urlget(self.PlayerURL, headers=headers, params=options)
+        res = http.get(self.PlayerURL, headers=headers, params=options)
 
         match = re.search(".+?'streamer':'(.+?)'", res.text)
         if not match:
