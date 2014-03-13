@@ -1,7 +1,7 @@
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, res_json, res_xml
 
 import re
 
@@ -15,8 +15,8 @@ class Cybergame(Plugin):
         return "cybergame.tv" in url
 
     def _get_rtmp_streams(self, params, alternative=""):
-        res = urlget(PLAYLIST_URL, params=params)
-        root = res_xml(res)
+        res = http.get(PLAYLIST_URL, params=params)
+        root = http.xml(res)
         rtmp = root.find("./head/meta").attrib.get("base")
         if not rtmp:
             raise NoStreamsError(self.url)
@@ -51,7 +51,7 @@ class Cybergame(Plugin):
             return self._get_vod_streams()
 
         self.logger.debug("Fetching live stream info")
-        res = urlget(self.url)
+        res = http.get(self.url)
 
         match = re.search("channel=([^\"]+)", res.text)
         if not match:
@@ -59,8 +59,8 @@ class Cybergame(Plugin):
 
         channelname = match.group(1)
 
-        res = urlget(CONFIG_URL, params=dict(c=channelname, ports="y"))
-        json = res_json(res)
+        res = http.get(CONFIG_URL, params=dict(c=channelname, ports="y"))
+        json = http.json(res)
         servers = json.get("servers")
         if not servers:
             raise NoStreamsError(self.url)
