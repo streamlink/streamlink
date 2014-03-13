@@ -1,10 +1,11 @@
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, res_json
 
 from time import time
 import re
+
 
 class Livestation(Plugin):
     SWFURL = "http://beta.cdn.livestation.com/player/5.10/livestation-player.swf"
@@ -23,7 +24,7 @@ class Livestation(Plugin):
 
         match = re.search("<meta content=\"(http://.+?\.swf)\?", text)
         if not match:
-            self.logger.warning("Failed to get player SWF URL location on URL {0}", sel.url)
+            self.logger.warning("Failed to get player SWF URL location on URL {0}", self.url)
         else:
             self.SWFURL = match.group(1)
             self.logger.debug("Found player SWF URL location {0}", self.SWFURL)
@@ -32,8 +33,8 @@ class Livestation(Plugin):
         if not match:
             raise PluginError(("Missing channel item-id on URL {0}").format(self.url))
 
-        res = urlget(self.APIURL.format(match.group(1), time()), params=dict(output="json"))
-        json = res_json(res)
+        res = http.get(self.APIURL.format(match.group(1), time()), params=dict(output="json"))
+        json = http.json(res)
 
         if not isinstance(json, list):
             raise PluginError("Invalid JSON response")
@@ -84,7 +85,7 @@ class Livestation(Plugin):
         return playlist
 
     def _get_streams(self):
-        res = urlget(self.url)
+        res = http.get(self.url)
         streams = {}
 
         if RTMPStream.is_usable(self.session):
