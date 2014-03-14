@@ -547,8 +547,8 @@ def setup_console():
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
-def setup_proxies():
-    """Sets the HTTP(S) proxies for this process."""
+def setup_http_session():
+    """Sets the global HTTP settings, such as proxy and headers."""
     if args.http_proxy:
         if not re.match("^http(s)?://", args.http_proxy):
             args.http_proxy = "http://" + args.http_proxy
@@ -558,6 +558,24 @@ def setup_proxies():
         if not re.match("^http(s)?://", args.https_proxy):
             args.https_proxy = "https://" + args.https_proxy
         livestreamer.http.proxies["https"] = args.https_proxy
+
+    if args.http_cookies:
+        livestreamer.http.parse_cookies(args.http_cookies)
+
+    if args.http_headers:
+        livestreamer.http.parse_headers(args.http_headers)
+
+    if args.http_query_params:
+        livestreamer.http.parse_query_params(args.http_query_params)
+
+    if args.http_no_ssl_verify:
+        livestreamer.http.verify = False
+
+    if args.http_ssl_cert:
+        livestreamer.http.cert = args.http_ssl_cert
+
+    if args.http_ssl_cert_crt_key:
+        livestreamer.http.cert = tuple(args.http_ssl_cert_crt_key)
 
 
 def setup_plugins():
@@ -683,7 +701,7 @@ def main():
     check_root()
     setup_livestreamer()
     setup_console()
-    setup_proxies()
+    setup_http_session()
     setup_plugins()
 
     with ignored(Exception):

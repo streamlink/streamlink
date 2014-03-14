@@ -64,14 +64,30 @@ parser.add_argument("-Q", "--quiet", action="store_true",
 parser.add_argument("-j", "--json", action="store_true",
                     help="Output JSON instead of the normal text output and "
                          "disable log output, useful for external scripting")
-parser.add_argument("--http-proxy", metavar="http://hostname:port/",
-                    help="Specify a HTTP proxy. This is the same as "
-                         "setting the environment variable 'http_proxy'.")
-parser.add_argument("--https-proxy", metavar="https://hostname:port/",
-                    help="Specify a HTTPS proxy. This is the same as "
-                         "setting the environment variable 'https_proxy'.")
 parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
+
+httpopt = parser.add_argument_group("HTTP options")
+httpopt.add_argument("--http-proxy", metavar="http://hostname:port/",
+                     help="Specify a HTTP proxy to use for all HTTP requests")
+httpopt.add_argument("--https-proxy", metavar="https://hostname:port/",
+                     help="Specify a HTTPS proxy to use for all HTTPS requests")
+httpopt.add_argument("--http-cookies", metavar="cookies",
+                     help="A semi-colon (;) delimited list of cookies to "
+                          "add to each HTTP request, e.g. foo=bar;baz=qux")
+httpopt.add_argument("--http-headers", metavar="headers",
+                     help="A semi-colon (;) delimited list of headers to "
+                          "add to each HTTP request, e.g. foo=bar;baz=qux")
+httpopt.add_argument("--http-query-params", metavar="params",
+                     help="A semi-colon (;) delimited list of query parameters "
+                          "to add to each HTTP request, e.g. foo=bar;baz=qux")
+httpopt.add_argument("--http-no-ssl-verify", action="store_true",
+                     help="Don't verify SSL certificates. Usually a bad idea")
+httpopt.add_argument("--http-ssl-cert", metavar="pem",
+                     help="SSL certificate to use (pem)")
+httpopt.add_argument("--http-ssl-cert-crt-key", metavar=("crt", "key"),
+                     nargs=2, help="SSL certificate to use (crt and key)")
+
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",

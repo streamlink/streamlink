@@ -272,19 +272,60 @@ Command line options
     Output JSON instead of the normal text output and
     disable log output, useful for external scripting
 
+
+HTTP options
+^^^^^^^^^^^^
+
 .. cmdoption:: --http-proxy http://hostname:port/
 
-    Specify a HTTP proxy. This is the same as setting
-    the environment variable ``http_proxy``.
+    Specify a HTTP proxy to use for all HTTP requests
 
     .. versionadded:: 1.7.0
 
 .. cmdoption:: --https-proxy https://hostname:port/
 
-    Specify a HTTPS proxy. This is the same as setting
-    the environment variable ``https_proxy``.
+    Specify a HTTPS proxy to use for all HTTPS requests
 
     .. versionadded:: 1.7.0
+
+.. cmdoption:: --http-cookies cookies
+
+    A semi-colon (;) delimited list of cookies to add to
+    each HTTP request, e.g. ``foo=bar;baz=qux``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-headers headers
+
+    A semi-colon (;) delimited list of headers to add to
+    each HTTP request, e.g. ``foo=bar;baz=qux``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-query-params params
+
+    A semi-colon (;) delimited list of query parameters to
+    add to each HTTP request, e.g. ``foo=bar;baz=qux``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-no-ssl-verify
+
+    Don't verify SSL certificates. Usually a bad idea!
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-ssl-cert pem
+
+    SSL certificate to use (pem)
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-ssl-cert-crt-key crt key
+
+    SSL certificate to use (crt and key)
+
+    .. versionadded:: 1.8.0
 
 
 Player options
