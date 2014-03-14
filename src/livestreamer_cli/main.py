@@ -552,12 +552,12 @@ def setup_proxies():
     if args.http_proxy:
         if not re.match("^http(s)?://", args.http_proxy):
             args.http_proxy = "http://" + args.http_proxy
-        os.environ["http_proxy"] = args.http_proxy
+        livestreamer.http.proxies["http"] = args.http_proxy
 
     if args.https_proxy:
         if not re.match("^http(s)?://", args.https_proxy):
             args.https_proxy = "https://" + args.https_proxy
-        os.environ["https_proxy"] = args.https_proxy
+        livestreamer.http.proxies["https"] = args.https_proxy
 
 
 def setup_plugins():
