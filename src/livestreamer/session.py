@@ -5,7 +5,7 @@ import traceback
 
 from . import plugins, __version__
 from .compat import urlparse, is_win32
-from .exceptions import NoPluginError
+from .exceptions import NoPluginError, PluginError
 from .logger import Logger
 from .options import Options
 from .plugin import api
@@ -135,6 +135,14 @@ class Livestreamer(object):
             if plugin.can_handle_url(url):
                 obj = plugin(url)
                 return obj
+
+        # Attempt to handle a redirect URL
+        try:
+            res = self.http.get(url, stream=True)
+            if res.url != url:
+                return self.resolve_url(res.url)
+        except PluginError:
+            pass
 
         raise NoPluginError
 
