@@ -1,20 +1,20 @@
 import re
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import partial
-from io import BytesIO, IOBase
+from io import BytesIO
 from random import randint
 from time import sleep
-from threading import Thread
 
-from livestreamer.buffers import RingBuffer
 from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import StreamError, PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream, HTTPStream, Stream
-
+from livestreamer.stream.segmented import (SegmentedStreamReader,
+                                           SegmentedStreamWriter,
+                                           SegmentedStreamWorker)
 from livestreamer.packages.flashmedia import AMFPacket, AMFError
 from livestreamer.packages.flashmedia.tag import Header
 
@@ -35,6 +35,8 @@ RECORDED_URL_PATTERN = r"^(http(s)?://)?(www\.)?ustream.tv/recorded/(?P<video_id
 RTMP_URL = "rtmp://channel.live.ums.ustream.tv:80/ustream"
 SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
 
+
+Chunk = namedtuple("Chunk", "num url")
 
 def valid_cdn(item):
     name, cdn = item
@@ -64,59 +66,68 @@ def create_ums_connection(app, media_id, page_url, password,
     return conn
 
 
-class UHSStreamFiller(Thread):
-    def __init__(self, stream, conn, provider, stream_index):
-        Thread.__init__(self)
-        self.daemon = True
-        self.running = False
+class UHSStreamWriter(SegmentedStreamWriter):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWriter.__init__(self, *args, **kwargs)
 
-        self.conn = conn
-        self.provider = provider
-        self.stream_index = stream_index
-        self.stream = stream
+        self.header_written = False
+
+    def open_chunk(self, chunk, retries=3):
+        while retries and not self.closed:
+            try:
+                return self.session.http.get(chunk.url,
+                                             stream=True,
+                                             timeout=10,
+                                             exception=StreamError)
+            except StreamError as err:
+                self.logger.error("Failed to open chunk {0}: {1}",
+                                  chunk.num, err)
+            retries -= 1
+
+    def write(self, chunk, chunk_size=8192):
+        res = self.open_chunk(chunk)
+        if not res:
+            return
+
+        try:
+            for data in res.iter_content(chunk_size):
+                if not self.header_written:
+                    flv_header = Header(has_video=True, has_audio=True)
+                    self.reader.buffer.write(flv_header.serialize())
+                    self.header_written = True
+
+                self.reader.buffer.write(data)
+
+                if self.closed:
+                    break
+            else:
+                self.logger.debug("Download of chunk {0} complete", chunk.num)
+        except IOError as err:
+            self.logger.error("Failed to read chunk {0}: {1}", chunk.num, err)
+
+
+class UHSStreamWorker(SegmentedStreamWorker):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWorker.__init__(self, *args, **kwargs)
+
+        self.conn = create_ums_connection("channel",
+                                          self.stream.channel_id,
+                                          self.stream.page_url,
+                                          self.stream.password,
+                                          exception=StreamError)
 
         self.chunk_ranges = {}
         self.chunk_id = None
         self.chunk_id_max = None
 
         self.filename_format = ""
-        self.header_written = False
-
-    def download_chunk(self, chunk_id):
-        self.stream.logger.debug("[{0}] Downloading chunk".format(chunk_id))
-        url = self.format_chunk_url(chunk_id)
-
-        attempts = 3
-        while attempts and self.running:
-            try:
-                res = http.get(url, stream=True, exception=IOError, timeout=10)
-                break
-            except IOError as err:
-                self.stream.logger.error("[{0}] Failed to open chunk: {1}".format(
-                                         chunk_id, err))
-                attempts -= 1
-        else:
-            return
-
-        for data in res.iter_content(8192):
-            if not self.header_written:
-                flv_header = Header(has_video=True, has_audio=True)
-                self.stream.buffer.write(flv_header.serialize())
-                self.header_written = True
-
-            self.stream.buffer.write(data)
-
-            if not self.running:
-                break
-        else:
-            self.stream.logger.debug("[{0}] Downloaded chunk".format(chunk_id))
 
     def process_module_info(self):
         try:
             result = self.conn.process_packets(invoked_method="moduleInfo",
                                                timeout=30)
         except (IOError, librtmp.RTMPError) as err:
-            self.stream.logger.error("Failed to get module info: {0}".format(err))
+            self.logger.error("Failed to get module info: {0}", err)
             return
 
         result = validate_module_info(result)
@@ -125,21 +136,22 @@ class UHSStreamFiller(Thread):
 
         providers = result.get("stream")
         if providers == "offline":
-            self.stream.logger.debug("Stream went offline")
-            self.stop()
+            self.logger.debug("Stream went offline")
+            self.close()
+            return
         elif not isinstance(providers, list):
             return
 
         for provider in filter(valid_provider, providers):
-            if provider.get("name") == self.stream.stream.provider:
+            if provider.get("name") == self.stream.provider:
                 break
         else:
             return
 
         try:
-            stream = provider.get("streams")[self.stream_index]
+            stream = provider.get("streams")[self.stream.stream_index]
         except IndexError:
-            self.stream.logger.debug("Stream index not in result")
+            self.logger.error("Stream index not in result")
             return
 
         filename_format = stream.get("streamName").replace("%", "%s")
@@ -170,86 +182,46 @@ class UHSStreamFiller(Thread):
 
         return self.filename_format % (chunk_id, chunk_hash)
 
-    def run(self):
-        self.stream.logger.debug("Starting buffer filler thread")
-
-        while self.running:
+    def iter_segments(self):
+        while not self.closed:
             self.check_connection()
             self.process_module_info()
 
-            if self.chunk_id is None:
-                continue
+            while self.chunk_id is not None and self.chunk_id <= self.chunk_id_max:
+                url = self.format_chunk_url(self.chunk_id)
+                chunk = Chunk(self.chunk_id, url)
 
-            while self.chunk_id <= self.chunk_id_max:
-                try:
-                    self.download_chunk(self.chunk_id)
-                except IOError as err:
-                    self.stream.logger.debug("[{0}] Failed to read data from chunk: {1}",
-                                             self.chunk_id, err)
+                self.logger.debug("Adding chunk {0} to queue", chunk.num)
+                yield chunk
 
                 self.chunk_id += 1
 
-        self.stop()
-        self.stream.logger.debug("Buffer filler thread completed")
-
     def check_connection(self):
         if not self.conn.connected:
-            self.stream.logger.error("Disconnected, attempting to reconnect")
+            self.logger.error("Disconnected, attempting to reconnect")
 
             try:
                 self.conn = create_ums_connection("channel",
-                                                  self.stream.stream.channel_id,
-                                                  self.stream.stream.page_url,
-                                                  self.stream.stream.password)
+                                                  self.stream.channel_id,
+                                                  self.stream.page_url,
+                                                  self.stream.password)
             except PluginError as err:
-                self.stream.logger.error("Failed to reconnect: {0}", err)
-                self.stop()
-
-    def start(self):
-        self.running = True
-
-        return Thread.start(self)
-
-    def stop(self):
-        self.running = False
-        self.conn.close()
-        self.stream.buffer.close()
-
-
-class UHSStreamIO(IOBase):
-    def __init__(self, session, stream, timeout=30):
-        self.session = session
-        self.stream = stream
-        self.timeout = timeout
-
-        self.logger = session.logger.new_module("stream.uhs")
-        self.buffer = None
-
-    def open(self):
-        self.buffer = RingBuffer(self.session.get_option("ringbuffer-size"))
-
-        conn = create_ums_connection("channel",
-                                     self.stream.channel_id,
-                                     self.stream.page_url,
-                                     self.stream.password,
-                                     exception=StreamError)
-
-        self.filler = UHSStreamFiller(self, conn, self.stream.provider,
-                                      self.stream.stream_index)
-        self.filler.start()
-
-    def read(self, size=-1):
-        if not self.buffer:
-            return b""
-
-        return self.buffer.read(size, block=self.filler.is_alive(),
-                                timeout=self.timeout)
+                self.logger.error("Failed to reconnect: {0}", err)
+                self.close()
 
     def close(self):
-        self.filler.stop()
+        self.conn.close()
+        SegmentedStreamWorker.close(self)
 
-        if self.filler.is_alive():
-            self.filler.join()
+
+class UHSStreamReader(SegmentedStreamReader):
+    __worker__ = UHSStreamWorker
+    __writer__ = UHSStreamWriter
+
+    def __init__(self, stream, *args, **kwargs):
+        self.logger = stream.session.logger.new_module("stream.uhs")
+
+        SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
 
 
 class UHSStream(Stream):
@@ -282,10 +254,10 @@ class UHSStream(Stream):
                     **Stream.__json__(self))
 
     def open(self):
-        fd = UHSStreamIO(self.session, self)
-        fd.open()
+        reader = UHSStreamReader(self)
+        reader.open()
 
-        return fd
+        return reader
 
 
 class UStreamTV(Plugin):
