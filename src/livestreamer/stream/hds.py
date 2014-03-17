@@ -3,32 +3,29 @@ from __future__ import division
 import base64
 import hmac
 import re
-import requests
 import os.path
 
 from binascii import unhexlify
+from collections import namedtuple
 from hashlib import sha256
-from io import BytesIO, IOBase
+from io import BytesIO
 from math import ceil
-from threading import Thread, Timer
-from time import time
 
+from .flvconcat import FLVTagConcat
+from .segmented import (SegmentedStreamReader,
+                        SegmentedStreamWriter,
+                        SegmentedStreamWorker)
 from .stream import Stream
 from .wrappers import StreamIOIterWrapper
 
-from ..buffers import RingBuffer
 from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, bytes, queue, range, is_py33
+from ..compat import parse_qsl, urljoin, urlparse, bytes, range
 from ..exceptions import StreamError
-from ..utils import absolute_url, res_xml, swfdecompress
+from ..utils import absolute_url, swfdecompress
 
-from ..packages.flashmedia import F4V, F4VError, FLVError
+from ..packages.flashmedia import F4V, F4VError
 from ..packages.flashmedia.box import Box
-from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
-                                       AVCVideoData, VideoCommandFrame,
-                                       ScriptData, Header, Tag,
-                                       TAG_TYPE_SCRIPT, TAG_TYPE_AUDIO,
-                                       TAG_TYPE_VIDEO)
+from ..packages.flashmedia.tag import ScriptData, Tag, TAG_TYPE_SCRIPT
 
 # Akamai HD player verification key
 # Use unhexlify() rather than bytes.fromhex() for compatibility with before
@@ -37,331 +34,128 @@ from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
 AKAMAIHD_PV_KEY = unhexlify(
     b"BD938D5EE6D9F42016F9C56577B6FDCF415FE4B184932B785AB32BCADC9BB592")
 
-AAC_SEQUENCE_HEADER = 0x00
-AVC_SEQUENCE_HEADER = 0x00
-AVC_SEQUENCE_END = 0x02
-
 # Some streams hosted by Akamai seem to require a hdcore parameter
 # to function properly.
 HDCORE_VERSION = "3.1.0"
 
-class HDSStreamFiller(Thread):
-    def __init__(self, stream):
-        Thread.__init__(self)
+# Fragment URL format
+FRAGMENT_URL = "{url}{identifier}{quality}Seg{segment}-Frag{fragment}"
 
-        self.daemon = True
-        self.error = None
-        self.running = False
-        self.stream = stream
-        self.queue = queue.Queue(maxsize=5)
+Fragment = namedtuple("Fragment", "segment fragment duration url")
 
-        self.avc_header_written = False
-        self.aac_header_written = False
 
-        self.timestamps = {
-            TAG_TYPE_AUDIO: None,
-            TAG_TYPE_VIDEO: None,
-            TAG_TYPE_SCRIPT: None
-        }
+class HDSStreamWriter(SegmentedStreamWriter):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWriter.__init__(self, *args, **kwargs)
 
-        self.create_tag_buffer(8182 * 8)
+        duration, tags = None, []
+        if self.stream.metadata:
+            duration = self.stream.metadata.value.get("duration")
+            tags = [Tag(TAG_TYPE_SCRIPT, timestamp=0,
+                        data=self.stream.metadata)]
 
-    def create_tag_buffer(self, size):
-        if is_py33:
-            self.tag_buffer = memoryview(bytearray(size))
-        else:
-            self.tag_buffer = bytearray(size)
+        self.concater = FLVTagConcat(tags=tags,
+                                     duration=duration,
+                                     flatten_timestamps=True)
 
-    def download_fragment(self, segment, fragment):
-        url = self.stream.fragment_url(segment, fragment)
-
-        self.stream.logger.debug("[Fragment {0}-{1}] Opening URL: {2}",
-                                 segment, fragment, url)
-
-        retries = 3
-        res = None
-
-        while retries > 0 and self.running:
+    def open_fragment(self, fragment, retries=3):
+        while retries and not self.closed:
             try:
-                res = self.stream.session.http.get(url,
-                                                   stream=True,
-                                                   exception=IOError,
-                                                   session=self.stream.rsession,
-                                                   timeout=10)
-                break
-            except IOError as err:
-                self.stream.logger.error("[Fragment {0}-{1}] Failed to open: {2}",
-                                         segment, fragment, str(err))
-
+                return self.session.http.get(fragment.url,
+                                             stream=True,
+                                             timeout=10,
+                                             exception=StreamError,
+                                             **self.stream.request_params)
+            except StreamError as err:
+                self.logger.error("Failed to open fragment {0}-{1}: {2}",
+                                  fragment.segment, fragment.segment, err)
             retries -= 1
 
+    def write(self, fragment, chunk_size=8192):
+        res = self.open_fragment(fragment)
         if not res:
+            self.fix_missing_fragment(fragment)
             return
 
         size = int(res.headers.get("content-length", "0"))
-        size = size * self.stream.buffer_fragments
-
-        if size > self.stream.buffer.buffer_size:
-            self.stream.buffer.resize(size)
+        size = size * self.reader.buffer_fragments
+        if size > self.reader.buffer.buffer_size:
+            self.reader.buffer.resize(size)
 
         fd = StreamIOIterWrapper(res.iter_content(8192))
-        return self.convert_fragment(segment, fragment, fd)
+        if not self.convert_fragment(fragment, fd):
+            self.fix_missing_fragment(fragment)
 
-    def convert_fragment(self, segment, fragment, fd):
+    def fix_missing_fragment(self, fragment):
+        # Make sure timestamps don't get out of sync when a fragment
+        # is missing or failed to download.
+        for key, value in self.concater.timestamps_sub.items():
+            self.concater.timestamps_sub[key] += fragment.duration
+
+    def convert_fragment(self, fragment, fd):
         mdat = None
-
         try:
             f4v = F4V(fd, raw_payload=True)
-
             # Fast forward to mdat box
             for box in f4v:
                 if box.type == "mdat":
                     mdat = box.payload.data
                     break
-
         except F4VError as err:
-            self.stream.logger.error("[Fragment {0}-{1}] Failed to deserialize: {2}",
-                                     segment, fragment, str(err))
+            self.logger.error("Failed to parse fragment {0}-{1}: {2}",
+                              fragment.segment, fragment.fragment, err)
             return
 
         if not mdat:
-            self.stream.logger.error("[Fragment {0}-{1}] No mdat box found",
-                                     segment, fragment)
+            self.logger.error("No MDAT box found in fragment {0}-{1}",
+                              fragment.segment, fragment.fragment)
             return
 
-        self.stream.logger.debug(("[Fragment {0}-{1}] Extracting FLV tags from"
-                                  " MDAT box"), segment, fragment)
+        try:
+            for chunk in self.concater.iter_chunks(buf=mdat, skip_header=True):
+                self.reader.buffer.write(chunk)
 
-        mdat_size = len(mdat)
-
-        if mdat_size > len(self.tag_buffer):
-            self.create_tag_buffer(mdat_size)
-
-        self.mdat_offset = 0
-        self.tag_offset = 0
-
-        while self.running and self.mdat_offset < mdat_size:
-            try:
-                self.extract_flv_tag(mdat)
-            except (FLVError, IOError) as err:
-                self.stream.logger.error(("Failed to extract FLV tag from MDAT"
-                                          " box: {0}").format(str(err)))
-                break
-
-        self.stream.buffer.write(self.tag_buffer[:self.tag_offset])
-
-        return True
-
-    def extract_flv_tag(self, mdat):
-        tag, self.mdat_offset = Tag.deserialize_from(mdat, self.mdat_offset)
-
-        if tag.filter:
-            self.stop()
-            self.error = IOError("Tag has filter flag set, probably encrypted")
-            raise self.error
-
-        if isinstance(tag.data, AudioData):
-            if isinstance(tag.data.data, AACAudioData):
-                if tag.data.data.type == AAC_SEQUENCE_HEADER:
-                    if self.aac_header_written:
-                        return
-
-                    self.aac_header_written = True
-                else:
-                    if not self.aac_header_written:
-                        self.stream.logger.debug("Skipping AAC data before header")
-                        return
-
-        if isinstance(tag.data, VideoData):
-            if isinstance(tag.data.data, AVCVideoData):
-                if tag.data.data.type == AVC_SEQUENCE_HEADER:
-                    if self.avc_header_written:
-                        return
-
-                    self.avc_header_written = True
-                else:
-                    if not self.avc_header_written:
-                        self.stream.logger.debug("Skipping AVC data before header")
-                        return
-
-            elif isinstance(tag.data.data, VideoCommandFrame):
-                self.stream.logger.debug("Skipping video command frame")
+                if self.closed:
+                    break
+            else:
+                self.logger.debug("Download of fragment {0}-{1} complete",
+                                  fragment.segment, fragment.fragment)
+                return True
+        except IOError as err:
+            if "Unknown tag type" in str(err):
+                self.logger.error("Unknown tag type found, this stream is "
+                                  "probably encrypted")
+                self.close()
                 return
 
-
-        if tag.type in self.timestamps:
-            if self.timestamps[tag.type] is None:
-                self.timestamps[tag.type] = tag.timestamp
-            else:
-                tag.timestamp = max(0, tag.timestamp - self.timestamps[tag.type])
-
-        self.tag_offset = tag.serialize_into(self.tag_buffer, self.tag_offset)
-
-    def run(self):
-        self.stream.logger.debug("Starting buffer filler thread")
-
-        while self.running:
-            try:
-                segment, fragment, fragment_duration = self.queue.get(True, 5)
-            except queue.Empty:
-                continue
-
-            # Make sure timestamps don't get out of sync when
-            # a fragment is missing or failed to download.
-            if not self.download_fragment(segment, fragment):
-                for key, value in self.timestamps.items():
-                    if value is not None:
-                        self.timestamps[key] += fragment_duration
-                    else:
-                        self.timestamps[key] = fragment_duration
-
-            if fragment == self.stream.end_fragment:
-                break
-
-        self.stop()
-        self.stream.logger.debug("Buffer filler thread completed")
-
-    def start(self):
-        self.running = True
-
-        return Thread.start(self)
-
-    def stop(self):
-        self.running = False
-        self.stream.buffer.close()
-
-        if self.stream.bootstrap_timer:
-            self.stream.bootstrap_timer.cancel()
+            self.logger.error("Error reading fragment {0}-{1}: {2}",
+                              fragment.segment, fragment.fragment, err)
 
 
-class HDSStreamIO(IOBase):
-    FragmentURL = "{url}{identifier}{quality}Seg{segment}-Frag{fragment}"
+class HDSStreamWorker(SegmentedStreamWorker):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWorker.__init__(self, *args, **kwargs)
 
-    def __init__(self, session, baseurl, url, bootstrap, metadata=None,
-                 timeout=60, rsession=None):
-
-        self.buffer = None
-        self.buffer_time = session.options.get("hds-live-edge")
-        self.buffer_fragments = int(session.options.get("hds-fragment-buffer"))
-        self.baseurl = baseurl
-        self.bootstrap = bootstrap
-        self.logger = session.logger.new_module("stream.hds")
-        self.metadata = metadata
-        self.session = session
-        self.timeout = timeout
-        self.url = url
-
-        if rsession:
-            self.rsession = rsession
-        else:
-            self.rsession = requests.session()
-
-    def open(self):
+        self.bootstrap = self.stream.bootstrap
         self.current_segment = -1
         self.current_fragment = -1
         self.first_fragment = 1
         self.last_fragment = -1
         self.end_fragment = None
 
-        self.bootstrap_timer = None
         self.bootstrap_minimal_reload_time = 2.0
         self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
-        self.bootstrap_reload_timestamp = 0
         self.invalid_fragments = set()
 
-        self.buffer = RingBuffer()
-        self.header_written = False
+        self.update_bootstrap()
 
-        self.filler = HDSStreamFiller(self)
-        self.filler.start()
-
-        try:
-            self.update_bootstrap(silent=False, fillqueue=True)
-        except StreamError:
-            self.close()
-            raise
-
-        return self
-
-    def close(self):
-        self.filler.stop()
-
-        if self.filler.is_alive():
-            self.filler.join()
-
-    def read(self, size=-1):
-        if not self.buffer:
-            return b""
-
-        if self.filler.error:
-            raise self.filler.error
-
-        return self.buffer.read(size, block=self.filler.is_alive(),
-                                timeout=self.timeout)
-
-    def fragment_url(self, segment, fragment):
-        url = absolute_url(self.baseurl, self.url)
-
-        return self.FragmentURL.format(url=url, identifier="",
-                                       quality="", segment=segment,
-                                       fragment=fragment)
-
-
-    def update_bootstrap(self, silent=True, fillqueue=False):
-        if not self.filler.running:
-            return
-
-        if self.end_fragment and self.current_fragment > self.end_fragment:
-            return
-
-        # Wait until buffer has room before requesting a new bootstrap
-        self.buffer.wait_free()
-
-        elapsed = time() - self.bootstrap_reload_timestamp
-        if elapsed > self.bootstrap_reload_time:
-            try:
-                self._update_bootstrap()
-            except IOError as err:
-                self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
-
-                if silent:
-                    self.logger.error("Failed to update bootstrap: {0}",
-                                      str(err))
-                else:
-                    raise StreamError(str(err))
-
-        if not self.header_written:
-            flvheader = Header(has_video=True, has_audio=True)
-            self.buffer.write(flvheader.serialize())
-
-            if self.metadata:
-                # Remove duration from metadata when it's a livestream
-                # since it will just confuse players anyway.
-                if self.live and "duration" in self.metadata.value:
-                    del self.metadata.value["duration"]
-
-                tag = Tag(TAG_TYPE_SCRIPT, timestamp=0, data=self.metadata)
-                self.buffer.write(tag.serialize())
-
-            self.header_written = True
-
-        if self.bootstrap_changed:
-            self._queue_fragments(fillqueue)
-
-        if self.bootstrap_timer:
-            self.bootstrap_timer.cancel()
-
-        self.bootstrap_timer = Timer(1, self.update_bootstrap)
-        self.bootstrap_timer.daemon = True
-        self.bootstrap_timer.start()
-
-    def _update_bootstrap(self):
+    def update_bootstrap(self):
         self.logger.debug("Updating bootstrap")
 
         if isinstance(self.bootstrap, Box):
             bootstrap = self.bootstrap
         else:
-            bootstrap = self._fetch_bootstrap(self.bootstrap)
+            bootstrap = self.fetch_bootstrap(self.bootstrap)
 
         self.live = bootstrap.payload.live
         self.profile = bootstrap.payload.profile
@@ -371,14 +165,14 @@ class HDSStreamIO(IOBase):
         self.segmentruntable = bootstrap.payload.segment_run_table_entries[0]
         self.fragmentruntable = bootstrap.payload.fragment_run_table_entries[0]
 
-        self.first_fragment, last_fragment = self._fragment_count()
-        fragment_duration = self._fragment_duration(last_fragment)
+        self.first_fragment, last_fragment = self.fragment_count()
+        fragment_duration = self.fragment_duration(last_fragment)
 
         if last_fragment != self.last_fragment:
-            self.bootstrap_changed = True
+            bootstrap_changed = True
             self.last_fragment = last_fragment
         else:
-            self.bootstrap_changed = False
+            bootstrap_changed = False
 
         if self.current_fragment < 0:
             if self.live:
@@ -386,11 +180,17 @@ class HDSStreamIO(IOBase):
 
                 # Less likely to hit edge if we don't start with last fragment,
                 # default buffer is 10 sec.
-                fragment_buffer = int(ceil(self.buffer_time / fragment_duration))
-                current_fragment = max(self.first_fragment, current_fragment - (fragment_buffer - 1))
+                fragment_buffer = int(ceil(self.reader.buffer_time /
+                                           fragment_duration))
+                current_fragment = max(self.first_fragment,
+                                       current_fragment - (fragment_buffer - 1))
 
                 self.logger.debug("Live edge buffer {0} sec is {1} fragments",
-                                  self.buffer_time, fragment_buffer)
+                                  self.reader.buffer_time, fragment_buffer)
+
+                # Make sure we don't have a duration set when it's a
+                # live stream since it will just confuse players anyway.
+                self.writer.concater.duration = None
             else:
                 current_fragment = self.first_fragment
 
@@ -403,91 +203,30 @@ class HDSStreamIO(IOBase):
         self.logger.debug("Last fragment: {0}", self.last_fragment)
         self.logger.debug("End fragment: {0}", self.end_fragment)
 
-        self.bootstrap_reload_timestamp = time()
         self.bootstrap_reload_time = fragment_duration
 
-        if self.live and not self.bootstrap_changed:
+        if self.live and not bootstrap_changed:
             self.logger.debug("Bootstrap not changed, shortening timer")
             self.bootstrap_reload_time /= 2
 
-        if self.bootstrap_reload_time < self.bootstrap_minimal_reload_time:
-            self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
+        self.bootstrap_reload_time = max(self.bootstrap_reload_time,
+                                         self.bootstrap_minimal_reload_time)
 
-    def _queue_fragments(self, fillqueue=False):
-        for i, fragment in enumerate(range(self.current_fragment, self.last_fragment + 1)):
-            if not self.filler.running or (fillqueue and i == self.filler.queue.maxsize):
-                break
-
-            if fragment in self.invalid_fragments:
-                continue
-
-            self.current_fragment = fragment + 1
-            self.current_segment = self._segment_from_fragment(fragment)
-            fragment_duration = int(self._fragment_duration(fragment) * 1000)
-            entry = (self.current_segment, fragment, fragment_duration)
-
-            self.logger.debug("[Fragment {0}-{1}] Adding to queue",
-                               entry[0], entry[1])
-
-            while self.filler.running:
-                try:
-                    self.filler.queue.put(entry, True, 5)
-                    break
-                except queue.Full:
-                    continue
-
-        self.bootstrap_changed = self.current_fragment != self.last_fragment
-
-    def _fetch_bootstrap(self, url):
-        res = self.session.http.get(url, session=self.rsession,
-                                    exception=IOError)
+    def fetch_bootstrap(self, url):
+        res = self.session.http.get(url,
+                                    exception=StreamError,
+                                    **self.stream.request_params)
         return Box.deserialize(BytesIO(res.content))
 
-    def _segment_from_fragment(self, fragment):
-        table = self.segmentruntable.payload.segment_run_entry_table
+    def fragment_url(self, segment, fragment):
+        url = absolute_url(self.stream.baseurl, self.stream.url)
+        return FRAGMENT_URL.format(url=url,
+                                   segment=segment,
+                                   fragment=fragment,
+                                   identifier="",
+                                   quality="")
 
-        for segment, start, end in self._iterate_segments(table):
-            if fragment >= (start + 1) and fragment <= (end + 1):
-                break
-        else:
-            segment = 1
-
-        return segment
-
-    def _iterate_segments(self, table):
-        # If the first segment in the table starts at the beginning we can go from there,
-        # otherwise we start from the end and use the total fragment count to figure
-        # out where the last segment ends.
-
-        if table[0].first_segment == 1:
-            prev_frag = self.first_fragment - 1
-
-            for segmentrun in table:
-                start = prev_frag + 1
-                end = prev_frag + segmentrun.fragments_per_segment
-
-                yield segmentrun.first_segment, start, end
-
-                prev_frag = end
-        else:
-            prev_frag = self.last_fragment + 1
-
-            for segmentrun in reversed(table):
-                start = prev_frag - segmentrun.fragments_per_segment
-                end = prev_frag - 1
-
-                yield segmentrun.first_segment, start, end
-
-                prev_frag = start
-
-    def _debug_fragment_table(self):
-        fragmentruntable = self.fragmentruntable.payload.fragment_run_entry_table
-
-        for i, fragmentrun in enumerate(fragmentruntable):
-            print(fragmentrun.first_fragment, fragmentrun.first_fragment_timestamp,
-                  fragmentrun.fragment_duration, fragmentrun.discontinuity_indicator)
-
-    def _fragment_count(self):
+    def fragment_count(self):
         table = self.fragmentruntable.payload.fragment_run_entry_table
         first_fragment, end_fragment = None, None
 
@@ -502,10 +241,12 @@ class HDSStreamIO(IOBase):
                 first_fragment = fragmentrun.first_fragment
 
             end_fragment = fragmentrun.first_fragment
-            fragment_duration = fragmentrun.first_fragment_timestamp + fragmentrun.fragment_duration
+            fragment_duration = (fragmentrun.first_fragment_timestamp +
+                                 fragmentrun.fragment_duration)
 
             if self.timestamp > fragment_duration:
-                offset = (self.timestamp - fragment_duration) / fragmentrun.fragment_duration
+                offset = ((self.timestamp - fragment_duration) /
+                          fragmentrun.fragment_duration)
                 end_fragment += int(offset)
 
         if first_fragment is None:
@@ -516,7 +257,7 @@ class HDSStreamIO(IOBase):
 
         return first_fragment, end_fragment
 
-    def _fragment_duration(self, fragment):
+    def fragment_duration(self, fragment):
         fragment_duration = 0
         table = self.fragmentruntable.payload.fragment_run_entry_table
         time_scale = self.fragmentruntable.payload.time_scale
@@ -540,6 +281,82 @@ class HDSStreamIO(IOBase):
 
         return fragment_duration
 
+    def segment_from_fragment(self, fragment):
+        table = self.segmentruntable.payload.segment_run_entry_table
+
+        for segment, start, end in self.iter_segment_table(table):
+            if fragment >= (start + 1) and fragment <= (end + 1):
+                break
+        else:
+            segment = 1
+
+        return segment
+
+    def iter_segment_table(self, table):
+        # If the first segment in the table starts at the beginning we
+        # can go from there, otherwise we start from the end and use the
+        # total fragment count to figure out where the last segment ends.
+        if table[0].first_segment == 1:
+            prev_frag = self.first_fragment - 1
+            for segmentrun in table:
+                start = prev_frag + 1
+                end = prev_frag + segmentrun.fragments_per_segment
+
+                yield segmentrun.first_segment, start, end
+                prev_frag = end
+        else:
+            prev_frag = self.last_fragment + 1
+            for segmentrun in reversed(table):
+                start = prev_frag - segmentrun.fragments_per_segment
+                end = prev_frag - 1
+
+                yield segmentrun.first_segment, start, end
+                prev_frag = start
+
+    def valid_fragment(self, fragment):
+        return fragment not in self.invalid_fragments
+
+    def iter_segments(self):
+        while not self.closed:
+            fragments = range(self.current_fragment, self.last_fragment + 1)
+            fragments = filter(self.valid_fragment, fragments)
+
+            for fragment in fragments:
+                self.current_fragment = fragment + 1
+                self.current_segment = self.segment_from_fragment(fragment)
+
+                fragment_duration = int(self.fragment_duration(fragment) * 1000)
+                fragment_url = self.fragment_url(self.current_segment, fragment)
+                fragment = Fragment(self.current_segment, fragment,
+                                    fragment_duration, fragment_url)
+
+                self.logger.debug("Adding fragment {0}-{1} to queue",
+                                  fragment.segment, fragment.fragment)
+                yield fragment
+
+                # End of stream
+                stream_end = self.end_fragment and fragment.fragment >= self.end_fragment
+                if self.closed or stream_end:
+                    return
+
+            self.wait(self.bootstrap_reload_time)
+            try:
+                self.update_bootstrap()
+            except StreamError as err:
+                self.logger.warning("Failed to update bootstrap: {0}", err)
+
+
+class HDSStreamReader(SegmentedStreamReader):
+    __worker__ = HDSStreamWorker
+    __writer__ = HDSStreamWriter
+
+    def __init__(self, stream, *args, **kwargs):
+        SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
+
+        self.buffer_time = self.session.options.get("hds-live-edge")
+        self.buffer_fragments = int(self.session.options.get("hds-fragment-buffer"))
+        self.logger = stream.session.logger.new_module("stream.hds")
+
 
 class HDSStream(Stream):
     """
@@ -548,17 +365,20 @@ class HDSStream(Stream):
     *Attributes:*
 
     - :attr:`baseurl` Base URL
-    - :attr:`url` Base path of the stream, joined with the base URL when fetching fragments
-    - :attr:`bootstrap` Either a URL pointing to the bootstrap or a bootstrap :class:`Box` object
-      used for initial information about the stream
-    - :attr:`metadata` Either `None` or a :class:`ScriptData` object that contains metadata about
-      the stream, such as height, width and bitrate
+    - :attr:`url` Base path of the stream, joined with the base URL when
+      fetching fragments
+    - :attr:`bootstrap` Either a URL pointing to the bootstrap or a
+      bootstrap :class:`Box` object used for initial information about
+      the stream
+    - :attr:`metadata` Either `None` or a :class:`ScriptData` object
+      that contains metadata about the stream, such as height, width and
+      bitrate
     """
 
     __shortname__ = "hds"
 
     def __init__(self, session, baseurl, url, bootstrap, metadata=None,
-                 timeout=60, rsession=None):
+                 timeout=60, **request_params):
         Stream.__init__(self, session)
 
         self.baseurl = baseurl
@@ -566,7 +386,7 @@ class HDSStream(Stream):
         self.bootstrap = bootstrap
         self.metadata = metadata
         self.timeout = timeout
-        self.rsession = rsession
+        self.request_params = request_params
 
     def __repr__(self):
         return ("<HDSStream({0!r}, {1!r}, {2!r},"
@@ -591,39 +411,44 @@ class HDSStream(Stream):
                     url=self.url, bootstrap=bootstrap, metadata=metadata)
 
     def open(self):
-        fd = HDSStreamIO(self.session, self.baseurl, self.url, self.bootstrap,
-                         self.metadata, self.timeout, self.rsession)
-
-        return fd.open()
+        reader = HDSStreamReader(self)
+        reader.open()
+        return reader
 
     @classmethod
-    def parse_manifest(cls, session, url, timeout=60, rsession=None,
-                       pvswf=None):
+    def parse_manifest(cls, session, url, timeout=60, pvswf=None,
+                       **request_params):
         """Parses a HDS manifest and returns its substreams.
 
         :param url: The URL to the manifest.
         :param timeout: How long to wait for data to be returned from
                         from the stream before raising an error.
-        :param rsession: requests session used for the streams.
         :param pvswf: URL of player SWF for Akamai HD player verification.
         """
 
-        if not rsession:
-            rsession = requests.session()
+        if not request_params:
+            request_params = {}
+            request_params["headers"] = {}
+            request_params["params"] = {}
+
+        # These params are reserved for internal use
+        request_params.pop("exception", None)
+        request_params.pop("stream", None)
+        request_params.pop("timeout", None)
+        request_params.pop("url", None)
 
         if "akamaihd" in url:
-            rsession.params["hdcore"] = HDCORE_VERSION
+            request_params["params"]["hdcore"] = HDCORE_VERSION
 
-        res = session.http.get(url, exception=IOError, session=rsession)
-        manifest = res_xml(res, "manifest XML", ignore_ns=True,
-                           exception=IOError)
+        res = session.http.get(url, exception=IOError, **request_params)
+        manifest = session.http.xml(res, "manifest XML", ignore_ns=True,
+                                    exception=IOError)
 
         parsed = urlparse(url)
         baseurl = manifest.findtext("baseURL")
         baseheight = manifest.findtext("height")
         bootstraps = {}
         streams = {}
-
 
         if not baseurl:
             baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
@@ -647,7 +472,7 @@ class HDSStream(Stream):
                               "to verify the SWF")
 
             params = cls._pv_params(session, pvswf, pvtoken)
-            rsession.params.update(params)
+            request_params["params"].update(params)
 
         for media in manifest.findall("media"):
             url = media.attrib.get("url")
@@ -685,14 +510,14 @@ class HDSStream(Stream):
 
                 stream = HDSStream(session, baseurl, url, bootstrap,
                                    metadata=metadata, timeout=timeout,
-                                   rsession=rsession)
+                                   **request_params)
                 streams[quality] = stream
 
             elif href:
                 url = absolute_url(baseurl, href)
                 child_streams = cls.parse_manifest(session, url,
                                                    timeout=timeout,
-                                                   rsession=rsession)
+                                                   **request_params)
 
                 for name, stream in child_streams.items():
                     # Override stream name if bitrate is available in parent
