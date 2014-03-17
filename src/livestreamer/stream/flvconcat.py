@@ -1,3 +1,5 @@
+from __future__ import division
+
 from collections import namedtuple
 from io import IOBase
 from itertools import chain
@@ -10,24 +12,37 @@ from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
                                        Header, ScriptData, Tag)
 
 
-__all__ = ["extract_flv_header_tags", "FLVTagConcatIO"]
+__all__ = ["extract_flv_header_tags", "FLVTagConcat", "FLVTagConcatIO"]
 
 AAC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_HEADER = 0x00
 AVC_SEQUENCE_END = 0x02
 
-FLVHeaderTags = namedtuple("FLVHeaderTags", ["metadata", "aac", "avc"])
+FLVHeaderTags = namedtuple("FLVHeaderTags", "metadata aac vc")
 
 
-def iterate_flv(fd, strict=False, skip_header=False):
+def iter_flv_tags(fd=None, buf=None, strict=False, skip_header=False):
+    if not (fd or buf):
+        return
+
+    offset = 0
     if not skip_header:
-        Header.deserialize(fd)
+        if fd:
+            Header.deserialize(fd)
+        elif buf:
+            header, offset = Header.deserialize_from(buf, offset)
 
-    while True:
+    while fd or buf and offset < len(buf):
         try:
-            tag = Tag.deserialize(fd, strict=strict)
-        except (IOError, FLVError):
-            break
+            if fd:
+                tag = Tag.deserialize(fd, strict=strict)
+            elif buf:
+                tag, offset = Tag.deserialize_from(buf, offset, strict=strict)
+        except (IOError, FLVError) as err:
+            if "Insufficient tag header" in str(err):
+                break
+
+            raise IOError(err)
 
         yield tag
 
@@ -36,7 +51,7 @@ def extract_flv_header_tags(stream):
     fd = stream.open()
     metadata = aac_header = avc_header = None
 
-    for tag_index, tag in enumerate(iterate_flv(fd)):
+    for tag_index, tag in enumerate(iter_flv_tags(fd)):
         if isinstance(tag.data, ScriptData) and tag.data.name == "onMetaData":
             metadata = tag
         elif (isinstance(tag.data, VideoData) and
@@ -58,28 +73,24 @@ def extract_flv_header_tags(stream):
     return FLVHeaderTags(metadata, aac_header, avc_header)
 
 
-class FLVTagConcatWorker(Thread):
-    def __init__(self, iterator, stream):
-        Thread.__init__(self)
-
-        self.daemon = True
+class FLVTagConcat(object):
+    def __init__(self, duration=None, tags=[], has_video=True, has_audio=True,
+                 flatten_timestamps=False):
+        self.duration = duration
+        self.flatten_timestamps = flatten_timestamps
+        self.has_audio = has_audio
+        self.has_video = has_video
+        self.tags = tags
 
         self.avc_header_written = False
         self.aac_header_written = False
         self.flv_header_written = False
-
         self.timestamps_add = {}
         self.timestamps_sub = {}
 
-        self.error = None
-        self.stream = stream
-        self.stream_iterator = iterator
-
     def verify_tag(self, tag):
         if tag.filter:
-            self.stop()
-            self.error = IOError("Tag has filter flag set, probably encrypted")
-            return
+            raise IOError("Tag has filter flag set, probably encrypted")
 
         if isinstance(tag.data, AudioData):
             if isinstance(tag.data.data, AACAudioData):
@@ -90,7 +101,6 @@ class FLVTagConcatWorker(Thread):
                     self.aac_header_written = True
                 else:
                     if not self.aac_header_written:
-                        self.stream.logger.debug("Skipping AAC data before header")
                         return
 
         elif isinstance(tag.data, VideoData):
@@ -102,17 +112,15 @@ class FLVTagConcatWorker(Thread):
                     self.avc_header_written = True
                 else:
                     if not self.avc_header_written:
-                        self.stream.logger.debug("Skipping AVC data before header")
                         return
 
             elif isinstance(tag.data.data, VideoCommandFrame):
-                self.stream.logger.debug("Skipping video command frame")
                 return
 
         elif isinstance(tag.data, ScriptData):
             if tag.data.name == "onMetaData":
-                if self.stream.duration:
-                    tag.data.value["duration"] = self.stream.duration
+                if self.duration:
+                    tag.data.value["duration"] = self.duration
                 elif "duration" in tag.data.value:
                     del tag.data.value["duration"]
 
@@ -120,7 +128,7 @@ class FLVTagConcatWorker(Thread):
 
     def adjust_tag_timestamp(self, tag):
         timestamp_offset_sub = self.timestamps_sub.get(tag.type)
-        if timestamp_offset_sub is None and tag not in self.stream.tags:
+        if timestamp_offset_sub is None and tag not in self.tags:
             self.timestamps_sub[tag.type] = tag.timestamp
             timestamp_offset_sub = self.timestamps_sub.get(tag.type)
 
@@ -131,42 +139,62 @@ class FLVTagConcatWorker(Thread):
         elif timestamp_offset_sub:
             tag.timestamp = max(0, tag.timestamp - timestamp_offset_sub)
 
-    def iterate_tags(self, fd):
-        tags_iterator = filter(None, self.stream.tags)
-        flv_iterator = iterate_flv(fd, skip_header=not not self.stream.tags)
+    def iter_tags(self, fd=None, buf=None, skip_header=None):
+        if skip_header is None:
+            skip_header = not not self.tags
+
+        tags_iterator = filter(None, self.tags)
+        flv_iterator = iter_flv_tags(fd=fd, buf=buf, skip_header=skip_header)
 
         for tag in chain(tags_iterator, flv_iterator):
             yield tag
 
-    def write_tag(self, tag):
-        self.stream.buffer.write(tag.serialize())
+    def iter_chunks(self, fd=None, buf=None, skip_header=None):
+        """Reads FLV tags from fd or buf and returns them with adjusted
+           timestamps."""
+        timestamps = dict(self.timestamps_add)
+
+        for tag in self.iter_tags(fd=fd, buf=buf, skip_header=skip_header):
+            if not self.flv_header_written:
+                flv_header = Header(has_video=self.has_video,
+                                    has_audio=self.has_audio)
+                yield flv_header.serialize()
+                self.flv_header_written = True
+
+            if self.verify_tag(tag):
+                self.adjust_tag_timestamp(tag)
+
+                if self.duration:
+                    norm_timestamp = tag.timestamp / 1000
+                    if norm_timestamp > self.duration:
+                        break
+                yield tag.serialize()
+                timestamps[tag.type] = tag.timestamp
+
+        if not self.flatten_timestamps:
+            self.timestamps_add = timestamps
+
+        self.tags = []
+
+
+class FLVTagConcatWorker(Thread):
+    def __init__(self, iterator, stream):
+        self.error = None
+        self.stream = stream
+        self.stream_iterator = iterator
+        self.concater = FLVTagConcat(stream.duration, stream.tags)
+
+        Thread.__init__(self)
+        self.daemon = True
 
     def run(self):
         for fd in self.stream_iterator:
-            timestamps = dict(self.timestamps_add)
-
-            for tag in self.iterate_tags(fd):
-                if not self.running:
-                    return self.stop()
-
-                if not self.flv_header_written:
-                    flv_header = Header(has_video=True, has_audio=True)
-                    self.write_tag(flv_header)
-                    self.flv_header_written = True
-
-                if self.verify_tag(tag):
-                    self.adjust_tag_timestamp(tag)
-
-                    if self.stream.duration:
-                        norm_timestamp = tag.timestamp / 1000
-                        if norm_timestamp > self.stream.duration:
-                            return self.stop()
-
-                    self.write_tag(tag)
-                    timestamps[tag.type] = tag.timestamp
-
-            self.timestamps_add = timestamps
-            self.stream.tags = []
+            try:
+                for chunk in self.concater.iter_chunks(fd):
+                    self.stream.buffer.write(chunk)
+            except IOError as err:
+                self.error = err
+                break
 
         self.stop()
 
@@ -183,7 +211,7 @@ class FLVTagConcatIO(IOBase):
     __worker__ = FLVTagConcatWorker
     __log_name__ = "stream.flv_concat"
 
-    def __init__(self, session, duration=None, tags=None, timeout=30):
+    def __init__(self, session, duration=None, tags=[], timeout=30):
         self.session = session
         self.timeout = timeout
         self.logger = session.logger.new_module(self.__log_name__)

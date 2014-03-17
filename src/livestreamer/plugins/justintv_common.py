@@ -185,7 +185,10 @@ class PluginBase(Plugin):
             chunk_stream = HTTPStream(self.session, chunk_url)
 
             if start_offset >= chunk_start and start_offset <= chunk_stop:
-                headers = extract_flv_header_tags(chunk_stream)
+                try:
+                    headers = extract_flv_header_tags(chunk_stream)
+                except IOError as err:
+                    raise StreamError("Error while parsing FLV: {0}", err)
 
                 if not headers.metadata:
                     raise StreamError("Missing metadata tag in the first chunk")

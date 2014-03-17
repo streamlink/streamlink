@@ -29,6 +29,8 @@ class FLVPlaylistIO(FLVTagConcatIO):
     def open(self, streams):
         def generator():
             for stream in streams:
+                self.logger.debug("Opening substream: {0}", stream)
+
                 try:
                     fd = stream.open()
                 except StreamError as err:
