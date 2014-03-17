@@ -33,7 +33,7 @@ AMF_URL = "http://cgw.ustream.tv/Viewer/getStream/1/{0}.amf"
 HLS_PLAYLIST_URL = "http://iphone-streaming.ustream.tv/uhls/{0}/streams/live/iphone/playlist.m3u8"
 RECORDED_URL = "http://tcdn.ustream.tv/video/{0}"
 RECORDED_URL_PATTERN = r"^(http(s)?://)?(www\.)?ustream.tv/recorded/(?P<video_id>\d+)"
-RTMP_URL = "rtmp://channel.live.ums.ustream.tv:80/ustream"
+RTMP_URL = "rtmp://r{0}.1.{1}.channel.live.ums.ustream.tv:80/ustream"
 SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
 
 
@@ -55,8 +55,9 @@ def validate_module_info(result):
 
 def create_ums_connection(app, media_id, page_url, password,
                           exception=PluginError):
+    url = RTMP_URL.format(randint(0, 0xffffff), media_id)
     params = dict(application=app, media=str(media_id), password=password)
-    conn = librtmp.RTMP(RTMP_URL, connect_data=params,
+    conn = librtmp.RTMP(url, connect_data=params,
                         swfurl=SWF_URL, pageurl=page_url)
 
     try:
