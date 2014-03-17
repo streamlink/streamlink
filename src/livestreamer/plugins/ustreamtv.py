@@ -12,11 +12,12 @@ from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream, HTTPStream, Stream
+from livestreamer.stream.flvconcat import FLVTagConcat
 from livestreamer.stream.segmented import (SegmentedStreamReader,
                                            SegmentedStreamWriter,
                                            SegmentedStreamWorker)
+from livestreamer.stream.wrappers import StreamIOIterWrapper
 from livestreamer.packages.flashmedia import AMFPacket, AMFError
-from livestreamer.packages.flashmedia.tag import Header
 
 try:
     import librtmp
@@ -70,7 +71,7 @@ class UHSStreamWriter(SegmentedStreamWriter):
     def __init__(self, *args, **kwargs):
         SegmentedStreamWriter.__init__(self, *args, **kwargs)
 
-        self.header_written = False
+        self.concater = FLVTagConcat(flatten_timestamps=True)
 
     def open_chunk(self, chunk, retries=3):
         while retries and not self.closed:
@@ -90,12 +91,8 @@ class UHSStreamWriter(SegmentedStreamWriter):
             return
 
         try:
-            for data in res.iter_content(chunk_size):
-                if not self.header_written:
-                    flv_header = Header(has_video=True, has_audio=True)
-                    self.reader.buffer.write(flv_header.serialize())
-                    self.header_written = True
-
+            fd = StreamIOIterWrapper(res.iter_content(chunk_size))
+            for data in self.concater.iter_chunks(fd, skip_header=True):
                 self.reader.buffer.write(data)
 
                 if self.closed:
@@ -115,11 +112,9 @@ class UHSStreamWorker(SegmentedStreamWorker):
                                           self.stream.page_url,
                                           self.stream.password,
                                           exception=StreamError)
-
         self.chunk_ranges = {}
         self.chunk_id = None
         self.chunk_id_max = None
-
         self.filename_format = ""
 
     def process_module_info(self):
