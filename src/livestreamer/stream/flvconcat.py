@@ -192,6 +192,9 @@ class FLVTagConcatWorker(Thread):
             try:
                 for chunk in self.concater.iter_chunks(fd):
                     self.stream.buffer.write(chunk)
+
+                    if not self.running:
+                        return
             except IOError as err:
                 self.error = err
                 break
