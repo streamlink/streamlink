@@ -139,6 +139,13 @@ class HLSStreamWorker(SegmentedStreamWorker):
         except ValueError as err:
             raise StreamError(err)
 
+        if playlist.is_master:
+            raise StreamError("Attempted to play a variant playlist, use "
+                              "'hlsvariant://{0}' instead".format(self.stream.url))
+
+        if playlist.iframes_only:
+            raise StreamError("Streams containing I-frames only is not playable")
+
         media_sequence = playlist.media_sequence or 0
         sequences = [Sequence(media_sequence + i, s)
                      for i, s in enumerate(playlist.segments)]
@@ -148,9 +155,6 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
     def process_sequences(self, playlist, sequences):
         first_sequence, last_sequence = sequences[0], sequences[-1]
-
-        if playlist.iframes_only:
-            raise StreamError("Streams containing I-frames only is not playable")
 
         if (first_sequence.segment.key and
             first_sequence.segment.key.method != "NONE"):
