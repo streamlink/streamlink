@@ -57,7 +57,10 @@ class CrunchyrollAPI(object):
         if self.session_id:
             params['session_id'] = self.session_id
 
-        response = http.get(url, params=params, headers=API_HEADERS)
+        # The certificate used by Crunchyroll cannot be verified in some
+        # environments.
+        response = http.get(url, params=params, headers=API_HEADERS,
+                            verify=False)
         json_response = http.json(response)
 
         if json_response['error']:
