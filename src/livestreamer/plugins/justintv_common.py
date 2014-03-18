@@ -71,7 +71,9 @@ class APIBase(object):
             params["oauth_token"] = self.oauth_token
 
         url = "https://api.{0}{1}.{2}".format(host or self.host, path, format)
-        res = http.get(url, params=params)
+        # The certificate used by Twitch cannot be verified in some
+        # environments.
+        res = http.get(url, params=params, verify=False)
 
         if format == "json":
             return http.json(res)
