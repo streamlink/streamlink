@@ -55,6 +55,8 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 +--------------------+--------+------+----------------------------------------+
 | Owncast.me         | Yes    | --   |                                        |
 +--------------------+--------+------+----------------------------------------+
++ SpeedRunsLive.com  | Yes    + --   +                                        |
++--------------------+--------+------+----------------------------------------+
 | SVT Play           | Yes    | Yes  | Videos may be geo-restricted to Sweden.|
 +--------------------+--------+------+----------------------------------------+
 | Twitch/Justin.tv   | Yes    | Yes  | Possible to authenticate for           |
