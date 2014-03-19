@@ -55,6 +55,7 @@ class HTTPSession(Session):
         exception = kwargs.pop("exception", PluginError)
         headers = kwargs.pop("headers", {})
         params = kwargs.pop("params", {})
+        proxies = kwargs.pop("proxies", self.proxies)
         session = kwargs.pop("session", None)
         timeout = kwargs.pop("timeout", 20)
 
@@ -67,6 +68,7 @@ class HTTPSession(Session):
                                   headers=headers,
                                   params=params,
                                   timeout=timeout,
+                                  proxies=proxies,
                                   *args, **kwargs)
             res.raise_for_status()
         except (RequestException, IOError) as rerr:
