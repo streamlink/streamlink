@@ -360,9 +360,16 @@ class UStreamTV(Plugin):
             for stream_index, stream_info in enumerate(provider_streams):
                 stream = None
                 stream_height = int(stream_info.get("height", 0))
-                stream_name = (stream_info.get("description") or
-                               (stream_height > 0 and "{0}p".format(stream_height)) or
-                               "live")
+                stream_name = stream_info.get("description")
+
+                if not stream_name:
+                    if stream_height:
+                        if not stream_info.get("isTranscoded"):
+                            stream_name = "{0}p+".format(stream_height)
+                        else:
+                            stream_name = "{0}p".format(stream_height)
+                    else:
+                        stream_name = "live"
 
                 if stream_name in streams:
                     provider_name_clean = provider_name.replace("uhs_", "")
