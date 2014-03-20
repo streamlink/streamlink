@@ -568,6 +568,9 @@ def setup_http_session():
     if args.http_query_params:
         livestreamer.http.parse_query_params(args.http_query_params)
 
+    if args.http_ignore_env:
+        livestreamer.http.trust_env = False
+
     if args.http_no_ssl_verify:
         livestreamer.http.verify = False
 

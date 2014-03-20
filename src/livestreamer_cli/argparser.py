@@ -81,6 +81,10 @@ httpopt.add_argument("--http-headers", metavar="headers",
 httpopt.add_argument("--http-query-params", metavar="params",
                      help="A semi-colon (;) delimited list of query parameters "
                           "to add to each HTTP request, e.g. foo=bar;baz=qux")
+httpopt.add_argument("--http-ignore-env", action="store_true",
+                     help="Ignore HTTP settings set in the environment, "
+                          "such as environment variables (HTTP_PROXY, etc) "
+                          "and ~/.netrc authentication")
 httpopt.add_argument("--http-no-ssl-verify", action="store_true",
                      help="Don't verify SSL certificates. Usually a bad idea")
 httpopt.add_argument("--http-ssl-cert", metavar="pem",

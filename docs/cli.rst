@@ -309,6 +309,14 @@ HTTP options
 
     .. versionadded:: 1.8.0
 
+.. cmdoption:: --http-ignore-env
+
+    Ignore HTTP settings set in the environment, such as
+    environment variables (``HTTP_PROXY``, etc) and ``~/.netrc``
+    authentication
+
+    .. versionadded:: 1.8.0
+
 .. cmdoption:: --http-no-ssl-verify
 
     Don't verify SSL certificates. Usually a bad idea!
