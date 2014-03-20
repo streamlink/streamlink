@@ -276,6 +276,15 @@ Command line options
 
     Do not check for new Livestreamer releases
 
+.. cmdoption:: --retry-streams delay
+
+    Will retry fetching streams until streams are found
+    while waiting <delay> (seconds) between each attempt
+
+.. cmdoption:: --retry-open attempts
+
+    Will try <attempts> to open the stream until giving up
+
 
 HTTP options
 ^^^^^^^^^^^^

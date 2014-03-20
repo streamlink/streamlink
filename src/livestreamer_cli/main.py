@@ -226,10 +226,13 @@ def open_stream(stream):
 def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
 
-    try:
-        stream_fd, prebuffer = open_stream(stream)
-    except StreamError as err:
-        console.logger.error("{0}", err)
+    for i in range(args.retry_open):
+        try:
+            stream_fd, prebuffer = open_stream(stream)
+            break
+        except StreamError as err:
+            console.logger.error("{0}", err)
+    else:
         return
 
     output = create_output()
@@ -371,6 +374,29 @@ def fetch_streams(plugin):
                               sorting_excludes=args.stream_sorting_excludes)
 
 
+def fetch_streams_infinite(plugin, interval):
+    """Attempts to fetch streams until some are returned."""
+
+    try:
+        streams = fetch_streams(plugin)
+    except PluginError as err:
+        console.logger.error("{0}", err)
+        streams = None
+
+    if not streams:
+        console.logger.info("Waiting for streams, retrying every {0} "
+                            "second(s)", args.retry_streams)
+    while not streams:
+        sleep(args.retry_streams)
+
+        try:
+            streams = fetch_streams(plugin)
+        except PluginError as err:
+            console.logger.error("{0}", err)
+
+    return streams
+
+
 def resolve_stream_name(streams, stream_name):
     """Returns the real stream name of a synonym."""
 
@@ -424,7 +450,11 @@ def handle_url():
         plugin = livestreamer.resolve_url(args.url)
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
-        streams = fetch_streams(plugin)
+
+        if args.retry_streams:
+            streams = fetch_streams_infinite(plugin, args.retry_streams)
+        else:
+            streams = fetch_streams(plugin)
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
     except PluginError as err:

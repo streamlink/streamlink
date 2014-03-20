@@ -66,6 +66,11 @@ parser.add_argument("-j", "--json", action="store_true",
                          "disable log output, useful for external scripting")
 parser.add_argument("--no-version-check", action="store_true",
                     help="Do not check for new Livestreamer releases")
+parser.add_argument("--retry-streams", metavar="delay", type=float,
+                    help="Will retry fetching streams until streams are found "
+                         "while waiting <delay> (seconds) between each attempt")
+parser.add_argument("--retry-open", metavar="attempts", type=int, default=1,
+                    help="Will try <attempts> to open the stream until giving up")
 parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
 
