@@ -75,12 +75,16 @@ def extract_flv_header_tags(stream):
 
 class FLVTagConcat(object):
     def __init__(self, duration=None, tags=[], has_video=True, has_audio=True,
-                 flatten_timestamps=False):
+                 flatten_timestamps=False, sync_headers=True):
         self.duration = duration
         self.flatten_timestamps = flatten_timestamps
         self.has_audio = has_audio
         self.has_video = has_video
+        self.sync_headers = sync_headers
         self.tags = tags
+
+        if not (has_audio and has_video):
+            self.sync_headers = False
 
         self.avc_header_written = False
         self.aac_header_written = False
@@ -92,6 +96,10 @@ class FLVTagConcat(object):
         if tag.filter:
             raise IOError("Tag has filter flag set, probably encrypted")
 
+        has_headers = self.aac_header_written and self.avc_header_written
+        if self.sync_headers and self.timestamps_sub and not has_headers:
+            self.timestamps_sub = {}
+
         if isinstance(tag.data, AudioData):
             if isinstance(tag.data.data, AACAudioData):
                 if tag.data.data.type == AAC_SEQUENCE_HEADER:
@@ -100,6 +108,9 @@ class FLVTagConcat(object):
 
                     self.aac_header_written = True
                 else:
+                    if self.sync_headers and not has_headers:
+                        return
+
                     if not self.aac_header_written:
                         return
 
@@ -111,6 +122,9 @@ class FLVTagConcat(object):
 
                     self.avc_header_written = True
                 else:
+                    if self.sync_headers and not has_headers:
+                        return
+
                     if not self.avc_header_written:
                         return
 
