@@ -72,7 +72,8 @@ class UHSStreamWriter(SegmentedStreamWriter):
     def __init__(self, *args, **kwargs):
         SegmentedStreamWriter.__init__(self, *args, **kwargs)
 
-        self.concater = FLVTagConcat(flatten_timestamps=True)
+        self.concater = FLVTagConcat(flatten_timestamps=True,
+                                     sync_headers=True)
 
     def open_chunk(self, chunk, retries=3):
         while retries and not self.closed:
