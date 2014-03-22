@@ -10,13 +10,13 @@ from ..packages.flashmedia import FLVError
 from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
                                        AVCVideoData, VideoCommandFrame,
                                        Header, ScriptData, Tag)
-
+from ..packages.flashmedia.tag import (AAC_PACKET_TYPE_SEQUENCE_HEADER,
+                                       AVC_PACKET_TYPE_SEQUENCE_HEADER,
+                                       AUDIO_CODEC_ID_AAC,
+                                       VIDEO_CODEC_ID_AVC)
 
 __all__ = ["extract_flv_header_tags", "FLVTagConcat", "FLVTagConcatIO"]
 
-AAC_SEQUENCE_HEADER = 0x00
-AVC_SEQUENCE_HEADER = 0x00
-AVC_SEQUENCE_END = 0x02
 
 FLVHeaderTags = namedtuple("FLVHeaderTags", "metadata aac vc")
 
@@ -56,11 +56,11 @@ def extract_flv_header_tags(stream):
             metadata = tag
         elif (isinstance(tag.data, VideoData) and
               isinstance(tag.data.data, AVCVideoData)):
-            if tag.data.data.type == AVC_SEQUENCE_HEADER:
+            if tag.data.data.type == AVC_PACKET_TYPE_SEQUENCE_HEADER:
                 avc_header = tag
         elif (isinstance(tag.data, AudioData) and
               isinstance(tag.data.data, AACAudioData)):
-            if tag.data.data.type == AAC_SEQUENCE_HEADER:
+            if tag.data.data.type == AAC_PACKET_TYPE_SEQUENCE_HEADER:
                 aac_header = tag
 
         if aac_header and avc_header and metadata:
@@ -86,50 +86,65 @@ class FLVTagConcat(object):
         if not (has_audio and has_video):
             self.sync_headers = False
 
-        self.avc_header_written = False
-        self.aac_header_written = False
+        self.audio_header_written = False
         self.flv_header_written = False
+        self.video_header_written = False
         self.timestamps_add = {}
         self.timestamps_sub = {}
+
+    @property
+    def headers_written(self):
+        return self.audio_header_written and self.video_header_written
 
     def verify_tag(self, tag):
         if tag.filter:
             raise IOError("Tag has filter flag set, probably encrypted")
 
-        has_headers = self.aac_header_written and self.avc_header_written
-        if self.sync_headers and self.timestamps_sub and not has_headers:
+        # Only AAC and AVC has detectable headers
+        if isinstance(tag.data, AudioData) and tag.data.codec != AUDIO_CODEC_ID_AAC:
+            self.audio_header_written = True
+        if isinstance(tag.data, VideoData) and tag.data.codec != VIDEO_CODEC_ID_AVC:
+            self.video_header_written = True
+
+        # Make sure there is no timestamp gap between audio and video when syncing
+        if self.sync_headers and self.timestamps_sub and not self.headers_written:
             self.timestamps_sub = {}
 
         if isinstance(tag.data, AudioData):
             if isinstance(tag.data.data, AACAudioData):
-                if tag.data.data.type == AAC_SEQUENCE_HEADER:
-                    if self.aac_header_written:
+                if tag.data.data.type == AAC_PACKET_TYPE_SEQUENCE_HEADER:
+                    if self.audio_header_written:
                         return
 
-                    self.aac_header_written = True
+                    self.audio_header_written = True
                 else:
-                    if self.sync_headers and not has_headers:
+                    if self.sync_headers and not self.headers_written:
                         return
 
-                    if not self.aac_header_written:
+                    if not self.audio_header_written:
                         return
+            else:
+                if self.sync_headers and not self.headers_written:
+                    return
 
         elif isinstance(tag.data, VideoData):
             if isinstance(tag.data.data, AVCVideoData):
-                if tag.data.data.type == AVC_SEQUENCE_HEADER:
-                    if self.avc_header_written:
+                if tag.data.data.type == AVC_PACKET_TYPE_SEQUENCE_HEADER:
+                    if self.video_header_written:
                         return
 
-                    self.avc_header_written = True
+                    self.video_header_written = True
                 else:
-                    if self.sync_headers and not has_headers:
+                    if self.sync_headers and not self.headers_written:
                         return
 
-                    if not self.avc_header_written:
+                    if not self.video_header_written:
                         return
-
             elif isinstance(tag.data.data, VideoCommandFrame):
                 return
+            else:
+                if self.sync_headers and not self.headers_written:
+                    return
 
         elif isinstance(tag.data, ScriptData):
             if tag.data.name == "onMetaData":
