@@ -6,7 +6,7 @@ from io import BytesIO
 from random import randint
 from time import sleep
 
-from livestreamer.compat import urlparse, urljoin
+from livestreamer.compat import urlparse, urljoin, range
 from livestreamer.exceptions import StreamError, PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
@@ -107,25 +107,36 @@ class UHSStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
         SegmentedStreamWorker.__init__(self, *args, **kwargs)
 
-        self.conn = create_ums_connection("channel",
-                                          self.stream.channel_id,
-                                          self.stream.page_url,
-                                          self.stream.password,
-                                          exception=StreamError)
         self.chunk_ranges = {}
         self.chunk_id = None
         self.chunk_id_max = None
+        self.chunks = []
         self.filename_format = ""
+        self.process_module_info()
+
+    def fetch_module_info(self):
+        self.logger.debug("Fetching module info")
+        conn = create_ums_connection("channel",
+                                     self.stream.channel_id,
+                                     self.stream.page_url,
+                                     self.stream.password,
+                                     exception=StreamError)
+
+        try:
+            result = conn.process_packets(invoked_method="moduleInfo",
+                                          timeout=10)
+        except (IOError, librtmp.RTMPError) as err:
+            raise StreamError("Failed to get module info: {0}".format(err))
+        finally:
+            conn.close()
+
+        return validate_module_info(result)
 
     def process_module_info(self):
-        try:
-            result = self.conn.process_packets(invoked_method="moduleInfo",
-                                               timeout=30)
-        except (IOError, librtmp.RTMPError) as err:
-            self.logger.error("Failed to get module info: {0}", err)
+        if self.closed:
             return
 
-        result = validate_module_info(result)
+        result = self.fetch_module_info()
         if not result:
             return
 
@@ -165,9 +176,12 @@ class UHSStreamWorker(SegmentedStreamWorker):
                                      chunk_range.items()))
         self.chunk_id_min = sorted(self.chunk_ranges)[0]
         self.chunk_id_max = int(result.get("chunkId"))
+        self.chunks = [Chunk(i, self.format_chunk_url(i))
+                       for i in range(self.chunk_id_min, self.chunk_id_max)]
 
-        if self.chunk_id is None:
-            self.chunk_id = max(self.chunk_id_max - 3, self.chunk_id_min)
+        if self.chunk_id is None and self.chunks:
+            edge_chunk = self.chunks[-(min(len(self.chunks), 3))]
+            self.chunk_id = edge_chunk.num
 
     def format_chunk_url(self, chunk_id):
         chunk_hash = ""
@@ -177,38 +191,27 @@ class UHSStreamWorker(SegmentedStreamWorker):
 
         return self.filename_format % (chunk_id, chunk_hash)
 
+    def valid_chunk(self, chunk):
+        return self.chunk_id and chunk.num >= self.chunk_id
+
     def iter_segments(self):
         while not self.closed:
-            self.check_connection()
-            self.process_module_info()
-
-            has_chunks = self.chunk_id is not None
-            while (self.chunk_id <= self.chunk_id_max and
-                   has_chunks and not self.closed):
-                url = self.format_chunk_url(self.chunk_id)
-                chunk = Chunk(self.chunk_id, url)
-
+            for chunk in filter(self.valid_chunk, self.chunks):
                 self.logger.debug("Adding chunk {0} to queue", chunk.num)
                 yield chunk
 
-                self.chunk_id += 1
+                # End of stream
+                if self.closed:
+                    return
 
-    def check_connection(self):
-        if not self.conn.connected:
-            self.logger.error("Disconnected, attempting to reconnect")
+                self.chunk_id = chunk.num + 1
+
+            self.wait(2)
 
             try:
-                self.conn = create_ums_connection("channel",
-                                                  self.stream.channel_id,
-                                                  self.stream.page_url,
-                                                  self.stream.password)
-            except PluginError as err:
-                self.logger.error("Failed to reconnect: {0}", err)
-                self.close()
-
-    def close(self):
-        self.conn.close()
-        SegmentedStreamWorker.close(self)
+                self.process_module_info()
+            except StreamError as err:
+                self.logger.warning("Failed to process module info: {0}", err)
 
 
 class UHSStreamReader(SegmentedStreamReader):
