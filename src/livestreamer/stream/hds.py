@@ -68,13 +68,12 @@ class HDSStreamWriter(SegmentedStreamWriter):
                                              **self.stream.request_params)
             except StreamError as err:
                 self.logger.error("Failed to open fragment {0}-{1}: {2}",
-                                  fragment.segment, fragment.segment, err)
+                                  fragment.segment, fragment.fragment, err)
             retries -= 1
 
     def write(self, fragment, chunk_size=8192):
         res = self.open_fragment(fragment)
         if not res:
-            self.fix_missing_fragment(fragment)
             return
 
         size = int(res.headers.get("content-length", "0"))
@@ -83,14 +82,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
             self.reader.buffer.resize(size)
 
         fd = StreamIOIterWrapper(res.iter_content(8192))
-        if not self.convert_fragment(fragment, fd):
-            self.fix_missing_fragment(fragment)
-
-    def fix_missing_fragment(self, fragment):
-        # Make sure timestamps don't get out of sync when a fragment
-        # is missing or failed to download.
-        for key, value in self.concater.timestamps_sub.items():
-            self.concater.timestamps_sub[key] += fragment.duration
+        self.convert_fragment(fragment, fd)
 
     def convert_fragment(self, fragment, fd):
         mdat = None
@@ -120,7 +112,6 @@ class HDSStreamWriter(SegmentedStreamWriter):
             else:
                 self.logger.debug("Download of fragment {0}-{1} complete",
                                   fragment.segment, fragment.fragment)
-                return True
         except IOError as err:
             if "Unknown tag type" in str(err):
                 self.logger.error("Unknown tag type found, this stream is "

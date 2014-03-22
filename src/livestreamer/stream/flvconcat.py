@@ -90,6 +90,7 @@ class FLVTagConcat(object):
         self.flv_header_written = False
         self.video_header_written = False
         self.timestamps_add = {}
+        self.timestamps_orig = {}
         self.timestamps_sub = {}
 
     @property
@@ -155,6 +156,14 @@ class FLVTagConcat(object):
 
         return True
 
+    def adjust_tag_gap(self, tag):
+        timestamp_gap = tag.timestamp - self.timestamps_orig.get(tag.type, 0)
+        timestamp_sub = self.timestamps_sub.get(tag.type)
+        if timestamp_gap > 1000 and timestamp_sub is not None:
+            self.timestamps_sub[tag.type] += timestamp_gap
+
+        self.timestamps_orig[tag.type] = tag.timestamp
+
     def adjust_tag_timestamp(self, tag):
         timestamp_offset_sub = self.timestamps_sub.get(tag.type)
         if timestamp_offset_sub is None and tag not in self.tags:
@@ -191,6 +200,7 @@ class FLVTagConcat(object):
                 self.flv_header_written = True
 
             if self.verify_tag(tag):
+                self.adjust_tag_gap(tag)
                 self.adjust_tag_timestamp(tag)
 
                 if self.duration:
