@@ -16,7 +16,6 @@ from livestreamer.stream.flvconcat import FLVTagConcat
 from livestreamer.stream.segmented import (SegmentedStreamReader,
                                            SegmentedStreamWriter,
                                            SegmentedStreamWorker)
-from livestreamer.stream.wrappers import StreamIOIterWrapper
 from livestreamer.packages.flashmedia import AMFPacket, AMFError
 
 try:
@@ -79,7 +78,6 @@ class UHSStreamWriter(SegmentedStreamWriter):
         while retries and not self.closed:
             try:
                 return self.session.http.get(chunk.url,
-                                             stream=True,
                                              timeout=10,
                                              exception=StreamError)
             except StreamError as err:
@@ -93,8 +91,8 @@ class UHSStreamWriter(SegmentedStreamWriter):
             return
 
         try:
-            fd = StreamIOIterWrapper(res.iter_content(chunk_size))
-            for data in self.concater.iter_chunks(fd, skip_header=True):
+            for data in self.concater.iter_chunks(buf=res.content,
+                                                  skip_header=True):
                 self.reader.buffer.write(data)
 
                 if self.closed:
@@ -184,7 +182,9 @@ class UHSStreamWorker(SegmentedStreamWorker):
             self.check_connection()
             self.process_module_info()
 
-            while self.chunk_id is not None and self.chunk_id <= self.chunk_id_max:
+            has_chunks = self.chunk_id is not None
+            while (self.chunk_id <= self.chunk_id_max and
+                   has_chunks and not self.closed):
                 url = self.format_chunk_url(self.chunk_id)
                 chunk = Chunk(self.chunk_id, url)
 
