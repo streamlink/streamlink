@@ -54,6 +54,10 @@ class Youtube(Plugin):
             return config
 
     def _get_stream_info(self, url):
+        match = re.search("/(embed|v)/([^?]+)", url)
+        if match:
+            url = "http://youtube.com/watch?v={0}".format(match.group(2))
+
         res = http.get(url)
         config = self._find_config(res.text)
 
