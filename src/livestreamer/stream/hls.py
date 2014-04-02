@@ -36,7 +36,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         while retries and not self.closed:
             try:
                 return self.session.http.get(sequence.segment.uri,
-                                             stream=True, timeout=10,
+                                             timeout=10,
                                              exception=StreamError,
                                              **request_params)
             except StreamError as err:
