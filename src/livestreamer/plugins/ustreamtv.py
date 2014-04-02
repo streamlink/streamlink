@@ -177,7 +177,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
         self.chunk_id_min = sorted(self.chunk_ranges)[0]
         self.chunk_id_max = int(result.get("chunkId"))
         self.chunks = [Chunk(i, self.format_chunk_url(i))
-                       for i in range(self.chunk_id_min, self.chunk_id_max)]
+                       for i in range(self.chunk_id_min, self.chunk_id_max + 1)]
 
         if self.chunk_id is None and self.chunks:
             edge_chunk = self.chunks[-(min(len(self.chunks), 3))]
