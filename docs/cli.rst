@@ -538,3 +538,10 @@ Plugin options
 
    .. versionadded:: 1.7.3
 
+.. cmdoption:: --livestation-email email
+
+    Specify Livestation account email to access restricted streams or Premium Quality streams.
+
+.. cmdoption:: --livestation-password password
+
+    Specify Livestation password for account specified.

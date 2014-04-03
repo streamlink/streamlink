@@ -684,6 +684,14 @@ def setup_options():
         livestreamer.set_plugin_option("crunchyroll", "purge_credentials",
                                        args.crunchyroll_purge_credentials)
 
+    if args.livestation_email:
+        livestreamer.set_plugin_option("livestation", "email",
+                                       args.livestation_email)
+
+    if args.livestation_password:
+        livestreamer.set_plugin_option("livestation", "password",
+                                       args.livestation_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

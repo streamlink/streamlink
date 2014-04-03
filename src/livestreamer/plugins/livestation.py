@@ -2,6 +2,7 @@ from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream
+from livestreamer.options import Options
 
 from time import time
 import re
@@ -10,6 +11,13 @@ import re
 class Livestation(Plugin):
     SWFURL = "http://beta.cdn.livestation.com/player/5.10/livestation-player.swf"
     APIURL = "http://tokens.api.livestation.com/channels/{0}/tokens.json?{1}"
+    LOGINPAGEURL = "http://www.livestation.com/en/users/new"
+    LOGINPOSTURL = "http://www.livestation.com/en/sessions.json"
+
+    options = Options({
+        "email": "",
+        "password": ""
+    })
 
     @classmethod
     def can_handle_url(self, url):
@@ -85,7 +93,37 @@ class Livestation(Plugin):
         return playlist
 
     def _get_streams(self):
+        # If email option given, try to login
+        if self.options.get("email"):
+            res = http.get(self.LOGINPAGEURL)
+            match = re.search('<meta content="([^"]+)" name="csrf-token"', res.text)
+            if not match:
+                raise PluginError("Missing CSRF Token: " + self.LOGINPAGEURL)
+            csrf_token = match.group(1)
+            
+            email = self.options.get("email")
+            password = self.options.get("password")
+            
+            res = http.post(
+                self.LOGINPOSTURL,
+                data = {
+                    'authenticity_token': csrf_token,
+                    'channel_id': '',
+                    'commit': 'Login',
+                    'plan_id': '',
+                    'session[email]': email,
+                    'session[password]': password,
+                    'utf8': "\xE2\x9C\x93", # Check Mark Character
+                }
+            )
+            
+            self.logger.debug("Login account info: {0}", res.text)
+            result = http.json(res)
+            if result.get('email', 'no-mail') != email:
+                raise PluginError("Invalid account")
+
         res = http.get(self.url)
+
         streams = {}
 
         if RTMPStream.is_usable(self.session):
