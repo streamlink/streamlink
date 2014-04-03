@@ -232,6 +232,14 @@ pluginopt.add_argument("--crunchyroll-purge-credentials", action="store_true",
                        "session and reauthenticate.")
 
 
+pluginopt.add_argument("--livestation-email",
+                       help="Specify Livestation account email to access restricted streams or Premium Quality streams.",
+                       metavar="email")
+pluginopt.add_argument("--livestation-password",
+                       help="Specify Livestation password for account specified.",
+                       metavar="password")
+
+
 # Deprecated options
 playeropt.add_argument("-q", "--quiet-player", action="store_true",
                        help=argparse.SUPPRESS)
