@@ -1,12 +1,14 @@
+import re
+
 from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HTTPStream, HLSStream
 from livestreamer.utils import verifyjson, parse_json, parse_qsd
 
-import re
-
-
+API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
+API_BASE = "https://www.googleapis.com/youtube/v3"
+API_SEARCH_URL = API_BASE + "/search"
 HLS_HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -16,7 +18,7 @@ def valid_stream(streaminfo):
     return not not streaminfo.get("url")
 
 
-class Youtube(Plugin):
+class YouTube(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return "youtube.com" in url or "youtu.be" in url
@@ -53,20 +55,38 @@ class Youtube(Plugin):
 
             return config
 
+    def _find_channel_config(self, data):
+        match = re.search(r'meta itemprop="channelId" content="([^"]+)"', data)
+        if not match:
+            return
+
+        channel_id = match.group(1)
+        query = dict(channelId=channel_id, type="video", eventType="live",
+                     part="id", key=API_KEY)
+        res = http.get(API_SEARCH_URL, params=query)
+        res = http.json(res)
+        videos = verifyjson(res, "items")
+
+        for video in videos:
+            info = verifyjson(video, "id")
+            video_id = info.get("videoId")
+            url = "http://youtube.com/watch?v={0}".format(video_id)
+
+            config = self._get_stream_info(url)
+            if config:
+                return config
+
     def _get_stream_info(self, url):
         match = re.search("/(embed|v)/([^?]+)", url)
         if match:
             url = "http://youtube.com/watch?v={0}".format(match.group(2))
 
         res = http.get(url)
-        config = self._find_config(res.text)
-
-        if not config:
-            watch_match = re.search("href=\"/(watch\?v=.+?)\"", res.text)
-            if watch_match:
-                watch_url = "http://youtube.com/{0}".format(watch_match.group(1))
-                res = http.get(watch_url)
-                config = self._find_config(res.text)
+        match = re.search("/user/([^?/]+)", res.url)
+        if match:
+            return self._find_channel_config(res.text)
+        else:
+            config = self._find_config(res.text)
 
         if config:
             return parse_json(config, "config JSON")
@@ -100,15 +120,12 @@ class Youtube(Plugin):
             raise NoStreamsError(self.url)
 
         args = verifyjson(info, "args")
-
-        streams = {}
-
         uestreammap = verifyjson(args, "url_encoded_fmt_stream_map")
         fmtlist = verifyjson(args, "fmt_list")
-
         streammap = self._parse_stream_map(uestreammap)
         formatmap = self._parse_format_map(fmtlist)
 
+        streams = {}
         for streaminfo in filter(valid_stream, streammap):
             params = {}
             if "s" in streaminfo and self._decrypt_signature(streaminfo["s"]):
@@ -175,4 +192,4 @@ class Youtube(Plugin):
             self.logger.warning("Unable to decrypt signature, key length {0} not supported; retrying might work", len(s))
             return None
 
-__plugin__ = Youtube
+__plugin__ = YouTube
