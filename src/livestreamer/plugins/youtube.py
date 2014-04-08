@@ -44,7 +44,7 @@ class YouTube(Plugin):
         if match:
             return match.group(1)
 
-        match = re.search("ytplayer.config = (.+);</script>", data)
+        match = re.search("ytplayer.config = (.+);\(function", data)
         if match:
             return match.group(1)
 
