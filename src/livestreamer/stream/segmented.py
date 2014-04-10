@@ -28,8 +28,10 @@ class SegmentedStreamWorker(Thread):
 
     def close(self):
         """Shuts down the thread."""
+        if not self.closed:
+            self.logger.debug("Closing worker thread")
+
         self.closed = True
-        self.writer.close()
         if self._wait:
             self._wait.set()
 
@@ -52,6 +54,7 @@ class SegmentedStreamWorker(Thread):
 
         # End of stream, tells the writer to exit
         self.writer.put(None)
+        self.close()
 
 
 class SegmentedStreamWriter(Thread):
@@ -74,6 +77,9 @@ class SegmentedStreamWriter(Thread):
 
     def close(self):
         """Shuts down the thread."""
+        if not self.closed:
+            self.logger.debug("Closing writer thread")
+
         self.closed = True
         self.reader.buffer.close()
 
@@ -104,6 +110,8 @@ class SegmentedStreamWriter(Thread):
                 self.write(segment)
             else:
                 break
+
+        self.close()
 
 
 class SegmentedStreamReader(StreamIO):
