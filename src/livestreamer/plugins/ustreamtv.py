@@ -500,6 +500,7 @@ class UStreamTV(Plugin):
                 raise PluginError("Invalid stream info: {0}".format(providers))
 
             for provider in providers:
+                base_url = provider.get("url")
                 for stream_info in provider.get("streams"):
                     bitrate = int(stream_info.get("bitrate", 0))
                     stream_name = (bitrate > 0 and "{0}k".format(bitrate) or
@@ -508,9 +509,15 @@ class UStreamTV(Plugin):
                     if stream_name in streams:
                         stream_name += "_alt"
 
-                    stream = HTTPStream(self.session,
-                                        stream_info.get("streamName"))
-                    streams[stream_name] = stream
+                    url = stream_info.get("streamName")
+                    if base_url:
+                        url = base_url + url
+
+                    if url.startswith("http"):
+                        streams[stream_name] = HTTPStream(self.session, url)
+                    elif url.startswith("rtmp"):
+                        params = dict(rtmp=url, pageUrl=self.url)
+                        streams[stream_name] = RTMPStream(self.session, params)
 
         else:
             self.logger.warning("The proper API could not be used without "
