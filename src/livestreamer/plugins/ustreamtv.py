@@ -36,7 +36,8 @@ RTMP_URL = "rtmp://r{0}.1.{1}.channel.live.ums.ustream.tv:80/ustream"
 SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
 
 
-Chunk = namedtuple("Chunk", "num url")
+Chunk = namedtuple("Chunk", "num url offset")
+
 
 def valid_cdn(item):
     name, cdn = item
@@ -75,15 +76,19 @@ class UHSStreamWriter(SegmentedStreamWriter):
                                      sync_headers=True)
 
     def open_chunk(self, chunk, retries=3):
-        while retries and not self.closed:
-            try:
-                return self.session.http.get(chunk.url,
-                                             timeout=10,
-                                             exception=StreamError)
-            except StreamError as err:
-                self.logger.error("Failed to open chunk {0}: {1}",
-                                  chunk.num, err)
-            retries -= 1
+        if not retries or self.closed:
+            return
+
+        try:
+            params = {}
+            if chunk.offset:
+                params["start"] = chunk.offset
+
+            return http.get(chunk.url,  params=params, timeout=10,
+                            exception=StreamError)
+        except StreamError as err:
+            self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
+            return self.open_chunk(chunk, retries - 1)
 
     def write(self, chunk, chunk_size=8192):
         res = self.open_chunk(chunk)
@@ -92,7 +97,7 @@ class UHSStreamWriter(SegmentedStreamWriter):
 
         try:
             for data in self.concater.iter_chunks(buf=res.content,
-                                                  skip_header=True):
+                                                  skip_header=not chunk.offset):
                 self.reader.buffer.write(data)
 
                 if self.closed:
@@ -172,16 +177,19 @@ class UHSStreamWorker(SegmentedStreamWorker):
         if not chunk_range:
             return
 
-        self.chunk_ranges.update(map(partial(map, int),
-                                     chunk_range.items()))
-        self.chunk_id_min = sorted(self.chunk_ranges)[0]
+        chunk_id = int(result.get("chunkId"))
+        chunk_offset = int(result.get("offset"))
+        chunk_range = dict(map(partial(map, int), chunk_range.items()))
+
+        self.chunk_ranges.update(chunk_range)
+        self.chunk_id_min = sorted(chunk_range)[0]
         self.chunk_id_max = int(result.get("chunkId"))
-        self.chunks = [Chunk(i, self.format_chunk_url(i))
+        self.chunks = [Chunk(i, self.format_chunk_url(i),
+                             not self.chunk_id and i == chunk_id and chunk_offset)
                        for i in range(self.chunk_id_min, self.chunk_id_max + 1)]
 
         if self.chunk_id is None and self.chunks:
-            edge_chunk = self.chunks[-(min(len(self.chunks), 3))]
-            self.chunk_id = edge_chunk.num
+            self.chunk_id = chunk_id
 
     def format_chunk_url(self, chunk_id):
         chunk_hash = ""
