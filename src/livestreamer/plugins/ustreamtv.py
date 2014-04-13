@@ -117,6 +117,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
         self.chunk_id_max = None
         self.chunks = []
         self.filename_format = ""
+        self.module_info_reload_time = 2
         self.process_module_info()
 
     def fetch_module_info(self):
@@ -214,12 +215,11 @@ class UHSStreamWorker(SegmentedStreamWorker):
 
                 self.chunk_id = chunk.num + 1
 
-            self.wait(2)
-
-            try:
-                self.process_module_info()
-            except StreamError as err:
-                self.logger.warning("Failed to process module info: {0}", err)
+            if self.wait(self.module_info_reload_time):
+                try:
+                    self.process_module_info()
+                except StreamError as err:
+                    self.logger.warning("Failed to process module info: {0}", err)
 
 
 class UHSStreamReader(SegmentedStreamReader):

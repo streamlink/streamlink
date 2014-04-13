@@ -198,12 +198,11 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
                 self.playlist_sequence = sequence.num + 1
 
-            self.wait(self.playlist_reload_time)
-
-            try:
-                self.reload_playlist()
-            except StreamError as err:
-                self.logger.warning("Failed to reload playlist: {0}", err)
+            if self.wait(self.playlist_reload_time):
+                try:
+                    self.reload_playlist()
+                except StreamError as err:
+                    self.logger.warning("Failed to reload playlist: {0}", err)
 
 
 class HLSStreamReader(SegmentedStreamReader):

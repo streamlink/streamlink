@@ -330,11 +330,11 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 if self.closed or stream_end:
                     return
 
-            self.wait(self.bootstrap_reload_time)
-            try:
-                self.update_bootstrap()
-            except StreamError as err:
-                self.logger.warning("Failed to update bootstrap: {0}", err)
+            if self.wait(self.bootstrap_reload_time):
+                try:
+                    self.update_bootstrap()
+                except StreamError as err:
+                    self.logger.warning("Failed to update bootstrap: {0}", err)
 
 
 class HDSStreamReader(SegmentedStreamReader):

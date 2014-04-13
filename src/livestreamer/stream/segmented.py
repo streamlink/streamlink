@@ -36,9 +36,13 @@ class SegmentedStreamWorker(Thread):
             self._wait.set()
 
     def wait(self, time):
-        """Pauses the thread."""
+        """Pauses the thread for a specified time.
+
+        Returns False if interrupted by another thread and True if the
+        time runs out normally.
+        """
         self._wait = Event()
-        self._wait.wait(time)
+        return not self._wait.wait(time)
 
     def iter_segments(self):
         """The iterator that generates segments for the worker thread.
