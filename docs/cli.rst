@@ -225,19 +225,15 @@ Most streaming technologies simply requires you to pass a HTTP URL, this is an A
 Livestreamer currently supports these protocols:
 
 
-+-------------------------------+-----------------------------------------------+
-| Name                          | Prefix                                        |
-+===============================+===============================================+
-| Adobe HTTP Dynamic Streaming  | hds://                                        |
-+-------------------------------+-----------------------------------------------+
-| Akamai HD Adaptive Streaming  | akamaihd://                                   |
-+-------------------------------+-----------------------------------------------+
-| Apple HTTP Live Streaming     | hls:// hlvsvariant://                         |
-+-------------------------------+-----------------------------------------------+
-| Real Time Messaging Protocol  | rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://  |
-+-------------------------------+-----------------------------------------------+
-| Progressive HTTP, HTTPS, etc  | httpstream://                                 |
-+-------------------------------+-----------------------------------------------+
+============================== =================================================
+Name                           Prefix
+============================== =================================================
+Adobe HTTP Dynamic Streaming   hds://
+Akamai HD Adaptive Streaming   akamaihd://
+Apple HTTP Live Streaming      hls:// hlvsvariant://
+Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
+Progressive HTTP, HTTPS, etc   httpstream://
+============================== =================================================
 
 
 .. _cli-options:
@@ -276,15 +272,20 @@ Command line options
 
     Do not check for new Livestreamer releases
 
+    .. versionadded:: 1.8.0
+
 .. cmdoption:: --retry-streams delay
 
     Will retry fetching streams until streams are found
     while waiting <delay> (seconds) between each attempt
 
+    .. versionadded:: 1.8.0
+
 .. cmdoption:: --retry-open attempts
 
     Will try <attempts> to open the stream until giving up
 
+    .. versionadded:: 1.8.0
 
 HTTP options
 ^^^^^^^^^^^^
@@ -542,6 +543,10 @@ Plugin options
 
     Specify Livestation account email to access restricted streams or Premium Quality streams.
 
+    .. versionadded:: 1.8.0
+
 .. cmdoption:: --livestation-password password
 
     Specify Livestation password for account specified.
+
+    .. versionadded:: 1.8.0
