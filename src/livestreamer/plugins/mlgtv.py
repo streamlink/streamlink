@@ -1,7 +1,5 @@
 import re
 
-from functools import partial
-
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HDSStream, HLSStream
@@ -12,7 +10,7 @@ CONFIG_API_URL = "http://www.majorleaguegaming.com/player/config.json"
 STREAM_API_URL = "http://streamapi.majorleaguegaming.com/service/streams/playback/{0}"
 STREAM_ID_REGEX = r"<meta content='.+/([\w_-]+).+' property='og:video'>"
 STREAM_TYPES = {
-    "hls": partial(HLSStream.parse_variant_playlist, nameprefix="mobile_"),
+    "hls": HLSStream.parse_variant_playlist,
     "hds": HDSStream.parse_manifest
 }
 URL_REGEX = r"http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)"
