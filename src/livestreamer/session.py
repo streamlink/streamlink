@@ -1,5 +1,6 @@
 import imp
 import pkgutil
+import re
 import sys
 import traceback
 
@@ -56,9 +57,97 @@ class Livestreamer(object):
         :param key: key of the option
         :param value: value to set the option to
 
-        """
 
-        self.options.set(key, value)
+        **Available options**:
+
+        ======================= =========================================
+        errorlog                (bool) Log errors from subprocesses to
+                                a file located in the temp directory
+
+        hds-fragment-buffer     (int) Specify the maximum amount of
+                                fragments to buffer, this controls the
+                                maximum size of the ringbuffer,
+                                default: ``10``
+
+        hds-live-edge           (float) Specify the time live HDS
+                                streams will start from the edge of
+                                stream, default: ``10.0``
+
+        http-proxy              (str) Specify a HTTP proxy to use for
+                                all HTTP requests
+
+        https-proxy             (str) Specify a HTTPS proxy to use for
+                                all HTTPS requests
+
+        http-cookies            (dict or str) A dict or a semi-colon (;)
+                                delimited str of cookies to add to each
+                                HTTP request, e.g. ``foo=bar;baz=qux``
+
+        http-headers            (dict or str) A dict or semi-colon (;)
+                                delimited str of headers to add to each
+                                HTTP request, e.g. ``foo=bar;baz=qux``
+
+        http-query-params       (dict or str) A dict or a ampersand (&)
+                                delimited string of query parameters to
+                                add to each HTTP request,
+                                e.g. ``foo=bar&baz=qux``
+
+        http-trust-env          (bool) Trust HTTP settings set in the
+                                environment, such as environment
+                                variables (HTTP_PROXY, etc) and
+                                ~/.netrc authentication
+
+        http-ssl-verify         (bool) Verify SSL certificates,
+                                default: ``True``
+
+        http-ssl-cert           (str or tuple) SSL certificate to use,
+                                can be either a .pem file (str) or a
+                                .crt/.key pair (tuple)
+
+        ringbuffer-size         (int) The size of the internal ring
+                                buffer used by most stream types,
+                                default: ``16777216`` (16MB)
+
+        rtmpdump                (str) Specify the location of the
+                                rtmpdump executable, e.g.
+                                ``/usr/local/bin/rtmpdump``
+
+        rtmpdump-proxy          (str) Specify a proxy (SOCKS) that
+                                rtmpdump will use
+        ======================= =========================================
+
+        """
+        if key == "http-proxy":
+            if not re.match("^http(s)?://", value):
+                value = "http://" + value
+            self.http.proxies["http"] = value
+        elif key == "https-proxy":
+            if not re.match("^http(s)?://", value):
+                value = "https://" + value
+            self.http.proxies["https"] = value
+        elif key == "http-cookies":
+            if isinstance(value, dict):
+                self.http.cookies.update(value)
+            else:
+                self.http.parse_cookies(value)
+        elif key == "http-headers":
+            if isinstance(value, dict):
+                self.http.headers.update(value)
+            else:
+                self.http.parse_headers(value)
+        elif key == "http-query-params":
+            if isinstance(value, dict):
+                self.http.params.update(value)
+            else:
+                self.http.parse_query_params(value)
+        elif key == "http-trust-env":
+            self.http.trust_env = value
+        elif key == "http-ssl-verify":
+            self.http.verify = value
+        elif key == "http-ssl-cert":
+            self.http.cert = value
+        else:
+            self.options.set(key, value)
 
     def get_option(self, key):
         """Returns current value of specified option.

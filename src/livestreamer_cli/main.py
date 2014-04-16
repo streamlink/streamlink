@@ -1,6 +1,5 @@
 import errno
 import os
-import re
 import requests
 import sys
 import signal
@@ -580,35 +579,31 @@ def setup_console():
 def setup_http_session():
     """Sets the global HTTP settings, such as proxy and headers."""
     if args.http_proxy:
-        if not re.match("^http(s)?://", args.http_proxy):
-            args.http_proxy = "http://" + args.http_proxy
-        livestreamer.http.proxies["http"] = args.http_proxy
+        livestreamer.set_option("http-proxy", args.http_proxy)
 
     if args.https_proxy:
-        if not re.match("^http(s)?://", args.https_proxy):
-            args.https_proxy = "https://" + args.https_proxy
-        livestreamer.http.proxies["https"] = args.https_proxy
+        livestreamer.set_option("https-proxy", args.https_proxy)
 
     if args.http_cookies:
-        livestreamer.http.parse_cookies(args.http_cookies)
+        livestreamer.set_option("http-cookies", args.http_cookies)
 
     if args.http_headers:
-        livestreamer.http.parse_headers(args.http_headers)
+        livestreamer.set_option("http-headers", args.http_headers)
 
     if args.http_query_params:
-        livestreamer.http.parse_query_params(args.http_query_params)
+        livestreamer.set_option("http-query-params", args.http_query_params)
 
     if args.http_ignore_env:
-        livestreamer.http.trust_env = False
+        livestreamer.set_option("http-trust-env", False)
 
     if args.http_no_ssl_verify:
-        livestreamer.http.verify = False
+        livestreamer.set_option("http-ssl-verify", False)
 
     if args.http_ssl_cert:
-        livestreamer.http.cert = args.http_ssl_cert
+        livestreamer.set_option("http-ssl-cert", args.http_ssl_cert)
 
     if args.http_ssl_cert_crt_key:
-        livestreamer.http.cert = tuple(args.http_ssl_cert_crt_key)
+        livestreamer.set_option("http-ssl-cert", tuple(args.http_ssl_cert_crt_key))
 
 
 def setup_plugins():
