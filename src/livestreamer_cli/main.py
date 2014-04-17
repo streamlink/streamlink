@@ -340,26 +340,25 @@ def handle_stream(plugin, streams, stream_name):
     elif console.json:
         console.msg_json(stream)
 
-    # Continuously output the stream over HTTP
-    elif args.player_continuous_http and not (args.output or args.stdout):
-        output_stream_http(plugin, streams)
-
     # Output the stream
     else:
         # Find any streams with a '_alt' suffix and attempt
         # to use these in case the main stream is not usable.
         alt_streams = list(filter(lambda k: stream_name + "_alt" in k,
                                   sorted(streams.keys())))
+        file_output = args.output or args.stdout
 
         for stream_name in [stream_name] + alt_streams:
-            console.logger.info("Opening stream: {0}", stream_name)
             stream = streams[stream_name]
             stream_type = type(stream).shortname()
 
-            if (stream_type in args.player_passthrough and
-                not (args.output or args.stdout)):
+            if stream_type in args.player_passthrough and not file_output:
+                console.logger.info("Opening stream: {0}", stream_name)
                 success = output_stream_passthrough(stream)
+            elif args.player_continuous_http and not file_output:
+                return output_stream_http(plugin, streams)
             else:
+                console.logger.info("Opening stream: {0}", stream_name)
                 success = output_stream(stream)
 
             if success:
