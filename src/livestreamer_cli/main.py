@@ -462,9 +462,14 @@ def handle_url():
     if not streams:
         console.exit("No streams found on this URL: {0}", args.url)
 
+    if args.best_stream_default and not args.stream and not args.json:
+        args.stream = ["best"]
+
     if args.stream:
+        validstreams = format_valid_streams(streams)
         for stream_name in args.stream:
             if stream_name in streams:
+                console.logger.info("Available streams: {0}", validstreams)
                 handle_stream(plugin, streams, stream_name)
                 return
 
@@ -475,7 +480,6 @@ def handle_url():
             console.msg_json(dict(streams=streams, plugin=plugin.module,
                                   error=err))
         else:
-            validstreams = format_valid_streams(streams)
             console.exit("{0}.\n       Available streams: {1}",
                          err, validstreams)
     else:

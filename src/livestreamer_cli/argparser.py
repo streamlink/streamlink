@@ -49,7 +49,6 @@ parser.add_argument("stream", nargs="?", type=comma_list,
                          "highest or lowest quality available. "
                          "Fallback streams can be specified by using a "
                          "comma-separated list, e.g. '720p,480p,best'.")
-
 parser.add_argument("-h", "--help", action="store_true",
                     help="Show this help message and exit")
 parser.add_argument("-V", "--version", action="version",
@@ -66,13 +65,36 @@ parser.add_argument("-j", "--json", action="store_true",
                          "disable log output, useful for external scripting")
 parser.add_argument("--no-version-check", action="store_true",
                     help="Do not check for new Livestreamer releases")
-parser.add_argument("--retry-streams", metavar="delay", type=float,
-                    help="Will retry fetching streams until streams are found "
-                         "while waiting <delay> (seconds) between each attempt")
-parser.add_argument("--retry-open", metavar="attempts", type=int, default=1,
-                    help="Will try <attempts> to open the stream until giving up")
 parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
+
+group = parser.add_argument_group("stream options")
+group.add_argument("--retry-streams", metavar="delay", type=float,
+                   help="Will retry fetching streams until streams are found "
+                        "while waiting <delay> (seconds) between each attempt")
+group.add_argument("--retry-open", metavar="attempts", type=int, default=1,
+                   help="Will try <attempts> to open the stream until giving up")
+group.add_argument("--stream-types", "--stream-priority", metavar="types",
+                   type=comma_list,
+                   help="A comma-delimited list of stream types to allow. "
+                        "The order will be used to separate streams when "
+                        "there are multiple streams with the same name "
+                        "and different stream types. Default is "
+                        "rtmp,hls,hds,http,akamaihd")
+group.add_argument("--stream-sorting-excludes", metavar="streams",
+                   type=comma_list,
+                   help="Fine tune best/worst synonyms by excluding "
+                        "unwanted streams. Uses a filter expression in "
+                        "the format [operator]<value>. For example the "
+                        "filter '>480p' will exclude streams ranked "
+                        "higher than '480p'. Valid operators are >, >=, < "
+                        "and <=. If no operator is specified then "
+                        "equality is tested. Multiple filters can be "
+                        "used by separating each expression with a comma. "
+                        "For example '>480p,>mobile_medium' will exclude "
+                        "streams from two quality types.")
+group.add_argument("--best-stream-default", action="store_true",
+                   help="Use the 'best' stream if no stream is specified.")
 
 httpopt = parser.add_argument_group("HTTP options")
 httpopt.add_argument("--http-proxy", metavar="http://hostname:port/",
@@ -98,7 +120,6 @@ httpopt.add_argument("--http-ssl-cert", metavar="pem",
                      help="SSL certificate to use (pem)")
 httpopt.add_argument("--http-ssl-cert-crt-key", metavar=("crt", "key"),
                      nargs=2, help="SSL certificate to use (crt and key)")
-
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",
@@ -148,7 +169,7 @@ outputopt.add_argument("-f", "--force", action="store_true",
 outputopt.add_argument("-O", "--stdout", action="store_true",
                        help="Write stream to stdout instead of playing it")
 
-streamopt = parser.add_argument_group("stream options")
+streamopt = parser.add_argument_group("stream transport options")
 streamopt.add_argument("-c", "--cmdline", action="store_true",
                        help="Print command-line used internally to play "
                             "stream, this may not be available on all streams")
@@ -179,26 +200,6 @@ pluginopt.add_argument("--plugin-dirs", metavar="directory", type=comma_list,
                        help="Attempts to load plugins from these directories. "
                             "Multiple directories can be used by separating "
                             "them with a semicolon (;)")
-pluginopt.add_argument("--stream-types", "--stream-priority", metavar="types",
-                       type=comma_list,
-                       help="A comma-delimited list of stream types to allow. "
-                            "The order will be used to separate streams when "
-                            "there are multiple streams with the same name "
-                            "and different stream types. Default is "
-                            "rtmp,hls,hds,http,akamaihd")
-pluginopt.add_argument("--stream-sorting-excludes", metavar="streams",
-                       type=comma_list,
-                       help="Fine tune best/worst synonyms by excluding "
-                            "unwanted streams. Uses a filter expression in "
-                            "the format [operator]<value>. For example the "
-                            "filter '>480p' will exclude streams ranked "
-                            "higher than '480p'. Valid operators are >, >=, < "
-                            "and <=. If no operator is specified then "
-                            "equality is tested. Multiple filters can be "
-                            "used by separating each expression with a comma. "
-                            "For example '>480p,>mobile_medium' will exclude "
-                            "streams from two quality types.")
-
 pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
                        help="Specify Twitch/Justin.tv cookies to allow access "
                             "to subscription channels, e.g. "
@@ -206,19 +207,15 @@ pluginopt.add_argument("--jtv-cookie", "--twitch-cookie", metavar="cookie",
 pluginopt.add_argument("--jtv-password", "--twitch-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
-
 pluginopt.add_argument("--twitch-oauth-token", metavar="token",
                        help="Specify a OAuth token to allow Livestreamer to "
                             "access Twitch using your account.")
-
 pluginopt.add_argument("--twitch-oauth-authenticate", action="store_true",
                        help="Opens a web browser where you can grant "
                             "Livestreamer access to your Twitch account.")
-
 pluginopt.add_argument("--ustream-password",
                        help="Use this to access password protected streams.",
                        metavar="password")
-
 pluginopt.add_argument("--crunchyroll-username", metavar="username",
                        help="Specify Crunchyroll username to allow access to "
                             "restricted streams")
@@ -230,14 +227,11 @@ pluginopt.add_argument("--crunchyroll-password", metavar="password",
 pluginopt.add_argument("--crunchyroll-purge-credentials", action="store_true",
                        help="Purge Crunchyroll credentials to initiate a new "
                        "session and reauthenticate.")
-
-
-pluginopt.add_argument("--livestation-email",
-                       help="Specify Livestation account email to access restricted streams or Premium Quality streams.",
-                       metavar="email")
-pluginopt.add_argument("--livestation-password",
-                       help="Specify Livestation password for account specified.",
-                       metavar="password")
+pluginopt.add_argument("--livestation-email", metavar="email",
+                       help="Specify Livestation account email to access "
+                            "restricted streams or Premium Quality streams.")
+pluginopt.add_argument("--livestation-password", metavar="password",
+                       help="Specify Livestation password for account specified.")
 
 
 # Deprecated options

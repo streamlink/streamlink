@@ -274,6 +274,10 @@ Command line options
 
     .. versionadded:: 1.8.0
 
+
+Stream options
+^^^^^^^^^^^^^^
+
 .. cmdoption:: --retry-streams delay
 
     Will retry fetching streams until streams are found
@@ -286,6 +290,33 @@ Command line options
     Will try <attempts> to open the stream until giving up
 
     .. versionadded:: 1.8.0
+
+.. cmdoption:: --stream-types types, --stream-priority types
+
+    A comma-delimited list of stream types to allow. The
+    order will be used to separate streams when there are
+    multiple streams with the same name and different
+    stream types. Default is ``rtmp,hls,hds,http,akamaihd``
+
+.. cmdoption:: --stream-sorting-excludes streams
+
+    Fine tune best/worst synonyms by excluding unwanted
+    streams. Uses a filter expression in the format
+    ``[operator]<value>``. For example the filter ``>480p`` will
+    exclude streams ranked higher than '480p'. Valid
+    operators are ``>``, ``>=``, ``<`` and ``<=``. If no operator is
+    specified then equality is tested.
+
+    Multiple filters can be used by separating each
+    expression with a comma. For example ``>480p,>mobile_medium``
+    will exclude streams from two quality types.
+
+.. cmdoption::  --best-stream-default
+
+    Use the 'best' stream if no stream is specified.
+
+    .. versionadded:: 1.8.0
+
 
 HTTP options
 ^^^^^^^^^^^^
@@ -424,8 +455,8 @@ File output options
     Write stream to stdout instead of playing it
 
 
-Stream options
-^^^^^^^^^^^^^^
+Stream transport options
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. cmdoption:: -c, --cmdline
 
@@ -474,26 +505,6 @@ Plugin options
     Attempts to load plugins from these directories.
     Multiple directories can be used by separating them
     with a semicolon (;)
-
-.. cmdoption:: --stream-types types, --stream-priority types
-
-    A comma-delimited list of stream types to allow. The
-    order will be used to separate streams when there are
-    multiple streams with the same name and different
-    stream types. Default is ``rtmp,hls,hds,http,akamaihd``
-
-.. cmdoption:: --stream-sorting-excludes streams
-
-    Fine tune best/worst synonyms by excluding unwanted
-    streams. Uses a filter expression in the format
-    ``[operator]<value>``. For example the filter ``>480p`` will
-    exclude streams ranked higher than '480p'. Valid
-    operators are ``>``, ``>=``, ``<`` and ``<=``. If no operator is
-    specified then equality is tested.
-
-    Multiple filters can be used by separating each
-    expression with a comma. For example ``>480p,>mobile_medium``
-    will exclude streams from two quality types.
 
 .. cmdoption:: --jtv-cookie cookie, --twitch-cookie cookie
 
