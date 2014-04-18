@@ -161,7 +161,8 @@ def output_stream_http(plugin, streams):
                 continue
 
             try:
-                console.logger.info("Opening stream: {0}", stream_name)
+                console.logger.info("Opening stream: {0} ({1})", stream_name,
+                                    type(stream).shortname())
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
                 console.logger.error("{0}", err)
@@ -353,12 +354,14 @@ def handle_stream(plugin, streams, stream_name):
             stream_type = type(stream).shortname()
 
             if stream_type in args.player_passthrough and not file_output:
-                console.logger.info("Opening stream: {0}", stream_name)
+                console.logger.info("Opening stream: {0} ({1})", stream_name,
+                                    stream_type)
                 success = output_stream_passthrough(stream)
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
-                console.logger.info("Opening stream: {0}", stream_name)
+                console.logger.info("Opening stream: {0} ({1})", stream_name,
+                                    stream_type)
                 success = output_stream(stream)
 
             if success:
