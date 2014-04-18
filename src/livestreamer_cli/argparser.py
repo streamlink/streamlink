@@ -170,18 +170,6 @@ outputopt.add_argument("-O", "--stdout", action="store_true",
                        help="Write stream to stdout instead of playing it")
 
 streamopt = parser.add_argument_group("stream transport options")
-streamopt.add_argument("-c", "--cmdline", action="store_true",
-                       help="Print command-line used internally to play "
-                            "stream, this may not be available on all streams")
-streamopt.add_argument("-e", "--errorlog", action="store_true",
-                       help="Log possible errors from internal command-line "
-                            "to a temporary file, use when debugging rtmpdump "
-                            "related issues")
-streamopt.add_argument("-r", "--rtmpdump", metavar="path",
-                       help="Specify location of rtmpdump executable, "
-                            "e.g. /usr/local/bin/rtmpdump")
-streamopt.add_argument("--rtmpdump-proxy", metavar="host:port",
-                       help="Specify a proxy (SOCKS) that rtmpdump will use")
 streamopt.add_argument("--hls-live-edge", type=int, metavar="segments",
                        help="How many segments from the end to start "
                             "live streams on, default is 3")
@@ -191,7 +179,9 @@ streamopt.add_argument("--hls-segment-attempts", type=int, metavar="attempts",
 streamopt.add_argument("--hls-segment-timeout", type=float, metavar="timeout",
                        help="Segment connect and read timeout, default is 10.0")
 streamopt.add_argument("--hls-timeout", type=float, metavar="timeout",
-                       help="HLS read timeout, default is 60.0")
+                       help="Timeout for reading data from HLS streams, "
+                             "default is 60.0")
+
 streamopt.add_argument("--hds-live-edge", type=float, metavar="seconds",
                        help="Specify the time live HDS streams will start "
                             "from the edge of stream, default is 10.0")
@@ -204,6 +194,23 @@ streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
                             "ringbuffer, default is 16777216 (16MB). "
                             "HDS streams manages this value automatically, "
                             "use --hds-fragment-buffer to change it")
+streamopt.add_argument("--rtmp-proxy", "--rtmpdump-proxy", metavar="host:port",
+                       help="Specify a proxy (SOCKS) that RTMP streams will use")
+streamopt.add_argument("--rtmp-rtmpdump", "--rtmpdump", "-r", metavar="path",
+                       help="Specify location of the rtmpdump executable "
+                            "used by RTMP streams, e.g. /usr/local/bin/rtmpdump")
+streamopt.add_argument("--rtmp-timeout", type=float, metavar="timeout",
+                       help="Timeout for reading data from RTMP streams, "
+                            "default is 60.0")
+streamopt.add_argument("--subprocess-cmdline", "--cmdline", "-c",
+                       action="store_true",
+                       help="Print command-line used internally to play "
+                            "stream, this is only available for RTMP streams")
+streamopt.add_argument("--subprocess-errorlog", "--errorlog", "-e",
+                       action="store_true",
+                       help="Log possible errors from internal subprocesses "
+                            "to a temporary file, use when debugging rtmpdump "
+                            "related issues")
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory", type=comma_list,

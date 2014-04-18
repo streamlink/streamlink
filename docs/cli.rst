@@ -458,42 +458,32 @@ File output options
 Stream transport options
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. cmdoption:: -c, --cmdline
-
-    Print command-line used internally to play stream,
-    this may not be available on all streams
-
-.. cmdoption:: -e, --errorlog
-
-    Log possible errors from internal command-line to a
-    temporary file, use when debugging
-
-.. cmdoption:: -r path, --rtmpdump path
-
-    Specify location of rtmpdump executable, e.g.
-    ``/usr/local/bin/rtmpdump``
-
-.. cmdoption:: --rtmpdump-proxy host:port
-
-    Specify a proxy (SOCKS) that rtmpdump will use
-
 .. cmdoption:: --hls-live-edge segments
 
     How many segments from the end to start live streams
     on, default is ``3``
+
+    .. versionadded:: 1.8.0
 
 .. cmdoption:: --hls-segment-attempts attempts
 
     How many attempts should be done to download each
     segment, default is ``3``
 
+    .. versionadded:: 1.8.0
+
 .. cmdoption:: --hls-segment-timeout timeout
 
     Segment connect and read timeout, default is ``10.0``
 
+    .. versionadded:: 1.8.0
+
 .. cmdoption:: --hls-timeout timeout
 
-    HLS read timeout, default is ``60.0``
+    Timeout for reading data from HLS streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
 
 .. cmdoption:: --hds-live-edge seconds
 
@@ -513,6 +503,33 @@ Stream transport options
 
     HDS streams manages this value automatically, use
     ``--hds-fragment-buffer`` to change it
+
+.. cmdoption:: --rtmp-proxy host:port, --rtmpdump-proxy host:port
+
+    Specify a proxy (SOCKS) that RTMP streams will use
+
+.. cmdoption:: --rtmp-rtmpdump path, --rtmpdump path, -r path
+
+    Specify location of the rtmpdump executable used by
+    RTMP streams, e.g. ``/usr/local/bin/rtmpdump``
+
+.. cmdoption:: --rtmp-timeout timeout
+
+    Timeout for reading data from RTMP streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --subprocess-cmdline, --cmdline, -c
+
+    Print command-line used internally to play stream,
+    this is only available for RTMP streams
+
+.. cmdoption:: --subprocess-errorlog, --errorlog, -e
+
+    Log possible errors from internal subprocesses to a
+    temporary file, use when debugging rtmpdump related
+    issues
 
 
 Plugin options

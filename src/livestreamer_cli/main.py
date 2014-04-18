@@ -326,7 +326,7 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print internal command-line if this stream
     # uses a subprocess.
-    if args.cmdline:
+    if args.subprocess_cmdline:
         if isinstance(stream, StreamProcess):
             try:
                 cmdline = stream.cmdline()
@@ -568,7 +568,7 @@ def setup_console():
         console.set_output(sys.stderr)
 
     # We don't want log output when we are printing JSON or a command-line.
-    if not (args.json or args.cmdline or args.quiet):
+    if not (args.json or args.subprocess_cmdline or args.quiet):
         console.set_level(args.loglevel)
 
     if args.quiet_player:
@@ -630,15 +630,6 @@ def setup_livestreamer():
 
 def setup_options():
     """Sets Livestreamer options."""
-
-    livestreamer.set_option("errorlog", args.errorlog)
-
-    if args.rtmpdump:
-        livestreamer.set_option("rtmpdump", args.rtmpdump)
-
-    if args.rtmpdump_proxy:
-        livestreamer.set_option("rtmpdump-proxy", args.rtmpdump_proxy)
-
     if args.hls_live_edge:
         livestreamer.set_option("hls-live-edge", args.hls_live_edge)
 
@@ -661,6 +652,20 @@ def setup_options():
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 
+    if args.rtmp_proxy:
+        livestreamer.set_option("rtmp-proxy", args.rtmp_proxy)
+
+    if args.rtmp_rtmpdump:
+        livestreamer.set_option("rtmp-rtmpdump", args.rtmp_rtmpdump)
+
+    if args.rtmp_timeout:
+        livestreamer.set_option("rtmp-timeout", args.rtmp_timeout)
+
+    livestreamer.set_option("subprocess-errorlog", args.subprocess_errorlog)
+
+
+def setup_plugin_options():
+    """Sets Livestreamer plugin options."""
     if args.jtv_cookie:
         livestreamer.set_plugin_option("justintv", "cookie",
                                        args.jtv_cookie)
@@ -767,6 +772,7 @@ def main():
     elif args.url:
         with ignored(KeyboardInterrupt):
             setup_options()
+            setup_plugin_options()
             handle_url()
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()

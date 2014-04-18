@@ -39,16 +39,17 @@ class Livestreamer(object):
     def __init__(self):
         self.http = api.HTTPSession()
         self.options = Options({
-            "rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
-            "rtmpdump-proxy": None,
-            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
             "hds-live-edge": 10.0,
             "hds-fragment-buffer": 10,
             "hls-live-edge": 3,
             "hls-segment-attempts": 3,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
-            "errorlog": False,
+            "rtmp-timeout": 60.0,
+            "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
+            "rtmp-proxy": None,
+            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
+            "subprocess-errorlog": False
         })
         self.plugins = {}
         self.logger = Logger()
@@ -65,9 +66,6 @@ class Livestreamer(object):
         **Available options**:
 
         ======================= =========================================
-        errorlog                (bool) Log errors from subprocesses to
-                                a file located in the temp directory
-
         hls-live-edge           (int) How many segments from the end
                                 to start live streams on, default: ``3``
 
@@ -77,7 +75,8 @@ class Livestreamer(object):
         hls-segment-timeout     (float) Segment connect and read timeout,
                                 default: ``10.0``
 
-        hls-timeout             (float) HLS read timeout, default: ``60.0``
+        hls-timeout             (float) Timeout for reading data from
+                                HLS streams, default: ``60.0``
 
         hds-fragment-buffer     (int) Specify the maximum amount of
                                 fragments to buffer, this controls the
@@ -119,19 +118,36 @@ class Livestreamer(object):
                                 can be either a .pem file (str) or a
                                 .crt/.key pair (tuple)
 
+        subprocess-errorlog     (bool) Log errors from subprocesses to
+                                a file located in the temp directory
+
         ringbuffer-size         (int) The size of the internal ring
                                 buffer used by most stream types,
                                 default: ``16777216`` (16MB)
 
-        rtmpdump                (str) Specify the location of the
-                                rtmpdump executable, e.g.
-                                ``/usr/local/bin/rtmpdump``
+        rtmp-proxy              (str) Specify a proxy (SOCKS) that RTMP
+                                streams will use
 
-        rtmpdump-proxy          (str) Specify a proxy (SOCKS) that
-                                rtmpdump will use
+        rtmp-rtmpdump           (str) Specify the location of the
+                                rtmpdump executable used by RTMP streams,
+                                e.g. ``/usr/local/bin/rtmpdump``
+
+        rtmp-timeout            (float) Timeout for reading data from
+                                RTMP streams, default: ``60.0``
+
+
         ======================= =========================================
 
         """
+
+        # Backwards compatibility
+        if key == "rtmpdump":
+            key = "rtmp-rtmpdump"
+        elif key == "rtmpdump-proxy":
+            key = "rtmp-proxy"
+        elif key == "errorlog":
+            key = "subprocess-errorlog"
+
         if key == "http-proxy":
             if not re.match("^http(s)?://", value):
                 value = "http://" + value

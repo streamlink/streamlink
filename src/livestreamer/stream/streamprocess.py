@@ -26,14 +26,14 @@ class StreamProcessIO(StreamIOThreadWrapper):
 
 
 class StreamProcess(Stream):
-    def __init__(self, session, params=None, timeout=30):
+    def __init__(self, session, params=None, timeout=60.0):
         Stream.__init__(self, session)
 
         if not params:
             params = {}
 
         self.params = params
-        self.errorlog = self.session.options.get("errorlog")
+        self.errorlog = self.session.options.get("subprocess-errorlog")
         self.timeout = timeout
 
     def open(self):
@@ -58,7 +58,8 @@ class StreamProcess(Stream):
 
         if not process_alive:
             if self.errorlog:
-                raise StreamError(("Error while executing subprocess, error output logged to: {0}").format(tmpfile.name))
+                raise StreamError(("Error while executing subprocess, "
+                                   "error output logged to: {0}").format(tmpfile.name))
             else:
                 raise StreamError("Error while executing subprocess")
 
@@ -69,7 +70,7 @@ class StreamProcess(Stream):
         try:
             cmd = sh.create_command(self.cmd)
         except sh.CommandNotFound as err:
-            raise StreamError(("Unable to find {0} command").format(str(err)))
+            raise StreamError("Unable to find {0} command".format(err))
 
         return cmd
 
