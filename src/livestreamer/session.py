@@ -44,6 +44,10 @@ class Livestreamer(object):
             "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
             "hds-live-edge": 10.0,
             "hds-fragment-buffer": 10,
+            "hls-live-edge": 3,
+            "hls-segment-attempts": 3,
+            "hls-segment-timeout": 10.0,
+            "hls-timeout": 60.0,
             "errorlog": False,
         })
         self.plugins = {}
@@ -63,6 +67,17 @@ class Livestreamer(object):
         ======================= =========================================
         errorlog                (bool) Log errors from subprocesses to
                                 a file located in the temp directory
+
+        hls-live-edge           (int) How many segments from the end
+                                to start live streams on, default: ``3``
+
+        hls-segment-attempts    (int) How many attempts should be done
+                                to download each segment, default: ``3``
+
+        hls-segment-timeout     (float) Segment connect and read timeout,
+                                default: ``10.0``
+
+        hls-timeout             (float) HLS read timeout, default: ``60.0``
 
         hds-fragment-buffer     (int) Specify the maximum amount of
                                 fragments to buffer, this controls the

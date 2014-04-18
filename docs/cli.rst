@@ -477,6 +477,24 @@ Stream transport options
 
     Specify a proxy (SOCKS) that rtmpdump will use
 
+.. cmdoption:: --hls-live-edge segments
+
+    How many segments from the end to start live streams
+    on, default is ``3``
+
+.. cmdoption:: --hls-segment-attempts attempts
+
+    How many attempts should be done to download each
+    segment, default is ``3``
+
+.. cmdoption:: --hls-segment-timeout timeout
+
+    Segment connect and read timeout, default is ``10.0``
+
+.. cmdoption:: --hls-timeout timeout
+
+    HLS read timeout, default is ``60.0``
+
 .. cmdoption:: --hds-live-edge seconds
 
     Specify the time live HDS streams will start from the

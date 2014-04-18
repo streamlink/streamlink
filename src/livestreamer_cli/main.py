@@ -639,6 +639,18 @@ def setup_options():
     if args.rtmpdump_proxy:
         livestreamer.set_option("rtmpdump-proxy", args.rtmpdump_proxy)
 
+    if args.hls_live_edge:
+        livestreamer.set_option("hls-live-edge", args.hls_live_edge)
+
+    if args.hls_segment_attempts:
+        livestreamer.set_option("hls-segment-attempts", args.hls_segment_attempts)
+
+    if args.hls_segment_timeout:
+        livestreamer.set_option("hls-segment-timeout", args.hls_segment_timeout)
+
+    if args.hls_timeout:
+        livestreamer.set_option("hls-timeout", args.hls_timeout)
+
     if args.hds_live_edge is not None:
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
 

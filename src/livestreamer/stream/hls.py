@@ -29,20 +29,22 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.byterange_offsets = defaultdict(int)
         self.key_data = None
         self.key_uri = None
+        self.segment_attempts = self.session.options.get("hls-segment-attempts")
+        self.segment_timeout = self.session.options.get("hls-segment-timeout")
 
     def open_sequence(self, sequence, retries=3):
-        request_params = self.create_request_params(sequence)
+        if self.closed or not retries:
+            return
 
-        while retries and not self.closed:
-            try:
-                return self.session.http.get(sequence.segment.uri,
-                                             timeout=10,
-                                             exception=StreamError,
-                                             **request_params)
-            except StreamError as err:
-                self.logger.error("Failed to open sequence {0}: {1}",
-                                  sequence.num, err)
-            retries -= 1
+        try:
+            request_params = self.create_request_params(sequence)
+            return self.session.http.get(sequence.segment.uri,
+                                         timeout=self.segment_timeout,
+                                         exception=StreamError,
+                                         **request_params)
+        except StreamError as err:
+            self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
+            return self.open_sequence(sequence, retries - 1)
 
     def create_decryptor(self, key, sequence):
         if key.method == "NONE":
@@ -72,9 +74,9 @@ class HLSStreamWriter(SegmentedStreamWriter):
             if sequence.segment.byterange.offset is not None:
                 bytes_start = sequence.segment.byterange.offset
 
-            bytes_end = bytes_start + max(sequence.segment.byterange.range - 1, 0)
-            headers["Range"] = "bytes={0}-{1}".format(bytes_start,
-                                                      bytes_end)
+            bytes_len = max(sequence.segment.byterange.range - 1, 0)
+            bytes_end = bytes_start + bytes_len
+            headers["Range"] = "bytes={0}-{1}".format(bytes_start, bytes_end)
             self.byterange_offsets[sequence.segment.uri] = bytes_end + 1
 
         request_params["headers"] = headers
@@ -82,7 +84,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         return request_params
 
     def write(self, sequence, chunk_size=8192):
-        res = self.open_sequence(sequence)
+        res = self.open_sequence(sequence, self.segment_attempts)
         if not res:
             return
 
@@ -105,10 +107,10 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 if self.closed:
                     break
             else:
-                self.logger.debug("Download of sequence {0} complete",
+                self.logger.debug("Download of segment {0} complete",
                                   sequence.num)
         except IOError as err:
-            self.logger.error("Failed to read sequence {0}: {1}",
+            self.logger.error("Failed to read segment {0}: {1}",
                               sequence.num, err)
 
 
@@ -121,6 +123,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_sequence = -1
         self.playlist_sequences = []
         self.playlist_reload_time = 15
+        self.live_edge = self.session.options.get("hls-live-edge")
 
         self.reload_playlist()
 
@@ -177,7 +180,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if self.playlist_sequence < 0:
             if self.playlist_end is None:
-                edge_sequence = sequences[-(min(len(sequences), 3))]
+                edge_index = -(min(len(sequences), max(int(self.live_edge), 1)))
+                edge_sequence = sequences[edge_index]
                 self.playlist_sequence = edge_sequence.num
             else:
                 self.playlist_sequence = first_sequence.num
@@ -188,7 +192,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
     def iter_segments(self):
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
-                self.logger.debug("Adding sequence {0} to queue", sequence.num)
+                self.logger.debug("Adding segment {0} to queue", sequence.num)
                 yield sequence
 
                 # End of stream
@@ -213,6 +217,7 @@ class HLSStreamReader(SegmentedStreamReader):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
         self.logger = stream.session.logger.new_module("stream.hls")
         self.request_params = dict(stream.args)
+        self.timeout = stream.session.options.get("hls-timeout")
 
         # These params are reserved for internal use
         self.request_params.pop("exception", None)
