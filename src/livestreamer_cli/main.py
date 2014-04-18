@@ -642,12 +642,8 @@ def setup_options():
     if args.hls_timeout:
         livestreamer.set_option("hls-timeout", args.hls_timeout)
 
-    if args.hds_live_edge is not None:
+    if args.hds_live_edge:
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
-
-    if args.hds_fragment_buffer is not None:
-        livestreamer.set_option("hds-fragment-buffer",
-                                args.hds_fragment_buffer)
 
     if args.http_timeout:
         livestreamer.set_option("http-timeout", args.http_timeout)
@@ -666,6 +662,11 @@ def setup_options():
 
     livestreamer.set_option("subprocess-errorlog", args.subprocess_errorlog)
 
+    # Deprecated options
+    if args.hds_fragment_buffer:
+        console.logger.warning("The option --hds-fragment-buffer is deprecated "
+                               "and will be removed in the future. Use "
+                               "--ringbuffer-size instead")
 
 def setup_plugin_options():
     """Sets Livestreamer plugin options."""

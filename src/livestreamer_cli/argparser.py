@@ -170,33 +170,35 @@ outputopt.add_argument("-O", "--stdout", action="store_true",
                        help="Write stream to stdout instead of playing it")
 
 streamopt = parser.add_argument_group("stream transport options")
-streamopt.add_argument("--hls-live-edge", type=int, metavar="segments",
-                       help="How many segments from the end to start "
-                            "live streams on, default is 3")
-streamopt.add_argument("--hls-segment-attempts", type=int, metavar="attempts",
-                       help="How many attempts should be done to download "
-                            "each segment, default is 3")
-streamopt.add_argument("--hls-segment-timeout", type=float, metavar="timeout",
-                       help="Segment connect and read timeout, default is 10.0")
-streamopt.add_argument("--hls-timeout", type=float, metavar="timeout",
-                       help="Timeout for reading data from HLS streams, "
-                             "default is 60.0")
-
 streamopt.add_argument("--hds-live-edge", type=float, metavar="seconds",
                        help="Specify the time live HDS streams will start "
                             "from the edge of stream, default is 10.0")
-streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
-                       help="Specify the maximum amount of fragments to "
-                            "buffer, this controls the maximum size of the "
-                            "ringbuffer, default is 10")
+streamopt.add_argument("--hds-segment-attempts", type=int, metavar="attempts",
+                       help="How many attempts should be done to download "
+                            "each HDS segment, default is 3")
+streamopt.add_argument("--hds-segment-timeout", type=float, metavar="timeout",
+                       help="HDS segment connect and read timeout, default is 10.0")
+streamopt.add_argument("--hds-timeout", type=float, metavar="timeout",
+                       help="Timeout for reading data from HDS streams, "
+                            "default is 60.0")
+streamopt.add_argument("--hls-live-edge", type=int, metavar="segments",
+                       help="How many segments from the end to start "
+                            "live HLS streams on, default is 3")
+streamopt.add_argument("--hls-segment-attempts", type=int, metavar="attempts",
+                       help="How many attempts should be done to download "
+                            "each HLS segment, default is 3")
+streamopt.add_argument("--hls-segment-timeout", type=float, metavar="timeout",
+                       help="HLS segment connect and read timeout, "
+                            "default is 10.0")
+streamopt.add_argument("--hls-timeout", type=float, metavar="timeout",
+                       help="Timeout for reading data from HLS streams, "
+                            "default is 60.0")
 streamopt.add_argument("--http-timeout", type=float, metavar="timeout",
                        help="Timeout for reading data from HTTP streams, "
                             "default is 60.0")
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
                        help="Specify a maximum size (bytes) for the "
-                            "ringbuffer, default is 16777216 (16MB). "
-                            "HDS streams manages this value automatically, "
-                            "use --hds-fragment-buffer to change it")
+                            "ringbuffer, default is 16777216 (16MB)")
 streamopt.add_argument("--rtmp-proxy", "--rtmpdump-proxy", metavar="host:port",
                        help="Specify a proxy (SOCKS) that RTMP streams will use")
 streamopt.add_argument("--rtmp-rtmpdump", "--rtmpdump", "-r", metavar="path",
@@ -266,6 +268,7 @@ pluginopt.add_argument("--gomtv-username", metavar="username",
 pluginopt.add_argument("--gomtv-password", metavar="password",
                        nargs="?", const=True, default=None,
                        help=argparse.SUPPRESS)
-
+streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
+                       help=argparse.SUPPRESS)
 
 __all__ = ["parser"]

@@ -40,16 +40,18 @@ class Livestreamer(object):
         self.http = api.HTTPSession()
         self.options = Options({
             "hds-live-edge": 10.0,
-            "hds-fragment-buffer": 10,
+            "hds-segment-attempts": 3,
+            "hds-segment-timeout": 10.0,
+            "hds-timeout": 60.0,
             "hls-live-edge": 3,
             "hls-segment-attempts": 3,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
             "http-timeout": 60.0,
+            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
-            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
             "subprocess-errorlog": False
         })
         self.plugins = {}
@@ -67,26 +69,30 @@ class Livestreamer(object):
         **Available options**:
 
         ======================= =========================================
+        hds-live-edge           (float) Specify the time live HDS
+                                streams will start from the edge of
+                                stream, default: ``10.0``
+
+        hds-segment-attempts    (int) How many attempts should be done
+                                to download each HDS segment, default: ``3``
+
+        hds-segment-timeout     (float) HDS segment connect and read
+                                timeout, default: ``10.0``
+
+        hds-timeout             (float) Timeout for reading data from
+                                HDS streams, default: ``60.0``
+
         hls-live-edge           (int) How many segments from the end
                                 to start live streams on, default: ``3``
 
         hls-segment-attempts    (int) How many attempts should be done
-                                to download each segment, default: ``3``
+                                to download each HLS segment, default: ``3``
 
-        hls-segment-timeout     (float) Segment connect and read timeout,
-                                default: ``10.0``
+        hls-segment-timeout     (float) HLS segment connect and read
+                                timeout, default: ``10.0``
 
         hls-timeout             (float) Timeout for reading data from
                                 HLS streams, default: ``60.0``
-
-        hds-fragment-buffer     (int) Specify the maximum amount of
-                                fragments to buffer, this controls the
-                                maximum size of the ringbuffer,
-                                default: ``10``
-
-        hds-live-edge           (float) Specify the time live HDS
-                                streams will start from the edge of
-                                stream, default: ``10.0``
 
         http-proxy              (str) Specify a HTTP proxy to use for
                                 all HTTP requests
@@ -138,8 +144,6 @@ class Livestreamer(object):
 
         rtmp-timeout            (float) Timeout for reading data from
                                 RTMP streams, default: ``60.0``
-
-
         ======================= =========================================
 
         """

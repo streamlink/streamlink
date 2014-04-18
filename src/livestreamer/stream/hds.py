@@ -57,29 +57,28 @@ class HDSStreamWriter(SegmentedStreamWriter):
         self.concater = FLVTagConcat(tags=tags,
                                      duration=duration,
                                      flatten_timestamps=True)
+        self.segment_attempts = self.session.options.get("hds-segment-attempts")
+        self.segment_timeout = self.session.options.get("hds-segment-timeout")
 
     def open_fragment(self, fragment, retries=3):
-        while retries and not self.closed:
-            try:
-                return self.session.http.get(fragment.url,
-                                             stream=True,
-                                             timeout=10,
-                                             exception=StreamError,
-                                             **self.stream.request_params)
-            except StreamError as err:
-                self.logger.error("Failed to open fragment {0}-{1}: {2}",
-                                  fragment.segment, fragment.fragment, err)
-            retries -= 1
-
-    def write(self, fragment, chunk_size=8192):
-        res = self.open_fragment(fragment)
-        if not res:
+        if self.closed or not retries:
             return
 
-        size = int(res.headers.get("content-length", "0"))
-        size = size * self.reader.buffer_fragments
-        if size > self.reader.buffer.buffer_size:
-            self.reader.buffer.resize(size)
+        try:
+            return self.session.http.get(fragment.url,
+                                         stream=True,
+                                         timeout=self.segment_timeout,
+                                         exception=StreamError,
+                                         **self.stream.request_params)
+        except StreamError as err:
+            self.logger.error("Failed to open fragment {0}-{1}: {2}",
+                              fragment.segment, fragment.fragment, err)
+            return self.open_fragment(fragment, retries - 1)
+
+    def write(self, fragment, chunk_size=8192):
+        res = self.open_fragment(fragment, self.segment_attempts)
+        if not res:
+            return
 
         fd = StreamIOIterWrapper(res.iter_content(8192))
         self.convert_fragment(fragment, fd)
@@ -137,6 +136,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
         self.bootstrap_minimal_reload_time = 2.0
         self.bootstrap_reload_time = self.bootstrap_minimal_reload_time
         self.invalid_fragments = set()
+        self.live_edge = self.session.options.get("hds-live-edge")
 
         self.update_bootstrap()
 
@@ -171,13 +171,12 @@ class HDSStreamWorker(SegmentedStreamWorker):
 
                 # Less likely to hit edge if we don't start with last fragment,
                 # default buffer is 10 sec.
-                fragment_buffer = int(ceil(self.reader.buffer_time /
-                                           fragment_duration))
+                fragment_buffer = int(ceil(self.live_edge / fragment_duration))
                 current_fragment = max(self.first_fragment,
                                        current_fragment - (fragment_buffer - 1))
 
                 self.logger.debug("Live edge buffer {0} sec is {1} fragments",
-                                  self.reader.buffer_time, fragment_buffer)
+                                  self.live_edge, fragment_buffer)
 
                 # Make sure we don't have a duration set when it's a
                 # live stream since it will just confuse players anyway.
@@ -344,8 +343,6 @@ class HDSStreamReader(SegmentedStreamReader):
     def __init__(self, stream, *args, **kwargs):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
 
-        self.buffer_time = self.session.options.get("hds-live-edge")
-        self.buffer_fragments = int(self.session.options.get("hds-fragment-buffer"))
         self.logger = stream.session.logger.new_module("stream.hds")
 
 

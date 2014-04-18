@@ -460,21 +460,21 @@ Stream transport options
 
 .. cmdoption:: --hls-live-edge segments
 
-    How many segments from the end to start live streams
-    on, default is ``3``
+    How many segments from the end to start live
+    HLS streams on, default is ``3``
 
     .. versionadded:: 1.8.0
 
 .. cmdoption:: --hls-segment-attempts attempts
 
     How many attempts should be done to download each
-    segment, default is ``3``
+    HLS segment, default is ``3``
 
     .. versionadded:: 1.8.0
 
 .. cmdoption:: --hls-segment-timeout timeout
 
-    Segment connect and read timeout, default is ``10.0``
+    HLS segment connect and read timeout, default is ``10.0``
 
     .. versionadded:: 1.8.0
 
@@ -490,11 +490,25 @@ Stream transport options
     Specify the time live HDS streams will start from the
     edge of stream, default is ``10.0``
 
-.. cmdoption:: --hds-fragment-buffer fragments
+.. cmdoption:: --hds-segment-attempts attempts
 
-    Specify the maximum amount of fragments to buffer,
-    this controls the maximum size of the ringbuffer,
-    default is ``10``
+    How many attempts should be done to download each
+    HDS segment, default is ``3``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --hds-segment-timeout timeout
+
+    HDS segment connect and read timeout, default is ``10.0``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --hds-timeout timeout
+
+    Timeout for reading data from HDS streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
 
 .. cmdoption:: --http-timeout timeout
 
@@ -507,9 +521,6 @@ Stream transport options
 
     Specify a maximum size (bytes) for the ringbuffer used
     by some stream types, default is ``16777216`` (16MB).
-
-    HDS streams manages this value automatically, use
-    ``--hds-fragment-buffer`` to change it
 
 .. cmdoption:: --rtmp-proxy host:port, --rtmpdump-proxy host:port
 
