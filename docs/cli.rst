@@ -490,11 +490,18 @@ Stream transport options
     Specify the time live HDS streams will start from the
     edge of stream, default is ``10.0``
 
-.. cmdoption::  --hds-fragment-buffer fragments
+.. cmdoption:: --hds-fragment-buffer fragments
 
     Specify the maximum amount of fragments to buffer,
     this controls the maximum size of the ringbuffer,
     default is ``10``
+
+.. cmdoption:: --http-timeout timeout
+
+    Timeout for reading data from HTTP streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
 
 .. cmdoption:: --ringbuffer-size size
 

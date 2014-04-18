@@ -45,6 +45,7 @@ class Livestreamer(object):
             "hls-segment-attempts": 3,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
+            "http-timeout": 60.0,
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
@@ -117,6 +118,9 @@ class Livestreamer(object):
         http-ssl-cert           (str or tuple) SSL certificate to use,
                                 can be either a .pem file (str) or a
                                 .crt/.key pair (tuple)
+
+        http-timeout            (float) Timeout for reading data from
+                                HTTP streams, default: ``60.0``
 
         subprocess-errorlog     (bool) Log errors from subprocesses to
                                 a file located in the temp directory

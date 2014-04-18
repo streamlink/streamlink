@@ -649,6 +649,9 @@ def setup_options():
         livestreamer.set_option("hds-fragment-buffer",
                                 args.hds_fragment_buffer)
 
+    if args.http_timeout:
+        livestreamer.set_option("http-timeout", args.http_timeout)
+
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 

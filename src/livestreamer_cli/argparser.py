@@ -189,6 +189,9 @@ streamopt.add_argument("--hds-fragment-buffer", type=int, metavar="fragments",
                        help="Specify the maximum amount of fragments to "
                             "buffer, this controls the maximum size of the "
                             "ringbuffer, default is 10")
+streamopt.add_argument("--http-timeout", type=float, metavar="timeout",
+                       help="Timeout for reading data from HTTP streams, "
+                            "default is 60.0")
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
                        help="Specify a maximum size (bytes) for the "
                             "ringbuffer, default is 16777216 (16MB). "

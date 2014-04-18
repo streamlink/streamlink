@@ -66,9 +66,11 @@ class HTTPStream(Stream):
 
     def open(self):
         method = self.args.get("method", "GET")
+        timeout = self.session.options.get("http-timeout")
         res = self.session.http.request(method=method,
                                         stream=True,
                                         exception=StreamError,
+                                        timeout=timeout,
                                         **self.args)
 
         return StreamIOIterWrapper(res.iter_content(8192))
