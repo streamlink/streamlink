@@ -47,7 +47,7 @@ class Livestreamer(object):
             "hls-segment-attempts": 3,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
-            "http-timeout": 60.0,
+            "http-stream-timeout": 60.0,
             "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
@@ -125,7 +125,11 @@ class Livestreamer(object):
                                 can be either a .pem file (str) or a
                                 .crt/.key pair (tuple)
 
-        http-timeout            (float) Timeout for reading data from
+        http-timeout            (float) General timeout used by all HTTP
+                                requests except the ones covered by
+                                other options, default: ``20.0``
+
+        http-stream-timeout     (float) Timeout for reading data from
                                 HTTP streams, default: ``60.0``
 
         subprocess-errorlog     (bool) Log errors from subprocesses to
@@ -185,6 +189,8 @@ class Livestreamer(object):
             self.http.verify = value
         elif key == "http-ssl-cert":
             self.http.cert = value
+        elif key == "http-timeout":
+            self.http.timeout = value
         else:
             self.options.set(key, value)
 

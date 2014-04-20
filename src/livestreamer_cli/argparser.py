@@ -132,6 +132,9 @@ httpopt.add_argument("--http-ssl-cert", metavar="pem",
                      help="SSL certificate to use (pem)")
 httpopt.add_argument("--http-ssl-cert-crt-key", metavar=("crt", "key"),
                      nargs=2, help="SSL certificate to use (crt and key)")
+httpopt.add_argument("--http-timeout", metavar="timeout", type=float,
+                     help="General timeout used by all HTTP requests except "
+                          "the ones covered by other options, default is 20.0")
 
 playeropt = parser.add_argument_group("player options")
 playeropt.add_argument("-p", "--player", metavar="command",
@@ -205,7 +208,7 @@ streamopt.add_argument("--hls-segment-timeout", type=float, metavar="timeout",
 streamopt.add_argument("--hls-timeout", type=float, metavar="timeout",
                        help="Timeout for reading data from HLS streams, "
                             "default is 60.0")
-streamopt.add_argument("--http-timeout", type=float, metavar="timeout",
+streamopt.add_argument("--http-stream-timeout", type=float, metavar="timeout",
                        help="Timeout for reading data from HTTP streams, "
                             "default is 60.0")
 streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,

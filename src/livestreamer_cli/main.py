@@ -611,6 +611,8 @@ def setup_http_session():
     if args.http_ssl_cert_crt_key:
         livestreamer.set_option("http-ssl-cert", tuple(args.http_ssl_cert_crt_key))
 
+    if args.http_timeout:
+        livestreamer.set_option("http-timeout", args.http_timeout)
 
 def setup_plugins():
     """Loads any additional plugins."""
@@ -645,8 +647,8 @@ def setup_options():
     if args.hds_live_edge:
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
 
-    if args.http_timeout:
-        livestreamer.set_option("http-timeout", args.http_timeout)
+    if args.http_stream_timeout:
+        livestreamer.set_option("http-stream-timeout", args.http_stream_timeout)
 
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)

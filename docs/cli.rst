@@ -380,6 +380,13 @@ HTTP options
 
     .. versionadded:: 1.8.0
 
+.. cmdoption:: --http-timeout timeout
+
+    General timeout used by all HTTP requests except the
+    ones covered by other options, default is ``20.0``
+
+    .. versionadded:: 1.8.0
+
 
 Player options
 ^^^^^^^^^^^^^^
@@ -510,7 +517,7 @@ Stream transport options
 
     .. versionadded:: 1.8.0
 
-.. cmdoption:: --http-timeout timeout
+.. cmdoption:: --http-stream-timeout timeout
 
     Timeout for reading data from HTTP streams,
     default is ``60.0``
