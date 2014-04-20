@@ -91,6 +91,10 @@ class HTTPSession(Session):
         for name, value in _parse_keyvalue_list(cookies):
             self.params[name] = value
 
+    def resolve_url(self, url):
+        """Resolves any redirects and returns the final URL."""
+        return self.get(url, stream=True).url
+
     def request(self, method, url, *args, **kwargs):
         exception = kwargs.pop("exception", PluginError)
         headers = kwargs.pop("headers", {})
