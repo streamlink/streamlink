@@ -35,6 +35,18 @@ def comma_list_filter(acceptable):
     return func
 
 
+def nonzero_num(type):
+    def func(value):
+        value = type(value)
+        if value > 0:
+            return value
+    func.__name__ = "non-zero {0}".format(type.__name__)
+    return func
+
+
+float = nonzero_num(float)
+int = nonzero_num(int)
+
 parser = ArgumentParser(description="Livestreamer is CLI program that "
                                     "extracts streams from various services "
                                     "and pipes them into a video player of "
