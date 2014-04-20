@@ -51,6 +51,8 @@ class HTTPSession(Session):
     def __init__(self, *args, **kwargs):
         Session.__init__(self, *args, **kwargs)
 
+        self.timeout = 20.0
+
         if TIMEOUT_ADAPTER_NEEDED:
             self.mount("http://", HTTPAdapterWithReadTimeout())
             self.mount("https://", HTTPAdapterWithReadTimeout())
@@ -95,7 +97,7 @@ class HTTPSession(Session):
         params = kwargs.pop("params", {})
         proxies = kwargs.pop("proxies", self.proxies)
         session = kwargs.pop("session", None)
-        timeout = kwargs.pop("timeout", 20)
+        timeout = kwargs.pop("timeout", self.timeout)
 
         if session:
             headers.update(session.headers)
