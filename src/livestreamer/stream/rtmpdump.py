@@ -125,7 +125,7 @@ class RTMPStream(StreamProcess):
 
     @classmethod
     def is_usable(cls, session):
-        cmd = session.options.get("rtmpdump")
+        cmd = session.options.get("rtmp-rtmpdump")
 
         return StreamProcess.is_usable(cmd)
 
