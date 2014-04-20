@@ -5,7 +5,7 @@ from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HTTPStream
-from livestreamer.utils import urlresolve, prepend_www
+from livestreamer.utils import prepend_www
 
 RTMP_URL = "rtmp://204.107.26.73/battlecam"
 RTMP_UPLOAD_URL = "rtmp://204.107.26.75/streamer"
@@ -44,7 +44,7 @@ class Filmon_us(Plugin):
 
         self.logger.debug("Testing if video exist")
         history_url = 'http://www.filmon.us/video/history/hid/' + video_id
-        if urlresolve(prepend_www(history_url)) == '/':
+        if http.url_resolve(prepend_www(history_url)) == "http://www.filmon.us/channels":
             raise PluginError("history number " + video_id + " don't exist")
 
         self.logger.debug("Fetching video URL")
@@ -59,7 +59,7 @@ class Filmon_us(Plugin):
     def _get_stream_upload(self):
         video = urlparse(self.url).path
 
-        if urlresolve(prepend_www(self.url)) == 'http://www.filmon.us/channels':
+        if http.resolve_url(prepend_www(self.url)) == 'http://www.filmon.us/channels':
             raise PluginError(video + " don't exist")
 
         playpath = "mp4:resources" + video + '/v_3.mp4'
