@@ -9,8 +9,7 @@ from time import sleep
 import re
 
 class RTMPStream(StreamProcess):
-    """
-    RTMP stream handler using rtmpdump.
+    """RTMP stream using rtmpdump.
 
     *Attributes:*
 
@@ -19,24 +18,23 @@ class RTMPStream(StreamProcess):
 
     __shortname__ = "rtmp"
 
-    def __init__(self, session, params, redirect=False, timeout=30):
-        StreamProcess.__init__(self, session, params, timeout)
+    def __init__(self, session, params, redirect=False):
+        StreamProcess.__init__(self, session, params)
 
-        self.cmd = self.session.options.get("rtmpdump")
+        self.cmd = self.session.options.get("rtmp-rtmpdump")
+        self.timeout = self.session.options.get("rtmp-timeout")
         self.redirect = redirect
         self.logger = session.logger.new_module("stream.rtmp")
 
     def __repr__(self):
-        return ("<RTMPStream({0!r}, redirect={1!r}, "
-                "timeout={2!r})>").format(self.params, self.redirect,
-                                          self.timeout)
+        return ("<RTMPStream({0!r}, redirect={1!r}>").format(self.params,
+                                                             self.redirect)
 
     def __json__(self):
-        return dict(type=RTMPStream.shortname(),
-                    params=self.params)
+        return dict(type=RTMPStream.shortname(), params=self.params)
 
     def open(self):
-        if self.session.options.get("rtmpdump-proxy"):
+        if self.session.options.get("rtmp-proxy"):
             if not self._supports_param("socks"):
                 raise StreamError("Installed rtmpdump does not support --socks argument")
 
@@ -111,9 +109,10 @@ class RTMPStream(StreamProcess):
         try:
             help = cmd(help=True, _err_to_out=True)
         except sh.ErrorReturnCode as err:
-            raise StreamError(("Error while checking rtmpdump compatibility: {0}").format(str(err.stdout, "ascii")))
+            err = str(err.stdout, "ascii")
+            raise StreamError("Error while checking rtmpdump compatibility: {0}".format(err))
 
-        for line in help.split("\n"):
+        for line in help.splitlines():
             m = re.match("^--(\w+)", line)
 
             if not m:
@@ -126,7 +125,7 @@ class RTMPStream(StreamProcess):
 
     @classmethod
     def is_usable(cls, session):
-        cmd = session.options.get("rtmpdump")
+        cmd = session.options.get("rtmp-rtmpdump")
 
         return StreamProcess.is_usable(cmd)
 

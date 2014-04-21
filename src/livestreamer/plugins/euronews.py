@@ -1,8 +1,9 @@
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, res_json
+
 
 class Euronews(Plugin):
     SWFURL = "http://euronews.com/media/player_live_1_14.swf"
@@ -17,8 +18,8 @@ class Euronews(Plugin):
         country_code = urlparse(self.url).netloc.split(".")[0]
 
         self.logger.debug("Fetching stream info")
-        res = urlget(self.APIURL)
-        json = res_json(res)
+        res = http.get(self.APIURL)
+        json = http.json(res)
 
         if not isinstance(json, dict):
             raise PluginError("Invalid JSON response")
@@ -33,8 +34,8 @@ class Euronews(Plugin):
         self.logger.debug("Euronews Countries:{0}", " ".join(json["primary"].keys()))
 
         if not (country_code in json["primary"] or country_code in json["secondary"]):
-            res = urlget(self.GEOIPURL)
-            geo = res_json(res)
+            res = http.get(self.GEOIPURL)
+            geo = http.json(res)
             if isinstance(json, dict) and "country_code" in geo:
                 country_code = geo["country_code"].lower()
                 if not (country_code in json["primary"] or country_code in json["secondary"]):

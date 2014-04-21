@@ -1,9 +1,13 @@
-from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
-from livestreamer.utils import urlget
 
 import re
+
+COOKIES = {
+    'NRK_PLAYER_SETTINGS_TV': 'devicetype=desktop&preferred-player-odm=hlslink&preferred-player-live=hlslink'
+}
+
 
 class NRK(Plugin):
     @classmethod
@@ -12,11 +16,12 @@ class NRK(Plugin):
 
     def _get_streams(self):
         self.logger.debug('Extracting media URL')
-        res = urlget(self.url, cookies = {'NRK_PLAYER_SETTINGS_TV':
-            'devicetype=desktop&preferred-player-odm=hlslink&preferred-player-live=hlslink'})
-        m = re.search(r'<div[^>]*?id="playerelement"[^>]+data-media="([^"]+)"', res.text)
+        res = http.get(self.url, cookies=COOKIES)
+        m = re.search(r'<div[^>]*?id="playerelement"[^>]+data-media="([^"]+)"',
+                      res.text)
         if not m:
-            raise NoStreamsError(self.url)
+            return
+
         return HLSStream.parse_variant_playlist(self.session, m.group(1))
 
 __plugin__ = NRK

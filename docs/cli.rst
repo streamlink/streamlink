@@ -225,19 +225,15 @@ Most streaming technologies simply requires you to pass a HTTP URL, this is an A
 Livestreamer currently supports these protocols:
 
 
-+-------------------------------+-----------------------------------------------+
-| Name                          | Prefix                                        |
-+===============================+===============================================+
-| Adobe HTTP Dynamic Streaming  | hds://                                        |
-+-------------------------------+-----------------------------------------------+
-| Akamai HD Adaptive Streaming  | akamaihd://                                   |
-+-------------------------------+-----------------------------------------------+
-| Apple HTTP Live Streaming     | hls:// hlvsvariant://                         |
-+-------------------------------+-----------------------------------------------+
-| Real Time Messaging Protocol  | rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://  |
-+-------------------------------+-----------------------------------------------+
-| Progressive HTTP, HTTPS, etc  | httpstream://                                 |
-+-------------------------------+-----------------------------------------------+
+============================== =================================================
+Name                           Prefix
+============================== =================================================
+Adobe HTTP Dynamic Streaming   hds://
+Akamai HD Adaptive Streaming   akamaihd://
+Apple HTTP Live Streaming      hls:// hlvsvariant://
+Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
+Progressive HTTP, HTTPS, etc   httpstream://
+============================== =================================================
 
 
 .. _cli-options:
@@ -272,19 +268,124 @@ Command line options
     Output JSON instead of the normal text output and
     disable log output, useful for external scripting
 
+.. cmdoption:: --no-version-check
+
+    Do not check for new Livestreamer releases
+
+    .. versionadded:: 1.8.0
+
+
+Stream options
+^^^^^^^^^^^^^^
+
+.. cmdoption:: --retry-streams delay
+
+    Will retry fetching streams until streams are found
+    while waiting <delay> (seconds) between each attempt
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --retry-open attempts
+
+    Will try <attempts> to open the stream until giving up
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --stream-types types, --stream-priority types
+
+    A comma-delimited list of stream types to allow. The
+    order will be used to separate streams when there are
+    multiple streams with the same name and different
+    stream types. Default is ``rtmp,hls,hds,http,akamaihd``
+
+.. cmdoption:: --stream-sorting-excludes streams
+
+    Fine tune best/worst synonyms by excluding unwanted
+    streams. Uses a filter expression in the format
+    ``[operator]<value>``. For example the filter ``>480p`` will
+    exclude streams ranked higher than '480p'. Valid
+    operators are ``>``, ``>=``, ``<`` and ``<=``. If no operator is
+    specified then equality is tested.
+
+    Multiple filters can be used by separating each
+    expression with a comma. For example ``>480p,>mobile_medium``
+    will exclude streams from two quality types.
+
+.. cmdoption::  --best-stream-default
+
+    Use the 'best' stream if no stream is specified.
+
+    .. versionadded:: 1.8.0
+
+
+HTTP options
+^^^^^^^^^^^^
+
 .. cmdoption:: --http-proxy http://hostname:port/
 
-    Specify a HTTP proxy. This is the same as setting
-    the environment variable ``http_proxy``.
+    Specify a HTTP proxy to use for all HTTP requests
 
     .. versionadded:: 1.7.0
 
 .. cmdoption:: --https-proxy https://hostname:port/
 
-    Specify a HTTPS proxy. This is the same as setting
-    the environment variable ``https_proxy``.
+    Specify a HTTPS proxy to use for all HTTPS requests
 
     .. versionadded:: 1.7.0
+
+.. cmdoption:: --http-cookies cookies
+
+    A semi-colon (;) delimited list of cookies to add to
+    each HTTP request, e.g. ``foo=bar;baz=qux``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-headers headers
+
+    A semi-colon (;) delimited list of headers to add to
+    each HTTP request, e.g. ``foo=bar;baz=qux``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-query-params params
+
+    A semi-colon (;) delimited list of query parameters to
+    add to each HTTP request, e.g. ``foo=bar;baz=qux``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-ignore-env
+
+    Ignore HTTP settings set in the environment, such as
+    environment variables (``HTTP_PROXY``, etc) and ``~/.netrc``
+    authentication
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-no-ssl-verify
+
+    Don't verify SSL certificates. Usually a bad idea!
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-ssl-cert pem
+
+    SSL certificate to use (pem)
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-ssl-cert-crt-key crt key
+
+    SSL certificate to use (crt and key)
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-timeout timeout
+
+    General timeout used by all HTTP requests except the
+    ones covered by other options, default is ``20.0``
+
+    .. versionadded:: 1.8.0
 
 
 Player options
@@ -361,46 +462,99 @@ File output options
     Write stream to stdout instead of playing it
 
 
-Stream options
-^^^^^^^^^^^^^^
+Stream transport options
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. cmdoption:: -c, --cmdline
+.. cmdoption:: --hls-live-edge segments
 
-    Print command-line used internally to play stream,
-    this may not be available on all streams
+    How many segments from the end to start live
+    HLS streams on, default is ``3``
 
-.. cmdoption:: -e, --errorlog
+    .. versionadded:: 1.8.0
 
-    Log possible errors from internal command-line to a
-    temporary file, use when debugging
+.. cmdoption:: --hls-segment-attempts attempts
 
-.. cmdoption:: -r path, --rtmpdump path
+    How many attempts should be done to download each
+    HLS segment, default is ``3``
 
-    Specify location of rtmpdump executable, e.g.
-    ``/usr/local/bin/rtmpdump``
+    .. versionadded:: 1.8.0
 
-.. cmdoption:: --rtmpdump-proxy host:port
+.. cmdoption:: --hls-segment-timeout timeout
 
-    Specify a proxy (SOCKS) that rtmpdump will use
+    HLS segment connect and read timeout, default is ``10.0``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --hls-timeout timeout
+
+    Timeout for reading data from HLS streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
 
 .. cmdoption:: --hds-live-edge seconds
 
     Specify the time live HDS streams will start from the
     edge of stream, default is ``10.0``
 
-.. cmdoption::  --hds-fragment-buffer fragments
+.. cmdoption:: --hds-segment-attempts attempts
 
-    Specify the maximum amount of fragments to buffer,
-    this controls the maximum size of the ringbuffer,
-    default is ``10``
+    How many attempts should be done to download each
+    HDS segment, default is ``3``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --hds-segment-timeout timeout
+
+    HDS segment connect and read timeout, default is ``10.0``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --hds-timeout timeout
+
+    Timeout for reading data from HDS streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --http-stream-timeout timeout
+
+    Timeout for reading data from HTTP streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
 
 .. cmdoption:: --ringbuffer-size size
 
     Specify a maximum size (bytes) for the ringbuffer used
     by some stream types, default is ``16777216`` (16MB).
 
-    HDS streams manages this value automatically, use
-    ``--hds-fragment-buffer`` to change it
+.. cmdoption:: --rtmp-proxy host:port, --rtmpdump-proxy host:port
+
+    Specify a proxy (SOCKS) that RTMP streams will use
+
+.. cmdoption:: --rtmp-rtmpdump path, --rtmpdump path, -r path
+
+    Specify location of the rtmpdump executable used by
+    RTMP streams, e.g. ``/usr/local/bin/rtmpdump``
+
+.. cmdoption:: --rtmp-timeout timeout
+
+    Timeout for reading data from RTMP streams,
+    default is ``60.0``
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --subprocess-cmdline, --cmdline, -c
+
+    Print command-line used internally to play stream,
+    this is only available for RTMP streams
+
+.. cmdoption:: --subprocess-errorlog, --errorlog, -e
+
+    Log possible errors from internal subprocesses to a
+    temporary file, use when debugging rtmpdump related
+    issues
 
 
 Plugin options
@@ -411,26 +565,6 @@ Plugin options
     Attempts to load plugins from these directories.
     Multiple directories can be used by separating them
     with a semicolon (;)
-
-.. cmdoption:: --stream-types types, --stream-priority types
-
-    A comma-delimited list of stream types to allow. The
-    order will be used to separate streams when there are
-    multiple streams with the same name and different
-    stream types. Default is ``rtmp,hls,hds,http,akamaihd``
-
-.. cmdoption:: --stream-sorting-excludes streams
-
-    Fine tune best/worst synonyms by excluding unwanted
-    streams. Uses a filter expression in the format
-    ``[operator]<value>``. For example the filter ``>480p`` will
-    exclude streams ranked higher than '480p'. Valid
-    operators are ``>``, ``>=``, ``<`` and ``<=``. If no operator is
-    specified then equality is tested.
-
-    Multiple filters can be used by separating each
-    expression with a comma. For example ``>480p,>mobile_medium``
-    will exclude streams from two quality types.
 
 .. cmdoption:: --jtv-cookie cookie, --twitch-cookie cookie
 
@@ -476,3 +610,14 @@ Plugin options
 
    .. versionadded:: 1.7.3
 
+.. cmdoption:: --livestation-email email
+
+    Specify Livestation account email to access restricted streams or Premium Quality streams.
+
+    .. versionadded:: 1.8.0
+
+.. cmdoption:: --livestation-password password
+
+    Specify Livestation password for account specified.
+
+    .. versionadded:: 1.8.0

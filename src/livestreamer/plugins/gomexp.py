@@ -4,8 +4,9 @@ This plugin is using the same API as the mobile app.
 """
 
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
-from livestreamer.utils import urlget, res_xml
+from livestreamer.utils import parse_xml
 
 import re
 
@@ -20,8 +21,8 @@ class GOMeXP(Plugin):
         return re.match(r"http(s)?://(www\.)?gomexp.com", url)
 
     def _get_live_cubeid(self):
-        res = urlget(API_URL_APP, params=dict(mode="get_live"))
-        root = res_xml(res)
+        res = http.get(API_URL_APP, params=dict(mode="get_live"))
+        root = parse_xml(res.text.encode("utf8"))
         return root.findtext("./cube/cubeid")
 
     def _get_streams(self):
@@ -29,10 +30,10 @@ class GOMeXP(Plugin):
         if not cubeid:
             return
 
-        res = urlget(API_URL_LIVE, params=dict(cubeid=cubeid))
-        root = res_xml(res)
-
+        res = http.get(API_URL_LIVE, params=dict(cubeid=cubeid))
+        root = parse_xml(res.text.encode("utf8"))
         streams = {}
+
         for entry in root.findall("./ENTRY/*/[@reftype='live'][@href]"):
             url = entry.get("href")
 

@@ -1,10 +1,10 @@
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, urlopen, parse_qsd
+from livestreamer.utils import parse_qsd
 
-import re
 
 class Weeb(Plugin):
     SWFURL = "http://static2.weeb.tv/static2/player.swf"
@@ -25,7 +25,7 @@ class Weeb(Plugin):
         form = dict(cid=channelname, watchTime="0",
                     firstConnect="1", ip="NaN")
 
-        res = urlopen(self.APIURL, data=form, headers=headers)
+        res = http.post(self.APIURL, data=form, headers=headers)
 
         params = parse_qsd(res.text)
 

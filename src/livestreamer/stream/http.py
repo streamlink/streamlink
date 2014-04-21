@@ -37,19 +37,18 @@ class HTTPStream(Stream):
     def __init__(self, session_, url, **args):
         Stream.__init__(self, session_)
 
-        self.args = dict(url=url, method=args.pop("method", "GET"),
-                         **args)
+        self.args = dict(url=url, **args)
 
     def __repr__(self):
         return "<HTTPStream({0!r})>".format(self.url)
 
     def __json__(self):
-        req = requests.Request(**valid_args(self.args))
-        session = self.args.get("session")
+        method = self.args.get("method", "GET")
+        req = requests.Request(method=method, **valid_args(self.args))
 
         # prepare_request is only available in requests 2.0+
-        if session and hasattr(session, "prepare_request"):
-            req = session.prepare_request(req)
+        if hasattr(self.session.http, "prepare_request"):
+            req = self.session.http.prepare_request(req)
         else:
             req = req.prepare()
 
@@ -61,15 +60,18 @@ class HTTPStream(Stream):
 
     @property
     def url(self):
-        return requests.Request(**valid_args(self.args)).prepare().url
+        method = self.args.get("method", "GET")
+        return requests.Request(method=method,
+                                **valid_args(self.args)).prepare().url
 
     def open(self):
-        try:
-            res = requests.request(stream=True, **self.args)
-            res.raise_for_status()
-        except (requests.exceptions.RequestException, IOError) as err:
-            raise StreamError("Unable to open URL: {0} ({1})".format(self.url,
-                                                                     err))
+        method = self.args.get("method", "GET")
+        timeout = self.session.options.get("http-timeout")
+        res = self.session.http.request(method=method,
+                                        stream=True,
+                                        exception=StreamError,
+                                        timeout=timeout,
+                                        **self.args)
 
         return StreamIOIterWrapper(res.iter_content(8192))
 

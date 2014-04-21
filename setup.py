@@ -29,10 +29,8 @@ else:
 srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
-import livestreamer
-
 setup(name="livestreamer",
-      version=livestreamer.__version__,
+      version="1.8.0",
       description="Livestreamer is CLI program that extracts streams from "
                   "various services and pipes them into a video player of "
                   "choice.",

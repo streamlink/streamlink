@@ -1,22 +1,22 @@
 import re
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import partial
-from io import BytesIO, IOBase
+from io import BytesIO
 from random import randint
 from time import sleep
-from threading import Thread
 
-from livestreamer.buffers import RingBuffer
-from livestreamer.compat import urlparse, urljoin
+from livestreamer.compat import urlparse, urljoin, range
 from livestreamer.exceptions import StreamError, PluginError, NoStreamsError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream, HTTPStream, Stream
-from livestreamer.utils import urlget
-
+from livestreamer.stream.flvconcat import FLVTagConcat
+from livestreamer.stream.segmented import (SegmentedStreamReader,
+                                           SegmentedStreamWriter,
+                                           SegmentedStreamWorker)
 from livestreamer.packages.flashmedia import AMFPacket, AMFError
-from livestreamer.packages.flashmedia.tag import Header
 
 try:
     import librtmp
@@ -32,8 +32,11 @@ AMF_URL = "http://cgw.ustream.tv/Viewer/getStream/1/{0}.amf"
 HLS_PLAYLIST_URL = "http://iphone-streaming.ustream.tv/uhls/{0}/streams/live/iphone/playlist.m3u8"
 RECORDED_URL = "http://tcdn.ustream.tv/video/{0}"
 RECORDED_URL_PATTERN = r"^(http(s)?://)?(www\.)?ustream.tv/recorded/(?P<video_id>\d+)"
-RTMP_URL = "rtmp://channel.live.ums.ustream.tv:80/ustream"
+RTMP_URL = "rtmp://r{0}.1.{1}.channel.live.ums.ustream.tv:80/ustream"
 SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
+
+
+Chunk = namedtuple("Chunk", "num url offset")
 
 
 def valid_cdn(item):
@@ -52,8 +55,9 @@ def validate_module_info(result):
 
 def create_ums_connection(app, media_id, page_url, password,
                           exception=PluginError):
+    url = RTMP_URL.format(randint(0, 0xffffff), media_id)
     params = dict(application=app, media=str(media_id), password=password)
-    conn = librtmp.RTMP(RTMP_URL, connect_data=params,
+    conn = librtmp.RTMP(url, connect_data=params,
                         swfurl=SWF_URL, pageurl=page_url)
 
     try:
@@ -64,82 +68,102 @@ def create_ums_connection(app, media_id, page_url, password,
     return conn
 
 
-class UHSStreamFiller(Thread):
-    def __init__(self, stream, conn, provider, stream_index):
-        Thread.__init__(self)
-        self.daemon = True
-        self.running = False
+class UHSStreamWriter(SegmentedStreamWriter):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWriter.__init__(self, *args, **kwargs)
 
-        self.conn = conn
-        self.provider = provider
-        self.stream_index = stream_index
-        self.stream = stream
+        self.concater = FLVTagConcat(flatten_timestamps=True,
+                                     sync_headers=True)
+
+    def open_chunk(self, chunk, retries=3):
+        if not retries or self.closed:
+            return
+
+        try:
+            params = {}
+            if chunk.offset:
+                params["start"] = chunk.offset
+
+            return http.get(chunk.url,  params=params, timeout=10,
+                            exception=StreamError)
+        except StreamError as err:
+            self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
+            return self.open_chunk(chunk, retries - 1)
+
+    def write(self, chunk, chunk_size=8192):
+        res = self.open_chunk(chunk)
+        if not res:
+            return
+
+        try:
+            for data in self.concater.iter_chunks(buf=res.content,
+                                                  skip_header=not chunk.offset):
+                self.reader.buffer.write(data)
+
+                if self.closed:
+                    break
+            else:
+                self.logger.debug("Download of chunk {0} complete", chunk.num)
+        except IOError as err:
+            self.logger.error("Failed to read chunk {0}: {1}", chunk.num, err)
+
+
+class UHSStreamWorker(SegmentedStreamWorker):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWorker.__init__(self, *args, **kwargs)
 
         self.chunk_ranges = {}
         self.chunk_id = None
         self.chunk_id_max = None
-
+        self.chunks = []
         self.filename_format = ""
-        self.header_written = False
+        self.module_info_reload_time = 2
+        self.process_module_info()
 
-    def download_chunk(self, chunk_id):
-        self.stream.logger.debug("[{0}] Downloading chunk".format(chunk_id))
-        url = self.format_chunk_url(chunk_id)
+    def fetch_module_info(self):
+        self.logger.debug("Fetching module info")
+        conn = create_ums_connection("channel",
+                                     self.stream.channel_id,
+                                     self.stream.page_url,
+                                     self.stream.password,
+                                     exception=StreamError)
 
-        attempts = 3
-        while attempts and self.running:
-            try:
-                res = urlget(url, stream=True, exception=IOError, timeout=10)
-                break
-            except IOError as err:
-                self.stream.logger.error("[{0}] Failed to open chunk: {1}".format(
-                                         chunk_id, err))
-                attempts -= 1
-        else:
-            return
+        try:
+            result = conn.process_packets(invoked_method="moduleInfo",
+                                          timeout=10)
+        except (IOError, librtmp.RTMPError) as err:
+            raise StreamError("Failed to get module info: {0}".format(err))
+        finally:
+            conn.close()
 
-        for data in res.iter_content(8192):
-            if not self.header_written:
-                flv_header = Header(has_video=True, has_audio=True)
-                self.stream.buffer.write(flv_header.serialize())
-                self.header_written = True
-
-            self.stream.buffer.write(data)
-
-            if not self.running:
-                break
-        else:
-            self.stream.logger.debug("[{0}] Downloaded chunk".format(chunk_id))
+        return validate_module_info(result)
 
     def process_module_info(self):
-        try:
-            result = self.conn.process_packets(invoked_method="moduleInfo",
-                                               timeout=30)
-        except (IOError, librtmp.RTMPError) as err:
-            self.stream.logger.error("Failed to get module info: {0}".format(err))
+        if self.closed:
             return
 
-        result = validate_module_info(result)
+        result = self.fetch_module_info()
         if not result:
             return
 
         providers = result.get("stream")
         if providers == "offline":
-            self.stream.logger.debug("Stream went offline")
-            self.stop()
+            self.logger.debug("Stream went offline")
+            self.close()
+            return
         elif not isinstance(providers, list):
             return
 
         for provider in filter(valid_provider, providers):
-            if provider.get("name") == self.stream.stream.provider:
+            if provider.get("name") == self.stream.provider:
                 break
         else:
             return
 
         try:
-            stream = provider.get("streams")[self.stream_index]
+            stream = provider.get("streams")[self.stream.stream_index]
         except IndexError:
-            self.stream.logger.debug("Stream index not in result")
+            self.logger.error("Stream index not in result")
             return
 
         filename_format = stream.get("streamName").replace("%", "%s")
@@ -154,13 +178,19 @@ class UHSStreamFiller(Thread):
         if not chunk_range:
             return
 
-        self.chunk_ranges.update(map(partial(map, int),
-                                     chunk_range.items()))
-        self.chunk_id_min = sorted(self.chunk_ranges)[0]
-        self.chunk_id_max = int(result.get("chunkId"))
+        chunk_id = int(result.get("chunkId"))
+        chunk_offset = int(result.get("offset"))
+        chunk_range = dict(map(partial(map, int), chunk_range.items()))
 
-        if self.chunk_id is None:
-            self.chunk_id = max(self.chunk_id_max - 3, self.chunk_id_min)
+        self.chunk_ranges.update(chunk_range)
+        self.chunk_id_min = sorted(chunk_range)[0]
+        self.chunk_id_max = int(result.get("chunkId"))
+        self.chunks = [Chunk(i, self.format_chunk_url(i),
+                             not self.chunk_id and i == chunk_id and chunk_offset)
+                       for i in range(self.chunk_id_min, self.chunk_id_max + 1)]
+
+        if self.chunk_id is None and self.chunks:
+            self.chunk_id = chunk_id
 
     def format_chunk_url(self, chunk_id):
         chunk_hash = ""
@@ -170,81 +200,36 @@ class UHSStreamFiller(Thread):
 
         return self.filename_format % (chunk_id, chunk_hash)
 
-    def run(self):
-        self.stream.logger.debug("Starting buffer filler thread")
+    def valid_chunk(self, chunk):
+        return self.chunk_id and chunk.num >= self.chunk_id
 
-        while self.running:
-            self.check_connection()
-            self.process_module_info()
+    def iter_segments(self):
+        while not self.closed:
+            for chunk in filter(self.valid_chunk, self.chunks):
+                self.logger.debug("Adding chunk {0} to queue", chunk.num)
+                yield chunk
 
-            if self.chunk_id is None:
-                continue
+                # End of stream
+                if self.closed:
+                    return
 
-            while self.chunk_id <= self.chunk_id_max:
-                self.download_chunk(self.chunk_id)
-                self.chunk_id += 1
+                self.chunk_id = chunk.num + 1
 
-        self.stop()
-        self.stream.logger.debug("Buffer filler thread completed")
-
-    def check_connection(self):
-        if not self.conn.connected:
-            self.stream.logger.error("Disconnected, attempting to reconnect")
-
-            try:
-                self.conn = create_ums_connection("channel",
-                                                  self.stream.stream.channel_id,
-                                                  self.stream.stream.page_url,
-                                                  self.stream.stream.password)
-            except PluginError as err:
-                self.stream.logger.error("Failed to reconnect: {0}", err)
-                self.stop()
-
-    def start(self):
-        self.running = True
-
-        return Thread.start(self)
-
-    def stop(self):
-        self.running = False
-        self.conn.close()
-        self.stream.buffer.close()
+            if self.wait(self.module_info_reload_time):
+                try:
+                    self.process_module_info()
+                except StreamError as err:
+                    self.logger.warning("Failed to process module info: {0}", err)
 
 
-class UHSStreamIO(IOBase):
-    def __init__(self, session, stream, timeout=30):
-        self.session = session
-        self.stream = stream
-        self.timeout = timeout
+class UHSStreamReader(SegmentedStreamReader):
+    __worker__ = UHSStreamWorker
+    __writer__ = UHSStreamWriter
 
-        self.logger = session.logger.new_module("stream.uhs")
-        self.buffer = None
+    def __init__(self, stream, *args, **kwargs):
+        self.logger = stream.session.logger.new_module("stream.uhs")
 
-    def open(self):
-        self.buffer = RingBuffer(self.session.get_option("ringbuffer-size"))
-
-        conn = create_ums_connection("channel",
-                                     self.stream.channel_id,
-                                     self.stream.page_url,
-                                     self.stream.password,
-                                     exception=StreamError)
-
-        self.filler = UHSStreamFiller(self, conn, self.stream.provider,
-                                      self.stream.stream_index)
-        self.filler.start()
-
-    def read(self, size=-1):
-        if not self.buffer:
-            return b""
-
-        return self.buffer.read(size, block=self.filler.is_alive(),
-                                timeout=self.timeout)
-
-    def close(self):
-        self.filler.stop()
-
-        if self.filler.is_alive():
-            self.filler.join()
+        SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
 
 
 class UHSStream(Stream):
@@ -277,10 +262,10 @@ class UHSStream(Stream):
                     **Stream.__json__(self))
 
     def open(self):
-        fd = UHSStreamIO(self.session, self)
-        fd.open()
+        reader = UHSStreamReader(self)
+        reader.open()
 
-        return fd
+        return reader
 
 
 class UStreamTV(Plugin):
@@ -311,7 +296,7 @@ class UStreamTV(Plugin):
         if match:
             return int(match.group(1))
 
-        match = re.search("\"cid\":(\d+)", urlget(url).text)
+        match = re.search("\"cid\":(\d+)", http.get(url).text)
         if match:
             return int(match.group(1))
 
@@ -387,9 +372,16 @@ class UStreamTV(Plugin):
             for stream_index, stream_info in enumerate(provider_streams):
                 stream = None
                 stream_height = int(stream_info.get("height", 0))
-                stream_name = (stream_info.get("description") or
-                               (stream_height > 0 and "{0}p".format(stream_height)) or
-                               "live")
+                stream_name = stream_info.get("description")
+
+                if not stream_name:
+                    if stream_height:
+                        if not stream_info.get("isTranscoded"):
+                            stream_name = "{0}p+".format(stream_height)
+                        else:
+                            stream_name = "{0}p".format(stream_height)
+                    else:
+                        stream_name = "live"
 
                 if stream_name in streams:
                     provider_name_clean = provider_name.replace("uhs_", "")
@@ -414,7 +406,7 @@ class UStreamTV(Plugin):
         if not RTMPStream.is_usable(self.session):
             raise NoStreamsError(self.url)
 
-        res = urlget(AMF_URL.format(self.channel_id))
+        res = http.get(AMF_URL.format(self.channel_id))
 
         try:
             packet = AMFPacket.deserialize(BytesIO(res.content))
@@ -508,6 +500,7 @@ class UStreamTV(Plugin):
                 raise PluginError("Invalid stream info: {0}".format(providers))
 
             for provider in providers:
+                base_url = provider.get("url")
                 for stream_info in provider.get("streams"):
                     bitrate = int(stream_info.get("bitrate", 0))
                     stream_name = (bitrate > 0 and "{0}k".format(bitrate) or
@@ -516,9 +509,15 @@ class UStreamTV(Plugin):
                     if stream_name in streams:
                         stream_name += "_alt"
 
-                    stream = HTTPStream(self.session,
-                                        stream_info.get("streamName"))
-                    streams[stream_name] = stream
+                    url = stream_info.get("streamName")
+                    if base_url:
+                        url = base_url + url
+
+                    if url.startswith("http"):
+                        streams[stream_name] = HTTPStream(self.session, url)
+                    elif url.startswith("rtmp"):
+                        params = dict(rtmp=url, pageUrl=self.url)
+                        streams[stream_name] = RTMPStream(self.session, params)
 
         else:
             self.logger.warning("The proper API could not be used without "

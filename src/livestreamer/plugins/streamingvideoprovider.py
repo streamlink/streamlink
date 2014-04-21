@@ -1,11 +1,12 @@
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, res_xml
 
 from time import time
 import re
+
 
 class Streamingvideoprovider(Plugin):
     SWFURL = "http://play.streamingvideoprovider.com/player2.swf"
@@ -18,7 +19,7 @@ class Streamingvideoprovider(Plugin):
     def _get_hls_streams(self, channelname):
         options = dict(l="info", a="ajax_video_info", file=channelname,
                        rid=time())
-        res = urlget(self.APIURL, params=options)
+        res = http.get(self.APIURL, params=options)
 
         match = re.search("'(http://.+\.m3u8)'", res.text)
         if not match:
@@ -34,8 +35,8 @@ class Streamingvideoprovider(Plugin):
     def _get_rtmp_streams(self, channelname):
         options = dict(l="info", a="xmlClipPath", clip_id=channelname,
                        rid=time())
-        res = urlget(self.APIURL, params=options)
-        clip = res_xml(res)
+        res = http.get(self.APIURL, params=options)
+        clip = http.xml(res)
         rtmpurl = clip.findtext("./info/url")
 
         if rtmpurl is None:

@@ -1,17 +1,16 @@
 import re
 
-from functools import partial
-
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import HDSStream, HLSStream
-from livestreamer.utils import res_json, verifyjson, urlget
+from livestreamer.utils import verifyjson
 
 
 CONFIG_API_URL = "http://www.majorleaguegaming.com/player/config.json"
 STREAM_API_URL = "http://streamapi.majorleaguegaming.com/service/streams/playback/{0}"
 STREAM_ID_REGEX = r"<meta content='.+/([\w_-]+).+' property='og:video'>"
 STREAM_TYPES = {
-    "hls": partial(HLSStream.parse_variant_playlist, nameprefix="mobile_"),
+    "hls": HLSStream.parse_variant_playlist,
     "hds": HDSStream.parse_manifest
 }
 URL_REGEX = r"http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)"
@@ -35,8 +34,8 @@ class MLGTV(Plugin):
             return match.group(1)
 
     def _get_stream_id(self, channel_id):
-        res = urlget(CONFIG_API_URL, params=dict(id=channel_id))
-        config = res_json(res)
+        res = http.get(CONFIG_API_URL, params=dict(id=channel_id))
+        config = http.json(res)
         media = verifyjson(config, "media")
 
         if not (media and isinstance(media, list)):
@@ -49,7 +48,7 @@ class MLGTV(Plugin):
         return media.get("channel")
 
     def _get_streams(self):
-        res = urlget(self.url)
+        res = http.get(self.url)
         channel_id = self._find_channel_id(res.text)
         if not channel_id:
             return
@@ -58,9 +57,9 @@ class MLGTV(Plugin):
         if not stream_id:
             return
 
-        res = urlget(STREAM_API_URL.format(stream_id),
-                     params=dict(format="all"))
-        json = res_json(res)
+        res = http.get(STREAM_API_URL.format(stream_id),
+                       params=dict(format="all"))
+        json = http.json(res)
         data = verifyjson(json, "data")
         items = verifyjson(data, "items")
 

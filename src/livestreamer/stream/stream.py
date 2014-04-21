@@ -1,4 +1,6 @@
+import io
 import json
+
 
 class Stream(object):
     __shortname__ = "stream"
@@ -35,4 +37,9 @@ class Stream(object):
     def shortname(cls):
         return cls.__shortname__
 
-__all__ = ["Stream"]
+
+class StreamIO(io.IOBase):
+    pass
+
+
+__all__ = ["Stream", "StreamIO"]

@@ -1,11 +1,10 @@
 import re
-import requests
 
 from livestreamer.compat import urlparse
 from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import urlget, urlopen, res_json
 
 AJAX_HEADERS = {
     "Referer": "http://www.filmon.com",
@@ -51,8 +50,7 @@ class Filmon(Plugin):
             raise PluginError("rtmpdump is not usable and required by Filmon plugin")
 
         self.logger.debug("Fetching stream info")
-        self.rsession = requests.session()
-        res = urlget(self.url, session=self.rsession)
+        res = http.get(self.url)
 
         match = re.search("movie_id=(\d+)", res.text)
         if match:
@@ -74,9 +72,8 @@ class Filmon(Plugin):
 
     def _get_stream(self, channel_id, quality):
         params = dict(channel_id=channel_id, quality=quality)
-        res = urlopen(CHINFO_URL, data=params, headers=AJAX_HEADERS,
-                      session=self.rsession)
-        json = res_json(res)
+        res = http.post(CHINFO_URL, data=params, headers=AJAX_HEADERS)
+        json = http.json(res)
 
         if not json:
             raise NoStreamsError(self.url)
@@ -103,9 +100,8 @@ class Filmon(Plugin):
         })
 
     def _get_vod_stream(self, movie_id):
-        res = urlopen(VODINFO_URL.format(movie_id), headers=AJAX_HEADERS,
-                      session=self.rsession)
-        json = res_json(res)
+        res = http.get(VODINFO_URL.format(movie_id), headers=AJAX_HEADERS)
+        json = http.json(res)
         json = json and json.get("data")
         json = json and json.get("streams")
 

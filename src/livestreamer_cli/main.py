@@ -1,6 +1,5 @@
 import errno
 import os
-import re
 import requests
 import sys
 import signal
@@ -162,7 +161,8 @@ def output_stream_http(plugin, streams):
                 continue
 
             try:
-                console.logger.info("Opening stream: {0}", stream_name)
+                console.logger.info("Opening stream: {0} ({1})", stream_name,
+                                    type(stream).shortname())
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
                 console.logger.error("{0}", err)
@@ -226,10 +226,13 @@ def open_stream(stream):
 def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
 
-    try:
-        stream_fd, prebuffer = open_stream(stream)
-    except StreamError as err:
-        console.logger.error("{0}", err)
+    for i in range(args.retry_open):
+        try:
+            stream_fd, prebuffer = open_stream(stream)
+            break
+        except StreamError as err:
+            console.logger.error("{0}", err)
+    else:
         return
 
     output = create_output()
@@ -323,7 +326,7 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print internal command-line if this stream
     # uses a subprocess.
-    if args.cmdline:
+    if args.subprocess_cmdline:
         if isinstance(stream, StreamProcess):
             try:
                 cmdline = stream.cmdline()
@@ -338,26 +341,27 @@ def handle_stream(plugin, streams, stream_name):
     elif console.json:
         console.msg_json(stream)
 
-    # Continuously output the stream over HTTP
-    elif args.player_continuous_http and not (args.output or args.stdout):
-        output_stream_http(plugin, streams)
-
     # Output the stream
     else:
         # Find any streams with a '_alt' suffix and attempt
         # to use these in case the main stream is not usable.
         alt_streams = list(filter(lambda k: stream_name + "_alt" in k,
                                   sorted(streams.keys())))
+        file_output = args.output or args.stdout
 
         for stream_name in [stream_name] + alt_streams:
-            console.logger.info("Opening stream: {0}", stream_name)
             stream = streams[stream_name]
             stream_type = type(stream).shortname()
 
-            if (stream_type in args.player_passthrough and
-                not (args.output or args.stdout)):
+            if stream_type in args.player_passthrough and not file_output:
+                console.logger.info("Opening stream: {0} ({1})", stream_name,
+                                    stream_type)
                 success = output_stream_passthrough(stream)
+            elif args.player_continuous_http and not file_output:
+                return output_stream_http(plugin, streams)
             else:
+                console.logger.info("Opening stream: {0} ({1})", stream_name,
+                                    stream_type)
                 success = output_stream(stream)
 
             if success:
@@ -369,6 +373,29 @@ def fetch_streams(plugin):
 
     return plugin.get_streams(stream_types=args.stream_types,
                               sorting_excludes=args.stream_sorting_excludes)
+
+
+def fetch_streams_infinite(plugin, interval):
+    """Attempts to fetch streams until some are returned."""
+
+    try:
+        streams = fetch_streams(plugin)
+    except PluginError as err:
+        console.logger.error("{0}", err)
+        streams = None
+
+    if not streams:
+        console.logger.info("Waiting for streams, retrying every {0} "
+                            "second(s)", args.retry_streams)
+    while not streams:
+        sleep(args.retry_streams)
+
+        try:
+            streams = fetch_streams(plugin)
+        except PluginError as err:
+            console.logger.error("{0}", err)
+
+    return streams
 
 
 def resolve_stream_name(streams, stream_name):
@@ -424,7 +451,11 @@ def handle_url():
         plugin = livestreamer.resolve_url(args.url)
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
-        streams = fetch_streams(plugin)
+
+        if args.retry_streams:
+            streams = fetch_streams_infinite(plugin, args.retry_streams)
+        else:
+            streams = fetch_streams(plugin)
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
     except PluginError as err:
@@ -433,9 +464,14 @@ def handle_url():
     if not streams:
         console.exit("No streams found on this URL: {0}", args.url)
 
+    if args.best_stream_default and not args.stream and not args.json:
+        args.stream = ["best"]
+
     if args.stream:
+        validstreams = format_valid_streams(streams)
         for stream_name in args.stream:
             if stream_name in streams:
+                console.logger.info("Available streams: {0}", validstreams)
                 handle_stream(plugin, streams, stream_name)
                 return
 
@@ -446,7 +482,6 @@ def handle_url():
             console.msg_json(dict(streams=streams, plugin=plugin.module,
                                   error=err))
         else:
-            validstreams = format_valid_streams(streams)
             console.exit("{0}.\n       Available streams: {1}",
                          err, validstreams)
     else:
@@ -533,7 +568,7 @@ def setup_console():
         console.set_output(sys.stderr)
 
     # We don't want log output when we are printing JSON or a command-line.
-    if not (args.json or args.cmdline or args.quiet):
+    if not (args.json or args.subprocess_cmdline or args.quiet):
         console.set_level(args.loglevel)
 
     if args.quiet_player:
@@ -547,18 +582,37 @@ def setup_console():
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
-def setup_proxies():
-    """Sets the HTTP(S) proxies for this process."""
+def setup_http_session():
+    """Sets the global HTTP settings, such as proxy and headers."""
     if args.http_proxy:
-        if not re.match("^http(s)?://", args.http_proxy):
-            args.http_proxy = "http://" + args.http_proxy
-        os.environ["http_proxy"] = args.http_proxy
+        livestreamer.set_option("http-proxy", args.http_proxy)
 
     if args.https_proxy:
-        if not re.match("^http(s)?://", args.https_proxy):
-            args.https_proxy = "https://" + args.https_proxy
-        os.environ["https_proxy"] = args.https_proxy
+        livestreamer.set_option("https-proxy", args.https_proxy)
 
+    if args.http_cookies:
+        livestreamer.set_option("http-cookies", args.http_cookies)
+
+    if args.http_headers:
+        livestreamer.set_option("http-headers", args.http_headers)
+
+    if args.http_query_params:
+        livestreamer.set_option("http-query-params", args.http_query_params)
+
+    if args.http_ignore_env:
+        livestreamer.set_option("http-trust-env", False)
+
+    if args.http_no_ssl_verify:
+        livestreamer.set_option("http-ssl-verify", False)
+
+    if args.http_ssl_cert:
+        livestreamer.set_option("http-ssl-cert", args.http_ssl_cert)
+
+    if args.http_ssl_cert_crt_key:
+        livestreamer.set_option("http-ssl-cert", tuple(args.http_ssl_cert_crt_key))
+
+    if args.http_timeout:
+        livestreamer.set_option("http-timeout", args.http_timeout)
 
 def setup_plugins():
     """Loads any additional plugins."""
@@ -578,25 +632,46 @@ def setup_livestreamer():
 
 def setup_options():
     """Sets Livestreamer options."""
+    if args.hls_live_edge:
+        livestreamer.set_option("hls-live-edge", args.hls_live_edge)
 
-    livestreamer.set_option("errorlog", args.errorlog)
+    if args.hls_segment_attempts:
+        livestreamer.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
-    if args.rtmpdump:
-        livestreamer.set_option("rtmpdump", args.rtmpdump)
+    if args.hls_segment_timeout:
+        livestreamer.set_option("hls-segment-timeout", args.hls_segment_timeout)
 
-    if args.rtmpdump_proxy:
-        livestreamer.set_option("rtmpdump-proxy", args.rtmpdump_proxy)
+    if args.hls_timeout:
+        livestreamer.set_option("hls-timeout", args.hls_timeout)
 
-    if args.hds_live_edge is not None:
+    if args.hds_live_edge:
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
 
-    if args.hds_fragment_buffer is not None:
-        livestreamer.set_option("hds-fragment-buffer",
-                                args.hds_fragment_buffer)
+    if args.http_stream_timeout:
+        livestreamer.set_option("http-stream-timeout", args.http_stream_timeout)
 
     if args.ringbuffer_size:
         livestreamer.set_option("ringbuffer-size", args.ringbuffer_size)
 
+    if args.rtmp_proxy:
+        livestreamer.set_option("rtmp-proxy", args.rtmp_proxy)
+
+    if args.rtmp_rtmpdump:
+        livestreamer.set_option("rtmp-rtmpdump", args.rtmp_rtmpdump)
+
+    if args.rtmp_timeout:
+        livestreamer.set_option("rtmp-timeout", args.rtmp_timeout)
+
+    livestreamer.set_option("subprocess-errorlog", args.subprocess_errorlog)
+
+    # Deprecated options
+    if args.hds_fragment_buffer:
+        console.logger.warning("The option --hds-fragment-buffer is deprecated "
+                               "and will be removed in the future. Use "
+                               "--ringbuffer-size instead")
+
+def setup_plugin_options():
+    """Sets Livestreamer plugin options."""
     if args.jtv_cookie:
         livestreamer.set_plugin_option("justintv", "cookie",
                                        args.jtv_cookie)
@@ -632,6 +707,14 @@ def setup_options():
     if args.crunchyroll_purge_credentials:
         livestreamer.set_plugin_option("crunchyroll", "purge_credentials",
                                        args.crunchyroll_purge_credentials)
+
+    if args.livestation_email:
+        livestreamer.set_plugin_option("livestation", "email",
+                                       args.livestation_email)
+
+    if args.livestation_password:
+        livestreamer.set_plugin_option("livestation", "password",
+                                       args.livestation_password)
 
     # Deprecated options
     if args.jtv_legacy_names:
@@ -683,17 +766,19 @@ def main():
     check_root()
     setup_livestreamer()
     setup_console()
-    setup_proxies()
+    setup_http_session()
     setup_plugins()
 
-    with ignored(Exception):
-        check_version()
+    if not args.no_version_check:
+        with ignored(Exception):
+            check_version()
 
     if args.plugins:
         print_plugins()
     elif args.url:
         with ignored(KeyboardInterrupt):
             setup_options()
+            setup_plugin_options()
             handle_url()
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()

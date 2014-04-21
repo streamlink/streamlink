@@ -1,9 +1,9 @@
-import requests
 import string
 import random
 import datetime
 
-from livestreamer import utils, options, plugin, exceptions, stream
+from livestreamer import options, plugin, exceptions, stream
+from livestreamer.plugin.api import http
 
 API_URL = 'https://api.crunchyroll.com/{0}.0.json'
 API_HEADERS = {
@@ -40,8 +40,6 @@ class CrunchyrollAPI(object):
         '''
         self.session_id = session_id
         self.auth = auth
-        self.session = requests.session()
-        self.session.headers = API_HEADERS
 
     def _api_call(self, entrypoint, params):
         '''Makes a call against the api.
@@ -59,8 +57,11 @@ class CrunchyrollAPI(object):
         if self.session_id:
             params['session_id'] = self.session_id
 
-        response = utils.urlget(url, params=params, session=self.session)
-        json_response = utils.res_json(response)
+        # The certificate used by Crunchyroll cannot be verified in some
+        # environments.
+        response = http.get(url, params=params, headers=API_HEADERS,
+                            verify=False)
+        json_response = http.json(response)
 
         if json_response['error']:
             raise APIError(json_response['message'])

@@ -7,6 +7,14 @@ N: Andrew Bashore
 G: bashtech
 D: Added support for HLS source in the Twitch plugin.
 
+N: Moritz Blanke
+G:
+D: HDS fix.
+
+N: Stefan Breunig
+G: breunigs
+D: Added SpeedRunsLive plugin.
+
 N: Dominik Dabrowski
 G: doda
 D: Initial quality ranking feature.
@@ -39,6 +47,10 @@ N: Niall McAndrew
 G: niallm90
 D: Original GOMTV plugin.
 
+N: Andy Mikhailenko
+G: neithere
+D: Added more URL support to the YouTube plugin.
+
 N: Athanasios Oikonomou
 G: athoik
 D: Various plugins.
@@ -46,6 +58,10 @@ D: Various plugins.
 N: Martin Panter
 G: vadmium
 D: Fixed various Python warnings and added support for HDS player verification.
+
+N: papplampe
+G: papplampe
+D: Added Chaturbate and Picarto plugins.
 
 N: John Peterson
 G: john-peterson
@@ -55,9 +71,17 @@ N: Christopher Rosell
 G: chrippa
 D: Primary author and maintainer of Livestreamer and most of its plugins.
 
+N: Sunaga Takahiro
+G: sunaga720
+D: Added login support to the Livestation plugin.
+
 N: T0mm0
 G: t0mm0
 D: Hitbox.tv plugin.
+
+N: unintended
+G: unintended
+D: Added channel support to the YouTube plugin.
 
 N: Daniel Wallace
 G: gtmanfred

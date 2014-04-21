@@ -1,12 +1,13 @@
 from livestreamer.compat import urlparse
 from livestreamer.stream import HLSStream, RTMPStream
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.exceptions import NoStreamsError
-from livestreamer.utils import urlget, res_json
 
 import re
 
 MOBILE_URL = "http://www.ilive.to/m/channel.php"
+
 
 class ILive(Plugin):
     @classmethod
@@ -33,7 +34,7 @@ class ILive(Plugin):
         if not match:
             return
 
-        res = urlget(MOBILE_URL, params=dict(n=match.group(1)))
+        res = http.get(MOBILE_URL, params=dict(n=match.group(1)))
 
         match = re.search("[^\"]+playlist.m3u8[^\"]+", res.content)
         if not match:
@@ -46,7 +47,7 @@ class ILive(Plugin):
 
     def _get_desktop_streams(self):
         self.logger.debug("Fetching stream info")
-        res = urlget(self.url)
+        res = http.get(self.url)
 
         match = re.search("flashplayer: \"(.+.swf)\".+streamer: \"(.+)\""
                           ".+file: \"(.+).flv\"", res.text, re.DOTALL)
@@ -74,7 +75,8 @@ class ILive(Plugin):
                           res.text)
         if match:
             token_url = match.group(1)
-            res = res_json(urlget(token_url, headers=dict(Referer=self.url)))
+            res = http.get(token_url, headers=dict(Referer=self.url))
+            res = http.json(res)
             token = res.get("token")
             if token:
                 params["token"] = token

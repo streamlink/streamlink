@@ -1,5 +1,5 @@
 from livestreamer.plugin import Plugin
-from livestreamer.utils import urlget
+from livestreamer.plugin.api import http
 
 import re
 
@@ -20,7 +20,7 @@ class DMCloudEmbed(Plugin):
                 return True
 
     def _get_streams(self):
-        res = urlget(self.url, headers=HEADERS)
+        res = http.get(self.url, headers=HEADERS)
 
         match = re.search(URL_REGEX, res.text)
         if match:

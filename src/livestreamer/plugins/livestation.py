@@ -1,14 +1,23 @@
-from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import urlget, res_json
+from livestreamer.options import Options
 
 from time import time
 import re
 
+
 class Livestation(Plugin):
     SWFURL = "http://beta.cdn.livestation.com/player/5.10/livestation-player.swf"
     APIURL = "http://tokens.api.livestation.com/channels/{0}/tokens.json?{1}"
+    LOGINPAGEURL = "http://www.livestation.com/en/users/new"
+    LOGINPOSTURL = "http://www.livestation.com/en/sessions.json"
+
+    options = Options({
+        "email": "",
+        "password": ""
+    })
 
     @classmethod
     def can_handle_url(self, url):
@@ -23,7 +32,7 @@ class Livestation(Plugin):
 
         match = re.search("<meta content=\"(http://.+?\.swf)\?", text)
         if not match:
-            self.logger.warning("Failed to get player SWF URL location on URL {0}", sel.url)
+            self.logger.warning("Failed to get player SWF URL location on URL {0}", self.url)
         else:
             self.SWFURL = match.group(1)
             self.logger.debug("Found player SWF URL location {0}", self.SWFURL)
@@ -32,8 +41,8 @@ class Livestation(Plugin):
         if not match:
             raise PluginError(("Missing channel item-id on URL {0}").format(self.url))
 
-        res = urlget(self.APIURL.format(match.group(1), time()), params=dict(output="json"))
-        json = res_json(res)
+        res = http.get(self.APIURL.format(match.group(1), time()), params=dict(output="json"))
+        json = http.json(res)
 
         if not isinstance(json, list):
             raise PluginError("Invalid JSON response")
@@ -84,7 +93,37 @@ class Livestation(Plugin):
         return playlist
 
     def _get_streams(self):
-        res = urlget(self.url)
+        # If email option given, try to login
+        if self.options.get("email"):
+            res = http.get(self.LOGINPAGEURL)
+            match = re.search('<meta content="([^"]+)" name="csrf-token"', res.text)
+            if not match:
+                raise PluginError("Missing CSRF Token: " + self.LOGINPAGEURL)
+            csrf_token = match.group(1)
+            
+            email = self.options.get("email")
+            password = self.options.get("password")
+            
+            res = http.post(
+                self.LOGINPOSTURL,
+                data = {
+                    'authenticity_token': csrf_token,
+                    'channel_id': '',
+                    'commit': 'Login',
+                    'plan_id': '',
+                    'session[email]': email,
+                    'session[password]': password,
+                    'utf8': "\xE2\x9C\x93", # Check Mark Character
+                }
+            )
+            
+            self.logger.debug("Login account info: {0}", res.text)
+            result = http.json(res)
+            if result.get('email', 'no-mail') != email:
+                raise PluginError("Invalid account")
+
+        res = http.get(self.url)
+
         streams = {}
 
         if RTMPStream.is_usable(self.session):

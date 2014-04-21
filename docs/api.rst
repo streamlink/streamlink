@@ -73,31 +73,6 @@ Session
     :members:
 
 
-Session options
----------------
-
-**rtmpdump**
-  The path to RTMPDump executable, default: ``"rtmpdump"``
-
-**rtmpdump-proxy**
-  RTMPDump SOCKS proxy, default: ``None``
-
-**errorlog**
-  Log errors from subprocesses to a file, default: ``False``
-
-**hds-live-edge**
-  Specify the time live HDS streams will start from the
-  edge of stream, default: ``10.0``
-
-**hds-fragment-buffer**
-  Specify the maximum amount of fragments to buffer,
-  this controls the maximum size of the ringbuffer,
-  default: ``10``
-
-**ringbuffer-size**
-  The size of the internal ring buffer used for some stream types, default: ``16777216``
-
-
 Plugins
 -------
 .. module:: livestreamer.plugin

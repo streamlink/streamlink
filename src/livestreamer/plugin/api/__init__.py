@@ -4,7 +4,9 @@ import sys
 
 from types import ModuleType as module
 
-__all__ = ["load_support_plugin"]
+from .http_session import HTTPSession
+
+__all__ = ["HTTPSession", "load_support_plugin", "http"]
 
 
 def load_support_plugin(name):
@@ -72,3 +74,4 @@ class SupportPlugin(module):
 
 support_plugin_path = "livestreamer.plugin.api.support_plugin"
 sys.modules[support_plugin_path] = SupportPlugin("support_plugin")
+http = None
