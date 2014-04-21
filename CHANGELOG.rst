@@ -1,3 +1,82 @@
+Version 1.8.0
+-------------
+
+CLI:
+ - Added option: ``--no-version-check``
+ - Added HTTP options: ``--http-cookies``,
+   ``--http-headers``,
+   ``--http-query-params``,
+   ``--http-ignore-env``,
+   ``--http-no-ssl-verify``,
+   ``--http-ssl-cert``,
+   ``--http-ssl-cert-crt-key`` and
+   ``--http-timeout``
+ - Added HTTP stream option: ``--http-stream-timeout``
+ - Added HDS stream options: ``--hds-segment-attempts``,
+   ``--hds-segment-timeout``
+   ``--hds-timeout``
+ - Added HLS stream options: ``--hls-live-edge``,
+   ``--hls-segment-attempts``,
+   ``--hls-segment-timeout`` and
+   ``--hls-timeout``
+ - Added RTMP stream option: ``--rtmp-timeout``
+ - Added plugin options: ``--livestation-email`` and ``--livestation-password``
+ - Added stream options: ``--retry-streams``,
+   ``--retry-open`` and
+   ``--best-stream-default``
+ - Deprecated option: ``--hds-fragment-buffer``
+
+Plugins:
+ - Added plugin for Bambuser, patch by Athanasios Oikonomou. (#327)
+ - Added plugin for Be-at.tv, patch by Athanasios Oikonomou. (#342)
+ - Added plugin for Chaturbate, patch by papplampe. (#337)
+ - Added plugin for Cybergame.tv, patch by Athanasios Oikonomou. (#324)
+ - Added plugin for Picarto, patch by papplampe. (#352)
+ - Added plugin for SpeedRunsLive, patch by Stefan Breunig. (#335)
+ - Removed plugins for dead services: Owncast.me and YYCast.
+ - azubutv: Added support for beta.azubu.tv.
+ - crunchyroll: Added workaround for SSL verification issue.
+ - dailymotion: Added support for HDS streams. (#348)
+ - gomexp: Fixed encoding issue on Python 2.
+ - livestation: Added support for logging in, patch by Sunaga Takahiro. (#344)
+ - mlgtv: Removed the ``mobile_`` prefix from the HLS streams.
+ - twitch: Added workaround for SSL verification issue. (#255)
+ - ustreamtv: Improved UHS stream stability.
+ - ustreamtv: Added support for RTMP VODs.
+ - youtube: Updated for service changes.
+ - youtube: Added support for embed URLs, patch by Athanasios Oikonomou.
+ - youtube: Now only picks up live streams from channel pages.
+
+General:
+ - Now attempts to resolve URL redirects such as URL shorterners.
+
+Bug fixes:
+ - Added workaround for HTTP streams not applying read timeout on some requests versions.
+
+API:
+ - Added new options: ``hds-segment-attempts``,
+   ``hds-segment-timeout``,
+   ``hds-timeout``,
+   ``hls-live-edge``,
+   ``hls-segment-attempts``,
+   ``hls-segment-timeout``,
+   ``hls-timeout``,
+   ``http-proxy``,
+   ``https-proxy``,
+   ``http-cookies``,
+   ``http-headers``,
+   ``http-query-params``,
+   ``http-trust-env``,
+   ``http-ssl-verify``,
+   ``http-ssl-cert``,
+   ``http-timeout``,
+   ``http-stream-timeout`` and
+   ``rtmp-timeout``
+ - Renamed option ``errorlog`` to ``subprocess-errorlog``.
+ - Renamed option ``rtmpdump-proxy`` to ``rtmp-proxy``.
+ - Renamed option ``rtmpdump`` to ``rtmp-rtmpdump``.
+
+
 Version 1.7.5
 -------------
 
