@@ -32,7 +32,9 @@ __credits__ = ["Christopher Rosell",
                "Andy Mikhailenko",
                "unintended",
                "Moritz Blanke",
-               "Jon Bergli Heier"]
+               "Jon Bergli Heier",
+               "Stefan Breunig",
+               "papplampe"]
 
 
 from .exceptions import (LivestreamerError, PluginError, NoStreamsError,
