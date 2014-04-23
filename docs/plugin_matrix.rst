@@ -25,6 +25,7 @@ DMCloud.net         Yes     --    Dailymotion cloud platform
 Euronews.com        Yes     No
 Filmon.com          Yes     Yes   Only SD (HD requires authentication)
 Freedocast          Yes     No
+Furstream           Yes     No
 GOMeXP              Yes     --
 Hashd.tv            Yes     Yes
 Hitbox.tv           Yes     Yes
@@ -44,4 +45,5 @@ Veetle.com          Yes     Yes
 Weeb.tv             Yes     --    Requires rtmpdump with K-S-V patches.
 YouTube             Yes     Yes   The plugin is primarily made for live
                                   streams and may not work on all videos.
+ZDFmediathek        Yes     Yes
 =================== ======= ===== ==============================================
