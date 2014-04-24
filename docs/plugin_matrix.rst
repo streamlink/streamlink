@@ -38,6 +38,7 @@ NRK TV              Yes     Yes   Videos may be geo-restricted to Norway.
 Picarto             Yes     --
 SpeedRunsLive.com   Yes     --
 SVT Play            Yes     Yes   Videos may be geo-restricted to Sweden.
+                                  Also supports Öppet arkiv and SVT Flow.
 Twitch/Justin.tv    Yes     Yes   Possible to authenticate for access to
                                   protected streams.
 UStream TV          Yes     Yes
