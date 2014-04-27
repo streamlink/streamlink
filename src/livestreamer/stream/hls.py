@@ -88,7 +88,6 @@ class HLSStreamWriter(SegmentedStreamWriter):
         if not res:
             return
 
-        decryptor = None
         if sequence.segment.key:
             try:
                 decryptor = self.create_decryptor(sequence.segment.key,
@@ -96,23 +95,20 @@ class HLSStreamWriter(SegmentedStreamWriter):
             except StreamError as err:
                 self.logger.error("Failed to create decryptor: {0}", err)
                 self.close()
+                return
 
-        try:
-            for chunk in res.iter_content(chunk_size):
-                if decryptor:
-                    chunk = decryptor.decrypt(chunk)
-
-                self.reader.buffer.write(chunk)
-
-                if self.closed:
-                    break
+            # If the input data is not a multiple of 16, cut off any garbage
+            garbage_len = len(res.content) % 16
+            if garbage_len:
+                self.logger.info("Cutting off garbage: {0}", garbage_len)
+                content = decryptor.decrypt(res.content[:-(garbage_len)])
             else:
-                self.logger.debug("Download of segment {0} complete",
-                                  sequence.num)
-        except IOError as err:
-            self.logger.error("Failed to read segment {0}: {1}",
-                              sequence.num, err)
+                content = decryptor.decrypt(res.content)
+        else:
+            content = res.content
 
+        self.reader.buffer.write(content)
+        self.logger.debug("Download of segment {0} complete", sequence.num)
 
 class HLSStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
