@@ -100,7 +100,8 @@ class HLSStreamWriter(SegmentedStreamWriter):
             # If the input data is not a multiple of 16, cut off any garbage
             garbage_len = len(res.content) % 16
             if garbage_len:
-                self.logger.info("Cutting off garbage: {0}", garbage_len)
+                self.logger.debug("Cutting off {0} bytes of garbage "
+                                  "before decrypting", garbage_len)
                 content = decryptor.decrypt(res.content[:-(garbage_len)])
             else:
                 content = decryptor.decrypt(res.content)
