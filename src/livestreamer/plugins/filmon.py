@@ -77,12 +77,9 @@ class Filmon(Plugin):
 
         if not json:
             raise NoStreamsError(self.url)
-        elif not isinstance(json, list):
-            raise PluginError("Invalid JSON response")
 
-        info = json[0]
-        rtmp = info.get("serverURL")
-        playpath = info.get("streamName")
+        rtmp = json.get("serverURL")
+        playpath = json.get("streamName")
         if not (rtmp and playpath):
             raise NoStreamsError(self.url)
 
