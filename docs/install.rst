@@ -12,6 +12,16 @@ Livestreamer is available in the `community package repository <https://www.arch
 
     # pacman -S livestreamer
 
+Debian/Ubuntu Linux
+-------------------
+
+Install pip via APT first, then install Livestreamer via pip:
+
+.. code-block:: console
+
+    # apt-get install python-pip
+    # pip install livestreamer
+
 FreeBSD
 -------
 
@@ -38,15 +48,7 @@ Livestreamer is available in the `official portage tree <https://packages.gentoo
 .. code-block:: console
 
     # emerge net-misc/livestreamer
-    
-Ubuntu 14.04 Linux
-------------
-The first command installs Python-pip and VLC which are necessary to watch live streams and the second command sets up livestreamer.
 
-.. code-block:: console
-
-    # sudo apt-get install python-pip vlc
-    # sudo pip install livestreamer
 Mac OS X
 --------
 
