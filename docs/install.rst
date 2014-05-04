@@ -38,7 +38,15 @@ Livestreamer is available in the `official portage tree <https://packages.gentoo
 .. code-block:: console
 
     # emerge net-misc/livestreamer
+    
+Ubuntu 14.04 Linux
+------------
+The first command installs Python-pip and VLC which are necessary to watch live streams and the second command sets up livestreamer.
 
+.. code-block:: console
+
+    # sudo apt-get install python-pip vlc
+    # sudo pip install livestreamer
 Mac OS X
 --------
 
