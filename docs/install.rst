@@ -12,6 +12,16 @@ Livestreamer is available in the `community package repository <https://www.arch
 
     # pacman -S livestreamer
 
+Debian/Ubuntu Linux
+-------------------
+
+Install pip via APT first, then install Livestreamer via pip:
+
+.. code-block:: console
+
+    # apt-get install python-pip
+    # pip install livestreamer
+
 FreeBSD
 -------
 
