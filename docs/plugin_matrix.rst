@@ -43,6 +43,7 @@ Twitch/Justin.tv    Yes     Yes   Possible to authenticate for access to
                                   protected streams.
 UStream TV          Yes     Yes
 Veetle.com          Yes     Yes
+Viasat Play         Yes     Yes   Videos may be geo-restricted.
 Weeb.tv             Yes     --    Requires rtmpdump with K-S-V patches.
 YouTube             Yes     Yes   The plugin is primarily made for live
                                   streams and may not work on all videos.
