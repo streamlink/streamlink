@@ -10,6 +10,11 @@ PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHid
 SWF_URL = "http://edge.vie.hitbox.tv/static/player/flowplayer/flowplayer.commercial-3.2.16.swf"
 
 
+def valid_playlist(playlist):
+    return (isinstance(playlist, dict) and "bitrates" in playlist
+            and "netConnectionUrl" in playlist)
+
+
 class Hitbox(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -48,22 +53,19 @@ class Hitbox(Plugin):
         streams = {}
         if live:
             playlists = verifyjson(json, "playlist") or []
-            if not playlists:
-                return
-
-            playlist = playlists[0]
-            bitrates = verifyjson(playlist, "bitrates")
-            rtmp = verifyjson(playlist, "netConnectionUrl")
-            for bitrate in bitrates:
-                quality = self._get_quality(verifyjson(bitrate, "label"))
-                url = verifyjson(bitrate, "url")
-                streams[quality] = RTMPStream(self.session, {
-                    "rtmp": rtmp,
-                    "pageUrl": self.url,
-                    "playpath": url,
-                    "swfVfy": SWF_URL,
-                    "live": True
-                })
+            for playlist in filter(valid_playlist, playlists):
+                bitrates = playlist.get("bitrates")
+                rtmp = playlist.get("netConnectionUrl")
+                for bitrate in bitrates:
+                    quality = self._get_quality(verifyjson(bitrate, "label"))
+                    url = verifyjson(bitrate, "url")
+                    streams[quality] = RTMPStream(self.session, {
+                        "rtmp": rtmp,
+                        "pageUrl": self.url,
+                        "playpath": url,
+                        "swfVfy": SWF_URL,
+                        "live": True
+                    })
         else:
             bitrates = verifyjson(clip, "bitrates")
             for bitrate in bitrates:
