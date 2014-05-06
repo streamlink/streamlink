@@ -11,7 +11,6 @@ from livestreamer.plugin.api import http
 from livestreamer.stream import AkamaiHDStream
 
 AMF_GATEWAY = "http://c.brightcove.com/services/messagebroker/amf"
-AMF_MESSAGE_PREFIX = "a9ab2f3d388a5169fc674c2ed57081c3d9c88158"
 AMF_MESSAGE_PREFIX = "af6b88c640c8d7b4cc75d22f7082ad95603bc627"
 STREAM_NAMES = ["360p", "480p", "720p", "1080p"]
 
@@ -101,9 +100,14 @@ class AzubuTV(Plugin):
         key = match.group(1)
 
         match = re.search("<param.+name=\"@videoPlayer\" value=\"(.+)\" />", res.text)
+        if match:
+            video_player = match.group(1)
+
         if not match:
-            raise PluginError("Missing key 'videoPlayer' in player params")
-        video_player = match.group(1)
+            match = re.search("AZUBU.setVar\(\"firstVideoRefId\", \"(.+)\"\);", res.text)
+            if not match:
+                raise PluginError("Unable to find video reference")
+            video_player = "ref:" + match.group(1)
 
         match = re.search("<param name=\"playerID\" value=\"(\d+)\" />", res.text)
         if not match:
