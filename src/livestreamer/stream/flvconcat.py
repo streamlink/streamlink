@@ -2,7 +2,7 @@ from __future__ import division
 
 from collections import namedtuple
 from io import IOBase
-from itertools import chain
+from itertools import chain, islice
 from threading import Thread
 
 from ..buffers import RingBuffer
@@ -13,7 +13,9 @@ from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
 from ..packages.flashmedia.tag import (AAC_PACKET_TYPE_SEQUENCE_HEADER,
                                        AVC_PACKET_TYPE_SEQUENCE_HEADER,
                                        AUDIO_CODEC_ID_AAC,
-                                       VIDEO_CODEC_ID_AVC)
+                                       VIDEO_CODEC_ID_AVC,
+                                       TAG_TYPE_AUDIO,
+                                       TAG_TYPE_VIDEO)
 
 __all__ = ["extract_flv_header_tags", "FLVTagConcat", "FLVTagConcatIO"]
 
@@ -177,6 +179,19 @@ class FLVTagConcat(object):
         elif timestamp_offset_sub:
             tag.timestamp = max(0, tag.timestamp - timestamp_offset_sub)
 
+    def analyze_tags(self, tag_iterator):
+        tags = list(islice(tag_iterator, 10))
+        audio_tags = len(list(filter(lambda t: t.type == TAG_TYPE_AUDIO, tags)))
+        video_tags = len(list(filter(lambda t: t.type == TAG_TYPE_VIDEO, tags)))
+
+        self.has_audio = audio_tags > 0
+        self.has_video = video_tags > 0
+
+        if not (self.has_audio and self.has_video):
+            self.sync_headers = False
+
+        return tags
+
     def iter_tags(self, fd=None, buf=None, skip_header=None):
         if skip_header is None:
             skip_header = not not self.tags
@@ -191,8 +206,14 @@ class FLVTagConcat(object):
         """Reads FLV tags from fd or buf and returns them with adjusted
            timestamps."""
         timestamps = dict(self.timestamps_add)
+        tag_iterator = self.iter_tags(fd=fd, buf=buf, skip_header=skip_header)
 
-        for tag in self.iter_tags(fd=fd, buf=buf, skip_header=skip_header):
+        if not self.flv_header_written:
+            analyzed_tags = self.analyze_tags(tag_iterator)
+        else:
+            analyzed_tags = []
+
+        for tag in chain(analyzed_tags, tag_iterator):
             if not self.flv_header_written:
                 flv_header = Header(has_video=self.has_video,
                                     has_audio=self.has_audio)
