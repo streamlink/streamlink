@@ -298,7 +298,7 @@ class FLVTagConcatIO(IOBase):
             return b""
 
         if self.worker.error:
-            raise self.filler.error
+            raise self.worker.error
 
         return self.buffer.read(size, block=self.worker.is_alive(),
                                 timeout=self.timeout)
