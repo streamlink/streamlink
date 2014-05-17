@@ -9,6 +9,8 @@ from .util import *
 
 
 class Box(Packet):
+    exception = F4VError
+
     def __init__(self, type, payload, extended_size=False):
         self.type = type
         self.payload = payload
@@ -74,6 +76,8 @@ class Box(Packet):
             packetwrite(self.payload)
 
 class BoxPayload(Packet):
+    exception = F4VError
+
     @property
     def size(self):
         return 0

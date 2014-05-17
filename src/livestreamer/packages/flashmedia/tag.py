@@ -97,6 +97,8 @@ class VideoFlags(Union):
 
 
 class Header(Packet):
+    exception = FLVError
+
     def __init__(self, version=1, has_audio=False, has_video=False, data_offset=9, tag0_size=0):
         self.version = version
         self.flags = TypeFlags()
@@ -171,6 +173,8 @@ class Header(Packet):
 
 
 class Tag(Packet):
+    exception = FLVError
+
     def __init__(self, typ=TAG_TYPE_SCRIPT, timestamp=0, data=None,
                  streamid=0, filter=False, padding=None):
         self.flags = TagFlags()
