@@ -47,9 +47,6 @@ class HLSStreamWriter(SegmentedStreamWriter):
             return self.open_sequence(sequence, retries - 1)
 
     def create_decryptor(self, key, sequence):
-        if key.method == "NONE":
-            return
-
         if key.method != "AES-128":
             raise StreamError("Unable to decrypt cipher {0}", key.method)
 
@@ -88,7 +85,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         if not res:
             return
 
-        if sequence.segment.key:
+        if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key,
                                                   sequence.num)
