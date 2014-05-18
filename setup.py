@@ -30,7 +30,7 @@ srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="livestreamer",
-      version="1.8.0",
+      version="1.8.1",
       description="Livestreamer is CLI program that extracts streams from "
                   "various services and pipes them into a video player of "
                   "choice.",
