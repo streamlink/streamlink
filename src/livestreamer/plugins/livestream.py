@@ -10,8 +10,6 @@ from livestreamer.stream import AkamaiHDStream, HLSStream
 from livestreamer.utils import verifyjson, parse_json
 
 
-SWF_URL = "http://cdn.livestream.com/swf/hdplayer-2.0.swf"
-
 class Livestream(Plugin):
     @classmethod
     def default_stream_types(cls, streams):
@@ -69,8 +67,8 @@ class Livestream(Plugin):
         streams = defaultdict(list)
         play_url = streaminfo.get("play_url")
         if play_url:
-            swfurl = info.get("hdPlayerSwfUrl") or SWF_URL
-            if not swfurl.startswith("http://"):
+            swfurl = info.get("viewerPlusSwfUrl") or info.get("hdPlayerSwfUrl")
+            if not swfurl.startswith("http"):
                 swfurl = "http://" + swfurl
 
             qualities = streaminfo.get("qualities", [])
