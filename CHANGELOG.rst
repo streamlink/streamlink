@@ -1,3 +1,26 @@
+Version 1.8.1
+-------------
+
+General:
+ - Added a wheel package to PyPi for speedier installation via pip.
+
+Bug fixes:
+ - hls: Handle encrypted segments that are invalid length (not multiple by 16). (#365)
+
+Plugins:
+ - Added plugin for Furstream, patch by Pascal Romahn. (#360)
+ - Added plugin for Viasat's play sites (tv6play.se, etc). (#378)
+ - Added plugin for ZDFmediathek, patch by Pascal Romahn. (#360)
+ - azubutv: Updated for service changes. (#373)
+ - crunchyroll: Correctly handle unicode errors, patch by Agustin Carrasco. (#387, #388)
+ - filmon: Updated for service changes, patch by Athanasios Oikonomou. (#375)
+ - hitbox: Updated for service changes.
+ - ilive: Updated for service changes, patch by Athanasios Oikonomou. (#376)
+ - svtplay: Added support for SVT Flow.
+ - twitch: Now uses the beta API on beta.twitch.tv URLs. (#391)
+ - ustream: Correctly handle UHS streams containing only video or audio.
+
+
 Version 1.8.0
 -------------
 
