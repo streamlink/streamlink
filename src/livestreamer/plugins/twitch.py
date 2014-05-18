@@ -24,9 +24,6 @@ def time_to_offset(t):
 
 
 class TwitchAPI(JustinTVAPIBase):
-    def __init__(self):
-        JustinTVAPIBase.__init__(self, host="twitch.tv")
-
     def channel_info(self, channel):
         return self.call("/api/channels/{0}".format(channel))
 
@@ -57,7 +54,8 @@ class Twitch(JustinTVPluginBase):
     def __init__(self, url):
         JustinTVPluginBase.__init__(self, url)
 
-        self.api = TwitchAPI()
+        self.api = TwitchAPI(host="twitch.tv",
+                             beta=self.subdomain == "beta")
 
     def _authenticate(self):
         oauth_token = self.options.get("oauth_token")
