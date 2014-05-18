@@ -4,6 +4,8 @@ from .types import AMF0String, AMF0Value, U8, U16BE, U32BE
 
 
 class AMFHeader(Packet):
+    exception = AMFError
+
     def __init__(self, name, value, must_understand=False):
         self.name = name
         self.value = value
@@ -34,6 +36,8 @@ class AMFHeader(Packet):
 
 
 class AMFMessage(Packet):
+    exception = AMFError
+
     def __init__(self, target_uri, response_uri, value):
         self.target_uri = target_uri
         self.response_uri = response_uri
@@ -65,6 +69,8 @@ class AMFMessage(Packet):
 
 
 class AMFPacket(Packet):
+    exception = AMFError
+
     def __init__(self, version, headers=None, messages=None):
         if headers is None:
             headers = []

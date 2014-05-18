@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 
+import struct
+
 class Packet(object):
+    exception = IOError
+
     @classmethod
     def _deserialize(cls, fd):
         raise NotImplementedError
@@ -11,11 +15,17 @@ class Packet(object):
 
     @classmethod
     def deserialize(cls, fd, **kw):
-        return cls._deserialize(fd, **kw)
+        try:
+            return cls._deserialize(fd, **kw)
+        except (struct.error, IOError) as err:
+            raise cls.exception(err)
 
     @classmethod
     def deserialize_from(cls, buf, offset, **kw):
-        return cls._deserialize_from(buf, offset, **kw)
+        try:
+            return cls._deserialize_from(buf, offset, **kw)
+        except (struct.error, IOError) as err:
+            raise cls.exception(err)
 
     def _serialize(self):
         raise NotImplementedError

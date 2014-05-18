@@ -71,7 +71,7 @@ class ILive(Plugin):
             "live": True
         }
 
-        match = re.search("(http(s)?://.+/server.php\?id=\d+)",
+        match = re.search("(http(s)?://.+/server\d?.php\?id=\d+)",
                           res.text)
         if match:
             token_url = match.group(1)

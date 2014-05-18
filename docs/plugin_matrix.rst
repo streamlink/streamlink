@@ -25,6 +25,7 @@ DMCloud.net         Yes     --    Dailymotion cloud platform
 Euronews.com        Yes     No
 Filmon.com          Yes     Yes   Only SD (HD requires authentication)
 Freedocast          Yes     No
+Furstream           Yes     No
 GOMeXP              Yes     --
 Hashd.tv            Yes     Yes
 Hitbox.tv           Yes     Yes
@@ -37,11 +38,14 @@ NRK TV              Yes     Yes   Videos may be geo-restricted to Norway.
 Picarto             Yes     --
 SpeedRunsLive.com   Yes     --
 SVT Play            Yes     Yes   Videos may be geo-restricted to Sweden.
+                                  Also supports Öppet arkiv and SVT Flow.
 Twitch/Justin.tv    Yes     Yes   Possible to authenticate for access to
                                   protected streams.
 UStream TV          Yes     Yes
 Veetle.com          Yes     Yes
+Viasat Play         Yes     Yes   Videos may be geo-restricted.
 Weeb.tv             Yes     --    Requires rtmpdump with K-S-V patches.
 YouTube             Yes     Yes   The plugin is primarily made for live
                                   streams and may not work on all videos.
+ZDFmediathek        Yes     Yes
 =================== ======= ===== ==============================================

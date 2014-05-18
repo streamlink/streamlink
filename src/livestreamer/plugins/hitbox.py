@@ -1,18 +1,18 @@
-from livestreamer.stream import RTMPStream, HTTPStream
+import re
+
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
-from livestreamer.exceptions import NoStreamsError
+from livestreamer.stream import RTMPStream, HTTPStream
 from livestreamer.utils import verifyjson
-
-import re
 
 LIVE_API = "http://www.hitbox.tv/api/media/live/{0}?showHidden=true"
 PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
+SWF_URL = "http://edge.vie.hitbox.tv/static/player/flowplayer/flowplayer.commercial-3.2.16.swf"
 
-# you can get this from http://www.hitbox.tv/js/hitbox-combined.js
-# but a 1.4MB download seems a bit much ;)
-# lets hope it doesn't change much...
-SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
+
+def valid_playlist(playlist):
+    return (isinstance(playlist, dict) and "bitrates" in playlist
+            and "netConnectionUrl" in playlist)
 
 
 class Hitbox(Plugin):
@@ -32,10 +32,9 @@ class Hitbox(Plugin):
 
         match = re.search(r".*hitbox.tv/([^/]*)/?(\d+)?", self.url)
         if not match:
-            raise NoStreamsError(self.url)
+            return
 
         stream_name, media_id = match.groups()
-
         if stream_name != "video":
             res = http.get(LIVE_API.format(stream_name))
             json = http.json(res)
@@ -43,34 +42,32 @@ class Hitbox(Plugin):
             media_id = verifyjson(livestream[0], "media_id")
             media_is_live = int(verifyjson(livestream[0], "media_is_live"))
             if not media_is_live:
-                raise NoStreamsError(self.url)
+                return
 
         media_type = "live" if media_is_live else "video"
         res = http.get(PLAYER_API.format(media_type, media_id))
         json = http.json(res)
         clip = verifyjson(json, "clip")
         live = verifyjson(clip, "live")
-        bitrates = verifyjson(clip, "bitrates")
 
         streams = {}
         if live:
-            for bitrate in bitrates:
-                connection_provider = clip.get("connectionProvider", "clustering")
-                plugins = verifyjson(json, "plugins")
-                provider_plugin = verifyjson(plugins, connection_provider)
-                swf = verifyjson(provider_plugin, "url")
-                rtmp = verifyjson(provider_plugin, "netConnectionUrl")
-                quality = self._get_quality(verifyjson(bitrate, "label"))
-                url = verifyjson(bitrate, "url")
-
-                streams[quality] = RTMPStream(self.session, {
-                    "rtmp": rtmp,
-                    "pageUrl": self.url,
-                    "playpath": url,
-                    "swfVfy": SWF_BASE + swf,
-                    "live": True
-                })
+            playlists = verifyjson(json, "playlist") or []
+            for playlist in filter(valid_playlist, playlists):
+                bitrates = playlist.get("bitrates")
+                rtmp = playlist.get("netConnectionUrl")
+                for bitrate in bitrates:
+                    quality = self._get_quality(verifyjson(bitrate, "label"))
+                    url = verifyjson(bitrate, "url")
+                    streams[quality] = RTMPStream(self.session, {
+                        "rtmp": rtmp,
+                        "pageUrl": self.url,
+                        "playpath": url,
+                        "swfVfy": SWF_URL,
+                        "live": True
+                    })
         else:
+            bitrates = verifyjson(clip, "bitrates")
             for bitrate in bitrates:
                 base_url = verifyjson(clip, "baseUrl")
                 url = verifyjson(bitrate, "url")

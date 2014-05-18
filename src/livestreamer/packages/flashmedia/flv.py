@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from .tag import Header, Tag
+from .error import FLVError
 from .compat import is_py2
+from .tag import Header, Tag
 
 class FLV(object):
     def __init__(self, fd=None, strict=False):
@@ -15,7 +16,7 @@ class FLV(object):
     def __next__(self):
         try:
             tag = Tag.deserialize(self.fd, strict=self.strict)
-        except IOError:
+        except (IOError, FLVError):
             raise StopIteration
 
         return tag

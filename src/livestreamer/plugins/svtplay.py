@@ -1,3 +1,5 @@
+import re
+
 from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
@@ -11,7 +13,7 @@ PAGE_URL = "http://www.svtplay.se"
 class SVTPlay(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "svtplay.se" in url or "oppetarkiv.se" in url
+        return re.match("http(s)?://(www\.)?(svtplay|svtflow|oppetarkiv).se/", url)
 
     def _get_streams(self):
         self.logger.debug("Fetching stream info")

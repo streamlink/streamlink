@@ -47,9 +47,6 @@ class HLSStreamWriter(SegmentedStreamWriter):
             return self.open_sequence(sequence, retries - 1)
 
     def create_decryptor(self, key, sequence):
-        if key.method == "NONE":
-            return
-
         if key.method != "AES-128":
             raise StreamError("Unable to decrypt cipher {0}", key.method)
 
@@ -88,31 +85,28 @@ class HLSStreamWriter(SegmentedStreamWriter):
         if not res:
             return
 
-        decryptor = None
-        if sequence.segment.key:
+        if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key,
                                                   sequence.num)
             except StreamError as err:
                 self.logger.error("Failed to create decryptor: {0}", err)
                 self.close()
+                return
 
-        try:
-            for chunk in res.iter_content(chunk_size):
-                if decryptor:
-                    chunk = decryptor.decrypt(chunk)
-
-                self.reader.buffer.write(chunk)
-
-                if self.closed:
-                    break
+            # If the input data is not a multiple of 16, cut off any garbage
+            garbage_len = len(res.content) % 16
+            if garbage_len:
+                self.logger.debug("Cutting off {0} bytes of garbage "
+                                  "before decrypting", garbage_len)
+                content = decryptor.decrypt(res.content[:-(garbage_len)])
             else:
-                self.logger.debug("Download of segment {0} complete",
-                                  sequence.num)
-        except IOError as err:
-            self.logger.error("Failed to read segment {0}: {1}",
-                              sequence.num, err)
+                content = decryptor.decrypt(res.content)
+        else:
+            content = res.content
 
+        self.reader.buffer.write(content)
+        self.logger.debug("Download of segment {0} complete", sequence.num)
 
 class HLSStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
