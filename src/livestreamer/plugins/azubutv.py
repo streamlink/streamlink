@@ -99,15 +99,10 @@ class AzubuTV(Plugin):
 
         key = match.group(1)
 
-        match = re.search("<param.+name=\"@videoPlayer\" value=\"(.+)\" />", res.text)
-        if match:
-            video_player = match.group(1)
-
+        match = re.search("AZUBU.setVar\(\"firstVideoRefId\", \"(.+)\"\);", res.text)
         if not match:
-            match = re.search("AZUBU.setVar\(\"firstVideoRefId\", \"(.+)\"\);", res.text)
-            if not match:
-                raise PluginError("Unable to find video reference")
-            video_player = "ref:" + match.group(1)
+            raise PluginError("Unable to find video reference")
+        video_player = "ref:" + match.group(1)
 
         match = re.search("<param name=\"playerID\" value=\"(\d+)\" />", res.text)
         if not match:
