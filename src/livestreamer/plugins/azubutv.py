@@ -2,6 +2,7 @@ import re
 
 from io import BytesIO
 from operator import attrgetter
+from time import sleep
 
 from livestreamer.exceptions import PluginError
 from livestreamer.packages.flashmedia import AMFPacket, AMFMessage
@@ -13,6 +14,9 @@ from livestreamer.stream import AkamaiHDStream
 AMF_GATEWAY = "http://c.brightcove.com/services/messagebroker/amf"
 AMF_MESSAGE_PREFIX = "af6b88c640c8d7b4cc75d22f7082ad95603bc627"
 STREAM_NAMES = ["360p", "480p", "720p", "1080p"]
+HTTP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36"
+}
 
 
 @AMF3ObjectBase.register("com.brightcove.experience.ViewerExperienceRequest")
@@ -87,28 +91,47 @@ class AzubuTV(Plugin):
 
         return AMFPacket.deserialize(BytesIO(res.content))
 
-    def _get_player_params(self, retries=3):
-        res = http.get(self.url)
+    def _get_player_params(self, retries=5):
+        try:
+            res = http.get(self.url, headers=HTTP_HEADERS)
+        except PluginError as err:
+            # The server sometimes gives us 404 for no reason
+            if "404" in str(err) and retries:
+                sleep(1)
+                return self._get_player_params(retries - 1)
+            else:
+                raise
+
         match = re.search("<param name=\"playerKey\" value=\"(.+)\" />", res.text)
         if not match:
             # The HTML returned sometimes doesn't contain the parameters
             if not retries:
                 raise PluginError("Missing key 'playerKey' in player params")
             else:
+                sleep(1)
                 return self._get_player_params(retries - 1)
 
         key = match.group(1)
-
         match = re.search("AZUBU.setVar\(\"firstVideoRefId\", \"(.+)\"\);", res.text)
         if not match:
-            raise PluginError("Unable to find video reference")
-        video_player = "ref:" + match.group(1)
+            # The HTML returned sometimes doesn't contain the parameters
+            if not retries:
+                raise PluginError("Unable to find video reference")
+            else:
+                sleep(1)
+                return self._get_player_params(retries - 1)
 
+        video_player = "ref:" + match.group(1)
         match = re.search("<param name=\"playerID\" value=\"(\d+)\" />", res.text)
         if not match:
-            raise PluginError("Missing key 'playerID' in player params")
-        player_id = match.group(1)
+            # The HTML returned sometimes doesn't contain the parameters
+            if not retries:
+                raise PluginError("Missing key 'playerID' in player params")
+            else:
+                sleep(1)
+                return self._get_player_params(retries - 1)
 
+        player_id = match.group(1)
         match = re.search("<!-- live on -->", res.text)
         if not match:
             match = re.search("<div id=\"channel_live\">", res.text)
