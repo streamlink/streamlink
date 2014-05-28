@@ -45,17 +45,23 @@ class FLVPlaylistIO(FLVTagConcatIO):
 class FLVPlaylist(Playlist):
     __shortname__ = "flv_playlist"
 
-    def __init__(self, session, streams, duration=None, tags=None):
+    def __init__(self, session, streams, duration=None, tags=None,
+                 skip_header=False, **concater_params):
         Playlist.__init__(self, session, streams, duration)
 
         if not tags:
             tags = []
 
         self.tags = tags
+        self.skip_header = skip_header
+        self.concater_params = concater_params
 
     def open(self):
-        fd = FLVPlaylistIO(self.session, tags=self.tags,
-                           duration=self.duration)
+        fd = FLVPlaylistIO(self.session,
+                           tags=self.tags,
+                           duration=self.duration,
+                           skip_header=self.skip_header,
+                           **self.concater_params)
         fd.open(self.streams)
 
         return fd
