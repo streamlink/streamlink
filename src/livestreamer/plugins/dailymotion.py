@@ -1,10 +1,15 @@
 import re
+from functools import reduce
 
-from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError
+from livestreamer.compat import urlparse, unquote, range
+from livestreamer.exceptions import StreamError, PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
-from livestreamer.stream import HDSStream, RTMPStream
+from livestreamer.stream.flvconcat import FLVTagConcat
+from livestreamer.stream import Stream, HDSStream, RTMPStream
+from livestreamer.stream.segmented import (SegmentedStreamReader,
+                                           SegmentedStreamWriter,
+                                           SegmentedStreamWorker)
 from livestreamer.utils import verifyjson
 
 
@@ -21,6 +26,108 @@ QUALITY_MAP = {
 RTMP_SPLIT_REGEX = r"(?P<host>rtmp://[^/]+)/(?P<app>[^/]+)/(?P<playpath>.+)"
 STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
 
+class DailyMotionWorker(SegmentedStreamWorker):
+
+    def __init__(self, reader):
+        self.segment_min = reader.segment_min
+        self.segment_max = reader.segment_max
+        SegmentedStreamWorker.__init__(self, reader)
+
+    def iter_segments(self):
+        return range(self.segment_min, self.segment_max + 1)
+
+class DailyMotionWriter(SegmentedStreamWriter):
+    def __init__(self, reader):
+        SegmentedStreamWriter.__init__(self, reader)
+
+        self.concater = FLVTagConcat(flatten_timestamps=True,
+                                     sync_headers=True)
+        self.uri_template = reader.uri_template
+
+    def open_segment(self, segment, retries=3):
+        if not retries:
+            return
+
+        try:
+            return http.get(self.uri_template.format(segment), timeout=10,
+                            exception=StreamError)
+        except StreamError as err:
+            self.logger.error("Failed to open segment {0}: {1}", segment, err)
+            return self.open_segment(segment, retries - 1)
+
+    def write(self, segment, segment_size=8192):
+        res = self.open_segment(segment)
+        if not res:
+            return
+
+        try:
+            for data in self.concater.iter_chunks(buf=res.content, skip_header=True):
+                self.reader.buffer.write(data)
+
+                if self.closed:
+                    break
+            else:
+                self.logger.debug("Download of segment {0} complete", segment)
+        except IOError as err:
+            self.logger.error("Failed to read segment {0}: {1}", segment, err)
+
+class DailyMotionReader(SegmentedStreamReader):
+    __worker__ = DailyMotionWorker
+    __writer__ = DailyMotionWriter
+
+    def __init__(self, stream, params, **kwargs):
+        self.logger = stream.session.logger.new_module("stream.dms.reader")
+        self.uri_template = params['uri_template']
+        self.segment_min = params['segment_min']
+        self.segment_max = params['segment_max']
+
+        SegmentedStreamReader.__init__(self, stream, **kwargs)
+
+class DailyMotionStream(Stream):
+    __shortname__ = "dms"
+
+    def __init__(self, session, channel_id, resolution, url):
+        Stream.__init__(self, session)
+        self.logger = session.logger.new_module("stream.dms")
+
+        self.channel_id = channel_id
+        self.resolution = resolution
+        parsed_url = urlparse(url)
+        self.scheme = parsed_url.scheme
+        self.host = parsed_url.netloc
+        self.info_uri = parsed_url.path
+
+    def __repr__(self):
+        return "<DailyMotionStream({0!r}, resolution={1})>".format(
+                self.channel_id, self.resolution)
+
+    def __json__(self):
+        return dict(channel_id=self.channel_id,
+                    resolution=self.resolution,
+                    host=self.host,
+                    info_uri=self.info_uri,
+                    **Stream.__json__(self))
+
+    def open(self):
+        res = http.get('{0}://{1}{2}'.format(self.scheme, self.host, self.info_uri))
+        json = http.json(res)
+
+        if not isinstance(json, dict):
+            raise PluginError("Invalid JSON response")
+
+        try:
+            params = {
+                    'uri_template' : '{0}://{1}{2}'.format(self.scheme, self.host, json['template'].replace('$fragment$','{0}')),
+                    'segment_min'  : 1,
+                    'segment_max'  : reduce(lambda i,j:i+j[0], json['fragments'], 0),
+            }
+        except KeyError:
+            raise PluginError('Unexpected JSON response')
+
+        reader = DailyMotionReader(self, params=params)
+        reader.open()
+
+        return reader
 
 class DailyMotion(Plugin):
 
@@ -135,13 +242,39 @@ class DailyMotion(Plugin):
 
         return streams
 
+    def _get_vod_streams(self, channelname):
+        res = http.get(self.url)
+        match = re.search('autoURL%22%3A%22(.*?)%22', res.text)
+        if not match:
+            raise PluginError('Error retrieving manifest url')
+        manifest_url = unquote(match.group(1)).replace('\\', '')
+
+        try:
+            res = http.get(manifest_url)
+            manifest = http.json(res)
+        except:
+            raise PluginError('Error retrieving manifest')
+
+        # A fallback host (http://proxy-xx...) is sometimes provided
+        # that we could make us of.
+        vod_streams = {params['name']+'p': DailyMotionStream(
+                                            self.session,
+                                            channelname,
+                                            params['name']+'p',
+                                            params['template'])
+                for params in manifest['alternates']}
+        return vod_streams
+
     def _get_streams(self):
         channelname = self._get_channel_name(self.url)
 
-        if not (channelname and self._check_channel_live(channelname)):
+        if not channelname:
             return
 
-        return self._get_rtmp_streams(channelname)
+        if self._check_channel_live(channelname):
+            return self._get_rtmp_streams(channelname)
+        else:
+            return self._get_vod_streams(channelname)
 
 
 __plugin__ = DailyMotion
