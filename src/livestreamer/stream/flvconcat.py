@@ -278,7 +278,7 @@ class FLVTagConcatIO(IOBase):
     __worker__ = FLVTagConcatWorker
     __log_name__ = "stream.flv_concat"
 
-    def __init__(self, session, duration=None, tags=[], skip_header=False,
+    def __init__(self, session, duration=None, tags=[], skip_header=None,
                  timeout=30, **concater_params):
         self.session = session
         self.timeout = timeout

@@ -46,7 +46,7 @@ class FLVPlaylist(Playlist):
     __shortname__ = "flv_playlist"
 
     def __init__(self, session, streams, duration=None, tags=None,
-                 skip_header=False, **concater_params):
+                 skip_header=None, **concater_params):
         Playlist.__init__(self, session, streams, duration)
 
         if not tags:
