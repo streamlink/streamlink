@@ -132,7 +132,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
                                     **self.reader.request_params)
 
         try:
-            playlist = hls_playlist.load(res.text, self.reader.stream.url)
+            playlist = hls_playlist.load(res.text, res.url)
         except ValueError as err:
             raise StreamError(err)
 
