@@ -1,3 +1,18 @@
+Version 1.8.2
+-------------
+
+Bug fixes:
+ - Fixed regression in loading config from non-ascii paths on Python 2.
+
+Plugins:
+ - azubutv: Update for service changes, patch by Gapato. (#399)
+ - dailymotion: Added support for VODs, patch by Gapato. (#402)
+ - hitbox: Fixed a issue where the correct streaming server was not used.
+
+Streams:
+ - hls: Handle playlists that redirect. (#405)
+
+
 Version 1.8.1
 -------------
 

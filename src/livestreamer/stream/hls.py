@@ -132,7 +132,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
                                     **self.reader.request_params)
 
         try:
-            playlist = hls_playlist.load(res.text, self.reader.stream.url)
+            playlist = hls_playlist.load(res.text, res.url)
         except ValueError as err:
             raise StreamError(err)
 
@@ -264,7 +264,7 @@ class HLSStream(HTTPStream):
         res = session_.http.get(url, exception=IOError, **request_params)
 
         try:
-            parser = hls_playlist.load(res.text, base_uri=url)
+            parser = hls_playlist.load(res.text, base_uri=res.url)
         except ValueError as err:
             raise IOError("Failed to parse playlist: {0}".format(err))
 

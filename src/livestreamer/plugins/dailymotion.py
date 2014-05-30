@@ -1,12 +1,14 @@
 import re
 
-from livestreamer.compat import urlparse
+from functools import reduce
+
+from livestreamer.compat import urlparse, unquote, range
 from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
-from livestreamer.stream import HDSStream, RTMPStream
+from livestreamer.stream import HDSStream, HTTPStream, RTMPStream
+from livestreamer.stream.playlist import FLVPlaylist
 from livestreamer.utils import verifyjson
-
 
 METADATA_URL = "https://api.dailymotion.com/video/{0}"
 QUALITY_MAP = {
@@ -23,7 +25,6 @@ STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
 
 
 class DailyMotion(Plugin):
-
     @classmethod
     def can_handle_url(self, url):
         # valid urls are of the form dailymotion.com/video/[a-z]{5}.*
@@ -135,13 +136,68 @@ class DailyMotion(Plugin):
 
         return streams
 
+    def _create_flv_playlist(self, template):
+        res = http.get(template)
+        json = http.json(res)
+
+        if not isinstance(json, dict):
+            raise PluginError("Invalid JSON response")
+
+        parsed = urlparse(template)
+        try:
+            url_template = '{0}://{1}{2}'.format(
+                parsed.scheme, parsed.netloc, json['template']
+            )
+            segment_max = reduce(lambda i,j: i+j[0], json['fragments'], 0)
+            duration = json['duration']
+        except KeyError:
+            raise PluginError('Unexpected JSON response')
+
+        substreams = [HTTPStream(self.session,
+                                 url_template.replace('$fragment$', str(i)))
+                      for i in range(1, segment_max + 1)]
+
+        return FLVPlaylist(self.session, streams=substreams,
+                           duration=duration, skip_header=True,
+                           flatten_timestamps=True)
+
+    def _get_vod_streams(self, channelname):
+        res = http.get(self.url)
+        match = re.search('autoURL%22%3A%22(.*?)%22', res.text)
+        if not match:
+            raise PluginError('Error retrieving manifest url')
+        manifest_url = unquote(match.group(1)).replace('\\', '')
+
+        try:
+            res = http.get(manifest_url)
+            manifest = http.json(res)
+        except:
+            raise PluginError('Error retrieving manifest')
+
+        # A fallback host (http://proxy-xx...) is sometimes provided
+        # that we could make us of.
+        streams = {}
+        for params in manifest.get('alternates', []):
+            name = params.get('name')
+            template = params.get('template')
+            if not (name and template):
+                continue
+
+            name = '{0}p'.format(name)
+            streams[name] = self._create_flv_playlist(template)
+
+        return streams
+
     def _get_streams(self):
         channelname = self._get_channel_name(self.url)
 
-        if not (channelname and self._check_channel_live(channelname)):
+        if not channelname:
             return
 
-        return self._get_rtmp_streams(channelname)
+        if self._check_channel_live(channelname):
+            return self._get_rtmp_streams(channelname)
+        else:
+            return self._get_vod_streams(channelname)
 
 
 __plugin__ = DailyMotion

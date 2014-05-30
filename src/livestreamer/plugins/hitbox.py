@@ -7,12 +7,8 @@ from livestreamer.utils import verifyjson
 
 LIVE_API = "http://www.hitbox.tv/api/media/live/{0}?showHidden=true"
 PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
-SWF_URL = "http://edge.vie.hitbox.tv/static/player/flowplayer/flowplayer.commercial-3.2.16.swf"
-
-
-def valid_playlist(playlist):
-    return (isinstance(playlist, dict) and "bitrates" in playlist
-            and "netConnectionUrl" in playlist)
+SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
+SWF_URL = SWF_BASE + "flowplayer.commercial-3.2.16.swf"
 
 
 class Hitbox(Plugin):
@@ -49,23 +45,42 @@ class Hitbox(Plugin):
         json = http.json(res)
         clip = verifyjson(json, "clip")
         live = verifyjson(clip, "live")
+        plugins = verifyjson(json, "plugins")
 
         streams = {}
         if live:
             playlists = verifyjson(json, "playlist") or []
-            for playlist in filter(valid_playlist, playlists):
+            swf_url = SWF_URL
+            for playlist in playlists:
                 bitrates = playlist.get("bitrates")
-                rtmp = playlist.get("netConnectionUrl")
+                provider = playlist.get("connectionProvider")
+                rtmp = None
+
+                if bitrates:
+                    rtmp = playlist.get("netConnectionUrl")
+                elif provider and provider in plugins:
+                    provider = plugins[provider]
+                    swf_name = verifyjson(provider, "url")
+                    swf_url = SWF_BASE + swf_name
+                    rtmp = verifyjson(provider, "netConnectionUrl")
+                    bitrates = clip.get("bitrates", [])
+                else:
+                    continue
+
                 for bitrate in bitrates:
                     quality = self._get_quality(verifyjson(bitrate, "label"))
                     url = verifyjson(bitrate, "url")
-                    streams[quality] = RTMPStream(self.session, {
+                    stream = RTMPStream(self.session, {
                         "rtmp": rtmp,
                         "pageUrl": self.url,
                         "playpath": url,
-                        "swfVfy": SWF_URL,
+                        "swfVfy": swf_url,
                         "live": True
                     })
+                    if quality in streams:
+                        quality += "_alt"
+
+                    streams[quality] = stream
         else:
             bitrates = verifyjson(clip, "bitrates")
             for bitrate in bitrates:
