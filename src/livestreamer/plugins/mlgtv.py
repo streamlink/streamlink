@@ -1,51 +1,60 @@
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HDSStream, HLSStream
-from livestreamer.utils import verifyjson
-
 
 CONFIG_API_URL = "http://www.majorleaguegaming.com/player/config.json"
 STREAM_API_URL = "http://streamapi.majorleaguegaming.com/service/streams/playback/{0}"
-STREAM_ID_REGEX = r"<meta content='.+/([\w_-]+).+' property='og:video'>"
 STREAM_TYPES = {
     "hls": HLSStream.parse_variant_playlist,
     "hds": HDSStream.parse_manifest
 }
-URL_REGEX = r"http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)"
 
+_stream_id_re = re.compile(r"<meta content='.+/([\w_-]+).+' property='og:video'>")
+_url_re = re.compile("http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)")
 
-def valid_stream(stream):
-    if not isinstance(stream, dict):
-        return
+_config_schema = validate.Schema(
+    {
+        "media": [{
+            "channel": validate.text
+        }]
+    }
+)
 
-    return stream.get("url") and stream.get("format") in STREAM_TYPES
+_stream_schema = validate.Schema(
+    {
+        "data": {
+            "items": validate.all(
+                [{
+                    "format": validate.text,
+                    "url": validate.text
+                }],
+                validate.filter(lambda s: s["format"] in STREAM_TYPES)
+            )
+        }
+    },
+    validate.get("data", {}),
+    validate.get("items", [])
+)
 
 
 class MLGTV(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return re.match(URL_REGEX, url)
+        return _url_re.match(url)
 
     def _find_channel_id(self, text):
-        match = re.search(STREAM_ID_REGEX, text)
+        match = _stream_id_re.search(text)
         if match:
             return match.group(1)
 
     def _get_stream_id(self, channel_id):
         res = http.get(CONFIG_API_URL, params=dict(id=channel_id))
-        config = http.json(res)
-        media = verifyjson(config, "media")
+        config = http.json(res, schema=_config_schema)
 
-        if not (media and isinstance(media, list)):
-            return
-
-        media = media[0]
-        if not isinstance(media, dict):
-            return
-
-        return media.get("channel")
+        if config["media"]:
+            return config["media"][0]["channel"]
 
     def _get_streams(self):
         res = http.get(self.url)
@@ -59,12 +68,9 @@ class MLGTV(Plugin):
 
         res = http.get(STREAM_API_URL.format(stream_id),
                        params=dict(format="all"))
-        json = http.json(res)
-        data = verifyjson(json, "data")
-        items = verifyjson(data, "items")
-
+        items = http.json(res, schema=_stream_schema)
         streams = {}
-        for stream in filter(valid_stream, items):
+        for stream in items:
             parser = STREAM_TYPES[stream["format"]]
 
             try:
