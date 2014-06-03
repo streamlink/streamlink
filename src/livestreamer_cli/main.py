@@ -24,6 +24,7 @@ from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
+QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = livestreamer = plugin = None
 
@@ -337,11 +338,18 @@ def handle_stream(plugin, streams, stream_name):
 
             console.msg("{0}", cmdline)
         else:
-            console.exit("Stream does not use a command-line")
+            console.exit("The stream specified cannot be translated to a command")
 
     # Print JSON representation of the stream
     elif console.json:
         console.msg_json(stream)
+
+    elif args.stream_url:
+        url = stream_to_url(stream)
+        if url:
+            console.msg("{0}", url)
+        else:
+            console.exit("The stream specified cannot be translated to a URL")
 
     # Output the stream
     else:
@@ -570,7 +578,7 @@ def setup_console():
         console.set_output(sys.stderr)
 
     # We don't want log output when we are printing JSON or a command-line.
-    if not (args.json or args.subprocess_cmdline or args.quiet):
+    if not any(getattr(args, attr) for attr in QUIET_OPTIONS):
         console.set_level(args.loglevel)
 
     if args.quiet_player:

@@ -235,6 +235,9 @@ def stream_to_url(stream):
 
         url = " ".join(params)
 
+    else:
+        url = None
+
     return url
 
 __all__ = ["NamedPipe", "HTTPServer", "JSONEncoder", "ignored",
