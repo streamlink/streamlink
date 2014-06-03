@@ -12,6 +12,7 @@ Livestreamer's primary focus is live streams, so VOD support is limited.
 Name                Live    VOD   Notes
 =================== ======= ===== ==============================================
 AfreecaTV           Yes     No    Only mobile streams supported.
+Aftonbladet         Yes     Yes
 Aliez.tv            Yes     No
 Azubu.tv            Yes     No
 Be-at.tv            Yes     Yes   Playlist not implemented yet
@@ -20,8 +21,9 @@ Cast3D.tv           Yes     Yes
 Chaturbate          Yes     No
 Crunchyroll         --      Yes
 Cybergame           Yes     Yes
-Dailymotion         Yes     No
+Dailymotion         Yes     Yes
 DMCloud.net         Yes     --    Dailymotion cloud platform
+DR TV               Yes     Yes   Videos may be geo-restricted to Denmark.
 Euronews.com        Yes     No
 Filmon.com          Yes     Yes   Only SD (HD requires authentication)
 Freedocast          Yes     No
@@ -39,6 +41,7 @@ Picarto             Yes     --
 SpeedRunsLive.com   Yes     --
 SVT Play            Yes     Yes   Videos may be geo-restricted to Sweden.
                                   Also supports Öppet arkiv and SVT Flow.
+TV4 Play            Yes     Yes   Videos may be geo-restricted to Sweden.
 Twitch/Justin.tv    Yes     Yes   Possible to authenticate for access to
                                   protected streams.
 UStream TV          Yes     Yes

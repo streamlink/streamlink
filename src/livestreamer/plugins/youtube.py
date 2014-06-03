@@ -2,9 +2,10 @@ import re
 
 from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream, HLSStream
-from livestreamer.utils import verifyjson, parse_json, parse_qsd
+from livestreamer.utils import parse_qsd
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
@@ -14,14 +15,91 @@ HLS_HEADERS = {
 }
 
 
-def valid_stream(streaminfo):
-    return not not streaminfo.get("url")
+def parse_stream_map(streammap):
+    streams = []
+    if not streammap:
+        return streams
+
+    for stream_qs in streammap.split(","):
+        stream = parse_qsd(stream_qs)
+        streams.append(stream)
+
+    return streams
+
+
+def parse_fmt_list(formatsmap):
+    formats = {}
+    if not formatsmap:
+        return formats
+
+    for format in formatsmap.split(","):
+        s = format.split("/")
+        (w, h) = s[1].split("x")
+        formats[int(s[0])] = "{0}p".format(h)
+
+    return formats
+
+
+_config_schema = validate.Schema(
+    {
+        "args": {
+            "fmt_list": validate.all(
+                validate.text,
+                validate.transform(parse_fmt_list)
+            ),
+            "url_encoded_fmt_stream_map": validate.all(
+                validate.text,
+                validate.transform(parse_stream_map),
+                [{
+                    "itag": validate.all(
+                        validate.text,
+                        validate.transform(int)
+                    ),
+                    "quality": validate.text,
+                    "url": validate.text,
+                    validate.optional("s"): validate.text,
+                    validate.optional("stereo3d"): validate.all(
+                        validate.text,
+                        validate.transform(int),
+                        validate.transform(bool)
+                    ),
+                }]
+            ),
+            validate.optional("hlsvp"): validate.text,
+            validate.optional("live_playback"): validate.transform(bool),
+        }
+    },
+    validate.get("args")
+)
+_search_schema = validate.Schema(
+    {
+        "items": [{
+            "id": {
+                "videoId": validate.text
+            }
+        }]
+    },
+    validate.get("items")
+)
+
+_url_re = re.compile("""
+    http(s)?://(\w+.)?
+    (youtube.com|youtu.be)
+    (?:
+        /(watch.+v=|embed/|v/)
+        (?P<video_id>[^/?&]+)
+    )?
+    (?:
+        (/user/)?(?P<user>[^/?]+)
+    ?)
+""", re.VERBOSE)
+
 
 
 class YouTube(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "youtube.com" in url or "youtu.be" in url
+        return _url_re.match(url)
 
     @classmethod
     def stream_weight(cls, stream):
@@ -64,14 +142,11 @@ class YouTube(Plugin):
         query = dict(channelId=channel_id, type="video", eventType="live",
                      part="id", key=API_KEY)
         res = http.get(API_SEARCH_URL, params=query)
-        res = http.json(res)
-        videos = verifyjson(res, "items")
+        videos = http.json(res, schema=_search_schema)
 
         for video in videos:
-            info = verifyjson(video, "id")
-            video_id = info.get("videoId")
+            video_id = video["id"]["videoId"]
             url = "http://youtube.com/watch?v={0}".format(video_id)
-
             config = self._get_stream_info(url)
             if config:
                 return config
@@ -89,29 +164,7 @@ class YouTube(Plugin):
             config = self._find_config(res.text)
 
         if config:
-            return parse_json(config, "config JSON")
-
-    def _parse_stream_map(self, streammap):
-        streams = []
-
-        for stream_qs in streammap.split(","):
-            stream = parse_qsd(stream_qs)
-            streams.append(stream)
-
-        return streams
-
-    def _parse_format_map(self, formatsmap):
-        formats = {}
-
-        if len(formatsmap) == 0:
-            return formats
-
-        for format in formatsmap.split(","):
-            s = format.split("/")
-            (w, h) = s[1].split("x")
-            formats[s[0]] = h + "p"
-
-        return formats
+            return parse_json(config, "config JSON", schema=_config_schema)
 
     def _get_streams(self):
         info = self._get_stream_info(self.url)
@@ -119,51 +172,42 @@ class YouTube(Plugin):
         if not info:
             raise NoStreamsError(self.url)
 
-        args = verifyjson(info, "args")
-        uestreammap = verifyjson(args, "url_encoded_fmt_stream_map")
-        fmtlist = verifyjson(args, "fmt_list")
-        streammap = self._parse_stream_map(uestreammap)
-        formatmap = self._parse_format_map(fmtlist)
-
+        formats = info["fmt_list"]
         streams = {}
-        for streaminfo in filter(valid_stream, streammap):
+        for stream_info in info["url_encoded_fmt_stream_map"]:
             params = {}
-            if "s" in streaminfo and self._decrypt_signature(streaminfo["s"]):
-                params["signature"] = self._decrypt_signature(streaminfo["s"])
+            sig = stream_info.get("s")
+            if sig:
+                params["signature"] = self._decrypt_signature(sig)
 
-            stream = HTTPStream(self.session, streaminfo["url"],
-                                params=params)
+            stream = HTTPStream(self.session, stream_info["url"], params=params)
+            name = formats.get(stream_info["itag"]) or stream_info["quality"]
 
-            if streaminfo["itag"] in formatmap:
-                quality = formatmap[streaminfo["itag"]]
-            else:
-                quality = streaminfo["quality"]
+            if stream_info.get("stereo3d"):
+                name += "_3d"
 
-            if streaminfo.get("stereo3d") == "1":
-                quality += "_3d"
+            streams[name] = stream
 
-            streams[quality] = stream
-
-        if "hlsvp" in args:
-            url = args["hlsvp"]
-
+        hls_playlist = info.get("hlsvp")
+        if hls_playlist:
             try:
-                hlsstreams = HLSStream.parse_variant_playlist(self.session, url,
-                                                              headers=HLS_HEADERS,
-                                                              namekey="pixels")
-                streams.update(hlsstreams)
+                hls_streams = HLSStream.parse_variant_playlist(
+                    self.session, hls_playlist, headers=HLS_HEADERS, namekey="pixels"
+                )
+                streams.update(hls_streams)
             except IOError as err:
-                self.logger.warning("Failed to get variant playlist: {0}", err)
+                self.logger.warning("Failed to get HLS streams: {0}", err)
 
-        if not streams and args.get("live_playback", "0") == "0":
-            self.logger.warning("VOD support may not be 100% complete. Try youtube-dl instead.")
+        if not streams and not info.get("live_playback"):
+            self.logger.warning("VOD support may not be 100% complete. "
+                                "Try youtube-dl instead.")
 
         return streams
 
     def _decrypt_signature(self, s):
-        """ 
-            Turn the encrypted s field into a working signature
-            https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/youtube.py
+        """Turn the encrypted s field into a working signature
+
+        Source: https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/youtube.py
         """
 
         if len(s) == 92:

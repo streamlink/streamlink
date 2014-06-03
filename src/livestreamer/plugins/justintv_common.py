@@ -13,10 +13,10 @@ from livestreamer.compat import urlparse, urljoin
 from livestreamer.exceptions import NoStreamsError, PluginError, StreamError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import (HTTPStream, HLSStream, FLVPlaylist,
                                  extract_flv_header_tags)
-from livestreamer.utils import parse_json, parse_qsd, verifyjson
+from livestreamer.utils import parse_json, parse_qsd
 
 __all__ = ["PluginBase", "APIBase"]
 
@@ -31,7 +31,10 @@ USHER_SELECT_PATH = "/select/{0}.json"
 
 _url_re = re.compile(r"""
     http(s)?://
-    (?P<subdomain>[\w\.]+)?
+    (?:
+        (?P<subdomain>\w+)
+        \.
+    )?
     (?P<domain>twitch.tv|justin.tv)
     /
     (?P<channel>[^/]+)
@@ -42,6 +45,42 @@ _url_re = re.compile(r"""
         (?P<video_id>\d+)
     )?
 """, re.VERBOSE)
+
+_access_token_schema = validate.Schema(
+    {
+        "token": validate.text,
+        "sig": validate.text
+    },
+    validate.union((
+        validate.get("sig"),
+        validate.get("token")
+    ))
+)
+_token_schema = validate.Schema(
+    {
+        "chansub": {
+            "restricted_bitrates": validate.all(
+                [validate.text],
+                validate.filter(
+                    lambda n: not re.match(r"(.+_)?archives|live|chunked", n)
+                )
+            )
+        }
+    },
+    validate.get("chansub")
+)
+_viewer_info_schema = validate.Schema(
+    {
+        validate.optional("login"): validate.text
+    },
+    validate.get("login")
+)
+_viewer_token_schema = validate.Schema(
+    {
+        validate.optional("token"): validate.text
+    },
+    validate.get("token")
+)
 
 
 class UsherService(object):
@@ -78,7 +117,7 @@ class APIBase(object):
     def add_cookies(self, cookies):
         http.parse_cookies(cookies, domain=self.host)
 
-    def call(self, path, format="json", host=None, **extra_params):
+    def call(self, path, format="json", host=None, schema=None, **extra_params):
         params = dict(as3="t", **extra_params)
 
         if self.oauth_token:
@@ -90,25 +129,21 @@ class APIBase(object):
         res = http.get(url, params=params, verify=False)
 
         if format == "json":
-            return http.json(res)
+            return http.json(res, schema=schema)
         elif format == "xml":
-            return http.xml(res)
+            return http.xml(res, schema=schema)
         else:
             return res
 
-    def channel_access_token(self, channel):
-        res = self.call("/api/channels/{0}/access_token".format(channel),
-                        host="twitch.tv")
+    def channel_access_token(self, channel, **params):
+        return self.call("/api/channels/{0}/access_token".format(channel),
+                         host="twitch.tv", **params)
 
-        return res.get("sig"), res.get("token")
+    def token(self, **params):
+        return self.call("/api/viewer/token", host="twitch.tv", **params)
 
-    def token(self):
-        res = self.call("/api/viewer/token", host="twitch.tv")
-
-        return res.get("token")
-
-    def viewer_info(self):
-        return self.call("/api/viewer/info", host="twitch.tv")
+    def viewer_info(self, **params):
+        return self.call("/api/viewer/info", host="twitch.tv", **params)
 
 
 class PluginBase(Plugin):
@@ -260,10 +295,8 @@ class PluginBase(Plugin):
             self.logger.info("Attempting to authenticate using cookies")
 
             self.api.add_cookies(cookies)
-            self.api.oauth_token = self.api.token()
-
-            viewer = self.api.viewer_info()
-            login = viewer.get("login")
+            self.api.oauth_token = self.api.token(schema=_viewer_token_schema)
+            login = self.api.viewer_info(schema=_viewer_info_schema)
 
             if login:
                 self.logger.info("Successfully logged in as {0}", login)
@@ -273,7 +306,9 @@ class PluginBase(Plugin):
 
     def _access_token(self):
         try:
-            sig, token = self.api.channel_access_token(self.channel)
+            sig, token = self.api.channel_access_token(
+                self.channel, schema=_access_token_schema
+            )
         except PluginError as err:
             if "404 Client Error" in str(err):
                 raise NoStreamsError(self.url)
@@ -300,15 +335,12 @@ class PluginBase(Plugin):
                 raise PluginError(err)
 
         try:
-            token = parse_json(token)
-            chansub = verifyjson(token, "chansub")
-            restricted_bitrates = verifyjson(chansub, "restricted_bitrates")
-
-            for name in filter(lambda n: not re.match(r"(.+_)?archives|live", n),
-                               restricted_bitrates):
-                self.logger.warning("The quality '{0}' is not available "
-                                    "since it requires a subscription.",
-                                    name)
+            token = parse_json(token, schema=_token_schema)
+            for name in token["restricted_bitrates"]:
+                if name not in streams:
+                    self.logger.warning("The quality '{0}' is not available "
+                                        "since it requires a subscription.",
+                                        name)
         except PluginError:
             pass
 

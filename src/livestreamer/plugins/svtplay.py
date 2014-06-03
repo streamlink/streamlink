@@ -1,60 +1,61 @@
 import re
 
-from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import RTMPStream, HLSStream, HDSStream
-from livestreamer.utils import verifyjson
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HLSStream, HDSStream
 
-SWF_URL = "http://www.svtplay.se/public/swf/video/svtplayer-2012.15.swf"
-PAGE_URL = "http://www.svtplay.se"
+STREAM_TYPES = {
+    "flash": HDSStream.parse_manifest,
+    "ios": HLSStream.parse_variant_playlist
+}
+
+_url_re = re.compile("""
+    http(s)?://
+    (www\.)?
+    (?:
+        svtplay |
+        svtflow |
+        oppetarkiv
+    )
+    .se
+""", re.VERBOSE)
+
+_video_schema = validate.Schema(
+    {
+        "video": {
+            "videoReferences": validate.all(
+                [{
+                    "url": validate.text,
+                    "playerType": validate.text
+                }],
+                validate.filter(lambda r: r["playerType"] in STREAM_TYPES)
+            ),
+        }
+    },
+    validate.get("video"),
+    validate.get("videoReferences")
+)
 
 
 class SVTPlay(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return re.match("http(s)?://(www\.)?(svtplay|svtflow|oppetarkiv).se/", url)
+        return _url_re.match(url)
 
     def _get_streams(self):
-        self.logger.debug("Fetching stream info")
         res = http.get(self.url, params=dict(output="json"))
-        json = http.json(res)
-
-        if not isinstance(json, dict):
-            raise PluginError("Invalid JSON response")
-
+        videos = http.json(res, schema=_video_schema)
         streams = {}
-        video = verifyjson(json, "video")
-        videos = verifyjson(video, "videoReferences")
-
         for video in videos:
-            if not ("url" in video and "playerType" in video):
-                continue
-
             url = video["url"]
+            stream_type = video["playerType"]
+            parser = STREAM_TYPES[stream_type]
 
-            if video["playerType"] == "flash":
-                if url.startswith("rtmp"):
-                    stream = RTMPStream(self.session, {
-                        "rtmp": url,
-                        "pageUrl": PAGE_URL,
-                        "swfVfy": SWF_URL,
-                        "live": True
-                    })
-                    streams[str(video["bitrate"]) + "k"] = stream
-                elif "manifest.f4m" in url:
-                    try:
-                        hdsstreams = HDSStream.parse_manifest(self.session, url)
-                        streams.update(hdsstreams)
-                    except IOError as err:
-                        self.logger.warning("Failed to get HDS manifest: {0}", err)
-
-            elif video["playerType"] == "ios":
-                try:
-                    hlsstreams = HLSStream.parse_variant_playlist(self.session, url)
-                    streams.update(hlsstreams)
-                except IOError as err:
-                    self.logger.warning("Failed to get variant playlist: {0}", err)
+            try:
+                streams.update(parser(self.session, url))
+            except IOError as err:
+                self.logger.error("Failed to extract {0} streams: {1}",
+                                  stream_type, err)
 
         return streams
 

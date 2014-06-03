@@ -1,75 +1,121 @@
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream, HTTPStream
-from livestreamer.utils import verifyjson
 
 LIVE_API = "http://www.hitbox.tv/api/media/live/{0}?showHidden=true"
 PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
 SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
 SWF_URL = SWF_BASE + "flowplayer.commercial-3.2.16.swf"
 
+_quality_re = re.compile("(\d+p)$")
+_url_re = re.compile("""
+    http(s)?://(www\.)?hitbox.tv
+    /(?P<channel>[^/]+)
+    (?:
+        /(?P<media_id>[^/]+)
+    )?
+""", re.VERBOSE)
+
+_live_schema = validate.Schema(
+    {
+        "livestream": [{
+            "media_is_live": validate.all(
+                validate.text,
+                validate.transform(int),
+                validate.transform(bool)
+            ),
+            "media_id": validate.text
+        }],
+    },
+    validate.get("livestream"),
+    validate.length(1),
+    validate.get(0)
+)
+_player_schema = validate.Schema(
+    {
+        "clip": {
+            "baseUrl": validate.any(None, validate.text),
+            "bitrates": validate.all(
+                validate.filter(lambda b: b.get("url") and b.get("label")),
+                [{
+                    "label": validate.text,
+                    "url": validate.text
+                }],
+            )
+        },
+        validate.optional("playlist"): [{
+            validate.optional("connectionProvider"): validate.text,
+            validate.optional("netConnectionUrl"): validate.text,
+            validate.optional("bitrates"): [{
+                "label": validate.text,
+                "url": validate.text
+            }]
+        }],
+        "plugins": {
+            validate.optional("clustering"): {
+                "netConnectionUrl": validate.text,
+                "url": validate.text
+            }
+        }
+    }
+)
+
 
 class Hitbox(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "hitbox.tv" in url
+        return _url_re.match(url)
 
     def _get_quality(self, label):
-        match = re.search(r".*?(\d+p)", label)
+        match = _quality_re.search(label)
         if match:
             return match.group(1)
+
         return "live"
 
     def _get_streams(self):
-        self.logger.debug("Fetching stream info")
-        media_is_live = 0
-
-        match = re.search(r".*hitbox.tv/([^/]*)/?(\d+)?", self.url)
+        match = _url_re.match(self.url)
         if not match:
             return
 
-        stream_name, media_id = match.groups()
-        if stream_name != "video":
-            res = http.get(LIVE_API.format(stream_name))
-            json = http.json(res)
-            livestream = verifyjson(json, "livestream")
-            media_id = verifyjson(livestream[0], "media_id")
-            media_is_live = int(verifyjson(livestream[0], "media_is_live"))
-            if not media_is_live:
+        channel, media_id = match.group("channel", "media_id")
+        if channel != "video":
+            res = http.get(LIVE_API.format(channel))
+            livestream = http.json(res, schema=_live_schema)
+            if not livestream["media_is_live"]:
                 return
 
-        media_type = "live" if media_is_live else "video"
-        res = http.get(PLAYER_API.format(media_type, media_id))
-        json = http.json(res)
-        clip = verifyjson(json, "clip")
-        live = verifyjson(clip, "live")
-        plugins = verifyjson(json, "plugins")
+            media_id = livestream["media_id"]
+            media_type = "live"
+        else:
+            media_type = "video"
 
+        res = http.get(PLAYER_API.format(media_type, media_id))
+        player = http.json(res, schema=_player_schema)
         streams = {}
-        if live:
-            playlists = verifyjson(json, "playlist") or []
+        if media_type == "live":
             swf_url = SWF_URL
-            for playlist in playlists:
+            for playlist in player.get("playlist", []):
                 bitrates = playlist.get("bitrates")
                 provider = playlist.get("connectionProvider")
                 rtmp = None
 
                 if bitrates:
                     rtmp = playlist.get("netConnectionUrl")
-                elif provider and provider in plugins:
-                    provider = plugins[provider]
-                    swf_name = verifyjson(provider, "url")
+                elif provider and provider in player["plugins"]:
+                    provider = player["plugins"][provider]
+                    swf_name = provider["url"]
                     swf_url = SWF_BASE + swf_name
-                    rtmp = verifyjson(provider, "netConnectionUrl")
-                    bitrates = clip.get("bitrates", [])
+                    rtmp = provider["netConnectionUrl"]
+                    bitrates = player["clip"]["bitrates"]
                 else:
                     continue
 
                 for bitrate in bitrates:
-                    quality = self._get_quality(verifyjson(bitrate, "label"))
-                    url = verifyjson(bitrate, "url")
+                    quality = self._get_quality(bitrate["label"])
+                    url = bitrate["url"]
                     stream = RTMPStream(self.session, {
                         "rtmp": rtmp,
                         "pageUrl": self.url,
@@ -82,11 +128,13 @@ class Hitbox(Plugin):
 
                     streams[quality] = stream
         else:
-            bitrates = verifyjson(clip, "bitrates")
-            for bitrate in bitrates:
-                base_url = verifyjson(clip, "baseUrl")
-                url = verifyjson(bitrate, "url")
-                quality = self._get_quality(verifyjson(bitrate, "label"))
+            base_url = player["clip"].get("baseUrl")
+            if not base_url:
+                return
+
+            for bitrate in player["clip"]["bitrates"]:
+                url = bitrate["url"]
+                quality = self._get_quality(bitrate["label"])
                 streams[quality] = HTTPStream(self.session,
                                               base_url + "/" + url)
 

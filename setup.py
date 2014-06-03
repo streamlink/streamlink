@@ -19,6 +19,10 @@ if (version_info[0] == 2 and version_info[1] < 7) or \
    (version_info[0] == 3 and version_info[1] < 2):
     deps.append("argparse")
 
+# require singledispatchon Python <3.4
+if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
+    deps.append("singledispatch")
+
 # requests 2.0 does not work correctly on Python <2.6.3
 if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
     deps.append("requests>=1.0,<2.0")
