@@ -22,6 +22,7 @@ Crunchyroll         --      Yes
 Cybergame           Yes     Yes
 Dailymotion         Yes     No
 DMCloud.net         Yes     --    Dailymotion cloud platform
+DR TV               Yes     Yes   Videos may be geo-restricted to Denmark.
 Euronews.com        Yes     No
 Filmon.com          Yes     Yes   Only SD (HD requires authentication)
 Freedocast          Yes     No
