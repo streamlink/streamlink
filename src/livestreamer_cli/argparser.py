@@ -231,6 +231,9 @@ streamopt.add_argument("--subprocess-errorlog", "--errorlog", "-e",
                        help="Log possible errors from internal subprocesses "
                             "to a temporary file, use when debugging rtmpdump "
                             "related issues")
+streamopt.add_argument("--stream-url", action="store_true",
+                       help="If possible, translate the stream to a URL and "
+                            "print it")
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory", type=comma_list,
