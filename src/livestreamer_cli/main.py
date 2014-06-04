@@ -8,6 +8,7 @@ import signal
 import webbrowser
 
 from contextlib import closing
+from itertools import chain
 from time import sleep
 from distutils.version import StrictVersion
 
@@ -19,7 +20,7 @@ from livestreamer.stream import StreamProcess
 from .argparser import parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
-from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
+from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
 
@@ -548,21 +549,37 @@ def load_plugins(dirs):
                                    "a directory!", directory)
 
 
-def setup_args():
+def setup_args(config_files=[]):
     """Parses arguments."""
     global args
-
     arglist = sys.argv[1:]
 
-    # Load additional arguments from livestreamerrc
-    if os.path.exists(CONFIG_FILE):
-        arglist.insert(0, "@" + CONFIG_FILE)
+    # Load arguments from config files
+    config_files = chain(config_files, CONFIG_FILES)
+    for config_file in filter(os.path.isfile, config_files):
+        arglist.insert(0, "@" + config_file)
 
     args = parser.parse_args(arglist)
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
         args.stream = [stream.lower() for stream in args.stream]
+
+
+def setup_extra_args():
+    config_files = []
+
+    if args.url:
+        plugin = livestreamer.resolve_url(args.url)
+        if plugin:
+            config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
+
+    if args.config:
+        # We want the config specified last to get highest priority
+        config_files += list(reversed(args.config))
+
+    if config_files:
+        setup_args(config_files)
 
 
 def setup_console():
@@ -775,9 +792,10 @@ def main():
     setup_args()
     check_root()
     setup_livestreamer()
+    setup_plugins()
+    setup_extra_args()
     setup_console()
     setup_http_session()
-    setup_plugins()
 
     if not args.no_version_check:
         with ignored(Exception):

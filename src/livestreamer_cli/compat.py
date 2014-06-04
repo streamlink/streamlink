@@ -19,6 +19,7 @@ elif is_py3:
 
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
+
 def shlex_quote(s):
     """Return a shell-escaped version of the string *s*.
 
@@ -34,5 +35,12 @@ def shlex_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
+def unicode_filename(filename):
+    if is_py2 and isinstance(filename, str):
+        return filename.decode(sys.getfilesystemencoding())
+
+    return filename
+
+
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "file",
-           "shlex_quote"]
+           "shlex_quote", "unicode_filename"]

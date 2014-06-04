@@ -2,9 +2,11 @@ import argparse
 
 from livestreamer import __version__ as livestreamer_version
 
+from .compat import unicode_filename
 from .constants import (EXAMPLE_USAGE, STREAM_PASSTHROUGH,
                         DEFAULT_PLAYER_ARGUMENTS)
 from .utils import find_default_player
+
 
 class ArgumentParser(argparse.ArgumentParser):
     def convert_arg_line_to_args(self, line):
@@ -67,6 +69,10 @@ parser.add_argument("-V", "--version", action="version",
                     version="%(prog)s " + livestreamer_version)
 parser.add_argument("--plugins", action="store_true",
                     help="Print all currently installed plugins")
+parser.add_argument("--config", action="append", metavar="filename",
+                    type=unicode_filename,
+                    help="Loads additional options from this config file. "
+                         "Can be repeated to load multiple files.")
 parser.add_argument("-l", "--loglevel", metavar="level", default="info",
                     help="Set log level, valid levels: none, error, warning, "
                           "info, debug")
