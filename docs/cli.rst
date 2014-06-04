@@ -73,9 +73,28 @@ The file should contain one option per line in the format ``option[=value]``, li
 
 For a list of all the supported options see :ref:`cli-options`.
 
+
+Plugin specific configuration file
+----------------------------------
+
+You may want to to use specific settings for some plugins only. This
+can be accomplished by placing those settings inside a plugin specific
+config file. Options inside these config files will override the main
+config file when a URL matching the plugin is used.
+
+Livestreamer expects this config to be named like the main config but
+with ``.<plugin name>`` attached to the end.
+
+A few examples:
+
+  - ``~/.config/livestreamer/config.twitch``
+  - ``~/.livestreamerrc.ustreamtv``
+  - ``%APPDATA%\livestreamer\livestreamerrc.youtube``
+
+You can see which plugins are installed using the command ``livestreamer --plugins``.
+
 Plugin specific usage
 ---------------------
-
 
 Authenticating with Twitch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
