@@ -580,6 +580,10 @@ Stream transport options
     temporary file, use when debugging rtmpdump related
     issues
 
+.. cmdoption:: --stream-url
+
+   If possible, translate the stream to a URL and print it
+
 
 Plugin options
 ^^^^^^^^^^^^^^
