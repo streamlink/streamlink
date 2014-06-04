@@ -274,6 +274,11 @@ Command line options
 
     Print all currently installed plugins
 
+.. cmdoption:: --config filename
+
+    Loads additional options from this config file. Can be
+    repeated to load multiple files.
+
 .. cmdoption:: -l level, --loglevel level
 
     Set log level, valid levels: ``none``, ``error``, ``warning``, ``info``, ``debug``

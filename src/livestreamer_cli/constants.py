@@ -1,7 +1,6 @@
 import os
-import sys
 
-from .compat import is_win32, is_py2
+from .compat import is_win32, is_py2, unicode_filename
 
 DEFAULT_PLAYER_ARGUMENTS = "{filename}"
 
@@ -19,8 +18,8 @@ else:
 
 # Turn the paths into unicode on Python 2 like they are on Python 3
 if is_py2:
-    PLUGINS_DIR = PLUGINS_DIR.decode(sys.getfilesystemencoding())
-    CONFIG_FILES = [p.decode(sys.getfilesystemencoding()) for p in CONFIG_FILES]
+    PLUGINS_DIR = unicode_filename(PLUGINS_DIR)
+    CONFIG_FILES = list(map(unicode_filename, CONFIG_FILES))
 
 
 EXAMPLE_USAGE = """

@@ -567,11 +567,19 @@ def setup_args(config_files=[]):
 
 
 def setup_extra_args():
+    config_files = []
+
     if args.url:
         plugin = livestreamer.resolve_url(args.url)
         if plugin:
-            config_files = ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
-            setup_args(config_files)
+            config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
+
+    if args.config:
+        # We want the config specified last to get highest priority
+        config_files += list(reversed(args.config))
+
+    if config_files:
+        setup_args(config_files)
 
 
 def setup_console():
