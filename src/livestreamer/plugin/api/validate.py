@@ -17,6 +17,7 @@
 
 
 from xml.etree import ElementTree as ET
+from copy import copy as copy_obj
 
 try:
     from functools import singledispatch
@@ -323,8 +324,7 @@ def validate_xml_element(schema, value):
 
 @validate.register(attr)
 def validate_attr(schema, value):
-    cls = type(value)
-    new = cls.__new__(cls)
+    new = copy_obj(value)
 
     for attr, schema in schema.schema.items():
         if not _hasattr(value, attr):
@@ -339,7 +339,7 @@ def validate_attr(schema, value):
 
 @singledispatch
 def validate_union(schema, value):
-    raise ValueError("Invalid union type: {0}".format(type(schema)))
+    raise ValueError("Invalid union type: {0}".format(type(schema).__name__))
 
 
 @validate_union.register(dict)
