@@ -5,7 +5,7 @@ import re
 from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.stream import HLSStream, RTMPStream
+from livestreamer.stream import HDSStream, HLSStream, RTMPStream
 from livestreamer.utils import rtmpparse
 
 STREAM_API_URL = "http://playapi.mtgx.tv/v1/videos/stream/{0}"
@@ -63,12 +63,18 @@ class Viasat(Plugin):
         for name, stream_url in stream_info.items():
             if stream_url.endswith(".m3u8"):
                 try:
-                    hls_streams = HLSStream.parse_variant_playlist(self.session,
-                                                                   stream_url)
-                    streams.update(hls_streams)
+                    streams.update(
+                        HLSStream.parse_variant_playlist(self.session, stream_url)
+                    )
                 except IOError as err:
                     self.logger.error("Failed to fetch HLS streams: {0}", err)
-
+            elif stream_url.endswith(".f4m"):
+                try:
+                    streams.update(
+                        HDSStream.parse_manifest(self.session, stream_url)
+                    )
+                except IOError as err:
+                    self.logger.error("Failed to fetch HDS streams: {0}", err)
             elif stream_url.startswith("rtmp://"):
                 swf_url = swf_url or self._get_swf_url()
                 params = {
