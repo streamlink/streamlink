@@ -37,6 +37,7 @@ __credits__ = ["Christopher Rosell",
                "papplampe"]
 
 
+from .api import streams
 from .exceptions import (LivestreamerError, PluginError, NoStreamsError,
                          NoPluginError, StreamError)
 from .session import Livestreamer
