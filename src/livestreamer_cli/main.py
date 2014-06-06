@@ -573,8 +573,8 @@ def setup_extra_args():
     config_files = []
 
     if args.url:
-        plugin = livestreamer.resolve_url(args.url)
-        if plugin:
+        with ignored(NoPluginError):
+            plugin = livestreamer.resolve_url(args.url)
             config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
 
     if args.config:
