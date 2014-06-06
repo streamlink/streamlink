@@ -1,11 +1,20 @@
 import argparse
+import re
 
 from livestreamer import __version__ as livestreamer_version
 
 from .compat import unicode_filename
-from .constants import (EXAMPLE_USAGE, STREAM_PASSTHROUGH,
-                        DEFAULT_PLAYER_ARGUMENTS)
+from .constants import (
+    EXAMPLE_USAGE, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
+)
 from .utils import find_default_player
+
+
+_filesize_re = re.compile("""
+    (?P<size>\d+(\.\d+)?)
+    (?P<modifier>[Kk]|[Mm])?
+    (?:[Bb])?
+""", re.VERBOSE)
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -40,10 +49,31 @@ def comma_list_filter(acceptable):
 def nonzero_num(type):
     def func(value):
         value = type(value)
-        if value > 0:
-            return value
+        if not value:
+            raise ValueError
+
+        return value
+
     func.__name__ = "non-zero {0}".format(type.__name__)
     return func
+
+
+def filesize(value):
+    match = _filesize_re.match(value)
+    if not match:
+        raise ValueError
+
+    size = float(match.group("size"))
+    if not size:
+        raise ValueError
+
+    modifier = match.group("modifier")
+    if modifier in ("M", "m"):
+        size *= 1024 * 1024
+    elif modifier in ("K", "k"):
+        size *= 1024
+
+    return int(size)
 
 
 float = nonzero_num(float)
@@ -217,9 +247,10 @@ streamopt.add_argument("--hls-timeout", type=float, metavar="timeout",
 streamopt.add_argument("--http-stream-timeout", type=float, metavar="timeout",
                        help="Timeout for reading data from HTTP streams, "
                             "default is 60.0")
-streamopt.add_argument("--ringbuffer-size", metavar="size", type=int,
-                       help="Specify a maximum size (bytes) for the "
-                            "ringbuffer, default is 16777216 (16MB)")
+streamopt.add_argument("--ringbuffer-size", metavar="size", type=filesize,
+                       help="Specify a maximum size (in bytes, add a M or K "
+                            "suffix for mega or kilo bytes) for the "
+                            "ringbuffer, default is 16M")
 streamopt.add_argument("--rtmp-proxy", "--rtmpdump-proxy", metavar="host:port",
                        help="Specify a proxy (SOCKS) that RTMP streams will use")
 streamopt.add_argument("--rtmp-rtmpdump", "--rtmpdump", "-r", metavar="path",

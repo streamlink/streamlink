@@ -550,8 +550,8 @@ Stream transport options
 
 .. cmdoption:: --ringbuffer-size size
 
-    Specify a maximum size (bytes) for the ringbuffer used
-    by some stream types, default is ``16777216`` (16MB).
+    Specify a maximum size (in bytes, add a M or K suffix
+    for mega or kilo bytes) for the ringbuffer, default is ``16M``
 
 .. cmdoption:: --rtmp-proxy host:port, --rtmpdump-proxy host:port
 
