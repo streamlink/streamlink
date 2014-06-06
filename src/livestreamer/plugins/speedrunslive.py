@@ -1,21 +1,22 @@
-from livestreamer.plugin import Plugin
-
 import re
 
-URL_REGEX = r"http://(?:www\.)?speedrunslive.com/#!/(?P<user>\w+)"
-TWITCH_URL = "http://www.twitch.tv/"
+from livestreamer.plugin import Plugin
+
+TWITCH_URL_FORMAT = "http://www.twitch.tv/{0}"
+
+_url_re = re.compile("http://(?:www\.)?speedrunslive.com/#!/(?P<user>\w+)")
+
 
 class SpeedRunsLive(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return re.search(URL_REGEX, url)
+        return _url_re.match(url)
 
     def _get_streams(self):
-        match = re.search(URL_REGEX, self.url)
+        match = _url_re.match(self.url)
         if match:
-            url = TWITCH_URL + match.group("user")
-            plugin = self.session.resolve_url(url)
-            return plugin.get_streams()
+            url = TWITCH_URL_FORMAT.format(match.group("user"))
+            return self.session.streams(url)
 
 
 __plugin__ = SpeedRunsLive
