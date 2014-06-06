@@ -76,7 +76,7 @@ class RTMPStream(StreamProcess):
         if process_alive:
             try:
                 stream.process.kill()
-            except:
+            except Exception:
                 pass
 
         try:
