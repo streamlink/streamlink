@@ -154,7 +154,7 @@ class Plugin(object):
 
         return stream_types
 
-    def get_streams(self, stream_types=None, sorting_excludes=None):
+    def streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
 
         Returns a :class:`dict` containing the streams, where the key is
@@ -267,6 +267,15 @@ class Plugin(object):
             streams["worst"] = streams[worst]
 
         return streams
+
+    def get_streams(self, *args, **kwargs):
+        """Deprecated since version 1.9.0.
+
+        Has been renamed to :func:`Plugin.streams`, this is an alias
+        for backwards compatibility.
+        """
+
+        return self.streams(*args, **kwargs)
 
     def _get_streams(self):
         raise NotImplementedError
