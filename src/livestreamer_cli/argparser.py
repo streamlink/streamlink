@@ -117,6 +117,9 @@ parser.add_argument("--yes-run-as-root", action="store_true",
                     help=argparse.SUPPRESS)
 
 group = parser.add_argument_group("stream options")
+group.add_argument("--default-stream", type=comma_list, metavar="stream",
+                   help="Open this stream when no stream argument is specified "
+                        "on the command line, e.g. 'best'")
 group.add_argument("--retry-streams", metavar="delay", type=float,
                    help="Will retry fetching streams until streams are found "
                         "while waiting <delay> (seconds) between each attempt")
@@ -142,7 +145,7 @@ group.add_argument("--stream-sorting-excludes", metavar="streams",
                         "For example '>480p,>mobile_medium' will exclude "
                         "streams from two quality types.")
 group.add_argument("--best-stream-default", action="store_true",
-                   help="Use the 'best' stream if no stream is specified.")
+                   help=argparse.SUPPRESS)
 
 httpopt = parser.add_argument_group("HTTP options")
 httpopt.add_argument("--http-proxy", metavar="http://hostname:port/",

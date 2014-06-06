@@ -475,8 +475,11 @@ def handle_url():
     if not streams:
         console.exit("No streams found on this URL: {0}", args.url)
 
-    if args.best_stream_default and not args.stream and not args.json:
-        args.stream = ["best"]
+    if args.best_stream_default:
+        args.default_stream = ["best"]
+
+    if args.default_stream and not args.stream and not args.json:
+        args.stream = args.default_stream
 
     if args.stream:
         validstreams = format_valid_streams(streams)
@@ -602,6 +605,11 @@ def setup_console():
         console.logger.warning("The option --quiet-player is deprecated since "
                                "version 1.4.3 as hiding player output is now "
                                "the default.")
+
+    if args.best_stream_default:
+        console.logger.warning("The option --best-stream-default is deprecated "
+                               "since version 1.9.0, use '--default-stream best' "
+                               "instead.")
 
     console.json = args.json
 

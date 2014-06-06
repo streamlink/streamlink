@@ -304,6 +304,13 @@ Command line options
 Stream options
 ^^^^^^^^^^^^^^
 
+.. cmdoption:: --default-stream stream
+
+    Open this stream when no stream argument is specified
+    on the command line, e.g. ``best``
+
+    .. versionadded:: 1.9.0
+
 .. cmdoption:: --retry-streams delay
 
     Will retry fetching streams until streams are found
@@ -336,12 +343,6 @@ Stream options
     Multiple filters can be used by separating each
     expression with a comma. For example ``>480p,>mobile_medium``
     will exclude streams from two quality types.
-
-.. cmdoption::  --best-stream-default
-
-    Use the 'best' stream if no stream is specified.
-
-    .. versionadded:: 1.8.0
 
 
 HTTP options
