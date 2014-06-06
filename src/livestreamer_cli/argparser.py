@@ -259,6 +259,9 @@ streamopt.add_argument("--rtmp-rtmpdump", "--rtmpdump", "-r", metavar="path",
 streamopt.add_argument("--rtmp-timeout", type=float, metavar="timeout",
                        help="Timeout for reading data from RTMP streams, "
                             "default is 60.0")
+streamopt.add_argument("--stream-url", action="store_true",
+                       help="If possible, translate the stream to a URL and "
+                            "print it")
 streamopt.add_argument("--subprocess-cmdline", "--cmdline", "-c",
                        action="store_true",
                        help="Print command-line used internally to play "
@@ -268,9 +271,6 @@ streamopt.add_argument("--subprocess-errorlog", "--errorlog", "-e",
                        help="Log possible errors from internal subprocesses "
                             "to a temporary file, use when debugging rtmpdump "
                             "related issues")
-streamopt.add_argument("--stream-url", action="store_true",
-                       help="If possible, translate the stream to a URL and "
-                            "print it")
 
 pluginopt = parser.add_argument_group("plugin options")
 pluginopt.add_argument("--plugin-dirs", metavar="directory", type=comma_list,

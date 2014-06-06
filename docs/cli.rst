@@ -279,6 +279,8 @@ Command line options
     Loads additional options from this config file. Can be
     repeated to load multiple files.
 
+    .. versionadded:: 1.9.0
+
 .. cmdoption:: -l level, --loglevel level
 
     Set log level, valid levels: ``none``, ``error``, ``warning``, ``info``, ``debug``
@@ -569,6 +571,12 @@ Stream transport options
 
     .. versionadded:: 1.8.0
 
+.. cmdoption:: --stream-url
+
+    If possible, translate the stream to a URL and print it
+
+    .. versionadded:: 1.9.0
+
 .. cmdoption:: --subprocess-cmdline, --cmdline, -c
 
     Print command-line used internally to play stream,
@@ -579,10 +587,6 @@ Stream transport options
     Log possible errors from internal subprocesses to a
     temporary file, use when debugging rtmpdump related
     issues
-
-.. cmdoption:: --stream-url
-
-   If possible, translate the stream to a URL and print it
 
 
 Plugin options
