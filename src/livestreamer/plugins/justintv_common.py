@@ -94,8 +94,8 @@ class UsherService(object):
     def select(self, channel, password=None, **extra_params):
         url = self.url(USHER_SELECT_PATH, channel)
         params = dict(p=int(random() * 999999), type="any",
-                      allow_source="true", private_code=password or "null",
-                      **extra_params)
+                      allow_source="true", allow_audio_only="true",
+                      private_code=password or "null", **extra_params)
 
         req = requests.Request("GET", url, params=params)
         # prepare_request is only available in requests 2.0+
