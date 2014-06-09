@@ -1,6 +1,6 @@
 import re
 
-from livestreamer.plugin import Plugin
+from livestreamer.plugin import Plugin, PluginError
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HTTPStream, HLSStream
 from livestreamer.utils import parse_qsd
@@ -159,13 +159,13 @@ class YouTube(Plugin):
 
         formats = info.get("fmt_list")
         streams = {}
+        protected = False
         for stream_info in info.get("url_encoded_fmt_stream_map", []):
-            params = {}
-            sig = stream_info.get("s")
-            if sig:
-                params["signature"] = self._decrypt_signature(sig)
+            if stream_info.get("s"):
+                protected = True
+                continue
 
-            stream = HTTPStream(self.session, stream_info["url"], params=params)
+            stream = HTTPStream(self.session, stream_info["url"])
             name = formats.get(stream_info["itag"]) or stream_info["quality"]
 
             if stream_info.get("stereo3d"):
@@ -183,42 +183,10 @@ class YouTube(Plugin):
             except IOError as err:
                 self.logger.warning("Failed to get HLS streams: {0}", err)
 
-        if not streams and not info.get("live_playback"):
-            self.logger.warning("VOD support may not be 100% complete. "
-                                "Try youtube-dl instead.")
+        if not streams and protected:
+            raise PluginError("This plugin does not support protected videos, "
+                              "try youtube-dl instead")
 
         return streams
-
-    def _decrypt_signature(self, s):
-        """Turn the encrypted s field into a working signature
-
-        Source: https://github.com/rg3/youtube-dl/blob/master/youtube_dl/extractor/youtube.py
-        """
-
-        if len(s) == 92:
-            return s[25] + s[3:25] + s[0] + s[26:42] + s[79] + s[43:79] + s[91] + s[80:83]
-        elif len(s) == 90:
-            return s[25] + s[3:25] + s[2] + s[26:40] + s[77] + s[41:77] + s[89] + s[78:81]
-        elif len(s) == 88:
-            return s[48] + s[81:67:-1] + s[82] + s[66:62:-1] + s[85] + s[61:48:-1] + s[67] + s[47:12:-1] + s[3] + s[11:3:-1] + s[2] + s[12]
-        elif len(s) == 87:
-            return s[4:23] + s[86] + s[24:85]
-        elif len(s) == 86:
-            return s[83:85] + s[26] + s[79:46:-1] + s[85] + s[45:36:-1] + s[30] + s[35:30:-1] + s[46] + s[29:26:-1] + s[82] + s[25:1:-1]
-        elif len(s) == 85:
-            return s[2:8] + s[0] + s[9:21] + s[65] + s[22:65] + s[84] + s[66:82] + s[21]
-        elif len(s) == 84:
-            return s[83:36:-1] + s[2] + s[35:26:-1] + s[3] + s[25:3:-1] + s[26]
-        elif len(s) == 83:
-            return s[6] + s[3:6] + s[33] + s[7:24] + s[0] + s[25:33] + s[53] + s[34:53] + s[24] + s[54:]
-        elif len(s) == 82:
-            return s[36] + s[79:67:-1] + s[81] + s[66:40:-1] + s[33] + s[39:36:-1] + s[40] + s[35] + s[0] + s[67] + s[32:0:-1] + s[34]
-        elif len(s) == 81:
-            return s[56] + s[79:56:-1] + s[41] + s[55:41:-1] + s[80] + s[40:34:-1] + s[0] + s[33:29:-1] + s[34] + s[28:9:-1] + s[29] + s[8:0:-1] + s[9]
-        elif len(s) == 79:
-            return s[54] + s[77:54:-1] + s[39] + s[53:39:-1] + s[78] + s[38:34:-1] + s[0] + s[33:29:-1] + s[34] + s[28:9:-1] + s[29] + s[8:0:-1] + s[9]
-        else:
-            self.logger.warning("Unable to decrypt signature, key length {0} not supported; retrying might work", len(s))
-            return None
 
 __plugin__ = YouTube
