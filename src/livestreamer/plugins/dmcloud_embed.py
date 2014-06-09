@@ -27,7 +27,7 @@ class DMCloudEmbed(Plugin):
         match = _embed_re.search(res.text)
         if match:
             url = match.group(0)
-            return self.session.resolve_url(url)
+            return self.session.streams(url)
 
 
 __plugin__ = DMCloudEmbed
