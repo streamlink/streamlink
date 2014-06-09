@@ -4,7 +4,10 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 
-USER_AGENT = "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)"
+USER_AGENT = (
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 6_0 like Mac OS X) AppleWebKit/536.26 "
+    "(KHTML, like Gecko) Version/6.0 Mobile/10A5376e Safari/8536.25"
+)
 HEADERS = {"User-Agent": USER_AGENT}
 PLAYLIST_URL = "http://m.afreeca.com/live/stream/a/hls/broad_no/{0}"
 CHANNEL_URL = "http://afbbs.afreeca.com:8080/api/video/get_bj_liveinfo.php"
@@ -40,6 +43,7 @@ class AfreecaTV(Plugin):
             return
 
         playlist_url = PLAYLIST_URL.format(broadcast)
-        return HLSStream.parse_variant_playlist(self.session, playlist_url)
+        return HLSStream.parse_variant_playlist(self.session, playlist_url,
+                                                headers=HEADERS)
 
 __plugin__ = AfreecaTV
