@@ -1,15 +1,14 @@
 import re
 
-from livestreamer.exceptions import NoStreamsError
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream, HLSStream
 from livestreamer.utils import parse_qsd
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
 API_SEARCH_URL = API_BASE + "/search"
+API_VIDEO_INFO = "http://youtube.com/get_video_info"
 HLS_HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -42,34 +41,32 @@ def parse_fmt_list(formatsmap):
 
 _config_schema = validate.Schema(
     {
-        "args": {
-            "fmt_list": validate.all(
-                validate.text,
-                validate.transform(parse_fmt_list)
-            ),
-            "url_encoded_fmt_stream_map": validate.all(
-                validate.text,
-                validate.transform(parse_stream_map),
-                [{
-                    "itag": validate.all(
-                        validate.text,
-                        validate.transform(int)
-                    ),
-                    "quality": validate.text,
-                    "url": validate.text,
-                    validate.optional("s"): validate.text,
-                    validate.optional("stereo3d"): validate.all(
-                        validate.text,
-                        validate.transform(int),
-                        validate.transform(bool)
-                    ),
-                }]
-            ),
-            validate.optional("hlsvp"): validate.text,
-            validate.optional("live_playback"): validate.transform(bool),
-        }
-    },
-    validate.get("args")
+        validate.optional("fmt_list"): validate.all(
+            validate.text,
+            validate.transform(parse_fmt_list)
+        ),
+        validate.optional("url_encoded_fmt_stream_map"): validate.all(
+            validate.text,
+            validate.transform(parse_stream_map),
+            [{
+                "itag": validate.all(
+                    validate.text,
+                    validate.transform(int)
+                ),
+                "quality": validate.text,
+                "url": validate.text,
+                validate.optional("s"): validate.text,
+                validate.optional("stereo3d"): validate.all(
+                    validate.text,
+                    validate.transform(int),
+                    validate.transform(bool)
+                ),
+            }]
+        ),
+        validate.optional("hlsvp"): validate.text,
+        validate.optional("live_playback"): validate.transform(bool),
+        "status": validate.text
+    }
 )
 _search_schema = validate.Schema(
     {
@@ -82,6 +79,7 @@ _search_schema = validate.Schema(
     validate.get("items")
 )
 
+_channelid_re = re.compile('meta itemprop="channelId" content="([^"]+)"')
 _url_re = re.compile("""
     http(s)?://(\w+.)?
     (youtube.com|youtu.be)
@@ -90,10 +88,9 @@ _url_re = re.compile("""
         (?P<video_id>[^/?&]+)
     )?
     (?:
-        (/user/)?(?P<user>[^/?]+)
-    ?)
+        /(user/)?(?P<user>[^/?]+)
+    ?)?
 """, re.VERBOSE)
-
 
 
 class YouTube(Plugin):
@@ -113,68 +110,56 @@ class YouTube(Plugin):
 
         return weight, group
 
-    def _find_config(self, data):
-        match = re.search("'PLAYER_CONFIG': (.+)\n.+}\);", data)
-        if match:
-            return match.group(1)
-
-        match = re.search("yt.playerConfig = (.+)\;\n", data)
-        if match:
-            return match.group(1)
-
-        match = re.search("ytplayer.config = (.+);\(function", data)
-        if match:
-            return match.group(1)
-
-        match = re.search("data-swf-config=\"(.+)\"", data)
-        if match:
-            config = match.group(1)
-            config = config.replace("&amp;quot;", "\"")
-
-            return config
-
-    def _find_channel_config(self, data):
-        match = re.search(r'meta itemprop="channelId" content="([^"]+)"', data)
+    def _find_channel_video(self):
+        res = http.get(self.url)
+        match = _channelid_re.search(res.text)
         if not match:
             return
 
         channel_id = match.group(1)
-        query = dict(channelId=channel_id, type="video", eventType="live",
-                     part="id", key=API_KEY)
+        query = {
+            "channelId": channel_id,
+            "type": "video",
+            "eventType": "live",
+            "part": "id",
+            "key": API_KEY
+        }
         res = http.get(API_SEARCH_URL, params=query)
         videos = http.json(res, schema=_search_schema)
 
         for video in videos:
             video_id = video["id"]["videoId"]
-            url = "http://youtube.com/watch?v={0}".format(video_id)
-            config = self._get_stream_info(url)
-            if config:
-                return config
+            return video_id
 
     def _get_stream_info(self, url):
-        match = re.search("/(embed|v)/([^?]+)", url)
-        if match:
-            url = "http://youtube.com/watch?v={0}".format(match.group(2))
+        match = _url_re.match(url)
+        user = match.group("user")
 
-        res = http.get(url)
-        match = re.search("/user/([^?/]+)", res.url)
-        if match:
-            return self._find_channel_config(res.text)
+        if user:
+            video_id = self._find_channel_video()
         else:
-            config = self._find_config(res.text)
+            video_id = match.group("video_id")
 
-        if config:
-            return parse_json(config, "config JSON", schema=_config_schema)
+        if not video_id:
+            return
+
+        params = {
+            "video_id": video_id,
+            "el": "player_embedded"
+        }
+        res = http.get(API_VIDEO_INFO, params=params)
+        config = parse_qsd(res.text)
+
+        return _config_schema.validate(config)
 
     def _get_streams(self):
         info = self._get_stream_info(self.url)
-
         if not info:
-            raise NoStreamsError(self.url)
+            return
 
-        formats = info["fmt_list"]
+        formats = info.get("fmt_list")
         streams = {}
-        for stream_info in info["url_encoded_fmt_stream_map"]:
+        for stream_info in info.get("url_encoded_fmt_stream_map", []):
             params = {}
             sig = stream_info.get("s")
             if sig:
