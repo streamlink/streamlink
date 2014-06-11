@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+from os import environ
+from os.path import abspath, dirname, join
 from setuptools import setup
 from sys import version_info, path as sys_path
-from os.path import abspath, dirname, join
 
 deps = []
 packages = ["livestreamer",
@@ -29,6 +30,10 @@ if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
 else:
     deps.append("requests>=1.0,<3.0")
 
+# When we build an egg for the Win32 bootstrap we don't want dependency
+# information built into it.
+if environ.get("NO_DEPS"):
+    deps = []
 
 srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
