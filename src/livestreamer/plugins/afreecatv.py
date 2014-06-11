@@ -32,7 +32,7 @@ class RedirectAdapter(HTTPAdapter):
 
     def get_connection(self, url, proxies=None):
         url = url.replace(self.redirect_source, self.redirect_target)
-        return HTTPAdapter.get_connection(self, url, proxies=None)
+        return HTTPAdapter.get_connection(self, url, proxies=proxies)
 
 
 class AfreecaTV(Plugin):
