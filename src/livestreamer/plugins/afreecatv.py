@@ -1,5 +1,7 @@
 import re
 
+from requests.adapters import HTTPAdapter
+
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
@@ -14,6 +16,23 @@ CHANNEL_URL = "http://afbbs.afreeca.com:8080/api/video/get_bj_liveinfo.php"
 
 _broadcast_re = re.compile(r".+\/(\d+)\.gif")
 _url_re = re.compile("http(s)?://(\w+\.)?afreeca.com/(?P<username>\w+)")
+
+
+class RedirectAdapter(HTTPAdapter):
+    """This adapter redirects connections on the socket level.
+
+    This is done to keep the Host header the same but replace the
+    actual server IP address used for the connection.
+    """
+
+    def __init__(self, *args, **kwargs):
+        self.redirect_source = kwargs.pop("source")
+        self.redirect_target = kwargs.pop("target")
+        HTTPAdapter.__init__(self, *args, **kwargs)
+
+    def get_connection(self, url, proxies=None):
+        url = url.replace(self.redirect_source, self.redirect_target)
+        return HTTPAdapter.get_connection(self, url, proxies=None)
 
 
 class AfreecaTV(Plugin):
@@ -45,5 +64,10 @@ class AfreecaTV(Plugin):
         playlist_url = PLAYLIST_URL.format(broadcast)
         return HLSStream.parse_variant_playlist(self.session, playlist_url,
                                                 headers=HEADERS)
+
+# Redirect 123.111.232.13 to 123.111.232.16
+http.mount("http://123.111.232.13", RedirectAdapter(source="123.111.232.13",
+                                                    target="123.111.232.16"))
+
 
 __plugin__ = AfreecaTV
