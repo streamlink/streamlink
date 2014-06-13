@@ -788,12 +788,17 @@ def check_version():
         latest_version = data.get("info").get("version")
         cache.set("latest_version", latest_version, (60 * 60 * 24))
 
+    version_info_printed = cache.get("version_info_printed")
+    if version_info_printed:
+        return
+
     installed_version = StrictVersion(livestreamer.version)
     latest_version = StrictVersion(latest_version)
 
     if latest_version > installed_version:
         console.logger.info("A new version of Livestreamer ({0}) is "
                             "available!".format(latest_version))
+        cache.set("version_info_printed", True, (60 * 60 * 6))
 
 
 def main():
