@@ -2,6 +2,7 @@
 
 import re
 
+from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HDSStream, RTMPStream
@@ -50,7 +51,7 @@ class TV4Play(Plugin):
             base = asset["base"]
             url = asset["url"]
 
-            if url.endswith(".f4m"):
+            if urlparse(url).path.endswith(".f4m"):
                 streams.update(HDSStream.parse_manifest(self.session, url))
             elif base.startswith("rtmp"):
                 name = "{0}k".format(asset["bitrate"])
