@@ -8,6 +8,7 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HDSStream, RTMPStream
 
 ASSET_URL = "https://prima.tv4play.se/api/web/asset/{0}/play"
+SWF_URL = "http://www.tv4play.se/flash/tv4video.swf"
 
 _url_re = re.compile("""
     http(s)?://(www\.)?tv4play.se
@@ -52,7 +53,9 @@ class TV4Play(Plugin):
             url = asset["url"]
 
             if urlparse(url).path.endswith(".f4m"):
-                streams.update(HDSStream.parse_manifest(self.session, url))
+                streams.update(
+                    HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL)
+                )
             elif base.startswith("rtmp"):
                 name = "{0}k".format(asset["bitrate"])
                 params = {
