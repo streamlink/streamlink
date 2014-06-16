@@ -2,15 +2,16 @@ import re
 
 from functools import reduce
 
-from livestreamer.compat import urlparse, unquote, range
-from livestreamer.exceptions import PluginError
+from livestreamer.compat import urlparse, range
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HDSStream, HTTPStream, RTMPStream
 from livestreamer.stream.playlist import FLVPlaylist
-from livestreamer.utils import verifyjson
 
-METADATA_URL = "https://api.dailymotion.com/video/{0}"
+COOKIES = {
+    "family_filter": "off",
+    "ff": "off"
+}
 QUALITY_MAP = {
     "ld": "240p",
     "sd": "360p",
@@ -20,187 +21,169 @@ QUALITY_MAP = {
     "custom": "live",
     "auto": "hds"
 }
-RTMP_SPLIT_REGEX = r"(?P<host>rtmp://[^/]+)/(?P<app>[^/]+)/(?P<playpath>.+)"
 STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
+
+_rtmp_re = re.compile("""
+    (?P<host>rtmp://[^/]+)
+    /(?P<app>[^/]+)
+    /(?P<playpath>.+)
+""", re.VERBOSE)
+_url_re = re.compile("""
+    http(s)?://(\w+\.)?
+    dailymotion.com
+    (/embed)?/video
+    /(?P<media_id>[^_?/]+)
+""", re.VERBOSE)
+
+_media_inner_schema = validate.Schema([{
+    "layerList": [{
+        "name": validate.text,
+        validate.optional("sequenceList"): [{
+            "layerList": validate.all(
+                [{
+                    "name": validate.text,
+                    validate.optional("param"): dict
+                }],
+                validate.filter(lambda l: l["name"] in ("video", "reporting"))
+            )
+        }]
+    }]
+}])
+_media_schema = validate.Schema(
+    validate.any(
+        _media_inner_schema,
+        validate.all(
+            {"sequence": _media_inner_schema},
+            validate.get("sequence")
+        )
+    )
+)
+_vod_playlist_schema = validate.Schema({
+    "duration": float,
+    "fragments": [[int, float]],
+    "template": validate.text
+})
+_vod_manifest_schema = validate.Schema({
+    "alternates": [{
+        "height": int,
+        "template": validate.text,
+        validate.optional("failover"): [validate.text]
+    }]
+})
 
 
 class DailyMotion(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        # valid urls are of the form dailymotion.com/video/[a-z]{5}.*
-        # but we make "video/" optional and allow for dai.ly as shortcut
-        # Gamecreds uses Dailymotion as backend so we support it through this plugin.
-        return ("dailymotion.com" in url) or ("dai.ly" in url) or ("video.gamecreds.com" in url)
+        return _url_re.match(url)
 
-    def _check_channel_live(self, channelname):
-        url = METADATA_URL.format(channelname)
-        res = http.get(url, params=dict(fields="mode"))
-        json = http.json(res)
+    def _get_streams_from_media(self, media_id):
+        res = http.get(STREAM_INFO_URL.format(media_id), cookies=COOKIES)
+        media = http.json(res, schema=_media_schema)
 
-        if not isinstance(json, dict):
-            raise PluginError("Invalid JSON response")
+        params = extra_params = swf_url = None
+        for __ in media:
+            for __ in __["layerList"]:
+                for __ in __.get("sequenceList", []):
+                    for layer in __["layerList"]:
+                        name = layer["name"]
+                        if name == "video":
+                            params = layer.get("param")
+                        elif name == "reporting":
+                            extra_params = layer.get("param", {})
+                            extra_params = extra_params.get("extraParams", {})
 
-        mode = verifyjson(json, "mode")
+        if not params:
+            return
 
-        return mode == "live"
+        if extra_params:
+            swf_url = extra_params.get("videoSwfURL")
 
-    def _get_channel_name(self, url):
-        name = None
-        if ("dailymotion.com" in url) or ("dai.ly" in url):
-            rpart = urlparse(url).path.rstrip("/").rpartition("/")[-1].lower()
-            name = re.sub("_.*", "", rpart)
-        elif ("video.gamecreds.com" in url):
-            res = http.get(url)
-            # The HTML is broken (unclosed meta tags) and minidom fails to parse.
-            # Since we are not manipulating the DOM, we get away with a simple grep instead of fixing it.
-            match = re.search("<meta property=\"og:video\" content=\"http://www.dailymotion.com/swf/video/([a-z0-9]{6})", res.text)
-            if match: name = match.group(1)
+        mode = params.get("mode")
+        if mode == "live":
+            return self._get_live_streams(params, swf_url)
+        elif mode == "vod":
+            return self._get_vod_streams(params)
 
-        return name
-
-    def _get_node_by_name(self, parent, name):
-        res = None
-        for node in parent:
-            if node["name"] == name:
-                res = node
-                break
-
-        return res
-
-    def _get_rtmp_streams(self, channelname):
-        self.logger.debug("Fetching stream info")
-        res = http.get(STREAM_INFO_URL.format(channelname))
-        json = http.json(res)
-
-        if not isinstance(json, dict):
-            raise PluginError("Invalid JSON response")
-
-        if not json:
-            raise PluginError("JSON is empty")
-
-        # This is ugly, not sure how to fix it.
-        back_json_node = json["sequence"][0]["layerList"][0]
-        if back_json_node["name"] != "background":
-            raise PluginError("JSON data has unexpected structure")
-
-        rep_node = self._get_node_by_name(back_json_node["sequenceList"], "reporting")["layerList"]
-        main_node = self._get_node_by_name(back_json_node["sequenceList"], "main")["layerList"]
-
-        if not (rep_node and main_node):
-            raise PluginError("Error parsing stream RTMP url")
-
-        swfurl = self._get_node_by_name(rep_node, "reporting")["param"]["extraParams"]["videoSwfURL"]
-        feeds_params = self._get_node_by_name(main_node, "video")["param"]
-
-        if not (swfurl and feeds_params):
-            raise PluginError("Error parsing stream RTMP url")
-
-
-        # Different feed qualities are available are a dict under "live"
-        # In some cases where there's only 1 quality available,
-        # it seems the "live" is absent. We use the single stream available
-        # under the "customURL" key.
+    def _get_live_streams(self, params, swf_url):
         streams = {}
-        if "mode" in feeds_params and feeds_params["mode"] == "live":
-            for key, quality in QUALITY_MAP.items():
-                url = feeds_params.get("{0}URL".format(key))
-                if not url:
+        for key, quality in QUALITY_MAP.items():
+            key = "{0}URL".format(key)
+            url = params.get(key)
+
+            if not url:
+                continue
+
+            try:
+                res = http.get(url, exception=IOError)
+            except IOError:
+                continue
+
+            if quality == "hds":
+                streams.update(
+                    HDSStream.parse_manifest(self.session, res.url)
+                )
+            elif res.text.startswith("rtmp"):
+                match = _rtmp_re.match(res.text)
+                if not match:
                     continue
 
-                try:
-                    res = http.get(url, exception=IOError)
-                except IOError:
-                    continue
+                stream = RTMPStream(self.session, {
+                    "rtmp": match.group("host"),
+                    "app": match.group("app"),
+                    "playpath": match.group("playpath"),
+                    "swfVfy": swf_url,
+                    "live": True
+                })
 
-                if quality == "hds":
-                    hds_streams = HDSStream.parse_manifest(self.session,
-                                                           res.url)
-                    streams.update(hds_streams)
-                else:
-                    match = re.match(RTMP_SPLIT_REGEX, res.text)
-                    if not match:
-                        self.logger.warning("Failed to split RTMP URL: {0}",
-                                            res.text)
-                        continue
-
-                    stream = RTMPStream(self.session, {
-                        "rtmp": match.group("host"),
-                        "app": match.group("app"),
-                        "playpath": match.group("playpath"),
-                        "swfVfy": swfurl,
-                        "live": True
-                    })
-
-                    self.logger.debug("Adding URL: {0}", res.text)
-                    streams[quality] = stream
+                streams[quality] = stream
 
         return streams
 
     def _create_flv_playlist(self, template):
         res = http.get(template)
-        json = http.json(res)
-
-        if not isinstance(json, dict):
-            raise PluginError("Invalid JSON response")
+        playlist = http.json(res, schema=_vod_playlist_schema)
 
         parsed = urlparse(template)
-        try:
-            url_template = '{0}://{1}{2}'.format(
-                parsed.scheme, parsed.netloc, json['template']
-            )
-            segment_max = reduce(lambda i,j: i+j[0], json['fragments'], 0)
-            duration = json['duration']
-        except KeyError:
-            raise PluginError('Unexpected JSON response')
+        url_template = "{0}://{1}{2}".format(
+            parsed.scheme, parsed.netloc, playlist["template"]
+        )
+        segment_max = reduce(lambda i,j: i+j[0], playlist["fragments"], 0)
 
         substreams = [HTTPStream(self.session,
-                                 url_template.replace('$fragment$', str(i)))
+                                 url_template.replace("$fragment$", str(i)))
                       for i in range(1, segment_max + 1)]
 
-        return FLVPlaylist(self.session, streams=substreams,
-                           duration=duration, skip_header=True,
-                           flatten_timestamps=True)
+        return FLVPlaylist(self.session,
+                           duration=playlist["duration"],
+                           flatten_timestamps=True,
+                           skip_header=True,
+                           streams=substreams)
 
-    def _get_vod_streams(self, channelname):
-        res = http.get(self.url)
-        match = re.search('autoURL%22%3A%22(.*?)%22', res.text)
-        if not match:
-            raise PluginError('Error retrieving manifest url')
-        manifest_url = unquote(match.group(1)).replace('\\', '')
+    def _get_vod_streams(self, params):
+        manifest_url = params.get("autoURL")
+        if not manifest_url:
+            return
 
-        try:
-            res = http.get(manifest_url)
-            manifest = http.json(res)
-        except:
-            raise PluginError('Error retrieving manifest')
-
-        # A fallback host (http://proxy-xx...) is sometimes provided
-        # that we could make us of.
+        res = http.get(manifest_url)
+        manifest = http.json(res, schema=_vod_manifest_schema)
         streams = {}
-        for params in manifest.get('alternates', []):
-            name = params.get('name')
-            template = params.get('template')
-            if not (name and template):
-                continue
+        for params in manifest["alternates"]:
+            name = "{0}p".format(params["height"])
+            stream = self._create_flv_playlist(params["template"])
+            streams[name] = stream
 
-            name = '{0}p'.format(name)
-            streams[name] = self._create_flv_playlist(template)
+            failover = params.get("failover")
+            if failover:
+                stream = self._create_flv_playlist(failover[0])
+                streams[name + "_alt"] = stream
 
         return streams
 
     def _get_streams(self):
-        channelname = self._get_channel_name(self.url)
+        match = _url_re.match(self.url)
+        media_id = match.group("media_id")
 
-        if not channelname:
-            return
-
-        if self._check_channel_live(channelname):
-            return self._get_rtmp_streams(channelname)
-        else:
-            return self._get_vod_streams(channelname)
-
+        return self._get_streams_from_media(media_id)
 
 __plugin__ = DailyMotion
-
-
-# vim: expandtab tabstop=4 shiftwidth=4
