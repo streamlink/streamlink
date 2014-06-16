@@ -2,8 +2,8 @@ import re
 
 from livestreamer.plugin import Plugin, PluginError
 from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api.utils import parse_query
 from livestreamer.stream import HTTPStream, HLSStream
-from livestreamer.utils import parse_qsd
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
@@ -20,7 +20,7 @@ def parse_stream_map(streammap):
         return streams
 
     for stream_qs in streammap.split(","):
-        stream = parse_qsd(stream_qs)
+        stream = parse_query(stream_qs)
         streams.append(stream)
 
     return streams
@@ -148,9 +148,8 @@ class YouTube(Plugin):
             "el": "player_embedded"
         }
         res = http.get(API_VIDEO_INFO, params=params)
-        config = parse_qsd(res.text)
 
-        return _config_schema.validate(config)
+        return parse_query(res.text, name="config", schema=_config_schema)
 
     def _get_streams(self):
         info = self._get_stream_info(self.url)
