@@ -1,9 +1,8 @@
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError
-from livestreamer.plugin import Plugin
+from livestreamer.plugin import Plugin, PluginError
 from livestreamer.plugin.api import http
+from livestreamer.plugin.api.utils import parse_query
 from livestreamer.stream import RTMPStream
-from livestreamer.utils import parse_qsd
 
 
 class Weeb(Plugin):
@@ -27,7 +26,7 @@ class Weeb(Plugin):
 
         res = http.post(self.APIURL, data=form, headers=headers)
 
-        params = parse_qsd(res.text)
+        params = parse_query(res.text)
 
         if "0" in params and int(params["0"]) <= 0:
             raise PluginError("Server refused to send required parameters.")
