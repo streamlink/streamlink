@@ -14,9 +14,9 @@ from livestreamer.exceptions import NoStreamsError, PluginError, StreamError
 from livestreamer.options import Options
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api.utils import parse_json, parse_query
 from livestreamer.stream import (HTTPStream, HLSStream, FLVPlaylist,
                                  extract_flv_header_tags)
-from livestreamer.utils import parse_json, parse_qsd
 
 __all__ = ["PluginBase", "APIBase"]
 
@@ -172,7 +172,7 @@ class PluginBase(Plugin):
             self.usher = UsherService(match.get("domain"))
 
             parsed = urlparse(url)
-            self.params = parse_qsd(parsed.query)
+            self.params = parse_query(parsed.query)
         except AttributeError:
             self.channel = None
             self.params = None
