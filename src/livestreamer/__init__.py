@@ -1,7 +1,7 @@
 """Livestreamer extracts streams from various services.
 
-The main compontent of Livestreamer is a CLI program that launches
-streams the streams in a video player.
+The main compontent of Livestreamer is a command-line utility that
+launches the streams in a video player.
 
 An API is also provided that allows direct access to stream data.
 

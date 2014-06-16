@@ -40,8 +40,8 @@ sys_path.insert(0, srcdir)
 
 setup(name="livestreamer",
       version="1.8.2",
-      description="Livestreamer is CLI program that extracts streams from "
-                  "various services and pipes them into a video player of "
+      description="Livestreamer is command-line utility that extracts streams "
+                  "from various services and pipes them into a video player of "
                   "choice.",
       url="http://livestreamer.tanuki.se/",
       author="Christopher Rosell",

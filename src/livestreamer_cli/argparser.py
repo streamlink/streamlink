@@ -79,7 +79,7 @@ def filesize(value):
 float = nonzero_num(float)
 int = nonzero_num(int)
 
-parser = ArgumentParser(description="Livestreamer is CLI program that "
+parser = ArgumentParser(description="Livestreamer is command-line utility that "
                                     "extracts streams from various services "
                                     "and pipes them into a video player of "
                                     "choice.",
