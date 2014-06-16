@@ -95,8 +95,18 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
     return tree
 
 
-def parse_qsd(*args, **kwargs):
-    return dict(parse_qsl(*args, **kwargs))
+def parse_qsd(data, name="query string", exception=PluginError, schema=None, **params):
+    """Parses a query string into a dict.
+
+    Unlike parse_qs and parse_qsl, duplicate keys are not preserved in
+    favor of a simpler return value.
+    """
+
+    value = dict(parse_qsl(data, **params))
+    if schema:
+        value = schema.validate(value, name=name, exception=exception)
+
+    return value
 
 
 def rtmpparse(url):
