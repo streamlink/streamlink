@@ -1,33 +1,49 @@
 import re
 
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import HDSStream
-from livestreamer.utils import parse_xml
+from functools import partial
 
+from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HLSStream, HDSStream
+
+_url_re = re.compile("http(s)?://live.daserste.de/(?P<channel>[^/?]+)?")
+
+STREAM_INFO_URL = "http://live.daserste.de/{0}/livestream.xml"
+SWF_URL = "http://live.daserste.de/lib/br-player/swf/main.swf"
+STREAMING_TYPES = {
+    "streamingUrlLive": (
+        "HDS", partial(HDSStream.parse_manifest, pvswf=SWF_URL)
+    ),
+    "streamingUrlIPhone": (
+        "HLS", HLSStream.parse_variant_playlist
+    )
+}
+
+_livestream_schema = validate.Schema(
+    validate.xml_findall("video/*"),
+    validate.filter(lambda e: e.tag in STREAMING_TYPES),
+    validate.map(lambda e: (STREAMING_TYPES.get(e.tag), e.text)),
+    validate.transform(dict),
+)
 
 class ard_live(Plugin):
     @classmethod
     def can_handle_url(cls, url):
-        return "live.daserste.de/" in url.lower()
+        return _url_re.match(url)
 
     def _get_streams(self):
-        self.logger.debug("Fetching stream info")
-
-        res = http.get("http://live.daserste.de/de/livestream.xml")
-        root = parse_xml(res.text.encode("utf8"))
-
-        res = http.get(self.url)
-        player_version = re.search(r"livestream\.microloader\.jsp\?v=([\d\.]+)", res.text)
+        match = _url_re.match(self.url)
+        channel = match.group("channel")
+        res = http.get(STREAM_INFO_URL.format(channel))
+        urls = http.xml(res, schema=_livestream_schema)
 
         streams = {}
-        for url in root.iter('streamingUrlLive'):
-            if re.search('f4m', url.text):
-                pvswf = 'http://live.daserste.de/lib/br-player/swf/main.swf?v={0}'.format(player_version.group(1))
-                hds_streams = HDSStream.parse_manifest(self.session, url.text, pvswf=pvswf)
-                streams.update(hds_streams)
+        for (name, parser), url in urls.items():
+            try:
+                streams.update(parser(self.session, url))
+            except IOError as err:
+                self.logger.warning("Unable to extract {0} streams: {1}", name, err)
 
         return streams
-
 
 __plugin__ = ard_live
