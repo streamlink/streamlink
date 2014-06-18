@@ -11,10 +11,14 @@ ASSET_URL = "https://prima.tv4play.se/api/web/asset/{0}/play"
 SWF_URL = "http://www.tv4play.se/flash/tv4video.swf"
 
 _url_re = re.compile("""
-    http(s)?://(www\.)?tv4play.se
-    /program
-    /(?P<series>[^\?/]+)
-    .+video_id=(?P<video_id>\d+)
+    http(s)?://(www\.)?
+    (?:
+        tv4play.se/program/[^\?/]+
+    )?
+    (?:
+        fotbollskanalen.se/video
+    )?
+    .+(video_id|videoid)=(?P<video_id>\d+)
 """, re.VERBOSE)
 
 _asset_schema = validate.Schema(
