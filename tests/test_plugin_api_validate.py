@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import re
 import unittest
 
 from xml.etree.ElementTree import Element
@@ -85,6 +86,10 @@ class TestPluginAPIValidate(unittest.TestCase):
     def test_get(self):
         assert validate(get("key"), {"key": "value"}) == "value"
         assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
+
+    def test_get_re(self):
+        m = re.match("(\d+)p", "720p")
+        assert validate(get(1), m) == "720"
 
     def test_getattr(self):
         el = Element("foo")

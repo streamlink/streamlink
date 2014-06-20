@@ -37,10 +37,16 @@ __all__ = [
 text = is_py2 and basestring or str
 
 # References to original functions that we override in this module
+_all = all
 _getattr = getattr
 _hasattr = hasattr
 _filter = filter
 _map = map
+
+
+_re_match_attr = ("group", "groups", "groupdict", "re")
+def _is_re_match(value):
+    return _all(_hasattr(value, a) for a in _re_match_attr)
 
 
 class any(tuple):
@@ -107,6 +113,8 @@ def get(item, default=None):
     """Get item from value (value[item]).
 
     If the item is not found, return the default.
+
+    Handles XML elements, regex matches and anything that has __getitem__.
     """
 
     def getter(value):
@@ -114,9 +122,15 @@ def get(item, default=None):
             value = value.attrib
 
         try:
-            return value[item]
+            # Use .group() if this is a regex match object
+            if _is_re_match(value):
+                return value.group(item)
+            else:
+                return value[item]
         except (KeyError, IndexError):
             return default
+        except (TypeError, AttributeError) as err:
+            raise ValueError(err)
 
     return transform(getter)
 
