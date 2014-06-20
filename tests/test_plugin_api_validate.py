@@ -9,7 +9,7 @@ from xml.etree.ElementTree import Element
 from livestreamer.plugin.api.validate import (
     validate, all, any, optional, transform, text, filter, map, hasattr,
     get, getattr, length, xml_element, xml_find, xml_findtext, xml_findall,
-    union, attr, url
+    union, attr, url, startswith, endswith
 )
 
 
@@ -151,6 +151,12 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(url(), url_)
         assert validate(url(scheme="http"), url_)
         assert validate(url(path="/path"), url_)
+
+    def test_startswith(self):
+        assert validate(startswith("abc"), "abcedf")
+
+    def test_endswith(self):
+        assert validate(endswith("åäö"), "xyzåäö")
 
 
 if __name__ == "__main__":

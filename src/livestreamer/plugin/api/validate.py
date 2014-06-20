@@ -29,8 +29,9 @@ from ...exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "url", "xml_element", "xml_find", "xml_findall",
-    "xml_findtext", "validate", "Schema", "SchemaContainer"
+    "transform", "text", "union", "url", "startswith", "endswith",
+    "xml_element", "xml_find", "xml_findall", "xml_findtext",
+    "validate", "Schema", "SchemaContainer"
 ]
 
 #: Alias for text type on each Python version
@@ -103,10 +104,35 @@ class xml_element(object):
 def length(length):
     """Checks value for minimum length using len()."""
     def min_len(value):
-        return len(value) >= length
-    min_len.__name__ = "min_len_{0}".format(length)
+        if not len(value) >= length:
+            raise ValueError(
+                "Minimum length is {0} but value is {1}".format(length, len(value))
+            )
+        return True
 
     return min_len
+
+
+def startswith(string):
+    """Checks if the string value starts with another string."""
+    def starts_with(value):
+        validate(text, value)
+        if not value.startswith(string):
+            raise ValueError("'{0}' does not start with '{1}'".format(value, string))
+        return True
+
+    return starts_with
+
+
+def endswith(string):
+    """Checks if the string value ends with another string."""
+    def ends_with(value):
+        validate(text, value)
+        if not value.endswith(string):
+            raise ValueError("'{0}' does not end with '{1}'".format(value, string))
+        return True
+
+    return ends_with
 
 
 def get(item, default=None):
@@ -272,7 +298,7 @@ def validate_any(schema, value):
         except ValueError as err:
             errors.append(err)
     else:
-        err = "or ".join(_map(str, errors))
+        err = " or ".join(_map(str, errors))
         raise ValueError(err)
 
 
