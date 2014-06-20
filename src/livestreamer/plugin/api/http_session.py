@@ -100,6 +100,7 @@ class HTTPSession(Session):
         headers = kwargs.pop("headers", {})
         params = kwargs.pop("params", {})
         proxies = kwargs.pop("proxies", self.proxies)
+        schema = kwargs.pop("schema", None)
         session = kwargs.pop("session", None)
         timeout = kwargs.pop("timeout", self.timeout)
 
@@ -120,5 +121,8 @@ class HTTPSession(Session):
                                                                        err=rerr))
             err.err = rerr
             raise err
+
+        if schema:
+            res = schema.validate(res.text, name="response text", exception=PluginError)
 
         return res
