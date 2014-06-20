@@ -8,7 +8,7 @@ from xml.etree.ElementTree import Element
 from livestreamer.plugin.api.validate import (
     validate, all, any, optional, transform, text, filter, map, hasattr,
     get, getattr, length, xml_element, xml_find, xml_findtext, xml_findall,
-    union, attr
+    union, attr, url
 )
 
 
@@ -40,7 +40,11 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(any(int), 4) == 4
 
-    def test_validate_list(self):
+    def test_union(self):
+        assert validate(union((get("foo"), get("bar"))),
+                        {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
+
+    def test_list(self):
         assert validate([1, 0], [1, 0, 1, 1]) == [1, 0, 1, 1]
         assert validate([1, 0], []) == []
         assert validate(all([0, 1], lambda l: len(l) > 2), [0, 1, 0]) == [0, 1, 0]
@@ -130,15 +134,18 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(xml_findall("child"), el) == children
 
-    def test_union(self):
-        assert validate(union((get("foo"), get("bar"))),
-                        {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
-
     def test_attr(self):
         el = Element("foo")
         el.text = "bar"
 
         assert validate(attr({"text": text}), el).text == "bar"
+
+    def test_url(self):
+        url_ = "https://google.se/path"
+
+        assert validate(url(), url_)
+        assert validate(url(scheme="http"), url_)
+        assert validate(url(path="/path"), url_)
 
 
 if __name__ == "__main__":

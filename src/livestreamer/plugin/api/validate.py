@@ -24,12 +24,12 @@ try:
 except ImportError:
     from singledispatch import singledispatch
 
-from ...compat import is_py2
+from ...compat import is_py2, urlparse
 from ...exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "xml_element", "xml_find", "xml_findall",
+    "transform", "text", "union", "url", "xml_element", "xml_find", "xml_findall",
     "xml_findtext", "validate", "Schema", "SchemaContainer"
 ]
 
@@ -87,6 +87,7 @@ class attr(SchemaContainer):
 
 
 class xml_element(object):
+    """A XML element."""
     def __init__(self, tag=None, text=None, attrib=None):
         self.tag = tag
         self.text = text
@@ -172,6 +173,36 @@ def map(func):
         return cls(_map(func, value))
 
     return transform(map_values)
+
+
+def url(**attributes):
+    """Parses an URL and validates its attributes."""
+    def check_url(value):
+        validate(text, value)
+        parsed = urlparse(value)
+        if not parsed.netloc:
+            raise ValueError("'{0}' is not a valid URL".format(value))
+
+        for name, schema in attributes.items():
+            if not _hasattr(parsed, name):
+                raise ValueError("Invalid URL attribute '{0}'".format(name))
+
+            try:
+                validate(schema, _getattr(parsed, name))
+            except ValueError as err:
+                raise ValueError(
+                    "Unable to validate URL attribute '{0}': {1}".format(
+                        name, err
+                    )
+                )
+
+        return True
+
+    # Convert "http" to be either any("http", "https") for convenience
+    if attributes.get("scheme") == "http":
+        attributes["scheme"] = any("http", "https")
+
+    return check_url
 
 
 def xml_find(xpath):
