@@ -19,9 +19,12 @@ _url_re = re.compile(r"""
     (?:
         /[TtVv]+/
         (?:
-            live/(?P<channel>[^/]+) |
-            se/(?P<series>)[^/]+/(?P<program>[^/]+)
-        )
+            live/(?P<channel>[^/]+)
+        )?
+        (?:
+            se/([^/]+/)?
+            (?P<program>[^/]+)
+        )?
     )
 """, re.VERBOSE)
 
