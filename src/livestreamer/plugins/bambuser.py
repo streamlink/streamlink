@@ -1,63 +1,71 @@
-from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import HTTPStream, RTMPStream
-from livestreamer.utils import verifyjson
-
-import random
 import re
 
-PLAYER_URL = "http://player-c.api.bambuser.com/getVideo.json"
+from random import random
+
+from livestreamer.plugin import Plugin, PluginError
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HTTPStream, RTMPStream
+
+API_CLIENT_NAME = "Bambuser AS2"
+API_CONTEXT = "b_broadcastpage"
+API_KEY = "005f64509e19a868399060af746a00aa"
+API_URL_VIDEO = "http://player-c.api.bambuser.com/getVideo.json"
+
+_url_re = re.compile("http(s)?://(\w+.)?bambuser.com/v/(?P<video_id>\d+)")
+_video_schema = validate.Schema({
+    validate.optional("error"): validate.text,
+    validate.optional("result"): {
+        "id": validate.text,
+        "size": validate.text,
+        "url": validate.url(
+            scheme=validate.any("rtmp", "http")
+        )
+    }
+})
+
 
 class Bambuser(Plugin):
-
     @classmethod
     def can_handle_url(self, url):
-        return "bambuser.com/v/" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        match = re.search("/v/(\d+)", self.url)
-        if not match:
-            return
+        match = _url_re.match(self.url)
+        video_id = match.group("video_id")
+        params = {
+            "client_name": API_CLIENT_NAME,
+            "context": API_CONTEXT,
+            "raw_user_input": 1,
+            "api_key": API_KEY,
+            "vid": video_id,
+            "r": random()
+        }
+        res = http.get(API_URL_VIDEO, params=params)
+        video = http.json(res, schema=_video_schema)
 
-        vid = match.group(1)
-        params = dict(client_name="Bambuser AS2", context="b_broadcastpage",
-                      raw_user_input=1, api_key="005f64509e19a868399060af746a00aa",
-                      vid=vid, r=random.random())
-
-        self.logger.debug("Fetching stream info")
-        res = http.get(PLAYER_URL, params=params)
-        json = http.json(res)
-
-        error = json and json.get("errorCode")
+        error = video.get("error")
         if error:
-            error = error and json.get("error")
-            self.logger.error(error)
+            raise PluginError(error)
+
+        result = video.get("result")
+        if not result:
             return
 
-        json = verifyjson(json, "result")
-        playpath = verifyjson(json, "id")
-        url = verifyjson(json, "url")
-        (width, height) = verifyjson(json, "size").split("x")
-        name = "{0}p".format(height)
-
-        parsed = urlparse(url)
-        streams  = {}
-
-        if parsed.scheme.startswith("rtmp"):
-            if not RTMPStream.is_usable(self.session):
-                raise PluginError("rtmpdump is not usable and required by Bambuser plugin")
-            streams[name] = RTMPStream(self.session, {
+        url = result["url"]
+        if url.startswith("http"):
+            stream = HTTPStream(self.session, url)
+        elif url.startswith("rtmp"):
+            stream = RTMPStream(self.session, {
                 "rtmp": url,
-                "playpath": playpath,
+                "playpath": result["id"],
                 "pageUrl": self.url,
                 "live": True
             })
-        elif parsed.scheme == "http":
-            streams[name] = HTTPStream(self.session, url)
 
-        return streams
+        width, height = result["size"].split("x")
+        name = "{0}p".format(height)
+
+        return {name: stream}
 
 
 __plugin__ = Bambuser
