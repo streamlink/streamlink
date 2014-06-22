@@ -1,22 +1,36 @@
-from livestreamer.exceptions import NoStreamsError
-from livestreamer.plugin import Plugin
-from livestreamer.stream import HLSStream
-from livestreamer.plugin.api import http
-
 import re
 
+from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HLSStream
+
+_url_re = re.compile("http://chaturbate.com/[^/?&]+")
+_playlist_url_re = re.compile("html \+= \"src='(?P<url>[^']+)'\";")
+_schema = validate.Schema(
+    validate.transform(_playlist_url_re.search),
+    validate.any(
+        None,
+        validate.all(
+            validate.get("url"),
+            validate.url(
+                scheme="http",
+                path=validate.endswith(".m3u8")
+            )
+        )
+    )
+)
+
+
 class Chaturbate(Plugin):
-    _reSrc = re.compile(r'html \+= \"src=\'([^\']+)\'\";')
-    
     @classmethod
     def can_handle_url(self, url):
-        return "chaturbate.com" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
-        match = self._reSrc.search(res.text)
-        if not match:
-            raise NoStreamsError(self.url)
-        return HLSStream.parse_variant_playlist(self.session, match.group(1))
-        
+        playlist_url = http.get(self.url, schema=_schema)
+        if not playlist_url:
+            return
+
+        return HLSStream.parse_variant_playlist(self.session, playlist_url)
+
 __plugin__ = Chaturbate
