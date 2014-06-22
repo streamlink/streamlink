@@ -14,9 +14,9 @@ class SpeedRunsLive(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        if match:
-            url = TWITCH_URL_FORMAT.format(match.group("user"))
-            return self.session.streams(url)
+        username = match.group("user")
+        url = TWITCH_URL_FORMAT.format(username)
+        return self.session.streams(url)
 
 
 __plugin__ = SpeedRunsLive
