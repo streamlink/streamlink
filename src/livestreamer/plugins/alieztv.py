@@ -1,34 +1,73 @@
-from livestreamer.compat import unquote
-from livestreamer.stream import RTMPStream
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.exceptions import NoStreamsError
-
 import re
+
+from os.path import splitext
+
+from livestreamer.compat import urlparse, unquote
+from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HTTPStream, RTMPStream
+
+_url_re = re.compile("""
+    http(s)?://(\w+\.)?aliez.tv
+    (?:
+        /live/[^/]+
+    )?
+    (?:
+        /video/\d+/[^/]+
+    )?
+""", re.VERBOSE)
+_file_re = re.compile("\"?file\"?:\s+['\"]([^'\"]+)['\"]")
+_swf_url_re = re.compile("swfobject.embedSWF\(\"([^\"]+)\",")
+
+_schema = validate.Schema(
+    validate.union({
+        "urls": validate.all(
+            validate.transform(_file_re.findall),
+            validate.map(unquote),
+            [validate.url()]
+        ),
+        "swf": validate.all(
+            validate.transform(_swf_url_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get(1),
+                    validate.url(
+                        scheme="http",
+                        path=validate.endswith("swf")
+                    )
+                )
+            )
+        )
+    })
+)
+
 
 class Aliez(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "aliez.tv" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        self.logger.debug("Fetching stream info")
-        res = http.get(self.url)
-
-        match = re.search("\"file\":[\t]+\"([^\"]+)\".+embedSWF\(\"([^\"]+)\"", res.text, re.DOTALL)
-        if not match:
-            raise NoStreamsError(self.url)
-
-        rtmp = unquote(match.group(1))
-        swfurl = match.group(2)
-
+        res = http.get(self.url, schema=_schema)
         streams = {}
-        streams["live"] = RTMPStream(self.session, {
-            "rtmp": rtmp,
-            "pageUrl": self.url,
-            "swfVfy": swfurl,
-            "live": True
-        }, redirect=True)
+        for url in res["urls"]:
+            parsed = urlparse(url)
+            if parsed.scheme.startswith("rtmp"):
+                params = {
+                    "rtmp": url,
+                    "pageUrl": self.url,
+                    "live": True
+                }
+                if res["swf"]:
+                    params["swfVfy"] = res["swf"]
+
+                stream = RTMPStream(self.session, params)
+                streams["live"] = stream
+            elif parsed.scheme.startswith("http"):
+                name = splitext(parsed.path)[1][1:]
+                stream = HTTPStream(self.session, url)
+                streams[name] = stream
 
         return streams
 
