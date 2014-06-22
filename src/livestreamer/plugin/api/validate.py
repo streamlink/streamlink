@@ -336,7 +336,7 @@ def validate_dict(schema, value):
                 continue
             key = key.key
 
-        if type(key) in (type, transform):
+        if type(key) in (type, transform, any, all, union):
             for subkey, subvalue in value.items():
                 new[validate(key, subkey)] = validate(subschema, subvalue)
             break
