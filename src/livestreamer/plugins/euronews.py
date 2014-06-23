@@ -1,65 +1,87 @@
-from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
+import re
+
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import RTMPStream
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HTTPStream, RTMPStream
+
+SWF_URL = "http://euronews.com/media/player_live_1_14.swf"
+API_URL_LIVE = "http://euronews.hexaglobe.com/json/"
+
+_url_re = re.compile("http(s)?://(\w+\.)?euronews.com")
+_lang_re = re.compile("EN.lang\s+= \"([^\"]+)\";")
+_live_check_re = re.compile("swfobject.embedSWF\(\"[^\"]+\", \"streaming-live-player\",")
+_video_re = re.compile("{file: \"(?P<url>[^\"]+)\", label: \"(?P<name>[^\"]+)\"}")
+
+_live_schema = validate.Schema({
+    validate.any("primary", "secondary"): {
+        validate.text: {
+            "rtmp_flash": {
+                validate.text: {
+                    "name": validate.text,
+                    "server": validate.url(scheme="rtmp")
+                }
+            }
+        }
+    }
+})
+_schema = validate.Schema(
+    validate.union({
+        "lang": validate.all(
+            validate.transform(_lang_re.search),
+            validate.get(1)
+        ),
+        "live": validate.all(
+            validate.transform(_live_check_re.search),
+            validate.transform(bool)
+        ),
+        "videos": validate.all(
+            validate.transform(_video_re.findall),
+            [(validate.url(scheme="http"), validate.text)]
+        )
+    })
+)
 
 
 class Euronews(Plugin):
-    SWFURL = "http://euronews.com/media/player_live_1_14.swf"
-    APIURL = "http://euronews.hexaglobe.com/json/"
-    GEOIPURL = "http://freegeoip.net/json/"
-
     @classmethod
     def can_handle_url(self, url):
-        return "euronews.com" in url
+        return _url_re.match(url)
 
-    def _get_streams(self):
-        country_code = urlparse(self.url).netloc.split(".")[0]
-
-        self.logger.debug("Fetching stream info")
-        res = http.get(self.APIURL)
-        json = http.json(res)
-
-        if not isinstance(json, dict):
-            raise PluginError("Invalid JSON response")
-        elif not ("primary" in json or "secondary" in json):
-            raise PluginError("Invalid JSON response")
-
-        if not RTMPStream.is_usable(self.session):
-            raise PluginError("rtmpdump is not usable and required by Euronews plugin")
+    def _get_live_streams(self, lang):
+        res = http.get(API_URL_LIVE)
+        json_res = http.json(res, schema=_live_schema)
 
         streams = {}
-
-        self.logger.debug("Euronews Countries:{0}", " ".join(json["primary"].keys()))
-
-        if not (country_code in json["primary"] or country_code in json["secondary"]):
-            res = http.get(self.GEOIPURL)
-            geo = http.json(res)
-            if isinstance(json, dict) and "country_code" in geo:
-                country_code = geo["country_code"].lower()
-                if not (country_code in json["primary"] or country_code in json["secondary"]):
-                    country_code = "en"
-            else:
-                country_code = "en"
-
         for site in ("primary", "secondary"):
-            for quality in json[site][country_code]["rtmp_flash"]:
-                stream = json[site][country_code]["rtmp_flash"][quality]
-                name = quality + "k"
+            for bitrate, stream in json_res[site][lang]["rtmp_flash"].items():
+                name = "{0}k".format(bitrate)
                 if site == "secondary":
                     name += "_alt"
-                streams[name] = RTMPStream(self.session, {
+
+                stream = RTMPStream(self.session, {
                     "rtmp": stream["server"],
                     "playpath" : stream["name"],
-                    "swfUrl": self.SWFURL,
+                    "swfUrl": SWF_URL,
                     "live": True
                 })
-
-        if len(streams) == 0:
-            raise NoStreamsError(self.url)
+                streams[name] = stream
 
         return streams
+
+    def _get_video_streams(self, videos):
+        streams = {}
+        for url, name in videos:
+            streams[name] = HTTPStream(self.session, url)
+
+        return streams
+
+    def _get_streams(self):
+        res = http.get(self.url, schema=_schema)
+
+        if res["live"]:
+            return self._get_live_streams(res["lang"])
+        else:
+            return self._get_video_streams(res["videso"])
 
 
 __plugin__ = Euronews
