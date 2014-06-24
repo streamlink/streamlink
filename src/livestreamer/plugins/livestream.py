@@ -8,7 +8,7 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import AkamaiHDStream, HLSStream
 
-
+_url_re = re.compile("http(s)?://new.livestream.com/")
 _stream_config_schema = validate.Schema({
     "event": {
         "stream_info": validate.any({
@@ -17,11 +17,14 @@ _stream_config_schema = validate.Schema({
                 "bitrate": int,
                 "height": int
             }],
-            validate.optional("play_url"): validate.text,
-            validate.optional("m3u8_url"): validate.text,
+            validate.optional("play_url"): validate.url(scheme="http"),
+            validate.optional("m3u8_url"): validate.url(
+                scheme="http",
+                path=validate.endswith(".m3u8")
+            ),
         }, None)
     },
-    validate.optional("viewerPlusSwfUrl"): validate.text,
+    validate.optional("viewerPlusSwfUrl"): validate.url(scheme="http"),
     validate.optional("hdPlayerSwfUrl"): validate.text
 })
 _smil_schema = validate.Schema(validate.union({
@@ -63,7 +66,7 @@ class Livestream(Plugin):
 
     @classmethod
     def can_handle_url(self, url):
-        return "new.livestream.com" in url
+        return _url_re.match(url)
 
     def _get_stream_info(self):
         res = http.get(self.url)
