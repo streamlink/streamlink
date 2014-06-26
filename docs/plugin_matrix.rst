@@ -8,48 +8,62 @@ This is a list of the currently supported services and what features they suppor
 Livestreamer's primary focus is live streams, so VOD support is limited.
 
 
-=================== ======= ===== ==============================================
-Name                Live    VOD   Notes
-=================== ======= ===== ==============================================
-AfreecaTV           Yes     No    Only mobile streams supported.
-Aftonbladet         Yes     Yes
-Aliez.tv            Yes     No
-ARD Live            Yes     --    Streams may be geo-restricted to Germany.
-Azubu.tv            Yes     No
-Be-at.tv            Yes     Yes   Playlist not implemented yet
-Bambuser.com        Yes     Yes
-Cast3D.tv           Yes     Yes
-Chaturbate          Yes     No
-Crunchyroll         --      Yes
-Cybergame           Yes     Yes
-Dailymotion         Yes     Yes
-DMCloud.net         Yes     --    Dailymotion cloud platform
-DR TV               Yes     Yes   Streams may be geo-restricted to Denmark.
-Euronews.com        Yes     No
-Filmon.com          Yes     Yes   Only SD (HD requires authentication)
-Freedocast          Yes     No
-Furstream           Yes     No
-GOMeXP              Yes     --
-Hashd.tv            Yes     Yes
-Hitbox.tv           Yes     Yes
-ILive               Yes     --
-Livestation         Yes     --
-Livestream          Yes     --    Both new and old site supported.
-Mips                Yes     --    Requires rtmpdump with K-S-V patches.
-MLG.tv              Yes     --
-NRK TV              Yes     Yes   Streams may be geo-restricted to Norway.
-Picarto             Yes     --
-SpeedRunsLive.com   Yes     --
-SVT Play            Yes     Yes   Streams may be geo-restricted to Sweden.
-                                  Also supports Öppet arkiv and SVT Flow.
-TV4 Play            Yes     Yes   Streams may be geo-restricted to Sweden.
-Twitch/Justin.tv    Yes     Yes   Possible to authenticate for access to
-                                  protected streams.
-UStream TV          Yes     Yes
-Veetle.com          Yes     Yes
-Viasat Play         Yes     Yes   Streams may be geo-restricted.
-Weeb.tv             Yes     --    Requires rtmpdump with K-S-V patches.
-YouTube             Yes     Yes   The plugin is primarily made for live
-                                  streams and may not work on all videos.
-ZDFmediathek        Yes     Yes
-=================== ======= ===== ==============================================
+=================== ==================== ===== ===== ===========================
+Name                URL(s)               Live  VOD   Notes
+=================== ==================== ===== ===== ===========================
+afreecatv           afreecatv.com        Yes   No    Only mobile streams are supported.
+aftonbladet         aftonbladet.se       Yes   Yes
+alieztv             aliez.tv             Yes   Yes
+ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
+ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
+azubutv             azubu.tv             Yes   No
+beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
+bambuser            bambuser.com         Yes   Yes
+chaturbate          chaturbate.com       Yes   No
+crunchyroll         crunchyroll.com      --    Yes
+cybergame           cybergame.tv         Yes   Yes
+dailymotion         dailymotion.com      Yes   Yes
+dommune             dommune.com          Yes   --
+dmcloud             api.dmcloud.net      Yes   --
+drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
+euronews            euronews.com         Yes   No
+filmon              filmon.com           Yes   Yes   Only SD quality streams.
+freedocast          freedocast.com       Yes   No
+furstream           furstre.am           Yes   No
+gomexp              gomexp.com           Yes   No
+hitbox              hitbox.tv            Yes   Yes
+ilive               ilive.to             Yes   --
+justintv            justin.tv            Yes   Yes
+livestation         livestation.com      Yes   --
+livestream          new.livestream.com   Yes   --
+mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
+mlgtv               mlg.tv               Yes   --
+nrk                 tv.nrk.no            Yes   Yes   Streams may be geo-restricted to Norway.
+oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
+picarto             picarto.tv           Yes   --
+speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
+svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
+                    - svtflow.se
+                    - oppetarkiv.se
+tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
+                    - fotbollskanalen.se
+twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
+                                                     subscription streams.
+ustreamtv           ustream.tv           Yes   Yes
+veetle              veetle.com           Yes   Yes
+viasat              - tv3play.se         Yes   Yes   Streams may be geo-restricted.
+                    - tv3play.no
+                    - tv3play.dk
+                    - tv3play.ee
+                    - tv3play.lt
+                    - tv3play.lv
+                    - tv6play.se
+                    - tv6play.no
+                    - tv8play.se
+                    - tv10play.se
+                    - viasat4play.no
+weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
+youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
+                    - youtu.be
+zdf_mediathek       zdf.de               Yes   Yes
+=================== ==================== ===== ===== ===========================
