@@ -12,15 +12,14 @@ Livestreamer is available in the `community package repository <https://www.arch
 
     # pacman -S livestreamer
 
-Debian/Ubuntu Linux
--------------------
+Debian Linux
+------------
 
-Install pip via APT first, then install Livestreamer via pip:
+Livestreamer is available in `Debian Sid <https://packages.debian.org/sid/livestreamer>`_.
 
 .. code-block:: console
 
-    # apt-get install python-pip
-    # pip install livestreamer
+    # apt-get install livestreamer
 
 FreeBSD
 -------
@@ -56,7 +55,7 @@ Mac OS X comes with Python and ``easy_install`` installed by default:
 
 .. code-block:: console
 
-    # easy_install livestreamer
+    # easy_install -U livestreamer
 
 OpenBSD
 -------
@@ -67,6 +66,16 @@ Livestreamer is available in the `ports tree <http://openports.se/multimedia/liv
 
     # cd /usr/ports/multimedia/livestreamer
     # make install clean
+
+Ubuntu Linux
+-------------------
+
+Install pip via APT first, then install Livestreamer via pip:
+
+.. code-block:: console
+
+    # apt-get install python-pip
+    # pip install -U livestreamer
 
 Windows
 -------
@@ -83,23 +92,31 @@ There are development builds available for Windows `here <http://livestreamer-bu
 Other OSs/from source
 ---------------------
 
-**Stable version**
+Stable version
+^^^^^^^^^^^^^^
 
 The preferred way install Livestreamer is to use the Python package manager `pip <http://www.pip-installer.org/>`_:
 
 .. code-block:: console
 
-    # pip install livestreamer
+    # pip install -U livestreamer
 
 But it is also possible to use the old way of installing Python packages via ``easy_install``:
 
 .. code-block:: console
 
-    # easy_install livestreamer
+    # easy_install -U livestreamer
 
-**Development version**
+Development version
+^^^^^^^^^^^^^^^^^^^
 
-You can get the latest development version using `Git <http://git-scm.com/>`_:
+pip can download the latest source code and install it for you:
+
+.. code-block:: console
+
+    # pip install --upgrade git+https://github.com/chrippa/livestreamer.git#egg=livestreamer
+
+or you can manually download the source using `Git <http://git-scm.com/>`_:
 
 .. code-block:: console
 
@@ -123,6 +140,7 @@ These will be installed automatically by the setup script if they are missing:
 
 - `python-argparse <http://pypi.python.org/pypi/argparse>`_ (only needed on Python version <2.7 and <3.2)
 - `python-requests <http://docs.python-requests.org/>`_ (at least version 1.0)
+- `python-singledispatch <http://pypi.python.org/pypi/singledispatch>`_ (only needed on Python version <3.4)
 
 
 `The Hitchhiker’s Guide to Python <http://docs.python-guide.org/>`_ has guides
@@ -139,7 +157,7 @@ For decrypting encrypted HLS streams:
 
 - `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_
 
-For full UStream.tv support:
+For the ``ustreamtv`` plugin to be able to use non-mobile streams:
 
 - `python-librtmp <https://github.com/chrippa/python-librtmp>`_
 
