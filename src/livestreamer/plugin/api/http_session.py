@@ -17,7 +17,7 @@ __all__ = ["HTTPSession"]
 def _parse_keyvalue_list(val):
     for keyvalue in val.split(";"):
         try:
-            key, value = keyvalue.split("=")
+            key, value = keyvalue.split("=", 1)
             yield key.strip(), value.strip()
         except ValueError:
             continue
