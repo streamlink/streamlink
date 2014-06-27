@@ -1,147 +1,87 @@
-from livestreamer.exceptions import PluginError
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.options import Options
-
-from time import time
 import re
+
+from livestreamer.plugin import Plugin, PluginError, PluginOptions
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HLSStream
+
+LOGIN_PAGE_URL = "http://www.livestation.com/en/users/new"
+LOGIN_POST_URL = "http://www.livestation.com/en/sessions.json"
+
+_csrf_token_re = re.compile("<meta content=\"([^\"]+)\" name=\"csrf-token\"")
+_hls_playlist_re = re.compile("<source src=\"([^\"]+)\"")
+_url_re = re.compile("http(s)?://(\w+\.)?livestation.com")
+
+_csrf_token_schema = validate.Schema(
+    validate.transform(_csrf_token_re.search),
+    validate.any(None, validate.get(1))
+)
+_hls_playlist_schema = validate.Schema(
+    validate.transform(_hls_playlist_re.search),
+    validate.any(
+        None,
+        validate.all(
+            validate.get(1),
+            validate.url(scheme="http", path=validate.endswith(".m3u8"))
+        )
+    )
+)
+_login_schema = validate.Schema({
+    "email": validate.text,
+    validate.optional("errors"): validate.all(
+        {
+            "base": [validate.text]
+        },
+        validate.get("base"),
+    )
+})
 
 
 class Livestation(Plugin):
-    SWFURL = "http://beta.cdn.livestation.com/player/5.10/livestation-player.swf"
-    APIURL = "http://tokens.api.livestation.com/channels/{0}/tokens.json?{1}"
-    LOGINPAGEURL = "http://www.livestation.com/en/users/new"
-    LOGINPOSTURL = "http://www.livestation.com/en/sessions.json"
-
-    options = Options({
+    options = PluginOptions({
         "email": "",
         "password": ""
     })
 
     @classmethod
     def can_handle_url(self, url):
-        return "livestation.com" in url
+        return _url_re.match(url)
 
-    def _get_rtmp_streams(self, text):
-        match = re.search("streamer=(rtmp://.+?)&", text)
-        if not match:
-            raise PluginError(("No RTMP streamer found on URL {0}").format(self.url))
+    def _authenticate(self, email, password):
+        csrf_token = http.get(LOGIN_PAGE_URL, schema=_csrf_token_schema)
+        if not csrf_token:
+            raise PluginError("Unable to find CSRF token")
 
-        rtmp = match.group(1)
+        data = {
+            "authenticity_token": csrf_token,
+            "channel_id": "",
+            "commit": "Login",
+            "plan_id": "",
+            "session[email]": email,
+            "session[password]": password,
+            "utf8": "\xE2\x9C\x93", # Check Mark Character
+        }
 
-        match = re.search("<meta content=\"(http://.+?\.swf)\?", text)
-        if not match:
-            self.logger.warning("Failed to get player SWF URL location on URL {0}", self.url)
-        else:
-            self.SWFURL = match.group(1)
-            self.logger.debug("Found player SWF URL location {0}", self.SWFURL)
+        res = http.post(LOGIN_POST_URL, data=data, acceptable_status=(200, 422))
+        result = http.json(res, schema=_login_schema)
 
-        match = re.search("<meta content=\"(.+)\" name=\"item-id\" />", text)
-        if not match:
-            raise PluginError(("Missing channel item-id on URL {0}").format(self.url))
+        errors = result.get("errors")
+        if errors:
+            errors = ", ".join(errors)
+            raise PluginError("Unable to authenticate: {0}".format(errors))
 
-        res = http.get(self.APIURL.format(match.group(1), time()), params=dict(output="json"))
-        json = http.json(res)
-
-        if not isinstance(json, list):
-            raise PluginError("Invalid JSON response")
-
-        rtmplist = {}
-
-        for jdata in json:
-            if "stream_name" not in jdata or "type" not in jdata:
-                continue
-
-            if "rtmp" not in jdata["type"]:
-                continue
-
-            playpath = jdata["stream_name"]
-
-            if "token" in jdata and jdata["token"]:
-                playpath += jdata["token"]
-
-            if len(json) == 1:
-                stream_name = "live"
-            else:
-                stream_name = jdata["stream_name"]
-
-            rtmplist[stream_name] = RTMPStream(self.session, {
-                "rtmp": rtmp,
-                "pageUrl": self.url,
-                "swfVfy": self.SWFURL,
-                "playpath": playpath,
-                "live": True
-            })
-
-        return rtmplist
-
-    def _get_hls_streams(self, text):
-        match = re.search("\"(http://.+\.m3u8)\"", text)
-        if not match:
-            raise PluginError(("No HLS playlist found on URL {0}").format(self.url))
-
-        playlisturl = match.group(1)
-        self.logger.debug("Playlist URL is {0}", playlisturl)
-        playlist = {}
-
-        try:
-            playlist = HLSStream.parse_variant_playlist(self.session, playlisturl)
-        except IOError as err:
-            raise PluginError(err)
-
-        return playlist
+        self.logger.info("Successfully logged in as {0}", result["email"])
 
     def _get_streams(self):
-        # If email option given, try to login
-        if self.options.get("email"):
-            res = http.get(self.LOGINPAGEURL)
-            match = re.search('<meta content="([^"]+)" name="csrf-token"', res.text)
-            if not match:
-                raise PluginError("Missing CSRF Token: " + self.LOGINPAGEURL)
-            csrf_token = match.group(1)
-            
-            email = self.options.get("email")
-            password = self.options.get("password")
-            
-            res = http.post(
-                self.LOGINPOSTURL,
-                data = {
-                    'authenticity_token': csrf_token,
-                    'channel_id': '',
-                    'commit': 'Login',
-                    'plan_id': '',
-                    'session[email]': email,
-                    'session[password]': password,
-                    'utf8': "\xE2\x9C\x93", # Check Mark Character
-                }
-            )
-            
-            self.logger.debug("Login account info: {0}", res.text)
-            result = http.json(res)
-            if result.get('email', 'no-mail') != email:
-                raise PluginError("Invalid account")
+        login_email = self.options.get("email")
+        login_password = self.options.get("password")
+        if login_email and login_password:
+            self._authenticate(login_email, login_password)
 
-        res = http.get(self.url)
+        hls_playlist = http.get(self.url, schema=_hls_playlist_schema)
+        if not hls_playlist:
+            return
 
-        streams = {}
-
-        if RTMPStream.is_usable(self.session):
-            try:
-                rtmpstreams = self._get_rtmp_streams(res.text)
-                streams.update(rtmpstreams)
-            except PluginError as err:
-                self.logger.error("Error when fetching RTMP stream info: {0}", str(err))
-        else:
-            self.logger.warning("rtmpdump is not usable, only HLS streams will be available")
-
-        try:
-            hlsstreams = self._get_hls_streams(res.text)
-            streams.update(hlsstreams)
-        except PluginError as err:
-            self.logger.error("Error when fetching HLS stream info: {0}", str(err))
-
-        return streams
+        return HLSStream.parse_variant_playlist(self.session, hls_playlist)
 
 
 __plugin__ = Livestation
