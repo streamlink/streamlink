@@ -19,7 +19,8 @@ QUALITY_MAP = {
     "hd720": "720p",
     "hd1080": "1080p",
     "custom": "live",
-    "auto": "hds"
+    "auto": "hds",
+    "source": "hds"
 }
 STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
 
@@ -108,8 +109,8 @@ class DailyMotion(Plugin):
     def _get_live_streams(self, params, swf_url):
         streams = {}
         for key, quality in QUALITY_MAP.items():
-            key = "{0}URL".format(key)
-            url = params.get(key)
+            key_url = "{0}URL".format(key)
+            url = params.get(key_url)
 
             if not url:
                 continue
@@ -120,9 +121,11 @@ class DailyMotion(Plugin):
                 continue
 
             if quality == "hds":
-                streams.update(
-                    HDSStream.parse_manifest(self.session, res.url)
-                )
+                hds_streams = HDSStream.parse_manifest(self.session, res.url)
+                for name, stream in hds_streams.items():
+                    if key == "source":
+                        name += "+"
+                    streams[name] = stream
             elif res.text.startswith("rtmp"):
                 match = _rtmp_re.match(res.text)
                 if not match:
