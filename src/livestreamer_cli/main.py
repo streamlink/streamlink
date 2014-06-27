@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import errno
 import os
 import requests
@@ -154,8 +152,7 @@ def output_stream_http(plugin, streams):
                     stream = None
 
             except PluginError as err:
-                console.logger.error("Unable to fetch new streams: {0}",
-                                     err)
+                console.logger.error(u"Unable to fetch new streams: {0}", err)
 
             if not stream:
                 console.logger.info("Stream not available, will re-fetch "
@@ -392,7 +389,7 @@ def fetch_streams_infinite(plugin, interval):
     try:
         streams = fetch_streams(plugin)
     except PluginError as err:
-        console.logger.error("{0}", err)
+        console.logger.error(u"{0}", err)
         streams = None
 
     if not streams:
@@ -404,7 +401,7 @@ def fetch_streams_infinite(plugin, interval):
         try:
             streams = fetch_streams(plugin)
         except PluginError as err:
-            console.logger.error("{0}", err)
+            console.logger.error(u"{0}", err)
 
     return streams
 
@@ -470,7 +467,7 @@ def handle_url():
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
     except PluginError as err:
-        console.exit("{0}", err)
+        console.exit(u"{0}", err)
 
     if not streams:
         console.exit("No streams found on this URL: {0}", args.url)

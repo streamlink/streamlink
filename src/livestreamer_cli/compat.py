@@ -35,12 +35,5 @@ def shlex_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
-def unicode_filename(filename):
-    if is_py2 and isinstance(filename, str):
-        return filename.decode(sys.getfilesystemencoding())
-
-    return filename
-
-
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "file",
-           "shlex_quote", "unicode_filename"]
+           "shlex_quote"]

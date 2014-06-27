@@ -1,6 +1,6 @@
 import os
 
-from .compat import is_win32, is_py2, unicode_filename
+from .compat import is_win32
 
 DEFAULT_PLAYER_ARGUMENTS = "{filename}"
 
@@ -15,11 +15,6 @@ else:
         os.path.expanduser("~/.livestreamerrc")
     ]
     PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/livestreamer/plugins")
-
-# Turn the paths into unicode on Python 2 like they are on Python 3
-if is_py2:
-    PLUGINS_DIR = unicode_filename(PLUGINS_DIR)
-    CONFIG_FILES = list(map(unicode_filename, CONFIG_FILES))
 
 
 EXAMPLE_USAGE = """

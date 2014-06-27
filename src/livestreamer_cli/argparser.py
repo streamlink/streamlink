@@ -3,7 +3,6 @@ import re
 
 from livestreamer import __version__ as livestreamer_version
 
-from .compat import unicode_filename
 from .constants import (
     EXAMPLE_USAGE, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
 )
@@ -100,7 +99,6 @@ parser.add_argument("-V", "--version", action="version",
 parser.add_argument("--plugins", action="store_true",
                     help="Print all currently installed plugins")
 parser.add_argument("--config", action="append", metavar="filename",
-                    type=unicode_filename,
                     help="Loads additional options from this config file. "
                          "Can be repeated to load multiple files.")
 parser.add_argument("-l", "--loglevel", metavar="level", default="info",

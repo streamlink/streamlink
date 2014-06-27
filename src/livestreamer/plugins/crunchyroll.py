@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import random
 import re
 import string
@@ -218,7 +216,7 @@ class Crunchyroll(Plugin):
             info = api.get_info(media_id, fields=["media.stream_data"],
                                 schema=_media_schema)
         except CrunchyrollAPIError as err:
-            raise PluginError("Media lookup error: {0}".format(err.msg))
+            raise PluginError(u"Media lookup error: {0}".format(err.msg))
 
         if not info:
             return
@@ -289,7 +287,7 @@ class Crunchyroll(Plugin):
                 expires = (login["expires"] - current_time).total_seconds()
                 self.cache.set("auth", login["auth"], expires)
             except CrunchyrollAPIError as err:
-                raise PluginError("Authentication error: {0}".format(err.msg))
+                raise PluginError(u"Authentication error: {0}".format(err.msg))
         else:
             self.logger.warning(
                 "No authentication provided, you won't be able to access "
