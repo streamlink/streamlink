@@ -96,10 +96,12 @@ class HTTPSession(Session):
         return self.get(url, stream=True).url
 
     def request(self, method, url, *args, **kwargs):
+        acceptable_status = kwargs.pop("acceptable_status", [])
         exception = kwargs.pop("exception", PluginError)
         headers = kwargs.pop("headers", {})
         params = kwargs.pop("params", {})
         proxies = kwargs.pop("proxies", self.proxies)
+        raise_for_status = kwargs.pop("raise_for_status", True)
         schema = kwargs.pop("schema", None)
         session = kwargs.pop("session", None)
         timeout = kwargs.pop("timeout", self.timeout)
@@ -115,7 +117,8 @@ class HTTPSession(Session):
                                   timeout=timeout,
                                   proxies=proxies,
                                   *args, **kwargs)
-            res.raise_for_status()
+            if raise_for_status and res.status_code not in acceptable_status:
+                res.raise_for_status()
         except (RequestException, IOError) as rerr:
             err = exception("Unable to open URL: {url} ({err})".format(url=url,
                                                                        err=rerr))
