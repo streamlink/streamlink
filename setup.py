@@ -15,9 +15,8 @@ packages = ["livestreamer",
             "livestreamer.packages.flashmedia",
             "livestreamer_cli"]
 
-# require argparse on Python <2.7 and <3.2
-if (version_info[0] == 2 and version_info[1] < 7) or \
-   (version_info[0] == 3 and version_info[1] < 2):
+# require argparse on Python 2.6
+if version_info[0] == 2 and version_info[1] == 6:
     deps.append("argparse")
 
 # require singledispatchon Python <3.4
@@ -54,10 +53,14 @@ setup(name="livestreamer",
       },
       install_requires=deps,
       test_suite="tests",
-      classifiers=["Operating System :: POSIX",
-                   "Operating System :: Microsoft :: Windows",
+      classifiers=["Development Status :: 5 - Production/Stable",
                    "Environment :: Console",
-                   "Development Status :: 5 - Production/Stable",
+                   "Operating System :: POSIX",
+                   "Operating System :: Microsoft :: Windows",
+                   "Programming Language :: Python :: 2.6",
+                   "Programming Language :: Python :: 2.7",
+                   "Programming Language :: Python :: 3.3",
+                   "Programming Language :: Python :: 3.4",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
                    "Topic :: Multimedia :: Video",

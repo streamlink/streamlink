@@ -132,13 +132,13 @@ Livestreamer currently depends on these libraries/programs to function.
 
 To run the setup script you need:
 
-- `Python <http://python.org/>`_ (at least version 2.6) or `PyPy <http://pypy.org/>`_
+- `Python <http://python.org/>`_ (2.6+ or 3.3+)
 - `python-setuptools <http://pypi.python.org/pypi/setuptools>`_
 
 
 These will be installed automatically by the setup script if they are missing:
 
-- `python-argparse <http://pypi.python.org/pypi/argparse>`_ (only needed on Python version <2.7 and <3.2)
+- `python-argparse <http://pypi.python.org/pypi/argparse>`_ (only needed on Python 2.6)
 - `python-requests <http://docs.python-requests.org/>`_ (at least version 1.0)
 - `python-singledispatch <http://pypi.python.org/pypi/singledispatch>`_ (only needed on Python version <3.4)
 
