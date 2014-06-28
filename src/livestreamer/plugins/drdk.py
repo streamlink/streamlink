@@ -22,8 +22,7 @@ _url_re = re.compile(r"""
             live/(?P<channel>[^/]+)
         )?
         (?:
-            se/([^/]+/)?
-            (?P<program>[^/]+)
+            se/(.+/)?(?P<program>[^/&?]+)
         )?
     )
 """, re.VERBOSE)
