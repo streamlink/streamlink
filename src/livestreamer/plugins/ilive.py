@@ -1,90 +1,77 @@
-from livestreamer.compat import urlparse
-from livestreamer.stream import HLSStream, RTMPStream
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.exceptions import NoStreamsError
-
 import re
 
-MOBILE_URL = "http://www.ilive.to/m/channel.php"
+from operator import methodcaller
+
+from livestreamer.compat import urlparse
+from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import RTMPStream
+
+_url_re = re.compile("http(s)?://(\w+\.)?ilive.to/")
+_rtmp_re = re.compile("""
+    \$.getJSON\("(?P<token_url>[^"]+)".*
+    flashplayer:\s+"(?P<swf_url>[^"]+)".*
+    streamer:\s+"(?P<rtmp_url>[^"]+)".*
+    file:\s+"(?P<rtmp_playpath>[^"]+)\.flv"
+""", re.VERBOSE | re.DOTALL)
+
+_token_schema = validate.Schema(
+    {
+        "token": validate.text
+    },
+    validate.get("token")
+)
+_schema = validate.Schema(
+    validate.transform(_rtmp_re.search),
+    validate.any(
+        None,
+        validate.all(
+            validate.transform(methodcaller("groupdict")),
+            {
+                "rtmp_playpath": validate.text,
+                "rtmp_url": validate.all(
+                    validate.transform(methodcaller("replace", "\\/", "/")),
+                    validate.url(scheme="rtmp"),
+                ),
+                "swf_url": validate.url(scheme="http"),
+                "token_url": validate.url(scheme="http")
+            }
+        )
+    )
+)
 
 
 class ILive(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "ilive.to" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        streams = {}
-        try:
-            streams = self._get_desktop_streams()
-        except NoStreamsError:
-            pass
-        try:
-            hlsstreams = self._get_mobile_streams()
-            if hlsstreams:
-                streams.update(hlsstreams)
-        except IOError as err:
-            self.logger.warning("Failed to get variant playlist: {0}", err)
-
-        return streams
-
-    def _get_mobile_streams(self):
-        match = re.search("view/(\d+)", self.url)
-        if not match:
+        info = http.get(self.url, schema=_schema)
+        if not info:
             return
 
-        res = http.get(MOBILE_URL, params=dict(n=match.group(1)))
+        headers = {"Referer": self.url}
+        res = http.get(info["token_url"], headers=headers)
+        token = http.json(res, schema=_token_schema)
 
-        match = re.search("[^\"]+playlist.m3u8[^\"]+", res.content)
-        if not match:
-            return
-
-        ios_url = match.group(0)
-        ios_url = ios_url.replace("\\", "")
-
-        return HLSStream.parse_variant_playlist(self.session, ios_url)
-
-    def _get_desktop_streams(self):
-        self.logger.debug("Fetching stream info")
-        res = http.get(self.url)
-
-        match = re.search("flashplayer: \"(.+.swf)\".+streamer: \"(.+)\""
-                          ".+file: \"(.+).flv\"", res.text, re.DOTALL)
-        if not match:
-            raise NoStreamsError(self.url)
-
-        rtmpurl = match.group(2).replace("\\/", "/")
-        parsed = urlparse(rtmpurl)
-
+        parsed = urlparse(info["rtmp_url"])
         if parsed.query:
             app = "{0}?{1}".format(parsed.path[1:], parsed.query)
         else:
             app = parsed.path[1:]
 
         params = {
-            "rtmp": rtmpurl,
+            "rtmp": info["rtmp_url"],
             "app": app,
             "pageUrl": self.url,
-            "swfVfy": match.group(1),
-            "playpath" : match.group(3),
+            "swfVfy": info["swf_url"],
+            "playpath": info["rtmp_playpath"],
+            "token": token,
             "live": True
         }
 
-        match = re.search("(http(s)?://.+/server\d?.php\?id=\d+)",
-                          res.text)
-        if match:
-            token_url = match.group(1)
-            res = http.get(token_url, headers=dict(Referer=self.url))
-            res = http.json(res)
-            token = res.get("token")
-            if token:
-                params["token"] = token
-
-        streams = {}
-        streams["live"] = RTMPStream(self.session, params)
-
-        return streams
-
+        stream = RTMPStream(self.session, params)
+        return dict(live=stream)
 
 __plugin__ = ILive
