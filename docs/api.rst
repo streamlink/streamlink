@@ -37,6 +37,8 @@ All streams inherit from the :class:`Stream` class.
     :members:
 
 
+.. _api-stream-subclasses:
+
 Stream subclasses
 ^^^^^^^^^^^^^^^^^
 

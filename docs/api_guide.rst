@@ -23,7 +23,7 @@ This simply attempts to find a plugin and use it to extract streams from
 the URL. This works great in simple cases but if you want more
 fine tuning you need to use a `session object`_ instead.
 
-The returned value is a dict containing :class:`stream.Stream` objects:
+The returned value is a dict containing :class:`Stream <stream.Stream>` objects:
 
 .. code-block:: python
 
@@ -62,10 +62,12 @@ If an error occurs while opening a stream, a :exc:`StreamError` will be raised.
 Inspecting streams
 ------------------
 
-It's also possible to inspect streams internal parameters, see the relevant stream
-class to see what attributes are available for inspection.
+It's also possible to inspect streams internal parameters, see
+:ref:`api-stream-subclasses` to see what attributes are available
+for inspection for each stream type.
 
-For example this is a :class:`stream.HLSStream` object which contains a `url` attribute.
+For example this is a :class:`HLSStream <stream.HLSStream>` object which
+contains a `url` attribute.
 
 .. code-block:: python
 

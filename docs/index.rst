@@ -7,11 +7,11 @@
 What is Livestreamer?
 ---------------------
 
-Livestreamer is a :ref:`cli` that pipes video streams from various services into a video player,
+Livestreamer is a :ref:`command-line utility <cli>` that pipes video streams from various services into a video player,
 such as `VLC <http://videolan.org/>`_. The main purpose of Livestreamer is to allow the user to avoid buggy
 and CPU heavy flash plugins but still be able to enjoy various streamed content.
 
-There is also an :ref:`api` available for developers who want access to the video stream data.
+There is also an :ref:`API <api_guide>` available for developers who want access to the video stream data.
 
 
 Latest release: v\ |version| (:ref:`changelog`)
