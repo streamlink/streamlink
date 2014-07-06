@@ -4,15 +4,13 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HLSStream
 
-COOKIES = {
-    "NRK_PLAYER_SETTINGS_TV": (
-        "devicetype=desktop&"
-        "preferred-player-odm=hlslink&"
-        "preferred-player-live=hlslink"
-    )
-}
+COOKIE_PARAMS = (
+    "devicetype=desktop&"
+    "preferred-player-odm=hlslink&"
+    "preferred-player-live=hlslink"
+)
 
-_url_re = re.compile("http://tv.nrk.no/")
+_url_re = re.compile("http://(tv|radio).nrk.no/")
 _media_url_re = re.compile("""
     <div[^>]*?id="playerelement"[^>]+
     data-media="(?P<url>[^"]+)"
@@ -39,7 +37,11 @@ class NRK(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        playlist_url = http.get(self.url, cookies=COOKIES, schema=_schema)
+        stream_type = _url_re.match(self.url).group(1).upper()
+        cookie = {
+            "NRK_PLAYER_SETTINGS_{0}".format(stream_type): COOKIE_PARAMS
+        }
+        playlist_url = http.get(self.url, cookies=cookie, schema=_schema)
         if not playlist_url:
             return
 
