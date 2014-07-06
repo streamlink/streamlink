@@ -6,7 +6,6 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HLSStream, HDSStream
 
-_url_re = re.compile("http(s)?://live.daserste.de/(?P<channel>[^/?]+)?")
 
 STREAM_INFO_URL = "http://live.daserste.de/{0}/livestream.xml"
 SWF_URL = "http://live.daserste.de/lib/br-player/swf/main.swf"
@@ -18,6 +17,8 @@ STREAMING_TYPES = {
         "HLS", HLSStream.parse_variant_playlist
     )
 }
+
+_url_re = re.compile("http(s)?://live.daserste.de/(?P<channel>[^/?]+)?")
 
 _livestream_schema = validate.Schema(
     validate.xml_findall("video/*"),
