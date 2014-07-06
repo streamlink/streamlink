@@ -1,5 +1,7 @@
 import os
 
+from livestreamer import __version__ as LIVESTREAMER_VERSION
+
 from .compat import is_win32
 
 DEFAULT_PLAYER_ARGUMENTS = "{filename}"
@@ -16,20 +18,10 @@ else:
     ]
     PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/livestreamer/plugins")
 
-
-EXAMPLE_USAGE = """
-example usage:
-
-$ livestreamer twitch.tv/thegdstudio
-Available streams: high, low, medium, mobile (worst), source (best)
-$ livestreamer twitch.tv/thegdstudio high
-
-Stream is now opened in player (default is VLC, if installed).
-
-"""
-
 STREAM_SYNONYMS = ["best", "worst"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 
-__all__ = ["EXAMPLE_USAGE", "CONFIG_FILES", "PLUGINS_DIR",
-           "STREAM_SYNONYMS", "STREAM_PASSTHROUGH", "DEFAULT_PLAYER_ARGUMENTS"]
+__all__ = [
+    "CONFIG_FILES", "DEFAULT_PLAYER_ARGUMENTS", "LIVESTREAMER_VERSION",
+    "PLUGINS_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
+]
