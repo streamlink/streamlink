@@ -6,7 +6,6 @@ import signal
 import webbrowser
 
 from contextlib import closing
-from itertools import chain
 from time import sleep
 from distutils.version import StrictVersion
 
@@ -555,7 +554,6 @@ def setup_args(config_files=[]):
     arglist = sys.argv[1:]
 
     # Load arguments from config files
-    config_files = chain(config_files, CONFIG_FILES)
     for config_file in filter(os.path.isfile, config_files):
         arglist.insert(0, "@" + config_file)
 
@@ -566,7 +564,7 @@ def setup_args(config_files=[]):
         args.stream = [stream.lower() for stream in args.stream]
 
 
-def setup_extra_args():
+def setup_config_args():
     config_files = []
 
     if args.url:
@@ -577,6 +575,11 @@ def setup_extra_args():
     if args.config:
         # We want the config specified last to get highest priority
         config_files += list(reversed(args.config))
+    else:
+        # Only load first available default config
+        for config_file in filter(os.path.isfile, CONFIG_FILES):
+            config_files.append(config_file)
+            break
 
     if config_files:
         setup_args(config_files)
@@ -803,7 +806,7 @@ def main():
     check_root()
     setup_livestreamer()
     setup_plugins()
-    setup_extra_args()
+    setup_config_args()
     setup_console()
     setup_http_session()
 
