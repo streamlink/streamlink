@@ -3,7 +3,7 @@ import re
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
 
-RTMP_URL = "rtmp://199.189.86.17/dsapp/{0}.flv"
+RTMP_URL = "rtmp://live.us.picarto.tv/golive/{0}"
 
 _url_re = re.compile("""
     http(s)?://(\w+\.)?picarto.tv
