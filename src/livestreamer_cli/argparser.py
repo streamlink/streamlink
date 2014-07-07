@@ -1,6 +1,7 @@
 import argparse
 import re
 
+from string import printable
 from textwrap import dedent
 
 from .constants import (
@@ -14,23 +15,34 @@ _filesize_re = re.compile("""
     (?P<modifier>[Kk]|[Mm])?
     (?:[Bb])?
 """, re.VERBOSE)
+_printable_re = re.compile("[{0}]".format(printable))
+_valid_option_start_re = re.compile("^[A-z]")
+_valid_option_char_re = re.compile("[A-z\-]")
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def convert_arg_line_to_args(self, line):
-        if len(line) == 0:
-            return
+    def sanitize_option(self, option):
+        return "".join(filter(_valid_option_char_re.match, option))
 
-        if line[0] == "#":
+    def convert_arg_line_to_args(self, line):
+        # Strip any non-printable characters that might be in the
+        # beginning of the line (e.g. Unicode BOM marker).
+        match = _printable_re.search(line)
+        if not match:
+            return
+        line = line[match.start():]
+
+        # Skip lines that do not start with a valid option character (e.g. comments)
+        if not _valid_option_start_re.match(line):
             return
 
         split = line.find("=")
         if split > 0:
-            key = line[:split].strip()
-            val = line[split+1:].strip()
-            yield "--%s=%s" % (key, val)
+            option = line[:split].strip()
+            value = line[split+1:].strip()
+            yield "--{0}={1}".format(self.sanitize_option(option), value)
         else:
-            yield "--%s" % line
+            yield "--{0}".format(self.sanitize_option(line))
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
