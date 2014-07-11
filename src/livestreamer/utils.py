@@ -52,8 +52,9 @@ def parse_json(data, name="JSON", exception=PluginError, schema=None):
     try:
         json_data = json.loads(data)
     except ValueError as err:
-        if len(data) > 35:
-            snippet = data[:35] + "..."
+        snippet = repr(data)
+        if len(snippet) > 35:
+            snippet = snippet[:35] + " ..."
         else:
             snippet = data
 
@@ -82,10 +83,9 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
     try:
         tree = ET.fromstring(data)
     except Exception as err:
-        if len(data) > 35:
-            snippet = data[:35] + "..."
-        else:
-            snippet = data
+        snippet = repr(data)
+        if len(snippet) > 35:
+            snippet = snippet[:35] + " ..."
 
         raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
 
