@@ -4,8 +4,9 @@
 Plugin matrix
 -------------
 
-This is a list of the currently supported services and what features they support.
-Livestreamer's primary focus is live streams, so VOD support is limited.
+This is a list of the currently built in plugins and what URLs and features
+they support. Livestreamer's primary focus is live streams, so VOD support
+is limited.
 
 
 =================== ==================== ===== ===== ===========================
@@ -38,7 +39,8 @@ livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
-nrk                 tv.nrk.no            Yes   Yes   Streams may be geo-restricted to Norway.
+nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
+                    - radio.nrk.no
 oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
 picarto             picarto.tv           Yes   --
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
@@ -51,6 +53,7 @@ twitch              twitch.tv            Yes   Yes   Possible to authenticate fo
                                                      subscription streams.
 ustreamtv           ustream.tv           Yes   Yes
 veetle              veetle.com           Yes   Yes
+vgtv                vgtv.no              Yes   Yes
 viasat              - tv3play.se         Yes   Yes   Streams may be geo-restricted.
                     - tv3play.no
                     - tv3play.dk

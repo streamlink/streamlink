@@ -1,12 +1,13 @@
 .. _install:
 
-Installing
-==========
+Installation
+============
 
 Arch Linux
 ----------
 
-Livestreamer is available in the `community package repository <https://www.archlinux.org/packages/community/any/livestreamer/>`_.
+Livestreamer is available in the `community package repository
+<https://www.archlinux.org/packages/community/any/livestreamer/>`_.
 
 .. code-block:: console
 
@@ -15,7 +16,8 @@ Livestreamer is available in the `community package repository <https://www.arch
 Debian Linux
 ------------
 
-Livestreamer is available in `Debian Sid <https://packages.debian.org/sid/livestreamer>`_.
+Livestreamer is available in `Debian Sid
+<https://packages.debian.org/sid/livestreamer>`_.
 
 .. code-block:: console
 
@@ -24,7 +26,9 @@ Livestreamer is available in `Debian Sid <https://packages.debian.org/sid/livest
 FreeBSD
 -------
 
-Livestreamer is available in the `ports tree <http://www.freshports.org/multimedia/livestreamer>`_ and also as a `package <http://www.freshports.org/multimedia/livestreamer>`_.
+Livestreamer is available in the `ports tree
+<http://www.freshports.org/multimedia/livestreamer>`_ and also as a
+`package <http://www.freshports.org/multimedia/livestreamer>`_.
 
 **Via ports**
 
@@ -42,7 +46,8 @@ Livestreamer is available in the `ports tree <http://www.freshports.org/multimed
 Gentoo Linux
 ------------
 
-Livestreamer is available in the `official portage tree <https://packages.gentoo.org/package/net-misc/livestreamer>`_:
+Livestreamer is available in the `official portage tree
+<https://packages.gentoo.org/package/net-misc/livestreamer>`_:
 
 .. code-block:: console
 
@@ -79,29 +84,60 @@ Install pip via APT first, then install Livestreamer via pip:
 
 Windows
 -------
-Livestreamer is primarily developed for Unix-like operating systems where using a CLI is common. There is however a installer available for brave Windows users who don't mind using the command prompt.
 
-The installer can be `downloaded from Github <https://github.com/chrippa/livestreamer/releases>`_. It contains a precompiled version of Livestreamer that does not require you to install any of the dependencies.
+Installer
+^^^^^^^^^
 
-Development builds
-^^^^^^^^^^^^^^^^^^
+This is a installer which contains and performs the following tasks:
 
-There are development builds available for Windows `here <http://livestreamer-builds.s3.amazonaws.com/builds.html>`_.
+- A compiled version of Livestreamer that does not require Python
+- RTMPDump for viewing RTMP streams
+- Generates a default :ref:`configuration file <cli-livestreamerrc>`
+- Adds Livestreamer to your ``$PATH`` (making it possible to use
+  :command:`livestreamer` directly from the command prompt without specifying
+  its directory)
+
+.. rst-class:: btn btn-neutral
+
+   `livestreamer-v1.8.2-win32-setup.exe <https://github.com/chrippa/livestreamer/releases/download/v1.8.2/livestreamer-v1.8.2-win32-setup.exe>`_
+
+ZIP Archive
+^^^^^^^^^^^
+
+This is minimal ZIP containing only a compiled version of Livestreamer
+that does not require Python to be installed.
+
+.. rst-class:: btn btn-neutral
+
+   `livestreamer-v1.8.2-win32.zip <https://github.com/chrippa/livestreamer/releases/download/v1.8.2/livestreamer-v1.8.2-win32.zip>`_
+
+Development build
+^^^^^^^^^^^^^^^^^
+
+This is an automatically generated build of the latest development code
+from the git repo.
+
+.. rst-class:: btn btn-neutral
+
+   `livestreamer-latest-win32.zip <http://livestreamer-builds.s3.amazonaws.com/livestreamer-latest-win32.zip>`_
 
 
-Other OSs/from source
----------------------
+
+Other platforms/from source
+---------------------------
 
 Stable version
 ^^^^^^^^^^^^^^
 
-The preferred way install Livestreamer is to use the Python package manager `pip <http://www.pip-installer.org/>`_:
+The preferred way install Livestreamer is to use the Python package manager
+`pip <http://www.pip-installer.org/>`_:
 
 .. code-block:: console
 
     # pip install -U livestreamer
 
-But it is also possible to use the old way of installing Python packages via ``easy_install``:
+But it's also possible to use the old way of installing Python packages
+via ``easy_install``:
 
 .. code-block:: console
 

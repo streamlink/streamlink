@@ -3,17 +3,22 @@
 Command-Line Interface
 ======================
 
-The CLI can be used to either pipe streams to a video player for playback or download them to a file.
+The CLI can be used to either pipe streams to a video player for playback or
+download them directly to a file.
 
 Tutorial
 --------
 
-The CLI is designed to be as simple as possible to use, in two or less steps you can start playback
-of your favorite stream in a desktop video player such as `VLC <http://videolan.org/>`_ or `MPlayer <http://www.mplayerhq.hu/>`_.
+The CLI is designed to be as simple as possible to use, in two or less steps
+you can start playback of your favorite stream in a desktop video player such
+as `VLC <http://videolan.org/>`_ or `mpv <http://mpv.io/>`_.
 
-Let's say you want to watch the stream located on http://twitch.tv/day9tv, you start off by telling Livestreamer
-where to to find information about your stream by giving the URL to ``livestreamer`` as the first argument.
-You do not need to specify the whole URL including ``http://``, just ``twitch.tv/day9tv`` will do just fine.
+Let's say you want to watch the stream located on http://twitch.tv/day9tv, you
+start off by telling Livestreamer where to to find information about your stream
+by giving the URL to the command :command:`livestreamer` as the first argument.
+
+You do not need to include the protocol when dealing with HTTP URLs,
+just ``twitch.tv/day9tv`` will do.
 
 .. code-block:: console
 
@@ -21,11 +26,14 @@ You do not need to specify the whole URL including ``http://``, just ``twitch.tv
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
     Available streams: audio, high, low, medium, mobile (worst), source (best)
 
-Livestreamer will find out what streams are available and print them out for you to choose from. Simply give ``livestreamer``
-the stream as the second argument and playback will start in your video player of choice.
+Livestreamer will find out what streams are available and print them out for you
+to choose from. Simply give :command:`livestreamer` the stream as the second
+argument and playback will start in your video player of choice.
 
-The words printed next to stream names within a parantheses are synonyms and can be used when selecting stream to play.
-In this case the ``best`` stream is a reference to the stream that is considered to be of highest quality, e.g ``source``.
+The words printed next to stream names within a parantheses are synonyms and
+can be used when selecting stream to play. In this case the ``best`` stream is
+a reference to the stream that is considered to be of highest quality,
+e.g. ``source``.
 
 .. sourcecode:: console
 
@@ -34,13 +42,15 @@ In this case the ``best`` stream is a reference to the stream that is considered
     [cli][info] Opening stream: source
     [cli][info] Starting player: vlc
 
-The default player is `VLC <http://videolan.org/>`_, but it can be easily changed using the :option:`--player` option.
+The default player is `VLC <http://videolan.org/>`_, but it can be easily changed
+using the :option:`--player` option.
 
 
-Now that you have a basic grasp of how Livestreamer works, you may want to look into
-customizing it to your own needs, such as:
+Now that you have a basic grasp of how Livestreamer works, you may want to look
+into customizing it to your own needs, such as:
 
-- Creating a :ref:`configuration file <cli-livestreamerrc>` of options you want to use
+- Creating a :ref:`configuration file <cli-livestreamerrc>` of options you
+  want to use
 - Setting up your player to :ref:`cache some data <issues-player_caching>`
   before playing the stream to help avoiding lag issues
 
@@ -50,37 +60,56 @@ customizing it to your own needs, such as:
 Configuration file
 ------------------
 
-Writing the command line options every time is painful, that's why Livestreamer
-is capable of reading options from a file instead, a sort of configuration file.
-Livestreamer will look for this file in different locations depending on your platform:
+Writing the command-line options every time is painful, that's why Livestreamer
+is capable of reading options from a configuration file instead.
+Livestreamer will look for config files in different locations depending on
+your platform:
 
-**Unix-like OSs**
-  - ``~/.config/livestreamer/config``
-  - ``~/.livestreamerrc``
+================= ====================================================
+Platform          Location
+================= ====================================================
+Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config
+                  - ~/.livestreamerrc
+Windows           %APPDATA%\\livestreamer\\livestreamerrc
+================= ====================================================
 
-**Windows**
-  - ``%APPDATA%\livestreamer\livestreamerrc``
+.. note::
+
+  - `$XDG_CONFIG_HOME` is ``~/.config`` if it has not been overridden
+  - `%APPDATA%` is usually ``<your user directory>\Application Data``
 
 
-You can also specify a location yourself using the :option:`--config` option.
+You can also specify the location yourself using the :option:`--config` option.
 
+Syntax
+^^^^^^
 
-The file should contain one option per line in the format ``option[=value]``, like this:
+The file should contain one :ref:`command-line option <cli-options>`
+(omitting the dashes) per line in this format::
+
+  option[=value]
+
+.. note::
+
+  Any quotes used will be part of the value, so only use when necessary.
+
+Example
+^^^^^^^
 
 .. code-block:: bash
 
-    player=mplayer -cache 2048
+    # Player options
+    player=mpv --cache 2048
     player-no-close
-    twitch-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
 
-
-For a list of all the supported options see :ref:`cli-options`.
+    # Authenticate with Twitch
+    twitch-oauth-token=mytoken
 
 
 Plugin specific configuration file
 ----------------------------------
 
-You may want to to use specific settings for some plugins only. This
+You may want to use specific options for some plugins only. This
 can be accomplished by placing those settings inside a plugin specific
 config file. Options inside these config files will override the main
 config file when a URL matching the plugin is used.
@@ -88,13 +117,20 @@ config file when a URL matching the plugin is used.
 Livestreamer expects this config to be named like the main config but
 with ``.<plugin name>`` attached to the end.
 
-A few examples:
+Examples
+^^^^^^^^
 
-  - ``~/.config/livestreamer/config.twitch``
-  - ``~/.livestreamerrc.ustreamtv``
-  - ``%APPDATA%\livestreamer\livestreamerrc.youtube``
+================= ====================================================
+Platform          Location
+================= ====================================================
+Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config\ ``.twitch``
+                  - ~/.livestreamerrc\ ``.ustreamtv``
+Windows           %APPDATA%\\livestreamer\\livestreamerrc\ ``.youtube``
+================= ====================================================
 
-You can see which plugins are installed using the command ``livestreamer --plugins``.
+Have a look at the :ref:`plugin matrix <plugin_matrix>` to see
+the name of each built-in plugin.
+
 
 Plugin specific usage
 ---------------------
@@ -103,18 +139,10 @@ Authenticating with Twitch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 It's possible to access subscription content on Twitch by giving Livestreamer
-access to your account. There are two methods to authenticate Livestreamer
-to Twitch: Application authorization via OAuth or re-using your web browsers
-cookies.
+access to your account.
 
-Using the OAuth method is recommended since it is easier and will never expire
-(unless access is revoked in your Twitch settings or a new access token is
-created), unlike cookies which may stop working if you log out in your browser.
-
-
-**Application authorization via OAuth**
-
-To authenticate Livestreamer with your Twitch account, simply run this command:
+Authentication is done by creating an OAuth token that Livestreamer will
+use to access your account. It's done like this:
 
 .. sourcecode:: console
 
@@ -122,35 +150,8 @@ To authenticate Livestreamer with your Twitch account, simply run this command:
 
 
 This will open a web browser where Twitch will ask you if you want to give
-Livestreamer permission to access your account, then forward you to a page
-with further instructions.
-
-
-**Cookies**
-
-Cookies should be specified in a key value list separated by a semicolon.
-In this case only the `_twitch_session_id` and `persistent` keys are required
-by Twitch. For example:
-
-
-.. sourcecode:: console
-
-    $ livestreamer --twitch-cookie "_twitch_session_id=xxxxxx; persistent=xxxxx" twitch.tv/ignproleague
-    [plugin.justintv][info] Attempting to authenticate using cookies
-    [plugin.justintv][info] Successfully logged in as <username>
-
-
-Extracting cookies from your web browser varies from browser to browser, try
-googling "<browser name> view cookies".
-
-It's recommended to save these cookies in your
-:ref:`configuration file <cli-livestreamerrc>` rather than specifying them
-manually every time.
-
-.. note::
-
-    Authenticating with Justin.tv is not possible since their video system
-    overhaul, but may be a unintended bug and could be fixed in the future.
+Livestreamer permission to access your account, then forwards you to a page
+with further instructions on how to use it.
 
 
 Authenticating with Crunchyroll
@@ -164,7 +165,7 @@ You can login like this:
 
 .. sourcecode:: console
 
-    $ livestreamer --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link...
+    $ livestreamer --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link
 
 .. note::
 
@@ -200,21 +201,17 @@ For this, the plugin provides the :option:`--crunchyroll-purge-credentials`
 option, which removes your saved session and credentials and tries to log
 in again using your username and password.
 
-
-Advanced usage
---------------
-
 Sideloading plugins
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
-Livestreamer will attempt to load plugins from these directories:
+Livestreamer will attempt to load standalone plugins from these directories:
 
-**Unix-like OSs**
-  - ``~/.config/livestreamer/plugins``
-
-**Windows**
-  - ``%APPDATA%\livestreamer\plugins``
-
+================= ====================================================
+Platform          Location
+================= ====================================================
+Unix-like (POSIX) $XDG_CONFIG_HOME/livestreamer/plugins
+Windows           %APPDATA%\\livestreamer\\plugins
+================= ====================================================
 
 .. note::
 
@@ -224,32 +221,35 @@ Livestreamer will attempt to load plugins from these directories:
 
 
 Playing built-in streaming protocols directly
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------------------------
 
-There are many types of streaming protocols used by services today and Livestreamer
-implements most of them. It is possible to tell Livestreamer to access a streaming
-protocol directly instead of relying on a plugin to find the information for you.
+There are many types of streaming protocols used by services today and
+Livestreamer supports most of them. It's possible to tell Livestreamer
+to access a streaming protocol directly instead of relying on a plugin
+to extract the streams from a URL for you.
 
-A protocol can be accessed directly by specifying it in the URL format:: 
+A protocol can be accessed directly by specifying it in the URL format::
 
-    protocol://path [key=value]
+  protocol://path [key=value]
 
-For example, to access a RTMP stream which requires parameters to be passed along to the stream:
+Accessing a stream that requires extra parameters to be passed along
+(e.g. RTMP):
 
 .. code-block:: console
 
     $ livestreamer "rtmp://streaming.server.net/playpath live=1 swfVfy=http://server.net/flashplayer.swf"
 
 
-Most streaming technologies simply requires you to pass a HTTP URL, this is an Adobe HDS stream:
+Most streaming technologies simply requires you to pass a HTTP URL, this is
+a Adobe HDS stream:
 
 .. code-block:: console
 
-    $ livestreamer hds://http://streaming.server.net/playpath/manifest.f4m
+    $ livestreamer hds://streaming.server.net/playpath/manifest.f4m
 
 
-Livestreamer currently supports these protocols:
-
+Supported streaming protocols
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ============================== =================================================
 Name                           Prefix
