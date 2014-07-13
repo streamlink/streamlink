@@ -1,76 +1,91 @@
-from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+import re
+
+from collections import defaultdict
+from time import time
+
+from livestreamer.plugin import Plugin, PluginError
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream, HLSStream
 
-from time import time
-import re
+SWF_URL = "http://play.streamingvideoprovider.com/player2.swf"
+API_URL = "http://player.webvideocore.net/index.php"
+
+_url_re = re.compile(
+    "http(s)?://(\w+\.)?streamingvideoprovider.co.uk/(?P<channel>[^/&?]+)"
+)
+_hls_re = re.compile("'(http://.+\.m3u8)'")
+
+_rtmp_schema = validate.Schema(
+    validate.xml_findtext("./info/url"),
+    validate.url(scheme="rtmp")
+)
+_hls_schema = validate.Schema(
+    validate.transform(_hls_re.search),
+    validate.any(
+        None,
+        validate.all(
+            validate.get(1),
+            validate.url(
+                scheme="http",
+                path=validate.endswith("m3u8")
+            )
+        )
+    )
+)
 
 
 class Streamingvideoprovider(Plugin):
-    SWFURL = "http://play.streamingvideoprovider.com/player2.swf"
-    APIURL = "http://player.webvideocore.net/index.php"
-
     @classmethod
     def can_handle_url(self, url):
-        return "streamingvideoprovider.co.uk" in url
+        return _url_re.match(url)
 
-    def _get_hls_streams(self, channelname):
-        options = dict(l="info", a="ajax_video_info", file=channelname,
-                       rid=time())
-        res = http.get(self.APIURL, params=options)
+    def _get_hls_stream(self, channel_name):
+        params = {
+            "l": "info",
+            "a": "ajax_video_info",
+            "file": channel_name,
+            "rid": time()
+        }
+        playlist_url = http.get(API_URL, params=params, schema=_hls_schema)
+        if not playlist_url:
+            return
 
-        match = re.search("'(http://.+\.m3u8)'", res.text)
-        if not match:
-            raise PluginError(("No HLS playlist found on URL {0}").format(self.url))
+        return HLSStream(self.session, playlist_url)
 
-        playlisturl = match.group(1)
-        self.logger.debug("Playlist URL is {0}", playlisturl)
-        playlist = {}
-        playlist["hls"] = HLSStream(self.session, playlisturl)
+    def _get_rtmp_stream(self, channel_name):
+        params = {
+            "l": "info",
+            "a": "xmlClipPath",
+            "clip_id": channel_name,
+            "rid": time()
+        }
+        res = http.get(API_URL, params=params)
+        rtmp_url = http.xml(res, schema=_rtmp_schema)
 
-        return playlist
-
-    def _get_rtmp_streams(self, channelname):
-        options = dict(l="info", a="xmlClipPath", clip_id=channelname,
-                       rid=time())
-        res = http.get(self.APIURL, params=options)
-        clip = http.xml(res)
-        rtmpurl = clip.findtext("./info/url")
-
-        if rtmpurl is None:
-            raise PluginError(("No RTMP Streams found on URL {0}").format(self.url))
-
-        rtmplist = {}
-        rtmplist["live"] = RTMPStream(self.session, {
-            "rtmp": rtmpurl,
-            "swfVfy": self.SWFURL,
+        return RTMPStream(self.session, {
+            "rtmp": rtmp_url,
+            "swfVfy": SWF_URL,
             "live": True
         })
 
-        return rtmplist
-
     def _get_streams(self):
-        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
-        streams = {}
-
-        if RTMPStream.is_usable(self.session):
-            try:
-                rtmpstreams = self._get_rtmp_streams(channelname)
-                streams.update(rtmpstreams)
-            except PluginError as err:
-                self.logger.error("Error when fetching RTMP stream info: {0}", str(err))
-        else:
-            self.logger.warning("rtmpdump is not usable, only HLS streams will be available")
+        match = _url_re.match(self.url)
+        channel_name = match.group("channel")
+        streams = defaultdict(list)
 
         try:
-            hlsstreams = self._get_hls_streams(channelname)
-            streams.update(hlsstreams)
+            stream = self._get_rtmp_stream(channel_name)
+            streams["live"].append(stream)
         except PluginError as err:
-            self.logger.error("Error when fetching HLS stream info: {0}", str(err))
+            self.logger.error("Unable to extract RTMP stream: {0}", err)
+
+        try:
+            stream = self._get_hls_stream(channel_name)
+            if stream:
+                streams["live"].append(stream)
+        except PluginError as err:
+            self.logger.error("Unable to extract HLS stream: {0}", err)
 
         return streams
-
 
 __plugin__ = Streamingvideoprovider

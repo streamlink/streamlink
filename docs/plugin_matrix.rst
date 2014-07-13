@@ -43,6 +43,8 @@ nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restrict
 oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
 picarto             picarto.tv           Yes   --
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
+streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
+                                                     K-S-V patches.
 svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - svtflow.se
                     - oppetarkiv.se
@@ -69,3 +71,8 @@ youtube             - youtube.com        Yes   Yes   Protected videos are not su
                     - youtu.be
 zdf_mediathek       zdf.de               Yes   Yes
 =================== ==================== ===== ===== ===========================
+
+
+.. [1] streamingvideoprovider
+.. [2] streamingvideoprovider.co.uk
+
