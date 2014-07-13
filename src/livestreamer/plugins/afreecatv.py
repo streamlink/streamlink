@@ -65,9 +65,9 @@ class AfreecaTV(Plugin):
         return HLSStream.parse_variant_playlist(self.session, playlist_url,
                                                 headers=HEADERS)
 
-# Redirect 123.111.232.13 to 123.111.232.16
-http.mount("http://123.111.232.13", RedirectAdapter(source="123.111.232.13",
-                                                    target="123.111.232.16"))
+# Redirect 123.111.232.16 to 123.111.232.13
+http.mount("http://123.111.232.16", RedirectAdapter(source="123.111.232.16",
+                                                    target="123.111.232.13"))
 
 
 __plugin__ = AfreecaTV
