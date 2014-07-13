@@ -201,16 +201,26 @@ def filter(func):
 
 
 def map(func):
-    """Apply function to each value inside the sequence."""
+    """Apply function to each value inside the sequence or dict.
+
+    Supports both dicts and sequences, key/value pairs are
+    expanded when applied to a dict.
+    """
     # text is an alias for basestring on Python 2, which cannot be
     # instantiated and therefore can't be used to transform the value,
     # so we force to unicode instead.
     if is_py2 and text == func:
         func = unicode
 
+    def expand_kv(kv):
+        return func(*kv)
+
     def map_values(value):
         cls = type(value)
-        return cls(_map(func, value))
+        if isinstance(value, dict):
+            return cls(_map(expand_kv, value.items()))
+        else:
+            return cls(_map(func, value))
 
     return transform(map_values)
 

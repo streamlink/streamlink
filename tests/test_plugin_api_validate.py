@@ -81,6 +81,9 @@ class TestPluginAPIValidate(unittest.TestCase):
     def test_map(self):
         assert validate(map(lambda v: v[0]), [(1, 2), (3, 4)]) == [1, 3]
 
+    def test_map_dict(self):
+        assert validate(map(lambda k, v: (v, k)), {"foo": "bar"}) == {"bar": "foo"}
+
     def test_get(self):
         assert validate(get("key"), {"key": "value"}) == "value"
         assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
