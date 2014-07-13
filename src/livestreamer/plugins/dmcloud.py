@@ -1,73 +1,80 @@
-from livestreamer.exceptions import NoStreamsError
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import RTMPStream, HLSStream
-from livestreamer.utils import parse_json, rtmpparse, swfdecompress
-
 import re
 
-class DMCloud(Plugin):
+from collections import defaultdict
 
+from livestreamer.compat import urlparse
+from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import RTMPStream, HTTPStream, HLSStream
+from livestreamer.utils import parse_json, rtmpparse, swfdecompress
+
+_url_re = re.compile("http(s)?://api.dmcloud.net/player/embed/[^/]+/[^/]+")
+_rtmp_re = re.compile(b"customURL[^h]+(https://.*?)\\\\")
+_info_re = re.compile("var info = (.*);")
+_schema = validate.Schema(
+    {
+        "mode": validate.text,
+        validate.optional("mp4_url"): validate.url(scheme="http"),
+        validate.optional("ios_url"): validate.url(scheme="http"),
+        validate.optional("swf_url"): validate.url(scheme="http"),
+    }
+)
+
+
+class DMCloud(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "api.dmcloud.net" in url
+        return _url_re.match(url)
 
     def _get_rtmp_streams(self, swfurl):
-        if not RTMPStream.is_usable(self.session):
-            raise NoStreamsError(self.url)
-
-        self.logger.debug("Fetching RTMP stream info")
-
         res = http.get(swfurl)
         swf = swfdecompress(res.content)
-        match = re.search("customURL[^h]+(https://.*?)\\\\", swf)
-
+        match = _rtmp_re.search(swf)
         if not match:
-            raise NoStreamsError(self.url)
+            return
 
         res = http.get(match.group(1))
         rtmp, playpath = rtmpparse(res.text)
-
         params = {
             "rtmp": rtmp,
             "pageUrl": self.url,
             "playpath": playpath,
+            "swfUrl": swfurl,
             "live": True
         }
-
-        match = re.search("file[^h]+(https?://.*?.swf)", swf)
-        if match:
-            params["swfUrl"] = match.group(1)
 
         return RTMPStream(self.session, params)
 
     def _get_streams(self):
-        self.logger.debug("Fetching stream info")
         res = http.get(self.url)
-
-        match = re.search("var info = (.*);", res.text)
+        match = _info_re.search(res.text)
         if not match:
-            raise NoStreamsError(self.url)
-
-        json = parse_json(match.group(1))
-        if not isinstance(json, dict):
             return
 
-        ios_url = json.get("ios_url")
-        swf_url = json.get("swf_url")
-        streams = {}
+        info = parse_json(match.group(1), schema=_schema)
+        streams = defaultdict(list)
+        stream_name = info["mode"]
+        mp4_url = info.get("mp4_url")
+        ios_url = info.get("ios_url")
+        swf_url = info.get("swf_url")
+
+        if mp4_url:
+            stream = HTTPStream(self.session, mp4_url)
+            streams[stream_name].append(stream)
 
         if ios_url:
-            hls = HLSStream.parse_variant_playlist(self.session, ios_url)
-            streams.update(hls)
+            if urlparse(ios_url).path.endswith(".m3u8"):
+                hls_streams = HLSStream.parse_variant_playlist(
+                    self.session, ios_url
+                )
+                for name, stream in hls_streams.items():
+                    streams[name].append(stream)
 
         if swf_url:
-            try:
-                streams["live"] = self._get_rtmp_streams(swf_url)
-            except NoStreamsError:
-                pass
+            stream = self._get_rtmp_streams(swf_url)
+            if stream:
+                streams[stream_name].append(stream)
 
         return streams
-
 
 __plugin__ = DMCloud
