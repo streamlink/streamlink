@@ -29,7 +29,6 @@ dmcloud             api.dmcloud.net      Yes   --
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 euronews            euronews.com         Yes   No
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
-freedocast          freedocast.com       Yes   No
 furstream           furstre.am           Yes   No
 gomexp              gomexp.com           Yes   No
 hitbox              hitbox.tv            Yes   Yes

@@ -29,6 +29,7 @@ Plugins:
  - Added plugin for TV4 Play (tv4play).
  - Added plugin for VGTV (vgtv), patch by @jantore. (#435)
  - Removed plugin: cast3d
+ - Removed plugin: freedocast
  - Removed plugin: hashd
  - Removed plugin: ongamnet
  - afreecatv: Updated for service changes. (#412, #413)
