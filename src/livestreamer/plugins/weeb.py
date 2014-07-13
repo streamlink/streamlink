@@ -1,84 +1,111 @@
-from livestreamer.compat import urlparse
+import re
+
 from livestreamer.plugin import Plugin, PluginError
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.plugin.api.utils import parse_query
 from livestreamer.stream import RTMPStream
 
+API_URL = "http://weeb.tv/api/setPlayer"
+SWF_URL = "http://static2.weeb.tv/static2/player.swf"
+HEADERS = {
+    "Referer": SWF_URL
+}
+PARAMS_KEY_MAP = {
+    "0": "status",
+    "10": "rtmp",
+    "11": "playpath",
+    "13": "block_type",
+    "14": "block_time",
+    "16": "reconnect_time",
+    "20": "multibitrate",
+    "73": "token"
+}
+BLOCKED_MSG_FORMAT = (
+    "You have crossed the free viewing limit. You have been blocked for "
+    "{0} minutes. Try again in {1} minutes"
+)
+BLOCK_TYPE_VIEWING_LIMIT = 1
+BLOCK_TYPE_NO_SLOTS = 11
+
+_url_re = re.compile("http(s)?://(\w+\.)?weeb.tv/channel/(?P<channel>[^/&?]+)")
+_schema = validate.Schema(
+    dict,
+    validate.map(lambda k, v: (PARAMS_KEY_MAP.get(k, k), v)),
+    validate.any(
+        {
+            "status": validate.transform(int),
+            "rtmp": validate.url(scheme="rtmp"),
+            "playpath": validate.text,
+            "multibitrate": validate.all(
+                validate.transform(int),
+                validate.transform(bool)
+            ),
+            "block_type": validate.transform(int),
+            validate.optional("token"): validate.text,
+            validate.optional("block_time"): validate.text,
+            validate.optional("reconnect_time"): validate.text,
+        },
+        {
+            "status": validate.transform(int),
+        },
+    )
+)
 
 class Weeb(Plugin):
-    SWFURL = "http://static2.weeb.tv/static2/player.swf"
-    APIURL = "http://weeb.tv/api/setPlayer"
-
     @classmethod
     def can_handle_url(self, url):
-        return "weeb.tv" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
-        self.logger.debug("Fetching stream info")
+        match = _url_re.match(self.url)
+        channel_name = match.group("channel")
 
-        headers = {
-            "Referer": self.SWFURL
+        form = {
+            "cid": channel_name,
+            "watchTime": 0,
+            "firstConnect": 1,
+            "ip": "NaN"
         }
+        res = http.post(API_URL, data=form, headers=HEADERS)
+        params = parse_query(res.text, schema=_schema)
 
-        form = dict(cid=channelname, watchTime="0",
-                    firstConnect="1", ip="NaN")
+        if params["status"] <= 0:
+            return
 
-        res = http.post(self.APIURL, data=form, headers=headers)
-
-        params = parse_query(res.text)
-
-        if "0" in params and int(params["0"]) <= 0:
-            raise PluginError("Server refused to send required parameters.")
-
-        rtmp = params["10"]
-        playpath = params["11"]
-        multibitrate = int(params["20"])
-        premiumuser = params["5"]
-        blocktype = int(params["13"])
-
-        if blocktype != 0:
-            if blocktype == 1:
-                blocktime = params["14"]
-                reconnectiontime = params["16"]
-                msg = ("You have crossed free viewing limit. ",
-                       "You have been blocked for %s minutes. " % blocktime,
-                       "Try again in %s minutes." % reconnectiontime)
+        if params["block_type"] != 0:
+            if params["block_type"] == BLOCK_TYPE_VIEWING_LIMIT:
+                msg = BLOCKED_MSG_FORMAT.format(
+                    params.get("block_time", "UNKNOWN"),
+                    params.get("reconnect_time", "UNKNOWN")
+                )
                 raise PluginError(msg)
-            elif blocktype == 11:
-                raise PluginError("No free slots available.")
+            elif params["block_type"] == BLOCK_TYPE_NO_SLOTS:
+                raise PluginError("No free slots available")
+            else:
+                raise PluginError("Blocked for unknown reasons")
 
-        if "73" in params:
-            token = params["73"]
-        else:
-            raise PluginError("Server seems busy, please try after some time.")
-
-        if not RTMPStream.is_usable(self.session):
-            raise PluginError("rtmpdump is not usable and required by Weeb plugin")
+        if "token" not in params:
+            raise PluginError("Server seems busy, retry again later")
 
         streams = {}
-        stream_name = "sd"
+        stream_names = ["sd"]
+        if params["multibitrate"]:
+            stream_names += ["hd"]
 
-        if multibitrate:
-            streams[stream_name] = RTMPStream(self.session, {
-                "rtmp": "{0}/{1}".format(rtmp, playpath),
+        for stream_name in stream_names:
+            playpath = params["playpath"]
+            if stream_name == "hd":
+                playpath += "HI"
+
+            stream = RTMPStream(self.session, {
+                "rtmp": "{0}/{1}".format(params["rtmp"], playpath),
                 "pageUrl": self.url,
-                "swfVfy": self.SWFURL,
-                "weeb": token,
+                "swfVfy": SWF_URL,
+                "weeb": params["token"],
                 "live": True
             })
-            playpath += "HI"
-            stream_name = "hd"
-
-        streams[stream_name] = RTMPStream(self.session, {
-            "rtmp": "{0}/{1}".format(rtmp, playpath),
-            "pageUrl": self.url,
-            "swfVfy": self.SWFURL,
-            "weeb": token,
-            "live": True
-        })
+            streams[stream_name] = stream
 
         return streams
-
 
 __plugin__ = Weeb
