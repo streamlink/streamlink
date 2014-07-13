@@ -256,7 +256,7 @@ Name                           Prefix
 ============================== =================================================
 Adobe HTTP Dynamic Streaming   hds://
 Akamai HD Adaptive Streaming   akamaihd://
-Apple HTTP Live Streaming      hls:// hlvsvariant://
+Apple HTTP Live Streaming      hls:// hlsvariant://
 Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
 Progressive HTTP, HTTPS, etc   httpstream://
 ============================== =================================================
