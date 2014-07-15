@@ -1,48 +1,68 @@
 import re
 
 from collections import namedtuple
+from io import BytesIO
 try:
     from Crypto.Cipher import AES
     CAN_DECRYPT = True
 except ImportError:
     CAN_DECRYPT = False
-from io import BytesIO
 
 from livestreamer.compat import range
-from livestreamer.exceptions import StreamError, PluginError
-from livestreamer.packages.flashmedia.tag import (AACAudioData, AudioData,
-                                                  AVCVideoData, RawData, Tag,
-                                                  VideoData)
-from livestreamer.packages.flashmedia.tag import (AAC_PACKET_TYPE_RAW,
-                                                  AAC_PACKET_TYPE_SEQUENCE_HEADER,
-                                                  AUDIO_BIT_RATE_16,
-                                                  AUDIO_CODEC_ID_AAC,
-                                                  AUDIO_RATE_44_KHZ,
-                                                  AUDIO_TYPE_STEREO,
-                                                  AVC_PACKET_TYPE_NALU,
-                                                  AVC_PACKET_TYPE_SEQUENCE_HEADER,
-                                                  TAG_TYPE_AUDIO,
-                                                  TAG_TYPE_VIDEO,
-                                                  VIDEO_CODEC_ID_AVC,
-                                                  VIDEO_FRAME_TYPE_INTER_FRAME,
-                                                  VIDEO_FRAME_TYPE_KEY_FRAME)
+from livestreamer.exceptions import StreamError
+from livestreamer.packages.flashmedia.tag import (
+    AACAudioData, AudioData, AVCVideoData, RawData, Tag, VideoData
+)
+from livestreamer.packages.flashmedia.tag import (
+    AAC_PACKET_TYPE_RAW, AAC_PACKET_TYPE_SEQUENCE_HEADER,
+    AUDIO_BIT_RATE_16, AUDIO_CODEC_ID_AAC, AUDIO_RATE_44_KHZ, AUDIO_TYPE_STEREO,
+    AVC_PACKET_TYPE_NALU, AVC_PACKET_TYPE_SEQUENCE_HEADER,
+    TAG_TYPE_AUDIO, TAG_TYPE_VIDEO, VIDEO_CODEC_ID_AVC,
+    VIDEO_FRAME_TYPE_INTER_FRAME, VIDEO_FRAME_TYPE_KEY_FRAME
+)
 from livestreamer.packages.flashmedia.types import U8, U16BE, U32BE
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import Stream, StreamIOIterWrapper
 from livestreamer.stream.flvconcat import FLVTagConcat
-from livestreamer.stream.segmented import (SegmentedStreamReader,
-                                           SegmentedStreamWriter,
-                                           SegmentedStreamWorker)
-
+from livestreamer.stream.segmented import (
+    SegmentedStreamReader, SegmentedStreamWriter, SegmentedStreamWorker
+)
 
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 BEAT_PROGRAM = "http://www.be-at.tv/{0}.program"
 BEAT_URL = "http://www.be-at.tv/{0}/{1}/{2}.{3}"
+QUALITY_MAP = {
+    "audio_mono": 0,
+    "audio_stereo": 1,
+    "mobile_low": 5,
+    "mobile_medium": 6,
+    "web_medium": 10,
+    "web_high": 11,
+    "web_hd": 12
+}
 
-QUALITY_MAP = {"audio_mono": 0, "audio_stereo": 1,
-               "mobile_low": 5, "mobile_medium": 6,
-               "web_medium": 10, "web_high": 11, "web_hd": 12}
+_url_re = re.compile("http(s)?://(\w+\.)?be-at.tv/")
+_schema = validate.Schema(
+    validate.any(
+        None,
+        {
+            "status": int,
+            "media": [{
+                "duration": validate.any(float, int),
+                "offset": int,
+                "id": int,
+                "parts": [{
+                    "duration": validate.any(float, int),
+                    "id": int,
+                    "offset": int,
+                    validate.optional("recording"): int,
+                    validate.optional("start"): validate.any(float, int)
+                }]
+            }]
+        }
+    )
+)
 
 Chunk = namedtuple("Chunk", "recording quality sequence extension")
 
@@ -152,16 +172,17 @@ class BeatStreamWriter(SegmentedStreamWriter):
                                       chunk.quality,
                                       chunk.sequence,
                                       chunk.extension)
+
                 return self.session.http.get(url,
                                              stream=True,
                                              headers=HEADERS,
                                              timeout=10,
                                              exception=StreamError)
             except StreamError as err:
-                self.logger.error("Failed to open chunk {0}/{1}/{2}: {3}",
-                                  chunk.recording,
-                                  chunk.quality,
-                                  chunk.sequence, err)
+                self.logger.error(
+                    "Failed to open chunk {0}/{1}/{2}: {3}",
+                    chunk.recording, chunk.quality, chunk.sequence, err
+                )
             retries -= 1
 
     def write(self, chunk, chunk_size=8192):
@@ -194,22 +215,23 @@ class BeatStreamWorker(SegmentedStreamWorker):
     def iter_segments(self):
         quality = QUALITY_MAP[self.stream.quality]
         for part in self.stream.parts:
-            duration = part.get("duration")
+            duration = part["duration"]
             if not part.get("recording"):
-                recording = part.get("id")
+                recording = part["id"]
                 extension = "part"
             else:
-                recording = part.get("recording")
+                recording = part["recording"]
                 extension = "rec"
+
             chunks = int(duration / 12) + 1
             start = int(part.get("start", 0) / 12)
             for sequence in range(start, chunks + start):
                 if self.closed:
                     return
+
                 self.logger.debug("Adding chunk {0}/{1}/{2} to queue",
-                                  recording,
-                                  quality,
-                                  sequence)
+                                  recording, quality, sequence)
+
                 yield Chunk(recording, quality, sequence, extension)
 
 
@@ -241,6 +263,11 @@ class BeatStream(Stream):
                     **Stream.__json__(self))
 
     def open(self):
+        if not CAN_DECRYPT:
+            raise StreamError(
+                "pyCrypto needs to be installed to decrypt this stream"
+            )
+
         reader = BeatStreamReader(self)
         reader.open()
 
@@ -248,10 +275,9 @@ class BeatStream(Stream):
 
 
 class BeatTV(Plugin):
-
     @classmethod
     def can_handle_url(self, url):
-        return "be-at.tv" in url
+        return _url_re.match(url)
 
     @classmethod
     def stream_weight(cls, key):
@@ -269,27 +295,22 @@ class BeatTV(Plugin):
         program = match.group(1)
         res = http.get(BEAT_PROGRAM.format(program), headers=HEADERS)
 
-        return http.json(res)
+        return http.json(res, schema=_schema)
 
     def _get_streams(self):
-        if not CAN_DECRYPT:
-            raise PluginError("Need pyCrypto installed to decrypt streams")
-
-        json = self._get_stream_info(self.url)
-
-        if not json:
-            return
-
-        if json.get("status", 0) == 0:
+        info = self._get_stream_info(self.url)
+        if not info or info["status"] == 0:
             return
 
         parts = []
-        for media in json.get("media", []):
-            if media.get("id") < 0:
+        for media in info["media"]:
+            if not media["id"]:
                 continue
-            for part in media.get("parts", []):
-                if part.get("duration") < 0:
+
+            for part in media["parts"]:
+                if not part["duration"]:
                     continue
+
                 parts.append(part)
 
         if not parts:
