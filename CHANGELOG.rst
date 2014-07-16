@@ -24,6 +24,7 @@ Plugins:
  - Added plugin for Aftonbladet (aftonbladet).
  - Added plugin for ARD Live (ard_live), patch by @MasterofJOKers. (#419)
  - Added plugin for ARD Mediathek (ard_mediathek), patch by @yeeeargh. (#421)
+ - Added plugin for Connect Cast (connectcast). (#423)
  - Added plugin for Danmarks Radio (drdk).
  - Added plugin for DOMMUNE (dommune).
  - Added plugin for TV4 Play (tv4play).

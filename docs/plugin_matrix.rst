@@ -21,6 +21,7 @@ azubutv             azubu.tv             Yes   No
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bambuser            bambuser.com         Yes   Yes
 chaturbate          chaturbate.com       Yes   No
+connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
 dailymotion         dailymotion.com      Yes   Yes
