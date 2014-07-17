@@ -4023,6 +4023,9 @@ div[class^='highlight'] pre {
 .wy-menu-vertical ul {
   margin-bottom: 0;
 }
+.wy-menu-vertical li.active {
+  background: #634b89;
+}
 .wy-menu-vertical li.divide-top {
   border-top: solid 1px #404040;
 }
@@ -4188,9 +4191,6 @@ div[class^='highlight'] pre {
 
 .wy-nav-side {
   float: left;
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 225px;
   overflow: hidden;
   min-height: 100%;
@@ -4209,7 +4209,7 @@ div[class^='highlight'] pre {
   position: relative;
   line-height: 50px;
   text-align: center;
-  font-size: 100%;
+  font-size: 150%;
   *zoom: 1;
 }
 .wy-nav-top:before, .wy-nav-top:after {
@@ -4223,6 +4223,9 @@ div[class^='highlight'] pre {
   color: white;
   font-weight: bold;
 }
+.wy-nav-top a:hover, .wy-nav-top a:visited:hover {
+  color: white;
+}
 .wy-nav-top img {
   margin-right: 12px;
   height: 45px;
@@ -4235,6 +4238,7 @@ div[class^='highlight'] pre {
   font-size: 30px;
   float: left;
   cursor: pointer;
+  margin-top: 8px;
 }
 
 .wy-nav-content-wrap {
@@ -4309,6 +4313,7 @@ footer p {
   }
 
   .wy-nav-side {
+    position: absolute;
     left: -225px;
   }
   .wy-nav-side.shift {
@@ -4335,6 +4340,9 @@ footer p {
     background-color: #6f5499;
   }
   .wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a {
+    color: white;
+  }
+  .wy-side-nav-search > a:hover, .wy-side-nav-search > a:visited:hover, .wy-side-nav-search .wy-dropdown > a:hover, .wy-side-nav-search .wy-dropdown > a:visited:hover {
     color: white;
   }
 }

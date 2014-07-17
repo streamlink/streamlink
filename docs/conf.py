@@ -96,7 +96,7 @@ html_theme_options = {
     ),
     "github_user": "chrippa",
     "github_repo": "livestreamer",
-    "sticky_navigation": False
+    "sticky_navigation": True
 }
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
