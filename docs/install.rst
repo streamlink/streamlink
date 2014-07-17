@@ -67,6 +67,14 @@ OpenBSD
 
 Livestreamer is available in the `ports tree <http://openports.se/multimedia/livestreamer>`_:
 
+**Via package**
+
+.. code-block:: console
+
+    # pkg_add livestreamer
+
+**Via ports**
+
 .. code-block:: console
 
     # cd /usr/ports/multimedia/livestreamer
