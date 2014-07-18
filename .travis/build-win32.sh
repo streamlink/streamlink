@@ -11,4 +11,7 @@ git fetch --unshallow
 sh win32/build-with-bootstrap.sh
 cd dist/
 cp *zip livestreamer-latest-win32.zip
-travis-artifacts upload --path *zip --target-path ""
+
+for zip in *zip; do
+	travis-artifacts upload --path "$zip" --target-path ""
+done
