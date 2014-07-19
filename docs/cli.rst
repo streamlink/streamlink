@@ -128,7 +128,7 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config\ ``.twitch``
 Windows           %APPDATA%\\livestreamer\\livestreamerrc\ ``.youtube``
 ================= ====================================================
 
-Have a look at the :ref:`plugin matrix <plugin_matrix>` to see
+Have a look at the :ref:`list of plugins <plugin_matrix>` to see
 the name of each built-in plugin.
 
 

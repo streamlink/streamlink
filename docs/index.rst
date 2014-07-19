@@ -30,7 +30,7 @@ such as:
 - `UStream <http://ustream.tv>`_
 
 ... and many more. A full list of plugins currently included can be found
-in the :ref:`plugin_matrix`.
+on the :ref:`plugin_matrix` page.
 
 Quickstart
 -----------
@@ -60,6 +60,7 @@ See their respective sections for more information on how to use them.
     install
     cli
     plugin_matrix
+    players
     issues
     api_guide
     api
