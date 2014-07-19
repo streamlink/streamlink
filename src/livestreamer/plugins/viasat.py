@@ -16,11 +16,12 @@ _url_re = re.compile("""
     http(s)?://(www\.)?
     (?:
         tv(3|6|8|10)play |
-        viasat4play
+        viasat4play |
+        viagame
     )
     \.
     (?:
-        dk|ee|lt|lv|no|se
+        dk|ee|lt|lv|no|se|com
     )
     /.+/
     (?P<stream_id>\d+)

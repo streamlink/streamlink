@@ -67,6 +67,7 @@ viasat              - tv3play.se         Yes   Yes   Streams may be geo-restrict
                     - tv6play.no
                     - tv8play.se
                     - tv10play.se
+                    - viagame.com
                     - viasat4play.no
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.

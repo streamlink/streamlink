@@ -32,13 +32,14 @@ Plugins:
  - Removed plugin: cast3d
  - Removed plugin: freedocast
  - Removed plugin: hashd
- - Removed plugin: ongamnet
+ - Removed plugin: ongamenet
  - afreecatv: Updated for service changes. (#412, #413)
  - dailymotion: Added support for source streams, patch by @kasper93. (#428)
  - nrk: Added support for radio.nrk.no, patch by @jantore. (#433)
  - picarto: Updated for service changes. (#431)
  - twitch: Added support for audio only streams, patch by @CommanderRoot. (#411)
  - viasat: Added support for HDS streams.
+ - viasat: Added support for viagame.com.
 
 API:
  - Added :func:`Livestreamer.streams` method.
