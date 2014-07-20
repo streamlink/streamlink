@@ -183,6 +183,7 @@ def find_default_player():
     if "darwin" in sys.platform:
         paths = os.environ.get("PATH", "").split(":")
         paths += ["/Applications/VLC.app/Contents/MacOS/"]
+        paths += ["~/Applications/VLC.app/Contents/MacOS/"]
         path = check_paths(("VLC", "vlc"), paths)
     elif "win32" in sys.platform:
         exename = "vlc.exe"
