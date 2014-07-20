@@ -56,7 +56,7 @@ from standard input is not supported in version 1.6.x of MPC-HC.
 MPC-HC only plays sound on Twitch streams
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Twitch sometimes returns badly muxed streams which may confuse players. The
-following workaround was contributed by MPC-HC developer `kasper93 <https://github.com/kasper93>`_:
+following workaround was contributed by MPC-HC developer @kasper93:
 
 *To fix this problem go to options -> internal filters -> open splitter settings
 and increase "Stream Analysis Duration" this will let ffmpeg to properly detect

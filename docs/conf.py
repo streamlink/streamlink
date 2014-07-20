@@ -18,7 +18,7 @@ sys.path.insert(0, os.path.abspath('.'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinxcontrib.issuetracker', 'ext_argparse']
+extensions = ['sphinx.ext.autodoc', 'ext_argparse', 'ext_github']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -80,8 +80,7 @@ exclude_patterns = ['_build']
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
-issuetracker = 'github'
-issuetracker_project = 'chrippa/livestreamer'
+github_project = 'chrippa/livestreamer'
 
 # -- Options for HTML output ---------------------------------------------------
 
