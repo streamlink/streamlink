@@ -5,12 +5,16 @@ with support for @user.
 """
 
 import re
+import sys
 
 from docutils import nodes
 from docutils.transforms import Transform
 
 GITHUB_ISSUE_URL = "https://github.com/{0}/issues/{1}"
 GITHUB_USER_URL = "https://github.com/{1}"
+
+if sys.version_info[0] == 2:
+    str = unicode
 
 
 class GithubReferences(Transform):
