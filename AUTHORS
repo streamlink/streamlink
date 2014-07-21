@@ -13,11 +13,15 @@ D: HDS fix.
 
 N: Stefan Breunig
 G: breunigs
-D: Added SpeedRunsLive plugin.
+D: Added SpeedRunsLive plugin and maintainer of Debian packages.
 
 N: Dominik Dabrowski
 G: doda
 D: Initial quality ranking feature.
+
+N: Brian Callahan
+G: ibara
+D: Documentation.
 
 N: Agustín Carrasco
 G: asermax
@@ -29,11 +33,11 @@ D: ilive.to plugin fixes.
 
 N: Gaspard Jankowiak
 G: gapato
-D: DailyMotion plugin.
+D: Added a DailyMotion plugin.
 
 N: Jon Bergli Heier
 G: sn4kebite
-D: NRK TV plugin.
+D: Added a NRK TV plugin.
 
 N: Kacper
 G: kasper93
@@ -50,6 +54,22 @@ D: Original GOMTV plugin.
 N: Andy Mikhailenko
 G: neithere
 D: Added more URL support to the YouTube plugin.
+
+N: Eric J
+G: wormeyman
+D: Documentation.
+
+N: Jan Tore Morken
+G: jantore
+D: Added plugin for VGTV and support for radio in the NRK plugin.
+
+N: JOKer
+G: MasterofJOKers
+D: Added plugin for ARD live.
+
+N: Max Nordlund
+G: maxnordlund
+D: Added ~/Applications to the search path for VLC on Mac OS X.
 
 N: Athanasios Oikonomou
 G: athoik
@@ -69,7 +89,7 @@ D: Added a FilmOn Social TV plugin and various tweaks and fixes.
 
 N: Pascal Romahn
 G: skulblakka
-D: Furstream and ZDFmediathek plugins
+D: Added Furstream and ZDFmediathek plugins.
 
 N: Christopher Rosell
 G: chrippa
@@ -81,7 +101,7 @@ D: Added login support to the Livestation plugin.
 
 N: T0mm0
 G: t0mm0
-D: Hitbox.tv plugin.
+D: Added a Hitbox.tv plugin.
 
 N: unintended
 G: unintended
@@ -90,4 +110,8 @@ D: Added channel support to the YouTube plugin.
 N: Daniel Wallace
 G: gtmanfred
 D: Added XDG_CONFIG_HOME support and maintainer of Arch Linux packages.
+
+N: yeeeargh
+G: yeeeargh
+D: Added a plugin for ARD Mediathek.
 
