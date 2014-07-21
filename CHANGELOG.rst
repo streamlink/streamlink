@@ -4,10 +4,13 @@ Version 1.9.0 (Under development)
 General:
  - **Dropped support for Python 3.2.** This is due to missing features
    which are necessary for this projects progression.
+ - `singledispatch <https://pypi.python.org/pypi/singledispatch>`_ is now a
+   dependency on Python <3.4.
 
 Bug fixes:
  - Handle bad input data better in parse_json/xml. (#440)
  - Handle bad input data in config files. (#432)
+ - Fixed regression causing rtmpdump proxies to have no effect.
 
 CLI:
  - Improved :option:`--help` significantly, more readable and more content.
@@ -15,9 +18,10 @@ CLI:
  - Added :option:`--stream-url` option. (#281)
  - Added support for K and M suffixes to the :option:`--ringbuffer-size` option.
  - Added support for loading config files based on plugin.
+ - Added ~/Applications to the search path for VLC on Mac OS X, patch by @maxnordlund. (#454)
  - Deprecated :option:`--best-stream-default` and added :option:`--default-stream`
    as a more flexible replacement. (#381)
- - Will no longer annoy you on every invocation about any newer versions available.
+ - Will now only warn about newer versions available every 6 hours.
 
 Plugins:
  - Many plugins have been refactored to use the validation API and better coding standards.
@@ -35,6 +39,7 @@ Plugins:
  - Removed plugin: ongamenet
  - afreecatv: Updated for service changes. (#412, #413)
  - dailymotion: Added support for source streams, patch by @kasper93. (#428)
+ - euronews: Added support for videos.
  - nrk: Added support for radio.nrk.no, patch by @jantore. (#433)
  - picarto: Updated for service changes. (#431)
  - twitch: Added support for audio only streams, patch by @CommanderRoot. (#411)
