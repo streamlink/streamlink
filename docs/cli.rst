@@ -123,9 +123,9 @@ Examples
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config\ ``.twitch``
-                  - ~/.livestreamerrc\ ``.ustreamtv``
-Windows           %APPDATA%\\livestreamer\\livestreamerrc\ ``.youtube``
+Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config\ **.twitch**
+                  - ~/.livestreamerrc\ **.ustreamtv**
+Windows           %APPDATA%\\livestreamer\\livestreamerrc\ **.youtube**
 ================= ====================================================
 
 Have a look at the :ref:`list of plugins <plugin_matrix>` to see

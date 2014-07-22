@@ -21,10 +21,8 @@ MPC-HC        --                       Currently no way of configuring the cache
 MPlayer       ``-cache <kbytes>``      Between 1024 and 8192 is recommended
 MPlayer2      ``-cache <kbytes>``      Between 1024 and 8192 is recommended
 mpv           ``--cache <kbytes>``     Between 1024 and 8192 is recommended
-VLC           ``--file-caching         Between 1000 and 10000 is recommended
-              <milliseconds>
-              --network-caching
-              <milliseconds>``
+VLC           ``--file-caching <ms>    Between 1000 and 10000 is recommended
+              --network-caching <ms>``
 ============= ======================== ======================================
 
 Use the :option:`--player` option to pass these options to your player.
