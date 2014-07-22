@@ -1,5 +1,5 @@
-Version 1.9.0 (Under development)
----------------------------------
+Version 1.9.0 (2014-07-22)
+--------------------------
 
 General:
  - **Dropped support for Python 3.2.** This is due to missing features
