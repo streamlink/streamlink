@@ -2,21 +2,18 @@ import re
 
 from collections import defaultdict, namedtuple
 from functools import partial
-from io import BytesIO
 from random import randint
 from time import sleep
 
 from livestreamer.compat import urlparse, urljoin, range
 from livestreamer.exceptions import StreamError, PluginError, NoStreamsError
-from livestreamer.options import Options
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin import Plugin, PluginOptions
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream, HLSStream, HTTPStream, Stream
 from livestreamer.stream.flvconcat import FLVTagConcat
-from livestreamer.stream.segmented import (SegmentedStreamReader,
-                                           SegmentedStreamWriter,
-                                           SegmentedStreamWorker)
-from livestreamer.packages.flashmedia import AMFPacket, AMFError
+from livestreamer.stream.segmented import (
+    SegmentedStreamReader, SegmentedStreamWriter, SegmentedStreamWorker
+)
 
 try:
     import librtmp
@@ -24,41 +21,78 @@ try:
 except ImportError:
     HAS_LIBRTMP = False
 
+_url_re = re.compile("""
+    http(s)?://(www\.)?ustream.tv
+    (?:
+        (/embed/|/channel/id/)(?P<channel_id>\d+)
+    )?
+    (?:
+        /recorded/(?P<video_id>\d+)
+    )?
+""", re.VERBOSE)
+_channel_id_re = re.compile("\"cid\":(\d+)")
 
-CDN_KEYS = ["cdnStreamUrl", "cdnStreamName"]
-PROVIDER_KEYS = ["streams", "name", "url"]
-
-AMF_URL = "http://cgw.ustream.tv/Viewer/getStream/1/{0}.amf"
-HLS_PLAYLIST_URL = "http://iphone-streaming.ustream.tv/uhls/{0}/streams/live/iphone/playlist.m3u8"
+HLS_PLAYLIST_URL = (
+    "http://iphone-streaming.ustream.tv"
+    "/uhls/{0}/streams/live/iphone/playlist.m3u8"
+)
 RECORDED_URL = "http://tcdn.ustream.tv/video/{0}"
-RECORDED_URL_PATTERN = r"^(http(s)?://)?(www\.)?ustream.tv/recorded/(?P<video_id>\d+)"
 RTMP_URL = "rtmp://r{0}.1.{1}.channel.live.ums.ustream.tv:80/ustream"
 SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
 
+_module_info_schema = validate.Schema(
+    list,
+    validate.length(1),
+    validate.get(0),
+    dict
+)
+_recorded_schema = validate.Schema({
+    validate.optional("stream"): [{
+        "name": validate.text,
+        "streams": [{
+            "streamName": validate.text,
+            "bitrate": float,
+        }],
+        validate.optional("url"): validate.text,
+    }]
+})
+_channel_schema = validate.Schema({
+    validate.optional("stream"):
+        validate.any([{
+            "name": validate.text,
+            "url": validate.text,
+            "streams": [{
+                "chunkId": float,
+                "chunkRange": {validate.text: validate.text},
+                "chunkTime": float,
+                "offset": float,
+                "offsetInMs": float,
+                "streamName": validate.text,
+                validate.optional("bitrate"): float,
+                validate.optional("height"): float,
+                validate.optional("description"): validate.text,
+                validate.optional("isTranscoded"): bool
+            }]
+        }],
+        "offline"
+    )
+})
 
 Chunk = namedtuple("Chunk", "num url offset")
-
-
-def valid_cdn(item):
-    name, cdn = item
-    return all(cdn.get(key) for key in CDN_KEYS)
-
-
-def valid_provider(info):
-    return isinstance(info, dict) and all(info.get(key) for key in PROVIDER_KEYS)
-
-
-def validate_module_info(result):
-    if (result and isinstance(result, list) and result[0].get("stream")):
-        return result[0]
 
 
 def create_ums_connection(app, media_id, page_url, password,
                           exception=PluginError):
     url = RTMP_URL.format(randint(0, 0xffffff), media_id)
-    params = dict(application=app, media=str(media_id), password=password)
-    conn = librtmp.RTMP(url, connect_data=params,
-                        swfurl=SWF_URL, pageurl=page_url)
+    params = {
+        "application": app,
+        "media": str(media_id),
+        "password": password
+    }
+    conn = librtmp.RTMP(url,
+                        swfurl=SWF_URL,
+                        pageurl=page_url,
+                        connect_data=params)
 
     try:
         conn.connect()
@@ -84,7 +118,9 @@ class UHSStreamWriter(SegmentedStreamWriter):
             if chunk.offset:
                 params["start"] = chunk.offset
 
-            return http.get(chunk.url,  params=params, timeout=10,
+            return http.get(chunk.url,
+                            timeout=10,
+                            params=params,
                             exception=StreamError)
         except StreamError as err:
             self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
@@ -136,55 +172,55 @@ class UHSStreamWorker(SegmentedStreamWorker):
         finally:
             conn.close()
 
-        return validate_module_info(result)
+        result = _module_info_schema.validate(result)
+        return _channel_schema.validate(result, "module info")
 
     def process_module_info(self):
         if self.closed:
             return
 
-        result = self.fetch_module_info()
-        if not result:
+        try:
+            result = self.fetch_module_info()
+        except PluginError as err:
+            self.logger.error("{0}", err)
             return
 
         providers = result.get("stream")
-        if providers == "offline":
+        if not providers or providers == "offline":
             self.logger.debug("Stream went offline")
             self.close()
             return
-        elif not isinstance(providers, list):
-            return
 
-        for provider in filter(valid_provider, providers):
+        for provider in providers:
             if provider.get("name") == self.stream.provider:
                 break
         else:
             return
 
         try:
-            stream = provider.get("streams")[self.stream.stream_index]
+            stream = provider["streams"][self.stream.stream_index]
         except IndexError:
             self.logger.error("Stream index not in result")
             return
 
-        filename_format = stream.get("streamName").replace("%", "%s")
-        filename_format = urljoin(provider.get("url"), filename_format)
+        filename_format = stream["streamName"].replace("%", "%s")
+        filename_format = urljoin(provider["url"], filename_format)
 
         self.filename_format = filename_format
         self.update_chunk_info(stream)
 
     def update_chunk_info(self, result):
-        chunk_range = result.get("chunkRange")
-
+        chunk_range = result["chunkRange"]
         if not chunk_range:
             return
 
-        chunk_id = int(result.get("chunkId"))
-        chunk_offset = int(result.get("offset"))
+        chunk_id = int(result["chunkId"])
+        chunk_offset = int(result["offset"])
         chunk_range = dict(map(partial(map, int), chunk_range.items()))
 
         self.chunk_ranges.update(chunk_range)
         self.chunk_id_min = sorted(chunk_range)[0]
-        self.chunk_id_max = int(result.get("chunkId"))
+        self.chunk_id_max = int(result["chunkId"])
         self.chunks = [Chunk(i, self.format_chunk_url(i),
                              not self.chunk_id and i == chunk_id and chunk_offset)
                        for i in range(self.chunk_id_min, self.chunk_id_max + 1)]
@@ -246,20 +282,21 @@ class UHSStream(Stream):
         self.password = password
 
     def __repr__(self):
-        return ("<UHSStream({0!r}, {1!r}, "
-                "{2!r}, {3!r}, {4!r})>").format(self.channel_id,
-                                                self.page_url,
-                                                self.provider,
-                                                self.stream_index,
-                                                self.password)
+        return "<UHSStream({0!r}, {1!r}, {2!r}, {3!r}, {4!r})>".format(
+            self.channel_id, self.page_url, self.provider,
+            self.stream_index, self.password
+        )
 
     def __json__(self):
-        return dict(channel_id=self.channel_id,
-                    page_url=self.page_url,
-                    provider=self.provider,
-                    stream_index=self.stream_index,
-                    password=self.password,
-                    **Stream.__json__(self))
+        json = Stream.__json__(self)
+        json.update({
+            "channel_id": self.channel_id,
+            "page_url": self.page_url,
+            "provider": self.provider,
+            "stream_index": self.stream_index,
+            "password": self.password
+        })
+        return json
 
     def open(self):
         reader = UHSStreamReader(self)
@@ -269,13 +306,13 @@ class UHSStream(Stream):
 
 
 class UStreamTV(Plugin):
-    options = Options({
+    options = PluginOptions({
         "password": ""
     })
 
     @classmethod
     def can_handle_url(cls, url):
-        return "ustream.tv" in url
+        return _url_re.match(url)
 
     @classmethod
     def stream_weight(cls, stream):
@@ -291,20 +328,17 @@ class UStreamTV(Plugin):
 
         return weight, group
 
-    def _get_channel_id(self, url):
-        match = re.search("ustream.tv/embed/(\d+)", url)
+    def _get_channel_id(self):
+        res = http.get(self.url)
+        match = _channel_id_re.search(res.text)
         if match:
             return int(match.group(1))
 
-        match = re.search("\"cid\":(\d+)", http.get(url).text)
-        if match:
-            return int(match.group(1))
-
-    def _get_hls_streams(self, wait_for_transcode=False):
+    def _get_hls_streams(self, channel_id, wait_for_transcode=False):
         # HLS streams are created on demand, so we may have to wait
         # for a transcode to be started.
         attempts = wait_for_transcode and 10 or 1
-        playlist_url = HLS_PLAYLIST_URL.format(self.channel_id)
+        playlist_url = HLS_PLAYLIST_URL.format(channel_id)
         streams = {}
         while attempts and not streams:
             try:
@@ -322,13 +356,18 @@ class UStreamTV(Plugin):
 
     def _create_rtmp_stream(self, cdn, stream_name):
         parsed = urlparse(cdn)
-        options = dict(rtmp=cdn, app=parsed.path[1:],
-                       playpath=stream_name, pageUrl=self.url,
-                       swfUrl=SWF_URL, live=True)
+        params = {
+            "rtmp": cdn,
+            "app": parsed.path[1:],
+            "playpath": stream_name,
+            "pageUrl": self.url,
+            "swfUrl": SWF_URL,
+            "live": True
+        }
 
-        return RTMPStream(self.session, options)
+        return RTMPStream(self.session, params)
 
-    def _get_module_info(self, app, media_id, password=""):
+    def _get_module_info(self, app, media_id, password="", schema=None):
         self.logger.debug("Waiting for moduleInfo invoke")
         conn = create_ums_connection(app, media_id, self.url, password)
 
@@ -336,46 +375,41 @@ class UStreamTV(Plugin):
         while conn.connected and attempts:
             try:
                 result = conn.process_packets(invoked_method="moduleInfo",
-                                              timeout=30)
+                                              timeout=10)
             except (IOError, librtmp.RTMPError) as err:
                 raise PluginError("Failed to get stream info: {0}".format(err))
 
-            result = validate_module_info(result)
-            if result:
+            try:
+                result = _module_info_schema.validate(result)
                 break
-            else:
+            except PluginError:
                 attempts -= 1
 
         conn.close()
 
+        if schema:
+            result = schema.validate(result)
+
         return result
 
-    def _get_streams_from_rtmp(self):
+    def _get_desktop_streams(self, channel_id):
         password = self.options.get("password")
-        module_info = self._get_module_info("channel", self.channel_id,
-                                            password)
-        if not module_info:
-            raise NoStreamsError(self.url)
+        channel = self._get_module_info("channel", channel_id, password,
+                                        schema=_channel_schema)
 
-        providers = module_info.get("stream")
-        if providers == "offline":
+        if not isinstance(channel.get("stream"), list):
             raise NoStreamsError(self.url)
-        elif not isinstance(providers, list):
-            raise PluginError("Invalid stream info: {0}".format(providers))
 
         streams = {}
-        for provider in filter(valid_provider, providers):
-            provider_url = provider.get("url")
-            provider_name = provider.get("name")
-            provider_streams = provider.get("streams")
-
-            for stream_index, stream_info in enumerate(provider_streams):
+        for provider in channel["stream"]:
+            provider_url = provider["url"]
+            provider_name = provider["name"]
+            for stream_index, stream_info in enumerate(provider["streams"]):
                 stream = None
                 stream_height = int(stream_info.get("height", 0))
                 stream_name = stream_info.get("description")
-
                 if not stream_name:
-                    if stream_height:
+                    if stream_height > 0:
                         if not stream_info.get("isTranscoded"):
                             stream_name = "{0}p+".format(stream_height)
                         else:
@@ -388,12 +422,11 @@ class UStreamTV(Plugin):
                     stream_name += "_alt_{0}".format(provider_name_clean)
 
                 if provider_name.startswith("uhs_"):
-                    stream = UHSStream(self.session, self.channel_id,
+                    stream = UHSStream(self.session, channel_id,
                                        self.url, provider_name,
                                        stream_index, password)
-                elif (provider_url.startswith("rtmp") and
-                      RTMPStream.is_usable(self.session)):
-                        playpath = stream_info.get("streamName")
+                elif provider_url.startswith("rtmp"):
+                        playpath = stream_info["streamName"]
                         stream = self._create_rtmp_stream(provider_url,
                                                           playpath)
 
@@ -402,82 +435,26 @@ class UStreamTV(Plugin):
 
         return streams
 
-    def _get_streams_from_amf(self):
-        if not RTMPStream.is_usable(self.session):
-            raise NoStreamsError(self.url)
-
-        res = http.get(AMF_URL.format(self.channel_id))
-
-        try:
-            packet = AMFPacket.deserialize(BytesIO(res.content))
-        except (IOError, AMFError) as err:
-            raise PluginError("Failed to parse AMF packet: {0}".format(err))
-
-        for message in packet.messages:
-            if message.target_uri == "/1/onResult":
-                result = message.value
-                break
-        else:
-            raise PluginError("No result found in AMF packet")
-
-        streams = {}
-        stream_name = result.get("streamName")
-        if stream_name:
-            cdn = result.get("cdnUrl") or result.get("fmsUrl")
-            if cdn:
-                stream = self._create_rtmp_stream(cdn, stream_name)
-
-                if "videoCodec" in result and result["videoCodec"]["height"] > 0:
-                    stream_name = "{0}p".format(int(result["videoCodec"]["height"]))
-                else:
-                    stream_name = "live"
-
-                streams[stream_name] = stream
-            else:
-                self.logger.warning("Missing cdnUrl and fmsUrl from result")
-
-        stream_versions = result.get("streamVersions")
-        if stream_versions:
-            for version, info in stream_versions.items():
-                stream_version_cdn = info.get("streamVersionCdn", {})
-
-                for name, cdn in filter(valid_cdn, stream_version_cdn.items()):
-                    stream = self._create_rtmp_stream(cdn["cdnStreamUrl"],
-                                                      cdn["cdnStreamName"])
-                    stream_name = "live_alt_{0}".format(name)
-                    streams[stream_name] = stream
-
-        return streams
-
-    def _get_live_streams(self):
-        self.channel_id = self._get_channel_id(self.url)
-
-        if not self.channel_id:
-            raise NoStreamsError(self.url)
-
+    def _get_live_streams(self, channel_id):
         streams = defaultdict(list)
-
-        if not RTMPStream.is_usable(self.session):
-            self.logger.warning("rtmpdump is not usable. "
-                                "Not all streams may be available.")
-
         if HAS_LIBRTMP:
-            desktop_streams = self._get_streams_from_rtmp
+            try:
+                desktop_streams = self._get_desktop_streams(channel_id)
+                for name, stream in desktop_streams.items():
+                    streams[name].append(stream)
+            except PluginError as err:
+                self.logger.error("Unable to fetch desktop streams: {0}", err)
+            except NoStreamsError:
+                pass
         else:
-            self.logger.warning("python-librtmp is not installed. "
-                                "Not all streams may be available.")
-            desktop_streams = self._get_streams_from_amf
+            self.logger.warning(
+                "python-librtmp is not installed, but is needed to access "
+                "the desktop streams"
+            )
 
         try:
-            for name, stream in desktop_streams().items():
-                streams[name].append(stream)
-        except PluginError as err:
-            self.logger.error("Unable to fetch desktop streams: {0}", err)
-        except NoStreamsError:
-            pass
-
-        try:
-            mobile_streams = self._get_hls_streams(wait_for_transcode=not streams)
+            mobile_streams = self._get_hls_streams(channel_id,
+                                                   wait_for_transcode=not streams)
             for name, stream in mobile_streams.items():
                 streams[name].append(stream)
         except PluginError as err:
@@ -489,19 +466,16 @@ class UStreamTV(Plugin):
 
     def _get_recorded_streams(self, video_id):
         streams = {}
-
         if HAS_LIBRTMP:
-            module_info = self._get_module_info("recorded", video_id)
-            if not module_info:
-                raise NoStreamsError(self.url)
+            recording = self._get_module_info("recorded", video_id,
+                                              schema=_recorded_schema)
 
-            providers = module_info.get("stream")
-            if not isinstance(providers, list):
-                raise PluginError("Invalid stream info: {0}".format(providers))
+            if not isinstance(recording.get("stream"), list):
+                return
 
-            for provider in providers:
+            for provider in recording["stream"]:
                 base_url = provider.get("url")
-                for stream_info in provider.get("streams"):
+                for stream_info in provider["streams"]:
                     bitrate = int(stream_info.get("bitrate", 0))
                     stream_name = (bitrate > 0 and "{0}k".format(bitrate) or
                                    "recorded")
@@ -509,7 +483,7 @@ class UStreamTV(Plugin):
                     if stream_name in streams:
                         stream_name += "_alt"
 
-                    url = stream_info.get("streamName")
+                    url = stream_info["streamName"]
                     if base_url:
                         url = base_url + url
 
@@ -520,9 +494,10 @@ class UStreamTV(Plugin):
                         streams[stream_name] = RTMPStream(self.session, params)
 
         else:
-            self.logger.warning("The proper API could not be used without "
-                                "python-librtmp installed. Stream URL may be "
-                                "incorrect.")
+            self.logger.warning(
+                "The proper API could not be used without python-librtmp "
+                "installed. Stream URL is not guaranteed to be valid"
+            )
 
             url = RECORDED_URL.format(video_id)
             random_hash = "{0:02x}{1:02x}".format(randint(0, 255),
@@ -534,10 +509,14 @@ class UStreamTV(Plugin):
         return streams
 
     def _get_streams(self):
-        recorded = re.match(RECORDED_URL_PATTERN, self.url)
-        if recorded:
-            return self._get_recorded_streams(recorded.group("video_id"))
-        else:
-            return self._get_live_streams()
+        match = _url_re.match(self.url)
+
+        video_id = match.group("video_id")
+        if video_id:
+            return self._get_recorded_streams(video_id)
+
+        channel_id = match.group("channel_id") or self._get_channel_id()
+        if channel_id:
+            return self._get_live_streams(channel_id)
 
 __plugin__ = UStreamTV

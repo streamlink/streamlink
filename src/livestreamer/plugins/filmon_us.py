@@ -1,115 +1,133 @@
 import re
 
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api.utils import parse_json, parse_query
 from livestreamer.stream import RTMPStream, HTTPStream
-from livestreamer.utils import prepend_www
 
-RTMP_URL = "rtmp://204.107.26.73/battlecam"
-RTMP_UPLOAD_URL = "rtmp://204.107.26.75/streamer"
-SWF_URL = "http://www.filmon.us/application/themes/base/flash/broadcast/VideoChatECCDN_debug_withoutCenteredOwner.swf"
-SWF_UPLOAD_URL = "http://www.battlecam.com/application/themes/base/flash/MediaPlayer.swf"
+SWF_LIVE_URL = "https://www.filmon.com/tv/modules/FilmOnTV/files/flashapp/filmon/FilmonPlayer.swf"
+SWF_VIDEO_URL = "http://www.filmon.us/application/themes/base/flash/MediaPlayer.swf"
 
+_url_re = re.compile("http(s)?://(\w+\.)?filmon.us")
+_live_export_re = re.compile(
+    "<iframe src=\"(https://www.filmon.com/channel/export[^\"]+)\""
+)
+_live_json_re = re.compile("var startupChannel = (.+);")
+_replay_json_re = re.compile("var standByVideo = encodeURIComponent\('(.+)'\);")
+_history_re = re.compile(
+    "helpers.common.flash.flashplayerinstall\({url:'([^']+)',"
+)
+_video_flashvars_re = re.compile(
+    "<embed width=\"486\" height=\"326\" flashvars=\"([^\"]+)\""
+)
+
+_live_schema = validate.Schema({
+    "streams": [{
+        "name": validate.text,
+        "quality": validate.text,
+        "url": validate.url(scheme="rtmp")
+    }]
+})
+_schema = validate.Schema(
+    validate.union({
+        "export_url": validate.all(
+            validate.transform(_live_export_re.search),
+            validate.any(
+                None,
+                validate.get(1),
+            )
+        ),
+        "video_flashvars": validate.all(
+            validate.transform(_video_flashvars_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get(1),
+                    validate.transform(parse_query),
+                    {
+                        "_111pix_serverURL": validate.url(scheme="rtmp"),
+                        "en_flash_providerName": validate.text
+                    }
+                )
+            )
+        ),
+        "history_video": validate.all(
+            validate.transform(_history_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get(1),
+                    validate.url(scheme="http")
+                )
+            )
+        ),
+        "standby_video": validate.all(
+            validate.transform(_replay_json_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get(1),
+                    validate.transform(parse_json),
+                    [{
+                        "streamName": validate.url(scheme="http")
+                    }]
+                )
+            )
+        )
+    })
+)
 
 class Filmon_us(Plugin):
     @classmethod
     def can_handle_url(self, url):
-        return "filmon.us" in url
+        return _url_re.match(url)
 
-    def _get_streams(self):
-        if not RTMPStream.is_usable(self.session):
-            raise PluginError("rtmpdump is not usable and required by Filmon_us plugin")
+    def _get_live_stream(self, export_url):
+        res = http.get(export_url)
+        match = _live_json_re.search(res.text)
+        if not match:
+            return
 
+        json = parse_json(match.group(1), schema=_live_schema)
         streams = {}
+        for stream in json["streams"]:
+            stream_name = stream["quality"]
+            parsed = urlparse(stream["url"])
 
-        try:
-            # history video
-            if "filmon.us/history" in self.url or "filmon.us/video/history/hid" in self.url:
-                streams['default'] = self._get_history()
-            # uploaded video
-            elif "filmon.us/video" in self.url:
-                streams['default'] = self._get_stream_upload()
-            # live video
-            else:
-                streams['default'] = self._get_stream_live()
-        except NoStreamsError:
-            pass
+            stream = RTMPStream(self.session, {
+                "rtmp": stream["url"],
+                "app": "{0}?{1}".format(parsed.path[1:], parsed.query),
+                "playpath": stream["name"],
+                "swfVfy": SWF_LIVE_URL,
+                "pageUrl": self.url,
+                "live": True
+            })
+            streams[stream_name] = stream
 
         return streams
 
-    def _get_history(self):
-        video_id = self.url.rstrip("/").rpartition("/")[2]
+    def _get_streams(self):
+        res = http.get(self.url, schema=_schema)
 
-        self.logger.debug("Testing if video exist")
-        history_url = 'http://www.filmon.us/video/history/hid/' + video_id
-        if http.url_resolve(prepend_www(history_url)) == "http://www.filmon.us/channels":
-            raise PluginError("history number " + video_id + " don't exist")
+        if res["export_url"]:
+            return self._get_live_stream(res["export_url"])
+        elif res["video_flashvars"]:
+            stream = RTMPStream(self.session, {
+                "rtmp": res["video_flashvars"]["_111pix_serverURL"],
+                "playpath": res["video_flashvars"]["en_flash_providerName"],
+                "swfVfy": SWF_VIDEO_URL,
+                "pageUrl": self.url
+            })
+            return dict(video=stream)
+        elif res["standby_video"]:
+            for stream in res["standby_video"]:
+                stream = HTTPStream(self.session, stream["streamName"])
+                return dict(replay=stream)
+        elif res["history_video"]:
+            stream = HTTPStream(self.session, res["history_video"])
+            return dict(history=stream)
 
-        self.logger.debug("Fetching video URL")
-        res = http.get(history_url)
-        match = re.search("http://cloud.battlecam.com/([/\w]+).flv", res.text)
-        if not match:
-            return
-        url = match.group(0)
-
-        return HTTPStream(self.session, url)
-
-    def _get_stream_upload(self):
-        video = urlparse(self.url).path
-
-        if http.resolve_url(prepend_www(self.url)) == 'http://www.filmon.us/channels':
-            raise PluginError(video + " don't exist")
-
-        playpath = "mp4:resources" + video + '/v_3.mp4'
-
-        rtmp = RTMP_UPLOAD_URL
-        parsed = urlparse(rtmp)
-        app = parsed.path[1:]
-
-        return RTMPStream(self.session, {
-            "rtmp": rtmp,
-            "pageUrl": self.url,
-            "swfUrl": SWF_UPLOAD_URL,
-            "playpath": playpath,
-            "app": app,
-            "live": True
-        })
-
-    def _get_stream_live(self):
-        self.logger.debug("Fetching room_id")
-        res = http.get(self.url)
-        match = re.search("room/id/(\d+)", res.text)
-        if not match:
-            return
-        room_id = match.group(1)
-
-        self.logger.debug("Comparing channel name with URL")
-        match = re.search("<meta property=\"og:url\" content=\"http://www.filmon.us/(\w+)", res.text)
-        if not match:
-            return
-        channel_name = match.group(1)
-        base_name = self.url.rstrip("/").rpartition("/")[2]
-
-        if (channel_name != base_name):
-            return
-
-        playpath = "mp4:bc_" + room_id
-        if not playpath:
-            raise NoStreamsError(self.url)
-
-        rtmp = RTMP_URL
-        parsed = urlparse(rtmp)
-        app = parsed.path[1:]
-
-        return RTMPStream(self.session, {
-            "rtmp": RTMP_URL,
-            "pageUrl": self.url,
-            "swfUrl": SWF_URL,
-            "playpath": playpath,
-            "app": app,
-            "live": True
-        })
+        return
 
 __plugin__ = Filmon_us

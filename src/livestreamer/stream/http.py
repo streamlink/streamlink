@@ -27,8 +27,7 @@ class HTTPStream(Stream):
 
     - :attr:`url`  The URL to the stream, prepared by requests.
     - :attr:`args` A :class:`dict` containing keyword arguments passed
-                   to :meth:`requests.request`, such as headers and
-                   cookies.
+      to :meth:`requests.request`, such as headers and cookies.
 
     """
 

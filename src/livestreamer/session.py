@@ -280,6 +280,17 @@ class Livestreamer(object):
 
         raise NoPluginError
 
+    def streams(self, url, **params):
+        """Attempts to find a plugin and extract streams from the *url*.
+
+        *params* are passed to :func:`Plugin.streams`.
+
+        Raises :exc:`NoPluginError` if no plugin is found.
+        """
+
+        plugin = self.resolve_url(url)
+        return plugin.streams(**params)
+
     def get_plugins(self):
         """Returns the loaded plugins for the session."""
 

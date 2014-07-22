@@ -1,30 +1,32 @@
-from livestreamer.exceptions import PluginError, NoStreamsError
+import re
+
 from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
-from livestreamer.compat import urlparse
-from livestreamer.utils import parse_qsd
+
+RTMP_URL = "rtmp://live.us.picarto.tv/golive/{0}"
+
+_url_re = re.compile("""
+    http(s)?://(\w+\.)?picarto.tv
+    /live/channel.php
+    .+watch=(?P<channel>[^&?/]+)
+""", re.VERBOSE)
+
 
 class Picarto(Plugin):
-
     @classmethod
     def can_handle_url(self, url):
-        return "picarto.tv" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        params = parse_qsd(urlparse(self.url).query)
-        if not 'watch' in params:
-            raise NoStreamsError(self.url)
-        channel = params['watch']
-        
-        if not RTMPStream.is_usable(self.session):
-            raise PluginError("rtmpdump is not usable but required by Picarto plugin")
-        
+        match = _url_re.match(self.url)
+        channel = match.group("channel")
+
         streams = {}
         streams["live"] = RTMPStream(self.session, {
-            "rtmp": "rtmp://199.189.86.17/dsapp/{0}.flv".format(channel),
+            "rtmp": RTMP_URL.format(channel),
             "pageUrl": self.url,
             "live": True
         })
         return streams
-        
+
 __plugin__ = Picarto

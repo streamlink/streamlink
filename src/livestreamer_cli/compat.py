@@ -19,6 +19,7 @@ elif is_py3:
 
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
+
 def shlex_quote(s):
     """Return a shell-escaped version of the string *s*.
 

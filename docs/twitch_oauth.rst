@@ -6,6 +6,8 @@ Twitch OAuth authentication
 
 .. raw:: html
 
+    <!-- Some themes include jquery after our code... -->
+    <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript">
         $(function() {
             var el = $(".highlight");
@@ -21,8 +23,6 @@ Twitch OAuth authentication
             }
         });
     </script>
-
-    <div class="oauth"></div>
 
 
 You successfully authenticated Livestreamer with Twitch.

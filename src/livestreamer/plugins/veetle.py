@@ -1,47 +1,59 @@
+import re
+
 from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import HTTPStream
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import FLVPlaylist, HTTPStream
+
+API_URL = "http://veetle.com/index.php/stream/ajaxStreamLocation/{0}/flash"
+
+_url_re = re.compile("""
+    http(s)?://(\w+\.)?veetle.com
+    (:?
+        /.*(v|view)/
+        (?P<channel>[^/]+/[^/&?]+)
+    )?
+""", re.VERBOSE)
+
+_schema = validate.Schema({
+    validate.optional("isLive"): bool,
+    "payload": validate.any(int, validate.url(scheme="http")),
+    "success": bool
+})
 
 
 class Veetle(Plugin):
-    APIURL = "http://veetle.com/index.php/stream/ajaxStreamLocation/{0}/flash"
-
     @classmethod
     def can_handle_url(self, url):
-        return "veetle.com" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
+        match = _url_re.match(self.url)
         parsed = urlparse(self.url)
-
         if parsed.fragment:
-            channelid = parsed.fragment
-        elif "/v/" in parsed.path:
-            channelid = parsed.path.rpartition("/v/")[-1]
+            channel_id = parsed.fragment
         else:
-            channelid = parsed.path.rpartition("view/")[-1]
+            channel_id = match.group("channel")
 
-        if not channelid:
-            raise NoStreamsError(self.url)
+        if not channel_id:
+            return
 
-        channelid = channelid.lower().replace("/", "_")
+        channel_id = channel_id.lower().replace("/", "_")
+        res = http.get(API_URL.format(channel_id))
+        info = http.json(res, schema=_schema)
 
-        self.logger.debug("Fetching stream info")
-        res = http.get(self.APIURL.format(channelid))
-        json = http.json(res)
+        if not info["success"]:
+            return
 
-        if not isinstance(json, dict):
-            raise PluginError("Invalid JSON response")
-        elif not ("success" in json and "payload" in json):
-            raise PluginError("Invalid JSON response")
-        elif json["success"] == False:
-            raise NoStreamsError(self.url)
+        if info.get("isLive"):
+            name = "live"
+        else:
+            name = "vod"
 
-        streams = {}
-        streams["live"] = HTTPStream(self.session, json["payload"])
+        stream = HTTPStream(self.session, info["payload"])
+        # Wrap the stream in a FLVPlaylist to verify the FLV tags
+        stream = FLVPlaylist(self.session, [stream])
 
-        return streams
-
+        return {name: stream}
 
 __plugin__ = Veetle

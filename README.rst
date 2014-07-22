@@ -57,6 +57,12 @@ or installing from a source directory:
 `The Hitchhiker’s Guide to Python <http://docs.python-guide.org/>`_ has guides
 helping you install Python + pip on the most common operating systems.
 
+Updating
+----------
+
+.. code-block:: bash
+
+    $ pip install --upgrade livestreamer
 
 Usage
 -----

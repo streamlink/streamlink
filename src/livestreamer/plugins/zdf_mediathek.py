@@ -1,9 +1,8 @@
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
-from livestreamer.stream import RTMPStream, HDSStream
-from livestreamer.utils import parse_xml
+from livestreamer.plugin.api import http, validate
+from livestreamer.stream import HDSStream, HLSStream, RTMPStream
 
 API_URL = "http://www.zdf.de/ZDFmediathek/xmlservice/web/beitragsDetails"
 QUALITY_WEIGHTS = {
@@ -13,54 +12,84 @@ QUALITY_WEIGHTS = {
     "med": 176,
     "low": 112
 }
+STREAMING_TYPES = {
+    "h264_aac_f4f_http_f4m_http": (
+        "HDS", HDSStream.parse_manifest
+    ),
+    "h264_aac_ts_http_m3u8_http": (
+        "HLS", HLSStream.parse_variant_playlist
+    )
+}
+
+_url_re = re.compile("""
+    http(s)?://(\w+\.)?zdf.de/zdfmediathek(\#)?/.+
+    /(live|video)
+    /(?P<video_id>\d+)
+""", re.VERBOSE | re.IGNORECASE)
+
+_schema = validate.Schema(
+    validate.xml_findall("video/formitaeten/formitaet"),
+    [
+        validate.union({
+            "type": validate.get("basetype"),
+            "quality": validate.xml_findtext("quality"),
+            "url": validate.all(
+                validate.xml_findtext("url"),
+                validate.url()
+            )
+        })
+    ]
+)
 
 
 class zdf_mediathek(Plugin):
     @classmethod
     def can_handle_url(cls, url):
-        return "zdf.de/zdfmediathek" in url.lower()
+        return _url_re.match(url)
 
     @classmethod
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
         if weight:
-            return weight, "ZDFmediathek"
+            return weight, "zdf_mediathek"
 
         return Plugin.stream_weight(key)
 
+    def _create_rtmp_stream(self, url):
+        return RTMPStream(self.session, {
+            "rtmp": self._get_meta_url(url),
+            "pageUrl": self.url,
+        })
+
+    def _get_meta_url(self, url):
+        res = http.get(url, exception=IOError)
+        root = http.xml(res, exception=IOError)
+        return root.findtext("default-stream-url")
+
     def _get_streams(self):
-        if not RTMPStream.is_usable(self.session):
-            self.logger.warning("rtmpdump is not usable, only HDS streams will be available")
-
-        self.logger.debug("Fetching stream info")
-        match = re.search("/\w*/(live|video)*/(\d+)", self.url)
-        if not match:
-            return
-
-        stream_id = match.group(2)
-        res = http.get(API_URL, params=dict(ak="web", id=stream_id))
-        root = parse_xml(res.text.encode("utf8"))
+        match = _url_re.match(self.url)
+        video_id = match.group("video_id")
+        res = http.get(API_URL, params=dict(ak="web", id=video_id))
+        fmts = http.xml(res, schema=_schema)
 
         streams = {}
-        for formitaet in root.iter('formitaet'):
-            url = formitaet.find('url').text
-            quality = formitaet.find('quality').text
+        for fmt in fmts:
+            if fmt["type"] in STREAMING_TYPES:
+                name, parser = STREAMING_TYPES[fmt["type"]]
+                try:
+                    streams.update(parser(self.session, fmt["url"]))
+                except IOError as err:
+                    self.logger.error("Failed to extract {0} streams: {1}",
+                                      name, err)
 
-            if formitaet.get('basetype') == "h264_aac_f4f_http_f4m_http":
-                hds_streams = HDSStream.parse_manifest(self.session, url)
-                streams.update(hds_streams)
-            elif formitaet.get('basetype') == 'h264_aac_mp4_rtmp_zdfmeta_http':
-                streams[quality] = RTMPStream(self.session, {
-                    "rtmp": self._get_stream(url),
-                    "pageUrl": self.url,
-                })
+            elif fmt["type"] == "h264_aac_mp4_rtmp_zdfmeta_http":
+                name = fmt["quality"]
+                try:
+                    streams[name] = self._create_rtmp_stream(fmt["url"])
+                except IOError as err:
+                    self.logger.error("Failed to extract RTMP stream '{0}': {1}",
+                                      name, err)
 
         return streams
-
-    def _get_stream(self, meta_url):
-        res = http.get(meta_url)
-        root = parse_xml(res.text.encode("utf8"))
-        stream_url = root.find("default-stream-url").text
-        return stream_url
 
 __plugin__ = zdf_mediathek

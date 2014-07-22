@@ -1,6 +1,7 @@
 import re
 
 from livestreamer.exceptions import PluginError, NoStreamsError
+from livestreamer.plugin.api import validate
 from livestreamer.options import Options
 
 # Import base classes from a support plugin that must exist in the
@@ -10,9 +11,42 @@ from livestreamer.plugin.api.support_plugin import justintv_common
 JustinTVPluginBase = justintv_common.PluginBase
 JustinTVAPIBase = justintv_common.APIBase
 
+_url_re = re.compile(r"http(s)?://([\w\.]+)?twitch.tv/[^/]+(/[ab]/\d+)?")
+_time_re = re.compile("""
+    (?:
+        (?P<hours>\d+)h
+    )?
+    (?:
+        (?P<minutes>\d+)m
+    )?
+    (?:
+        (?P<seconds>\d+)s
+    )?
+""", re.VERBOSE)
+
+_user_schema = validate.Schema(
+    {
+        validate.optional("display_name"): validate.text
+    },
+    validate.get("display_name")
+)
+_video_schema = validate.Schema(
+    {
+        "chunks": {
+            validate.text: [{
+                "length": int,
+                "url": validate.text
+            }]
+        },
+        "restrictions": { validate.text: validate.text },
+        "start_offset": int,
+        "end_offset": int,
+    }
+)
+
 
 def time_to_offset(t):
-    match = re.match(r"((?P<hours>\d+)h)?((?P<minutes>\d+)m)?((?P<seconds>\d+)s)?", t)
+    match = _time_re.match(t)
     if match:
         offset = int(match.group("hours") or "0") * 60 * 60
         offset += int(match.group("minutes") or "0") * 60
@@ -24,20 +58,20 @@ def time_to_offset(t):
 
 
 class TwitchAPI(JustinTVAPIBase):
-    def channel_info(self, channel):
-        return self.call("/api/channels/{0}".format(channel))
+    def channel_info(self, channel, **params):
+        return self.call("/api/channels/{0}".format(channel), **params)
 
-    def channel_subscription(self, channel):
-        return self.call("/api/channels/{0}/subscription".format(channel))
+    def channel_subscription(self, channel, **params):
+        return self.call("/api/channels/{0}/subscription".format(channel), **params)
 
-    def channel_viewer_info(self, channel):
-        return self.call("/api/channels/{0}/viewer".format(channel))
+    def channel_viewer_info(self, channel, **params):
+        return self.call("/api/channels/{0}/viewer".format(channel), **params)
 
-    def user(self):
-        return self.call("/kraken/user")
+    def user(self, **params):
+        return self.call("/kraken/user", **params)
 
-    def videos(self, video_id):
-        return self.call("/api/videos/{0}".format(video_id))
+    def videos(self, video_id, **params):
+        return self.call("/api/videos/{0}".format(video_id), **params)
 
 
 class Twitch(JustinTVPluginBase):
@@ -49,7 +83,7 @@ class Twitch(JustinTVPluginBase):
 
     @classmethod
     def can_handle_url(self, url):
-        return "twitch.tv" in url
+        return _url_re.match(url)
 
     def __init__(self, url):
         JustinTVPluginBase.__init__(self, url)
@@ -63,7 +97,7 @@ class Twitch(JustinTVPluginBase):
         if oauth_token and not self.api.oauth_token:
             self.logger.info("Attempting to authenticate using OAuth token")
             self.api.oauth_token = oauth_token
-            user = self.api.user().get("display_name")
+            user = self.api.user(schema=_user_schema)
 
             if user:
                 self.logger.info("Successfully logged in as {0}", user)
@@ -80,7 +114,8 @@ class Twitch(JustinTVPluginBase):
             self.video_type = "a"
 
         try:
-            videos = self.api.videos(self.video_type + self.video_id)
+            videos = self.api.videos(self.video_type + self.video_id,
+                                     schema=_video_schema)
         except PluginError as err:
             if "HTTP/1.1 0 ERROR" in str(err):
                 raise NoStreamsError(self.url)

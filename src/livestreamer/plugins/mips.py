@@ -1,53 +1,64 @@
-from livestreamer.compat import urlparse
-from livestreamer.exceptions import PluginError, NoStreamsError
+import re
+
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api.utils import parse_query
 from livestreamer.stream import RTMPStream
 
-import re
+BALANCER_URL = "http://www.mips.tv:1935/loadbalancer"
+PLAYER_URL = "http://mips.tv/embedplayer/{0}/1/500/400"
+SWF_URL = "http://mips.tv/content/scripts/eplayer.swf"
+
+_url_re = re.compile("http(s)?://(\w+.)?mips.tv/(?P<channel>[^/&?]+)")
+_flashvars_re = re.compile("'FlashVars', '([^']+)'")
+_rtmp_re = re.compile("redirect=(.+)")
+
+_schema = validate.Schema(
+    validate.transform(_flashvars_re.search),
+    validate.any(
+        None,
+        validate.all(
+            validate.get(1),
+            validate.transform(parse_query),
+            {
+                "id": validate.transform(int),
+                validate.optional("s"): validate.text
+            }
+        )
+    )
+)
+_rtmp_schema = validate.Schema(
+    validate.transform(_rtmp_re.search),
+    validate.get(1),
+)
 
 
 class Mips(Plugin):
-    SWFURL = "http://mips.tv/content/scripts/eplayer.swf"
-    PlayerURL = "http://mips.tv/embedplayer/{0}/1/500/400"
-    BalancerURL = "http://www.mips.tv:1935/loadbalancer"
-
     @classmethod
     def can_handle_url(self, url):
-        return "mips.tv" in url
+        return _url_re.match(url)
 
     def _get_streams(self):
-        channelname = urlparse(self.url).path.rstrip("/").rpartition("/")[-1].lower()
+        match = _url_re.match(self.url)
+        channel = match.group("channel")
 
-        self.logger.debug("Fetching stream info")
+        headers = {"Referer": self.url}
+        url = PLAYER_URL.format(channel)
+        res = http.get(url, headers=headers, schema=_schema)
+        if not res or "s" not in res:
+            return
 
-        headers = {
-            "Referer": self.url
-        }
-
-        res = http.get(self.PlayerURL.format(channelname), headers=headers)
-        match = re.search("'FlashVars', '(id=\d+)&s=(.+?)&", res.text)
-        if not match:
-            raise NoStreamsError(self.url)
-
-        channelname = "{0}?{1}".format(match.group(2), match.group(1))
-        res = http.get(self.BalancerURL, headers=headers)
-
-        match = re.search("redirect=(.+)", res.text)
-        if not match:
-            raise PluginError("Error retrieving RTMP address from loadbalancer")
-
-        rtmp = match.group(1)
         streams = {}
+        server = http.get(BALANCER_URL, headers=headers, schema=_rtmp_schema)
+        playpath = "{0}?{1}".format(res["s"], res["id"])
         streams["live"] = RTMPStream(self.session, {
-            "rtmp": "rtmp://{0}/live/{1}".format(rtmp, channelname),
+            "rtmp": "rtmp://{0}/live/{1}".format(server, playpath),
             "pageUrl": self.url,
-            "swfVfy": self.SWFURL,
+            "swfVfy": SWF_URL,
             "conn": "S:OK",
             "live": True
         })
 
         return streams
-
 
 __plugin__ = Mips

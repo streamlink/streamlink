@@ -107,19 +107,15 @@ def main():
     livestreamer.set_loglevel("info")
     livestreamer.set_logoutput(sys.stdout)
 
-    # Attempt to find a plugin for this URL
-    try:
-        plugin = livestreamer.resolve_url(url)
-    except NoPluginError:
-        exit("Livestreamer is unable to handle the URL '{0}'".format(url))
-
     # Attempt to fetch streams
     try:
-        streams = plugin.get_streams()
+        streams = livestreamer.streams(url)
+    except NoPluginError:
+        exit("Livestreamer is unable to handle the URL '{0}'".format(url))
     except PluginError as err:
         exit("Plugin error: {0}".format(err))
 
-    if len(streams) == 0:
+    if not streams:
         exit("No streams found on URL '{0}'".format(url))
 
     # Look for specified stream

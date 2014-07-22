@@ -137,8 +137,6 @@ class RunningCommand(object):
         # we're running in the background, return self and let us lazily
         # evaluate
         if self.call_args["bg"]:
-            if self.process.stdin:
-                self.process.stdin.close()
             return
 
         # we're running this command as a with context, don't do anything

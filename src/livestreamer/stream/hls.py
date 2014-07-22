@@ -227,8 +227,7 @@ class HLSStream(HTTPStream):
 
     - :attr:`url` The URL to the HLS playlist.
     - :attr:`args` A :class:`dict` containing keyword arguments passed
-                   to :meth:`requests.request`, such as headers and
-                   cookies.
+      to :meth:`requests.request`, such as headers and cookies.
 
     .. versionchanged:: 1.7.0
        Added *args* attribute.

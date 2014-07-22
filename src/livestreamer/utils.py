@@ -7,7 +7,7 @@ try:
 except ImportError:
     import xml.etree.ElementTree as ET
 
-from .compat import urljoin, urlparse, parse_qsl
+from .compat import urljoin, urlparse, parse_qsl, is_py2
 from .exceptions import PluginError
 
 
@@ -44,41 +44,69 @@ def prepend_www(url):
         return url
 
 
-def parse_json(data, jsontype="JSON", exception=PluginError):
+def parse_json(data, name="JSON", exception=PluginError, schema=None):
+    """Wrapper around json.loads.
+
+    Wraps errors in custom exception with a snippet of the data in the message.
+    """
     try:
-        jsondata = json.loads(data)
+        json_data = json.loads(data)
     except ValueError as err:
-        if len(data) > 35:
-            snippet = data[:35] + "..."
+        snippet = repr(data)
+        if len(snippet) > 35:
+            snippet = snippet[:35] + " ..."
         else:
             snippet = data
 
-        raise exception("Unable to parse {0}: {1} ({2})".format(jsontype, err,
-                                                                snippet))
+        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
 
-    return jsondata
+    if schema:
+        json_data = schema.validate(json_data, name=name, exception=exception)
+
+    return json_data
 
 
-def parse_xml(data, xmltype="XML", ignore_ns=False, exception=PluginError):
+def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=None):
+    """Wrapper around ElementTree.fromstring with some extras.
+
+    Provides these extra features:
+     - Handles incorrectly encoded XML
+     - Allows stripping namespace information
+     - Wraps errors in custom exception with a snippet of the data in the message
+    """
+    if is_py2 and isinstance(data, unicode):
+        data = data.encode("utf8")
+
     if ignore_ns:
         data = re.sub(" xmlns=\"(.+?)\"", "", data)
 
     try:
         tree = ET.fromstring(data)
     except Exception as err:
-        if len(data) > 35:
-            snippet = data[:35] + "..."
-        else:
-            snippet = data
+        snippet = repr(data)
+        if len(snippet) > 35:
+            snippet = snippet[:35] + " ..."
 
-        raise exception("Unable to parse {0}: {1} ({2})".format(xmltype, err,
-                                                                snippet))
+        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
+
+    if schema:
+        tree = schema.validate(tree, name=name, exception=exception)
 
     return tree
 
 
-def parse_qsd(*args, **kwargs):
-    return dict(parse_qsl(*args, **kwargs))
+def parse_qsd(data, name="query string", exception=PluginError, schema=None, **params):
+    """Parses a query string into a dict.
+
+    Unlike parse_qs and parse_qsl, duplicate keys are not preserved in
+    favor of a simpler return value.
+    """
+
+    value = dict(parse_qsl(data, **params))
+    if schema:
+        value = schema.validate(value, name=name, exception=exception)
+
+    return value
 
 
 def rtmpparse(url):

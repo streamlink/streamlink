@@ -527,7 +527,12 @@ class HDSStream(Stream):
         http://stream-recorder.com/forum/showpost.php?p=43761&postcount=13
         """
 
-        (data, hdntl) = pv.split(";")
+        try:
+            data, hdntl = pv.split(";")
+        except ValueError:
+            data = pv
+            hdntl = ""
+
         cache = Cache(filename="stream.json")
         key = "akamaihd-player:" + pvswf
         cached = cache.get(key)

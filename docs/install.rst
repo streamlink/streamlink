@@ -1,146 +1,188 @@
 .. _install:
 
-Installing
-==========
+Installation
+============
 
-Arch Linux
-----------
+Linux and BSD packages
+----------------------
 
-Livestreamer is available in the `community package repository <https://www.archlinux.org/packages/community/any/livestreamer/>`_.
+==================================== ===========================================
+Distribution                         Installing
+==================================== ===========================================
+`Arch Linux (package)`_              .. code-block:: console
 
-.. code-block:: console
+                                        # pacman -S livestreamer
+`Arch Linux (aur, git)`_             `Installing AUR packages`_
+`CRUX`_                              .. code-block:: console
 
-    # pacman -S livestreamer
+                                        $ cd /usr/ports/contrib/livestreamer
+                                        # pkgmk -d -i
+`Debian testing (jessie)`_           .. code-block:: console
 
-Debian/Ubuntu Linux
--------------------
+                                        # apt-get install livestreamer
+`Debian unstable (sid)`_             .. code-block:: console
 
-Install pip via APT first, then install Livestreamer via pip:
+                                        # apt-get install livestreamer
+`Exherbo Linux`_
+`FreeBSD (package)`_                 .. code-block:: console
 
-.. code-block:: console
+                                        # pkg install multimedia/livestreamer
+`FreeBSD (ports)`_                   .. code-block:: console
 
-    # apt-get install python-pip
-    # pip install livestreamer
+                                        $ cd /usr/ports/multimedia/livestreamer
+                                        # make install clean
+`Gentoo Linux`_                      .. code-block:: console
 
-FreeBSD
--------
+                                        # emerge net-misc/livestreamer
+`OpenBSD (package)`_                 .. code-block:: console
 
-Livestreamer is available in the `ports tree <http://www.freshports.org/multimedia/livestreamer>`_ and also as a `package <http://www.freshports.org/multimedia/livestreamer>`_.
+                                        # pkg_add livestreamer
+`OpenBSD (ports)`_                   .. code-block:: console
 
-**Via ports**
+                                        $ cd /usr/ports/multimedia/livestreamer
+                                        # make install clean
+==================================== ===========================================
 
-.. code-block:: console
+.. _Arch Linux (package): https://archlinux.org/packages/?q=livestreamer
+.. _Arch Linux (aur, git): https://aur.archlinux.org/packages/livestreamer-git/
+.. _CRUX: http://crux.nu/portdb/?a=search&q=livestreamer
+.. _Debian testing (jessie): https://packages.debian.org/jessie/livestreamer
+.. _Debian unstable (sid): https://packages.debian.org/sid/livestreamer
+.. _Exherbo Linux: http://git.exherbo.org/summer/packages/media/livestreamer/index.html
+.. _FreeBSD (package): http://www.freshports.org/multimedia/livestreamer
+.. _FreeBSD (ports): http://www.freshports.org/multimedia/livestreamer
+.. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/livestreamer
+.. _OpenBSD (package): http://openports.se/multimedia/livestreamer
+.. _OpenBSD (ports): http://openports.se/multimedia/livestreamer
 
-    # cd /usr/ports/multimedia/livestreamer
-    # make install clean
-
-**Via package**
-
-.. code-block:: console
-
-    # pkg install multimedia/livestreamer
-
-Gentoo Linux
-------------
-
-Livestreamer is available in the `official portage tree <https://packages.gentoo.org/package/net-misc/livestreamer>`_:
-
-.. code-block:: console
-
-    # emerge net-misc/livestreamer
-
-Mac OS X
---------
-
-Mac OS X comes with Python and ``easy_install`` installed by default:
-
-.. code-block:: console
-
-    # easy_install livestreamer
-
-OpenBSD
--------
-
-Livestreamer is available in the `ports tree <http://openports.se/multimedia/livestreamer>`_:
-
-.. code-block:: console
-
-    # cd /usr/ports/multimedia/livestreamer
-    # make install clean
-
-Windows
--------
-Livestreamer is primarily developed for Unix-like operating systems where using a CLI is common. There is however a installer available for brave Windows users who don't mind using the command prompt.
-
-The installer can be `downloaded from Github <https://github.com/chrippa/livestreamer/releases>`_. It contains a precompiled version of Livestreamer that does not require you to install any of the dependencies.
-
-Development builds
-^^^^^^^^^^^^^^^^^^
-
-There are development builds available for Windows `here <http://livestreamer-builds.s3.amazonaws.com/builds.html>`_.
+.. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 
 
-Other OSs/from source
----------------------
+Other platforms
+---------------
 
-**Stable version**
+==================================== ===========================================
+Platform                             Installing
+==================================== ===========================================
+Mac OS X                             .. code-block:: console
 
-The preferred way install Livestreamer is to use the Python package manager `pip <http://www.pip-installer.org/>`_:
+                                        # easy_install -U livestreamer
+Microsoft Windows                    See `Windows binaries`_.
+==================================== ===========================================
 
-.. code-block:: console
 
-    # pip install livestreamer
+Source code
+-----------
 
-But it is also possible to use the old way of installing Python packages via ``easy_install``:
+If a package is not available for your platform (or it's out of date) you
+can install Livestreamer via source.
 
-.. code-block:: console
+There are a few different methods to do this,
+`pip <http://pip.readthedocs.org/en/latest/installing.html>`_ the Python package
+manager, :command:`easy_install` the older package manager included with
+`python-setuptools`_ or by checking out the latest code with
+`Git <http://git-scm.com/downloads>`_.
 
-    # easy_install livestreamer
+The commands listed here will also upgrade any existing version of Livestreamer.
 
-**Development version**
+==================================== ===========================================
+Version                              Installing
+==================================== ===========================================
+`Latest release (pip)`_              .. code-block:: console
 
-You can get the latest development version using `Git <http://git-scm.com/>`_:
+                                        # pip install -U livestreamer
+`Latest release (easy_install)`_     .. code-block:: console
 
-.. code-block:: console
+                                        # easy_install -U livestreamer
+`Development version (pip)`_         .. code-block:: console
 
-    $ git clone git://github.com/chrippa/livestreamer.git
-    $ cd livestreamer
-    # python setup.py install
+                                        # pip install -U git+https://github.com/chrippa/livestreamer.git
 
+`Development version (git)`_         .. code-block:: console
+
+                                        $ git clone git://github.com/chrippa/livestreamer.git
+                                        $ cd livestreamer
+                                        # python setup.py install
+==================================== ===========================================
+
+.. _Latest release (pip): https://pypi.python.org/pypi/livestreamer
+.. _Latest release (easy_install): https://pypi.python.org/pypi/livestreamer
+.. _Development version (pip): https://github.com/chrippa/livestreamer
+.. _Development version (git): https://github.com/chrippa/livestreamer
 
 Dependencies
 ^^^^^^^^^^^^
 
-Livestreamer currently depends on these libraries/programs to function.
+To install Livestreamer from source you will need these dependencies.
 
-To run the setup script you need:
+==================================== ===========================================
+Name                                 Notes
+==================================== ===========================================
+`Python`_                            At least version **2.6** or **3.3**.
+`python-setuptools`_
 
-- `Python <http://python.org/>`_ (at least version 2.6) or `PyPy <http://pypy.org/>`_
-- `python-setuptools <http://pypi.python.org/pypi/setuptools>`_
+**Automatically installed by the setup script**
+--------------------------------------------------------------------------------
+`python-argparse`_                   Only needed on Python version **2.6**.
+`python-requests`_                   At least version **1.0**.
+`python-singledispatch`_             Only needed on Python versions older than **3.4**.
+
+**Optional**
+--------------------------------------------------------------------------------
+`RTMPDump`_                          Required to play RTMP streams.
+`PyCrypto`_                          Required to play some encrypted streams.
+`python-librtmp`_                    Required by the *ustreamtv* plugin to be
+                                     able to use non-mobile streams.
+==================================== ===========================================
+
+.. _Python: http://python.org/
+.. _python-setuptools: http://pypi.python.org/pypi/setuptools
+.. _python-argparse: http://pypi.python.org/pypi/argparse
+.. _python-requests: http://python-requests.org/
+.. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
+.. _RTMPDump: http://rtmpdump.mplayerhq.hu/
+.. _PyCrypto: https://www.dlitz.net/software/pycrypto/
+.. _python-librtmp: https://github.com/chrippa/python-librtmp
 
 
-These will be installed automatically by the setup script if they are missing:
+Windows binaries
+----------------
 
-- `python-argparse <http://pypi.python.org/pypi/argparse>`_ (only needed on Python version <2.7 and <3.2)
-- `python-requests <http://docs.python-requests.org/>`_ (at least version 1.0)
+:releaseref:`Installer <https://github.com/chrippa/livestreamer/releases/download/v|release|/livestreamer-v|release|-win32-setup.exe>`
+^^^^^^^^^^^^^^^^^^^^^^
+
+This is a installer which contains:
+
+- A compiled version of Livestreamer that does not require an existing Python
+  installation
+- `RTMPDump`_ for viewing RTMP streams
+
+and performs the following tasks:
+
+- Generates a default :ref:`configuration file <cli-livestreamerrc>`
+- Adds Livestreamer to your ``$PATH`` (making it possible to use
+  :command:`livestreamer` directly from the command prompt without specifying
+  its directory)
+
+:releaseref:`Zip archive <https://github.com/chrippa/livestreamer/releases/download/v|release|/livestreamer-v|release|-win32.zip>`
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+This is minimal zip archive containing a compiled version of Livestreamer that
+does not require an existing Python installation.
+
+`Nightly build`_
+^^^^^^^^^^^^^^^^
+
+This is an automatically generated build of the latest development code
+from the git repo.
+
+.. _Nightly build: http://livestreamer-builds.s3.amazonaws.com/livestreamer-latest-win32.zip
 
 
-`The Hitchhiker’s Guide to Python <http://docs.python-guide.org/>`_ has guides
-helping you install Python on most common operating systems.
+.. note::
 
-Optional dependencies
-^^^^^^^^^^^^^^^^^^^^^
-
-For RTMP based plugins:
-
-- `RTMPDump <http://rtmpdump.mplayerhq.hu/>`_
-
-For decrypting encrypted HLS streams:
-
-- `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_
-
-For full UStream.tv support:
-
-- `python-librtmp <https://github.com/chrippa/python-librtmp>`_
+    The binaries requires `Microsoft Visual C++ 2008 Redistributable
+    Package <http://www.microsoft.com/en-us/download/details.aspx?id=29>`_ to
+    be installed.
 
 

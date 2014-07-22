@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import errno
 import os
 import requests
@@ -19,11 +17,12 @@ from livestreamer.stream import StreamProcess
 from .argparser import parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
-from .constants import CONFIG_FILE, PLUGINS_DIR, STREAM_SYNONYMS
+from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
+QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = livestreamer = plugin = None
 
@@ -152,8 +151,7 @@ def output_stream_http(plugin, streams):
                     stream = None
 
             except PluginError as err:
-                console.logger.error("Unable to fetch new streams: {0}",
-                                     err)
+                console.logger.error(u"Unable to fetch new streams: {0}", err)
 
             if not stream:
                 console.logger.info("Stream not available, will re-fetch "
@@ -337,11 +335,18 @@ def handle_stream(plugin, streams, stream_name):
 
             console.msg("{0}", cmdline)
         else:
-            console.exit("Stream does not use a command-line")
+            console.exit("The stream specified cannot be translated to a command")
 
     # Print JSON representation of the stream
     elif console.json:
         console.msg_json(stream)
+
+    elif args.stream_url:
+        url = stream_to_url(stream)
+        if url:
+            console.msg("{0}", url)
+        else:
+            console.exit("The stream specified cannot be translated to a URL")
 
     # Output the stream
     else:
@@ -383,7 +388,7 @@ def fetch_streams_infinite(plugin, interval):
     try:
         streams = fetch_streams(plugin)
     except PluginError as err:
-        console.logger.error("{0}", err)
+        console.logger.error(u"{0}", err)
         streams = None
 
     if not streams:
@@ -395,7 +400,7 @@ def fetch_streams_infinite(plugin, interval):
         try:
             streams = fetch_streams(plugin)
         except PluginError as err:
-            console.logger.error("{0}", err)
+            console.logger.error(u"{0}", err)
 
     return streams
 
@@ -461,13 +466,16 @@ def handle_url():
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
     except PluginError as err:
-        console.exit("{0}", err)
+        console.exit(u"{0}", err)
 
     if not streams:
         console.exit("No streams found on this URL: {0}", args.url)
 
-    if args.best_stream_default and not args.stream and not args.json:
-        args.stream = ["best"]
+    if args.best_stream_default:
+        args.default_stream = ["best"]
+
+    if args.default_stream and not args.stream and not args.json:
+        args.stream = args.default_stream
 
     if args.stream:
         validstreams = format_valid_streams(streams)
@@ -540,21 +548,41 @@ def load_plugins(dirs):
                                    "a directory!", directory)
 
 
-def setup_args():
+def setup_args(config_files=[]):
     """Parses arguments."""
     global args
-
     arglist = sys.argv[1:]
 
-    # Load additional arguments from livestreamerrc
-    if os.path.exists(CONFIG_FILE):
-        arglist.insert(0, "@" + CONFIG_FILE)
+    # Load arguments from config files
+    for config_file in filter(os.path.isfile, config_files):
+        arglist.insert(0, "@" + config_file)
 
     args = parser.parse_args(arglist)
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
         args.stream = [stream.lower() for stream in args.stream]
+
+
+def setup_config_args():
+    config_files = []
+
+    if args.url:
+        with ignored(NoPluginError):
+            plugin = livestreamer.resolve_url(args.url)
+            config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
+
+    if args.config:
+        # We want the config specified last to get highest priority
+        config_files += list(reversed(args.config))
+    else:
+        # Only load first available default config
+        for config_file in filter(os.path.isfile, CONFIG_FILES):
+            config_files.append(config_file)
+            break
+
+    if config_files:
+        setup_args(config_files)
 
 
 def setup_console():
@@ -570,13 +598,18 @@ def setup_console():
         console.set_output(sys.stderr)
 
     # We don't want log output when we are printing JSON or a command-line.
-    if not (args.json or args.subprocess_cmdline or args.quiet):
+    if not any(getattr(args, attr) for attr in QUIET_OPTIONS):
         console.set_level(args.loglevel)
 
     if args.quiet_player:
         console.logger.warning("The option --quiet-player is deprecated since "
                                "version 1.4.3 as hiding player output is now "
                                "the default.")
+
+    if args.best_stream_default:
+        console.logger.warning("The option --best-stream-default is deprecated "
+                               "since version 1.9.0, use '--default-stream best' "
+                               "instead.")
 
     console.json = args.json
 
@@ -755,21 +788,27 @@ def check_version():
         latest_version = data.get("info").get("version")
         cache.set("latest_version", latest_version, (60 * 60 * 24))
 
+    version_info_printed = cache.get("version_info_printed")
+    if version_info_printed:
+        return
+
     installed_version = StrictVersion(livestreamer.version)
     latest_version = StrictVersion(latest_version)
 
     if latest_version > installed_version:
         console.logger.info("A new version of Livestreamer ({0}) is "
                             "available!".format(latest_version))
+        cache.set("version_info_printed", True, (60 * 60 * 6))
 
 
 def main():
     setup_args()
     check_root()
     setup_livestreamer()
+    setup_plugins()
+    setup_config_args()
     setup_console()
     setup_http_session()
-    setup_plugins()
 
     if not args.no_version_check:
         with ignored(Exception):

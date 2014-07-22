@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
+from os import environ
+from os.path import abspath, dirname, join
 from setuptools import setup
 from sys import version_info, path as sys_path
-from os.path import abspath, dirname, join
 
 deps = []
 packages = ["livestreamer",
@@ -14,10 +15,13 @@ packages = ["livestreamer",
             "livestreamer.packages.flashmedia",
             "livestreamer_cli"]
 
-# require argparse on Python <2.7 and <3.2
-if (version_info[0] == 2 and version_info[1] < 7) or \
-   (version_info[0] == 3 and version_info[1] < 2):
+# require argparse on Python 2.6
+if version_info[0] == 2 and version_info[1] == 6:
     deps.append("argparse")
+
+# require singledispatchon Python <3.4
+if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
+    deps.append("singledispatch")
 
 # requests 2.0 does not work correctly on Python <2.6.3
 if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
@@ -25,14 +29,18 @@ if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
 else:
     deps.append("requests>=1.0,<3.0")
 
+# When we build an egg for the Win32 bootstrap we don't want dependency
+# information built into it.
+if environ.get("NO_DEPS"):
+    deps = []
 
 srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="livestreamer",
-      version="1.8.2",
-      description="Livestreamer is CLI program that extracts streams from "
-                  "various services and pipes them into a video player of "
+      version="1.9.0",
+      description="Livestreamer is command-line utility that extracts streams "
+                  "from various services and pipes them into a video player of "
                   "choice.",
       url="http://livestreamer.tanuki.se/",
       author="Christopher Rosell",
@@ -45,10 +53,14 @@ setup(name="livestreamer",
       },
       install_requires=deps,
       test_suite="tests",
-      classifiers=["Operating System :: POSIX",
-                   "Operating System :: Microsoft :: Windows",
+      classifiers=["Development Status :: 5 - Production/Stable",
                    "Environment :: Console",
-                   "Development Status :: 5 - Production/Stable",
+                   "Operating System :: POSIX",
+                   "Operating System :: Microsoft :: Windows",
+                   "Programming Language :: Python :: 2.6",
+                   "Programming Language :: Python :: 2.7",
+                   "Programming Language :: Python :: 3.3",
+                   "Programming Language :: Python :: 3.4",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
                    "Topic :: Multimedia :: Video",

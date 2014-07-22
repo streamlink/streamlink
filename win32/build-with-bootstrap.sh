@@ -26,7 +26,7 @@ fi
 unzip -d $BUILD_TARGET_DIR $BOOTSTRAP_PATH
 
 cd $SOURCE_DIR
-python setup.py bdist_egg
+NO_DEPS=1 python setup.py bdist_egg
 egg=$(basename dist/*.egg)
 
 unzip -d "$BUILD_TARGET_DIR/$egg" "dist/$egg"

@@ -1,32 +1,33 @@
+import re
+
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 
-import re
-
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0"
+    "User-Agent": ("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) "
+                   "Gecko/20100101 Firefox/25.0")
 }
-URL_REGEX = r"http(s)?://api.dmcloud.net/player/embed/[\w\?=&\/;\-]+"
 URLS = [
-    r"http(s)?://(\w+\.)?action24.gr"
+    re.compile("http(s)?://(\w+\.)?action24.gr")
 ]
+
+_embed_re = re.compile("http(s)?://api.dmcloud.net/player/embed/[\w\?=&\/;\-]+")
 
 
 class DMCloudEmbed(Plugin):
     @classmethod
     def can_handle_url(self, url):
         for site in URLS:
-            if re.match(site, url):
+            if site.match(url):
                 return True
 
     def _get_streams(self):
         res = http.get(self.url, headers=HEADERS)
 
-        match = re.search(URL_REGEX, res.text)
+        match = _embed_re.search(res.text)
         if match:
             url = match.group(0)
-            plugin = self.session.resolve_url(url)
-            return plugin.get_streams()
+            return self.session.streams(url)
 
 
 __plugin__ = DMCloudEmbed

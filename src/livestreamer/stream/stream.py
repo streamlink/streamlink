@@ -21,7 +21,7 @@ class Stream(object):
 
     def open(self):
         """
-        Attemps to open a connection to the stream.
+        Attempts to open a connection to the stream.
         Returns a file-like object that can be used to read the stream data.
 
         Raises :exc:`StreamError` on failure.
