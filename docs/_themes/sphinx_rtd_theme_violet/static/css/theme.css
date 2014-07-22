@@ -3278,7 +3278,7 @@ select[disabled], textarea[disabled], input[readonly], select[readonly], textare
   float: right;
 }
 
-.full-width {
+.full-width, .rst-content table.docutils:not(.field-list) {
   width: 100%;
 }
 
@@ -3352,14 +3352,14 @@ select[disabled], textarea[disabled], input[readonly], select[readonly], textare
 }
 
 /* BORDERED TABLES */
-.wy-table-bordered-all, .rst-content table.docutils {
+.wy-table-bordered-all {
   border: 1px solid #e1e4e5;
 }
-.wy-table-bordered-all td, .rst-content table.docutils td {
+.wy-table-bordered-all td {
   border-bottom: 1px solid #e1e4e5;
   border-left: 1px solid #e1e4e5;
 }
-.wy-table-bordered-all tbody > tr:last-child td, .rst-content table.docutils tbody > tr:last-child td {
+.wy-table-bordered-all tbody > tr:last-child td {
   border-bottom-width: 0;
 }
 
@@ -3367,10 +3367,10 @@ select[disabled], textarea[disabled], input[readonly], select[readonly], textare
   border: 1px solid #e1e4e5;
 }
 
-.wy-table-bordered-rows td {
+.wy-table-bordered-rows td, .rst-content table.docutils td {
   border-bottom: 1px solid #e1e4e5;
 }
-.wy-table-bordered-rows tbody > tr:last-child td {
+.wy-table-bordered-rows tbody > tr:last-child td, .rst-content table.docutils tbody > tr:last-child td {
   border-bottom-width: 0;
 }
 
@@ -4616,8 +4616,19 @@ nav.stickynav {
   padding-right: 0;
   vertical-align: top;
 }
+.rst-content table.docutils {
+  border: none;
+}
+.rst-content table.docutils td, .rst-content table.docutils th {
+  border-left: none;
+  border-top: none;
+  border-right: none;
+}
 .rst-content table.docutils td {
   vertical-align: top;
+}
+.rst-content table.docutils.footnote {
+  width: auto;
 }
 .rst-content table.field-list {
   border: none;
@@ -4760,4 +4771,10 @@ a:visited:hover {
 .wy-table-responsive .wy-plain-list-disc li, .wy-table-responsive .rst-content .section ul li, .rst-content .section .wy-table-responsive ul li, .wy-table-responsive .rst-content .toctree-wrapper ul li, .rst-content .toctree-wrapper .wy-table-responsive ul li {
   list-style: none;
   margin-left: 0;
+}
+.wy-table-responsive div.highlight {
+  margin: 0;
+}
+.wy-table-responsive div.highlight pre {
+  padding: 5px;
 }
