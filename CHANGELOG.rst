@@ -1,3 +1,19 @@
+Version 1.10.0 (Under development)
+----------------------------------
+
+Bug fixes:
+ - The HDS options added in 1.8.0 where never actually applied when
+   used via the CLI, oops.
+
+CLI:
+ - Added :option:`--hds-segment-threads` option.
+ - Added :option:`--hls-segment-threads` option.
+
+API:
+ - Added new option: ``hds-segment-threads``.
+ - Added new option: ``hls-segment-threads``.
+
+
 Version 1.9.0 (2014-07-22)
 --------------------------
 
