@@ -165,33 +165,30 @@ class BeatStreamWriter(SegmentedStreamWriter):
 
         self.concater = BeatFLVTagConcat(flatten_timestamps=True)
 
-    def open_chunk(self, chunk, retries=3):
-        while retries and not self.closed:
-            try:
-                url = BEAT_URL.format(chunk.recording,
-                                      chunk.quality,
-                                      chunk.sequence,
-                                      chunk.extension)
-
-                return self.session.http.get(url,
-                                             stream=True,
-                                             headers=HEADERS,
-                                             timeout=10,
-                                             exception=StreamError)
-            except StreamError as err:
-                self.logger.error(
-                    "Failed to open chunk {0}/{1}/{2}: {3}",
-                    chunk.recording, chunk.quality, chunk.sequence, err
-                )
-            retries -= 1
-
-    def write(self, chunk, chunk_size=8192):
-        res = self.open_chunk(chunk)
-        if not res:
+    def fetch(self, chunk, retries=None):
+        if self.closed or not retries:
             return
 
         try:
-            fd = StreamIOIterWrapper(res.iter_content(8192))
+            url = BEAT_URL.format(chunk.recording,
+                                  chunk.quality,
+                                  chunk.sequence,
+                                  chunk.extension)
+
+            return self.session.http.get(url,
+                                         headers=HEADERS,
+                                         timeout=10,
+                                         exception=StreamError)
+        except StreamError as err:
+            self.logger.error(
+                "Failed to open chunk {0}/{1}/{2}: {3}",
+                chunk.recording, chunk.quality, chunk.sequence, err
+            )
+            return self.fetch(chunk, retries - 1)
+
+    def write(self, chunk, res, chunk_size=8192):
+        try:
+            fd = StreamIOIterWrapper(res.iter_content(chunk_size))
             for data in self.concater.iter_chunks(fd=fd, skip_header=True):
                 self.reader.buffer.write(data)
                 if self.closed:

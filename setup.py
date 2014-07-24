@@ -15,11 +15,15 @@ packages = ["livestreamer",
             "livestreamer.packages.flashmedia",
             "livestreamer_cli"]
 
-# require argparse on Python 2.6
-if version_info[0] == 2 and version_info[1] == 6:
-    deps.append("argparse")
+if version_info[0] == 2:
+    # Require backport of concurrent.futures on Python 2
+    deps.append("futures")
 
-# require singledispatchon Python <3.4
+    # Require backport of argparse on Python 2.6
+    if version_info[1] == 6:
+        deps.append("argparse")
+
+# Require singledispatch on Python <3.4
 if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
     deps.append("singledispatch")
 

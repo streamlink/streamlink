@@ -1,9 +1,9 @@
+from concurrent import futures
 from threading import Thread, Event
 
 from .stream import StreamIO
 from ..buffers import RingBuffer
 from ..compat import queue
-
 
 
 class SegmentedStreamWorker(Thread):
@@ -68,13 +68,16 @@ class SegmentedStreamWriter(Thread):
     and finally writing the data to the buffer.
     """
 
-    def __init__(self, reader, size=10):
+    def __init__(self, reader, size=10, threads=1, retries=3):
         self.closed = False
-        self.queue = queue.Queue(size)
         self.reader = reader
         self.stream = reader.stream
         self.session = reader.stream.session
         self.logger = reader.logger
+
+        self.retries = retries
+        self.executor = futures.ThreadPoolExecutor(max_workers=threads)
+        self.futures = queue.Queue(size)
 
         Thread.__init__(self)
         self.daemon = True
@@ -86,18 +89,39 @@ class SegmentedStreamWriter(Thread):
 
         self.closed = True
         self.reader.buffer.close()
+        self.executor.shutdown(wait=True)
 
     def put(self, segment):
-        """Add a segment to the queue."""
+        """Adds a segment to the download pool and write queue."""
+        if self.closed:
+            return
+
+        if segment is not None:
+            future = self.executor.submit(self.fetch, segment,
+                                          retries=self.retries)
+        else:
+            future = None
+
+        self.queue(self.futures, (segment, future))
+
+    def queue(self, queue_, value):
+        """Puts a value into a queue but aborts if this thread is closed."""
         while not self.closed:
             try:
-                self.queue.put(segment, block=True, timeout=1)
+                queue_.put(value, block=True, timeout=1)
                 break
             except queue.Full:
                 continue
 
-    def write(self, segment):
-        """Write the segment to the buffer.
+    def fetch(self, segment):
+        """Fetches a segment.
+
+        Should be overridden by the inheriting class.
+        """
+        pass
+
+    def write(self, segment, result):
+        """Writes a segment to the buffer.
 
         Should be overridden by the inheriting class.
         """
@@ -106,13 +130,25 @@ class SegmentedStreamWriter(Thread):
     def run(self):
         while not self.closed:
             try:
-                segment = self.queue.get(block=True, timeout=0.5)
+                segment, future = self.futures.get(block=True, timeout=0.5)
             except queue.Empty:
                 continue
 
-            if segment is not None:
-                self.write(segment)
-            else:
+            # End of stream
+            if future is None:
+                break
+
+            while not self.closed:
+                try:
+                    result = future.result(timeout=0.5)
+                except futures.TimeoutError:
+                    continue
+                except futures.CancelledError:
+                    break
+
+                if result is not None:
+                    self.write(segment, result)
+
                 break
 
         self.close()
@@ -154,6 +190,3 @@ class SegmentedStreamReader(StreamIO):
 
         return self.buffer.read(size, block=self.writer.is_alive(),
                                 timeout=self.timeout)
-
-
-

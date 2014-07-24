@@ -476,6 +476,17 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--hds-segment-threads",
+    type=num(int, max=10),
+    metavar="THREADS",
+    help="""
+    The size of the thread pool used to download HDS segments.
+    Minimum value is 1 and maximum is 10.
+
+    Default is 1.
+    """
+)
+transport.add_argument(
     "--hds-segment-timeout",
     type=num(float, min=0),
     metavar="TIMEOUT",
@@ -517,6 +528,17 @@ transport.add_argument(
     before giving up.
 
     Default is 3.
+    """
+)
+transport.add_argument(
+    "--hls-segment-threads",
+    type=num(int, max=10),
+    metavar="THREADS",
+    help="""
+    The size of the thread pool used to download HLS segments.
+    Minimum value is 1 and maximum is 10.
+
+    Default is 1.
     """
 )
 transport.add_argument(

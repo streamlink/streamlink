@@ -673,6 +673,9 @@ def setup_options():
     if args.hls_segment_attempts:
         livestreamer.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
+    if args.hls_segment_threads:
+        livestreamer.set_option("hls-segment-threads", args.hls_segment_threads)
+
     if args.hls_segment_timeout:
         livestreamer.set_option("hls-segment-timeout", args.hls_segment_timeout)
 
@@ -684,6 +687,9 @@ def setup_options():
 
     if args.hds_segment_attempts:
         livestreamer.set_option("hds-segment-attempts", args.hds_segment_attempts)
+
+    if args.hds_segment_threads:
+        livestreamer.set_option("hds-segment-threads", args.hds_segment_threads)
 
     if args.hds_segment_timeout:
         livestreamer.set_option("hds-segment-timeout", args.hds_segment_timeout)
