@@ -682,6 +682,15 @@ def setup_options():
     if args.hds_live_edge:
         livestreamer.set_option("hds-live-edge", args.hds_live_edge)
 
+    if args.hds_segment_attempts:
+        livestreamer.set_option("hds-segment-attempts", args.hds_segment_attempts)
+
+    if args.hds_segment_timeout:
+        livestreamer.set_option("hds-segment-timeout", args.hds_segment_timeout)
+
+    if args.hds_timeout:
+        livestreamer.set_option("hds-timeout", args.hds_timeout)
+
     if args.http_stream_timeout:
         livestreamer.set_option("http-stream-timeout", args.http_stream_timeout)
 
