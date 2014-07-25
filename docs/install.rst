@@ -124,6 +124,7 @@ Name                                 Notes
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
 `python-argparse`_                   Only needed on Python version **2.6**.
+`python-futures`_                    Only needed on Python **2.x**.
 `python-requests`_                   At least version **1.0**.
 `python-singledispatch`_             Only needed on Python versions older than **3.4**.
 
@@ -138,6 +139,7 @@ Name                                 Notes
 .. _Python: http://python.org/
 .. _python-setuptools: http://pypi.python.org/pypi/setuptools
 .. _python-argparse: http://pypi.python.org/pypi/argparse
+.. _python-futures: http://pypi.python.org/pypi/futures
 .. _python-requests: http://python-requests.org/
 .. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
