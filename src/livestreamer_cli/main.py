@@ -24,7 +24,7 @@ from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
-args = console = livestreamer = plugin = None
+args = console = livestreamer = plugin = stream_fd = None
 
 
 def check_file_output(filename, force):
@@ -202,6 +202,7 @@ def open_stream(stream):
     before opening the output.
 
     """
+    global stream_fd
 
     # Attempts to open the stream
     try:
@@ -832,10 +833,14 @@ def main():
     if args.plugins:
         print_plugins()
     elif args.url:
-        with ignored(KeyboardInterrupt):
+        try:
             setup_options()
             setup_plugin_options()
             handle_url()
+        except KeyboardInterrupt:
+            # Make sure current stream gets properly cleaned up
+            if stream_fd:
+                stream_fd.close()
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     else:
