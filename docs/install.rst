@@ -41,6 +41,7 @@ Distribution                         Installing
 
                                         $ cd /usr/ports/multimedia/livestreamer
                                         # make install clean
+`Slackware Linux`_                   `Installing Slackbuilds`_
 ==================================== ===========================================
 
 .. _Arch Linux (package): https://archlinux.org/packages/?q=livestreamer
@@ -54,9 +55,10 @@ Distribution                         Installing
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/livestreamer
 .. _OpenBSD (package): http://openports.se/multimedia/livestreamer
 .. _OpenBSD (ports): http://openports.se/multimedia/livestreamer
+.. _Slackware Linux: http://slackbuilds.org/result/?search=livestreamer
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
-
+.. _Installing Slackbuilds: http://slackbuilds.org/howto/
 
 Other platforms
 ---------------
