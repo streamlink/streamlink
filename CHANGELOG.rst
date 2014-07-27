@@ -8,10 +8,21 @@ Bug fixes:
 CLI:
  - Added :option:`--hds-segment-threads` option.
  - Added :option:`--hls-segment-threads` option.
+ - Added :option:`--stream-segment-attempts` option.
+ - Added :option:`--stream-segment-threads` option.
+ - Added :option:`--stream-segment-timeout` option.
+ - Added :option:`--stream-timeout` option.
+
+Plugins:
+ - hitbox: Added support for HLS videos.
 
 API:
- - Added new option: ``hds-segment-threads``.
- - Added new option: ``hls-segment-threads``.
+ - Added new session option: ``hds-segment-threads``.
+ - Added new session option: ``hls-segment-threads``.
+ - Added new session option: ``stream-segment-attempts``.
+ - Added new session option: ``stream-segment-threads``.
+ - Added new session option: ``stream-segment-timeout``.
+ - Added new session option: ``stream-timeout``.
 
 
 Version 1.9.0 (2014-07-22)
