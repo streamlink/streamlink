@@ -713,6 +713,18 @@ def setup_options():
     if args.rtmp_timeout:
         livestreamer.set_option("rtmp-timeout", args.rtmp_timeout)
 
+    if args.stream_segment_attempts:
+        livestreamer.set_option("stream-segment-attempts", args.stream_segment_attempts)
+
+    if args.stream_segment_threads:
+        livestreamer.set_option("stream-segment-threads", args.stream_segment_threads)
+
+    if args.stream_segment_timeout:
+        livestreamer.set_option("stream-segment-timeout", args.stream_segment_timeout)
+
+    if args.stream_timeout:
+        livestreamer.set_option("stream-timeout", args.stream_timeout)
+
     livestreamer.set_option("subprocess-errorlog", args.subprocess_errorlog)
 
     # Deprecated options

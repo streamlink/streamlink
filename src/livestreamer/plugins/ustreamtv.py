@@ -119,7 +119,7 @@ class UHSStreamWriter(SegmentedStreamWriter):
                 params["start"] = chunk.offset
 
             return http.get(chunk.url,
-                            timeout=10,
+                            timeout=self.timeout,
                             params=params,
                             exception=StreamError)
         except StreamError as err:

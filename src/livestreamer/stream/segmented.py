@@ -68,14 +68,24 @@ class SegmentedStreamWriter(Thread):
     and finally writing the data to the buffer.
     """
 
-    def __init__(self, reader, size=10, threads=1, retries=3):
+    def __init__(self, reader, size=10, retries=None, threads=None, timeout=None):
         self.closed = False
         self.reader = reader
         self.stream = reader.stream
         self.session = reader.stream.session
         self.logger = reader.logger
 
+        if not retries:
+            retries = self.session.options.get("stream-segment-attempts")
+
+        if not threads:
+            threads = self.session.options.get("stream-segment-threads")
+
+        if not timeout:
+            timeout = self.session.options.get("stream-segment-timeout")
+
         self.retries = retries
+        self.timeout = timeout
         self.executor = futures.ThreadPoolExecutor(max_workers=threads)
         self.futures = queue.Queue(size)
 
@@ -158,11 +168,14 @@ class SegmentedStreamReader(StreamIO):
     __worker__ = SegmentedStreamWorker
     __writer__ = SegmentedStreamWriter
 
-    def __init__(self, stream, timeout=60):
+    def __init__(self, stream, timeout=None):
         StreamIO.__init__(self)
-
         self.session = stream.session
         self.stream = stream
+
+        if not timeout:
+            timeout = self.session.options.get("stream-timeout")
+
         self.timeout = timeout
 
     def open(self):

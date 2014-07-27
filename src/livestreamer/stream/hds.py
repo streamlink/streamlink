@@ -49,6 +49,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
         options = reader.stream.session.options
         kwargs["retries"] = options.get("hds-segment-attempts")
         kwargs["threads"] = options.get("hds-segment-threads")
+        kwargs["timeout"] = options.get("hds-segment-timeout")
         SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
 
         duration, tags = None, []
@@ -60,8 +61,6 @@ class HDSStreamWriter(SegmentedStreamWriter):
         self.concater = FLVTagConcat(tags=tags,
                                      duration=duration,
                                      flatten_timestamps=True)
-        self.segment_attempts = self.session.options.get("hds-segment-attempts")
-        self.segment_timeout = self.session.options.get("hds-segment-timeout")
 
     def fetch(self, fragment, retries=None):
         if self.closed or not retries:
@@ -70,7 +69,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
         try:
             return self.session.http.get(fragment.url,
                                          stream=True,
-                                         timeout=self.segment_timeout,
+                                         timeout=self.timeout,
                                          exception=StreamError,
                                          **self.stream.request_params)
         except StreamError as err:

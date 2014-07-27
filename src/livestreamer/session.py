@@ -54,6 +54,10 @@ class Livestreamer(object):
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
+            "stream-segment-attempts": 3,
+            "stream-segment-threads": 1,
+            "stream-segment-timeout": 10.0,
+            "stream-timeout": 60.0,
             "subprocess-errorlog": False
         })
         self.plugins = {}
@@ -156,6 +160,26 @@ class Livestreamer(object):
 
         rtmp-timeout            (float) Timeout for reading data from
                                 RTMP streams, default: ``60.0``
+
+        stream-segment-attempts (int) How many attempts should be done
+                                to download each segment, default: ``3``.
+                                General option used by streams not
+                                covered by other options.
+
+        stream-segment-threads  (int) The size of the thread pool used
+                                to download segments, default: ``1``.
+                                General option used by streams not
+                                covered by other options.
+
+        stream-segment-timeout  (float) Segment connect and read
+                                timeout, default: ``10.0``.
+                                General option used by streams not
+                                covered by other options.
+
+        stream-timeout          (float) Timeout for reading data from
+                                stream, default: ``60.0``.
+                                General option used by streams not
+                                covered by other options.
         ======================= =========================================
 
         """

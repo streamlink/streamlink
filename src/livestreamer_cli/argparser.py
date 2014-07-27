@@ -626,6 +626,57 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--stream-segment-attempts",
+    type=num(int, min=0),
+    metavar="ATTEMPTS",
+    help="""
+    How many attempts should be done to download each segment before giving up.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 3.
+    """
+)
+transport.add_argument(
+    "--stream-segment-threads",
+    type=num(int, max=10),
+    metavar="THREADS",
+    help="""
+    The size of the thread pool used to download segments.
+    Minimum value is 1 and maximum is 10.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 1.
+    """
+)
+transport.add_argument(
+    "--stream-segment-timeout",
+    type=num(float, min=0),
+    metavar="TIMEOUT",
+    help="""
+    Segment connect and read timeout.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 10.0.
+    """)
+transport.add_argument(
+    "--stream-timeout",
+    type=num(float, min=0),
+    metavar="TIMEOUT",
+    help="""
+    Timeout for reading data from streams.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 60.0.
+    """)
+transport.add_argument(
     "--stream-url",
     action="store_true",
     help="""

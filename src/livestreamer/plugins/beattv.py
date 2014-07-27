@@ -177,7 +177,7 @@ class BeatStreamWriter(SegmentedStreamWriter):
 
             return self.session.http.get(url,
                                          headers=HEADERS,
-                                         timeout=10,
+                                         timeout=self.timeout,
                                          exception=StreamError)
         except StreamError as err:
             self.logger.error(
