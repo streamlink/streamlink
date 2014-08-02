@@ -15,6 +15,7 @@ CLI:
 
 Plugins:
  - Added plugin for GoodGame.ru (goodgame), patch by @eltiren. (#466)
+ - Added plugin for gaminglive.tv (gaminglive), patch by @chhe. (#468)
  - hitbox: Added support for HLS videos.
 
 API:
