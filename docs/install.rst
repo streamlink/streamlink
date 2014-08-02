@@ -129,7 +129,7 @@ Name                                 Notes
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-argparse`_                   Only needed on Python version **2.6**.
+`python-argparse`_                   Only needed on Python **2.6**.
 `python-futures`_                    Only needed on Python **2.x**.
 `python-requests`_                   At least version **1.0**.
 `python-singledispatch`_             Only needed on Python versions older than **3.4**.
