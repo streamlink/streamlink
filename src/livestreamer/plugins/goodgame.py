@@ -1,37 +1,47 @@
 import re
 
-from requests.adapters import HTTPAdapter
-
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 
-GOODGAME_URL_FORMAT = "http://hls.goodgame.ru/hls/{0}.m3u8"
-GOODGAME_URL_FORMAT_720 = "http://hls.goodgame.ru/hls/{0}_720.m3u8"
-GOODGAME_URL_FORMAT_480 = "http://hls.goodgame.ru/hls/{0}_480.m3u8"
-GOODGAME_URL_FORMAT_240 = "http://hls.goodgame.ru/hls/{0}_240.m3u8"
+HLS_URL_FORMAT = "http://hls.goodgame.ru/hls/{0}{1}.m3u8"
+QUALITIES = {
+    "1080p": "",
+    "720p": "_720",
+    "480p": "_480",
+    "240p": "_240"
+}
 
 _url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)/")
+_stream_re = re.compile(
+    "\s+data-objid=\"(\d+)\" id=\"channel-popup-link\" class=\"fright font-size-small\">"
+)
 
 class GoodGame(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
 
+    def _check_stream(self, url):
+        res = http.get(url, acceptable_status=(200, 404))
+        if res.status_code == 200:
+            return True
+
     def _get_streams(self):
-        match = _url_re.match(self.url)
         res = http.get(self.url)
-        match = re.search("                    data-objid=\"(\d+)\" id=\"channel-popup-link\" class=\"fright font-size-small\">", res.text)
-        print(match)
-        theurl = GOODGAME_URL_FORMAT.format(match.group(1))
-        
+        match = _stream_re.search(res.text)
+        if not match:
+            return
+
+        stream_id = match.group(1)
         streams = {}
-        
-        streams["1080p"] = HLSStream(self.session, GOODGAME_URL_FORMAT.format(match.group(1)))
-        streams["720p"] = HLSStream(self.session, GOODGAME_URL_FORMAT_720.format(match.group(1)))
-        streams["480p"] = HLSStream(self.session, GOODGAME_URL_FORMAT_480.format(match.group(1)))
-        streams["240p"] = HLSStream(self.session, GOODGAME_URL_FORMAT_240.format(match.group(1)))
-        
+        for name, url_suffix in QUALITIES.items():
+            url = HLS_URL_FORMAT.format(stream_id, url_suffix)
+            if not self._check_stream(url):
+                continue
+
+            streams[name] = HLSStream(self.session, url)
+
         return streams
 
 __plugin__ = GoodGame
