@@ -1,16 +1,33 @@
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http
+from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
+CHANNELS_API_URL = "http://api.gaminglive.tv/channels/{0}"
 QUALITY_WEIGHTS = {
     "live": 3,
     "medium": 2,
     "low": 1,
 }
-CHANNELS_API = "http://api.gaminglive.tv/channels/{0}"
-_url_re = re.compile("http(s)?://(staging|alpha)\.gaminglive\.tv/\#/channels/(?P<channel>[^/]+)", re.VERBOSE)
+
+_url_re = re.compile("""
+    http(s)?://(staging|alpha)\.gaminglive\.tv
+    /\#/channels/(?P<channel>[^/]+)
+""", re.VERBOSE)
+_quality_re = re.compile("[^/]+-(?P<quality>[^/]+)")
+
+_channel_schema = validate.Schema(
+    {
+        validate.optional("state"): {
+            "stream": {
+                "qualities": [validate.text],
+                "rootUrl": validate.url(scheme="rtmp")
+            }
+        }
+    },
+    validate.get("state")
+)
 
 
 class GamingLive(Plugin):
@@ -22,13 +39,12 @@ class GamingLive(Plugin):
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
         if weight:
-            return weight, "GamingLive"
+            return weight, "gaminglive"
 
         return Plugin.stream_weight(key)
 
     def _get_quality(self, label):
-        quality_re = re.compile(self.channel + "-(?P<quality>[^/]+)")
-        match = quality_re.match(label)
+        match = _quality_re.match(label)
         if match:
             return match.group("quality")
 
@@ -36,44 +52,22 @@ class GamingLive(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        if not match:
-            return
+        channel = match.group("channel")
 
-        self.channel = match.group("channel")
-
-        if not self.channel:
+        res = http.get(CHANNELS_API_URL.format(channel))
+        json = http.json(res, schema=_channel_schema)
+        if not json:
             return
 
         streams = {}
-        res = http.get(CHANNELS_API.format(self.channel))
-        json = http.json(res)
-
-        state = json['state']
-
-        if not state:
-            return
-
-        stream = state['stream']
-
-        if not stream:
-            return
-
-        rtmpBaseUrl = stream['rootUrl']
-
-        if not rtmpBaseUrl:
-            return
-
-        qualities = stream['qualities']
-
-        if not qualities:
-            return
-
-        for quality in qualities:
+        for quality in json["stream"]["qualities"]:
+            stream_name = self._get_quality(quality)
             stream = RTMPStream(self.session, {
-                "rtmp": rtmpBaseUrl + "/" + quality,
+                "rtmp": json["stream"]["rootUrl"],
+                "playpath": quality,
                 "pageUrl": self.url
             })
-            streams[self._get_quality(quality)] = stream
+            streams[stream_name] = stream
 
         return streams
 
