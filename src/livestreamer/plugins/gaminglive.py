@@ -10,7 +10,7 @@ QUALITY_WEIGHTS = {
     "low": 1,
 }
 CHANNELS_API = "http://api.gaminglive.tv/channels/{0}"
-_url_re = re.compile("http(s)?://staging.gaminglive.tv/\#/channels/(?P<channel>[^/]+)", re.VERBOSE)
+_url_re = re.compile("http(s)?://(staging|alpha)\.gaminglive\.tv/\#/channels/(?P<channel>[^/]+)", re.VERBOSE)
 
 
 class GamingLive(Plugin):
