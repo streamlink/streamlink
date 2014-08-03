@@ -14,8 +14,9 @@ CLI:
  - Added :option:`--stream-timeout` option.
 
 Plugins:
- - Added plugin for GoodGame.ru (goodgame), patch by @eltiren. (#466)
+ - Added plugin for goodgame.ru (goodgame), patch by @eltiren. (#466)
  - Added plugin for gaminglive.tv (gaminglive), patch by @chhe. (#468)
+ - Added plugin for douyutv.com (doyutv), patch by @nixxquality. (#469)
  - hitbox: Added support for HLS videos.
 
 API:
