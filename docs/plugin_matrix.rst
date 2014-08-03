@@ -26,6 +26,7 @@ crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
 dailymotion         dailymotion.com      Yes   Yes
 dommune             dommune.com          Yes   --
+douyutv             douyutv.com          Yes   --
 dmcloud             api.dmcloud.net      Yes   --
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 euronews            euronews.com         Yes   No
@@ -80,4 +81,3 @@ zdf_mediathek       zdf.de               Yes   Yes
 
 .. [1] streamingvideoprovider
 .. [2] streamingvideoprovider.co.uk
-
