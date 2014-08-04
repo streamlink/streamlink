@@ -85,7 +85,7 @@ _url_re = re.compile("""
     (youtube.com|youtu.be)
     (?:
         /(watch.+v=|embed/|v/)
-        (?P<video_id>[^/?&]+)
+        (?P<video_id>[^/?&#]+)
     )?
     (?:
         /(user/)?(?P<user>[^/?]+)
