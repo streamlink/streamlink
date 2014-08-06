@@ -12,11 +12,14 @@ CLI:
  - Added :option:`--stream-segment-threads` option.
  - Added :option:`--stream-segment-timeout` option.
  - Added :option:`--stream-timeout` option.
+ - Deprecated the :option:`--jtv-cookie` option.
+ - Deprecated the :option:`--jtv-password` option.
 
 Plugins:
  - Added plugin for goodgame.ru (goodgame), patch by @eltiren. (#466)
  - Added plugin for gaminglive.tv (gaminglive), patch by @chhe. (#468)
- - Added plugin for douyutv.com (doyutv), patch by @nixxquality. (#469)
+ - Added plugin for douyutv.com (douyutv), patch by @nixxquality. (#469)
+ - Removed plugin: justintv
  - hitbox: Added support for HLS videos.
 
 API:

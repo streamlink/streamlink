@@ -39,8 +39,7 @@ Each stream type has it's own option, these options are currently available:
 =================================== ============================================
 Option                              Used by these plugins
 =================================== ============================================
-:option:`--hls-segment-threads`     `justintv`, `twitch`, `youtube` and
-                                    many more.
+:option:`--hls-segment-threads`     `twitch`, `youtube` and many more.
 :option:`--hds-segment-threads`     `dailymotion`, `mlgtv` and many more.
 :option:`--stream-segment-threads`  `ustreamtv`, `beattv` and any other plugins
                                     implementing their own segmented streaming

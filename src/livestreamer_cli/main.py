@@ -735,17 +735,9 @@ def setup_options():
 
 def setup_plugin_options():
     """Sets Livestreamer plugin options."""
-    if args.jtv_cookie:
-        livestreamer.set_plugin_option("justintv", "cookie",
-                                       args.jtv_cookie)
+    if args.twitch_cookie:
         livestreamer.set_plugin_option("twitch", "cookie",
-                                       args.jtv_cookie)
-
-    if args.jtv_password:
-        livestreamer.set_plugin_option("justintv", "password",
-                                       args.jtv_password)
-        livestreamer.set_plugin_option("twitch", "password",
-                                       args.jtv_password)
+                                       args.twitch_cookie)
 
     if args.twitch_oauth_token:
         livestreamer.set_plugin_option("twitch", "oauth_token",
@@ -783,6 +775,14 @@ def setup_plugin_options():
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
                                "deprecated and will be removed in the future.")
+
+    if args.jtv_cookie:
+        console.logger.warning("The option --jtv-cookie is deprecated and "
+                               "will be removed in the future.")
+
+    if args.jtv_password:
+        console.logger.warning("The option --jtv-password is deprecated "
+                               "and will be removed in the future.")
 
     if args.gomtv_username:
         console.logger.warning("The option --gomtv-username is deprecated "

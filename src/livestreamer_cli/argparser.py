@@ -842,11 +842,10 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--jtv-cookie", "--twitch-cookie",
+    "--twitch-cookie",
     metavar="COOKIES",
     help="""
-    Twitch/Justin.tv cookies to authenticate to allow access
-    to subscription channels.
+    Twitch cookies to authenticate to allow access to subscription channels.
 
     Example:
 
@@ -856,13 +855,6 @@ plugin.add_argument(
     Twitch, using --twitch-oauth-authenticate is the recommended and
     simpler way of doing it now.
 
-    """
-)
-plugin.add_argument(
-    "--jtv-password", "--twitch-password",
-    metavar="PASSWORD",
-    help="""
-    A password to access password protected Twitch/Justin.tv channels.
     """
 )
 plugin.add_argument(
@@ -956,6 +948,13 @@ plugin.add_argument(
     default=None,
     help=argparse.SUPPRESS
 )
-
+plugin.add_argument(
+    "--jtv-cookie",
+    help=argparse.SUPPRESS
+)
+plugin.add_argument(
+    "--jtv-password", "--twitch-password",
+    help=argparse.SUPPRESS
+)
 
 __all__ = ["parser"]
