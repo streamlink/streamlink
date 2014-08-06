@@ -26,7 +26,7 @@ class TestSession(unittest.TestCase):
 
     def test_builtin_plugins(self):
         plugins = self.session.get_plugins()
-        self.assertTrue("justintv" in plugins)
+        self.assertTrue("twitch" in plugins)
 
     def test_resolve_url(self):
         plugins = self.session.get_plugins()
