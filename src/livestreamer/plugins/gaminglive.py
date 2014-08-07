@@ -4,6 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
+SWF_URL = "http://alpha.gaminglive.tv/lib/flowplayer/flash/flowplayer.commercial-3.2.18.swf"
 CHANNELS_API_URL = "http://api.gaminglive.tv/channels/{0}"
 QUALITY_WEIGHTS = {
     "live": 3,
@@ -65,7 +66,9 @@ class GamingLive(Plugin):
             stream = RTMPStream(self.session, {
                 "rtmp": json["stream"]["rootUrl"],
                 "playpath": quality,
-                "pageUrl": self.url
+                "pageUrl": self.url,
+                "swfVfy": SWF_URL,
+                "live": True
             })
             streams[stream_name] = stream
 
