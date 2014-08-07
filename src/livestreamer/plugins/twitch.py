@@ -244,7 +244,7 @@ class Twitch(Plugin):
                 self.logger.info("Successfully logged in as {0}", user)
             else:
                 self.logger.error("Failed to authenticate, the access token "
-                                  "is not valid")
+                                  "is invalid or missing required scope")
         elif cookies:
             self.logger.info("Attempting to authenticate using cookies")
 
