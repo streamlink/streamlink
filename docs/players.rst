@@ -34,7 +34,7 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 `MPlayer <http://mplayerhq.hu>`_                      Yes        Yes        Yes
 `MPlayer2 <http://mplayer2.org>`_                     Yes        Yes        Yes
 `mpv <http://mpv.io>`_                                Yes        Yes        Yes
-`VLC media player <http://videolan.org>`_             Yes        Yes        Yes
+`VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
 ===================================================== ========== ========== ====
 
 .. [1] :option:`--player-continuous-http` must be used.
@@ -43,6 +43,13 @@ Name                                                  Stdin Pipe Named Pipe HTTP
        HTTP requests and Livestreamer will attempt to open the stream for each
        request.
 .. [2] Stdin requires MPC-HC 1.7 or newer.
+
+.. [3] Some versions of VLC might be unable to use the stdin pipe and
+       prints the error message::
+
+            VLC is unable to open the MRL 'fd://0'
+
+       Use one of the other transport methods instead to work around this.
 
 
 Known issues and workarounds
@@ -74,10 +81,4 @@ VLC hangs when buffering and no playback starts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Some versions of 64-bit VLC seem to be unable to read the stream created by
 rtmpdump. Using the 32-bit version of VLC might help.
-
-VLC fails to play with a error message
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-VLC version *2.0.1* and *2.0.2* contains a bug that prevents it from
-reading data from standard input. This has been fixed in version *2.0.3*.
-
 
