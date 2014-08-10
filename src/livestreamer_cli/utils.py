@@ -174,7 +174,7 @@ def ignored(*exceptions):
 def check_paths(exes, paths):
     for path in paths:
         for exe in exes:
-            path = os.path.join(path, exe)
+            path = os.path.expanduser(os.path.join(path, exe))
             if os.path.isfile(path):
                 return path
 
