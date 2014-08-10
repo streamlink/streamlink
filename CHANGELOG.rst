@@ -4,6 +4,7 @@ Version 1.10.0 (Under development)
 Bug fixes:
  - The HDS options added in 1.8.0 where never actually applied when
    used via the CLI, oops.
+ - Fixed default player paths not expanding ~, patch by @medina. (#484)
 
 CLI:
  - Added :option:`--hds-segment-threads` option.
@@ -21,6 +22,7 @@ Plugins:
  - Added plugin for douyutv.com (douyutv), patch by @nixxquality. (#469)
  - Removed plugin: justintv
  - hitbox: Added support for HLS videos.
+ - ustreamtv: Fixed regression that caused channels using RTMP streams to fail.
 
 API:
  - Added new session option: ``hds-segment-threads``.
