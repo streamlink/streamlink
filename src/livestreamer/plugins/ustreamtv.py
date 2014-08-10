@@ -61,18 +61,23 @@ _channel_schema = validate.Schema({
         validate.any([{
             "name": validate.text,
             "url": validate.text,
-            "streams": [{
-                "chunkId": float,
-                "chunkRange": {validate.text: validate.text},
-                "chunkTime": float,
-                "offset": float,
-                "offsetInMs": float,
-                "streamName": validate.text,
-                validate.optional("bitrate"): float,
-                validate.optional("height"): float,
-                validate.optional("description"): validate.text,
-                validate.optional("isTranscoded"): bool
-            }]
+            "streams": [
+                validate.any({
+                    "chunkId": float,
+                    "chunkRange": {validate.text: validate.text},
+                    "chunkTime": float,
+                    "offset": float,
+                    "offsetInMs": float,
+                    "streamName": validate.text,
+                    validate.optional("bitrate"): float,
+                    validate.optional("height"): float,
+                    validate.optional("description"): validate.text,
+                    validate.optional("isTranscoded"): bool
+                },
+                {
+                    "streamName": validate.text,
+                })
+            ]
         }],
         "offline"
     )
