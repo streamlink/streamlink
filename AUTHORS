@@ -59,13 +59,17 @@ N: Niall McAndrew
 G: niallm90
 D: Original GOMTV plugin.
 
-N: nixxquality
-G: nixxquality
-D: Added plugin for Douyutv.
+N: medina
+G: medina
+D: Fixed default player paths not expanding ~ in the CLI.
 
 N: Andy Mikhailenko
 G: neithere
 D: Added more URL support to the YouTube plugin.
+
+N: nixxquality
+G: nixxquality
+D: Added plugin for Douyutv.
 
 N: Eric J
 G: wormeyman

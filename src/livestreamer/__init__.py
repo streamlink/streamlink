@@ -22,7 +22,8 @@ __credits__ = [
     "Martin Panter", "t0mm0", "Agustin Carrasco", "Andy Mikhailenko",
     "unintended", "Moritz Blanke", "Jon Bergli Heier", "Stefan Breunig",
     "papplampe", "Brian Callahan", "Eric J", "Jan Tore Morken", "JOKer",
-    "Max Nordlund", "yeeeargh", "Vitaly Evtushenko", "Che", "nixxquality"
+    "Max Nordlund", "yeeeargh", "Vitaly Evtushenko", "Che", "nixxquality",
+    "medina"
 ]
 
 
