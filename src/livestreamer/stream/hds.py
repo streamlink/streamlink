@@ -437,7 +437,10 @@ class HDSStream(Stream):
         streams = {}
 
         if not baseurl:
-            baseurl = urljoin(url, os.path.dirname(parsed.path)) + "/"
+            baseurl = urljoin(url, os.path.dirname(parsed.path))
+
+        if not baseurl.endswith("/"):
+            baseurl += "/"
 
         for bootstrap in manifest.findall("bootstrapInfo"):
             name = bootstrap.attrib.get("id") or "_global"
