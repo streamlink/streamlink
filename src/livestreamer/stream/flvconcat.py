@@ -155,6 +155,8 @@ class FLVTagConcat(object):
                     tag.data.value["duration"] = self.duration
                 elif "duration" in tag.data.value:
                     del tag.data.value["duration"]
+            else:
+                return False
 
         return True
 
