@@ -4,13 +4,14 @@ from contextlib import contextmanager
 
 from .http_server import HTTPServer
 from .named_pipe import NamedPipe
+from .progress import progress
 from .player import find_default_player
 from .stream import stream_to_url
 
 
 __all__ = [
-    "NamedPipe", "HTTPServer", "JSONEncoder", "ignored",
-    "find_default_player", "stream_to_url"
+    "NamedPipe", "HTTPServer", "JSONEncoder",
+    "find_default_player", "ignored", "progress", "stream_to_url"
 ]
 
 

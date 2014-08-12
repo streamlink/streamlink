@@ -15,6 +15,7 @@ packages = [
     "livestreamer.packages",
     "livestreamer.packages.flashmedia",
     "livestreamer_cli",
+    "livestreamer_cli.packages",
     "livestreamer_cli.utils"
 ]
 
