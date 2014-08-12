@@ -42,6 +42,7 @@ livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
+nhkworld            nhk.or.jp/nhkworld   Yes   No
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
 oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
