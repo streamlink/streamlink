@@ -409,7 +409,7 @@ def fetch_streams_infinite(plugin, interval):
 def resolve_stream_name(streams, stream_name):
     """Returns the real stream name of a synonym."""
 
-    if stream_name in STREAM_SYNONYMS:
+    if stream_name in STREAM_SYNONYMS and stream_name in streams:
         for name, stream in streams.items():
             if stream is streams[stream_name] and name not in STREAM_SYNONYMS:
                 return name
