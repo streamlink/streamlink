@@ -15,6 +15,8 @@ CLI:
  - Added :option:`--stream-timeout` option.
  - Deprecated the :option:`--jtv-cookie` option.
  - Deprecated the :option:`--jtv-password` option.
+ - Significantly improved the status line printed while writing a
+   stream to a file. (#462)
 
 Plugins:
  - Added plugin for goodgame.ru (goodgame), patch by @eltiren. (#466)
