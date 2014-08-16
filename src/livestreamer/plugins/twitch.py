@@ -90,7 +90,7 @@ _video_schema = validate.Schema(
             validate.text: [{
                 "length": int,
                 "url": validate.text,
-                "upkeep": validate.any("pass", "fail")
+                "upkeep": validate.any("pass", "fail", None)
             }]
         },
         "restrictions": { validate.text: validate.text },
