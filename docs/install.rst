@@ -153,6 +153,42 @@ Name                                 Notes
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
 
 
+Installing without root permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you do not wish to install Livestreamer globally on your system it's
+recommended to use `virtualenv`_ to create a user owned Python environment
+instead.
+
+.. code-block:: console
+
+    Creating an environment
+    $ virtualenv ~/myenv
+
+    Activating the environment
+    $ source ~/myenv/bin/activate
+
+    Installing livestreamer into the environment
+    (myenv)$ pip install livestreamer
+
+    Using livestreamer in the enviroment
+    (myenv)$ livestreamer ...
+
+    Deactivating the enviroment
+    (myenv)$ deactivate
+
+    Using livestreamer without activating the environment
+    $ ~/myenv/bin/livestreamer ...
+
+.. note::
+
+    This may also be required on some OS X versions that seems to have weird
+    permission issues (see issue #401).
+
+
+.. _virtualenv: http://virtualenv.readthedocs.org/en/latest/
+
+
 Windows binaries
 ----------------
 

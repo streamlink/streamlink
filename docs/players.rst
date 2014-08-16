@@ -65,9 +65,9 @@ MPC-HC only plays sound on Twitch streams
 Twitch sometimes returns badly muxed streams which may confuse players. The
 following workaround was contributed by MPC-HC developer @kasper93:
 
-*To fix this problem go to options -> internal filters -> open splitter settings
-and increase "Stream Analysis Duration" this will let ffmpeg to properly detect
-all streams.*
+    *To fix this problem go to options -> internal filters -> open splitter
+    settings and increase "Stream Analysis Duration" this will let ffmpeg to
+    properly detect all streams.*
 
 Using :option:`--player-passthrough hls <--player-passthrough>` has also been
 reported to work.
