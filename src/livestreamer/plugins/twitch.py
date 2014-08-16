@@ -89,7 +89,8 @@ _video_schema = validate.Schema(
         "chunks": {
             validate.text: [{
                 "length": int,
-                "url": validate.text
+                "url": validate.text,
+                "upkeep": validate.any("pass", "fail")
             }]
         },
         "restrictions": { validate.text: validate.text },
@@ -308,8 +309,8 @@ class Twitch(Plugin):
         playlist_tags = []
 
         for chunk in chunks:
-            chunk_url = chunk.get("url")
-            chunk_length = chunk.get("length")
+            chunk_url = chunk["url"]
+            chunk_length = chunk["length"]
             chunk_start = playlist_offset
             chunk_stop = chunk_start + chunk_length
             chunk_stream = HTTPStream(self.session, chunk_url)
@@ -327,7 +328,10 @@ class Twitch(Plugin):
                 keyframes = metadata.get("keyframes")
 
                 if not keyframes:
-                    raise StreamError("Missing keyframes info in the first chunk")
+                    if chunk["upkeep"] == "fail":
+                        raise StreamError("Unable to seek into muted chunk, try another timestamp")
+                    else:
+                        raise StreamError("Missing keyframes info in the first chunk")
 
                 keyframe_offset = None
                 keyframe_offsets = keyframes.get("filepositions")
