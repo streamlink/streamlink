@@ -12,10 +12,13 @@ if is_py2:
     file = file
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]").search
 
+    from .packages.shutil_backport import get_terminal_size
+
 elif is_py3:
     input = input
     stdout = sys.stdout.buffer
     from io import IOBase as file
+    from shutil import get_terminal_size
 
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
@@ -36,4 +39,4 @@ def shlex_quote(s):
 
 
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "file",
-           "shlex_quote"]
+           "shlex_quote", "get_terminal_size"]

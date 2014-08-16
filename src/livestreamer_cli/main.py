@@ -6,8 +6,10 @@ import signal
 import webbrowser
 
 from contextlib import closing
-from time import sleep
 from distutils.version import StrictVersion
+from functools import partial
+from itertools import chain
+from time import sleep
 
 from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
@@ -19,7 +21,7 @@ from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe, HTTPServer, ignored, stream_to_url
+from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
@@ -255,57 +257,46 @@ def output_stream(stream):
     return True
 
 
-def read_stream(stream, output, prebuffer):
+def read_stream(stream, output, prebuffer, chunk_size=8192):
     """Reads data from stream and then writes it to the output."""
-
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout
-    written = 0
 
-    while True:
-        try:
-            data = prebuffer or stream.read(8192)
-        except IOError as err:
-            console.logger.error("Error when reading from stream: {0}",
-                                 str(err))
-            break
+    stream_iterator = chain(
+        [prebuffer],
+        iter(partial(stream.read, chunk_size), b"")
+    )
+    if show_progress:
+        stream_iterator = progress(stream_iterator,
+                                   prefix=os.path.basename(args.output))
 
-        if len(data) == 0:
-            break
+    try:
+        for data in stream_iterator:
+            # We need to check if the player process still exists when
+            # using named pipes on Windows since the named pipe is not
+            # automatically closed by the player.
+            if is_win32 and is_fifo:
+                output.player.poll()
 
-        # We need to check if the player process still exists when
-        # using named pipes on Windows since the named pipe is not
-        # automatically closed by the player.
-        if is_win32 and is_fifo:
-            output.player.poll()
+                if output.player.returncode is not None:
+                    console.logger.info("Player closed")
+                    break
 
-            if output.player.returncode is not None:
-                console.logger.info("Player closed")
+            try:
+                output.write(data)
+            except IOError as err:
+                if is_player and err.errno in ACCEPTABLE_ERRNO:
+                    console.logger.info("Player closed")
+                elif is_http and err.errno in ACCEPTABLE_ERRNO:
+                    console.logger.info("HTTP connection closed")
+                else:
+                    console.logger.error("Error when writing to output: {0}", err)
+
                 break
-
-        try:
-            output.write(data)
-        except IOError as err:
-            if is_player and err.errno in ACCEPTABLE_ERRNO:
-                console.logger.info("Player closed")
-            elif is_http and err.errno in ACCEPTABLE_ERRNO:
-                console.logger.info("HTTP connection closed")
-            else:
-                console.logger.error("Error when writing to output: {0}",
-                                     err)
-
-            break
-
-        written += len(data)
-        prebuffer = None
-
-        if show_progress:
-            console.msg_inplace("Written {0} bytes", written)
-
-    if show_progress and written > 0:
-        console.msg_inplace_end()
+    except IOError as err:
+        console.logger.error("Error when reading from stream: {0}", err)
 
     stream.close()
     console.logger.info("Stream ended")

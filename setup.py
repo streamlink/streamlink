@@ -6,14 +6,18 @@ from setuptools import setup
 from sys import version_info, path as sys_path
 
 deps = []
-packages = ["livestreamer",
-            "livestreamer.stream",
-            "livestreamer.plugin",
-            "livestreamer.plugin.api",
-            "livestreamer.plugins",
-            "livestreamer.packages",
-            "livestreamer.packages.flashmedia",
-            "livestreamer_cli"]
+packages = [
+    "livestreamer",
+    "livestreamer.stream",
+    "livestreamer.plugin",
+    "livestreamer.plugin.api",
+    "livestreamer.plugins",
+    "livestreamer.packages",
+    "livestreamer.packages.flashmedia",
+    "livestreamer_cli",
+    "livestreamer_cli.packages",
+    "livestreamer_cli.utils"
+]
 
 if version_info[0] == 2:
     # Require backport of concurrent.futures on Python 2
