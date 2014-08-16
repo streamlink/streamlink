@@ -130,9 +130,9 @@ SectionEnd
 SectionGroupEnd
 
 Section -Uninstaller
-  WriteUninstaller "$INSTDIR\Livestreamer-uninst.exe"
+  WriteUninstaller "$INSTDIR\uninstall-livestreamer.exe"
   WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "DisplayName" "$(^Name)"
-  WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "UninstallString" "$INSTDIR\Livestreamer-uninst.exe"
+  WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "UninstallString" "$INSTDIR\uninstall-livestreamer.exe"
 SectionEnd
 
 
