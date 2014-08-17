@@ -38,6 +38,7 @@ gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 ilive               ilive.to             Yes   --
+leton               leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
