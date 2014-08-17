@@ -23,9 +23,11 @@ Plugins:
  - Added plugin for gaminglive.tv (gaminglive), patch by @chhe. (#468)
  - Added plugin for douyutv.com (douyutv), patch by @nixxquality. (#469)
  - Added plugin for NHK World (nhkworld).
+ - Added plugin for Let On TV (letontv), patch by @cheah. (#500)
  - Removed plugin: justintv
  - afreecatv: Updated for service changes. (#488)
  - hitbox: Added support for HLS videos.
+ - twitch: Fixed some Twitch broadcasts being unplayable. (#490)
  - ustreamtv: Fixed regression that caused channels using RTMP streams to fail.
 
 API:
