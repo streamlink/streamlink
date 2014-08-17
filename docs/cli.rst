@@ -62,6 +62,7 @@ Configuration file
 
 Writing the command-line options every time is painful, that's why Livestreamer
 is capable of reading options from a configuration file instead.
+
 Livestreamer will look for config files in different locations depending on
 your platform:
 
@@ -73,13 +74,18 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config
 Windows           %APPDATA%\\livestreamer\\livestreamerrc
 ================= ====================================================
 
+You can also specify the location yourself using the :option:`--config` option.
+
 .. note::
 
   - `$XDG_CONFIG_HOME` is ``~/.config`` if it has not been overridden
   - `%APPDATA%` is usually ``<your user directory>\Application Data``
 
+.. note::
 
-You can also specify the location yourself using the :option:`--config` option.
+  On Windows there is a default config created by the installer but on any
+  other platform you must create the file yourself.
+
 
 Syntax
 ^^^^^^
@@ -89,9 +95,7 @@ The file should contain one :ref:`command-line option <cli-options>`
 
   option[=value]
 
-.. note::
-
-  Any quotes used will be part of the value, so only use when necessary.
+Any quotes used will be part of the value, so only use when necessary.
 
 Example
 ^^^^^^^
