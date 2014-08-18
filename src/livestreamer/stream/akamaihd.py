@@ -5,7 +5,7 @@ import hmac
 import random
 
 from .stream import Stream
-from .wrappers import StreamIOIterWrapper
+from .wrappers import StreamIOThreadWrapper, StreamIOIterWrapper
 
 from ..buffers import Buffer
 from ..compat import str, bytes, urlparse
@@ -262,6 +262,6 @@ class AkamaiHDStream(Stream):
         stream = AkamaiHDStreamIO(self.session, self.url,
                                   self.swf, self.seek)
 
-        return stream.open()
+        return StreamIOThreadWrapper(self.session, stream.open())
 
 __all__ = ["AkamaiHDStream"]
