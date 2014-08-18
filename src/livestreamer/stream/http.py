@@ -3,7 +3,7 @@ import inspect
 import requests
 
 from .stream import Stream
-from .wrappers import StreamIOIterWrapper
+from .wrappers import StreamIOThreadWrapper, StreamIOIterWrapper
 from ..exceptions import StreamError
 
 
@@ -72,5 +72,8 @@ class HTTPStream(Stream):
                                         timeout=timeout,
                                         **self.args)
 
-        return StreamIOIterWrapper(res.iter_content(8192))
+        fd = StreamIOIterWrapper(res.iter_content(8192))
+        fd = StreamIOThreadWrapper(self.session, fd, timeout=timeout)
+
+        return fd
 
