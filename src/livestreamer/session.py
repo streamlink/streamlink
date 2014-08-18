@@ -41,10 +41,12 @@ class Livestreamer(object):
         self.options = Options({
             "hds-live-edge": 10.0,
             "hds-segment-attempts": 3,
+            "hds-segment-threads": 1,
             "hds-segment-timeout": 10.0,
             "hds-timeout": 60.0,
             "hls-live-edge": 3,
             "hls-segment-attempts": 3,
+            "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
             "http-stream-timeout": 60.0,
@@ -52,6 +54,10 @@ class Livestreamer(object):
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
+            "stream-segment-attempts": 3,
+            "stream-segment-threads": 1,
+            "stream-segment-timeout": 10.0,
+            "stream-timeout": 60.0,
             "subprocess-errorlog": False
         })
         self.plugins = {}
@@ -76,6 +82,9 @@ class Livestreamer(object):
         hds-segment-attempts    (int) How many attempts should be done
                                 to download each HDS segment, default: ``3``
 
+        hds-segment-threads     (int) The size of the thread pool used
+                                to download segments, default: ``1``
+
         hds-segment-timeout     (float) HDS segment connect and read
                                 timeout, default: ``10.0``
 
@@ -87,6 +96,9 @@ class Livestreamer(object):
 
         hls-segment-attempts    (int) How many attempts should be done
                                 to download each HLS segment, default: ``3``
+
+        hls-segment-threads     (int) The size of the thread pool used
+                                to download segments, default: ``1``
 
         hls-segment-timeout     (float) HLS segment connect and read
                                 timeout, default: ``10.0``
@@ -148,6 +160,26 @@ class Livestreamer(object):
 
         rtmp-timeout            (float) Timeout for reading data from
                                 RTMP streams, default: ``60.0``
+
+        stream-segment-attempts (int) How many attempts should be done
+                                to download each segment, default: ``3``.
+                                General option used by streams not
+                                covered by other options.
+
+        stream-segment-threads  (int) The size of the thread pool used
+                                to download segments, default: ``1``.
+                                General option used by streams not
+                                covered by other options.
+
+        stream-segment-timeout  (float) Segment connect and read
+                                timeout, default: ``10.0``.
+                                General option used by streams not
+                                covered by other options.
+
+        stream-timeout          (float) Timeout for reading data from
+                                stream, default: ``60.0``.
+                                General option used by streams not
+                                covered by other options.
         ======================= =========================================
 
         """

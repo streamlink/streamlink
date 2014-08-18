@@ -1,3 +1,48 @@
+Version 1.10.0 (2014-08-18)
+---------------------------
+
+Bug fixes:
+ - The HDS options added in 1.8.0 where never actually applied when
+   used via the CLI, oops.
+ - Fixed default player paths not expanding ~, patch by @medina. (#484)
+
+CLI:
+ - Added :option:`--hds-segment-threads` option.
+ - Added :option:`--hls-segment-threads` option.
+ - Added :option:`--stream-segment-attempts` option.
+ - Added :option:`--stream-segment-threads` option.
+ - Added :option:`--stream-segment-timeout` option.
+ - Added :option:`--stream-timeout` option.
+ - Deprecated the :option:`--jtv-cookie` option.
+ - Deprecated the :option:`--jtv-password` option.
+ - Significantly improved the status line printed while writing a
+   stream to a file. (#462)
+
+Plugins:
+ - Added plugin for goodgame.ru (goodgame), patch by @eltiren. (#466)
+ - Added plugin for gaminglive.tv (gaminglive), patch by @chhe. (#468)
+ - Added plugin for douyutv.com (douyutv), patch by @nixxquality. (#469)
+ - Added plugin for NHK World (nhkworld).
+ - Added plugin for Let On TV (letontv), patch by @cheah. (#500)
+ - Removed plugin: justintv.
+ - afreecatv: Updated for service changes. (#488)
+ - hitbox: Added support for HLS videos.
+ - twitch: Fixed some Twitch broadcasts being unplayable. (#490)
+ - ustreamtv: Fixed regression that caused channels using RTMP streams to fail.
+
+Streams:
+ - akamaihd: Now supports background buffering.
+ - http: Now supports background buffering.
+
+API:
+ - Added new session option: ``hds-segment-threads``.
+ - Added new session option: ``hls-segment-threads``.
+ - Added new session option: ``stream-segment-attempts``.
+ - Added new session option: ``stream-segment-threads``.
+ - Added new session option: ``stream-segment-timeout``.
+ - Added new session option: ``stream-timeout``.
+
+
 Version 1.9.0 (2014-07-22)
 --------------------------
 

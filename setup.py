@@ -6,20 +6,28 @@ from setuptools import setup
 from sys import version_info, path as sys_path
 
 deps = []
-packages = ["livestreamer",
-            "livestreamer.stream",
-            "livestreamer.plugin",
-            "livestreamer.plugin.api",
-            "livestreamer.plugins",
-            "livestreamer.packages",
-            "livestreamer.packages.flashmedia",
-            "livestreamer_cli"]
+packages = [
+    "livestreamer",
+    "livestreamer.stream",
+    "livestreamer.plugin",
+    "livestreamer.plugin.api",
+    "livestreamer.plugins",
+    "livestreamer.packages",
+    "livestreamer.packages.flashmedia",
+    "livestreamer_cli",
+    "livestreamer_cli.packages",
+    "livestreamer_cli.utils"
+]
 
-# require argparse on Python 2.6
-if version_info[0] == 2 and version_info[1] == 6:
-    deps.append("argparse")
+if version_info[0] == 2:
+    # Require backport of concurrent.futures on Python 2
+    deps.append("futures")
 
-# require singledispatchon Python <3.4
+    # Require backport of argparse on Python 2.6
+    if version_info[1] == 6:
+        deps.append("argparse")
+
+# Require singledispatch on Python <3.4
 if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
     deps.append("singledispatch")
 
@@ -38,7 +46,7 @@ srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="livestreamer",
-      version="1.9.0",
+      version="1.10.0",
       description="Livestreamer is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",

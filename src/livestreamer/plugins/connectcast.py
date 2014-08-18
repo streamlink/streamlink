@@ -11,7 +11,7 @@ BASE_VOD_URL = "https://www.connectcast.tv"
 SWF_URL = "https://www.connectcast.tv/jwplayer/jwplayer.flash.swf"
 
 _url_re = re.compile("http(s)?://(\w+\.)?connectcast.tv/")
-_playlist_re = re.compile("playlist: (\[.+\]),", re.DOTALL)
+_playlist_re = re.compile("playlist: (\[.+?\]),", re.DOTALL)
 _js_to_json = partial(re.compile("(\w+):\s").sub, r'"\1":')
 
 _playlist_schema = validate.Schema(

@@ -9,7 +9,7 @@ SetCompressor lzma
 
 # Livestreamer program information
 !define PROGRAM_NAME "Livestreamer"
-!define PROGRAM_VERSION "1.9.0"
+!define PROGRAM_VERSION "1.10.0"
 !define PROGRAM_WEB_SITE "http://livestreamer.tanuki.se/"
 
 # Python files generated with bbfreeze
@@ -130,9 +130,9 @@ SectionEnd
 SectionGroupEnd
 
 Section -Uninstaller
-  WriteUninstaller "$INSTDIR\Livestreamer-uninst.exe"
+  WriteUninstaller "$INSTDIR\uninstall-livestreamer.exe"
   WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "DisplayName" "$(^Name)"
-  WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "UninstallString" "$INSTDIR\Livestreamer-uninst.exe"
+  WriteRegStr ${PROGRAM_UNINST_ROOT_KEY} "${PROGRAM_UNINST_KEY}" "UninstallString" "$INSTDIR\uninstall-livestreamer.exe"
 SectionEnd
 
 

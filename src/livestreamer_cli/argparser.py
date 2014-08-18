@@ -76,15 +76,28 @@ def comma_list_filter(acceptable):
     return func
 
 
-def nonzero_num(type):
+def num(type, min=None, max=None):
     def func(value):
         value = type(value)
-        if not value:
-            raise ValueError
+
+        if min is not None and not (value > min):
+            raise argparse.ArgumentTypeError(
+                "{0} value must be more than {1} but is {2}".format(
+                    type.__name__, min, value
+                )
+            )
+
+        if max is not None and not (value <= max):
+            raise argparse.ArgumentTypeError(
+                "{0} value must be at most {1} but is {2}".format(
+                    type.__name__, max, value
+                )
+            )
 
         return value
 
-    func.__name__ = "non-zero {0}".format(type.__name__)
+    func.__name__ = type.__name__
+
     return func
 
 
@@ -103,11 +116,7 @@ def filesize(value):
     elif modifier in ("K", "k"):
         size *= 1024
 
-    return int(size)
-
-
-float = nonzero_num(float)
-int = nonzero_num(int)
+    return num(int, min=0)(size)
 
 
 parser = ArgumentParser(
@@ -386,7 +395,7 @@ stream.add_argument(
 stream.add_argument(
     "--retry-streams",
     metavar="DELAY",
-    type=float,
+    type=num(float, min=0),
     help="""
     Will retry fetching streams until streams are found while
     waiting DELAY (seconds) between each attempt.
@@ -395,7 +404,7 @@ stream.add_argument(
 stream.add_argument(
     "--retry-open",
     metavar="ATTEMPTS",
-    type=int,
+    type=num(int, min=0),
     default=1,
     help="""
     Will try ATTEMPTS times to open the stream until giving up.
@@ -447,7 +456,7 @@ stream.add_argument(
 transport = parser.add_argument_group("Stream transport options")
 transport.add_argument(
     "--hds-live-edge",
-    type=float,
+    type=num(float, min=0),
     metavar="SECONDS",
     help="""
     The time live HDS streams will start from the edge of stream.
@@ -457,7 +466,7 @@ transport.add_argument(
 )
 transport.add_argument(
     "--hds-segment-attempts",
-    type=int,
+    type=num(int, min=0),
     metavar="ATTEMPTS",
     help="""
     How many attempts should be done to download each HDS segment
@@ -467,8 +476,19 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--hds-segment-threads",
+    type=num(int, max=10),
+    metavar="THREADS",
+    help="""
+    The size of the thread pool used to download HDS segments.
+    Minimum value is 1 and maximum is 10.
+
+    Default is 1.
+    """
+)
+transport.add_argument(
     "--hds-segment-timeout",
-    type=float,
+    type=num(float, min=0),
     metavar="TIMEOUT",
     help="""
     HDS segment connect and read timeout.
@@ -478,7 +498,7 @@ transport.add_argument(
 )
 transport.add_argument(
     "--hds-timeout",
-    type=float,
+    type=num(float, min=0),
     metavar="TIMEOUT",
     help="""
     Timeout for reading data from HDS streams.
@@ -488,7 +508,7 @@ transport.add_argument(
 )
 transport.add_argument(
     "--hls-live-edge",
-    type=int,
+    type=num(int, min=0),
     metavar="SEGMENTS",
     help="""
     How many segments from the end to start live HLS streams on.
@@ -501,7 +521,7 @@ transport.add_argument(
 )
 transport.add_argument(
     "--hls-segment-attempts",
-    type=int,
+    type=num(int, min=0),
     metavar="ATTEMPTS",
     help="""
     How many attempts should be done to download each HLS segment
@@ -511,8 +531,19 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--hls-segment-threads",
+    type=num(int, max=10),
+    metavar="THREADS",
+    help="""
+    The size of the thread pool used to download HLS segments.
+    Minimum value is 1 and maximum is 10.
+
+    Default is 1.
+    """
+)
+transport.add_argument(
     "--hls-segment-timeout",
-    type=float,
+    type=num(float, min=0),
     metavar="TIMEOUT",
     help="""
     HLS segment connect and read timeout.
@@ -521,7 +552,7 @@ transport.add_argument(
     """)
 transport.add_argument(
     "--hls-timeout",
-    type=float,
+    type=num(float, min=0),
     metavar="TIMEOUT",
     help="""
     Timeout for reading data from HLS streams.
@@ -530,7 +561,7 @@ transport.add_argument(
     """)
 transport.add_argument(
     "--http-stream-timeout",
-    type=float,
+    type=num(float, min=0),
     metavar="TIMEOUT",
     help="""
     Timeout for reading data from HTTP streams.
@@ -586,7 +617,7 @@ transport.add_argument(
 )
 transport.add_argument(
     "--rtmp-timeout",
-    type=float,
+    type=num(float, min=0),
     metavar="TIMEOUT",
     help="""
     Timeout for reading data from RTMP streams.
@@ -594,6 +625,57 @@ transport.add_argument(
     Default is 60.0.
     """
 )
+transport.add_argument(
+    "--stream-segment-attempts",
+    type=num(int, min=0),
+    metavar="ATTEMPTS",
+    help="""
+    How many attempts should be done to download each segment before giving up.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 3.
+    """
+)
+transport.add_argument(
+    "--stream-segment-threads",
+    type=num(int, max=10),
+    metavar="THREADS",
+    help="""
+    The size of the thread pool used to download segments.
+    Minimum value is 1 and maximum is 10.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 1.
+    """
+)
+transport.add_argument(
+    "--stream-segment-timeout",
+    type=num(float, min=0),
+    metavar="TIMEOUT",
+    help="""
+    Segment connect and read timeout.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 10.0.
+    """)
+transport.add_argument(
+    "--stream-timeout",
+    type=num(float, min=0),
+    metavar="TIMEOUT",
+    help="""
+    Timeout for reading data from streams.
+
+    This is generic option used by streams not covered by other options,
+    such as stream protocols specific to plugins, e.g. UStream.
+
+    Default is 60.0.
+    """)
 transport.add_argument(
     "--stream-url",
     action="store_true",
@@ -720,7 +802,7 @@ http.add_argument(
 http.add_argument(
     "--http-timeout",
     metavar="TIMEOUT",
-    type=float,
+    type=num(float, min=0),
     help="""
     General timeout used by all HTTP requests except the ones covered
     by other options.
@@ -760,11 +842,10 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--jtv-cookie", "--twitch-cookie",
+    "--twitch-cookie",
     metavar="COOKIES",
     help="""
-    Twitch/Justin.tv cookies to authenticate to allow access
-    to subscription channels.
+    Twitch cookies to authenticate to allow access to subscription channels.
 
     Example:
 
@@ -774,13 +855,6 @@ plugin.add_argument(
     Twitch, using --twitch-oauth-authenticate is the recommended and
     simpler way of doing it now.
 
-    """
-)
-plugin.add_argument(
-    "--jtv-password", "--twitch-password",
-    metavar="PASSWORD",
-    help="""
-    A password to access password protected Twitch/Justin.tv channels.
     """
 )
 plugin.add_argument(
@@ -874,6 +948,13 @@ plugin.add_argument(
     default=None,
     help=argparse.SUPPRESS
 )
-
+plugin.add_argument(
+    "--jtv-cookie",
+    help=argparse.SUPPRESS
+)
+plugin.add_argument(
+    "--jtv-password", "--twitch-password",
+    help=argparse.SUPPRESS
+)
 
 __all__ = ["parser"]

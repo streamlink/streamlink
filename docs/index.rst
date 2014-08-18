@@ -25,7 +25,7 @@ such as:
 
 - `Dailymotion <http://dailymotion.com/live>`_
 - `Livestream <http://livestream.com>`_
-- `Twitch <http://twitch.tv>`_/`Justin.tv <http://justin.tv>`_
+- `Twitch <http://twitch.tv>`_
 - `YouTube Live <http://youtube.com>`_
 - `UStream <http://ustream.tv>`_
 

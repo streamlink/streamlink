@@ -61,18 +61,23 @@ _channel_schema = validate.Schema({
         validate.any([{
             "name": validate.text,
             "url": validate.text,
-            "streams": [{
-                "chunkId": float,
-                "chunkRange": {validate.text: validate.text},
-                "chunkTime": float,
-                "offset": float,
-                "offsetInMs": float,
-                "streamName": validate.text,
-                validate.optional("bitrate"): float,
-                validate.optional("height"): float,
-                validate.optional("description"): validate.text,
-                validate.optional("isTranscoded"): bool
-            }]
+            "streams": [
+                validate.any({
+                    "chunkId": float,
+                    "chunkRange": {validate.text: validate.text},
+                    "chunkTime": float,
+                    "offset": float,
+                    "offsetInMs": float,
+                    "streamName": validate.text,
+                    validate.optional("bitrate"): float,
+                    validate.optional("height"): float,
+                    validate.optional("description"): validate.text,
+                    validate.optional("isTranscoded"): bool
+                },
+                {
+                    "streamName": validate.text,
+                })
+            ]
         }],
         "offline"
     )
@@ -109,7 +114,7 @@ class UHSStreamWriter(SegmentedStreamWriter):
         self.concater = FLVTagConcat(flatten_timestamps=True,
                                      sync_headers=True)
 
-    def open_chunk(self, chunk, retries=3):
+    def fetch(self, chunk, retries=None):
         if not retries or self.closed:
             return
 
@@ -119,18 +124,14 @@ class UHSStreamWriter(SegmentedStreamWriter):
                 params["start"] = chunk.offset
 
             return http.get(chunk.url,
-                            timeout=10,
+                            timeout=self.timeout,
                             params=params,
                             exception=StreamError)
         except StreamError as err:
             self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
-            return self.open_chunk(chunk, retries - 1)
+            return self.fetch(chunk, retries - 1)
 
-    def write(self, chunk, chunk_size=8192):
-        res = self.open_chunk(chunk)
-        if not res:
-            return
-
+    def write(self, chunk, res, chunk_size=8192):
         try:
             for data in self.concater.iter_chunks(buf=res.content,
                                                   skip_header=not chunk.offset):

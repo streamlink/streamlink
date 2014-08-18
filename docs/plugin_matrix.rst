@@ -26,20 +26,24 @@ crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
 dailymotion         dailymotion.com      Yes   Yes
 dommune             dommune.com          Yes   --
+douyutv             douyutv.com          Yes   --
 dmcloud             api.dmcloud.net      Yes   --
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 euronews            euronews.com         Yes   No
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 furstream           furstre.am           Yes   No
+gaminglive          gamlinglive.tv       Yes   No
 gomexp              gomexp.com           Yes   No
+goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 ilive               ilive.to             Yes   --
-justintv            justin.tv            Yes   Yes
+letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
+nhkworld            nhk.or.jp/nhkworld   Yes   No
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
 oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
@@ -78,4 +82,3 @@ zdf_mediathek       zdf.de               Yes   Yes
 
 .. [1] streamingvideoprovider
 .. [2] streamingvideoprovider.co.uk
-

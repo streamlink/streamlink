@@ -1,13 +1,15 @@
 import re
 
+from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.stream import RTMPStream, HTTPStream
+from livestreamer.stream import HLSStream, HTTPStream, RTMPStream
 
 LIVE_API = "http://www.hitbox.tv/api/media/live/{0}?showHidden=true"
 PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
 SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
 SWF_URL = SWF_BASE + "flowplayer.commercial-3.2.16.swf"
+VOD_BASE_URL = "http://edge.bf.hitbox.tv/static/videos/vods"
 
 _quality_re = re.compile("(\d+p)$")
 _url_re = re.compile("""
@@ -128,15 +130,17 @@ class Hitbox(Plugin):
 
                     streams[quality] = stream
         else:
-            base_url = player["clip"].get("baseUrl")
-            if not base_url:
-                return
-
+            base_url = player["clip"]["baseUrl"] or VOD_BASE_URL
             for bitrate in player["clip"]["bitrates"]:
-                url = bitrate["url"]
+                url = base_url + "/" + bitrate["url"]
                 quality = self._get_quality(bitrate["label"])
-                streams[quality] = HTTPStream(self.session,
-                                              base_url + "/" + url)
+
+                if urlparse(url).path.endswith("m3u8"):
+                    stream = HLSStream(self.session, url)
+                else:
+                    stream = HTTPStream(self.session, url)
+
+                streams[quality] = stream
 
         return streams
 

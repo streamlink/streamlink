@@ -23,28 +23,16 @@ Sequence = namedtuple("Sequence", "num segment")
 
 
 class HLSStreamWriter(SegmentedStreamWriter):
-    def __init__(self, *args, **kwargs):
-        SegmentedStreamWriter.__init__(self, *args, **kwargs)
+    def __init__(self, reader, *args, **kwargs):
+        options = reader.stream.session.options
+        kwargs["retries"] = options.get("hls-segment-attempts")
+        kwargs["threads"] = options.get("hls-segment-threads")
+        kwargs["timeout"] = options.get("hls-segment-timeout")
+        SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
 
         self.byterange_offsets = defaultdict(int)
         self.key_data = None
         self.key_uri = None
-        self.segment_attempts = self.session.options.get("hls-segment-attempts")
-        self.segment_timeout = self.session.options.get("hls-segment-timeout")
-
-    def open_sequence(self, sequence, retries=3):
-        if self.closed or not retries:
-            return
-
-        try:
-            request_params = self.create_request_params(sequence)
-            return self.session.http.get(sequence.segment.uri,
-                                         timeout=self.segment_timeout,
-                                         exception=StreamError,
-                                         **request_params)
-        except StreamError as err:
-            self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
-            return self.open_sequence(sequence, retries - 1)
 
     def create_decryptor(self, key, sequence):
         if key.method != "AES-128":
@@ -80,11 +68,21 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         return request_params
 
-    def write(self, sequence, chunk_size=8192):
-        res = self.open_sequence(sequence, self.segment_attempts)
-        if not res:
+    def fetch(self, sequence, retries=None):
+        if self.closed or not retries:
             return
 
+        try:
+            request_params = self.create_request_params(sequence)
+            return self.session.http.get(sequence.segment.uri,
+                                         timeout=self.timeout,
+                                         exception=StreamError,
+                                         **request_params)
+        except StreamError as err:
+            self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
+            return self.fetch(sequence, retries - 1)
+
+    def write(self, sequence, res, chunk_size=8192):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key,

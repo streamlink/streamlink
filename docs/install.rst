@@ -17,10 +17,10 @@ Distribution                         Installing
 
                                         $ cd /usr/ports/contrib/livestreamer
                                         # pkgmk -d -i
-`Debian testing (jessie)`_           .. code-block:: console
+`Debian Jessie (testing)`_           .. code-block:: console
 
                                         # apt-get install livestreamer
-`Debian unstable (sid)`_             .. code-block:: console
+`Debian Sid (unstable)`_             .. code-block:: console
 
                                         # apt-get install livestreamer
 `Exherbo Linux`_
@@ -41,22 +41,28 @@ Distribution                         Installing
 
                                         $ cd /usr/ports/multimedia/livestreamer
                                         # make install clean
+`Slackware Linux`_                   `Installing Slackbuilds`_
+`Ubuntu Utopic`_                     .. code-block:: console
+
+                                        # apt-get install livestreamer
 ==================================== ===========================================
 
 .. _Arch Linux (package): https://archlinux.org/packages/?q=livestreamer
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/livestreamer-git/
 .. _CRUX: http://crux.nu/portdb/?a=search&q=livestreamer
-.. _Debian testing (jessie): https://packages.debian.org/jessie/livestreamer
-.. _Debian unstable (sid): https://packages.debian.org/sid/livestreamer
+.. _Debian Jessie (testing): https://packages.debian.org/jessie/livestreamer
+.. _Debian Sid (unstable): https://packages.debian.org/sid/livestreamer
 .. _Exherbo Linux: http://git.exherbo.org/summer/packages/media/livestreamer/index.html
 .. _FreeBSD (package): http://www.freshports.org/multimedia/livestreamer
 .. _FreeBSD (ports): http://www.freshports.org/multimedia/livestreamer
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/livestreamer
 .. _OpenBSD (package): http://openports.se/multimedia/livestreamer
 .. _OpenBSD (ports): http://openports.se/multimedia/livestreamer
+.. _Slackware Linux: http://slackbuilds.org/result/?search=livestreamer
+.. _Ubuntu Utopic: http://packages.ubuntu.com/utopic/livestreamer
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
-
+.. _Installing Slackbuilds: http://slackbuilds.org/howto/
 
 Other platforms
 ---------------
@@ -123,7 +129,8 @@ Name                                 Notes
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-argparse`_                   Only needed on Python version **2.6**.
+`python-argparse`_                   Only needed on Python **2.6**.
+`python-futures`_                    Only needed on Python **2.x**.
 `python-requests`_                   At least version **1.0**.
 `python-singledispatch`_             Only needed on Python versions older than **3.4**.
 
@@ -138,11 +145,48 @@ Name                                 Notes
 .. _Python: http://python.org/
 .. _python-setuptools: http://pypi.python.org/pypi/setuptools
 .. _python-argparse: http://pypi.python.org/pypi/argparse
+.. _python-futures: http://pypi.python.org/pypi/futures
 .. _python-requests: http://python-requests.org/
 .. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
 .. _PyCrypto: https://www.dlitz.net/software/pycrypto/
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
+
+
+Installing without root permissions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you do not wish to install Livestreamer globally on your system it's
+recommended to use `virtualenv`_ to create a user owned Python environment
+instead.
+
+.. code-block:: console
+
+    Creating an environment
+    $ virtualenv ~/myenv
+
+    Activating the environment
+    $ source ~/myenv/bin/activate
+
+    Installing livestreamer into the environment
+    (myenv)$ pip install livestreamer
+
+    Using livestreamer in the enviroment
+    (myenv)$ livestreamer ...
+
+    Deactivating the enviroment
+    (myenv)$ deactivate
+
+    Using livestreamer without activating the environment
+    $ ~/myenv/bin/livestreamer ...
+
+.. note::
+
+    This may also be required on some OS X versions that seems to have weird
+    permission issues (see issue #401).
+
+
+.. _virtualenv: http://virtualenv.readthedocs.org/en/latest/
 
 
 Windows binaries
