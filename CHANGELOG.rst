@@ -1,5 +1,5 @@
-Version 1.10.0 (Under development)
-----------------------------------
+Version 1.10.0 (2014-08-18)
+---------------------------
 
 Bug fixes:
  - The HDS options added in 1.8.0 where never actually applied when
@@ -24,11 +24,15 @@ Plugins:
  - Added plugin for douyutv.com (douyutv), patch by @nixxquality. (#469)
  - Added plugin for NHK World (nhkworld).
  - Added plugin for Let On TV (letontv), patch by @cheah. (#500)
- - Removed plugin: justintv
+ - Removed plugin: justintv.
  - afreecatv: Updated for service changes. (#488)
  - hitbox: Added support for HLS videos.
  - twitch: Fixed some Twitch broadcasts being unplayable. (#490)
  - ustreamtv: Fixed regression that caused channels using RTMP streams to fail.
+
+Streams:
+ - akamaihd: Now supports background buffering.
+ - http: Now supports background buffering.
 
 API:
  - Added new session option: ``hds-segment-threads``.
