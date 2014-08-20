@@ -31,6 +31,10 @@ class FLVPlaylistIO(FLVTagConcatIO):
             for stream in streams:
                 self.logger.debug("Opening substream: {0}", stream)
 
+                # No need for multiple ringbuffers
+                if hasattr(stream, "buffered"):
+                    stream.buffered = False
+
                 try:
                     fd = stream.open()
                 except StreamError as err:
