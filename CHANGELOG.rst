@@ -1,3 +1,13 @@
+Version 1.10.1 (Under development)
+----------------------------------
+
+Bug fixes:
+ - Fixed strange read error caused by double buffering in FLV playlists.
+
+Plugins:
+ - Added plugin for Vaughn Live (vaughnlive). (#478)
+
+
 Version 1.10.0 (2014-08-18)
 ---------------------------
 
