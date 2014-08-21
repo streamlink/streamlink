@@ -54,15 +54,9 @@ rtmpdump=@INSTDIR@\rtmpdump\rtmpdump.exe
 # Log level, default is info
 #loglevel=debug
 
-# Cookies to authenticate the user to Twitch/JustinTV. Needed for streams
-# that require authentication. Replace with actual values from your browser session.
-#jtv-cookie=_twitch_session_id=xxxxxx; persistent=xxxxx;
+# Number of threads to use when streaming HLS streams
+#hls-segment-threads=1
 
-# Cookies to authenticate the user to allow access to GOMTV.net streams.
-# Replace with actual values from your browser session.
-#gomtv-cookie=SES_MEMBERNO=xxx; SES_STATE=xxx; SES_MEMBERNICK=xxx; SES_USERNICK=xxx;
-
-# A username and password to allow access to GOMTV.net streams.
-#gomtv-username=
-#gomtv-password=
+# Number of threads to use when streaming HDS streams
+#hds-segment-threads=1
 
