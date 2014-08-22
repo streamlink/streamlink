@@ -5,7 +5,13 @@ from time import time
 
 from ..compat import is_win32, get_terminal_size
 
-PROGRESS_FORMAT = "[download][{prefix}] Written {written} ({elapsed} @ {speed}/s)"
+PROGRESS_FORMATS = (
+    "[download][{prefix}] Written {written} ({elapsed} @ {speed}/s)",
+    "[download] Written {written} ({elapsed} @ {speed}/s)",
+    "[download] {written} ({elapsed} @ {speed}/s)",
+    "[download] {written} ({elapsed})",
+    "[download] {written}"
+)
 
 
 def terminal_len(value):
@@ -62,6 +68,19 @@ def format_time(elapsed):
     return rval
 
 
+def create_status_line(**params):
+    """Creates a status line with appropriate size."""
+    max_size = get_terminal_size().columns - 1
+
+    for fmt in PROGRESS_FORMATS:
+        status = fmt.format(**params)
+
+        if len(status) <= max_size:
+            break
+
+    return status
+
+
 def progress(iterator, prefix):
     """Progress an iterator and updates a pretty status line to the terminal.
 
@@ -95,11 +114,11 @@ def progress(iterator, prefix):
             speed_history_elapsed = now - speed_history[-1][1]
             speed = speed_history_written / speed_history_elapsed
 
-            msg = PROGRESS_FORMAT.format(
+            status = create_status_line(
                 prefix=prefix,
                 written=format_filesize(written),
                 elapsed=format_time(elapsed),
                 speed=format_filesize(speed)
             )
-            print_inplace(msg)
+            print_inplace(status)
 
