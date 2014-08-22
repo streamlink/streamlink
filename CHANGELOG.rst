@@ -1,5 +1,5 @@
-Version 1.10.1 (Under development)
-----------------------------------
+Version 1.10.1 (2014-08-22)
+---------------------------
 
 Bug fixes:
  - Fixed strange read error caused by double buffering in FLV playlists.
