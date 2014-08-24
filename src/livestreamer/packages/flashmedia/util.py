@@ -84,7 +84,7 @@ def chunked_read(fd, length, chunk_size=8192, exception=IOError):
             raise exception("Failed to read data: {0}".format(str(err)))
 
         if not data:
-            raise exception("End of stream before requied data could be read")
+            raise exception("End of stream before required data could be read")
 
         data_left -= len(data)
         chunks.append(data)
