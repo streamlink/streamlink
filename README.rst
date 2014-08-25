@@ -1,14 +1,15 @@
 Livestreamer
 ============
 
-.. image:: https://badge.fury.io/py/livestreamer.png
-    :target: http://badge.fury.io/py/livestreamer
+.. image:: http://img.shields.io/pypi/v/livestreamer.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/livestreamer
 
-.. image:: https://secure.travis-ci.org/chrippa/livestreamer.png
+.. image:: http://img.shields.io/pypi/dm/livestreamer.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/livestreamer
+
+.. image:: http://img.shields.io/travis/chrippa/livestreamer.svg?style=flat-square
     :target: http://travis-ci.org/chrippa/livestreamer
 
-.. image:: https://pypip.in/d/livestreamer/badge.png
-    :target: https://crate.io/packages/livestreamer?version=latest
 
 
 Overview
