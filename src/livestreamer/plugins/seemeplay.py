@@ -1,5 +1,6 @@
 import re
 
+from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HLSStream, HTTPStream
@@ -35,7 +36,7 @@ class SeeMePlay(Plugin):
         if not res:
             return
 
-        if res["type"] == "channel":
+        if res["type"] == "channel" and urlparse(res["url"]).path.endswith("m3u8"):
             return HLSStream.parse_variant_playlist(self.session, res["url"])
         elif res["type"] == "video":
             stream = HTTPStream(self.session, res["url"])
