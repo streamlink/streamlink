@@ -89,7 +89,7 @@ _video_schema = validate.Schema(
         "chunks": {
             validate.text: [{
                 "length": int,
-                "url": validate.text,
+                "url": validate.any(None, validate.url(scheme="http")),
                 "upkeep": validate.any("pass", "fail", None)
             }]
         },
@@ -276,6 +276,12 @@ class Twitch(Plugin):
             if quality == "live":
                 quality = "source"
 
+            chunks_filtered = list(filter(lambda c: c["url"], chunks))
+            if len(chunks) != len(chunks_filtered):
+                self.logger.warning("The video '{0}' contains invalid chunks. "
+                                    "There will be missing data.", quality)
+                chunks = chunks_filtered
+
             chunks_duration = sum(c.get("length") for c in chunks)
 
             # If it's a full broadcast we just use all the chunks
@@ -294,7 +300,7 @@ class Twitch(Plugin):
                                                      start_offset,
                                                      stop_offset)
                 except StreamError as err:
-                    self.logger.error("Error while creating video clip '{0}': {1}",
+                    self.logger.error("Error while creating video '{0}': {1}",
                                       quality, err)
                     continue
 

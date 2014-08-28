@@ -4,6 +4,7 @@ Version 1.10.2 (Under development)
 Plugins:
  - Added plugin for RTVE.es (rtve), patch by @jaimeMF. (#509)
  - Added plugin for Seemeplay.ru (seemeplay). (#510)
+ - twitch: Now handles videos with chunks that are missing URLs.
 
 
 Version 1.10.1 (2014-08-22)
