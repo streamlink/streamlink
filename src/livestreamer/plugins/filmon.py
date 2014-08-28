@@ -3,7 +3,7 @@ import re
 from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.stream import RTMPStream
+from livestreamer.stream import HLSStream
 
 AJAX_HEADERS = {
     "Referer": "http://www.filmon.com",
@@ -16,8 +16,6 @@ QUALITY_WEIGHTS = {
     "high": 720,
     "low": 480
 }
-SWF_URL = "http://www.filmon.com/tv/modules/FilmOnTV/files/flashapp/filmon/FilmonPlayer.swf"
-
 
 _url_re = re.compile("http(s)?://(\w+\.)?filmon.com/(channel|tv|vod)/")
 _channel_id_re = re.compile("/channels/(\d+)/extra_big_logo.png")
@@ -25,9 +23,7 @@ _vod_id_re = re.compile("movie_id=(\d+)")
 
 _channel_schema = validate.Schema({
     "streams": [{
-        "name": validate.text,
-        "quality": validate.text,
-        "url": validate.url(scheme="rtmp")
+        "url": validate.url(scheme="http")
     }]
 })
 _vod_schema = validate.Schema(
@@ -36,7 +32,7 @@ _vod_schema = validate.Schema(
             "streams": {
                 validate.text: {
                     "name": validate.text,
-                    "url": validate.url(scheme="rtmp")
+                    "url": validate.url(scheme="http")
                 }
             }
         }
@@ -58,58 +54,24 @@ class Filmon(Plugin):
 
         return Plugin.stream_weight(key)
 
-    def _get_rtmp_app(self, rtmp):
-        parsed = urlparse(rtmp)
-        if parsed.query:
-            app = "{0}?{1}".format(parsed.path[1:], parsed.query)
-        else:
-            app = parsed.path[1:]
-
-        return app
-
     def _get_live_streams(self, channel_id):
         params = dict(channel_id=channel_id)
         res = http.post(CHINFO_URL, data=params, headers=AJAX_HEADERS)
         channel = http.json(res, schema=_channel_schema)
-
         streams = {}
         for stream in channel["streams"]:
-            name = stream["quality"]
-            rtmp = stream["url"]
-            playpath = stream["name"]
-            app = self._get_rtmp_app(rtmp)
-
-            stream = RTMPStream(self.session, {
-                "rtmp": rtmp,
-                "pageUrl": self.url,
-                "swfUrl": SWF_URL,
-                "playpath": playpath,
-                "app": app,
-                "live": True
-            })
-            streams[name] = stream
+            streams.update(
+                HLSStream.parse_variant_playlist(self.session, stream["url"])
+            )
 
         return streams
 
     def _get_vod_streams(self, movie_id):
         res = http.get(VODINFO_URL.format(movie_id), headers=AJAX_HEADERS)
         vod = http.json(res, schema=_vod_schema)
-
         streams = {}
         for name, stream_info in vod["streams"].items():
-            rtmp = stream_info["url"]
-            app = self._get_rtmp_app(rtmp)
-            playpath = stream_info["name"]
-            if playpath.endswith(".mp4"):
-                playpath = "mp4:" + playpath
-
-            stream = RTMPStream(self.session, {
-                "rtmp": rtmp,
-                "pageUrl": self.url,
-                "swfUrl": SWF_URL,
-                "playpath": playpath,
-                "app": app,
-            })
+            stream = HLSStream(self.session, stream_info["url"])
             streams[name] = stream
 
         return streams
