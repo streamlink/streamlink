@@ -2,6 +2,7 @@ import operator
 import re
 
 from functools import partial
+from inspect import isgenerator
 
 from ..cache import Cache
 from ..exceptions import PluginError, NoStreamsError
@@ -30,7 +31,6 @@ FILTER_OPERATORS = {
     ">": operator.gt,
     ">=": operator.ge,
 }
-
 
 
 def stream_weight(stream):
@@ -63,7 +63,10 @@ def stream_weight(stream):
 
 
 def iterate_streams(streams):
-    for name, stream in streams.items():
+    if isinstance(streams, dict):
+        streams = streams.items()
+
+    for name, stream in streams:
         if isinstance(stream, list):
             for sub_stream in stream:
                 yield (name, sub_stream)
@@ -208,6 +211,8 @@ class Plugin(object):
 
         try:
             ostreams = self._get_streams()
+            if isgenerator(ostreams):
+                ostreams = list(ostreams)
         except NoStreamsError:
             return {}
         except (IOError, OSError, ValueError) as err:
