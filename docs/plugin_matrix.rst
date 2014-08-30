@@ -61,7 +61,10 @@ tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restrict
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
 ustreamtv           ustream.tv           Yes   Yes
-vaughnlive          vaughnlive.tv        Yes   --
+vaughnlive          - vaughnlive.tv      Yes   --
+                    - breakers.tv
+                    - instagib.tv
+                    - vapers.tv
 veetle              veetle.com           Yes   Yes
 vgtv                vgtv.no              Yes   Yes
 viasat              - tv3play.se         Yes   Yes   Streams may be geo-restricted.

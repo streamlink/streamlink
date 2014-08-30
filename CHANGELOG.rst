@@ -6,6 +6,8 @@ Plugins:
  - Added plugin for Seemeplay.ru (seemeplay). (#510)
  - filmon: Updated for service changes. (#514)
  - twitch: Now handles videos with chunks that are missing URLs.
+ - vaughnlive: Added support for breakers.tv, instagib.tv and vapers.tv. (#521)
+ - youtube: Added support for audio-only streams. (#522)
 
 
 Version 1.10.1 (2014-08-22)
