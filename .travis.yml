@@ -6,7 +6,7 @@ python:
 script: python setup.py test
 install:
 - sudo apt-get install zip unzip
-- pip install requests argparse
+- pip install requests==2.3.0 argparse
 - gem install --version 0.8.9 faraday
 - gem install travis-artifacts
 after_success:
