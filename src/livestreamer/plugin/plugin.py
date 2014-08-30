@@ -2,7 +2,6 @@ import operator
 import re
 
 from functools import partial
-from inspect import isgenerator
 
 from ..cache import Cache
 from ..exceptions import PluginError, NoStreamsError
@@ -63,9 +62,6 @@ def stream_weight(stream):
 
 
 def iterate_streams(streams):
-    if isinstance(streams, dict):
-        streams = streams.items()
-
     for name, stream in streams:
         if isinstance(stream, list):
             for sub_stream in stream:
@@ -211,7 +207,11 @@ class Plugin(object):
 
         try:
             ostreams = self._get_streams()
-            if isgenerator(ostreams):
+            if isinstance(ostreams, dict):
+                ostreams = ostreams.items()
+
+            # Flatten the iterator to a list so we can reuse it.
+            if ostreams:
                 ostreams = list(ostreams)
         except NoStreamsError:
             return {}
@@ -221,8 +221,6 @@ class Plugin(object):
         if not ostreams:
             return {}
 
-        streams = {}
-
         if stream_types is None:
             stream_types = self.default_stream_types(ostreams)
 
@@ -231,6 +229,7 @@ class Plugin(object):
                                 key=partial(stream_type_priority,
                                             stream_types))
 
+        streams = {}
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
