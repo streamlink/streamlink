@@ -14,16 +14,11 @@ HLS_HEADERS = {
 }
 
 
-def parse_stream_map(streammap):
-    streams = []
-    if not streammap:
-        return streams
+def parse_stream_map(stream_map):
+    if not stream_map:
+        return []
 
-    for stream_qs in streammap.split(","):
-        stream = parse_query(stream_qs)
-        streams.append(stream)
-
-    return streams
+    return [parse_query(s) for s in stream_map.split(",")]
 
 
 def parse_fmt_list(formatsmap):
@@ -54,13 +49,28 @@ _config_schema = validate.Schema(
                     validate.transform(int)
                 ),
                 "quality": validate.text,
-                "url": validate.text,
+                "url": validate.url(scheme="http"),
                 validate.optional("s"): validate.text,
                 validate.optional("stereo3d"): validate.all(
                     validate.text,
                     validate.transform(int),
                     validate.transform(bool)
                 ),
+            }]
+        ),
+        validate.optional("adaptive_fmts"): validate.all(
+            validate.text,
+            validate.transform(parse_stream_map),
+            [{
+                validate.optional("s"): validate.text,
+                "type": validate.all(
+                    validate.text,
+                    validate.transform(lambda t: t.split(";")[0].split("/")),
+                    [validate.text, validate.text]
+                ),
+                "url": validate.all(
+                    validate.url(scheme="http")
+                )
             }]
         ),
         validate.optional("hlsvp"): validate.text,
@@ -172,6 +182,21 @@ class YouTube(Plugin):
 
             streams[name] = stream
 
+        # Extract audio streams from the DASH format list
+        for stream_info in info.get("adaptive_fmts", []):
+            if stream_info.get("s"):
+                protected = True
+                continue
+
+            stream_type, stream_format = stream_info["type"]
+            if stream_type != "audio":
+                continue
+
+            stream = HTTPStream(self.session, stream_info["url"])
+            name = "audio_{0}".format(stream_format)
+
+            streams[name] = stream
+
         hls_playlist = info.get("hlsvp")
         if hls_playlist:
             try:
@@ -180,7 +205,7 @@ class YouTube(Plugin):
                 )
                 streams.update(hls_streams)
             except IOError as err:
-                self.logger.warning("Failed to get HLS streams: {0}", err)
+                self.logger.warning("Failed to extract HLS streams: {0}", err)
 
         if not streams and protected:
             raise PluginError("This plugin does not support protected videos, "
