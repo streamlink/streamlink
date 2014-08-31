@@ -236,8 +236,17 @@ class Plugin(object):
             if stream_type not in stream_types:
                 continue
 
-            if name in streams:
-                name = "{0}_{1}".format(name, stream_type)
+            existing = streams.get(name)
+            if existing:
+                existing_stream_type = type(existing).shortname()
+                if existing_stream_type != stream_type:
+                    name = "{0}_{1}".format(name, stream_type)
+
+                if name in streams:
+                    name = "{0}_alt".format(name)
+                    num_alts = len(list(filter(lambda n: name in n, streams.keys())))
+                    if num_alts >= 1:
+                        name = "{0}{1}".format(name, num_alts + 1)
 
             # Validate stream name and discard the stream if it's bad.
             match = re.match("([A-z0-9_+]+)", name)
