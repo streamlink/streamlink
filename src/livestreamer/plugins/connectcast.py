@@ -55,7 +55,6 @@ class ConnectCast(Plugin):
         res = http.get(url, verify=False)
         smil = http.xml(res, schema=_smil_schema)
 
-        streams = {}
         for video in smil["videos"]:
             stream = RTMPStream(self.session, {
                 "rtmp": smil["base"],
@@ -64,30 +63,22 @@ class ConnectCast(Plugin):
                 "pageUrl": self.url,
                 "live": True
             })
-            if streams:
-                name = "live_alt"
-            else:
-                name = "live"
-
-            streams[name] = stream
-
-        return streams
+            yield "live", stream
 
     def _get_streams(self):
         playlist = http.get(self.url, schema=_playlist_schema)
-        streams = {}
         for item in playlist:
             for source in item["sources"]:
                 filename = source["file"]
                 if filename.endswith(".smil"):
-                    streams.update(self._get_smil_streams(filename))
+                    # TODO: Replace with "yield from" when dropping Python 2.
+                    for stream in self._get_smil_streams(filename):
+                        yield stream
                 elif filename.startswith("/"):
                     name = source.get("label", "vod")
                     url = BASE_VOD_URL + filename
-                    streams[name] = HTTPStream(self.session, url)
+                    yield name, HTTPStream(self.session, url)
 
             break
-
-        return streams
 
 __plugin__ = ConnectCast
