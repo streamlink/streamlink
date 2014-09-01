@@ -1,6 +1,6 @@
 import re
 
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 from functools import partial
 from random import randint
 from time import sleep
@@ -437,12 +437,14 @@ class UStreamTV(Plugin):
         return streams
 
     def _get_live_streams(self, channel_id):
-        streams = defaultdict(list)
+        has_desktop_streams = False
         if HAS_LIBRTMP:
             try:
-                desktop_streams = self._get_desktop_streams(channel_id)
-                for name, stream in desktop_streams.items():
-                    streams[name].append(stream)
+                streams = self._get_desktop_streams(channel_id)
+                # TODO: Replace with "yield from" when dropping Python 2.
+                for stream in streams.items():
+                    has_desktop_streams = True
+                    yield stream
             except PluginError as err:
                 self.logger.error("Unable to fetch desktop streams: {0}", err)
             except NoStreamsError:
@@ -454,19 +456,18 @@ class UStreamTV(Plugin):
             )
 
         try:
-            mobile_streams = self._get_hls_streams(channel_id,
-                                                   wait_for_transcode=not streams)
-            for name, stream in mobile_streams.items():
-                streams[name].append(stream)
+            streams = self._get_hls_streams(channel_id,
+                                            wait_for_transcode=not has_desktop_streams)
+
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for stream in streams.items():
+                yield stream
         except PluginError as err:
             self.logger.error("Unable to fetch mobile streams: {0}", err)
         except NoStreamsError:
             pass
 
-        return streams
-
     def _get_recorded_streams(self, video_id):
-        streams = {}
         if HAS_LIBRTMP:
             recording = self._get_module_info("recorded", video_id,
                                               schema=_recorded_schema)
@@ -481,18 +482,15 @@ class UStreamTV(Plugin):
                     stream_name = (bitrate > 0 and "{0}k".format(bitrate) or
                                    "recorded")
 
-                    if stream_name in streams:
-                        stream_name += "_alt"
-
                     url = stream_info["streamName"]
                     if base_url:
                         url = base_url + url
 
                     if url.startswith("http"):
-                        streams[stream_name] = HTTPStream(self.session, url)
+                        yield stream_name, HTTPStream(self.session, url)
                     elif url.startswith("rtmp"):
                         params = dict(rtmp=url, pageUrl=self.url)
-                        streams[stream_name] = RTMPStream(self.session, params)
+                        yield stream_name, RTMPStream(self.session, params)
 
         else:
             self.logger.warning(
@@ -505,9 +503,7 @@ class UStreamTV(Plugin):
                                                   randint(0, 255))
             params = dict(hash=random_hash)
             stream = HTTPStream(self.session, url, params=params)
-            streams["recorded"] = stream
-
-        return streams
+            yield "recorded", stream
 
     def _get_streams(self):
         match = _url_re.match(self.url)
