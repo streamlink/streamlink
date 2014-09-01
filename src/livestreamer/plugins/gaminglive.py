@@ -4,7 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
-SWF_URL = "http://alpha.gaminglive.tv/lib/flowplayer/flash/flowplayer.commercial-3.2.18.swf"
+SWF_URL = "http://www.gaminglive.tv/lib/flowplayer/flash/flowplayer.commercial-3.2.18.swf"
 CHANNELS_API_URL = "http://api.gaminglive.tv/channels/{0}"
 QUALITY_WEIGHTS = {
     "live": 3,
@@ -13,7 +13,7 @@ QUALITY_WEIGHTS = {
 }
 
 _url_re = re.compile("""
-    http(s)?://(staging|alpha)\.gaminglive\.tv
+    http(s)?://www\.gaminglive\.tv
     /\#/channels/(?P<channel>[^/]+)
 """, re.VERBOSE)
 _quality_re = re.compile("[^/]+-(?P<quality>[^/]+)")
