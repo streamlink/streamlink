@@ -1,36 +1,16 @@
 import re
 
-from functools import partial
-
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream, RTMPStream
+
+from livestreamer.plugin.api.support_plugin import common_jwplayer as jwplayer
 
 BASE_VOD_URL = "https://www.connectcast.tv"
 SWF_URL = "https://www.connectcast.tv/jwplayer/jwplayer.flash.swf"
 
 _url_re = re.compile("http(s)?://(\w+\.)?connectcast.tv/")
-_playlist_re = re.compile("playlist: (\[.+?\]),", re.DOTALL)
-_js_to_json = partial(re.compile("(\w+):\s").sub, r'"\1":')
 
-_playlist_schema = validate.Schema(
-    validate.transform(_playlist_re.search),
-    validate.any(
-        None,
-        validate.all(
-            validate.get(1),
-            validate.transform(_js_to_json),
-            validate.transform(parse_json),
-            [{
-                "sources": [{
-                    "file": validate.text,
-                    validate.optional("label"): validate.text
-                }]
-            }]
-        )
-    )
-)
 _smil_schema = validate.Schema(
     validate.union({
         "base": validate.all(
@@ -66,7 +46,11 @@ class ConnectCast(Plugin):
             yield "live", stream
 
     def _get_streams(self):
-        playlist = http.get(self.url, schema=_playlist_schema)
+        res = http.get(self.url)
+        playlist = jwplayer.parse_playlist(res)
+        if not playlist:
+            return
+
         for item in playlist:
             for source in item["sources"]:
                 filename = source["file"]
