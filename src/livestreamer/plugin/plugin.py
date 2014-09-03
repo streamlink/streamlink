@@ -244,8 +244,12 @@ class Plugin(object):
 
                 if name in streams:
                     name = "{0}_alt".format(name)
-                    num_alts = len(list(filter(lambda n: name in n, streams.keys())))
-                    if num_alts >= 1:
+                    num_alts = len(list(filter(lambda n: n.startswith(name), streams.keys())))
+
+                    # We shouldn't need more than 2 alt streams
+                    if num_alts >= 2:
+                        continue
+                    elif num_alts > 0:
                         name = "{0}{1}".format(name, num_alts + 1)
 
             # Validate stream name and discard the stream if it's bad.
