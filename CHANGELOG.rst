@@ -4,6 +4,7 @@ Version 1.10.2 (Under development)
 Plugins:
  - Added plugin for RTVE.es (rtve), patch by @jaimeMF. (#509)
  - Added plugin for Seemeplay.ru (seemeplay). (#510)
+ - euronews: Updated for service changes.
  - filmon: Updated for service changes. (#514)
  - twitch: Now handles videos with chunks that are missing URLs.
  - vaughnlive: Added support for breakers.tv, instagib.tv and vapers.tv. (#521)

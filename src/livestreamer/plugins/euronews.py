@@ -1,45 +1,15 @@
 import re
 
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
-from livestreamer.stream import HTTPStream, RTMPStream
+from itertools import chain
 
-SWF_URL = "http://euronews.com/media/player_live_1_14.swf"
-API_URL_LIVE = "http://euronews.hexaglobe.com/json/"
+from livestreamer.compat import urlparse
+from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
+from livestreamer.stream import HLSStream, HTTPStream
+
+from livestreamer.plugin.api.support_plugin import common_jwplayer as jwplayer
 
 _url_re = re.compile("http(s)?://(\w+\.)?euronews.com")
-_lang_re = re.compile("EN.lang\s+= \"([^\"]+)\";")
-_live_check_re = re.compile("swfobject.embedSWF\(\"[^\"]+\", \"streaming-live-player\",")
-_video_re = re.compile("{file: \"(?P<url>[^\"]+)\", label: \"(?P<name>[^\"]+)\"}")
-
-_live_schema = validate.Schema({
-    validate.any("primary", "secondary"): {
-        validate.text: {
-            "rtmp_flash": {
-                validate.text: {
-                    "name": validate.text,
-                    "server": validate.url(scheme="rtmp")
-                }
-            }
-        }
-    }
-})
-_schema = validate.Schema(
-    validate.union({
-        "lang": validate.all(
-            validate.transform(_lang_re.search),
-            validate.get(1)
-        ),
-        "live": validate.all(
-            validate.transform(_live_check_re.search),
-            validate.transform(bool)
-        ),
-        "videos": validate.all(
-            validate.transform(_video_re.findall),
-            [(validate.url(scheme="http"), validate.text)]
-        )
-    })
-)
 
 
 class Euronews(Plugin):
@@ -47,41 +17,30 @@ class Euronews(Plugin):
     def can_handle_url(self, url):
         return _url_re.match(url)
 
-    def _get_live_streams(self, lang):
-        res = http.get(API_URL_LIVE)
-        json_res = http.json(res, schema=_live_schema)
+    def _create_stream(self, source):
+        url = source["file"]
 
-        streams = {}
-        for site in ("primary", "secondary"):
-            for bitrate, stream in json_res[site][lang]["rtmp_flash"].items():
-                name = "{0}k".format(bitrate)
-                if site == "secondary":
-                    name += "_alt"
+        if urlparse(url).path.endswith("m3u8"):
+            streams = HLSStream.parse_variant_playlist(self.session, url)
 
-                stream = RTMPStream(self.session, {
-                    "rtmp": stream["server"],
-                    "playpath" : stream["name"],
-                    "swfUrl": SWF_URL,
-                    "live": True
-                })
-                streams[name] = stream
-
-        return streams
-
-    def _get_video_streams(self, videos):
-        streams = {}
-        for url, name in videos:
-            streams[name] = HTTPStream(self.session, url)
-
-        return streams
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for stream in streams.items():
+                yield stream
+        else:
+            name = source.get("label", "vod")
+            yield name, HTTPStream(self.session, url)
 
     def _get_streams(self):
-        res = http.get(self.url, schema=_schema)
+        res = http.get(self.url)
+        playlist = jwplayer.parse_playlist(res)
+        if not playlist:
+            return
 
-        if res["live"]:
-            return self._get_live_streams(res["lang"])
-        else:
-            return self._get_video_streams(res["videso"])
+        for item in playlist:
+            streams = map(self._create_stream, item["sources"])
 
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for stream in chain.from_iterable(streams):
+                yield stream
 
 __plugin__ = Euronews
