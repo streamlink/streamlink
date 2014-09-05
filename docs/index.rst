@@ -26,8 +26,8 @@ such as:
 - `Dailymotion <http://dailymotion.com/live>`_
 - `Livestream <http://livestream.com>`_
 - `Twitch <http://twitch.tv>`_
-- `YouTube Live <http://youtube.com>`_
 - `UStream <http://ustream.tv>`_
+- `YouTube Live <http://youtube.com>`_
 
 ... and many more. A full list of plugins currently included can be found
 on the :ref:`plugin_matrix` page.
@@ -43,7 +43,7 @@ player (`VLC <http://videolan.org/>`_).
     # pip install livestreamer
     $ livestreamer twitch.tv/day9tv best
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
-    [cli][info] Opening stream: source
+    [cli][info] Opening stream: source (hls)
     [cli][info] Starting player: vlc
 
 For more in-depth usage and install instructions see the `User guide`_.

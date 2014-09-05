@@ -42,8 +42,8 @@ such as:
 - `Dailymotion <http://dailymotion.com/live>`_
 - `Livestream <http://livestream.com>`_
 - `Twitch <http://twitch.tv>`_
-- `YouTube Live <http://youtube.com>`_
 - `UStream <http://ustream.tv>`_
+- `YouTube Live <http://youtube.com>`_
 
 ... and many more. A full list of plugins currently included can be found
 on the `Plugins`_ page.
