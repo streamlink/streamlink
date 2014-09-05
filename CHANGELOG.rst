@@ -2,7 +2,7 @@ Version 1.10.2 (Under development)
 ----------------------------------
 
 Plugins:
- - Added plugin for Arte.tv (arte). (#457)
+ - Added plugin for Arte.tv (artetv). (#457)
  - Added plugin for RTVE.es (rtve), patch by @jaimeMF. (#509)
  - Added plugin for Seemeplay.ru (seemeplay). (#510)
  - euronews: Updated for service changes.
