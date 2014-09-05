@@ -1,5 +1,5 @@
-Version 1.10.2 (Under development)
-----------------------------------
+Version 1.10.2 (2014-09-05)
+---------------------------
 
 Plugins:
  - Added plugin for Arte.tv (artetv). (#457)
@@ -7,6 +7,7 @@ Plugins:
  - Added plugin for Seemeplay.ru (seemeplay). (#510)
  - euronews: Updated for service changes.
  - filmon: Updated for service changes. (#514)
+ - gaminglive: Updated for service changes, patch by @chhe. (#524)
  - twitch: Now handles videos with chunks that are missing URLs.
  - vaughnlive: Added support for breakers.tv, instagib.tv and vapers.tv. (#521)
  - youtube: Added support for audio-only streams. (#522)
