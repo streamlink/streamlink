@@ -3,22 +3,23 @@
 Command-Line Interface
 ======================
 
-The CLI can be used to either pipe streams to a video player for playback or
-download them directly to a file.
-
 Tutorial
 --------
 
-The CLI is designed to be as simple as possible to use, in two or less steps
-you can start playback of your favorite stream in a desktop video player such
-as `VLC <http://videolan.org/>`_ or `mpv <http://mpv.io/>`_.
+Livestreamer is command-line application, this means the commands described
+here should be typed into a terminal. On Windows this means you should open
+the `command prompt`_ or `PowerShell`_, on Mac OS X open the `Terminal`_ app
+and if you're on Linux or BSD you probably already know the drill.
 
-Let's say you want to watch the stream located on http://twitch.tv/day9tv, you
-start off by telling Livestreamer where to to find information about your stream
-by giving the URL to the command :command:`livestreamer` as the first argument.
+The way Livestreamer works is that it's only a means to extract and transport
+the streams, and the playback is done by an external video player. Livestreamer
+works best with `VLC`_ or `mpv`_, which are also cross-platform, but other players
+may be compatible too, see the :ref:`Players` page for a complete overview.
 
-You do not need to include the protocol when dealing with HTTP URLs,
-just ``twitch.tv/day9tv`` will do.
+Now to get into actually using Livestreamer, let's say you want to watch the
+stream located on http://twitch.tv/day9tv, you start off by telling Livestreamer
+where to attempt to extract streams from. This is done by giving the URL to the
+command :command:`livestreamer` as the first argument:
 
 .. code-block:: console
 
@@ -26,25 +27,32 @@ just ``twitch.tv/day9tv`` will do.
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
     Available streams: audio, high, low, medium, mobile (worst), source (best)
 
-Livestreamer will find out what streams are available and print them out for you
-to choose from. Simply give :command:`livestreamer` the stream as the second
-argument and playback will start in your video player of choice.
 
-The words printed next to stream names within a parantheses are synonyms and
-can be used when selecting stream to play. In this case the ``best`` stream is
-a reference to the stream that is considered to be of highest quality,
-e.g. ``source``.
+.. note::
+    You don't need to include the protocol when dealing with HTTP URLs,
+    e.g. just ``twitch.tv/day9tv`` is enough and quicker to type.
+
+
+This command will tell Livestreamer to attempt to extract streams from the URL
+specified, and if it's successful, print out a list of available streams to choose
+from.
+
+To select a stream and start playback, we simply add the stream name as a second
+argument to the :command:`livestreamer` command:
 
 .. sourcecode:: console
 
-    $ livestreamer twitch.tv/day9tv best
+    $ livestreamer twitch.tv/day9tv source
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
-    [cli][info] Opening stream: source
+    [cli][info] Opening stream: source (hls)
     [cli][info] Starting player: vlc
 
-The default player is `VLC <http://videolan.org/>`_, but it can be easily changed
-using the :option:`--player` option.
 
+The stream you chose should now be playing in the player. It's a common use case
+to just want start the highest quality stream and not be bothered with what it's
+named. To do this just specify ``best`` as the stream name and Livestreamer will
+attempt to rank the streams and open the one of highest quality. You can also
+specify ``worst`` to get the lowest quality.
 
 Now that you have a basic grasp of how Livestreamer works, you may want to look
 into customizing it to your own needs, such as:
@@ -52,7 +60,14 @@ into customizing it to your own needs, such as:
 - Creating a :ref:`configuration file <cli-livestreamerrc>` of options you
   want to use
 - Setting up your player to :ref:`cache some data <issues-player_caching>`
-  before playing the stream to help avoiding lag issues
+  before playing the stream to help avoiding buffering issues
+
+
+.. _command prompt: http://windows.microsoft.com/en-us/windows/command-prompt-faq#1TC=windows-8
+.. _PowerShell: http://www.microsoft.com/powershell
+.. _Terminal: http://en.wikipedia.org/wiki/Terminal_(OS_X)
+.. _VLC: http://videolan.org/
+.. _mpv: http://mpv.io/
 
 
 .. _cli-livestreamerrc:
@@ -60,7 +75,7 @@ into customizing it to your own needs, such as:
 Configuration file
 ------------------
 
-Writing the command-line options every time is painful, that's why Livestreamer
+Writing the command-line options every time is inconvenient, that's why Livestreamer
 is capable of reading options from a configuration file instead.
 
 Livestreamer will look for config files in different locations depending on
@@ -90,12 +105,19 @@ You can also specify the location yourself using the :option:`--config` option.
 Syntax
 ^^^^^^
 
-The file should contain one :ref:`command-line option <cli-options>`
-(omitting the dashes) per line in this format::
+The config file is a simple text file and should contain one
+:ref:`command-line option <cli-options>` (omitting the dashes) per
+line in the format::
 
-  option[=value]
+  option=value
 
-Any quotes used will be part of the value, so only use when necessary.
+or for a option without value::
+
+  option
+
+.. note::
+    Any quotes used will be part of the value, so only use when the value needs them,
+    e.g. specifiying a player with a path containing spaces.
 
 Example
 ^^^^^^^

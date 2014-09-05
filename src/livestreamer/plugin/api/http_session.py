@@ -8,6 +8,15 @@ try:
 except ImportError:
     TIMEOUT_ADAPTER_NEEDED = False
 
+try:
+    from requests.packages import urllib3
+
+    # We tell urllib3 to disable warnings about unverified HTTPS requests,
+    # because in some plugins we have to do unverified requests intentionally.
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+except (ImportError, AttributeError):
+    pass
+
 from ...exceptions import PluginError
 from ...utils import parse_json, parse_xml
 

@@ -4,14 +4,24 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
-INFO_URL = "http://mvn.vaughnsoft.net/video/edge/live_{channel}"
+INFO_URL = "http://mvn.vaughnsoft.net/video/edge/{domain}_{channel}"
 SWF_URL = "http://vaughnlive.tv/800021294/swf/VaughnSoftPlayer.swf"
+
+DOMAIN_MAP = {
+    "breakers": "btv",
+    "vapers": "vtv",
+    "vaughnlive": "live",
+}
 
 DEBUG_PORT_ID = 84
 SECURE_TOKEN = "30dabc4871922a1314192e925ab7961d"
 SET_GEO_CODE = 5
 
-_url_re = re.compile("http(s)?://(\w+\.)?vaughnlive.tv/(?P<channel>[^/&?]+)")
+_url_re = re.compile("""
+    http(s)?://(\w+\.)?
+    (?P<domain>vaughnlive|breakers|instagib|vapers).tv
+    /(?P<channel>[^/&?]+)
+""", re.VERBOSE)
 _channel_not_found_re = re.compile("<title>Channel Not Found")
 
 
@@ -41,6 +51,7 @@ _schema = validate.Schema(
     })
 )
 
+
 class VaughnLive(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -52,7 +63,9 @@ class VaughnLive(Plugin):
             return
 
         match = _url_re.match(self.url)
-        info = http.get(INFO_URL.format(**match.groupdict()), schema=_schema)
+        params = match.groupdict()
+        params["domain"] = DOMAIN_MAP.get(params["domain"], params["domain"])
+        info = http.get(INFO_URL.format(**params), schema=_schema)
 
         stream = RTMPStream(self.session, {
             "rtmp": "rtmp://{0}/live".format(info["server"]),
@@ -60,7 +73,7 @@ class VaughnLive(Plugin):
             "swfVfy": SWF_URL,
             "pageUrl": self.url,
             "live": True,
-            "playpath": "live_{0}".format(match.group("channel")),
+            "playpath": "{domain}_{channel}".format(**params),
             "token": SECURE_TOKEN
         })
 

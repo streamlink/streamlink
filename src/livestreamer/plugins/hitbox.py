@@ -96,7 +96,6 @@ class Hitbox(Plugin):
 
         res = http.get(PLAYER_API.format(media_type, media_id))
         player = http.json(res, schema=_player_schema)
-        streams = {}
         if media_type == "live":
             swf_url = SWF_URL
             for playlist in player.get("playlist", []):
@@ -125,10 +124,7 @@ class Hitbox(Plugin):
                         "swfVfy": swf_url,
                         "live": True
                     })
-                    if quality in streams:
-                        quality += "_alt"
-
-                    streams[quality] = stream
+                    yield quality, stream
         else:
             base_url = player["clip"]["baseUrl"] or VOD_BASE_URL
             for bitrate in player["clip"]["bitrates"]:
@@ -140,8 +136,6 @@ class Hitbox(Plugin):
                 else:
                     stream = HTTPStream(self.session, url)
 
-                streams[quality] = stream
-
-        return streams
+                yield quality, stream
 
 __plugin__ = Hitbox

@@ -1,7 +1,5 @@
 import re
 
-from collections import defaultdict
-
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HTTPStream, HDSStream, RTMPStream
@@ -54,21 +52,14 @@ class ard_mediathek(Plugin):
         if not isinstance(info["_stream"], list):
             urls = [urls]
 
-        streams = {}
         for url in urls:
             stream = HTTPStream(self.session, url)
-            if streams:
-                streams[name + "_alt"] = stream
-            else:
-                streams[name] = stream
-
-        return streams
+            yield name, stream
 
     def _get_hds_streams(self, info):
         # Needs the hdcore parameter added
         url = info["_stream"] + HDCORE_PARAMETER
-
-        return HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL)
+        return HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL).items()
 
     def _get_rtmp_streams(self, info):
         name = QUALITY_MAP.get(info["_quality"], "live")
@@ -80,21 +71,19 @@ class ard_mediathek(Plugin):
             "live": True
         }
         stream = RTMPStream(self.session, params)
-
-        return {name: stream}
+        yield name, stream
 
     def _get_smil_streams(self, info):
         res = http.get(info["_stream"])
         smil = http.xml(res, "SMIL config", schema=_smil_schema)
 
-        streams = {}
         for video in smil["videos"]:
             url = "{0}/{1}{2}".format(smil["base"], video, HDCORE_PARAMETER)
-            streams.update(
-                HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL)
-            )
+            streams = HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL)
 
-        return streams
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for stream in streams.items():
+                yield stream
 
     def _get_streams(self):
         res = http.get(self.url)
@@ -107,7 +96,6 @@ class ard_mediathek(Plugin):
         res = http.get(MEDIA_URL.format(media_id))
         media = http.json(res, schema=_media_schema)
 
-        streams = defaultdict(list)
         for media in media["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:
                 server = stream.get("_server", "").strip()
@@ -132,12 +120,11 @@ class ard_mediathek(Plugin):
                     parser_name = "HTTP"
 
                 try:
-                    for name, stream in parser(stream).items():
-                        streams[name].append(stream)
+                    # TODO: Replace with "yield from" when dropping Python 2.
+                    for stream in parser(stream):
+                        yield stream
                 except IOError as err:
                     self.logger.error("Failed to extract {0} streams: {1}",
                                       parser_name, err)
-
-        return streams
 
 __plugin__ = ard_mediathek

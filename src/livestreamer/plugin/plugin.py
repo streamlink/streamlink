@@ -32,7 +32,6 @@ FILTER_OPERATORS = {
 }
 
 
-
 def stream_weight(stream):
     for group, weights in QUALITY_WEIGTHS_EXTRA.items():
         if stream in weights:
@@ -63,7 +62,7 @@ def stream_weight(stream):
 
 
 def iterate_streams(streams):
-    for name, stream in streams.items():
+    for name, stream in streams:
         if isinstance(stream, list):
             for sub_stream in stream:
                 yield (name, sub_stream)
@@ -208,6 +207,12 @@ class Plugin(object):
 
         try:
             ostreams = self._get_streams()
+            if isinstance(ostreams, dict):
+                ostreams = ostreams.items()
+
+            # Flatten the iterator to a list so we can reuse it.
+            if ostreams:
+                ostreams = list(ostreams)
         except NoStreamsError:
             return {}
         except (IOError, OSError, ValueError) as err:
@@ -215,8 +220,6 @@ class Plugin(object):
 
         if not ostreams:
             return {}
-
-        streams = {}
 
         if stream_types is None:
             stream_types = self.default_stream_types(ostreams)
@@ -226,14 +229,28 @@ class Plugin(object):
                                 key=partial(stream_type_priority,
                                             stream_types))
 
+        streams = {}
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
             if stream_type not in stream_types:
                 continue
 
-            if name in streams:
-                name = "{0}_{1}".format(name, stream_type)
+            existing = streams.get(name)
+            if existing:
+                existing_stream_type = type(existing).shortname()
+                if existing_stream_type != stream_type:
+                    name = "{0}_{1}".format(name, stream_type)
+
+                if name in streams:
+                    name = "{0}_alt".format(name)
+                    num_alts = len(list(filter(lambda n: n.startswith(name), streams.keys())))
+
+                    # We shouldn't need more than 2 alt streams
+                    if num_alts >= 2:
+                        continue
+                    elif num_alts > 0:
+                        name = "{0}{1}".format(name, num_alts + 1)
 
             # Validate stream name and discard the stream if it's bad.
             match = re.match("([A-z0-9_+]+)", name)

@@ -1,6 +1,5 @@
 import re
 
-from collections import defaultdict
 from time import time
 
 from livestreamer.plugin import Plugin, PluginError
@@ -71,21 +70,18 @@ class Streamingvideoprovider(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         channel_name = match.group("channel")
-        streams = defaultdict(list)
 
         try:
             stream = self._get_rtmp_stream(channel_name)
-            streams["live"].append(stream)
+            yield "live", stream
         except PluginError as err:
             self.logger.error("Unable to extract RTMP stream: {0}", err)
 
         try:
             stream = self._get_hls_stream(channel_name)
             if stream:
-                streams["live"].append(stream)
+                yield "live", stream
         except PluginError as err:
             self.logger.error("Unable to extract HLS stream: {0}", err)
-
-        return streams
 
 __plugin__ = Streamingvideoprovider

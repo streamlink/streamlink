@@ -1,7 +1,5 @@
 import re
 
-from collections import defaultdict
-
 from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
@@ -26,7 +24,7 @@ class DMCloud(Plugin):
     def can_handle_url(self, url):
         return _url_re.match(url)
 
-    def _get_rtmp_streams(self, swfurl):
+    def _get_rtmp_stream(self, swfurl):
         res = http.get(swfurl)
         swf = swfdecompress(res.content)
         match = _rtmp_re.search(swf)
@@ -52,7 +50,6 @@ class DMCloud(Plugin):
             return
 
         info = parse_json(match.group(1), schema=_schema)
-        streams = defaultdict(list)
         stream_name = info["mode"]
         mp4_url = info.get("mp4_url")
         ios_url = info.get("ios_url")
@@ -60,21 +57,19 @@ class DMCloud(Plugin):
 
         if mp4_url:
             stream = HTTPStream(self.session, mp4_url)
-            streams[stream_name].append(stream)
+            yield stream_name, stream
 
         if ios_url:
             if urlparse(ios_url).path.endswith(".m3u8"):
-                hls_streams = HLSStream.parse_variant_playlist(
-                    self.session, ios_url
-                )
-                for name, stream in hls_streams.items():
-                    streams[name].append(stream)
+                streams = HLSStream.parse_variant_playlist(self.session, ios_url)
+                # TODO: Replace with "yield from" when dropping Python 2.
+                for stream in streams.items():
+                    yield stream
 
         if swf_url:
-            stream = self._get_rtmp_streams(swf_url)
+            stream = self._get_rtmp_stream(swf_url)
             if stream:
-                streams[stream_name].append(stream)
+                yield stream_name, stream
 
-        return streams
 
 __plugin__ = DMCloud

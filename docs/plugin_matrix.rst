@@ -17,6 +17,7 @@ aftonbladet         aftonbladet.se       Yes   Yes
 alieztv             aliez.tv             Yes   Yes
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
+artetv              arte.tv              Yes   Yes
 azubutv             azubu.tv             Yes   No
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bambuser            bambuser.com         Yes   Yes
@@ -48,6 +49,8 @@ nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restrict
                     - radio.nrk.no
 oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
 picarto             picarto.tv           Yes   --
+rtve                rtve.es              Yes   No
+seemeplay           seemeplay.ru         Yes   Yes
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
@@ -59,7 +62,10 @@ tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restrict
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
 ustreamtv           ustream.tv           Yes   Yes
-vaughnlive          vaughnlive.tv        Yes   --
+vaughnlive          - vaughnlive.tv      Yes   --
+                    - breakers.tv
+                    - instagib.tv
+                    - vapers.tv
 veetle              veetle.com           Yes   Yes
 vgtv                vgtv.no              Yes   Yes
 viasat              - tv3play.se         Yes   Yes   Streams may be geo-restricted.

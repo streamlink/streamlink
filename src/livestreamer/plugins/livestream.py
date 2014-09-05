@@ -1,7 +1,5 @@
 import re
 
-from collections import defaultdict
-
 from livestreamer.compat import urljoin
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
@@ -80,12 +78,9 @@ class Livestream(Plugin):
         res = http.get(url)
         smil = http.xml(res, "SMIL config", schema=_smil_schema)
 
-        streams = {}
         for src, bitrate in smil["videos"]:
             url = urljoin(smil["http_base"], src)
-            streams[bitrate] = AkamaiHDStream(self.session, url, swf=swf_url)
-
-        return streams
+            yield bitrate, AkamaiHDStream(self.session, url, swf=swf_url)
 
     def _get_streams(self):
         info = self._get_stream_info()
@@ -97,30 +92,27 @@ class Livestream(Plugin):
             # Stream is not live
             return
 
-        streams = defaultdict(list)
         play_url = stream_info.get("play_url")
         if play_url:
-            swfurl = info.get("viewerPlusSwfUrl") or info.get("hdPlayerSwfUrl")
-            if not swfurl.startswith("http"):
-                swfurl = "http://" + swfurl
+            swf_url = info.get("viewerPlusSwfUrl") or info.get("hdPlayerSwfUrl")
+            if not swf_url.startswith("http"):
+                swf_url = "http://" + swf_url
 
             qualities = stream_info["qualities"]
-            smil = self._parse_smil(play_url, swfurl)
-            for bitrate, stream in smil.items():
+            for bitrate, stream in self._parse_smil(play_url, swf_url):
                 name = "{0}k".format(bitrate / 1000)
                 for quality in qualities:
                     if quality["bitrate"] == bitrate:
                         name = "{0}p".format(quality["height"])
 
-                streams[name].append(stream)
+                yield name, stream
 
         m3u8_url = stream_info.get("m3u8_url")
         if m3u8_url:
-            hls_streams = HLSStream.parse_variant_playlist(self.session, m3u8_url,
-                                                           namekey="pixels")
-            for name, stream in hls_streams.items():
-                streams[name].append(stream)
-
-        return streams
+            streams = HLSStream.parse_variant_playlist(self.session, m3u8_url,
+                                                       namekey="pixels")
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for stream in streams.items():
+                yield stream
 
 __plugin__ = Livestream
