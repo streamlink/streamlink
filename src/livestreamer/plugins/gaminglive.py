@@ -7,9 +7,14 @@ from livestreamer.stream import RTMPStream
 SWF_URL = "http://www.gaminglive.tv/lib/flowplayer/flash/flowplayer.commercial-3.2.18.swf"
 CHANNELS_API_URL = "http://api.gaminglive.tv/channels/{0}"
 QUALITY_WEIGHTS = {
-    "live": 3,
+    "source": 5,
+    "live": 5,
+    "1080": 4,
+    "720": 3,
+    "480": 2,
     "medium": 2,
-    "low": 1,
+    "360": 1,
+    "low": 1
 }
 
 _url_re = re.compile("""
