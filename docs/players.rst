@@ -34,6 +34,7 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 `MPlayer <http://mplayerhq.hu>`_                      Yes        Yes        Yes
 `MPlayer2 <http://mplayer2.org>`_                     Yes        Yes        Yes
 `mpv <http://mpv.io>`_                                Yes        Yes        Yes
+`QuickTime <http://apple.com/quicktime>`_             No         No         No
 `VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
 ===================================================== ========== ========== ====
 
