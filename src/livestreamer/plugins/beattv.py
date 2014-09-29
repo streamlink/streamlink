@@ -50,12 +50,12 @@ _schema = validate.Schema(
             "status": int,
             "media": [{
                 "duration": validate.any(float, int),
-                "offset": int,
+                "offset": validate.any(float, int),
                 "id": int,
                 "parts": [{
                     "duration": validate.any(float, int),
                     "id": int,
-                    "offset": int,
+                    "offset": validate.any(float, int),
                     validate.optional("recording"): int,
                     validate.optional("start"): validate.any(float, int)
                 }]
