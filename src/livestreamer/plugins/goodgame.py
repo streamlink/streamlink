@@ -14,7 +14,7 @@ QUALITIES = {
 
 _url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)/")
 _stream_re = re.compile(
-    "\s+data-objid=\"(\d+)\" id=\"channel-popup-link\" class=\"fright font-size-small\">"
+    "iframe frameborder=\"0\" width=\"100%\" height=\"100%\" src=\"http://goodgame.ru/player(\d)?\?(\d+)\""
 )
 
 class GoodGame(Plugin):
@@ -33,7 +33,7 @@ class GoodGame(Plugin):
         if not match:
             return
 
-        stream_id = match.group(1)
+        stream_id = match.group(2)
         streams = {}
         for name, url_suffix in QUALITIES.items():
             url = HLS_URL_FORMAT.format(stream_id, url_suffix)
