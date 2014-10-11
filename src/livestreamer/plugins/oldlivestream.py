@@ -19,7 +19,7 @@ class OldLivestream(Plugin):
         channel = channel.replace("_", "-")
         playlist_url = PLAYLIST_URL.format(channel)
 
-        return HLSStream.parse_variant_playlist(self.session, playlist_url)
+        return HLSStream.parse_variant_playlist(self.session, playlist_url, check_streams=True)
 
 
 __plugin__ = OldLivestream
