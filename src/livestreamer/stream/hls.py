@@ -257,13 +257,15 @@ class HLSStream(HTTPStream):
 
     @classmethod
     def parse_variant_playlist(cls, session_, url, name_key="name",
-                               name_prefix="", **request_params):
+                               name_prefix="", check_streams=False,
+                               **request_params):
         """Attempts to parse a variant playlist and return its streams.
 
         :param url: The URL of the variant playlist.
         :param name_key: Prefer to use this key as stream name, valid keys are:
                          name, pixels, bitrate.
         :param name_prefix: Add this prefix to the stream names.
+        :param check_streams: Only allow streams that are accesible.
         """
 
         # Backwards compatibility with "namekey" and "nameprefix" params.
@@ -302,6 +304,12 @@ class HLSStream(HTTPStream):
 
             if not stream_name or stream_name in streams:
                 continue
+
+            if check_streams:
+                try:
+                    session_.http.get(playlist.uri, **request_params)
+                except Exception:
+                    continue
 
             stream = HLSStream(session_, playlist.uri, **request_params)
             streams[name_prefix + stream_name] = stream
