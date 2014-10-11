@@ -1,3 +1,17 @@
+Version 1.10.3 (Under development)
+----------------------------------
+
+CLI:
+ - Only apply the backslash magic on player paths on Windows.
+
+Plugins:
+ - beattv: Updated validation schema to include float offsets, patch by @suhailpatel. (#555)
+ - douyutv: Added support for transcodes.
+ - gaminglive: Fixed quality names, patch by @chhe. (#545)
+ - goodgame: Updated for service changes, patch by @JaxxC. (#554)
+ - oldlivestream: Check that streams don't return 404. (#560)
+
+
 Version 1.10.2 (2014-09-05)
 ---------------------------
 
