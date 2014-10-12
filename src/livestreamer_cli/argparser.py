@@ -272,13 +272,16 @@ player.add_argument(
     are put together with the value of --player to create a command
     to execute.
 
+    This value can contain formatting variables surrounded by curly
+    braces, {{ and }}. If you need to include a brace character, it
+    can be escaped by doubling, e.g. {{{{ and }}}}.
+
     Formatting variables available:
 
     filename
       This is the filename that the player will use.
       It's usually "-" (stdin), but can also be a URL or a file
       depending on the options used.
-
 
     It's usually enough to use --player instead of this unless you
     need to add arguments after the filename.
