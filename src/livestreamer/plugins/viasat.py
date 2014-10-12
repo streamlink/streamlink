@@ -10,6 +10,9 @@ from livestreamer.utils import rtmpparse
 
 STREAM_API_URL = "http://playapi.mtgx.tv/v1/videos/stream/{0}"
 
+_embed_url_re = re.compile(
+    '<meta itemprop="embedURL" content="http://www.viagame.com/embed/(\d+)" />'
+)
 _swf_url_re = re.compile("data-flashplayer-url=\"([^\"]+)\"")
 
 _url_re = re.compile("""
@@ -23,15 +26,17 @@ _url_re = re.compile("""
     (?:
         dk|ee|lt|lv|no|se|com
     )
-    /.+/
-    (?P<stream_id>\d+)
+    (?:
+        /.+/
+        (?P<stream_id>\d+)
+    )?
 """, re.VERBOSE)
 
 _stream_schema = validate.Schema(
     {
         "streams": validate.all(
-            { validate.text: validate.any(validate.text, int, None) },
-            validate.filter(lambda k,v: isinstance(v, validate.text))
+            {validate.text: validate.any(validate.text, int, None)},
+            validate.filter(lambda k, v: isinstance(v, validate.text))
         )
     },
     validate.get("streams")
@@ -51,12 +56,18 @@ class Viasat(Plugin):
 
         return match.group(1)
 
+    def _find_stream_id(self):
+        res = http.get(self.url)
+        match = _embed_url_re.search(res.text)
+        if match:
+            return match.group(1)
+
     def _get_streams(self):
         match = _url_re.match(self.url)
-        if not match:
+        stream_id = match.group("stream_id") or self._find_stream_id()
+        if not stream_id:
             return
 
-        stream_id = match.group("stream_id")
         res = http.get(STREAM_API_URL.format(stream_id))
         stream_info = http.json(res, schema=_stream_schema)
         streams = {}

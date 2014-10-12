@@ -10,6 +10,7 @@ Plugins:
  - gaminglive: Fixed quality names, patch by @chhe. (#545)
  - goodgame: Updated for service changes, patch by @JaxxC. (#554)
  - oldlivestream: Check that streams don't return 404. (#560)
+ - viasat: Now handles channel pages on viagame aswell. (#564, #566)
 
 
 Version 1.10.2 (2014-09-05)
