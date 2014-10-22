@@ -113,16 +113,18 @@ def rtmpparse(url):
     parse = urlparse(url)
     netloc = "{hostname}:{port}".format(hostname=parse.hostname,
                                         port=parse.port or 1935)
-    split = parse.path.split("/")
-    app = "/".join(split[1:2])
+    split = list(filter(None, parse.path.split("/")))
 
     if len(split) > 2:
+        app = "/".join(split[:2])
         playpath = "/".join(split[2:])
-
-        if len(parse.query) > 0:
-            playpath += "?" + parse.query
+    elif len(split) == 2:
+        app, playpath = split
     else:
-        playpath = ""
+        app = split[0]
+
+    if len(parse.query) > 0:
+        playpath += "?{parse.query}".format(parse=parse)
 
     tcurl = "{scheme}://{netloc}/{app}".format(scheme=parse.scheme,
                                                netloc=netloc,
