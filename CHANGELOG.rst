@@ -5,6 +5,7 @@ CLI:
  - Only apply the backslash magic on player paths on Windows.
 
 Plugins:
+ - afreecatv: Updated for service changes. (#568)
  - beattv: Updated validation schema to include float offsets, patch by @suhailpatel. (#555)
  - douyutv: Added support for transcodes.
  - gaminglive: Fixed quality names, patch by @chhe. (#545)
