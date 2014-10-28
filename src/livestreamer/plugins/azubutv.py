@@ -1,7 +1,6 @@
 import re
 
 from io import BytesIO
-from operator import attrgetter
 from time import sleep
 
 from livestreamer.exceptions import PluginError
@@ -13,7 +12,7 @@ from livestreamer.stream import AkamaiHDStream
 
 AMF_GATEWAY = "http://c.brightcove.com/services/messagebroker/amf"
 AMF_MESSAGE_PREFIX = "af6b88c640c8d7b4cc75d22f7082ad95603bc627"
-STREAM_NAMES = ["360p", "480p", "720p", "1080p"]
+STREAM_NAMES = ["360p", "480p", "720p", "source"]
 HTTP_HEADERS = {
     "User-Agent": ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
                    "(KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36")
@@ -83,8 +82,17 @@ class ContentOverride(AMF3ObjectBase):
 
 class AzubuTV(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            weight = 1080
+        else:
+            weight, group = Plugin.stream_weight(stream)
+
+        return weight, "azubutv"
 
     def _create_amf_request(self, key, video_player, player_id):
         if video_player.startswith("ref:"):
@@ -105,7 +113,9 @@ class AzubuTV(Plugin):
         return req
 
     def _send_amf_request(self, req, key):
-        headers = { "content-type": "application/x-amf" }
+        headers = {
+            "content-type": "application/x-amf"
+        }
         res = http.post(AMF_GATEWAY, data=bytes(req.serialize()),
                         headers=headers, params=dict(playerKey=key))
 
@@ -163,7 +173,7 @@ class AzubuTV(Plugin):
         res = _viewerexp_schema.validate(res)
         player = res.programmedContent["videoPlayer"]
         renditions = sorted(player.mediaDTO.renditions.values(),
-                            key=attrgetter("encodingRate"))
+                            key=lambda r: r.encodingRate or 100000000)
 
         streams = {}
         for stream_name, rendition in zip(STREAM_NAMES, renditions):
