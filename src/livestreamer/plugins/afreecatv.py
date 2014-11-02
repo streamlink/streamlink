@@ -4,7 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream, HLSStream
 
-CHANNEL_INFO_URL = "http://live.afreeca.com:8057/afreeca/player_live_api.php"
+CHANNEL_INFO_URL = "http://live.afreeca.com:8057/api/get_broad_state_list.php"
 KEEP_ALIVE_URL = "{server}/stream_keepalive.html"
 STREAM_INFO_URLS = {
     "rtmp": "http://sessionmanager01.afreeca.tv:6060/broad_stream_assign.html",
@@ -21,7 +21,11 @@ _channel_schema = validate.Schema(
     {
         "CHANNEL": {
             "RESULT": validate.transform(int),
-            validate.optional("BNO"): validate.text,
+            "BROAD_INFOS": [{
+                "list": [{
+                    "nBroadNo": validate.text
+                }]
+            }]
         }
     },
     validate.get("CHANNEL")
@@ -41,10 +45,13 @@ class AfreecaTV(Plugin):
         return _url_re.match(url)
 
     def _get_channel_info(self, username):
-        data = {
-            "bid": username
+        headers = {
+            "Referer": self.url
         }
-        res = http.post(CHANNEL_INFO_URL, data=data)
+        data = {
+            "uid": username
+        }
+        res = http.post(CHANNEL_INFO_URL, data=data, headers=headers)
 
         return http.json(res, schema=_channel_schema)
 
@@ -75,7 +82,7 @@ class AfreecaTV(Plugin):
         if channel["RESULT"] != CHANNEL_RESULT_OK:
             return
 
-        broadcast = channel.get("BNO")
+        broadcast = channel["BROAD_INFOS"][0]["list"][0]["nBroadNo"]
         if not broadcast:
             return
 
