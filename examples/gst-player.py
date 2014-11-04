@@ -3,13 +3,17 @@
 from __future__ import print_function
 from livestreamer import Livestreamer, StreamError, PluginError, NoPluginError
 
-import gobject
+# PyGI http://sourceforge.net/projects/pygobjectwin32/
+import gi
+gi.require_version('Gst', '1.0')
+from gi.repository import GObject as gobject, Gst as gst
+
+
 gobject.threads_init()
+gst.init(None)
 
-import pygst
-pygst.require("0.10")
 
-import gst
+
 import sys
 
 def exit(msg):
@@ -23,7 +27,7 @@ class LivestreamerPlayer(object):
 
         # This creates a playbin pipeline and using the appsrc source
         # we can feed it our stream data
-        self.pipeline = gst.element_factory_make("playbin2", None)
+        self.pipeline = gst.ElementFactory.make("playbin", None)
         self.pipeline.set_property("uri", "appsrc://")
 
         # When the playbin creates the appsrc source it will call
@@ -42,7 +46,7 @@ class LivestreamerPlayer(object):
 
     def stop(self):
         # Stop playback and exit mainloop
-        self.pipeline.set_state(gst.STATE_NULL)
+        self.pipeline.set_state(gst.State.NULL)
         self.mainloop.quit()
 
         # Close the stream
@@ -57,7 +61,7 @@ class LivestreamerPlayer(object):
             self.exit("Failed to open stream: {0}".format(err))
 
         # Start playback
-        self.pipeline.set_state(gst.STATE_PLAYING)
+        self.pipeline.set_state(gst.State.PLAYING)
         self.mainloop.run()
 
     def on_source_setup(self, element, source):
