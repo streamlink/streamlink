@@ -109,7 +109,10 @@ Examples
 Simple player
 ^^^^^^^^^^^^^
 
-This example uses the Python bindings of `GStreamer <http://gstreamer.freedesktop.org/>`_
-to playback a stream.
+This example uses the `PyGObject`_ module to playback a stream using the
+`GStreamer`_ framework.
+
+.. _PyGObject: https://wiki.gnome.org/action/show/Projects/PyGObject
+.. _GStreamer: http://gstreamer.freedesktop.org/
 
 .. literalinclude:: ../examples/gst-player.py
