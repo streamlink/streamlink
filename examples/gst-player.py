@@ -1,24 +1,19 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 from __future__ import print_function
-from livestreamer import Livestreamer, StreamError, PluginError, NoPluginError
-
-# PyGI http://sourceforge.net/projects/pygobjectwin32/
-import gi
-gi.require_version('Gst', '1.0')
-from gi.repository import GObject as gobject, Gst as gst
-
-
-gobject.threads_init()
-gst.init(None)
-
-
 
 import sys
+
+import gi
+
+from gi.repository import GObject as gobject, Gst as gst
+from livestreamer import Livestreamer, StreamError, PluginError, NoPluginError
+
 
 def exit(msg):
     print(msg, file=sys.stderr)
     sys.exit()
+
 
 class LivestreamerPlayer(object):
     def __init__(self):
@@ -83,7 +78,7 @@ class LivestreamerPlayer(object):
 
         # Convert the Python bytes into a GStreamer Buffer
         # and then push it to the appsrc
-        buf = gst.Buffer(data)
+        buf = gst.Buffer.new_wrapped(data)
         source.emit("push-buffer", buf)
 
     def on_eos(self, bus, msg):
@@ -99,6 +94,11 @@ class LivestreamerPlayer(object):
 def main():
     if len(sys.argv) < 3:
         exit("Usage: {0} <url> <quality>".format(sys.argv[0]))
+
+    # Initialize and check GStreamer version
+    gi.require_version("Gst", "1.0")
+    gobject.threads_init()
+    gst.init(None)
 
     # Collect arguments
     url = sys.argv[1]
