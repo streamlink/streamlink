@@ -1,4 +1,5 @@
 import re
+import json
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
@@ -47,7 +48,18 @@ class ConnectCast(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url)
-        playlist = jwplayer.parse_playlist(res)
+
+        # temporary fix until the jwplayer-parser works for this site again
+        # refer to: https://github.com/chrippa/livestreamer/issues/588
+        #
+        # not working:
+        # playlist = jwplayer.parse_playlist(res)
+
+        playlist = re.compile(r"playlist: (\[{.*?}\]),", re.DOTALL + re.IGNORECASE).search(res.content).group(1).strip()
+        playlist = playlist.replace('sources:', '"sources":')
+        playlist = playlist.replace('file:', '"file":')
+        playlist = json.loads(playlist)
+        
         if not playlist:
             return
 
