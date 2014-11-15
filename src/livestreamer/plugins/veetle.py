@@ -32,6 +32,8 @@ class Veetle(Plugin):
         parsed = urlparse(self.url)
         if parsed.fragment:
             channel_id = parsed.fragment
+        elif parsed.path[:3] == '/v/':
+            channel_id = parsed.path.split('/')[-1]
         else:
             channel_id = match.group("channel")
 
