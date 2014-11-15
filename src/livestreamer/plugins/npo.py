@@ -6,11 +6,10 @@ Supports:
 """
 
 import re
-import sys
 import json
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api import http
 from livestreamer.stream import HTTPStream, HLSStream
 
 _url_re = re.compile("http(s)?://(\w+\.)?npo.nl/")
@@ -49,9 +48,8 @@ class NPO(Plugin):
     def _get_streams(self):
         urlparts = self.url.split('/')
         self.npo_id = urlparts[-1]
-        self.is_live = len(urlparts) > 1 and urlparts[-2] == 'live'
 
-        if (self.is_live):
+        if (urlparts[-2] == 'live'):
             return self._get_live_streams()
         else:
             return self._get_vod_streams()
