@@ -1,18 +1,28 @@
-Version 1.10.3 (Under development)
+Version 1.11 (Under development)
 ----------------------------------
 
 CLI:
  - Only apply the backslash magic on player paths on Windows.
+ - Changed the continuous HTTP mode to always fetch streams.
+   Should fix segmented streams repeating at the end for most
+   services.
 
 Plugins:
+ - Added plugin for NPO, patch by @monkeyphysics. (#599)
  - afreecatv: Updated for service changes. (#568)
  - beattv: Updated validation schema to include float offsets, patch by @suhailpatel. (#555)
  - douyutv: Added support for transcodes.
  - gaminglive: Fixed quality names, patch by @chhe. (#545)
  - goodgame: Updated for service changes, patch by @JaxxC. (#554)
  - oldlivestream: Check that streams don't return 404. (#560)
+ - ilive: Updated for service changes. (#563)
  - livestation: Updated for service changes. (#581)
+ - vaughnlive: Updated for service changes. (#611)
+ - veetle: Fixed shortcut URLs, patch by @monkeyphysics. (#601)
  - viasat: Now handles channel pages on viagame aswell. (#564, #566)
+
+Plugin API:
+ - Added a class to simplify mapping data to stream objects.
 
 
 Version 1.10.2 (2014-09-05)
