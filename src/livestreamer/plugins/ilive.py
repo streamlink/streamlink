@@ -1,43 +1,16 @@
 import re
 
-from operator import methodcaller
-
 from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
-from livestreamer.stream import RTMPStream
+from livestreamer.plugin.api import StreamMapper, http, validate
+from livestreamer.stream import HLSStream, RTMPStream
 
-_url_re = re.compile("http(s)?://(\w+\.)?ilive.to/")
-_rtmp_re = re.compile("""
-    \$.getJSON\("(?P<token_url>[^"]+)".*
-    flashplayer:\s+"(?P<swf_url>[^"]+)".*
-    streamer:\s+"(?P<rtmp_url>[^"]+)".*
-    file:\s+"(?P<rtmp_playpath>[^"]+)\.flv"
-""", re.VERBOSE | re.DOTALL)
+CHANNEL_URL = "http://www.mobileonline.tv/channel.php"
 
-_token_schema = validate.Schema(
-    {
-        "token": validate.text
-    },
-    validate.get("token")
-)
+_url_re = re.compile("http(s)?://(\w+\.)?streamlive.to/view/(?P<channel>\d+)")
+_link_re = re.compile("<p style=\"font-size:30px;\"><a href=(\S+) target=")
 _schema = validate.Schema(
-    validate.transform(_rtmp_re.search),
-    validate.any(
-        None,
-        validate.all(
-            validate.transform(methodcaller("groupdict")),
-            {
-                "rtmp_playpath": validate.text,
-                "rtmp_url": validate.all(
-                    validate.transform(methodcaller("replace", "\\/", "/")),
-                    validate.url(scheme="rtmp"),
-                ),
-                "swf_url": validate.url(scheme="http"),
-                "token_url": validate.url(scheme="http")
-            }
-        )
-    )
+    validate.transform(_link_re.findall),
 )
 
 
@@ -46,32 +19,40 @@ class ILive(Plugin):
     def can_handle_url(self, url):
         return _url_re.match(url)
 
-    def _get_streams(self):
-        info = http.get(self.url, schema=_schema)
-        if not info:
-            return
+    def _create_hls_streams(self, url):
+        try:
+            streams = HLSStream.parse_variant_playlist(self.session, url)
+            return streams.items()
+        except IOError as err:
+            self.logger.warning("Failed to extract HLS streams: {0}", err)
 
-        headers = {"Referer": self.url}
-        res = http.get(info["token_url"], headers=headers)
-        token = http.json(res, schema=_token_schema)
-
-        parsed = urlparse(info["rtmp_url"])
+    def _create_rtmp_stream(self, url):
+        parsed = urlparse(url)
         if parsed.query:
             app = "{0}?{1}".format(parsed.path[1:], parsed.query)
         else:
             app = parsed.path[1:]
 
         params = {
-            "rtmp": info["rtmp_url"],
+            "rtmp": url,
             "app": app,
             "pageUrl": self.url,
-            "swfVfy": info["swf_url"],
-            "playpath": info["rtmp_playpath"],
-            "token": token,
             "live": True
         }
 
         stream = RTMPStream(self.session, params)
-        return dict(live=stream)
+        return "live", stream
+
+    def _get_streams(self):
+        channel = _url_re.match(self.url).group("channel")
+        urls = http.get(CHANNEL_URL, params=dict(n=channel), schema=_schema)
+        if not urls:
+            return
+
+        mapper = StreamMapper(cmp=lambda scheme, url: url.startswith(scheme))
+        mapper.map("http", self._create_hls_streams)
+        mapper.map("rtmp", self._create_rtmp_stream)
+
+        return mapper(urls)
 
 __plugin__ = ILive
