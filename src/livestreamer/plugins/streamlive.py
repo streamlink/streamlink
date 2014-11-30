@@ -14,7 +14,7 @@ _schema = validate.Schema(
 )
 
 
-class ILive(Plugin):
+class StreamLive(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
@@ -55,4 +55,4 @@ class ILive(Plugin):
 
         return mapper(urls)
 
-__plugin__ = ILive
+__plugin__ = StreamLive

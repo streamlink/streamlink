@@ -38,7 +38,6 @@ gaminglive          gamlinglive.tv       Yes   No
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
-ilive               ilive.to             Yes   --
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
@@ -54,6 +53,7 @@ seemeplay           seemeplay.ru         Yes   Yes
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
+streamlive          streamlive.to        Yes   --
 svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - svtflow.se
                     - oppetarkiv.se
