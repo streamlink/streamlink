@@ -16,33 +16,35 @@ _filesize_re = re.compile("""
     (?:[Bb])?
 """, re.VERBOSE)
 _printable_re = re.compile("[{0}]".format(printable))
-_valid_option_start_re = re.compile("^[A-z]")
-_valid_option_char_re = re.compile("[A-z\-]")
+_option_re = re.compile("""
+    (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
+    \s*
+    (?P<op>=)? # Separating the option and the value with a equals sign is
+               # common, but optional.
+    \s*
+    (?P<value>.*) # The value, anything goes.
+""", re.VERBOSE)
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def sanitize_option(self, option):
-        return "".join(filter(_valid_option_char_re.match, option))
-
     def convert_arg_line_to_args(self, line):
         # Strip any non-printable characters that might be in the
         # beginning of the line (e.g. Unicode BOM marker).
         match = _printable_re.search(line)
         if not match:
             return
-        line = line[match.start():]
+        line = line[match.start():].strip()
 
-        # Skip lines that do not start with a valid option character (e.g. comments)
-        if not _valid_option_start_re.match(line):
+        # Skip lines that do not start with a valid option (e.g. comments)
+        option = _option_re.match(line)
+        if not option:
             return
 
-        split = line.find("=")
-        if split > 0:
-            option = line[:split].strip()
-            value = line[split+1:].strip()
-            yield "--{0}={1}".format(self.sanitize_option(option), value)
-        else:
-            yield "--{0}".format(self.sanitize_option(line))
+        name, value = option.group("name", "value")
+        if name and value:
+            yield "--{0}={1}".format(name, value)
+        elif name:
+            yield "--{0}".format(name)
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
