@@ -232,8 +232,34 @@ class Livestreamer(object):
         :param key: key of the option
 
         """
+        # Backwards compatibility
+        if key == "rtmpdump":
+            key = "rtmp-rtmpdump"
+        elif key == "rtmpdump-proxy":
+            key = "rtmp-proxy"
+        elif key == "errorlog":
+            key = "subprocess-errorlog"
 
-        return self.options.get(key)
+        if key == "http-proxy":
+            return self.http.proxies.get("http")
+        elif key == "https-proxy":
+            return self.http.proxies.get("https")
+        elif key == "http-cookies":
+            return self.http.cookies
+        elif key == "http-headers":
+            return self.http.headers
+        elif key == "http-query-params":
+            return self.http.params
+        elif key == "http-trust-env":
+            return self.http.trust_env
+        elif key == "http-ssl-verify":
+            return self.http.verify
+        elif key == "http-ssl-cert":
+            return self.http.cert
+        elif key == "http-timeout":
+            return self.http.timeout
+        else:
+            return self.options.get(key)
 
     def set_plugin_option(self, plugin, key, value):
         """Sets plugin specific options used by plugins originating
