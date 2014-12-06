@@ -15,6 +15,7 @@ _filesize_re = re.compile("""
     (?P<modifier>[Kk]|[Mm])?
     (?:[Bb])?
 """, re.VERBOSE)
+_keyvalue_re = re.compile("(?P<key>[^=]+)\s*=\s*(?P<value>.*)")
 _printable_re = re.compile("[{0}]".format(printable))
 _option_re = re.compile("""
     (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
@@ -119,6 +120,14 @@ def filesize(value):
         size *= 1024
 
     return num(int, min=0)(size)
+
+
+def keyvalue(value):
+    match = _keyvalue_re.match(value)
+    if not match:
+        raise ValueError
+
+    return match.group("key", "value")
 
 
 parser = ArgumentParser(
@@ -729,43 +738,36 @@ http.add_argument(
     """
 )
 http.add_argument(
-    "--http-cookies",
-    metavar="COOKIES",
+    "--http-cookie",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
     help="""
-    A semi-colon delimited list of cookies to add to each HTTP
-    request.
+    A cookie to add to each HTTP request.
 
-    For example this will add the cookies "foo" and "baz":
-
-      "foo=bar; baz=qux"
-
+    Can be repeated to add multiple cookies.
     """
 )
 http.add_argument(
-    "--http-headers",
-    metavar="HEADERS",
+    "--http-header",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
     help="""
-    A semi-colon delimited list of headers to add to each HTTP
-    request.
+    A header to add to each HTTP request.
 
-    For example this will add the headers "X-Forwarded-For"
-    and "User-Agent":
-
-      "X-Forwarded-For=0.0.0.0; User-Agent=foo"
-
+    Can be repeated to add multiple headers.
     """
 )
 http.add_argument(
-    "--http-query-params",
-    metavar="PARAMS",
+    "--http-query-param",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
     help="""
-    A semi-colon delimited list of query parameters to add to each
-    HTTP request.
+    A query parameter to add to each HTTP request.
 
-    For example this will add the query parameters "foo" and "baz":
-
-      "foo=bar; baz=qux"
-
+    Can be repeated to add multiple query parameters.
     """
 )
 http.add_argument(
@@ -959,6 +961,21 @@ plugin.add_argument(
 )
 plugin.add_argument(
     "--jtv-password", "--twitch-password",
+    help=argparse.SUPPRESS
+)
+http.add_argument(
+    "--http-cookies",
+    metavar="COOKIES",
+    help=argparse.SUPPRESS
+)
+http.add_argument(
+    "--http-headers",
+    metavar="HEADERS",
+    help=argparse.SUPPRESS
+)
+http.add_argument(
+    "--http-query-params",
+    metavar="PARAMS",
     help=argparse.SUPPRESS
 )
 

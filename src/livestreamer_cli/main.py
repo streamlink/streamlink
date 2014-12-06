@@ -610,14 +610,14 @@ def setup_http_session():
     if args.https_proxy:
         livestreamer.set_option("https-proxy", args.https_proxy)
 
-    if args.http_cookies:
-        livestreamer.set_option("http-cookies", args.http_cookies)
+    if args.http_cookie:
+        livestreamer.set_option("http-cookies", dict(args.http_cookies))
 
-    if args.http_headers:
-        livestreamer.set_option("http-headers", args.http_headers)
+    if args.http_header:
+        livestreamer.set_option("http-headers", dict(args.http_header))
 
-    if args.http_query_params:
-        livestreamer.set_option("http-query-params", args.http_query_params)
+    if args.http_query_param:
+        livestreamer.set_option("http-query-params", dict(args.http_query_param))
 
     if args.http_ignore_env:
         livestreamer.set_option("http-trust-env", False)
@@ -633,6 +633,22 @@ def setup_http_session():
 
     if args.http_timeout:
         livestreamer.set_option("http-timeout", args.http_timeout)
+
+    if args.http_cookies:
+        console.logger.warning("The option --http-cookies is deprecated since "
+                               "version 1.11.0, use --http-cookie instead.")
+        livestreamer.set_option("http-cookies", args.http_cookies)
+
+    if args.http_headers:
+        console.logger.warning("The option --http-headers is deprecated since "
+                               "version 1.11.0, use --http-header instead.")
+        livestreamer.set_option("http-headers", args.http_headers)
+
+    if args.http_query_params:
+        console.logger.warning("The option --http-query-params is deprecated since "
+                               "version 1.11.0, use --http-query-param instead.")
+        livestreamer.set_option("http-query-params", args.http_query_params)
+
 
 def setup_plugins():
     """Loads any additional plugins."""
