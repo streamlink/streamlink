@@ -2,6 +2,12 @@ Version 1.11 (Under development)
 ----------------------------------
 
 CLI:
+ - Added :option:`--http-cookie` option.
+ - Added :option:`--http-header` option.
+ - Added :option:`--http-query-param` option.
+ - Deprecated the :option:`--http-cookies` option.
+ - Deprecated the :option:`--http-headers` option.
+ - Deprecated the :option:`--http-query-params` option.
  - Only apply the backslash magic on player paths on Windows.
  - Changed the continuous HTTP mode to always fetch streams.
    Should fix segmented streams repeating at the end for most
@@ -15,11 +21,12 @@ Plugins:
  - gaminglive: Fixed quality names, patch by @chhe. (#545)
  - goodgame: Updated for service changes, patch by @JaxxC. (#554)
  - oldlivestream: Check that streams don't return 404. (#560)
- - ilive: Updated for service changes. (#563)
+ - ilive: Updated for service changes and renamed to streamlive. (#563)
  - livestation: Updated for service changes. (#581)
+ - twitch: Added support for the new video streams.
  - vaughnlive: Updated for service changes. (#611)
  - veetle: Fixed shortcut URLs, patch by @monkeyphysics. (#601)
- - viasat: Now handles channel pages on viagame aswell. (#564, #566)
+ - viasat/viagame: Updated for service changes (#564, #566, #617)
 
 Plugin API:
  - Added a class to simplify mapping data to stream objects.
