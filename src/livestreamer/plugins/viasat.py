@@ -4,32 +4,27 @@ import re
 
 from livestreamer.exceptions import PluginError
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api import StreamMapper, http, validate
 from livestreamer.stream import HDSStream, HLSStream, RTMPStream
 from livestreamer.utils import rtmpparse
 
-STREAM_API_URL = "http://playapi.mtgx.tv/v1/videos/stream/{0}"
+STREAM_API_URL = "http://playapi.mtgx.tv/v3/videos/stream/{0}"
 
-_embed_url_re = re.compile(
-    '<meta itemprop="embedURL" content="http://www.viagame.com/embed/(\d+)" />'
-)
 _swf_url_re = re.compile("data-flashplayer-url=\"([^\"]+)\"")
+_player_data_re = re.compile("window.fluxData\s*=\s*JSON.parse\(\"(.+)\"\);")
 
 _url_re = re.compile("""
     http(s)?://(www\.)?
     (?:
         tv(3|6|8|10)play |
-        viasat4play |
-        viagame
+        viasat4play
     )
     \.
     (?:
         dk|ee|lt|lv|no|se|com
     )
-    (?:
-        /.+/
-        (?P<stream_id>\d+)
-    )?
+    /.+/
+    (?P<stream_id>\d+)
 """, re.VERBOSE)
 
 _stream_schema = validate.Schema(
@@ -56,54 +51,46 @@ class Viasat(Plugin):
 
         return match.group(1)
 
-    def _find_stream_id(self):
-        res = http.get(self.url)
-        match = _embed_url_re.search(res.text)
-        if match:
-            return match.group(1)
+    def _create_dynamic_streams(self, stream_type, parser, video):
+        try:
+            streams = parser(self.session, video[1])
+            return streams.items()
+        except IOError as err:
+            self.logger.error("Failed to extract {0} streams: {1}", stream_type, err)
+
+    def _create_rtmp_stream(self, video):
+        name, stream_url = video
+        params = {
+            "rtmp": stream_url,
+            "pageUrl": self.url,
+            "swfVfy": self._get_swf_url(),
+        }
+
+        if stream_url.endswith(".mp4"):
+            tcurl, playpath = rtmpparse(stream_url)
+            params["rtmp"] = tcurl
+            params["playpath"] = playpath
+        else:
+            params["live"] = True
+
+        return name, RTMPStream(self.session, params)
+
+    def _extract_streams(self, stream_id):
+        res = http.get(STREAM_API_URL.format(stream_id), raise_for_status=False)
+        stream_info = http.json(res, schema=_stream_schema)
+
+        mapper = StreamMapper(lambda pattern, video: re.search(pattern, video[1]))
+        mapper.map(r"\.m3u8$", self._create_dynamic_streams, "HLS", HLSStream.parse_variant_playlist)
+        mapper.map(r"\.f4m$", self._create_dynamic_streams, "HDS", HDSStream.parse_manifest)
+        mapper.map(r"^rtmp://", self._create_rtmp_stream)
+
+        return mapper(stream_info.items())
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        stream_id = match.group("stream_id") or self._find_stream_id()
-        if not stream_id:
-            return
+        stream_id = match.group("stream_id")
 
-        res = http.get(STREAM_API_URL.format(stream_id))
-        stream_info = http.json(res, schema=_stream_schema)
-        streams = {}
-        swf_url = None
-        for name, stream_url in stream_info.items():
-            if stream_url.endswith(".m3u8"):
-                try:
-                    streams.update(
-                        HLSStream.parse_variant_playlist(self.session, stream_url)
-                    )
-                except IOError as err:
-                    self.logger.error("Failed to fetch HLS streams: {0}", err)
-            elif stream_url.endswith(".f4m"):
-                try:
-                    streams.update(
-                        HDSStream.parse_manifest(self.session, stream_url)
-                    )
-                except IOError as err:
-                    self.logger.error("Failed to fetch HDS streams: {0}", err)
-            elif stream_url.startswith("rtmp://"):
-                swf_url = swf_url or self._get_swf_url()
-                params = {
-                    "rtmp": stream_url,
-                    "pageUrl": self.url,
-                    "swfVfy": swf_url,
-                }
+        return self._extract_streams(stream_id)
 
-                if stream_url.endswith(".mp4"):
-                    tcurl, playpath = rtmpparse(stream_url)
-                    params["rtmp"] = tcurl
-                    params["playpath"] = playpath
-                else:
-                    params["live"] = True
-
-                streams[name] = RTMPStream(self.session, params)
-
-        return streams
 
 __plugin__ = Viasat
