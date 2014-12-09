@@ -38,7 +38,7 @@ _url_re = re.compile(r"""
     (?P<channel>[^/]+)
     (?:
         /
-        (?P<video_type>[bc])
+        (?P<video_type>[bcv])
         /
         (?P<video_id>\d+)
     )?
@@ -93,7 +93,7 @@ _video_schema = validate.Schema(
                 "upkeep": validate.any("pass", "fail", None)
             }]
         },
-        "restrictions": { validate.text: validate.text },
+        "restrictions": {validate.text: validate.text},
         "start_offset": int,
         "end_offset": int,
     }
@@ -125,10 +125,9 @@ def time_to_offset(t):
 
 
 class UsherService(object):
-    def select(self, channel, password=None, **extra_params):
-        url = "http://usher.twitch.tv/select/{0}.json".format(channel)
+    def _create_url(self, endpoint, asset, **extra_params):
+        url = "http://usher.twitch.tv/{0}/{1}".format(endpoint, asset)
         params = {
-            "private_code": password or "null",
             "player": "twitchweb",
             "p": int(random() * 999999),
             "type": "any",
@@ -145,6 +144,12 @@ class UsherService(object):
             req = req.prepare()
 
         return req.url
+
+    def select(self, channel, **extra_params):
+        return self._create_url("select", channel, **extra_params)
+
+    def vod(self, vod_id, **extra_params):
+        return self._create_url("vod", vod_id, **extra_params)
 
 
 class TwitchAPI(object):
@@ -171,8 +176,8 @@ class TwitchAPI(object):
         else:
             return res
 
-    def channel_access_token(self, channel, **params):
-        return self.call("/api/channels/{0}/access_token".format(channel), **params)
+    def access_token(self, endpoint, asset, **params):
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
 
     def channel_info(self, channel, **params):
         return self.call("/api/channels/{0}".format(channel), **params)
@@ -389,11 +394,17 @@ class Twitch(Plugin):
 
         return self._create_playlist_streams(videos)
 
-    def _access_token(self):
+    def _access_token(self, type="live"):
         try:
-            sig, token = self.api.channel_access_token(
-                self.channel, schema=_access_token_schema
-            )
+            if type == "live":
+                endpoint = "channels"
+                value = self.channel
+            elif type == "video":
+                endpoint = "vods"
+                value = self.video_id
+
+            sig, token = self.api.access_token(endpoint, value,
+                                               schema=_access_token_schema)
         except PluginError as err:
             if "404 Client Error" in str(err):
                 raise NoStreamsError(self.url)
@@ -402,10 +413,13 @@ class Twitch(Plugin):
 
         return sig, token
 
-    def _get_live_streams(self):
+    def _get_hls_streams(self, type="live"):
         self._authenticate()
-        sig, token = self._access_token()
-        url = self.usher.select(self.channel, nauthsig=sig, nauth=token)
+        sig, token = self._access_token(type)
+        if type == "live":
+            url = self.usher.select(self.channel, nauthsig=sig, nauth=token)
+        elif type == "video":
+            url = self.usher.vod(self.video_id, nauthsig=sig, nauth=token)
 
         try:
             streams = HLSStream.parse_variant_playlist(self.session, url)
@@ -430,9 +444,12 @@ class Twitch(Plugin):
 
     def _get_streams(self):
         if self.video_id:
-            return self._get_video_streams()
+            if self.video_type == "v":
+                return self._get_hls_streams("video")
+            else:
+                return self._get_video_streams()
         else:
-            return self._get_live_streams()
+            return self._get_hls_streams("live")
 
 
 __plugin__ = Twitch
