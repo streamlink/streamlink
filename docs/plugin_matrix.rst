@@ -44,6 +44,7 @@ livestream          new.livestream.com   Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
+npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
 oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
@@ -68,6 +69,7 @@ vaughnlive          - vaughnlive.tv      Yes   --
                     - vapers.tv
 veetle              veetle.com           Yes   Yes
 vgtv                vgtv.no              Yes   Yes
+viagame             viagame.com
 viasat              - tv3play.se         Yes   Yes   Streams may be geo-restricted.
                     - tv3play.no
                     - tv3play.dk
@@ -78,7 +80,6 @@ viasat              - tv3play.se         Yes   Yes   Streams may be geo-restrict
                     - tv6play.no
                     - tv8play.se
                     - tv10play.se
-                    - viagame.com
                     - viasat4play.no
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
