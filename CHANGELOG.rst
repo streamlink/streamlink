@@ -1,5 +1,8 @@
-Version 1.11 (Under development)
-----------------------------------
+Version 1.11 (2014-12-10)
+-------------------------
+
+Bugfixes:
+ - cli: Only apply the backslash magic on player paths on Windows.
 
 CLI:
  - Added :option:`--http-cookie` option.
@@ -8,7 +11,6 @@ CLI:
  - Deprecated the :option:`--http-cookies` option.
  - Deprecated the :option:`--http-headers` option.
  - Deprecated the :option:`--http-query-params` option.
- - Only apply the backslash magic on player paths on Windows.
  - Changed the continuous HTTP mode to always fetch streams.
    Should fix segmented streams repeating at the end for most
    services.
@@ -659,4 +661,3 @@ General:
  - Added unit tests, still fairly small coverage though.
  - Added travis-ci integration.
  - Now using python-sh on *nix since python-pbs is deprecated.
-

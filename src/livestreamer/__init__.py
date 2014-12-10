@@ -11,7 +11,7 @@ Full documentation is available at http://livestreamer.tanuki.se/.
 
 
 __title__ = "livestreamer"
-__version__ = "1.10.2"
+__version__ = "1.11.0"
 __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
 __copyright__ = "Copyright 2011-2014 Christopher Rosell"
