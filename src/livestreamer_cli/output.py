@@ -105,10 +105,13 @@ class PlayerOutput(Output):
         else:
             filename = "-"
 
-        # shlex removes un-escaped backslashes
-        cmd = self.cmd.replace("\\", "\\\\")
         args = self.args.format(filename=filename)
-        args = args.replace("\\", "\\\\")
+        cmd = self.cmd
+        if is_win32:
+            # We want to keep the backslashes on Windows as forcing the user to
+            # escape backslashes for paths would be inconvenient.
+            cmd = cmd.replace("\\", "\\\\")
+            args = args.replace("\\", "\\\\")
 
         return shlex.split(cmd) + shlex.split(args)
 

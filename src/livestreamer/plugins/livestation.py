@@ -8,7 +8,7 @@ LOGIN_PAGE_URL = "http://www.livestation.com/en/users/new"
 LOGIN_POST_URL = "http://www.livestation.com/en/sessions.json"
 
 _csrf_token_re = re.compile("<meta content=\"([^\"]+)\" name=\"csrf-token\"")
-_hls_playlist_re = re.compile("<source src=\"([^\"]+)\"")
+_hls_playlist_re = re.compile("<meta content=\"([^\"]+.m3u8)\" property=\"og:video\" />")
 _url_re = re.compile("http(s)?://(\w+\.)?livestation.com")
 
 _csrf_token_schema = validate.Schema(

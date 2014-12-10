@@ -205,7 +205,6 @@ class RunningCommand(object):
         return self._stderr.decode(DEFAULT_ENCODING, "replace")
 
     def wait(self):
-        if self.process.returncode is not None: return
         self._stdout, self._stderr = self.process.communicate()
         self._handle_exit_code(self.process.wait())
         return str(self)

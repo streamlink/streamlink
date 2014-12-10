@@ -1,3 +1,39 @@
+Version 1.11 (2014-12-10)
+-------------------------
+
+Bugfixes:
+ - cli: Only apply the backslash magic on player paths on Windows.
+
+CLI:
+ - Added :option:`--http-cookie` option.
+ - Added :option:`--http-header` option.
+ - Added :option:`--http-query-param` option.
+ - Deprecated the :option:`--http-cookies` option.
+ - Deprecated the :option:`--http-headers` option.
+ - Deprecated the :option:`--http-query-params` option.
+ - Changed the continuous HTTP mode to always fetch streams.
+   Should fix segmented streams repeating at the end for most
+   services.
+
+Plugins:
+ - Added plugin for NPO, patch by @monkeyphysics. (#599)
+ - afreecatv: Updated for service changes. (#568)
+ - beattv: Updated validation schema to include float offsets, patch by @suhailpatel. (#555)
+ - douyutv: Added support for transcodes.
+ - gaminglive: Fixed quality names, patch by @chhe. (#545)
+ - goodgame: Updated for service changes, patch by @JaxxC. (#554)
+ - oldlivestream: Check that streams don't return 404. (#560)
+ - ilive: Updated for service changes and renamed to streamlive. (#563)
+ - livestation: Updated for service changes. (#581)
+ - twitch: Added support for the new video streams.
+ - vaughnlive: Updated for service changes. (#611)
+ - veetle: Fixed shortcut URLs, patch by @monkeyphysics. (#601)
+ - viasat/viagame: Updated for service changes (#564, #566, #617)
+
+Plugin API:
+ - Added a class to simplify mapping data to stream objects.
+
+
 Version 1.10.2 (2014-09-05)
 ---------------------------
 
@@ -625,4 +661,3 @@ General:
  - Added unit tests, still fairly small coverage though.
  - Added travis-ci integration.
  - Now using python-sh on *nix since python-pbs is deprecated.
-

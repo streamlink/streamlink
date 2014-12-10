@@ -106,6 +106,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.reader.buffer.write(content)
         self.logger.debug("Download of segment {0} complete", sequence.num)
 
+
 class HLSStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
         SegmentedStreamWorker.__init__(self, *args, **kwargs)
@@ -151,10 +152,9 @@ class HLSStreamWorker(SegmentedStreamWorker):
     def process_sequences(self, playlist, sequences):
         first_sequence, last_sequence = sequences[0], sequences[-1]
 
-        if (first_sequence.segment.key and
-            first_sequence.segment.key.method != "NONE"):
-
+        if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
             self.logger.debug("Segments in this playlist are encrypted")
+
             if not CAN_DECRYPT:
                 raise StreamError("Need pyCrypto installed to decrypt this stream")
 
@@ -256,8 +256,22 @@ class HLSStream(HTTPStream):
         return reader
 
     @classmethod
-    def parse_variant_playlist(cls, session_, url, namekey="name",
-                               nameprefix="", **request_params):
+    def parse_variant_playlist(cls, session_, url, name_key="name",
+                               name_prefix="", check_streams=False,
+                               **request_params):
+        """Attempts to parse a variant playlist and return its streams.
+
+        :param url: The URL of the variant playlist.
+        :param name_key: Prefer to use this key as stream name, valid keys are:
+                         name, pixels, bitrate.
+        :param name_prefix: Add this prefix to the stream names.
+        :param check_streams: Only allow streams that are accesible.
+        """
+
+        # Backwards compatibility with "namekey" and "nameprefix" params.
+        name_key = request_params.pop("namekey", name_key)
+        name_prefix = request_params.pop("nameprefix", name_prefix)
+
         res = session_.http.get(url, exception=IOError, **request_params)
 
         try:
@@ -281,18 +295,23 @@ class HLSStream(HTTPStream):
                 bw = playlist.stream_info.bandwidth
 
                 if bw >= 1000:
-                    names["bitrate"] = "{0}k".format(int(bw/1000.0))
+                    names["bitrate"] = "{0}k".format(int(bw / 1000.0))
                 else:
-                    names["bitrate"] = "{0}k".format(bw/1000.0)
+                    names["bitrate"] = "{0}k".format(bw / 1000.0)
 
-            stream_name = (names.get(namekey) or names.get("name") or
+            stream_name = (names.get(name_key) or names.get("name") or
                            names.get("pixels") or names.get("bitrate"))
 
             if not stream_name or stream_name in streams:
                 continue
 
+            if check_streams:
+                try:
+                    session_.http.get(playlist.uri, **request_params)
+                except Exception:
+                    continue
+
             stream = HLSStream(session_, playlist.uri, **request_params)
-            streams[nameprefix + stream_name] = stream
+            streams[name_prefix + stream_name] = stream
 
         return streams
-

@@ -1,20 +1,19 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 from __future__ import print_function
+
+import sys
+
+import gi
+
+from gi.repository import GObject as gobject, Gst as gst
 from livestreamer import Livestreamer, StreamError, PluginError, NoPluginError
 
-import gobject
-gobject.threads_init()
-
-import pygst
-pygst.require("0.10")
-
-import gst
-import sys
 
 def exit(msg):
     print(msg, file=sys.stderr)
     sys.exit()
+
 
 class LivestreamerPlayer(object):
     def __init__(self):
@@ -23,7 +22,7 @@ class LivestreamerPlayer(object):
 
         # This creates a playbin pipeline and using the appsrc source
         # we can feed it our stream data
-        self.pipeline = gst.element_factory_make("playbin2", None)
+        self.pipeline = gst.ElementFactory.make("playbin", None)
         self.pipeline.set_property("uri", "appsrc://")
 
         # When the playbin creates the appsrc source it will call
@@ -42,7 +41,7 @@ class LivestreamerPlayer(object):
 
     def stop(self):
         # Stop playback and exit mainloop
-        self.pipeline.set_state(gst.STATE_NULL)
+        self.pipeline.set_state(gst.State.NULL)
         self.mainloop.quit()
 
         # Close the stream
@@ -57,7 +56,7 @@ class LivestreamerPlayer(object):
             self.exit("Failed to open stream: {0}".format(err))
 
         # Start playback
-        self.pipeline.set_state(gst.STATE_PLAYING)
+        self.pipeline.set_state(gst.State.PLAYING)
         self.mainloop.run()
 
     def on_source_setup(self, element, source):
@@ -79,7 +78,7 @@ class LivestreamerPlayer(object):
 
         # Convert the Python bytes into a GStreamer Buffer
         # and then push it to the appsrc
-        buf = gst.Buffer(data)
+        buf = gst.Buffer.new_wrapped(data)
         source.emit("push-buffer", buf)
 
     def on_eos(self, bus, msg):
@@ -95,6 +94,11 @@ class LivestreamerPlayer(object):
 def main():
     if len(sys.argv) < 3:
         exit("Usage: {0} <url> <quality>".format(sys.argv[0]))
+
+    # Initialize and check GStreamer version
+    gi.require_version("Gst", "1.0")
+    gobject.threads_init()
+    gst.init(None)
 
     # Collect arguments
     url = sys.argv[1]

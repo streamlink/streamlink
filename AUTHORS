@@ -3,6 +3,10 @@
 # List is sorted by surname.
 # Fields are name (N), github account (G) and description (D).
 
+N: David Arvelo
+G: darvelo
+D: Updated Vaughnlive plugin.
+
 N: Andrew Bashore
 G: bashtech
 D: Added support for HLS source in the Twitch plugin.
@@ -15,13 +19,17 @@ N: Stefan Breunig
 G: breunigs
 D: Added SpeedRunsLive plugin and maintainer of Debian packages.
 
+N: Btimo
+G: btiom
+D: Updated GStreamer example to 1.0.
+
 N: Dominik Dabrowski
 G: doda
 D: Initial quality ranking feature.
 
 N: Brian Callahan
 G: ibara
-D: Documentation.
+D: Documentation and maintainer of OpenBSD packages.
 
 N: Agustín Carrasco
 G: asermax
@@ -74,6 +82,10 @@ D: Fixed default player paths not expanding ~ in the CLI.
 N: Andy Mikhailenko
 G: neithere
 D: Added more URL support to the YouTube plugin.
+
+N: Monkeyphysics
+G: monkeyphysics
+D: Added plugin for NPO and various plugin fixes.
 
 N: nixxquality
 G: nixxquality

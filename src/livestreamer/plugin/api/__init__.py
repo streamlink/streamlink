@@ -3,9 +3,10 @@ import sys
 from types import ModuleType as module
 
 from .http_session import HTTPSession
+from .mapper import StreamMapper
 from .support_plugin import load_support_plugin
 
-__all__ = ["HTTPSession", "load_support_plugin", "http"]
+__all__ = ["HTTPSession", "StreamMapper", "load_support_plugin", "http"]
 
 
 class SupportPlugin(module):

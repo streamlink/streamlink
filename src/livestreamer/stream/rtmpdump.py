@@ -1,12 +1,13 @@
+import re
+
+from time import sleep
+
 from .streamprocess import StreamProcess
-from ..compat import str, urljoin
+from ..compat import str
 from ..exceptions import StreamError
 from ..packages import pbs as sh
 from ..utils import rtmpparse
 
-from time import sleep
-
-import re
 
 class RTMPStream(StreamProcess):
     """RTMP stream using rtmpdump.
@@ -63,13 +64,12 @@ class RTMPStream(StreamProcess):
         self.logger.debug("Attempting to find tcURL redirect")
 
         stream = cmd(**params)
-
         elapsed = 0
         process_alive = True
 
         while elapsed < timeout and process_alive:
+            stream.process.poll()
             process_alive = stream.process.returncode is None
-
             sleep(0.25)
             elapsed += 0.25
 
@@ -78,6 +78,8 @@ class RTMPStream(StreamProcess):
                 stream.process.kill()
             except Exception:
                 pass
+
+        stream.process.wait()
 
         try:
             stderr = stream.stderr()
@@ -97,7 +99,7 @@ class RTMPStream(StreamProcess):
 
             if "rtmp" in self.params:
                 tcurl, playpath = rtmpparse(self.params["rtmp"])
-                rtmp = urljoin(redirect, playpath)
+                rtmp = "{redirect}/{playpath}".format(**locals())
                 self.params["rtmp"] = rtmp
 
             if "tcUrl" in self.params:

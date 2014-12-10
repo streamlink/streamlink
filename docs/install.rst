@@ -34,6 +34,10 @@ Distribution                         Installing
 `Gentoo Linux`_                      .. code-block:: console
 
                                         # emerge net-misc/livestreamer
+`NetBSD (pkgsrc)`_                   .. code-block:: console
+
+                                        $ cd /usr/pkgsrc/multimedia/livestreamer
+                                        # make install clean
 `OpenBSD (package)`_                 .. code-block:: console
 
                                         # pkg_add livestreamer
@@ -56,6 +60,7 @@ Distribution                         Installing
 .. _FreeBSD (package): http://www.freshports.org/multimedia/livestreamer
 .. _FreeBSD (ports): http://www.freshports.org/multimedia/livestreamer
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/livestreamer
+.. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/livestreamer
 .. _OpenBSD (package): http://openports.se/multimedia/livestreamer
 .. _OpenBSD (ports): http://openports.se/multimedia/livestreamer
 .. _Slackware Linux: http://slackbuilds.org/result/?search=livestreamer

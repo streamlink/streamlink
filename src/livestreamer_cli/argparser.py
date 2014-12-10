@@ -15,34 +15,37 @@ _filesize_re = re.compile("""
     (?P<modifier>[Kk]|[Mm])?
     (?:[Bb])?
 """, re.VERBOSE)
+_keyvalue_re = re.compile("(?P<key>[^=]+)\s*=\s*(?P<value>.*)")
 _printable_re = re.compile("[{0}]".format(printable))
-_valid_option_start_re = re.compile("^[A-z]")
-_valid_option_char_re = re.compile("[A-z\-]")
+_option_re = re.compile("""
+    (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
+    \s*
+    (?P<op>=)? # Separating the option and the value with a equals sign is
+               # common, but optional.
+    \s*
+    (?P<value>.*) # The value, anything goes.
+""", re.VERBOSE)
 
 
 class ArgumentParser(argparse.ArgumentParser):
-    def sanitize_option(self, option):
-        return "".join(filter(_valid_option_char_re.match, option))
-
     def convert_arg_line_to_args(self, line):
         # Strip any non-printable characters that might be in the
         # beginning of the line (e.g. Unicode BOM marker).
         match = _printable_re.search(line)
         if not match:
             return
-        line = line[match.start():]
+        line = line[match.start():].strip()
 
-        # Skip lines that do not start with a valid option character (e.g. comments)
-        if not _valid_option_start_re.match(line):
+        # Skip lines that do not start with a valid option (e.g. comments)
+        option = _option_re.match(line)
+        if not option:
             return
 
-        split = line.find("=")
-        if split > 0:
-            option = line[:split].strip()
-            value = line[split+1:].strip()
-            yield "--{0}={1}".format(self.sanitize_option(option), value)
-        else:
-            yield "--{0}".format(self.sanitize_option(line))
+        name, value = option.group("name", "value")
+        if name and value:
+            yield "--{0}={1}".format(name, value)
+        elif name:
+            yield "--{0}".format(name)
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -117,6 +120,14 @@ def filesize(value):
         size *= 1024
 
     return num(int, min=0)(size)
+
+
+def keyvalue(value):
+    match = _keyvalue_re.match(value)
+    if not match:
+        raise ValueError
+
+    return match.group("key", "value")
 
 
 parser = ArgumentParser(
@@ -272,13 +283,16 @@ player.add_argument(
     are put together with the value of --player to create a command
     to execute.
 
+    This value can contain formatting variables surrounded by curly
+    braces, {{ and }}. If you need to include a brace character, it
+    can be escaped by doubling, e.g. {{{{ and }}}}.
+
     Formatting variables available:
 
     filename
       This is the filename that the player will use.
       It's usually "-" (stdin), but can also be a URL or a file
       depending on the options used.
-
 
     It's usually enough to use --player instead of this unless you
     need to add arguments after the filename.
@@ -724,43 +738,36 @@ http.add_argument(
     """
 )
 http.add_argument(
-    "--http-cookies",
-    metavar="COOKIES",
+    "--http-cookie",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
     help="""
-    A semi-colon delimited list of cookies to add to each HTTP
-    request.
+    A cookie to add to each HTTP request.
 
-    For example this will add the cookies "foo" and "baz":
-
-      "foo=bar; baz=qux"
-
+    Can be repeated to add multiple cookies.
     """
 )
 http.add_argument(
-    "--http-headers",
-    metavar="HEADERS",
+    "--http-header",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
     help="""
-    A semi-colon delimited list of headers to add to each HTTP
-    request.
+    A header to add to each HTTP request.
 
-    For example this will add the headers "X-Forwarded-For"
-    and "User-Agent":
-
-      "X-Forwarded-For=0.0.0.0; User-Agent=foo"
-
+    Can be repeated to add multiple headers.
     """
 )
 http.add_argument(
-    "--http-query-params",
-    metavar="PARAMS",
+    "--http-query-param",
+    metavar="KEY=VALUE",
+    type=keyvalue,
+    action="append",
     help="""
-    A semi-colon delimited list of query parameters to add to each
-    HTTP request.
+    A query parameter to add to each HTTP request.
 
-    For example this will add the query parameters "foo" and "baz":
-
-      "foo=bar; baz=qux"
-
+    Can be repeated to add multiple query parameters.
     """
 )
 http.add_argument(
@@ -954,6 +961,21 @@ plugin.add_argument(
 )
 plugin.add_argument(
     "--jtv-password", "--twitch-password",
+    help=argparse.SUPPRESS
+)
+http.add_argument(
+    "--http-cookies",
+    metavar="COOKIES",
+    help=argparse.SUPPRESS
+)
+http.add_argument(
+    "--http-headers",
+    metavar="HEADERS",
+    help=argparse.SUPPRESS
+)
+http.add_argument(
+    "--http-query-params",
+    metavar="PARAMS",
     help=argparse.SUPPRESS
 )
 

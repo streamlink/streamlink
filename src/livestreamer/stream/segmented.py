@@ -68,7 +68,7 @@ class SegmentedStreamWriter(Thread):
     and finally writing the data to the buffer.
     """
 
-    def __init__(self, reader, size=10, retries=None, threads=None, timeout=None):
+    def __init__(self, reader, size=20, retries=None, threads=None, timeout=None):
         self.closed = False
         self.reader = reader
         self.stream = reader.stream

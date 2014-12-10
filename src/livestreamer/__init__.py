@@ -11,7 +11,7 @@ Full documentation is available at http://livestreamer.tanuki.se/.
 
 
 __title__ = "livestreamer"
-__version__ = "1.10.2"
+__version__ = "1.11.0"
 __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
 __copyright__ = "Copyright 2011-2014 Christopher Rosell"
@@ -23,7 +23,8 @@ __credits__ = [
     "unintended", "Moritz Blanke", "Jon Bergli Heier", "Stefan Breunig",
     "papplampe", "Brian Callahan", "Eric J", "Jan Tore Morken", "JOKer",
     "Max Nordlund", "yeeeargh", "Vitaly Evtushenko", "Che", "nixxquality",
-    "medina", "Michael Cheah", "Jaime Marquinez Ferrandiz"
+    "medina", "Michael Cheah", "Jaime Marquinez Ferrandiz", "btimo",
+    "MonkeyPhysics", "David Arvelo"
 ]
 
 
