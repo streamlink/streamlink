@@ -125,8 +125,8 @@ def time_to_offset(t):
 
 
 class UsherService(object):
-    def _create_url(self, endpoint, asset, **extra_params):
-        url = "http://usher.twitch.tv/{0}/{1}".format(endpoint, asset)
+    def _create_url(self, endpoint, **extra_params):
+        url = "http://usher.twitch.tv{0}".format(endpoint)
         params = {
             "player": "twitchweb",
             "p": int(random() * 999999),
@@ -145,11 +145,12 @@ class UsherService(object):
 
         return req.url
 
-    def select(self, channel, **extra_params):
-        return self._create_url("select", channel, **extra_params)
+    def channel(self, channel, **extra_params):
+        return self._create_url("/api/channel/hls/{0}.m3u8".format(channel),
+                                **extra_params)
 
-    def vod(self, vod_id, **extra_params):
-        return self._create_url("vod", vod_id, **extra_params)
+    def video(self, video_id, **extra_params):
+        return self._create_url("/vod/{0}".format(video_id), **extra_params)
 
 
 class TwitchAPI(object):
@@ -417,9 +418,9 @@ class Twitch(Plugin):
         self._authenticate()
         sig, token = self._access_token(type)
         if type == "live":
-            url = self.usher.select(self.channel, nauthsig=sig, nauth=token)
+            url = self.usher.channel(self.channel, sig=sig, token=token)
         elif type == "video":
-            url = self.usher.vod(self.video_id, nauthsig=sig, nauth=token)
+            url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
 
         try:
             streams = HLSStream.parse_variant_playlist(self.session, url)
