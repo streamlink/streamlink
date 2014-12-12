@@ -1,5 +1,12 @@
-Version 1.11 (2014-12-10)
--------------------------
+Version 1.11.1 (2014-12-12)
+---------------------------
+
+Plugins:
+  - twitch: Updated for API changes. (#633)
+
+
+Version 1.11.0 (2014-12-10)
+---------------------------
 
 Bugfixes:
  - cli: Only apply the backslash magic on player paths on Windows.
