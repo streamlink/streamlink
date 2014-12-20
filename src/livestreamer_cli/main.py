@@ -844,6 +844,13 @@ def main():
 
     if args.plugins:
         print_plugins()
+    elif args.can_handle_url:
+        try:
+            livestreamer.resolve_url(args.can_handle_url)
+        except NoPluginError:
+            sys.exit(1)
+        else:
+            sys.exit(0)
     elif args.url:
         try:
             setup_options()

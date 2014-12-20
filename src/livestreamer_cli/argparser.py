@@ -202,6 +202,17 @@ general.add_argument(
     """
 )
 general.add_argument(
+    "--can-handle-url",
+    metavar="URL",
+    help="""
+    Check if Livestreamer has a plugin that can handle the specified URL.
+
+    Returns status code 1 for false and 0 for true.
+
+    Useful for external scripting.
+    """
+)
+general.add_argument(
     "--config",
     action="append",
     metavar="FILENAME",

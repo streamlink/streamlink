@@ -1,8 +1,20 @@
+Version 1.12.0 (Under development)
+----------------------------------
+
+CLI:
+ - Added :option:`--can-handle-url` option, useful for scripting.
+
+
+Plugins:
+ - hitbox: Updated for services changes. (#648)
+ - youtube: Now handles more URL types.
+
+
 Version 1.11.1 (2014-12-12)
 ---------------------------
 
 Plugins:
-  - twitch: Updated for API changes. (#633)
+ - twitch: Updated for API changes. (#633)
 
 
 Version 1.11.0 (2014-12-10)
