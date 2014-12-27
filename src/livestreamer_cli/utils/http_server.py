@@ -75,10 +75,21 @@ class HTTPServer(object):
             raise OSError("Failed to read data from socket")
 
         req = HTTPRequest(req_data)
+        if req.command not in ("GET", "HEAD"):
+            conn.send(b"HTTP/1.1 501 Not Implemented\r\n")
+            conn.close()
+            raise OSError("Invalid request method: {0}".format(req.command))
 
         conn.send(b"HTTP/1.1 200 OK\r\n")
         conn.send(b"Server: Livestreamer\r\n")
+        conn.send(b"Content-Type: video/unknown\r\n")
         conn.send(b"\r\n")
+
+        # We don't want to send any data on HEAD requests.
+        if req.command == "HEAD":
+            conn.close()
+            raise OSError
+
         self.conn = conn
 
         return req
@@ -95,4 +106,3 @@ class HTTPServer(object):
 
         if not client_only:
             self.socket.close()
-
