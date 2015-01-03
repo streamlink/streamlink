@@ -7,7 +7,7 @@ from livestreamer.stream import HLSStream, RTMPStream
 
 CHANNEL_URL = "http://www.mobileonline.tv/channel.php"
 
-_url_re = re.compile("http(s)?://(\w+\.)?(ilive.to|streamlive.to)/view-channel/(?P<channel>\d+)")
+_url_re = re.compile("http(s)?://(\w+\.)?(ilive.to|streamlive.to)/.*/(?P<channel>\d+)")
 _link_re = re.compile("<a href=(\S+) target=\"_blank\"")
 _schema = validate.Schema(
     validate.transform(_link_re.findall),
