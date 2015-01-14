@@ -5,6 +5,7 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HDSStream, HLSStream
 
 CONFIG_API_URL = "http://www.majorleaguegaming.com/player/config.json"
+PLAYER_EMBED_URL = "http://www.majorleaguegaming.com/player/embed/{0}"
 STREAM_API_URL = "http://streamapi.majorleaguegaming.com/service/streams/playback/{0}"
 STREAM_TYPES = {
     "hls": HLSStream.parse_variant_playlist,
@@ -12,6 +13,7 @@ STREAM_TYPES = {
 }
 
 _stream_id_re = re.compile(r"<meta content='.+/([\w_-]+).+' property='og:video'>")
+_player_id_re = re.compile(r"<input type=\"hidden\" id=\"player-id\" value=\"(.+)\" />")
 _url_re = re.compile("http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)")
 
 _config_schema = validate.Schema(
@@ -49,6 +51,11 @@ class MLGTV(Plugin):
         if match:
             return match.group(1)
 
+    def _find_player_id(self, text):
+        match = _player_id_re.search(text)
+        if match:
+            return match.group(1)
+
     def _get_stream_id(self, channel_id):
         res = http.get(CONFIG_API_URL, params=dict(id=channel_id))
         config = http.json(res, schema=_config_schema)
@@ -62,7 +69,12 @@ class MLGTV(Plugin):
         if not channel_id:
             return
 
-        stream_id = self._get_stream_id(channel_id)
+        res = http.get(PLAYER_EMBED_URL.format(channel_id))
+        player_id = self._find_player_id(res.text)
+        if not player_id:
+            return
+
+        stream_id = self._get_stream_id(player_id)
         if not stream_id:
             return
 
