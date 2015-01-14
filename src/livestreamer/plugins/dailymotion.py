@@ -32,7 +32,7 @@ _rtmp_re = re.compile("""
 _url_re = re.compile("""
     http(s)?://(\w+\.)?
     dailymotion.com
-    (/embed)?/video
+    (/embed)?/(video|live)
     /(?P<media_id>[^_?/]+)
 """, re.VERBOSE)
 
