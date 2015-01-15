@@ -12,7 +12,7 @@ ROOM_INFO_URL   = "http://star.api.plu.cn/api/roomstatus?roomid=%d&pageType=live
 STREAM_INFO_URL = "http://info.zb.qq.com/?cnlid=%d&host=plu.cn&cmd=2&qq=0&guid=fcd0fce8a00361c258937659febd5434&txvjsv=2.0&stream=2&debug=&ip=&system=1&sdtfrom=113"
 
 _url_re = re.compile("http://star.(tga\.)?plu.cn/(m\/)?(?P<domain>[a-z0-9]+)");
-_stream_re = re.compile("<iframe style='(.*)?' frameborder='0' scrolling='no' src='http://v.qq.com/iframe/live_player.html\?cnlid=(?P<cnid>\d+)&width=\d+&height=\d+'></iframe>");
+_stream_re = re.compile("<iframe style='(.*?)' frameborder='0' scrolling='no' src='http://v.qq.com/iframe/live_player.html\?cnlid=(?P<cnid>\d+)&width=\d+&height=\d+'></iframe>");
 _channel_schema = validate.Schema(
     {
         "data" : validate.any(None, {
