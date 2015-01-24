@@ -91,12 +91,12 @@ def create_output():
     return out
 
 
-def create_http_server():
+def create_http_server(host=None, port=None):
     """Creates a HTTP server listening on a random port."""
 
     try:
         http = HTTPServer()
-        http.bind()
+        http.bind(host=host, port=port)
     except OSError as err:
         console.exit("Failed to create HTTP server: {0}", err)
 
@@ -106,40 +106,48 @@ def create_http_server():
 def iter_http_requests(server, player):
     """Accept HTTP connections while the player is running."""
 
-    while player.running:
+    while not player or player.running:
         try:
             yield server.open(timeout=2.5)
         except OSError:
             continue
 
 
-def output_stream_http(plugin, initial_streams):
+def output_stream_http(plugin, initial_streams, external=False, port=0):
     """Continuously output the stream over HTTP."""
 
-    server = create_http_server()
+    if not external:
+        if not args.player:
+            console.exit("The default player (VLC) does not seem to be "
+                         "installed. You must specify the path to a player "
+                         "executable with --player.")
 
-    if not args.player:
-        console.exit("The default player (VLC) does not seem to be "
-                     "installed. You must specify the path to a player "
-                     "executable with --player.")
+        server = create_http_server()
+        player = PlayerOutput(args.player, args=args.player_args,
+                              filename=server.url,
+                              quiet=not args.verbose_player)
 
-    player = PlayerOutput(args.player, args=args.player_args,
-                          filename=server.url,
-                          quiet=not args.verbose_player)
+        try:
+            console.logger.info("Starting player: {0}", args.player)
+            if player:
+                player.open()
+        except OSError as err:
+            console.exit("Failed to start player: {0} ({1})",
+                         args.player, err)
+    else:
+        server = create_http_server(host=None, port=port)
+        player = None
 
-    try:
-        console.logger.info("Starting player: {0}", args.player)
-        player.open()
-    except OSError as err:
-        console.exit("Failed to start player: {0} ({1})",
-                     args.player, err)
+        console.logger.info("Starting server, access with one of:")
+        for url in server.urls:
+            console.logger.info(" " + url)
 
     for req in iter_http_requests(server, player):
         user_agent = req.headers.get("User-Agent") or "unknown player"
         console.logger.info("Got HTTP request from {0}".format(user_agent))
 
         stream_fd = None
-        while not stream_fd and player.running:
+        while not stream_fd and (not player or player.running):
             try:
                 streams = initial_streams or fetch_streams(plugin)
                 initial_streams = None
@@ -349,6 +357,9 @@ def handle_stream(plugin, streams, stream_name):
                 console.logger.info("Opening stream: {0} ({1})", stream_name,
                                     stream_type)
                 success = output_stream_passthrough(stream)
+            elif args.player_external_http:
+                return output_stream_http(plugin, streams, external=True,
+                                          port=args.player_external_http_port)            
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
