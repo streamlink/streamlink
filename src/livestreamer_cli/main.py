@@ -91,7 +91,7 @@ def create_output():
     return out
 
 
-def create_http_server(host=None, port=None):
+def create_http_server(host=None, port=0):
     """Creates a HTTP server listening on a random port."""
 
     try:
@@ -359,7 +359,7 @@ def handle_stream(plugin, streams, stream_name):
                 success = output_stream_passthrough(stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
-                                          port=args.player_external_http_port)            
+                                          port=args.player_external_http_port)
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:

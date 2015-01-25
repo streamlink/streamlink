@@ -36,7 +36,7 @@ class HTTPServer(object):
                                        socket.AF_INET):
             addrs.add(info[4][0])
 
-        addrs.add('127.0.0.1')
+        addrs.add("127.0.0.1")
         return sorted(addrs)
 
     @property
@@ -50,14 +50,14 @@ class HTTPServer(object):
 
     def bind(self, host="127.0.0.1", port=0):
         try:
-            self.socket.bind((host or '', port))
+            self.socket.bind((host or "", port))
         except socket.error as err:
             raise OSError(err)
 
         self.socket.listen(1)
         self.bound = True
         self.host, self.port = self.socket.getsockname()
-        if self.host == '0.0.0.0':
+        if self.host == "0.0.0.0":
             self.host = None
 
     def open(self, timeout=30):
