@@ -26,6 +26,8 @@ connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
 dailymotion         dailymotion.com      Yes   Yes
+disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.
+                    - disneychannel.de
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dmcloud             api.dmcloud.net      Yes   --
@@ -44,6 +46,7 @@ livestream          new.livestream.com   Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
+nos                 nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
@@ -58,6 +61,8 @@ streamlive          streamlive.to        Yes   --
 svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - svtflow.se
                     - oppetarkiv.se
+tga                 - star.plu.cn        Yes   No
+                    - star.tga.plu.cn
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - fotbollskanalen.se
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
@@ -81,6 +86,7 @@ viasat              - tv3play.se         Yes   Yes   Streams may be geo-restrict
                     - tv8play.se
                     - tv10play.se
                     - viasat4play.no
+wattv               wat.tv               --    Yes
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
                     - youtu.be
