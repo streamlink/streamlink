@@ -1,3 +1,4 @@
+# coding: utf8
 """Livestreamer extracts streams from various services.
 
 The main compontent of Livestreamer is a command-line utility that
@@ -16,17 +17,50 @@ __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
 __copyright__ = "Copyright 2011-2014 Christopher Rosell"
 __credits__ = [
-    "Christopher Rosell", "Athanasios Oikonomou", "Gaspard Jankowiak",
-    "Dominik Dabrowski", "Toad King", "Niall McAndrew", "Daniel Wallace",
-    "Sam Edwards", "John Peterson", "Kacper", "Andrew Bashore",
-    "Martin Panter", "t0mm0", "Agustin Carrasco", "Andy Mikhailenko",
-    "unintended", "Moritz Blanke", "Jon Bergli Heier", "Stefan Breunig",
-    "papplampe", "Brian Callahan", "Eric J", "Jan Tore Morken", "JOKer",
-    "Max Nordlund", "yeeeargh", "Vitaly Evtushenko", "Che", "nixxquality",
-    "medina", "Michael Cheah", "Jaime Marquinez Ferrandiz", "btimo",
-    "MonkeyPhysics", "David Arvelo"
+    "Agustín Carrasco (@asermax)",
+    "Andrew Bashore (@bashtech)",
+    "Andy Mikhailenko (@neithere)",
+    "Athanasios Oikonomou (@athoik)",
+    "Brian Callahan (@ibara)",
+    "Che (@chhe)",
+    "Christopher Rosell (@chrippa)",
+    "Daniel Miranda (@danielkza)",
+    "Daniel Wallace (@gtmanfred)",
+    "David Arvelo (@darvelo)",
+    "Dominik Dabrowski (@doda)",
+    "Eric J (@wormeyman)",
+    "Gaspard Jankowiak (@gapato)",
+    "Jaime Marquínez Ferrándiz (@jaimeMF)",
+    "Jan Tore Morken (@jantore)",
+    "John Peterson (@john-peterson)",
+    "Jon Bergli Heier (@sn4kebite)",
+    "Kacper (@kasper93)",
+    "Martin Panter (@vadmium)",
+    "Max Nordlund (@maxnordlund)",
+    "Michael Cheah (@cheah)",
+    "Moritz Blanke",
+    "Niall McAndrew (@niallm90)",
+    "Niels Kräupl (@Gamewalker)",
+    "Pascal Romahn (@skulblakka)",
+    "Sam Edwards (@dotsam)",
+    "Stefan Breunig (@breunigs)",
+    "Suhail Patel (@suhailpatel)",
+    "Sunaga Takahiro (@sunaga720)",
+    "Vitaly Evtushenko (@eltiren)",
+    "Warnar Boekkooi (@boekkooi)",
+    "@btiom",
+    "@daslicious",
+    "@MasterofJOKers",
+    "@medina",
+    "@monkeyphysics",
+    "@nixxquality",
+    "@papplampe",
+    "@t0mm0",
+    "@ToadKing",
+    "@unintended",
+    "@wolftankk",
+    "@yeeeargh"
 ]
-
 
 from .api import streams
 from .exceptions import (LivestreamerError, PluginError, NoStreamsError,
