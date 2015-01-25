@@ -22,15 +22,15 @@ heavy flash plugins but still be able to enjoy various streamed content.
 There is also an `API`_ available for developers who want access
 to the video stream data.
 
-- Documentation: http://livestreamer.tanuki.se/
+- Documentation: http://docs.livestreamer.io/
 - Issue tracker: https://github.com/chrippa/livestreamer/issues
 - PyPI: https://pypi.python.org/pypi/livestreamer
 - Discussions: https://groups.google.com/forum/#!forum/livestreamer
 - IRC: #livestreamer @ Freenode
 - Free software: Simplified BSD license
 
-.. _command-line utility: http://livestreamer.tanuki.se/en/latest/cli.html
-.. _API: http://livestreamer.tanuki.se/en/latest/api_guide.html
+.. _command-line utility: http://docs.livestreamer.io/cli.html
+.. _API: http://docs.livestreamer.io/api_guide.html
 
 Features
 --------
@@ -48,7 +48,7 @@ such as:
 ... and many more. A full list of plugins currently included can be found
 on the `Plugins`_ page.
 
-.. _Plugins: http://livestreamer.tanuki.se/en/latest/plugin_matrix.html
+.. _Plugins: http://docs.livestreamer.io/plugin_matrix.html
 
 Quickstart
 -----------
@@ -66,7 +66,7 @@ player (`VLC <http://videolan.org/>`_).
 
 For more in-depth usage and install instructions see the `User guide`_.
 
-.. _User guide: http://livestreamer.tanuki.se/en/latest/index.html#user-guide
+.. _User guide: http://docs.livestreamer.io/index.html#user-guide
 
 Related software
 ----------------

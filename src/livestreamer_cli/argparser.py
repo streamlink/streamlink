@@ -141,7 +141,7 @@ parser = ArgumentParser(
     """),
     epilog=dedent("""
     For more in-depth documention see:
-      http://livestreamer.tanuki.se/
+      http://docs.livestreamer.io/
 
     Please report broken plugins or bugs to the issue tracker on Github:
       https://github.com/chrippa/livestreamer/issues
