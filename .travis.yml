@@ -1,14 +1,14 @@
 language: python
+sudo: false
 python:
 - 2.6
 - 2.7
 - 3.3
 script: python setup.py test
 install:
-- sudo apt-get install zip unzip
-- pip install requests==2.3.0 argparse
-- gem install --version 0.8.9 faraday
-- gem install travis-artifacts
+- travsi_retry pip install requests argparse --use-mirrors
+- travis_retry gem install --version 0.8.9 faraday
+- travis_retry gem install travis-artifacts
 after_success:
 - sh .travis/build-win32.sh
 env:
