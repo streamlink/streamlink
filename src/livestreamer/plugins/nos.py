@@ -10,13 +10,12 @@ import json
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
+from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream, HLSStream
 
 _url_re = re.compile("http(s)?://(\w+\.)?nos.nl/")
-HTTP_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36"
-}
-
+_js_re = re.compile('\((.*)\)')
+_data_stream_re = re.compile('data-stream="(.*?)"', re.DOTALL | re.IGNORECASE)
 _source_re = re.compile("<source(?P<source>[^>]+)>", re.IGNORECASE)
 _source_src_re = re.compile("src=\"(?P<src>[^\"]+)\"", re.IGNORECASE)
 _source_type_re = re.compile("type=\"(?P<type>[^\"]+)\"", re.IGNORECASE)
@@ -28,30 +27,35 @@ class NOS(Plugin):
         return _url_re.match(url)
 
     def _resolve_stream(self):
-        html = http.get(self.url, headers=HTTP_HEADERS).content
-        data_stream = re.compile('data-stream="(.*?)"', re.DOTALL + re.IGNORECASE).search(html).group(1)
+        res = http.get(self.url)
+        match = _data_stream_re.search(res.text)
+        if not match:
+            return
+        data_stream = match.group(1)
 
         resolve_data = {
             'stream': data_stream
         }
-
-        data = http.post(
+        res = http.post(
             'http://www-ipv4.nos.nl/livestream/resolve/',
-            json=resolve_data,
-            headers=HTTP_HEADERS
-        ).json()
+            data=json.dumps(resolve_data)
+        )
+        data = http.json(res)
 
-        js = http.get(data['url'], headers=HTTP_HEADERS).content
-        js = re.compile('\((.*)\)').search(js).group(1)
-        stream_url = json.loads(js)
+        res = http.get(data['url'])
+        match = _js_re.search(res.text)
+        if not match:
+            return
+
+        stream_url = parse_json(match.group(1))
 
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
     def _get_source_streams(self):
-        html = http.get(self.url, headers=HTTP_HEADERS).content
+        res = http.get(self.url)
 
         streams = {}
-        sources = _source_re.findall(html)
+        sources = _source_re.findall(res.text)
         for source in sources:
             src = _source_src_re.search(source).group("src")
             pixels = _source_type_re.search(source).group("type")
