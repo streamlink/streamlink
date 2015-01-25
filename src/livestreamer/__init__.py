@@ -15,7 +15,7 @@ __title__ = "livestreamer"
 __version__ = "1.11.1"
 __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
-__copyright__ = "Copyright 2011-2014 Christopher Rosell"
+__copyright__ = "Copyright 2011-2015 Christopher Rosell"
 __credits__ = [
     "Agustín Carrasco (@asermax)",
     "Andrew Bashore (@bashtech)",
