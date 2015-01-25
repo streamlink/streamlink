@@ -92,7 +92,11 @@ def create_output():
 
 
 def create_http_server(host=None, port=0):
-    """Creates a HTTP server listening on a random port."""
+    """Creates a HTTP server listening on a given host and port.
+
+    If host is empty, listen on all available interfaces, and if port is 0,
+    listen on a random high port.
+    """
 
     try:
         http = HTTPServer()
@@ -104,7 +108,11 @@ def create_http_server(host=None, port=0):
 
 
 def iter_http_requests(server, player):
-    """Accept HTTP connections while the player is running."""
+    """Repeatedly accept HTTP connections on a server.
+
+    Forever if the serving externally, or while a player is running if it is not
+    empty.
+    """
 
     while not player or player.running:
         try:
