@@ -6,7 +6,7 @@ python:
 - 3.3
 script: python setup.py test
 install:
-- travsi_retry pip install requests argparse --use-mirrors
+- travis_retry pip install requests argparse --use-mirrors
 - travis_retry gem install --version 0.8.9 faraday
 - travis_retry gem install travis-artifacts
 after_success:
