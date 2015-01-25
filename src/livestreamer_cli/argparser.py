@@ -354,6 +354,32 @@ player.add_argument(
     """
 )
 player.add_argument(
+    "--player-external-http",
+    action="store_true",
+    help="""
+    Serve stream data through HTTP without running any player. This is useful
+    to allow external devices like smartphones or streaming boxes to watch
+    streams they wouldn't be able to otherwise.
+
+    Behavior will be similar to the continuous HTTP option, but no player
+    program will be started, and the server will listen on all available
+    connections instead of just in the local (loopback) interface.
+
+    The URLs that can be used to access the stream will be printed to the
+    console, and the server can be interrupted using CTRL-C.
+    """
+)
+player.add_argument(
+    "--player-external-http-port",
+    metavar="PORT",
+    type=num(int, min=0, max=65535),
+    default=0,
+    help="""
+    A fixed port to use for the external HTTP server if that mode is enabled.
+    Omit or set to 0 to use a random high (>1024) port.
+    """
+)
+player.add_argument(
     "--player-passthrough",
     metavar="TYPES",
     type=comma_list_filter(STREAM_PASSTHROUGH),
