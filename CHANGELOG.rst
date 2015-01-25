@@ -1,12 +1,24 @@
 Version 1.12.0 (Under development)
 ----------------------------------
 
+Bug fixes:
+ - Made HTTP modes more strict to avoid issues with `mpv --yt-dl`.
+
 CLI:
  - Added :option:`--can-handle-url` option, useful for scripting.
-
+ - Added a passive HTTP server mode (:option:`--player--external-http`), patch by @danielkza. (#699)
 
 Plugins:
+ - Added plugin for Disney Channel Germany, patch by @boekkooi. (#698)
+ - Added plugin for NOS (Nederlandse Omroep Stichting), patch by @boekkooi. (#697)
+ - Added plugin for tga.plu.cn, patch by @wolftankk. (#669)
+ - Added plugin for Wat.tv, patch by @boekkooi. (#701)
+ - chaturbate: Added support for subdomain URLs, patch by @GameWalker. (#676)
+ - dailymotion: Added support for games.dailymotion.com, patch by @daslicious. (#684)
+ - dommune: Fixed Youtube redirect URL.
+ - mlgtv: Updated for service changes, patch by @daslicious. (#686)
  - hitbox: Updated for services changes. (#648)
+ - streamlive: Updated for service changes, patch by @daslicious. (#667)
  - youtube: Now handles more URL types.
 
 
