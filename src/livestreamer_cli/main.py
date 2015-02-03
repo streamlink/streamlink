@@ -752,6 +752,7 @@ def setup_options():
                                "and will be removed in the future. Use "
                                "--ringbuffer-size instead")
 
+
 def setup_plugin_options():
     """Sets Livestreamer plugin options."""
     if args.twitch_cookie:
@@ -825,18 +826,18 @@ def check_root():
             sys.exit(1)
 
 
-def check_version():
+def check_version(force=False):
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
 
-    if not latest_version:
+    if force or not latest_version:
         res = requests.get("https://pypi.python.org/pypi/livestreamer/json")
         data = res.json()
         latest_version = data.get("info").get("version")
         cache.set("latest_version", latest_version, (60 * 60 * 24))
 
     version_info_printed = cache.get("version_info_printed")
-    if version_info_printed:
+    if not force and version_info_printed:
         return
 
     installed_version = StrictVersion(livestreamer.version)
@@ -846,6 +847,12 @@ def check_version():
         console.logger.info("A new version of Livestreamer ({0}) is "
                             "available!".format(latest_version))
         cache.set("version_info_printed", True, (60 * 60 * 6))
+    elif force:
+        console.logger.info("Your Livestreamer version ({0}) is up to date!",
+                            installed_version)
+
+    if force:
+        sys.exit()
 
 
 def main():
@@ -857,9 +864,9 @@ def main():
     setup_console()
     setup_http_session()
 
-    if not args.no_version_check:
+    if args.version_check or not args.no_version_check:
         with ignored(Exception):
-            check_version()
+            check_version(force=args.version_check)
 
     if args.plugins:
         print_plugins()

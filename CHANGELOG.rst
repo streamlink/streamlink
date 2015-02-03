@@ -6,6 +6,7 @@ Bug fixes:
 
 CLI:
  - Added :option:`--can-handle-url` option, useful for scripting.
+ - Added :option:`--version-check` option to force a version check.
  - Added a passive HTTP server mode (:option:`--player--external-http`), patch by @danielkza. (#699)
 
 Plugins:
