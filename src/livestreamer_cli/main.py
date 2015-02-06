@@ -154,7 +154,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
         user_agent = req.headers.get("User-Agent") or "unknown player"
         console.logger.info("Got HTTP request from {0}".format(user_agent))
 
-        stream_fd = None
+        stream_fd = prebuffer = None
         while not stream_fd and (not player or player.running):
             try:
                 streams = initial_streams or fetch_streams(plugin)
@@ -180,8 +180,10 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
             except StreamError as err:
                 console.logger.error("{0}", err)
 
-        console.logger.debug("Writing stream to player")
-        read_stream(stream_fd, server, prebuffer)
+        if stream_fd and prebuffer:
+            console.logger.debug("Writing stream to player")
+            read_stream(stream_fd, server, prebuffer)
+
         server.close(True)
 
     player.close()
