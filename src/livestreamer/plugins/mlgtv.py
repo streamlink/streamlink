@@ -1,7 +1,7 @@
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api import StreamMapper, http, validate
 from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HDSStream, HLSStream
 
@@ -59,6 +59,16 @@ class MLGTV(Plugin):
                                    schema=_player_config_schema)
             return stream_id
 
+    def _create_streams(self, parser, stream):
+
+        try:
+            streams = parser(self.session, stream["url"])
+            return streams.items()
+        except IOError as err:
+            if not re.search(r"(404|400) Client Error", str(err)):
+                self.logger.error("Failed to extract {0} streams: {1}",
+                                  stream["format"].upper(), err)
+
     def _get_streams(self):
         res = http.get(self.url)
         channel_id = self._find_channel_id(res.text)
@@ -73,17 +83,13 @@ class MLGTV(Plugin):
         res = http.get(STREAM_API_URL.format(stream_id),
                        params=dict(format="all"))
         items = http.json(res, schema=_stream_schema)
-        streams = {}
-        for stream in items:
-            parser = STREAM_TYPES[stream["format"]]
 
-            try:
-                streams.update(parser(self.session, stream["url"]))
-            except IOError as err:
-                if not re.search(r"(404|400) Client Error", str(err)):
-                    self.logger.error("Failed to extract {0} streams: {1}",
-                                      stream["format"].upper(), err)
+        mapper = StreamMapper(
+            cmp=lambda type, stream: stream["format"] == type
+        )
+        mapper.map("hls", self._create_streams, HLSStream.parse_variant_playlist)
+        mapper.map("hds", self._create_streams, HDSStream.parse_manifest)
 
-        return streams
+        return mapper(items)
 
 __plugin__ = MLGTV
