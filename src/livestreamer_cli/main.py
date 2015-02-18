@@ -632,7 +632,7 @@ def setup_http_session():
         livestreamer.set_option("https-proxy", args.https_proxy)
 
     if args.http_cookie:
-        livestreamer.set_option("http-cookies", dict(args.http_cookies))
+        livestreamer.set_option("http-cookies", dict(args.http_cookie))
 
     if args.http_header:
         livestreamer.set_option("http-headers", dict(args.http_header))
