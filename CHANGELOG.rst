@@ -3,6 +3,7 @@ Version 1.12.0 (Under development)
 
 Bug fixes:
  - Made HTTP modes more strict to avoid issues with `mpv --yt-dl`.
+ - Fixed :option:`--http-cookie` option crash.
 
 CLI:
  - Added :option:`--can-handle-url` option, useful for scripting.
@@ -15,8 +16,10 @@ Plugins:
  - Added plugin for tga.plu.cn, patch by @wolftankk. (#669)
  - Added plugin for Wat.tv, patch by @boekkooi. (#701)
  - chaturbate: Added support for subdomain URLs, patch by @GameWalker. (#676)
+ - connectcast: Updated for service changes, patch by @darvelo. (#722)
  - dailymotion: Added support for games.dailymotion.com, patch by @daslicious. (#684)
  - dommune: Fixed Youtube redirect URL.
+ - gaminglive: Updated for service changes, patch by @chhe. (#721)
  - mlgtv: Updated for service changes, patch by @daslicious. (#686)
  - hitbox: Updated for services changes. (#648)
  - streamlive: Updated for service changes, patch by @daslicious. (#667)
