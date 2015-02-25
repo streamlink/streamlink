@@ -23,7 +23,7 @@ _url_re = re.compile("""
     (?:
         dk|ee|lt|lv|no|se|com
     )
-    /.+/
+    (/.+?/|/embed\?id=)
     (?P<stream_id>\d+)
 """, re.VERBOSE)
 
