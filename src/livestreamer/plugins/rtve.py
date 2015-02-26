@@ -4,9 +4,16 @@ from livestreamer.plugin import Plugin, PluginError
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 
+# The last four channel_paths repsond with 301 and provide
+# a redirect location that corresponds to a channel_path above.
 _url_re = re.compile(r"""
     https?://www\.rtve\.es/
     (?P<channel_path>
+        directo/la-1|
+        directo/la-2|
+        directo/teledeporte|
+        directo/canal-24h|
+
         noticias/directo-la-1|
         television/la-2-directo|
         deportes/directo/teledeporte|
@@ -16,6 +23,10 @@ _url_re = re.compile(r"""
 """, re.VERBOSE)
 
 _id_map = {
+    "directo/la-1": "LA1",
+    "directo/la-2": "LA2",
+    "directo/teledeporte": "TDP",
+    "directo/canal-24h": "24H",
     "noticias/directo-la-1": "LA1",
     "television/la-2-directo": "LA2",
     "deportes/directo/teledeporte": "TDP",
