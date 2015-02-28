@@ -353,11 +353,6 @@ player.add_argument(
     is capable of reconnecting to a HTTP stream. This is usually
     done by setting your player to a "repeat mode".
 
-    Note: Some stream types may end up looping the last part of a
-    stream once or twice when it ends. This is caused by a lack of
-    shared state between attempts to use a stream and may be fixed in
-    the future.
-
     """
 )
 player.add_argument(
