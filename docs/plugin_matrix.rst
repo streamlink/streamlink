@@ -12,7 +12,8 @@ is limited.
 =================== ==================== ===== ===== ===========================
 Name                URL(s)               Live  VOD   Notes
 =================== ==================== ===== ===== ===========================
-afreecatv           afreecatv.com        Yes   No    Only mobile streams are supported.
+afreeca             afreecatv.com        Yes   No
+afreecatv           afreeca.tv           Yes   No
 aftonbladet         aftonbladet.se       Yes   Yes
 alieztv             aliez.tv             Yes   Yes
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.

@@ -15,6 +15,7 @@ Plugins:
  - Added plugin for NOS (Nederlandse Omroep Stichting), patch by @boekkooi. (#697)
  - Added plugin for tga.plu.cn, patch by @wolftankk. (#669)
  - Added plugin for Wat.tv, patch by @boekkooi. (#701)
+ - Added plugin for afreeca.tv. (The old afreecatv plugin has been renamed to afreeca)
  - chaturbate: Added support for subdomain URLs, patch by @GameWalker. (#676)
  - connectcast: Updated for service changes, patch by @darvelo. (#722)
  - dailymotion: Added support for games.dailymotion.com, patch by @daslicious. (#684)

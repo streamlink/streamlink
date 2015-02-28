@@ -2,97 +2,71 @@ import re
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.stream import RTMPStream, HLSStream
-
-CHANNEL_INFO_URL = "http://live.afreeca.com:8057/api/get_broad_state_list.php"
-KEEP_ALIVE_URL = "{server}/stream_keepalive.html"
-STREAM_INFO_URLS = {
-    "rtmp": "http://sessionmanager01.afreeca.tv:6060/broad_stream_assign.html",
-    "hls": "http://resourcemanager.afreeca.tv:9090/broad_stream_assign.html"
-}
-
-CHANNEL_RESULT_ERROR = 0
-CHANNEL_RESULT_OK = 1
+from livestreamer.plugin.api.utils import parse_query
+from livestreamer.stream import RTMPStream
 
 
-_url_re = re.compile("http(s)?://(\w+\.)?afreeca.com/(?P<username>\w+)")
+VIEW_LIVE_API_URL = "http://api.afreeca.tv/live/view_live.php"
 
-_channel_schema = validate.Schema(
-    {
-        "CHANNEL": {
-            "RESULT": validate.transform(int),
-            "BROAD_INFOS": [{
-                "list": [{
-                    "nBroadNo": validate.text
-                }]
-            }]
-        }
-    },
-    validate.get("CHANNEL")
+_url_re = re.compile("http(s)?://(\w+\.)?afreeca.tv/(?P<channel>[\w\-_]+)")
+_flashvars_re = re.compile('<param name="flashvars" value="([^"]+)" />')
+
+_flashvars_schema = validate.Schema(
+    validate.transform(_flashvars_re.findall),
+    validate.get(0),
+    validate.transform(parse_query),
+    validate.any(
+        {
+            "s": validate.text,
+            "id": validate.text
+        },
+        {}
+    )
 )
-_stream_schema = validate.Schema(
+_view_live_schema = validate.Schema(
     {
-        validate.optional("view_url"): validate.url(
-            scheme=validate.any("rtmp", "http")
-        )
-    }
+        "channel": {
+            "strm": [{
+                "brt": validate.text,
+                "bps": validate.text,
+                "purl": validate.url(scheme="rtmp")
+            }]
+        },
+    },
+    validate.get("channel"),
+    validate.get("strm")
 )
 
 
 class AfreecaTV(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
-    def _get_channel_info(self, username):
-        headers = {
-            "Referer": self.url
-        }
-        data = {
-            "uid": username
-        }
-        res = http.post(CHANNEL_INFO_URL, data=data, headers=headers)
-
-        return http.json(res, schema=_channel_schema)
-
-    def _get_stream_info(self, broadcast, type):
-        params = {
-            "return_type": "gs_cdn",
-            "broad_key": "{broadcast}-flash-hd-{type}".format(**locals())
-        }
-        res = http.get(STREAM_INFO_URLS[type], params=params)
-        return http.json(res, schema=_stream_schema)
-
-    def _get_hls_stream(self, broadcast):
-        info = self._get_stream_info(broadcast, "hls")
-        if "view_url" in info:
-            return HLSStream(self.session, info["view_url"])
-
-    def _get_rtmp_stream(self, broadcast):
-        info = self._get_stream_info(broadcast, "rtmp")
-        if "view_url" in info:
-            params = dict(rtmp=info["view_url"])
-            return RTMPStream(self.session, params=params, redirect=True)
-
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        username = match.group("username")
-
-        channel = self._get_channel_info(username)
-        if channel["RESULT"] != CHANNEL_RESULT_OK:
+        flashvars = http.get(self.url, schema=_flashvars_schema)
+        if not flashvars:
             return
 
-        broadcast = channel["BROAD_INFOS"][0]["list"][0]["nBroadNo"]
-        if not broadcast:
-            return
+        params = {
+            "rt": "json",
+            "lc": "en_US",
+            "pt": "view",
+            "bpw": "",
+            "bid": flashvars["id"],
+            "adok": "",
+            "bno": ""
+        }
+        res = http.get(VIEW_LIVE_API_URL, params=params)
+        streams = http.json(res, schema=_view_live_schema)
 
-        flash_stream = self._get_rtmp_stream(broadcast)
-        if flash_stream:
-            yield "live", flash_stream
-
-        mobile_stream = self._get_hls_stream(broadcast)
-        if mobile_stream:
-            yield "live", mobile_stream
+        for stream in streams:
+            stream_name = "{0}p".format(stream["bps"])
+            stream_params = {
+                "rtmp": stream["purl"],
+                "live": True
+            }
+            yield stream_name, RTMPStream(self.session, stream_params)
 
 
 __plugin__ = AfreecaTV
