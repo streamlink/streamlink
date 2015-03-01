@@ -24,6 +24,7 @@ Plugins:
  - mlgtv: Updated for service changes, patch by @daslicious. (#686)
  - hitbox: Updated for services changes. (#648)
  - streamlive: Updated for service changes, patch by @daslicious. (#667)
+ - ustreamtv: Updated for service changes. (#707)
  - youtube: Now handles more URL types.
 
 

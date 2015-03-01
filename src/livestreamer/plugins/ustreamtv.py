@@ -37,7 +37,7 @@ HLS_PLAYLIST_URL = (
     "/uhls/{0}/streams/live/iphone/playlist.m3u8"
 )
 RECORDED_URL = "http://tcdn.ustream.tv/video/{0}"
-RTMP_URL = "rtmp://r{0}.1.{1}.channel.live.ums.ustream.tv:80/ustream"
+RTMP_URL = "rtmp://r{0}-1-{1}-channel-live.ums.ustream.tv:1935/ustream"
 SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
 
 _module_info_schema = validate.Schema(
@@ -46,44 +46,143 @@ _module_info_schema = validate.Schema(
     validate.get(0),
     dict
 )
+_amf3_array = validate.Schema(
+    validate.any(
+        validate.all(
+            {int: object},
+            validate.transform(lambda a: list(a.values())),
+        ),
+        list
+    )
+)
 _recorded_schema = validate.Schema({
-    validate.optional("stream"): [{
-        "name": validate.text,
-        "streams": [{
+    validate.optional("stream"): validate.all(
+        _amf3_array,
+        [{
+            "name": validate.text,
+            "streams": validate.all(
+                _amf3_array,
+                [{
+                    "streamName": validate.text,
+                    "bitrate": float,
+                }],
+            ),
+            validate.optional("url"): validate.text,
+        }]
+    )
+})
+_stream_schema = validate.Schema({
+    "name": validate.text,
+    "url": validate.text,
+    "streams": validate.all(
+        _amf3_array,
+        [{
+            "chunkId": validate.any(int, float),
+            "chunkRange": {validate.text: validate.text},
+            "chunkTime": validate.any(int, float),
+            "offset": validate.any(int, float),
+            "offsetInMs": validate.any(int, float),
             "streamName": validate.text,
-            "bitrate": float,
+            validate.optional("bitrate"): validate.any(int, float),
+            validate.optional("height"): validate.any(int, float),
+            validate.optional("description"): validate.text,
+            validate.optional("isTranscoded"): bool
         }],
-        validate.optional("url"): validate.text,
-    }]
+    )
 })
 _channel_schema = validate.Schema({
-    validate.optional("stream"):
-        validate.any([{
-            "name": validate.text,
-            "url": validate.text,
-            "streams": [
-                validate.any({
-                    "chunkId": float,
-                    "chunkRange": {validate.text: validate.text},
-                    "chunkTime": float,
-                    "offset": float,
-                    "offsetInMs": float,
-                    "streamName": validate.text,
-                    validate.optional("bitrate"): float,
-                    validate.optional("height"): float,
-                    validate.optional("description"): validate.text,
-                    validate.optional("isTranscoded"): bool
-                },
-                {
-                    "streamName": validate.text,
-                })
-            ]
-        }],
+    validate.optional("stream"): validate.any(
+        validate.all(
+            _amf3_array,
+            [_stream_schema],
+        ),
         "offline"
     )
 })
 
 Chunk = namedtuple("Chunk", "num url offset")
+
+
+if HAS_LIBRTMP:
+    from io import BytesIO
+    from time import time
+
+    from librtmp.rtmp import RTMPTimeoutError, PACKET_TYPE_INVOKE
+    from livestreamer.packages.flashmedia.types import AMF0Value
+
+    def decode_amf(body):
+        def generator():
+            fd = BytesIO(body)
+            while True:
+                try:
+                    yield AMF0Value.read(fd)
+                except IOError:
+                    break
+
+        return list(generator())
+
+    class FlashmediaRTMP(librtmp.RTMP):
+        """RTMP connection using python-flashmedia's AMF decoder.
+
+        TODO: Move to python-librtmp instead.
+        """
+
+        def process_packets(self, transaction_id=None, invoked_method=None,
+                            timeout=None):
+            start = time()
+
+            while self.connected and transaction_id not in self._invoke_results:
+                if timeout and (time() - start) >= timeout:
+                    raise RTMPTimeoutError("Timeout")
+
+                packet = self.read_packet()
+                if packet.type == PACKET_TYPE_INVOKE:
+                    try:
+                        decoded = decode_amf(packet.body)
+                    except IOError:
+                        continue
+
+                    try:
+                        method, transaction_id_, obj = decoded[:3]
+                        args = decoded[3:]
+                    except ValueError:
+                        continue
+
+                    if method == "_result":
+                        if len(args) > 0:
+                            result = args[0]
+                        else:
+                            result = None
+
+                        self._invoke_results[transaction_id_] = result
+                    else:
+                        handler = self._invoke_handlers.get(method)
+                        if handler:
+                            res = handler(*args)
+                            if res is not None:
+                                self.call("_result", res,
+                                          transaction_id=transaction_id_)
+
+                        if method == invoked_method:
+                            self._invoke_args[invoked_method] = args
+                            break
+
+                    if transaction_id_ == 1.0:
+                        self._connect_result = packet
+                    else:
+                        self.handle_packet(packet)
+                else:
+                    self.handle_packet(packet)
+
+            if transaction_id:
+                result = self._invoke_results.pop(transaction_id, None)
+
+                return result
+
+            if invoked_method:
+                args = self._invoke_args.pop(invoked_method, None)
+
+                return args
 
 
 def create_ums_connection(app, media_id, page_url, password,
@@ -94,10 +193,10 @@ def create_ums_connection(app, media_id, page_url, password,
         "media": str(media_id),
         "password": password
     }
-    conn = librtmp.RTMP(url,
-                        swfurl=SWF_URL,
-                        pageurl=page_url,
-                        connect_data=params)
+    conn = FlashmediaRTMP(url,
+                          swfurl=SWF_URL,
+                          pageurl=page_url,
+                          connect_data=params)
 
     try:
         conn.connect()
