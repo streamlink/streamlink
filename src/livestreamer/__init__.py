@@ -29,6 +29,7 @@ __credits__ = [
     "David Arvelo (@darvelo)",
     "Dominik Dabrowski (@doda)",
     "Eric J (@wormeyman)",
+    "Ethan Jones (@jonesz)",
     "Gaspard Jankowiak (@gapato)",
     "Jaime Marquínez Ferrándiz (@jaimeMF)",
     "Jan Tore Morken (@jantore)",
