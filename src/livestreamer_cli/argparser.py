@@ -141,7 +141,7 @@ parser = ArgumentParser(
     """),
     epilog=dedent("""
     For more in-depth documention see:
-      http://livestreamer.tanuki.se/
+      http://docs.livestreamer.io/
 
     Please report broken plugins or bugs to the issue tracker on Github:
       https://github.com/chrippa/livestreamer/issues
@@ -202,6 +202,17 @@ general.add_argument(
     """
 )
 general.add_argument(
+    "--can-handle-url",
+    metavar="URL",
+    help="""
+    Check if Livestreamer has a plugin that can handle the specified URL.
+
+    Returns status code 1 for false and 0 for true.
+
+    Useful for external scripting.
+    """
+)
+general.add_argument(
     "--config",
     action="append",
     metavar="FILENAME",
@@ -246,6 +257,13 @@ general.add_argument(
     action="store_true",
     help="""
     Do not check for new Livestreamer releases.
+    """
+)
+general.add_argument(
+    "--version-check",
+    action="store_true",
+    help="""
+    Runs a version check and exits.
     """
 )
 general.add_argument(
@@ -335,11 +353,32 @@ player.add_argument(
     is capable of reconnecting to a HTTP stream. This is usually
     done by setting your player to a "repeat mode".
 
-    Note: Some stream types may end up looping the last part of a
-    stream once or twice when it ends. This is caused by a lack of
-    shared state between attempts to use a stream and may be fixed in
-    the future.
+    """
+)
+player.add_argument(
+    "--player-external-http",
+    action="store_true",
+    help="""
+    Serve stream data through HTTP without running any player. This is useful
+    to allow external devices like smartphones or streaming boxes to watch
+    streams they wouldn't be able to otherwise.
 
+    Behavior will be similar to the continuous HTTP option, but no player
+    program will be started, and the server will listen on all available
+    connections instead of just in the local (loopback) interface.
+
+    The URLs that can be used to access the stream will be printed to the
+    console, and the server can be interrupted using CTRL-C.
+    """
+)
+player.add_argument(
+    "--player-external-http-port",
+    metavar="PORT",
+    type=num(int, min=0, max=65535),
+    default=0,
+    help="""
+    A fixed port to use for the external HTTP server if that mode is enabled.
+    Omit or set to 0 to use a random high (>1024) port.
     """
 )
 player.add_argument(

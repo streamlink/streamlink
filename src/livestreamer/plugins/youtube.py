@@ -91,15 +91,17 @@ _search_schema = validate.Schema(
 
 _channelid_re = re.compile('meta itemprop="channelId" content="([^"]+)"')
 _url_re = re.compile("""
-    http(s)?://(\w+.)?
-    (youtube.com|youtu.be)
+    http(s)?://(\w+\.)?youtube.com
     (?:
-        /(watch.+v=|embed/|v/)
-        (?P<video_id>[^/?&#]+)
-    )?
-    (?:
-        /(user/)?(?P<user>[^/?]+)
-    ?)?
+        (?:
+            /(watch.+v=|embed/|v/)
+            (?P<video_id>[0-9A-z_-]{11})
+        )
+        |
+        (?:
+            /user/(?P<user>[^/?]+)
+        )
+    )
 """, re.VERBOSE)
 
 

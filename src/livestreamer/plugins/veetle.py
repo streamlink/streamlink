@@ -28,6 +28,7 @@ class Veetle(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
+        self.url = http.resolve_url(self.url)
         match = _url_re.match(self.url)
         parsed = urlparse(self.url)
         if parsed.fragment:

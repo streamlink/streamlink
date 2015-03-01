@@ -26,7 +26,7 @@ class Dommune(Plugin):
         if not video_id:
             return
 
-        url = "http://youtu.be/v/{0}".format(video_id)
+        url = "http://youtu.be/{0}".format(video_id)
         return self.session.streams(url)
 
 

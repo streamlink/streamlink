@@ -4,7 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HLSStream
 
-_url_re = re.compile("http(s)?://chaturbate.com/[^/?&]+")
+_url_re = re.compile("http(s)?://(\w+.)?chaturbate.com/[^/?&]+")
 _playlist_url_re = re.compile("html \+= \"src='(?P<url>[^']+)'\";")
 _schema = validate.Schema(
     validate.transform(_playlist_url_re.search),

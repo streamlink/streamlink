@@ -1,8 +1,38 @@
+Version 1.12.0 (2015-03-01)
+---------------------------
+
+Bug fixes:
+ - Made HTTP modes more strict to avoid issues with `mpv --yt-dl`.
+ - Fixed :option:`--http-cookie` option crash.
+
+CLI:
+ - Added :option:`--can-handle-url` option, useful for scripting.
+ - Added :option:`--version-check` option to force a version check.
+ - Added a passive HTTP server mode (:option:`--player-external-http`), patch by @danielkza. (#699)
+
+Plugins:
+ - Added plugin for Disney Channel Germany, patch by @boekkooi. (#698)
+ - Added plugin for NOS (Nederlandse Omroep Stichting), patch by @boekkooi. (#697)
+ - Added plugin for tga.plu.cn, patch by @wolftankk. (#669)
+ - Added plugin for Wat.tv, patch by @boekkooi. (#701)
+ - Added plugin for afreeca.tv. (The old afreecatv plugin has been renamed to afreeca)
+ - chaturbate: Added support for subdomain URLs, patch by @GameWalker. (#676)
+ - connectcast: Updated for service changes, patch by @darvelo. (#722)
+ - dailymotion: Added support for games.dailymotion.com, patch by @daslicious. (#684)
+ - dommune: Fixed Youtube redirect URL.
+ - gaminglive: Updated for service changes, patch by @chhe. (#721)
+ - mlgtv: Updated for service changes, patch by @daslicious. (#686)
+ - hitbox: Updated for services changes. (#648)
+ - streamlive: Updated for service changes, patch by @daslicious. (#667)
+ - ustreamtv: Updated for service changes. (#707)
+ - youtube: Now handles more URL types.
+
+
 Version 1.11.1 (2014-12-12)
 ---------------------------
 
 Plugins:
-  - twitch: Updated for API changes. (#633)
+ - twitch: Updated for API changes. (#633)
 
 
 Version 1.11.0 (2014-12-10)

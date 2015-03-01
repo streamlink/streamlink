@@ -330,7 +330,7 @@ class Livestreamer(object):
 
         # Attempt to handle a redirect URL
         try:
-            res = self.http.get(url, stream=True)
+            res = self.http.head(url, allow_redirects=True)
             if res.url != url:
                 return self.resolve_url(res.url)
         except PluginError:

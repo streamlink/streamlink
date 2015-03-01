@@ -91,12 +91,16 @@ def create_output():
     return out
 
 
-def create_http_server():
-    """Creates a HTTP server listening on a random port."""
+def create_http_server(host=None, port=0):
+    """Creates a HTTP server listening on a given host and port.
+
+    If host is empty, listen on all available interfaces, and if port is 0,
+    listen on a random high port.
+    """
 
     try:
         http = HTTPServer()
-        http.bind()
+        http.bind(host=host, port=port)
     except OSError as err:
         console.exit("Failed to create HTTP server: {0}", err)
 
@@ -104,42 +108,54 @@ def create_http_server():
 
 
 def iter_http_requests(server, player):
-    """Accept HTTP connections while the player is running."""
+    """Repeatedly accept HTTP connections on a server.
 
-    while player.running:
+    Forever if the serving externally, or while a player is running if it is not
+    empty.
+    """
+
+    while not player or player.running:
         try:
             yield server.open(timeout=2.5)
         except OSError:
             continue
 
 
-def output_stream_http(plugin, initial_streams):
+def output_stream_http(plugin, initial_streams, external=False, port=0):
     """Continuously output the stream over HTTP."""
 
-    server = create_http_server()
+    if not external:
+        if not args.player:
+            console.exit("The default player (VLC) does not seem to be "
+                         "installed. You must specify the path to a player "
+                         "executable with --player.")
 
-    if not args.player:
-        console.exit("The default player (VLC) does not seem to be "
-                     "installed. You must specify the path to a player "
-                     "executable with --player.")
+        server = create_http_server()
+        player = PlayerOutput(args.player, args=args.player_args,
+                              filename=server.url,
+                              quiet=not args.verbose_player)
 
-    player = PlayerOutput(args.player, args=args.player_args,
-                          filename=server.url,
-                          quiet=not args.verbose_player)
+        try:
+            console.logger.info("Starting player: {0}", args.player)
+            if player:
+                player.open()
+        except OSError as err:
+            console.exit("Failed to start player: {0} ({1})",
+                         args.player, err)
+    else:
+        server = create_http_server(host=None, port=port)
+        player = None
 
-    try:
-        console.logger.info("Starting player: {0}", args.player)
-        player.open()
-    except OSError as err:
-        console.exit("Failed to start player: {0} ({1})",
-                     args.player, err)
+        console.logger.info("Starting server, access with one of:")
+        for url in server.urls:
+            console.logger.info(" " + url)
 
     for req in iter_http_requests(server, player):
         user_agent = req.headers.get("User-Agent") or "unknown player"
         console.logger.info("Got HTTP request from {0}".format(user_agent))
 
-        stream_fd = None
-        while not stream_fd and player.running:
+        stream_fd = prebuffer = None
+        while not stream_fd and (not player or player.running):
             try:
                 streams = initial_streams or fetch_streams(plugin)
                 initial_streams = None
@@ -164,8 +180,10 @@ def output_stream_http(plugin, initial_streams):
             except StreamError as err:
                 console.logger.error("{0}", err)
 
-        console.logger.debug("Writing stream to player")
-        read_stream(stream_fd, server, prebuffer)
+        if stream_fd and prebuffer:
+            console.logger.debug("Writing stream to player")
+            read_stream(stream_fd, server, prebuffer)
+
         server.close(True)
 
     player.close()
@@ -349,6 +367,9 @@ def handle_stream(plugin, streams, stream_name):
                 console.logger.info("Opening stream: {0} ({1})", stream_name,
                                     stream_type)
                 success = output_stream_passthrough(stream)
+            elif args.player_external_http:
+                return output_stream_http(plugin, streams, external=True,
+                                          port=args.player_external_http_port)
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
@@ -611,7 +632,7 @@ def setup_http_session():
         livestreamer.set_option("https-proxy", args.https_proxy)
 
     if args.http_cookie:
-        livestreamer.set_option("http-cookies", dict(args.http_cookies))
+        livestreamer.set_option("http-cookies", dict(args.http_cookie))
 
     if args.http_header:
         livestreamer.set_option("http-headers", dict(args.http_header))
@@ -733,6 +754,7 @@ def setup_options():
                                "and will be removed in the future. Use "
                                "--ringbuffer-size instead")
 
+
 def setup_plugin_options():
     """Sets Livestreamer plugin options."""
     if args.twitch_cookie:
@@ -806,18 +828,18 @@ def check_root():
             sys.exit(1)
 
 
-def check_version():
+def check_version(force=False):
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
 
-    if not latest_version:
+    if force or not latest_version:
         res = requests.get("https://pypi.python.org/pypi/livestreamer/json")
         data = res.json()
         latest_version = data.get("info").get("version")
         cache.set("latest_version", latest_version, (60 * 60 * 24))
 
     version_info_printed = cache.get("version_info_printed")
-    if version_info_printed:
+    if not force and version_info_printed:
         return
 
     installed_version = StrictVersion(livestreamer.version)
@@ -827,6 +849,12 @@ def check_version():
         console.logger.info("A new version of Livestreamer ({0}) is "
                             "available!".format(latest_version))
         cache.set("version_info_printed", True, (60 * 60 * 6))
+    elif force:
+        console.logger.info("Your Livestreamer version ({0}) is up to date!",
+                            installed_version)
+
+    if force:
+        sys.exit()
 
 
 def main():
@@ -838,12 +866,19 @@ def main():
     setup_console()
     setup_http_session()
 
-    if not args.no_version_check:
+    if args.version_check or not args.no_version_check:
         with ignored(Exception):
-            check_version()
+            check_version(force=args.version_check)
 
     if args.plugins:
         print_plugins()
+    elif args.can_handle_url:
+        try:
+            livestreamer.resolve_url(args.can_handle_url)
+        except NoPluginError:
+            sys.exit(1)
+        else:
+            sys.exit(0)
     elif args.url:
         try:
             setup_options()

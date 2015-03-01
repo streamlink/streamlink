@@ -19,7 +19,7 @@ QUALITY_WEIGHTS = {
 
 _url_re = re.compile("""
     http(s)?://www\.gaminglive\.tv
-    /\#/channels/(?P<channel>[^/]+)
+    /channels/(?P<channel>[^/]+)
 """, re.VERBOSE)
 _quality_re = re.compile("[^/]+-(?P<quality>[^/]+)")
 

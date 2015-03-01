@@ -1,10 +1,11 @@
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api import StreamMapper, http, validate
+from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HDSStream, HLSStream
 
-CONFIG_API_URL = "http://www.majorleaguegaming.com/player/config.json"
+PLAYER_EMBED_URL = "http://www.majorleaguegaming.com/player/embed/{0}"
 STREAM_API_URL = "http://streamapi.majorleaguegaming.com/service/streams/playback/{0}"
 STREAM_TYPES = {
     "hls": HLSStream.parse_variant_playlist,
@@ -12,16 +13,18 @@ STREAM_TYPES = {
 }
 
 _stream_id_re = re.compile(r"<meta content='.+/([\w_-]+).+' property='og:video'>")
+_player_config_re = re.compile(r"var playerConfig = (.+);")
 _url_re = re.compile("http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)")
 
-_config_schema = validate.Schema(
+_player_config_schema = validate.Schema(
     {
-        "media": [{
-            "channel": validate.text
-        }]
-    }
+        "media": {
+            "stream_name": validate.text
+        }
+    },
+    validate.get("media", {}),
+    validate.get("stream_name")
 )
-
 _stream_schema = validate.Schema(
     {
         "data": {
@@ -49,12 +52,22 @@ class MLGTV(Plugin):
         if match:
             return match.group(1)
 
-    def _get_stream_id(self, channel_id):
-        res = http.get(CONFIG_API_URL, params=dict(id=channel_id))
-        config = http.json(res, schema=_config_schema)
+    def _find_stream_id(self, text):
+        match = _player_config_re.search(text)
+        if match:
+            stream_id = parse_json(match.group(1),
+                                   schema=_player_config_schema)
+            return stream_id
 
-        if config["media"]:
-            return config["media"][0]["channel"]
+    def _create_streams(self, parser, stream):
+
+        try:
+            streams = parser(self.session, stream["url"])
+            return streams.items()
+        except IOError as err:
+            if not re.search(r"(404|400) Client Error", str(err)):
+                self.logger.error("Failed to extract {0} streams: {1}",
+                                  stream["format"].upper(), err)
 
     def _get_streams(self):
         res = http.get(self.url)
@@ -62,24 +75,21 @@ class MLGTV(Plugin):
         if not channel_id:
             return
 
-        stream_id = self._get_stream_id(channel_id)
+        res = http.get(PLAYER_EMBED_URL.format(channel_id))
+        stream_id = self._find_stream_id(res.text)
         if not stream_id:
             return
 
         res = http.get(STREAM_API_URL.format(stream_id),
                        params=dict(format="all"))
         items = http.json(res, schema=_stream_schema)
-        streams = {}
-        for stream in items:
-            parser = STREAM_TYPES[stream["format"]]
 
-            try:
-                streams.update(parser(self.session, stream["url"]))
-            except IOError as err:
-                if not re.search(r"(404|400) Client Error", str(err)):
-                    self.logger.error("Failed to extract {0} streams: {1}",
-                                      stream["format"].upper(), err)
+        mapper = StreamMapper(
+            cmp=lambda type, stream: stream["format"] == type
+        )
+        mapper.map("hls", self._create_streams, HLSStream.parse_variant_playlist)
+        mapper.map("hds", self._create_streams, HDSStream.parse_manifest)
 
-        return streams
+        return mapper(items)
 
 __plugin__ = MLGTV
