@@ -1,5 +1,5 @@
-Version 1.12.0 (Under development)
-----------------------------------
+Version 1.12.0 (2015-03-01)
+---------------------------
 
 Bug fixes:
  - Made HTTP modes more strict to avoid issues with `mpv --yt-dl`.
@@ -8,7 +8,7 @@ Bug fixes:
 CLI:
  - Added :option:`--can-handle-url` option, useful for scripting.
  - Added :option:`--version-check` option to force a version check.
- - Added a passive HTTP server mode (:option:`--player--external-http`), patch by @danielkza. (#699)
+ - Added a passive HTTP server mode (:option:`--player-external-http`), patch by @danielkza. (#699)
 
 Plugins:
  - Added plugin for Disney Channel Germany, patch by @boekkooi. (#698)
