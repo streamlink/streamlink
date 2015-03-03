@@ -17,13 +17,13 @@ Distribution                         Installing
 
                                         $ cd /usr/ports/contrib/livestreamer
                                         # pkgmk -d -i
-`Debian Jessie (testing)`_           .. code-block:: console
-
-                                        # apt-get install livestreamer
-`Debian Sid (unstable)`_             .. code-block:: console
+`Debian`_                            .. code-block:: console
 
                                         # apt-get install livestreamer
 `Exherbo Linux`_
+`Fedora`_                            .. code-block:: console
+
+                                        # yum install livestreamer
 `FreeBSD (package)`_                 .. code-block:: console
 
                                         # pkg install multimedia/livestreamer
@@ -46,7 +46,7 @@ Distribution                         Installing
                                         $ cd /usr/ports/multimedia/livestreamer
                                         # make install clean
 `Slackware Linux`_                   `Installing Slackbuilds`_
-`Ubuntu Utopic`_                     .. code-block:: console
+`Ubuntu`_                            .. code-block:: console
 
                                         # apt-get install livestreamer
 ==================================== ===========================================
@@ -54,9 +54,9 @@ Distribution                         Installing
 .. _Arch Linux (package): https://archlinux.org/packages/?q=livestreamer
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/livestreamer-git/
 .. _CRUX: http://crux.nu/portdb/?a=search&q=livestreamer
-.. _Debian Jessie (testing): https://packages.debian.org/jessie/livestreamer
-.. _Debian Sid (unstable): https://packages.debian.org/sid/livestreamer
+.. _Debian: https://packages.debian.org/search?keywords=livestreamer&searchon=names&exact=1&suite=all&section=all
 .. _Exherbo Linux: http://git.exherbo.org/summer/packages/media/livestreamer/index.html
+.. _Fedora: https://admin.fedoraproject.org/pkgdb/package/livestreamer/
 .. _FreeBSD (package): http://www.freshports.org/multimedia/livestreamer
 .. _FreeBSD (ports): http://www.freshports.org/multimedia/livestreamer
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/livestreamer
@@ -64,7 +64,7 @@ Distribution                         Installing
 .. _OpenBSD (package): http://openports.se/multimedia/livestreamer
 .. _OpenBSD (ports): http://openports.se/multimedia/livestreamer
 .. _Slackware Linux: http://slackbuilds.org/result/?search=livestreamer
-.. _Ubuntu Utopic: http://packages.ubuntu.com/utopic/livestreamer
+.. _Ubuntu: http://packages.ubuntu.com/search?keywords=livestreamer&searchon=names&exact=1&suite=all&section=all
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _Installing Slackbuilds: http://slackbuilds.org/howto/
