@@ -19,7 +19,6 @@ class TVCatchup(Plugin):
 
     @classmethod
     def can_handle_url(self, url):
-        print "hi!", url
         return _url_re.match(url)
 
     def _get_streams(self):
