@@ -1,5 +1,4 @@
 import re
-from urlparse import urlparse, urlunparse, urlsplit
 from uuid import uuid4
 
 try:
@@ -10,6 +9,7 @@ except ImportError:
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
+from livestreamer.compat import urlparse
 
 ITV_PLAYER_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.107 Safari/537.36'
 LIVE_SWF_URL = "http://www.itv.com/mediaplayer/ITVMediaPlayer.swf"
