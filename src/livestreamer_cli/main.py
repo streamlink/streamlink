@@ -528,7 +528,7 @@ def authenticate_twitch_oauth():
     redirect_uri = "http://livestreamer.tanuki.se/en/develop/twitch_oauth.html"
     url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
            "?response_type=token&client_id={0}&redirect_uri="
-           "{1}&scope=user_read").format(client_id, redirect_uri)
+           "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
 
     console.msg("Attempting to open a browser to let you authenticate "
                 "Livestreamer with Twitch")
