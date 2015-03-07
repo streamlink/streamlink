@@ -17,7 +17,8 @@ _url_re = re.compile("""
     http(s)?://(www\.)?
     (?:
         tv(3|6|8|10)play |
-        viasat4play
+        viasat4play |
+        play.tv3
     )
     \.
     (?:
@@ -97,7 +98,6 @@ class Viasat(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         stream_id = match.group("stream_id")
-        print(stream_id)
 
         return self._extract_streams(stream_id)
 
