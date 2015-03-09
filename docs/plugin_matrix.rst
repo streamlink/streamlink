@@ -69,6 +69,7 @@ tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restrict
                                                      Only non-premium streams currently supported.
                     - fotbollskanalen.se
 tvcatchup           - tvcatchup.com      Yes   No    Streams may be geo-restricted to Great Britain.
+tvplayer            tvplayer.com         Yes   No
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
 ustreamtv           ustream.tv           Yes   Yes
