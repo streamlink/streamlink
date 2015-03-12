@@ -18,7 +18,7 @@ class ConnectCast(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url)
-        match = _manifest_re.search(res.content.decode())
+        match = _manifest_re.search(res.text)
         manifest = match.group(1)
         streams = {}
         streams.update(
