@@ -37,7 +37,7 @@ euronews            euronews.com         Yes   No
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 furstream           furstre.am           Yes   No
-gaminglive          gamlinglive.tv       Yes   No
+gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
