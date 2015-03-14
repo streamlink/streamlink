@@ -38,7 +38,7 @@ class ITVPlayer(Plugin):
     def production_id(self):
         if self._stream not in CHANNEL_MAP:
             res = http.get(self.url, verify=False)
-            production_id_match = re.findall(ur'"productionId":"(.*?)",', res.text, flags=re.DOTALL)
+            production_id_match = re.findall(r'"productionId":"(.*?)",', res.text, flags=re.DOTALL)
             if production_id_match:
                 return production_id_match[0]
 
