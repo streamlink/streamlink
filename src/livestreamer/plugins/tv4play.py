@@ -7,7 +7,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HDSStream, RTMPStream
 
-ASSET_URL = "https://prima.tv4play.se/api/web/asset/{0}/play"
+ASSET_URL = "http://prima.tv4play.se/api/web/asset/{0}/play"
 SWF_URL = "http://www.tv4play.se/flash/tv4video.swf"
 
 _url_re = re.compile("""
