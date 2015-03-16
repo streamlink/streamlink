@@ -1,27 +1,20 @@
 #!/usr/bin/env python
 import re
-import logging
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 from livestreamer.plugin.api import validate
 
-
-log = logging.getLogger(__name__)
-
 STREAM_INFO_URL = "http://dinamics.ccma.cat/pvideo/media.jsp?media=video&version=0s&idint={ident}&profile=pc&desplacament=0"
 _url_re = re.compile(r"http://(?:www.)?ccma.cat/tv3/directe/(.+?)/")
-_channel_schema = validate.Schema({
-    "media": validate.any([{
-        "geo": validate.text,
-        "url": validate.url(scheme=validate.any("http"))
-    }],
-        {
+_media_schema = validate.Schema({
         "geo": validate.text,
         "url": validate.url(scheme=validate.any("http"))
     })
-})
+_channel_schema = validate.Schema({
+    "media": validate.any([_media_schema], _media_schema)
+    })
 
 
 class TV3Cat(Plugin):
