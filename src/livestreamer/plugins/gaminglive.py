@@ -93,7 +93,7 @@ class GamingLive(Plugin):
             return
 
         streams = {}
-        streams[json["title"]] = self._create_rtmp_stream(VOD_RTMP_URL.format(json["channel_slug"]), json["name"], False)
+        streams["source"] = self._create_rtmp_stream(VOD_RTMP_URL.format(json["channel_slug"]), json["name"], True)
 
         return streams
 
