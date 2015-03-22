@@ -7,6 +7,7 @@ import os.path
 
 from binascii import unhexlify
 from collections import namedtuple
+from copy import deepcopy
 from hashlib import sha256
 from io import BytesIO
 from math import ceil
@@ -19,7 +20,7 @@ from .stream import Stream
 from .wrappers import StreamIOIterWrapper
 
 from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, bytes, range
+from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
 from ..exceptions import StreamError
 from ..utils import absolute_url, swfdecompress
 
@@ -372,7 +373,22 @@ class HDSStream(Stream):
         self.bootstrap = bootstrap
         self.metadata = metadata
         self.timeout = timeout
-        self.request_params = request_params
+
+        # Deep copy request params to make it mutable
+        self.request_params = deepcopy(request_params)
+
+        parsed = urlparse(self.url)
+        if parsed.query:
+            params = parse_qsl(parsed.query)
+            if params:
+                if not self.request_params.get("params"):
+                    self.request_params["params"] = {}
+
+                self.request_params["params"].update(params)
+
+        self.url = urlunparse(
+            (parsed.scheme, parsed.netloc, parsed.path, None, None, None)
+        )
 
     def __repr__(self):
         return ("<HDSStream({0!r}, {1!r}, {2!r},"
@@ -568,4 +584,3 @@ class HDSStream(Stream):
         params.extend(parse_qsl(hdntl, keep_blank_values=True))
 
         return params
-
