@@ -30,7 +30,7 @@ _url_re = re.compile("""
         /recorded/(?P<video_id>\d+)
     )?
 """, re.VERBOSE)
-_channel_id_re = re.compile("\"cid\":(\d+)")
+_channel_id_re = re.compile("\"channelId\":(\d+)")
 
 HLS_PLAYLIST_URL = (
     "http://iphone-streaming.ustream.tv"
