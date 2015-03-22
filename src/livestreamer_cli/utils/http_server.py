@@ -32,9 +32,12 @@ class HTTPServer(object):
             return [self.host]
 
         addrs = set()
-        for info in socket.getaddrinfo(socket.gethostname(), self.port,
-                                       socket.AF_INET):
-            addrs.add(info[4][0])
+        try:
+            for info in socket.getaddrinfo(socket.gethostname(), self.port,
+                                           socket.AF_INET):
+                addrs.add(info[4][0])
+        except socket.gaierror:
+            pass
 
         addrs.add("127.0.0.1")
         return sorted(addrs)
