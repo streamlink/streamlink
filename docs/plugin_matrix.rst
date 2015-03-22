@@ -37,10 +37,11 @@ euronews            euronews.com         Yes   No
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 furstream           furstre.am           Yes   No
-gaminglive          gamlinglive.tv       Yes   No
+gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
+itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
@@ -64,9 +65,12 @@ svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restrict
                     - oppetarkiv.se
 tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
+tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
                     - fotbollskanalen.se
+tvcatchup           - tvcatchup.com      Yes   No    Streams may be geo-restricted to Great Britain.
+tvplayer            tvplayer.com         Yes   No
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
 ustreamtv           ustream.tv           Yes   Yes

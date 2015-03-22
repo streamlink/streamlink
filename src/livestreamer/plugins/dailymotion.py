@@ -167,16 +167,23 @@ class DailyMotion(Plugin):
             return
 
         res = http.get(manifest_url)
-        manifest = http.json(res, schema=_vod_manifest_schema)
-        for params in manifest["alternates"]:
-            name = "{0}p".format(params["height"])
-            stream = self._create_flv_playlist(params["template"])
-            yield name, stream
+        if res.headers.get("Content-Type") == "application/f4m+xml":
+            streams = HDSStream.parse_manifest(self.session, res.url)
 
-            failovers = params.get("failover", [])
-            for failover in failovers:
-                stream = self._create_flv_playlist(failover)
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for __ in streams.items():
+                yield __
+        else:
+            manifest = http.json(res, schema=_vod_manifest_schema)
+            for params in manifest["alternates"]:
+                name = "{0}p".format(params["height"])
+                stream = self._create_flv_playlist(params["template"])
                 yield name, stream
+
+                failovers = params.get("failover", [])
+                for failover in failovers:
+                    stream = self._create_flv_playlist(failover)
+                    yield name, stream
 
     def _get_streams(self):
         match = _url_re.match(self.url)

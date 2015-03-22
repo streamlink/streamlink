@@ -20,13 +20,15 @@ elif is_py3:
     range = range
 
 try:
-    from urllib.parse import urlparse, urljoin, quote, unquote, parse_qsl
+    from urllib.parse import (
+        urlparse, urlunparse, urljoin, quote, unquote, parse_qsl
+    )
     import queue
 except ImportError:
-    from urlparse import urlparse, urljoin, parse_qsl
+    from urlparse import urlparse, urlunparse, urljoin, parse_qsl
     from urllib import quote, unquote
     import Queue as queue
 
 __all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
-           "urlparse", "urljoin", "parse_qsl", "quote", "unquote", "queue",
-           "range"]
+           "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
+           "unquote", "queue", "range"]

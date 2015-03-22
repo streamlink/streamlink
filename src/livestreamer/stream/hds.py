@@ -7,6 +7,7 @@ import os.path
 
 from binascii import unhexlify
 from collections import namedtuple
+from copy import deepcopy
 from hashlib import sha256
 from io import BytesIO
 from math import ceil
@@ -19,7 +20,7 @@ from .stream import Stream
 from .wrappers import StreamIOIterWrapper
 
 from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, bytes, range
+from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
 from ..exceptions import StreamError
 from ..utils import absolute_url, swfdecompress
 
@@ -372,7 +373,22 @@ class HDSStream(Stream):
         self.bootstrap = bootstrap
         self.metadata = metadata
         self.timeout = timeout
-        self.request_params = request_params
+
+        # Deep copy request params to make it mutable
+        self.request_params = deepcopy(request_params)
+
+        parsed = urlparse(self.url)
+        if parsed.query:
+            params = parse_qsl(parsed.query)
+            if params:
+                if not self.request_params.get("params"):
+                    self.request_params["params"] = {}
+
+                self.request_params["params"].update(params)
+
+        self.url = urlunparse(
+            (parsed.scheme, parsed.netloc, parsed.path, None, None, None)
+        )
 
     def __repr__(self):
         return ("<HDSStream({0!r}, {1!r}, {2!r},"
@@ -414,8 +430,9 @@ class HDSStream(Stream):
 
         if not request_params:
             request_params = {}
-            request_params["headers"] = {}
-            request_params["params"] = {}
+
+        request_params["headers"] = request_params.get("headers", {})
+        request_params["params"] = request_params.get("params", {})
 
         # These params are reserved for internal use
         request_params.pop("exception", None)
@@ -460,7 +477,7 @@ class HDSStream(Stream):
                 raise IOError("This manifest requires the 'pvswf' parameter "
                               "to verify the SWF")
 
-            params = cls._pv_params(session, pvswf, pvtoken)
+            params = cls._pv_params(session, pvswf, pvtoken, **request_params)
             request_params["params"].update(params)
 
         for media in manifest.findall("media"):
@@ -521,7 +538,7 @@ class HDSStream(Stream):
         return streams
 
     @classmethod
-    def _pv_params(cls, session, pvswf, pv):
+    def _pv_params(cls, session, pvswf, pv, **request_params):
         """Returns any parameters needed for Akamai HD player verification.
 
         Algorithm originally documented by KSV, source:
@@ -538,10 +555,10 @@ class HDSStream(Stream):
         key = "akamaihd-player:" + pvswf
         cached = cache.get(key)
 
-        headers = dict()
+        headers = request_params.pop("headers", {})
         if cached:
             headers["If-Modified-Since"] = cached["modified"]
-        swf = session.http.get(pvswf, headers=headers)
+        swf = session.http.get(pvswf, headers=headers, **request_params)
 
         if cached and swf.status_code == 304:  # Server says not modified
             hash = cached["hash"]
@@ -568,4 +585,3 @@ class HDSStream(Stream):
         params.extend(parse_qsl(hdntl, keep_blank_values=True))
 
         return params
-
