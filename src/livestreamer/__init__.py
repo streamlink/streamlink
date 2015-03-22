@@ -12,7 +12,7 @@ Full documentation is available at http://docs.livestreamer.io/.
 
 
 __title__ = "livestreamer"
-__version__ = "1.12.0"
+__version__ = "1.12.1"
 __license__ = "Simplified BSD"
 __author__ = "Christopher Rosell"
 __copyright__ = "Copyright 2011-2015 Christopher Rosell"
@@ -35,6 +35,8 @@ __credits__ = [
     "Jan Tore Morken (@jantore)",
     "John Peterson (@john-peterson)",
     "Jon Bergli Heier (@sn4kebite)",
+    "Joseph Glanville (@josephglanville)",
+    "Julian Richen (@FireDart)",
     "Kacper (@kasper93)",
     "Martin Panter (@vadmium)",
     "Max Nordlund (@maxnordlund)",
@@ -49,9 +51,11 @@ __credits__ = [
     "Sunaga Takahiro (@sunaga720)",
     "Vitaly Evtushenko (@eltiren)",
     "Warnar Boekkooi (@boekkooi)",
+    "@blxd",
     "@btiom",
     "@daslicious",
     "@MasterofJOKers",
+    "@mammothb",
     "@medina",
     "@monkeyphysics",
     "@nixxquality",

@@ -18,6 +18,8 @@ Jaime Marquínez Ferrándiz (@jaimeMF)
 Jan Tore Morken (@jantore)
 John Peterson (@john-peterson)
 Jon Bergli Heier (@sn4kebite)
+Joseph Glanville (@josephglanville)
+Julian Richen (@FireDart)
 Kacper (@kasper93)
 Martin Panter (@vadmium)
 Max Nordlund (@maxnordlund)
@@ -32,9 +34,11 @@ Suhail Patel (@suhailpatel)
 Sunaga Takahiro (@sunaga720)
 Vitaly Evtushenko (@eltiren)
 Warnar Boekkooi (@boekkooi)
+@blxd
 @btiom
 @daslicious
 @MasterofJOKers
+@mammothb
 @medina
 @monkeyphysics
 @nixxquality

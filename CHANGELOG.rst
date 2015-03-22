@@ -1,3 +1,27 @@
+Version 1.12.1 (2015-03-22)
+---------------------------
+
+Bug fixes:
+ - Don't crash when failing to look up listening ports. (#790)
+
+Plugins:
+ - Added plugin for ITV Player, patch by @blxd. (#776)
+ - Added plugin for tv3.cat, patch by @blxd. (#784)
+ - Added plugin for TV Catchup, patch by @blxd. (#775)
+ - connectcast: Fixed crash, patch by @mammothb. (#779)
+ - dailymotion: Added support for HDS VODs. (#731)
+ - gaminglive: Added support for VODs, patches by @kasper93 and @chhe. (#789, #808)
+ - picarto: Updated for service changes, patch by @FireDart. (#803)
+ - tv4play: Work around bad SSL implementation on Python 2. (#785)
+ - twitch: Use correct OAuth scopes, patch by @josephglanville. (#778)
+ - ustreamtv: Updated for service changes, patch by @trUSTssc. (#799)
+ - viasat: Fixed missing streams. (#750)
+ - viasat: Added play.tv3.lt to supported URLs. (#773)
+
+Streams:
+ - hds: Fixed issue with query parameters when building fragment URLs. (#786)
+
+
 Version 1.12.0 (2015-03-01)
 ---------------------------
 
