@@ -98,6 +98,9 @@ class Livestream(Plugin):
             if not swf_url.startswith("http"):
                 swf_url = "http://" + swf_url
 
+            # Work around broken SSL.
+            swf_url = swf_url.replace("https://", "http://")
+
             qualities = stream_info["qualities"]
             for bitrate, stream in self._parse_smil(play_url, swf_url):
                 name = "{0}k".format(bitrate / 1000)
