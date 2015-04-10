@@ -47,7 +47,9 @@ kanal5_9_11         - kanal5play.se      --    Yes   Requires rtmpdump with K-S-
                     - kanal11play.se
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
-livestream          livestream.com       Yes   --
+livestream          new.livestream.com   Yes   --
+media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS ar are supported.
+                    - streaming... [4]_
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
@@ -109,3 +111,4 @@ zdf_mediathek       zdf.de               Yes   Yes
 .. [1] streamingvideoprovider
 .. [2] streamingvideoprovider.co.uk
 .. [3] original.livestream.com
+.. [4] streaming.media.ccc.de
