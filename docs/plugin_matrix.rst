@@ -47,7 +47,7 @@ kanal5_9_11         - kanal5play.se      --    Yes   Requires rtmpdump with K-S-
                     - kanal11play.se
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
-livestream          new.livestream.com   Yes   --
+livestream          livestream.com       Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
@@ -55,7 +55,7 @@ nos                 nos.nl               Yes   Yes   Streams may be geo-restrict
 npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
-oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
+oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
 picarto             picarto.tv           Yes   --
 rtve                rtve.es              Yes   No
 seemeplay           seemeplay.ru         Yes   Yes
@@ -107,3 +107,4 @@ zdf_mediathek       zdf.de               Yes   Yes
 
 .. [1] streamingvideoprovider
 .. [2] streamingvideoprovider.co.uk
+.. [3] original.livestream.com

@@ -6,7 +6,7 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import AkamaiHDStream, HLSStream
 
-_url_re = re.compile("http(s)?://new.livestream.com/")
+_url_re = re.compile("http(s)?://(www\.)?livestream.com/")
 _stream_config_schema = validate.Schema({
     "event": {
         "stream_info": validate.any({
