@@ -1,3 +1,21 @@
+Version 1.12.2 (Under development)
+----------------------------------
+
+Bug fixes:
+ - hds: Don't modify request params when handling PVSWF. (#842)
+ - hls: Handle unpadded encryption IV's.
+ - Fixed regression in redirect resolver. (#816)
+
+Plugins:
+ - Added plugin for Kanal 5/9/11, patch by @tboss. (#815)
+ - Added plugin for Periscope.
+ - artetv: Updated for service changes.
+ - livestream: Updated for service changes.
+ - viasat: Added support for juicyplay.se.
+ - viasat: Fixed missing streams. (#822)
+ - youtube: Added support for /channel URLs. (#825)
+
+
 Version 1.12.1 (2015-03-22)
 ---------------------------
 
