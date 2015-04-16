@@ -10,6 +10,7 @@ Plugins:
  - Added plugin for Kanal 5/9/11, patch by @tboss. (#815)
  - Added plugin for Periscope.
  - artetv: Updated for service changes.
+ - hitbox: Fixed VOD support. (#856)
  - livestream: Updated for service changes.
  - viasat: Added support for juicyplay.se.
  - viasat: Fixed missing streams. (#822)
