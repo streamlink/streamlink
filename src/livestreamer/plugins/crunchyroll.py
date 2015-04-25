@@ -9,16 +9,16 @@ from livestreamer.stream import HLSStream
 
 API_URL = "https://api.crunchyroll.com/{0}.0.json"
 API_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (PLAYSTATION 3; 4.46)",
+    "User-Agent": "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; en_US)",
     "Host": "api.crunchyroll.com",
     "Accept-Encoding": "gzip, deflate",
     "Accept": "*/*",
     "Content-Type": "application/x-www-form-urlencoded"
 }
-API_VERSION = "1.0.1"
+API_VERSION = "2313.8"
 API_LOCALE = "enUS"
-API_ACCESS_TOKEN = "S7zg3vKx6tRZ0Sf"
-API_DEVICE_TYPE = "com.crunchyroll.ps3"
+API_ACCESS_TOKEN = "QWjz212GspMHH9h"
+API_DEVICE_TYPE = "com.crunchyroll.iphone"
 STREAM_WEIGHTS = {
     "low": 240,
     "mid": 420,
