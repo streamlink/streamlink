@@ -63,6 +63,7 @@ picarto             picarto.tv           Yes   --
 rtve                rtve.es              Yes   No
 seemeplay           seemeplay.ru         Yes   Yes
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
+ssh101              ssh101.com           Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
 streamlive          streamlive.to        Yes   --
