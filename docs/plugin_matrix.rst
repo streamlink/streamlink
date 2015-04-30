@@ -42,9 +42,6 @@ gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
-kanal5_9_11         - kanal5play.se      --    Yes   Requires rtmpdump with K-S-V patches.
-                    - kanal9play.se
-                    - kanal11play.se
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
@@ -61,6 +58,9 @@ oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are sup
 periscope           periscope.tv         Yes   --
 picarto             picarto.tv           Yes   --
 rtve                rtve.es              Yes   No
+sbsdiscovery        - kanal5play.se      --    Yes
+                    - kanal9play.se
+                    - kanal11play.se
 seemeplay           seemeplay.ru         Yes   Yes
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 ssh101              ssh101.com           Yes   No
