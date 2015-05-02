@@ -6,13 +6,14 @@ from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import StreamMapper, http, validate
 from livestreamer.stream import HLSStream, HTTPStream, RTMPStream
+from livestreamer.utils import absolute_url
 
 HLS_PLAYLIST_BASE = "http://www.hitbox.tv{0}"
 LIVE_API = "http://www.hitbox.tv/api/media/live/{0}?showHidden=true"
 PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
 SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
 SWF_URL = SWF_BASE + "flowplayer.commercial-3.2.16.swf"
-VOD_BASE_URL = "http://edge.bf.hitbox.tv/static/videos/vods"
+VOD_BASE_URL = "http://www.hitbox.tv/"
 
 _quality_re = re.compile("(\d+p)$")
 _url_re = re.compile("""
@@ -143,7 +144,14 @@ class Hitbox(Plugin):
         return chain.from_iterable(mappers)
 
     def _create_video_stream(self, cls, base_url, bitrate):
-        url = base_url + "/" + bitrate["url"]
+        url = absolute_url(base_url, bitrate["url"])
+        if bitrate["label"].lower() == "auto":
+            try:
+                return cls.parse_variant_playlist(self.session, url).items()
+            except IOError as err:
+                self.logger.warning("Failed to extract HLS streams: {0}", err)
+                return
+
         quality = self._get_quality(bitrate["label"])
         return quality, cls(self.session, url)
 

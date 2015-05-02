@@ -18,7 +18,8 @@ _url_re = re.compile("""
     (?:
         tv(3|6|8|10)play |
         viasat4play |
-        play.tv3
+        play.tv3 |
+        juicyplay
     )
     \.
     (?:
@@ -82,12 +83,12 @@ class Viasat(Plugin):
 
         mapper = StreamMapper(lambda pattern, video: re.search(pattern, video[1]))
         mapper.map(
-            r"/master\.m3u8",
+            r"/\w+\.m3u8",
             self._create_dynamic_streams,
             "HLS", HLSStream.parse_variant_playlist
         )
         mapper.map(
-            r"/manifest\.f4m",
+            r"/\w+\.f4m",
             self._create_dynamic_streams,
             "HDS", HDSStream.parse_manifest
         )

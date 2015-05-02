@@ -555,6 +555,7 @@ class HDSStream(Stream):
         key = "akamaihd-player:" + pvswf
         cached = cache.get(key)
 
+        request_params = deepcopy(request_params)
         headers = request_params.pop("headers", {})
         if cached:
             headers["If-Modified-Since"] = cached["modified"]

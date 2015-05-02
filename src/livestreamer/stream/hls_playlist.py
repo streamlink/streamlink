@@ -127,7 +127,11 @@ class M3U8Parser(object):
             return float(match.group("duration")), match.group("title")
 
     def parse_hex(self, value):
-        return unhexlify(value[2:])
+        value = value[2:]
+        if len(value) % 2:
+            value = "0" + value
+
+        return unhexlify(value)
 
     def parse_resolution(self, value):
         match = re.match("(\d+)x(\d+)", value)

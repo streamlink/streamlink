@@ -45,6 +45,8 @@ itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restrict
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
+media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS ar are supported.
+                    - streaming... [4]_
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
@@ -52,11 +54,16 @@ nos                 nos.nl               Yes   Yes   Streams may be geo-restrict
 npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
-oldlivestream       livestream.com       Yes   No    Only mobile streams are supported.
+oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
+periscope           periscope.tv         Yes   --
 picarto             picarto.tv           Yes   --
 rtve                rtve.es              Yes   No
+sbsdiscovery        - kanal5play.se      --    Yes
+                    - kanal9play.se
+                    - kanal11play.se
 seemeplay           seemeplay.ru         Yes   Yes
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
+ssh101              ssh101.com           Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
 streamlive          streamlive.to        Yes   --
@@ -92,6 +99,8 @@ viasat              - tv3play.se         Yes   Yes   Streams may be geo-restrict
                     - tv8play.se
                     - tv10play.se
                     - viasat4play.no
+                    - play.tv3.lt
+                    - juicyplay.se
 wattv               wat.tv               --    Yes
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
@@ -102,3 +111,5 @@ zdf_mediathek       zdf.de               Yes   Yes
 
 .. [1] streamingvideoprovider
 .. [2] streamingvideoprovider.co.uk
+.. [3] original.livestream.com
+.. [4] streaming.media.ccc.de

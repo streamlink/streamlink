@@ -6,7 +6,7 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import AkamaiHDStream, HLSStream
 
-_url_re = re.compile("http(s)?://new.livestream.com/")
+_url_re = re.compile("http(s)?://(www\.)?livestream.com/")
 _stream_config_schema = validate.Schema({
     "event": {
         "stream_info": validate.any({
@@ -97,6 +97,9 @@ class Livestream(Plugin):
             swf_url = info.get("viewerPlusSwfUrl") or info.get("hdPlayerSwfUrl")
             if not swf_url.startswith("http"):
                 swf_url = "http://" + swf_url
+
+            # Work around broken SSL.
+            swf_url = swf_url.replace("https://", "http://")
 
             qualities = stream_info["qualities"]
             for bitrate, stream in self._parse_smil(play_url, swf_url):

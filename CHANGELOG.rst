@@ -1,3 +1,25 @@
+Version 1.12.2 (2015-05-02)
+---------------------------
+
+Bug fixes:
+ - hds: Don't modify request params when handling PVSWF. (#842)
+ - hls: Handle unpadded encryption IV's.
+ - Fixed regression in redirect resolver. (#816)
+
+Plugins:
+ - Added plugin for media.ccc.de (media_ccc_de), patch by @meise.
+ - Added plugin for Kanal 5/9/11 (sbsdiscovery), patch by @tboss. (#815)
+ - Added plugin for Periscope (periscope).
+ - Added plugin for SSH101 (ssh101), patch by @Razier-23. (#869)
+ - artetv: Updated for service changes.
+ - crunchyroll: Updated for service changes. (#864, #865)
+ - hitbox: Fixed VOD support. (#856)
+ - livestream: Updated for service changes.
+ - viasat: Added support for juicyplay.se.
+ - viasat: Fixed missing streams. (#822)
+ - youtube: Added support for /channel URLs. (#825)
+
+
 Version 1.12.1 (2015-03-22)
 ---------------------------
 

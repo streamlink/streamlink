@@ -99,7 +99,7 @@ _url_re = re.compile("""
         )
         |
         (?:
-            /user/(?P<user>[^/?]+)
+            /(user|channel)/(?P<user>[^/?]+)
         )
     )
 """, re.VERBOSE)

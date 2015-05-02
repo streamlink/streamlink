@@ -5,7 +5,7 @@ from livestreamer.stream import HLSStream
 
 PLAYLIST_URL = "http://x{0}x.api.channel.livestream.com/3.0/playlist.m3u8"
 
-_url_re = re.compile("http(s)?://(www\.)?livestream.com/(?P<channel>[^&?/]+)")
+_url_re = re.compile("http(s)?://original.livestream.com/(?P<channel>[^&?/]+)")
 
 
 class OldLivestream(Plugin):

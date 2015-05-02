@@ -48,6 +48,10 @@ class HLSStreamWriter(SegmentedStreamWriter):
             self.key_uri = key.uri
 
         iv = key.iv or num_to_iv(sequence)
+
+        # Pad IV if needed
+        iv = b"\x00" * (16 - len(iv)) + iv
+
         return AES.new(self.key_data, AES.MODE_CBC, iv)
 
     def create_request_params(self, sequence):
