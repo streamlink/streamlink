@@ -7,10 +7,12 @@ Athanasios Oikonomou (@athoik)
 Brian Callahan (@ibara)
 Che (@chhe)
 Christopher Rosell (@chrippa)
+Daniel Meißner (@meise)
 Daniel Miranda (@danielkza)
 Daniel Wallace (@gtmanfred)
 David Arvelo (@darvelo)
 Dominik Dabrowski (@doda)
+Erik G (@tboss)
 Eric J (@wormeyman)
 Ethan Jones (@jonesz)
 Gaspard Jankowiak (@gapato)
@@ -43,8 +45,9 @@ Warnar Boekkooi (@boekkooi)
 @monkeyphysics
 @nixxquality
 @papplampe
-@unintended
+@Raziel-23
 @t0mm0
 @ToadKing
+@unintended
 @wolftankk
 @yeeeargh
