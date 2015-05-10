@@ -24,7 +24,7 @@ def decode_token(token):
     return token.replace("0m0", "")
 
 _schema = validate.Schema(
-    validate.transform(lambda s: s.split(";:mvnkey%")),
+    validate.transform(lambda s: s.split(";:mvnkey-")),
     validate.length(2),
     validate.union({
         "server": validate.all(
