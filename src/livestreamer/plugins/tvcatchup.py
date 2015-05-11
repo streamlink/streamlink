@@ -4,10 +4,8 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 
-SUCCESS_HTTP_CODES = (200,)
-
-STREAM_URL_FORMAT = "http://tvcatchup.com/stream.php?chan={0}"
-_url_re = re.compile("http://(?:www\.)?tvcatchup.com/watch/(?P<channel_id>[0-9]+)")
+_url_re = re.compile("http://(?:www\.)?tvcatchup.com/watch/\w+")
+_stream_re = re.compile(r"\"(?P<stream_url>http://.*m3u8.*clientKey=[^\"]*)\";")
 
 
 class TVCatchup(Plugin):
@@ -17,17 +15,17 @@ class TVCatchup(Plugin):
 
     def _get_streams(self):
         """
-        Finds the stream from tvcatchup, they only provide a single 480p stream per channel.
+        Finds the stream from tvcatchup, they only provide a single 720p stream per channel.
         """
-        match = _url_re.match(self.url).groupdict()
-        channel_id = match["channel_id"]
+        res = http.get(self.url)
 
-        res = http.get(STREAM_URL_FORMAT.format(channel_id))
+        match = _stream_re.search(res.text, re.IGNORECASE | re.MULTILINE)
 
-        stream_url = http.json(res).get('url')
+        if match:
+            stream_url = match.groupdict()["stream_url"]
 
-        if stream_url:
-            return {"480p": HLSStream(self.session, stream_url)}
+            if stream_url:
+                return {"720p": HLSStream(self.session, stream_url)}
 
 
 __plugin__ = TVCatchup
