@@ -30,7 +30,7 @@ QUALITY_WEIGHTS = {
 _url_re = re.compile(r"""
     http(s)?://
     (?:
-        (?P<subdomain>\w+)
+        (?P<subdomain>[\w\-]+)
         \.
     )?
     twitch.tv
