@@ -20,6 +20,7 @@ ard_live            live.daserste.de     Yes   --    Streams may be geo-restrict
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
 azubutv             azubu.tv             Yes   No
+beam                beam.pro             Yes   No 
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bambuser            bambuser.com         Yes   Yes
 chaturbate          chaturbate.com       Yes   No
