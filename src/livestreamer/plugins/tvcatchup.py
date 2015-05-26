@@ -25,7 +25,7 @@ class TVCatchup(Plugin):
             stream_url = match.groupdict()["stream_url"]
 
             if stream_url:
-                return {"720p": HLSStream(self.session, stream_url)}
+                return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
 __plugin__ = TVCatchup
