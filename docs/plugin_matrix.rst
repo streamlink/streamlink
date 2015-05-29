@@ -23,6 +23,7 @@ azubutv             azubu.tv             Yes   No
 beam                beam.pro             Yes   No 
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bambuser            bambuser.com         Yes   Yes
+bliptv              blip.tv              --    Yes
 chaturbate          chaturbate.com       Yes   No
 connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
