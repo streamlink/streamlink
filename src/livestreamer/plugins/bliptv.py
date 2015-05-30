@@ -6,14 +6,23 @@ from livestreamer.stream import HTTPStream
 
 _url_re = re.compile("(http(s)?://)?blip.tv/.*-(?P<videoid>\d+)")
 VIDEO_GET_URL = 'http://player.blip.tv/file/get/{0}'
-SINGLE_VIDEO_URL = '.*\.((mp4)|(mov)|(m4v)|(flv))'
+SINGLE_VIDEO_URL = re.compile('.*\.((mp4)|(mov)|(m4v)|(flv))')
+
+QUALITY_WEIGHTS = {
+    "ultra": 1080,
+    "high": 720,
+    "medium": 480,
+    "low": 240,
+}
+
+QUALITY_WEIGHTS_ULTRA = re.compile('ultra+_(?P<level>\d+)')
 
 
 def get_quality_dict(quality_list):
     quality_list.sort()
     quality_dict = {}
     i = 0
-    for bitrate in quality_list:
+    for i, bitrate in enumerate(quality_list):
         if i == 0:
             quality_dict['%i' % bitrate] = 'low'
         elif i == 1:
@@ -24,7 +33,6 @@ def get_quality_dict(quality_list):
             quality_dict['%i' % bitrate] = 'ultra'
         else:
             quality_dict['%i' % bitrate] = 'ultra+_%i' % (i-3)
-        i += 1
     return quality_dict
 
 
@@ -33,28 +41,33 @@ class bliptv(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
+    @classmethod
+    def stream_weight(cls, key):
+        match_ultra = QUALITY_WEIGHTS_ULTRA.match(key)
+        if match_ultra:
+            ultra_level = int(match_ultra.group('level'))
+            return 1080 * (ultra_level + 1), "bliptv"
+        weight = QUALITY_WEIGHTS.get(key)
+        if weight:
+            return weight, "bliptv"
+        return Plugin.stream_weight(key)
+
     def _get_streams(self):
         match = _url_re.match(self.url)
-        videoid = match.group("videoid")
-        try:
-            get_return = http.get(VIDEO_GET_URL.format(videoid))
-        except:
-            raise PluginError('Can not get video information from blip.tv for id %s' % videoid)
+        videoid = match.group('videoid')
+        get_return = http.get(VIDEO_GET_URL.format(videoid))
         json_decode = http.json(get_return)
         streams = {}
         quality_list = []
         for stream in json_decode:
-            if re.compile(SINGLE_VIDEO_URL).match(stream['direct_url']):
+            if SINGLE_VIDEO_URL.match(stream['direct_url']):
                 quality_list.append(int(stream['video_bitrate']))
         if len(quality_list) == 0:
-            raise PluginError('No videos on blip.tv found for id %s' % videoid)
+            return
         quality_dict = get_quality_dict(quality_list)
         for stream in json_decode:
-            if re.compile(SINGLE_VIDEO_URL).match(stream['direct_url']):
+            if SINGLE_VIDEO_URL.match(stream['direct_url']):
                 streams[quality_dict[stream['video_bitrate']]] = HTTPStream(self.session, stream['direct_url'])
-        quality_list.sort()
-        streams['worst'] = streams[quality_dict['%i' % quality_list[0]]]
-        streams['best'] = streams[quality_dict['%i' % quality_list[-1]]]
         return streams
 
 __plugin__ = bliptv
