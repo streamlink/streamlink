@@ -18,7 +18,8 @@ HTTP_HEADERS = {
                    "(KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36")
 }
 
-_url_re = re.compile("http(s)?://(\w+\.)?azubu.tv/[^/]+")
+_url_re = re.compile("http(s)?://(\w+\.)?azubu.tv/(?P<domain>\w+)")
+CHANNEL_INFO_URL = "http://api.azubu.tv/public/channel/%s"
 
 _viewerexp_schema = validate.Schema(
     validate.attr({
@@ -162,10 +163,13 @@ class AzubuTV(Plugin):
                 return self._get_player_params(retries - 1)
 
         player_id = match.group(1)
-        match = re.search("<!-- live on -->", res.text)
-        if not match:
-            match = re.search("<div id=\"channel_live\">", res.text)
-        is_live = not not match
+
+        #get live status from api
+        match = _url_re.match(self.url);
+        domain = match.group('domain');
+        channel_info = http.get(CHANNEL_INFO_URL % str(domain))
+        info = http.json(channel_info)
+        is_live = info['data']['is_live']
 
         return key, video_player, player_id, is_live
 
