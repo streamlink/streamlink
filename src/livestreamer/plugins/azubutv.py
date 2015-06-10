@@ -19,7 +19,7 @@ HTTP_HEADERS = {
 }
 
 _url_re = re.compile("http(s)?://(\w+\.)?azubu.tv/(?P<domain>\w+)")
-CHANNEL_INFO_URL = "http://api.azubu.tv/public/channel/%s"
+CHANNEL_INFO_URL = "http://api.azubu.tv/public/channel/%s/player"
 
 _viewerexp_schema = validate.Schema(
     validate.attr({
@@ -123,8 +123,10 @@ class AzubuTV(Plugin):
         return AMFPacket.deserialize(BytesIO(res.content))
 
     def _get_player_params(self, retries=5):
+        match = _url_re.match(self.url);
+        domain = match.group('domain');
         try:
-            res = http.get(self.url, headers=HTTP_HEADERS)
+            res = http.get(CHANNEL_INFO_URL % str(domain))
         except PluginError as err:
             # The server sometimes gives us 404 for no reason
             if "404" in str(err) and retries:
@@ -132,44 +134,20 @@ class AzubuTV(Plugin):
                 return self._get_player_params(retries - 1)
             else:
                 raise
+        channel_info = http.json(res)
+        channel_info = channel_info['data']
 
-        match = re.search("<param name=\"playerKey\" value=\"(.+)\" />", res.text)
-        if not match:
-            # The HTML returned sometimes doesn't contain the parameters
-            if not retries:
-                raise PluginError("Missing key 'playerKey' in player params")
-            else:
-                sleep(1)
-                return self._get_player_params(retries - 1)
+        key = channel_info['player_key'];
 
-        key = match.group(1)
-        match = re.search("AZUBU.setVar\(\"firstVideoRefId\", \"(.+)\"\);", res.text)
-        if not match:
-            # The HTML returned sometimes doesn't contain the parameters
-            if not retries:
-                raise PluginError("Unable to find video reference")
-            else:
-                sleep(1)
-                return self._get_player_params(retries - 1)
+        is_live = channel_info['is_live'];
 
-        video_player = "ref:" + match.group(1)
-        match = re.search("<param name=\"playerID\" value=\"(\d+)\" />", res.text)
-        if not match:
-            # The HTML returned sometimes doesn't contain the parameters
-            if not retries:
-                raise PluginError("Missing key 'playerID' in player params")
-            else:
-                sleep(1)
-                return self._get_player_params(retries - 1)
+        stream_video = channel_info['stream_video']
+        if stream_video:
+            video_player = stream_video['reference_id']
+        else:
+            is_live = False
 
-        player_id = match.group(1)
-
-        #get live status from api
-        match = _url_re.match(self.url);
-        domain = match.group('domain');
-        channel_info = http.get(CHANNEL_INFO_URL % str(domain))
-        info = http.json(channel_info)
-        is_live = info['data']['is_live']
+        player_id = channel_info['player_id']
 
         return key, video_player, player_id, is_live
 
