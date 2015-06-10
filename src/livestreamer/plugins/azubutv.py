@@ -143,7 +143,7 @@ class AzubuTV(Plugin):
 
         stream_video = channel_info['stream_video']
         if stream_video:
-            video_player = stream_video['reference_id']
+            video_player = "ref:" + stream_video['reference_id']
         else:
             is_live = False
 
