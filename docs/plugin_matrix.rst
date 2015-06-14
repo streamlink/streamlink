@@ -60,6 +60,7 @@ nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restrict
 oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
 periscope           periscope.tv         Yes   --
 picarto             picarto.tv           Yes   --
+ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 rtve                rtve.es              Yes   No
 sbsdiscovery        - kanal5play.se      --    Yes
                     - kanal9play.se
