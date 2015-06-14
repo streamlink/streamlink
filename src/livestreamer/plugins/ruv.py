@@ -74,11 +74,9 @@ class Ruv(Plugin):
         live_match = _live_url_re.match(url)
 
         if live_match:
-            print("live")
             self.live = True
             self.channel_path = live_match.group("channel_path")
         else:
-            print("sarpur")
             self.live = False
 
     def _get_live_streams(self):
@@ -140,7 +138,12 @@ class Ruv(Plugin):
         if not date:
             date = ""
 
-        streams["source"] = RTMPStream(self.session, {
+        if extension == "mp3":
+            key = "audio"
+        else:
+            key = "576p"
+
+        streams[key] = RTMPStream(self.session, {
             "rtmp": RTMP_SARPURINN_URL.format(status, date, token, extension),
             "pageUrl": self.url,
             "live": True
