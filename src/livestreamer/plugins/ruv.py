@@ -1,6 +1,6 @@
 import re
 
-from livestreamer.plugin import Plugin, PluginError
+from livestreamer.plugin import Plugin
 from livestreamer.stream import RTMPStream
 
 from livestreamer.plugin.api import http
