@@ -61,6 +61,7 @@ _id_map =\
     "rondo": "ras3"
 }
 
+
 class Ruv(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -90,9 +91,6 @@ class Ruv(Plugin):
                 "pageUrl": self.url,
                 "live": True
             })
-
-            streams["best"] = streams["720p"]
-
             streams["480p"] = RTMPStream(self.session, {
                 "rtmp": RTMP_LIVE_URL.format(stream_id, 2),
                 "pageUrl": self.url,
@@ -108,18 +106,12 @@ class Ruv(Plugin):
                 "pageUrl": self.url,
                 "live": True
             })
-
-            streams["worst"] = streams["240p"]
-
         else:
             streams["audio"] = RTMPStream(self.session, {
                 "rtmp": RTMP_LIVE_URL.format(stream_id, 1),
                 "pageUrl": self.url,
                 "live": True
             })
-
-            streams["best"] = streams["audio"]
-            streams["worst"] = streams["audio"]
 
         return streams
 
