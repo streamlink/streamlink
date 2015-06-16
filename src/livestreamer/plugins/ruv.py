@@ -1,12 +1,19 @@
+"""Plugin for RÚV, the Icelandic national television."""
+
 import re
 
 from livestreamer.plugin import Plugin
-from livestreamer.stream import RTMPStream
+from livestreamer.stream import RTMPStream, HLSStream
 
 from livestreamer.plugin.api import http
 
 RTMP_LIVE_URL = "rtmp://ruv{0}livefs.fplive.net/ruv{0}live-live/stream{1}"
 RTMP_SARPURINN_URL = "rtmp://sipvodfs.fplive.net/sipvod/{0}/{1}{2}.{3}"
+
+HLS_RUV_LIVE_URL = "http://ruvruv-live.hls.adaptive.level3.net/ruv/ruv/index/stream{0}.m3u8"
+HLS_RADIO_LIVE_URL = "http://sip-live.hds.adaptive.level3.net/hls-live/ruv-{0}/_definst_/live/stream1.m3u8"
+HLS_SARPURINN_URL = "http://sip-ruv-vod.dcp.adaptive.level3.net/{0}/{1}{2}.{3}.m3u8"
+
 
 _live_url_re = re.compile(r"""^(?:https?://)?(?:www\.)?ruv\.is/
                                 (?P<channel_path>
@@ -37,6 +44,7 @@ _sarpurinn_url_re = re.compile(r"""^(?:https?://)?(?:www\.)?ruv\.is/sarpurinn/
                                     [0-9]+
                                     /?
                                     """, re.VERBOSE)
+
 _rtmp_url_re = re.compile(r"""rtmp://sipvodfs\.fplive.net/sipvod/
                                 (?P<status>
                                     lokad|
@@ -51,8 +59,7 @@ _rtmp_url_re = re.compile(r"""rtmp://sipvodfs\.fplive.net/sipvod/
                                     mp3
                                 )""", re.VERBOSE)
 
-_id_map =\
-{
+_id_map = {
     "ruv": "ruv",
     "ras1": "ras1",
     "ras-1": "ras1",
@@ -86,32 +93,36 @@ class Ruv(Plugin):
         streams = {}
 
         if stream_id == "ruv":
-            streams["720p"] = RTMPStream(self.session, {
-                "rtmp": RTMP_LIVE_URL.format(stream_id, 1),
-                "pageUrl": self.url,
-                "live": True
-            })
-            streams["480p"] = RTMPStream(self.session, {
-                "rtmp": RTMP_LIVE_URL.format(stream_id, 2),
-                "pageUrl": self.url,
-                "live": True
-            })
-            streams["360p"] = RTMPStream(self.session, {
-                "rtmp": RTMP_LIVE_URL.format(stream_id, 3),
-                "pageUrl": self.url,
-                "live": True
-            })
-            streams["240p"] = RTMPStream(self.session, {
-                "rtmp": RTMP_LIVE_URL.format(stream_id, 4),
-                "pageUrl": self.url,
-                "live": True
-            })
+            qualities_rtmp = ["720p", "480p", "360p", "240p"]
+
+            for i, quality in enumerate(qualities_rtmp):
+                streams[quality] = RTMPStream(
+                    self.session,
+                    {
+                        "rtmp": RTMP_LIVE_URL.format(stream_id, i+1),
+                        "pageUrl": self.url,
+                        "live": True
+                    }
+                )
+
+            qualities_hls = ["240p_hls", "360p_hls", "480p_hls", "720p_hls"]
+            for i, quality_hls in enumerate(qualities_hls):
+                streams[quality_hls] = HLSStream(
+                    self.session,
+                    HLS_RUV_LIVE_URL.format(i+1)
+                )
+
         else:
             streams["audio"] = RTMPStream(self.session, {
                 "rtmp": RTMP_LIVE_URL.format(stream_id, 1),
                 "pageUrl": self.url,
                 "live": True
             })
+
+            streams["audio_hls"] = HLSStream(
+                self.session,
+                HLS_RADIO_LIVE_URL.format(stream_id)
+            )
 
         return streams
 
@@ -134,6 +145,12 @@ class Ruv(Plugin):
             key = "audio"
         else:
             key = "576p"
+
+            # HLS on Sarpurinn is currently only available on videos
+            streams[key+"_hls"] = HLSStream(
+                self.session,
+                HLS_SARPURINN_URL.format(status, date, token, extension)
+            )
 
         streams[key] = RTMPStream(self.session, {
             "rtmp": RTMP_SARPURINN_URL.format(status, date, token, extension),
