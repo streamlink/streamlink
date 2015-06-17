@@ -1,4 +1,4 @@
-"""Plugin for RÚV, the Icelandic national television."""
+"""Plugin for RUV, the Icelandic national television."""
 
 import re
 
@@ -90,13 +90,11 @@ class Ruv(Plugin):
     def _get_live_streams(self):
         stream_id = _id_map[self.channel_path]
 
-        streams = {}
-
         if stream_id == "ruv":
             qualities_rtmp = ["720p", "480p", "360p", "240p"]
 
             for i, quality in enumerate(qualities_rtmp):
-                streams[quality] = RTMPStream(
+                yield quality, RTMPStream(
                     self.session,
                     {
                         "rtmp": RTMP_LIVE_URL.format(stream_id, i+1),
@@ -105,34 +103,31 @@ class Ruv(Plugin):
                     }
                 )
 
-            qualities_hls = ["240p_hls", "360p_hls", "480p_hls", "720p_hls"]
+            qualities_hls = ["240p", "360p", "480p", "720p"]
             for i, quality_hls in enumerate(qualities_hls):
-                streams[quality_hls] = HLSStream(
+                yield quality_hls, HLSStream(
                     self.session,
                     HLS_RUV_LIVE_URL.format(i+1)
                 )
 
         else:
-            streams["audio"] = RTMPStream(self.session, {
+            yield "audio", RTMPStream(self.session, {
                 "rtmp": RTMP_LIVE_URL.format(stream_id, 1),
                 "pageUrl": self.url,
                 "live": True
             })
 
-            streams["audio_hls"] = HLSStream(
+            yield "audio", HLSStream(
                 self.session,
                 HLS_RADIO_LIVE_URL.format(stream_id)
             )
-
-        return streams
 
     def _get_sarpurinn_streams(self):
         res = http.get(self.url)
         match = _rtmp_url_re.search(res.text)
 
-        streams = {}
         if not match:
-            return streams
+            yield
 
         token = match.group("id")
         status = match.group("status")
@@ -147,18 +142,16 @@ class Ruv(Plugin):
             key = "576p"
 
             # HLS on Sarpurinn is currently only available on videos
-            streams[key+"_hls"] = HLSStream(
+            yield key, HLSStream(
                 self.session,
                 HLS_SARPURINN_URL.format(status, date, token, extension)
             )
 
-        streams[key] = RTMPStream(self.session, {
+        yield key, RTMPStream(self.session, {
             "rtmp": RTMP_SARPURINN_URL.format(status, date, token, extension),
             "pageUrl": self.url,
             "live": True
         })
-
-        return streams
 
     def _get_streams(self):
         if self.live:
