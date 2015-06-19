@@ -58,7 +58,7 @@ npo                 npo.nl               Yes   Yes   Streams may be geo-restrict
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
 oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
-periscope           periscope.tv         Yes   --
+periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
 rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
