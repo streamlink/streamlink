@@ -2,11 +2,10 @@ import re
 from livestreamer.compat import urlparse
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
-from livestreamer.plugin.api.utils import parse_xml
 from livestreamer.stream import HDSStream, HLSStream, RTMPStream
 
 
-VIDEO_INFO_URL = "http://www.expressen.se/Handlers/WebTvHandler.ashx?id={0}";
+STREAMS_INFO_URL = "http://www.expressen.se/Handlers/WebTvHandler.ashx?id={0}";
 
 _url_re = re.compile("http(s)?://(?:\w+.)?\.expressen\.se")
 _meta_xmlurl_id_re = re.compile('<meta.+xmlUrl=http%3a%2f%2fwww.expressen.se%2fHandlers%2fWebTvHandler.ashx%3fid%3d([0-9]*)" />')
@@ -24,14 +23,14 @@ class Expressen(Plugin):
         if not match:
             return;
         
-        xml_info_url = VIDEO_INFO_URL.format(match.group(1))
+        xml_info_url = STREAMS_INFO_URL.format(match.group(1))
         video_info_res = http.get(xml_info_url)
-        parsed_info = parse_xml(video_info_res.text)
-        
-        streams = { }
+        parsed_info = http.xml(video_info_res)
         
         live_el = parsed_info.find("live");
         live = live_el is not None and live_el.text == "1"
+        
+        streams = { }
         
         hdsurl_el = parsed_info.find("hdsurl");
         if hdsurl_el is not None and hdsurl_el.text is not None:
@@ -60,12 +59,12 @@ class Expressen(Plugin):
                 if text in parsed_urls:
                     continue
                 
-                mobileurls_el.add(text)
+                parsed_urls.add(text)
                 url = urlparse(text)
                 
                 if url[0] == "http" and url[2].endswith("m3u8"):
                     streams.update(HLSStream.parse_variant_playlist(self.session, text))
-        
+                    
         return streams
 
 __plugin__ = Expressen
