@@ -46,7 +46,7 @@ class Expressen(Plugin):
                     params = {
                         "rtmp": vurl_el.text,
                     }
-                    streams.update({name: RTMPStream(self.session, params)})
+                    streams[name] = RTMPStream(self.session, params)
                     
         parsed_urls = set()
         mobileurls_el = parsed_info.find("mobileurls");
@@ -64,7 +64,7 @@ class Expressen(Plugin):
                 
                 if url[0] == "http" and url[2].endswith("m3u8"):
                     streams.update(HLSStream.parse_variant_playlist(self.session, text))
-                    
+        
         return streams
 
 __plugin__ = Expressen
