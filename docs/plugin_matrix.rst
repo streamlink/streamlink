@@ -36,6 +36,7 @@ douyutv             douyutv.com          Yes   --
 dmcloud             api.dmcloud.net      Yes   --
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 euronews            euronews.com         Yes   No
+expressen           expressen.se         Yes   Yes
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 furstream           furstre.am           Yes   No
