@@ -19,8 +19,6 @@ class LivecodingTV(Plugin):
         match = _rtmp_re.search(res.text)
         rtmp_url = match.group(0)
 
-        print("GOT MATCH: {0}".format(rtmp_url))
-
         if not match:
             return
 
