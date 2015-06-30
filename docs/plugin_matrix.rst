@@ -20,7 +20,7 @@ ard_live            live.daserste.de     Yes   --    Streams may be geo-restrict
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
 azubutv             azubu.tv             Yes   No
-beam                beam.pro             Yes   No 
+beam                beam.pro             Yes   No
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bambuser            bambuser.com         Yes   Yes
 bliptv              blip.tv              --    Yes
@@ -48,6 +48,7 @@ itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restrict
 letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
+livecoding          livecoding.tv        Yes   --
 media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS ar are supported.
                     - streaming... [4]_
 meerkat             meerkatapp.co        Yes   --
