@@ -4,8 +4,9 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
 _url_re = re.compile("http://(?:www\.)?tvcatchup.com/watch/\w+")
-_stream_re = re.compile(r"\"(?P<stream_url>http://.*m3u8.*clientKey=[^\"]*)\";")
+_stream_re = re.compile(r"\"(?P<stream_url>https?://.*m3u8\?.*clientKey=[^\"]*)\";")
 
 
 class TVCatchup(Plugin):
@@ -15,8 +16,9 @@ class TVCatchup(Plugin):
 
     def _get_streams(self):
         """
-        Finds the stream from tvcatchup, they only provide a single 720p stream per channel.
+        Finds the streams from tvcatchup.com.
         """
+        http.headers.update({"User-Agent": USER_AGENT})
         res = http.get(self.url)
 
         match = _stream_re.search(res.text, re.IGNORECASE | re.MULTILINE)
