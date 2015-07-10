@@ -7,8 +7,10 @@ from livestreamer.stream import RTMPStream
 
 
 VIEW_LIVE_API_URL = "http://api.afreeca.tv/live/view_live.php"
+VIEW_LIVE_API_URL_TW = "http://api.afreecatv.com.tw/live/view_live.php"
 
-_url_re = re.compile("http(s)?://(\w+\.)?afreeca.tv/(?P<channel>[\w\-_]+)")
+_url_re = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw|afreeca.tv)/(?P<channel>[\w\-_]+)")
+_url_re_tw = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw)/(?P<channel>[\w\-_]+)")
 _flashvars_re = re.compile('<param name="flashvars" value="([^"]+)" />')
 
 _flashvars_schema = validate.Schema(
@@ -27,7 +29,6 @@ _view_live_schema = validate.Schema(
     {
         "channel": {
             "strm": [{
-                "brt": validate.text,
                 "bps": validate.text,
                 "purl": validate.url(scheme="rtmp")
             }]
@@ -57,7 +58,12 @@ class AfreecaTV(Plugin):
             "adok": "",
             "bno": ""
         }
-        res = http.get(VIEW_LIVE_API_URL, params=params)
+        
+        if re.search(_url_re_tw, self.url):
+            res = http.get(VIEW_LIVE_API_URL_TW, params=params)
+        else:
+            res = http.get(VIEW_LIVE_API_URL, params=params)
+            
         streams = http.json(res, schema=_view_live_schema)
 
         for stream in streams:
