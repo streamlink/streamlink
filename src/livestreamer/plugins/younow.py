@@ -19,6 +19,7 @@ def getStreamURL(channel):
 
     if not any("media" in s for s in streamerinfo):
         print ("User offline or invalid")
+        return
     else:
         streamdata = streamerinfo['media']
         #print(streamdata)
@@ -37,12 +38,14 @@ class younow(Plugin):
         channel = match.group("channel")
 
         streamurl = getStreamURL(channel)
-
+        if not streamurl:
+            return
         streams = {}
         streams["live"] = RTMPStream(self.session, {
             "rtmp": streamurl,
             "live": True
         })
+        
         return streams
 
 
