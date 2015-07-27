@@ -8,6 +8,7 @@ Supports:
 import re
 import json
 
+from livestreamer.compat import quote
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HTTPStream, HLSStream
@@ -23,8 +24,32 @@ class NPO(Plugin):
         return _url_re.match(url)
 
     def get_token(self):
-        token = http.get('http://ida.omroep.nl/npoplayer/i.js', headers=HTTP_HEADERS).content
-        return re.compile('token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
+        url = 'http://ida.omroep.nl/npoplayer/i.js?s={}'.format(quote(self.url))
+        token = http.get(url, headers=HTTP_HEADERS).content
+        token = re.compile('token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
+
+        # Great the have a ['en','ok','t'].reverse() decurity option in npoplayer.js
+        secured = list(token)
+        token = list(token)
+
+        first = -1
+        second = -1
+        for i, c in enumerate(token):
+            if c.isdigit() and 4 < i < len(token):
+                if first == -1:
+                    first = i
+                else:
+                    second = i
+                    break
+
+        if first == -1:
+            first = 12
+        if second == -1:
+            second = 13
+
+        secured[first] = token[second]
+        secured[second] = token[first]
+        return ''.join(secured)
 
     def _get_meta(self):
         html = http.get('http://www.npo.nl/live/{}'.format(self.npo_id), headers=HTTP_HEADERS).content
@@ -34,8 +59,12 @@ class NPO(Plugin):
         return json.loads(meta)
 
     def _get_vod_streams(self):
-        url = 'http://ida.omroep.nl/odi/?prid={}&puboptions=adaptive,h264_bb,h264_std,h264_sb&adaptive=no&part=1&token={}'.format(self.npo_id, self.get_token())
-        data = http.get(url, headers=HTTP_HEADERS).json()
+        url = 'http://ida.omroep.nl/odi/?prid={}&puboptions=adaptive,h264_bb,h264_sb,h264_std&adaptive=no&part=1&token={}'\
+            .format(quote(self.npo_id), quote(self.get_token()))
+        res = http.get(url, headers=HTTP_HEADERS);
+
+        data = res.json()
+
         streams = {}
         stream = http.get(data['streams'][0].replace('jsonp', 'json'), headers=HTTP_HEADERS).json()
         streams['best'] = streams['high'] = HTTPStream(self.session, stream['url'])
