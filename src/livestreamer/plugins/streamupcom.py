@@ -6,7 +6,7 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
 RTMP_URL = "rtmp://{0}/app/{1}"
-CHANNEL_DETAILS_URI = "https://api.streamup.com/1.0/channels/{0}?access_token={1}"
+CHANNEL_DETAILS_URI = "https://api.streamup.com/v1/channels/{0}?access_token={1}"
 REDIRECT_SERVICE_URI = "https://lancer.streamup.com/api/redirect/{0}"
 
 _url_re = re.compile("http(s)?://(\w+\.)?streamup.com/(?P<channel>[^/?]+)")
