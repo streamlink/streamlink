@@ -938,6 +938,16 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
+    "--crunchyroll-locale",
+    metavar="LOCALE",
+    help="""
+    Indicate which locale to use for Crunchyroll subtitles.
+
+    The locale is formatted as [language_code][country_code], by default
+    enUS is used.
+    """
+)
+plugin.add_argument(
     "--livestation-email",
     metavar="EMAIL",
     help="""

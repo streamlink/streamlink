@@ -785,6 +785,10 @@ def setup_plugin_options():
         livestreamer.set_plugin_option("crunchyroll", "purge_credentials",
                                        args.crunchyroll_purge_credentials)
 
+    if args.crunchyroll_locale:
+        livestreamer.set_plugin_option("crunchyroll", "locale",
+                                       args.crunchyroll_locale)
+
     if args.livestation_email:
         livestreamer.set_plugin_option("livestation", "email",
                                        args.livestation_email)
