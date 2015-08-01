@@ -8,15 +8,15 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HLSStream
 
 API_URL = "https://api.crunchyroll.com/{0}.0.json"
+API_DEFAULT_LOCALE = "en_US"
+API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {})"
 API_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; en_US)",
     "Host": "api.crunchyroll.com",
     "Accept-Encoding": "gzip, deflate",
     "Accept": "*/*",
     "Content-Type": "application/x-www-form-urlencoded"
 }
 API_VERSION = "2313.8"
-API_DEFAULT_LOCALE = "enUS"
 API_ACCESS_TOKEN = "QWjz212GspMHH9h"
 API_DEVICE_TYPE = "com.crunchyroll.iphone"
 STREAM_WEIGHTS = {
@@ -120,14 +120,18 @@ class CrunchyrollAPI(object):
         params = dict(params)
         params.update({
             "version": API_VERSION,
-            "locale": self.locale,
+            "locale": self.locale.replace('_', ''),
         })
 
         if self.session_id:
             params["session_id"] = self.session_id
 
+        # Headers
+        headers = dict(API_HEADERS)
+        headers['User-Agent'] = API_USER_AGENT.format(self.locale)
+
         # The certificate used by Crunchyroll cannot be verified in some environments.
-        res = http.get(url, params=params, headers=API_HEADERS, verify=False)
+        res = http.get(url, params=params, headers=headers, verify=False)
         json_res = http.json(res, schema=_api_schema)
 
         if json_res["error"]:

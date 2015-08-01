@@ -943,8 +943,8 @@ plugin.add_argument(
     help="""
     Indicate which locale to use for Crunchyroll subtitles.
 
-    The locale is formatted as [language_code][country_code], by default
-    enUS is used.
+    The locale is formatted as [language_code]_[country_code], by default
+    en_US is used.
     """
 )
 plugin.add_argument(
