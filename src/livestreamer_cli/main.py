@@ -915,5 +915,12 @@ def main():
                 console.msg("Interrupted! Exiting...")
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
-    else:
+    if args.help:
         parser.print_help()
+    else:
+        usage = parser.format_usage()
+        msg = (
+            "{usage}\nUse -h/--help to see the available options or "
+            "read the manual at http://docs.livestreamer.io/"
+        ).format(usage=usage)
+        console.msg(msg)
