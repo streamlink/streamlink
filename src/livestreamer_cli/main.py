@@ -915,7 +915,7 @@ def main():
                 console.msg("Interrupted! Exiting...")
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
-    if args.help:
+    elif args.help:
         parser.print_help()
     else:
         usage = parser.format_usage()
