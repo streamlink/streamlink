@@ -26,7 +26,7 @@ from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
-args = console = livestreamer = plugin = stream_fd = None
+args = console = livestreamer = plugin = stream_fd = output = None
 
 
 def check_file_output(filename, force):
@@ -123,6 +123,7 @@ def iter_http_requests(server, player):
 
 def output_stream_http(plugin, initial_streams, external=False, port=0):
     """Continuously output the stream over HTTP."""
+    global output
 
     if not external:
         if not args.player:
@@ -131,9 +132,9 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "executable with --player.")
 
         server = create_http_server()
-        player = PlayerOutput(args.player, args=args.player_args,
-                              filename=server.url,
-                              quiet=not args.verbose_player)
+        player = output = PlayerOutput(args.player, args=args.player_args,
+                                       filename=server.url,
+                                       quiet=not args.verbose_player)
 
         try:
             console.logger.info("Starting player: {0}", args.player)
@@ -192,15 +193,16 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
 
 def output_stream_passthrough(stream):
     """Prepares a filename to be passed to the player."""
+    global output
 
     filename = '"{0}"'.format(stream_to_url(stream))
-    out = PlayerOutput(args.player, args=args.player_args,
-                       filename=filename, call=True,
-                       quiet=not args.verbose_player)
+    output = PlayerOutput(args.player, args=args.player_args,
+                          filename=filename, call=True,
+                          quiet=not args.verbose_player)
 
     try:
         console.logger.info("Starting player: {0}", args.player)
-        out.open()
+        output.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", args.player, err)
         return False
@@ -239,6 +241,7 @@ def open_stream(stream):
 
 def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
+    global output
 
     for i in range(args.retry_open):
         try:
@@ -897,6 +900,10 @@ def main():
             setup_plugin_options()
             handle_url()
         except KeyboardInterrupt:
+            # Close output
+            if output:
+                output.close()
+
             # Make sure current stream gets properly cleaned up
             if stream_fd:
                 console.msg("Interrupted! Closing currently open stream...")
