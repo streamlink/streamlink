@@ -439,11 +439,10 @@ def format_valid_streams(plugin, streams):
     delimiter = ", "
     validstreams = []
 
-    for name, stream in sorted(streams.items()):
+    for name, stream in sorted(streams.items(),
+                               key=lambda stream: plugin.stream_weight(stream[0])):
         if name in STREAM_SYNONYMS:
             continue
-
-        weight = plugin.stream_weight(name)
 
         synonymfilter = lambda n: stream is streams[n] and n is not name
         synonyms = list(filter(synonymfilter, streams.keys()))
@@ -452,12 +451,9 @@ def format_valid_streams(plugin, streams):
             joined = delimiter.join(synonyms)
             name = "{0} ({1})".format(name, joined)
 
-        validstreams.append((name, weight))
+        validstreams.append(name)
 
-    validstreams.sort(key=lambda stream: stream[1])
-
-
-    return delimiter.join(stream[0] for stream in validstreams)
+    return delimiter.join(validstreams)
 
 
 def handle_url():
