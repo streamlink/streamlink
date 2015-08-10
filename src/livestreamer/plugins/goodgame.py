@@ -12,7 +12,7 @@ QUALITIES = {
     "240p": "_240"
 }
 
-_url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)/")
+_url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(
     "iframe frameborder=\"0\" width=\"100%\" height=\"100%\" src=\"http://goodgame.ru/player(\d)?\?(\d+)\""
 )
