@@ -16,6 +16,9 @@ _url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(
     "iframe frameborder=\"0\" width=\"100%\" height=\"100%\" src=\"http://goodgame.ru/player(\d)?\?(\d+)\""
 )
+_ddos_re = re.compile(
+    "document.cookie=\"(__DDOS_[^;]+)"
+)
 
 class GoodGame(Plugin):
     @classmethod
@@ -28,7 +31,16 @@ class GoodGame(Plugin):
             return True
 
     def _get_streams(self):
-        res = http.get(self.url)
+        headers = {
+            "Referer": self.url
+        }
+        res = http.get(self.url, headers=headers)
+
+        match = _ddos_re.search(res.text)
+        if (match):
+            headers["Cookie"] = match.group(1)
+            res = http.get(self.url, headers=headers)
+
         match = _stream_re.search(res.text)
         if not match:
             return
