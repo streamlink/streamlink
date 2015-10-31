@@ -49,7 +49,7 @@ letontv             leton.tv             Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 livecoding          livecoding.tv        Yes   --
-media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS ar are supported.
+media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
                     - streaming... [4]_
 meerkat             meerkatapp.co        Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
