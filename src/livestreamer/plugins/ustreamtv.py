@@ -92,7 +92,8 @@ _stream_schema = validate.Schema(
         )
     },
     {
-        "name": validate.text
+        "name": validate.text,
+        "varnishUrl": validate.text
     })
 )
 _channel_schema = validate.Schema({
