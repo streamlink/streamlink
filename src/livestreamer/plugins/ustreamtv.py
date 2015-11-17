@@ -71,25 +71,30 @@ _recorded_schema = validate.Schema({
         }]
     )
 })
-_stream_schema = validate.Schema({
-    "name": validate.text,
-    "url": validate.text,
-    "streams": validate.all(
-        _amf3_array,
-        [{
-            "chunkId": validate.any(int, float),
-            "chunkRange": {validate.text: validate.text},
-            "chunkTime": validate.any(int, float),
-            "offset": validate.any(int, float),
-            "offsetInMs": validate.any(int, float),
-            "streamName": validate.text,
-            validate.optional("bitrate"): validate.any(int, float),
-            validate.optional("height"): validate.any(int, float),
-            validate.optional("description"): validate.text,
-            validate.optional("isTranscoded"): bool
-        }],
-    )
-})
+_stream_schema = validate.Schema(
+    validate.any({
+        "name": validate.text,
+        "url": validate.text,
+        "streams": validate.all(
+            _amf3_array,
+            [{
+                "chunkId": validate.any(int, float),
+                "chunkRange": {validate.text: validate.text},
+                "chunkTime": validate.any(int, float),
+                "offset": validate.any(int, float),
+                "offsetInMs": validate.any(int, float),
+                "streamName": validate.text,
+                validate.optional("bitrate"): validate.any(int, float),
+                validate.optional("height"): validate.any(int, float),
+                validate.optional("description"): validate.text,
+                validate.optional("isTranscoded"): bool
+            }],
+        )
+    },
+    {
+        "name": validate.text
+    })
+)
 _channel_schema = validate.Schema({
     validate.optional("stream"): validate.any(
         validate.all(
@@ -502,6 +507,8 @@ class UStreamTV(Plugin):
 
         streams = {}
         for provider in channel["stream"]:
+            if provider["name"] == u"uhs_akamai":  # not heavily tested, but got a stream working
+                continue
             provider_url = provider["url"]
             provider_name = provider["name"]
             for stream_index, stream_info in enumerate(provider["streams"]):
