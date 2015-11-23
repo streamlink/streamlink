@@ -10,7 +10,7 @@ COOKIE_PARAMS = (
     "preferred-player-live=hlslink"
 )
 
-_url_re = re.compile("http://(tv|radio).nrk.no/")
+_url_re = re.compile("https?://(tv|radio).nrk.no/")
 _media_url_re = re.compile("""
     <div[^>]*?id="playerelement"[^>]+
     data-media="(?P<url>[^"]+)"
@@ -37,6 +37,7 @@ class NRK(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
+        # Get the stream type from the url (tv/radio).
         stream_type = _url_re.match(self.url).group(1).upper()
         cookie = {
             "NRK_PLAYER_SETTINGS_{0}".format(stream_type): COOKIE_PARAMS
