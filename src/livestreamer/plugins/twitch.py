@@ -133,6 +133,7 @@ class UsherService(object):
             "type": "any",
             "allow_source": "true",
             "allow_audio_only": "true",
+            "allow_spectre": "false",
         }
         params.update(extra_params)
 
