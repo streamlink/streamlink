@@ -25,7 +25,7 @@ class NPO(Plugin):
 
     def get_token(self):
         url = 'http://ida.omroep.nl/npoplayer/i.js?s={}'.format(quote(self.url))
-        token = http.get(url, headers=HTTP_HEADERS).content
+        token = http.get(url, headers=HTTP_HEADERS).text
         token = re.compile('token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
 
         # Great the have a ['en','ok','t'].reverse() decurity option in npoplayer.js
@@ -52,9 +52,9 @@ class NPO(Plugin):
         return ''.join(secured)
 
     def _get_meta(self):
-        html = http.get('http://www.npo.nl/live/{}'.format(self.npo_id), headers=HTTP_HEADERS).content
+        html = http.get('http://www.npo.nl/live/{}'.format(self.npo_id), headers=HTTP_HEADERS).text
         program_id = re.compile('data-prid="(.*?)"', re.DOTALL + re.IGNORECASE).search(html).group(1)
-        meta = http.get('http://e.omroep.nl/metadata/{}'.format(program_id), headers=HTTP_HEADERS).content
+        meta = http.get('http://e.omroep.nl/metadata/{}'.format(program_id), headers=HTTP_HEADERS).text
         meta = re.compile('({.*})', re.DOTALL + re.IGNORECASE).search(meta).group(1)
         return json.loads(meta)
 
@@ -72,11 +72,11 @@ class NPO(Plugin):
 
     def _get_live_streams(self):
         meta = self._get_meta()
-        stream = filter(lambda x: x['type'] == 'hls', meta['streams'])[0]['url']
+        stream = [x for x in meta['streams'] if x['type'] == 'hls'][0]['url']
 
         url = 'http://ida.omroep.nl/aapi/?type=jsonp&stream={}&token={}'.format(stream, self.get_token())
         streamdata = http.get(url, headers=HTTP_HEADERS).json()
-        deeplink = http.get(streamdata['stream'], headers=HTTP_HEADERS).content
+        deeplink = http.get(streamdata['stream'], headers=HTTP_HEADERS).text
         deeplink = re.compile('"(.*?)"', re.DOTALL + re.IGNORECASE).search(deeplink).group(1)
         playlist_url = deeplink.replace("\\/", "/")
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
