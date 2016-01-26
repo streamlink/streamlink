@@ -13,5 +13,5 @@ cd dist/
 cp *zip livestreamer-latest-win32.zip
 
 for zip in *zip; do
-	travis-artifacts upload --path "$zip" --target-path ""
+	~/bin/artifacts upload --target-paths "/" "$zip"
 done

@@ -1,19 +1,20 @@
 language: python
 sudo: false
 python:
-- 2.6
-- 2.7
-- 3.3
+  - 2.6
+  - 2.7
+  - 3.3
 script: python setup.py test
+
 install:
-- travis_retry pip install requests argparse --use-mirrors
-- travis_retry gem install --version 0.8.9 faraday
-- travis_retry gem install travis-artifacts
+  - travis_retry pip install requests argparse --use-mirrors
+  - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
+
 after_success:
-- sh .travis/build-win32.sh
+  - sh .travis/build-win32.sh
+
 env:
   global:
-  - ARTIFACTS_AWS_REGION=us-east-1
-  - ARTIFACTS_S3_BUCKET=livestreamer-builds
-  - secure: hCNU8Oaw944R+pbHiPFputtgXgC6B02m2UM+7flIatoTnUYTZbwGSkVCxF12s5vSuI4Zg01/54qSuCe4sNxloPmqQ50oxKaxFkq8LlidOjbGw6hq7u+qDvD5+E2PfRwcfDNnso9NbuRSP8TMk9/WRXeBD/SrbgnbZ/1o/LQEKBQ=
-  - secure: YUltQXSDTBIP0iDbU9NiLv8FP3Xr/TT/JYuuyw8JfRzOcjM0PP+qKXyR9bc/gDpSj2uoLDaKfTQvPGFCYdrd+UuTZmlvV56VYQ2/tG0XXifvINJOyESWBLvQfhySuvC/IDpMhz0yEKI8btKHurlvIdvv/9HKlxVL/EIU3C2apiQ=
+    - ARTIFACTS_S3_REGION=eu-west-1
+    - ARTIFACTS_S3_BUCKET=livestreamer-builds
+
