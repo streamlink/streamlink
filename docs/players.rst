@@ -48,7 +48,7 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 .. [3] Some versions of VLC might be unable to use the stdin pipe and
        prints the error message::
 
-            VLC is unable to open the MRL 'fd://0'
+       VLC is unable to open the MRL 'fd://0'
 
        Use one of the other transport methods instead to work around this.
 
