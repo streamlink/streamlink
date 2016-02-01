@@ -24,7 +24,8 @@ _videoid_re = re.compile ("<link rel='shortlink' href='http://www.dplay.se/\?p=(
 # ------------------
 _api_schema = validate.Schema (
     {
-        "data": validate.all (
+        "data": validate.any (
+            None,
             [{
                 "video_metadata_drmid_playready": validate.text,
                 "video_metadata_drmid_flashaccess": validate.text,
@@ -35,7 +36,7 @@ _api_schema = validate.Schema (
                                 "value": validate.text
                             })
                     })
-            }]),
+            }])
     }
 )
 _media_schema = validate.Schema (
@@ -64,11 +65,11 @@ class Dplay (Plugin):
 
     # Returns true if stream is playable (i.e. non-premium & not drm-protected)
     def _is_playable (self, data):
-        if data["data"][0]["video_metadata_drmid_playready"] != "none":
+        if data['data'][0]['video_metadata_drmid_playready'] != 'none':
             return False
-        if data["data"][0]["video_metadata_drmid_playready"] != "none":
+        if data['data'][0]['video_metadata_drmid_playready'] != 'none':
             return False
-        if data["data"][0]["content_info"]["package_label"]["value"] == "Premium":
+        if data['data'][0]['content_info']['package_label']['value'] == 'Premium':
             return False
         return True
 
@@ -96,11 +97,13 @@ class Dplay (Plugin):
             return {}   # Return if shortlink/video ID not found
         videoId = match.group ('id')
         
-        # Get data from general API to validate stream is playable
+        # Get data from general API to validate that stream is playable
         res = http.get (GENERAL_API_URL.format (videoId), headers=hdr)
         data = http.json (res, schema=_api_schema)
+        if not data['data']:        # <-- May be better to log a proper error
+            return {}
         if not self._is_playable (data):
-            return {}   # <-- May be better to log an error
+            return {}
         
         # Get geo data, validate and form cookie consisting of
         # geo data + expiry timestamp (current time + 1 hour)
@@ -113,11 +116,15 @@ class Dplay (Plugin):
         hdr['Cookie'] = cookie
         
         # Get available streams using stream API
-        res = http.get (STREAM_API_URL.format (videoId, 'hds'), headers=hdr)
+        res = http.get (STREAM_API_URL.format (videoId, 'hls'), headers=hdr, verify=False)
         data = http.json (res, schema=_media_schema)
+        media = data.copy ()
+        res = http.get (STREAM_API_URL.format (videoId, 'hds'), headers=hdr, verify=False)
+        data = http.json (res, schema=_media_schema)
+        media.update (data)
         
-        # Reformat response data into list with format and url
-        videos = [{'format': k, 'url': data[k]} for k in data]
+        # Reformat data into list with stream format and url
+        streams = [{'format': k, 'url': media[k]} for k in media]
         
         # Create mapper for supported stream types (HLS/HDS)
         mapper = StreamMapper (cmp=lambda type, video: video['format'] == type)
@@ -125,6 +132,6 @@ class Dplay (Plugin):
         mapper.map ('hds', self._create_streams, HDSStream.parse_manifest)
         
         # Feed stream data to mapper and return all streams found
-        return mapper (videos)
+        return mapper (streams)
 
 __plugin__ = Dplay
