@@ -6,12 +6,17 @@ python:
   - 3.3
 script: python setup.py test
 
+addons:
+  apt:
+    packages:
+      - nsis
+
 install:
   - travis_retry pip install requests argparse --use-mirrors
   - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 after_success:
-  - sh .travis/build-win32.sh
+  - bash .travis/build-win32.sh
 
 env:
   global:
