@@ -12,6 +12,7 @@ from livestreamer.stream import HLSStream, HDSStream
 GENERAL_API_URL = 'http://www.dplay.se/api/v2/ajax/videos?video_id={0}'
 STREAM_API_URL = 'https://secure.dplay.se/secure/api/v2/user/authorization/stream/{0}?stream_type={1}'
 GEO_DATA_URL = 'http://geo.dplay.se/geo.js'
+SWF_URL = 'http://player.dplay.se/4.3.5/swf/AkamaiAdvancedFlowplayerProvider_v3.8.swf'
 
 # User-agent to use for http requests
 USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.82 Safari/537.36'
@@ -78,7 +79,7 @@ class Dplay (Plugin):
         try:
             if stream['format'] == 'hds':
                 streams = parser (self.session, stream['url'],
-                                  params={'hdcore': '3.8.0'})
+                                  params={'hdcore': '3.8.0'}, pvswf=SWF_URL)
             else:
                 streams = parser (self.session, stream['url'])
             return streams.items ()
