@@ -8,9 +8,11 @@ from livestreamer.stream import RTMPStream
 
 VIEW_LIVE_API_URL = "http://api.afreeca.tv/live/view_live.php"
 VIEW_LIVE_API_URL_TW = "http://api.afreecatv.com.tw/live/view_live.php"
+VIEW_LIVE_API_URL_JP = "http://api.afreecatv.jp/live/view_live.php"
 
-_url_re = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw|afreeca.tv)/(?P<channel>[\w\-_]+)")
+_url_re = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw|afreeca.tv|afreecatv.jp)/(?P<channel>[\w\-_]+)")
 _url_re_tw = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw)/(?P<channel>[\w\-_]+)")
+_url_re_jp = re.compile("http(s)?://(\w+\.)?(afreecatv.jp)/(?P<channel>[\w\-_]+)")
 _flashvars_re = re.compile('<param name="flashvars" value="([^"]+)" />')
 
 _flashvars_schema = validate.Schema(
@@ -61,6 +63,8 @@ class AfreecaTV(Plugin):
         
         if re.search(_url_re_tw, self.url):
             res = http.get(VIEW_LIVE_API_URL_TW, params=params)
+        elif re.search(_url_re_jp, self.url):
+            res = http.get(VIEW_LIVE_API_URL_JP, params=params)
         else:
             res = http.get(VIEW_LIVE_API_URL, params=params)
             
