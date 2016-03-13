@@ -35,7 +35,10 @@ disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restrict
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dmcloud             api.dmcloud.net      Yes   --
-dplay               dplay.se             --    Yes
+dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
+                                                     Only non-premium streams currently supported.
+                    - dplay.no
+                    - dplay.dk
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 euronews            euronews.com         Yes   No
 expressen           expressen.se         Yes   Yes
