@@ -56,6 +56,7 @@ livestream          new.livestream.com   Yes   --
 livecoding          livecoding.tv        Yes   --
 media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
                     - streaming... [4]_
+mediaklikk          mediaklikk.hu        Yes   Yes   Streams may be geo-restricted to Hungary.
 meerkat             meerkatapp.co        Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mlgtv               mlg.tv               Yes   --
