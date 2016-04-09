@@ -23,6 +23,7 @@ _stream_config_schema = validate.Schema({
         }, None)
     },
     validate.optional("viewerPlusSwfUrl"): validate.url(scheme="http"),
+    validate.optional("lsPlayerSwfUrl"): validate.text,
     validate.optional("hdPlayerSwfUrl"): validate.text
 })
 _smil_schema = validate.Schema(validate.union({
@@ -94,7 +95,7 @@ class Livestream(Plugin):
 
         play_url = stream_info.get("play_url")
         if play_url:
-            swf_url = info.get("viewerPlusSwfUrl") or info.get("hdPlayerSwfUrl")
+            swf_url = info.get("hdPlayerSwfUrl") or info.get("lsPlayerSwfUrl") or info.get("viewerPlusSwfUrl")
             if not swf_url.startswith("http"):
                 swf_url = "http://" + swf_url
 
