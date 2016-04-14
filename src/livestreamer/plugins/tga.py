@@ -5,12 +5,15 @@ import re
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.plugin.api.utils import parse_query
-from livestreamer.stream import HLSStream, HTTPStream
+from livestreamer.stream import HLSStream, HTTPStream, RTMPStream
 
 CHANNEL_INFO_URL = "http://api.plu.cn/tga/streams/%s"
-STREAM_INFO_URL = "http://info.zb.qq.com/?cnlid=%d&cmd=2&stream=%d&system=1&sdtfrom=113"
+QQ_STREAM_INFO_URL = "http://info.zb.qq.com/?cnlid=%d&cmd=2&stream=%d&system=1&sdtfrom=113"
+PLU_STREAM_INFO_URL = "http://star.api.plu.cn/live/GetLiveUrl?roomId=%d"
 
-_url_re = re.compile("http://star\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9]+)");
+_quality_re = re.compile("\d+x(\d+)$")
+_url_re = re.compile("http://star\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9]+)")
+
 _channel_schema = validate.Schema(
     {
         "data" : validate.any(None, {
@@ -24,10 +27,22 @@ _channel_schema = validate.Schema(
         })
     },
     validate.get("data")
-);
-_qq_schema = validate.Schema({
-    validate.optional("playurl"): validate.url(scheme="http")   
-},
+)
+
+_plu_schema = validate.Schema(
+    {
+        "urls": [{
+            "securityUrl": validate.url(scheme=validate.any("rtmp", "http")),
+            "resolution": validate.text,
+            "ext": validate.text
+        }]
+    }
+)
+
+_qq_schema = validate.Schema(
+    {
+        validate.optional("playurl"): validate.url(scheme="http")
+    },
     validate.get("playurl")
 )
 
@@ -48,38 +63,52 @@ class Tga(Plugin):
 
         return Plugin.stream_weight(stream)
 
+    def _get_quality(self, label):
+        match = _quality_re.search(label)
+        if match:
+            return match.group(1) + "p"
+        else:
+            return "live"
+
     def _get_channel_id(self, domain):
         channel_info = http.get(CHANNEL_INFO_URL % str(domain))
         info = http.json(channel_info, schema=_channel_schema)
-        if info is None:
-            return False
-        cnid = info['channel']['vid']
-        if cnid <= 0:
-            return False
 
-        return cnid
+        return info['channel']['vid'], info['channel']['id']
 
-    def _get_qq_stream_url(self, cnid, weight = 1):
-        qq_stream_url = http.get(STREAM_INFO_URL % (int(cnid), int(weight)));
-        qq_info = http.json(qq_stream_url, schema=_qq_schema)
+    def _get_qq_streams(self, vid):
+        res = http.get(QQ_STREAM_INFO_URL % (vid, 1))
+        info = http.json(res, schema=_qq_schema)
+        yield "live", HTTPStream(self.session, info)
 
-        return qq_info;
+        res = http.get(QQ_STREAM_INFO_URL % (vid, 2))
+        info = http.json(res, schema=_qq_schema)
+        yield "live_http", HLSStream(self.session, info)
+
+    def _get_plu_streams(self, cid):
+        res = http.get(PLU_STREAM_INFO_URL % cid)
+        info = http.json(res, schema=_plu_schema)
+        for source in info["urls"]:
+            quality = self._get_quality(source["resolution"])
+            if source["ext"] == "m3u8":
+                yield quality, HLSStream(self.session, source["securityUrl"])
+            elif source["ext"] == "flv":
+                yield quality, HTTPStream(self.session, source["securityUrl"])
+            elif source["ext"] == "rtmp":
+                yield quality, RTMPStream(self.session, {
+                    "rtmp":source["securityUrl"],
+                    "live":True
+                })
 
     def _get_streams(self):
         match = _url_re.match(self.url);
         domain = match.group('domain')
         
-        cnid = self._get_channel_id(domain);
+        vid, cid = self._get_channel_id(domain);
 
-        if cnid == False:
-            return;
-
-        flash_stream = HTTPStream(self.session, self._get_qq_stream_url(cnid, 1))
-        if flash_stream:
-            yield "live", flash_stream
-
-        mobile_stream = HLSStream(self.session, self._get_qq_stream_url(cnid, 2))
-        if mobile_stream:
-            yield "live_http", mobile_stream
+        if vid == 0:
+            return self._get_plu_streams(cid)
+        else:
+            return self._get_qq_streams(vid)
 
 __plugin__ = Tga
