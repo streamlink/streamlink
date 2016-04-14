@@ -73,6 +73,8 @@ class Tga(Plugin):
     def _get_channel_id(self, domain):
         channel_info = http.get(CHANNEL_INFO_URL % str(domain))
         info = http.json(channel_info, schema=_channel_schema)
+        if info is None:
+            return 0, 0
 
         return info['channel']['vid'], info['channel']['id']
 
@@ -106,9 +108,9 @@ class Tga(Plugin):
         
         vid, cid = self._get_channel_id(domain);
 
-        if vid == 0:
-            return self._get_plu_streams(cid)
-        else:
+        if vid != 0:
             return self._get_qq_streams(vid)
+        elif cid != 0:
+            return self._get_plu_streams(cid)
 
 __plugin__ = Tga
