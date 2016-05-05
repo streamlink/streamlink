@@ -51,19 +51,36 @@ class pandatv(Plugin):
         url = ROOM_API + channel
         res = http.get(url)
         data = http.json(res, schema=_room_schema)
-        if type(data) is not types.DictionaryType or data['videoinfo']['status'] != "2":
+        if not isinstance(data, dict):
+            self.logger.error("Please Check PandaTV Room API")
+            return
+    
+        videoinfo = data.get('videoinfo')
+
+        if not videoinfo or not videoinfo.get('status'):
+            self.logger.error("Please Check PandaTV Room API")
+            return
+    
+        if videoinfo.get('status') != '2':
+            self.logger.info("Channel offline now!")
             return
 
         streams = {}
-        plflag = data['videoinfo']['plflag'].split('_')[1]
-        room_key = data['videoinfo']['room_key']
+        plflag = videoinfo.get('plflag')
+        if not plflag or not '_' in plflag:
+            self.logger.error("Please Check PandaTV Room API")
+            return
+        plflag = plflag.split('_')[1]
+        room_key = videoinfo.get('room_key')
 
         # SD(Super high Definition) has higher quality than HD(High Definition) which
         # conflict with existing code, use ehq and hq instead.
-        if data['videoinfo']['stream_addr']['SD'] == '1':
+        stream_addr = videoinfo.get('stream_addr')
+    
+        if stream_addr and stream_addr.get('SD') == '1':
             streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag, room_key))
 
-        if data['videoinfo']['stream_addr']['HD'] == '1':
+        if stream_addr and stream_addr.get('HD') == '1':
             streams['hq'] = HTTPStream(self.session, HD_URL_PATTERN.format(plflag, room_key))
 
         return streams
