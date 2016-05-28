@@ -12,7 +12,7 @@ _url_re = re.compile(r"""
 """, re.VERBOSE)
 
 _channel_casing_re = re.compile(r"""
-    <script>placeStreamChannel\('(?P<channel>[^']+)',[^,]+,[^,]+,'(?P<visibility>[^']+)'\);</script>
+    <script>placeStreamChannelFlash\('(?P<channel>[^']+)',[^,]+,[^,]+,'(?P<visibility>[^']+)',[^,]+\);</script>
 """, re.VERBOSE)
 
 
