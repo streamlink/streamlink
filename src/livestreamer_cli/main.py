@@ -532,7 +532,7 @@ def authenticate_twitch_oauth():
        access to their Twitch account."""
 
     client_id = "ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
-    redirect_uri = "http://livestreamer.tanuki.se/en/develop/twitch_oauth.html"
+    redirect_uri = "http://docs.livestreamer.io/twitch_oauth.html"
     url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
            "?response_type=token&client_id={0}&redirect_uri="
            "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
