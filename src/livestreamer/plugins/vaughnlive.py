@@ -4,7 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
-INFO_URL = "http://mvn.vaughnsoft.net/video/edge/{domain}_{channel}"
+INFO_URL = "http://mvn.vaughnsoft.net/video/edge/mvn-{domain}_{channel}"
 
 DOMAIN_MAP = {
     "breakers": "btv",
