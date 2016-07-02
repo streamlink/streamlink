@@ -113,6 +113,7 @@ viasat              - tv3play.se         Yes   Yes   Streams may be geo-restrict
                     - viasat4play.no
                     - play.tv3.lt
                     - juicyplay.se
+vidio               vidio.com            Yes   Yes
 wattv               wat.tv               --    Yes
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
