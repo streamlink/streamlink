@@ -16,7 +16,7 @@ CHANNEL_RESULT_ERROR = 0
 CHANNEL_RESULT_OK = 1
 
 
-_url_re = re.compile("http(s)?://(\w+\.)?afreeca.com/(?P<username>\w+)")
+_url_re = re.compile("http(s)?://(\w+\.)?afreeca(tv)?.com/(?P<username>\w+)/\d+")
 
 _channel_schema = validate.Schema(
     {
@@ -49,10 +49,10 @@ class AfreecaTV(Plugin):
         headers = {
             "Referer": self.url
         }
-        data = {
+        params = {
             "uid": username
         }
-        res = http.post(CHANNEL_INFO_URL, data=data, headers=headers)
+        res = http.get(CHANNEL_INFO_URL, params=params, headers=headers)
 
         return http.json(res, schema=_channel_schema)
 
