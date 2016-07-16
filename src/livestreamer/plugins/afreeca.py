@@ -4,7 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream, HLSStream
 
-CHANNEL_INFO_URL = "http://live.afreeca.com:8057/api/get_broad_state_list.php"
+CHANNEL_INFO_URL = "http://live.afreecatv.com:8057/api/get_broad_state_list.php"
 KEEP_ALIVE_URL = "{server}/stream_keepalive.html"
 STREAM_INFO_URLS = {
     "rtmp": "http://sessionmanager01.afreeca.tv:6060/broad_stream_assign.html",
