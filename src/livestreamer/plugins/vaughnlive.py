@@ -5,7 +5,8 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
-INFO_URL = "http://mvn.vaughnsoft.net/video/edge/mnv-{domain}_{channel}_{version}_{ms}-{ms}-{random}"
+PLAYER_VERSION = "0.1.1.751"
+INFO_URL = "http://mvn.vaughnsoft.net/video/edge/mnv-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
 
 DOMAIN_MAP = {
     "breakers": "btv",
@@ -21,11 +22,8 @@ _url_re = re.compile("""
 
 _swf_player_re = re.compile('swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"')
 
-def decode_token(token):
-    return token.replace("0m0", "")
-
 _schema = validate.Schema(
-    validate.transform(lambda s: s.split(";:mvnkey-")),
+    validate.transform(lambda s: s.split(";")),
     validate.length(2),
     validate.union({
         "server": validate.all(
@@ -35,7 +33,8 @@ _schema = validate.Schema(
         "token": validate.all(
             validate.get(1),
             validate.text,
-            validate.transform(decode_token)
+            validate.startswith(":mvnkey-"),
+            validate.transform(lambda s: s[len(":mvnkey-"):])
         )
     })
 )
