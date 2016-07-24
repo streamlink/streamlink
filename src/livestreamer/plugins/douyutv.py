@@ -102,6 +102,36 @@ class Douyutv(Plugin):
 
         url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         stream = HTTPStream(self.session, url)
-        yield "source", stream
+        yield "best", stream
+
+        data = {
+            "cdn": "ws",
+            "rate": "2",
+            "tt": ts,
+            "did": did,
+            "sign": sign
+        }
+
+        res = http.post(LAPI_URL.format(channel), data=data)
+        room = http.json(res, schema=_lapi_schema)
+
+        url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
+        stream = HTTPStream(self.session, url)
+        yield "middle", stream
+
+        data = {
+            "cdn": "ws",
+            "rate": "1",
+            "tt": ts,
+            "did": did,
+            "sign": sign
+        }
+
+        res = http.post(LAPI_URL.format(channel), data=data)
+        room = http.json(res, schema=_lapi_schema)
+
+        url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
+        stream = HTTPStream(self.session, url)
+        yield "low", stream
 
 __plugin__ = Douyutv
