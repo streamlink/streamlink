@@ -9,9 +9,8 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HTTPStream
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36"
-SWFAPI_URL = "http://www.douyu.com/swf_api/room/{0}?cdn=&nofan=yes&_t={1}&sign={2}"
+MAPI_URL = "http://m.douyu.com/html5/live?roomId={0}"
 LAPI_URL = "http://www.douyu.com/lapi/live/getPlay/{0}"
-SWFAPI_SECRET = "bLFlashflowlad92"
 LAPI_SECRET = "A12Svb&%1UUmf@hC"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
@@ -53,13 +52,8 @@ class Douyutv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        ts = int(time.time() / 60)
-        did = ''.join([random.choice(string.ascii_uppercase + string.digits) for n in range(32)])
-        swf_sign = hashlib.md5(("{0}{1}{2}".format(channel, SWFAPI_SECRET, ts)).encode("utf-8")).hexdigest()
-        l_sign = hashlib.md5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8")).hexdigest()
-
         http.headers.update({"User-Agent": USER_AGENT})
-        res = http.get(SWFAPI_URL.format(channel, ts, swf_sign))
+        res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
             return
@@ -67,12 +61,16 @@ class Douyutv(Plugin):
         if room["show_status"] != SHOW_STATUS_ONLINE:
             return
 
+        ts = int(time.time() / 60)
+        did = ''.join([random.choice(string.ascii_uppercase + string.digits) for n in range(32)])
+        sign = hashlib.md5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8")).hexdigest()
+
         data = {
             "cdn": "ws",
             "rate": "0",
             "tt": ts,
             "did": did,
-            "sign": l_sign
+            "sign": sign
         }
 
         res = http.post(LAPI_URL.format(channel), data=data)
