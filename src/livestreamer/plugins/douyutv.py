@@ -68,7 +68,7 @@ class Douyutv(Plugin):
             return
 
         data = {
-            "cdn": "tct",
+            "cdn": "ws",
             "rate": "0",
             "tt": ts,
             "did": did,
