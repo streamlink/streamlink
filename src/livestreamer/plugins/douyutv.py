@@ -54,7 +54,7 @@ class Douyutv(Plugin):
         channel = match.group("channel")
 
         ts = int(time.time() / 60)
-        did = ''.join([random.choice(string.ascii_uppercase + string.digits) for n in xrange(32)])
+        did = ''.join([random.choice(string.ascii_uppercase + string.digits) for n in range(32)])
         swf_sign = hashlib.md5(("{0}{1}{2}".format(channel, SWFAPI_SECRET, ts)).encode("utf-8")).hexdigest()
         l_sign = hashlib.md5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8")).hexdigest()
 
