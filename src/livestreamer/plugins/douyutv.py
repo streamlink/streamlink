@@ -6,6 +6,7 @@ import string
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
+from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36"
@@ -19,6 +20,27 @@ _url_re = re.compile("""
     http(s)?://(www\.)?douyu.com
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
+
+_json_re = re.compile(r"var\s\$ROOM\s=\s({.+?});")
+
+_room_id_schema = validate.Schema(
+    validate.all(
+        validate.transform(_json_re.search),
+        validate.any(
+            None,
+            validate.all(
+                validate.get(1),
+                validate.transform(parse_json),
+                {
+                    "room_id": validate.any(
+                        validate.text,
+                        validate.transform(int)
+                    )
+                }
+            )
+        )
+    )
+)
 
 _room_schema = validate.Schema(
     {
@@ -53,6 +75,8 @@ class Douyutv(Plugin):
         channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
+        room_id = http.get(self.url, schema=_room_id_schema)
+        channel = room_id["room_id"]
         res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
