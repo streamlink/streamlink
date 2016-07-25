@@ -15,6 +15,11 @@ LAPI_URL = "http://www.douyu.com/lapi/live/getPlay/{0}"
 LAPI_SECRET = "A12Svb&%1UUmf@hC"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
+STREAM_WEIGHTS = {
+    "low": 540,
+    "middle": 720,
+    "source": 1080
+}
 
 _url_re = re.compile("""
     http(s)?://(www\.)?douyu.com
@@ -70,6 +75,13 @@ class Douyutv(Plugin):
     def can_handle_url(self, url):
         return _url_re.match(url)
 
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream in STREAM_WEIGHTS:
+            return STREAM_WEIGHTS[stream], "douyutv"
+
+        return Plugin.stream_weight(stream)
+
     def _get_streams(self):
         match = _url_re.match(self.url)
         channel = match.group("channel")
@@ -102,7 +114,7 @@ class Douyutv(Plugin):
 
         url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         stream = HTTPStream(self.session, url)
-        yield "best", stream
+        yield "source", stream
 
         data = {
             "cdn": "ws",
