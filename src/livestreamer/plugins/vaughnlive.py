@@ -5,7 +5,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream
 
-PLAYER_VERSION = "0.1.1.751"
+PLAYER_VERSION = "0.1.1.759"
 INFO_URL = "http://mvn.vaughnsoft.net/video/edge/mnv-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
 
 DOMAIN_MAP = {
@@ -24,7 +24,7 @@ _swf_player_re = re.compile('swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"'
 
 _schema = validate.Schema(
     validate.transform(lambda s: s.split(";")),
-    validate.length(2),
+    validate.length(3),
     validate.union({
         "server": validate.all(
             validate.get(0),
@@ -35,6 +35,10 @@ _schema = validate.Schema(
             validate.text,
             validate.startswith(":mvnkey-"),
             validate.transform(lambda s: s[len(":mvnkey-"):])
+        ),
+        "ingest": validate.all(
+            validate.get(2),
+            validate.text
         )
     })
 )
@@ -59,10 +63,20 @@ class VaughnLive(Plugin):
         params["ms"] = random.randint(0, 999)
         params["random"] = random.random()
         info = http.get(INFO_URL.format(**params), schema=_schema)
+        print(info)
+
+        app = "live"
+        if info["server"] in ["198.255.17.18:1337", "198.255.17.66:1337"]:
+            if info["ingest"] == "SJC":
+                app = "live-sjc"
+            elif info["ingest"] == "NYC":
+                app = "live-nyc"
+            elif info["ingest"] == "ORD":
+                app = "live-ord"
 
         stream = RTMPStream(self.session, {
             "rtmp": "rtmp://{0}/live".format(info["server"]),
-            "app": "live?{0}".format(info["token"]),
+            "app": "{0}?{1}".format(app, info["token"]),
             "swfVfy": swfUrl,
             "pageUrl": self.url,
             "live": True,
