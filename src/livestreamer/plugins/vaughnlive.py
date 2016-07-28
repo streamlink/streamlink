@@ -63,7 +63,6 @@ class VaughnLive(Plugin):
         params["ms"] = random.randint(0, 999)
         params["random"] = random.random()
         info = http.get(INFO_URL.format(**params), schema=_schema)
-        print(info)
 
         app = "live"
         if info["server"] in ["198.255.17.18:1337", "198.255.17.66:1337"]:
