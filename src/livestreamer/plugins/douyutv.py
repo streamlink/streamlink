@@ -26,7 +26,7 @@ _url_re = re.compile("""
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_json_re = re.compile(r"var\s\$ROOM\s=\s({.+?});")
+_json_re = re.compile(r"var\s*\$ROOM\s*=\s*({.+?});")
 
 _room_id_schema = validate.Schema(
     validate.all(
