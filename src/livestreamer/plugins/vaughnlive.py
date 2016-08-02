@@ -57,8 +57,9 @@ class VaughnLive(Plugin):
         swfUrl = "http://vaughnlive.tv" + match.group(1)
 
         match = _url_re.match(self.url)
-        params = match.groupdict()
-        params["domain"] = DOMAIN_MAP.get(params["domain"], params["domain"])
+        params = {}
+        params["channel"] = match.group("channel").lower()
+        params["domain"] = DOMAIN_MAP.get(match.group("domain"), match.group("domain"))
         params["version"] = PLAYER_VERSION
         params["ms"] = random.randint(0, 999)
         params["random"] = random.random()
