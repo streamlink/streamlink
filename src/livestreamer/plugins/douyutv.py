@@ -1,8 +1,7 @@
 import hashlib
 import re
 import time
-import random
-import string
+import uuid
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
@@ -98,7 +97,7 @@ class Douyutv(Plugin):
             return
 
         ts = int(time.time() / 60)
-        did = ''.join([random.choice(string.ascii_uppercase + string.digits) for n in range(32)])
+        did = uuid.uuid4().hex.upper()
         sign = hashlib.md5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8")).hexdigest()
 
         data = {
