@@ -25,26 +25,7 @@ _url_re = re.compile("""
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_json_re = re.compile(r"var\s*\$ROOM\s*=\s*({.+?});")
-
-_room_id_schema = validate.Schema(
-    validate.all(
-        validate.transform(_json_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(parse_json),
-                {
-                    "room_id": validate.any(
-                        validate.text,
-                        validate.transform(int)
-                    )
-                }
-            )
-        )
-    )
-)
+_room_id_re = re.compile('"room_id"\s*:\s*(?P<channel>\d+),')
 
 _room_schema = validate.Schema(
     {
@@ -83,11 +64,14 @@ class Douyutv(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
-        room_id = http.get(self.url, schema=_room_id_schema)
-        channel = room_id["room_id"]
+        res = http.get(self.url)
+        match1 = _room_id_re.search(res.text)
+        channel = match1.group("channel")
+        if channel == "0":
+            channel = match.group("channel")
+
         res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
