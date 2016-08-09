@@ -7,7 +7,6 @@ from requests.adapters import HTTPAdapter
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
