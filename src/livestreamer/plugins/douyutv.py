@@ -3,12 +3,14 @@ import re
 import time
 import uuid
 
+from requests.adapters import HTTPAdapter
+
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.plugin.api.utils import parse_json
 from livestreamer.stream import HTTPStream
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.106 Safari/537.36"
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
 MAPI_URL = "http://m.douyu.com/html5/live?roomId={0}"
 LAPI_URL = "http://www.douyu.com/lapi/live/getPlay/{0}"
 LAPI_SECRET = "A12Svb&%1UUmf@hC"
@@ -66,6 +68,8 @@ class Douyutv(Plugin):
         match = _url_re.match(self.url)
 
         http.headers.update({"User-Agent": USER_AGENT})
+        http.mount('http://', HTTPAdapter(max_retries=999))
+
         res = http.get(self.url)
         match1 = _room_id_re.search(res.text)
         channel = match1.group("channel")
