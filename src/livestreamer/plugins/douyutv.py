@@ -26,7 +26,34 @@ _url_re = re.compile("""
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_room_id_re = re.compile('"room_id"\s*:\s*(?P<channel>\d+),')
+_room_id_re = re.compile(r'"room_id"\s*:\s*(\d+),')
+_room_id_alt_re = re.compile(r'data-room_id="(\d+)"')
+
+_room_id_schema = validate.Schema(
+    validate.all(
+        validate.transform(_room_id_re.search),
+        validate.any(
+            None,
+            validate.all(
+                validate.get(1),
+                validate.transform(int)
+            )
+        )
+    )
+)
+
+_room_id_alt_schema = validate.Schema(
+    validate.all(
+        validate.transform(_room_id_alt_re.search),
+        validate.any(
+            None,
+            validate.all(
+                validate.get(1),
+                validate.transform(int)
+            )
+        )
+    )
+)
 
 _room_schema = validate.Schema(
     {
@@ -65,15 +92,18 @@ class Douyutv(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
+        channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
-        http.mount('http://', HTTPAdapter(max_retries=999))
+        http.mount('http://', HTTPAdapter(max_retries=99))
 
-        res = http.get(self.url)
-        match1 = _room_id_re.search(res.text)
-        channel = match1.group("channel")
-        if channel == "0":
-            channel = match.group("channel")
+        #Thanks to @ximellon for providing method.
+        try:
+            channel = int(channel)
+        except ValueError:
+            channel = http.get(self.url, schema=_room_id_schema)
+            if channel == 0:
+                channel = http.get(self.url, schema=_room_id_alt_schema)
 
         res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
