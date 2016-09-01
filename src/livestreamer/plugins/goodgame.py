@@ -14,7 +14,7 @@ QUALITIES = {
 
 _url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(
-    "meta property=\"og:video:iframe\" content=\"http://goodgame.ru/player/html\?(\d+)\""
+    "meta property=\"og:video:iframe\" content=\"http://goodgame.ru/player/html\?(\w+)\""
 )
 _ddos_re = re.compile(
     "document.cookie=\"(__DDOS_[^;]+)"
