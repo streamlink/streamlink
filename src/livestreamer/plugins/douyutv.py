@@ -10,8 +10,8 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HTTPStream
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
-MAPI_URL = "http://m.douyu.com/html5/live?roomId={0}"
-LAPI_URL = "http://www.douyu.com/lapi/live/getPlay/{0}"
+MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
+LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
 LAPI_SECRET = "A12Svb&%1UUmf@hC"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
@@ -95,6 +95,7 @@ class Douyutv(Plugin):
         channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
+        http.verify=False
         http.mount('http://', HTTPAdapter(max_retries=99))
 
         #Thanks to @ximellon for providing method.
