@@ -5,7 +5,8 @@ from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
 
 API_CHANNEL_INFO = "https://picarto.tv/process/channel"
-RTMP_URL = "{}/?{}/{}"
+RTMP_URL = "rtmp://{}:1935/play/"
+RTMP_PLAYPATH = "golive+{}?token={}"
 
 _url_re = re.compile(r"""
     https?://(\w+\.)?picarto\.tv/[^&?/]
@@ -37,7 +38,8 @@ class Picarto(Plugin):
 
         streams = {}
         streams["live"] = RTMPStream(self.session, {
-            "rtmp": RTMP_URL.format(channel_server_res.text, visibility, channel),
+            "rtmp": RTMP_URL.format(channel_server_res.text),
+			"playpath": RTMP_PLAYPATH.format(channel, visibility),
             "pageUrl": self.url,
             "live": True
         })
