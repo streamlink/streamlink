@@ -39,7 +39,7 @@ class Picarto(Plugin):
         streams = {}
         streams["live"] = RTMPStream(self.session, {
             "rtmp": RTMP_URL.format(channel_server_res.text),
-			"playpath": RTMP_PLAYPATH.format(channel, visibility),
+            "playpath": RTMP_PLAYPATH.format(channel, visibility),
             "pageUrl": self.url,
             "live": True
         })
