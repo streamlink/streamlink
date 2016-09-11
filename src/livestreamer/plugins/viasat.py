@@ -19,7 +19,8 @@ _url_re = re.compile("""
         tv(3|6|8|10)play |
         viasat4play |
         play.tv3 |
-        juicyplay
+        juicyplay |
+        viafree
     )
     \.
     (?:
