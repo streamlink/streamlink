@@ -15,6 +15,7 @@ from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
 from livestreamer.cache import Cache
 from livestreamer.stream import StreamProcess
+from livestreamer.plugins.twitch import TWITCH_CLIENT_ID
 
 from .argparser import parser
 from .compat import stdout, is_win32
@@ -531,8 +532,8 @@ def authenticate_twitch_oauth():
     """Opens a web browser to allow the user to grant Livestreamer
        access to their Twitch account."""
 
-    client_id = "ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
-    redirect_uri = "http://docs.livestreamer.io/twitch_oauth.html"
+    client_id = TWITCH_CLIENT_ID
+    redirect_uri = "http://livestreamer.tanuki.se/en/develop/twitch_oauth.html"
     url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
            "?response_type=token&client_id={0}&redirect_uri="
            "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
