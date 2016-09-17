@@ -23,7 +23,7 @@ There is also an `API`_ available for developers who want access
 to the video stream data.
 
 - Documentation: http://docs.livestreamer.io/
-- Issue tracker: https://github.com/chrippa/livestreamer/issues
+- Issue tracker: https://github.com/streamlink/streamlink/issues
 - PyPI: https://pypi.python.org/pypi/livestreamer
 - Discussions: https://groups.google.com/forum/#!forum/livestreamer
 - IRC: #livestreamer @ Freenode
@@ -72,7 +72,7 @@ Related software
 ----------------
 
 Feel free to add any Livestreamer related things to
-the `wiki <https://github.com/chrippa/livestreamer/wiki/>`_.
+the `wiki <https://github.com/streamlink/streamlink/wiki/>`_.
 
 
 Contributing

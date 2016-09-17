@@ -162,7 +162,7 @@ class Plugin(object):
             )
 
             if issue:
-                msg += "More info: https://github.com/chrippa/livestreamer/issues/{0}".format(issue)
+                msg += "More info: https://github.com/streamlink/streamlink/issues/{0}".format(issue)
 
             raise PluginError(msg)
 

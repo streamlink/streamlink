@@ -107,7 +107,7 @@ Version                              Installing
                                         # easy_install -U livestreamer
 `Development version (pip)`_         .. code-block:: console
 
-                                        # pip install -U git+https://github.com/chrippa/livestreamer.git
+                                        # pip install -U git+https://github.com/streamlink/streamlink.git
 
 `Development version (git)`_         .. code-block:: console
 
@@ -118,8 +118,8 @@ Version                              Installing
 
 .. _Latest release (pip): https://pypi.python.org/pypi/livestreamer
 .. _Latest release (easy_install): https://pypi.python.org/pypi/livestreamer
-.. _Development version (pip): https://github.com/chrippa/livestreamer
-.. _Development version (git): https://github.com/chrippa/livestreamer
+.. _Development version (pip): https://github.com/streamlink/streamlink
+.. _Development version (git): https://github.com/streamlink/streamlink
 
 Dependencies
 ^^^^^^^^^^^^
@@ -197,7 +197,7 @@ instead.
 Windows binaries
 ----------------
 
-:releaseref:`Installer <https://github.com/chrippa/livestreamer/releases/download/v|release|/livestreamer-v|release|-win32-setup.exe>`
+:releaseref:`Installer <https://github.com/streamlink/streamlink/releases/download/v|release|/livestreamer-v|release|-win32-setup.exe>`
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This is a installer which contains:
@@ -213,7 +213,7 @@ and performs the following tasks:
   :command:`livestreamer` directly from the command prompt without specifying
   its directory)
 
-:releaseref:`Zip archive <https://github.com/chrippa/livestreamer/releases/download/v|release|/livestreamer-v|release|-win32.zip>`
+:releaseref:`Zip archive <https://github.com/streamlink/streamlink/releases/download/v|release|/livestreamer-v|release|-win32.zip>`
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is minimal zip archive containing a compiled version of Livestreamer that

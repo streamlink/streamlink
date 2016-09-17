@@ -144,7 +144,7 @@ parser = ArgumentParser(
       http://docs.livestreamer.io/
 
     Please report broken plugins or bugs to the issue tracker on Github:
-      https://github.com/chrippa/livestreamer/issues
+      https://github.com/streamlink/streamlink/issues
     """)
 )
 

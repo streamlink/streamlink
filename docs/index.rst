@@ -9,8 +9,8 @@ There is also an :ref:`API <api_guide>` available for developers who want access
 to the video stream data.
 
 - Latest release: |version| (:ref:`changelog`)
-- GitHub: https://github.com/chrippa/livestreamer
-- Issue tracker: https://github.com/chrippa/livestreamer/issues
+- GitHub: https://github.com/streamlink/streamlink
+- Issue tracker: https://github.com/streamlink/streamlink/issues
 - PyPI: https://pypi.python.org/pypi/livestreamer
 - Discussions: https://groups.google.com/forum/#!forum/livestreamer
 - IRC: #livestreamer @ Freenode
