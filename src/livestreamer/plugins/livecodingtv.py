@@ -16,7 +16,7 @@ class LivecodingTV(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url)
-        match = _rtmp_re.search(res.content)
+        match = _rtmp_re.search(res.content.decode('utf-8'))
         if match:
             params = {
                 "rtmp": match.group(0),
@@ -26,7 +26,7 @@ class LivecodingTV(Plugin):
             yield 'live', RTMPStream(self.session, params)
             return
 
-        match = _vod_re.search(res.content)
+        match = _vod_re.search(res.content.decode('utf-8'))
         if match:
             yield 'vod', HTTPStream(self.session, match.group(1))
 
