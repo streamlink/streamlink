@@ -1,25 +1,16 @@
 language: python
 sudo: false
 python:
-  - 2.6
-  - 2.7
-  - 3.3
+  - "2.6"
+  - "2.7"
+  - "3.3"
+  - "3.4"
+  - "3.5"
 script: python setup.py test
-
-addons:
-  apt:
-    packages:
-      - nsis
-
 install:
-  - travis_retry pip install requests argparse --use-mirrors
-  - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
-
+  - pip install coveralls
+  - pip install coverage
+  - travis_retry gem install --version 0.8.9 faraday
 after_success:
-  - bash .travis/build-win32.sh
-
-env:
-  global:
-    - ARTIFACTS_S3_REGION=eu-west-1
-    - ARTIFACTS_S3_BUCKET=livestreamer-builds
-
+  - sh .travis/build-win32.sh
+  - coveralls
