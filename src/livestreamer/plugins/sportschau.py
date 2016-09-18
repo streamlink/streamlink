@@ -25,21 +25,17 @@ class sportschau(Plugin):
 
         res = http.get(player_js)
 
-        # ensure utf8        
-        response_text = res.text.encode('utf-8')
-
-        jsonp_start = response_text.find('(') + 1
-        jsonp_end = response_text.rfind(')')
+        jsonp_start = res.text.find('(') + 1
+        jsonp_end = res.text.rfind(')')
 
         if jsonp_start <= 0 or jsonp_end <= 0:
             self.logger.info("Couldn't extract json metadata from player.js: {0}", player_js)
             return
-            
-        json_s = response_text[jsonp_start:jsonp_end]
-        
+
+        json_s = res.text[jsonp_start:jsonp_end]
+
         stream_metadata = json.loads(json_s)
-        self.logger.info("Metadata: {0}", stream_metadata)
-        
+
         return HDSStream.parse_manifest(self.session, stream_metadata['mediaResource']['dflt']['videoURL']).items()
 
 __plugin__ = sportschau
