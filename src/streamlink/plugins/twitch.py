@@ -220,7 +220,7 @@ class TwitchAPI(object):
         return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
 
     def channel_info(self, channel, **params):
-        return self.call("/api/channels/{0}".format(channel), **params)
+        return self.call("/kraken/channels/{0}".format(channel), **params)
 
     def channel_subscription(self, channel, **params):
         return self.call("/api/channels/{0}/subscription".format(channel), **params)
@@ -235,7 +235,7 @@ class TwitchAPI(object):
         return self.call("/kraken/user", **params)
 
     def videos(self, video_id, **params):
-        return self.call("/api/videos/{0}".format(video_id), **params)
+        return self.call("/kraken/videos/{0}".format(video_id), **params)
 
     def viewer_info(self, **params):
         return self.call("/api/viewer/info", **params)
