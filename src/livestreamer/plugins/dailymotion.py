@@ -5,7 +5,7 @@ from functools import reduce
 from livestreamer.compat import urlparse, range
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
-from livestreamer.stream import HDSStream, HTTPStream, RTMPStream
+from livestreamer.stream import HDSStream, HLSStream, HTTPStream, RTMPStream
 from livestreamer.stream.playlist import FLVPlaylist
 
 COOKIES = {
@@ -169,6 +169,12 @@ class DailyMotion(Plugin):
         res = http.get(manifest_url)
         if res.headers.get("Content-Type") == "application/f4m+xml":
             streams = HDSStream.parse_manifest(self.session, res.url)
+
+            # TODO: Replace with "yield from" when dropping Python 2.
+            for __ in streams.items():
+                yield __
+        elif res.headers.get("Content-Type") == "application/vnd.apple.mpegurl":
+            streams = HLSStream.parse_variant_playlist(self.session, res.url)
 
             # TODO: Replace with "yield from" when dropping Python 2.
             for __ in streams.items():

@@ -4,6 +4,7 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import StreamMapper, http, validate
 from livestreamer.stream import HLSStream, HDSStream
 
+API_URL = "http://www.svt.se/videoplayer-api/video/{0}"
 
 _url_re = re.compile("""
     http(s)?://
@@ -16,7 +17,25 @@ _url_re = re.compile("""
     .se
 """, re.VERBOSE)
 
+# Regex to match video ID
+_id_re = re.compile(r"""data-video-id=['"](?P<id>[^'"]+)['"]""")
+_old_id_re = re.compile(r"/(?:video|klipp)/(?P<id>[0-9]+)/")
+
+# New video schema used with API call
 _video_schema = validate.Schema(
+    {
+        "videoReferences": validate.all(
+            [{
+                "url": validate.text,
+                "format": validate.text
+            }],
+        ),
+    },
+    validate.get("videoReferences")
+)
+
+# Old video schema
+_old_video_schema = validate.Schema(
     {
         "video": {
             "videoReferences": validate.all(
@@ -46,12 +65,26 @@ class SVTPlay(Plugin):
                               stream_type, err)
 
     def _get_streams(self):
-        res = http.get(self.url, params=dict(output="json"))
-        videos = http.json(res, schema=_video_schema)
+        # Retrieve URL page and search for new type of video ID
+        res = http.get(self.url)
+        match = _id_re.search(res.text)
 
-        mapper = StreamMapper(cmp=lambda type, video: video["playerType"] == type)
-        mapper.map("ios", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
-        mapper.map("flash", self._create_streams, "HDS", HDSStream.parse_manifest)
+        # Use API if match, otherwise resort to old method
+        if match:
+            vid = match.group("id")
+            res = http.get(API_URL.format(vid))
+
+            videos = http.json(res, schema = _video_schema)
+            mapper = StreamMapper(cmp = lambda format, video: video["format"] == format)
+            mapper.map("hls", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
+            mapper.map("hds", self._create_streams, "HDS", HDSStream.parse_manifest)
+        else:
+            res = http.get(self.url, params=dict(output="json"))
+            videos = http.json(res, schema=_old_video_schema)
+
+            mapper = StreamMapper(cmp=lambda type, video: video["playerType"] == type)
+            mapper.map("ios", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
+            mapper.map("flash", self._create_streams, "HDS", HDSStream.parse_manifest)
 
         return mapper(videos)
 

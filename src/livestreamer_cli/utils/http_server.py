@@ -83,10 +83,13 @@ class HTTPServer(object):
             conn.close()
             raise OSError("Invalid request method: {0}".format(req.command))
 
-        conn.send(b"HTTP/1.1 200 OK\r\n")
-        conn.send(b"Server: Livestreamer\r\n")
-        conn.send(b"Content-Type: video/unknown\r\n")
-        conn.send(b"\r\n")
+        try:
+            conn.send(b"HTTP/1.1 200 OK\r\n")
+            conn.send(b"Server: Livestreamer\r\n")
+            conn.send(b"Content-Type: video/unknown\r\n")
+            conn.send(b"\r\n")
+        except socket.error:
+            raise OSError("Failed to write data to socket")
 
         # We don't want to send any data on HEAD requests.
         if req.command == "HEAD":

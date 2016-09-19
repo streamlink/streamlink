@@ -15,6 +15,7 @@ from livestreamer import (Livestreamer, StreamError, PluginError,
                           NoPluginError)
 from livestreamer.cache import Cache
 from livestreamer.stream import StreamProcess
+from livestreamer.plugins.twitch import TWITCH_CLIENT_ID
 
 from .argparser import parser
 from .compat import stdout, is_win32
@@ -26,7 +27,7 @@ from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
-args = console = livestreamer = plugin = stream_fd = None
+args = console = livestreamer = plugin = stream_fd = output = None
 
 
 def check_file_output(filename, force):
@@ -123,6 +124,7 @@ def iter_http_requests(server, player):
 
 def output_stream_http(plugin, initial_streams, external=False, port=0):
     """Continuously output the stream over HTTP."""
+    global output
 
     if not external:
         if not args.player:
@@ -131,9 +133,9 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "executable with --player.")
 
         server = create_http_server()
-        player = PlayerOutput(args.player, args=args.player_args,
-                              filename=server.url,
-                              quiet=not args.verbose_player)
+        player = output = PlayerOutput(args.player, args=args.player_args,
+                                       filename=server.url,
+                                       quiet=not args.verbose_player)
 
         try:
             console.logger.info("Starting player: {0}", args.player)
@@ -192,15 +194,16 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
 
 def output_stream_passthrough(stream):
     """Prepares a filename to be passed to the player."""
+    global output
 
     filename = '"{0}"'.format(stream_to_url(stream))
-    out = PlayerOutput(args.player, args=args.player_args,
-                       filename=filename, call=True,
-                       quiet=not args.verbose_player)
+    output = PlayerOutput(args.player, args=args.player_args,
+                          filename=filename, call=True,
+                          quiet=not args.verbose_player)
 
     try:
         console.logger.info("Starting player: {0}", args.player)
-        out.open()
+        output.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", args.player, err)
         return False
@@ -239,6 +242,7 @@ def open_stream(stream):
 
 def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
+    global output
 
     for i in range(args.retry_open):
         try:
@@ -422,18 +426,22 @@ def resolve_stream_name(streams, stream_name):
     return stream_name
 
 
-def format_valid_streams(streams):
+def format_valid_streams(plugin, streams):
     """Formats a dict of streams.
 
     Filters out synonyms and displays them next to
     the stream they point to.
+
+    Streams are sorted according to their quality
+    (based on plugin.stream_weight).
 
     """
 
     delimiter = ", "
     validstreams = []
 
-    for name, stream in sorted(streams.items()):
+    for name, stream in sorted(streams.items(),
+                               key=lambda stream: plugin.stream_weight(stream[0])):
         if name in STREAM_SYNONYMS:
             continue
 
@@ -484,7 +492,7 @@ def handle_url():
         args.stream = args.default_stream
 
     if args.stream:
-        validstreams = format_valid_streams(streams)
+        validstreams = format_valid_streams(plugin, streams)
         for stream_name in args.stream:
             if stream_name in streams:
                 console.logger.info("Available streams: {0}", validstreams)
@@ -504,7 +512,7 @@ def handle_url():
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module))
         else:
-            validstreams = format_valid_streams(streams)
+            validstreams = format_valid_streams(plugin, streams)
             console.msg("Available streams: {0}", validstreams)
 
 
@@ -524,7 +532,7 @@ def authenticate_twitch_oauth():
     """Opens a web browser to allow the user to grant Livestreamer
        access to their Twitch account."""
 
-    client_id = "ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
+    client_id = TWITCH_CLIENT_ID
     redirect_uri = "http://livestreamer.tanuki.se/en/develop/twitch_oauth.html"
     url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
            "?response_type=token&client_id={0}&redirect_uri="
@@ -785,6 +793,10 @@ def setup_plugin_options():
         livestreamer.set_plugin_option("crunchyroll", "purge_credentials",
                                        args.crunchyroll_purge_credentials)
 
+    if args.crunchyroll_locale:
+        livestreamer.set_plugin_option("crunchyroll", "locale",
+                                       args.crunchyroll_locale)
+
     if args.livestation_email:
         livestreamer.set_plugin_option("livestation", "email",
                                        args.livestation_email)
@@ -885,6 +897,10 @@ def main():
             setup_plugin_options()
             handle_url()
         except KeyboardInterrupt:
+            # Close output
+            if output:
+                output.close()
+
             # Make sure current stream gets properly cleaned up
             if stream_fd:
                 console.msg("Interrupted! Closing currently open stream...")
@@ -896,5 +912,12 @@ def main():
                 console.msg("Interrupted! Exiting...")
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
-    else:
+    elif args.help:
         parser.print_help()
+    else:
+        usage = parser.format_usage()
+        msg = (
+            "{usage}\nUse -h/--help to see the available options or "
+            "read the manual at http://docs.livestreamer.io/"
+        ).format(usage=usage)
+        console.msg(msg)

@@ -3,6 +3,7 @@
 Supports:
    MP$: http://nos.nl/uitzending/nieuwsuur.html
    Live: http://www.nos.nl/livestream/*
+   Tour: http://nos.nl/tour/live
 """
 
 import re
@@ -67,7 +68,7 @@ class NOS(Plugin):
     def _get_streams(self):
         urlparts = self.url.split('/')
 
-        if urlparts[-2] == 'livestream':
+        if urlparts[-2] == 'livestream' or urlparts[-3] == 'tour':
             return self._resolve_stream()
         else:
             return self._get_source_streams()

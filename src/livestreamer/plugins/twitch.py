@@ -27,10 +27,12 @@ QUALITY_WEIGHTS = {
 }
 
 
+TWITCH_CLIENT_ID="ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
+
 _url_re = re.compile(r"""
     http(s)?://
     (?:
-        (?P<subdomain>\w+)
+        (?P<subdomain>[\w\-]+)
         \.
     )?
     twitch.tv
@@ -133,6 +135,7 @@ class UsherService(object):
             "type": "any",
             "allow_source": "true",
             "allow_audio_only": "true",
+            "allow_spectre": "false",
         }
         params.update(extra_params)
 
@@ -166,16 +169,26 @@ class TwitchAPI(object):
 
         if self.oauth_token:
             params["oauth_token"] = self.oauth_token
-
-        url = "https://{0}.twitch.tv{1}.{2}".format(self.subdomain, path, format)
+        
+        if len(format) > 0:
+            url = "https://{0}.twitch.tv{1}.{2}".format(self.subdomain, path, format)
+        else:
+            url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
         # The certificate used by Twitch cannot be verified on some OpenSSL versions.
-        res = http.get(url, params=params, verify=False)
+        res = http.get(url, params=params, verify=False, headers={'Client-ID': TWITCH_CLIENT_ID})
 
         if format == "json":
             return http.json(res, schema=schema)
         else:
             return res
+    
+    def call_subdomain(self, subdomain, path, format="json", schema=None, **extra_params):
+        subdomain_buffer = self.subdomain
+        self.subdomain = subdomain
+        response = self.call(path, format=format, schema=schema, **extra_params)
+        self.subdomain = subdomain_buffer
+        return response
 
     def access_token(self, endpoint, asset, **params):
         return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
@@ -200,12 +213,16 @@ class TwitchAPI(object):
 
     def viewer_info(self, **params):
         return self.call("/api/viewer/info", **params)
+    
+    def  hosted_channel(self, **params):
+        return self.call_subdomain("tmi", "/hosts", format="", **params)
 
 
 class Twitch(Plugin):
     options = PluginOptions({
         "cookie": None,
         "oauth_token": None,
+        "allow_host": None,
     })
 
     @classmethod
@@ -222,7 +239,6 @@ class Twitch(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-
         match = _url_re.match(url).groupdict()
         self.channel = match.get("channel").lower()
         self.subdomain = match.get("subdomain")
@@ -413,9 +429,17 @@ class Twitch(Plugin):
                 raise
 
         return sig, token
+    
+    def _check_for_host(self):
+        channel_id = self.api.channel_info(self.channel)["_id"]
+        host_info = self.api.hosted_channel(include_logins=1, host=channel_id).json()["hosts"][0]
+        if "target_login" in host_info:
+            self.logger.info("{0} is in host mode, switching to {1}".format(self.channel, host_info["target_login"]))
+            self.channel = host_info["target_login"]
 
     def _get_hls_streams(self, type="live"):
         self._authenticate()
+        self._check_for_host()
         sig, token = self._access_token(type)
         if type == "live":
             url = self.usher.channel(self.channel, sig=sig, token=token)

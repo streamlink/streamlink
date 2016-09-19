@@ -23,7 +23,7 @@ Distribution                         Installing
 `Exherbo Linux`_
 `Fedora`_                            .. code-block:: console
 
-                                        # yum install livestreamer
+                                        # dnf install livestreamer
 `FreeBSD (package)`_                 .. code-block:: console
 
                                         # pkg install multimedia/livestreamer

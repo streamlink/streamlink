@@ -37,7 +37,7 @@ def stream_weight(stream):
         if stream in weights:
             return weights[stream], group
 
-    match = re.match("^(\d+)([k]|[p])?([\+])?$", stream)
+    match = re.match("^(\d+)([k]|[p])?(\d*)([\+])?$", stream)
 
     if match:
         if match.group(2) == "k":
@@ -53,7 +53,10 @@ def stream_weight(stream):
         elif match.group(2) == "p":
             weight = int(match.group(1))
 
-            if match.group(3) == "+":
+            if match.group(3):
+                weight += int(match.group(3))
+
+            if match.group(4) == "+":
                 weight += 1
 
             return weight, "pixels"

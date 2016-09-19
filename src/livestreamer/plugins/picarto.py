@@ -1,14 +1,19 @@
 import re
 
 from livestreamer.plugin import Plugin
+from livestreamer.plugin.api import http
 from livestreamer.stream import RTMPStream
 
-RTMP_URL = "rtmp://live.us.picarto.tv/golive/{0}"
+API_CHANNEL_INFO = "https://picarto.tv/process/channel"
+RTMP_URL = "rtmp://{}:1935/play/"
+RTMP_PLAYPATH = "golive+{}?token={}"
 
-_url_re = re.compile("""
-    http(s)?://(\w+\.)?picarto.tv
-    /live/(channel|channelhd|multistream).php
-    .+watch=(?P<channel>[^&?/]+)
+_url_re = re.compile(r"""
+    https?://(\w+\.)?picarto\.tv/[^&?/]
+""", re.VERBOSE)
+
+_channel_casing_re = re.compile(r"""
+    <script>placeStreamChannelFlash\('(?P<channel>[^']+)',[^,]+,[^,]+,'(?P<visibility>[^']+)',[^,]+\);</script>
 """, re.VERBOSE)
 
 
@@ -18,12 +23,23 @@ class Picarto(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
+        page_res = http.get(self.url)
+        match = _channel_casing_re.search(page_res.text)
+
+        if not match:
+            return {}
+
         channel = match.group("channel")
+        visibility = match.group("visibility")
+
+        channel_server_res = http.post(API_CHANNEL_INFO, data={
+            "loadbalancinginfo": channel
+        })
 
         streams = {}
         streams["live"] = RTMPStream(self.session, {
-            "rtmp": RTMP_URL.format(channel),
+            "rtmp": RTMP_URL.format(channel_server_res.text),
+            "playpath": RTMP_PLAYPATH.format(channel, visibility),
             "pageUrl": self.url,
             "live": True
         })
