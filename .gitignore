@@ -23,3 +23,8 @@ dist
 *.tmp*
 *.swp
 docs/_build
+include/
+lib/
+local/
+share/
+pip-selfcheck.json
