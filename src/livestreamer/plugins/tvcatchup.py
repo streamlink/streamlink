@@ -4,10 +4,9 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
 from livestreamer.stream import HLSStream
 
-SUCCESS_HTTP_CODES = (200,)
-
-STREAM_URL_FORMAT = "http://tvcatchup.com/stream.php?chan={0}"
-_url_re = re.compile("http://(?:www\.)?tvcatchup.com/watch/(?P<channel_id>[0-9]+)")
+USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
+_url_re = re.compile("http://(?:www\.)?tvcatchup.com/watch/\w+")
+_stream_re = re.compile(r"\"(?P<stream_url>https?://.*m3u8\?.*clientKey=[^\"]*)\";")
 
 
 class TVCatchup(Plugin):
@@ -17,17 +16,21 @@ class TVCatchup(Plugin):
 
     def _get_streams(self):
         """
-        Finds the stream from tvcatchup, they only provide a single 480p stream per channel.
+        Finds the streams from tvcatchup.com.
         """
-        match = _url_re.match(self.url).groupdict()
-        channel_id = match["channel_id"]
+        http.headers.update({"User-Agent": USER_AGENT})
+        res = http.get(self.url)
 
-        res = http.get(STREAM_URL_FORMAT.format(channel_id))
+        match = _stream_re.search(res.text, re.IGNORECASE | re.MULTILINE)
 
-        stream_url = http.json(res).get('url')
+        if match:
+            stream_url = match.groupdict()["stream_url"]
 
-        if stream_url:
-            return {"480p": HLSStream(self.session, stream_url)}
+            if stream_url:
+                if "_adp" in stream_url:
+                    return HLSStream.parse_variant_playlist(self.session, stream_url)
+                else:
+                    return {'576p': HLSStream(self.session, stream_url)}
 
 
 __plugin__ = TVCatchup

@@ -4,18 +4,19 @@ from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http, validate
 from livestreamer.stream import RTMPStream, HLSStream
 
-CHANNEL_INFO_URL = "http://live.afreeca.com:8057/api/get_broad_state_list.php"
+CHANNEL_INFO_URL = "http://live.afreecatv.com:8057/api/get_broad_state_list.php"
 KEEP_ALIVE_URL = "{server}/stream_keepalive.html"
 STREAM_INFO_URLS = {
     "rtmp": "http://sessionmanager01.afreeca.tv:6060/broad_stream_assign.html",
     "hls": "http://resourcemanager.afreeca.tv:9090/broad_stream_assign.html"
 }
+HLS_KEY_URL = "http://api.m.afreeca.com/broad/a/watch"
 
 CHANNEL_RESULT_ERROR = 0
 CHANNEL_RESULT_OK = 1
 
 
-_url_re = re.compile("http(s)?://(\w+\.)?afreeca.com/(?P<username>\w+)")
+_url_re = re.compile("http(s)?://(\w+\.)?afreeca(tv)?.com/(?P<username>\w+)/\d+")
 
 _channel_schema = validate.Schema(
     {
@@ -48,25 +49,44 @@ class AfreecaTV(Plugin):
         headers = {
             "Referer": self.url
         }
-        data = {
+        params = {
             "uid": username
         }
-        res = http.post(CHANNEL_INFO_URL, data=data, headers=headers)
+        res = http.get(CHANNEL_INFO_URL, params=params, headers=headers)
 
         return http.json(res, schema=_channel_schema)
+
+    def _get_hls_key(self, broadcast, username):
+        headers = {
+            "Referer": self.url
+        }
+        data = {
+            "bj_id": username,
+            "broad_no": broadcast
+        }
+        res = http.post(HLS_KEY_URL, data=data, headers=headers)
+
+        return http.json(res)
 
     def _get_stream_info(self, broadcast, type):
         params = {
             "return_type": "gs_cdn",
+            "use_cors": "true",
+            "cors_origin_url": "m.afreeca.com",
+            "broad_no": "{broadcast}-mobile-hd-{type}".format(**locals()),
             "broad_key": "{broadcast}-flash-hd-{type}".format(**locals())
         }
         res = http.get(STREAM_INFO_URLS[type], params=params)
         return http.json(res, schema=_stream_schema)
 
-    def _get_hls_stream(self, broadcast):
+    def _get_hls_stream(self, broadcast, username):
+        keyjson = self._get_hls_key(broadcast, username)
+        if keyjson["result"] != CHANNEL_RESULT_OK:
+            return
+        key = keyjson["data"]["hls_authentication_key"]
         info = self._get_stream_info(broadcast, "hls")
         if "view_url" in info:
-            return HLSStream(self.session, info["view_url"])
+            return HLSStream(self.session, info["view_url"], params=dict(aid=key))
 
     def _get_rtmp_stream(self, broadcast):
         info = self._get_stream_info(broadcast, "rtmp")
@@ -90,7 +110,7 @@ class AfreecaTV(Plugin):
         if flash_stream:
             yield "live", flash_stream
 
-        mobile_stream = self._get_hls_stream(broadcast)
+        mobile_stream = self._get_hls_stream(broadcast, username)
         if mobile_stream:
             yield "live", mobile_stream
 

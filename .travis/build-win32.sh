@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ $TRAVIS_SECURE_ENV_VARS != "true" ]; then
+	exit 0
+fi
+
 if [ $TRAVIS_PYTHON_VERSION != "2.7" ]; then
 	exit 0
 fi
@@ -10,8 +14,12 @@ git fetch --unshallow
 
 sh win32/build-with-bootstrap.sh
 cd dist/
-cp *zip livestreamer-latest-win32.zip
 
-for zip in *zip; do
-	travis-artifacts upload --path "$zip" --target-path ""
+if [ $TRAVIS_BRANCH = "develop" ]; then
+	cp *zip livestreamer-latest-win32.zip
+	cp *exe livestreamer-latest-win32-setup.exe
+fi
+
+for file in ./{*.exe,*.zip}; do
+	~/bin/artifacts upload --target-paths "/" "$file"
 done

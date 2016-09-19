@@ -159,7 +159,7 @@ class YouTube(Plugin):
             "video_id": video_id,
             "el": "player_embedded"
         }
-        res = http.get(API_VIDEO_INFO, params=params)
+        res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
 
         return parse_query(res.text, name="config", schema=_config_schema)
 
