@@ -1,6 +1,6 @@
 import unittest
 
-from livestreamer.options import Options
+from streamlink.options import Options
 
 class TestOptions(unittest.TestCase):
     def setUp(self):

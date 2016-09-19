@@ -1,6 +1,6 @@
 import unittest
 
-from livestreamer.buffers import Buffer
+from streamlink.buffers import Buffer
 
 class TestBuffer(unittest.TestCase):
     def setUp(self):

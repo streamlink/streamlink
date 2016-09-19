@@ -1,8 +1,8 @@
-from livestreamer.plugins import Plugin
-from livestreamer.options import Options
-from livestreamer.stream import *
+from streamlink.plugins import Plugin
+from streamlink.options import Options
+from streamlink.stream import *
 
-from livestreamer.plugin.api.support_plugin import testplugin_support
+from streamlink.plugin.api.support_plugin import testplugin_support
 
 class TestPlugin(Plugin):
     options = Options({

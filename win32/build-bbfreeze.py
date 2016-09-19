@@ -7,7 +7,7 @@ import bbfreeze.recipes
 
 from itertools import ifilter
 from bbfreeze import Freezer
-from livestreamer import __version__
+from streamlink import __version__
 
 def recipe_pycparser(mf):
     m = mf.findNode("pycparser")
@@ -22,8 +22,8 @@ bbfreeze.recipes.recipe_pycparser = recipe_pycparser
 
 build_version = __version__
 python_path = sys.prefix
-script = os.path.join(python_path, "Scripts\\livestreamer-script.py")
-script_exe = os.path.join(python_path, "Scripts\\livestreamer.py")
+script = os.path.join(python_path, "Scripts\\streamlink-script.py")
+script_exe = os.path.join(python_path, "Scripts\\streamlink.py")
 
 shutil.copy(script, script_exe)
 
@@ -35,7 +35,7 @@ includes = ("requests", "re", "xml", "xml.dom.minidom",
 manual_copy = ("librtmp", "librtmp_config", "librtmp_ffi")
 
 freezer_path = os.path.dirname(os.path.abspath(__file__))
-dst = "{0}\\..\\build-win32\\livestreamer-{1}-win32\\".format(freezer_path, build_version)
+dst = "{0}\\..\\build-win32\\streamlink-{1}-win32\\".format(freezer_path, build_version)
 site_packages = next(ifilter(lambda p: p.endswith("site-packages"), sys.path))
 
 f = Freezer(dst, includes=includes)

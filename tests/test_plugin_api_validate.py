@@ -4,7 +4,7 @@ import unittest
 
 from xml.etree.ElementTree import Element
 
-from livestreamer.plugin.api.validate import (
+from streamlink.plugin.api.validate import (
     validate, all, any, optional, transform, text, filter, map, hasattr,
     get, getattr, length, xml_element, xml_find, xml_findtext, xml_findall,
     union, attr, url, startswith, endswith
