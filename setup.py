@@ -7,16 +7,16 @@ from sys import version_info, path as sys_path
 
 deps = []
 packages = [
-    "livestreamer",
-    "livestreamer.stream",
-    "livestreamer.plugin",
-    "livestreamer.plugin.api",
-    "livestreamer.plugins",
-    "livestreamer.packages",
-    "livestreamer.packages.flashmedia",
-    "livestreamer_cli",
-    "livestreamer_cli.packages",
-    "livestreamer_cli.utils"
+    "streamlink",
+    "streamlink.stream",
+    "streamlink.plugin",
+    "streamlink.plugin.api",
+    "streamlink.plugins",
+    "streamlink.packages",
+    "streamlink.packages.flashmedia",
+    "streamlink_cli",
+    "streamlink_cli.packages",
+    "streamlink_cli.utils"
 ]
 
 if version_info[0] == 2:
@@ -45,19 +45,19 @@ if environ.get("NO_DEPS"):
 srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
-setup(name="livestreamer",
+setup(name="streamlink",
       version="1.14.0-rc1",
-      description="Livestreamer is command-line utility that extracts streams "
+      description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",
-      url="http://livestreamer.io/",
+      url="http://streamlink.io/",
       author="Christopher Rosell",
-      author_email="chrippa@tanuki.se",
+      author_email="streamlink@tanuki.se",
       license="Simplified BSD",
       packages=packages,
       package_dir={ "": "src" },
       entry_points={
-          "console_scripts": ["livestreamer=livestreamer_cli.main:main"]
+          "console_scripts": ["streamlink=streamlink_cli.main:main"]
       },
       install_requires=deps,
       test_suite="tests",

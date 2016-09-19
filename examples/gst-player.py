@@ -7,7 +7,7 @@ import sys
 import gi
 
 from gi.repository import GObject as gobject, Gst as gst
-from livestreamer import Livestreamer, StreamError, PluginError, NoPluginError
+from streamlink import Streamlink, StreamError, PluginError, NoPluginError
 
 
 def exit(msg):
@@ -15,7 +15,7 @@ def exit(msg):
     sys.exit()
 
 
-class LivestreamerPlayer(object):
+class StreamlinkPlayer(object):
     def __init__(self):
         self.fd = None
         self.mainloop = gobject.MainLoop()
@@ -104,18 +104,18 @@ def main():
     url = sys.argv[1]
     quality = sys.argv[2]
 
-    # Create the Livestreamer session
-    livestreamer = Livestreamer()
+    # Create the Streamlink session
+    streamlink = Streamlink()
 
     # Enable logging
-    livestreamer.set_loglevel("info")
-    livestreamer.set_logoutput(sys.stdout)
+    streamlink.set_loglevel("info")
+    streamlink.set_logoutput(sys.stdout)
 
     # Attempt to fetch streams
     try:
-        streams = livestreamer.streams(url)
+        streams = streamlink.streams(url)
     except NoPluginError:
-        exit("Livestreamer is unable to handle the URL '{0}'".format(url))
+        exit("Streamlink is unable to handle the URL '{0}'".format(url))
     except PluginError as err:
         exit("Plugin error: {0}".format(err))
 
@@ -130,7 +130,7 @@ def main():
     stream = streams[quality]
 
     # Create the player and start playback
-    player = LivestreamerPlayer()
+    player = StreamlinkPlayer()
 
     # Blocks until playback is done
     player.play(stream)

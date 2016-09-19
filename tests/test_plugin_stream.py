@@ -1,13 +1,13 @@
 import os
 import unittest
 
-from livestreamer import Livestreamer, PluginError, NoPluginError
-from livestreamer.plugins import Plugin
-from livestreamer.stream import *
+from streamlink import Streamlink, PluginError, NoPluginError
+from streamlink.plugins import Plugin
+from streamlink.stream import *
 
 class TestPluginStream(unittest.TestCase):
     def setUp(self):
-        self.session = Livestreamer()
+        self.session = Streamlink()
 
     def assertDictHas(self, a, b):
         for key, value in a.items():

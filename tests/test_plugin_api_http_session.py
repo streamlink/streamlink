@@ -1,7 +1,7 @@
 import unittest
 
-from livestreamer.exceptions import PluginError
-from livestreamer.plugin.api.http_session import HTTPSession
+from streamlink.exceptions import PluginError
+from streamlink.plugin.api.http_session import HTTPSession
 
 
 class TestPluginAPIHTTPSession(unittest.TestCase):

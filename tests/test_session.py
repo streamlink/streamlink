@@ -1,16 +1,16 @@
 import os
 import unittest
 
-from livestreamer import Livestreamer, PluginError, NoPluginError
-from livestreamer.plugins import Plugin
-from livestreamer.stream import *
+from streamlink import Streamlink, PluginError, NoPluginError
+from streamlink.plugins import Plugin
+from streamlink.stream import *
 
 
 class TestSession(unittest.TestCase):
     PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
 
     def setUp(self):
-        self.session = Livestreamer()
+        self.session = Streamlink()
         self.session.load_plugins(self.PluginPath)
 
     def test_exceptions(self):
