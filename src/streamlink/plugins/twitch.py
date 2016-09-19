@@ -198,8 +198,11 @@ class TwitchAPI(object):
         else:
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
+        headers = { 'Accept': 'application/vnd.twitchtv.v3+json',
+                    'Client-ID': TWITCH_CLIENT_ID }
+
         # The certificate used by Twitch cannot be verified on some OpenSSL versions.
-        res = http.get(url, params=params, verify=False, headers={'Client-ID': TWITCH_CLIENT_ID})
+        res = http.get(url, params=params, verify=False, headers=headers)
 
         if format == "json":
             return http.json(res, schema=schema)
