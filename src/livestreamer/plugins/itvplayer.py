@@ -8,14 +8,14 @@ except ImportError:
 
 from livestreamer.plugin import Plugin
 from livestreamer.plugin.api import http
-from livestreamer.stream import RTMPStream
+from livestreamer.stream import RTMPStream, HDSStream
 from livestreamer.compat import urlparse
 
 ITV_PLAYER_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.107 Safari/537.36'
 LIVE_SWF_URL = "http://www.itv.com/mediaplayer/ITVMediaPlayer.swf"
 ONDEMAND_SWF_URL = "http://www.itv.com/mercury/Mercury_VideoPlayer.swf"
 CHANNEL_MAP = {'itv': 1, 'itv2': 2, 'itv3': 3, 'itv4': 4, 'itvbe': 8, 'citv': 7}
-_url_re = re.compile(r"https://(?:www.)?itv.com/itvplayer/(?P<stream>.+)")
+_url_re = re.compile(r"http(?:s)?://(?:www.)?itv.com/hub/(?P<stream>.+)")
 
 
 class ITVPlayer(Plugin):
@@ -62,35 +62,65 @@ class ITVPlayer(Plugin):
                         headers=headers,
                         data=soap_message)
 
-        # looking for the <MediaFiles> tag
+        # Parse XML
         xmldoc = http.xml(res)
 
-        mediafiles = xmldoc.find(".//VideoEntries//MediaFiles")
-        # No mediafiles, no streams
-        if not mediafiles:
+        # Check that geo region has been accepted
+        faultcode = xmldoc.find('.//faultcode')
+        if not faultcode == None:
+            if 'InvalidGeoRegion' in faultcode.text:
+                self.logger.error('Failed to retrieve playlist data '
+                                  '(invalid geo region)')
             return None
 
-        rtmp = mediafiles.attrib['base']
+        # Look for <MediaFiles> tag (RTMP streams)
+        mediafiles = xmldoc.find('.//VideoEntries//MediaFiles')
+
+        # Look for <ManifestFile> tag (HDS streams)
+        manifestfile = xmldoc.find('.//VideoEntries//ManifestFile')
+
+        # No streams
+        if not mediafiles and not manifestfile:
+            return None
+
         streams = {}
 
-        for mediafile in mediafiles.findall("MediaFile"):
-            playpath = mediafile.find("URL").text
+        # Proxy not needed for media retrieval (Note: probably better to use flag)
+        # for x in ('http', 'https'):
+        #     if x in http.proxies:
+        #         http.proxies.pop(x);
 
-            rtmp_url = urlparse(rtmp)
-            app = (rtmp_url.path[1:] + '?' + rtmp_url.query).rstrip('?')
-            live = app == "live"
+        # Parse RTMP streams
+        if mediafiles:
+            rtmp = mediafiles.attrib['base']
 
-            params = dict(rtmp="{u.scheme}://{u.netloc}{u.path}".format(u=rtmp_url),
-                          app=app.rstrip('?'),
-                          playpath=playpath,
-                          swfVfy=LIVE_SWF_URL if live else ONDEMAND_SWF_URL,
-                          timeout=10)
-            if live:
-                params['live'] = True
+            for mediafile in mediafiles.findall("MediaFile"):
+                playpath = mediafile.find("URL").text
 
-            bitrate = int(mediafile.attrib['bitrate']) / 1000
-            quality = "{0}k".format(bitrate)
-            streams[quality] = RTMPStream(self.session, params)
+                rtmp_url = urlparse(rtmp)
+                app = (rtmp_url.path[1:] + '?' + rtmp_url.query).rstrip('?')
+                live = app == "live"
+
+                params = dict(rtmp="{u.scheme}://{u.netloc}{u.path}".format(u=rtmp_url),
+                              app=app.rstrip('?'),
+                              playpath=playpath,
+                              swfVfy=LIVE_SWF_URL if live else ONDEMAND_SWF_URL,
+                              timeout=10)
+                if live:
+                    params['live'] = True
+
+                bitrate = int(mediafile.attrib['bitrate']) / 1000
+                quality = "{0}k".format(bitrate)
+                streams[quality] = RTMPStream(self.session, params)
+
+        # Parse HDS streams
+        if manifestfile:
+            url = manifestfile.find('URL').text
+
+            if urlparse(url).path.endswith('f4m'):
+                streams.update(
+                    HDSStream.parse_manifest(self.session, url, pvswf=LIVE_SWF_URL)
+                )
 
         return streams
 

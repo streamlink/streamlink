@@ -12,9 +12,12 @@ QUALITIES = {
     "240p": "_240"
 }
 
-_url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)/")
+_url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(
-    "iframe frameborder=\"0\" width=\"100%\" height=\"100%\" src=\"http://goodgame.ru/player(\d)?\?(\d+)\""
+    "meta property=\"og:video:iframe\" content=\"http://goodgame.ru/player/html\?(\w+)\""
+)
+_ddos_re = re.compile(
+    "document.cookie=\"(__DDOS_[^;]+)"
 )
 
 class GoodGame(Plugin):
@@ -28,12 +31,21 @@ class GoodGame(Plugin):
             return True
 
     def _get_streams(self):
-        res = http.get(self.url)
+        headers = {
+            "Referer": self.url
+        }
+        res = http.get(self.url, headers=headers)
+
+        match = _ddos_re.search(res.text)
+        if (match):
+            headers["Cookie"] = match.group(1)
+            res = http.get(self.url, headers=headers)
+
         match = _stream_re.search(res.text)
         if not match:
             return
 
-        stream_id = match.group(2)
+        stream_id = match.group(1)
         streams = {}
         for name, url_suffix in QUALITIES.items():
             url = HLS_URL_FORMAT.format(stream_id, url_suffix)

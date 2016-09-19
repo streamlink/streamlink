@@ -8,15 +8,15 @@ from livestreamer.plugin.api import http, validate
 from livestreamer.stream import HLSStream
 
 API_URL = "https://api.crunchyroll.com/{0}.0.json"
+API_DEFAULT_LOCALE = "en_US"
+API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {})"
 API_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; en_US)",
     "Host": "api.crunchyroll.com",
     "Accept-Encoding": "gzip, deflate",
     "Accept": "*/*",
     "Content-Type": "application/x-www-form-urlencoded"
 }
 API_VERSION = "2313.8"
-API_LOCALE = "enUS"
 API_ACCESS_TOKEN = "QWjz212GspMHH9h"
 API_DEVICE_TYPE = "com.crunchyroll.iphone"
 STREAM_WEIGHTS = {
@@ -98,13 +98,14 @@ class CrunchyrollAPIError(Exception):
 
 
 class CrunchyrollAPI(object):
-    def __init__(self, session_id=None, auth=None):
+    def __init__(self, session_id=None, auth=None, locale=API_DEFAULT_LOCALE):
         """Abstract the API to access to Crunchyroll data.
 
         Can take saved credentials to use on it's calls to the API.
         """
         self.session_id = session_id
         self.auth = auth
+        self.locale = locale
 
     def _api_call(self, entrypoint, params, schema=None):
         """Makes a call against the api.
@@ -119,14 +120,18 @@ class CrunchyrollAPI(object):
         params = dict(params)
         params.update({
             "version": API_VERSION,
-            "locale": API_LOCALE,
+            "locale": self.locale.replace('_', ''),
         })
 
         if self.session_id:
             params["session_id"] = self.session_id
 
+        # Headers
+        headers = dict(API_HEADERS)
+        headers['User-Agent'] = API_USER_AGENT.format(self.locale)
+
         # The certificate used by Crunchyroll cannot be verified in some environments.
-        res = http.get(url, params=params, headers=API_HEADERS, verify=False)
+        res = http.get(url, params=params, headers=headers, verify=False)
         json_res = http.json(res, schema=_api_schema)
 
         if json_res["error"]:
@@ -193,6 +198,7 @@ class Crunchyroll(Plugin):
         "username": None,
         "password": None,
         "purge_credentials": None,
+        "locale": API_DEFAULT_LOCALE
     })
 
     @classmethod
@@ -250,8 +256,9 @@ class Crunchyroll(Plugin):
 
         current_time = datetime.datetime.utcnow()
         device_id = self._get_device_id()
+        locale = self.options.get("locale")
         api = CrunchyrollAPI(
-            self.cache.get("session_id"), self.cache.get("auth")
+            self.cache.get("session_id"), self.cache.get("auth"), locale
         )
 
         self.logger.debug("Creating session")
@@ -260,7 +267,7 @@ class Crunchyroll(Plugin):
         except CrunchyrollAPIError as err:
             if err.code == "bad_session":
                 self.logger.debug("Current session has expired, creating a new one")
-                api = CrunchyrollAPI()
+                api = CrunchyrollAPI(locale=locale)
                 api.session_id = api.start_session(device_id, schema=_session_schema)
             else:
                 raise err

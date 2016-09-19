@@ -33,3 +33,6 @@ unzip -d "$BUILD_TARGET_DIR/$egg" "dist/$egg"
 
 cd $BUILD_DIR
 zip -r $DIST_TARGET "$(basename "$BUILD_TARGET_DIR")"
+
+cd $SCRIPT_DIR
+makensis -DPROGRAM_VERSION=$(git describe) -DLIVESTREAMER_PYTHON_BBFREEZE_OUTPUT_DIR="$BUILD_TARGET_DIR" "livestreamer-win32-installer-from-bootstrap.nsi"
