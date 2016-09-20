@@ -1,5 +1,3 @@
 [report]
 omit =
   */python?.?/*
-  */site-packages/*
-  *__init__*
