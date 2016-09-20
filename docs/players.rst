@@ -41,7 +41,7 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 .. [1] :option:`--player-continuous-http` must be used.
        Using HTTP with players that rely on Windows' codecs to access HTTP
        streams may have a long startup time since Windows tend to do multiple
-       HTTP requests and Livestreamer will attempt to open the stream for each
+       HTTP requests and Streamlink will attempt to open the stream for each
        request.
 .. [2] Stdin requires MPC-HC 1.7 or newer.
 
@@ -82,4 +82,3 @@ VLC hangs when buffering and no playback starts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Some versions of 64-bit VLC seem to be unable to read the stream created by
 rtmpdump. Using the 32-bit version of VLC might help.
-
