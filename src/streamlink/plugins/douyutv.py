@@ -94,9 +94,9 @@ class Douyutv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        http.headers.update({"User-Agent": USER_AGENT})
+        http.headers.update({'User-Agent': USER_AGENT})
         http.verify=False
-        http.mount('http://', HTTPAdapter(max_retries=99))
+        http.mount('https://', HTTPAdapter(max_retries=99))
 
         #Thanks to @ximellon for providing method.
         try:
