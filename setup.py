@@ -46,16 +46,16 @@ srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="streamlink",
-      version="1.14.0-rc1",
+      version="0.0.1",
       description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",
-      url="http://streamlink.io/",
-      author="Christopher Rosell",
-      author_email="streamlink@tanuki.se",
+      url="https://github.com/streamlink/streamlink",
+      author="Streamlink",
+      author_email="charlie@charliedrage.com",  # temp until we have a mailing list / global email
       license="Simplified BSD",
       packages=packages,
-      package_dir={ "": "src" },
+      package_dir={"": "src"},
       entry_points={
           "console_scripts": ["streamlink=streamlink_cli.main:main"]
       },
@@ -72,5 +72,4 @@ setup(name="streamlink",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
                    "Topic :: Multimedia :: Video",
-                   "Topic :: Utilities"]
-)
+                   "Topic :: Utilities"])
