@@ -1,10 +1,10 @@
 import re
 
-from livestreamer.compat import urljoin
-from livestreamer.plugin import Plugin
-from livestreamer.plugin.api import http, validate
-from livestreamer.plugin.api.utils import parse_json
-from livestreamer.stream import AkamaiHDStream, HLSStream
+from streamlink.compat import urljoin
+from streamlink.plugin import Plugin
+from streamlink.plugin.api import http, validate
+from streamlink.plugin.api.utils import parse_json
+from streamlink.stream import AkamaiHDStream, HLSStream
 
 _url_re = re.compile("http(s)?://(www\.)?livestream.com/")
 _stream_config_schema = validate.Schema({
@@ -22,9 +22,7 @@ _stream_config_schema = validate.Schema({
             ),
         }, None)
     },
-    validate.optional("viewerPlusSwfUrl"): validate.url(scheme="http"),
-    validate.optional("lsPlayerSwfUrl"): validate.text,
-    validate.optional("hdPlayerSwfUrl"): validate.text
+    validate.optional("playerUri"): validate.text
 })
 _smil_schema = validate.Schema(validate.union({
     "http_base": validate.all(
@@ -95,7 +93,7 @@ class Livestream(Plugin):
 
         play_url = stream_info.get("play_url")
         if play_url:
-            swf_url = info.get("hdPlayerSwfUrl") or info.get("lsPlayerSwfUrl") or info.get("viewerPlusSwfUrl")
+            swf_url = info.get("playerUri")
             if swf_url:
                 if not swf_url.startswith("http"):
                     swf_url = "http://" + swf_url
