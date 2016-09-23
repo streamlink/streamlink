@@ -6,6 +6,22 @@ The main purpose of streamlink is to convert CPU-heavy flash plugins to a less C
 
 Streamlink is a fork of the [livestreamer](https://github.com/chrippa/livestreamer) project.
 
+# Installation
+
+Streamlink can be installed either via: `pip` or manually via `python setup.py install`.
+
+Pip:
+```
+sudo pip install streamlink
+```
+
+Manually:
+```
+git clone https://github.com/streamlink/streamlink
+sudo python setup.py install
+```
+
+
 # Features
 
 Streamlink is built via a plugin system which allows new services to be easily added.
@@ -39,7 +55,15 @@ chaturbate.py     douyutv.py          itvplayer.py   oldlivestream.py  svtplay.p
 
 # Quickstart
 
-We've only just recently forked, but please be patient while we update the code :) (September 17, 2016)
+After installation simply use:
+```
+streamlink twitch.tv/lirik source
+```
+
+And Streamlink will automatically open a default video player and begin streaming!
+
+For full details on how to use Streamlink visit our documentation at [streamlink.github.io](https://streamlink.github.io)
+
 
 # Contributing
 
