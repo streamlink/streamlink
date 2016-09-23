@@ -65,12 +65,9 @@ replaceversion() {
   echo "OLD VERSION:" $OLD_VERSION
 
   echo "1. Replaced .py versioning"
-  find . -name '*.py' -type f -exec sed -i "s/$OLD_VERSION/$1/g" {} \;
+  sed -i "s/$OLD_VERSION/$1/g" setup.py
 
-  echo "2. Replaced docs versioning"
-  find docs/ -name '*.md' -type f -exec sed -i "s/$OLD_VERSION/$1/g" {} \;
-
-  echo "3. Replaced README.md versioning"
+  echo "2. Replaced README.md versioning"
   sed -i "s/$OLD_VERSION/$1/g" README.md
   
   cd ..
@@ -79,7 +76,7 @@ replaceversion() {
 changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
-  LOG=`git shortlog --email --no-merges --pretty=%s ${1}..`
+  LOG=`git shortlog --email --no-merges --pretty=%s`
   echo -e "\`\`\`\n$LOG\n\`\`\`" > ../changes.txt
   echo "Changelog has been written to changes.txt"
   echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
