@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 # Execute this at the base of the streamlink repo.
-# Requires: sphinx
 
 if [ "$#" -ne 1 ] ; then
     echo "Path to streamlink.github.io repo is required."
@@ -9,6 +8,7 @@ fi
 
 DOCS_REPO_PATH="$1"
 
+pip install sphinx
 make --directory=docs html
 
 # remove old files
