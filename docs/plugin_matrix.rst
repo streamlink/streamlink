@@ -80,6 +80,7 @@ servustv            servustv.com         ?     ?
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportschau          sportschau.de        Yes   No
 ssh101              ssh101.com           Yes   No
+streamboat          streamboat.tv        Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
 streamlive          streamlive.to        Yes   --
