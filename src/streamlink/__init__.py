@@ -14,8 +14,8 @@ Full documentation is available at http://docs.streamlink.io/.
 __title__ = "streamlink"
 __version__ = "0.0.1"
 __license__ = "Simplified BSD"
-__author__ = "Christopher Rosell"
-__copyright__ = "Copyright 2011-2015 Christopher Rosell"
+__author__ = "Streamlink"
+__copyright__ = "Copyright 2016 Streamlink"
 __credits__ = [
     "Agustín Carrasco (@asermax)",
     "Andrew Bashore (@bashtech)",
