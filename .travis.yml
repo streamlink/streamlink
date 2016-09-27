@@ -13,7 +13,6 @@ matrix:
 
 before_install:
   - pip install pytest pytest-cov coveralls coverage
-  - travis_retry gem install --version 0.8.9 faraday
 
 install:
   - python setup.py install
