@@ -35,23 +35,8 @@ Major streaming services such as:
 
 Are supported.
 
-A full list of plugins can be found in the plugin directory:
+A full list of plugins can be found on the [plugin page](https://streamlink.github.io/plugin_matrix.html).
 
-```
-src/streamlink/plugins
-▶ ls
-afreeca.py        common_jwplayer.py  drdk.py        letontv.py        periscope.py               tga.py         viasat_embed.py
-afreecatv.py      common_swf.py       euronews.py    livestation.py    picarto.py                 tv3cat.py      viasat.py
-aftonbladet.py    connectcast.py      filmon.py      livestream.py     rtve.py                    tv4play.py     wattv.py
-alieztv.py        crunchyroll.py      filmon_us.py   media_ccc_de.py   sbsdiscovery.py            tvcatchup.py   weeb.py
-ard_live.py       cybergame.py        furstream.py   mips.py           seemeplay.py               tvplayer.py    youtube.py
-ard_mediathek.py  dailymotion.py      gaminglive.py  mlgtv.py          speedrunslive.py           twitch.py      zdf_mediathek.py
-artetv.py         disney_de.py        gomexp.py      nhkworld.py       ssh101.py                  ustreamtv.py
-azubutv.py        dmcloud_embed.py    goodgame.py    nos.py            streamingvideoprovider.py  vaughnlive.py
-bambuser.py       dmcloud.py          hitbox.py      npo.py            streamlive.py              veetle.py
-beattv.py         dommune.py          __init__.py    nrk.py            stream.py                  vgtv.py
-chaturbate.py     douyutv.py          itvplayer.py   oldlivestream.py  svtplay.py                 viagame.py
-```
 
 # Quickstart
 
