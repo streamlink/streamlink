@@ -18,7 +18,7 @@ install:
   - python setup.py install
 
 script:
-  - pytest tests/
+  - python -m pytest tests/
   - coverage run setup.py test
   - bash script/pushdocs.sh
 
