@@ -1,3 +1,6 @@
+[paths]
+source=
+  src/
 [report]
 omit =
   */python?.?/*
