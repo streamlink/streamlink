@@ -18,7 +18,8 @@ install:
   - python setup.py install
 
 script:
-  - python -m pytest -vv --cov-report= --cov-config .coveragerc --cov=. tests/
+  - pytests tests/
+  - coverage run setup.py test
   - bash script/pushdocs.sh
 
 after_success:
