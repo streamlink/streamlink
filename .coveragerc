@@ -1,8 +1,12 @@
-[paths]
-source=
-  src/
+[run]
+source = streamlink
 [report]
 omit =
   */python?.?/*
-  */site-packages/nose/*
-  *__init__*
+    *__init__*
+
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise NotImplementedError
+    if __name__ == .__main__.:
