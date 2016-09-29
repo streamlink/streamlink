@@ -773,6 +773,10 @@ def setup_plugin_options():
         streamlink.set_plugin_option("twitch", "oauth_token",
                                        args.twitch_oauth_token)
 
+    if args.twitch_disable_hosting:
+        streamlink.set_plugin_option("twitch", "disable_hosting",
+                                       args.twitch_disable_hosting)
+
     if args.ustream_password:
         streamlink.set_plugin_option("ustreamtv", "password",
                                        args.ustream_password)
