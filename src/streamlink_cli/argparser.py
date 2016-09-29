@@ -904,6 +904,13 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
+    "--twitch-disable-hosting",
+    action="store_true",
+    help="""
+    Do not open the stream if the target channel is hosting another channel.
+    """
+)
+plugin.add_argument(
     "--ustream-password",
     metavar="PASSWORD",
     help="""
