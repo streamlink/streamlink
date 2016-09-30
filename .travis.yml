@@ -1,26 +1,28 @@
 language: python
 
+python:
+  - 2.6
+  - 2.7
+  - 3.3
+  - 3.4
+  - 3.5
+
 sudo: false
 
-matrix:
-  include:
-  - python: "2.6"
-  - python: "2.7"
-  - python: "3.3"
-  - python: "3.4"
-  - python: "3.5"
-    env: BUILD_DOCS=yes
+env:
+  - BUILD_DOCS=yes
 
 before_install:
-  - pip install pytest pytest-cov coveralls coverage
+  - pip install pytest pytest-cov codecov coverage
 
 install:
   - python setup.py install
 
 script:
-  - python -m pytest -vv --cov streamlink
+  - python -m pytest tests/
+  - coverage run setup.py test
   - bash script/pushdocs.sh
 
 after_success:
   - sh .travis/build-win32.sh
-  - coveralls
+  - codecov
