@@ -9,9 +9,8 @@ python:
 
 sudo: false
 
-matrix:
-  include:
-    env: BUILD_DOCS=yes
+env:
+  - BUILD_DOCS=yes
 
 before_install:
   - pip install pytest pytest-cov codecov coverage
