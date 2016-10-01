@@ -34,7 +34,7 @@ Multi-threaded streaming
 
 On segmented streaming protocols (such as HLS and HDS) it's possible to use
 multiple threads to potentially increase the throughput.
-Each stream type has it's own option, these options are currently available:
+Each stream type has its own option, and these are the ones that are currently available:
 
 =================================== ============================================
 Option                              Used by these plugins
