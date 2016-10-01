@@ -17,16 +17,18 @@ ssh-add "$DOCS_KEY"
 
 # clone the repo
 git clone "$DOCS_REPO_URL" "$DOCS_REPO_NAME"
-bash script/makedocs.sh "$DOCS_REPO_NAME"
+if bash script/makedocs.sh "$DOCS_REPO_NAME" ; then
+    # git config
+    cd "$DOCS_REPO_NAME"
+    git config user.name "$DOCS_USER"
+    git config user.email "<>"
+    git add --all
+    # Check if anythhing changed, and if it's the case, push to origin/master.
+    if git commit -m 'update docs' -m "Commit: https://github.com/streamlink/streamlink/commit/$TRAVIS_COMMIT" ; then
+        git push origin master
+    fi
 
-# git config
-cd "$DOCS_REPO_NAME"
-git config user.name "$DOCS_USER"
-git config user.email "<>"
-git add --all
-# Check if anythhing changed, and if it's the case, push to origin/master.
-if git commit -m 'update docs' -m "Commit: https://github.com/streamlink/streamlink/commit/$TRAVIS_COMMIT" ; then
-    git push origin master
+    exit 0
+else
+    exit 1
 fi
-
-exit 0
