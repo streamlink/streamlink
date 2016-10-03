@@ -112,19 +112,19 @@ Version                              Installing
                                         # easy_install -U streamlink
 `Development version (pip)`_         .. code-block:: console
 
-                                        # pip install -U git+https://github.com/chrippa/streamlink.git
+                                        # pip install -U git+https://github.com/streamlink/streamlink.git
 
 `Development version (git)`_         .. code-block:: console
 
-                                        $ git clone git://github.com/chrippa/streamlink.git
+                                        $ git clone git://github.com/streamlink/streamlink.git
                                         $ cd streamlink
                                         # python setup.py install
 ==================================== ===========================================
 
 .. _Latest release (pip): https://pypi.python.org/pypi/streamlink
 .. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
-.. _Development version (pip): https://github.com/chrippa/streamlink
-.. _Development version (git): https://github.com/chrippa/streamlink
+.. _Development version (pip): https://github.com/streamlink/streamlink
+.. _Development version (git): https://github.com/streamlink/streamlink
 
 Dependencies
 ^^^^^^^^^^^^
@@ -202,7 +202,7 @@ instead.
 Windows binaries
 ----------------
 
-:releaseref:`Installer <https://github.com/chrippa/streamlink/releases/download/v|release|/streamlink-v|release|-win32-setup.exe>`
+:releaseref:`Installer <https://github.com/streamlink/streamlink/releases/download/v|release|/streamlink-v|release|-win32-setup.exe>`
 ^^^^^^^^^^^^^^^^^^^^^^
 
 This is a installer which contains:
@@ -218,7 +218,7 @@ and performs the following tasks:
   :command:`streamlink` directly from the command prompt without specifying
   its directory)
 
-:releaseref:`Zip archive <https://github.com/chrippa/streamlink/releases/download/v|release|/streamlink-v|release|-win32.zip>`
+:releaseref:`Zip archive <https://github.com/streamlink/streamlink/releases/download/v|release|/streamlink-v|release|-win32.zip>`
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is minimal zip archive containing a compiled version of Streamlink that
