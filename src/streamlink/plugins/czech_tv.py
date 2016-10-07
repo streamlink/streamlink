@@ -22,7 +22,7 @@ _url_re = re.compile(
     r'http(s)?://([^.]*.)?ceskatelevize.cz'
 )
 _player_re = re.compile(
-    r'http://([^.]*.)?ceskatelevize.cz/ivysilani/embed/iFramePlayer[^"]+'
+    r'ivysilani/embed/iFramePlayer[^"]+'
 )
 _hash_re = re.compile(
     r'hash:"([0-9a-z]+)"'
@@ -77,7 +77,7 @@ def _find_player_url(response):
         else:
             url = tmp_url
 
-    return url
+    return 'http://ceskatelevize.cz/'+url
 
 class CzechTV(Plugin):
 
