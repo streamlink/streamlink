@@ -22,5 +22,4 @@ script:
   - bash script/pushdocs.sh
 
 after_success:
-  - sh .travis/build-win32.sh
   - codecov
