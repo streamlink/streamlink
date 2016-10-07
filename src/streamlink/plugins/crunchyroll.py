@@ -58,13 +58,12 @@ _media_schema = validate.Schema(
             {
                 "streams": validate.all(
                     [{
-                        "quality": validate.text,
+                        "quality": validate.any(validate.text, None),
                         "url": validate.url(
                             scheme="http",
                             path=validate.endswith(".m3u8")
                         )
-                    }],
-                    validate.filter(lambda s: s["quality"] != "adaptive")
+                    }]
                 )
             }
         )
@@ -227,11 +226,24 @@ class Crunchyroll(Plugin):
         if not info:
             return
 
-        # TODO: Use dict comprehension here after dropping Python 2.6 support.
-        return dict(
-            (stream["quality"], HLSStream(self.session, stream["url"]))
-            for stream in info["streams"]
-        )
+        # The adaptive quality stream contains a superset of all the other streams listeed
+        has_adaptive = any([s[u"quality"] == u"adaptive" for s in info[u"streams"]])
+        if has_adaptive:
+            self.logger.debug(u"Loading streams from adaptive playlist")
+            for stream in filter(lambda x: x[u"quality"] == u"adaptive", info[u"streams"]):
+                return HLSStream.parse_variant_playlist(self.session, stream["url"])
+        else:
+            streams = {}
+            # If there is no adaptive quality stream then parse each individual result
+            for stream in info[u"streams"]:
+                # the video_encode_id indicates that the stream is not a variant playlist
+                if u"video_encode_id" in stream:
+                    streams[stream[u"quality"]] = HLSStream(self.session, stream[u"url"])
+                else:
+                    # otherwise the stream url is actually a list of stream qualities
+                    streams.update(HLSStream.parse_variant_playlist(self.session, stream[u"url"]))
+
+            return streams
 
     def _get_device_id(self):
         """Returns the saved device id or creates a new one and saves it."""
