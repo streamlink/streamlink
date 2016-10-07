@@ -9,7 +9,7 @@ except ImportError:
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.stream import RTMPStream, HDSStream
-from streamlink.compat import urlparse
+from streamlink.compat import urlparse, unquote
 
 ITV_PLAYER_USER_AGENT = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/32.0.1700.107 Safari/537.36'
 LIVE_SWF_URL = "http://www.itv.com/mediaplayer/ITVMediaPlayer.swf"
@@ -38,9 +38,11 @@ class ITVPlayer(Plugin):
     def production_id(self):
         if self._stream not in CHANNEL_MAP:
             res = http.get(self.url, verify=False)
-            production_id_match = re.findall(r'"productionId":"(.*?)",', res.text, flags=re.DOTALL)
+            production_id_match = re.findall(r"&productionId=(.*?)['&\"]", res.text, flags=re.DOTALL)
             if production_id_match:
-                return production_id_match[0]
+                return unquote(production_id_match[0])
+            else:
+                self.logger.error(u"No production ID found, has the page layout changed?")
 
     def _get_streams(self):
         """
@@ -67,7 +69,7 @@ class ITVPlayer(Plugin):
 
         # Check that geo region has been accepted
         faultcode = xmldoc.find('.//faultcode')
-        if not faultcode == None:
+        if faultcode is not None:
             if 'InvalidGeoRegion' in faultcode.text:
                 self.logger.error('Failed to retrieve playlist data '
                                   '(invalid geo region)')
@@ -180,7 +182,7 @@ class ITVPlayer(Plugin):
         # build userinfo
         userinfo = sub_item(get_playlist, "userInfo")
         sub_itv(userinfo, "Broadcaster").text = "Itv"
-        sub_itv(userinfo, "RevenueScienceValue").text = "ITVPLAYER.2.14.1.+build.4a9166f0ba"
+        sub_itv(userinfo, "RevenueScienceValue").text = "ITVPLAYER.2.18.14.+build.a778cd30ac"
         sub_itv(userinfo, "SessionId")
         sub_itv(userinfo, "SsoToken")
         sub_itv(userinfo, "UserToken")
