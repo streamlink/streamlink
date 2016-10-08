@@ -1,6 +1,7 @@
 # Streamlink
 
 [![Build Status](https://travis-ci.org/streamlink/streamlink.svg?branch=master)](https://travis-ci.org/streamlink/streamlink)
+[![codecov.io](http://codecov.io/github/streamlink/streamlink/coverage.svg?branch=master)](http://codecov.io/github/streamlink/streamlink?branch=master)
 
 Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC, or alternatively, a browser.
 
