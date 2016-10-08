@@ -1,0 +1,19 @@
+Description: Use Debian packaged fonts
+ Remove Google Fonts link used by upstream and instead
+ use local fonts. Except for "Roboto Slab", all are
+ available on Debian.
+Forwarded: not-needed
+Author: Stefan Breunig <stefan-debian@yrden.de>
+
+Index: packaging/docs/_themes/sphinx_rtd_theme_violet/layout.html
+===================================================================
+--- packaging.orig/docs/_themes/sphinx_rtd_theme_violet/layout.html	2015-01-19 22:50:36.613894253 +0100
++++ packaging/docs/_themes/sphinx_rtd_theme_violet/layout.html	2015-01-19 22:50:59.298397091 +0100
+@@ -23,7 +23,6 @@
+   {% endif %}
+ 
+   {# CSS #}
+-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+ 
+   {# OPENSEARCH #}
+   {% if not embedded %}

@@ -1,0 +1,22 @@
+Description: Remove GitHub Buttons without replacement
+ Upstream includes buttons to GitHub that display how
+ often the project was starred. Due to privacy concerns
+ these are removed from the documentation in Debian.
+Forwarded: not-needed
+Author: Stefan Breunig <stefan-debian@yrden.de>
+
+Index: packaging/docs/_themes/sphinx_rtd_theme_violet/layout.html
+===================================================================
+--- packaging.orig/docs/_themes/sphinx_rtd_theme_violet/layout.html	2015-01-19 22:51:07.000000000 +0100
++++ packaging/docs/_themes/sphinx_rtd_theme_violet/layout.html	2015-01-19 23:07:46.225297834 +0100
+@@ -176,10 +176,6 @@
+   {% endif %}
+ 
+ 
+-  {% if theme_github_user and theme_github_repo %}
+-  <script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+-  {% endif %}
+-
+   {%- block footer %} {% endblock %}
+ 
+ </body>
