@@ -1,5 +1,7 @@
 # Streamlink
 
+[![Build Status](https://travis-ci.org/streamlink/streamlink.svg?branch=master)](https://travis-ci.org/streamlink/streamlink)
+
 Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC, or alternatively, a browser.
 
 The main purpose of streamlink is to convert CPU-heavy flash plugins to a less CPU-intensive format.
