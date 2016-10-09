@@ -1,20 +1,20 @@
-livestreamer (1.12.2-1) unstable; urgency=low
+streamlink (1.12.2-1) unstable; urgency=low
 
   * New upstream version
     - works around SSL issues on new.livestream.com (Closes: #780931)
   * Do not remove version check command line parameters for compatibility with
-    apps that use livestreamer
+    apps that use streamlink
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Sat, 02 May 2015 22:30:30 +0200
 
-livestreamer (1.12.1-1) unstable; urgency=low
+streamlink (1.12.1-1) unstable; urgency=low
 
   * New upstream version
   * Updated Homepage URL
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Mon, 23 Mar 2015 21:32:18 +0100
 
-livestreamer (1.12.0-1) unstable; urgency=low
+streamlink (1.12.0-1) unstable; urgency=low
 
   * New upstream version
   * Updated copyright file
@@ -23,7 +23,7 @@ livestreamer (1.12.0-1) unstable; urgency=low
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Sun, 01 Mar 2015 22:00:36 +0100
 
-livestreamer (1.11.1-1) unstable; urgency=low
+streamlink (1.11.1-1) unstable; urgency=low
 
   * New upstream version
     - fixes no streams being found on Twitch.tv (closes: 772890)
@@ -31,38 +31,38 @@ livestreamer (1.11.1-1) unstable; urgency=low
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Sat, 13 Dec 2014 03:07:55 +0100
 
-livestreamer (1.10.2-1) unstable; urgency=low
+streamlink (1.10.2-1) unstable; urgency=low
 
   * New upstream version
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Sat, 06 Sep 2014 10:51:45 +0200
 
-livestreamer (1.10.1-1) unstable; urgency=low
+streamlink (1.10.1-1) unstable; urgency=low
 
   * New upstream version
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Sat, 30 Aug 2014 17:46:46 +0200
 
-livestreamer (1.10.0-1) unstable; urgency=low
+streamlink (1.10.0-1) unstable; urgency=low
 
   * New upstream version (Closes: #757347)
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Mon, 18 Aug 2014 22:18:54 +0200
 
-livestreamer (1.9.0-1) unstable; urgency=low
+streamlink (1.9.0-1) unstable; urgency=low
 
   * Disable version check (Closes: #750502)
   * New upstream version
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Tue, 22 Jul 2014 20:50:15 +0200
 
-livestreamer (1.8.1-1) unstable; urgency=low
+streamlink (1.8.1-1) unstable; urgency=low
 
   * New upstream version
 
  -- Stefan Breunig <stefan-debian@yrden.de>  Tue, 27 May 2014 21:18:04 +0200
 
-livestreamer (1.7.4-1) unstable; urgency=low
+streamlink (1.7.4-1) unstable; urgency=low
 
   * Initial release (Closes: #740062)
 
