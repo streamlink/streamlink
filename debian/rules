@@ -16,4 +16,4 @@ override_dh_compress:
 	dh_compress -X.html
 
 override_dh_installchangelogs:
-	dh_installchangelogs CHANGELOG.rst
+	dh_installchangelogs CHANGELOG.md
