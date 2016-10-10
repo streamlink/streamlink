@@ -202,8 +202,7 @@ instead.
 Windows binaries
 ----------------
 
-:releaseref:`Installer <https://github.com/streamlink/streamlink/releases/download/v|release|/streamlink-v|release|-win32-setup.exe>`
-^^^^^^^^^^^^^^^^^^^^^^
+You can download the latest Windows installer `here <https://github.com/streamlink/streamlink/releases>`_.
 
 This is a installer which contains:
 
@@ -213,28 +212,9 @@ This is a installer which contains:
 
 and performs the following tasks:
 
-- Generates a default :ref:`configuration file <cli-streamlinkrc>`
 - Adds Streamlink to your ``$PATH`` (making it possible to use
   :command:`streamlink` directly from the command prompt without specifying
   its directory)
 
-:releaseref:`Zip archive <https://github.com/streamlink/streamlink/releases/download/v|release|/streamlink-v|release|-win32.zip>`
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-This is minimal zip archive containing a compiled version of Streamlink that
-does not require an existing Python installation.
-
-`Nightly build`_
-^^^^^^^^^^^^^^^^
-
-This is an automatically generated build of the latest development code
-from the git repo.
-
-.. _Nightly build: http://streamlink-builds.s3.amazonaws.com/streamlink-latest-win32.zip
-
-
-.. note::
-
-    The binaries requires `Microsoft Visual C++ 2008 Redistributable
-    Package <http://www.microsoft.com/en-us/download/details.aspx?id=29>`_ to
-    be installed.
+To build the installer, you need to have NSIS and pynsist installed on your
+system.
