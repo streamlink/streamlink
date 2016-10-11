@@ -37,6 +37,9 @@ if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
 else:
     deps.append("requests>=1.0,<3.0")
 
+deps.append("websocket-client==0.37.0")
+deps.append("pymp4==1.0.0")
+
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
 if environ.get("NO_DEPS"):
