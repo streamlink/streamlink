@@ -1,3 +1,81 @@
+## streamlink 0.0.2 (10-12-2016)
+
+The second ever release of Streamlink!
+
+In this release we've not only set the stepping stone for the further development of Streamlink (documentation site updated, CI builds working) but we're already fixing bugs and implementing features past the initial fork of livestreamer.
+
+The main features of this release are:
+  - New windows build available and generated via pyinstaller
+  - Multiple provider bug fixes (twitch, picarto, itvplayer, crunchyroll, periscope, douyutv)
+  - Updated and reformed documentation which also includes our site [https://streamlink.github.io](https://streamlink.github.io)
+
+As always, below is a `git shortlog` of all changes from the previous release of Streamlink (0.0.1) to now (0.0.2).
+
+```
+Brainzyy <Brainzyy@users.noreply.github.com> (1):
+      add stream.me to the docs
+
+Charlie Drage <charlie@charliedrage.com> (9):
+      Add script to generate authors list / update authors
+      Add release script
+      Get setup.py ready for a release.
+      Revert "Latest fix to plugin from livestreamer"
+      0.0.1 Release
+      Update the README with installation notes
+      Update copyright author
+      Update plugin description on README
+      It's now 2016
+
+Forrest <gravyboat@users.noreply.github.com> (1):
+      Add a coverage file (#54)
+
+Forrest Alvarez <forrest.alvarez@gmail.com> (4):
+      Modify release for streamlink
+      Remove faraday from travis run
+      Remove tox
+      Add the code coverage badge
+
+Latent Logic <lat.logic@gmail.com> (1):
+      Picarto plugin: multistream workaround (fixes #50)
+
+Maschmi <Maschmi@users.noreply.github.com> (1):
+      added travis build status badge fixes #74 (#76)
+
+Randy Taylor <tehgecKozzz@gmail.com> (1):
+      Fix typo in issues docs and improve wording (#61)
+
+Simon Bernier St-Pierre <sbernierstpierre@gmail.com> (8):
+      add script to build & copy the docs
+      move makedocs.sh to script/
+      Automated docs updates via travis-ci
+      prevent the build from hanging
+      fix automated commit message
+      add streamboat to the docs
+      disable docs on pull requests
+      twitch.tv: add option to disable hosting
+
+Simon Bernier St-Pierre <sbstp@users.noreply.github.com> (2):
+      Don't delete everything if docs build fail (#62)
+      Create install script for pynsist (#27)
+
+beardypig <beardypig@users.noreply.github.com> (3):
+      TVPlayer plugin supports the latest version of the website
+      crunchyroll: decide if to parse the stream links as HLS variant playlist or plain old HLS stream (fixes #70)
+      itvplayer: updated the productionId extraction method
+
+boda2004 <boda2004@gmail.com> (1):
+      fixed periscope live streaming and allowed url re (#79)
+
+ethanhlc <sakithree@gmail.com> (1):
+      fixed instances of chrippa/streamlink to streamlink/streamlink
+
+scottbernstein <scott_bernstein@hotmail.com> (1):
+      Latest fix to plugin from livestreamer
+
+steven7851 <steven7851@msn.com> (1):
+      Update plugin.douyutv
+```
+
 ## streamlink 0.0.1 (09-23-2016)
 
 The first release of Streamlink!
