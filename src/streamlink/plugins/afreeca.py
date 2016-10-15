@@ -16,7 +16,7 @@ CHANNEL_RESULT_ERROR = 0
 CHANNEL_RESULT_OK = 1
 
 
-_url_re = re.compile("http(s)?://(\w+\.)?afreeca(tv)?.com/(?P<username>\w+)/\d+")
+_url_re = re.compile("http(s)?://(\w+\.)?afreeca(tv)?.com/(?P<username>\w+)(/\d+)?")
 
 _channel_schema = validate.Schema(
     {
