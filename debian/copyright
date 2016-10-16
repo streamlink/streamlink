@@ -1,10 +1,11 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Contact: Christopher Rosell <chrippa@tanuki.se>
+Upstream-Contact: Forrest Alvarez <forrest.alvarez+streamlinkdebian@gmail.com>
 Source: https://github.com/streamlink/streamlink
 Upstream-Name: streamlink
 
 Files: *
 Copyright: 2011-2016 Christopher Rosell <chrippa@tanuki.se>
+           2016 Streamlink Team
 License: BSD-2-clause
 
 Files: src/streamlink/packages/pbs.py
