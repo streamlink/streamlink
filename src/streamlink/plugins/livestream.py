@@ -103,7 +103,7 @@ class Livestream(Plugin):
 
             qualities = stream_info["qualities"]
             for bitrate, stream in self._parse_smil(play_url, swf_url):
-                name = "{0}k".format(bitrate / 1000)
+                name = "{0:d}k".format(int(bitrate / 1000))
                 for quality in qualities:
                     if quality["bitrate"] == bitrate:
                         name = "{0}p".format(quality["height"])

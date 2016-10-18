@@ -112,7 +112,7 @@ class ITVPlayer(Plugin):
                     params['live'] = True
 
                 bitrate = int(mediafile.attrib['bitrate']) / 1000
-                quality = "{0}k".format(bitrate)
+                quality = "{0:d}k".format(int(bitrate))
                 streams[quality] = RTMPStream(self.session, params)
 
         # Parse HDS streams
