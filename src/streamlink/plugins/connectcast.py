@@ -3,13 +3,11 @@ import json
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream
+from streamlink.stream import RTMPStream
 
-SWF_URL = "https://www.connectcast.tv/jwplayer/jwplayer.flash.swf"
-
-_url_re = re.compile("http(s)?://(\w+\.)?connectcast.tv/")
-_manifest_re = re.compile(".*data-playback=\"([^\"]*)\".*")
-
+_url_re = re.compile(r"http(?:s)?://connectcast.tv/(\w+)?")
+_stream_re = re.compile(r'<video src="mp4:(.*?)"')
+_stream_url = "http://connectcast.tv/channel/stream/{channel}"
 
 class ConnectCast(Plugin):
     @classmethod
@@ -17,14 +15,15 @@ class ConnectCast(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
-        match = _manifest_re.search(res.text)
-        manifest = match.group(1)
-        streams = {}
-        streams.update(
-            HDSStream.parse_manifest(self.session, manifest, pvswf=SWF_URL)
-        )
-        
-        return streams
+        url_match = _url_re.match(self.url)
+        stream_url = _stream_url.format(channel=url_match.group(1))
+        res = self.session.http.get(stream_url)
+        match = _stream_re.search(res.content)
+        if match:
+            params = dict(rtmp="rtmp://stream.connectcast.tv/live",
+                          playpath=match.group(1),
+                          live=True)
+
+            return dict(live=RTMPStream(self.session, params))
 
 __plugin__ = ConnectCast
