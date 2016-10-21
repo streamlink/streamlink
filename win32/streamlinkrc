@@ -1,7 +1,7 @@
 # Format is option=value. Lines starting with a # is considered comments
 # and are ignored.
 
-# By default livestreamer will attempt to locate VLC on your system
+# By default streamlink will attempt to locate VLC on your system
 # and use that, but you can also specify the location of a player
 # yourself.
 
