@@ -128,7 +128,7 @@ def time_to_offset(t):
 
 class UsherService(object):
     def _create_url(self, endpoint, **extra_params):
-        url = "http://usher.twitch.tv{0}".format(endpoint)
+        url = "https://usher.ttvnw.net{0}".format(endpoint)
         params = {
             "player": "twitchweb",
             "p": int(random() * 999999),
