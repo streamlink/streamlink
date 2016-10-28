@@ -89,6 +89,13 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config
 Windows           %APPDATA%\\streamlink\\streamlinkrc
 ================= ====================================================
 
+.. note::
+  Currently the Windows installer does not create the streamlinkrc file. This
+  is a known issue being tracked
+  `here <https://github.com/streamlink/streamlink/issues/81>`_. An example
+  configuration file is available in the
+  `repo <https://github.com/streamlink/streamlink/blob/master/win32/streamlinkrc>`_.
+
 You can also specify the location yourself using the :option:`--config` option.
 
 .. note::
