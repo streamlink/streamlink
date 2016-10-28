@@ -9,7 +9,7 @@ There is also an :ref:`API <api_guide>` available for developers who want access
 to the video stream data. This project was forked from Livestreamer, which is
 no longer maintained.
 
-- Latest release: |version| (:ref:`changelog`)
+- Latest release: |version| (https://github.com/streamlink/streamlink/releases/latest)
 - GitHub: https://github.com/streamlink/streamlink
 - Issue tracker: https://github.com/streamlink/streamlink/issues
 - PyPI: https://pypi.python.org/pypi/streamlink
