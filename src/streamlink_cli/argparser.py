@@ -266,11 +266,6 @@ general.add_argument(
     Runs a version check and exits.
     """
 )
-general.add_argument(
-    "--yes-run-as-root",
-    action="store_true",
-    help=argparse.SUPPRESS
-)
 
 player = parser.add_argument_group("Player options")
 player.add_argument(
