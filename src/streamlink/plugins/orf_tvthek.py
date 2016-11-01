@@ -4,9 +4,9 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
-_stream_url_re = re.compile(r'https?://tvthek\.orf\.at/live/(?P<title>[^/]+)/(?P<id>[0-9]+)')
-_vod_url_re = re.compile(r'https?://tvthek\.orf\.at/program/(?P<showtitle>[^/]+)/(?P<showid>[0-9]+)/(?P<episodetitle>[^/]+)/(?P<epsiodeid>[0-9]+)(/(?P<segmenttitle>[^/]+)/(?P<segmentid>[0-9]+))?')
-_json_re = re.compile(r'initializeAdworx\(\[(?P<json>.+)\]\);')
+_stream_url_re = re.compile(r'https?://tvthek\.orf\.at/(index\.php/)?live/(?P<title>[^/]+)/(?P<id>[0-9]+)')
+_vod_url_re = re.compile(r'https?://tvthek\.orf\.at/pro(gram|file)/(?P<showtitle>[^/]+)/(?P<showid>[0-9]+)/(?P<episodetitle>[^/]+)/(?P<epsiodeid>[0-9]+)(/(?P<segmenttitle>[^/]+)/(?P<segmentid>[0-9]+))?')
+_json_re = re.compile(r'<div class="jsb_ jsb_VideoPlaylist" data-jsb="(?P<json>[^"]+)">')
 
 MODE_STREAM, MODE_VOD = 0, 1
 
@@ -24,16 +24,16 @@ class ORFTVThek(Plugin):
         res = http.get(self.url)
         match = _json_re.search(res.text)
         if match:
-            data = json.loads(_json_re.search(res.text).group('json'))
+            data = json.loads(_json_re.search(res.text).group('json').replace('&quot;', '"'))
         else:
             raise PluginError("Could not extract JSON metadata")
 
         streams = {}
         try:
             if mode == MODE_STREAM:
-                sources = data['values']['episode']['livestream_playlist_data']['videos'][0]['sources']
+                sources = data['playlist']['videos'][0]['sources']
             elif mode == MODE_VOD:
-                sources = data['values']['segment']['playlist_item_array']['sources']
+                sources = data['selected_video']['sources']
         except (KeyError, IndexError):
             raise PluginError("Could not extract sources")
 
