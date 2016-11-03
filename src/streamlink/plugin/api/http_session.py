@@ -67,8 +67,33 @@ class HTTPSession(Session):
             self.mount("https://", HTTPAdapterWithReadTimeout())
 
     @classmethod
+    def determine_json_encoding(cls, sample):
+        """
+        Determine which Unicode encoding the JSON text sample is encoded with
+
+        RFC4627 (http://www.ietf.org/rfc/rfc4627.txt) suggests that the encoding of JSON text can be determined
+        by checking the pattern of NULL bytes in first 4 octets of the text.
+        :param sample: a sample of at least 4 bytes of the JSON text
+        :return: the most likely encoding of the JSON text
+        """
+        nulls_at = [i for i, j in enumerate(bytearray(sample[:4])) if j == 0]
+        if nulls_at == [0, 1, 2]:
+            return "UTF-32BE"
+        elif nulls_at == [0, 2]:
+            return "UTF-16BE"
+        elif nulls_at == [1, 2, 3]:
+            return "UTF-32LE"
+        elif nulls_at == [1, 3]:
+            return "UTF-16LE"
+        else:
+            return "UTF-8"
+
+    @classmethod
     def json(cls, res, *args, **kwargs):
         """Parses JSON from a response."""
+        # if an encoding is already set then use the provided encoding
+        if res.encoding is None:
+            res.encoding = cls.determine_json_encoding(res.content[:4])
         return parse_json(res.text, *args, **kwargs)
 
     @classmethod
