@@ -11,7 +11,7 @@ matrix:
     env: BUILD_DOCS=yes
 
 before_install:
-  - pip install pytest pytest-cov codecov coverage
+  - pip install pytest pytest-cov codecov coverage mock
 
 install:
   - python setup.py install
