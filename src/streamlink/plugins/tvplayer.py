@@ -29,7 +29,7 @@ class TVPlayer(Plugin):
 
     def _get_streams(self):
         # find the list of channels from the html in the page
-        res = http.get(self.url)
+        res = http.get(self.url, headers={"User-Agent": TVPlayer._user_agent})
         stream_attrs = dict((k, v.strip('"')) for k, v in TVPlayer._stream_attrs_.findall(res.text))
 
         # get the stream urls
