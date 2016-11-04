@@ -403,9 +403,9 @@ def fetch_streams_infinite(plugin, interval):
 
     if not streams:
         console.logger.info("Waiting for streams, retrying every {0} "
-                            "second(s)", args.retry_streams)
+                            "second(s)", interval)
     while not streams:
-        sleep(args.retry_streams)
+        sleep(interval)
 
         try:
             streams = fetch_streams(plugin)

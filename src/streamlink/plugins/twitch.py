@@ -1,3 +1,4 @@
+# coding=utf-8
 import re
 
 import requests
@@ -214,7 +215,7 @@ class TwitchAPI(object):
     def viewer_info(self, **params):
         return self.call("/api/viewer/info", **params)
 
-    def  hosted_channel(self, **params):
+    def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
 
@@ -244,6 +245,7 @@ class Twitch(Plugin):
         self.subdomain = match.get("subdomain")
         self.video_type = match.get("video_type")
         self.video_id = match.get("video_id")
+        self._hosted_chain = []
 
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)
@@ -389,6 +391,7 @@ class Twitch(Plugin):
                            tags=playlist_tags, duration=playlist_duration)
 
     def _get_video_streams(self):
+        self.logger.debug("Getting video steams for {} (type={})".format(self.video_id, self.video_type))
         self._authenticate()
 
         if self.video_type == "b":
@@ -435,22 +438,34 @@ class Twitch(Plugin):
         host_info = self.api.hosted_channel(include_logins=1, host=channel_id).json()["hosts"][0]
         if "target_login" in host_info:
             self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
-            self.channel = host_info["target_login"]
-            return True
-        return False
+            return host_info["target_login"]
 
     def _get_hls_streams(self, type="live"):
+        self.logger.debug("Getting {} HLS streams for {}".format(type, self.channel))
         self._authenticate()
-        if self._check_for_host() and self.options.get("disable_hosting"):
+        hosted_channel = self._check_for_host()
+        if hosted_channel and self.options.get("disable_hosting"):
             self.logger.info("hosting was disabled by command line option")
             return {}
-        else:
-            self.logger.info("switching to {}", self.channel)
+        elif hosted_channel:
+            self.logger.info("switching to {}", hosted_channel)
+            if hosted_channel in self._hosted_chain:
+                self._hosted_chain.append(hosted_channel)
+                self.logger.error(u"A loop of hosted channels has been detected, "
+                                  "cannot find a playable stream. ({})".format(u" -> ".join(self._hosted_chain)))
+                return {}
+            self._hosted_chain.append(hosted_channel)
+            self.channel = hosted_channel
+            return self._get_hls_streams(type)
+
         sig, token = self._access_token(type)
         if type == "live":
             url = self.usher.channel(self.channel, sig=sig, token=token)
         elif type == "video":
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
+        else:
+            self.logger.debug("Unknown HLS stream type: {}".format(type))
+            return {}
 
         try:
             streams = HLSStream.parse_variant_playlist(self.session, url)
