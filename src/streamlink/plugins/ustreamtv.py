@@ -38,7 +38,8 @@ HLS_PLAYLIST_URL = (
 )
 RECORDED_URL = "http://tcdn.ustream.tv/video/{0}"
 RTMP_URL = "rtmp://r{0}-1-{1}-channel-live.ums.ustream.tv:1935/ustream"
-SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"
+#SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.rsl:505.swf"  
+SWF_URL = "http://static-cdn1.ustream.tv/swf/live/viewer.qrsl:65.swf?rmalang=en_US" 
 
 _module_info_schema = validate.Schema(
     list,
@@ -103,7 +104,8 @@ _channel_schema = validate.Schema({
             [_stream_schema],
         ),
         "offline"
-    )
+    ),  
+    validate.optional("viewers"): validate.any(int, float)  
 })
 
 Chunk = namedtuple("Chunk", "num url offset")
@@ -246,6 +248,8 @@ class UHSStreamWriter(SegmentedStreamWriter):
                     break
             else:
                 self.logger.debug("Download of chunk {0} complete", chunk.num)
+                if self.playing == 1:  
+                    self.playing += 1  
         except IOError as err:
             self.logger.error("Failed to read chunk {0}: {1}", chunk.num, err)
 
@@ -260,23 +264,45 @@ class UHSStreamWorker(SegmentedStreamWorker):
         self.chunks = []
         self.filename_format = ""
         self.module_info_reload_time = 2
+        self.conn = None  
+        self.writer.playing = 0  
+        #0 is stopped, sending bool false  
+        #1 is playing sent bool false, waiting for downloaded chunk  
+        #2 is chunk downloaded, ready to send bool true  
+        #3 is playing sent bool true  
         self.process_module_info()
 
     def fetch_module_info(self):
         self.logger.debug("Fetching module info")
-        conn = create_ums_connection("channel",
-                                     self.stream.channel_id,
-                                     self.stream.page_url,
-                                     self.stream.password,
-                                     exception=StreamError)
+        if not self.conn or not self.conn.connected:  
+            self.logger.debug("creating new connection.")  
+            self.conn = create_ums_connection("channel",  
+                                         self.stream.channel_id,  
+                                         self.stream.page_url,  
+                                         self.stream.password,  
+                                         exception=StreamError)  
+        else:  
+            self.logger.debug("reusing existing connection.")  
+        if self.writer.playing == 0 or self.writer.playing == 2:  
+            if self.writer.playing == 0:  
+                playparm = False  
+            else:  
+                playparm = True  
+            reason = {  
+                "reason": ""  
+            }  
+            uhs_setPlaying = self.conn.remote_method("playing", block=False)  
+            uhs_setPlaying(str(self.stream.channel_id), playparm, reason)  
+            self.writer.playing+= 1  
 
         try:
-            result = conn.process_packets(invoked_method="moduleInfo",
+            result = self.conn.process_packets(invoked_method="moduleInfo",
                                           timeout=10)
         except (IOError, librtmp.RTMPError) as err:
             raise StreamError("Failed to get module info: {0}".format(err))
         finally:
-            conn.close()
+            #conn.close()
+            pass
 
         result = _module_info_schema.validate(result)
         return _channel_schema.validate(result, "module info")
@@ -285,13 +311,25 @@ class UHSStreamWorker(SegmentedStreamWorker):
         if self.closed:
             return
 
-        try:
-            result = self.fetch_module_info()
-        except PluginError as err:
-            self.logger.error("{0}", err)
-            return
+        attempts = 50  
+        result = None  
+        providers = None  
+        viewers = None  
+        while attempts and not self.closed:  
+            try:  
+                result = self.fetch_module_info()  
+            except PluginError as err:  
+                self.logger.error("{0}", err)  
+                return  
 
-        providers = result.get("stream")
+            providers = result.get("stream")  
+            if not providers:  
+                attempts -= 1  
+            else:  
+                attempts=0  
+        viewers = result.get("viewers")  
+        if viewers:  
+            self.logger.debug("There are {0} viewers.",int(viewers))  
         if not providers or providers == "offline":
             self.logger.debug("Stream went offline")
             self.close()
@@ -327,6 +365,8 @@ class UHSStreamWorker(SegmentedStreamWorker):
         self.chunk_ranges.update(chunk_range)
         self.chunk_id_min = sorted(chunk_range)[0]
         self.chunk_id_max = int(result["chunkId"])
+        if self.chunk_id and self.chunk_id < self.chunk_id_min:  
+            self.chunk_id_min = self.chunk_id  
         self.chunks = [Chunk(i, self.format_chunk_url(i),
                              not self.chunk_id and i == chunk_id and chunk_offset)
                        for i in range(self.chunk_id_min, self.chunk_id_max + 1)]
@@ -498,70 +538,8 @@ class UStreamTV(Plugin):
 
         return result
 
-    def _get_desktop_streams(self, channel_id):
-        password = self.options.get("password")
-        channel = self._get_module_info("channel", channel_id, password,
-                                        schema=_channel_schema)
-
-        if not isinstance(channel.get("stream"), list):
-            raise NoStreamsError(self.url)
-
-        streams = {}
-        for provider in channel["stream"]:
-            if provider["name"] == u"uhs_akamai":  # not heavily tested, but got a stream working
-                continue
-            provider_url = provider["url"]
-            provider_name = provider["name"]
-            for stream_index, stream_info in enumerate(provider["streams"]):
-                stream = None
-                stream_height = int(stream_info.get("height", 0))
-                stream_name = stream_info.get("description")
-                if not stream_name:
-                    if stream_height > 0:
-                        if not stream_info.get("isTranscoded"):
-                            stream_name = "{0}p+".format(stream_height)
-                        else:
-                            stream_name = "{0}p".format(stream_height)
-                    else:
-                        stream_name = "live"
-
-                if stream_name in streams:
-                    provider_name_clean = provider_name.replace("uhs_", "")
-                    stream_name += "_alt_{0}".format(provider_name_clean)
-
-                if provider_name.startswith("uhs_"):
-                    stream = UHSStream(self.session, channel_id,
-                                       self.url, provider_name,
-                                       stream_index, password)
-                elif provider_url.startswith("rtmp"):
-                        playpath = stream_info["streamName"]
-                        stream = self._create_rtmp_stream(provider_url,
-                                                          playpath)
-
-                if stream:
-                    streams[stream_name] = stream
-
-        return streams
-
     def _get_live_streams(self, channel_id):
         has_desktop_streams = False
-        if HAS_LIBRTMP:
-            try:
-                streams = self._get_desktop_streams(channel_id)
-                # TODO: Replace with "yield from" when dropping Python 2.
-                for stream in streams.items():
-                    has_desktop_streams = True
-                    yield stream
-            except PluginError as err:
-                self.logger.error("Unable to fetch desktop streams: {0}", err)
-            except NoStreamsError:
-                pass
-        else:
-            self.logger.warning(
-                "python-librtmp is not installed, but is needed to access "
-                "the desktop streams"
-            )
-
         try:
             streams = self._get_hls_streams(channel_id,
                                             wait_for_transcode=not has_desktop_streams)
@@ -617,7 +595,8 @@ class UStreamTV(Plugin):
 
         video_id = match.group("video_id")
         if video_id:
-            return self._get_recorded_streams(video_id)
+            self.logger.error("VOD are not supported")
+            #return self._get_recorded_streams(video_id)
 
         channel_id = match.group("channel_id") or self._get_channel_id()
         if channel_id:
