@@ -4,7 +4,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
-HLS_URL_FORMAT = "http://hls.goodgame.ru/hls/{0}{1}.m3u8"
+HLS_URL_FORMAT = "https://hls.goodgame.ru/hls/{0}{1}.m3u8"
 QUALITIES = {
     "1080p": "",
     "720p": "_720",
@@ -12,13 +12,8 @@ QUALITIES = {
     "240p": "_240"
 }
 
-_url_re = re.compile("http://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
-_stream_re = re.compile(
-    "meta property=\"og:video:iframe\" content=\"http://goodgame.ru/player/html\?(\w+)\""
-)
-_ddos_re = re.compile(
-    "document.cookie=\"(__DDOS_[^;]+)"
-)
+_url_re = re.compile("https://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
+_stream_re = re.compile(r'var src = "([^"]+)";')
 
 class GoodGame(Plugin):
     @classmethod
@@ -35,11 +30,6 @@ class GoodGame(Plugin):
             "Referer": self.url
         }
         res = http.get(self.url, headers=headers)
-
-        match = _ddos_re.search(res.text)
-        if (match):
-            headers["Cookie"] = match.group(1)
-            res = http.get(self.url, headers=headers)
 
         match = _stream_re.search(res.text)
         if not match:
