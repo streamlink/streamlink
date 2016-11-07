@@ -6,7 +6,7 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
 from streamlink.stream import RTMPStream
 
-jsonapi= "http://www.younow.com/php/api/broadcast/info/curId=0/user="
+jsonapi= "https://api.younow.com/php/api/broadcast/info/curId=0/user="
 
 # http://younow.com/channel/
 _url_re = re.compile("http(s)?://(\w+.)?younow.com/(?P<channel>[^/&?]+)")
