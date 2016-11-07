@@ -14,6 +14,7 @@ QUALITIES = {
 
 _url_re = re.compile("https://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(r'var src = "([^"]+)";')
+_ddos_re = re.compile(r'document.cookie="(__DDOS_[^;]+)')
 
 class GoodGame(Plugin):
     @classmethod
@@ -30,6 +31,11 @@ class GoodGame(Plugin):
             "Referer": self.url
         }
         res = http.get(self.url, headers=headers)
+
+        match = _ddos_re.search(res.text)
+        if match:
+            headers["Cookie"] = match.group(1)
+            res = http.get(self.url, headers=headers)
 
         match = _stream_re.search(res.text)
         if not match:
