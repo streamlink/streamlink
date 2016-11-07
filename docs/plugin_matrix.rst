@@ -12,6 +12,7 @@ is limited.
 =================== ==================== ===== ===== ===========================
 Name                URL(s)               Live  VOD   Notes
 =================== ==================== ===== ===== ===========================
+adultswim           adultswim.com        Yes   No    Streams may be geo-restricted, VOD streams are encrypted
 afreeca             afreecatv.com        Yes   No
 afreecatv           afreeca.tv           Yes   No
 aftonbladet         aftonbladet.se       Yes   Yes
