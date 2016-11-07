@@ -21,8 +21,6 @@ from streamlink.stream.flvconcat import FLVTagConcat
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from websocket import WebSocket
 
-log = logging.getLogger(__name__)
-
 FLVChunk = namedtuple("FLVChunk", "num url offset")
 MP4Chunk = namedtuple("MP4Chunk", "num url type is_header")
 
@@ -31,7 +29,9 @@ class UHSDesktopClient(WebSocket):
     WS_URL = "ws://r{0}-1-{1}-channel-live.ums.ustream.tv:1935/1/ustream"
     APP_ID, APP_VERSION = 3, 1
 
-    def __init__(self, **options):
+    def __init__(self, session, **options):
+        self.session = session
+        self.logger = session.logger.new_module("stream.uhs.flv")
         super(UHSDesktopClient, self).__init__(**options)
         self._callbacks = {}
         self.channel_id = options.pop("channel_id", None)
@@ -60,7 +60,7 @@ class UHSDesktopClient(WebSocket):
         if data[u"cmd"] in self._callbacks:
             return self._callbacks[data[u"cmd"]](self, **data)
         else:
-            log.warn("No handler for command: {0}".format(data[u"cmd"]))
+            self.logger.warn("No handler for command: {0}".format(data[u"cmd"]))
 
     @property
     def rsid(self):
@@ -115,7 +115,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
             if chunk_id >= chunk_start:
                 return chunk_hash
 
-    def get_chunk_url(self, chunk_id, file_pattern, preferred_provider=None, **params):
+    def get_chunk_url(self, chunk_id, file_pattern, preferred_provider="uhs_akamai", **params):
         """
         Get the URL for the chunk using the first provider, or prefer a particular provider
         :param file_pattern:
@@ -167,7 +167,8 @@ class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
 
     def __init__(self, *args, **kwargs):
         super(UHSSegmentedFLVStreamWorker, self).__init__(*args, **kwargs)
-        self.key_frame_offset = 0
+        self.chunk_offsets = {}
+        self.need_offset = True
 
     def handle_module_info(self, client, cmd, args):
         data = validate.validate(self._moduleInfoSchema, args)
@@ -178,11 +179,14 @@ class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
             self.hashes.update(stream.get(u"hashes")[self.stream.stream_index])
 
             # set the max chunk id to the latest id in the hashes
-            self.chunk_id_max = self.chunk_id or sorted(self.hashes)[-1]
+            self.chunk_id_max = sorted(self.hashes)[-1]
+            self.logger.debug("New max chunk_id = {} ".format(self.chunk_id_max))
 
             # the first chunk is the keyframe chunk, it also has an offset
-            self.chunk_id = stream[u"keyframe"][self.stream.stream_index][u"chunkId"]
-            # ignoring keyframe offset for now
+            self.chunk_id = self.chunk_id or stream[u"keyframe"][self.stream.stream_index][u"chunkId"]
+            if self.need_offset:
+                self.chunk_offsets[self.chunk_id] = stream[u"keyframe"][self.stream.stream_index][u"offset"]
+                self.need_offset = False
 
             self.providers = stream.get("providers", self.providers)
             self.file_pattern = stream["streams"][self.stream.stream_index]["streamName"][0]
@@ -191,12 +195,13 @@ class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
         while not self.closed:
             # wait for a command from the web socket server
             self.stream.client.recv_command()
-            while self.chunk_id <= self.chunk_id_max:
-                self.logger.debug("Adding chunk {0} to queue", self.chunk_id)
+            while self.chunk_id <= self.chunk_id_max - self.reader.live_edge:
+                self.logger.debug("Adding chunk {} to queue (offset={})",
+                                  self.chunk_id, self.chunk_offsets.get(self.chunk_id, 0))
 
                 yield FLVChunk(self.chunk_id,
                                self.get_chunk_url(self.chunk_id, self.file_pattern),
-                               self.chunk_offsets.pop(self.chunk_id, 0))
+                               self.chunk_offsets.get(self.chunk_id, 0))
                 self.chunk_id += 1
 
 
@@ -305,10 +310,12 @@ class UHSSegmentedFLVStreamWriter(SegmentedStreamWriter):
                             params=params,
                             exception=StreamError)
         except StreamError as err:
-            self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
             retries -= 1
             if retries <= 0:
+                self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
                 raise
+            sleep(1)
+            self.logger.debug("Retrying chunk {0} due to previous error", chunk.num)
             return self.fetch(chunk, retries)
 
 
@@ -350,9 +357,9 @@ class UHSSegmentedMP4StreamWriter(SegmentedStreamWriter):
             # grab all the URLs for the chunk
             return http.get(chunk.url, timeout=self.timeout, exception=StreamError)
         except StreamError as err:
-            self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
             retries -= 1
             if retries <= 0:
+                self.logger.error("Failed to open chunk {0}: {1}", chunk.num, err)
                 raise
             sleep(1)  # a short delay between retries
             return self.fetch(chunk, retries)
@@ -362,9 +369,10 @@ class UHSSegmentedFLVStreamReader(SegmentedStreamReader):
     __worker__ = UHSSegmentedFLVStreamWorker
     __writer__ = UHSSegmentedFLVStreamWriter
 
-    def __init__(self, stream, *args, **kwargs):
+    def __init__(self, stream, live_edge=1, *args, **kwargs):
         self.logger = stream.session.logger.new_module("stream.uhs.flv")
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
+        self.live_edge = live_edge
 
 
 class UHSSegmentedMP4StreamReader(SegmentedStreamReader):
@@ -384,7 +392,7 @@ class UHSStream(Stream):
         Stream.__init__(self, session)
         self.url = url
         self.channel_id = channel_id
-        self.client = UHSDesktopClient(channel_id=channel_id, url=url)
+        self.client = UHSDesktopClient(session=session, channel_id=channel_id, url=url)
 
     def __repr__(self):
         return "<{0}({1!r}, {2!r})>".format(self.__class__.__name__, self.url, self.channel_id)
@@ -515,7 +523,7 @@ class UStreamTV(Plugin):
                 else:
                     self.logger.warning("Unsupported streamType={0}".format(stream_type))
 
-        ws = UHSDesktopClient(channel_id=channel_id, url=self.url).register("moduleInfo", handle_module_info)
+        ws = UHSDesktopClient(self.session, channel_id=channel_id, url=self.url).register("moduleInfo", handle_module_info)
         ws.connect().recv_command()
         ws.close()
 
