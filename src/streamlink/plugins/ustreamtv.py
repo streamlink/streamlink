@@ -60,7 +60,7 @@ class UHSDesktopClient(WebSocket):
         if data[u"cmd"] in self._callbacks:
             return self._callbacks[data[u"cmd"]](self, **data)
         else:
-            self.logger.warn("No handler for command: {0}".format(data[u"cmd"]))
+            self.logger.warning("No handler for command: {0}".format(data[u"cmd"]))
 
     @property
     def rsid(self):
@@ -450,9 +450,9 @@ class UHSSegmentedMP4Stream(UHSStream):
 
 class UStreamTV(Plugin):
     _url_re = re.compile("""
-        http(s)?://(www\.)?ustream.tv
+        http(?:s)?://(?:www\.)?ustream.tv
         (?:
-            (/embed/|/channel/id/)(?P<channel_id>\d+)
+            (?:/embed/|/channel/id/)(?P<channel_id>\d+)
         )?
         (?:
             /recorded/(?P<video_id>\d+)
@@ -485,10 +485,14 @@ class UStreamTV(Plugin):
         return weight, group
 
     def _get_channel_id(self):
-        res = http.get(self.url)
-        match = UStreamTV._channel_id_re.search(res.text)
-        if match:
-            return int(match.group(1))
+        channel_id, _ = UStreamTV._url_re.match(self.url).groups()
+        if not channel_id:
+            res = http.get(self.url)
+            match = UStreamTV._channel_id_re.search(res.text)
+            if match:
+                return int(match.group(1))
+        else:
+            return int(channel_id)
 
     def _get_desktop_streams(self, channel_id):
         streams = {}
