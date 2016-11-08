@@ -519,12 +519,12 @@ class UStreamTV(Plugin):
         def handle_module_info(client, cmd, args):
             if len(args) and u"stream" in args[0]:
                 stream_metadata = args[0][u"stream"]
-                stream_type = stream_metadata.get("streamType")
                 if stream_metadata == u"offline":
                     self.logger.warning("This stream is currently offline")
                     return
+                stream_type = stream_metadata.get("streamType")
                 # generate streams for the flv stream type
-                elif stream_type == "flv/segmented":
+                if stream_type == "flv/segmented":
                     for stream_index, stream in enumerate(stream_metadata["streams"]):
                         desc = "{0}p".format(stream.get("height"))
                         streams[desc] = UHSSegmentedFLVStream(self.session, client.url, client.media_id,
