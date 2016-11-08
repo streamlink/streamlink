@@ -16,6 +16,7 @@ from pymp4.tools.mux import MP4Muxer
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream
+from streamlink.stream import HTTPStream
 from streamlink.stream import Stream
 from streamlink.stream.flvconcat import FLVTagConcat
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
@@ -26,26 +27,29 @@ MP4Chunk = namedtuple("MP4Chunk", "num url type is_header")
 
 
 class UHSDesktopClient(WebSocket):
-    WS_URL = "ws://r{0}-1-{1}-channel-live.ums.ustream.tv:1935/1/ustream"
+    WS_URL = "ws://r{0}-1-{1}-{2}-live.ums.ustream.tv:1935/1/ustream"
     APP_ID, APP_VERSION = 3, 1
 
-    def __init__(self, session, **options):
+    def __init__(self, session, media_id, application, **options):
         self.session = session
         self.logger = session.logger.new_module("stream.uhs.flv")
         super(UHSDesktopClient, self).__init__(**options)
         self._callbacks = {}
-        self.channel_id = options.pop("channel_id", None)
+        self.media_id = media_id
+        self.application = application
         self.url = options.pop("url", None)
         self._rsid_a = None
         self._rpin = None
+        self._app_id = options.pop("app_id", self.APP_ID)
+        self._app_version = options.pop("app_version", self.APP_VERSION)
 
     def connect(self, **options):
         options.pop("url", None)
         super(UHSDesktopClient, self).connect(self.ws_url, **options)
         self.send_command("connect",
-                          {"type": "viewer", "appId": self.APP_ID, "appVersion": self.APP_VERSION, "rsid": self.rsid,
-                           "rpin": self.rpin, "referrer": self.url or "unknown", "media": str(self.channel_id),
-                           "application": "channel"}
+                          {"type": "viewer", "appId": self._app_id, "appVersion": self._app_version, "rsid": self.rsid,
+                           "rpin": self.rpin, "referrer": self.url or "unknown", "media": str(self.media_id),
+                           "application": self.application}
                           )
         return self
 
@@ -60,7 +64,7 @@ class UHSDesktopClient(WebSocket):
         if data[u"cmd"] in self._callbacks:
             return self._callbacks[data[u"cmd"]](self, **data)
         else:
-            self.logger.warning("No handler for command: {0}".format(data[u"cmd"]))
+            self.logger.warning("No handler for command: {}({})", data[u"cmd"], data.get(u"args"))
 
     @property
     def rsid(self):
@@ -78,7 +82,7 @@ class UHSDesktopClient(WebSocket):
 
     @property
     def ws_url(self):
-        return self.WS_URL.format(randint(0, 0xffffff), self.channel_id)
+        return self.WS_URL.format(randint(0, 0xffffff), self.media_id, self.application)
 
 
 class UHSStreamWorker(SegmentedStreamWorker):
@@ -392,7 +396,7 @@ class UHSStream(Stream):
         Stream.__init__(self, session)
         self.url = url
         self.channel_id = channel_id
-        self.client = UHSDesktopClient(session=session, channel_id=channel_id, url=url)
+        self.client = UHSDesktopClient(session=session, media_id=channel_id, application="channel", url=url)
 
     def __repr__(self):
         return "<{0}({1!r}, {2!r})>".format(self.__class__.__name__, self.url, self.channel_id)
@@ -485,14 +489,29 @@ class UStreamTV(Plugin):
         return weight, group
 
     def _get_channel_id(self):
-        channel_id, _ = UStreamTV._url_re.match(self.url).groups()
-        if not channel_id:
+        """
+        Get the channel ID, either from the URL in the case of an embedded URL or from the page
+        :return:
+        """
+        channel_id, video_id = UStreamTV._url_re.match(self.url).groups()
+        if video_id:
+            return None
+        elif not channel_id:
             res = http.get(self.url)
             match = UStreamTV._channel_id_re.search(res.text)
             if match:
                 return int(match.group(1))
         else:
             return int(channel_id)
+
+    def _get_video_id(self):
+        """
+        Get the video ID from the URL
+        :return: the numeric video_id
+        """
+        _, video_id = UStreamTV._url_re.match(self.url).groups()
+        if video_id:
+            return int(video_id)
 
     def _get_desktop_streams(self, channel_id):
         streams = {}
@@ -508,7 +527,7 @@ class UStreamTV(Plugin):
                 elif stream_type == "flv/segmented":
                     for stream_index, stream in enumerate(stream_metadata["streams"]):
                         desc = "{0}p".format(stream.get("height"))
-                        streams[desc] = UHSSegmentedFLVStream(self.session, client.url, client.channel_id,
+                        streams[desc] = UHSSegmentedFLVStream(self.session, client.url, client.media_id,
                                                               stream_index=stream_index)
                 elif stream_type == "mp4/segmented":
                     audio_stream_index = None
@@ -522,27 +541,60 @@ class UStreamTV(Plugin):
                     for video_stream_index, video_stream in enumerate(stream_metadata["streams"]):
                         if video_stream[u"contentType"].startswith(u"video"):
                             desc = "{0}p".format(video_stream["height"])
-                            streams[desc] = UHSSegmentedMP4Stream(self.session, client.url, client.channel_id,
+                            streams[desc] = UHSSegmentedMP4Stream(self.session, client.url, client.media_id,
                                                                   video_stream_index, audio_stream_index)
                 else:
                     self.logger.warning("Unsupported streamType={0}".format(stream_type))
 
-        ws = UHSDesktopClient(self.session, channel_id=channel_id, url=self.url).register("moduleInfo", handle_module_info)
+        ws = UHSDesktopClient(self.session,
+                              media_id=channel_id,
+                              application="channel",
+                              url=self.url).register("moduleInfo", handle_module_info)
         ws.connect().recv_command()
         ws.close()
 
         return streams
 
     def _get_mobile_streams(self, channel_id):
+        """
+        Get the mobile streams
+        :param channel_id: the numeric ID of the channel
+        :return: a generator of (quality, stream) pairs
+        """
         playlist_url = self._iphone_stream_url.format(channel_id=channel_id)
         for name, stream in HLSStream.parse_variant_playlist(self.session, playlist_url).items():
             yield "mobile_{}".format(name), stream
 
+    def _get_recorded_streams(self, video_id):
+        streams = {}
+
+        def handle_module_info(client, cmd, args):
+            if len(args) and u"stream" in args[0]:
+                for stream_metadata in args[0][u"stream"]:
+                    for stream in stream_metadata.get(u"streams", []):
+                        streams["recorded"] = HTTPStream(self.session, stream[u"streamName"])
+
+        ws = UHSDesktopClient(self.session, app_id=11, app_version=2,
+                              media_id=video_id,
+                              application="recorded",
+                              url=self.url).register("moduleInfo", handle_module_info)
+        ws.connect().recv_command()
+        ws.close()
+
+        return streams
+
     def _get_streams(self):
         channel_id = self._get_channel_id()
-        streams = self._get_desktop_streams(channel_id)
-        streams.update(self._get_mobile_streams(channel_id))
-
+        streams = {}
+        if channel_id:
+            self.logger.debug("Getting streams for channel_id: {}".format(channel_id))
+            streams.update(self._get_desktop_streams(channel_id))
+            streams.update(self._get_mobile_streams(channel_id))
+        else:
+            video_id = self._get_video_id()
+            if video_id:
+                self.logger.debug("Getting streams for video_id: {}".format(video_id))
+                streams.update(self._get_recorded_streams(video_id))
         return streams
 
 
