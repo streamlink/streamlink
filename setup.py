@@ -38,7 +38,7 @@ else:
     deps.append("requests>=1.0,<3.0")
 
 deps.append("websocket-client==0.37.0")
-deps.append("pymp4==1.0.0")
+deps.append("pymp4==1.0.1")
 
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
