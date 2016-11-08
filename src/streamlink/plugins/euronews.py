@@ -66,9 +66,8 @@ class Euronews(Plugin):
         match = self._url_re.match(self.url)
         language, path = match.groups()
 
-        # default language to english
-        if language == "www" or language == "":
-            language = "en"
+        # remap domain to language (default to english)
+        language = {"www": "en", "": "en", "arabic": "ar"}.get(language, language)
 
         if path == "live":
             return self._get_live_streams(language)
