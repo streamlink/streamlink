@@ -137,7 +137,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
 
         return urljoin(purl,
                        file_pattern.replace("%", "%s") % (chunk_id, self.get_chunk_hash(chunk_id))) \
-            + "?" + urlencode(params)
+               + "?" + urlencode(params)
 
 
 class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
@@ -147,25 +147,28 @@ class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
     """
     _moduleInfoSchema = [
         {
-            validate.optional(u"stream"): {
-                u"hashes": [validate.all({validate.text: validate.text},
-                                         validate.transform(lambda x: dict(map(partial(map, int), x.items())))
-                                         )],
-                u'keyframe': [{u'chunkId': int,
-                               u'offset': int,
-                               u'offsetInMs': int}],
-                u'providers': [{u'name': validate.text,
-                                validate.optional(u'url'): validate.url(),
-                                validate.optional(u'varnishUrl'): validate.url()}],
-                u'streamType': u'flv/segmented',
-                u'streams': [{u'bitrate': int,
-                              u'chunkTime': int,
-                              u'height': int,
-                              u'isTranscoded': bool,
-                              u'streamName': [validate.text],
-                              u'videoCodec': validate.text,
-                              u'width': int}]
-            }
+            validate.optional(u"stream"):
+                validate.any(
+                    u"offline",
+                    {
+                        u"hashes": [validate.all({validate.text: validate.text},
+                                                 validate.transform(lambda x: dict(map(partial(map, int), x.items())))
+                                                 )],
+                        u'keyframe': [{u'chunkId': int,
+                                       u'offset': int,
+                                       u'offsetInMs': int}],
+                        u'providers': [{u'name': validate.text,
+                                        validate.optional(u'url'): validate.url(),
+                                        validate.optional(u'varnishUrl'): validate.url()}],
+                        u'streamType': u'flv/segmented',
+                        u'streams': [{u'bitrate': int,
+                                      u'chunkTime': int,
+                                      u'height': int,
+                                      u'isTranscoded': bool,
+                                      u'streamName': [validate.text],
+                                      u'videoCodec': validate.text,
+                                      u'width': int}]
+                    })
         }
     ]
 
@@ -178,6 +181,8 @@ class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
         data = validate.validate(self._moduleInfoSchema, args)
         if u"stream" in data[0]:
             stream = data[0]["stream"]
+            if stream == u"offline":
+                return
 
             # update the hashes for the chunk id
             self.hashes.update(stream.get(u"hashes")[self.stream.stream_index])
@@ -212,29 +217,32 @@ class UHSSegmentedFLVStreamWorker(UHSStreamWorker):
 class UHSSegmentedMP4StreamWorker(UHSStreamWorker):
     _moduleInfoSchema = [
         {
-            validate.optional(u"stream"): {
-                u"chunkId": int,
-                u"hashes": validate.all({validate.text: validate.text},
-                                        validate.transform(
-                                            lambda x: dict(map(lambda y: (int(y[0]), y[1]), x.items())))),
-                u'providers': [
-                    {u'name': validate.text, u'url': validate.url(), validate.optional(u'varnishUrl'): validate.url()}],
-                u'streamType': u'mp4/segmented',
-                u'streams': [validate.any(
-                    {u'bitrate': int,
-                     u'codec': validate.text,
-                     u'contentType': u'video/mp4',
-                     u'height': int,
-                     u'initUrl': validate.text,
-                     u'segmentUrl': validate.text,
-                     u'width': int},
-                    {u'bitrate': int,
-                     u'codec': validate.text,
-                     u'contentType': u'audio/mp4',
-                     u'initUrl': validate.text,
-                     u'segmentUrl': validate.text},
-                )]
-            }
+            validate.optional(u"stream"): validate.any(
+                u"offline",
+                {
+                    u"chunkId": int,
+                    u"hashes": validate.all({validate.text: validate.text},
+                                            validate.transform(
+                                                lambda x: dict(map(lambda y: (int(y[0]), y[1]), x.items())))),
+                    u'providers': [
+                        {u'name': validate.text, u'url': validate.url(),
+                         validate.optional(u'varnishUrl'): validate.url()}],
+                    u'streamType': u'mp4/segmented',
+                    u'streams': [validate.any(
+                        {u'bitrate': int,
+                         u'codec': validate.text,
+                         u'contentType': u'video/mp4',
+                         u'height': int,
+                         u'initUrl': validate.text,
+                         u'segmentUrl': validate.text,
+                         u'width': int},
+                        {u'bitrate': int,
+                         u'codec': validate.text,
+                         u'contentType': u'audio/mp4',
+                         u'initUrl': validate.text,
+                         u'segmentUrl': validate.text},
+                    )]
+                })
         }
     ]
 
@@ -246,6 +254,8 @@ class UHSSegmentedMP4StreamWorker(UHSStreamWorker):
         data = validate.validate(self._moduleInfoSchema, args)
         if u"stream" in data[0]:
             stream = data[0]["stream"]
+            if stream == u"offline":
+                return
             # update the hashes for the chunk id
             self.hashes.update(stream.get(u"hashes"))
 
