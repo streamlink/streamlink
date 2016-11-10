@@ -6,6 +6,7 @@ from streamlink.stream import HDSStream, HLSStream
 from streamlink.plugin.api.utils import parse_query
 
 API_URL = "https://api.zdf.de"
+
 QUALITY_WEIGHTS = {
     "hd": 720,
     "veryhigh": 480,
@@ -13,6 +14,7 @@ QUALITY_WEIGHTS = {
     "med": 176,
     "low": 112
 }
+
 STREAMING_TYPES = {
     "h264_aac_f4f_http_f4m_http": (
         "HDS", HDSStream.parse_manifest
@@ -79,28 +81,30 @@ class zdf_mediathek(Plugin):
         title = self.url.rsplit('/', 1)[-1]
         if title.endswith(".html"):
             title = title[:-5]
+
         request_url = "https://api.zdf.de/content/documents/%s.json?profile=player" % title
         res = http.get(request_url, headers={"Api-Auth" : "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32"})
         document = http.json(res, schema=_documents_schema)
-        stream_request_url = (((document["mainVideoContent"])["http://zdf.de/rels/target"])["http://zdf.de/rels/streams/ptmd"])
+
+        stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
         stream_request_url = API_URL + stream_request_url
+
         res = http.get(stream_request_url)
         res = http.json(res, schema=_schema)
-        priorityList = res["priorityList"]
+        formatList = res["priorityList"]["formitaeten"]
 
         streams = {}
-        for fmts in priorityList:
-            for fmt in fmts["formitaeten"]:
-                if fmt["type"] in STREAMING_TYPES:
-                    name, parser = STREAMING_TYPES[fmt["type"]]
-                    try:
-                        for quality in fmt["qualities"]:
-                            tracks = quality["audio"]["tracks"]
-                            for track in tracks:
-                                streams.update(parser(self.session, track["uri"]))
-                    except IOError as err:
-                        self.logger.error("Failed to extract {0} streams: {1}",
-                                          name, err)
+        for format_ in formatList:
+            if format_["type"] in STREAMING_TYPES:
+                name, parser = STREAMING_TYPES[format_["type"]]
+                for quality in format_["qualities"]:
+                    tracks = quality["audio"]["tracks"]
+                    for track in tracks:
+                        try:
+                            streams.update(parser(self.session, track["uri"]))
+                        except IOError as err:
+                            self.logger.error("Failed to extract {0} streams: {1}",
+                                            name, err)
 
         return streams
 
