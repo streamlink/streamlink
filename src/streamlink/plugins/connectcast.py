@@ -18,7 +18,7 @@ class ConnectCast(Plugin):
         url_match = _url_re.match(self.url)
         stream_url = _stream_url.format(channel=url_match.group(1))
         res = self.session.http.get(stream_url)
-        match = _stream_re.search(res.content)
+        match = _stream_re.search(res.text)
         if match:
             params = dict(rtmp="rtmp://stream.connectcast.tv/live",
                           playpath=match.group(1),
