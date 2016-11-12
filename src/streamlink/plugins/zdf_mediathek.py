@@ -76,6 +76,35 @@ class zdf_mediathek(Plugin):
 
         return Plugin.stream_weight(key)
 
+    def _extract_streams(self, response):
+        if "priorityList" not in response:
+            self.logger.error("Invalid response! Contains no priorityList!")
+
+        for priority in response["priorityList"]:
+            for format_ in priority["formitaeten"]:
+                yield self._extract_from_format(format_)
+
+    def _parse_track(self, track, parser):
+        try:
+            return parser(self.session, track["uri"])
+        except IOError as err:
+            self.logger.error("Failed to extract {0} streams: {1}", name, err)
+
+    def _extract_from_format(self, format_):
+        qualities = {}
+
+        if format_["type"] not in STREAMING_TYPES:
+            return qualities
+
+        name, parser = STREAMING_TYPES[format_["type"]]
+        for quality in format_["qualities"]:
+            for track in quality["audio"]["tracks"]:
+                option = self._parse_track(track, parser)
+                qualities.update(option)
+
+        return qualities
+            
+
     def _get_streams(self):
         match = _url_re.match(self.url)
         title = self.url.rsplit('/', 1)[-1]
@@ -91,20 +120,10 @@ class zdf_mediathek(Plugin):
 
         res = http.get(stream_request_url)
         res = http.json(res, schema=_schema)
-        formatList = res["priorityList"]["formitaeten"]
 
         streams = {}
-        for format_ in formatList:
-            if format_["type"] in STREAMING_TYPES:
-                name, parser = STREAMING_TYPES[format_["type"]]
-                for quality in format_["qualities"]:
-                    tracks = quality["audio"]["tracks"]
-                    for track in tracks:
-                        try:
-                            streams.update(parser(self.session, track["uri"]))
-                        except IOError as err:
-                            self.logger.error("Failed to extract {0} streams: {1}",
-                                            name, err)
+        for format_ in self._extract_streams(res):
+            streams.update(format_)
 
         return streams
 
