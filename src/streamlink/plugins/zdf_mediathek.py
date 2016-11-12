@@ -91,7 +91,7 @@ class zdf_mediathek(Plugin):
 
         res = http.get(stream_request_url)
         res = http.json(res, schema=_schema)
-        formatList = res["priorityList"]["formitaeten"]
+        formatList = res["priorityList"][0]["formitaeten"]
 
         streams = {}
         for format_ in formatList:
