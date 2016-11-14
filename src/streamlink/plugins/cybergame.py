@@ -5,6 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
+LIVE_STREAM_URL = "rtmp://stream1.cybergame.tv:2936/live/"
 PLAYLIST_URL = "http://api.cybergame.tv/p/playlist.smil"
 
 _url_re = re.compile("""
@@ -46,7 +47,7 @@ _playlist_schema = validate.Schema(
 
 class Cybergame(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
     def _get_playlist(self, **params):
@@ -75,6 +76,10 @@ class Cybergame(Plugin):
         if video_id:
             return self._get_playlist(vod=video_id)
         elif channel:
-            return self._get_playlist(channel=channel)
+            return {'live': RTMPStream(
+                self.session,
+                dict(rtmp=LIVE_STREAM_URL, app="live", pageUrl=self.url, playpath=channel, live=True)
+            )}
+
 
 __plugin__ = Cybergame
