@@ -47,8 +47,8 @@
 # Show console output from the video player
 #verbose-player
 
-# RTMP streams are downloaded using rtmpdump. Full path to the rtmpdump exe
-# should be specified here.
+# RTMP streams are downloaded using rtmpdump. Full path or relative path
+# to the rtmpdump exe should be specified here.
 #rtmpdump=C:\Program Files (x86)\Streamlink\rtmpdump\rtmpdump.exe
 
 # Log level, default is info
