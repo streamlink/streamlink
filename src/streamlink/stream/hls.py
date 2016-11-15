@@ -160,7 +160,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.logger.debug("Segments in this playlist are encrypted")
 
             if not CAN_DECRYPT:
-                raise StreamError("Need pyCrypto installed to decrypt this stream")
+                raise StreamError("Need pyCrypto or pycryptodome installed to decrypt this stream")
 
         self.playlist_changed = ([s.num for s in self.playlist_sequences] !=
                                  [s.num for s in sequences])

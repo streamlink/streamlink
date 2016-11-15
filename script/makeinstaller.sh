@@ -19,6 +19,7 @@ format=bundled
 packages=requests
          streamlink
          streamlink_cli
+pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/rtmpdump > \$INSTDIR
 
