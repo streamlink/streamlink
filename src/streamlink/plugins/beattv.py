@@ -262,7 +262,7 @@ class BeatStream(Stream):
     def open(self):
         if not CAN_DECRYPT:
             raise StreamError(
-                "pyCrypto needs to be installed to decrypt this stream"
+                "pyCrypto or pycryptodome needs to be installed to decrypt this stream"
             )
 
         reader = BeatStreamReader(self)

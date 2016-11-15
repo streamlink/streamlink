@@ -147,7 +147,7 @@ Name                                 Notes
 **Optional**
 --------------------------------------------------------------------------------
 `RTMPDump`_                          Required to play RTMP streams.
-`PyCrypto`_                          Required to play some encrypted streams.
+`PyCrypto`_                          Required to play some encrypted streams (`pycryptodome`_ is a compatible alternative).
 `python-librtmp`_                    Required by the *ustreamtv* plugin to be
                                      able to use non-mobile streams.
 ==================================== ===========================================
@@ -160,6 +160,7 @@ Name                                 Notes
 .. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
 .. _PyCrypto: https://www.dlitz.net/software/pycrypto/
+.. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
 
 
