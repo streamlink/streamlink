@@ -202,7 +202,9 @@ instead.
 Windows binaries
 ----------------
 
-You can download the latest Windows installer `here <https://github.com/streamlink/streamlink/releases>`_.
+You can download the latest stable Windows installer `here <https://github.com/streamlink/streamlink/releases>`_.
+
+You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`_.
 
 This is a installer which contains:
 
