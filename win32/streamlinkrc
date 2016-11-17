@@ -50,6 +50,7 @@
 # RTMP streams are downloaded using rtmpdump. Full path or relative path
 # to the rtmpdump exe should be specified here.
 #rtmpdump=C:\Program Files (x86)\Streamlink\rtmpdump\rtmpdump.exe
+rtmpdump=
 
 # Log level, default is info
 #loglevel=debug
