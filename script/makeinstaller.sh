@@ -54,6 +54,37 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 !include "TextFunc.nsh"
 [% extends "pyapp.nsi" %]
 
+[% block modernui %]
+    ; let the user review all changes being made to the system first
+    !define MUI_FINISHPAGE_NOAUTOCLOSE
+    !define MUI_UNFINISHPAGE_NOAUTOCLOSE
+
+    ; add checkbox for opening the documentation in the user's default web browser
+    !define MUI_FINISHPAGE_RUN
+    !define MUI_FINISHPAGE_RUN_TEXT "Open online manual in web browser"
+    !define MUI_FINISHPAGE_RUN_FUNCTION "OpenDocs"
+    !define MUI_FINISHPAGE_RUN_NOTCHECKED
+
+    Function OpenDocs
+        ExecShell "" "https://streamlink.github.io/cli.html"
+    FunctionEnd
+
+    ; add checkbox for editing the configuration file
+    !define MUI_FINISHPAGE_SHOWREADME
+    !define MUI_FINISHPAGE_SHOWREADME_TEXT "Edit configuration file"
+    !define MUI_FINISHPAGE_SHOWREADME_FUNCTION "EditConfig"
+    !define MUI_FINISHPAGE_SHOWREADME_NOTCHECKED
+
+    Function EditConfig
+        SetShellVarContext current
+        Exec '"\$WINDIR\notepad.exe" "\$APPDATA\streamlink\streamlinkrc"'
+        SetShellVarContext all
+    FunctionEnd
+
+    ; constants need to be defined before importing MUI
+    [[ super() ]]
+[% endblock %]
+
 [% block install_files %]
     [[ super() ]]
 
@@ -66,7 +97,10 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
     SetOverwrite ifnewer
     SetOutPath -
     SetShellVarContext all
+[% endblock %]
 
+[% block install_shortcuts %]
+    ; remove unnecessary shortcut
 [% endblock %]
 EOF
 
