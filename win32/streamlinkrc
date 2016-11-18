@@ -31,15 +31,15 @@
 # Use this if you want to transport the stream to the player via HTTP.
 #player-http
 
-# Use this if you want Livestreamer to only pass a URL to your player and
+# Use this if you want streamlink to only pass a URL to your player and
 # let it handle the transport of the stream itself.
 #player-passthrough=http,hls,rtmp
 
-# By default Livestreamer will close the player when stream is over.
+# By default streamlink will close the player when stream is over.
 # Use this option to let the player stay or close itself instead.
 #player-no-close
 
-# Use this option if you want Livestreamer to keep trying to access
+# Use this option if you want streamlink to keep trying to access
 # the stream even if it goes offline or disconnects. Your player must
 # support HTTP and its playlist should be set to repeat mode.
 #player-continuous-http
