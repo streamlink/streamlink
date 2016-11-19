@@ -3,10 +3,12 @@ from .wrappers import StreamIOThreadWrapper
 from ..compat import str
 from ..exceptions import StreamError
 from ..packages import pbs as sh
+from ..packages.shutil_which import which
 
 import os
 import time
 import tempfile
+
 
 class StreamProcessIO(StreamIOThreadWrapper):
     def __init__(self, session, process, **kwargs):
@@ -68,7 +70,7 @@ class StreamProcess(Stream):
 
     def _check_cmd(self):
         try:
-            cmd = sh.create_command(self.cmd)
+            cmd = sh.create_command(which(self.cmd) or self.cmd)
         except sh.CommandNotFound as err:
             raise StreamError("Unable to find {0} command".format(err))
 
@@ -82,7 +84,7 @@ class StreamProcess(Stream):
     @classmethod
     def is_usable(cls, cmd):
         try:
-            cmd = sh.create_command(cmd)
+            cmd = sh.create_command(which(cmd) or cmd)
         except sh.CommandNotFound:
             return False
 

@@ -1,5 +1,4 @@
 import re
-import os.path
 
 from time import sleep
 
@@ -23,7 +22,7 @@ class RTMPStream(StreamProcess):
     def __init__(self, session, params, redirect=False):
         StreamProcess.__init__(self, session, params)
 
-        self.cmd = os.path.realpath(self.session.options.get("rtmp-rtmpdump"))
+        self.cmd = self.session.options.get("rtmp-rtmpdump")
         self.timeout = self.session.options.get("rtmp-timeout")
         self.redirect = redirect
         self.logger = session.logger.new_module("stream.rtmp")
