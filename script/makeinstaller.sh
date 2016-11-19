@@ -100,7 +100,12 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 [% endblock %]
 
 [% block install_shortcuts %]
-    ; remove unnecessary shortcut
+    ; Remove shortcut from previous releases
+    Delete "\$SMPROGRAMS\Streamlink.lnk"
+[% endblock %]
+
+[% block uninstall_shortcuts %]
+    ; no shortcuts to be removed...
 [% endblock %]
 EOF
 
