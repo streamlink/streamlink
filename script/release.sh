@@ -272,7 +272,7 @@ main() {
   "Create PR"
   "Tarball and sign - requires gpg key"
   "Create Windows binary"
-  "Upload the tarball and windows binary and push to Github release page"
+  "Upload the tarball and Windows binary and push to Github release page"
   "Test upload to pypi"
   "Upload to pypi"
   "Clean"
