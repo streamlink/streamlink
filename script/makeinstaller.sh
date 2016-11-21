@@ -6,13 +6,15 @@ set -e # stop on error
 command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to build the installer. Aborting."; exit 1; }
 command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
 
-STREAMLINK_VERSION=$(python -c 'import streamlink; print(streamlink.__version__)')
-STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
 
 # For travis nightly builds generate a version number with commit hash
 if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
+    STREAMLINK_VERSION=$(python -c 'import streamlink; print(streamlink.__version__)')
     STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}-${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT:0:7}"
     STREAMLINK_VERSION="${STREAMLINK_VERSION}+${TRAVIS_COMMIT:0:7}"
+else
+    STREAMLINK_VERSION=$('python setup.py --version')
+    STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
 fi
 
 build_dir="$(pwd)/build"
