@@ -28,6 +28,7 @@ cat > "${build_dir}/streamlink.cfg" <<EOF
 name=Streamlink
 version=${STREAMLINK_VERSION}
 entry_point=streamlink_cli.main:main
+icon=../win32/doggo.ico
 
 [Python]
 version=3.5.2
