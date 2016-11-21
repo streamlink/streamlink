@@ -1,3 +1,94 @@
+## streamlink 0.1.0 (11-21-2016)
+
+A major update to Streamlink.
+
+With this release, we include a Windows binary as well as numerous plugin changes and fixes.
+
+The main features are:
+
+  - Windows binary (and generation!) thanks to the fabulous work by @beardypig
+  - Multiple plugin fixes
+  - Remove unneeded run-as-root (no more warning you when you run as root, we trust that you know what you're doing)
+  - Fix stream quality naming issue
+
+```
+Beardypig <beardypig@users.noreply.github.com> (13):
+      fix stream quality naming issue with py2 vs. py3, fixing #89 (#96)
+      updated connectcast plugin to support the new rtmp streams; fixes #93 (#95)
+      Fix for erroneous escape coding the livecoding plugin. Fixes #106 (#121)
+      TVPlayer.com: fix for 400 error, correctly set the platform parameter (#123)
+      Added a method to automatically determine the encoding when parsing JSON, if no encoding is provided. (#122)
+      when retry-streams and twitch-disable-hosting arguments are used the stream is retried until a non-hosted stream is found (#125)
+      plugins.goodgame: Update for API change (#130)
+      plugins.adultswim: added a new adultswim.com plugin (#139)
+      plugins.goodgame: restored DDOS protection cookie support (#136)
+      plugins.younow: update API url (#135)
+      plugins.euronew: update to support the new site (#141)
+      plugins.webtv: added a new plugin to support web.tv (#144)
+      plugins.connectcast: fix regex issue with python 3 (#152)
+
+Brainzyy <Brainzyy@users.noreply.github.com> (1):
+      Add piczel.tv plugin (courtesy of @intact) (#114)
+
+Charlie Drage <charlie@charliedrage.com> (1):
+      Update release scripts
+
+Erk- <Erk-@users.noreply.github.com> (1):
+      Changed the twitch plugin to use https instead of http as discussed in #103 (#104)
+
+Forrest <gravyboat@users.noreply.github.com> (2):
+      Modify the changelog link (#107)
+      Update cli to note a few windows issues (#108)
+
+Simon Bernier St-Pierre <sbernierstpierre@gmail.com> (1):
+      change icon
+
+Simon Bernier St-Pierre <sbstp@users.noreply.github.com> (1):
+      finish the installer (#98)
+
+Stefan <stefan-github@yrden.de> (1):
+      Debian packaging base (#80)
+
+Stefan <stefanhani@gmail.com> (1):
+      remove run-as-root option, reworded warning #85 (#109)
+
+Weslly <weslly.honorato@gmail.com> (1):
+      Fixed afreecatv.com url matching (#90)
+
+bastimeyer <mail@bastimeyer.de> (2):
+      Improve NSIS installer script
+      Remove shortcut from previous releases on Windows
+
+beardypig <beardypig@users.noreply.github.com> (8):
+      plugins.cybergame: update to support changes to the live streams on the cybergame.tv website
+      Use pycryptodome inplace of pyCrypto
+      Automated build of the Windows NSIS installer
+      support for relative paths for rtmpdump
+      makeinstaller: install the streamlinkrc file in to the users %APPDATA% directory
+      remove references to livestreamer in the win32 config template
+      stream.rtmpdump: fixed the rtmpdump path issue, introduced in 6bf7fd7
+      pin requests to <2.12.0 to avoid the strict IDNA2008 validation
+
+ethanhlc <ethanhlc@users.noreply.github.com> (1):
+      fixed instance of livestreamer (#99)
+
+intact <intact.devel@gmail.com> (1):
+      plugins.livestream: Support old player urls
+
+mmetak <mmetak@users.noreply.github.com> (2):
+      fix vaughnlive.tv info_url (#88)
+      fix vaughnlive.tv info_url (yet again...) (#143)
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      Overworked Plugin for ZDF Mediathek (#154)
+
+sqrt2 <sqrt2@users.noreply.github.com> (1):
+      Fix ORF TVthek plugin (#113)
+
+tam1m <tam1m@users.noreply.github.com> (1):
+      Fix zdf_mediathek TypeError (#156)
+```
+
 ## streamlink 0.0.2 (10-12-2016)
 
 The second ever release of Streamlink!
