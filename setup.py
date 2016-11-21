@@ -35,7 +35,8 @@ if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
 if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
     deps.append("requests>=1.0,<2.0")
 else:
-    deps.append("requests>=1.0,<3.0")
+    # requests >2.12.0 currently has strict IDNA2008 parsing that breaks on some non-compliant URIs (YouTube)
+    deps.append("requests>=1.0,<2.12.0")
 
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
