@@ -838,7 +838,7 @@ def setup_plugin_options():
 def check_root():
     if hasattr(os, "getuid"):
         if os.geteuid() == 0:
-            print("streamlink is running as root! Be careful!")
+            console.logger.info("streamlink is running as root! Be careful!")
 
 
 def check_version(force=False):
@@ -872,12 +872,12 @@ def check_version(force=False):
 
 def main():
     setup_args()
-    check_root()
     setup_streamlink()
     setup_plugins()
     setup_config_args()
     setup_console()
     setup_http_session()
+    check_root()
 
     if args.version_check or not args.no_version_check:
         with ignored(Exception):
