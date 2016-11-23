@@ -13,7 +13,7 @@ if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
     STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}-${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT:0:7}"
     STREAMLINK_VERSION="${STREAMLINK_VERSION}+${TRAVIS_COMMIT:0:7}"
 else
-    STREAMLINK_VERSION=$('python setup.py --version')
+    STREAMLINK_VERSION=$(python setup.py --version)
     STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
 fi
 
