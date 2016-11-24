@@ -36,6 +36,7 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 `mpv <http://mpv.io>`_                                Yes        Yes        Yes
 `QuickTime <http://apple.com/quicktime>`_             No         No         No
 `VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
+OMXPlayer                                             No         Yes        Yes [4]_
 ===================================================== ========== ========== ====
 
 .. [1] :option:`--player-continuous-http` must be used.
@@ -51,6 +52,10 @@ Name                                                  Stdin Pipe Named Pipe HTTP
        VLC is unable to open the MRL 'fd://0'
 
        Use one of the other transport methods instead to work around this.
+
+.. [4] :option:`--player-continuous-http` has been reported to work when also
+       using the timeout option for omxplayer (see `When using OMXPlayer the
+       stream stops unexpectedly`_.)
 
 
 Known issues and workarounds
@@ -82,3 +87,8 @@ VLC hangs when buffering and no playback starts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Some versions of 64-bit VLC seem to be unable to read the stream created by
 rtmpdump. Using the 32-bit version of VLC might help.
+
+When using OMXPlayer the stream stops unexpectedly
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When reading from a fifo pipe OMXPlayer will quit when there is no data, to fix
+this you can supply the timeout option to OMXPlayer using :option:`--player "omxplayer --timeout 20" <--player>`.
