@@ -38,6 +38,9 @@ else:
     # requests >2.12.0 currently has strict IDNA2008 parsing that breaks on some non-compliant URIs (YouTube)
     deps.append("requests>=1.0,<2.12.0")
 
+# this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.5
+deps.append("pycryptodome==3.4.3")
+
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
 if environ.get("NO_DEPS"):
