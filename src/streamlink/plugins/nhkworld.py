@@ -4,42 +4,28 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream
+from streamlink.stream import HLSStream
 
-API_URL = "http://api.sh.nhk.fivecool.tv/api/cdn/?publicId=3bz2huey&playerId=7Dy"
+API_URL = "http://{}.nhk.or.jp/nhkworld/app/tv/hlslive_web.xml"
 
-_url_re = re.compile("http(s)?://(\w+\.)?nhk.or.jp/nhkworld")
-_schema = validate.Schema({
-    "live-streams": [{
-        "streams": validate.all(
-            [{
-                "protocol": validate.text,
-                "streamUrl": validate.text
-            }],
-            validate.filter(lambda s: s["protocol"] in ("http-flash", "http-hds"))
-        )
-    }]
-})
+_url_re = re.compile("http(?:s)?://(?:(\w+)\.)?nhk.or.jp/nhkworld")
+_schema = validate.Schema(
+        validate.xml_findtext("./main_url/wstrm")
+)
 
 
 class NHKWorld(Plugin):
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return _url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(API_URL)
-        data = http.json(res, schema=_schema)
+        # get the HLS xml from the same sub domain as the main url, defaulting to www
+        sdomain = _url_re.match(self.url).group(1) or "www"
+        res = http.get(API_URL.format(sdomain))
 
-        streams = {}
-        for livestreams in data["live-streams"]:
-            for stream in livestreams["streams"]:
-                url = stream["streamUrl"]
-                for name, stream in HDSStream.parse_manifest(self.session, url).items():
-                    if name.endswith("k"):
-                        streams[name] = stream
-
-        return streams
+        stream_url = http.xml(res, schema=_schema)
+        return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
 __plugin__ = NHKWorld
