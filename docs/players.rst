@@ -53,9 +53,11 @@ OMXPlayer                                             No         Yes        Yes 
 
        Use one of the other transport methods instead to work around this.
 
-.. [4] :option:`--player-continuous-http` has been reported to work when also
-       using the timeout option for omxplayer (see `When using OMXPlayer the
-       stream stops unexpectedly`_.)
+.. [4] :option:`--player-continuous-http` has been reported to work for HLS
+       streams when also using the timeout option for omxplayer (see `When
+       using OMXPlayer the stream stops unexpectedly`_.) Other stream types
+       may not work as expected, it is recommended that :option:`--player-fifo` be
+       used.
 
 
 Known issues and workarounds
