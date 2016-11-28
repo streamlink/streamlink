@@ -2,7 +2,7 @@ import datetime
 import re
 import time
 from collections import namedtuple
-from itertools import count
+from itertools import count, repeat, izip
 
 from streamlink.compat import urlparse, urljoin
 
@@ -28,6 +28,9 @@ from contextlib import contextmanager
 
 Segment = namedtuple("Segment", "url duration init content available_at")
 
+
+def datetime_to_seconds(dt):
+    return (dt - datetime.datetime(1970, 1, 1, tzinfo=utc)).total_seconds()
 
 @contextmanager
 def sleeper(duration):
@@ -75,6 +78,10 @@ class MPDParsers(object):
             return float(a)/float(b)
         else:
             return float(frame_rate)
+
+    @staticmethod
+    def timedelta(seconds):
+        return datetime.timedelta(seconds=int(seconds))
 
 
 class MPDParsingError(Exception):
@@ -301,7 +308,10 @@ class SegmentTemplate(MPDNode):
         self.duration = self.attr(u"duration", parser=int)
         self.timescale = self.attr(u"timescale", parser=int, default=1)
         self.startNumber = self.attr(u"startNumber", parser=int)
-        self.seconds = self.duration / float(self.timescale)
+        self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta)
+
+        self.duration_seconds = self.duration / float(self.timescale)
+
         self.period = list(self.walk_back(Period))[0]
 
     def segments(self, **kwargs):
@@ -309,7 +319,7 @@ class SegmentTemplate(MPDNode):
         if init_url:
             yield Segment(init_url, 0, True, False, 0)
         for media_url, available_at in self.format_media(**kwargs):
-            yield Segment(media_url, self.seconds, False, True, available_at)
+            yield Segment(media_url, self.duration_seconds, False, True, available_at)
 
     def make_url(self, url):
         """
@@ -323,33 +333,47 @@ class SegmentTemplate(MPDNode):
         if self.initialization:
             return self.make_url(self.initialization.format(**kwargs))
 
-    def starting_segment(self):
-        if self.root.type == "dynamic":
-            seconds_since_start = (datetime.datetime.now(utc) - self.root.availabilityStartTime).seconds - 3
-            seconds_per_segment = (self.duration / self.timescale)
 
-            return self.startNumber + (seconds_since_start / seconds_per_segment)
-        else:
-            return self.startNumber
+    def segment_numbers(self):
+        """
+        yield the segment number and when it will be available
+        There are two cases for segment number generation, static and dynamic.
 
-    def available_at(self, n):
-        if self.root.type == "dynamic":
-            seconds_per_segment = (self.duration / self.timescale)
-            available_since = (self.root.availabilityStartTime - datetime.datetime(1970, 1, 1, tzinfo=utc)).total_seconds()
-            return available_since + ((n - self.startNumber) * seconds_per_segment)
+        In the case of static stream, the segment number starts at the startNumber and counts
+        up to the number of segments that are represented by the periods duration.
+
+        In the case of dynamic streams, the segments should appear at the specified time
+        in the simplest case the segment number is based on the time since the availabilityStartTime
+        :return:
+        """
+        if self.root.type == u"static":
+            available_iter = repeat(0)
+            if self.period.duration.seconds:
+                number_iter = range(self.startNumber, (self.period.duration.seconds / self.duration_seconds) + 1)
+            else:
+                number_iter = count(self.startNumber)
         else:
-            return 0
+            now = datetime.datetime.now(utc)
+            if self.presentationTimeOffset:
+                seconds_since_start = ((now - self.presentationTimeOffset) - self.root.availabilityStartTime).total_seconds()
+                available_start_date = self.root.availabilityStartTime + self.presentationTimeOffset + datetime.timedelta(seconds=seconds_since_start)
+                available_start = int(datetime_to_seconds(available_start_date))
+            else:
+                seconds_since_start = (now - self.root.availabilityStartTime).total_seconds()
+                available_start = int(datetime_to_seconds(now))
+
+            print seconds_since_start, available_start
+
+            number_iter = count(self.startNumber + int(seconds_since_start / self.duration_seconds))
+            available_iter = count(available_start + 3, step=self.duration_seconds)
+
+        for number, available_at in izip(number_iter, available_iter):
+            yield number, available_at
 
     def format_media(self, **kwargs):
         if self.startNumber:
-
-            if self.period.duration.seconds:
-                number_iter = range(self.starting_segment(), (self.period.duration.seconds / self.seconds) + 1)
-            else:
-                number_iter = count(self.starting_segment())
-
-            for n in number_iter:
-                yield self.make_url(self.media.format(Number=n, **kwargs)), self.available_at(n)
+            for number, available_at in self.segment_numbers():
+                yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
         else:
             yield self.make_url(self.media.format(**kwargs)), 0
 
