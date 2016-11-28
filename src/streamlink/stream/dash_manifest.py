@@ -45,28 +45,36 @@ def sleep_until(walltime):
 
 class MPDParsers(object):
     @staticmethod
-    def parse_bool_str(v):
+    def bool_str(v):
         if v.lower() not in ("true", "false"):
             raise MPDParsingError("bool must be true or false")
         return v.lower() == "true"
 
     @staticmethod
-    def parse_type(type_):
+    def type(type_):
         if type_ not in (u"static", u"dynamic"):
             raise MPDParsingError("@type must be static or dynamic")
         return type_
 
     @staticmethod
-    def parse_duration(duration):
+    def duration(duration):
         return parse_duration(duration)
 
     @staticmethod
-    def parse_datetime(dt):
+    def datetime(dt):
         return parse_datetime(dt)
 
     @staticmethod
-    def parse_segment_template(url_template):
+    def segment_template(url_template):
         return re.compile(r"\$(\w+)\$").sub(r"{\1}", url_template)
+
+    @staticmethod
+    def frame_rate(frame_rate):
+        if "/" in frame_rate:
+            a, b = frame_rate.split("/")
+            return float(a)/float(b)
+        else:
+            return float(frame_rate)
 
 
 class MPDParsingError(Exception):
@@ -95,7 +103,7 @@ class MPDNode(object):
             attrs=" ".join("@{}={}".format(attr, getattr(self, attr)) for attr in self.attributes)
         )
 
-    def attr(self, key, default=None, parser=None, required=False):
+    def attr(self, key, default=None, parser=None, required=False, inherited=False):
         self.attributes.add(key)
         if key in self.attrib:
             value = self.attrib.get(key)
@@ -103,7 +111,11 @@ class MPDNode(object):
                 return parser(value)
             else:
                 return value
-        elif required:
+        elif inherited:
+            if self.parent and hasattr(self.parent, key) and getattr(self.parent, key):
+                    return getattr(self.parent, key)
+
+        if required:
             raise MPDParsingError("could not find required attribute {tag}@{attr} ".format(attr=key, tag=self.__tag__))
         else:
             return default
@@ -151,18 +163,18 @@ class MPD(MPDNode):
         # top level has no parent
         super(MPD, self).__init__(node, root=self, *args, **kwargs)
         # parser attributes
-        self.id = self.attr(u"id", parser=int)
+        self.id = self.attr(u"id")
         self.profiles = self.attr(u"profiles", required=True)
-        self.type = self.attr(u"type", default=u"static", parser=MPDParsers.parse_type)
-        self.minimumUpdatePeriod = self.attr(u"minimumUpdatePeriod", parser=MPDParsers.parse_duration)
-        self.minBufferTime = self.attr(u"minBufferTime", parser=MPDParsers.parse_duration, required=True)
-        self.timeShiftBufferDepth = self.attr(u"timeShiftBufferDepth", parser=MPDParsers.parse_duration)
+        self.type = self.attr(u"type", default=u"static", parser=MPDParsers.type)
+        self.minimumUpdatePeriod = self.attr(u"minimumUpdatePeriod", parser=MPDParsers.duration)
+        self.minBufferTime = self.attr(u"minBufferTime", parser=MPDParsers.duration, required=True)
+        self.timeShiftBufferDepth = self.attr(u"timeShiftBufferDepth", parser=MPDParsers.duration)
         self.availabilityStartTime = self.attr(u"availabilityStartTime", parser=parse_datetime,
                                                default=datetime.datetime.fromtimestamp(0, utc),  # earliest date
                                                required=self.type == "dynamic")
         self.publishTime = self.attr(u"publishTime", parser=parse_datetime, required=self.type == "dynamic")
-        self.mediaPresentationDuration = self.attr(u"mediaPresentationDuration", parser=MPDParsers.parse_duration)
-        self.suggestedPresentationDelay = self.attr(u"suggestedPresentationDelay", parser=MPDParsers.parse_duration)
+        self.mediaPresentationDuration = self.attr(u"mediaPresentationDuration", parser=MPDParsers.duration)
+        self.suggestedPresentationDelay = self.attr(u"suggestedPresentationDelay", parser=MPDParsers.duration)
 
         # parse children
         self.baseURLs = self.children(BaseURL)
@@ -210,9 +222,9 @@ class Period(MPDNode):
         super(Period, self).__init__(node, root, parent, *args, **kwargs)
         self.i = kwargs.get(u"i", 0)
         self.id = self.attr(u"id")
-        self.bitstreamSwitching = self.attr(u"bitstreamSwitching", parser=MPDParsers.parse_bool_str)
-        self.duration = self.attr(u"duration", default=Duration(), parser=MPDParsers.parse_duration)
-        self.start = self.attr(u"start", default=Duration(), parser=MPDParsers.parse_duration)
+        self.bitstreamSwitching = self.attr(u"bitstreamSwitching", parser=MPDParsers.bool_str)
+        self.duration = self.attr(u"duration", default=Duration(), parser=MPDParsers.duration)
+        self.start = self.attr(u"start", default=Duration(), parser=MPDParsers.duration)
 
         if self.start is None and self.i == 0 and self.root.type == "static":
             self.start = 0
@@ -257,20 +269,21 @@ class AdaptationSet(MPDNode):
 
         self.id = self.attr(u"id")
         self.group = self.attr(u"group")
+        self.mimeType = self.attr(u"mimeType")
         self.lang = self.attr(u"lang")
         self.contentType = self.attr(u"contentType")
         self.par = self.attr(u"par")
         self.minBandwidth = self.attr(u"minBandwidth")
         self.maxBandwidth = self.attr(u"maxBandwidth")
-        self.minWidth = self.attr(u"minWidth")
-        self.maxWidth = self.attr(u"maxWidth")
-        self.minHeight = self.attr(u"minHeight")
-        self.maxHeight = self.attr(u"maxHeight")
-        self.minFrameRate = self.attr(u"minFrameRate")
-        self.maxFrameRate = self.attr(u"maxFrameRate")
-        self.segmentAlignment = self.attr(u"segmentAlignment", default=False, parser=MPDParsers.parse_bool_str)
-        self.bitstreamSwitching = self.attr(u"bitstreamSwitching", parser=MPDParsers.parse_bool_str)
-        self.subsegmentAlignment = self.attr(u"subsegmentAlignment", default=False, parser=MPDParsers.parse_bool_str)
+        self.minWidth = self.attr(u"minWidth", parser=int)
+        self.maxWidth = self.attr(u"maxWidth", parser=int)
+        self.minHeight = self.attr(u"minHeight", parser=int)
+        self.maxHeight = self.attr(u"maxHeight", parser=int)
+        self.minFrameRate = self.attr(u"minFrameRate", parser=MPDParsers.frame_rate)
+        self.maxFrameRate = self.attr(u"maxFrameRate", parser=MPDParsers.frame_rate)
+        self.segmentAlignment = self.attr(u"segmentAlignment", default=False, parser=MPDParsers.bool_str)
+        self.bitstreamSwitching = self.attr(u"bitstreamSwitching", parser=MPDParsers.bool_str)
+        self.subsegmentAlignment = self.attr(u"subsegmentAlignment", default=False, parser=MPDParsers.bool_str)
         self.subsegmentStartsWithSAP = self.attr(u"subsegmentStartsWithSAP", default=0, parser=int)
 
         self.baseURLs = self.children(BaseURL)
@@ -283,10 +296,10 @@ class SegmentTemplate(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super(SegmentTemplate, self).__init__(node, root, parent, *args, **kwargs)
-        self.initialization = self.attr(u"initialization", parser=MPDParsers.parse_segment_template)
-        self.media = self.attr(u"media", parser=MPDParsers.parse_segment_template)
+        self.initialization = self.attr(u"initialization", parser=MPDParsers.segment_template)
+        self.media = self.attr(u"media", parser=MPDParsers.segment_template)
         self.duration = self.attr(u"duration", parser=int)
-        self.timescale = self.attr(u"timescale", parser=int)
+        self.timescale = self.attr(u"timescale", parser=int, default=1)
         self.startNumber = self.attr(u"startNumber", parser=int)
         self.seconds = self.duration / float(self.timescale)
         self.period = list(self.walk_back(Period))[0]
@@ -348,7 +361,7 @@ class Representation(MPDNode):
         super(Representation, self).__init__(node, root, parent, *args, **kwargs)
         self.id = self.attr(u"id", required=True)
         self.bandwidth = self.attr(u"bandwidth", parser=lambda b: float(b) / 1000.0, required=True)
-        self.mimeType = self.attr(u"mimeType", required=True)
+        self.mimeType = self.attr(u"mimeType", required=True, inherited=True)
 
         self.codecs = self.attr(u"codecs")
         self.startWithSAP = self.attr(u"startWithSAP")
@@ -356,12 +369,14 @@ class Representation(MPDNode):
         # video
         self.width = self.attr(u"width", parser=int)
         self.height = self.attr(u"height", parser=int)
-        self.frameRate = self.attr(u"frameRate", parser=float)
+        self.frameRate = self.attr(u"frameRate", parser=MPDParsers.frame_rate)
 
         # audio
         self.audioSamplingRate = self.attr(u"audioSamplingRate", parser=int)
         self.numChannels = self.attr(u"numChannels", parser=int)
 
+        # subtitle
+        self.lang = self.attr(u"lang", inherited=True)
 
         self.baseURLs = self.children(BaseURL)
         self.subRepresentation = self.children(SubRepresentation)
