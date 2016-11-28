@@ -10,7 +10,7 @@ STREAM_TYPES=["rtmp"]
 
 _url_re = re.compile("""
     http(s)?://www\.tigerdile\.com
-    \/stream\/.*\/""", re.VERBOSE)
+    \/stream\/(.*)\/""", re.VERBOSE)
 
 
 class Tigerdile(Plugin):
@@ -20,15 +20,16 @@ class Tigerdile(Plugin):
 
     def _get_streams(self):
         res = self.url
+        streamname = _url_re.search(res).group(2)
         streams = {}
         stream = RTMPStream(self.session, {
-            "rtmp": ROOT_URL.format(res[len(PAGE_URL):]),
+            "rtmp": ROOT_URL.format(streamname),
             "pageUrl": PAGE_URL,
             "live": True,
             "app": "live",
             "flashVer": "LNX 11,2,202,280",
             "swfVfy": "https://www.tigerdile.com/wp-content/jwplayer.flash.swf",
-            "playpath": res[len(PAGE_URL):-1],
+            "playpath": streamname,
         })
         streams["live"] = stream
 
