@@ -25,6 +25,8 @@ atv                 atv.com.tr           Yes   No
 azubutv             azubu.tv             Yes   No
 bambuser            bambuser.com         Yes   Yes
 beam                beam.pro             Yes   No
+bigo                - live.bigo.tv       Yes   --
+                    - bigoweb.co
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
