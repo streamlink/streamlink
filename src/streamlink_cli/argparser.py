@@ -761,7 +761,17 @@ transport.add_argument(
     Useful when debugging rtmpdump related issues.
     """
 )
+transport.add_argument(
+    "--ffmpeg-ffmpeg",
+    metavar="FILENAME",
+    help="""
+    FFMPEG is used to access mux separate video and audio streams.
+    You can specify the location of the ffmpeg executable if it is
+    not in your PATH.
 
+    Example: "/usr/local/bin/ffmpeg"
+    """
+)
 
 http = parser.add_argument_group("HTTP options")
 http.add_argument(

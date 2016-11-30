@@ -59,7 +59,8 @@ class Streamlink(object):
             "stream-segment-timeout": 10.0,
             "stream-timeout": 60.0,
             "subprocess-errorlog": False,
-            "subprocess-errorlog-path": None
+            "subprocess-errorlog-path": None,
+            "ffmpeg-ffmpeg": is_win32 and "ffmpeg.exe" or "ffmpeg"
         })
         self.plugins = {}
         self.logger = Logger()

@@ -754,6 +754,9 @@ def setup_options():
     if args.stream_timeout:
         streamlink.set_option("stream-timeout", args.stream_timeout)
 
+    if args.ffmpeg_ffmpeg:
+        streamlink.set_option("ffmpeg-ffmpeg", args.ffmpeg_ffmpeg)
+
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
 
