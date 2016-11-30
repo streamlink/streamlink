@@ -18,15 +18,16 @@ except ImportError:
 class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
 
-    def __init__(self, session, *substreams):
+    def __init__(self, session, *substreams, **options):
         super(MuxedStream, self).__init__(session)
         self.substreams = substreams
+        self.options = options
 
     def open(self):
         fds = []
         for substream in self.substreams:
             fds.append(substream.open())
-        return FFMPEGMuxer(self.session, *fds).open()
+        return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
     @classmethod
     def is_usable(cls, session):
@@ -70,13 +71,14 @@ class FFMPEGMuxer(object):
 
         ofmt = options.pop("format", "matroska")
         outpath = options.pop("outpath", "pipe:1")
-
+        videocodec = options.pop("vcodec", "copy")
+        audiocodec = options.pop("acodec", "copy")
 
         self._cmd = [self.command(session), '-y']
         for np in self.pipes:
             self._cmd.extend(["-i", np.path])
 
-        self._cmd.extend(['-c:v', 'copy', '-c:a', 'copy', '-f', ofmt, outpath])
+        self._cmd.extend(['-c:v', videocodec, '-c:a', audiocodec, '-f', ofmt, outpath])
         self.logger.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
 
 
