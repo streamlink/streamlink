@@ -772,6 +772,25 @@ transport.add_argument(
     Example: "/usr/local/bin/ffmpeg"
     """
 )
+transport.add_argument(
+    "--ffmpeg-video-transcode",
+    metavar="CODEC",
+    help="""
+    When muxing streams transcode the video to this CODEC, defaults to copy (no transcode)
+
+    Example: "h264"
+    """
+)
+
+transport.add_argument(
+    "--ffmpeg-audio-transcode",
+    metavar="CODEC",
+    help="""
+    When muxing streams transcode the audio to this CODEC, defaults to copy (no transcode)
+
+    Example: "aac"
+    """
+)
 
 http = parser.add_argument_group("HTTP options")
 http.add_argument(

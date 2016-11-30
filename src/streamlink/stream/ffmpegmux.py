@@ -71,8 +71,8 @@ class FFMPEGMuxer(object):
 
         ofmt = options.pop("format", "matroska")
         outpath = options.pop("outpath", "pipe:1")
-        videocodec = options.pop("vcodec", "copy")
-        audiocodec = options.pop("acodec", "copy")
+        videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
+        audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
 
         self._cmd = [self.command(session), '-y']
         for np in self.pipes:
