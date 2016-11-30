@@ -9,7 +9,7 @@ ROOT_URL = "rtmp://stream.tigerdile.com/live/{}"
 STREAM_TYPES=["rtmp"]
 
 _url_re = re.compile("""
-    http(s)?://(www|sfw)\.tigerdile\.com
+    https?://(?:www|sfw)\.tigerdile\.com
     \/stream\/(.*)\/""", re.VERBOSE)
 
 
@@ -20,7 +20,7 @@ class Tigerdile(Plugin):
 
     def _get_streams(self):
         res = self.url
-        streamname = _url_re.search(res).group(3)
+        streamname = _url_re.search(res).group(1)
         streams = {}
         stream = RTMPStream(self.session, {
             "rtmp": ROOT_URL.format(streamname),
