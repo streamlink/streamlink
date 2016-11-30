@@ -97,6 +97,7 @@ svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restrict
                     - oppetarkiv.se
 tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
+tigerdile           tigerdile.com        Yes   --
 tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
