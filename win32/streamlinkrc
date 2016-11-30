@@ -52,6 +52,12 @@
 #rtmpdump=C:\Program Files (x86)\Streamlink\rtmpdump\rtmpdump.exe
 rtmpdump=
 
+# FFMPEG is used to mux separate video and audio streams in to a single
+# stream so that they can be played. The pull or relative path to ffmpeg
+# or avconv should be specified here.
+#ffmpeg-ffmpeg=C:\Program Files (x86)\Streamlink\ffmpeg\ffmpeg.exe
+ffmpeg-ffmpeg=
+
 # Log level, default is info
 #loglevel=debug
 
