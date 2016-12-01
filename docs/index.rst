@@ -32,7 +32,7 @@ such as:
 on the :ref:`plugin_matrix` page.
 
 Quickstart
------------
+----------
 
 The default behaviour of Streamlink is to playback a stream in the default
 player (`VLC <http://videolan.org/>`_).
@@ -63,3 +63,5 @@ See their respective sections for more information on how to use them.
     issues
     api_guide
     api
+    changelog
+    twitch_oauth
