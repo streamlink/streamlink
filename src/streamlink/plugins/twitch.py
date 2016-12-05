@@ -28,7 +28,7 @@ QUALITY_WEIGHTS = {
 }
 
 
-TWITCH_CLIENT_ID="ewvlchtxgqq88ru9gmfp1gmyt6h2b93"
+TWITCH_CLIENT_ID="pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
 
 _url_re = re.compile(r"""
     http(s)?://
