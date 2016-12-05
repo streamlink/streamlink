@@ -4,7 +4,7 @@ import time
 from collections import namedtuple
 from itertools import count, repeat, izip
 
-from streamlink.compat import urlparse, urljoin
+from streamlink.compat import urlparse, urljoin, urlunparse
 
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc
@@ -104,6 +104,10 @@ class MPDNode(object):
     def attrib(self):
         return self.node.attrib
 
+    @property
+    def text(self):
+        return self.node.text
+
     def __str__(self):
         return "<{tag} {attrs}>".format(
             tag=self.__tag__,
@@ -166,10 +170,11 @@ class MPD(MPDNode):
     """
     __tag__ = u"MPD"
 
-    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+    def __init__(self, node, root=None, parent=None, url=None, *args, **kwargs):
         # top level has no parent
         super(MPD, self).__init__(node, root=self, *args, **kwargs)
         # parser attributes
+        self.url = url
         self.id = self.attr(u"id")
         self.profiles = self.attr(u"profiles", required=True)
         self.type = self.attr(u"type", default=u"static", parser=MPDParsers.type)
@@ -184,10 +189,17 @@ class MPD(MPDNode):
         self.suggestedPresentationDelay = self.attr(u"suggestedPresentationDelay", parser=MPDParsers.duration)
 
         # parse children
+        location = self.children(Location)
+        self.location = location[0] if location else None
+        if self.location:
+            self.url = self.location.text
+            urlp = list(urlparse(self.url))
+            urlp[2], _ = urlp[2].rsplit("/", 1)
+            self._base_url = urlunparse(urlp)
+
         self.baseURLs = self.children(BaseURL)
         self.periods = self.children(Period, minimum=1)
         self.programInformation = self.children(ProgramInformation)
-        self.locations = self.children(Location)
 
 
 class ProgramInformation(MPDNode):
@@ -310,9 +322,16 @@ class SegmentTemplate(MPDNode):
         self.startNumber = self.attr(u"startNumber", parser=int)
         self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta)
 
-        self.duration_seconds = self.duration / float(self.timescale)
+        if self.duration:
+            self.duration_seconds = self.duration / float(self.timescale)
+        else:
+            self.duration_seconds = None
 
         self.period = list(self.walk_back(Period))[0]
+
+        # children
+        timeline = self.children(SegmentTimeline, maximum=1)
+        self.segmentTimeline = timeline[0] if len(timeline) else None
 
     def segments(self, **kwargs):
         init_url = self.format_initialization(**kwargs)
@@ -374,6 +393,12 @@ class SegmentTemplate(MPDNode):
         if self.startNumber:
             for number, available_at in self.segment_numbers():
                 yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
+        elif self.segmentTimeline:
+            t = 0
+            for segment in self.segmentTimeline.segments:
+                t = t or segment.t
+                yield self.make_url(self.media.format(Time=t, **kwargs)), 0
+                t += segment.d
         else:
             yield self.make_url(self.media.format(**kwargs)), 0
 
@@ -440,3 +465,22 @@ class Representation(MPDNode):
 
 class SubRepresentation(MPDNode):
     __tag__ = "SubRepresentation"
+
+
+class SegmentTimeline(MPDNode):
+    __tag__ = "SegmentTimeline"
+
+    def __init__(self, node, *args, **kwargs):
+        super(SegmentTimeline, self).__init__(node, *args, **kwargs)
+
+        self.segments = self.children(TimelineSegment)
+
+
+class TimelineSegment(MPDNode):
+    __tag__ = "S"
+
+    def __init__(self, node, *args, **kwargs):
+        super(TimelineSegment, self).__init__(node, *args, **kwargs)
+
+        self.t = self.attr("t", parser=int)
+        self.d = self.attr("d", parser=int)

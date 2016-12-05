@@ -54,6 +54,17 @@ class DASHStreamWorker(SegmentedStreamWorker):
             yield segment
             self.logger.debug("Adding segment {0} to queue", segment.url)
 
+    def reload(self):
+        if self.closed:
+            return
+
+        self.reader.buffer.wait_free()
+        self.logger.debug("Reloading manifest")
+        res = self.session.http.get(self.mpd.url,
+                                    exception=StreamError,
+                                    **self.reader.request_params)
+
+        mpd = MPD(http.xml(res, ignore_ns=True), base_url=self.mpd.base_url, url=self.mpd.url)
 
 class DASHStreamReader(SegmentedStreamReader):
     __worker__ = DASHStreamWorker
@@ -87,7 +98,8 @@ class DASHStream(Stream):
         urlp = list(urlparse(url))
         urlp[2], _ = urlp[2].rsplit("/", 1)
 
-        mpd = MPD(http.xml(res, ignore_ns=True), base_url=urlunparse(urlp))
+        mpd = MPD(http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
+
         video, audio = [], []
 
         for aset in mpd.periods[0].adaptionSets:

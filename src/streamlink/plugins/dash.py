@@ -9,8 +9,8 @@ from streamlink.stream.dash import DASHStream
 log = logging.getLogger(__name__)
 
 
-class DASHPlugin(Plugin):
-    _url_re = re.compile(r"dash://(http://.*)")
+class MPEGDASH(Plugin):
+    _url_re = re.compile(r"dash://(https?://.*)")
 
     @classmethod
     def stream_weight(cls, stream):
@@ -31,4 +31,4 @@ class DASHPlugin(Plugin):
 
         return DASHStream.parse_manifest(self.session, mpdurl)
 
-__plugin__ = DASHPlugin
+__plugin__ = MPEGDASH
