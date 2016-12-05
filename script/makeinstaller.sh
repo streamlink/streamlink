@@ -142,6 +142,13 @@ SubSectionEnd
 	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "EstimatedSize" "\$0"
 [% endblock %]
 
+[% block uninstall_files %]
+    [[ super() ]]
+    RMDir /r "\$INSTDIR\rtmpdump"
+    RMDir /r "\$INSTDIR\ffmpeg"
+[% endblock %]
+
+
 [% block install_shortcuts %]
     ; Remove shortcut from previous releases
     Delete "\$SMPROGRAMS\Streamlink.lnk"
