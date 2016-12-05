@@ -781,7 +781,6 @@ transport.add_argument(
     Example: "h264"
     """
 )
-
 transport.add_argument(
     "--ffmpeg-audio-transcode",
     metavar="CODEC",
