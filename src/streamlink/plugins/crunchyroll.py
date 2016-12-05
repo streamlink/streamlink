@@ -25,6 +25,11 @@ STREAM_WEIGHTS = {
     "high": 720,
     "ultra": 1080,
 }
+STREAM_NAMES = {
+    "120k": "low",
+    "328k": "mid",
+    "864k": "high"
+}
 
 
 def parse_timestamp(ts):
@@ -62,7 +67,8 @@ _media_schema = validate.Schema(
                         "url": validate.url(
                             scheme="http",
                             path=validate.endswith(".m3u8")
-                        )
+                        ),
+                        validate.optional("video_encode_id"): validate.text
                     }]
                 )
             }
@@ -77,7 +83,8 @@ _login_schema = validate.Schema({
         validate.transform(parse_timestamp)
     ),
     "user": {
-        "username": validate.text
+        "username": validate.any(validate.text, None),
+        "email": validate.text
     }
 })
 _session_schema = validate.Schema(
@@ -226,24 +233,32 @@ class Crunchyroll(Plugin):
         if not info:
             return
 
-        # The adaptive quality stream contains a superset of all the other streams listeed
+        streams = {}
+
+        # The adaptive quality stream sometimes a subset of all the other streams listed, ultra is no included
         has_adaptive = any([s[u"quality"] == u"adaptive" for s in info[u"streams"]])
         if has_adaptive:
             self.logger.debug(u"Loading streams from adaptive playlist")
             for stream in filter(lambda x: x[u"quality"] == u"adaptive", info[u"streams"]):
-                return HLSStream.parse_variant_playlist(self.session, stream["url"])
-        else:
-            streams = {}
-            # If there is no adaptive quality stream then parse each individual result
-            for stream in info[u"streams"]:
+                for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
+                    # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
+                    name = STREAM_NAMES.get(q, q)
+                    streams[name] = s
+
+        # If there is no adaptive quality stream then parse each individual result
+        for stream in info[u"streams"]:
+            if stream[u"quality"] != u"adaptive":
                 # the video_encode_id indicates that the stream is not a variant playlist
                 if u"video_encode_id" in stream:
                     streams[stream[u"quality"]] = HLSStream(self.session, stream[u"url"])
                 else:
                     # otherwise the stream url is actually a list of stream qualities
-                    streams.update(HLSStream.parse_variant_playlist(self.session, stream[u"url"]))
+                    for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
+                        # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
+                        name = STREAM_NAMES.get(q, q)
+                        streams[name] = s
 
-            return streams
+        return streams
 
     def _get_device_id(self):
         """Returns the saved device id or creates a new one and saves it."""
@@ -301,7 +316,7 @@ class Crunchyroll(Plugin):
                 api.auth = login["auth"]
 
                 self.logger.info("Successfully logged in as '{0}'",
-                                 login["user"]["username"])
+                                 login["user"]["username"] or login["user"]["email"])
 
                 expires = (login["expires"] - current_time).total_seconds()
                 self.cache.set("auth", login["auth"], expires)
