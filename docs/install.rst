@@ -1,10 +1,5 @@
 .. _install:
 
-.. Warning::
-    The information contained in this page is misleading. Streamlink has not yet
-    been packaged and distributed. This page was simply converted from the
-    previous documentation.
-
 Installation
 ============
 
@@ -23,24 +18,6 @@ Distribution                         Installing
                                         # pacaur -S streamlink-git
 
                                      `Installing AUR packages`_
-`CRUX`_                              .. code-block:: console
-
-                                        $ cd /usr/ports/contrib/streamlink
-                                        # pkgmk -d -i
-`Debian`_                            .. code-block:: console
-
-                                        # apt-get install streamlink
-`Exherbo Linux`_
-`Fedora`_                            .. code-block:: console
-
-                                        # dnf install streamlink
-`FreeBSD (package)`_                 .. code-block:: console
-
-                                        # pkg install multimedia/streamlink
-`FreeBSD (ports)`_                   .. code-block:: console
-
-                                        $ cd /usr/ports/multimedia/streamlink
-                                        # make install clean
 `Gentoo Linux`_                      .. code-block:: console
 
                                         # emerge net-misc/streamlink
@@ -48,14 +25,6 @@ Distribution                         Installing
 
                                         $ cd /usr/pkgsrc/multimedia/streamlink
                                         # make install clean
-`OpenBSD (package)`_                 .. code-block:: console
-
-                                        # pkg_add streamlink
-`OpenBSD (ports)`_                   .. code-block:: console
-
-                                        $ cd /usr/ports/multimedia/streamlink
-                                        # make install clean
-`Slackware Linux`_                   `Installing Slackbuilds`_
 `Solus`_                             .. code-block:: console
 
                                         # eopkg install streamlink
@@ -68,22 +37,12 @@ Distribution                         Installing
 
 .. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
-.. _CRUX: http://crux.nu/portdb/?a=search&q=streamlink
-.. _Debian: https://packages.debian.org/search?keywords=streamlink&searchon=names&exact=1&suite=all&section=all
-.. _Exherbo Linux: http://git.exherbo.org/summer/packages/media/streamlink/index.html
-.. _Fedora: https://admin.fedoraproject.org/pkgdb/package/streamlink/
-.. _FreeBSD (package): http://www.freshports.org/multimedia/streamlink
-.. _FreeBSD (ports): http://www.freshports.org/multimedia/streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
-.. _OpenBSD (package): http://openports.se/multimedia/streamlink
-.. _OpenBSD (ports): http://openports.se/multimedia/streamlink
-.. _Slackware Linux: http://slackbuilds.org/result/?search=streamlink
 .. _Solus: https://git.solus-project.com/packages/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
-.. _Installing Slackbuilds: http://slackbuilds.org/howto/
 
 Other platforms
 ---------------
