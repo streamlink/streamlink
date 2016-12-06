@@ -6,7 +6,7 @@ launches the streams in a video player.
 
 An API is also provided that allows direct access to stream data.
 
-Full documentation is available at http://docs.streamlink.io/.
+Full documentation is available at https://streamlink.github.io.
 
 """
 

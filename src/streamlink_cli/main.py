@@ -919,6 +919,6 @@ def main():
         usage = parser.format_usage()
         msg = (
             "{usage}\nUse -h/--help to see the available options or "
-            "read the manual at http://docs.streamlink.io/"
+            "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)
