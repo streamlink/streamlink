@@ -33,6 +33,9 @@ Distribution                         Installing
                                         # add-apt-repository ppa:nilarimogard/webupd8
                                         # apt update
                                         # apt install streamlink
+`Void`_                              .. code-block:: console
+
+                                        # xbps-install streamlink
 ==================================== ===========================================
 
 .. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
@@ -41,6 +44,7 @@ Distribution                         Installing
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
 .. _Solus: https://git.solus-project.com/packages/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
+.. _Void: https://github.com/voidlinux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 
