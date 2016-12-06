@@ -56,9 +56,14 @@ Distribution                         Installing
                                         $ cd /usr/ports/multimedia/streamlink
                                         # make install clean
 `Slackware Linux`_                   `Installing Slackbuilds`_
+`Solus`_                             .. code-block:: console
+
+                                        # eopkg install streamlink
 `Ubuntu`_                            .. code-block:: console
 
-                                        # apt-get install streamlink
+                                        # add-apt-repository ppa:nilarimogard/webupd8
+                                        # apt update
+                                        # apt install streamlink
 ==================================== ===========================================
 
 .. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
@@ -74,7 +79,8 @@ Distribution                         Installing
 .. _OpenBSD (package): http://openports.se/multimedia/streamlink
 .. _OpenBSD (ports): http://openports.se/multimedia/streamlink
 .. _Slackware Linux: http://slackbuilds.org/result/?search=streamlink
-.. _Ubuntu: http://packages.ubuntu.com/search?keywords=streamlink&searchon=names&exact=1&suite=all&section=all
+.. _Solus: https://git.solus-project.com/packages/streamlink/
+.. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _Installing Slackbuilds: http://slackbuilds.org/howto/
