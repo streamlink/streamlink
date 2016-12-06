@@ -1,6 +1,7 @@
 import datetime
 import re
 import time
+from collections import defaultdict
 from collections import namedtuple
 from itertools import count, repeat, izip
 
@@ -36,7 +37,9 @@ def datetime_to_seconds(dt):
 def sleeper(duration):
     s = time.time()
     yield
-    time.sleep(duration - (time.time() - s))
+    time_to_sleep = duration - (time.time() - s)
+    if time_to_sleep > 0:
+        time.sleep(time_to_sleep)
 
 
 def sleep_until(walltime):
@@ -175,6 +178,8 @@ class MPD(MPDNode):
         super(MPD, self).__init__(node, root=self, *args, **kwargs)
         # parser attributes
         self.url = url
+        self.timelines = defaultdict(int)
+        self.timelines.update(kwargs.pop("timelines", {}))
         self.id = self.attr(u"id")
         self.profiles = self.attr(u"profiles", required=True)
         self.type = self.attr(u"type", default=u"static", parser=MPDParsers.type)
@@ -334,9 +339,10 @@ class SegmentTemplate(MPDNode):
         self.segmentTimeline = timeline[0] if len(timeline) else None
 
     def segments(self, **kwargs):
-        init_url = self.format_initialization(**kwargs)
-        if init_url:
-            yield Segment(init_url, 0, True, False, 0)
+        if kwargs.pop("init", True):
+            init_url = self.format_initialization(**kwargs)
+            if init_url:
+                yield Segment(init_url, 0, True, False, 0)
         for media_url, available_at in self.format_media(**kwargs):
             yield Segment(media_url, self.duration_seconds, False, True, available_at)
 
@@ -368,7 +374,7 @@ class SegmentTemplate(MPDNode):
         if self.root.type == u"static":
             available_iter = repeat(0)
             if self.period.duration.seconds:
-                number_iter = range(self.startNumber, (self.period.duration.seconds / self.duration_seconds) + 1)
+                number_iter = range(self.startNumber, int(self.period.duration.seconds / self.duration_seconds) + 1)
             else:
                 number_iter = count(self.startNumber)
         else:
@@ -380,8 +386,6 @@ class SegmentTemplate(MPDNode):
             else:
                 seconds_since_start = (now - self.root.availabilityStartTime).total_seconds()
                 available_start = int(datetime_to_seconds(now))
-
-            print seconds_since_start, available_start
 
             number_iter = count(self.startNumber + int(seconds_since_start / self.duration_seconds))
             available_iter = count(available_start + 3, step=self.duration_seconds)
@@ -397,7 +401,10 @@ class SegmentTemplate(MPDNode):
             t = 0
             for segment in self.segmentTimeline.segments:
                 t = t or segment.t
-                yield self.make_url(self.media.format(Time=t, **kwargs)), 0
+                # check the start time from MPD
+                if t > self.root.timelines[self.parent.id]:
+                    yield self.make_url(self.media.format(Time=t, **kwargs)), 0
+                    self.root.timelines[self.parent.id] = t
                 t += segment.d
         else:
             yield self.make_url(self.media.format(**kwargs)), 0

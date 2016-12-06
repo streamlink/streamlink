@@ -4,7 +4,7 @@ from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin.api import http
 from streamlink.stream import Stream
 from streamlink.stream import StreamIOIterWrapper
-from streamlink.stream.dash_manifest import MPD
+from streamlink.stream.dash_manifest import MPD, sleeper
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 
@@ -48,11 +48,28 @@ class DASHStreamWorker(SegmentedStreamWorker):
         self.period = self.stream.period
 
     def iter_segments(self):
-        for segment in self.reader.representation.segments():
-            if self.closed:
-                break
-            yield segment
-            self.logger.debug("Adding segment {0} to queue", segment.url)
+        init = True
+        while not self.closed:
+            # find the representation by ID
+            representation = None
+            for aset in self.mpd.periods[0].adaptionSets:
+                for rep in aset.representations:
+                    if rep.id == self.reader.representation_id:
+                        representation = rep
+            min_wait = self.mpd.minimumUpdatePeriod.total_seconds() if self.mpd.minimumUpdatePeriod else 5
+            with sleeper(min_wait):
+                if representation:
+                    for segment in representation.segments(init=init):
+                        if self.closed:
+                            break
+                        yield segment
+                        self.logger.debug("Adding segment {0} to queue", segment.url)
+
+                    if self.mpd.type == "dynamic":
+                        self.reload()
+                    else:
+                        return
+                    init = False
 
     def reload(self):
         if self.closed:
@@ -60,20 +77,22 @@ class DASHStreamWorker(SegmentedStreamWorker):
 
         self.reader.buffer.wait_free()
         self.logger.debug("Reloading manifest")
-        res = self.session.http.get(self.mpd.url,
-                                    exception=StreamError,
-                                    **self.reader.request_params)
+        res = self.session.http.get(self.mpd.url, exception=StreamError)
 
-        mpd = MPD(http.xml(res, ignore_ns=True), base_url=self.mpd.base_url, url=self.mpd.url)
+        self.mpd = MPD(http.xml(res, ignore_ns=True),
+                       base_url=self.mpd.base_url,
+                       url=self.mpd.url,
+                       timelines=self.mpd.timelines)
+
 
 class DASHStreamReader(SegmentedStreamReader):
     __worker__ = DASHStreamWorker
     __writer__ = DASHStreamWriter
 
-    def __init__(self, stream, representation, *args, **kwargs):
+    def __init__(self, stream, representation_id, *args, **kwargs):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
         self.logger = stream.session.logger.new_module("stream.dash")
-        self.representation = representation
+        self.representation_id = representation_id
 
 
 class DASHStream(Stream):
@@ -117,8 +136,8 @@ class DASHStream(Stream):
             yield vid_name, stream
 
     def open(self):
-        video = DASHStreamReader(self, self.video_representation)
-        audio = DASHStreamReader(self, self.audio_representation)
+        video = DASHStreamReader(self, self.video_representation.id)
+        audio = DASHStreamReader(self, self.audio_representation.id)
         video.open()
         audio.open()
         muxer = FFMPEGMuxer(self.session, video, audio).open()
