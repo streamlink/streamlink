@@ -141,7 +141,7 @@ parser = ArgumentParser(
     """),
     epilog=dedent("""
     For more in-depth documention see:
-      http://docs.streamlink.io/
+      https://streamlink.github.io
 
     Please report broken plugins or bugs to the issue tracker on Github:
       https://github.com/streamlink/streamlink/issues
