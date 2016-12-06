@@ -15,10 +15,11 @@ Copyright 2015 Red Hat, Inc.
 """
 from io import BytesIO
 from requests.adapters import BaseAdapter
-from requests.compat import urlparse, unquote
+from requests.compat import urlparse, unquote, urljoin
 from requests import Response, codes
 import errno
 import os
+import os.path
 import stat
 import locale
 import io
@@ -40,8 +41,13 @@ class FileAdapter(BaseAdapter):
         url_parts = urlparse(request.url)
 
         # Reject URLs with a hostname component
-        if url_parts.netloc and url_parts.netloc != "localhost":
+        if url_parts.netloc and not url_parts.netloc in ("localhost", ".", ".."):
             raise ValueError("file: URLs with hostname components are not permitted")
+
+        # If the path is relative update it to be absolute
+        if url_parts.netloc in (".", ".."):
+            pwd = os.path.abspath(url_parts.netloc).replace(os.sep, "/") + "/"
+            url_parts = url_parts._replace(path=urljoin(pwd, url_parts.path.lstrip("/")))
 
         resp = Response()
         resp.url = request.url
