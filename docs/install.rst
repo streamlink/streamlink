@@ -14,10 +14,15 @@ Linux and BSD packages
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
-`Arch Linux (package)`_              .. code-block:: console
+`Arch Linux (aur)`_                  .. code-block:: console
 
-                                        # pacman -S streamlink
-`Arch Linux (aur, git)`_             `Installing AUR packages`_
+                                        # pacaur -S streamlink
+
+`Arch Linux (aur, git)`_             .. code-block:: console
+
+                                        # pacaur -S streamlink-git
+
+                                     `Installing AUR packages`_
 `CRUX`_                              .. code-block:: console
 
                                         $ cd /usr/ports/contrib/streamlink
@@ -56,7 +61,7 @@ Distribution                         Installing
                                         # apt-get install streamlink
 ==================================== ===========================================
 
-.. _Arch Linux (package): https://archlinux.org/packages/?q=streamlink
+.. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _CRUX: http://crux.nu/portdb/?a=search&q=streamlink
 .. _Debian: https://packages.debian.org/search?keywords=streamlink&searchon=names&exact=1&suite=all&section=all
