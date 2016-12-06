@@ -35,8 +35,7 @@ if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
 if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
     deps.append("requests>=1.0,<2.0")
 else:
-    # requests >2.12.0 currently has strict IDNA2008 parsing that breaks on some non-compliant URIs (YouTube)
-    deps.append("requests>=1.0,<2.12.0")
+    deps.append("requests>=1.0,!=2.12.0,!=2.12.1,<3.0")
 
 # this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.5
 deps.append("pycryptodome==3.4.3")
