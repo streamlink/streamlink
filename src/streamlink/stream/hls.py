@@ -79,6 +79,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         try:
             request_params = self.create_request_params(sequence)
             return self.session.http.get(sequence.segment.uri,
+                                         stream=True,
                                          timeout=self.timeout,
                                          exception=StreamError,
                                          **request_params)
@@ -96,18 +97,20 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            # If the input data is not a multiple of 16, cut off any garbage
-            garbage_len = len(res.content) % 16
-            if garbage_len:
-                self.logger.debug("Cutting off {0} bytes of garbage "
-                                  "before decrypting", garbage_len)
-                content = decryptor.decrypt(res.content[:-(garbage_len)])
-            else:
-                content = decryptor.decrypt(res.content)
+            for chunk in res.iter_content(chunk_size):
+                # If the input data is not a multiple of 16, cut off any garbage
+                garbage_len = len(chunk) % 16
+                if garbage_len:
+                    self.logger.debug("Cutting off {0} bytes of garbage "
+                                      "before decrypting", garbage_len)
+                    decrypted_chunk = decryptor.decrypt(chunk[:-garbage_len])
+                else:
+                    decrypted_chunk = decryptor.decrypt(chunk)
+                self.reader.buffer.write(decrypted_chunk)
         else:
-            content = res.content
+            for chunk in res.iter_content(chunk_size):
+                self.reader.buffer.write(chunk)
 
-        self.reader.buffer.write(content)
         self.logger.debug("Download of segment {0} complete", sequence.num)
 
 
