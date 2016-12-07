@@ -1,6 +1,6 @@
 import unittest
 
-from livestreamer.stream import StreamIOIterWrapper
+from streamlink.stream import StreamIOIterWrapper
 
 class TestPluginStream(unittest.TestCase):
     def test_iter(self):

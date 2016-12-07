@@ -7,16 +7,16 @@ from sys import version_info, path as sys_path
 
 deps = []
 packages = [
-    "livestreamer",
-    "livestreamer.stream",
-    "livestreamer.plugin",
-    "livestreamer.plugin.api",
-    "livestreamer.plugins",
-    "livestreamer.packages",
-    "livestreamer.packages.flashmedia",
-    "livestreamer_cli",
-    "livestreamer_cli.packages",
-    "livestreamer_cli.utils"
+    "streamlink",
+    "streamlink.stream",
+    "streamlink.plugin",
+    "streamlink.plugin.api",
+    "streamlink.plugins",
+    "streamlink.packages",
+    "streamlink.packages.flashmedia",
+    "streamlink_cli",
+    "streamlink_cli.packages",
+    "streamlink_cli.utils"
 ]
 
 if version_info[0] == 2:
@@ -35,7 +35,10 @@ if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
 if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
     deps.append("requests>=1.0,<2.0")
 else:
-    deps.append("requests>=1.0,<3.0")
+    deps.append("requests>=1.0,!=2.12.0,!=2.12.1,<3.0")
+
+# this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.5
+deps.append("pycryptodome==3.4.3")
 
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
@@ -45,19 +48,19 @@ if environ.get("NO_DEPS"):
 srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
-setup(name="livestreamer",
-      version="1.12.2",
-      description="Livestreamer is command-line utility that extracts streams "
+setup(name="streamlink",
+      version="0.1.0",
+      description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",
-      url="http://livestreamer.io/",
-      author="Christopher Rosell",
-      author_email="chrippa@tanuki.se",
+      url="https://github.com/streamlink/streamlink",
+      author="Streamlink",
+      author_email="charlie@charliedrage.com",  # temp until we have a mailing list / global email
       license="Simplified BSD",
       packages=packages,
-      package_dir={ "": "src" },
+      package_dir={"": "src"},
       entry_points={
-          "console_scripts": ["livestreamer=livestreamer_cli.main:main"]
+          "console_scripts": ["streamlink=streamlink_cli.main:main"]
       },
       install_requires=deps,
       test_suite="tests",
@@ -72,5 +75,4 @@ setup(name="livestreamer",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
                    "Topic :: Multimedia :: Video",
-                   "Topic :: Utilities"]
-)
+                   "Topic :: Utilities"])

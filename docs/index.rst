@@ -1,25 +1,25 @@
 Overview
 --------
 
-Livestreamer is a :ref:`command-line utility <cli>` that pipes video streams
+Streamlink is a :ref:`command-line utility <cli>` that pipes video streams
 from various services into a video player, such as `VLC <http://videolan.org/>`_.
-The main purpose of Livestreamer is to allow the user to avoid buggy and CPU
+The main purpose of Streamlink is to allow the user to avoid buggy and CPU
 heavy flash plugins but still be able to enjoy various streamed content.
 There is also an :ref:`API <api_guide>` available for developers who want access
-to the video stream data.
+to the video stream data. This project was forked from Livestreamer, which is
+no longer maintained.
 
-- Latest release: |version| (:ref:`changelog`)
-- GitHub: https://github.com/chrippa/livestreamer
-- Issue tracker: https://github.com/chrippa/livestreamer/issues
-- PyPI: https://pypi.python.org/pypi/livestreamer
-- Discussions: https://groups.google.com/forum/#!forum/livestreamer
-- IRC: #livestreamer @ Freenode
+- Latest release: |version| (https://github.com/streamlink/streamlink/releases/latest)
+- GitHub: https://github.com/streamlink/streamlink
+- Issue tracker: https://github.com/streamlink/streamlink/issues
+- PyPI: https://pypi.python.org/pypi/streamlink
 - Free software: Simplified BSD license
+- Icon: https://www.flickr.com/photos/phploveme/27078045626 (cc-by-sa 2.0)
 
 Features
 --------
 
-Livestreamer is built upon a plugin system which allows support for new services
+Streamlink is built upon a plugin system which allows support for new services
 to be easily added. Currently most of the big streaming services are supported,
 such as:
 
@@ -35,13 +35,13 @@ on the :ref:`plugin_matrix` page.
 Quickstart
 -----------
 
-The default behaviour of Livestreamer is to playback a stream in the default
+The default behaviour of Streamlink is to playback a stream in the default
 player (`VLC <http://videolan.org/>`_).
 
 .. sourcecode:: console
 
-    # pip install livestreamer
-    $ livestreamer twitch.tv/day9tv best
+    # pip install streamlink
+    $ streamlink twitch.tv/day9tv best
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
     [cli][info] Opening stream: source (hls)
     [cli][info] Starting player: vlc
@@ -51,7 +51,7 @@ For more in-depth usage and install instructions see the `User guide`_.
 User guide
 ----------
 
-Livestreamer is made up of two parts, a :ref:`cli` and a library :ref:`API <api>`.
+Streamlink is made up of two parts, a :ref:`cli` and a library :ref:`API <api>`.
 See their respective sections for more information on how to use them.
 
 .. toctree::
@@ -64,4 +64,3 @@ See their respective sections for more information on how to use them.
     issues
     api_guide
     api
-

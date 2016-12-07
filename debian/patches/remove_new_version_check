@@ -1,0 +1,34 @@
+Subject: Remove streamlink version check on startup
+Forwarded: not-needed
+Author: Stefan Breunig <stefan-debian@yrden.de>
+Bug-Debian: https://bugs.debian.org/750502
+
+Index: packaging/src/streamlink_cli/main.py
+===================================================================
+--- packaging.orig/src/streamlink_cli/main.py	2015-05-02 22:17:15.771531546 +0200
++++ packaging/src/streamlink_cli/main.py	2015-05-02 22:17:15.771531546 +0200
+@@ -866,9 +866,9 @@
+     setup_console()
+     setup_http_session()
+
+-    if args.version_check or not args.no_version_check:
++    if args.version_check:
+         with ignored(Exception):
+-            check_version(force=args.version_check)
++            check_version(force=True)
+
+     if args.plugins:
+         print_plugins()
+Index: packaging/src/streamlink_cli/argparser.py
+===================================================================
+--- packaging.orig/src/streamlink_cli/argparser.py	2015-03-23 21:33:43.167182164 +0100
++++ packaging/src/streamlink_cli/argparser.py	2015-05-02 22:18:38.469608924 +0200
+@@ -256,7 +256,7 @@
+     "--no-version-check",
+     action="store_true",
+     help="""
+-    Do not check for new Streamlink releases.
++    Unused, kept for compatibility reasons.
+     """
+ )
+ general.add_argument(

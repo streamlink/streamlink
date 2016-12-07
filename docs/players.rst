@@ -36,21 +36,28 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 `mpv <http://mpv.io>`_                                Yes        Yes        Yes
 `QuickTime <http://apple.com/quicktime>`_             No         No         No
 `VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
+OMXPlayer                                             No         Yes        Yes [4]_
 ===================================================== ========== ========== ====
 
 .. [1] :option:`--player-continuous-http` must be used.
        Using HTTP with players that rely on Windows' codecs to access HTTP
        streams may have a long startup time since Windows tend to do multiple
-       HTTP requests and Livestreamer will attempt to open the stream for each
+       HTTP requests and Streamlink will attempt to open the stream for each
        request.
 .. [2] Stdin requires MPC-HC 1.7 or newer.
 
 .. [3] Some versions of VLC might be unable to use the stdin pipe and
        prints the error message::
 
-            VLC is unable to open the MRL 'fd://0'
+       VLC is unable to open the MRL 'fd://0'
 
        Use one of the other transport methods instead to work around this.
+
+.. [4] :option:`--player-continuous-http` has been reported to work for HLS
+       streams when also using the timeout option for omxplayer (see `When
+       using OMXPlayer the stream stops unexpectedly`_.) Other stream types
+       may not work as expected, it is recommended that :option:`--player-fifo` be
+       used.
 
 
 Known issues and workarounds
@@ -83,3 +90,13 @@ VLC hangs when buffering and no playback starts
 Some versions of 64-bit VLC seem to be unable to read the stream created by
 rtmpdump. Using the 32-bit version of VLC might help.
 
+Youtube Live does not work with VLC
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The stable version of VLC cannot play Youtube Live streams. This a known bug
+that is fixed in VLC 3, which is still in development. You can also try
+using a different player.
+
+When using OMXPlayer the stream stops unexpectedly
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When reading from a fifo pipe OMXPlayer will quit when there is no data, to fix
+this you can supply the timeout option to OMXPlayer using :option:`--player "omxplayer --timeout 20" <--player>`.

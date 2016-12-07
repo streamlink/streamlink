@@ -16,10 +16,14 @@ dist
 .mr.developer.cfg
 .hg
 .bzr
-.tox
 .svn
 *.pyc
 *.pyo
 *.tmp*
 *.swp
 docs/_build
+include/
+lib/
+local/
+share/
+pip-selfcheck.json
