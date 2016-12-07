@@ -176,6 +176,11 @@ instead.
 Windows binaries
 ----------------
 
+.. important::
+
+    Windows XP is not supported.
+    Windows Vista requires at least SP2 to be installed. 
+
 You can download the latest stable Windows installer `here <https://github.com/streamlink/streamlink/releases>`_.
 
 You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`_.
