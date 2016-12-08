@@ -48,7 +48,7 @@ class BigoStream(Stream):
 class Bigo(Plugin):
     _url_re = re.compile(r"https?://(live.bigo.tv/\d+|bigoweb.co/show/\d+)")
     _flashvars_re = flashvars = re.compile(
-        r'''^\s*(?<!<!--)<param.*value="sid=(\d+)&uid=(\d+)&ip=(\d+\.\d+\.\d+\.\d+)&port=(\d+)"''',
+        r'''^\s*(?<!<!--)<param.*value="tmp=(\d+)&channel=(\d+)&srv=(\d+\.\d+\.\d+\.\d+)&port=(\d+)"''',
         re.M)
 
     @classmethod
