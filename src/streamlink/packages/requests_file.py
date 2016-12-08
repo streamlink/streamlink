@@ -17,7 +17,7 @@ from io import BytesIO
 
 import sys
 from requests.adapters import BaseAdapter
-from requests.compat import urlparse, unquote, urljoin, is_py3
+from requests.compat import urlparse, unquote, urljoin
 from requests import Response, codes
 import errno
 import os
@@ -25,6 +25,8 @@ import os.path
 import stat
 import locale
 import io
+
+from streamlink.compat import is_win32, is_py3
 
 
 class FileAdapter(BaseAdapter):
@@ -49,6 +51,9 @@ class FileAdapter(BaseAdapter):
         # If the path is relative update it to be absolute
         if url_parts.netloc in (".", ".."):
             pwd = os.path.abspath(url_parts.netloc).replace(os.sep, "/") + "/"
+            if is_win32:
+                # prefix the path with a / in Windows
+                pwd = "/" + pwd
             url_parts = url_parts._replace(path=urljoin(pwd, url_parts.path.lstrip("/")))
 
         resp = Response()
