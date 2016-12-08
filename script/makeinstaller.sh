@@ -43,6 +43,7 @@ packages=requests
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/rtmpdump > \$INSTDIR
+      ../win32/LICENSE.txt > \$INSTDIR
 
 [Command streamlink]
 entry_point=streamlink_cli.main:main
