@@ -44,6 +44,10 @@ class FileAdapter(BaseAdapter):
         # Parse the URL
         url_parts = urlparse(request.url)
 
+        # Make the Windows URLs slightly nicer
+        if is_win32 and url_parts.netloc.endswith(":"):
+            url_parts = url_parts._replace(path="/" + url_parts.netloc + url_parts.path, netloc='')
+
         # Reject URLs with a hostname component
         if url_parts.netloc and not url_parts.netloc in ("localhost", ".", "..", "-"):
             raise ValueError("file: URLs with hostname components are not permitted")
