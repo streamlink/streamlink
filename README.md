@@ -11,7 +11,7 @@ Streamlink is a fork of the [livestreamer](https://github.com/chrippa/livestream
 
 # Installation
 
-Streamlink can be installed by using Python or through the the installers below.
+Streamlink can be installed by using Python or through the installers below.
 
 **Installation via Python pip:**
 ```
