@@ -56,7 +56,7 @@ EOF
 
 cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 !include "TextFunc.nsh"
-[% extends "pyapp.nsi" %]
+[% extends "pyapp_msvcrt.nsi" %]
 
 [% block modernui %]
     ; let the user review all changes being made to the system first
@@ -91,7 +91,6 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 
 [% block install_files %]
     [[ super() ]]
-
     ; Install config file
     SetShellVarContext current # install the config file for the current user
     SetOverwrite off # config file we don't want to overwrite
