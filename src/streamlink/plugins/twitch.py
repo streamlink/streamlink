@@ -21,8 +21,12 @@ except ImportError:
 
 QUALITY_WEIGHTS = {
     "source": 1080,
+    "1080": 1080,
     "high": 720,
+    "720": 720,
     "medium": 480,
+    "480": 480,
+    "360": 360,
     "low": 240,
     "mobile": 120,
 }
@@ -44,6 +48,10 @@ _url_re = re.compile(r"""
         (?P<video_type>[bcv])
         /
         (?P<video_id>\d+)
+    )?
+    (?:
+        /
+        (?P<clip_name>[\w]+)
     )?
 """, re.VERBOSE)
 _time_re = re.compile("""
@@ -112,6 +120,20 @@ _viewer_token_schema = validate.Schema(
         validate.optional("token"): validate.text
     },
     validate.get("token")
+)
+_quality_options_schema = validate.Schema(
+    {
+        "quality_options": validate.all(
+            [{
+                "quality": validate.any(validate.text, None),
+                "source": validate.url(
+                    scheme="https",
+                    path=validate.endswith(".mp4")
+                )
+            }]
+        )
+    },
+    validate.get("quality_options")
 )
 
 
@@ -218,6 +240,8 @@ class TwitchAPI(object):
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
+    def clip_status(self, channel, clip_name, schema):
+        return http.json(self.call_subdomain("clips", "/api/v1/clips/" + channel + "/" + clip_name + "/status", format=""), schema=schema)
 
 class Twitch(Plugin):
     options = PluginOptions({
@@ -245,6 +269,7 @@ class Twitch(Plugin):
         self.subdomain = match.get("subdomain")
         self.video_type = match.get("video_type")
         self.video_id = match.get("video_id")
+        self.clip_name = match.get("clip_name")
         self._hosted_chain = []
 
         parsed = urlparse(url)
@@ -488,12 +513,21 @@ class Twitch(Plugin):
 
         return streams
 
+    def _get_clips(self):
+        quality_options = self.api.clip_status(self.channel, self.clip_name, schema=_quality_options_schema)
+        streams = {}
+        for quality_option in quality_options:
+            streams[quality_option["quality"]] = HTTPStream(self.session, quality_option["source"])
+        return streams
+
     def _get_streams(self):
         if self.video_id:
             if self.video_type == "v":
                 return self._get_hls_streams("video")
             else:
                 return self._get_video_streams()
+        elif self.clip_name:
+                return self._get_clips()
         else:
             return self._get_hls_streams("live")
 
