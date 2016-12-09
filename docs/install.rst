@@ -25,6 +25,7 @@ Distribution                         Installing
 
                                         $ cd /usr/pkgsrc/multimedia/streamlink
                                         # make install clean
+`NixOS`_                             `Installing NixOS packages`_
 `Solus`_                             .. code-block:: console
 
                                         # eopkg install streamlink
@@ -42,11 +43,13 @@ Distribution                         Installing
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
+.. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _Solus: https://git.solus-project.com/packages/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
 .. _Void: https://github.com/voidlinux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
+.. _Installing NixOS packages: https://nixos.org/wiki/Install/remove_software#How_to_install_software
 
 Other platforms
 ---------------
