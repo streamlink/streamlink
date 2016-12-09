@@ -1,5 +1,6 @@
 import re
 
+from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_query
@@ -90,6 +91,7 @@ _search_schema = validate.Schema(
 )
 
 _channelid_re = re.compile('meta itemprop="channelId" content="([^"]+)"')
+_livechannelid_re = re.compile('meta property="og:video:url" content="([^"]+)')
 _url_re = re.compile("""
     http(s)?://(\w+\.)?youtube.com
     (?:
@@ -100,6 +102,10 @@ _url_re = re.compile("""
         |
         (?:
             /(user|channel)/(?P<user>[^/?]+)
+        )
+        |
+        (?:
+            /c/(?P<liveChannel>[^/?]+)/live
         )
     )
 """, re.VERBOSE)
@@ -128,7 +134,9 @@ class YouTube(Plugin):
         if not match:
             return
 
-        channel_id = match.group(1)
+        return self._get_channel_video(match.group(1))
+
+    def _get_channel_video(self, channel_id):
         query = {
             "channelId": channel_id,
             "type": "video",
@@ -143,14 +151,29 @@ class YouTube(Plugin):
             video_id = video["id"]["videoId"]
             return video_id
 
+    def _find_canonical_stream_info(self):
+        res = http.get(self.url)
+        match = _livechannelid_re.search(res.text)
+        if not match:
+            return
+
+        return self._get_stream_info(match.group(1))
+
     def _get_stream_info(self, url):
         match = _url_re.match(url)
         user = match.group("user")
+        live_channel = match.group("liveChannel")
 
         if user:
             video_id = self._find_channel_video()
+        elif live_channel:
+            return self._find_canonical_stream_info()
         else:
             video_id = match.group("video_id")
+            if video_id == "live_stream":
+                query_info = dict(parse_qsl(urlparse(url).query))
+                if "channel" in query_info:
+                    video_id = self._get_channel_video(query_info["channel"])
 
         if not video_id:
             return
@@ -160,7 +183,6 @@ class YouTube(Plugin):
             "el": "player_embedded"
         }
         res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
-
         return parse_query(res.text, name="config", schema=_config_schema)
 
     def _get_streams(self):
