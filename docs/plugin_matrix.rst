@@ -57,6 +57,7 @@ gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
+kralmuzik           kralmuzik.com.tr     Yes   No
 letontv             leton.tv             Yes   --
 livecoding          livecoding.tv        Yes   --
 livestation         livestation.com      Yes   --
