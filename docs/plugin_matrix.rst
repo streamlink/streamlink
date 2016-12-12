@@ -50,12 +50,14 @@ euronews            euronews.com         Yes   No
 expressen           expressen.se         Yes   Yes
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
+foxtr               fox.com.tr           Yes   No
 furstream           furstre.am           Yes   No
 gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
+kralmuzik           kralmuzik.com.tr     Yes   No
 letontv             leton.tv             Yes   --
 livecoding          livecoding.tv        Yes   --
 livestation         livestation.com      Yes   --
@@ -83,9 +85,11 @@ rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 seemeplay           seemeplay.ru         Yes   Yes
 servustv            servustv.com         ?     ?
+showtv              showtv.com.tr        Yes   No
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportschau          sportschau.de        Yes   No
 ssh101              ssh101.com           Yes   No
+startv              startv.com.tr        Yes   No
 streamboat          streamboat.tv        Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
@@ -102,6 +106,7 @@ tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restrict
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
                     - fotbollskanalen.se
+tv8                 tv8.com.tr           Yes   No
 tvcatchup           - tvcatchup.com      Yes   No    Streams may be geo-restricted to Great Britain.
 tvplayer            tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
