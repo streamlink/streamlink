@@ -40,6 +40,10 @@ dingittv            dingit.tv            Yes   Yes
 disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.
                     - disneychannel.de
 dmcloud             api.dmcloud.net      Yes   --
+dogan               - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
+                    - kanald.com.tr
+                    - dreamtv.com.tr
+                    - cnnturk.com
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
