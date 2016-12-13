@@ -21,8 +21,6 @@ antenna             antenna.gr           --    Yes
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
-atv                 - atv.com.tr         Yes   No
-                    - a2tv.com.tr
 azubutv             azubu.tv             Yes   No
 bambuser            bambuser.com         Yes   Yes
 beam                beam.pro             Yes   No
@@ -114,6 +112,12 @@ tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
 tigerdile           tigerdile.com        Yes   --
 trt                 trt.net.tr           Yes   No    Some streams may be geo-restricted to Turkey.
+turkuvaz            - atv.com.tr         Yes   No
+                    - a2tv.com.tr
+                    - ahaber.com.tr
+                    - aspor.com.tr
+                    - minikago.com.tr
+                    - minikacocuk.com.tr
 tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
