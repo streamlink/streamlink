@@ -49,6 +49,7 @@ dogan               - teve2.com.tr       Yes   Yes   VOD is supported for teve2 
                     - kanald.com.tr
                     - dreamtv.com.tr
                     - cnnturk.com
+                    - dreamturk.com.tr
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
