@@ -32,6 +32,11 @@ beattv              be-at.tv             Yes   Yes   Playlist not implemented ye
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
 chaturbate          chaturbate.com       Yes   No
+cinergroup          - showtv.com.tr      Yes   No
+                    - haberturk.com
+                    - showmax.com.tr
+                    - showturk.com.tr
+                    - bloomberght.com
 connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
@@ -91,7 +96,6 @@ rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 seemeplay           seemeplay.ru         Yes   Yes
 servustv            servustv.com         ?     ?
-showtv              showtv.com.tr        Yes   No
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportschau          sportschau.de        Yes   No
 ssh101              ssh101.com           Yes   No
