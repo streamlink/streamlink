@@ -6,6 +6,7 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
+
 class FoxTR(Plugin):
     """
     Support for Turkish Fox live stream: http://www.fox.com.tr/canli-yayin
