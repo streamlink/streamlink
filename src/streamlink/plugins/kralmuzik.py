@@ -1,25 +1,25 @@
 from __future__ import print_function
+
 import re
 
-from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
-from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.plugins.startv import StarTVBase
 
 
-class KralMuzik(Plugin):
+class KralMuzik(StarTVBase):
     url_re = re.compile(r"https?://www.kralmuzik.com.tr/tv/kral-tv")
-    stream_url_re = re.compile(r"(?P<quote>[\"'])(?P<url>https?://[^ ]*?/live/hls/[^ ]*?\?token=[^ ]*?)(?P=quote);")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
+    mobile_url_re = re.compile(r"(?P<quote>[\"'])(?P<url>https?://[^ ]*?/live/hls/[^ ]*?\?token=[^ ]*?)(?P=quote);")
+    desktop_url_re = re.compile(r"(?P<quote>[\"'])(?P<url>https?://[^ ]*?/live/hds/[^ ]*?\?token=[^ ]*?)(?P=quote);")
 
     def _get_streams(self):
         res = http.get(self.url)
-        match = self.stream_url_re.search(res.text)
-        if match:
-            return HLSStream.parse_variant_playlist(self.session, match.group("url"))
+        mobile_match = self.mobile_url_re.search(res.text)
+        desktop_match = self.desktop_url_re.search(res.text)
+
+        mobile_url = mobile_match.group("url") if mobile_match else None
+        desktop_url = desktop_match.group("url") if desktop_match else None
+
+        return self._get_star_streams(desktop_url, mobile_url)
 
 
 __plugin__ = KralMuzik

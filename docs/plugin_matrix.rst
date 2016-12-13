@@ -21,7 +21,8 @@ antenna             antenna.gr           --    Yes
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
-atv                 atv.com.tr           Yes   No
+atv                 - atv.com.tr         Yes   No
+                    - a2tv.com.tr
 azubutv             azubu.tv             Yes   No
 bambuser            bambuser.com         Yes   Yes
 beam                beam.pro             Yes   No
@@ -39,6 +40,10 @@ dingittv            dingit.tv            Yes   Yes
 disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.
                     - disneychannel.de
 dmcloud             api.dmcloud.net      Yes   --
+dogan               - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
+                    - kanald.com.tr
+                    - dreamtv.com.tr
+                    - cnnturk.com
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
@@ -74,6 +79,7 @@ nos                 nos.nl               Yes   Yes   Streams may be geo-restrict
 npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
+ntv                 ntv.com.tr           Yes   No
 oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
 openrectv           openrec.tv           Yes   Yes
 orf_tvthek          tvthek.orf.at        Yes   Yes

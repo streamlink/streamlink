@@ -418,7 +418,7 @@ class HDSStream(Stream):
         return reader
 
     @classmethod
-    def parse_manifest(cls, session, url, timeout=60, pvswf=None,
+    def parse_manifest(cls, session, url, timeout=60, pvswf=None, is_akamai=False,
                        **request_params):
         """Parses a HDS manifest and returns its substreams.
 
@@ -440,7 +440,7 @@ class HDSStream(Stream):
         request_params.pop("timeout", None)
         request_params.pop("url", None)
 
-        if "akamaihd" in url:
+        if "akamaihd" in url or is_akamai:
             request_params["params"]["hdcore"] = HDCORE_VERSION
 
         res = session.http.get(url, exception=IOError, **request_params)
