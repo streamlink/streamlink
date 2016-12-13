@@ -47,6 +47,12 @@ class Picarto(Plugin):
         except ValueError:
             return
 
+        self.logger.debug("Channel {} is {}, streaming via {} with token={}",
+                          channel,
+                          "online" if online else "offline",
+                          "RTMP" if is_flash else "HLS",
+                          visibility)
+
         if not online:
             self.logger.error("This stream is currently offline")
             return
@@ -55,16 +61,21 @@ class Picarto(Plugin):
             "loadbalancinginfo": channel
         })
 
+        server = channel_server_res.text
+
+        self.logger.debug("Using load balancing server: {}", server)
+
         if is_flash:
             return {"live": RTMPStream(self.session, {
-                "rtmp": RTMP_URL.format(channel_server_res.text),
+                "rtmp": RTMP_URL.format(server),
                 "playpath": RTMP_PLAYPATH.format(channel, visibility),
                 "pageUrl": self.url,
                 "live": True
             })}
         else:
             return HLSStream.parse_variant_playlist(self.session,
-                                                    HLS_URL.format(channel_server_res.text, channel, visibility),
+                                                    HLS_URL.format(server, channel, visibility),
                                                     verify=False)
+
 
 __plugin__ = Picarto
