@@ -20,7 +20,8 @@ class CinerGroup(Plugin):
             haberturk.com/canliyayin|
             showmax.com.tr/canliyayin|
             showturk.com.tr/canli-yayin/showturk|
-            bloomberght.com/tv
+            bloomberght.com/tv|
+            haberturk.tv/canliyayin
         )/?""", re.VERBOSE)
     stream_re = re.compile(r"""div .*? data-ht=(?P<quote>["'])(?P<data>.*?)(?P=quote)""", re.DOTALL)
     stream_data_schema = validate.Schema(
