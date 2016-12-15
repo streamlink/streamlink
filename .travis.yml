@@ -11,7 +11,7 @@ matrix:
     env: BUILD_DOCS=yes BUILD_INSTALLER=yes STREAMLINK_INSTALLER_DIST_DIR=$TRAVIS_BUILD_DIR/dist/nsis
 
 before_install:
-  - pip install pytest pytest-cov codecov coverage mock pynsist
+  - pip install -r dev-requirements.txt
   - sudo pip install s3cmd
 
 install:

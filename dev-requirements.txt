@@ -1,0 +1,6 @@
+pytest
+pytest-cov
+codecov
+coverage
+mock
+pynsist
