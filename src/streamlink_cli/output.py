@@ -5,6 +5,8 @@ import sys
 
 from time import sleep
 
+import re
+
 from .compat import is_win32, stdout
 from .constants import DEFAULT_PLAYER_ARGUMENTS
 from .utils import ignored
@@ -45,6 +47,7 @@ class Output(object):
 
 class FileOutput(Output):
     def __init__(self, filename=None, fd=None):
+        super(FileOutput, self).__init__()
         self.filename = filename
         self.fd = fd
 
@@ -64,9 +67,9 @@ class FileOutput(Output):
 
 
 class PlayerOutput(Output):
-    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS,
-                 filename=None, quiet=True, kill=True,
-                 call=False, http=False, namedpipe=None):
+    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=False,
+                 namedpipe=None):
+        super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
         self.kill = kill
@@ -108,10 +111,7 @@ class PlayerOutput(Output):
         args = self.args.format(filename=filename)
         cmd = self.cmd
         if is_win32:
-            # We want to keep the backslashes on Windows as forcing the user to
-            # escape backslashes for paths would be inconvenient.
-            cmd = cmd.replace("\\", "\\\\")
-            args = args.replace("\\", "\\\\")
+            return cmd + " " + args
 
         return shlex.split(cmd) + shlex.split(args)
 
@@ -139,7 +139,6 @@ class PlayerOutput(Output):
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
-
         # Wait 0.5 seconds to see if program exited prematurely
         if not self.running:
             raise OSError("Process exited prematurely")
