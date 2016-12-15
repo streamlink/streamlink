@@ -1,9 +1,13 @@
 [run]
-source = streamlink
+source =
+    streamlink
+    streamlink_cli
+
 [report]
 omit =
   */python?.?/*
-    *__init__*
+  *__init__*
+  src/streamlink/packages/*
 
 exclude_lines =
     pragma: no cover
