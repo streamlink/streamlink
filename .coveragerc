@@ -8,6 +8,7 @@ omit =
   */python?.?/*
   *__init__*
   src/streamlink/packages/*
+  src/streamlink_cli/packages/*
 
 exclude_lines =
     pragma: no cover
