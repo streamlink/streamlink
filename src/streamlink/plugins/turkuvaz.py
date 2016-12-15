@@ -11,7 +11,11 @@ class Turkuvaz(Plugin):
     Plugin to support ATV/A2TV Live streams from www.atv.com.tr and www.a2tv.com.tr
     """
 
-    _url_re = re.compile(r"http://www.(atv|a2tv|ahaber|aspor|minikago|minikacocuk).com.tr/webtv/canli-yayin")
+    _url_re = re.compile(r"""https?://(?:www.)?
+            (?:
+                (atv|a2tv|ahaber|aspor|minikago|minikacocuk).com.tr/webtv/canli-yayin|
+                (atvavrupa).tv/webtv/videoizle/atv_avrupa/canli_yayin
+            )""", re.VERBOSE)
     _hls_url = "http://trkvz-live.ercdn.net/{channel}/{channel}.m3u8"
     _token_url = "http://videotoken.tmgrup.com.tr/webtv/secure"
     _token_schema = validate.Schema(validate.all(
@@ -27,7 +31,8 @@ class Turkuvaz(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        domain = self._url_re.match(self.url).group(1)
+        url_m = self._url_re.match(self.url)
+        domain = url_m.group(1) or url_m.group(2)
         # remap the domain to channel
         channel = {"atv": "atvhd",
                    "ahaber": "ahaberhd",
