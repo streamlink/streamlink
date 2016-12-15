@@ -1,8 +1,19 @@
+from io import BytesIO
+from itertools import repeat
+
 from streamlink.plugins import Plugin
 from streamlink.options import Options
 from streamlink.stream import *
 
 from streamlink.plugin.api.support_plugin import testplugin_support
+
+
+class TestStream(Stream):
+    __shortname__ = "test"
+
+    def open(self):
+        return BytesIO(b'x'*8192*2)
+
 
 class TestPlugin(Plugin):
     options = Options({
@@ -15,6 +26,7 @@ class TestPlugin(Plugin):
 
     def _get_streams(self):
         streams = {}
+        streams["test"] = TestStream(self.session)
         streams["rtmp"] = RTMPStream(self.session, dict(rtmp="rtmp://test.se"))
         streams["hls"] = HLSStream(self.session, "http://test.se/playlist.m3u8")
         streams["http"] = HTTPStream(self.session, "http://test.se/stream")

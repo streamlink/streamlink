@@ -13,7 +13,9 @@ from streamlink.plugin.api.http_session import HTTPSession
 
 
 class TestPluginAPIHTTPSession(unittest.TestCase):
-    def test_read_timeout(self):
+    @patch('requests.sessions.Session.send')
+    def test_read_timeout(self, mock_send):
+        mock_send.side_effect = IOError
         session = HTTPSession()
 
         def stream_data():
