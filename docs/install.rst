@@ -60,7 +60,7 @@ Platform                             Installing
 Mac OS X                             .. code-block:: console
 
                                         # easy_install -U streamlink
-Microsoft Windows                    See `Windows binaries`_.
+Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 ==================================== ===========================================
 
 
@@ -202,3 +202,15 @@ and performs the following tasks:
 
 To build the installer, you need to have NSIS and pynsist installed on your
 system.
+
+
+Windows portable version
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Instructions:
+
+- Download https://github.com/streamlink/streamlink-portable/archive/master.zip
+
+- Extract the "Streamlink for Windows (Compiled)" folder from the ZIP file
+
+- Check README.txt file for requirements and run "Streamlink for Windows.exe"

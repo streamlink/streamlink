@@ -31,6 +31,8 @@ sudo python setup.py install
 
   - [Windows](https://streamlink.github.io/install.html#windows-binaries)
 
+  - [Windows portable version](https://streamlink.github.io/install.html#windows-portable-version)
+
   - [Linux and BSD](https://streamlink.github.io/install.html#linux-and-bsd-packages)
 
 # Features
