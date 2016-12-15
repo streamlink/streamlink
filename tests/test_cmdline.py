@@ -43,12 +43,12 @@ class TestCommandLineInvocation(unittest.TestCase):
     # POSIX tests
     #
 
-    @unittest.skipIf(is_win32, "test only applicable in a POISX OS")
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_regular_path_player(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc", "http://test.se", "test"],
                         ["/usr/bin/vlc", "-"])
 
-    @unittest.skipIf(is_win32, "test only applicable in a POISX OS")
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_space_path_player(self):
         self._test_args(["streamlink", "-p", "\"/Applications/Video Player/VLC/vlc\"", "http://test.se", "test"],
                         ["/Applications/Video Player/VLC/vlc", "-"])
@@ -56,14 +56,14 @@ class TestCommandLineInvocation(unittest.TestCase):
         self._test_args(["streamlink", "-p", "/Applications/Video\ Player/VLC/vlc", "http://test.se", "test"],
                         ["/Applications/Video Player/VLC/vlc", "-"])
 
-    @unittest.skipIf(is_win32, "test only applicable in a POISX OS")
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_extra_args_in_player(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
                          "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
                          "http://test.se", "test"],
                         ["/usr/bin/vlc", "--input-title-format", 'Poker "Stars"', "-"])
 
-    @unittest.skipIf(is_win32, "test only applicable in a POISX OS")
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_extra_args_in_player_pass_through(self):
         self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "/usr/bin/vlc",
                          "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
