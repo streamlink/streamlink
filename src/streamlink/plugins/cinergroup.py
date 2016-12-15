@@ -14,8 +14,8 @@ class CinerGroup(Plugin):
     """
     Support for the live stream on www.showtv.com.tr
     """
-    url_re = re.compile(r"""https?://(:?www.)?
-        (:?
+    url_re = re.compile(r"""https?://(?:www.)?
+        (?:
             showtv.com.tr/canli-yayin/showtv|
             haberturk.com/canliyayin|
             showmax.com.tr/canliyayin|

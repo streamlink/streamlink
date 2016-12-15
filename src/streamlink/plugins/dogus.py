@@ -14,8 +14,8 @@ class Dogus(Plugin):
     Support for live streams from Dogus sites include startv, ntv, ntvspor, and kralmuzik
     """
 
-    url_re = re.compile(r"""https?://(:?www.)?
-        (:?
+    url_re = re.compile(r"""https?://(?:www.)?
+        (?:
             startv.com.tr/canli-yayin|
             ntv.com.tr/canli-yayin/ntv|
             ntvspor.net/canli-yayin|
