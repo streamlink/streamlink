@@ -1,7 +1,7 @@
 import os
 import sys
 
-from ..compat import shlex_quote
+import subprocess
 
 
 def check_paths(exes, paths):
@@ -35,5 +35,5 @@ def find_default_player():
 
     if path:
         # Quote command because it can contain space
-        return shlex_quote(path)
+        return subprocess.list2cmdline([path])
 

@@ -5,5 +5,6 @@ include LICENSE*
 include requirements-docs.txt
 
 recursive-include docs *
+prune docs/_build
 recursive-include examples *
 recursive-include tests *py

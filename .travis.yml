@@ -1,5 +1,4 @@
 language: python
-sudo: required
 
 matrix:
   include:
@@ -11,8 +10,8 @@ matrix:
     env: BUILD_DOCS=yes BUILD_INSTALLER=yes STREAMLINK_INSTALLER_DIST_DIR=$TRAVIS_BUILD_DIR/dist/nsis
 
 before_install:
-  - pip install pytest pytest-cov codecov coverage mock pynsist
-  - sudo pip install s3cmd
+  - pip install --disable-pip-version-check --upgrade pip
+  - pip install -r dev-requirements.txt
 
 install:
   - python setup.py install
