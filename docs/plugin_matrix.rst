@@ -21,8 +21,6 @@ antenna             antenna.gr           --    Yes
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
-atv                 - atv.com.tr         Yes   No
-                    - a2tv.com.tr
 azubutv             azubu.tv             Yes   No
 bambuser            bambuser.com         Yes   Yes
 beam                beam.pro             Yes   No
@@ -32,6 +30,11 @@ beattv              be-at.tv             Yes   Yes   Playlist not implemented ye
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
 chaturbate          chaturbate.com       Yes   No
+cinergroup          - showtv.com.tr      Yes   No
+                    - haberturk.com
+                    - showmax.com.tr
+                    - showturk.com.tr
+                    - bloomberght.com
 connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
@@ -44,6 +47,11 @@ dogan               - teve2.com.tr       Yes   Yes   VOD is supported for teve2 
                     - kanald.com.tr
                     - dreamtv.com.tr
                     - cnnturk.com
+                    - dreamturk.com.tr
+dogus               - startv.com.tr      Yes   No
+                    - ntvspor.net
+                    - kralmuzik.com.tr
+                    - ntv.com.tr
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
@@ -62,7 +70,6 @@ gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
-kralmuzik           kralmuzik.com.tr     Yes   No
 letontv             leton.tv             Yes   --
 livecoding          livecoding.tv        Yes   --
 livestation         livestation.com      Yes   --
@@ -79,7 +86,6 @@ nos                 nos.nl               Yes   Yes   Streams may be geo-restrict
 npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
-ntv                 ntv.com.tr           Yes   No
 oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
 openrectv           openrec.tv           Yes   Yes
 orf_tvthek          tvthek.orf.at        Yes   Yes
@@ -91,11 +97,9 @@ rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 seemeplay           seemeplay.ru         Yes   Yes
 servustv            servustv.com         ?     ?
-showtv              showtv.com.tr        Yes   No
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportschau          sportschau.de        Yes   No
 ssh101              ssh101.com           Yes   No
-startv              startv.com.tr        Yes   No
 streamboat          streamboat.tv        Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                      K-S-V patches.
@@ -109,6 +113,12 @@ tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
 tigerdile           tigerdile.com        Yes   --
 trt                 trt.net.tr           Yes   No    Some streams may be geo-restricted to Turkey.
+turkuvaz            - atv.com.tr         Yes   No
+                    - a2tv.com.tr
+                    - ahaber.com.tr
+                    - aspor.com.tr
+                    - minikago.com.tr
+                    - minikacocuk.com.tr
 tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.

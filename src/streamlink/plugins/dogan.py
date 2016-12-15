@@ -19,7 +19,8 @@ class Dogan(Plugin):
         (?:teve2.com.tr/(?:canli-yayin|filmler/.*|programlar/.*)|
            kanald.com.tr/.*|
            cnnturk.com/canli-yayin|
-           dreamtv.com.tr/canli-yayin)
+           dreamtv.com.tr/canli-yayin|
+           dreamturk.com.tr/canli)
     """, re.VERBOSE)
     playerctrl_re = re.compile(r'''<div[^>]*?ng-controller=(?P<quote>["'])(?:Live)?PlayerCtrl(?P=quote).*?>''', re.DOTALL)
     data_id_re = re.compile(r'''data-id=(?P<quote>["'])(?P<id>\w+)(?P=quote)''')
@@ -39,7 +40,6 @@ class Dogan(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        print(url)
         return cls.url_re.match(url) is not None
 
     def _get_content_id(self):
