@@ -21,6 +21,7 @@ antenna             antenna.gr           --    Yes
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
+atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
 azubutv             azubu.tv             Yes   No
 bambuser            bambuser.com         Yes   Yes
 beam                beam.pro             Yes   No
