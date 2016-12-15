@@ -1,6 +1,10 @@
-import os.path
-import unittest
+import sys
+if sys.version_info[0:2] == (2, 6):
+    import unittest2 as unittest
+else:
+    import unittest
 
+import os.path
 import streamlink_cli.main
 from mock import patch, ANY
 from streamlink import Streamlink
