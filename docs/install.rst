@@ -64,6 +64,23 @@ Microsoft Windows                    See `Windows binaries`_ and `Windows portab
 ==================================== ===========================================
 
 
+Package maintainers
+-------------------
+==================================== ===========================================
+Distribution/Platform                Maintainer
+==================================== ===========================================
+Arch                                 Josip Ponjavic <josipponjavic at gmail.com>
+Gentoo                               soredake <fdsfgs at krutt.org>
+NetBSD                               Maya Rashish <maya at netbsd.org>
+NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
+Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
+Ubuntu                               Alin Andrei <andrew at webupd8.org>
+Void                                 wkuipers <wietse at kuiprs.nl>
+Windows binaries                     beardypig <beardypig at protonmail.com>
+Windows port. version                RosadinTV
+==================================== ===========================================
+
+
 Source code
 -----------
 
