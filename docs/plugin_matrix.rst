@@ -71,6 +71,7 @@ gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
+kanal7              kanal7.com           Yes   No
 letontv             leton.tv             Yes   --
 livecoding          livecoding.tv        Yes   --
 livestation         livestation.com      Yes   --
@@ -93,6 +94,7 @@ orf_tvthek          tvthek.orf.at        Yes   Yes
 pandatv             panda.tv             Yes   ?
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
+powerapp            powerapp.com.tr      Yes   No
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restriced to The Netherlands. Livestreams not supported.
 rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
@@ -125,6 +127,7 @@ tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restrict
                                                      Only non-premium streams currently supported.
                     - fotbollskanalen.se
 tv8                 tv8.com.tr           Yes   No
+tv360               tv360.com.tr         Yes   No
 tvcatchup           - tvcatchup.com      Yes   No    Streams may be geo-restricted to Great Britain.
 tvplayer            tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
