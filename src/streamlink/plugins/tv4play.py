@@ -13,11 +13,9 @@ SWF_URL = "http://www.tv4play.se/flash/tv4video.swf"
 _url_re = re.compile("""
     http(s)?://(www\.)?
     (?:
-        tv4play.se/program/[^\?/]+
-    )?
-    (?:
+        tv4play.se/program/[^\?/]+|
         fotbollskanalen.se/video
-    )?
+    )
     .+(video_id|videoid)=(?P<video_id>\d+)
 """, re.VERBOSE)
 

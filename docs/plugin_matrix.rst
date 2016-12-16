@@ -75,6 +75,7 @@ itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restrict
 kanal7              kanal7.com           Yes   No
 letontv             leton.tv             Yes   --
 livecoding          livecoding.tv        Yes   --
+liveme              liveme.com           Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
