@@ -73,6 +73,7 @@ hitbox              hitbox.tv            Yes   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 letontv             leton.tv             Yes   --
 livecoding          livecoding.tv        Yes   --
+liveme              liveme.com           Yes   --
 livestation         livestation.com      Yes   --
 livestream          new.livestream.com   Yes   --
 media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
