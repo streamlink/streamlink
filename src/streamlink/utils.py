@@ -4,7 +4,7 @@ import zlib
 
 try:
     import xml.etree.cElementTree as ET
-except ImportError:
+except ImportError:  # pragma: no cover
     import xml.etree.ElementTree as ET
 
 from .compat import urljoin, urlparse, parse_qsl, is_py2
@@ -139,7 +139,8 @@ def rtmpparse(url):
 
 import requests
 
-def urlget(url, *args, **kwargs):
+
+def urlget(url, *args, **kwargs):  # pragma: no cover
     """This function is deprecated."""
     data = kwargs.pop("data", None)
     exception = kwargs.pop("exception", PluginError)
@@ -167,10 +168,11 @@ def urlget(url, *args, **kwargs):
 
     return res
 
+
 urlopen = urlget
 
 
-def urlresolve(url):
+def urlresolve(url):  # pragma: no cover
     """This function is deprecated."""
     res = urlget(url, stream=True, allow_redirects=False)
 
@@ -180,12 +182,12 @@ def urlresolve(url):
         return url
 
 
-def res_xml(res, *args, **kw):
+def res_xml(res, *args, **kw):  # pragma: no cover
     """This function is deprecated."""
     return parse_xml(res.text, *args, **kw)
 
 
-def res_json(res, jsontype="JSON", exception=PluginError):
+def res_json(res, jsontype="JSON", exception=PluginError):  # pragma: no cover
     """This function is deprecated."""
     try:
         jsondata = res.json()
@@ -200,12 +202,14 @@ def res_json(res, jsontype="JSON", exception=PluginError):
 
     return jsondata
 
+
 import hmac
 import hashlib
 
 SWF_KEY = b"Genuine Adobe Flash Player 001"
 
-def swfverify(url):
+
+def swfverify(url):  # pragma: no cover
     """This function is deprecated."""
     res = urlopen(url)
     swf = swfdecompress(res.content)
