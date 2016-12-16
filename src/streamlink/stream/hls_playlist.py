@@ -4,10 +4,7 @@ from binascii import unhexlify
 from collections import namedtuple
 from itertools import starmap
 
-try:
-    from urlparse import urljoin
-except ImportError:
-    from urllib.parse import urljoin
+from streamlink.compat import urljoin, urlparse
 
 __all__ = ["load", "M3U8Parser"]
 
@@ -258,7 +255,7 @@ class M3U8Parser(object):
         return self.m3u8
 
     def uri(self, uri):
-        if uri and uri.startswith("http"):
+        if uri and urlparse(uri).scheme:
             return uri
         elif self.base_uri and uri:
             return urljoin(self.base_uri, uri)

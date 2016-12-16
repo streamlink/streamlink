@@ -1,6 +1,7 @@
 from requests import Session, __build__ as requests_version
 from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
+from streamlink.packages.requests_file import FileAdapter
 
 try:
     from requests.packages.urllib3.util import Timeout
@@ -65,6 +66,8 @@ class HTTPSession(Session):
         if TIMEOUT_ADAPTER_NEEDED:
             self.mount("http://", HTTPAdapterWithReadTimeout())
             self.mount("https://", HTTPAdapterWithReadTimeout())
+
+        self.mount('file://', FileAdapter())
 
     @classmethod
     def determine_json_encoding(cls, sample):

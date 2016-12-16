@@ -37,6 +37,18 @@ This command will tell Streamlink to attempt to extract streams from the URL
 specified, and if it's successful, print out a list of available streams to choose
 from.
 
+In some cases  (`Supported streaming protocols`_)  local files are supported
+using the ``file://`` protocol, for example a local HLS playlist can be played.
+Relative file paths and absolute paths are supported. All path separators are ``/``,
+even on Windows.
+
+.. code-block:: console
+
+    $ streamlink hlsvariant://file://C:/hls/playlist.m3u8
+    [cli][info] Found matching plugin stream for URL hlsvariant://file://C:/hls/playlist.m3u8
+    Available streams: 180p (worst), 272p, 408p, 554p, 818p, 1744p (best)
+
+
 To select a stream and start playback, we simply add the stream name as a second
 argument to the :command:`streamlink` command:
 
@@ -289,12 +301,12 @@ Name                           Prefix
 ============================== =================================================
 Adobe HTTP Dynamic Streaming   hds://
 Akamai HD Adaptive Streaming   akamaihd://
-Apple HTTP Live Streaming      hls:// hlsvariant://
+Apple HTTP Live Streaming      hls:// hlsvariant:// [1]_
 Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
-Progressive HTTP, HTTPS, etc   httpstream://
+Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 ============================== =================================================
 
-
+.. [1] supports local files using the file:// protocol
 .. _cli-options:
 
 Command-line usage
