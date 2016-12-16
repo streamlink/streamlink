@@ -33,16 +33,17 @@ class TVPlayer(Plugin):
         res = http.get(self.url, headers={"User-Agent": TVPlayer._user_agent})
         stream_attrs = dict((k, v.strip('"')) for k, v in TVPlayer._stream_attrs_.findall(res.text))
 
-        # get the stream urls
-        res = http.post(TVPlayer.API_URL, data=dict(id=stream_attrs["resourceId"],
-                                                    validate=stream_attrs["validate"],
-                                                    platform=stream_attrs["platform"]))
+        if "resourceId" in stream_attrs and "validate" in stream_attrs and "platform" in stream_attrs:
+            # get the stream urls
+            res = http.post(TVPlayer.API_URL, data=dict(id=stream_attrs["resourceId"],
+                                                        validate=stream_attrs["validate"],
+                                                        platform=stream_attrs["platform"]))
 
-        stream_data = http.json(res, schema=TVPlayer._stream_schema)
+            stream_data = http.json(res, schema=TVPlayer._stream_schema)
 
-        return HLSStream.parse_variant_playlist(self.session,
-                                                stream_data["tvplayer"]["response"]["stream"],
-                                                headers={'user-agent': TVPlayer._user_agent})
+            return HLSStream.parse_variant_playlist(self.session,
+                                                    stream_data["tvplayer"]["response"]["stream"],
+                                                    headers={'user-agent': TVPlayer._user_agent})
 
 
 __plugin__ = TVPlayer
