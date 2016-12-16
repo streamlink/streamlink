@@ -42,8 +42,19 @@ install:
 
   # install dev requirements, for testing, etc.
   - "pip install -r dev-requirements.txt"
+  - "pip install ."
 
 build: off
 
 test_script:
-  - "build.cmd %PYTHON%\\python.exe setup.py test"
+  - "build.cmd %PYTHON%\\python.exe -m coverage run setup.py test"
+
+after_test:
+  - rm -rf tests/coverages
+  - if not exist dist mkdir dist
+  - if exist .coverage (cp .coverage dist\) else (echo no .coverage)
+  - codecov
+  - if exist coverage.xml (cp coverage.xml dist\) else (echo no coverage.xml)
+
+artifacts:
+  - path: dist\*
