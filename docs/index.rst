@@ -64,3 +64,5 @@ See their respective sections for more information on how to use them.
     issues
     api_guide
     api
+    changelog
+    twitch_oauth
