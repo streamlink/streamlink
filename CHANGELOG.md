@@ -1,3 +1,91 @@
+## streamlink 0.2.0 (12-16-2016)
+
+Release 0.2.0 of Streamlink!
+
+We've done numerous changes to plugins as well as fixed quite a few which were originally failing. Among these changes are updated docs as well as general UI/UX cleaning with console output.
+
+The main features are:
+  - Additional plugins added
+  - Plugin fixes
+  - Cleaned up console output
+  - Additional documentation (contribution, installation instructions)
+
+Again, thank you everyone whom contributed to this release! :D
+
+```
+Beardypig <beardypig@users.noreply.github.com> (6):
+      Turkish Streams Part III (#292)
+      coverage: include streamlink_cli in the coverage, but exclude the vendored packages (#302)
+      Windows command line parsing fix (#300)
+      plugins.atresplayer: add support for live streams on atresplayer.com (#303)
+      Turkish Streams IV (#305)
+      Support for local files (#304)
+
+Charlie Drage <charlie@charliedrage.com> (2):
+      Spelling error in release script
+      Fix issue with building installer
+
+Fishscene <fishscene@gmail.com> (3):
+      Updated homepage
+      Updated README.md
+      Fixed type in README.md.
+
+Forrest <gravyboat@users.noreply.github.com> (3):
+      Modify the browser redirect (#191)
+      Update client ID (#241)
+      Update requests version after bug fix (#239)
+
+Josip Ponjavic <josipponjavic@gmail.com> (1):
+      Add NixOS install instructions
+
+Simon Bernier St-Pierre <sbernierstpierre@gmail.com> (1):
+      add contributing guidelines
+
+bastimeyer <mail@bastimeyer.de> (1):
+      Add metadata to Windows installer
+
+beardypig <beardypig@users.noreply.github.com> (25):
+      plugins.nhkworld: update the plugin to use the new HLS streams
+      plugins.picarto: updated the plugin to use the new javascript and support HLS streams
+      add pycryptodome==3.4.3 to the setup.py dependencies
+      plugins.nineanime: added a plugin to support 9anime.to
+      plugins.nineanime: update the plugin matrix in the docs
+      plugins.atv: add support for the live stream on atv.com.tr
+      include omxplayer in the list of players in the documentation
+      update the player docs with findings from @Junior1544 and @stevekmcc
+      plugins.bigo: support for bigo.tv
+      docs: move pycryptodome to the list of automatically installed libraries in the docs
+      plugins.dingittv: add support for dingit.tv
+      plugins.crunchyroll: support ultra quality for subscribers
+      update URL for docs to point to the github.io page
+      stream.hls: stream the HLS segments out to the player as they are downloaded, decrypting on the fly
+      installer: install the required MS VC++ runtime files beside the python installation (see takluyver/pynsist/pull/87)
+      plugins.bigo: FlashVars regex updated due to site change
+      add some license notices for the bundled libraries
+      plugins.youtube: support additional live urls
+      add support for a few Turkish live streams
+      plugins.foxtr: add support for turkish fox live streams
+      plugins.kralmuzik: basic support for the HLS stream only
+      stream.hds: added option to force akamai authentication plugins.startv: refactored in to a base class, to be used in other plugins that use the same hosting as StarTV plugins.kralmuzik: refactored to use StarTVBase plugins.ntv: added NTV support
+      plugins.atv: add support for a2tv which is very similar to atv
+      plugins.dogan: support for teve2, kanald, dreamtv, and ccnturk via the same plugin
+      plugins.trt: added support for the live channels on trt.net.tr
+
+che <che27012011@googlemail.com> (1):
+      plugins.twitch: support for clips added
+
+ioblank <iosonoblank@gmail.com> (1):
+      Use ConsoleOutput for run-as-root warning
+
+mmetak <mmetak@users.noreply.github.com> (3):
+      Update install instruction (#257)
+      Add links for windows portable version. (#299)
+      Add package maintainers to docs. (#301)
+
+thatlinuxfur <toss1@zootboy.com> (1):
+      Added tigerdile.com support. (#221)
+```
+
 ## streamlink 0.1.0 (11-21-2016)
 
 A major update to Streamlink.

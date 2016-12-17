@@ -49,7 +49,7 @@ srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="streamlink",
-      version="0.1.0",
+      version="0.2.0",
       description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",
