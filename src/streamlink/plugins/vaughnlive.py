@@ -5,7 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
-PLAYER_VERSION = "0.1.1.765"
+PLAYER_VERSION = "0.1.1.767"
 INFO_URL = "http://mvn.vaughnsoft.net/video/edge/mnt-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
 
 DOMAIN_MAP = {
@@ -17,6 +17,7 @@ DOMAIN_MAP = {
 _url_re = re.compile("""
     http(s)?://(\w+\.)?
     (?P<domain>vaughnlive|breakers|instagib|vapers).tv
+    (/embed/video)?
     /(?P<channel>[^/&?]+)
 """, re.VERBOSE)
 
