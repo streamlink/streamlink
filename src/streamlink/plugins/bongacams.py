@@ -2,17 +2,16 @@
 
 import json
 import re
-import requests
 import time
 
 from io import BytesIO
 from hashlib import md5
-from urllib.parse import urljoin, urlsplit
 
+from streamlink.compat import urljoin, urlparse
 from streamlink.exceptions import PluginError, NoStreamsError
-from streamlink.packages.flashmedia.types import AMF0Value
+from streamlink.packages.flashmedia.types import AMF0String, AMF0Value, U32BE
 from streamlink.packages.flashmedia import AMFPacket, AMFMessage
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import validate, http
 from streamlink.plugin import Plugin
 from streamlink.stream import RTMPStream
 from streamlink.utils import parse_json
@@ -47,10 +46,11 @@ amf_msg_schema = validate.Schema({
 
 
 class AMFMessage2(AMFMessage):
-    @property
-    def size(self):
-        size = AMF0Value.size(self.value)
-        return size
+    def _serialize(self, packet):
+        packet += AMF0String(self.target_uri)
+        packet += AMF0String(self.response_uri)
+        packet += U32BE(AMF0Value.size(self.value))
+        packet += AMF0Value.pack(self.value)
 
 
 class bongacams(Plugin):
@@ -69,10 +69,10 @@ class bongacams(Plugin):
         chathost = match.group(2)
         chathost_url = match.group()
         amf_gateway_url = urljoin(baseurl, CONST_AMF_GATEWAY_LOCATION)
-        country = urlsplit(baseurl).netloc[:2].lower()
+        country = urlparse(baseurl).netloc[:2].lower()
 
         # create http session and set headers
-        http_session = requests.Session()
+        http_session = http
         http_session.headers.update(CONST_HEADERS)
 
         # get swf url and cookies for next request
@@ -140,6 +140,6 @@ class bongacams(Plugin):
         self.logger.debug("Stream params:\n{}", stream_params)
         stream = RTMPStream(self.session, stream_params)
 
-        return {'best': stream, 'high': stream}
+        return {'high': stream}
 
 __plugin__ = bongacams
