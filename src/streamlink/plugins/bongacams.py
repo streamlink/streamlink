@@ -114,7 +114,7 @@ class bongacams(Plugin):
         if len(amf_response.messages) != 1 or amf_response.messages[0].target_uri != "/1/onResult":
             raise PluginError("unexpected response from amf gate")
 
-        stream_source_info = parse_json(json.dumps(amf_response.messages[0].value), schema=amf_msg_schema)
+        stream_source_info = amf_msg_schema.validate(amf_response.messages[0].value)
         self.logger.debug("source stream info:\n{}", stream_source_info)
 
         stream_params = {
