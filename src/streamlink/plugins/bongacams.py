@@ -1,6 +1,3 @@
-"""Streamlink plugin for bongacams.com"""
-
-import json
 import re
 import time
 
@@ -14,7 +11,6 @@ from streamlink.packages.flashmedia import AMFPacket, AMFMessage
 from streamlink.plugin.api import validate, http
 from streamlink.plugin import Plugin
 from streamlink.stream import RTMPStream
-from streamlink.utils import parse_json
 
 
 CONST_FLASH_VER = "WIN 24,0,0,186"
