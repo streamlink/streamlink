@@ -14,8 +14,7 @@ STATUS_OFFLINE = 0
 
 #hls source is not stable, lower priority
 STREAM_WEIGHTS = {
-        "http": 1080,
-        "hls": 720
+        "live": 1080
 }
 
 _url_re = re.compile("""
