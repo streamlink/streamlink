@@ -12,6 +12,12 @@ API_URL = "http://www.zhanqi.tv/api/static/live.roomid/{roomID[id]}.json"
 STATUS_ONLINE = 4
 STATUS_OFFLINE = 0
 
+#hls source is not stable, lower priority
+STREAM_WEIGHTS = {
+        "http": 1080,
+        "hls": 720
+}
+
 _url_re = re.compile("""
     http(s)?://(www\.)?zhanqi.tv
     /(?P<channel>[^/]+)
@@ -57,6 +63,12 @@ class Zhanqitv(Plugin):
     def can_handle_url(self, url):
         return _url_re.match(url)
 
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream in STREAM_WEIGHTS:
+            return STREAM_WEIGHTS[stream], "zhanqitv"
+        return Plugin.stream_weight(stream)
+
     def _get_streams(self):
         match = _url_re.match(self.url)
         channel = match.group("channel")
@@ -66,9 +78,11 @@ class Zhanqitv(Plugin):
         res = http.get(API_URL.format(roomID=roomID))
         room = http.json(res, schema=_room_schema)
         if not room:
+            self.logger.info("Not a valid room url.")
             return
 
         if room["status"] != STATUS_ONLINE:
+            self.logger.info("Stream current unavailable.")
             return
 
         hls_url = "http://dlhls.cdn.zhanqi.tv/zqlive/{room[videoId]}_1024/index.m3u8?Dnion_vsnae={room[videoId]}".format(room=room)
