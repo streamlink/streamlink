@@ -27,6 +27,31 @@ _url_re = re.compile("""
 _room_sn_re = re.compile(r'"sn"\s*:\s*"(?P<sn>[a-zA-Z0-9_]+)"', re.VERBOSE)
 _room_channel_re = re.compile(r'"channel"\s*:\s*"(?P<channel>[a-zA-Z0-9_]+)"', re.VERBOSE)
 
+_room_sn_schema = validate.Schema(
+        validate.all(
+            validate.transform(_room_sn_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get('sn'),
+                    validate.transform(str)
+                    )
+                )
+            )
+        )
+_room_channel_schema = validate.Schema(
+        validate.all(
+            validate.transform(_room_channel_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get('channel'),
+                    validate.transform(str)
+                    )
+                )
+            )
+        )
+
 class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -46,13 +71,8 @@ class Huajiao(Plugin):
         http.headers.update({"User-Agent": USER_AGENT})
         http.verify=False
 
-        res = http.get(HUAJIAO_URL.format(channel)).content.decode('utf-8')
-
-        match = _room_sn_re.search(res)
-        sn = match.group("sn")
-
-        match = _room_channel_re.search(res)
-        channel_sid = match.group("channel")
+        sn = http.get(HUAJIAO_URL.format(channel), schema=_room_sn_schema)
+        channel_sid = http.get(HUAJIAO_URL.format(channel), schema=_room_channel_schema)
         
         sid = uuid.uuid4().hex.upper()
 
