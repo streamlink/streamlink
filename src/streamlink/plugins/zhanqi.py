@@ -7,7 +7,8 @@ from streamlink.stream import (
     HTTPStream, HLSStream
 )
 
-API_URL = "http://www.zhanqi.tv/api/public/room.liveparam?room_id={roomID[id]}"
+API_URL = "http://www.zhanqi.tv/api/static/live.roomid/{roomID[id]}.json"
+
 STATUS_ONLINE = 4
 STATUS_OFFLINE = 0
 
@@ -16,7 +17,7 @@ _url_re = re.compile("""
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_json_re = re.compile(r"window\.oPageConfig\.oRoom\s=\s({.+?});")
+_json_re = re.compile(r"window\.oPageConfig\.oRoom\s*=\s*({.+?});")
 
 _roomID_schema = validate.Schema(
     validate.all(
