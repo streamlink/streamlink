@@ -892,6 +892,13 @@ def main():
             sys.exit(1)
         else:
             sys.exit(0)
+    elif args.can_handle_url_nohead:
+        try:
+            streamlink.resolve_url_nohead(args.can_handle_url_nohead)
+        except NoPluginError:
+            sys.exit(1)
+        else:
+            sys.exit(0)
     elif args.url:
         try:
             setup_options()

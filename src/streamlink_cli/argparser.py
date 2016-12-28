@@ -213,6 +213,13 @@ general.add_argument(
     """
 )
 general.add_argument(
+    "--can-handle-url-nohead",
+    metavar="URL",
+    help="""
+    Same as --can-handle-url but without HTTP operations involved.
+    """
+)
+general.add_argument(
     "--config",
     action="append",
     metavar="FILENAME",

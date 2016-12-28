@@ -343,6 +343,29 @@ class Streamlink(object):
 
         raise NoPluginError
 
+    def resolve_url_nohead(self, url):
+        """Attempts to find a plugin that can use this URL.
+
+        The default protocol (http) will be prefixed to the URL if
+        not specified.
+
+        Raises :exc:`NoPluginError` on failure.
+
+        :param url: a URL to match against loaded plugins
+
+        """
+        parsed = urlparse(url)
+
+        if len(parsed.scheme) == 0:
+            url = "http://" + url
+
+        for name, plugin in self.plugins.items():
+            if plugin.can_handle_url(url):
+                obj = plugin(url)
+                return obj
+
+        raise NoPluginError
+
     def streams(self, url, **params):
         """Attempts to find a plugin and extract streams from the *url*.
 
