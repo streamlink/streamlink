@@ -3,9 +3,8 @@ import time
 
 from io import BytesIO
 from hashlib import md5
-from urllib.parse import urlunsplit
 
-from streamlink.compat import urljoin, urlparse
+from streamlink.compat import urljoin, urlparse, urlunparse
 from streamlink.exceptions import PluginError, NoStreamsError
 from streamlink.packages.flashmedia.types import AMF0String, AMF0Value, U32BE
 from streamlink.packages.flashmedia import AMFPacket, AMFMessage
@@ -73,7 +72,7 @@ class bongacams(Plugin):
         http_session.headers.update(CONST_HEADERS)
 
         # get swf url and cookies
-        r = http_session.get(urlunsplit((stream_page_scheme, stream_page_domain, stream_page_path, '', '')))
+        r = http_session.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
 
         # redirect to profile page means stream is offlie
         if '/profile/' in r.url:
@@ -89,7 +88,7 @@ class bongacams(Plugin):
             country_code = urlparse(r.url).netloc.split('.')[0].lower()
 
         # time to set variables
-        baseurl = urlunsplit((stream_page_scheme, urlparse(r.url).netloc, '', '', ''))
+        baseurl = urlunparse((stream_page_scheme, urlparse(r.url).netloc, '', '', '', ''))
         amf_gateway_url = urljoin(baseurl, CONST_AMF_GATEWAY_LOCATION)
         stream_page_url = urljoin(baseurl, stream_page_path)
 
