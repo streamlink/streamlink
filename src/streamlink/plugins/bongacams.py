@@ -3,6 +3,7 @@ import time
 
 from io import BytesIO
 from hashlib import md5
+from urllib.parse import urlunsplit
 
 from streamlink.compat import urljoin, urlparse
 from streamlink.exceptions import PluginError, NoStreamsError
@@ -17,12 +18,13 @@ CONST_FLASH_VER = "WIN 24,0,0,186"
 CONST_DEFAULT_SWF_LOCATION = '/swf/chat/BCamChat.swf?cache=20161226150'
 CONST_AMF_GATEWAY_LOCATION = '/tools/amf.php'
 CONST_AMF_GATEWAY_PARAM = 'x-country'
+CONST_DEFAULT_COUNTRY_CODE = 'en'
 
 CONST_HEADERS = {}
 CONST_HEADERS['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
 CONST_HEADERS['User-Agent'] += 'Chrome/54.0.2840.99 Safari/537.36 OPR/41.0.2353.69'
 
-url_re = re.compile("^(https?://\w{2}.bongacams.com)/([\w\d_-]+)$")
+url_re = re.compile("(http(s)?://)?(\w{2}.)?(bongacams.com)/([\w\d_-]+)")
 swf_re = re.compile("/swf/\w+/\w+.swf\?cache=\d+")
 
 amf_msg_schema = validate.Schema({
@@ -61,21 +63,20 @@ class bongacams(Plugin):
     def _get_streams(self):
         match = url_re.match(self.url)
 
-        baseurl = match.group(1)
-        chathost = match.group(2)
-        chathost_url = match.group()
-        amf_gateway_url = urljoin(baseurl, CONST_AMF_GATEWAY_LOCATION)
-        country = urlparse(baseurl).netloc[:2].lower()
+        stream_page_scheme = 'https'
+        stream_page_domain = match.group(4)
+        stream_page_path = match.group(5)
+        country_code = CONST_DEFAULT_COUNTRY_CODE
 
         # create http session and set headers
         http_session = http
         http_session.headers.update(CONST_HEADERS)
 
-        # get swf url and cookies for next request
-        r = http_session.get(chathost_url, allow_redirects=False)
+        # get swf url and cookies
+        r = http_session.get(urlunsplit((stream_page_scheme, stream_page_domain, stream_page_path, '', '')))
 
-        if r.is_redirect:
-            self.logger.debug("redirect to: {}", r.headers.get('Location'))
+        # redirect to profile page means stream is offlie
+        if '/profile/' in r.url:
             raise NoStreamsError
         if not r.ok:
             self.logger.debug("Status code for {}: {}", r.url, r.status_code)
@@ -83,22 +84,33 @@ class bongacams(Plugin):
         if len(http_session.cookies) == 0:
             raise PluginError("Can't get a cookies")
 
+        if urlparse(r.url).netloc != stream_page_domain:
+            # then redirected to regional subdomain
+            country_code = urlparse(r.url).netloc.split('.')[0].lower()
+
+        # time to set variables
+        baseurl = urlunsplit((stream_page_scheme, urlparse(r.url).netloc, '', '', ''))
+        amf_gateway_url = urljoin(baseurl, CONST_AMF_GATEWAY_LOCATION)
+        stream_page_url = urljoin(baseurl, stream_page_path)
+
         match = swf_re.search(r.text)
         if match:
             swf_url = urljoin(baseurl, match.group())
             self.logger.debug("swf url found: {}", swf_url)
         else:
+            # most likely it means that country/region banned
+            # can try use default swf-url
             swf_url = urljoin(baseurl, CONST_DEFAULT_SWF_LOCATION)
             self.logger.debug("swf url not found. Will try {}", swf_url)
 
         # create amf query
-        amf_message = AMFMessage2("svDirectAmf.getRoomData", "/1", [chathost, True])
+        amf_message = AMFMessage2("svDirectAmf.getRoomData", "/1", [stream_page_path, True])
         amf_packet = AMFPacket(version=0)
         amf_packet.messages.append(amf_message)
 
         # send request and close http-session
         r = http_session.post(url=amf_gateway_url,
-                              params={CONST_AMF_GATEWAY_PARAM : country},
+                              params={CONST_AMF_GATEWAY_PARAM : country_code},
                               data=bytes(amf_packet.serialize()))
         http_session.close()
 
@@ -121,8 +133,8 @@ class bongacams(Plugin):
             "swfUrl": swf_url,
             "tcUrl": stream_source_info['localData']['NC_ConnUrl'],
             "rtmp": stream_source_info['localData']['NC_ConnUrl'],
-            "pageUrl": chathost_url,
-            "playpath": "%s?uid=%s" % (''.join(('stream_', chathost)),
+            "pageUrl": stream_page_url,
+            "playpath": "%s?uid=%s" % (''.join(('stream_', stream_page_path)),
                                        self._get_stream_uid(stream_source_info['userData']['username'])),
             # Multiple args with same name not supported.
             # Details: https://github.com/streamlink/streamlink/issues/321
