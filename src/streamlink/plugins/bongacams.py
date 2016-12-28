@@ -77,10 +77,10 @@ class bongacams(Plugin):
 
         # redirect to profile page means stream is offlie
         if '/profile/' in r.url:
-            raise NoStreamsError
+            raise NoStreamsError(self.url)
         if not r.ok:
             self.logger.debug("Status code for {}: {}", r.url, r.status_code)
-            raise NoStreamsError
+            raise NoStreamsError(self.url)
         if len(http_session.cookies) == 0:
             raise PluginError("Can't get a cookies")
 
