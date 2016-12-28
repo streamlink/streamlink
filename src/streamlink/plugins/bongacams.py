@@ -4,7 +4,7 @@ import time
 from io import BytesIO
 from hashlib import md5
 
-from streamlink.compat import urljoin, urlparse, urlunparse
+from streamlink.compat import bytes, urljoin, urlparse, urlunparse
 from streamlink.exceptions import PluginError, NoStreamsError
 from streamlink.packages.flashmedia.types import AMF0String, AMF0Value, U32BE
 from streamlink.packages.flashmedia import AMFPacket, AMFMessage
@@ -66,6 +66,7 @@ class bongacams(Plugin):
         stream_page_domain = match.group(4)
         stream_page_path = match.group(5)
         country_code = CONST_DEFAULT_COUNTRY_CODE
+        is_paid_show = False
 
         # create http session and set headers
         http_session = http
@@ -103,7 +104,7 @@ class bongacams(Plugin):
             self.logger.debug("swf url not found. Will try {}", swf_url)
 
         # create amf query
-        amf_message = AMFMessage2("svDirectAmf.getRoomData", "/1", [stream_page_path, True])
+        amf_message = AMFMessage2("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
         amf_packet = AMFPacket(version=0)
         amf_packet.messages.append(amf_message)
 
