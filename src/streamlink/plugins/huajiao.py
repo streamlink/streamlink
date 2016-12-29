@@ -11,10 +11,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import (HTTPStream, HLSStream)
 
-STREAM_WEIGHTS = {
-        "live": 1080
-}    
-
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
 HUAJIAO_URL = "http://www.huajiao.com/l/{}"
 LAPI_URL = "http://g2.live.360.cn/liveplay?stype=flv&channel={}&bid=huajiao&sn={}&sid={}&_rate=xd&ts={}&r={}&_ostype=flash&_delay=0&_sign=null&_ver=13"
@@ -42,13 +38,6 @@ class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
-
-    @classmethod
-    def stream_weight(cls, stream):
-        if stream in STREAM_WEIGHTS:
-            return STREAM_WEIGHTS[stream], "Huajiao"
-
-        return Plugin.stream_weight(stream)
 
     def _get_streams(self):
         match = _url_re.match(self.url)
