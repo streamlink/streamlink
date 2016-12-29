@@ -9,10 +9,10 @@ from requests.adapters import HTTPAdapter
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HTTPStream
+from streamlink.stream import (HTTPStream, HLSStream)
 
 STREAM_WEIGHTS = {
-        "source": 1080
+        "live": 1080
 }    
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
@@ -24,34 +24,20 @@ _url_re = re.compile("""
         /l/(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_room_sn_re = re.compile(r'"sn"\s*:\s*"(?P<sn>[a-zA-Z0-9_]+)"', re.VERBOSE)
-_room_channel_re = re.compile(r'"channel"\s*:\s*"(?P<channel>[a-zA-Z0-9_]+)"', re.VERBOSE)
+_feed_json_re = re.compile(r'^\s*var\s*feed\s*=\s*(?P<feed>{.*})\s*;', re.MULTILINE)
 
-_room_sn_schema = validate.Schema(
+_feed_json_schema = validate.Schema(
         validate.all(
-            validate.transform(_room_sn_re.search),
+            validate.transform(_feed_json_re.search),
             validate.any(
                 None,
                 validate.all(
-                    validate.get('sn'),
-                    validate.transform(str)
+                    validate.get('feed'),
+                    validate.transform(json.loads)
                     )
                 )
             )
         )
-_room_channel_schema = validate.Schema(
-        validate.all(
-            validate.transform(_room_channel_re.search),
-            validate.any(
-                None,
-                validate.all(
-                    validate.get('channel'),
-                    validate.transform(str)
-                    )
-                )
-            )
-        )
-
 class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -71,19 +57,24 @@ class Huajiao(Plugin):
         http.headers.update({"User-Agent": USER_AGENT})
         http.verify=False
 
-        sn = http.get(HUAJIAO_URL.format(channel), schema=_room_sn_schema)
-        channel_sid = http.get(HUAJIAO_URL.format(channel), schema=_room_channel_schema)
-        
-        sid = uuid.uuid4().hex.upper()
+        #res = http.get(HUAJIAO_URL.format(channel)).content.decode('utf-8')
 
-        encoded_json = http.get(LAPI_URL.format(channel_sid, sn, sid, time.time(), random.random())).content
+        #match = _feed_json_re.search(res)
+        #feed_json = json.loads(match.group('feed'))
 
-        decoded_json = base64.decodestring(encoded_json[0:3] + encoded_json[6:]).decode('utf-8')
-        video_data = json.loads(decoded_json)
-        url = video_data['main']
-        
-        stream = HTTPStream(self.session, url)
-        name = "source"
+        feed_json = http.get(HUAJIAO_URL.format(channel), schema=_feed_json_schema)
+        if feed_json['feed']['m3u8']:
+            stream = HLSStream(self.session, feed_json['feed']['m3u8'])
+            name = "hls"
+        else:
+            sn = feed_json['feed']['sn']
+            channel_sid = feed_json['relay']['channel']
+            sid = uuid.uuid4().hex.upper()
+            encoded_json = http.get(LAPI_URL.format(channel_sid, sn, sid, time.time(), random.random())).content
+            decoded_json = base64.decodestring(encoded_json[0:3] + encoded_json[6:]).decode('utf-8')
+            video_data = json.loads(decoded_json)
+            stream = HTTPStream(self.session, video_data['main'])
+            name = "http"
         yield name, stream
 
 __plugin__ = Huajiao
