@@ -57,15 +57,9 @@ class Huajiao(Plugin):
         http.headers.update({"User-Agent": USER_AGENT})
         http.verify=False
 
-        #res = http.get(HUAJIAO_URL.format(channel)).content.decode('utf-8')
-
-        #match = _feed_json_re.search(res)
-        #feed_json = json.loads(match.group('feed'))
-
         feed_json = http.get(HUAJIAO_URL.format(channel), schema=_feed_json_schema)
         if feed_json['feed']['m3u8']:
             stream = HLSStream(self.session, feed_json['feed']['m3u8'])
-            name = "hls"
         else:
             sn = feed_json['feed']['sn']
             channel_sid = feed_json['relay']['channel']
@@ -74,7 +68,6 @@ class Huajiao(Plugin):
             decoded_json = base64.decodestring(encoded_json[0:3] + encoded_json[6:]).decode('utf-8')
             video_data = json.loads(decoded_json)
             stream = HTTPStream(self.session, video_data['main'])
-            name = "http"
-        yield name, stream
+        yield "live", stream
 
 __plugin__ = Huajiao
