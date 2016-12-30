@@ -43,6 +43,7 @@ class StreamLive(Plugin):
         stream = RTMPStream(self.session, params)
         return "live", stream
 
+    @Plugin.broken(315)
     def _get_streams(self):
         channel = _url_re.match(self.url).group("channel")
         urls = http.get(CHANNEL_URL, params=dict(n=channel), schema=_schema)
