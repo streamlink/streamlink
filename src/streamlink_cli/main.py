@@ -892,9 +892,9 @@ def main():
             sys.exit(1)
         else:
             sys.exit(0)
-    elif args.can_handle_url_nohead:
+    elif args.can_handle_url_no_redirect:
         try:
-            streamlink.resolve_url_nohead(args.can_handle_url_nohead)
+            streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
             sys.exit(1)
         else:
@@ -929,3 +929,4 @@ def main():
             "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)
+

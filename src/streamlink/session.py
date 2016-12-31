@@ -343,7 +343,7 @@ class Streamlink(object):
 
         raise NoPluginError
 
-    def resolve_url_nohead(self, url):
+    def resolve_url_no_redirect(self, url):
         """Attempts to find a plugin that can use this URL.
 
         The default protocol (http) will be prefixed to the URL if
@@ -424,3 +424,4 @@ class Streamlink(object):
         return __version__
 
 __all__ = ["Streamlink"]
+
