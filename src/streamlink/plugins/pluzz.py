@@ -101,7 +101,7 @@ class Pluzz(Plugin):
             # Check whether video format is expired
             available = False
             for interval in video['plages_ouverture']:
-                available = interval['debut'] <= now <= interval['fin']
+                available = (interval['debut'] or 0) <= now <= (interval['fin'] or sys.maxsize)
                 if available:
                     break
             if not available:
