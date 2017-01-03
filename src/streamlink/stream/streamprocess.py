@@ -36,6 +36,7 @@ class StreamProcess(Stream):
 
         self.params = params
         self.errorlog = self.session.options.get("subprocess-errorlog")
+        self.errorlog_path = self.session.options.get("subprocess-errorlog-path")
         self.timeout = timeout
 
     def open(self):
@@ -43,7 +44,9 @@ class StreamProcess(Stream):
         params = self.params.copy()
         params["_bg"] = True
 
-        if self.errorlog:
+        if self.errorlog_path:
+            params["_err"] = open(self.errorlog_path, "w")
+        elif self.errorlog:
             tmpfile = tempfile.NamedTemporaryFile(prefix="streamlink",
                                                   suffix=".err", delete=False)
             params["_err"] = tmpfile

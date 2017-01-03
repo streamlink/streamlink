@@ -20,6 +20,8 @@ def stream_to_url(stream):
         for key, value in stream_params.items():
             if isinstance(value, bool):
                 value = str(int(value))
+            if isinstance(value, int):
+                value = str(value)
 
             # librtmp expects some characters to be escaped
             value = value.replace("\\", "\\5c")
