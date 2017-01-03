@@ -172,6 +172,12 @@ class Streamlink(object):
                                 ffmpeg executable use by Muxing streams
                                 e.g. ``/usr/local/bin/ffmpeg``
 
+        ffmpeg-verbose          (bool) Log stderr from ffmpeg to the
+                                console
+
+        ffmpeg-verbose-path     (str) Specify the location of the
+                                ffmpeg stderr log file
+
         ffmpeg-video-transcode  (str) The codec to use if transcoding
                                 video when muxing with ffmpeg
                                 e.g. ``h264``

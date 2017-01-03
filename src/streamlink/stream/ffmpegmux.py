@@ -4,6 +4,7 @@ import threading
 
 import subprocess
 
+import sys
 from streamlink.packages import pbs
 from streamlink.packages.pbs import CommandNotFound
 from streamlink.stream import Stream
@@ -61,6 +62,7 @@ class FFMPEGMuxer(object):
         if not self.is_usable(session):
             raise Exception("cannot use FFMPEG")
 
+        self.session = session
         self.process = None
         self.logger = session.logger.new_module("stream.mp4mux-ffmpeg")
         self.streams = streams
@@ -74,20 +76,28 @@ class FFMPEGMuxer(object):
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
 
-        self._cmd = [self.command(session), '-y']
+        self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
             self._cmd.extend(["-i", np.path])
 
         self._cmd.extend(['-c:v', videocodec, '-c:a', audiocodec, '-f', ofmt, outpath])
         self.logger.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
+        self.close_errorlog = False
+
+        if session.options.get("ffmpeg-verbose"):
+            self.errorlog = sys.stderr
+        elif session.options.get("ffmpeg-verbose-path"):
+            self.errorlog = open(session.options.get("ffmpeg-verbose-path"), "w")
+            self.close_errorlog = True
+        else:
+            self.errorlog = devnull()
 
 
     def open(self):
         for t in self.pipe_threads:
             t.daemon = True
             t.start()
-
-        self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE, stderr=devnull())
+        self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE, stderr=self.errorlog)
 
         return self
 
@@ -122,4 +132,7 @@ class FFMPEGMuxer(object):
                     stream.close()
 
             self.logger.debug("Closed all the substreams")
+        if self.close_errorlog:
+            self.errorlog.close()
+            self.errorlog = None
 

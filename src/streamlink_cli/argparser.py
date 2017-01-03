@@ -773,6 +773,21 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--ffmpeg-verbose",
+    action="store_true",
+    help="""
+    Write the console output from ffmpeg to the console
+    """
+)
+transport.add_argument(
+    "--ffmpeg-verbose-path",
+    type=str,
+    metavar="PATH",
+    help="""
+    Path to write the output from the ffmpeg console
+    """
+)
+transport.add_argument(
     "--ffmpeg-video-transcode",
     metavar="CODEC",
     help="""
