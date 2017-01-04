@@ -32,39 +32,38 @@ class Picarto(Plugin):
             raise ValueError
 
         # transform the arguments
-        channel, player_id, product, offline_image, online, visibility, is_flash = \
+        channel, player_id, product, offline_image, online, token, is_flash = \
             map(lambda a: a.strip("' \""), match.group(1).split(","))
-        player_id, product, offline_image, online, is_flash = \
-            map(lambda a: bool(int(a)), [player_id, product, offline_image, online, is_flash])
+        online, is_flash = bool(int(online)), bool(int(is_flash))
 
-        return channel, player_id, product, offline_image, online, visibility, is_flash
+        return channel, online, token, is_flash
 
     def _get_streams(self):
         page = http.get(self.url)
 
         try:
-            channel, _, _, _, online, visibility, is_flash = self._get_stream_arguments(page)
+            channel, online, token, is_flash = self._get_stream_arguments(page)
         except ValueError:
             return
+
+        self.logger.debug("Channel {} is {}, default player tech: {} with token={}",
+                          channel,
+                          "online" if online else "offline",
+                          "RTMP" if is_flash else "HTML5",
+                          token)
 
         if not online:
             self.logger.error("This stream is currently offline")
             return
 
-        channel_server_res = http.post(API_CHANNEL_INFO, data={
-            "loadbalancinginfo": channel
-        })
+        channel_server_res = http.post(API_CHANNEL_INFO, data={"loadbalancinginfo": channel})
+        server = channel_server_res.text
 
-        if is_flash:
-            return {"live": RTMPStream(self.session, {
-                "rtmp": RTMP_URL.format(channel_server_res.text),
-                "playpath": RTMP_PLAYPATH.format(channel, visibility),
-                "pageUrl": self.url,
-                "live": True
-            })}
-        else:
-            return HLSStream.parse_variant_playlist(self.session,
-                                                    HLS_URL.format(channel_server_res.text, channel, visibility),
-                                                    verify=False)
+        self.logger.debug("Using load balancing server: {}", server)
+
+        return HLSStream.parse_variant_playlist(self.session,
+                                                HLS_URL.format(server, channel, token),
+                                                verify=False)
+
 
 __plugin__ = Picarto
