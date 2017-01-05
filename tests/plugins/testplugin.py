@@ -1,6 +1,6 @@
 from io import BytesIO
-from itertools import repeat
 
+from streamlink import NoStreamsError
 from streamlink.plugins import Plugin
 from streamlink.options import Options
 from streamlink.stream import *
@@ -25,6 +25,11 @@ class TestPlugin(Plugin):
         return "test.se" in url
 
     def _get_streams(self):
+        if "empty" in self.url:
+            return
+        if "NoStreamsError" in self.url:
+            raise NoStreamsError(self.url)
+
         streams = {}
         streams["test"] = TestStream(self.session)
         streams["rtmp"] = RTMPStream(self.session, dict(rtmp="rtmp://test.se"))

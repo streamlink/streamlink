@@ -27,3 +27,6 @@ lib/
 local/
 share/
 pip-selfcheck.json
+
+# coverage
+htmlcov
