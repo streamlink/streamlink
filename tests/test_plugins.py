@@ -31,7 +31,7 @@ class PluginTestMeta(type):
             return load_plugin_test
 
         for pname, file, pathname, desc in plugins:
-            dict['test_{}_load'.format(pname)] = gentest(pname, file, pathname, desc)
+            dict['test_{0}_load'.format(pname)] = gentest(pname, file, pathname, desc)
 
         return type.__new__(mcs, name, bases, dict)
 

@@ -13,7 +13,7 @@ class AtresPlayer(Plugin):
     url_re = re.compile(r"https?://(?:www.)?atresplayer.com/directos/television/(\w+)/?")
     player_re = re.compile(r"""div.*?directo=(\d+)""")
     stream_api = "https://servicios.atresplayer.com/api/urlVideoLanguage/v3/{id}/web/{id}|{time}|{hash}/es.xml"
-    manifest_re = re.compile(r"<resultDes>(.*)?</resultDes>")
+    manifest_re = re.compile(r"<resultDes>(.*?)</resultDes>")
 
     @classmethod
     def can_handle_url(cls, url):
