@@ -33,6 +33,9 @@ if version_info[0] == 2:
     deps.append("backports.shutil_which")
     deps.append("backports.shutil_get_terminal_size")
 
+deps.append("websocket-client==0.37.0")
+deps.append("pymp4==1.0.2")
+
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
 if environ.get("NO_DEPS"):
