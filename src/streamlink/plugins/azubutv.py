@@ -21,7 +21,7 @@ HTTP_HEADERS = {
 
 }
 
-_url_re = re.compile("http(s)?://(\w+\.)?azubu.tv/(?P<domain>\w+)")
+_url_re = re.compile(r"http(s)?://(\w+\.)?azubu.tv/(?P<domain>\w+)")
 
 PARAMS_REGEX = r"(\w+)=({.+?}|\[.+?\]|\(.+?\)|'(?:[^'\\]|\\')*'|\"(?:[^\"\\]|\\\")*\"|\S+)"
 stream_video_url = "http://api.azubu.tv/public/channel/{}/player"

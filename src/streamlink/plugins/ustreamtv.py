@@ -21,7 +21,7 @@ try:
 except ImportError:
     HAS_LIBRTMP = False
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(www\.)?ustream.tv
     (?:
         (/embed/|/channel/id/)(?P<channel_id>\d+)
@@ -30,7 +30,7 @@ _url_re = re.compile("""
         /recorded/(?P<video_id>\d+)
     )?
 """, re.VERBOSE)
-_channel_id_re = re.compile("\"channelId\":(\d+)")
+_channel_id_re = re.compile(r"\"channelId\":(\d+)")
 
 HLS_PLAYLIST_URL = (
     "http://iphone-streaming.ustream.tv"

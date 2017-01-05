@@ -54,7 +54,7 @@ _url_re = re.compile(r"""
         (?P<clip_name>[\w]+)
     )?
 """, re.VERBOSE)
-_time_re = re.compile("""
+_time_re = re.compile(r"""
     (?:
         (?P<hours>\d+)h
     )?

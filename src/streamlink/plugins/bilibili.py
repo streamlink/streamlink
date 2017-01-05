@@ -14,12 +14,12 @@ STREAM_WEIGHTS = {
     "source": 1080
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://live.bilibili.com
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_room_re = re.compile('var ROOMID = (\\d+)')
+_room_re = re.compile(r'var ROOMID = (\d+)')
 
 class Bilibili(Plugin):
     @classmethod

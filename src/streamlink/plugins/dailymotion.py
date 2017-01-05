@@ -24,12 +24,12 @@ QUALITY_MAP = {
 }
 STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
 
-_rtmp_re = re.compile("""
+_rtmp_re = re.compile(r"""
     (?P<host>rtmp://[^/]+)
     /(?P<app>[^/]+)
     /(?P<playpath>.+)
 """, re.VERBOSE)
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?
     dailymotion.com
     (/embed)?/(video|live)

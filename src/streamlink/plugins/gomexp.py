@@ -13,7 +13,7 @@ API_BASE = "http://gox.gomexp.com/cgi-bin"
 API_URL_APP = API_BASE + "/app_api.cgi"
 API_URL_LIVE = API_BASE + "/gox_live.cgi"
 
-_url_re = re.compile("http(s)?://(www\.)?gomexp.com")
+_url_re = re.compile(r"http(s)?://(www\.)?gomexp.com")
 
 _entries_schema = validate.Schema(
     validate.xml_findall("./ENTRY/*/[@reftype='live'][@href]"),

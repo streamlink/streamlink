@@ -7,7 +7,7 @@ from streamlink.stream import RTMPStream
 PLAYER_URL = "http://leton.tv/player.php"
 SWF_URL = "http://files.leton.tv/jwplayer.flash.swf"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http?://(\w+.)?leton.tv
     (?:
         /player\.php\?.*streampage=
@@ -17,8 +17,8 @@ _url_re = re.compile("""
     )?
     (?P<streampage>[^/?&]+)
 """, re.VERBOSE)
-_js_var_re = re.compile("var (?P<var>\w+)\s?=\s?'?(?P<value>[^;']+)'?;")
-_rtmp_re = re.compile("/(?P<app>[^/]+)/(?P<playpath>.+)")
+_js_var_re = re.compile(r"var (?P<var>\w+)\s?=\s?'?(?P<value>[^;']+)'?;")
+_rtmp_re = re.compile(r"/(?P<app>[^/]+)/(?P<playpath>.+)")
 
 
 def _parse_server_ip(values):

@@ -4,8 +4,8 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
-_url_re = re.compile("^http(s)?://(\w+\.)?furstre\.am/stream/.+")
-_stream_url_re = re.compile("<source src=\"([^\"]+)\"")
+_url_re = re.compile(r"^http(s)?://(\w+\.)?furstre\.am/stream/.+")
+_stream_url_re = re.compile(r"<source src=\"([^\"]+)\"")
 _schema = validate.Schema(
     validate.transform(_stream_url_re.search),
     validate.any(

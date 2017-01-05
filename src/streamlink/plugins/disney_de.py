@@ -13,11 +13,11 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
 
-_url_re = re.compile("http(s)?://(\w+\.)?disney(channel)?.de/")
+_url_re = re.compile(r"http(s)?://(\w+\.)?disney(channel)?.de/")
 
 # stream urls are in `Grill.burger`->stack->data->externals->data
-_stream_hls_re = re.compile("\"hlsStreamUrl\":\s*(\"[^\"]+\")")
-_stream_data_re = re.compile("\"dataUrl\":\s*(\"[^\"]+\")")
+_stream_hls_re = re.compile(r"\"hlsStreamUrl\":\s*(\"[^\"]+\")")
+_stream_data_re = re.compile(r"\"dataUrl\":\s*(\"[^\"]+\")")
 
 
 class DisneyDE(Plugin):

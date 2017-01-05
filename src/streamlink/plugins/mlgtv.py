@@ -14,7 +14,7 @@ STREAM_TYPES = {
 
 _stream_id_re = re.compile(r"<meta content='.+/([\w_-]+).+' property='og:video'>")
 _player_config_re = re.compile(r"var playerConfig = (.+);")
-_url_re = re.compile("http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)")
+_url_re = re.compile(r"http(s)?://(\w+\.)?(majorleaguegaming\.com|mlg\.tv)")
 
 _player_config_schema = validate.Schema(
     {

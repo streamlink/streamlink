@@ -41,7 +41,7 @@ def parse_timestamp(ts):
     )
 
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?crunchyroll\.
     (?:
         com|de|es|fr|co.jp

@@ -11,8 +11,8 @@ from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
 SWF_URL = "http://www.arte.tv/player/v2/jwplayer6/mediaplayer.6.6.swf"
 
-_url_re = re.compile("http(s)?://(\w+\.)?arte.tv/")
-_json_re = re.compile("arte_vp_(?:live-)?url=(['\"])(.+?)\\1")
+_url_re = re.compile(r"http(s)?://(\w+\.)?arte.tv/")
+_json_re = re.compile(r'arte_vp_(?:live-)?url=([\'"])(.+?)\1')
 
 _schema = validate.Schema(
     validate.transform(_json_re.search),

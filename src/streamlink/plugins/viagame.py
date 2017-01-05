@@ -11,8 +11,8 @@ STREAM_API_URL = "http://playapi.mtgx.tv/v3/videos/stream/{0}"
 _embed_url_re = re.compile(
     '<meta itemprop="embedURL" content="http://www.viagame.com/embed/video/([^"]+)"'
 )
-_store_data_re = re.compile("window.fluxData\s*=\s*JSON.parse\(\"(.+)\"\);")
-_url_re = re.compile("http(s)?://(www\.)?viagame.com/channels/.+")
+_store_data_re = re.compile(r"window.fluxData\s*=\s*JSON.parse\(\"(.+)\"\);")
+_url_re = re.compile(r"http(s)?://(www\.)?viagame.com/channels/.+")
 
 _store_schema = validate.Schema(
     {

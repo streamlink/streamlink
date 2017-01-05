@@ -18,7 +18,7 @@ STREAMING_TYPES = {
     )
 }
 
-_url_re = re.compile("http(s)?://live.daserste.de/(?P<channel>[^/?]+)?")
+_url_re = re.compile(r"http(s)?://live.daserste.de/(?P<channel>[^/?]+)?")
 
 _livestream_schema = validate.Schema(
     validate.xml_findall("video/*"),

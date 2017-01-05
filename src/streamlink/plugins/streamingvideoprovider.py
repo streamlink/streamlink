@@ -12,7 +12,7 @@ API_URL = "http://player.webvideocore.net/index.php"
 _url_re = re.compile(
     "http(s)?://(\w+\.)?streamingvideoprovider.co.uk/(?P<channel>[^/&?]+)"
 )
-_hls_re = re.compile("'(http://.+\.m3u8)'")
+_hls_re = re.compile(r"'(http://.+\.m3u8)'")
 
 _rtmp_schema = validate.Schema(
     validate.xml_findtext("./info/url"),

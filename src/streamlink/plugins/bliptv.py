@@ -4,9 +4,9 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream
 
-_url_re = re.compile("(http(s)?://)?blip.tv/.*-(?P<videoid>\d+)")
+_url_re = re.compile(r"(http(s)?://)?blip.tv/.*-(?P<videoid>\d+)")
 VIDEO_GET_URL = 'http://player.blip.tv/file/get/{0}'
-SINGLE_VIDEO_URL = re.compile('.*\.((mp4)|(mov)|(m4v)|(flv))')
+SINGLE_VIDEO_URL = re.compile(r'.*\.((mp4)|(mov)|(m4v)|(flv))')
 
 QUALITY_WEIGHTS = {
     "ultra": 1080,
@@ -15,7 +15,7 @@ QUALITY_WEIGHTS = {
     "low": 240,
 }
 
-QUALITY_WEIGHTS_ULTRA = re.compile('ultra+_(?P<level>\d+)')
+QUALITY_WEIGHTS_ULTRA = re.compile(r'ultra+_(?P<level>\d+)')
 
 
 def get_quality_dict(quality_list):

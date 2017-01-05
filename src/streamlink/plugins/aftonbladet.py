@@ -15,10 +15,10 @@ STREAM_FORMATS = ("m3u8", "f4m")
 VIDEO_INFO_URL = "http://aftonbladet-play-static-ext.cdn.drvideo.aptoma.no/actions/video"
 METADATA_URL = "http://aftonbladet-play-metadata.cdn.drvideo.aptoma.no/video/{0}.json"
 
-_embed_re = re.compile("<iframe src=\"(http://tv.aftonbladet.se[^\"]+)\"")
-_aptoma_id_re = re.compile("<div id=\"drvideo\".+data-aptomaId=\"([^\"]+)\"")
-_live_re = re.compile("data-isLive=\"true\"")
-_url_re = re.compile("http(s)?://(\w+.)?.aftonbladet.se")
+_embed_re = re.compile(r"<iframe src=\"(http://tv.aftonbladet.se[^\"]+)\"")
+_aptoma_id_re = re.compile(r"<div id=\"drvideo\".+data-aptomaId=\"([^\"]+)\"")
+_live_re = re.compile(r"data-isLive=\"true\"")
+_url_re = re.compile(r"http(s)?://(\w+.)?.aftonbladet.se")
 
 _video_schema = validate.Schema(
     {

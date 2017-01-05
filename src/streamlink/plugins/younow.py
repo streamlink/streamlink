@@ -9,7 +9,7 @@ from streamlink.stream import RTMPStream
 jsonapi= "https://api.younow.com/php/api/broadcast/info/curId=0/user="
 
 # http://younow.com/channel/
-_url_re = re.compile("http(s)?://(\w+.)?younow.com/(?P<channel>[^/&?]+)")
+_url_re = re.compile(r"http(s)?://(\w+.)?younow.com/(?P<channel>[^/&?]+)")
 
 def getStreamURL(channel):
     url = jsonapi + channel

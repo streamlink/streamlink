@@ -7,8 +7,8 @@ from streamlink.plugin.api.utils import parse_json
 
 __all__ = ["parse_playlist"]
 
-_playlist_re = re.compile("\(?\{.*playlist: (\[.*\]),.*?\}\)?;", re.DOTALL)
-_js_to_json = partial(re.compile("(\w+):\s").sub, r'"\1":')
+_playlist_re = re.compile(r"\(?\{.*playlist: (\[.*\]),.*?\}\)?;", re.DOTALL)
+_js_to_json = partial(re.compile(r"(\w+):\s").sub, r'"\1":')
 
 _playlist_schema = validate.Schema(
     validate.transform(_playlist_re.search),

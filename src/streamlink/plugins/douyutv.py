@@ -21,7 +21,7 @@ STREAM_WEIGHTS = {
     "source": 1080
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(www\.)?douyu.com
     /(?P<channel>[^/]+)
 """, re.VERBOSE)

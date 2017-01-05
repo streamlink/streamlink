@@ -9,7 +9,7 @@ from streamlink.utils import parse_json
 
 
 class WebTV(Plugin):
-    _url_re = re.compile("http(?:s)?://(\w+)\.web.tv/?")
+    _url_re = re.compile(r"http(?:s)?://(\w+)\.web.tv/?")
     _sources_re = re.compile(r'"sources": (\[.*?\]),', re.DOTALL)
     _sources_schema = validate.Schema([
         {

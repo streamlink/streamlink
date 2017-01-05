@@ -5,9 +5,9 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream
 
-_url_re = re.compile("http(s)?://(\w+\.)?ssh101\.com/")
+_url_re = re.compile(r"http(s)?://(\w+\.)?ssh101\.com/")
 
-_live_re = re.compile("""
+_live_re = re.compile(r"""
 \s*jwplayer\(\"player\"\)\.setup\({.*?
 \s*primary:\s+"([^"]+)".*?
 \s*file:\s+"([^"]+)"

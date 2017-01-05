@@ -6,9 +6,9 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream, HTTPStream, HLSStream
 from streamlink.utils import parse_json, rtmpparse, swfdecompress
 
-_url_re = re.compile("http(s)?://api.dmcloud.net/player/embed/[^/]+/[^/]+")
-_rtmp_re = re.compile(b"customURL[^h]+(https://.*?)\\\\")
-_info_re = re.compile("var info = (.*);")
+_url_re = re.compile(r"http(s)?://api.dmcloud.net/player/embed/[^/]+/[^/]+")
+_rtmp_re = re.compile(br'customURL[^h]+(https://.*?)\\')
+_info_re = re.compile(r"var info = (.*);")
 _schema = validate.Schema(
     {
         "mode": validate.text,
