@@ -2,22 +2,10 @@
 
 from os import environ
 from os.path import abspath, dirname, join
-from setuptools import setup
+from setuptools import setup, find_packages
 from sys import version_info, path as sys_path
 
 deps = []
-packages = [
-    "streamlink",
-    "streamlink.stream",
-    "streamlink.plugin",
-    "streamlink.plugin.api",
-    "streamlink.plugins",
-    "streamlink.packages",
-    "streamlink.packages.flashmedia",
-    "streamlink_cli",
-    "streamlink_cli.packages",
-    "streamlink_cli.utils"
-]
 
 if version_info[0] == 2:
     # Require backport of concurrent.futures on Python 2
@@ -37,8 +25,13 @@ if (version_info[0] == 2 and version_info[1] == 6 and version_info[2] < 3):
 else:
     deps.append("requests>=1.0,!=2.12.0,!=2.12.1,<3.0")
 
-# this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.5
-deps.append("pycryptodome==3.4.3")
+# this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.6
+deps.append("pycryptodome>=3.4.3,<4")
+
+# shutil.get_terminal_size and which were added in Python 3.3
+if version_info[0] == 2:
+    deps.append("backports.shutil_which")
+    deps.append("backports.shutil_get_terminal_size")
 
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
@@ -57,7 +50,7 @@ setup(name="streamlink",
       author="Streamlink",
       author_email="charlie@charliedrage.com",  # temp until we have a mailing list / global email
       license="Simplified BSD",
-      packages=packages,
+      packages=find_packages("src"),
       package_dir={"": "src"},
       entry_points={
           "console_scripts": ["streamlink=streamlink_cli.main:main"]

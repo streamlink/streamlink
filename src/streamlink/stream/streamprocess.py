@@ -3,7 +3,10 @@ from .wrappers import StreamIOThreadWrapper
 from ..compat import str
 from ..exceptions import StreamError
 from ..packages import pbs as sh
-from ..packages.shutil_which import which
+try:
+    from shutil import which
+except ImportError:
+    from backports.shutil_which import which
 
 import os
 import time
