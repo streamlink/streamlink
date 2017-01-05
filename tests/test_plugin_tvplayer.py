@@ -1,7 +1,10 @@
 import json
 import unittest
 
-from mock import patch, Mock, ANY
+try:
+    from unittest.mock import patch, Mock, ANY
+except ImportError:
+    from mock import patch, Mock, ANY
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
 

@@ -6,7 +6,10 @@ import os.path
 import streamlink.cache
 from shutil import rmtree
 
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 is_py2 = (sys.version_info[0] == 2)
 
 

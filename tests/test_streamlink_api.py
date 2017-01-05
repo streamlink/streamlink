@@ -1,7 +1,10 @@
 import os.path
 import unittest
 
-from mock import patch
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 from streamlink import Streamlink
 from streamlink.api import streams
 

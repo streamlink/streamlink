@@ -6,7 +6,10 @@ else:
 
 import os.path
 import streamlink_cli.main
-from mock import patch, ANY
+try:
+    from unittest.mock import patch, ANY
+except ImportError:
+    from mock import patch, ANY
 from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
 

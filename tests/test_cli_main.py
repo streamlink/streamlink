@@ -6,7 +6,10 @@ else:
     import unittest
 import os.path
 import streamlink_cli.main
-from mock import Mock, patch
+try:
+    from unittest.mock import Mock, patch
+except ImportError:
+    from mock import Mock, patch
 from streamlink_cli.main import check_file_output
 from streamlink_cli.output import FileOutput
 
