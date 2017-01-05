@@ -1,0 +1,20 @@
+codecov:
+  notify:
+    require_ci_to_pass: true
+comment:
+  behavior: default
+  layout: header, diff
+  require_changes: false
+coverage:
+  precision: 2
+  range:
+  - 50.0
+  - 100.0
+  round: down
+  status:
+    changes: false
+    patch: false
+    project: 
+      default:
+        target: 40
+
