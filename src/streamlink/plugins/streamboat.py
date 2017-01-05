@@ -4,7 +4,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
-_RE_URL = re.compile('^https?://streamboat.tv/.+')
+_RE_URL = re.compile(r'^https?://streamboat.tv/.+')
 _RE_CDN = re.compile(r'"cdn_host"\s*:\s*"([^"]+)"')
 _RE_PLAYLIST = re.compile(r'"playlist_url"\s*:\s*"([^"]+)"')
 

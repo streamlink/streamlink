@@ -4,7 +4,7 @@ from streamlink.plugin import Plugin
 
 TWITCH_URL_FORMAT = "http://www.twitch.tv/{0}"
 
-_url_re = re.compile("http://(?:www\.)?speedrunslive.com/#!/(?P<user>\w+)")
+_url_re = re.compile(r"http://(?:www\.)?speedrunslive.com/#!/(?P<user>\w+)")
 
 
 class SpeedRunsLive(Plugin):

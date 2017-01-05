@@ -7,7 +7,7 @@ from streamlink.stream import HLSStream, HTTPStream
 
 
 class Euronews(Plugin):
-    _url_re = re.compile("http(?:s)?://(\w+)\.?euronews.com/(live|.*)")
+    _url_re = re.compile(r"http(?:s)?://(\w+)\.?euronews.com/(live|.*)")
     _re_vod = re.compile(r'<meta\s+property="og:video"\s+content="(http.*?)"\s*/>')
     _live_api_url = "http://fr.euronews.com/api/watchlive.json"
     _live_schema = validate.Schema({

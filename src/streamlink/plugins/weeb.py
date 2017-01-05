@@ -27,7 +27,7 @@ BLOCKED_MSG_FORMAT = (
 BLOCK_TYPE_VIEWING_LIMIT = 1
 BLOCK_TYPE_NO_SLOTS = 11
 
-_url_re = re.compile("http(s)?://(\w+\.)?weeb.tv/(channel|online)/(?P<channel>[^/&?]+)")
+_url_re = re.compile(r"http(s)?://(\w+\.)?weeb.tv/(channel|online)/(?P<channel>[^/&?]+)")
 _schema = validate.Schema(
     dict,
     validate.map(lambda k, v: (PARAMS_KEY_MAP.get(k, k), v)),

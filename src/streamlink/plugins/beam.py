@@ -4,7 +4,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
-_url_re = re.compile("http(s)?://(\w+.)?beam.pro/(?P<channel>[^/]+)")
+_url_re = re.compile(r"http(s)?://(\w+.)?beam.pro/(?P<channel>[^/]+)")
 
 CHANNEL_INFO = "https://beam.pro/api/v1/channels/{0}"
 CHANNEL_MANIFEST = "https://beam.pro/api/v1/channels/{0}/manifest.smil"

@@ -7,7 +7,7 @@ from streamlink.stream import FLVPlaylist, HTTPStream
 
 API_URL = "http://veetle.com/index.php/stream/ajaxStreamLocation/{0}/flash"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?veetle.com
     (:?
         /.*(v|view)/

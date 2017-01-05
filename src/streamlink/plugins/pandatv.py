@@ -12,7 +12,7 @@ HD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv"
 # I don't know ordinary-definition url pattern, sorry for ignore it.
 OD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv"
 
-_url_re = re.compile("http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
+_url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 
 _room_schema = validate.Schema(
         {

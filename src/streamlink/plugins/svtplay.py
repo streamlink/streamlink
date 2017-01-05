@@ -6,7 +6,7 @@ from streamlink.stream import HLSStream, HDSStream
 
 API_URL = "http://www.svt.se/videoplayer-api/video/{0}"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://
     (www\.)?
     (?:

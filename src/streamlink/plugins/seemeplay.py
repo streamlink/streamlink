@@ -5,8 +5,8 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream, HTTPStream
 
-_url_re = re.compile("http(s)?://(\w+\.)?seemeplay.ru/")
-_player_re = re.compile("""
+_url_re = re.compile(r"http(s)?://(\w+\.)?seemeplay.ru/")
+_player_re = re.compile(r"""
     SMP.(channel|video).player.init\({
     \s+file:\s+"([^"]+)"
 """, re.VERBOSE)

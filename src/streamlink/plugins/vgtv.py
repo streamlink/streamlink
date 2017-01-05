@@ -27,8 +27,8 @@ STREAM_FORMATS = ("mp4")
 
 INFO_URL = "http://www.vgtv.no/data/actions/videostatus/"
 
-_url_re = re.compile("https?://(www\.)?(vgtv|vg).no")
-_content_id_re = re.compile("(?:data-videoid=\"|videostatus/\?id=)(\d+)")
+_url_re = re.compile(r"https?://(www\.)?(vgtv|vg).no")
+_content_id_re = re.compile(r"(?:data-videoid=\"|videostatus/\?id=)(\d+)")
 _url_id_re = re.compile((
     "https?://(?:www\.)?vgtv.no/"
     "(?:(?:#!/)?video/|(?:#!|\?)id=)(\d+)"

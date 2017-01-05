@@ -29,12 +29,12 @@ API_URL_MEDIA           = "https://api.media.ccc.de"
 API_URL_STREAMING_MEDIA = "https://streaming.media.ccc.de/streams/v1.json"
 
 # http(s)://media.ccc.de/path/to/talk.html
-_url_media_re           = re.compile("(?P<scheme>http|https)"
+_url_media_re           = re.compile(r"(?P<scheme>http|https)"
                                      ":\/\/"
                                      "(?P<server>media\.ccc\.de)"
                                      "\/")
 # https://streaming.media.ccc.de/room/
-_url_streaming_media_re = re.compile("(?P<scheme>http|https)"
+_url_streaming_media_re = re.compile(r"(?P<scheme>http|https)"
                                      ":\/\/"
                                      "(?P<server>streaming\.media\.ccc\.de)"
                                      "\/"

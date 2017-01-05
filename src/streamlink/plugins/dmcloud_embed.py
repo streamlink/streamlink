@@ -8,10 +8,10 @@ HEADERS = {
                    "Gecko/20100101 Firefox/25.0")
 }
 URLS = [
-    re.compile("http(s)?://(\w+\.)?action24.gr")
+    re.compile(r"http(s)?://(\w+\.)?action24.gr")
 ]
 
-_embed_re = re.compile("http(s)?://api.dmcloud.net/player/embed/[\w\?=&\/;\-]+")
+_embed_re = re.compile(r"http(s)?://api.dmcloud.net/player/embed/[\w\?=&\/;\-]+")
 
 
 class DMCloudEmbed(Plugin):

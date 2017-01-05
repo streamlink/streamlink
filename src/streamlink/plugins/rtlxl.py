@@ -4,7 +4,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 
-_url_re = re.compile("""http(?:s)?://(?:\w+\.)?rtlxl.nl/#!/(?:.*)/(?P<uuid>.*?)\Z""", re.IGNORECASE)
+_url_re = re.compile(r"""http(?:s)?://(?:\w+\.)?rtlxl.nl/#!/(?:.*)/(?P<uuid>.*?)\Z""", re.IGNORECASE)
 
 class rtlxl(Plugin):
     @classmethod
@@ -16,7 +16,7 @@ class rtlxl(Plugin):
         uuid = match.group("uuid")
         html = http.get('http://www.rtl.nl/system/s4m/vfd/version=2/uuid={}/d=pc/fmt=adaptive/'.format(uuid)).text
 
-        playlist_url = "http://manifest.us.rtl.nl" + re.compile('videopath":"(?P<playlist_url>.*?)",', re.IGNORECASE).search(html).group("playlist_url")
+        playlist_url = "http://manifest.us.rtl.nl" + re.compile(r'videopath":"(?P<playlist_url>.*?)",', re.IGNORECASE).search(html).group("playlist_url")
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
 
 __plugin__ = rtlxl

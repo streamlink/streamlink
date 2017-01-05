@@ -18,11 +18,11 @@ QUALITY_WEIGHTS = {
     "low": 1
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?gaminglive\.tv
     /(?P<type>channels|videos)/(?P<name>[^/]+)
 """, re.VERBOSE)
-_quality_re = re.compile("[^/]+-(?P<quality>[^/]+)")
+_quality_re = re.compile(r"[^/]+-(?P<quality>[^/]+)")
 
 _channel_schema = validate.Schema(
     {

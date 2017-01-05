@@ -6,7 +6,7 @@ from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import AkamaiHDStream, HLSStream
 
-_url_re = re.compile("http(s)?://(www\.)?livestream.com/")
+_url_re = re.compile(r"http(s)?://(www\.)?livestream.com/")
 _stream_config_schema = validate.Schema({
     "event": {
         "stream_info": validate.any({

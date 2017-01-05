@@ -7,8 +7,8 @@ from streamlink.stream import HDSStream, HLSStream, RTMPStream
 
 STREAMS_INFO_URL = "http://www.expressen.se/Handlers/WebTvHandler.ashx?id={0}";
 
-_url_re = re.compile("http(s)?://(?:\w+.)?\.expressen\.se")
-_meta_xmlurl_id_re = re.compile('<meta.+xmlUrl=http%3a%2f%2fwww.expressen.se%2fHandlers%2fWebTvHandler.ashx%3fid%3d([0-9]*)" />')
+_url_re = re.compile(r"http(s)?://(?:\w+.)?\.expressen\.se")
+_meta_xmlurl_id_re = re.compile(r'<meta.+xmlUrl=http%3a%2f%2fwww.expressen.se%2fHandlers%2fWebTvHandler.ashx%3fid%3d([0-9]*)" />')
 
 
 class Expressen(Plugin):

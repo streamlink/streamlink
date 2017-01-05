@@ -13,7 +13,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream, HLSStream
 
-_url_re = re.compile("http(s)?://(\w+\.)?npo.nl/")
+_url_re = re.compile(r"http(s)?://(\w+\.)?npo.nl/")
 HTTP_HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36"
 }
@@ -26,7 +26,7 @@ class NPO(Plugin):
     def get_token(self):
         url = 'http://ida.omroep.nl/npoplayer/i.js?s={}'.format(quote(self.url))
         token = http.get(url, headers=HTTP_HEADERS).text
-        token = re.compile('token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
+        token = re.compile(r'token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
 
         # Great the have a ['en','ok','t'].reverse() decurity option in npoplayer.js
         secured = list(token)
@@ -53,9 +53,9 @@ class NPO(Plugin):
 
     def _get_meta(self):
         html = http.get('http://www.npo.nl/live/{}'.format(self.npo_id), headers=HTTP_HEADERS).text
-        program_id = re.compile('data-prid="(.*?)"', re.DOTALL + re.IGNORECASE).search(html).group(1)
+        program_id = re.compile(r'data-prid="(.*?)"', re.DOTALL + re.IGNORECASE).search(html).group(1)
         meta = http.get('http://e.omroep.nl/metadata/{}'.format(program_id), headers=HTTP_HEADERS).text
-        meta = re.compile('({.*})', re.DOTALL + re.IGNORECASE).search(meta).group(1)
+        meta = re.compile(r'({.*})', re.DOTALL + re.IGNORECASE).search(meta).group(1)
         return json.loads(meta)
 
     def _get_vod_streams(self):
@@ -77,7 +77,7 @@ class NPO(Plugin):
         url = 'http://ida.omroep.nl/aapi/?type=jsonp&stream={}&token={}'.format(stream, self.get_token())
         streamdata = http.get(url, headers=HTTP_HEADERS).json()
         deeplink = http.get(streamdata['stream'], headers=HTTP_HEADERS).text
-        deeplink = re.compile('"(.*?)"', re.DOTALL + re.IGNORECASE).search(deeplink).group(1)
+        deeplink = re.compile(r'"(.*?)"', re.DOTALL + re.IGNORECASE).search(deeplink).group(1)
         playlist_url = deeplink.replace("\\/", "/")
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
 

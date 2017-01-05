@@ -8,7 +8,7 @@ from streamlink.stream import RTMPStream
 LIVE_STREAM_URL = "rtmp://stream1.cybergame.tv:2936/live/"
 PLAYLIST_URL = "http://api.cybergame.tv/p/playlist.smil"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?cybergame.tv
     (?:
         /videos/(?P<video_id>\d+)

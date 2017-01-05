@@ -10,10 +10,10 @@ from streamlink.utils import rtmpparse
 
 STREAM_API_URL = "http://playapi.mtgx.tv/v3/videos/stream/{0}"
 
-_swf_url_re = re.compile("data-flashplayer-url=\"([^\"]+)\"")
-_player_data_re = re.compile("window.fluxData\s*=\s*JSON.parse\(\"(.+)\"\);")
+_swf_url_re = re.compile(r"data-flashplayer-url=\"([^\"]+)\"")
+_player_data_re = re.compile(r"window.fluxData\s*=\s*JSON.parse\(\"(.+)\"\);")
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(www\.)?
     (?:
         tv(3|6|8|10)play |

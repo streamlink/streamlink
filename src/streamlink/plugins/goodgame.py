@@ -12,7 +12,7 @@ QUALITIES = {
     "240p": "_240"
 }
 
-_url_re = re.compile("https://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
+_url_re = re.compile(r"https://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(r'var src = "([^"]+)";')
 _ddos_re = re.compile(r'document.cookie="(__DDOS_[^;]+)')
 

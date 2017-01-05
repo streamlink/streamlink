@@ -24,7 +24,7 @@ STREAMING_TYPES = {
     )
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?zdf.de/
 """, re.VERBOSE | re.IGNORECASE)
 

@@ -4,8 +4,8 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream
 
-_url_re = re.compile("http(s)?://(www\.)?openrec.tv/(live|movie)/[^/?&]+")
-_playlist_url_re = re.compile("data-file=\"(?P<url>[^\"]+)\"")
+_url_re = re.compile(r"http(s)?://(www\.)?openrec.tv/(live|movie)/[^/?&]+")
+_playlist_url_re = re.compile(r"data-file=\"(?P<url>[^\"]+)\"")
 _schema = validate.Schema(
     validate.transform(_playlist_url_re.search),
     validate.any(

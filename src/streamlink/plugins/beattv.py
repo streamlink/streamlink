@@ -42,7 +42,7 @@ QUALITY_MAP = {
     "web_hd": 12
 }
 
-_url_re = re.compile("http(s)?://(\w+\.)?be-at.tv/")
+_url_re = re.compile(r"http(s)?://(\w+\.)?be-at.tv/")
 _schema = validate.Schema(
     validate.any(
         None,

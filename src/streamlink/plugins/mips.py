@@ -9,9 +9,9 @@ BALANCER_URL = "http://www.mips.tv:1935/loadbalancer"
 PLAYER_URL = "http://mips.tv/embedplayer/{0}/1/500/400"
 SWF_URL = "http://mips.tv/content/scripts/eplayer.swf"
 
-_url_re = re.compile("http(s)?://(\w+.)?mips.tv/(?P<channel>[^/&?]+)")
-_flashvars_re = re.compile("'FlashVars', '([^']+)'")
-_rtmp_re = re.compile("redirect=(.+)")
+_url_re = re.compile(r"http(s)?://(\w+.)?mips.tv/(?P<channel>[^/&?]+)")
+_flashvars_re = re.compile(r"'FlashVars', '([^']+)'")
+_rtmp_re = re.compile(r"redirect=(.+)")
 
 _schema = validate.Schema(
     validate.transform(_flashvars_re.search),

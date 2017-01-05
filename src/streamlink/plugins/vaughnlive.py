@@ -14,14 +14,14 @@ DOMAIN_MAP = {
     "vaughnlive": "live",
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?
     (?P<domain>vaughnlive|breakers|instagib|vapers).tv
     (/embed/video)?
     /(?P<channel>[^/&?]+)
 """, re.VERBOSE)
 
-_swf_player_re = re.compile('swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"')
+_swf_player_re = re.compile(r'swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"')
 
 _schema = validate.Schema(
     validate.transform(lambda s: s.split(";")),

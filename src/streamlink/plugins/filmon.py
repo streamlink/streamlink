@@ -20,9 +20,9 @@ QUALITY_WEIGHTS = {
 }
 STREAM_TYPES = ("hls", "rtmp")
 
-_url_re = re.compile("http(s)?://(\w+\.)?filmon.com/(channel|tv|vod)/")
-_channel_id_re = re.compile("/channels/(\d+)/extra_big_logo.png")
-_vod_id_re = re.compile("movie_id=(\d+)")
+_url_re = re.compile(r"http(s)?://(\w+\.)?filmon.com/(channel|tv|vod)/")
+_channel_id_re = re.compile(r"/channels/(\d+)/extra_big_logo.png")
+_vod_id_re = re.compile(r"movie_id=(\d+)")
 
 _channel_schema = validate.Schema({
     "streams": [{

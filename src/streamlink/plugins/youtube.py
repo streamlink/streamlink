@@ -90,9 +90,9 @@ _search_schema = validate.Schema(
     validate.get("items")
 )
 
-_channelid_re = re.compile('meta itemprop="channelId" content="([^"]+)"')
-_livechannelid_re = re.compile('meta property="og:video:url" content="([^"]+)')
-_url_re = re.compile("""
+_channelid_re = re.compile(r'meta itemprop="channelId" content="([^"]+)"')
+_livechannelid_re = re.compile(r'meta property="og:video:url" content="([^"]+)')
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?youtube.com
     (?:
         (?:

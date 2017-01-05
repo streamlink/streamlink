@@ -10,10 +10,10 @@ VIEW_LIVE_API_URL = "http://api.afreeca.tv/live/view_live.php"
 VIEW_LIVE_API_URL_TW = "http://api.afreecatv.com.tw/live/view_live.php"
 VIEW_LIVE_API_URL_JP = "http://api.afreecatv.jp/live/view_live.php"
 
-_url_re = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw|afreeca.tv|afreecatv.jp)/(?P<channel>[\w\-_]+)")
-_url_re_tw = re.compile("http(s)?://(\w+\.)?(afreecatv.com.tw)/(?P<channel>[\w\-_]+)")
-_url_re_jp = re.compile("http(s)?://(\w+\.)?(afreecatv.jp)/(?P<channel>[\w\-_]+)")
-_flashvars_re = re.compile('<param name="flashvars" value="([^"]+)" />')
+_url_re = re.compile(r"http(s)?://(\w+\.)?(afreecatv.com.tw|afreeca.tv|afreecatv.jp)/(?P<channel>[\w\-_]+)")
+_url_re_tw = re.compile(r"http(s)?://(\w+\.)?(afreecatv.com.tw)/(?P<channel>[\w\-_]+)")
+_url_re_jp = re.compile(r"http(s)?://(\w+\.)?(afreecatv.jp)/(?P<channel>[\w\-_]+)")
+_flashvars_re = re.compile(r'<param name="flashvars" value="([^"]+)" />')
 
 _flashvars_schema = validate.Schema(
     validate.transform(_flashvars_re.findall),

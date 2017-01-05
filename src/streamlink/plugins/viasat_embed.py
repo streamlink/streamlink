@@ -4,8 +4,8 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 
 
-_url_re = re.compile("http(s)?://(www\.)?tv(3|6|8|10)\.se")
-_embed_re = re.compile('<iframe class="iframe-player" src="([^"]+)">')
+_url_re = re.compile(r"http(s)?://(www\.)?tv(3|6|8|10)\.se")
+_embed_re = re.compile(r'<iframe class="iframe-player" src="([^"]+)">')
 
 
 class ViasatEmbed(Plugin):

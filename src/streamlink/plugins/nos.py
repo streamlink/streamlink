@@ -14,12 +14,12 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HTTPStream, HLSStream
 
-_url_re = re.compile("http(s)?://(\w+\.)?nos.nl/")
-_js_re = re.compile('\((.*)\)')
-_data_stream_re = re.compile('data-stream="(.*?)"', re.DOTALL | re.IGNORECASE)
-_source_re = re.compile("<source(?P<source>[^>]+)>", re.IGNORECASE)
-_source_src_re = re.compile("src=\"(?P<src>[^\"]+)\"", re.IGNORECASE)
-_source_type_re = re.compile("type=\"(?P<type>[^\"]+)\"", re.IGNORECASE)
+_url_re = re.compile(r"http(s)?://(\w+\.)?nos.nl/")
+_js_re = re.compile(r'\((.*)\)')
+_data_stream_re = re.compile(r'data-stream="(.*?)"', re.DOTALL | re.IGNORECASE)
+_source_re = re.compile(r"<source(?P<source>[^>]+)>", re.IGNORECASE)
+_source_src_re = re.compile(r"src=\"(?P<src>[^\"]+)\"", re.IGNORECASE)
+_source_type_re = re.compile(r"type=\"(?P<type>[^\"]+)\"", re.IGNORECASE)
 
 
 class NOS(Plugin):
