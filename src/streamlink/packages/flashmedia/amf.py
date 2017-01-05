@@ -55,7 +55,7 @@ class AMFMessage(Packet):
     def _serialize(self, packet):
         packet += AMF0String(self.target_uri)
         packet += AMF0String(self.response_uri)
-        packet += U32BE(self.size)
+        packet += U32BE(AMF0Value.size(self.value))
         packet += AMF0Value.pack(self.value)
 
     @classmethod
