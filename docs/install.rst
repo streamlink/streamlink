@@ -93,6 +93,11 @@ manager, :command:`easy_install` the older package manager included with
 `python-setuptools`_ or by checking out the latest code with
 `Git <http://git-scm.com/downloads>`_.
 
+.. note::
+
+    For some Linux distributions the Python headers package needs to be installed before installing streamlink
+    (``python-devel`` in RedHat, Fedora, etc.).
+
 The commands listed here will also upgrade any existing version of Streamlink.
 
 ==================================== ===========================================
