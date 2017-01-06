@@ -14,7 +14,7 @@ class AdultSwim(Plugin):
         "Chrome/43.0.2357.65 Safari/537.36")
     API_URL = "http://www.adultswim.com/videos/api/v2/videos/{id}?fields=stream"
 
-    _url_re = re.compile(r"http://www\.adultswim\.com/videos/streams/(.*)")
+    _url_re = re.compile(r"https?://(?:www\.)?adultswim\.com/videos/streams/(.*)")
     _stream_data_re = re.compile(r".*AS_INITIAL_DATA = (\{.*?});.*", re.M | re.DOTALL)
 
     _page_data_schema = validate.Schema({
