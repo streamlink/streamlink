@@ -83,6 +83,7 @@ media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are suppor
 mediaklikk          mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
 meerkat             meerkatapp.co        Yes   --
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
+mitele              mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
 nineanime           9anime.to            --    Yes
