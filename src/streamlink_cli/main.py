@@ -755,6 +755,7 @@ def setup_options():
         streamlink.set_option("stream-timeout", args.stream_timeout)
 
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
+    streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
 
     # Deprecated options
     if args.hds_fragment_buffer:

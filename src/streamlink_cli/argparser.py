@@ -750,6 +750,17 @@ transport.add_argument(
     Useful when debugging rtmpdump related issues.
     """
 )
+transport.add_argument(
+    "--subprocess-errorlog-path", "--errorlog-path",
+    type=str,
+    metavar="PATH",
+    help="""
+    Log the subprocess errorlog to a specific file rather than a temporary file.
+    Takes precedence over subprocess-errorlog.
+
+    Useful when debugging rtmpdump related issues.
+    """
+)
 
 
 http = parser.add_argument_group("HTTP options")
