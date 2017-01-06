@@ -98,6 +98,7 @@ orf_tvthek          tvthek.orf.at        Yes   Yes
 pandatv             panda.tv             Yes   ?
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
+pluzz               pluzz.francetv.fr    Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
 powerapp            powerapp.com.tr      Yes   No
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restriced to The Netherlands. Livestreams not supported.
 rtve                rtve.es              Yes   No
