@@ -99,7 +99,7 @@ changelog_rst() {
   echo "Generating CHANGELOG.rst"
   CHANGES=$(cat changes.txt)
   cd $CLI
-  DATE=$(date +"%m-%d-%Y")
+  DATE=$(date +"%Y-%m-%d")
   CHANGELOG=$(cat CHANGELOG.rst)
   HEADER="$CLI $1 ($DATE)"
   HEADER="${HEADER}\n$(for i in $(seq 1 ${#HEADER}); do echo '-'; done)"
