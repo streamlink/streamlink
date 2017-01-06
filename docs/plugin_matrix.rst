@@ -70,6 +70,7 @@ gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 hitbox              hitbox.tv            Yes   Yes
+huajiao             huajiao.com          Yes   No    
 ine                 ine.com              ---   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 kanal7              kanal7.com           Yes   No
@@ -165,6 +166,7 @@ younow              younow.com           Yes   --
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
                     - youtu.be
 zdf_mediathek       zdf.de               Yes   Yes
+zhanqitv            zhanqi.tv            Yes   No
 =================== ==================== ===== ===== ===========================
 
 
