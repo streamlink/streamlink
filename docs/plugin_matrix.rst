@@ -30,6 +30,11 @@ bigo                - live.bigo.tv       Yes   --
                     - bigoweb.co
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
+bnt                 - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
+                    - bgonair.com
+                    - kanal3.bg
+                    - bitelevision.com
+                    - nova.bg
 bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
@@ -61,6 +66,7 @@ dplay               - dplay.se           --    Yes   Streams may be geo-restrict
                     - dplay.no
                     - dplay.dk
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
+eurocom             eurocom.bg           Yes   No
 euronews            euronews.com         Yes   No
 expressen           expressen.se         Yes   Yes
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
