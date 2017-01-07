@@ -148,6 +148,6 @@ class bongacams(Plugin):
         self.logger.debug("Stream params:\n{}", stream_params)
         stream = RTMPStream(self.session, stream_params)
 
-        return {'high': stream}
+        return {'live': stream}
 
 __plugin__ = bongacams
