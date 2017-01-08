@@ -5,8 +5,8 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
-PLAYER_VERSION = "0.1.1.767"
-INFO_URL = "http://mvn.vaughnsoft.net/video/edge/mnt-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
+PLAYER_VERSION = "0.1.1.782"
+INFO_URL = "http://mvn.vaughnsoft.net/video/edge/soon_depricated_Q2_2017-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
 
 DOMAIN_MAP = {
     "breakers": "btv",
@@ -56,6 +56,7 @@ class VaughnLive(Plugin):
         if match is None:
             return
         swfUrl = "http://vaughnlive.tv" + match.group(1)
+        self.logger.debug("Using swf url: {0}", swfUrl)
 
         match = _url_re.match(self.url)
         params = {}
@@ -64,7 +65,9 @@ class VaughnLive(Plugin):
         params["version"] = PLAYER_VERSION
         params["ms"] = random.randint(0, 999)
         params["random"] = random.random()
-        info = http.get(INFO_URL.format(**params), schema=_schema)
+        info_url = INFO_URL.format(**params)
+        self.logger.debug("Loading info url: {0}", INFO_URL.format(**params))
+        info = http.get(info_url, schema=_schema)
 
         app = "live"
         if info["server"] in ["198.255.17.18:1337", "198.255.17.66:1337", "50.7.188.2:1337"]:
