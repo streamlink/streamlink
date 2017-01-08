@@ -24,24 +24,29 @@ _url_re = re.compile(r"""
 _swf_player_re = re.compile(r'swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"')
 
 _schema = validate.Schema(
-    validate.transform(lambda s: s.split(";")),
-    validate.length(3),
-    validate.union({
-        "server": validate.all(
-            validate.get(0),
-            validate.text
-        ),
-        "token": validate.all(
-            validate.get(1),
-            validate.text,
-            validate.startswith(":mvnkey-"),
-            validate.transform(lambda s: s[len(":mvnkey-"):])
-        ),
-        "ingest": validate.all(
-            validate.get(2),
-            validate.text
+    validate.any(
+        validate.all(u"<error></error>", validate.transform(lambda x: None)),
+        validate.all(
+            validate.transform(lambda s: s.split(";")),
+            validate.length(3),
+            validate.union({
+                "server": validate.all(
+                    validate.get(0),
+                    validate.text
+                ),
+                "token": validate.all(
+                    validate.get(1),
+                    validate.text,
+                    validate.startswith(":mvnkey-"),
+                    validate.transform(lambda s: s[len(":mvnkey-"):])
+                ),
+                "ingest": validate.all(
+                    validate.get(2),
+                    validate.text
+                )
+            })
         )
-    })
+    )
 )
 
 
@@ -68,6 +73,9 @@ class VaughnLive(Plugin):
         info_url = INFO_URL.format(**params)
         self.logger.debug("Loading info url: {0}", INFO_URL.format(**params))
         info = http.get(info_url, schema=_schema)
+        if not info:
+            self.logger.info("This stream is currently available")
+            return
 
         app = "live"
         if info["server"] in ["198.255.17.18:1337", "198.255.17.66:1337", "50.7.188.2:1337"]:
