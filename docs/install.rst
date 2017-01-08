@@ -61,8 +61,13 @@ Mac OS X                             .. code-block:: console
 
                                         # easy_install -U streamlink
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
+
+`Chocolatey`_                        .. code-block:: powershell
+
+                                        C:\> choco install streamlink
 ==================================== ===========================================
 
+.. _Chocolatey: https://chocolatey.org/packages/streamlink
 
 Package maintainers
 -------------------
@@ -70,6 +75,7 @@ Package maintainers
 Distribution/Platform                Maintainer
 ==================================== ===========================================
 Arch                                 Josip Ponjavic <josipponjavic at gmail.com>
+Chocolatey                           Scott Walters <me at scowalt.com>
 Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
