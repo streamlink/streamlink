@@ -60,16 +60,15 @@ class VaughnLive(Plugin):
         match = _swf_player_re.search(res.text)
         if match is None:
             return
-        swfUrl = "http://vaughnlive.tv" + match.group(1)
-        self.logger.debug("Using swf url: {0}", swfUrl)
+        swf_url = "http://vaughnlive.tv" + match.group(1)
+        self.logger.debug("Using swf url: {0}", swf_url)
 
         match = _url_re.match(self.url)
-        params = {}
-        params["channel"] = match.group("channel").lower()
-        params["domain"] = DOMAIN_MAP.get(match.group("domain"), match.group("domain"))
-        params["version"] = PLAYER_VERSION
-        params["ms"] = random.randint(0, 999)
-        params["random"] = random.random()
+        params = dict(channel=match.group("channel").lower(),
+                      domain=DOMAIN_MAP.get(match.group("domain"), match.group("domain")),
+                      version=PLAYER_VERSION,
+                      ms=random.randint(0, 999),
+                      random=random.random())
         info_url = INFO_URL.format(**params)
         self.logger.debug("Loading info url: {0}", INFO_URL.format(**params))
         info = http.get(info_url, schema=_schema)
@@ -90,14 +89,13 @@ class VaughnLive(Plugin):
             elif info["ingest"] == "DEN":
                 app = "live-den"
 
-        stream = RTMPStream(self.session, {
-            "rtmp": "rtmp://{0}/live".format(info["server"]),
-            "app": "{0}?{1}".format(app, info["token"]),
-            "swfVfy": swfUrl,
-            "pageUrl": self.url,
-            "live": True,
-            "playpath": "{domain}_{channel}".format(**params),
-        })
+        stream = RTMPStream(self.session,
+                            dict(rtmp="rtmp://{0}/live".format(info["server"]),
+                                 app="{0}?{1}".format(app, info["token"]),
+                                 swfVfy=swf_url,
+                                 pageUrl=self.url,
+                                 live=True,
+                                 playpath="{domain}_{channel}".format(**params)))
 
         return dict(live=stream)
 
