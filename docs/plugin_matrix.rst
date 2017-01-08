@@ -117,6 +117,8 @@ streamupcom         streamup.com         Yes   --
 svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - svtflow.se
                     - oppetarkiv.se
+tf1                 - tf1.fr             Yes   No    Streams may be geo-restricted to France.
+                    - lci.fr
 tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
 tigerdile           tigerdile.com        Yes   --
