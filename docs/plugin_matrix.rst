@@ -137,6 +137,7 @@ tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restrict
                                                      Only non-premium streams currently supported.
                     - fotbollskanalen.se
 tv8                 tv8.com.tr           Yes   No
+tv8cat              tv8.cat              Yes   No    Streams may be geo-restricted to Spain/Catalunya.
 tv360               tv360.com.tr         Yes   No
 tvcatchup           - tvcatchup.com      Yes   No    Streams may be geo-restricted to Great Britain.
 tvplayer            tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
