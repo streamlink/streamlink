@@ -11,9 +11,9 @@ class TF1(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?(?:tf1\.fr/(\w+)/direct|(lci).fr/direct)/?")
     embed_url = "http://www.wat.tv/embedframe/live{0}"
     embed_re = re.compile(r"urlLive.*?:.*?\"(http.*?)\"", re.MULTILINE)
-    api_url = "http://www.wat.tv/get/androidlive{0}/591997"
-    swf_url = "http://www.wat.tv/images/v70/PlayerWat.swf?rev=04.00.861"
-    hds_channel_remap = {"tf1": "connect"}
+    api_url = "http://www.wat.tv/get/{0}/591997"
+    swf_url = "http://www.wat.tv/images/v70/PlayerLite.swf"
+    hds_channel_remap = {"tf1": "androidliveconnect", "lci": "androidlivelci"}
     hls_channel_remap = {"lci": "LCI", "tf1": "V4"}
 
     @classmethod
@@ -21,13 +21,15 @@ class TF1(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_hds_streams(self, channel):
-        channel = self.hds_channel_remap.get(channel, channel)
+        channel = self.hds_channel_remap.get(channel, "{0}live".format(channel))
         manifest_url = http.get(self.api_url.format(channel),
-                                params={"getURL": 1}).text
+                                params={"getURL": 1},
+                                headers={"User-Agent": useragents.FIREFOX}).text
 
         for s in HDSStream.parse_manifest(self.session,
                                           manifest_url,
-                                          pvswf=self.swf_url).items():
+                                          pvswf=self.swf_url,
+                                          headers={"User-Agent": useragents.FIREFOX}).items():
             yield s
 
     def _get_hls_streams(self, channel):
@@ -41,8 +43,11 @@ class TF1(Plugin):
         if m:
             hls_stream_url = m.group(1)
 
-            for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
-                yield s
+            try:
+                for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
+                    yield s
+            except:
+                self.logger.error("Failed to load the HLS playlist for {0}", channel)
 
     def _get_streams(self):
         m = self.url_re.match(self.url)
