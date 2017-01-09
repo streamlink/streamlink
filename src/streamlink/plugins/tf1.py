@@ -43,8 +43,11 @@ class TF1(Plugin):
         if m:
             hls_stream_url = m.group(1)
 
-            for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
-                yield s
+            try:
+                for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
+                    yield s
+            except:
+                self.logger.error("Failed to load the HLS playlist for {0}", channel)
 
     def _get_streams(self):
         m = self.url_re.match(self.url)
@@ -54,8 +57,8 @@ class TF1(Plugin):
             for s in self._get_hds_streams(channel):
                 yield s
 
-            #for s in self._get_hls_streams(channel):
-            #    yield s
+            for s in self._get_hls_streams(channel):
+                yield s
 
 
 
