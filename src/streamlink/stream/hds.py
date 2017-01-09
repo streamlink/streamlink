@@ -2,8 +2,10 @@ from __future__ import division
 
 import base64
 import hmac
+import random
 import re
 import os.path
+import string
 
 from binascii import unhexlify
 from collections import namedtuple
@@ -68,11 +70,15 @@ class HDSStreamWriter(SegmentedStreamWriter):
             return
 
         try:
+            request_params = self.stream.request_params.copy()
+            params = request_params.pop("params", {})
+            params.pop("g", None)
             return self.session.http.get(fragment.url,
                                          stream=True,
                                          timeout=self.timeout,
                                          exception=StreamError,
-                                         **self.stream.request_params)
+                                         params=params,
+                                         **request_params)
         except StreamError as err:
             self.logger.error("Failed to open fragment {0}-{1}: {2}",
                               fragment.segment, fragment.fragment, err)
@@ -442,6 +448,7 @@ class HDSStream(Stream):
 
         if "akamaihd" in url or is_akamai:
             request_params["params"]["hdcore"] = HDCORE_VERSION
+            request_params["params"]["g"] = cls.cache_buster_string(12)
 
         res = session.http.get(url, exception=IOError, **request_params)
         manifest = session.http.xml(res, "manifest XML", ignore_ns=True,
@@ -586,3 +593,7 @@ class HDSStream(Stream):
         params.extend(parse_qsl(hdntl, keep_blank_values=True))
 
         return params
+
+    @staticmethod
+    def cache_buster_string(length):
+        return "".join([random.choice(string.ascii_uppercase) for i in range(length)])
