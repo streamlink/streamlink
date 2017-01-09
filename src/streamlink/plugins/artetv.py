@@ -7,7 +7,7 @@ from itertools import chain
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.stream import HDSStream, HLSStream, HTTPStream, RTMPStream
 
 SWF_URL = "http://www.arte.tv/player/v2/jwplayer6/mediaplayer.6.6.swf"
 JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{}/{}"
@@ -39,7 +39,6 @@ _video_schema = validate.Schema({
     }
 })
 
-
 class ArteTV(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -62,6 +61,15 @@ class ArteTV(Plugin):
                     self.logger.error("Failed to extract HLS streams: {0}", err)
             else:
                 yield stream_name, HTTPStream(self.session, stream_url)
+
+        elif stream_type == "f4m":
+            try:
+                streams = HDSStream.parse_manifest(self.session, stream_url)
+
+                for stream in streams.items():
+                    yield stream
+            except IOError as err:
+                self.logger.error("Failed to extract HDS streams: {0}", err)
 
         elif stream_type == "rtmp":
             params = {
