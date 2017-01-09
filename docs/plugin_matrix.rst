@@ -36,6 +36,7 @@ bnt                 - tv.bnt.bg          Yes   No    Streams may be geo-restrict
                     - bitelevision.com
                     - nova.bg
 bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
+btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com

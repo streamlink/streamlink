@@ -810,6 +810,17 @@ def setup_plugin_options():
         streamlink.set_plugin_option("livestation", "password",
                                        args.livestation_password)
 
+    if args.btv_username:
+        streamlink.set_plugin_option("btv", "username", args.btv_username)
+
+    if args.btv_username and not args.btv_password:
+        btv_password = console.askpass("Enter BTV password: ")
+    else:
+        btv_password = args.btv_password
+
+    if btv_password:
+        streamlink.set_plugin_option("btv", "password", btv_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

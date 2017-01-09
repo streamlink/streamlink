@@ -975,6 +975,20 @@ plugin.add_argument(
     A Livestation account password to use with --livestation-email.
     """
 )
+plugin.add_argument(
+    "--btv-username",
+    metavar="USERNAME",
+    help="""
+    A BTV username required to access any stream.
+    """
+)
+plugin.add_argument(
+    "--btv-password",
+    metavar="PASSWORD",
+    help="""
+    A BTV account password to use with --btv-username.
+    """
+)
 
 
 # Deprecated options
