@@ -213,6 +213,13 @@ general.add_argument(
     """
 )
 general.add_argument(
+    "--can-handle-url-no-redirect",
+    metavar="URL",
+    help="""
+    Same as --can-handle-url but without following redirects when looking up the URL.
+    """
+)
+general.add_argument(
     "--config",
     action="append",
     metavar="FILENAME",
@@ -1099,3 +1106,4 @@ http.add_argument(
 )
 
 __all__ = ["parser"]
+
