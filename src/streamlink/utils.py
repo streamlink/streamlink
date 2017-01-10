@@ -114,7 +114,7 @@ def rtmpparse(url):
     netloc = "{hostname}:{port}".format(hostname=parse.hostname,
                                         port=parse.port or 1935)
     split = list(filter(None, parse.path.split("/")))
-
+    playpath = None
     if len(split) > 2:
         app = "/".join(split[:2])
         playpath = "/".join(split[2:])
