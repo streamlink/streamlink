@@ -46,7 +46,7 @@ class BNT(Plugin):
                     return url
 
     def _get_streams(self):
-        http.headers = {"User-Agent": useragents.FIREFOX}
+        http.headers = {"User-Agent": useragents.CHROME}
         res = http.get(self.url)
         iframe_url = self.find_iframe(res)
 
@@ -59,8 +59,9 @@ class BNT(Plugin):
                 return
 
             if stream_url:
-                return HLSStream.parse_variant_playlist(self.session, stream_url, headers={"Referer": iframe_url})
-
+                return HLSStream.parse_variant_playlist(self.session,
+                                                        stream_url,
+                                                        headers={"User-Agent": useragents.CHROME})
 
 
 __plugin__ = BNT
