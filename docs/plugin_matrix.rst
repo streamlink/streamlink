@@ -115,6 +115,7 @@ ruv                 ruv.is               Yes   Yes   Streams may be geo-restrict
 seemeplay           seemeplay.ru         Yes   Yes
 servustv            servustv.com         ?     ?
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
+sportal             sportal.bg           Yes   No
 sportschau          sportschau.de        Yes   No
 ssh101              ssh101.com           Yes   No
 streamboat          streamboat.tv        Yes   No

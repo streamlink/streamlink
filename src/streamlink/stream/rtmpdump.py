@@ -99,7 +99,10 @@ class RTMPStream(StreamProcess):
 
             if "rtmp" in self.params:
                 tcurl, playpath = rtmpparse(self.params["rtmp"])
-                rtmp = "{redirect}/{playpath}".format(**locals())
+                if playpath:
+                    rtmp = "{redirect}/{playpath}".format(redirect=redirect, playpath=playpath)
+                else:
+                    rtmp = redirect
                 self.params["rtmp"] = rtmp
 
             if "tcUrl" in self.params:
