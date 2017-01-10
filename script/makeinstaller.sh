@@ -42,9 +42,7 @@ packages=requests
          streamlink_cli
 pypi_wheels=pycryptodome==3.4.3
 
-files=../win32/rtmpdump > \$INSTDIR
-      ../win32/LICENSE.txt > \$INSTDIR
-
+files=../win32/LICENSE.txt > \$INSTDIR
 [Command streamlink]
 entry_point=streamlink_cli.main:main
 
@@ -90,6 +88,38 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
     [[ super() ]]
 [% endblock %]
 
+; UI pages
+[% block ui_pages %]
+!insertmacro MUI_PAGE_WELCOME
+!insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MUI_PAGE_DIRECTORY
+!insertmacro MUI_PAGE_INSTFILES
+!insertmacro MUI_PAGE_FINISH
+[% endblock ui_pages %]
+
+[% block sections %]
+[[ super()  ]]
+SubSection /e "Bundled tools" bundled
+    Section "rtmpdump" rtmpdump
+        SetOutPath "\$INSTDIR\rtmpdump"
+        File /r "rtmpdump\*.*"
+        SetShellVarContext current
+        \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "rtmpdump=" "\$INSTDIR\rtmpdump\rtmpdump.exe" \$R0
+        SetShellVarContext all
+        SetOutPath -
+    SectionEnd
+
+    Section "FFMPEG" ffmpeg
+        SetOutPath "\$INSTDIR\ffmpeg"
+        File /r "ffmpeg\*.*"
+        SetShellVarContext current
+        \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "ffmpeg-ffmpeg=" "\$INSTDIR\ffmpeg\ffmpeg.exe" \$R0
+        SetShellVarContext all
+        SetOutPath -
+    SectionEnd
+SubSectionEnd
+[% endblock %]
+
 [% block install_files %]
     [[ super() ]]
     ; Install config file
@@ -97,7 +127,6 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
     SetOverwrite off # config file we don't want to overwrite
     SetOutPath \$APPDATA\streamlink
     File /r "streamlinkrc"
-    \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "rtmpdump=" "\$INSTDIR\rtmpdump\rtmpdump.exe" \$R0
     SetOverwrite ifnewer
     SetOutPath -
     SetShellVarContext all
@@ -113,6 +142,13 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "EstimatedSize" "\$0"
 [% endblock %]
 
+[% block uninstall_files %]
+    [[ super() ]]
+    RMDir /r "\$INSTDIR\rtmpdump"
+    RMDir /r "\$INSTDIR\ffmpeg"
+[% endblock %]
+
+
 [% block install_shortcuts %]
     ; Remove shortcut from previous releases
     Delete "\$SMPROGRAMS\Streamlink.lnk"
@@ -121,6 +157,23 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 [% block uninstall_shortcuts %]
     ; no shortcuts to be removed...
 [% endblock %]
+
+[% block mouseover_messages %]
+[[ super() ]]
+
+StrCmp \$0 \${sec_app} "" +2
+  SendMessage \$R0 \${WM_SETTEXT} 0 "STR:\${PRODUCT_NAME} with embedded Python"
+
+StrCmp \$0 \${bundled} "" +2
+  SendMessage \$R0 \${WM_SETTEXT} 0 "STR:Extra tools used to play some streams"
+
+StrCmp \$0 \${rtmpdump} "" +2
+  SendMessage \$R0 \${WM_SETTEXT} 0 "STR:rtmpdump is used to play RTMP streams"
+
+StrCmp \$0 \${ffmpeg} "" +2
+  SendMessage \$R0 \${WM_SETTEXT} 0 "STR:FFMPEG is used to mux separate video and audio streams, for example high quality YouTube videos or DASH streams"
+
+[% endblock %]
 EOF
 
 echo "Building Python 3 installer" 1>&2
@@ -128,6 +181,11 @@ echo "Building Python 3 installer" 1>&2
 # copy the streamlinkrc file to the build dir, we cannot use the Include.files property in the config file
 # because those files will always overwrite, and for a config file we do not want to overwrite
 cp "win32/streamlinkrc" "${nsis_dir}/streamlinkrc"
+
+# copy the ffmpeg and rtmpdump directories to the install build dir
+cp -r "win32/ffmpeg" "${nsis_dir}/"
+cp -r "win32/rtmpdump" "${nsis_dir}/"
+
 pynsist build/streamlink.cfg
 
 # Make a copy of this build for the "latest" nightly

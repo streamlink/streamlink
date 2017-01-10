@@ -155,6 +155,8 @@ Name                                 Notes
 `RTMPDump`_                          Required to play RTMP streams.
 `python-librtmp`_                    Required by the *ustreamtv* plugin to be
                                      able to use non-mobile streams.
+`ffmpeg`_                            Required to play streams that are made up of separate
+                                     audio and video streams, eg. YouTube 1080p+
 ==================================== ===========================================
 
 .. _Python: http://python.org/
@@ -166,6 +168,7 @@ Name                                 Notes
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
+.. _ffmpeg: https://www.ffmpeg.org/
 
 
 Installing without root permissions
@@ -221,6 +224,7 @@ This is a installer which contains:
 - A compiled version of Streamlink that does not require an existing Python
   installation
 - `RTMPDump`_ for viewing RTMP streams
+- `ffmpeg`_ for muxing streams
 
 and performs the following tasks:
 

@@ -761,7 +761,50 @@ transport.add_argument(
     Useful when debugging rtmpdump related issues.
     """
 )
+transport.add_argument(
+    "--ffmpeg-ffmpeg",
+    metavar="FILENAME",
+    help="""
+    FFMPEG is used to access mux separate video and audio streams.
+    You can specify the location of the ffmpeg executable if it is
+    not in your PATH.
 
+    Example: "/usr/local/bin/ffmpeg"
+    """
+)
+transport.add_argument(
+    "--ffmpeg-verbose",
+    action="store_true",
+    help="""
+    Write the console output from ffmpeg to the console
+    """
+)
+transport.add_argument(
+    "--ffmpeg-verbose-path",
+    type=str,
+    metavar="PATH",
+    help="""
+    Path to write the output from the ffmpeg console
+    """
+)
+transport.add_argument(
+    "--ffmpeg-video-transcode",
+    metavar="CODEC",
+    help="""
+    When muxing streams transcode the video to this CODEC, defaults to copy (no transcode)
+
+    Example: "h264"
+    """
+)
+transport.add_argument(
+    "--ffmpeg-audio-transcode",
+    metavar="CODEC",
+    help="""
+    When muxing streams transcode the audio to this CODEC, defaults to copy (no transcode)
+
+    Example: "aac"
+    """
+)
 
 http = parser.add_argument_group("HTTP options")
 http.add_argument(

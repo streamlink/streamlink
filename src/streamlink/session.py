@@ -59,7 +59,10 @@ class Streamlink(object):
             "stream-segment-timeout": 10.0,
             "stream-timeout": 60.0,
             "subprocess-errorlog": False,
-            "subprocess-errorlog-path": None
+            "subprocess-errorlog-path": None,
+            "ffmpeg-ffmpeg": is_win32 and "ffmpeg.exe" or "ffmpeg",
+            "ffmpeg-video-transcode": "copy",
+            "ffmpeg-audio-transcode": "copy"
         })
         self.plugins = {}
         self.logger = Logger()
@@ -164,6 +167,24 @@ class Streamlink(object):
 
         rtmp-timeout             (float) Timeout for reading data from
                                  RTMP streams, default: ``60.0``
+
+        ffmpeg-ffmpeg           (str) Specify the location of the
+                                ffmpeg executable use by Muxing streams
+                                e.g. ``/usr/local/bin/ffmpeg``
+
+        ffmpeg-verbose          (bool) Log stderr from ffmpeg to the
+                                console
+
+        ffmpeg-verbose-path     (str) Specify the location of the
+                                ffmpeg stderr log file
+
+        ffmpeg-video-transcode  (str) The codec to use if transcoding
+                                video when muxing with ffmpeg
+                                e.g. ``h264``
+
+        ffmpeg-audio-transcode  (str) The codec to use if transcoding
+                                audio when muxing with ffmpeg
+                                e.g. ``aac``
 
         stream-segment-attempts  (int) How many attempts should be done
                                  to download each segment, default: ``3``.
