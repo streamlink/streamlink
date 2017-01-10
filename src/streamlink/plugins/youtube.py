@@ -5,6 +5,8 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HTTPStream, HLSStream
+from streamlink.compat import parse_qsl
+from streamlink.stream.ffmpegmux import MuxedStream
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
@@ -112,17 +114,42 @@ _url_re = re.compile(r"""
 
 
 class YouTube(Plugin):
+    adp_video = {
+        137: "1080p",
+        303: "1080p60",  # HFR
+        299: "1080p60",  # HFR
+        264: "1440p",
+        308: "1440p60",  # HFR
+        266: "2160p",
+        315: "2160p60",  # HFR
+        138: "2160p",
+        302: "720p60",  # HFR
+    }
+    adp_audio = {
+        140: 128,
+        141: 256,
+        171: 128,
+        249: 48,
+        250: 64,
+        251: 160,
+    }
+
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
 
     @classmethod
     def stream_weight(cls, stream):
-        match = re.match("(\w+)_3d", stream)
-        if match:
-            weight, group = Plugin.stream_weight(match.group(1))
+        match_3d = re.match("(\w+)_3d", stream)
+        match_hfr = re.match("(\d+p)(\d+)", stream)
+        if match_3d:
+            weight, group = Plugin.stream_weight(match_3d.group(1))
             weight -= 1
             group = "youtube_3d"
+        elif match_hfr:
+            weight, group = Plugin.stream_weight(match_hfr.group(1))
+            weight += 1
+            group = "high_frame_rate"
         else:
             weight, group = Plugin.stream_weight(stream)
 
@@ -206,20 +233,40 @@ class YouTube(Plugin):
 
             streams[name] = stream
 
+        adaptive_streams = {}
+        best_audio_itag = None
+
         # Extract audio streams from the DASH format list
         for stream_info in info.get("adaptive_fmts", []):
             if stream_info.get("s"):
                 protected = True
                 continue
 
-            stream_type, stream_format = stream_info["type"]
-            if stream_type != "audio":
+            stream_params = dict(parse_qsl(stream_info["url"]))
+            if "itag" not in stream_params:
                 continue
+            itag = int(stream_params["itag"])
+            # extract any high quality streams only available in adaptive formats
+            adaptive_streams[itag] = stream_info["url"]
 
-            stream = HTTPStream(self.session, stream_info["url"])
-            name = "audio_{0}".format(stream_format)
+            stream_type, stream_format = stream_info["type"]
+            if stream_type == "audio":
+                stream = HTTPStream(self.session, stream_info["url"])
+                name = "audio_{0}".format(stream_format)
+                streams[name] = stream
 
-            streams[name] = stream
+                # find the best quality audio stream m4a, opus or vorbis
+                if best_audio_itag is None or self.adp_audio[itag] > self.adp_audio[best_audio_itag]:
+                    best_audio_itag = itag
+
+        if best_audio_itag and adaptive_streams and MuxedStream.is_usable(self.session):
+            aurl = adaptive_streams[best_audio_itag]
+            for itag, name in self.adp_video.items():
+                if itag in adaptive_streams:
+                    vurl = adaptive_streams[itag]
+                    streams[name] = MuxedStream(self.session,
+                                                HTTPStream(self.session, vurl),
+                                                HTTPStream(self.session, aurl))
 
         hls_playlist = info.get("hlsvp")
         if hls_playlist:
@@ -236,5 +283,6 @@ class YouTube(Plugin):
                               "try youtube-dl instead")
 
         return streams
+
 
 __plugin__ = YouTube
