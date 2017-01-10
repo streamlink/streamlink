@@ -1,44 +1,33 @@
 import re
 
-from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
+from streamlink.compat import urljoin
 
-_url_re = re.compile(r"http(s)?://(\w+\.)?ssh101\.com/")
-
-_live_re = re.compile(r"""
-\s*jwplayer\(\"player\"\)\.setup\({.*?
-\s*primary:\s+"([^"]+)".*?
-\s*file:\s+"([^"]+)"
-""", re.DOTALL)
-
-_live_schema = validate.Schema(
-    validate.transform(_live_re.search),
-    validate.any(
-        None,
-        validate.union({
-            "type": validate.get(1),
-            "url": validate.all(
-                validate.get(2),
-                validate.url(scheme="http"),
-            ),
-        })
-    )
-)
 
 class SSH101(Plugin):
+    url_re = re.compile(r"https?://(?:\w+\.)?ssh101\.com/(.+)(/vod)?")
+    src_re = re.compile(r'''source.*?src="(?P<url>.*?)"''')
+    iframe_re = re.compile(r'''iframe.*?src="(?P<url>.*?)"''')
+
     @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
+    def can_handle_url(cls, url):
+        return cls.url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url, schema=_live_schema)
-        if not res:
-            return
+        res = http.get(self.url)
 
-        if res["type"] == "hls" and urlparse(res["url"]).path.endswith("m3u8"):
-            stream = HLSStream(self.session, res["url"])
-            return dict(hls=stream)
+        # some pages have embedded players
+        iframe_m = self.iframe_re.search(res.text)
+        if iframe_m:
+            url = urljoin(self.url, iframe_m.group("url"))
+            res = http.get(url)
+
+        video = self.src_re.search(res.text)
+        stream_src = video and video.group("url")
+
+        if stream_src and stream_src.endswith("m3u8"):
+            return HLSStream.parse_variant_playlist(self.session, stream_src)
 
 __plugin__ = SSH101
