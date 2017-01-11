@@ -44,6 +44,12 @@ deploy:
     on:
       tags: true
       condition: $BUILD_INSTALLER = yes
+  - provider: script
+    script: python script/github_releases.py
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $BUILD_INSTALLER = yes
   - provider: s3
     skip_cleanup: true
     local_dir: $STREAMLINK_INSTALLER_DIST_DIR
