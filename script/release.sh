@@ -86,8 +86,8 @@ replaceversion() {
 changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
-  LOG=`git shortlog --email --no-merges --pretty=%s ${1}..`
-  echo -e "\`\`\`\n$LOG\n\`\`\`" > ../changes.txt
+  LOG=$(git shortlog --email --no-merges --pretty=%s ${1}.. | sed  's/^/    /')
+  echo -e "::\n\n$LOG" > ../changes.txt
   echo "Changelog has been written to changes.txt"
   echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
   echo "Open changes.txt and add the release information"
@@ -95,15 +95,16 @@ changelog() {
   cd ..
 }
 
-changelog_md() {
-  echo "Generating CHANGELOG.md"
+changelog_rst() {
+  echo "Generating CHANGELOG.rst"
   CHANGES=$(cat changes.txt)
   cd $CLI
-  DATE=$(date +"%m-%d-%Y")
-  CHANGELOG=$(cat CHANGELOG.md)
-  HEADER="## $CLI $1 ($DATE)"
-  echo -e "$HEADER\n\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.md
-  echo "Changes have been written to CHANGELOG.md"
+  DATE=$(date +"%Y-%m-%d")
+  CHANGELOG=$(cat CHANGELOG.rst)
+  HEADER="$CLI $1 ($DATE)"
+  HEADER="${HEADER}\n$(for i in $(seq 1 ${#HEADER}); do echo '-'; done)"
+  echo -e "$HEADER\n\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
+  echo "Changes have been written to CHANGELOG.rst"
   cd ..
 }
 
@@ -291,7 +292,7 @@ main() {
               changelog $PREV_VERSION
               ;;
           "Generate changelog for release")
-              changelog_md $VERSION
+              changelog_rst $VERSION
               ;;
           "Create PR")
               git_commit $VERSION

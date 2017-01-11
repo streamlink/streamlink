@@ -25,6 +25,7 @@ templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
+exclude_patterns = ['twitch_oauth.rst']
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
