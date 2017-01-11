@@ -7,13 +7,15 @@ command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to buil
 command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
 
 
+STREAMLINK_VERSION_PLAIN=$(python setup.py --version)
 # For travis nightly builds generate a version number with commit hash
 if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
-    STREAMLINK_VERSION=$(python -c 'import streamlink; print(streamlink.__version__)')
-    STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}-${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT:0:7}"
-    STREAMLINK_VERSION="${STREAMLINK_VERSION}+${TRAVIS_COMMIT:0:7}"
+    STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER}"
+    STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION_PLAIN}-${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT:0:7}"
+    STREAMLINK_VERSION="${STREAMLINK_VERSION_PLAIN}+${TRAVIS_COMMIT:0:7}"
 else
-    STREAMLINK_VERSION=$(python setup.py --version)
+    STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
+    STREAMLINK_VERSION="${STREAMLINK_VERSION_PLAIN}"
     STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
 fi
 
@@ -86,6 +88,14 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 
     ; constants need to be defined before importing MUI
     [[ super() ]]
+
+    ; Add the product version information
+    VIProductVersion "${STREAMLINK_VI_VERSION}"
+    VIAddVersionKey /LANG=\${LANG_ENGLISH} "ProductName" "Streamlink"
+    VIAddVersionKey /LANG=\${LANG_ENGLISH} "CompanyName" "Streamlink"
+    VIAddVersionKey /LANG=\${LANG_ENGLISH} "FileDescription" "Streamlink Installer"
+    VIAddVersionKey /LANG=\${LANG_ENGLISH} "LegalCopyright" ""
+    VIAddVersionKey /LANG=\${LANG_ENGLISH} "FileVersion" "${STREAMLINK_VERSION}"
 [% endblock %]
 
 ; UI pages
@@ -137,9 +147,9 @@ SubSectionEnd
     WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "Publisher" "Streamlink"
     WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "URLInfoAbout" "https://streamlink.github.io/"
     WriteRegStr HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "HelpLink" "https://streamlink.github.io/"
-	\${GetSize} "\$INSTDIR" "/S=0K" \$0 \$1 \$2
-	IntFmt \$0 "0x%08X" \$0
-	WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "EstimatedSize" "\$0"
+    \${GetSize} "\$INSTDIR" "/S=0K" \$0 \$1 \$2
+    IntFmt \$0 "0x%08X" \$0
+    WriteRegDWORD HKLM "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\\${PRODUCT_NAME}" "EstimatedSize" "\$0"
 [% endblock %]
 
 [% block uninstall_files %]
