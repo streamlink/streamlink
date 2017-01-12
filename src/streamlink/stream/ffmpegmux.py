@@ -36,7 +36,7 @@ class MuxedStream(Stream):
 
 
 class FFMPEGMuxer(object):
-    __commands__ = ['ffmpeg', 'avconv']
+    __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
 
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
@@ -107,7 +107,9 @@ class FFMPEGMuxer(object):
 
     @classmethod
     def command(cls, session):
-        command = [session.options.get("ffmpeg-ffmpeg")]
+        command = []
+        if session.options.get("ffmpeg-ffmpeg"):
+            command.append(session.options.get("ffmpeg-ffmpeg"))
         for cmd in command or cls.__commands__:
             try:
                 pbs.create_command(cmd)

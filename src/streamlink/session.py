@@ -60,7 +60,7 @@ class Streamlink(object):
             "stream-timeout": 60.0,
             "subprocess-errorlog": False,
             "subprocess-errorlog-path": None,
-            "ffmpeg-ffmpeg": is_win32 and "ffmpeg.exe" or "ffmpeg",
+            "ffmpeg-ffmpeg": None,
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy"
         })
