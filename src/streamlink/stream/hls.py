@@ -320,8 +320,17 @@ class HLSStream(HTTPStream):
             stream_name = (names.get(name_key) or names.get("name") or
                            names.get("pixels") or names.get("bitrate"))
 
-            if not stream_name or stream_name in streams:
+            if not stream_name:
                 continue
+            if stream_name in streams:  # rename duplicate streams
+                stream_name = "{0}_alt".format(stream_name)
+                num_alts = len(list(filter(lambda n: n.startswith(stream_name), streams.keys())))
+
+                # We shouldn't need more than 2 alt streams
+                if num_alts >= 2:
+                    continue
+                elif num_alts > 0:
+                    stream_name = "{0}{1}".format(stream_name, num_alts + 1)
 
             if check_streams:
                 try:
