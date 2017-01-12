@@ -21,7 +21,7 @@ _clipdata_re = re.compile(r"""data-json-clips\s*=\s*(['"])(.*?)\1""")
 _schema = validate.Schema(
     validate.transform(_clipdata_re.search),
     validate.any(
-        None, 
+        None,
         validate.all(
             validate.get(2),
             validate.transform(html_unescape),

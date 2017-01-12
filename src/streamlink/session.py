@@ -452,4 +452,3 @@ class Streamlink(object):
 
 
 __all__ = ["Streamlink"]
-

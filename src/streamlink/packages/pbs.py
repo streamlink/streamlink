@@ -449,6 +449,3 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
             stdin=input_stream, stdout=stdout, stderr=stderr)
 
         return RunningCommand(command_ran, process, call_args, input_data)
-
-
-

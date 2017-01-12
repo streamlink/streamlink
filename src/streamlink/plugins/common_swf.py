@@ -49,4 +49,3 @@ def parse_swf(data):
     tags = list(read_tags(fd))
 
     return SWF(frame_size, frame_rate, frame_count, tags)
-

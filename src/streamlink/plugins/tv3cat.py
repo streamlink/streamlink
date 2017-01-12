@@ -49,4 +49,3 @@ class TV3Cat(Plugin):
 
 
 __plugin__ = TV3Cat
-

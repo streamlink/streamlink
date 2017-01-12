@@ -93,10 +93,10 @@ class Dplay (Plugin):
     def _get_streams (self):
         # Get domain name
         self.domain = _url_re.match (self.url).group ('domain')
-        
+
         # Set header data for user-agent
         hdr = {'User-Agent': USER_AGENT.format('sv_SE')}
-        
+
         # Parse video ID from data received from supplied URL
         res = http.get (self.url, headers=hdr).text
         match = _videoid_re.search (res)
@@ -104,7 +104,7 @@ class Dplay (Plugin):
             self.logger.error ('Failed to parse video ID')
             return {}
         videoId = match.group ('id')
-        
+
         # Get data from general API to validate that stream is playable
         res = http.get (GENERAL_API_URL.format (self.domain, videoId), headers=hdr)
         data = http.json (res, schema=_api_schema)
@@ -114,17 +114,17 @@ class Dplay (Plugin):
         if not self._is_playable (data):    # Stream not playable
             self.logger.error ('Stream is not playable (Premium or DRM-protected content)')
             return {}
-        
+
         # Get geo data, validate and form cookie consisting of
         # geo data + expiry timestamp (current time + 1 hour)
         res = http.get (GEO_DATA_URL.format (self.domain), headers=hdr)
         geo = http.json (res, schema=_geo_schema)
         timestamp = (int (time.time ()) + 3600) * 1000
         cookie = 'dsc-geo=%s' % quote ('{"countryCode":"%s","expiry":%s}' % (geo, timestamp))
-        
+
         # Append cookie to headers
         hdr['Cookie'] = cookie
-        
+
         # Get available streams using stream API
         try:
             res = http.get (STREAM_API_URL.format (self.domain, videoId, 'hls'),
@@ -143,15 +143,15 @@ class Dplay (Plugin):
                 raise NoStreamsError (self.url)
             else:
                 raise
-        
+
         # Reformat data into list with stream format and url
         streams = [{'format': k, 'url': media[k]} for k in media]
-        
+
         # Create mapper for supported stream types (HLS/HDS)
         mapper = StreamMapper (cmp=lambda type, video: video['format'] == type)
         mapper.map ('hls', self._create_streams, HLSStream.parse_variant_playlist)
         mapper.map ('hds', self._create_streams, HDSStream.parse_manifest)
-        
+
         # Feed stream data to mapper and return all streams found
         return mapper (streams)
 

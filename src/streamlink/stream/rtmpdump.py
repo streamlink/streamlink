@@ -133,5 +133,3 @@ class RTMPStream(StreamProcess):
         cmd = session.options.get("rtmp-rtmpdump")
 
         return StreamProcess.is_usable(cmd)
-
-

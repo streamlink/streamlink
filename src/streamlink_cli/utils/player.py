@@ -36,4 +36,3 @@ def find_default_player():
     if path:
         # Quote command because it can contain space
         return subprocess.list2cmdline([path])
-

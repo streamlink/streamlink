@@ -45,7 +45,7 @@ class younow(Plugin):
             "rtmp": streamurl,
             "live": True
         })
-        
+
         return streams
 
 

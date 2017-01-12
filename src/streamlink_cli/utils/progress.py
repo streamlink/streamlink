@@ -121,4 +121,3 @@ def progress(iterator, prefix):
                 speed=format_filesize(speed)
             )
             print_inplace(status)
-

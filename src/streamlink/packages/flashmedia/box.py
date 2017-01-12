@@ -1090,4 +1090,3 @@ PayloadTypes = {
     "trak": BoxPayloadTRAK,
     "dinf": BoxPayloadDINF,
 }
-

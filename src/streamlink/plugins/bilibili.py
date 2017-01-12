@@ -36,10 +36,10 @@ class Bilibili(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         channel = match.group("channel")
-        
+
         html_page = http.get(self.url).content.decode('utf-8')
         room_id = _room_re.search(html_page).group(1)
-    
+
         ts = int(time.time() / 60)
         sign = hashlib.md5(("{0}{1}".format(channel, API_SECRET, ts)).encode("utf-8")).hexdigest()
 
