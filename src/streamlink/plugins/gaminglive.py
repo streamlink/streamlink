@@ -106,4 +106,5 @@ class GamingLive(Plugin):
         elif type == "videos":
             return self._get_vod_streams(match.group("name"))
 
+
 __plugin__ = GamingLive

@@ -127,4 +127,5 @@ class zdf_mediathek(Plugin):
 
         return streams
 
+
 __plugin__ = zdf_mediathek

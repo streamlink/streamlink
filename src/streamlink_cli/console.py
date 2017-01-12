@@ -70,4 +70,5 @@ class ConsoleOutput(object):
 
         sys.exit(1)
 
+
 __all__ = ["ConsoleOutput"]

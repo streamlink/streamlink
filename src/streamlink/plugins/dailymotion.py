@@ -197,4 +197,5 @@ class DailyMotion(Plugin):
 
         return self._get_streams_from_media(media_id)
 
+
 __plugin__ = DailyMotion

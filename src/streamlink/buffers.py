@@ -161,4 +161,5 @@ class RingBuffer(Buffer):
     def is_full(self):
         return self.free == 0
 
+
 __all__ = ["Buffer", "RingBuffer"]

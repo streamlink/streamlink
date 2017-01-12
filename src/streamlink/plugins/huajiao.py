@@ -59,4 +59,5 @@ class Huajiao(Plugin):
             stream = HTTPStream(self.session, video_data['main'])
         yield "live", stream
 
+
 __plugin__ = Huajiao

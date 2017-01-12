@@ -69,4 +69,5 @@ class TV4Play(Plugin):
 
         return streams
 
+
 __plugin__ = TV4Play

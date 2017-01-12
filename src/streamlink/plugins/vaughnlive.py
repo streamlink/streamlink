@@ -101,4 +101,5 @@ class VaughnLive(Plugin):
 
         return dict(live=stream)
 
+
 __plugin__ = VaughnLive

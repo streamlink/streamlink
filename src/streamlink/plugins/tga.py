@@ -113,4 +113,5 @@ class Tga(Plugin):
         elif cid != 0:
             return self._get_plu_streams(cid)
 
+
 __plugin__ = Tga

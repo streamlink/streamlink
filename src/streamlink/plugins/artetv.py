@@ -107,4 +107,5 @@ class ArteTV(Plugin):
 
         return chain.from_iterable(streams)
 
+
 __plugin__ = ArteTV

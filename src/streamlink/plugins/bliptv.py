@@ -70,4 +70,5 @@ class bliptv(Plugin):
                 streams[quality_dict[stream['video_bitrate']]] = HTTPStream(self.session, stream['direct_url'])
         return streams
 
+
 __plugin__ = bliptv

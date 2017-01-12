@@ -191,4 +191,5 @@ class Hitbox(Plugin):
         else:
             return self._get_video_streams(player)
 
+
 __plugin__ = Hitbox

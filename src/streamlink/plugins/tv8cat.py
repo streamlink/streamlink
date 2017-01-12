@@ -76,4 +76,5 @@ class TV8cat(Plugin):
                                     "playpath": source.get("stream_name")})
                     yield q, s
 
+
 __plugin__ = TV8cat

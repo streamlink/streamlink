@@ -163,4 +163,5 @@ class Douyutv(Plugin):
         stream = HTTPStream(self.session, url)
         yield "low", stream
 
+
 __plugin__ = Douyutv

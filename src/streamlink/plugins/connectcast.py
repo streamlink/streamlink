@@ -26,4 +26,5 @@ class ConnectCast(Plugin):
 
             return dict(live=RTMPStream(self.session, params))
 
+
 __plugin__ = ConnectCast

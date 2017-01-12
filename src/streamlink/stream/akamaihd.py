@@ -264,4 +264,5 @@ class AkamaiHDStream(Stream):
 
         return StreamIOThreadWrapper(self.session, stream.open())
 
+
 __all__ = ["AkamaiHDStream"]

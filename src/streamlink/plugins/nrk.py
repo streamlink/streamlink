@@ -60,4 +60,5 @@ class NRK(Plugin):
 
         return HLSStream.parse_variant_playlist(self.session, media_url)
 
+
 __plugin__ = NRK

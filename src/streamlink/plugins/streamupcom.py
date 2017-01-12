@@ -21,4 +21,5 @@ class StreamupCom(Plugin):
         hls_url = "http://video-cdn.streamup.com{}".format(url)
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
+
 __plugin__ = StreamupCom

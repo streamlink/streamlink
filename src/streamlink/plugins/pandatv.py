@@ -85,5 +85,6 @@ class pandatv(Plugin):
 
         return streams
 
+
 __plugin__ = pandatv
 

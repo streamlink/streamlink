@@ -146,4 +146,5 @@ class Filmon(Plugin):
         if match:
             return self._get_live_streams(match.group(1))
 
+
 __plugin__ = Filmon

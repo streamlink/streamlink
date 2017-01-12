@@ -74,4 +74,5 @@ class Euronews(Plugin):
         else:
             return self._get_vod_stream()
 
+
 __plugin__ = Euronews

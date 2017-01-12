@@ -127,4 +127,5 @@ class ard_mediathek(Plugin):
                     self.logger.error("Failed to extract {0} streams: {1}",
                                       parser_name, err)
 
+
 __plugin__ = ard_mediathek

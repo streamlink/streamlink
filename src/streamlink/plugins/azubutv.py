@@ -94,4 +94,5 @@ class AzubuTV(Plugin):
 
         return streams
 
+
 __plugin__ = AzubuTV

@@ -71,4 +71,5 @@ class AdultSwim(Plugin):
         else:
             self.logger.error("Couldn't find the stream data for this stream: {}".format(stream_name))
 
+
 __plugin__ = AdultSwim

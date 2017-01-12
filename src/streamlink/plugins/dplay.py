@@ -155,4 +155,5 @@ class Dplay (Plugin):
         # Feed stream data to mapper and return all streams found
         return mapper (streams)
 
+
 __plugin__ = Dplay

@@ -883,6 +883,7 @@ class AMF0Value(ScriptDataValue):
 class AMF0String(ScriptDataString):
     pass
 
+
 AMF0Number = ScriptDataNumber
 
 AMF3Double = ScriptDataNumber

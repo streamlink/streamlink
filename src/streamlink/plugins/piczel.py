@@ -67,4 +67,5 @@ class Piczel(Plugin):
 
 		return
 
+
 __plugin__ = Piczel

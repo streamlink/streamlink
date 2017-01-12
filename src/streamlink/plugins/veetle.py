@@ -59,4 +59,5 @@ class Veetle(Plugin):
 
         return {name: stream}
 
+
 __plugin__ = Veetle

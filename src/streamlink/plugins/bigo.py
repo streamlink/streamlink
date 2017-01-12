@@ -66,4 +66,5 @@ class Bigo(Plugin):
         sid, uid, ip, port = flashvars.groups()
         yield "live", BigoStream(self.session, sid, uid, ip, port)
 
+
 __plugin__ = Bigo

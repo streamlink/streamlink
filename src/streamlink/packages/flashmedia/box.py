@@ -1058,6 +1058,7 @@ class BoxPayloadMETA(BoxContainer):
 class BoxPayloadDINF(BoxContainerSingle):
     pass
 
+
 PayloadTypes = {
     "ftyp": BoxPayloadFTYP,
     "mvhd": BoxPayloadMVHD,

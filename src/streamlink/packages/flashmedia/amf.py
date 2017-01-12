@@ -127,4 +127,5 @@ class AMFPacket(Packet):
 
         return cls(version, headers, messages)
 
+
 __all__ = ["AMFPacket", "AMFHeader", "AMFMessage"]

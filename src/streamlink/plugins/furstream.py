@@ -38,4 +38,5 @@ class Furstream(Plugin):
 
         return dict(live=stream)
 
+
 __plugin__ = Furstream

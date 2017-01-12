@@ -150,4 +150,5 @@ class bongacams(Plugin):
 
         return {'live': stream}
 
+
 __plugin__ = bongacams

@@ -171,4 +171,5 @@ class PlayerOutput(Output):
         else:
             self.player.stdin.write(data)
 
+
 __all__ = ["PlayerOutput", "FileOutput"]
