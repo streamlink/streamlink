@@ -1,5 +1,5 @@
 include AUTHORS
-include CHANGELOG.md
+include CHANGELOG.rst
 include README.md
 include LICENSE*
 include requirements-docs.txt
