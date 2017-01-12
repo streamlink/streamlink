@@ -280,8 +280,8 @@ class HDSStreamWorker(SegmentedStreamWorker):
         table = self.segmentruntable.payload.segment_run_entry_table
 
         for segment, start, end in self.iter_segment_table(table):
-            if fragment >= (start + 1) and fragment <= (end + 1):
-                break
+            if start - 1 <= fragment <= end:
+                return segment
         else:
             segment = 1
 
@@ -322,6 +322,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
 
                 fragment_duration = int(self.fragment_duration(fragment) * 1000)
                 fragment_url = self.fragment_url(self.current_segment, fragment)
+                self.logger.debug(fragment_url)
                 fragment = Fragment(self.current_segment, fragment,
                                     fragment_duration, fragment_url)
 
