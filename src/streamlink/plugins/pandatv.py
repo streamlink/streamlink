@@ -18,7 +18,7 @@ _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 _sd_re = re.compile(r'"SD"\s*:\s*"(\d+)"')
 _hd_re = re.compile(r'"HD"\s*:\s*"(\d+)"')
 _od_re = re.compile(r'"OD"\s*:\s*"(\d+)"')
-_status_re = re.compile(r'"status"\s*:\s*"(\d+)"')
+_status_re = re.compile(r'"status"\s*:\s*"(\d+)","display_type"')
 _room_key_re = re.compile(r'"room_key"\s*:\s*"(.+?)"')
 
 _room_schema = validate.Schema(
