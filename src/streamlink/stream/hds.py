@@ -322,7 +322,6 @@ class HDSStreamWorker(SegmentedStreamWorker):
 
                 fragment_duration = int(self.fragment_duration(fragment) * 1000)
                 fragment_url = self.fragment_url(self.current_segment, fragment)
-                self.logger.debug(fragment_url)
                 fragment = Fragment(self.current_segment, fragment,
                                     fragment_duration, fragment_url)
 
