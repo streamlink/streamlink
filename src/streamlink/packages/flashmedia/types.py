@@ -1602,4 +1602,3 @@ class AMF3Value(DynamicType):
 
         else:
             raise IOError("Unhandled AMF3 type: {0}".format(hex(type_)))
-

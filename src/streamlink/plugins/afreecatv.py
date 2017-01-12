@@ -60,14 +60,14 @@ class AfreecaTV(Plugin):
             "adok": "",
             "bno": ""
         }
-        
+
         if re.search(_url_re_tw, self.url):
             res = http.get(VIEW_LIVE_API_URL_TW, params=params)
         elif re.search(_url_re_jp, self.url):
             res = http.get(VIEW_LIVE_API_URL_JP, params=params)
         else:
             res = http.get(VIEW_LIVE_API_URL, params=params)
-            
+
         streams = http.json(res, schema=_view_live_schema)
 
         for stream in streams:

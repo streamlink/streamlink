@@ -43,7 +43,7 @@ class Antenna(Plugin):
         streams.update(
             HDSStream.parse_manifest(self.session, manifest_url, pvswf=swf_url)
         )
-        
+
         return streams
 
 

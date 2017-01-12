@@ -54,13 +54,13 @@ class pandatv(Plugin):
         if not isinstance(data, dict):
             self.logger.error("Please Check PandaTV Room API")
             return
-    
+
         videoinfo = data.get('videoinfo')
 
         if not videoinfo or not videoinfo.get('status'):
             self.logger.error("Please Check PandaTV Room API")
             return
-    
+
         if videoinfo.get('status') != '2':
             self.logger.info("Channel offline now!")
             return
@@ -76,7 +76,7 @@ class pandatv(Plugin):
         # SD(Super high Definition) has higher quality than HD(High Definition) which
         # conflict with existing code, use ehq and hq instead.
         stream_addr = videoinfo.get('stream_addr')
-    
+
         if stream_addr and stream_addr.get('SD') == '1':
             streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag, room_key))
 
@@ -87,4 +87,3 @@ class pandatv(Plugin):
 
 
 __plugin__ = pandatv
-

@@ -71,4 +71,3 @@ class NamedPipe(object):
         else:
             self.fifo.close()
             os.unlink(self.path)
-

@@ -952,4 +952,3 @@ def main():
             "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)
-

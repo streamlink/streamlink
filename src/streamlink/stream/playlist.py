@@ -69,4 +69,3 @@ class FLVPlaylist(Playlist):
         fd.open(self.streams)
 
         return fd
-

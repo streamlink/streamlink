@@ -103,7 +103,7 @@ class zdf_mediathek(Plugin):
                 qualities.update(option)
 
         return qualities
-            
+
 
     def _get_streams(self):
         match = _url_re.match(self.url)

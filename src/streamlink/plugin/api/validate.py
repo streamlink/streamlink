@@ -471,4 +471,3 @@ class Schema(object):
 @validate.register(Schema)
 def validate_schema(schema, value):
     return schema.validate(value, exception=ValueError)
-

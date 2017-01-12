@@ -105,7 +105,7 @@ class Tga(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url);
         domain = match.group('domain')
-        
+
         vid, cid = self._get_channel_id(domain);
 
         if vid != 0:

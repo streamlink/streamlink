@@ -68,4 +68,3 @@ def setup(app):
     app.add_config_value("github_issue_pattern", r"#(\d+)", "env")
     app.add_config_value("github_mention_pattern", r"@(\w+)", "env")
     app.add_transform(GithubReferences)
-

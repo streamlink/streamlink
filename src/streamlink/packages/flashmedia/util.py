@@ -95,4 +95,3 @@ def chunked_read(fd, length, chunk_size=8192, exception=IOError):
 __all__ = ["byte", "flagproperty", "lang_to_iso639",
            "iso639_to_lang", "pack_many_into", "pack_bytes_into",
            "unpack_many_from", "chunked_read"]
-

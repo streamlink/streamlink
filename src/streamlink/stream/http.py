@@ -78,4 +78,3 @@ class HTTPStream(Stream):
             fd = StreamIOThreadWrapper(self.session, fd, timeout=timeout)
 
         return fd
-

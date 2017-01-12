@@ -135,4 +135,3 @@ class FFMPEGMuxer(object):
         if self.close_errorlog:
             self.errorlog.close()
             self.errorlog = None
-

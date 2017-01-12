@@ -48,4 +48,3 @@ def load_support_plugin(name):
             if fd: fd.close()
 
     return module
-
