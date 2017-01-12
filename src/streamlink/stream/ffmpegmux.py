@@ -8,7 +8,7 @@ import sys
 from streamlink.packages import pbs
 from streamlink.packages.pbs import CommandNotFound
 from streamlink.stream import Stream
-from streamlink_cli.utils import NamedPipe
+from streamlink.utils import NamedPipe
 try:
     from subprocess import DEVNULL
     devnull = lambda: DEVNULL
