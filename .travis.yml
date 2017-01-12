@@ -36,15 +36,29 @@ addons:
     - nsis
 
 deploy:
-  provider: s3
-  skip_cleanup: true
-  local_dir: $STREAMLINK_INSTALLER_DIST_DIR
-  bucket: streamlink-builds
-  upload-dir: nightly/windows
-  on:
-    branch: master
-    condition: $BUILD_INSTALLER = yes
-  secret_access_key:
-    secure: 3abBcpXNxhWDJyznMA/wDmQ+lUSaJVwi62aXHjFxA7Zrz/CidbHmXkNedViWTOivMyVcM4Ypej4JD1V74Uo78GN09TICRbSc9fTF08O8Hu+hKiAcVWepfmuV54nyoQHY5mcxBPwgUZwnTwSYLzKXCqDEmQXrUrM313m4f2cbDSQgo6VPoCqE+U7JTVaUI6asutsErvK7vfw9EqGSumndRNjQdD0triubs5kh6WPv5STpKrkUNWX95fjBbkuf5hy+DIQN22hLpHYwqV3DoTnhWzbPy8/OnCKoUjEAspLehkjr86brwuls1UfR1uC2uG53O2Rb3CCYkZSVC7GKdEw0SnbLNVfbhy500a8AiPbWC0AV75PidXNEe+1zye4n/xKdx0KA8aRXr7v/89x7KibHNpwf6rdpx7axYhlsWcFcyfoOTZJ3thhu7ib9QYJZ7gkRVGWbawZU6I370I5sMJLIwmzBXgZ2y8jFk7LUNbb2GUS3LKcw5gRYOqo+ZEHFdiLpPYXFHUslTkpaMNoPCNUR7Tsa2JPfJ29yEDMsdDs2lJbP+Km8hAnpkyJfpfPcVUcl8Ootd1cTe8iPdD1nqt3KvIy4sCjkCxvQFnmGOTWFqXY/UDD+Yqo3IVOG1aLPR3UxhzHtPX6M5FxtNB22kv8hrbN/QxhBEo/SfNhGIGZJNdI=
-  access_key_id:
-    secure: sjjc1tM756TvFbD8+0VCs/MOLFRhY+VZv/lq7pvNldtbGdv21lcJguvgg0gUwUZ7SihceyL1YagfUlDU2vWS1N5Si04z0VUcHO4lbj9nUJ4CXy27pMNFuk92HmblxYQ4bJw/xVqzsrT9Zeh4tIrbV+F3lYXtg7FDqjpm5bqrUJ5ULyWbhax31s2k8JRVnG2fxVmJiU+j4zwgzCqeZJXQkvXsfdzSe88mLyIrl7Otfjlp1rySocxStQ8qlmkvRAmsYmsKriUq+VgtX21HFAIJqHQp4WbL15eh0aFFzbmORf7OMIKmsmkyeYYeM6xp+Jm9m7ZcWHZ+7siplVM/9ksmumN3+CGp6pogduZ5zFH4BtRQa9o8N2SWnPiPvMrpoyLbHbQhg/uhcMJkYI1yrzj/s9MEH7DVnDEMmgc/UKsyTC2PRwZcgqYYPHxqRVWXzvBWDUe1wtxdNyaXWWKdD/1E7u8XF2+zPTPaUNAYAF1rSi5GNF38uRNMC+QSuEm8wZ/32KXFN4m+RW3NtpT9YHI8MCo4ofVxpRUMcEUwPDF/jV5zW7Krz7LEeL5/zcHMcNay/Ls8e3eApQShAcLAx1jZo+EjznVGXtlRbH9ABXmPO5AcxUH5+20tMiMoj0q6hJen03X8Jx+OMmcDNDufDgPikSym3KVC3Lvj65lG4G9pAyY=
+  - provider: releases
+    api_key: "${RELEASES_API_KEY}"
+    file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
+    file_glob: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $BUILD_INSTALLER = yes
+  - provider: script
+    script: python script/github_releases.py
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $BUILD_INSTALLER = yes
+  - provider: s3
+    skip_cleanup: true
+    local_dir: $STREAMLINK_INSTALLER_DIST_DIR
+    bucket: streamlink-builds
+    upload-dir: nightly/windows
+    on:
+      branch: master
+      condition: $BUILD_INSTALLER = yes
+    secret_access_key:
+      secure: 3abBcpXNxhWDJyznMA/wDmQ+lUSaJVwi62aXHjFxA7Zrz/CidbHmXkNedViWTOivMyVcM4Ypej4JD1V74Uo78GN09TICRbSc9fTF08O8Hu+hKiAcVWepfmuV54nyoQHY5mcxBPwgUZwnTwSYLzKXCqDEmQXrUrM313m4f2cbDSQgo6VPoCqE+U7JTVaUI6asutsErvK7vfw9EqGSumndRNjQdD0triubs5kh6WPv5STpKrkUNWX95fjBbkuf5hy+DIQN22hLpHYwqV3DoTnhWzbPy8/OnCKoUjEAspLehkjr86brwuls1UfR1uC2uG53O2Rb3CCYkZSVC7GKdEw0SnbLNVfbhy500a8AiPbWC0AV75PidXNEe+1zye4n/xKdx0KA8aRXr7v/89x7KibHNpwf6rdpx7axYhlsWcFcyfoOTZJ3thhu7ib9QYJZ7gkRVGWbawZU6I370I5sMJLIwmzBXgZ2y8jFk7LUNbb2GUS3LKcw5gRYOqo+ZEHFdiLpPYXFHUslTkpaMNoPCNUR7Tsa2JPfJ29yEDMsdDs2lJbP+Km8hAnpkyJfpfPcVUcl8Ootd1cTe8iPdD1nqt3KvIy4sCjkCxvQFnmGOTWFqXY/UDD+Yqo3IVOG1aLPR3UxhzHtPX6M5FxtNB22kv8hrbN/QxhBEo/SfNhGIGZJNdI=
+    access_key_id:
+      secure: sjjc1tM756TvFbD8+0VCs/MOLFRhY+VZv/lq7pvNldtbGdv21lcJguvgg0gUwUZ7SihceyL1YagfUlDU2vWS1N5Si04z0VUcHO4lbj9nUJ4CXy27pMNFuk92HmblxYQ4bJw/xVqzsrT9Zeh4tIrbV+F3lYXtg7FDqjpm5bqrUJ5ULyWbhax31s2k8JRVnG2fxVmJiU+j4zwgzCqeZJXQkvXsfdzSe88mLyIrl7Otfjlp1rySocxStQ8qlmkvRAmsYmsKriUq+VgtX21HFAIJqHQp4WbL15eh0aFFzbmORf7OMIKmsmkyeYYeM6xp+Jm9m7ZcWHZ+7siplVM/9ksmumN3+CGp6pogduZ5zFH4BtRQa9o8N2SWnPiPvMrpoyLbHbQhg/uhcMJkYI1yrzj/s9MEH7DVnDEMmgc/UKsyTC2PRwZcgqYYPHxqRVWXzvBWDUe1wtxdNyaXWWKdD/1E7u8XF2+zPTPaUNAYAF1rSi5GNF38uRNMC+QSuEm8wZ/32KXFN4m+RW3NtpT9YHI8MCo4ofVxpRUMcEUwPDF/jV5zW7Krz7LEeL5/zcHMcNay/Ls8e3eApQShAcLAx1jZo+EjznVGXtlRbH9ABXmPO5AcxUH5+20tMiMoj0q6hJen03X8Jx+OMmcDNDufDgPikSym3KVC3Lvj65lG4G9pAyY=
