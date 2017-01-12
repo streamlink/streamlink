@@ -23,4 +23,5 @@ class StreamBoat(Plugin):
         url = 'http://{}{}'.format(cdn, playlist_url)
         return dict(source=HLSStream(self.session, url))
 
+
 __plugin__ = StreamBoat

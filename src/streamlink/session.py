@@ -450,5 +450,6 @@ class Streamlink(object):
     def version(self):
         return __version__
 
+
 __all__ = ["Streamlink"]
 

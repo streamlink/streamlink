@@ -38,4 +38,5 @@ class sportschau(Plugin):
 
         return HDSStream.parse_manifest(self.session, stream_metadata['mediaResource']['dflt']['videoURL']).items()
 
+
 __plugin__ = sportschau

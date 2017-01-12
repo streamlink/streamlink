@@ -97,5 +97,6 @@ class TestSession(unittest.TestCase):
         self.assertTrue("support" in streams)
         self.assertTrue(isinstance(streams["support"], HTTPStream))
 
+
 if __name__ == "__main__":
     unittest.main()

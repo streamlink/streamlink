@@ -73,4 +73,5 @@ class NOS(Plugin):
         else:
             return self._get_source_streams()
 
+
 __plugin__ = NOS

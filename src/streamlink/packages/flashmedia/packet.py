@@ -60,4 +60,5 @@ class TagData(Packet):
         else:
             return len(self.data)
 
+
 __all__ = ["Packet", "TagData"]

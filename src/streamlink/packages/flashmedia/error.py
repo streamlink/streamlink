@@ -9,4 +9,5 @@ class F4VError(Exception):
 class AMFError(Exception):
     pass
 
+
 __all__ = ["FLVError", "F4VError", "AMFError"]

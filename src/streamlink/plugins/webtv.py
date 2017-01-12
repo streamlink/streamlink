@@ -55,4 +55,5 @@ class WebTV(Plugin):
                     except IOError:
                         self.logger.warning("Could not open the stream, perhaps the channel is offline")
 
+
 __plugin__ = WebTV

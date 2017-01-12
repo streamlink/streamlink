@@ -39,4 +39,5 @@ class LivecodingTV(Plugin):
             elif stream_type == "video/mp4":
                 yield 'vod', HTTPStream(self.session, url)
 
+
 __plugin__ = LivecodingTV

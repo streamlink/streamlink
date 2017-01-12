@@ -53,4 +53,5 @@ class TestPlugin(Plugin):
 
         return streams
 
+
 __plugin__ = TestPlugin

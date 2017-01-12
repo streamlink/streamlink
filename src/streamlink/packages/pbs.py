@@ -75,6 +75,7 @@ class ErrorReturnCode(Exception):
 
 class CommandNotFound(Exception): pass
 
+
 rc_exc_regex = re.compile("ErrorReturnCode_(\d+)")
 rc_exc_cache = {}
 

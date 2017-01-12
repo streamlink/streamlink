@@ -61,4 +61,5 @@ class Beam(Plugin):
 
         return streams
 
+
 __plugin__ = Beam

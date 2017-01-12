@@ -55,4 +55,5 @@ class Rtve(Plugin):
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
+
 __plugin__ = Rtve

@@ -30,4 +30,5 @@ class SSH101(Plugin):
         if stream_src and stream_src.endswith("m3u8"):
             return HLSStream.parse_variant_playlist(self.session, stream_src)
 
+
 __plugin__ = SSH101

@@ -94,4 +94,5 @@ class Zhanqitv(Plugin):
         if http_stream:
             yield "http", http_stream
 
+
 __plugin__ = Zhanqitv

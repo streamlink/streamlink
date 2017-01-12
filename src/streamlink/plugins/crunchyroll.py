@@ -330,4 +330,5 @@ class Crunchyroll(Plugin):
 
         return api
 
+
 __plugin__ = Crunchyroll

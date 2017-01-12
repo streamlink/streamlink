@@ -42,4 +42,5 @@ class SeeMePlay(Plugin):
             stream = HTTPStream(self.session, res["url"])
             return dict(video=stream)
 
+
 __plugin__ = SeeMePlay

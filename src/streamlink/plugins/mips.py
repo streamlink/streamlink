@@ -61,4 +61,5 @@ class Mips(Plugin):
 
         return streams
 
+
 __plugin__ = Mips

@@ -623,4 +623,5 @@ class UStreamTV(Plugin):
         if channel_id:
             return self._get_live_streams(channel_id)
 
+
 __plugin__ = UStreamTV

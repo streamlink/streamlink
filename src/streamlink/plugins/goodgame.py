@@ -52,4 +52,5 @@ class GoodGame(Plugin):
 
         return streams
 
+
 __plugin__ = GoodGame

@@ -56,4 +56,5 @@ class StreamLive(Plugin):
 
         return mapper(urls)
 
+
 __plugin__ = StreamLive

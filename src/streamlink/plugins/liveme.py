@@ -47,4 +47,5 @@ class LiveMe(Plugin):
             if video:
                 yield "live", video
 
+
 __plugin__ = LiveMe

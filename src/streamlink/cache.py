@@ -90,4 +90,5 @@ class Cache(object):
         else:
             return default
 
+
 __all__ = ["Cache"]

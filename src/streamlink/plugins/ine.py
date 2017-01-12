@@ -51,4 +51,5 @@ class INE(Plugin):
                 if source["type"] == "hls":
                     return HLSStream.parse_variant_playlist(self.session, "https:" + source["file"])
 
+
 __plugin__ = INE

@@ -88,4 +88,5 @@ class SVTPlay(Plugin):
 
         return mapper(videos)
 
+
 __plugin__ = SVTPlay

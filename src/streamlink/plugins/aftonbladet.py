@@ -85,4 +85,5 @@ class Aftonbladet(Plugin):
 
         return streams
 
+
 __plugin__ = Aftonbladet

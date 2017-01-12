@@ -23,4 +23,5 @@ class StreamMe(Plugin):
         except KeyError:
             return {}
 
+
 __plugin__ = StreamMe

@@ -65,4 +65,5 @@ class WAT(Plugin):
 
         return token
 
+
 __plugin__ = WAT

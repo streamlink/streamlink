@@ -84,4 +84,5 @@ class Streamingvideoprovider(Plugin):
         except PluginError as err:
             self.logger.error("Unable to extract HLS stream: {0}", err)
 
+
 __plugin__ = Streamingvideoprovider

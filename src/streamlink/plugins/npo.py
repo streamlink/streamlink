@@ -90,4 +90,5 @@ class NPO(Plugin):
         else:
             return self._get_vod_streams()
 
+
 __plugin__ = NPO

@@ -19,4 +19,5 @@ class rtlxl(Plugin):
         playlist_url = "http://manifest.us.rtl.nl" + re.compile(r'videopath":"(?P<playlist_url>.*?)",', re.IGNORECASE).search(html).group("playlist_url")
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
 
+
 __plugin__ = rtlxl

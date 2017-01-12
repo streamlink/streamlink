@@ -54,4 +54,5 @@ class Bilibili(Plugin):
             stream = HTTPStream(self.session, url)
             yield name, stream
 
+
 __plugin__ = Bilibili
