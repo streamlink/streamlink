@@ -257,6 +257,10 @@ class Plugin(object):
             if stream_type not in stream_types:
                 continue
 
+            # drop _alt from any stream names
+            if name.endswith("_alt"):
+                name = name[:-len("_alt")]
+
             existing = streams.get(name)
             if existing:
                 existing_stream_type = type(existing).shortname()

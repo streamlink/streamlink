@@ -41,9 +41,12 @@ class StreamMapper(object):
                 yield value
             else:
                 try:
-                    # TODO: Replace with "yield from" when dropping Python 2.
-                    for __ in value:
-                        yield __
+                    if isinstance(value, dict):
+                        for __ in value.items():
+                            yield __
+                    else:
+                        for __ in value:
+                            yield __
                 except TypeError:
                     # Non-iterable returned
                     continue
