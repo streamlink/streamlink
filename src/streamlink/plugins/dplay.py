@@ -60,6 +60,7 @@ _geo_schema = validate.Schema(
 )
 # ------------------
 
+
 class Dplay (Plugin):
     @classmethod
     def can_handle_url(cls, url):

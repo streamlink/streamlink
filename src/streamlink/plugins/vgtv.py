@@ -60,6 +60,7 @@ _video_schema = validate.Schema({
     )
 })
 
+
 class VGTV(Plugin):
     @classmethod
     def can_handle_url(self, url):

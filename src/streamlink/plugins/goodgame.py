@@ -16,6 +16,7 @@ _url_re = re.compile(r"https://(?:www\.)?goodgame.ru/channel/(?P<user>\w+)")
 _stream_re = re.compile(r'var src = "([^"]+)";')
 _ddos_re = re.compile(r'document.cookie="(__DDOS_[^;]+)')
 
+
 class GoodGame(Plugin):
     @classmethod
     def can_handle_url(self, url):

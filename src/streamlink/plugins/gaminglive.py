@@ -45,6 +45,7 @@ _vod_schema = validate.Schema(
     },
 )
 
+
 class GamingLive(Plugin):
     @classmethod
     def can_handle_url(self, url):

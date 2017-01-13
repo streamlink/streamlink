@@ -8,6 +8,7 @@ from streamlink.stream import HDSStream
 _url_re = re.compile(r"http(s)?://(\w+\.)?sportschau.de/")
 _player_js = re.compile(r"https?://deviceids-medp.wdr.de/ondemand/.*\.js")
 
+
 class sportschau(Plugin):
     @classmethod
     def can_handle_url(cls, url):

@@ -4,6 +4,7 @@ from threading import Thread
 
 import io
 
+
 class StreamIOWrapper(io.IOBase):
     """Wraps file-like objects that are not inheriting from IOBase"""
 

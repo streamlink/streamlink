@@ -10,6 +10,7 @@ _playlist_re = re.compile(r"playlist:\s*\"(/templates/data/jplayer\?cid=[^\"]+)"
 _manifest_re = re.compile(r"jwplayer:source\s+file=\"([^\"]+)\"")
 _swf_re = re.compile(r"<jwplayer:provider>(http[^<]+)</jwplayer:provider>")
 
+
 class Antenna(Plugin):
     @classmethod
     def can_handle_url(self, url):

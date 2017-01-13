@@ -246,6 +246,7 @@ class TwitchAPI(object):
     def clip_status(self, channel, clip_name, schema):
         return http.json(self.call_subdomain("clips", "/api/v1/clips/" + channel + "/" + clip_name + "/status", format=""), schema=schema)
 
+
 class Twitch(Plugin):
     options = PluginOptions({
         "cookie": None,

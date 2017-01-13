@@ -41,6 +41,7 @@ class PrimitiveType(Struct):
 
         return self.unpack(data)[0]
 
+
 class PrimitiveClassType(PrimitiveType):
     def __init__(self, format, cls):
         self.cls = cls
@@ -244,6 +245,7 @@ class FixedPoint(PrimitiveType):
 
         return (val,)
 
+
 class PaddedBytes(PrimitiveType):
     def __init__(self, size, padding):
         self.padded_size = size
@@ -340,6 +342,7 @@ FourCC = PaddedBytes(4, " ")
 ScriptDataNumber = DoubleBE
 ScriptDataBoolean = PrimitiveType("?")
 
+
 class U3264(DynamicType):
     @classmethod
     def size(cls, val, version):
@@ -404,6 +407,7 @@ class String(DynamicType):
         return pack_bytes_into(buf, offset,
                                val.encode(encoding, errors))
 
+
 class CString(String):
     EndMarker = b"\x00"
 
@@ -447,6 +451,7 @@ class CString(String):
 class ScriptDataType(object):
     __identifier__ = 0
 
+
 class ScriptDataString(String):
     __size_primitive__ = U16BE
 
@@ -484,12 +489,14 @@ class ScriptDataString(String):
 
         return (data, offset)
 
+
 class ScriptDataLongString(ScriptDataString):
     __size_primitive__ = U32BE
 
 
 class ScriptDataObjectEnd(Exception):
     pass
+
 
 class ScriptDataObject(OrderedDict, ScriptDataType):
     __identifier__ = SCRIPT_DATA_TYPE_OBJECT
@@ -604,6 +611,7 @@ class ScriptDataECMAArray(ScriptDataObject):
         val, offset = ScriptDataObject.unpack_from(buf, offset)
 
         return (cls(val), offset)
+
 
 class ScriptDataStrictArray(DynamicType):
     @classmethod
@@ -880,6 +888,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
 class AMF0Value(ScriptDataValue):
     pass
 
+
 class AMF0String(ScriptDataString):
     pass
 
@@ -888,8 +897,10 @@ AMF0Number = ScriptDataNumber
 
 AMF3Double = ScriptDataNumber
 
+
 class AMF3Type(ScriptDataType):
     pass
+
 
 class AMF3Integer(DynamicType, AMF3Type):
     __identifier__ = AMF3_TYPE_INTEGER
@@ -1259,6 +1270,7 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
 
         return obj
 
+
 class AMF3Array(OrderedDict):
     def __init__(self, *args, **kwargs):
         if args and isinstance(args[0], list):
@@ -1281,6 +1293,7 @@ class AMF3Array(OrderedDict):
     def dense_values(self):
         for key in self.dense_keys():
             yield self[key]
+
 
 class AMF3ArrayPacker(DynamicType, AMF3Type):
     __identifier__ = AMF3_TYPE_ARRAY
@@ -1401,6 +1414,7 @@ class AMF3Date(object):
     def __init__(self, time):
         self.time = time
 
+
 class AMF3DatePacker(DynamicType, AMF3Type):
     __identifier__ = AMF3_TYPE_ARRAY
 
@@ -1439,6 +1453,7 @@ class AMF3DatePacker(DynamicType, AMF3Type):
             cache.append(date)
 
             return date
+
 
 class AMF3Value(DynamicType):
     PrimitiveReaders = {

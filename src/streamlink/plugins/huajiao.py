@@ -34,6 +34,8 @@ _feed_json_schema = validate.Schema(
         )
     )
 )
+
+
 class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):

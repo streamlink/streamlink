@@ -39,6 +39,7 @@ _video_schema = validate.Schema({
     }
 })
 
+
 class ArteTV(Plugin):
     @classmethod
     def can_handle_url(self, url):

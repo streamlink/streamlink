@@ -51,6 +51,7 @@ STREAM_WEIGHTS = {
     "source": 1080
 }
 
+
 class Tga(Plugin):
     @classmethod
     def can_handle_url(self, url):

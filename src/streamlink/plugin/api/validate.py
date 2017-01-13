@@ -46,6 +46,8 @@ _map = map
 
 
 _re_match_attr = ("group", "groups", "groupdict", "re")
+
+
 def _is_re_match(value):
     return _all(_hasattr(value, a) for a in _re_match_attr)
 

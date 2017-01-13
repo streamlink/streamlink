@@ -41,6 +41,7 @@ _url_streaming_media_re = re.compile(r"(?P<scheme>http|https)"
                                      "(?P<room>.*)"
                                      "\/")
 
+
 def get_event_id(url):
     """Extract event id from talk html page.
 
@@ -58,6 +59,7 @@ def get_event_id(url):
 
     return event_id
 
+
 def get_json(url):
     """Fetch page for given URL and return json Python object.
 
@@ -67,6 +69,7 @@ def get_json(url):
     res = http.get(url)
 
     return http.json(res)
+
 
 def parse_media_json(json_object):
     """Expose available file formats.
@@ -97,6 +100,7 @@ def parse_media_json(json_object):
         recordings[name] = recording['recording_url']
 
     return recordings
+
 
 def parse_streaming_media_json(json_object, room_from_url):
     """Filter all availabe live streams for given json and room name.

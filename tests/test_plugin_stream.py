@@ -5,6 +5,7 @@ from streamlink import Streamlink, PluginError, NoPluginError
 from streamlink.plugins import Plugin
 from streamlink.stream import *
 
+
 class TestPluginStream(unittest.TestCase):
     def setUp(self):
         self.session = Streamlink()

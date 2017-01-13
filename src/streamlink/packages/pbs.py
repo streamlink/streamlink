@@ -46,6 +46,7 @@ else:
 
 DEFAULT_ENCODING = "utf-8"
 
+
 class ErrorReturnCode(Exception):
     truncate_cap = 200
 
@@ -75,12 +76,14 @@ class ErrorReturnCode(Exception):
              tstderr.decode(DEFAULT_ENCODING, "replace"))
         super(ErrorReturnCode, self).__init__(msg)
 
+
 class CommandNotFound(Exception):
     pass
 
 
 rc_exc_regex = re.compile("ErrorReturnCode_(\d+)")
 rc_exc_cache = {}
+
 
 def get_rc_exc(rc):
     rc = int(rc)
@@ -112,6 +115,7 @@ def which(program):
                 return exe_file
 
     return None
+
 
 def resolve_program(program):
     path = which(program)

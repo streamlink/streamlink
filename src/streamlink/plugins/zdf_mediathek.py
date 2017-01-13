@@ -63,6 +63,7 @@ _schema = validate.Schema(
     }
 )
 
+
 class zdf_mediathek(Plugin):
     @classmethod
     def can_handle_url(cls, url):

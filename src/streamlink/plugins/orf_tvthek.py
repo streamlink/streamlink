@@ -10,6 +10,7 @@ _json_re = re.compile(r'<div class="jsb_ jsb_VideoPlaylist" data-jsb="(?P<json>[
 
 MODE_STREAM, MODE_VOD = 0, 1
 
+
 class ORFTVThek(Plugin):
     @classmethod
     def can_handle_url(self, url):

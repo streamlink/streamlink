@@ -18,6 +18,7 @@ HTTP_HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36"
 }
 
+
 class NPO(Plugin):
     @classmethod
     def can_handle_url(cls, url):

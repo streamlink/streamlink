@@ -23,6 +23,7 @@ _streams_schema = validate.Schema(
     }
 )
 
+
 class Piczel(Plugin):
     @classmethod
     def can_handle_url(cls, url):

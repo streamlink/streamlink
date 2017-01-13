@@ -2,6 +2,7 @@ import unittest
 
 from streamlink.stream import StreamIOIterWrapper
 
+
 class TestPluginStream(unittest.TestCase):
     def test_iter(self):
         def generator():

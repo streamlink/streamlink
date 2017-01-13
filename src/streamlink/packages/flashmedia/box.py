@@ -75,6 +75,7 @@ class Box(Packet):
         else:
             packetwrite(self.payload)
 
+
 class BoxPayload(Packet):
     exception = F4VError
 
@@ -94,6 +95,7 @@ class BoxPayload(Packet):
         payload = cls(*args, **kw)
 
         return Box(type_, 0, payload)
+
 
 class BoxContainer(BoxPayload):
     def __init__(self, boxes):
@@ -143,6 +145,7 @@ class BoxContainerSingle(BoxPayload):
 
         return cls(box)
 
+
 class RawPayload(BoxPayload):
     def __init__(self, data):
         self.data = data
@@ -161,6 +164,7 @@ class RawPayload(BoxPayload):
 
     def _serialize(self, packet):
         packet += self.data
+
 
 class BoxPayloadFTYP(BoxPayload):
     def __init__(self, major_brand="f4v", minor_version=0,
@@ -604,6 +608,7 @@ class BoxPayloadDREF(BoxContainer):
 
         return cls(version, boxes)
 
+
 class BoxPayloadURL(BoxPayload):
     def __init__(self, version=0, flags=1):
         self.version = version
@@ -623,6 +628,7 @@ class BoxPayloadURL(BoxPayload):
         flags = U24BE.read(io)
 
         return cls(version, flags)
+
 
 class BoxPayloadSTSD(BoxContainer):
     def __init__(self, version=0, descriptions=[]):
@@ -663,6 +669,7 @@ class BoxPayloadSTSD(BoxContainer):
 
         return cls(version, descriptions)
 
+
 class BoxPayloadVisualSample(BoxContainer):
     def __init__(self, data_reference_index=0, width=0, height=0,
                  horiz_resolution=0.0, vert_resolution=0.0, frame_count=0,
@@ -700,9 +707,11 @@ class BoxPayloadMDAT(RawPayload):
     def __repr__(self):
         return "<BoxPayloadMDAT size={0}>".format(self.size)
 
+
 class BoxPayloadSKIP(RawPayload):
     def __repr__(self):
         return "<BoxPayloadSKIP size={0}>".format(self.size)
+
 
 class BoxPayloadFREE(RawPayload):
     def __repr__(self):
@@ -1030,26 +1039,34 @@ class BoxPayloadAFRT(BoxPayload):
 class BoxPayloadMVEX(BoxContainer):
     pass
 
+
 class BoxPayloadMFRA(BoxContainer):
     pass
+
 
 class BoxPayloadTRAK(BoxContainer):
     pass
 
+
 class BoxPayloadMDIA(BoxContainer):
     pass
+
 
 class BoxPayloadMINF(BoxContainer):
     pass
 
+
 class BoxPayloadSTBL(BoxContainer):
     pass
+
 
 class BoxPayloadMOOV(BoxContainer):
     pass
 
+
 class BoxPayloadMOOF(BoxContainer):
     pass
+
 
 class BoxPayloadMETA(BoxContainer):
     pass

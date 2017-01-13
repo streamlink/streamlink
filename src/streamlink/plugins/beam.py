@@ -35,6 +35,7 @@ _assets_schema = validate.Schema(
     })
 )
 
+
 class Beam(Plugin):
     @classmethod
     def can_handle_url(self, url):
