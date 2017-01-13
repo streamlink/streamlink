@@ -1068,7 +1068,7 @@ PayloadTypes = {
     "hdlr": BoxPayloadHDLR,
     "vmhd": BoxPayloadVMHD,
     "dref": BoxPayloadDREF,
-    "url":  BoxPayloadURL,
+    "url": BoxPayloadURL,
     "stsd": BoxPayloadSTSD,
     "mdat": BoxPayloadMDAT,
 

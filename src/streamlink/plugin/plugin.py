@@ -18,8 +18,8 @@ QUALITY_WEIGTHS_EXTRA = {
     },
     "quality": {
         "ehq": 720,
-        "hq":  576,
-        "sq":  360,
+        "hq": 576,
+        "sq": 360,
     },
 }
 
