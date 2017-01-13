@@ -39,7 +39,7 @@ bongacams           bongacams.com        Yes   No    Only RTMP streams are avail
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 canaplus            - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
                     - c8.fr
-		    - cstar.fr
+                    - cstar.fr
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com
