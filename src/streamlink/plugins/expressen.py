@@ -30,7 +30,7 @@ class Expressen(Plugin):
         live_el = parsed_info.find("live");
         live = live_el is not None and live_el.text == "1"
 
-        streams = { }
+        streams = {}
 
         hdsurl_el = parsed_info.find("hdsurl");
         if hdsurl_el is not None and hdsurl_el.text is not None:

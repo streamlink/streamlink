@@ -18,7 +18,7 @@ def getStreamURL(channel):
     #print(streamerinfo)
 
     if not any("media" in s for s in streamerinfo):
-        print ("User offline or invalid")
+        print("User offline or invalid")
         return
     else:
         streamdata = streamerinfo['media']

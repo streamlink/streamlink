@@ -138,7 +138,7 @@ class AkamaiHDStreamIO(io.IOBase):
         self.buffer.write(tag.serialize())
 
     def send_token(self, token):
-        headers = { "x-Akamai-Streaming-SessionToken": token }
+        headers = {"x-Akamai-Streaming-SessionToken": token}
 
         self.logger.debug("Sending new session token")
         self.send_control("sendingNewToken", headers=headers,

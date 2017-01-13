@@ -17,9 +17,9 @@ STREAM_TYPES = {
     },
     "hls": {
         "parser": HLSStream.parse_variant_playlist,
-        "file" : "master.m3u8"
+        "file": "master.m3u8"
     },
-    "http" : {}
+    "http": {}
 }
 
 # For now we only handle MP4.
@@ -45,11 +45,11 @@ _video_schema = validate.Schema({
                 validate.filter(lambda k, v: k in STREAM_FORMATS),
                 {
                     validate.text: [{
-                        "bitrate" : int,
+                        "bitrate": int,
                         "paths": [{
                             "address": validate.text,
-                            "port" : int,
-                            "path" : validate.text,
+                            "port": int,
+                            "path": validate.text,
                             "filename": validate.text,
                             "application": validate.text,
                         }],

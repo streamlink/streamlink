@@ -16,13 +16,13 @@ _url_re = re.compile(r"http://star\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9
 
 _channel_schema = validate.Schema(
     {
-        "data" : validate.any(None, {
-            "channel" : validate.any(None, {
-                "id" : validate.all(
+        "data": validate.any(None, {
+            "channel": validate.any(None, {
+                "id": validate.all(
                     validate.text,
                     validate.transform(int)
                 ),
-                "vid" : int
+                "vid": int
             })
         })
     },

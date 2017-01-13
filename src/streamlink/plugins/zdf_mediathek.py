@@ -112,7 +112,7 @@ class zdf_mediathek(Plugin):
             title = title[:-5]
 
         request_url = "https://api.zdf.de/content/documents/%s.json?profile=player" % title
-        res = http.get(request_url, headers={"Api-Auth" : "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32"})
+        res = http.get(request_url, headers={"Api-Auth": "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32"})
         document = http.json(res, schema=_documents_schema)
 
         stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
