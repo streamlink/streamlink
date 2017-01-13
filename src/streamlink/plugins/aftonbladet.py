@@ -27,7 +27,7 @@ _video_schema = validate.Schema(
                 validate.text: {
                     validate.text: validate.all(
                         dict,
-                        validate.filter(lambda k,v: k in STREAM_FORMATS),
+                        validate.filter(lambda k, v: k in STREAM_FORMATS),
                         {
                             validate.text: [{
                                 "address": validate.text,
@@ -38,7 +38,7 @@ _video_schema = validate.Schema(
                     )
                 }
             },
-            validate.filter(lambda k,v: k in STREAM_TYPES)
+            validate.filter(lambda k, v: k in STREAM_TYPES)
         )
     }
 )

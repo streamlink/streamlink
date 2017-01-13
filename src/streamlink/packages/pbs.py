@@ -302,7 +302,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
             else: processed_args.append(self._format_arg(arg))
 
         # aggregate the keyword arguments
-        for k,v in kwargs.items():
+        for k, v in kwargs.items():
             # we're passing a short arg as a kwarg, example:
             # cut(d="\t")
             if len(k) == 1:
@@ -326,7 +326,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         call_args, kwargs = self._extract_call_args(kwargs)
 
         pruned_call_args = call_args
-        for k,v in Command.call_args.items():
+        for k, v in Command.call_args.items():
             try:
                 if pruned_call_args[k] == v:
                     del pruned_call_args[k]

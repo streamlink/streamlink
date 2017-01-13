@@ -98,8 +98,8 @@ class Tga(Plugin):
                 yield quality, HTTPStream(self.session, source["securityUrl"])
             elif source["ext"] == "rtmp":
                 yield quality, RTMPStream(self.session, {
-                    "rtmp":source["securityUrl"],
-                    "live":True
+                    "rtmp": source["securityUrl"],
+                    "live": True
                 })
 
     def _get_streams(self):
