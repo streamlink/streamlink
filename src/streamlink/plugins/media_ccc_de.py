@@ -117,7 +117,7 @@ def parse_streaming_media_json(json_object, room_from_url):
 
             for stream in room['streams']:
                 # get stream language
-                if stream['isTranslated'] == False:
+                if stream['isTranslated'] is False:
                     language = 'native'
                 else:
                     language = 'translated'

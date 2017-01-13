@@ -63,7 +63,7 @@ class AzubuTV(Plugin):
         channel_info = requests.get(stream_video_url.format(channel))
         j = json.loads(channel_info.text)
 
-        if j["data"]["is_live"] != True:
+        if j["data"]["is_live"] is not True:
             return "", False
         else:
             is_live = True
