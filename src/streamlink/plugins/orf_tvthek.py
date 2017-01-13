@@ -1,4 +1,5 @@
-import re, json
+import re
+import json
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
