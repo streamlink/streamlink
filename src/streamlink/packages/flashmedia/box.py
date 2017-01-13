@@ -171,7 +171,7 @@ class BoxPayloadFTYP(BoxPayload):
 
     @property
     def size(self):
-        return 4+4+(len(self.compatible_brands)*4)
+        return 4 +4 +(len(self.compatible_brands) *4)
 
     def _serialize(self, packet):
         packet += FourCC(self.major_brand)
@@ -215,12 +215,12 @@ class BoxPayloadMVHD(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+4+4+2+2+4+4+(9*4)+(6*4)+4
+        size = 1 +3 +4 +4 +2 +2 +4 +4 +(9 *4) +(6 *4) +4
 
         if self.version == 1:
-            size += 3*8
+            size += 3 *8
         else:
-            size += 3*4
+            size += 3 *4
 
         return size
 
@@ -336,7 +336,7 @@ class BoxPayloadTREX(BoxPayload):
 
     @property
     def size(self):
-        return 1+3+4+4+4+4+self.default_sample_flags.size
+        return 1 +3 +4 +4 +4 +4 +self.default_sample_flags.size
 
     def _serialize(self, packet):
         packet += U8(self.version)
@@ -383,10 +383,10 @@ class BoxPayloadTKHD(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+4+4+4+4+4+(4*2)+2+2+2+2+(9*4)+4+4
+        size = 1 +3 +4 +4 +4 +4 +4 +(4 *2) +2 +2 +2 +2 +(9 *4) +4 +4
 
         if self.version == 1:
-            size += 4*3
+            size += 4 *3
 
         return size
 
@@ -457,10 +457,10 @@ class BoxPayloadMDHD(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+4+4+4+4+2+2
+        size = 1 +3 +4 +4 +4 +4 +2 +2
 
         if self.version == 1:
-            size += 4*3
+            size += 4 *3
 
         return size
 
@@ -503,7 +503,7 @@ class BoxPayloadHDLR(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+4+4+(3*4)
+        size = 1 +3 +4 +4 +(3 *4)
         size += len(self.name)
 
         return size
@@ -546,7 +546,7 @@ class BoxPayloadVMHD(BoxPayload):
 
     @property
     def size(self):
-        return 1+3+2+(3*2)
+        return 1 +3 +2 +(3 *2)
 
     def _serialize(self, packet):
         packet += U8(self.version)
@@ -576,7 +576,7 @@ class BoxPayloadDREF(BoxContainer):
 
     @property
     def size(self):
-        size = 1+3+4
+        size = 1 +3 +4
 
         for box in self.boxes:
             size += box.size
@@ -631,7 +631,7 @@ class BoxPayloadSTSD(BoxContainer):
 
     @property
     def size(self):
-        size = 4+4
+        size = 4 +4
 
         for description in self.descriptions:
             size += description.size
@@ -748,7 +748,7 @@ class BoxPayloadABST(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+4+1+4+8+8
+        size = 1 +3 +4 +1 +4 +8 +8
         size += len(self.movie_identifier) + 1
 
         size += 1
@@ -882,7 +882,7 @@ class BoxPayloadASRT(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+1+4
+        size = 1 +3 +1 +4
 
         for quality in self.quality_segment_url_modifiers:
             size += len(quality) + 1
@@ -937,7 +937,7 @@ class FragmentRunEntry(BoxPayload):
 
     @property
     def size(self):
-        size = 4+8+4
+        size = 4 +8 +4
 
         if self.fragment_duration == 0:
             size += 1
@@ -979,7 +979,7 @@ class BoxPayloadAFRT(BoxPayload):
 
     @property
     def size(self):
-        size = 1+3+4+1+4
+        size = 1 +3 +4 +1 +4
 
         for quality in self.quality_segment_url_modifiers:
             size += len(quality) + 1

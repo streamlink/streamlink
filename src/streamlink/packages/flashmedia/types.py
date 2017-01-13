@@ -924,18 +924,18 @@ class AMF3Integer(DynamicType, AMF3Type):
             offset += 1
         elif val < 0x4000:
             buf[offset] = (val >> 7 & 0x7f) | 0x80
-            buf[offset+1] = val & 0x7f
+            buf[offset +1] = val & 0x7f
             offset += 2
         elif val < 0x200000:
             buf[offset] = (val >> 14 & 0x7f) | 0x80
-            buf[offset+1] = (val >> 7 & 0x7f) | 0x80
-            buf[offset+2] = val & 0x7f
+            buf[offset +1] = (val >> 7 & 0x7f) | 0x80
+            buf[offset +2] = val & 0x7f
             offset += 3
         elif val < 0x40000000:
             buf[offset] = (val >> 22 & 0x7f) | 0x80
-            buf[offset+1] = (val >> 15 & 0x7f) | 0x80
-            buf[offset+2] = (val >> 8 & 0x7f) | 0x80
-            buf[offset+3] = val & 0xff
+            buf[offset +1] = (val >> 15 & 0x7f) | 0x80
+            buf[offset +2] = (val >> 8 & 0x7f) | 0x80
+            buf[offset +3] = val & 0xff
             offset += 4
 
         return offset

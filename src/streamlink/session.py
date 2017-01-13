@@ -20,7 +20,7 @@ def print_small_exception(start_after):
 
     for i, trace in enumerate(tb):
         if trace[2] == start_after:
-            index = i+1
+            index = i +1
             break
 
     lines = traceback.format_list(tb[index:])

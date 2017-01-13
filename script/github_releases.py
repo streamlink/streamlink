@@ -35,7 +35,7 @@ try:
         raise AssertionError("Missing changelog file")
 
     changelogs = split(RE_LOG_HEADER, contents, flags=IGNORECASE)[1:]
-    changelogs = {v: changelogs[i+1] for i, v in enumerate(changelogs) if i % 2 == 0}
+    changelogs = {v: changelogs[i +1] for i, v in enumerate(changelogs) if i % 2 == 0}
 
     if not getenv("TRAVIS_TAG") in changelogs:
         raise AssertionError("Missing changelog for current release")
