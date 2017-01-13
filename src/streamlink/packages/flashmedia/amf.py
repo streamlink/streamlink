@@ -109,7 +109,7 @@ class AMFPacket(Packet):
     def _deserialize(cls, io):
         version = U16BE.read(io)
 
-        if not version in (0, 3):
+        if version not in (0, 3):
             raise AMFError("AMF version must be 0 or 3")
 
         headers = []

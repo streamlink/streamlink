@@ -43,7 +43,7 @@ try:
     # Get release ID
     res = githubAPI("GET", "tags/{0}".format(getenv("TRAVIS_TAG")))
     data = res.json()
-    if not "id" in data:
+    if "id" not in data:
         raise AssertionError("Missing id from Github API response")
 
     # Update release name and body

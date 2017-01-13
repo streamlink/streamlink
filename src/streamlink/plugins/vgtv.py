@@ -102,10 +102,10 @@ class VGTV(Plugin):
 
         # HDS/HLS: Get all variants and produce a playlist URL.
         for f in ('hds', 'hls'):
-            if not f in info["formats"]:
+            if f not in info["formats"]:
                 next
 
-            if not "mp4" in info["formats"][f]:
+            if "mp4" not in info["formats"][f]:
                 next
 
             streamtype = STREAM_TYPES[f]
