@@ -131,12 +131,12 @@ def parse_streaming_media_json(json_object, room_from_url):
                     # ${height}p and (hd|sd)_native_${height}p
                     if language == 'native':
                         name      = "%sp" % stream['videoSize'][-1]
-                        long_name = "hls_%s_%sp" % ("native",\
+                        long_name = "hls_%s_%sp" % ("native",
                                                     stream['videoSize'][-1])
                         streams[name]      = stream_url
                         streams[long_name] = stream_url
                     elif language == 'translated':
-                        long_name = "hls_%s_%sp" % ("translated",\
+                        long_name = "hls_%s_%sp" % ("translated",
                                                     stream['videoSize'][-1])
                         streams[long_name] = stream_url
 
@@ -169,15 +169,15 @@ class media_ccc_de(Plugin):
         match = _url_streaming_media_re.match(self.url)
         if match:
             query_url    = API_URL_STREAMING_MEDIA
-            live_streams = parse_streaming_media_json(get_json(query_url),\
+            live_streams = parse_streaming_media_json(get_json(query_url),
                                                       match.group('room'))
 
             for stream_name, stream_url in live_streams.items():
                 if re.search(r"m3u8", live_streams[stream_name]):
-                    streams[stream_name] = HLSStream(self.session,\
+                    streams[stream_name] = HLSStream(self.session,
                                                      stream_url)
                 else:
-                    streams[stream_name] = HTTPStream(self.session,\
+                    streams[stream_name] = HTTPStream(self.session,
                                                       stream_url)
 
         # media.ccc.de
