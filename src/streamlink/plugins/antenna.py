@@ -37,7 +37,7 @@ class Antenna(Plugin):
 
         # Find SWF
         match = _swf_re.search(res.text)
-        swf_url = match.group(1);
+        swf_url = match.group(1)
 
         streams = {}
         streams.update(

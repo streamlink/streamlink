@@ -57,8 +57,8 @@ class AzubuTV(Plugin):
 
     def _get_stream_url(self, o):
 
-        match = _url_re.match(self.url);
-        channel = match.group('domain');
+        match = _url_re.match(self.url)
+        channel = match.group('domain')
 
         channel_info = requests.get(stream_video_url.format(channel))
         j = json.loads(channel_info.text)

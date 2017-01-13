@@ -61,7 +61,7 @@ class NPO(Plugin):
     def _get_vod_streams(self):
         url = 'http://ida.omroep.nl/odi/?prid={}&puboptions=adaptive,h264_bb,h264_sb,h264_std&adaptive=no&part=1&token={}'\
             .format(quote(self.npo_id), quote(self.get_token()))
-        res = http.get(url, headers=HTTP_HEADERS);
+        res = http.get(url, headers=HTTP_HEADERS)
 
         data = res.json()
 
