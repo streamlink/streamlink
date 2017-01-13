@@ -677,7 +677,7 @@ class ScriptData(TagData):
 
     @classmethod
     def _deserialize(cls, io):
-        name  = ScriptDataValue.read(io)
+        name = ScriptDataValue.read(io)
         value = ScriptDataValue.read(io)
 
         return ScriptData(name, value)

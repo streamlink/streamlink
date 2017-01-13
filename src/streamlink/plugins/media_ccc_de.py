@@ -25,14 +25,14 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream, HLSStream
 
-API_URL_MEDIA           = "https://api.media.ccc.de"
+API_URL_MEDIA = "https://api.media.ccc.de"
 API_URL_STREAMING_MEDIA = "https://streaming.media.ccc.de/streams/v1.json"
 
 # http(s)://media.ccc.de/path/to/talk.html
-_url_media_re           = re.compile(r"(?P<scheme>http|https)"
-                                     ":\/\/"
-                                     "(?P<server>media\.ccc\.de)"
-                                     "\/")
+_url_media_re = re.compile(r"(?P<scheme>http|https)"
+                           ":\/\/"
+                           "(?P<server>media\.ccc\.de)"
+                           "\/")
 # https://streaming.media.ccc.de/room/
 _url_streaming_media_re = re.compile(r"(?P<scheme>http|https)"
                                      ":\/\/"
@@ -76,7 +76,7 @@ def parse_media_json(json_object):
     """
     recordings = {}
     for recording in json_object['recordings']:
-        match       = re.search(r".*\/(?P<format>.*)", recording['mime_type'])
+        match = re.search(r".*\/(?P<format>.*)", recording['mime_type'])
         file_format = match.group('format')
 
         if recording['mime_type'] == 'vnd.voc/mp4-web' or\
@@ -130,10 +130,10 @@ def parse_streaming_media_json(json_object, room_from_url):
                     # native HLS streams are announced as
                     # ${height}p and (hd|sd)_native_${height}p
                     if language == 'native':
-                        name      = "%sp" % stream['videoSize'][-1]
+                        name = "%sp" % stream['videoSize'][-1]
                         long_name = "hls_%s_%sp" % ("native",
                                                     stream['videoSize'][-1])
-                        streams[name]      = stream_url
+                        streams[name] = stream_url
                         streams[long_name] = stream_url
                     elif language == 'translated':
                         long_name = "hls_%s_%sp" % ("translated",
@@ -143,15 +143,15 @@ def parse_streaming_media_json(json_object, room_from_url):
                 # get available audio only mpeg urls
                 mp3_stream = stream['urls'].get('mp3')
                 if mp3_stream:
-                    stream_url    = mp3_stream['url']
-                    name          = "audio_%s_mpeg" % language
+                    stream_url = mp3_stream['url']
+                    name = "audio_%s_mpeg" % language
                     streams[name] = stream_url
 
                 # get available audio only opus urls
                 opus_stream = stream['urls'].get('opus')
                 if opus_stream:
-                    stream_url    = opus_stream['url']
-                    name          = "audio_%s_opus" % language
+                    stream_url = opus_stream['url']
+                    name = "audio_%s_opus" % language
                     streams[name] = stream_url
 
     return streams
@@ -168,7 +168,7 @@ class media_ccc_de(Plugin):
         # streaming.media.ccc.de
         match = _url_streaming_media_re.match(self.url)
         if match:
-            query_url    = API_URL_STREAMING_MEDIA
+            query_url = API_URL_STREAMING_MEDIA
             live_streams = parse_streaming_media_json(get_json(query_url),
                                                       match.group('room'))
 
@@ -182,8 +182,8 @@ class media_ccc_de(Plugin):
 
         # media.ccc.de
         elif _url_media_re.search(self.url):
-            event_id   = get_event_id(self.url)
-            query_url  = "%s/public/events/%i" % (API_URL_MEDIA, event_id)
+            event_id = get_event_id(self.url)
+            query_url = "%s/public/events/%i" % (API_URL_MEDIA, event_id)
             recordings = parse_media_json(get_json(query_url))
 
             for name, stream_url in recordings.items():
