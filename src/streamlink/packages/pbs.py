@@ -352,7 +352,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
 
     def __eq__(self, other):
         try: return str(self) == str(other)
-        except: return False
+        except Exception: return False
     __hash__ = None  # Avoid DeprecationWarning in Python < 3
 
 

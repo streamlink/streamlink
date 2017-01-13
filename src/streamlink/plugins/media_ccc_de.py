@@ -53,7 +53,7 @@ def get_event_id(url):
 
     try:
         event_id = int(match.group('event_id'))
-    except:
+    except Exception:
         raise PluginError("Failed to get event id from URL.")
 
     return event_id
