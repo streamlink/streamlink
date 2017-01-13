@@ -116,7 +116,7 @@ class VGTV(Plugin):
             for stream in info["formats"][f]["mp4"]:
                 for p in stream["paths"]:
                     url = self._build_url(**p)
-                    variant = p["filename"][:-4] # strip ".mp4"
+                    variant = p["filename"][:-4]  # strip ".mp4"
 
                     if url in f_streams:
                         f_streams[url].append(variant)

@@ -591,14 +591,14 @@ class ScriptDataECMAArray(ScriptDataObject):
 
     @classmethod
     def read(cls, fd):
-        U32BE.read(fd) # Length
+        U32BE.read(fd)  # Length
         val = ScriptDataObject.read(fd)
 
         return cls(val)
 
     @classmethod
     def unpack_from(cls, buf, offset):
-        U32BE.unpack_from(buf, offset) # Length
+        U32BE.unpack_from(buf, offset)  # Length
         offset += U32BE.size
 
         val, offset = ScriptDataObject.unpack_from(buf, offset)

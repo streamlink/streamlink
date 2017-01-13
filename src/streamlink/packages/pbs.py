@@ -224,12 +224,12 @@ class Command(object):
     _prepend_stack = []
 
     call_args = {
-        "fg": False, # run command in foreground
-        "bg": False, # run command in background
-        "with": False, # prepend the command to every command after it
-        "out": None, # redirect STDOUT
-        "err": None, # redirect STDERR
-        "err_to_out": None, # redirect STDERR to STDOUT
+        "fg": False,  # run command in foreground
+        "bg": False,  # run command in background
+        "with": False,  # prepend the command to every command after it
+        "out": None,  # redirect STDOUT
+        "err": None,  # redirect STDERR
+        "err_to_out": None,  # redirect STDERR to STDOUT
         "in": None,
         "env": os.environ,
         "cwd": None,
