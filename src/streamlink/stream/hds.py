@@ -433,6 +433,7 @@ class HDSStream(Stream):
                         from the stream before raising an error.
         :param pvswf: URL of player SWF for Akamai HD player verification.
         """
+        logger = session.logger.new_module("hls.parse_manifest")
 
         if not request_params:
             request_params = {}
@@ -453,6 +454,10 @@ class HDSStream(Stream):
         res = session.http.get(url, exception=IOError, **request_params)
         manifest = session.http.xml(res, "manifest XML", ignore_ns=True,
                                     exception=IOError)
+
+        if manifest.findtext("drmAdditionalHeader"):
+            logger.debug("Omitting HDS stream protected by DRM: {}", url)
+            return {}
 
         parsed = urlparse(url)
         baseurl = manifest.findtext("baseURL")
