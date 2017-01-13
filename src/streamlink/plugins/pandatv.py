@@ -138,7 +138,7 @@ class Pandatv(Plugin):
 
         streams = {}
         plflag = videoinfo.get('plflag')
-        if not plflag or not '_' in plflag:
+        if not plflag or '_' not in plflag:
             self.logger.info("Please Check PandaTV Room API")
             return
 
