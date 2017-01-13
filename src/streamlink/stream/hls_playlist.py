@@ -183,7 +183,8 @@ class M3U8Parser(object):
         elif line.startswith("#EXT-X-KEY"):
             attr = self.parse_tag(line, self.parse_attributes)
             iv = attr.get("IV")
-            if iv: iv = self.parse_hex(iv)
+            if iv:
+                iv = self.parse_hex(iv)
             self.state["key"] = Key(attr.get("METHOD"),
                                     self.uri(attr.get("URI")),
                                     iv, attr.get("KEYFORMAT"),

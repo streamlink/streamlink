@@ -15,7 +15,8 @@ class StreamupCom(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url)
-        if not res: return
+        if not res:
+            return
         match = _hls_manifest_re.search(res.text)
         url = match.group(1)
         hls_url = "http://video-cdn.streamup.com{}".format(url)

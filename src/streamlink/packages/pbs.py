@@ -54,14 +54,16 @@ class ErrorReturnCode(Exception):
         self.stdout = stdout
         self.stderr = stderr
 
-        if self.stdout is None: tstdout = "<redirected>"
+        if self.stdout is None:
+            tstdout = "<redirected>"
         else:
             tstdout = self.stdout[:self.truncate_cap]
             out_delta = len(self.stdout) - len(tstdout)
             if out_delta:
                 tstdout += ("... (%d more, please see e.stdout)" % out_delta).encode()
 
-        if self.stderr is None: tstderr = "<redirected>"
+        if self.stderr is None:
+            tstderr = "<redirected>"
         else:
             tstderr = self.stderr[:self.truncate_cap]
             err_delta = len(self.stderr) - len(tstderr)
@@ -73,7 +75,8 @@ class ErrorReturnCode(Exception):
              tstderr.decode(DEFAULT_ENCODING, "replace"))
         super(ErrorReturnCode, self).__init__(msg)
 
-class CommandNotFound(Exception): pass
+class CommandNotFound(Exception):
+    pass
 
 
 rc_exc_regex = re.compile("ErrorReturnCode_(\d+)")
@@ -81,8 +84,10 @@ rc_exc_cache = {}
 
 def get_rc_exc(rc):
     rc = int(rc)
-    try: return rc_exc_cache[rc]
-    except KeyError: pass
+    try:
+        return rc_exc_cache[rc]
+    except KeyError:
+        pass
 
     name = "ErrorReturnCode_%d" % rc
     exc = type(name, (ErrorReturnCode,), {})
@@ -98,7 +103,8 @@ def which(program):
 
     fpath, fname = os.path.split(program)
     if fpath:
-        if is_exe(program): return program
+        if is_exe(program):
+            return program
     else:
         for path in os.environ["PATH"].split(os.pathsep):
             exe_file = os.path.join(path, program)
@@ -114,8 +120,10 @@ def resolve_program(program):
         # that from python (we have to use underscores), so we'll check
         # if a dash version of our underscore command exists and use that
         # if it does
-        if "_" in program: path = which(program.replace("_", "-"))
-        if not path: return None
+        if "_" in program:
+            path = which(program.replace("_", "-"))
+        if not path:
+            return None
     return path
 
 
@@ -142,10 +150,12 @@ class RunningCommand(object):
 
         # we're running this command as a with context, don't do anything
         # because nothing was started to run from Command.__call__
-        if self.call_args["with"]: return
+        if self.call_args["with"]:
+            return
 
         # run and block
-        if stdin: stdin = stdin.encode(DEFAULT_ENCODING)
+        if stdin:
+            stdin = stdin.encode(DEFAULT_ENCODING)
         self._stdout, self._stderr = self.process.communicate(stdin)
         self._handle_exit_code(self.process.wait())
 
@@ -161,14 +171,19 @@ class RunningCommand(object):
             Command._prepend_stack.pop()
 
     def __str__(self):
-        if IS_PY3: return self.__unicode__()
-        else: return unicode(self).encode(DEFAULT_ENCODING)
+        if IS_PY3:
+            return self.__unicode__()
+        else:
+            return unicode(self).encode(DEFAULT_ENCODING)
 
     def __unicode__(self):
         if self.process:
-            if self.call_args["bg"]: self.wait()
-            if self._stdout: return self.stdout()
-            else: return ""
+            if self.call_args["bg"]:
+                self.wait()
+            if self._stdout:
+                return self.stdout()
+            else:
+                return ""
 
     def __eq__(self, other):
         return unicode(self) == unicode(other)
@@ -180,8 +195,10 @@ class RunningCommand(object):
     def __getattr__(self, p):
         # let these three attributes pass through to the Popen object
         if p in ("send_signal", "terminate", "kill"):
-            if self.process: return getattr(self.process, p)
-            else: raise AttributeError
+            if self.process:
+                return getattr(self.process, p)
+            else:
+                raise AttributeError
         return getattr(unicode(self), p)
 
     def __repr__(self):
@@ -198,11 +215,13 @@ class RunningCommand(object):
         return int(str(self).strip())
 
     def stdout(self):
-        if self.call_args["bg"]: self.wait()
+        if self.call_args["bg"]:
+            self.wait()
         return self._stdout.decode(DEFAULT_ENCODING, "replace")
 
     def stderr(self):
-        if self.call_args["bg"]: self.wait()
+        if self.call_args["bg"]:
+            self.wait()
         return self._stderr.decode(DEFAULT_ENCODING, "replace")
 
     def wait(self):
@@ -242,7 +261,8 @@ class Command(object):
     @classmethod
     def _create(cls, program):
         path = resolve_program(program)
-        if not path: raise CommandNotFound(program)
+        if not path:
+            raise CommandNotFound(program)
         return cls(path)
 
     def __init__(self, path):
@@ -254,8 +274,10 @@ class Command(object):
     def __getattribute__(self, name):
         # convenience
         getattr = partial(object.__getattribute__, self)
-        if name.startswith("_"): return getattr(name)
-        if name == "bake": return getattr("bake")
+        if name.startswith("_"):
+            return getattr(name)
+        if name == "bake":
+            return getattr("bake")
         return getattr("bake")(name)
 
 
@@ -298,8 +320,10 @@ class Command(object):
                 if not arg:
                     warnings.warn("Empty list passed as an argument to %r. \
 If you're using glob.glob(), please use pbs.glob() instead." % self.path, stacklevel=3)
-                for sub_arg in arg: processed_args.append(self._format_arg(sub_arg))
-            else: processed_args.append(self._format_arg(arg))
+                for sub_arg in arg:
+                    processed_args.append(self._format_arg(sub_arg))
+            else:
+                processed_args.append(self._format_arg(arg))
 
         # aggregate the keyword arguments
         for k, v in kwargs.items():
@@ -307,14 +331,17 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
             # cut(d="\t")
             if len(k) == 1:
                 processed_args.append("-" + k)
-                if v is not True: processed_args.append(self._format_arg(v))
+                if v is not True:
+                    processed_args.append(self._format_arg(v))
 
             # we're doing a long arg
             else:
                 k = k.replace("_", "-")
 
-                if v is True: processed_args.append("--" + k)
-                else: processed_args.append("--%s=%s" % (k, self._format_arg(v)))
+                if v is True:
+                    processed_args.append("--" + k)
+                else:
+                    processed_args.append("--%s=%s" % (k, self._format_arg(v)))
 
         return processed_args
 
@@ -330,7 +357,8 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
             try:
                 if pruned_call_args[k] == v:
                     del pruned_call_args[k]
-            except KeyError: continue
+            except KeyError:
+                continue
 
         fn._partial_call_args.update(self._partial_call_args)
         fn._partial_call_args.update(pruned_call_args)
@@ -339,20 +367,25 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         return fn
 
     def __str__(self):
-        if IS_PY3: return self.__unicode__()
-        else: return unicode(self).encode(DEFAULT_ENCODING)
+        if IS_PY3:
+            return self.__unicode__()
+        else:
+            return unicode(self).encode(DEFAULT_ENCODING)
 
     def __repr__(self):
         return str(self)
 
     def __unicode__(self):
         baked_args = " ".join(self._partial_baked_args)
-        if baked_args: baked_args = " " + baked_args
+        if baked_args:
+            baked_args = " " + baked_args
         return self._path + baked_args
 
     def __eq__(self, other):
-        try: return str(self) == str(other)
-        except Exception: return False
+        try:
+            return str(self) == str(other)
+        except Exception:
+            return False
     __hash__ = None  # Avoid DeprecationWarning in Python < 3
 
 
@@ -371,7 +404,8 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         cmd = []
 
         # aggregate any with contexts
-        for prepend in self._prepend_stack: cmd.extend(prepend)
+        for prepend in self._prepend_stack:
+            cmd.extend(prepend)
 
         cmd.append(self._path)
 
@@ -402,7 +436,8 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
                     input_stream = first_arg.process.stdout
                 else:
                     input_data = first_arg.stdout()
-            else: args.insert(0, first_arg)
+            else:
+                args.insert(0, first_arg)
 
         processed_args = self._compile_args(args, kwargs)
 
@@ -430,18 +465,23 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         stdout = pipe
         out = call_args["out"]
         if out:
-            if hasattr(out, "write"): stdout = out
-            else: stdout = open(str(out), "w")
+            if hasattr(out, "write"):
+                stdout = out
+            else:
+                stdout = open(str(out), "w")
 
         # stderr redirection
         stderr = pipe
         err = call_args["err"]
 
         if err:
-            if hasattr(err, "write"): stderr = err
-            else: stderr = open(str(err), "w")
+            if hasattr(err, "write"):
+                stderr = err
+            else:
+                stderr = open(str(err), "w")
 
-        if call_args["err_to_out"]: stderr = subp.STDOUT
+        if call_args["err_to_out"]:
+            stderr = subp.STDOUT
 
         # leave shell=False
         process = subp.Popen(cmd, shell=False, env=call_args["env"],
