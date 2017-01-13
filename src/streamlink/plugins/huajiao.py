@@ -30,10 +30,10 @@ _feed_json_schema = validate.Schema(
             validate.all(
                 validate.get('feed'),
                 validate.transform(json.loads)
-                )
             )
         )
     )
+)
 class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):

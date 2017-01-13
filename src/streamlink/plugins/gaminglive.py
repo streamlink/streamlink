@@ -72,7 +72,7 @@ class GamingLive(Plugin):
             "pageUrl": self.url,
             "swfVfy": SWF_URL,
             "live": live
-            })
+        })
 
     def _get_live_streams(self, name):
         res = http.get(API_URL.format("channels", name))

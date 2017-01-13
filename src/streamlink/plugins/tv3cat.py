@@ -11,10 +11,10 @@ _url_re = re.compile(r"http://(?:www.)?ccma.cat/tv3/directe/(.+?)/")
 _media_schema = validate.Schema({
     "geo": validate.text,
     "url": validate.url(scheme=validate.any("http"))
-    })
+})
 _channel_schema = validate.Schema({
     "media": validate.any([_media_schema], _media_schema)
-    })
+})
 
 
 class TV3Cat(Plugin):

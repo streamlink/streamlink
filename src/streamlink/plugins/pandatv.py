@@ -30,12 +30,12 @@ _room_schema = validate.Schema(
                             "HD": validate.text,
                             "OD": validate.text,
                             "SD": validate.text
-                            }
                         }
-                    )
-                }
-            )
-        },
+                    }
+                )
+            }
+        )
+    },
     validate.get("data"))
 
 

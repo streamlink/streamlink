@@ -25,8 +25,8 @@ class DingitTV(Plugin):
             validate.optional("stream"): validate.text,
             validate.optional("akaurl"): validate.text,
             validate.optional("pereakaurl"): validate.text,
-            }]
-        },
+        }]
+    },
         validate.get("data"),
         validate.length(1),
         validate.get(0)
