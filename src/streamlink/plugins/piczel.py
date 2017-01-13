@@ -11,15 +11,15 @@ RTMP_URL = "rtmp://piczel.tv:1935/live/{0}"
 _url_re = re.compile(r"https://piczel.tv/watch/(\w+)")
 
 _streams_schema = validate.Schema(
-       {
-               "type": validate.text,
-               "data": [
-                       {
-                               "id": int,
-                               "live": bool,
-                              "slug": validate.text
-                       }
-               ]
+    {
+        "type": validate.text,
+        "data": [
+            {
+                "id": int,
+                "live": bool,
+                "slug": validate.text
+                }
+            ]
        }
 )
 
@@ -58,9 +58,9 @@ class Piczel(Plugin):
                                raise
 
                        streams["rtmp"] = RTMPStream(self.session, {
-                               "rtmp": RTMP_URL.format(stream["id"]),
-                               "pageUrl": self.url,
-                               "live": True
+                           "rtmp": RTMP_URL.format(stream["id"]),
+                           "pageUrl": self.url,
+                           "live": True
                        })
 
                        return streams
