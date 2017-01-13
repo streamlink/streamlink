@@ -80,7 +80,7 @@ def parse_media_json(json_object):
         file_format = match.group('format')
 
         if recording['mime_type'] == 'vnd.voc/mp4-web' or\
-            recording['display_mime_type'] == 'video/webm':
+                recording['display_mime_type'] == 'video/webm':
             continue
         elif recording['mime_type'] == 'vnd.voc/h264-hd':
             name = "1080p"
