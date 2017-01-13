@@ -1538,8 +1538,8 @@ class AMF3Value(DynamicType):
         elif isinstance(val, (AMF3Array, list)):
             chunks.append(U8(AMF3_TYPE_ARRAY))
             chunks.append(AMF3ArrayPacker.pack(val, str_cache=str_cache,
-                                              object_cache=object_cache,
-                                              traits_cache=traits_cache))
+                                               object_cache=object_cache,
+                                               traits_cache=traits_cache))
 
         elif isinstance(val, string_types):
             chunks.append(U8(AMF3_TYPE_STRING))

@@ -445,7 +445,7 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
 
         # leave shell=False
         process = subp.Popen(cmd, shell=False, env=call_args["env"],
-            cwd=call_args["cwd"],
-            stdin=input_stream, stdout=stdout, stderr=stderr)
+                             cwd=call_args["cwd"],
+                             stdin=input_stream, stdout=stdout, stderr=stderr)
 
         return RunningCommand(command_ran, process, call_args, input_data)
