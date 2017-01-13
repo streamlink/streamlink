@@ -34,7 +34,7 @@ class AdultSwim(Plugin):
             validate.xml_findall(".//files/file"),
             [validate.xml_element,
                 validate.transform(lambda v: {"bitrate": v.attrib.get("bitrate"), "url": v.text})
-            ]
+             ]
         )
     )
 
