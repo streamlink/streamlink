@@ -91,7 +91,7 @@ _stream_schema = validate.Schema(
             }],
         )
     },
-    {
+        {
         "name": validate.text,
         "varnishUrl": validate.text
     })

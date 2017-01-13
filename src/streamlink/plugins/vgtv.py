@@ -12,7 +12,7 @@ from streamlink.stream import HDSStream, HLSStream, HTTPStream
 STREAM_TYPES = {
     "hds": {
         "parser": HDSStream.parse_manifest,
-#         "params": { "pvswf": SWF_URL },
+        #         "params": { "pvswf": SWF_URL },
         "file": "manifest.f4m"
     },
     "hls": {
