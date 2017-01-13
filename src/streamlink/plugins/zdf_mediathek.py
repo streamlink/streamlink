@@ -105,7 +105,6 @@ class zdf_mediathek(Plugin):
 
         return qualities
 
-
     def _get_streams(self):
         match = _url_re.match(self.url)
         title = self.url.rsplit('/', 1)[-1]

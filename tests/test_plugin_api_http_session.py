@@ -23,7 +23,6 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
                               timeout=3, stream=True)
             next(res.iter_content(8192))
 
-
         self.assertRaises(PluginError, stream_data)
 
     def test_json_encoding(self):

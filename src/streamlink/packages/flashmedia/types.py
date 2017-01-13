@@ -216,7 +216,6 @@ class HighLowCombo(PrimitiveType):
         return (ret,)
 
 
-
 class FixedPoint(PrimitiveType):
     def __init__(self, format, bits):
         self.divider = float(1 << bits)
@@ -1114,7 +1113,6 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
                 for member in traits.__members__:
                     size += AMF3String.size(member, cache=str_cache)
 
-
             for member in traits.__members__:
                 value = getattr(val, member)
                 size += AMF3Value.size(value, str_cache=str_cache,
@@ -1176,14 +1174,12 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
                 for member in traits.__members__:
                     chunks.append(AMF3String(member, cache=str_cache))
 
-
             for member in traits.__members__:
                 value = getattr(val, member)
                 value = AMF3Value.pack(value, str_cache=str_cache,
                                        object_cache=object_cache,
                                        traits_cache=traits_cache)
                 chunks.append(value)
-
 
             if traits.__dynamic__:
                 if isinstance(val, AMF3Object):

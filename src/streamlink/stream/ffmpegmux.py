@@ -92,7 +92,6 @@ class FFMPEGMuxer(object):
         else:
             self.errorlog = devnull()
 
-
     def open(self):
         for t in self.pipe_threads:
             t.daemon = True

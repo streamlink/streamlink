@@ -21,7 +21,6 @@
 #===============================================================================
 
 
-
 import subprocess as subp
 import sys
 import traceback
@@ -96,8 +95,6 @@ def get_rc_exc(rc):
     exc = type(name, (ErrorReturnCode,), {})
     rc_exc_cache[rc] = exc
     return exc
-
-
 
 
 def which(program):
@@ -241,8 +238,6 @@ class RunningCommand(object):
         return len(str(self))
 
 
-
-
 class Command(object):
     _prepend_stack = []
 
@@ -284,7 +279,6 @@ class Command(object):
             return getattr("bake")
         return getattr("bake")(name)
 
-
     @staticmethod
     def _extract_call_args(kwargs):
         kwargs = kwargs.copy()
@@ -295,7 +289,6 @@ class Command(object):
                 call_args[parg] = kwargs[key]
                 del kwargs[key]
         return call_args, kwargs
-
 
     def _format_arg(self, arg):
         if IS_PY3:
@@ -349,7 +342,6 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
 
         return processed_args
 
-
     def bake(self, *args, **kwargs):
         fn = Command(self._path)
         fn._partial = True
@@ -392,13 +384,11 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
             return False
     __hash__ = None  # Avoid DeprecationWarning in Python < 3
 
-
     def __enter__(self):
         Command._prepend_stack.append([self._path])
 
     def __exit__(self, typ, value, traceback):
         Command._prepend_stack.pop()
-
 
     def __call__(self, *args, **kwargs):
 
@@ -413,10 +403,8 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
 
         cmd.append(self._path)
 
-
         call_args, kwargs = self._extract_call_args(kwargs)
         call_args.update(self._partial_call_args)
-
 
         # here we normalize the ok_code to be something we can do
         # "if return_code in call_args["ok_code"]" on
@@ -452,13 +440,11 @@ If you're using glob.glob(), please use pbs.glob() instead." % self.path, stackl
         cmd.extend(final_args)
         command_ran = " ".join(cmd)
 
-
         # with contexts shouldn't run at all yet, they prepend
         # to every command in the context
         if call_args["with"]:
             Command._prepend_stack.append(cmd)
             return RunningCommand(command_ran, None, call_args)
-
 
         # stdin from string
         input = call_args["in"]

@@ -697,10 +697,7 @@ class BoxPayloadVisualSample(BoxContainer):
         for i in range(4):
             U8.read(io)
 
-
         return cls(version, flags)
-
-
 
 
 class BoxPayloadMDAT(RawPayload):

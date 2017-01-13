@@ -61,5 +61,4 @@ class TF1(Plugin):
                 yield s
 
 
-
 __plugin__ = TF1

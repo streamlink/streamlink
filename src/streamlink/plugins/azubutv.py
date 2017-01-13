@@ -76,7 +76,6 @@ class AzubuTV(Plugin):
         stream_url = t["sources"][0]["src"]
         return stream_url, is_live
 
-
     def _get_streams(self):
         hls_url, is_live = self._get_stream_url(self)
 

@@ -53,7 +53,6 @@ try:
     }
     githubAPI("PATCH", data["id"], json=payload)
 
-
     print("Github release {0} has been successfully updated".format(getenv("TRAVIS_TAG")))
     exit(0)
 

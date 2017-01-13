@@ -20,6 +20,5 @@ class TestPluginStream(unittest.TestCase):
         self.assertEqual(fd.read(), b"3" * 512)
 
 
-
 if __name__ == "__main__":
     unittest.main()

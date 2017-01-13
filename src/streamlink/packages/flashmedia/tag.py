@@ -658,7 +658,6 @@ class AVCVideoData(TagData):
         return offset
 
 
-
 class ScriptData(TagData):
     def __init__(self, name=None, value=None):
         self.name = name
@@ -705,7 +704,6 @@ TagDataTypes = {
     TAG_TYPE_VIDEO: VideoData,
     TAG_TYPE_SCRIPT: ScriptData
 }
-
 
 
 __all__ = ["Header", "Tag", "FrameData", "AudioData", "AACAudioData",

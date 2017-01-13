@@ -68,7 +68,6 @@ class TestUtil(unittest.TestCase):
         self.assertRaises(IOError,
                           parse_xml, u"1" * 1000, exception=IOError)
 
-
     def test_parse_xml_validate(self):
         expected = ET.Element("test", {"foo": "bar"})
         actual = parse_xml(u"""<test foo="bar"/>""",
