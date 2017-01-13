@@ -80,8 +80,8 @@ class Dplay (Plugin):
         try:
             if stream['format'] == 'hds':
                 streams = parser(self.session, stream['url'],
-                                 params = {'hdcore': '3.8.0'},
-                                 pvswf = SWF_URL.format(self.domain))
+                                 params={'hdcore': '3.8.0'},
+                                 pvswf=SWF_URL.format(self.domain))
             else:
                 streams = parser(self.session, stream['url'])
             return streams.items()
