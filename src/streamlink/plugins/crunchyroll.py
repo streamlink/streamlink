@@ -97,6 +97,7 @@ _session_schema = validate.Schema(
 
 class CrunchyrollAPIError(Exception):
     """Exception thrown by the Crunchyroll API when an error occurs"""
+
     def __init__(self, msg, code):
         Exception.__init__(self, msg)
         self.msg = msg

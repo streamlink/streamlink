@@ -15,6 +15,7 @@ class BigoStream(Stream):
     The stream is started by sending the uid and sid as little-endian unsigned longs
     after connecting to the server. The video stream is FLV.
     """
+
     def __init__(self, session, sid, uid, ip, port):
         super(BigoStream, self).__init__(session)
         try:

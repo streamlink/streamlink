@@ -34,7 +34,7 @@ class AdultSwim(Plugin):
             validate.xml_findall(".//files/file"),
             [validate.xml_element,
                 validate.transform(lambda v: {"bitrate": v.attrib.get("bitrate"), "url": v.text})
-             ]
+            ]
         )
     )
 
@@ -63,22 +63,22 @@ class AdultSwim(Plugin):
 
     def _get_live_stream(self, stream_data, stream_name):
             # parse the stream info as json
-        stream_info = parse_json(stream_data.group(1), schema=self.live_schema)
-        # get the stream ID
-        stream_id = stream_info[u"streams"][stream_name][u"stream"]
+            stream_info = parse_json(stream_data.group(1), schema=self.live_schema)
+            # get the stream ID
+            stream_id = stream_info[u"streams"][stream_name][u"stream"]
 
-        if stream_id:
-            api_url = self.API_URL.format(id=stream_id)
+            if stream_id:
+                api_url = self.API_URL.format(id=stream_id)
 
-            res = http.get(api_url, headers={"User-Agent": self._user_agent})
-            stream_data = http.json(res, schema=self._api_schema)
+                res = http.get(api_url, headers={"User-Agent": self._user_agent})
+                stream_data = http.json(res, schema=self._api_schema)
 
-            for asset in stream_data[u'data'][u'stream'][u'assets']:
-                for n, s in HLSStream.parse_variant_playlist(self.session, asset[u"url"]).items():
-                    yield n, s
+                for asset in stream_data[u'data'][u'stream'][u'assets']:
+                    for n, s in HLSStream.parse_variant_playlist(self.session, asset[u"url"]).items():
+                        yield n, s
 
-        else:
-            self.logger.error("Couldn't find the stream ID for this stream: {}".format(stream_name))
+            else:
+                self.logger.error("Couldn't find the stream ID for this stream: {}".format(stream_name))
 
     def _get_streams(self):
         # get the page
