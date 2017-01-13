@@ -15,28 +15,28 @@ OD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv"
 _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 
 _room_schema = validate.Schema(
-        {
-            "data": validate.any(
-                validate.text,
-                dict,
-                {
-                    "videoinfo": validate.any(
-                        validate.text,
-                        {
-                            "room_key": validate.text,
-                            "plflag": validate.text,
-                            "status": validate.text,
-                            "stream_addr": {
-                                "HD": validate.text,
-                                "OD": validate.text,
-                                "SD": validate.text
+    {
+        "data": validate.any(
+            validate.text,
+            dict,
+            {
+                "videoinfo": validate.any(
+                    validate.text,
+                    {
+                        "room_key": validate.text,
+                        "plflag": validate.text,
+                        "status": validate.text,
+                        "stream_addr": {
+                            "HD": validate.text,
+                            "OD": validate.text,
+                            "SD": validate.text
                             }
                         }
                     )
                 }
             )
         },
-        validate.get("data"))
+    validate.get("data"))
 
 
 class pandatv(Plugin):

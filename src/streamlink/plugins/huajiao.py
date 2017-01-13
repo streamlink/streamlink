@@ -23,17 +23,17 @@ _url_re = re.compile("""
 _feed_json_re = re.compile(r'^\s*var\s*feed\s*=\s*(?P<feed>{.*})\s*;', re.MULTILINE)
 
 _feed_json_schema = validate.Schema(
-        validate.all(
-            validate.transform(_feed_json_re.search),
-            validate.any(
-                None,
-                validate.all(
-                    validate.get('feed'),
-                    validate.transform(json.loads)
-                    )
+    validate.all(
+        validate.transform(_feed_json_re.search),
+        validate.any(
+            None,
+            validate.all(
+                validate.get('feed'),
+                validate.transform(json.loads)
                 )
             )
         )
+    )
 class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):
