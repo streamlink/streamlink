@@ -445,7 +445,8 @@ def format_valid_streams(plugin, streams):
         if name in STREAM_SYNONYMS:
             continue
 
-        synonymfilter = lambda n: stream is streams[n] and n is not name
+        def synonymfilter(n):
+            return stream is streams[n] and n is not name
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:

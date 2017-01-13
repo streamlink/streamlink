@@ -286,8 +286,9 @@ class Plugin(object):
             streams[name.lower()] = stream
 
         # Create the best/worst synonmys
-        stream_weight_only = lambda s: (self.stream_weight(s)[0] or
-                                        (len(streams) == 1 and 1))
+        def stream_weight_only(s):
+            return (self.stream_weight(s)[0] or
+                    (len(streams) == 1 and 1))
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
 

@@ -11,9 +11,12 @@ from streamlink.stream import Stream
 from streamlink_cli.utils import NamedPipe
 try:
     from subprocess import DEVNULL
-    devnull = lambda: DEVNULL
+
+    def devnull():
+        return DEVNULL
 except ImportError:
-    devnull = lambda: open(os.path.devnull, 'w')
+    def devnull():
+        return open(os.path.devnull, 'w')
 
 
 class MuxedStream(Stream):
