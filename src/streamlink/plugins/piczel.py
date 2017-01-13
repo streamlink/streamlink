@@ -18,9 +18,9 @@ _streams_schema = validate.Schema(
                 "id": int,
                 "live": bool,
                 "slug": validate.text
-                }
-            ]
-       }
+            }
+        ]
+        }
 )
 
 class Piczel(Plugin):
