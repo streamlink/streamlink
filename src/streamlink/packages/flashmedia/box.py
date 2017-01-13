@@ -720,10 +720,10 @@ class BoxPayloadABST(BoxPayload):
         _fields_ = [("bit", Bits), ("byte", c_uint8)]
 
     def __init__(self, version, bootstrap_info_version, profile, live, update,
-                       time_scale, current_media_time, smpte_time_code_offset,
-                       movie_identifier, server_entry_table, quality_entry_table,
-                       drm_data, metadata, segment_run_table_entries,
-                       fragment_run_table_entries):
+                 time_scale, current_media_time, smpte_time_code_offset,
+                 movie_identifier, server_entry_table, quality_entry_table,
+                 drm_data, metadata, segment_run_table_entries,
+                 fragment_run_table_entries):
         self.version = version
         self.bootstrap_info_version = bootstrap_info_version
         self.flags = self.Flags()

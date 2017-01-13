@@ -2,7 +2,7 @@ from streamlink.compat import urlparse
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.stream import (AkamaiHDStream, HDSStream, HLSStream,
-                                 HTTPStream, RTMPStream)
+                               HTTPStream, RTMPStream)
 
 import ast
 import re

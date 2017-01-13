@@ -1587,8 +1587,8 @@ class AMF3Value(DynamicType):
 
         elif type_ == AMF3_TYPE_ARRAY:
             return AMF3ArrayPacker.read(fd, str_cache=str_cache,
-                                         object_cache=object_cache,
-                                         traits_cache=traits_cache)
+                                        object_cache=object_cache,
+                                        traits_cache=traits_cache)
 
         elif type_ == AMF3_TYPE_OBJECT:
             return AMF3ObjectPacker.read(fd, str_cache=str_cache, object_cache=object_cache,

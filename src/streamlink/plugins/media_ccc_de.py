@@ -175,10 +175,10 @@ class media_ccc_de(Plugin):
             for stream_name, stream_url in live_streams.items():
                 if re.search(r"m3u8", live_streams[stream_name]):
                     streams[stream_name] = HLSStream(self.session,\
-                                                        stream_url)
+                                                     stream_url)
                 else:
                     streams[stream_name] = HTTPStream(self.session,\
-                                                        stream_url)
+                                                      stream_url)
 
         # media.ccc.de
         elif _url_media_re.search(self.url):

@@ -80,14 +80,14 @@ class Dplay (Plugin):
         try:
             if stream['format'] == 'hds':
                 streams = parser(self.session, stream['url'],
-                                  params = {'hdcore': '3.8.0'},
-                                  pvswf = SWF_URL.format(self.domain))
+                                 params = {'hdcore': '3.8.0'},
+                                 pvswf = SWF_URL.format(self.domain))
             else:
                 streams = parser(self.session, stream['url'])
             return streams.items()
         except IOError as err:
             self.logger.error('Failed to extract {0} streams: {1}',
-                               stream['format'].upper(), err)
+                              stream['format'].upper(), err)
 
     # Assembles available streams
     def _get_streams(self):
@@ -128,18 +128,18 @@ class Dplay (Plugin):
         # Get available streams using stream API
         try:
             res = http.get(STREAM_API_URL.format(self.domain, videoId, 'hls'),
-                            headers=hdr, verify=False)
+                           headers=hdr, verify=False)
             data = http.json(res, schema=_media_schema)
             media = data.copy()
             res = http.get(STREAM_API_URL.format(self.domain, videoId, 'hds'),
-                            headers=hdr, verify=False)
+                           headers=hdr, verify=False)
             data = http.json(res, schema=_media_schema)
             media.update(data)
         except PluginError as err:      # Likely geo-restricted
             if any(e in str(err) for e in ('401 Client Error',
-                                             '403 Client Error')):
+                                           '403 Client Error')):
                 self.logger.error('Failed to access stream API, '
-                                   'may be due to geo-restriction')
+                                  'may be due to geo-restriction')
                 raise NoStreamsError(self.url)
             else:
                 raise

@@ -57,7 +57,7 @@ class TestPluginStream(unittest.TestCase):
 
     def test_plugin(self):
         self._test_rtmp("rtmp://hostname.se/stream",
-                         "rtmp://hostname.se/stream", dict())
+                        "rtmp://hostname.se/stream", dict())
 
         self._test_rtmp("rtmp://hostname.se/stream live=1 num=47",
                         "rtmp://hostname.se/stream", dict(live=True, num=47))
