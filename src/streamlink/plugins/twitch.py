@@ -530,7 +530,7 @@ class Twitch(Plugin):
             else:
                 return self._get_video_streams()
         elif self.clip_name:
-                return self._get_clips()
+            return self._get_clips()
         else:
             return self._get_hls_streams("live")
 
