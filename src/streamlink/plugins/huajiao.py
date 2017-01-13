@@ -44,7 +44,7 @@ class Huajiao(Plugin):
         channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
-        http.verify=False
+        http.verify = False
 
         feed_json = http.get(HUAJIAO_URL.format(channel), schema=_feed_json_schema)
         if feed_json['feed']['m3u8']:
