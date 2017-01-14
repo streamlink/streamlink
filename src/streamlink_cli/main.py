@@ -259,9 +259,11 @@ def output_stream(stream):
         output.open()
     except (IOError, OSError) as err:
         if isinstance(output, PlayerOutput):
+            stream_fd.close()
             console.exit("Failed to start player: {0} ({1})",
                          args.player, err)
         else:
+            stream_fd.close()
             console.exit("Failed to open output: {0} ({1})",
                          args.output, err)
 
