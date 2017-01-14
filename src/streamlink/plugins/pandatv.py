@@ -52,14 +52,21 @@ class Pandatv(Plugin):
 
         res = http.get(self.url)
 
-        status = _status_re.search(res.text).group(1)
+        try:
+            status = _status_re.search(res.text).group(1)
+            room_key = _room_key_re.search(res.text).group(1)
+            sd = _sd_re.search(res.text).group(1)
+            hd = _hd_re.search(res.text).group(1)
+            od = _od_re.search(res.text).group(1)
+        except AttributeError:
+            self.logger.info("Please enter the correct room number!")
+            return
+
         if status != '2':
             self.logger.info("Channel offline now!")
             return
 
         ts = int(time.time())
-        room_key = _room_key_re.search(res.text).group(1)
-
         url = ROOM_API.format(channel, room_key, ts)
         room = http.get(url)
         data = http.json(room, schema=_room_schema)
@@ -90,15 +97,12 @@ class Pandatv(Plugin):
         sign = plflag_list["auth"]["sign"]
         ts = plflag_list["auth"]["time"]
 
-        sd = _sd_re.search(res.text).group(1)
         if sd == '1':
             streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
 
-        hd = _hd_re.search(res.text).group(1)
         if hd == '1':
             streams['hq'] = HTTPStream(self.session, HD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
 
-        od = _od_re.search(res.text).group(1)
         if od == '1':
             streams['sq'] = HTTPStream(self.session, OD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
 
