@@ -40,71 +40,6 @@ _room_schema = validate.Schema(
     validate.get("data")
 )
 
-_sd_schema = validate.Schema(
-    validate.all(
-        validate.transform(_sd_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(int)
-            )
-        )
-    )
-)
-
-_hd_schema = validate.Schema(
-    validate.all(
-        validate.transform(_hd_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(int)
-            )
-        )
-    )
-)
-
-_od_schema = validate.Schema(
-    validate.all(
-        validate.transform(_od_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(int)
-            )
-        )
-    )
-)
-
-_status_schema = validate.Schema(
-    validate.all(
-        validate.transform(_status_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(int)
-            )
-        )
-    )
-)
-
-_room_key_schema = validate.Schema(
-    validate.all(
-        validate.transform(_room_key_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.text
-            )
-        )
-    )
-)
-
 
 class Pandatv(Plugin):
     @classmethod
@@ -115,17 +50,19 @@ class Pandatv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        status = http.get(self.url, schema=_status_schema)
-        if status != 2:
+        res = http.get(self.url)
+
+        status = _status_re.search(res.text).group(1)
+        if status != '2':
             self.logger.info("Channel offline now!")
             return
 
         ts = int(time.time())
-        room_key = http.get(self.url, schema=_room_key_schema)
+        room_key = _room_key_re.search(res.text).group(1)
 
         url = ROOM_API.format(channel, room_key, ts)
-        res = http.get(url)
-        data = http.json(res, schema=_room_schema)
+        room = http.get(url)
+        data = http.json(room, schema=_room_schema)
         if not isinstance(data, dict):
             self.logger.info("Please Check PandaTV Room API")
             return
@@ -142,24 +79,28 @@ class Pandatv(Plugin):
             self.logger.info("Please Check PandaTV Room API")
             return
 
-        plflag = plflag.split('_')[1]
+        plflag0 = plflag.split('_')[1]
+        if plflag0 != '3':
+            plflag1 = '4'
+        else:
+            plflag1 = '3'
 
         plflag_list = json.loads(plflag_list)
         rid = plflag_list["auth"]["rid"]
         sign = plflag_list["auth"]["sign"]
         ts = plflag_list["auth"]["time"]
 
-        sd = http.get(self.url, schema=_sd_schema)
-        if sd == 1:
-            streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag, room_key, sign, ts, rid))
+        sd = _sd_re.search(res.text).group(1)
+        if sd == '1':
+            streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
 
-        hd = http.get(self.url, schema=_hd_schema)
-        if hd == 1:
-            streams['hq'] = HTTPStream(self.session, HD_URL_PATTERN.format(plflag, room_key, sign, ts, rid))
+        hd = _hd_re.search(res.text).group(1)
+        if hd == '1':
+            streams['hq'] = HTTPStream(self.session, HD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
 
-        od = http.get(self.url, schema=_od_schema)
-        if od == 1:
-            streams['sq'] = HTTPStream(self.session, OD_URL_PATTERN.format(plflag, room_key, sign, ts, rid))
+        od = _od_re.search(res.text).group(1)
+        if od == '1':
+            streams['sq'] = HTTPStream(self.session, OD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
 
         return streams
 
