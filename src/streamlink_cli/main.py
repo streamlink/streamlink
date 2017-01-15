@@ -935,7 +935,7 @@ def main():
         finally:
             if stream_fd:
                 try:
-                    console.msg("Closing currently open stream...")
+                    console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
                     sys.exit()
