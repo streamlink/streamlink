@@ -27,32 +27,24 @@ url_re = re.compile("(http(s)?://)?(\w{2}.)?(bongacams.com)/([\w\d_-]+)")
 swf_re = re.compile("/swf/\w+/\w+.swf\?cache=\d+")
 
 amf_msg_schema = validate.Schema({
-    "status" : "success",
-    "userData" : {
+    "status": "success",
+    "userData": {
         "username": validate.text
     },
-    "localData" : {
-        "NC_ConnUrl" : validate.url(scheme="rtmp"),
+    "localData": {
+        "NC_ConnUrl": validate.url(scheme="rtmp"),
         "NC_AccessKey" : validate.length(32),
-        "dataKey" : validate.length(32),
+        "dataKey": validate.length(32),
     },
-    "performerData" : {
-        "username" : validate.text,
+    "performerData": {
+        "username": validate.text,
     }
 })
 
 
-class AMFMessage2(AMFMessage):
-    def _serialize(self, packet):
-        packet += AMF0String(self.target_uri)
-        packet += AMF0String(self.response_uri)
-        packet += U32BE(AMF0Value.size(self.value))
-        packet += AMF0Value.pack(self.value)
-
-
 class bongacams(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return url_re.match(url)
 
     def _get_stream_uid(self, username):
@@ -75,7 +67,7 @@ class bongacams(Plugin):
         # get swf url and cookies
         r = http_session.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
 
-        # redirect to profile page means stream is offlie
+        # redirect to profile page means stream is offline
         if '/profile/' in r.url:
             raise NoStreamsError(self.url)
         if not r.ok:
@@ -104,7 +96,7 @@ class bongacams(Plugin):
             self.logger.debug("swf url not found. Will try {}", swf_url)
 
         # create amf query
-        amf_message = AMFMessage2("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
+        amf_message = AMFMessage("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
         amf_packet = AMFPacket(version=0)
         amf_packet.messages.append(amf_message)
 
@@ -128,7 +120,6 @@ class bongacams(Plugin):
         stream_params = {
             "live": True,
             "realtime": True,
-            "verbose": True,
             "flashVer": CONST_FLASH_VER,
             "swfUrl": swf_url,
             "tcUrl": stream_source_info['localData']['NC_ConnUrl'],
@@ -138,12 +129,17 @@ class bongacams(Plugin):
                                        self._get_stream_uid(stream_source_info['userData']['username'])),
             # Multiple args with same name not supported.
             # Details: https://github.com/streamlink/streamlink/issues/321
-            "conn" : "S:{username} --conn=S:{access_key} --conn=B:0 --conn=S:{data_key}".format(
+            "conn": "S:{username} --conn=S:{access_key} --conn=B:0 --conn=S:{data_key}".format(
                 username=stream_source_info['userData']['username'],
                 access_key=stream_source_info['localData']['NC_AccessKey'],
                 data_key=stream_source_info['localData']['dataKey']
             )
         }
+
+        subprocess_errorlog_path = self.session.options.options.get('subprocess-errorlog-path')
+        subprocess_errorlog = self.session.options.options.get('subprocess-errorlog')
+        if subprocess_errorlog or subprocess_errorlog_path:
+            stream_params["debug"] = True
 
         self.logger.debug("Stream params:\n{}", stream_params)
         stream = RTMPStream(self.session, stream_params)
