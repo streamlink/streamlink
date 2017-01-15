@@ -5,49 +5,84 @@ from streamlink.plugins.bongacams import bongacams
 
 class TestPluginBongacams(unittest.TestCase):
     def test_can_handle_url(self):
-        valid_sep = '://'
-        valid_domains = ['bongacams.com', 'xx.bongacams.com']
-        valid_schemes = ['http', 'https', '']
-        valid_stream_paths = ['1', '0000000000test', '_-_test_-', 'TEst']
-
-        non_valid_seps = [' ', '//', ':///', 'test']
-        non_valid_domains = [' ', 'xxx.bongacams.com', 'x.bongacams.com', 'x.bongacams',
-                             'bongacams.jp', 'test.domain', 'bongacams.co.uk']
-        non_valid_stream_paths = [' ', '', '\\', '\\test', '|test']
-
-        # {schema}{sep}{domain}/{stream_path}
-        url = "{0}{1}{2}/{3}"
-
-        """ Positive cases """
-        for schema in valid_schemes:
-            for domain in valid_domains:
-                for stream_path in valid_stream_paths:
-                    sep = valid_sep if schema else ''
-                    _url = url.format(schema, sep, domain, stream_path)
-                    self.assertTrue(bongacams.can_handle_url(_url), msg=_url)
+        """ positive cases """
+        self.assertTrue(bongacams.can_handle_url('http://bongacams.com/1'))
+        self.assertTrue(bongacams.can_handle_url('http://bongacams.com/0000000000test'))
+        self.assertTrue(bongacams.can_handle_url('http://bongacams.com/_-_test_-'))
+        self.assertTrue(bongacams.can_handle_url('http://bongacams.com/TEst'))
+        self.assertTrue(bongacams.can_handle_url('http://xx.bongacams.com/1'))
+        self.assertTrue(bongacams.can_handle_url('http://xx.bongacams.com/0000000000test'))
+        self.assertTrue(bongacams.can_handle_url('http://xx.bongacams.com/_-_test_-'))
+        self.assertTrue(bongacams.can_handle_url('http://xx.bongacams.com/TEst'))
+        self.assertTrue(bongacams.can_handle_url('https://bongacams.com/1'))
+        self.assertTrue(bongacams.can_handle_url('https://bongacams.com/0000000000test'))
+        self.assertTrue(bongacams.can_handle_url('https://bongacams.com/_-_test_-'))
+        self.assertTrue(bongacams.can_handle_url('https://bongacams.com/TEst'))
+        self.assertTrue(bongacams.can_handle_url('https://xx.bongacams.com/1'))
+        self.assertTrue(bongacams.can_handle_url('https://xx.bongacams.com/0000000000test'))
+        self.assertTrue(bongacams.can_handle_url('https://xx.bongacams.com/_-_test_-'))
+        self.assertTrue(bongacams.can_handle_url('https://xx.bongacams.com/TEst'))
+        self.assertTrue(bongacams.can_handle_url('bongacams.com/1'))
+        self.assertTrue(bongacams.can_handle_url('bongacams.com/0000000000test'))
+        self.assertTrue(bongacams.can_handle_url('bongacams.com/_-_test_-'))
+        self.assertTrue(bongacams.can_handle_url('bongacams.com/TEst'))
+        self.assertTrue(bongacams.can_handle_url('xx.bongacams.com/1'))
+        self.assertTrue(bongacams.can_handle_url('xx.bongacams.com/0000000000test'))
+        self.assertTrue(bongacams.can_handle_url('xx.bongacams.com/_-_test_-'))
+        self.assertTrue(bongacams.can_handle_url('xx.bongacams.com/TEst'))
 
         """ Negative cases """
         # invalid schema
         self.assertFalse(bongacams.can_handle_url("test://bongacams.com/test"))
 
         # invalid stream path
-        for schema in valid_schemes:
-            for domain in valid_domains:
-                for stream_path in non_valid_stream_paths:
-                    sep = valid_sep if schema else ''
-                    _url = url.format(schema, sep, domain, stream_path)
-                    self.assertFalse(bongacams.can_handle_url(_url), msg=_url)
+        self.assertFalse(bongacams.can_handle_url('http://bongacams.com/ '))
+        self.assertFalse(bongacams.can_handle_url('http://bongacams.com/'))
+        self.assertFalse(bongacams.can_handle_url('http://bongacams.com/\\'))
+        self.assertFalse(bongacams.can_handle_url('http://bongacams.com/\test'))
+        self.assertFalse(bongacams.can_handle_url('http://xx.bongacams.com/ '))
+        self.assertFalse(bongacams.can_handle_url('http://xx.bongacams.com/'))
+        self.assertFalse(bongacams.can_handle_url('http://xx.bongacams.com/\\'))
+        self.assertFalse(bongacams.can_handle_url('http://xx.bongacams.com/\\test'))
+        self.assertFalse(bongacams.can_handle_url('https://bongacams.com/ '))
+        self.assertFalse(bongacams.can_handle_url('https://bongacams.com/'))
+        self.assertFalse(bongacams.can_handle_url('https://bongacams.com/\\'))
+        self.assertFalse(bongacams.can_handle_url('https://bongacams.com/\test'))
+        self.assertFalse(bongacams.can_handle_url('https://xx.bongacams.com/ '))
+        self.assertFalse(bongacams.can_handle_url('https://xx.bongacams.com/'))
+        self.assertFalse(bongacams.can_handle_url('https://xx.bongacams.com/\\'))
+        self.assertFalse(bongacams.can_handle_url('https://xx.bongacams.com/\test'))
+        self.assertFalse(bongacams.can_handle_url('bongacams.com/ '))
+        self.assertFalse(bongacams.can_handle_url('bongacams.com/'))
+        self.assertFalse(bongacams.can_handle_url('bongacams.com/\\'))
+        self.assertFalse(bongacams.can_handle_url('bongacams.com/\test'))
+        self.assertFalse(bongacams.can_handle_url('xx.bongacams.com/ '))
+        self.assertFalse(bongacams.can_handle_url('xx.bongacams.com/'))
+        self.assertFalse(bongacams.can_handle_url('xx.bongacams.com/\\'))
+        self.assertFalse(bongacams.can_handle_url('xx.bongacams.com/\test'))
 
         # invalid domain
-        for domain in non_valid_domains:
-            _url = url.format('https', valid_sep, domain, 'test')
-            self.assertFalse(bongacams.can_handle_url(_url), msg=_url)
+        self.assertFalse(bongacams.can_handle_url('https:// /test'))
+        self.assertFalse(bongacams.can_handle_url('https://xxx.bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('https://x.bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('https://x.bongacams/test'))
+        self.assertFalse(bongacams.can_handle_url('https://bongacams.jp/test'))
+        self.assertFalse(bongacams.can_handle_url('https://test.domain/test'))
+        self.assertFalse(bongacams.can_handle_url('https://bongacams.co.uk/test'))
 
         # invalid separator
-        for sep in non_valid_seps:
-            for schema in valid_schemes:
-                _url = url.format(schema, sep, 'bongacams.com', 'test')
-                self.assertFalse(bongacams.can_handle_url(_url), msg=_url)
+        self.assertFalse(bongacams.can_handle_url('http bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('https bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url(' bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('http//bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('https//bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('//bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('http:///bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('https:///bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url(':///bongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('httptestbongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('httpstestbongacams.com/test'))
+        self.assertFalse(bongacams.can_handle_url('testbongacams.com/test'))
 
 
 if __name__ == "__main__":
