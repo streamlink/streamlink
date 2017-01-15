@@ -928,13 +928,14 @@ def main():
             setup_plugin_options()
             handle_url()
         except KeyboardInterrupt:
+            # Close output
+            if output:
+                output.close()
             console.msg("Interrupted! Exiting...")
         finally:
             if hasattr(stream_fd, "close"):
                 console.msg("Closing currently open stream...")
                 stream_fd.close()
-            if hasattr(output, "close"):
-                output.close()
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
