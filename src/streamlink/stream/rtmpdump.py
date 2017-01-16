@@ -41,6 +41,17 @@ class RTMPStream(StreamProcess):
 
             self.params["socks"] = self.session.options.get("rtmp-proxy")
 
+        # set rtmpdump logging level
+        if self.session.options.get("subprocess-errorlog-path") \
+        or self.session.options.get("subprocess-errorlog"):
+            for i in ("quiet", "verbose", "debug"):
+                if i in self.params:
+                    del self.params[i]
+            if self.session.logger.Levels[self.session.logger.level] == "debug":
+                self.params["debug"] = True
+            else:
+                self.params["verbose"] = True
+
         if "jtv" in self.params and not self._supports_param("jtv"):
             raise StreamError("Installed rtmpdump does not support --jtv argument")
 
@@ -58,7 +69,8 @@ class RTMPStream(StreamProcess):
         cmd = self._check_cmd()
 
         params = self.params.copy()
-        params["verbose"] = True
+        if not "debug" in params:
+            params["verbose"] = True
         params["_bg"] = True
 
         self.logger.debug("Attempting to find tcURL redirect")
