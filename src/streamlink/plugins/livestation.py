@@ -58,7 +58,7 @@ class Livestation(Plugin):
             "plan_id": "",
             "session[email]": email,
             "session[password]": password,
-            "utf8": "\xE2\x9C\x93", # Check Mark Character
+            "utf8": "\xE2\x9C\x93",  # Check Mark Character
         }
 
         res = http.post(LOGIN_POST_URL, data=data, acceptable_status=(200, 422))

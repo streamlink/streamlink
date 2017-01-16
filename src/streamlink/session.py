@@ -20,7 +20,7 @@ def print_small_exception(start_after):
 
     for i, trace in enumerate(tb):
         if trace[2] == start_after:
-            index = i+1
+            index = i + 1
             break
 
     lines = traceback.format_list(tb[index:])
@@ -50,7 +50,7 @@ class Streamlink(object):
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
             "http-stream-timeout": 60.0,
-            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
+            "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,

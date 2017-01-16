@@ -8,6 +8,7 @@ from streamlink.stream import RTMPStream, HLSStream
 _url_re = re.compile(r'http(s)?://(\w+\.)?streamup.com/(?P<channel>[^/?]+)')
 _hls_manifest_re = re.compile(r'HlsManifestUrl:\s*"//"\s*\+\s*response\s*\+\s*"(.+)"')
 
+
 class StreamupCom(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -15,7 +16,8 @@ class StreamupCom(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url)
-        if not res: return
+        if not res:
+            return
         match = _hls_manifest_re.search(res.text)
         url = match.group(1)
         hls_url = "http://video-cdn.streamup.com{}".format(url)

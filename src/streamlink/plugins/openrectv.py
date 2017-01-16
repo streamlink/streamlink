@@ -20,6 +20,7 @@ _schema = validate.Schema(
     )
 )
 
+
 class OPENRECtv(Plugin):
     @classmethod
     def can_handle_url(self, url):

@@ -69,7 +69,6 @@ class Dogus(Plugin):
         mobile_url_m = self.mobile_url_re.search(res.text)
         desktop_url_m = self.desktop_url_re.search(res.text)
 
-
         desktop_url = desktop_url_m and desktop_url_m.group("url")
         mobile_url = mobile_url_m and mobile_url_m.group("url")
 

@@ -13,7 +13,7 @@ class AMFHeader(Packet):
 
     @property
     def size(self):
-        size = 4+1
+        size = 4 + 1
         size += AMF0String.size(self.name)
         size += AMF0Value.size(self.value)
 
@@ -84,7 +84,7 @@ class AMFPacket(Packet):
 
     @property
     def size(self):
-        size = 2+2+2
+        size = 2 + 2 + 2
 
         for header in self.headers:
             size += header.size
@@ -109,7 +109,7 @@ class AMFPacket(Packet):
     def _deserialize(cls, io):
         version = U16BE.read(io)
 
-        if not version in (0, 3):
+        if version not in (0, 3):
             raise AMFError("AMF version must be 0 or 3")
 
         headers = []

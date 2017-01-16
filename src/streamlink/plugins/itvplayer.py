@@ -126,7 +126,6 @@ class ITVPlayer(Plugin):
 
         return streams
 
-
     def _soap_request(self):
 
         def sub_ns(parent, tag, ns):
@@ -188,7 +187,6 @@ class ITVPlayer(Plugin):
         sub_itv(userinfo, "UserToken")
         # GeoLocationToken -> Token
         # sub_itv(sub_itv(userinfo, "GeoLocationToken"), "Token")
-
 
         # build siteinfo
         siteinfo = sub_item(get_playlist, "siteInfo")

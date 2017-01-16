@@ -78,6 +78,7 @@ _schema = validate.Schema(
     })
 )
 
+
 class Filmon_us(Plugin):
     @classmethod
     def can_handle_url(self, url):

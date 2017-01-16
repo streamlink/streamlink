@@ -56,11 +56,9 @@ class Pluzz(Plugin):
         )
     })
 
-
     @classmethod
     def can_handle_url(cls, url):
         return Pluzz._url_re.match(url)
-
 
     def _get_streams(self):
         # Retrieve geolocation data

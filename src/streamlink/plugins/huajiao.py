@@ -23,17 +23,19 @@ _url_re = re.compile("""
 _feed_json_re = re.compile(r'^\s*var\s*feed\s*=\s*(?P<feed>{.*})\s*;', re.MULTILINE)
 
 _feed_json_schema = validate.Schema(
-        validate.all(
-            validate.transform(_feed_json_re.search),
-            validate.any(
-                None,
-                validate.all(
-                    validate.get('feed'),
-                    validate.transform(json.loads)
-                    )
-                )
+    validate.all(
+        validate.transform(_feed_json_re.search),
+        validate.any(
+            None,
+            validate.all(
+                validate.get('feed'),
+                validate.transform(json.loads)
             )
         )
+    )
+)
+
+
 class Huajiao(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -44,7 +46,7 @@ class Huajiao(Plugin):
         channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
-        http.verify=False
+        http.verify = False
 
         feed_json = http.get(HUAJIAO_URL.format(channel), schema=_feed_json_schema)
         if feed_json['feed']['m3u8']:

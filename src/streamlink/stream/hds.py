@@ -264,7 +264,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 # Check for the last fragment of the stream
                 if fragmentrun.discontinuity_indicator == 0:
                     if i > 0:
-                        prev = table[i-1]
+                        prev = table[i - 1]
                         self.end_fragment = prev.first_fragment
 
                     break

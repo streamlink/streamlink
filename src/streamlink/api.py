@@ -1,5 +1,6 @@
 from .session import Streamlink
 
+
 def streams(url, **params):
     """Attempts to find a plugin and extract streams from the *url*.
 

@@ -4,11 +4,13 @@ from .compat import bytes, is_py2, string_types
 
 import struct
 
+
 def byte(ordinal):
     if isinstance(ordinal, string_types):
         ordinal = ord(ordinal)
 
     return bytes((ordinal,))
+
 
 class flagproperty(object):
     def __init__(self, flags, attr, boolean=False):
@@ -28,6 +30,7 @@ class flagproperty(object):
     def __set__(self, obj, val):
         flags = getattr(obj, self.flags)
         setattr(flags.bit, self.attr, int(val))
+
 
 def lang_to_iso639(lang):
     res = [0, 0, 0]
@@ -57,12 +60,14 @@ def pack_many_into(buf, offset, types, values):
 
     return offset
 
+
 def pack_bytes_into(buf, offset, data):
     size = len(data)
     fmt = str(size) + "s"
     struct.pack_into(fmt, buf, offset, data)
 
     return offset + size
+
 
 def unpack_many_from(buf, offset, types):
     rval = tuple()
@@ -72,6 +77,7 @@ def unpack_many_from(buf, offset, types):
         offset += unpacker.size
 
     return rval
+
 
 def chunked_read(fd, length, chunk_size=8192, exception=IOError):
     chunks = []

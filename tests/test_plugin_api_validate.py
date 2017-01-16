@@ -76,7 +76,7 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_filter(self):
         assert validate(filter(lambda i: i > 5),
-                        [10,5,4,6,7]) == [10,6,7]
+                        [10, 5, 4, 6, 7]) == [10, 6, 7]
 
     def test_map(self):
         assert validate(map(lambda v: v[0]), [(1, 2), (3, 4)]) == [1, 3]
@@ -104,7 +104,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(hasattr("tag"), el) == el
 
     def test_length(self):
-        assert validate(length(1), [1,2,3]) == [1,2,3]
+        assert validate(length(1), [1, 2, 3]) == [1, 2, 3]
 
         def invalid_length():
             validate(length(2), [1])

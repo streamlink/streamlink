@@ -12,7 +12,7 @@ from itertools import chain
 from time import sleep
 
 from streamlink import (Streamlink, StreamError, PluginError,
-                          NoPluginError)
+                        NoPluginError)
 from streamlink.cache import Cache
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
@@ -445,7 +445,8 @@ def format_valid_streams(plugin, streams):
         if name in STREAM_SYNONYMS:
             continue
 
-        synonymfilter = lambda n: stream is streams[n] and n is not name
+        def synonymfilter(n):
+            return stream is streams[n] and n is not name
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:
@@ -779,23 +780,23 @@ def setup_plugin_options():
     """Sets Streamlink plugin options."""
     if args.twitch_cookie:
         streamlink.set_plugin_option("twitch", "cookie",
-                                       args.twitch_cookie)
+                                     args.twitch_cookie)
 
     if args.twitch_oauth_token:
         streamlink.set_plugin_option("twitch", "oauth_token",
-                                       args.twitch_oauth_token)
+                                     args.twitch_oauth_token)
 
     if args.twitch_disable_hosting:
         streamlink.set_plugin_option("twitch", "disable_hosting",
-                                       args.twitch_disable_hosting)
+                                     args.twitch_disable_hosting)
 
     if args.ustream_password:
         streamlink.set_plugin_option("ustreamtv", "password",
-                                       args.ustream_password)
+                                     args.ustream_password)
 
     if args.crunchyroll_username:
         streamlink.set_plugin_option("crunchyroll", "username",
-                                       args.crunchyroll_username)
+                                     args.crunchyroll_username)
 
     if args.crunchyroll_username and not args.crunchyroll_password:
         crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
@@ -804,22 +805,22 @@ def setup_plugin_options():
 
     if crunchyroll_password:
         streamlink.set_plugin_option("crunchyroll", "password",
-                                       crunchyroll_password)
+                                     crunchyroll_password)
     if args.crunchyroll_purge_credentials:
         streamlink.set_plugin_option("crunchyroll", "purge_credentials",
-                                       args.crunchyroll_purge_credentials)
+                                     args.crunchyroll_purge_credentials)
 
     if args.crunchyroll_locale:
         streamlink.set_plugin_option("crunchyroll", "locale",
-                                       args.crunchyroll_locale)
+                                     args.crunchyroll_locale)
 
     if args.livestation_email:
         streamlink.set_plugin_option("livestation", "email",
-                                       args.livestation_email)
+                                     args.livestation_email)
 
     if args.livestation_password:
         streamlink.set_plugin_option("livestation", "password",
-                                       args.livestation_password)
+                                     args.livestation_password)
 
     if args.btv_username:
         streamlink.set_plugin_option("btv", "username", args.btv_username)

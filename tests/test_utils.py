@@ -42,7 +42,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual({"test": 1}, parse_json("""{"test": 1}""", schema=validate.Schema({"test": 1})))
         self.assertRaises(PluginError, parse_json, """{"test: 1}""")
         self.assertRaises(IOError, parse_json, """{"test: 1}""", exception=IOError)
-        self.assertRaises(PluginError, parse_json, """{"test: 1}"""*10)
+        self.assertRaises(PluginError, parse_json, """{"test: 1}""" * 10)
 
     def test_parse_xml(self):
         expected = ET.Element("test", {"foo": "bar"})
@@ -64,10 +64,9 @@ class TestUtil(unittest.TestCase):
 
     def test_parse_xml_fail(self):
         self.assertRaises(PluginError,
-                          parse_xml, u"1"*1000)
+                          parse_xml, u"1" * 1000)
         self.assertRaises(IOError,
-                          parse_xml, u"1"*1000, exception=IOError)
-
+                          parse_xml, u"1" * 1000, exception=IOError)
 
     def test_parse_xml_validate(self):
         expected = ET.Element("test", {"foo": "bar"})

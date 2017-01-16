@@ -16,13 +16,13 @@ _url_re = re.compile(r"http://star\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9
 
 _channel_schema = validate.Schema(
     {
-        "data" : validate.any(None, {
-            "channel" : validate.any(None, {
-                "id" : validate.all(
+        "data": validate.any(None, {
+            "channel": validate.any(None, {
+                "id": validate.all(
                     validate.text,
                     validate.transform(int)
                 ),
-                "vid" : int
+                "vid": int
             })
         })
     },
@@ -50,6 +50,7 @@ STREAM_WEIGHTS = {
     "middle": 540,
     "source": 1080
 }
+
 
 class Tga(Plugin):
     @classmethod
@@ -98,15 +99,15 @@ class Tga(Plugin):
                 yield quality, HTTPStream(self.session, source["securityUrl"])
             elif source["ext"] == "rtmp":
                 yield quality, RTMPStream(self.session, {
-                    "rtmp":source["securityUrl"],
-                    "live":True
+                    "rtmp": source["securityUrl"],
+                    "live": True
                 })
 
     def _get_streams(self):
-        match = _url_re.match(self.url);
+        match = _url_re.match(self.url)
         domain = match.group('domain')
 
-        vid, cid = self._get_channel_id(domain);
+        vid, cid = self._get_channel_id(domain)
 
         if vid != 0:
             return self._get_qq_streams(vid)

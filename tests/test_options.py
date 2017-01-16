@@ -2,6 +2,7 @@ import unittest
 
 from streamlink.options import Options
 
+
 class TestOptions(unittest.TestCase):
     def setUp(self):
         self.options = Options({

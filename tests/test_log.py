@@ -11,6 +11,7 @@ if is_py2:
 else:
     from io import StringIO
 
+
 class TestSession(unittest.TestCase):
     def setUp(self):
         self.output = StringIO()

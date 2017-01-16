@@ -12,7 +12,7 @@ class TestStream(Stream):
     __shortname__ = "test"
 
     def open(self):
-        return BytesIO(b'x'*8192*2)
+        return BytesIO(b'x' * 8192 * 2)
 
 
 class TestPlugin(Plugin):

@@ -57,6 +57,7 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
 
     Originally written by Jakub Roztocil of the httpie project.
     """
+
     def __init__(self, max_help_position=4, *args, **kwargs):
         # A smaller indent for args help.
         kwargs["max_help_position"] = max_help_position

@@ -45,6 +45,7 @@ _vod_schema = validate.Schema(
     },
 )
 
+
 class GamingLive(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -67,12 +68,12 @@ class GamingLive(Plugin):
 
     def _create_rtmp_stream(self, rtmp, playpath, live):
         return RTMPStream(self.session, {
-                    "rtmp": rtmp,
-                    "playpath": playpath,
-                    "pageUrl": self.url,
-                    "swfVfy": SWF_URL,
-                    "live": live
-                })
+            "rtmp": rtmp,
+            "playpath": playpath,
+            "pageUrl": self.url,
+            "swfVfy": SWF_URL,
+            "live": live
+        })
 
     def _get_live_streams(self, name):
         res = http.get(API_URL.format("channels", name))

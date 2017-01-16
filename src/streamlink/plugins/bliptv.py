@@ -32,7 +32,7 @@ def get_quality_dict(quality_list):
         elif i == 3:
             quality_dict['%i' % bitrate] = 'ultra'
         else:
-            quality_dict['%i' % bitrate] = 'ultra+_%i' % (i-3)
+            quality_dict['%i' % bitrate] = 'ultra+_%i' % (i - 3)
     return quality_dict
 
 

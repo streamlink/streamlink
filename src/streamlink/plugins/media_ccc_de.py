@@ -25,14 +25,14 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream, HLSStream
 
-API_URL_MEDIA           = "https://api.media.ccc.de"
+API_URL_MEDIA = "https://api.media.ccc.de"
 API_URL_STREAMING_MEDIA = "https://streaming.media.ccc.de/streams/v1.json"
 
 # http(s)://media.ccc.de/path/to/talk.html
-_url_media_re           = re.compile(r"(?P<scheme>http|https)"
-                                     ":\/\/"
-                                     "(?P<server>media\.ccc\.de)"
-                                     "\/")
+_url_media_re = re.compile(r"(?P<scheme>http|https)"
+                           ":\/\/"
+                           "(?P<server>media\.ccc\.de)"
+                           "\/")
 # https://streaming.media.ccc.de/room/
 _url_streaming_media_re = re.compile(r"(?P<scheme>http|https)"
                                      ":\/\/"
@@ -40,6 +40,7 @@ _url_streaming_media_re = re.compile(r"(?P<scheme>http|https)"
                                      "\/"
                                      "(?P<room>.*)"
                                      "\/")
+
 
 def get_event_id(url):
     """Extract event id from talk html page.
@@ -53,10 +54,11 @@ def get_event_id(url):
 
     try:
         event_id = int(match.group('event_id'))
-    except:
+    except Exception:
         raise PluginError("Failed to get event id from URL.")
 
     return event_id
+
 
 def get_json(url):
     """Fetch page for given URL and return json Python object.
@@ -68,6 +70,7 @@ def get_json(url):
 
     return http.json(res)
 
+
 def parse_media_json(json_object):
     """Expose available file formats.
 
@@ -76,11 +79,11 @@ def parse_media_json(json_object):
     """
     recordings = {}
     for recording in json_object['recordings']:
-        match       = re.search(r".*\/(?P<format>.*)", recording['mime_type'])
+        match = re.search(r".*\/(?P<format>.*)", recording['mime_type'])
         file_format = match.group('format')
 
         if recording['mime_type'] == 'vnd.voc/mp4-web' or\
-            recording['display_mime_type'] == 'video/webm':
+                recording['display_mime_type'] == 'video/webm':
             continue
         elif recording['mime_type'] == 'vnd.voc/h264-hd':
             name = "1080p"
@@ -97,6 +100,7 @@ def parse_media_json(json_object):
         recordings[name] = recording['recording_url']
 
     return recordings
+
 
 def parse_streaming_media_json(json_object, room_from_url):
     """Filter all availabe live streams for given json and room name.
@@ -117,7 +121,7 @@ def parse_streaming_media_json(json_object, room_from_url):
 
             for stream in room['streams']:
                 # get stream language
-                if stream['isTranslated'] == False:
+                if stream['isTranslated'] is False:
                     language = 'native'
                 else:
                     language = 'translated'
@@ -130,28 +134,28 @@ def parse_streaming_media_json(json_object, room_from_url):
                     # native HLS streams are announced as
                     # ${height}p and (hd|sd)_native_${height}p
                     if language == 'native':
-                        name      = "%sp" % stream['videoSize'][-1]
-                        long_name = "hls_%s_%sp" % ("native",\
+                        name = "%sp" % stream['videoSize'][-1]
+                        long_name = "hls_%s_%sp" % ("native",
                                                     stream['videoSize'][-1])
-                        streams[name]      = stream_url
+                        streams[name] = stream_url
                         streams[long_name] = stream_url
                     elif language == 'translated':
-                        long_name = "hls_%s_%sp" % ("translated",\
+                        long_name = "hls_%s_%sp" % ("translated",
                                                     stream['videoSize'][-1])
                         streams[long_name] = stream_url
 
                 # get available audio only mpeg urls
                 mp3_stream = stream['urls'].get('mp3')
                 if mp3_stream:
-                    stream_url    = mp3_stream['url']
-                    name          = "audio_%s_mpeg" % language
+                    stream_url = mp3_stream['url']
+                    name = "audio_%s_mpeg" % language
                     streams[name] = stream_url
 
                 # get available audio only opus urls
                 opus_stream = stream['urls'].get('opus')
                 if opus_stream:
-                    stream_url    = opus_stream['url']
-                    name          = "audio_%s_opus" % language
+                    stream_url = opus_stream['url']
+                    name = "audio_%s_opus" % language
                     streams[name] = stream_url
 
     return streams
@@ -168,22 +172,22 @@ class media_ccc_de(Plugin):
         # streaming.media.ccc.de
         match = _url_streaming_media_re.match(self.url)
         if match:
-            query_url    = API_URL_STREAMING_MEDIA
-            live_streams = parse_streaming_media_json(get_json(query_url),\
+            query_url = API_URL_STREAMING_MEDIA
+            live_streams = parse_streaming_media_json(get_json(query_url),
                                                       match.group('room'))
 
             for stream_name, stream_url in live_streams.items():
                 if re.search(r"m3u8", live_streams[stream_name]):
-                    streams[stream_name] = HLSStream(self.session,\
-                                                        stream_url)
+                    streams[stream_name] = HLSStream(self.session,
+                                                     stream_url)
                 else:
-                    streams[stream_name] = HTTPStream(self.session,\
-                                                        stream_url)
+                    streams[stream_name] = HTTPStream(self.session,
+                                                      stream_url)
 
         # media.ccc.de
         elif _url_media_re.search(self.url):
-            event_id   = get_event_id(self.url)
-            query_url  = "%s/public/events/%i" % (API_URL_MEDIA, event_id)
+            event_id = get_event_id(self.url)
+            query_url = "%s/public/events/%i" % (API_URL_MEDIA, event_id)
             recordings = parse_media_json(get_json(query_url))
 
             for name, stream_url in recordings.items():

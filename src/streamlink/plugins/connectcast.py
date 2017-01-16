@@ -9,6 +9,7 @@ _url_re = re.compile(r"http(?:s)?://connectcast.tv/(\w+)?")
 _stream_re = re.compile(r'<video src="mp4:(.*?)"')
 _stream_url = "http://connectcast.tv/channel/stream/{channel}"
 
+
 class ConnectCast(Plugin):
     @classmethod
     def can_handle_url(self, url):

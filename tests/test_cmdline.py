@@ -38,7 +38,7 @@ class TestCommandLineInvocation(unittest.TestCase):
         streamlink_cli.main.main()
         mock_setup_streamlink.assert_called_with()
         if not passthrough:
-            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize = ANY, stdin = ANY)
+            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
         else:
             mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY)
 

@@ -28,7 +28,7 @@ class ConsoleOutput(object):
 
         try:
             answer = input()
-        except:
+        except Exception:
             answer = ""
 
         return answer.strip()

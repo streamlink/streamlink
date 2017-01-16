@@ -32,7 +32,7 @@ QUALITY_WEIGHTS = {
 }
 
 
-TWITCH_CLIENT_ID="pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
+TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
 
 _url_re = re.compile(r"""
     http(s)?://
@@ -198,8 +198,8 @@ class TwitchAPI(object):
         else:
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
-        headers = { 'Accept': 'application/vnd.twitchtv.v3+json',
-                    'Client-ID': TWITCH_CLIENT_ID }
+        headers = {'Accept': 'application/vnd.twitchtv.v3+json',
+                   'Client-ID': TWITCH_CLIENT_ID}
 
         # The certificate used by Twitch cannot be verified on some OpenSSL versions.
         res = http.get(url, params=params, verify=False, headers=headers)
@@ -245,6 +245,7 @@ class TwitchAPI(object):
 
     def clip_status(self, channel, clip_name, schema):
         return http.json(self.call_subdomain("clips", "/api/v1/clips/" + channel + "/" + clip_name + "/status", format=""), schema=schema)
+
 
 class Twitch(Plugin):
     options = PluginOptions({
@@ -529,7 +530,7 @@ class Twitch(Plugin):
             else:
                 return self._get_video_streams()
         elif self.clip_name:
-                return self._get_clips()
+            return self._get_clips()
         else:
             return self._get_hls_streams("live")
 
