@@ -50,7 +50,7 @@ class Rtve(Plugin):
     secret_key = base64.b64decode("eWVMJmRhRDM=")
     channel_id_re = re.compile(r'<span.*?id="iniIDA">(\d+)</span>')
     url_re = re.compile(r"""
-        https?://(?:www\.)?rtve\.es/(?:noticias|television|deportes)/.*?/?
+        https?://(?:www\.)?rtve\.es/(?:directo|noticias|television|deportes)/.*?/?
     """, re.VERBOSE)
     cdn_schema = validate.Schema(
         validate.transform(parse_xml),
