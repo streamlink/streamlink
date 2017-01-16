@@ -931,16 +931,14 @@ def main():
             # Close output
             if output:
                 output.close()
-
-            # Make sure current stream gets properly cleaned up
+            console.msg("Interrupted! Exiting...")
+        finally:
             if stream_fd:
-                console.msg("Interrupted! Closing currently open stream...")
                 try:
+                    console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
                     sys.exit()
-            else:
-                console.msg("Interrupted! Exiting...")
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
