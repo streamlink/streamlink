@@ -8,7 +8,7 @@ fi
 
 DOCS_REPO_PATH="$1"
 
-pip install sphinx
+pip install -r docs-requirements.txt
 if make --directory=docs html ; then
     # remove old files
     rm "$DOCS_REPO_PATH/"*.html -f

@@ -25,7 +25,6 @@ templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
-exclude_patterns = ['twitch_oauth.rst']
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -35,7 +34,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Streamlink'
-copyright = '2016, Streamlink'
+copyright = '2017, Streamlink'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -187,7 +186,7 @@ htmlhelp_basename = 'streamlinkdoc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('cli', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Christopher Rosell'], 1)
+    ('cli', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Streamlink Contributors'], 1)
 ]
 
 # If true, show URL addresses after external links.

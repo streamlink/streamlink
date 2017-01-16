@@ -1,7 +1,6 @@
 language: python
 
 matrix:
-matrix:
   include:
   - python: '2.6'
   - python: '2.7'
@@ -17,6 +16,7 @@ matrix:
 before_install:
   - pip install --disable-pip-version-check --upgrade pip
   - pip install -r dev-requirements.txt
+  - pip install -r docs-requirements.txt
 
 install:
   - python setup.py install
@@ -24,10 +24,13 @@ install:
 script:
   - python -m pytest tests/
   - coverage run setup.py test
-  - bash script/pushdocs.sh
+  # test building the docs
+  - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
 
 after_success:
+  # push the docs only if the build was successful
+  - bash script/pushdocs.sh
   - codecov
 
 addons:

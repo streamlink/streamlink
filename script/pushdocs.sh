@@ -23,7 +23,7 @@ if bash script/makedocs.sh "$DOCS_REPO_NAME" ; then
     git config user.name "$DOCS_USER"
     git config user.email "<>"
     git add --all
-    # Check if anythhing changed, and if it's the case, push to origin/master.
+    # Check if anything changed, and if it's the case, push to origin/master.
     if git commit -m 'update docs' -m "Commit: https://github.com/streamlink/streamlink/commit/$TRAVIS_COMMIT" ; then
         git push origin master
     fi
