@@ -31,7 +31,7 @@ bigo                - live.bigo.tv       Yes   --
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
 bnt                 - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
-                    - bgonair.com
+                    - bgonair.bg
                     - kanal3.bg
                     - bitelevision.com
                     - nova.bg
