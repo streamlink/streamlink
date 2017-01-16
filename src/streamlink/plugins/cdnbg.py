@@ -10,7 +10,7 @@ from streamlink.stream import HLSStream
 from streamlink.compat import urlparse
 
 
-class BNT(Plugin):
+class CDNBG(Plugin):
     url_re = re.compile(r"""
         https?://(?:www\.)?(?:
             tv\.bnt\.bg/\w+(?:/\w+)?|
@@ -20,10 +20,11 @@ class BNT(Plugin):
             bgonair\.bg/tvonline
         )/?
     """, re.VERBOSE)
-    iframe_re = re.compile(r"iframe .*?src=\"([^\"]+)\"", re.DOTALL)
+    iframe_re = re.compile(r"iframe .*?src=\"((?:https?:)?//(?:\w+\.)?cdn.bg/live[^\"]+)\"", re.DOTALL)
     sdata_re = re.compile(r"sdata\.src.*?=.*?(?P<q>[\"'])(?P<url>http.*?)(?P=q)")
     hls_file_re = re.compile(r"file: (?P<q>[\"'])(?P<url>http.+?m3u8.*?)(?P=q)")
     hls_src_re = re.compile(r"video src=(?P<url>http[^ ]+m3u8[^ ]*)")
+
     stream_schema = validate.Schema(
         validate.any(
             validate.all(validate.transform(sdata_re.search), validate.get("url")),
@@ -54,14 +55,10 @@ class BNT(Plugin):
             self.logger.debug("Found iframe: {0}", iframe_url)
             res = http.get(iframe_url, headers={"Referer": self.url})
             try:
-                stream_url = self.stream_schema.validate(res.text)
+                return HLSStream.parse_variant_playlist(self.session,
+                                                        self.stream_schema.validate(res.text),
+                                                        headers={"User-Agent": useragents.CHROME})
             except PluginError:
                 return
 
-            if stream_url:
-                return HLSStream.parse_variant_playlist(self.session,
-                                                        stream_url,
-                                                        headers={"User-Agent": useragents.CHROME})
-
-
-__plugin__ = BNT
+__plugin__ = CDNBG
