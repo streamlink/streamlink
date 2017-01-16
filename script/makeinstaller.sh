@@ -158,6 +158,13 @@ SubSectionEnd
     RMDir /r "\$INSTDIR\ffmpeg"
 [% endblock %]
 
+[% block install_commands %]
+    ; Remove any existing bin dir from %PATH% to avoid duplicates
+    [% if has_commands %]
+    nsExec::ExecToLog '[[ python ]] -Es "\$INSTDIR\_system_path.py" remove "\$INSTDIR\bin"'
+    [% endif %]
+    [[ super() ]]
+[% endblock install_commands %]
 
 [% block install_shortcuts %]
     ; Remove shortcut from previous releases
