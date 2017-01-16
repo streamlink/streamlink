@@ -15,11 +15,11 @@ HD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv?sign={2}&ts=
 OD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_small.flv?sign={2}&ts={3}&rid={4}"
 
 _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
+_status_re = re.compile(r'"status"\s*:\s*"(\d+)","display_type"')
+_room_key_re = re.compile(r'"room_key"\s*:\s*"(.+?)"')
 _sd_re = re.compile(r'"SD"\s*:\s*"(\d+)"')
 _hd_re = re.compile(r'"HD"\s*:\s*"(\d+)"')
 _od_re = re.compile(r'"OD"\s*:\s*"(\d+)"')
-_status_re = re.compile(r'"status"\s*:\s*"(\d+)","display_type"')
-_room_key_re = re.compile(r'"room_key"\s*:\s*"(.+?)"')
 
 _room_schema = validate.Schema(
     {
@@ -37,8 +37,7 @@ _room_schema = validate.Schema(
             }
         )
     },
-    validate.get("data")
-)
+    validate.get("data"))
 
 
 class Pandatv(Plugin):

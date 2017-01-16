@@ -1,9 +1,9 @@
-#!/usr/bin/env python
 import re
-from pprint import pprint
 
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import StreamMapper
 from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import useragents
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
@@ -11,16 +11,24 @@ from streamlink.utils import parse_json, parse_xml
 
 
 class AdultSwim(Plugin):
-    _user_agent = (
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_3) AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/43.0.2357.65 Safari/537.36")
     API_URL = "http://www.adultswim.com/videos/api/v2/videos/{id}?fields=stream"
     vod_api = " http://www.adultswim.com/videos/api/v0/assets"
 
-    _url_re = re.compile(r"https?://(?:www\.)?adultswim\.com/videos/([^/]*)/?(.*?)/?$")
+    url_re = re.compile(r"""https?://(?:www\.)?adultswim\.com/videos
+            (?:/(streams))?
+            (?:/([^/]+))?
+            (?:/([^/]+))?
+            """, re.VERBOSE)
     _stream_data_re = re.compile(r"(?:__)?AS_INITIAL_DATA(?:__)? = (\{.*?});", re.M | re.DOTALL)
 
-    live_schema = validate.Schema({u"streams": {validate.text: {u"stream": validate.text}}})
+    live_schema = validate.Schema({
+        u"streams": {
+            validate.text: {u"stream": validate.text,
+                            u"archiveEpisodes": [{
+                                u"id": validate.text,
+                                u"slug": validate.text
+                            }]}}
+    })
     vod_id_schema = validate.Schema({u"show": {u"sluggedVideo": {u"id": validate.text}}},
                                     validate.transform(lambda x: x["show"]["sluggedVideo"]["id"]))
     _api_schema = validate.Schema({
@@ -33,72 +41,102 @@ class AdultSwim(Plugin):
         validate.all(
             validate.xml_findall(".//files/file"),
             [validate.xml_element,
-                validate.transform(lambda v: {"bitrate": v.attrib.get("bitrate"), "url": v.text})
-            ]
+             validate.transform(lambda v: {"bitrate": v.attrib.get("bitrate"), "url": v.text})
+             ]
         )
     )
 
     @classmethod
     def can_handle_url(cls, url):
-        match = AdultSwim._url_re.match(url)
+        match = AdultSwim.url_re.match(url)
         return match is not None
 
-    def _get_vod_streams(self, stream_data, show, episode, platform="desktop"):
+    def _make_hls_hds_stream(self, func, stream, *args, **kwargs):
+        return func(self.session, stream["url"], *args, **kwargs)
+
+    def _get_show_streams(self, stream_data, show, episode, platform="desktop"):
         video_id = parse_json(stream_data.group(1), schema=self.vod_id_schema)
         res = http.get(self.vod_api, params={"platform": platform, "id": video_id})
-        streams = parse_xml(res.text, schema=self._vod_api_schema)
-        urls = set()
-        for stream in streams:
-            bitrate, url = stream["bitrate"], stream["url"]
-            if url not in urls:
-                if url.endswith(".mp4"):
-                    yield "{0}k".format(bitrate), HTTPStream(self.session, url)
-                elif url.endswith(".m3u8"):
-                    for s in HLSStream.parse_variant_playlist(self.session, url).items():
-                        yield s
-                elif url.endswith(".f4m"):
-                    for s in HDSStream.parse_manifest(self.session, url, is_akamai=True).items():
-                        yield s
-                urls.add(stream["url"])
 
-    def _get_live_stream(self, stream_data, stream_name):
-            # parse the stream info as json
-            stream_info = parse_json(stream_data.group(1), schema=self.live_schema)
-            # get the stream ID
-            stream_id = stream_info[u"streams"][stream_name][u"stream"]
+        # create a unique list of the stream manifest URLs
+        streams = []
+        urldups = []
+        for stream in parse_xml(res.text, schema=self._vod_api_schema):
+            if stream["url"] not in urldups:
+                streams.append(stream)
+                urldups.append(stream["url"])
 
-            if stream_id:
-                api_url = self.API_URL.format(id=stream_id)
+        mapper = StreamMapper(lambda fmt, strm: strm["url"].endswith(fmt))
+        mapper.map(".m3u8", self._make_hls_hds_stream, HLSStream.parse_variant_playlist)
+        mapper.map(".f4m", self._make_hls_hds_stream, HDSStream.parse_manifest, is_akamai=True)
+        mapper.map(".mp4", lambda s: (s["bitrate"]+"k", HTTPStream(self.session, s["url"])))
 
-                res = http.get(api_url, headers={"User-Agent": self._user_agent})
-                stream_data = http.json(res, schema=self._api_schema)
+        for q, s in mapper(streams):
+            yield q, s
 
-                for asset in stream_data[u'data'][u'stream'][u'assets']:
-                    for n, s in HLSStream.parse_variant_playlist(self.session, asset[u"url"]).items():
-                        yield n, s
+    def _get_live_stream(self, stream_data, show, episode=None):
+        # parse the stream info as json
+        stream_info = parse_json(stream_data.group(1), schema=self.live_schema)
+        # get the stream ID
+        stream_id = None
+        if episode:
+            for epi in stream_info[u"streams"][show][u"archiveEpisodes"]:
+                if epi[u"slug"] == episode:
+                    stream_id = epi[u"id"]
+        else:
+            stream_id = stream_info[u"streams"][show][u"stream"]
 
-            else:
-                self.logger.error("Couldn't find the stream ID for this stream: {}".format(stream_name))
+        if stream_id:
+            api_url = self.API_URL.format(id=stream_id)
+
+            res = http.get(api_url, headers={"User-Agent": useragents.SAFARI_8})
+            stream_data = http.json(res, schema=self._api_schema)
+
+            mapper = StreamMapper(lambda fmt, surl: surl.endswith(fmt))
+            mapper.map(".m3u8", HLSStream.parse_variant_playlist, self.session)
+            mapper.map(".f4m", HDSStream.parse_manifest, self.session)
+
+            stream_urls = [asset[u"url"] for asset in stream_data[u'data'][u'stream'][u'assets']]
+            for q, s in mapper(stream_urls):
+                yield q, s
+
+        else:
+            self.logger.error("Couldn't find the stream ID for this stream: {}".format(show))
 
     def _get_streams(self):
         # get the page
-        url_match = self._url_re.match(self.url)
-        show_name = url_match.group(1)
-        stream_name = url_match.group(2) or "live-stream"
+        url_match = self.url_re.match(self.url)
+        live_stream, show_name, episode_name = url_match.groups()
+        if live_stream:
+            show_name = show_name or "live-stream"
 
-        res = http.get(self.url, headers={"User-Agent": self._user_agent})
+        res = http.get(self.url, headers={"User-Agent": useragents.SAFARI_8})
         # find the big blob of stream info in the page
         stream_data = self._stream_data_re.search(res.text)
 
         if stream_data:
-            if show_name == "streams":
-                self.logger.debug("Loading LIVE streams for: {0}", stream_name)
-                return self._get_live_stream(stream_data, stream_name)
+            if live_stream:
+                if episode_name:
+                    self.logger.debug("Loading replay of LIVE streams for: {0}/{1}", show_name, episode_name)
+                else:
+                    self.logger.debug("Loading LIVE streams for: {0}", show_name)
+                streams = self._get_live_stream(stream_data, show_name, episode_name)
             else:
-                self.logger.debug("Loading VOD streams for: {0}/{1}", show_name, stream_name)
-                return self._get_vod_streams(stream_data, show_name, stream_name)
+                self.logger.debug("Loading VOD streams for: {0}/{1}", show_name, episode_name)
+                streams = self._get_show_streams(stream_data, show_name, episode_name)
+
+            # De-dup the streams, some of the mobile streams overlap the desktop streams
+            dups = set()
+            for q, s in streams:
+                if hasattr(s, "args") and "url" in s.args:
+                    if s.args["url"] not in dups:
+                        yield q, s
+                        dups.add(s.args["url"])
+                else:
+                    yield q, s
+
         else:
-            self.logger.error("Couldn't find the stream data for this stream: {}".format(stream_name))
+            self.logger.error("Couldn't find the stream data for this stream: {}".format(show_name))
 
 
 __plugin__ = AdultSwim

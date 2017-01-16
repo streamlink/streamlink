@@ -57,6 +57,7 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
 
     Originally written by Jakub Roztocil of the httpie project.
     """
+
     def __init__(self, max_help_position=4, *args, **kwargs):
         # A smaller indent for args help.
         kwargs["max_help_position"] = max_help_position
@@ -134,7 +135,7 @@ parser = ArgumentParser(
     fromfile_prefix_chars="@",
     formatter_class=HelpFormatter,
     add_help=False,
-    usage="%(prog)s [OPTIONS] [URL] [STREAM]",
+    usage="%(prog)s [OPTIONS] <URL> [STREAM]",
     description=dedent("""
     Streamlink is command-line utility that extracts streams from
     various services and pipes them into a video player of choice.
@@ -728,7 +729,6 @@ transport.add_argument(
 
     This is generic option used by streams not covered by other options,
     such as stream protocols specific to plugins, e.g. UStream.
-
     Default is 60.0.
     """)
 transport.add_argument(
@@ -1006,8 +1006,9 @@ plugin.add_argument(
     help="""
     Indicate which locale to use for Crunchyroll subtitles.
 
-    The locale is formatted as [language_code]_[country_code], by default
-    en_US is used.
+    The locale is formatted as [language_code]_[country_code].
+
+    Default is en_US.
     """
 )
 plugin.add_argument(

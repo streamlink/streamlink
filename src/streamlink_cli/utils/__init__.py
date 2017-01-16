@@ -3,7 +3,7 @@ import json
 from contextlib import contextmanager
 
 from .http_server import HTTPServer
-from .named_pipe import NamedPipe
+from streamlink.utils.named_pipe import NamedPipe
 from .progress import progress
 from .player import find_default_player
 from .stream import stream_to_url

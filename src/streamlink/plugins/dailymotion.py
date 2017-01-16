@@ -149,7 +149,7 @@ class DailyMotion(Plugin):
         url_template = "{0}://{1}{2}".format(
             parsed.scheme, parsed.netloc, playlist["template"]
         )
-        segment_max = reduce(lambda i,j: i + j[0], playlist["fragments"], 0)
+        segment_max = reduce(lambda i, j: i + j[0], playlist["fragments"], 0)
 
         substreams = [HTTPStream(self.session,
                                  url_template.replace("$fragment$", str(i)))

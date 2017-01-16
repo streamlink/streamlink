@@ -62,7 +62,7 @@ Mac OS X                             .. code-block:: console
                                         # easy_install -U streamlink
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 
-`Chocolatey`_                        .. code-block:: powershell
+`Chocolatey`_                        .. code-block:: console
 
                                         C:\> choco install streamlink
 ==================================== ===========================================
@@ -95,14 +95,16 @@ can install Streamlink via source.
 
 There are a few different methods to do this,
 `pip <http://pip.readthedocs.org/en/latest/installing.html>`_ the Python package
-manager, :command:`easy_install` the older package manager included with
-`python-setuptools`_ or by checking out the latest code with
-`Git <http://git-scm.com/downloads>`_.
+manager, or by checking out the latest code with
+`Git <http://git-scm.com/downloads>`_. Using :command:`easy_install` is no longer recommended.
 
 .. note::
 
     For some Linux distributions the Python headers package needs to be installed before installing streamlink
     (``python-devel`` in RedHat, Fedora, etc.).
+
+    Ensure that you are using an up-to-date version of :command:`pip`, at least version **6** is recommended.
+
 
 The commands listed here will also upgrade any existing version of Streamlink.
 
@@ -215,9 +217,9 @@ Windows binaries
     Windows XP is not supported.
     Windows Vista requires at least SP2 to be installed. 
 
-You can download the latest stable Windows installer `here <https://github.com/streamlink/streamlink/releases>`_.
+You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
 
-You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`_.
+You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
 
 This is a installer which contains:
 

@@ -4,6 +4,7 @@ from .error import FLVError
 from .compat import is_py2
 from .tag import Header, Tag
 
+
 class FLV(object):
     def __init__(self, fd=None, strict=False):
         self.fd = fd

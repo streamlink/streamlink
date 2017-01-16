@@ -20,13 +20,13 @@ class DingitTV(Plugin):
     # flashvars API url and schema
     flashvars_url = "http://www.dingit.tv/api/get_player_flashvars"
     flashvars_schema = validate.Schema({
-            u"status": 0,
-            u"data": [{
-                    validate.optional("stream"): validate.text,
-                    validate.optional("akaurl"): validate.text,
-                    validate.optional("pereakaurl"): validate.text,
-                }]
-        },
+        u"status": 0,
+        u"data": [{
+            validate.optional("stream"): validate.text,
+            validate.optional("akaurl"): validate.text,
+            validate.optional("pereakaurl"): validate.text,
+        }]
+    },
         validate.get("data"),
         validate.length(1),
         validate.get(0)

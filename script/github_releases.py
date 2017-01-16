@@ -35,7 +35,7 @@ try:
         raise AssertionError("Missing changelog file")
 
     changelogs = split(RE_LOG_HEADER, contents, flags=IGNORECASE)[1:]
-    changelogs = {v: changelogs[i+1] for i, v in enumerate(changelogs) if i % 2 == 0}
+    changelogs = {v: changelogs[i + 1] for i, v in enumerate(changelogs) if i % 2 == 0}
 
     if not getenv("TRAVIS_TAG") in changelogs:
         raise AssertionError("Missing changelog for current release")
@@ -43,7 +43,7 @@ try:
     # Get release ID
     res = githubAPI("GET", "tags/{0}".format(getenv("TRAVIS_TAG")))
     data = res.json()
-    if not "id" in data:
+    if "id" not in data:
         raise AssertionError("Missing id from Github API response")
 
     # Update release name and body
@@ -52,7 +52,6 @@ try:
         "body": changelogs[getenv("TRAVIS_TAG")]
     }
     githubAPI("PATCH", data["id"], json=payload)
-
 
     print("Github release {0} has been successfully updated".format(getenv("TRAVIS_TAG")))
     exit(0)

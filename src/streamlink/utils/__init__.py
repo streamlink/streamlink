@@ -7,8 +7,9 @@ try:
 except ImportError:  # pragma: no cover
     import xml.etree.ElementTree as ET
 
-from .compat import urljoin, urlparse, parse_qsl, is_py2
-from .exceptions import PluginError
+from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2
+from streamlink.exceptions import PluginError
+from streamlink.utils.named_pipe import NamedPipe
 
 
 def swfdecompress(data):
@@ -221,4 +222,4 @@ def swfverify(url):  # pragma: no cover
 
 __all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
-           "parse_xml", "res_xml", "rtmpparse", "prepend_www"]
+           "parse_xml", "res_xml", "rtmpparse", "prepend_www", "NamedPipe"]

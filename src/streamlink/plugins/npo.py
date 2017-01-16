@@ -18,6 +18,7 @@ HTTP_HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36"
 }
 
+
 class NPO(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -61,7 +62,7 @@ class NPO(Plugin):
     def _get_vod_streams(self):
         url = 'http://ida.omroep.nl/odi/?prid={}&puboptions=adaptive,h264_bb,h264_sb,h264_std&adaptive=no&part=1&token={}'\
             .format(quote(self.npo_id), quote(self.get_token()))
-        res = http.get(url, headers=HTTP_HEADERS);
+        res = http.get(url, headers=HTTP_HEADERS)
 
         data = res.json()
 

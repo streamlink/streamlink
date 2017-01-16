@@ -74,7 +74,7 @@ class TestBuffer(unittest.TestCase):
 
 
 class TestRingBuffer(unittest.TestCase):
-    BUFFER_SIZE = 8192*4
+    BUFFER_SIZE = 8192 * 4
 
     def setUp(self):
         self.buffer = RingBuffer(size=self.BUFFER_SIZE)
@@ -108,10 +108,10 @@ class TestRingBuffer(unittest.TestCase):
 
     def test_resize(self):
         self.assertEqual(self.buffer.buffer_size, self.BUFFER_SIZE)
-        self.buffer.resize(self.BUFFER_SIZE*2)
-        self.assertEqual(self.buffer.buffer_size, self.BUFFER_SIZE*2)
+        self.buffer.resize(self.BUFFER_SIZE * 2)
+        self.assertEqual(self.buffer.buffer_size, self.BUFFER_SIZE * 2)
 
     def test_free(self):
         self.assertEqual(self.buffer.free, self.BUFFER_SIZE)
         self.buffer.write(b'1' * 100)
-        self.assertEqual(self.buffer.free, self.BUFFER_SIZE-100)
+        self.assertEqual(self.buffer.free, self.BUFFER_SIZE - 100)

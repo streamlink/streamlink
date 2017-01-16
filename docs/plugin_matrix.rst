@@ -12,7 +12,7 @@ is limited.
 =================== ==================== ===== ===== ===========================
 Name                URL(s)               Live  VOD   Notes
 =================== ==================== ===== ===== ===========================
-adultswim           adultswim.com        Yes   No    Streams may be geo-restricted, VOD streams are encrypted
+adultswim           adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
 afreeca             afreecatv.com        Yes   No
 afreecatv           afreeca.tv           Yes   No
 aftonbladet         aftonbladet.se       Yes   Yes
@@ -37,6 +37,9 @@ bnt                 - tv.bnt.bg          Yes   No    Streams may be geo-restrict
                     - nova.bg
 bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
+canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
+                    - c8.fr
+                    - cstar.fr
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com

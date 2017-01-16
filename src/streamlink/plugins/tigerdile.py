@@ -6,7 +6,7 @@ from streamlink.stream import RTMPStream
 
 PAGE_URL = "https://www.tigerdile.com/stream/"
 ROOT_URL = "rtmp://stream.tigerdile.com/live/{}"
-STREAM_TYPES=["rtmp"]
+STREAM_TYPES = ["rtmp"]
 
 _url_re = re.compile(r"""
     https?://(?:www|sfw)\.tigerdile\.com

@@ -27,17 +27,17 @@ url_re = re.compile("(http(s)?://)?(\w{2}.)?(bongacams.com)/([\w\d_-]+)")
 swf_re = re.compile("/swf/\w+/\w+.swf\?cache=\d+")
 
 amf_msg_schema = validate.Schema({
-    "status" : "success",
-    "userData" : {
+    "status": "success",
+    "userData": {
         "username": validate.text
     },
-    "localData" : {
-        "NC_ConnUrl" : validate.url(scheme="rtmp"),
-        "NC_AccessKey" : validate.length(32),
-        "dataKey" : validate.length(32),
+    "localData": {
+        "NC_ConnUrl": validate.url(scheme="rtmp"),
+        "NC_AccessKey": validate.length(32),
+        "dataKey": validate.length(32),
     },
-    "performerData" : {
-        "username" : validate.text,
+    "performerData": {
+        "username": validate.text,
     }
 })
 
@@ -110,7 +110,7 @@ class bongacams(Plugin):
 
         # send request and close http-session
         r = http_session.post(url=amf_gateway_url,
-                              params={CONST_AMF_GATEWAY_PARAM : country_code},
+                              params={CONST_AMF_GATEWAY_PARAM: country_code},
                               data=bytes(amf_packet.serialize()))
         http_session.close()
 
@@ -138,7 +138,7 @@ class bongacams(Plugin):
                                        self._get_stream_uid(stream_source_info['userData']['username'])),
             # Multiple args with same name not supported.
             # Details: https://github.com/streamlink/streamlink/issues/321
-            "conn" : "S:{username} --conn=S:{access_key} --conn=B:0 --conn=S:{data_key}".format(
+            "conn": "S:{username} --conn=S:{access_key} --conn=B:0 --conn=S:{data_key}".format(
                 username=stream_source_info['userData']['username'],
                 access_key=stream_source_info['localData']['NC_AccessKey'],
                 data_key=stream_source_info['localData']['dataKey']

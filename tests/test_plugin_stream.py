@@ -5,6 +5,7 @@ from streamlink import Streamlink, PluginError, NoPluginError
 from streamlink.plugins import Plugin
 from streamlink.stream import *
 
+
 class TestPluginStream(unittest.TestCase):
     def setUp(self):
         self.session = Streamlink()
@@ -57,7 +58,7 @@ class TestPluginStream(unittest.TestCase):
 
     def test_plugin(self):
         self._test_rtmp("rtmp://hostname.se/stream",
-                         "rtmp://hostname.se/stream", dict())
+                        "rtmp://hostname.se/stream", dict())
 
         self._test_rtmp("rtmp://hostname.se/stream live=1 num=47",
                         "rtmp://hostname.se/stream", dict(live=True, num=47))
@@ -84,9 +85,7 @@ class TestPluginStream(unittest.TestCase):
                         "http://hostname.se/auth.php", dict(auth=("test", "test2")))
 
         self._test_http("httpstream://https://hostname.se/auth.php verify=False params={'key': 'a value'}",
-                       "https://hostname.se/auth.php?key=a+value", dict(verify=False, params=dict(key='a value')))
-
-
+                        "https://hostname.se/auth.php?key=a+value", dict(verify=False, params=dict(key='a value')))
 
 
 if __name__ == "__main__":

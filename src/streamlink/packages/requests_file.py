@@ -49,7 +49,7 @@ class FileAdapter(BaseAdapter):
             url_parts = url_parts._replace(path="/" + url_parts.netloc + url_parts.path, netloc='')
 
         # Reject URLs with a hostname component
-        if url_parts.netloc and not url_parts.netloc in ("localhost", ".", "..", "-"):
+        if url_parts.netloc and url_parts.netloc not in ("localhost", ".", "..", "-"):
             raise ValueError("file: URLs with hostname components are not permitted")
 
         # If the path is relative update it to be absolute

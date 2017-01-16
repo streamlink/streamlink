@@ -32,7 +32,7 @@ QUALITY_WEIGHTS = {
 }
 
 
-TWITCH_CLIENT_ID="pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
+TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
 
 _url_re = re.compile(r"""
     http(s)?://
@@ -198,8 +198,8 @@ class TwitchAPI(object):
         else:
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
-        headers = { 'Accept': 'application/vnd.twitchtv.v3+json',
-                    'Client-ID': TWITCH_CLIENT_ID }
+        headers = {'Accept': 'application/vnd.twitchtv.v3+json',
+                   'Client-ID': TWITCH_CLIENT_ID}
 
         # The certificate used by Twitch cannot be verified on some OpenSSL versions.
         res = http.get(url, params=params, verify=False, headers=headers)
@@ -245,6 +245,7 @@ class TwitchAPI(object):
 
     def clip_status(self, channel, clip_name, schema):
         return http.json(self.call_subdomain("clips", "/api/v1/clips/" + channel + "/" + clip_name + "/status", format=""), schema=schema)
+
 
 class Twitch(Plugin):
     options = PluginOptions({
@@ -468,31 +469,30 @@ class Twitch(Plugin):
             self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
 
-    def _get_hls_streams(self, type="live"):
-        self.logger.debug("Getting {} HLS streams for {}".format(type, self.channel))
+    def _get_hls_streams(self, stream_type="live"):
+        self.logger.debug("Getting {} HLS streams for {}".format(stream_type, self.channel))
         self._authenticate()
-        hosted_channel = self._check_for_host()
-        if hosted_channel and self.options.get("disable_hosting"):
-            self.logger.info("hosting was disabled by command line option")
-            return {}
-        elif hosted_channel:
-            self.logger.info("switching to {}", hosted_channel)
-            if hosted_channel in self._hosted_chain:
-                self._hosted_chain.append(hosted_channel)
-                self.logger.error(u"A loop of hosted channels has been detected, "
-                                  "cannot find a playable stream. ({})".format(u" -> ".join(self._hosted_chain)))
+        sig, token = self._access_token(stream_type)
+        if stream_type == "live":
+            hosted_channel = self._check_for_host()
+            if hosted_channel and self.options.get("disable_hosting"):
+                self.logger.info("hosting was disabled by command line option")
                 return {}
-            self._hosted_chain.append(hosted_channel)
-            self.channel = hosted_channel
-            return self._get_hls_streams(type)
-
-        sig, token = self._access_token(type)
-        if type == "live":
+            elif hosted_channel:
+                self.logger.info("switching to {}", hosted_channel)
+                if hosted_channel in self._hosted_chain:
+                    self._hosted_chain.append(hosted_channel)
+                    self.logger.error(u"A loop of hosted channels has been detected, "
+                                      "cannot find a playable stream. ({})".format(u" -> ".join(self._hosted_chain)))
+                    return {}
+                self._hosted_chain.append(hosted_channel)
+                self.channel = hosted_channel
+                return self._get_hls_streams(stream_type)
             url = self.usher.channel(self.channel, sig=sig, token=token)
-        elif type == "video":
+        elif stream_type == "video":
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
         else:
-            self.logger.debug("Unknown HLS stream type: {}".format(type))
+            self.logger.debug("Unknown HLS stream type: {}".format(stream_type))
             return {}
 
         try:
@@ -530,7 +530,7 @@ class Twitch(Plugin):
             else:
                 return self._get_video_streams()
         elif self.clip_name:
-                return self._get_clips()
+            return self._get_clips()
         else:
             return self._get_hls_streams("live")
 

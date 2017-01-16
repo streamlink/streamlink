@@ -27,6 +27,7 @@ _livestream_schema = validate.Schema(
     validate.transform(dict),
 )
 
+
 class ard_live(Plugin):
     @classmethod
     def can_handle_url(cls, url):

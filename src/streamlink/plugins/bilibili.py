@@ -21,6 +21,7 @@ _url_re = re.compile(r"""
 
 _room_re = re.compile(r'var ROOMID = (\d+)')
 
+
 class Bilibili(Plugin):
     @classmethod
     def can_handle_url(self, url):

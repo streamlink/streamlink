@@ -6,6 +6,7 @@ from streamlink.stream import HDSStream, HLSStream, RTMPStream
 
 _url_re = re.compile(r"""http(?:s)?://(?:\w+\.)?rtlxl.nl/#!/(?:.*)/(?P<uuid>.*?)\Z""", re.IGNORECASE)
 
+
 class rtlxl(Plugin):
     @classmethod
     def can_handle_url(cls, url):

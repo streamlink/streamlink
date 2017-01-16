@@ -18,8 +18,8 @@ QUALITY_WEIGTHS_EXTRA = {
     },
     "quality": {
         "ehq": 720,
-        "hq":  576,
-        "sq":  360,
+        "hq": 576,
+        "sq": 360,
     },
 }
 
@@ -257,6 +257,10 @@ class Plugin(object):
             if stream_type not in stream_types:
                 continue
 
+            # drop _alt from any stream names
+            if name.endswith("_alt"):
+                name = name[:-len("_alt")]
+
             existing = streams.get(name)
             if existing:
                 existing_stream_type = type(existing).shortname()
@@ -286,8 +290,9 @@ class Plugin(object):
             streams[name.lower()] = stream
 
         # Create the best/worst synonmys
-        stream_weight_only = lambda s: (self.stream_weight(s)[0] or
-                                        (len(streams) == 1 and 1))
+        def stream_weight_only(s):
+            return (self.stream_weight(s)[0] or
+                    (len(streams) == 1 and 1))
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
 

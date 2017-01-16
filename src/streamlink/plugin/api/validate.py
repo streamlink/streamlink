@@ -46,6 +46,8 @@ _map = map
 
 
 _re_match_attr = ("group", "groups", "groupdict", "re")
+
+
 def _is_re_match(value):
     return _all(_hasattr(value, a) for a in _re_match_attr)
 
@@ -69,6 +71,7 @@ class SchemaContainer(object):
 
 class transform(object):
     """Applies function to value to transform it."""
+
     def __init__(self, func):
         # text is an alias for basestring on Python 2, which cannot be
         # instantiated and therefore can't be used to transform the value,
@@ -81,6 +84,7 @@ class transform(object):
 
 class optional(object):
     """An optional key used in a dict or union-dict."""
+
     def __init__(self, key):
         self.key = key
 
@@ -95,6 +99,7 @@ class attr(SchemaContainer):
 
 class xml_element(object):
     """A XML element."""
+
     def __init__(self, tag=None, text=None, attrib=None):
         self.tag = tag
         self.text = text
