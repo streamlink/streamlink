@@ -18,6 +18,9 @@ Distribution                         Installing
                                         # pacaur -S streamlink-git
 
                                      `Installing AUR packages`_
+`Fedora`_                            .. code-block:: console
+
+                                        # dnf install streamlink
 `Gentoo Linux`_                      .. code-block:: console
 
                                         # emerge net-misc/streamlink
@@ -41,6 +44,7 @@ Distribution                         Installing
 
 .. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
+.. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
@@ -76,6 +80,7 @@ Distribution/Platform                Maintainer
 ==================================== ===========================================
 Arch                                 Josip Ponjavic <josipponjavic at gmail.com>
 Chocolatey                           Scott Walters <me at scowalt.com>
+Fedora                               Mohamed El Morabity <melmorabity at fedoraproject.org>
 Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
