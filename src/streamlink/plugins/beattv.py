@@ -286,7 +286,7 @@ class BeatTV(Plugin):
 
     def _get_stream_info(self, url):
         res = http.get(url, headers=HEADERS)
-        match = re.search("embed.swf\?p=(\d+)", res.text)
+        match = re.search(r"embed.swf\?p=(\d+)", res.text)
         if not match:
             return
         program = match.group(1)
