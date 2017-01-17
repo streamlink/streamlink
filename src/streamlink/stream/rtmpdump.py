@@ -19,6 +19,7 @@ class RTMPStream(StreamProcess):
     """
 
     __shortname__ = "rtmp"
+    logging_parameters = ("quiet", "verbose", "debug", "q", "V", "z")
 
     def __init__(self, session, params, redirect=False, **kwargs):
         StreamProcess.__init__(self, session, params=params, **kwargs)
@@ -27,6 +28,18 @@ class RTMPStream(StreamProcess):
         self.timeout = self.session.options.get("rtmp-timeout")
         self.redirect = redirect
         self.logger = session.logger.new_module("stream.rtmp")
+
+        # set rtmpdump logging level
+        if self.session.options.get("subprocess-errorlog-path") or \
+                self.session.options.get("subprocess-errorlog"):
+            # disable any current logging level
+            for p in self.logging_parameters:
+                self.parameters.pop(p, None)
+
+            if self.session.logger.Levels[self.session.logger.level] == "debug":
+                self.parameters["debug"] = True
+            else:
+                self.parameters["verbose"] = True
 
     def __repr__(self):
         return "<RTMPStream({0!r}, redirect={1!r}>".format(self.parameters,
@@ -59,6 +72,10 @@ class RTMPStream(StreamProcess):
 
     def _check_redirect(self, timeout=20):
         params = self.parameters.copy()
+        # remove any existing logging parameters
+        for p in self.logging_parameters:
+            params.pop(p, None)
+        # and explicitly set verbose
         params["verbose"] = True
 
         self.logger.debug("Attempting to find tcURL redirect")
