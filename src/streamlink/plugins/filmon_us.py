@@ -16,10 +16,10 @@ _live_export_re = re.compile(
 _live_json_re = re.compile(r"var startupChannel = (.+);")
 _replay_json_re = re.compile(r"var standByVideo = encodeURIComponent\('(.+)'\);")
 _history_re = re.compile(
-    "helpers.common.flash.flashplayerinstall\({url:'([^']+)',"
+    r"helpers.common.flash.flashplayerinstall\(\{url:'([^']+)',"
 )
 _video_flashvars_re = re.compile(
-    "<embed width=\"486\" height=\"326\" flashvars=\"([^\"]+)\""
+    r"<embed width=\"486\" height=\"326\" flashvars=\"([^\"]+)\""
 )
 
 _live_schema = validate.Schema({

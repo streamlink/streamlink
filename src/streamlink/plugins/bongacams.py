@@ -23,8 +23,8 @@ CONST_HEADERS = {}
 CONST_HEADERS['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
 CONST_HEADERS['User-Agent'] += 'Chrome/54.0.2840.99 Safari/537.36 OPR/41.0.2353.69'
 
-url_re = re.compile("(http(s)?://)?(\w{2}.)?(bongacams.com)/([\w\d_-]+)")
-swf_re = re.compile("/swf/\w+/\w+.swf\?cache=\d+")
+url_re = re.compile(r"(http(s)?://)?(\w{2}.)?(bongacams.com)/([\w\d_-]+)")
+swf_re = re.compile(r"/swf/\w+/\w+.swf\?cache=\d+")
 
 amf_msg_schema = validate.Schema({
     "status": "success",
@@ -136,13 +136,10 @@ class bongacams(Plugin):
             "pageUrl": stream_page_url,
             "playpath": "%s?uid=%s" % (''.join(('stream_', stream_page_path)),
                                        self._get_stream_uid(stream_source_info['userData']['username'])),
-            # Multiple args with same name not supported.
-            # Details: https://github.com/streamlink/streamlink/issues/321
-            "conn": "S:{username} --conn=S:{access_key} --conn=B:0 --conn=S:{data_key}".format(
-                username=stream_source_info['userData']['username'],
-                access_key=stream_source_info['localData']['NC_AccessKey'],
-                data_key=stream_source_info['localData']['dataKey']
-            )
+            "conn": ["S:{0}".format(stream_source_info['userData']['username']),
+                     "S:{0}".format(stream_source_info['localData']['NC_AccessKey']),
+                     "B:0",
+                     "S:{0}".format(stream_source_info['localData']['dataKey'])]
         }
 
         self.logger.debug("Stream params:\n{}", stream_params)

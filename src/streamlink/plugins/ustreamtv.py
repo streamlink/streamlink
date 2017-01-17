@@ -422,7 +422,7 @@ class UStreamTV(Plugin):
 
     @classmethod
     def stream_weight(cls, stream):
-        match = re.match("mobile_(\w+)", stream)
+        match = re.match(r"mobile_(\w+)", stream)
         if match:
             weight, group = Plugin.stream_weight(match.group(1))
             weight -= 1

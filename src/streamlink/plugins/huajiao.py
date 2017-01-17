@@ -15,7 +15,7 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 HUAJIAO_URL = "http://www.huajiao.com/l/{}"
 LAPI_URL = "http://g2.live.360.cn/liveplay?stype=flv&channel={}&bid=huajiao&sn={}&sid={}&_rate=xd&ts={}&r={}&_ostype=flash&_delay=0&_sign=null&_ver=13"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
         http(s)?://(www\.)?huajiao.com
         /l/(?P<channel>[^/]+)
 """, re.VERBOSE)
