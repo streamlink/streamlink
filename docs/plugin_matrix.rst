@@ -30,16 +30,16 @@ bigo                - live.bigo.tv       Yes   --
                     - bigoweb.co
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
-bnt                 - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
-                    - bgonair.com
-                    - kanal3.bg
-                    - bitelevision.com
-                    - nova.bg
 bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
                     - c8.fr
                     - cstar.fr
+cdnbg               - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
+                    - bgonair.bg
+                    - kanal3.bg
+                    - bitelevision.com
+                    - nova.bg
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com
