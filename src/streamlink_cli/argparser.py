@@ -883,6 +883,15 @@ http.add_argument(
     """
 )
 http.add_argument(
+    "--http-disable-dh",
+    action="store_true",
+    help="""
+    Disable Diffie Hellman key exchange
+
+    Usually a bad idea, only use this if you know what you're doing.
+    """
+)
+http.add_argument(
     "--http-ssl-cert",
     metavar="FILENAME",
     help="""
