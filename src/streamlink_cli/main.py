@@ -655,6 +655,9 @@ def setup_http_session():
     if args.http_no_ssl_verify:
         streamlink.set_option("http-ssl-verify", False)
 
+    if args.http_disable_dh:
+        streamlink.set_option("http-disable-dh", True)
+
     if args.http_ssl_cert:
         streamlink.set_option("http-ssl-cert", args.http_ssl_cert)
 

@@ -4,6 +4,8 @@ import re
 import sys
 import traceback
 
+import requests
+
 from . import plugins, __version__
 from .compat import urlparse, is_win32
 from .exceptions import NoPluginError, PluginError
@@ -246,6 +248,15 @@ class Streamlink(object):
             self.http.trust_env = value
         elif key == "http-ssl-verify":
             self.http.verify = value
+        elif key == "http-disable-dh":
+            if value:
+                requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':!DH'
+                try:
+                    requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST = \
+                        requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS.encode("ascii")
+                except AttributeError:
+                    # no ssl to disable the cipher on
+                    pass
         elif key == "http-ssl-cert":
             self.http.cert = value
         elif key == "http-timeout":
