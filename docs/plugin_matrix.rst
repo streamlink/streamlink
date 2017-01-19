@@ -121,6 +121,10 @@ servustv            servustv.com         ?     ?
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportal             sportal.bg           Yes   No
 sportschau          sportschau.de        Yes   No
+srgssr              - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
+                    - rts.ch
+                    - rsi.ch
+                    - rtr.ch
 ssh101              ssh101.com           Yes   No
 streamboat          streamboat.tv        Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
