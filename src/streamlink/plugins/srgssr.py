@@ -7,15 +7,16 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import unquote
 
 
 class SRGSSR(Plugin):
     url_re = re.compile(r"""https?://(?:www\.)?
             (srf|rts|rsi|rtr)\.ch/
-            (
+            (?:
                 play/tv|
-                livestream/player
+                livestream/player|
+                live-streaming|
+                sport/direct/(\d+)-
             )""", re.VERBOSE)
     api_url = "http://il.srgssr.ch/integrationlayer/1.0/ue/{site}/video/play/{id}.json"
     token_url = "http://tp.srgssr.ch/akahd/token"
@@ -50,11 +51,14 @@ class SRGSSR(Plugin):
         qinfo = dict(parse_qsl(parsed.query or parsed.fragment.lstrip("?")))
 
         site, video_id = None, None
+        url_m = self.url_re.match(self.url)
 
         # look for the video id in the URL, otherwise find it in the page
         if "tvLiveId" in qinfo:
             video_id = qinfo["tvLiveId"]
-            site = self.url_re.match(self.url).group(1)
+            site = url_m.group(1)
+        elif url_m.group(2):
+            site, video_id = url_m.group(1), url_m.group(2)
         else:
             video_id_m = http.get(self.url, schema=self.video_id_schema)
             if video_id_m:
@@ -65,7 +69,6 @@ class SRGSSR(Plugin):
     def get_authparams(self, url):
         parsed = urlparse(url)
         path, _ = parsed.path.rsplit("/", 1)
-        print(path)
         token_res = http.get(self.token_url, params=dict(acl=path + "/*"))
         authparams = http.json(token_res, schema=self.token_schema)
         self.logger.debug("Found authparams: {0}", authparams)
@@ -81,8 +84,8 @@ class SRGSSR(Plugin):
 
             for stream_info in http.json(res, schema=self.api_schema):
                 for url in stream_info["url"]:
-                    params = self.get_authparams(url["text"])
                     if stream_info["@protocol"] == "HTTP-HLS":
+                        params = self.get_authparams(url["text"])
                         for s in HLSStream.parse_variant_playlist(self.session, url["text"], params=params).items():
                             yield s
 
