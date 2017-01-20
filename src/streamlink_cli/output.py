@@ -67,6 +67,8 @@ class FileOutput(Output):
 
 
 class PlayerOutput(Output):
+    PLAYER_TERMINATE_TIMEOUT = 10.0
+
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=False,
                  namedpipe=None):
         super(PlayerOutput, self).__init__()
@@ -160,7 +162,15 @@ class PlayerOutput(Output):
 
         if self.kill:
             with ignored(Exception):
-                self.player.kill()
+                self.player.terminate()
+                if not is_win32:
+                    t, timeout = 0.0, self.PLAYER_TERMINATE_TIMEOUT
+                    while not self.player.poll() and t < timeout:
+                        sleep(0.5)
+                        t += 0.5
+
+                    if not self.player.returncode:
+                        self.player.kill()
         self.player.wait()
 
     def _write(self, data):
