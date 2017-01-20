@@ -5,6 +5,8 @@ import threading
 import subprocess
 
 import sys
+
+from streamlink import StreamError
 from streamlink.packages import pbs
 from streamlink.packages.pbs import CommandNotFound
 from streamlink.stream import Stream
@@ -30,7 +32,7 @@ class MuxedStream(Stream):
     def open(self):
         fds = []
         for substream in self.substreams:
-            fds.append(substream.open())
+            fds.append(substream and substream.open())
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
     @classmethod
@@ -63,27 +65,36 @@ class FFMPEGMuxer(object):
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
-            raise Exception("cannot use FFMPEG")
+            raise StreamError("cannot use FFMPEG")
 
         self.session = session
         self.process = None
         self.logger = session.logger.new_module("stream.mp4mux-ffmpeg")
         self.streams = streams
-        self.pipes = [NamedPipe("foo-{}-{}".format(os.getpid(), random.randint(0, 1000))) for _ in streams]
+
+        self.pipes = [NamedPipe("foo-{}-{}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
         self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
                              for stream, np in
-                             zip(streams, self.pipes)]
+                             zip(self.streams, self.pipes)]
 
         ofmt = options.pop("format", "matroska")
         outpath = options.pop("outpath", "pipe:1")
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
+        metadata = options.pop("metadata", {})
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
             self._cmd.extend(["-i", np.path])
 
-        self._cmd.extend(['-c:v', videocodec, '-c:a', audiocodec, '-f', ofmt, outpath])
+        self._cmd.extend(['-c:v', videocodec])
+        self._cmd.extend(['-c:a', audiocodec])
+
+        for stream, data in metadata.items():
+            for datum in data:
+                self._cmd.extend(["-metadata:{0}".format(stream), datum])
+
+        self._cmd.extend(['-f', ofmt, outpath])
         self.logger.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
         self.close_errorlog = False
 

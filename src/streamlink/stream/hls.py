@@ -1,11 +1,16 @@
 from collections import defaultdict, namedtuple
 
+from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
+from streamlink.utils.l10n import Localization
+
 try:
     from Crypto.Cipher import AES
     import struct
 
+
     def num_to_iv(n):
         return struct.pack(">8xq", n)
+
 
     CAN_DECRYPT = True
 except ImportError:
@@ -17,7 +22,6 @@ from .segmented import (SegmentedStreamReader,
                         SegmentedStreamWriter,
                         SegmentedStreamWorker)
 from ..exceptions import StreamError
-
 
 Sequence = namedtuple("Sequence", "num segment")
 
@@ -236,6 +240,16 @@ class HLSStreamReader(SegmentedStreamReader):
         self.request_params.pop("url", None)
 
 
+class MuxedHLSStream(MuxedStream):
+    __shortname__ = "hls-multi"
+
+    def __init__(self, session, video, audio, force_restart=False, ffmpeg_options=None, **args):
+        substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), [video, audio])
+        ffmpeg_options = ffmpeg_options or {}
+
+        super(MuxedHLSStream, self).__init__(session, *substreams, **ffmpeg_options)
+
+
 class HLSStream(HTTPStream):
     """Implementation of the Apple HTTP Live Streaming protocol
 
@@ -288,7 +302,8 @@ class HLSStream(HTTPStream):
         :param force_restart: Start at the first segment even for a live stream
         :param check_streams: Only allow streams that are accesible.
         """
-
+        logger = session_.logger.new_module("hls.parse_variant_playlist")
+        locale = session_.localization
         # Backwards compatibility with "namekey" and "nameprefix" params.
         name_key = request_params.pop("namekey", name_key)
         name_prefix = request_params.pop("nameprefix", name_prefix)
@@ -303,10 +318,23 @@ class HLSStream(HTTPStream):
         streams = {}
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
+            default_audio = None
+            preferred_audio = None
 
             for media in playlist.media:
                 if media.type == "VIDEO" and media.name:
                     names["name"] = media.name
+                elif media.type == "AUDIO":
+                    if media.default:
+                        default_audio = media
+                    # if the media is "audoselect" and it better matches the users preferences, use that
+                    # instead of default
+                    if media.autoselect and locale.equivalent(language=media.language):
+                        default_audio = media
+
+                    # select the first audio stream that matches the users explict language selection
+                    if not preferred_audio and locale.explicit and locale.equivalent(language=media.language):
+                        preferred_audio = media
 
             if playlist.stream_info.resolution:
                 width, height = playlist.stream_info.resolution
@@ -341,7 +369,19 @@ class HLSStream(HTTPStream):
                 except Exception:
                     continue
 
-            stream = HLSStream(session_, playlist.uri, force_restart=force_restart, **request_params)
+            external_audio = preferred_audio or default_audio
+            if external_audio and external_audio.uri:
+                logger.debug("Using external audio track for stream {0} (language={1})".format(
+                    name_prefix + stream_name,
+                    external_audio.language))
+
+                stream = MuxedHLSStream(session_,
+                                        video=playlist.uri,
+                                        audio=external_audio and external_audio.uri,
+                                        force_restart=force_restart,
+                                        **request_params)
+            else:
+                stream = HLSStream(session_, playlist.uri, force_restart=force_restart, **request_params)
             streams[name_prefix + stream_name] = stream
 
         return streams
