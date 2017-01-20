@@ -33,6 +33,10 @@ if version_info[0] == 2:
     deps.append("backports.shutil_which")
     deps.append("backports.shutil_get_terminal_size")
 
+# for localization
+deps.append("iso-639")
+deps.append("iso3166")
+
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
 if environ.get("NO_DEPS"):

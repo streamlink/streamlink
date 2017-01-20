@@ -1,10 +1,12 @@
 import imp
+import locale
 import pkgutil
 import re
 import sys
 import traceback
 
 import requests
+from streamlink.utils.l10n import Localization
 
 from . import plugins, __version__
 from .compat import urlparse, is_win32
@@ -64,7 +66,8 @@ class Streamlink(object):
             "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-video-transcode": "copy",
-            "ffmpeg-audio-transcode": "copy"
+            "ffmpeg-audio-transcode": "copy",
+            "locale": None
         })
         self.plugins = {}
         self.logger = Logger()
@@ -207,6 +210,10 @@ class Streamlink(object):
                                  stream, default: ``60.0``.
                                  General option used by streams not
                                  covered by other options.
+
+        locale                   (str) Locale setting, in the RFC 1766 format
+                                 eg. en_US or es_ES
+                                 default: ``system locale``.
         ======================== =========================================
 
         """
@@ -460,6 +467,10 @@ class Streamlink(object):
     @property
     def version(self):
         return __version__
+
+    @property
+    def localization(self):
+        return Localization(self.get_option("locale"))
 
 
 __all__ = ["Streamlink"]

@@ -274,6 +274,20 @@ general.add_argument(
     Runs a version check and exits.
     """
 )
+general.add_argument(
+    "--locale",
+    type=str,
+    metavar="LOCALE",
+    help="""
+    The preferred locale setting, for selecting the preferred
+    subtitle and audio language.
+
+    The locale is formatted as [language_code]_[country_code],
+     eg. eg. en_US or es_ES
+
+    Default is system locale.
+    """
+)
 
 player = parser.add_argument_group("Player options")
 player.add_argument(
@@ -1010,17 +1024,6 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--crunchyroll-locale",
-    metavar="LOCALE",
-    help="""
-    Indicate which locale to use for Crunchyroll subtitles.
-
-    The locale is formatted as [language_code]_[country_code].
-
-    Default is en_US.
-    """
-)
-plugin.add_argument(
     "--livestation-email",
     metavar="EMAIL",
     help="""
@@ -1112,6 +1115,11 @@ http.add_argument(
 http.add_argument(
     "--http-query-params",
     metavar="PARAMS",
+    help=argparse.SUPPRESS
+)
+plugin.add_argument(
+    "--crunchyroll-locale",
+    metavar="LOCALE",
     help=argparse.SUPPRESS
 )
 
