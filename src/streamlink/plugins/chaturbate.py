@@ -5,7 +5,7 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream
 
 _url_re = re.compile(r"http(s)?://(\w+.)?chaturbate.com/[^/?&]+")
-_playlist_url_re = re.compile(r"html \+= \"src='(?P<url>[^']+)'\";")
+_playlist_url_re = re.compile(r"var hlsSource\w+ = '(?P<url>[^']+)';")
 _schema = validate.Schema(
     validate.transform(_playlist_url_re.search),
     validate.any(
