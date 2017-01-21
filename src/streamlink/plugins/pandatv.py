@@ -10,12 +10,14 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import HTTPStream
 
 ROOM_API = "http://www.panda.tv/api_room_v3?roomid={0}&roomkey={1}&_={2}"
+ROOM_API_V2 = "http://www.panda.tv/api_room_v2?roomid={0}&_={1}"
 SD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}.flv?sign={2}&ts={3}&rid={4}"
 HD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv?sign={2}&ts={3}&rid={4}"
 OD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_small.flv?sign={2}&ts={3}&rid={4}"
 
 _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
-_status_re = re.compile(r'"status"\s*:\s*"(\d+)","display_type"')
+_room_id_re = re.compile(r'data-room-id="(\d+)"')
+_status_re = re.compile(r'"status"\s*:\s*"(\d+)"\s*,\s*"display_type"')
 _room_key_re = re.compile(r'"room_key"\s*:\s*"(.+?)"')
 _sd_re = re.compile(r'"SD"\s*:\s*"(\d+)"')
 _hd_re = re.compile(r'"HD"\s*:\s*"(\d+)"')
@@ -49,7 +51,14 @@ class Pandatv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        res = http.get(self.url)
+        try:
+            res = http.get(self.url)
+            channel = int(channel)
+        except ValueError:
+            channel = _room_id_re.search(res.text).group(1)
+            ts = int(time.time())
+            url = ROOM_API_V2.format(channel, ts)
+            res = http.get(url)
 
         try:
             status = _status_re.search(res.text).group(1)
