@@ -11,7 +11,7 @@ from streamlink.stream import HDSStream, HLSStream
 class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
     API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}&catalogue=Pluzz'
-    HDS_TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
+    TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
     _url_re = re.compile(r'http://pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)')
     _video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
@@ -88,6 +88,12 @@ class Pluzz(Plugin):
         now = time.time()
 
         for video in videos['videos']:
+            video_url = video['url']
+
+            # TODO: add DASH streams once supported
+            if '.mpd' in video_url:
+                continue
+
             # Check whether video format is available
             if video['statut'] != 'ONLINE':
                 continue
@@ -105,11 +111,10 @@ class Pluzz(Plugin):
             if not available:
                 continue
 
-            video_url = video['url']
-            # TODO: add DASH streams once supported
+            res = http.get(self.TOKEN_URL.format(video_url))
+            video_url = res.text
+
             if '.f4m' in video_url and swf_url is not None:
-                res = http.get(self.HDS_TOKEN_URL.format(video_url))
-                video_url = res.text
                 for bitrate, stream in HDSStream.parse_manifest(self.session, video_url, pvswf=swf_url).items():
                     # HDS videos with data in their manifest fragment token
                     # doesn't seem to be supported by HDSStream. Ignore such
