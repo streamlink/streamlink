@@ -51,8 +51,9 @@ class Pandatv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
+        res = http.get(self.url)
+
         try:
-            res = http.get(self.url)
             channel = int(channel)
         except ValueError:
             channel = _room_id_re.search(res.text).group(1)
