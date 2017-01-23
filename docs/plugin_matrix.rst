@@ -80,6 +80,7 @@ furstream           furstre.am           Yes   No
 gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
+gulli               replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France, Belgium and Switzerland.
 hitbox              hitbox.tv            Yes   Yes
 huajiao             huajiao.com          Yes   No    
 ine                 ine.com              ---   Yes
