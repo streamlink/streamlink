@@ -18,10 +18,7 @@ _channel_schema = validate.Schema(
     {
         "data": validate.any(None, {
             "channel": validate.any(None, {
-                "id": validate.all(
-                    validate.text,
-                    validate.transform(int)
-                ),
+                "id": int,
                 "vid": int
             })
         })
@@ -82,11 +79,11 @@ class Tga(Plugin):
     def _get_qq_streams(self, vid):
         res = http.get(QQ_STREAM_INFO_URL % (vid, 1))
         info = http.json(res, schema=_qq_schema)
-        yield "live", HTTPStream(self.session, info)
+        yield "http", HTTPStream(self.session, info)
 
         res = http.get(QQ_STREAM_INFO_URL % (vid, 2))
         info = http.json(res, schema=_qq_schema)
-        yield "live_http", HLSStream(self.session, info)
+        yield "hls", HLSStream(self.session, info)
 
     def _get_plu_streams(self, cid):
         res = http.get(PLU_STREAM_INFO_URL % cid)
