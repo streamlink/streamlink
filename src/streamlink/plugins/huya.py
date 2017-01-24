@@ -35,7 +35,7 @@ class Huya(Plugin):
         channel = match.group("channel")
 
         http.headers.update({"User-Agent": USER_AGENT})
-        http.verify = False
+        #Some problem with SSL on huya.com now, do not use https
 
         hls_url = http.get(HUYA_URL % channel, schema=_hls_schema)
         yield "live", HLSStream(self.session, hls_url)
