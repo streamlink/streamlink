@@ -122,6 +122,7 @@ class M3U8Parser(object):
         match = re.match("(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?", value)
         if match:
             return float(match.group("duration")), match.group("title")
+        return (0, None)
 
     def parse_hex(self, value):
         value = value[2:]
