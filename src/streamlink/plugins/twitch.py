@@ -496,7 +496,10 @@ class Twitch(Plugin):
             return {}
 
         try:
-            streams = HLSStream.parse_variant_playlist(self.session, url)
+            # If the stream is a VOD that is still being recorded the stream should start at the
+            # beginning of the recording
+            streams = HLSStream.parse_variant_playlist(self.session, url,
+                                                       force_restart=not stream_type == "live")
         except IOError as err:
             err = str(err)
             if "404 Client Error" in err or "Failed to parse playlist" in err:
