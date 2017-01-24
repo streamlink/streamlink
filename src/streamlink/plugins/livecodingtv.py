@@ -14,7 +14,7 @@ _streams_re = re.compile(r"""
         )".*?
      type:\s+"(.*?)"                            # which stream type it is
      """, re.M | re.DOTALL | re.VERBOSE)
-_url_re = re.compile(r"http(s)?://(?:\w+\.)?livecoding\.tv")
+_url_re = re.compile(r"http(s)?://(?:\w+\.)?(livecoding|liveedu)\.tv")
 
 
 class LivecodingTV(Plugin):

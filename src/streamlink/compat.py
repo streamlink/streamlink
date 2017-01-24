@@ -21,14 +21,15 @@ elif is_py3:
 
 try:
     from urllib.parse import (
-        urlparse, urlunparse, urljoin, quote, unquote, parse_qsl
+        urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, urlencode
     )
     import queue
 except ImportError:
     from urlparse import urlparse, urlunparse, urljoin, parse_qsl
-    from urllib import quote, unquote
+    from urllib import quote, unquote, urlencode
     import Queue as queue
+
 
 __all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
-           "unquote", "queue", "range"]
+           "unquote", "queue", "range", "urlencode"]
