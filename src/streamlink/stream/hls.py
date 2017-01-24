@@ -189,7 +189,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.playlist_end = last_sequence.num
 
         if self.playlist_sequence < 0:
-            if self.playlist_end is None:
+            if self.playlist_end is None and not self.stream.force_restart:
                 edge_index = -(min(len(sequences), max(int(self.live_edge), 1)))
                 edge_sequence = sequences[edge_index]
                 self.playlist_sequence = edge_sequence.num
@@ -252,8 +252,9 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
 
-    def __init__(self, session_, url, **args):
+    def __init__(self, session_, url, force_restart=False, **args):
         HTTPStream.__init__(self, session_, url, **args)
+        self.force_restart = force_restart
 
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
@@ -276,6 +277,7 @@ class HLSStream(HTTPStream):
     @classmethod
     def parse_variant_playlist(cls, session_, url, name_key="name",
                                name_prefix="", check_streams=False,
+                               force_restart=False,
                                **request_params):
         """Attempts to parse a variant playlist and return its streams.
 
@@ -283,6 +285,7 @@ class HLSStream(HTTPStream):
         :param name_key: Prefer to use this key as stream name, valid keys are:
                          name, pixels, bitrate.
         :param name_prefix: Add this prefix to the stream names.
+        :param force_restart: Start at the first segment even for a live stream
         :param check_streams: Only allow streams that are accesible.
         """
 
@@ -338,7 +341,7 @@ class HLSStream(HTTPStream):
                 except Exception:
                     continue
 
-            stream = HLSStream(session_, playlist.uri, **request_params)
+            stream = HLSStream(session_, playlist.uri, force_restart=force_restart, **request_params)
             streams[name_prefix + stream_name] = stream
 
         return streams
