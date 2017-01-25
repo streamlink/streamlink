@@ -50,13 +50,13 @@
 # RTMP streams are downloaded using rtmpdump. Full path or relative path
 # to the rtmpdump exe should be specified here.
 #rtmpdump=C:\Program Files (x86)\Streamlink\rtmpdump\rtmpdump.exe
-rtmpdump=
+rtmpdump=rtmpdump.exe
 
 # FFMPEG is used to mux separate video and audio streams in to a single
-# stream so that they can be played. The pull or relative path to ffmpeg
+# stream so that they can be played. The full or relative path to ffmpeg
 # or avconv should be specified here.
 #ffmpeg-ffmpeg=C:\Program Files (x86)\Streamlink\ffmpeg\ffmpeg.exe
-ffmpeg-ffmpeg=
+ffmpeg-ffmpeg=ffmpeg.exe
 
 # Log level, default is info
 #loglevel=debug
