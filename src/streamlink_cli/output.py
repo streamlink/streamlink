@@ -165,7 +165,7 @@ class PlayerOutput(Output):
                 self.player.terminate()
                 if not is_win32:
                     t, timeout = 0.0, self.PLAYER_TERMINATE_TIMEOUT
-                    while not self.player.poll() and t < timeout:
+                    while self.player.poll() is None and t < timeout:
                         sleep(0.5)
                         t += 0.5
 
