@@ -1,10 +1,9 @@
 # coding=utf-8
 import re
-
-import requests
-
+import warnings
 from random import random
 
+import requests
 from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError, StreamError
 from streamlink.plugin import Plugin, PluginOptions
@@ -180,9 +179,10 @@ class UsherService(object):
 
 
 class TwitchAPI(object):
-    def __init__(self, beta=False):
+    def __init__(self, beta=False, version=3):
         self.oauth_token = None
         self.subdomain = beta and "betaapi" or "api"
+        self.version = version
 
     def add_cookies(self, cookies):
         http.parse_cookies(cookies, domain="twitch.tv")
@@ -198,7 +198,7 @@ class TwitchAPI(object):
         else:
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
-        headers = {'Accept': 'application/vnd.twitchtv.v3+json',
+        headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
                    'Client-ID': TWITCH_CLIENT_ID}
 
         # The certificate used by Twitch cannot be verified on some OpenSSL versions.
@@ -216,26 +216,27 @@ class TwitchAPI(object):
         self.subdomain = subdomain_buffer
         return response
 
-    def access_token(self, endpoint, asset, **params):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
-
-    def channel_info(self, channel, **params):
-        return self.call("/kraken/channels/{0}".format(channel), **params)
-
-    def channel_subscription(self, channel, **params):
-        return self.call("/api/channels/{0}/subscription".format(channel), **params)
-
-    def channel_viewer_info(self, channel, **params):
-        return self.call("/api/channels/{0}/viewer".format(channel), **params)
-
-    def token(self, **params):
-        return self.call("/api/viewer/token", **params)
+    # Public API calls
 
     def user(self, **params):
         return self.call("/kraken/user", **params)
 
+    def users(self, **params):
+        return self.call("/kraken/users", **params)
+
     def videos(self, video_id, **params):
         return self.call("/kraken/videos/{0}".format(video_id), **params)
+
+    def channel_info(self, channel, **params):
+        return self.call("/kraken/channels/{0}".format(channel), **params)
+
+    # Private API calls
+
+    def access_token(self, endpoint, asset, **params):
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
+
+    def token(self, **params):
+        return self.call("/api/viewer/token", **params)
 
     def viewer_info(self, **params):
         return self.call("/api/viewer/info", **params)
@@ -245,6 +246,17 @@ class TwitchAPI(object):
 
     def clip_status(self, channel, clip_name, schema):
         return http.json(self.call_subdomain("clips", "/api/v1/clips/" + channel + "/" + clip_name + "/status", format=""), schema=schema)
+
+    # Unsupported/Removed private API calls
+
+    def channel_viewer_info(self, channel, **params):
+        warnings.warn("The channel_viewer_info API call is unsupported and may stop working at any time")
+        return self.call("/api/channels/{0}/viewer".format(channel), **params)
+
+    def channel_subscription(self, channel, **params):
+        warnings.warn("The channel_subscription API call has been removed and no longer works",
+                      category=DeprecationWarning)
+        return self.call("/api/channels/{0}/subscription".format(channel), **params)
 
 
 class Twitch(Plugin):
@@ -279,7 +291,7 @@ class Twitch(Plugin):
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)
 
-        self.api = TwitchAPI(beta=self.subdomain == "beta")
+        self.api = TwitchAPI(beta=self.subdomain == "beta", version=5)
         self.usher = UsherService()
 
     def _authenticate(self):
@@ -374,7 +386,7 @@ class Twitch(Plugin):
             chunk_stop = chunk_start + chunk_length
             chunk_stream = HTTPStream(self.session, chunk_url)
 
-            if start_offset >= chunk_start and start_offset <= chunk_stop:
+            if chunk_start <= start_offset <= chunk_stop:
                 try:
                     headers = extract_flv_header_tags(chunk_stream)
                 except IOError as err:
@@ -411,7 +423,7 @@ class Twitch(Plugin):
                 playlist_streams.append(chunk_stream)
                 for tag in headers:
                     playlist_tags.append(tag)
-            elif chunk_start >= start_offset and chunk_start < stop_offset:
+            elif start_offset <= chunk_start < stop_offset:
                 playlist_streams.append(chunk_stream)
 
             playlist_offset += chunk_length
@@ -462,34 +474,43 @@ class Twitch(Plugin):
 
         return sig, token
 
+    def _get_channel_id(self, channel):
+        cdata = self.api.users(login=channel)
+        if len(cdata["users"]):
+            return cdata["users"][0]
+        else:
+            raise PluginError("Unable to find channel: {0}".format(channel))
+
     def _check_for_host(self):
-        channel_id = self.api.channel_info(self.channel)["_id"]
+        channel_id = self._get_channel_id(self.channel)
         host_info = self.api.hosted_channel(include_logins=1, host=channel_id).json()["hosts"][0]
-        if "target_login" in host_info:
+        if "target_login" in host_info and host_info["target_login"].lower() != self.channel.lower():
             self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
 
     def _get_hls_streams(self, stream_type="live"):
         self.logger.debug("Getting {} HLS streams for {}".format(stream_type, self.channel))
         self._authenticate()
-        sig, token = self._access_token(stream_type)
+        self._hosted_chain.append(self.channel)
+
         if stream_type == "live":
             hosted_channel = self._check_for_host()
             if hosted_channel and self.options.get("disable_hosting"):
                 self.logger.info("hosting was disabled by command line option")
-                return {}
             elif hosted_channel:
                 self.logger.info("switching to {}", hosted_channel)
                 if hosted_channel in self._hosted_chain:
-                    self._hosted_chain.append(hosted_channel)
                     self.logger.error(u"A loop of hosted channels has been detected, "
-                                      "cannot find a playable stream. ({})".format(u" -> ".join(self._hosted_chain)))
+                                      "cannot find a playable stream. ({})".format(u" -> ".join(self._hosted_chain + [hosted_channel])))
                     return {}
-                self._hosted_chain.append(hosted_channel)
                 self.channel = hosted_channel
                 return self._get_hls_streams(stream_type)
+
+            # only get the token once the channel has been resolved
+            sig, token = self._access_token(stream_type)
             url = self.usher.channel(self.channel, sig=sig, token=token)
         elif stream_type == "video":
+            sig, token = self._access_token(stream_type)
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
         else:
             self.logger.debug("Unknown HLS stream type: {}".format(stream_type))
