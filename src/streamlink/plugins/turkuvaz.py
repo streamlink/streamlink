@@ -40,7 +40,9 @@ class Turkuvaz(Plugin):
 
         hls_url = self._hls_url.format(channel=channel)
         # get the secure HLS URL
-        res = http.get(self._token_url, params={"url": hls_url})
+        res = http.get(self._token_url,
+                       params={"url": hls_url},
+                       headers={"Referer": self.url})
         secure_hls_url = http.json(res, schema=self._token_schema)
 
         return HLSStream.parse_variant_playlist(self.session, secure_hls_url)
