@@ -156,6 +156,8 @@ Name                                 Notes
 `python-requests`_                   At least version **1.0**.
 `python-singledispatch`_             Only needed on Python versions older than **3.4**.
 `pycryptodome`_                      Required to play some encrypted streams
+`iso-639`_                           Used for localization settings, provides language information
+`iso3166`_                           Used for localization settings, provides country information
 
 **Optional**
 --------------------------------------------------------------------------------
@@ -176,6 +178,8 @@ Name                                 Notes
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
 .. _ffmpeg: https://www.ffmpeg.org/
+.. _iso-639: https://pypi.python.org/pypi/iso-639
+.. _iso3166: https://pypi.python.org/pypi/iso3166
 
 
 Installing without root permissions

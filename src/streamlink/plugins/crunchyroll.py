@@ -205,7 +205,7 @@ class Crunchyroll(Plugin):
         "username": None,
         "password": None,
         "purge_credentials": None,
-        "locale": API_DEFAULT_LOCALE
+        "locale": None
     })
 
     @classmethod
@@ -284,12 +284,13 @@ class Crunchyroll(Plugin):
 
         current_time = datetime.datetime.utcnow()
         device_id = self._get_device_id()
-        locale = self.options.get("locale")
+        # use the crunchyroll locale as an override, for backwards compatibility
+        locale = self.get_option("locale") or self.session.localization.language_code
         api = CrunchyrollAPI(
             self.cache.get("session_id"), self.cache.get("auth"), locale
         )
 
-        self.logger.debug("Creating session")
+        self.logger.debug("Creating session with locale: {0}", locale)
         try:
             api.session_id = api.start_session(device_id, schema=_session_schema)
         except CrunchyrollAPIError as err:
