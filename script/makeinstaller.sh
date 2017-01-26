@@ -44,6 +44,7 @@ packages=requests
          streamlink_cli
          iso639
          iso3166
+         pkg_resources
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
