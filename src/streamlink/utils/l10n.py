@@ -37,8 +37,12 @@ class Localization(object):
 
     def equivalent(self, language=None, country=None):
         equivalent = True
-        equivalent = equivalent and (not language or self.language == self.get_language(language))
-        equivalent = equivalent and (not country or self.country == self.get_country(country))
+        try:
+            equivalent = equivalent and (not language or self.language == self.get_language(language))
+            equivalent = equivalent and (not country or self.country == self.get_country(country))
+        except KeyError:
+            # if an unknown language/country code is given they cannot equivalent
+            return False
 
         return equivalent
 
