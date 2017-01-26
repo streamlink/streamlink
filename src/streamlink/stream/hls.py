@@ -370,7 +370,7 @@ class HLSStream(HTTPStream):
                     continue
 
             external_audio = preferred_audio or default_audio
-            if external_audio and external_audio.uri:
+            if external_audio and external_audio.uri and FFMPEGMuxer.is_usable(session_):
                 logger.debug("Using external audio track for stream {0} (language={1})".format(
                     name_prefix + stream_name,
                     external_audio.language))
