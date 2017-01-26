@@ -838,6 +838,18 @@ def setup_plugin_options():
     if btv_password:
         streamlink.set_plugin_option("btv", "password", btv_password)
 
+    if args.schoolism_email:
+        streamlink.set_plugin_option("schoolism", "email", args.schoolism_email)
+    if args.schoolism_email and not args.schoolism_password:
+        schoolism_password = console.askpass("Enter Schoolism password: ")
+    else:
+        schoolism_password = args.schoolism_password
+    if schoolism_password:
+        streamlink.set_plugin_option("schoolism", "password", schoolism_password)
+
+    if args.schoolism_part:
+        streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

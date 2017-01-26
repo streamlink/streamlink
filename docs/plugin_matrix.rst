@@ -116,6 +116,7 @@ raiplay             raiplay.it           Yes   No    Most streams are geo-restri
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
+schoolism           schoolism.com        --    Yes   Requires a login and a subscription.
 seemeplay           seemeplay.ru         Yes   Yes
 servustv            servustv.com         ?     ?
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.

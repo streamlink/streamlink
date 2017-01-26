@@ -1052,7 +1052,31 @@ plugin.add_argument(
     A BTV account password to use with --btv-username.
     """
 )
+plugin.add_argument(
+    "--schoolism-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your Schoolism account, required to access any Schoolism stream.
+    """
+)
+plugin.add_argument(
+    "--schoolism-password",
+    metavar="PASSWORD",
+    help="""
+    A Schoolism account password to use with --schoolism-email.
+    """
+)
+plugin.add_argument(
+    "--schoolism-part",
+    type=int,
+    default=1,
+    metavar="PART",
+    help="""
+    Play part number PART of the lesson
 
+    Defaults is 1
+    """
+)
 
 # Deprecated options
 stream.add_argument(
