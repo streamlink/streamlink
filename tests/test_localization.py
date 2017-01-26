@@ -58,12 +58,13 @@ class TestLocalization(unittest.TestCase):
 
     def test_get_language(self):
         self.assertEqual("eng",
-                         Localization.get_language("en").part3)
-        self.assertEqual("fra",
-                         Localization.get_language("fra").part3)
-        self.assertEqual("fra",
-                         Localization.get_language("fre").part3,
-                         msg="fre should be remapped to fra")
+                         Localization.get_language("en").part2b)
+        self.assertEqual("fre",
+                         Localization.get_language("fra").part2b)
+        self.assertEqual("fre",
+                         Localization.get_language("fre").part2b)
+        self.assertEqual("gre",
+                         Localization.get_language("gre").part2b)
 
     def test_get_language_miss(self):
         self.assertRaises(ValueError, Localization.get_language, "00")

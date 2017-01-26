@@ -6,9 +6,6 @@ DEFAULT_LANGUAGE_CODE = "en_US"
 
 
 class Localization(object):
-    language_code_remap = {
-        "fre": "fra"
-    }
 
     def __init__(self, language_code=None):
         self._language_code = None
@@ -40,8 +37,12 @@ class Localization(object):
 
     def equivalent(self, language=None, country=None):
         equivalent = True
-        equivalent = equivalent and (not language or self.language == self.get_language(language))
-        equivalent = equivalent and (not country or self.country == self.get_country(country))
+        try:
+            equivalent = equivalent and (not language or self.language == self.get_language(language))
+            equivalent = equivalent and (not country or self.country == self.get_country(country))
+        except KeyError:
+            # if an unknown language/country code is given they cannot equivalent
+            return False
 
         return equivalent
 
@@ -54,13 +55,16 @@ class Localization(object):
 
     @classmethod
     def get_language(cls, language):
-        # some language codes need to be remapped. why? because standards were designed to be broken.
-        _language = cls.language_code_remap.get(language, language)
         try:
-            if len(_language) == 2:
-                return languages.get(alpha2=_language)
-            elif len(_language) == 3:
-                return languages.get(part3=_language)
+            if len(language) == 2:
+                return languages.get(alpha2=language)
+            elif len(language) == 3:
+                for code_type in ['part2b', 'part2t', 'part3']:
+                    try:
+                        return languages.get(**{code_type: language})
+                    except KeyError:
+                        pass
+                raise KeyError
             else:
                 raise ValueError("Invalid language code: {0}".format(language))
         except KeyError:
