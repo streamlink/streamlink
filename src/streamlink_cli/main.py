@@ -870,6 +870,17 @@ def setup_plugin_options():
                                                        args.funimation_language.lower())
         streamlink.set_plugin_option("funimationnow", "language", lang)
 
+    if args.tvplayer_email:
+        streamlink.set_plugin_option("tvplayer", "email", args.tvplayer_email)
+
+    if args.tvplayer_email and not args.tvplayer_password:
+        tvplayer_password = console.askpass("Enter TVPlayer password: ")
+    else:
+        tvplayer_password = args.tvplayer_password
+
+    if tvplayer_password:
+        streamlink.set_plugin_option("tvplayer", "password", tvplayer_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
