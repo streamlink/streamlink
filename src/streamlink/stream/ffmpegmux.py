@@ -5,21 +5,10 @@ import threading
 import subprocess
 
 import sys
-
-from streamlink import StreamError
-from streamlink.packages import pbs
-from streamlink.packages.pbs import CommandNotFound
 from streamlink.stream import Stream
+from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
-try:
-    from subprocess import DEVNULL
-
-    def devnull():
-        return DEVNULL
-except ImportError:
-    def devnull():
-        return open(os.path.devnull, 'w')
-
+from streamlink.compat import devnull, which
 
 class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
@@ -40,7 +29,7 @@ class MuxedStream(Stream):
         return FFMPEGMuxer.is_usable(session)
 
 
-class FFMPEGMuxer(object):
+class FFMPEGMuxer(StreamIO):
     __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
 
     @staticmethod
@@ -124,11 +113,8 @@ class FFMPEGMuxer(object):
         if session.options.get("ffmpeg-ffmpeg"):
             command.append(session.options.get("ffmpeg-ffmpeg"))
         for cmd in command or cls.__commands__:
-            try:
-                pbs.create_command(cmd)
+            if which(cmd):
                 return cmd
-            except CommandNotFound:
-                continue
 
     def read(self, size=-1):
         data = self.process.stdout.read(size)

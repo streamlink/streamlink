@@ -2,11 +2,12 @@ import re
 
 from time import sleep
 
-from .streamprocess import StreamProcess
-from ..compat import str
-from ..exceptions import StreamError
-from ..packages import pbs as sh
-from ..utils import rtmpparse
+import subprocess
+
+from streamlink.stream.streamprocess import StreamProcess
+from streamlink.compat import str, which
+from streamlink.exceptions import StreamError
+from streamlink.utils import rtmpparse
 
 
 class RTMPStream(StreamProcess):
@@ -18,107 +19,100 @@ class RTMPStream(StreamProcess):
     """
 
     __shortname__ = "rtmp"
+    logging_parameters = ("quiet", "verbose", "debug", "q", "V", "z")
 
-    def __init__(self, session, params, redirect=False):
-        StreamProcess.__init__(self, session, params)
+    def __init__(self, session, params, redirect=False, **kwargs):
+        StreamProcess.__init__(self, session, params=params, **kwargs)
 
         self.cmd = self.session.options.get("rtmp-rtmpdump")
         self.timeout = self.session.options.get("rtmp-timeout")
         self.redirect = redirect
         self.logger = session.logger.new_module("stream.rtmp")
 
+        # set rtmpdump logging level
+        if self.session.options.get("subprocess-errorlog-path") or \
+                self.session.options.get("subprocess-errorlog"):
+            # disable any current logging level
+            for p in self.logging_parameters:
+                self.parameters.pop(p, None)
+
+            if self.session.logger.Levels[self.session.logger.level] == "debug":
+                self.parameters["debug"] = True
+            else:
+                self.parameters["verbose"] = True
+
     def __repr__(self):
-        return ("<RTMPStream({0!r}, redirect={1!r}>").format(self.params,
-                                                             self.redirect)
+        return "<RTMPStream({0!r}, redirect={1!r}>".format(self.parameters,
+                                                           self.redirect)
 
     def __json__(self):
-        return dict(type=RTMPStream.shortname(), params=self.params)
+        return dict(type=RTMPStream.shortname(),
+                    args=self.arguments,
+                    params=self.parameters)
 
     def open(self):
         if self.session.options.get("rtmp-proxy"):
             if not self._supports_param("socks"):
                 raise StreamError("Installed rtmpdump does not support --socks argument")
 
-            self.params["socks"] = self.session.options.get("rtmp-proxy")
+            self.parameters["socks"] = self.session.options.get("rtmp-proxy")
 
-        if "jtv" in self.params and not self._supports_param("jtv"):
+        if "jtv" in self.parameters and not self._supports_param("jtv"):
             raise StreamError("Installed rtmpdump does not support --jtv argument")
 
-        if "weeb" in self.params and not self._supports_param("weeb"):
+        if "weeb" in self.parameters and not self._supports_param("weeb"):
             raise StreamError("Installed rtmpdump does not support --weeb argument")
 
         if self.redirect:
             self._check_redirect()
 
-        self.params["flv"] = "-"
+        self.parameters["flv"] = "-"
 
         return StreamProcess.open(self)
 
     def _check_redirect(self, timeout=20):
-        cmd = self._check_cmd()
-
-        params = self.params.copy()
+        params = self.parameters.copy()
+        # remove any existing logging parameters
+        for p in self.logging_parameters:
+            params.pop(p, None)
+        # and explicitly set verbose
         params["verbose"] = True
-        params["_bg"] = True
 
         self.logger.debug("Attempting to find tcURL redirect")
 
-        stream = cmd(**params)
-        elapsed = 0
-        process_alive = True
-
-        while elapsed < timeout and process_alive:
-            stream.process.poll()
-            process_alive = stream.process.returncode is None
-            sleep(0.25)
-            elapsed += 0.25
-
-        if process_alive:
-            try:
-                stream.process.kill()
-            except Exception:
-                pass
-
-        stream.process.wait()
-
-        try:
-            stderr = stream.stderr()
-        except sh.ErrorReturnCode as err:
-            self._update_redirect(err.stderr)
+        process = self.spawn(params, timeout=timeout, stderr=subprocess.PIPE)
+        self._update_redirect(process.stderr.read())
 
     def _update_redirect(self, stderr):
         tcurl, redirect = None, None
         stderr = str(stderr, "utf8")
 
-        m = re.search("DEBUG: Property: <Name:\s+redirect,\s+STRING:\s+(\w+://.+?)>", stderr)
+        m = re.search(r"DEBUG: Property: <Name:\s+redirect,\s+STRING:\s+(\w+://.+?)>", stderr)
         if m:
             redirect = m.group(1)
 
         if redirect:
             self.logger.debug("Found redirect tcUrl: {0}", redirect)
 
-            if "rtmp" in self.params:
-                tcurl, playpath = rtmpparse(self.params["rtmp"])
+            if "rtmp" in self.parameters:
+                tcurl, playpath = rtmpparse(self.parameters["rtmp"])
                 if playpath:
                     rtmp = "{redirect}/{playpath}".format(redirect=redirect, playpath=playpath)
                 else:
                     rtmp = redirect
-                self.params["rtmp"] = rtmp
+                self.parameters["rtmp"] = rtmp
 
-            if "tcUrl" in self.params:
-                self.params["tcUrl"] = redirect
+            if "tcUrl" in self.parameters:
+                self.parameters["tcUrl"] = redirect
 
-    def _supports_param(self, param):
-        cmd = self._check_cmd()
-
+    def _supports_param(self, param, timeout=5.0):
         try:
-            help = cmd(help=True, _err_to_out=True)
-        except sh.ErrorReturnCode as err:
-            err = str(err.stdout, "ascii")
-            raise StreamError("Error while checking rtmpdump compatibility: {0}".format(err))
+            rtmpdump = self.spawn(dict(help=True), timeout=timeout, stderr=subprocess.PIPE)
+        except StreamError as err:
+            raise StreamError("Error while checking rtmpdump compatibility: {0}".format(err.message))
 
-        for line in help.splitlines():
-            m = re.match("^--(\w+)", line)
+        for line in rtmpdump.stderr.readlines():
+            m = re.match(r"^--(\w+)", str(line, "ascii"))
 
             if not m:
                 continue
@@ -132,4 +126,4 @@ class RTMPStream(StreamProcess):
     def is_usable(cls, session):
         cmd = session.options.get("rtmp-rtmpdump")
 
-        return StreamProcess.is_usable(cmd)
+        return which(cmd) is not None
