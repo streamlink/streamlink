@@ -39,9 +39,11 @@ _url_re = re.compile(r"""
         (?P<subdomain>[\w\-]+)
         \.
     )?
-    twitch.tv
-    /
-    (?P<channel>[^/]+)
+    twitch.tv/
+    (?:
+        videos/(?P<videos_id>\d+)|
+        (?P<channel>[^/]+)
+    )
     (?:
         /
         (?P<video_type>[bcv])
@@ -281,10 +283,13 @@ class Twitch(Plugin):
     def __init__(self, url):
         Plugin.__init__(self, url)
         match = _url_re.match(url).groupdict()
-        self.channel = match.get("channel").lower()
+        self._channel = match.get("channel") and match.get("channel").lower()
+        self._channel_id = None
         self.subdomain = match.get("subdomain")
         self.video_type = match.get("video_type")
-        self.video_id = match.get("video_id")
+        if match.get("videos_id"):
+            self.video_type = "v"
+        self.video_id = match.get("video_id") or match.get("videos_id")
         self.clip_name = match.get("clip_name")
         self._hosted_chain = []
 
@@ -293,6 +298,50 @@ class Twitch(Plugin):
 
         self.api = TwitchAPI(beta=self.subdomain == "beta", version=5)
         self.usher = UsherService()
+
+    @property
+    def channel(self):
+        if not self._channel:
+            if self.video_id:
+                cdata = self._channel_from_video_id(self.video_id)
+                self._channel = cdata["name"].lower()
+                self._channel_id = cdata["_id"]
+        return self._channel
+
+    @channel.setter
+    def channel(self, channel):
+        self._channel = channel
+        # channel id becomes unknown
+        self._channel_id = None
+
+    @property
+    def channel_id(self):
+        if not self._channel_id:
+            # If the channel name is set, use that to look up the ID
+            if self._channel:
+                cdata = self._channel_from_login(self._channel)
+                self._channel_id = cdata["_id"]
+
+            # If the channel name is not set but the video ID is,
+            # use that to look up both ID and name
+            elif self.video_id:
+                cdata = self._channel_from_video_id(self.video_id)
+                self._channel = cdata["name"].lower()
+                self._channel_id = cdata["_id"]
+        return self._channel_id
+
+    def _channel_from_video_id(self, video_id):
+        vdata = self.api.videos(video_id)
+        if "channel" not in vdata:
+            raise PluginError("Unable to find video: {0}".format(video_id))
+        return vdata["channel"]
+
+    def _channel_from_login(self, channel):
+        cdata = self.api.users(login=channel)
+        if len(cdata["users"]):
+            return cdata["users"][0]
+        else:
+            raise PluginError("Unable to find channel: {0}".format(channel))
 
     def _authenticate(self):
         if self.api.oauth_token:
@@ -474,16 +523,8 @@ class Twitch(Plugin):
 
         return sig, token
 
-    def _get_channel_id(self, channel):
-        cdata = self.api.users(login=channel)
-        if len(cdata["users"]):
-            return cdata["users"][0]
-        else:
-            raise PluginError("Unable to find channel: {0}".format(channel))
-
     def _check_for_host(self):
-        channel_id = self._get_channel_id(self.channel)
-        host_info = self.api.hosted_channel(include_logins=1, host=channel_id).json()["hosts"][0]
+        host_info = self.api.hosted_channel(include_logins=1, host=self.channel_id).json()["hosts"][0]
         if "target_login" in host_info and host_info["target_login"].lower() != self.channel.lower():
             self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
