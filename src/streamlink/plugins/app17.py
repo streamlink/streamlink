@@ -7,10 +7,10 @@ from streamlink.stream import HLSStream, RTMPStream
 API_URL = "https://api-dsa.17app.co/api/v1/liveStreams/isUserOnLiveStream"
 ROOM_URL = "http://17app.co/share/live/{0}"
 
-_url_re = re.compile(r"http://17app.co/share/user/(?P<channel>[^/&?]+)")
+_url_re = re.compile(r"http://17app.co/share/(?P<page>[^/]+)/(?P<channel>[^/&?]+)")
 _userid_re = re.compile(r'"userID"\s*:\s*"(.+?)"')
 _rid_re = re.compile(r'"liveStreamID"\s*:\s*(\d+)')
-_status_re = re.compile(r'"userIsOnLive"\s*:\s*(\d+)')
+_status_re = re.compile(r'"userIsOnLive"\s*:\s*([A-z]+)')
 _rtmp_re = re.compile(r'"url"\s*:\s*"(.+?)"')
 
 
@@ -21,26 +21,33 @@ class App17(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        channel = match.group("channel")
+        page = match.group("page")
 
         http.headers.update({'User-Agent': useragents.CHROME})
 
-        res = http.get(self.url)
-        userid = _userid_re.search(res.text).group(1)
-        data = {
-            "targetUserID": userid
-        }
-        api = http.post(API_URL, data=data)
-        info = re.sub(r'\\', '', api.text)
+        if page == 'user':
+            res = http.get(self.url)
+            userid = _userid_re.search(res.text).group(1)
+            data = {
+                "targetUserID": userid
+            }
+            api = http.post(API_URL, data=data)
+            info = re.sub(r'\\', '', api.text)
+            rid = _rid_re.search(info).group(1)
+            if rid == '0':
+                self.logger.info("Channel offline now!")
+                return
 
-        status = _status_re.search(info).group(1)
-        if status != '1':
+            url = ROOM_URL.format(rid)
+            res = http.get(url)
+        elif page == 'live':
+            res = http.get(self.url)
+
+        status = _status_re.search(res.text).group(1)
+        if status != 'true':
             self.logger.info("Channel offline now!")
             return
 
-        rid = _rid_re.search(info).group(1)
-        url = ROOM_URL.format(rid)
-        res = http.get(url)
         url = _rtmp_re.search(res.text).group(1)
         stream = RTMPStream(self.session, {
                 "rtmp": url,
