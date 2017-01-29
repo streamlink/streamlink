@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import http, useragents
 from streamlink.stream import HLSStream, RTMPStream
 
 API_URL = "https://api-dsa.17app.co/api/v1/liveStreams/isUserOnLiveStream"
@@ -57,8 +57,8 @@ class App17(Plugin):
 
         prefix = re.sub(r'rtmp:', 'http:', url)
         url = prefix + "/playlist.m3u8"
-        stream = HLSStream(self.session, url)
-        yield "hls", stream
+        for stream in HLSStream.parse_variant_playlist(self.session, url).items():
+            yield stream
 
 
 __plugin__ = App17
