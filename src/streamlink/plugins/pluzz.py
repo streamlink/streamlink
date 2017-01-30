@@ -36,6 +36,7 @@ class Pluzz(Plugin):
                     validate.url(),
                 ),
                 'statut': validate.text,
+                'drm': bool,
                 'geoblocage': validate.any(
                     None,
                     [validate.all(validate.text)]
@@ -87,19 +88,26 @@ class Pluzz(Plugin):
         videos = http.json(res, schema=self._api_schema)
         now = time.time()
 
+        offline = False
+        geolocked = False
+        drm = False
+        expired = False
         for video in videos['videos']:
             video_url = video['url']
 
-            # TODO: add DASH streams once supported
-            if '.mpd' in video_url:
-                continue
-
             # Check whether video format is available
             if video['statut'] != 'ONLINE':
+                offline = offline or True
                 continue
 
             # Check whether video format is geo-locked
             if video['geoblocage'] is not None and country_code not in video['geoblocage']:
+                geolocked = geolocked or True
+                continue
+
+            # Check whether video is DRM-protected
+            if video['drm']:
+                drm = drm or True
                 continue
 
             # Check whether video format is expired
@@ -109,6 +117,11 @@ class Pluzz(Plugin):
                 if available:
                     break
             if not available:
+                expired = expired or True
+                continue
+
+            # TODO: add DASH streams once supported
+            if '.mpd' in video_url:
                 continue
 
             res = http.get(self.TOKEN_URL.format(video_url))
@@ -127,6 +140,15 @@ class Pluzz(Plugin):
             elif '.m3u8' in video_url:
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield stream
+
+        if offline:
+            self.logger.error('Failed to access stream, may be due to offline content')
+        if geolocked:
+            self.logger.error('Failed to access stream, may be due to geo-restricted content')
+        if drm:
+            self.logger.error('Failed to access stream, may be due to DRM-protected content')
+        if expired:
+            self.logger.error('Failed to access stream, may be due to expired content')
 
 
 __plugin__ = Pluzz
