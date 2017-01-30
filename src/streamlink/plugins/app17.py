@@ -43,6 +43,10 @@ class App17(Plugin):
         elif page == 'live':
             res = http.get(self.url)
 
+        if res.status_code != 200:
+            self.logger.info("Channel not found!")
+            return
+
         status = _status_re.search(res.text).group(1)
         if status != 'true':
             self.logger.info("Channel offline now!")
