@@ -1,150 +1,137 @@
 import re
 
-from streamlink.compat import urlparse
+import time
+
+from streamlink import StreamError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HLSStream, RTMPStream
+from streamlink.stream import HLSStream
 
-CHINFO_URL = "http://www.filmon.com/ajax/getChannelInfo"
-SWF_URL = "http://www.filmon.com/tv/modules/FilmOnTV/files/flashapp/filmon/FilmonPlayer.swf"
-VODINFO_URL = "http://www.filmon.com/vod/info/{0}"
 
-AJAX_HEADERS = {
-    "Referer": "http://www.filmon.com",
-    "X-Requested-With": "XMLHttpRequest",
-    "User-Agent": "Mozilla/5.0"
-}
-QUALITY_WEIGHTS = {
-    "high": 720,
-    "low": 480
-}
-STREAM_TYPES = ("hls", "rtmp")
+class FilmOnHLS(HLSStream):
+    __shortname__ = "hls-filmon"
 
-_url_re = re.compile(r"http(s)?://(\w+\.)?filmon.com/(channel|tv|vod)/")
-_channel_id_re = re.compile(r"/channels/(\d+)/extra_big_logo.png")
-_vod_id_re = re.compile(r"movie_id=(\d+)")
+    def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
+        super(FilmOnHLS, self).__init__(session_, None, **args)
+        self.logger = self.session.logger.new_module("stream.hls-filmon")
+        self.channel = channel
+        self.vod_id = vod_id
+        if self.channel is None and self.vod_id is None:
+            raise ValueError("channel or vod_id must be set")
+        self.quality = quality
+        self.api = FilmOnAPI()
+        self._url = None
+        self.watch_timeout = 0
 
-_channel_schema = validate.Schema({
-    "streams": [{
-        "name": validate.text,
+    def _get_stream_data(self):
+        if self.channel:
+            self.logger.debug("Reloading FilmOn channel playlist: {0}", self.channel)
+            data = self.api.channel(self.channel)
+            for stream in data["streams"]:
+                yield stream
+        elif self.vod_id:
+            self.logger.debug("Reloading FilmOn VOD playlist: {0}", self.vod_id)
+            data = self.api.vod(self.vod_id)
+            for _, stream in data["streams"].items():
+                yield stream
+
+    @property
+    def url(self):
+        # If the watch timeout has passed then refresh the playlist from the API
+        if int(time.time()) >= self.watch_timeout:
+            for stream in self._get_stream_data():
+                if stream["quality"] == self.quality:
+                    self.watch_timeout = int(time.time()) + stream["watch-timeout"]
+                    self._url = stream["url"]
+                    return self._url
+            raise StreamError("cannot refresh FilmOn HLS Stream playlist")
+        else:
+            return self._url
+
+
+class FilmOnAPI(object):
+    channel_url = "http://www.filmon.com/api-v2/channel/{0}?protocol=hls"
+    vod_url = "http://www.filmon.com/vod/info/{0}"
+
+    stream_schema = {
         "quality": validate.text,
-        "url": validate.url(scheme=validate.any("http", "rtmp"))
-    }]
-})
-_vod_schema = validate.Schema(
-    {
-        "data": {
-            "streams": {
-                validate.text: {
-                    "name": validate.text,
-                    "url": validate.url(scheme=validate.any("http", "rtmp"))
-                }
+        "url": validate.url(),
+        "watch-timeout": int
+    }
+    api_schema = validate.Schema(
+        {
+            "data": {
+                "streams": validate.any(
+                    {validate.text: stream_schema},
+                    [stream_schema]
+                )
             }
-        }
-    },
-    validate.get("data")
-)
+        },
+        validate.get("data")
+    )
 
+    def channel(self, channel):
+        res = http.get(self.channel_url.format(channel))
+        return http.json(res, schema=self.api_schema)
 
-def ajax(*args, **kwargs):
-    kwargs["headers"] = AJAX_HEADERS
-    return http.post(*args, **kwargs)
+    def vod(self, vod_id):
+        res = http.get(self.vod_url.format(vod_id))
+        return http.json(res, schema=self.api_schema)
 
 
 class Filmon(Plugin):
+    url_re = re.compile(r"""https?://(?:\w+\.)?filmon.(?:tv|com)/
+        (?:
+            (tv|channel)/(?P<channel>[^/]+)|
+            vod/view/(?P<vod_id>\d+)-|
+            group/
+        )
+    """, re.VERBOSE)
+
+    _channel_id_re = re.compile(r'channel_id\s*?=\s*"(\d+)"')
+    _channel_id_schema = validate.Schema(
+        validate.transform(_channel_id_re.search),
+        validate.any(None, validate.get(1))
+    )
+
+    quality_weights = {
+        "high": 720,
+        "low": 480
+    }
+
+    def __init__(self, url):
+        super(Filmon, self).__init__(url)
+        self.api = FilmOnAPI()
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls.url_re.match(url) is not None
 
     @classmethod
     def stream_weight(cls, key):
-        weight = QUALITY_WEIGHTS.get(key)
+        weight = cls.quality_weights.get(key)
         if weight:
             return weight, "filmon"
 
         return Plugin.stream_weight(key)
 
-    def _create_rtmp_stream(self, stream, live=True):
-        rtmp = stream["url"]
-        playpath = stream["name"]
-        parsed = urlparse(rtmp)
-        if parsed.query:
-            app = "{0}?{1}".format(parsed.path[1:], parsed.query)
-        else:
-            app = parsed.path[1:]
-
-        if playpath.endswith(".mp4"):
-            playpath = "mp4:" + playpath
-
-        params = {
-            "rtmp": rtmp,
-            "pageUrl": self.url,
-            "swfUrl": SWF_URL,
-            "playpath": playpath,
-            "app": app,
-        }
-        if live:
-            params["live"] = True
-
-        return RTMPStream(self.session, params)
-
-    def _get_live_streams(self, channel_id):
-        params = {"channel_id": channel_id}
-        for stream_type in STREAM_TYPES:
-            cookies = {"flash-player-type": stream_type}
-            res = ajax(CHINFO_URL, cookies=cookies, data=params)
-            channel = http.json(res, schema=_channel_schema)
-
-            # TODO: Replace with "yield from" when dropping Python 2.
-            for stream in self._parse_live_streams(channel):
-                yield stream
-
-    def _parse_live_streams(self, channel):
-        for stream in channel["streams"]:
-            name = stream["quality"]
-            scheme = urlparse(stream["url"]).scheme
-
-            if scheme == "http":
-                try:
-                    streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
-                    for __, stream in streams.items():
-                        yield name, stream
-
-                except IOError as err:
-                    self.logger.error("Failed to extract HLS stream '{0}': {1}", name, err)
-
-            elif scheme == "rtmp":
-                yield name, self._create_rtmp_stream(stream)
-
-    def _get_vod_streams(self, movie_id):
-        for stream_type in STREAM_TYPES:
-            cookies = {"flash-player-type": stream_type}
-            res = ajax(VODINFO_URL.format(movie_id), cookies=cookies)
-            vod = http.json(res, schema=_vod_schema)
-
-            # TODO: Replace with "yield from" when dropping Python 2.
-            for stream in self._parse_vod_streams(vod):
-                yield stream
-
-    def _parse_vod_streams(self, vod):
-        for name, stream in vod["streams"].items():
-            scheme = urlparse(stream["url"]).scheme
-
-            if scheme == "http":
-                yield name, HLSStream(self.session, stream["url"])
-            elif scheme == "rtmp":
-                yield name, self._create_rtmp_stream(stream, live=False)
-
     def _get_streams(self):
-        res = http.get(self.url)
+        url_m = self.url_re.match(self.url)
 
-        match = _vod_id_re.search(res.text)
-        if match:
-            return self._get_vod_streams(match.group(1))
+        channel = url_m and url_m.group("channel")
+        vod_id = url_m and url_m.group("vod_id")
 
-        match = _channel_id_re.search(res.text)
-        if match:
-            return self._get_live_streams(match.group(1))
+        if vod_id:
+            data = self.api.vod(vod_id)
+            for _, stream in data["streams"].items():
+                yield stream["quality"], FilmOnHLS(self.session, vod_id=vod_id, quality=stream["quality"])
+
+        else:
+            if not channel:
+                channel = http.get(self.url, schema=self._channel_id_schema)
+            data = self.api.channel(channel)
+            for stream in data["streams"]:
+                yield stream["quality"], FilmOnHLS(self.session, channel=channel, quality=stream["quality"])
 
 
 __plugin__ = Filmon
