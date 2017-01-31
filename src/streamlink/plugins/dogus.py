@@ -7,6 +7,7 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
+from streamlink.utils import update_scheme
 
 
 class Dogus(Plugin):
@@ -22,11 +23,11 @@ class Dogus(Plugin):
             kralmuzik.com.tr/tv/kral-tv|
             kralmuzik.com.tr/tv/kral-pop-tv
         )/?""", re.VERBOSE)
-    mobile_url_re = re.compile(r"""(?P<q>[\"'])(?P<url>https?://[^'"]*?/live/hls/[^'"]*?\?token=)
+    mobile_url_re = re.compile(r"""(?P<q>["'])(?P<url>(https?:)?//[^'"]*?/live/hls/[^'"]*?\?token=)
                                    (?P<token>[^'"]*?)(?P=q)""", re.VERBOSE)
-    desktop_url_re = re.compile(r"""(?P<q>[\"'])(?P<url>https?://[^'"]*?/live/hds/[^'"]*?\?token=)
+    desktop_url_re = re.compile(r"""(?P<q>["'])(?P<url>(https?:)?//[^'"]*?/live/hds/[^'"]*?\?token=)
                                     (?P<token>[^'"]*?)(?P=q)""", re.VERBOSE)
-    token_re = re.compile(r"""token=(?P<q>[\"'])(?P<token>[^'"]*?)(?P=q)""")
+    token_re = re.compile(r"""token=(?P<q>["'])(?P<token>[^'"]*?)(?P=q)""")
 
     hds_schema = validate.Schema(validate.all(
         {
@@ -69,8 +70,8 @@ class Dogus(Plugin):
         mobile_url_m = self.mobile_url_re.search(res.text)
         desktop_url_m = self.desktop_url_re.search(res.text)
 
-        desktop_url = desktop_url_m and desktop_url_m.group("url")
-        mobile_url = mobile_url_m and mobile_url_m.group("url")
+        desktop_url = desktop_url_m and  update_scheme(self.url, desktop_url_m.group("url"))
+        mobile_url = mobile_url_m and  update_scheme(self.url, mobile_url_m.group("url"))
 
         token = (desktop_url_m and desktop_url_m.group("token")) or (mobile_url_m and mobile_url_m.group("token"))
         if not token:

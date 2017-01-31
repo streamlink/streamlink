@@ -1,6 +1,7 @@
 import sys
 
 from streamlink.plugin.api.validate import xml_element, text
+from streamlink.utils import update_scheme
 
 try:
     import xml.etree.cElementTree as ET
@@ -79,3 +80,17 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             {"test": "1", "foo": "bar"},
             parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": validate.text, "foo": "bar"})))
+
+    def test_update_scheme(self):
+        self.assertEqual(
+            "https://example.com/foo",
+            update_scheme("https://other.com/bar", "//example.com/foo")
+        )
+        self.assertEqual(
+            "http://example.com/foo",
+            update_scheme("http://other.com/bar", "//example.com/foo")
+        )
+        self.assertEqual(
+            "http://example.com/foo",
+            update_scheme("https://other.com/bar", "http://example.com/foo")
+        )

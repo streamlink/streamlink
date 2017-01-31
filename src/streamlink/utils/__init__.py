@@ -134,6 +134,21 @@ def rtmpparse(url):
     return (tcurl, playpath)
 
 
+def update_scheme(current, target):
+    """
+    Take the scheme from the current URL and applies it to the
+    target URL if the target URL startswith //
+    :param current: current URL
+    :param target: target URL
+    :return: target URL with the current URLs schema
+    """
+    scheme = urlparse(current).scheme
+    if target.startswith("//"):
+        return "{0}:{1}".format(scheme, target)
+    else:
+        return target
+
+
 #####################################
 # Deprecated functions, do not use. #
 #####################################
