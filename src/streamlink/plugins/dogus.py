@@ -21,7 +21,8 @@ class Dogus(Plugin):
             ntv.com.tr/canli-yayin/ntv|
             ntvspor.net/canli-yayin|
             kralmuzik.com.tr/tv/kral-tv|
-            kralmuzik.com.tr/tv/kral-pop-tv
+            kralmuzik.com.tr/tv/kral-pop-tv|
+            eurostartv.com.tr/canli-izle
         )/?""", re.VERBOSE)
     mobile_url_re = re.compile(r"""(?P<q>["'])(?P<url>(https?:)?//[^'"]*?/live/hls/[^'"]*?\?token=)
                                    (?P<token>[^'"]*?)(?P=q)""", re.VERBOSE)
