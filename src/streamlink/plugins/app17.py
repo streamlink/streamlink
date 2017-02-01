@@ -35,7 +35,7 @@ class App17(Plugin):
             info = re.sub(r'\\', '', api.text)
             rid = _rid_re.search(info).group(1)
             if rid == '0':
-                self.logger.info("Channel offline now!")
+                self.logger.info("Stream current unavailable.")
                 return
 
             url = ROOM_URL.format(rid)
@@ -44,12 +44,12 @@ class App17(Plugin):
             res = http.get(self.url)
 
         if res.status_code != 200:
-            self.logger.info("Channel not found!")
+            self.logger.info("Not a valid room url.")
             return
 
         status = _status_re.search(res.text).group(1)
         if status != 'true':
-            self.logger.info("Channel offline now!")
+            self.logger.info("Stream current unavailable.")
             return
 
         url = _rtmp_re.search(res.text).group(1)
