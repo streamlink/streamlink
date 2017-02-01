@@ -67,7 +67,7 @@ class bongacams(Plugin):
         # get swf url and cookies
         r = http_session.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
 
-        # redirect to profile page means stream is offlie
+        # redirect to profile page means stream is offline
         if '/profile/' in r.url:
             raise NoStreamsError(self.url)
         if not r.ok:
@@ -120,7 +120,6 @@ class bongacams(Plugin):
         stream_params = {
             "live": True,
             "realtime": True,
-            "verbose": True,
             "flashVer": CONST_FLASH_VER,
             "swfUrl": swf_url,
             "tcUrl": stream_source_info['localData']['NC_ConnUrl'],
