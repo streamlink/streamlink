@@ -12,8 +12,6 @@ from streamlink.stream import HTTPStream
 MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
 LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
 LAPI_SECRET = "A12Svb&%1UUmf@hC"
-SHOW_STATUS_ONLINE = 1
-SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
     "low": 540,
     "middle": 720,
@@ -108,11 +106,11 @@ class Douyutv(Plugin):
         res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
-            self.logger.info("API error")
+            self.logger.info("Not a valid room url.")
             return
 
-        if room["show_status"] != SHOW_STATUS_ONLINE:
-            self.logger.info("Channel offline now!")
+        if room["show_status"] != 1:
+            self.logger.info("Stream current unavailable.")
             return
 
         ts = int(time.time() / 60)
