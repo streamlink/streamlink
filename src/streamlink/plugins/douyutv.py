@@ -6,10 +6,9 @@ import uuid
 from requests.adapters import HTTPAdapter
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import HTTPStream
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
 MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
 LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
 LAPI_SECRET = "A12Svb&%1UUmf@hC"
@@ -94,7 +93,7 @@ class Douyutv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        http.headers.update({'User-Agent': USER_AGENT})
+        http.headers.update({'User-Agent': useragents.CHROME})
         http.verify = False
         http.mount('https://', HTTPAdapter(max_retries=99))
 
@@ -109,9 +108,11 @@ class Douyutv(Plugin):
         res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
+            self.logger.info("API error")
             return
 
         if room["show_status"] != SHOW_STATUS_ONLINE:
+            self.logger.info("Channel offline now!")
             return
 
         ts = int(time.time() / 60)
