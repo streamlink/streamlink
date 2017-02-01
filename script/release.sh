@@ -43,13 +43,6 @@ requirements() {
   fi
 }
 
-windows_binary() {
-  cd $CLI
-  ./script/makeinstaller.sh
-  cd ..
-  mv $CLI/build/nsis/$CLI-$1.exe .
-}
-
 # Clone and then change to user's upstream repo for pushing to master / opening PR's :)
 clone() {
   git clone ssh://git@github.com/$UPSTREAM_REPO/$CLI.git
@@ -102,8 +95,7 @@ changelog_rst() {
   DATE=$(date +"%Y-%m-%d")
   CHANGELOG=$(cat CHANGELOG.rst)
   HEADER="$CLI $1 ($DATE)"
-  HEADER="${HEADER}\n$(for i in $(seq 1 ${#HEADER}); do echo '-'; done)"
-  echo -e "$HEADER\n\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
+  echo -e "$HEADER\n----------\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
   echo "Changes have been written to CHANGELOG.rst"
   cd ..
 }
@@ -177,19 +169,6 @@ push() {
       --user $UPSTREAM_REPO \
       --repo $CLI \
       --tag $1 \
-      --name "$CLI-$1.exe" \
-      --file $CLI-$1.exe
-  if [ $? -eq 0 ]; then
-        echo WINDOWS BINARY UPLOAD OK
-  else 
-        echo WINDOWS BINARY UPLOAD FAIL
-        exit
-  fi
-
-  github-release upload \
-      --user $UPSTREAM_REPO \
-      --repo $CLI \
-      --tag $1 \
       --name "$CLI-$1.tar.gz" \
       --file $CLI-$1.tar.gz
   if [ $? -eq 0 ]; then
@@ -217,7 +196,6 @@ push() {
   echo "!!!"
   echo "https://github.com/$UPSTREAM_REPO/$CLI/releases/edit/$1"
   echo "!!!"
-  echo "REMEMBER TO UPDATE DOCKER BUILDS! :D"
 }
 
 upload_pypi_test() {
@@ -272,8 +250,7 @@ main() {
   "Generate changelog for release"
   "Create PR"
   "Tarball and sign - requires gpg key"
-  "Create Windows binary"
-  "Upload the tarball and Windows binary and push to Github release page"
+  "Upload the tarball and source code to GitHub release page"
   "Test upload to pypi"
   "Upload to pypi"
   "Clean"
@@ -300,10 +277,7 @@ main() {
           "Tarball and sign - requires gpg key")
               sign $VERSION
               ;;
-          "Create Windows binary")
-              windows_binary $VERSION
-              ;;
-          "Upload the tarball and Windows binary and push to Github release page")
+          "Upload the tarball and source code to GitHub release page")
               push $VERSION
               ;;
           "Test upload to pypi")
