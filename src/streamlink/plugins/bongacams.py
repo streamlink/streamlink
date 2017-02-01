@@ -42,14 +42,6 @@ amf_msg_schema = validate.Schema({
 })
 
 
-class AMFMessage2(AMFMessage):
-    def _serialize(self, packet):
-        packet += AMF0String(self.target_uri)
-        packet += AMF0String(self.response_uri)
-        packet += U32BE(AMF0Value.size(self.value))
-        packet += AMF0Value.pack(self.value)
-
-
 class bongacams(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -75,7 +67,7 @@ class bongacams(Plugin):
         # get swf url and cookies
         r = http_session.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
 
-        # redirect to profile page means stream is offlie
+        # redirect to profile page means stream is offline
         if '/profile/' in r.url:
             raise NoStreamsError(self.url)
         if not r.ok:
@@ -104,7 +96,7 @@ class bongacams(Plugin):
             self.logger.debug("swf url not found. Will try {}", swf_url)
 
         # create amf query
-        amf_message = AMFMessage2("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
+        amf_message = AMFMessage("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
         amf_packet = AMFPacket(version=0)
         amf_packet.messages.append(amf_message)
 
@@ -128,7 +120,6 @@ class bongacams(Plugin):
         stream_params = {
             "live": True,
             "realtime": True,
-            "verbose": True,
             "flashVer": CONST_FLASH_VER,
             "swfUrl": swf_url,
             "tcUrl": stream_source_info['localData']['NC_ConnUrl'],
