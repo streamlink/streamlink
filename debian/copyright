@@ -5,7 +5,7 @@ Upstream-Name: streamlink
 
 Files: *
 Copyright: 2011-2016 Christopher Rosell <chrippa@tanuki.se>
-           2016 Streamlink Team
+           2016-2017 Streamlink Team
 License: BSD-2-clause
 
 Files: src/streamlink/packages/pbs.py
