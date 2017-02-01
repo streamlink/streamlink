@@ -1,3 +1,16 @@
+def escape_librtmp(value):
+    if isinstance(value, bool):
+        value = "1" if value else "0"
+    if isinstance(value, int):
+        value = str(value)
+
+    # librtmp expects some characters to be escaped
+    value = value.replace("\\", "\\5c")
+    value = value.replace(" ", "\\20")
+    value = value.replace('"', "\\22")
+    return value
+
+
 def stream_to_url(stream):
     stream_type = type(stream).shortname()
 
@@ -18,17 +31,11 @@ def stream_to_url(stream):
             stream_params.pop("swfsize", None)
 
         for key, value in stream_params.items():
-            if isinstance(value, bool):
-                value = str(int(value))
-            if isinstance(value, int):
-                value = str(value)
-
-            # librtmp expects some characters to be escaped
-            value = value.replace("\\", "\\5c")
-            value = value.replace(" ", "\\20")
-            value = value.replace('"', "\\22")
-
-            params.append("{0}={1}".format(key, value))
+            if isinstance(value, list):
+                for svalue in value:
+                    params.append("{0}={1}".format(key, escape_librtmp(svalue)))
+            else:
+                params.append("{0}={1}".format(key, escape_librtmp(value)))
 
         url = " ".join(params)
 

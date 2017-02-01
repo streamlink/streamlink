@@ -14,10 +14,10 @@ STATUS_OFFLINE = 0
 
 #hls source is not stable, lower priority
 STREAM_WEIGHTS = {
-        "live": 1080
+    "live": 1080
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(www\.)?zhanqi.tv
     /(?P<channel>[^/]+)
 """, re.VERBOSE)

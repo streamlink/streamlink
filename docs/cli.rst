@@ -314,7 +314,7 @@ Command-line usage
 
 .. code-block:: console
 
-    $ streamlink [OPTIONS] [URL] [STREAM]
+    $ streamlink [OPTIONS] <URL> [STREAM]
 
 
 .. argparse::

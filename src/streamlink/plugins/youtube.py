@@ -140,8 +140,8 @@ class YouTube(Plugin):
 
     @classmethod
     def stream_weight(cls, stream):
-        match_3d = re.match("(\w+)_3d", stream)
-        match_hfr = re.match("(\d+p)(\d+)", stream)
+        match_3d = re.match(r"(\w+)_3d", stream)
+        match_hfr = re.match(r"(\d+p)(\d+)", stream)
         if match_3d:
             weight, group = Plugin.stream_weight(match_3d.group(1))
             weight -= 1

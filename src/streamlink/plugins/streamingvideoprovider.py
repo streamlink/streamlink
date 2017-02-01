@@ -10,7 +10,7 @@ SWF_URL = "http://play.streamingvideoprovider.com/player2.swf"
 API_URL = "http://player.webvideocore.net/index.php"
 
 _url_re = re.compile(
-    "http(s)?://(\w+\.)?streamingvideoprovider.co.uk/(?P<channel>[^/&?]+)"
+    r"http(s)?://(\w+\.)?streamingvideoprovider.co.uk/(?P<channel>[^/&?]+)"
 )
 _hls_re = re.compile(r"'(http://.+\.m3u8)'")
 

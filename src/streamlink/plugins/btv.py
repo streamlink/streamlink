@@ -31,7 +31,7 @@ class BTV(Plugin):
                          validate.any(
                              None,
                              validate.get(1), validate.url()
-                         ))
+            ))
         )
     )
 

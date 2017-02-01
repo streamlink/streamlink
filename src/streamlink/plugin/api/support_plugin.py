@@ -45,6 +45,7 @@ def load_support_plugin(name):
         try:
             module = imp.load_module(name, fd, filename, desc)
         finally:
-            if fd: fd.close()
+            if fd:
+                fd.close()
 
     return module

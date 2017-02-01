@@ -95,7 +95,7 @@ class Douyutv(Plugin):
         channel = match.group("channel")
 
         http.headers.update({'User-Agent': USER_AGENT})
-        http.verify=False
+        http.verify = False
         http.mount('https://', HTTPAdapter(max_retries=99))
 
         #Thanks to @ximellon for providing method.

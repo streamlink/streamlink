@@ -35,6 +35,7 @@ _assets_schema = validate.Schema(
     })
 )
 
+
 class Beam(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -54,8 +55,8 @@ class Beam(Plugin):
         streams = {}
         for video in assets["videos"]:
             name = "{0}p".format(video["height"])
-            stream = RTMPStream(self.session,{
-                "rtmp"     : "{0}/{1}".format(assets["base"], video["src"])
+            stream = RTMPStream(self.session, {
+                "rtmp": "{0}/{1}".format(assets["base"], video["src"])
             })
             streams[name] = stream
 

@@ -24,10 +24,12 @@ class AdultSwim(Plugin):
     live_schema = validate.Schema({
         u"streams": {
             validate.text: {u"stream": validate.text,
+                            u"isLive": bool,
                             u"archiveEpisodes": [{
                                 u"id": validate.text,
-                                u"slug": validate.text
+                                u"slug": validate.text,
                             }]}}
+
     })
     vod_id_schema = validate.Schema({u"show": {u"sluggedVideo": {u"id": validate.text}}},
                                     validate.transform(lambda x: x["show"]["sluggedVideo"]["id"]))
@@ -79,12 +81,25 @@ class AdultSwim(Plugin):
         stream_info = parse_json(stream_data.group(1), schema=self.live_schema)
         # get the stream ID
         stream_id = None
+        show_info = stream_info[u"streams"][show]
+
         if episode:
-            for epi in stream_info[u"streams"][show][u"archiveEpisodes"]:
+            self.logger.debug("Loading replay of episode: {0}/{1}", show, episode)
+            for epi in show_info[u"archiveEpisodes"]:
                 if epi[u"slug"] == episode:
                     stream_id = epi[u"id"]
-        else:
-            stream_id = stream_info[u"streams"][show][u"stream"]
+        elif show_info["isLive"] or not len(show_info[u"archiveEpisodes"]):
+            self.logger.debug("Loading LIVE streams for: {0}", show)
+            stream_id = show_info[u"stream"]
+        else:  # off-air
+            if len(show_info[u"archiveEpisodes"]):
+                epi = show_info[u"archiveEpisodes"][0]
+                self.logger.debug("Loading replay of episode: {0}/{1}", show, epi[u"slug"])
+                stream_id = epi[u"id"]
+            else:
+                self.logger.error("This stream is currently offline")
+                return
+
 
         if stream_id:
             api_url = self.API_URL.format(id=stream_id)
@@ -116,10 +131,6 @@ class AdultSwim(Plugin):
 
         if stream_data:
             if live_stream:
-                if episode_name:
-                    self.logger.debug("Loading replay of LIVE streams for: {0}/{1}", show_name, episode_name)
-                else:
-                    self.logger.debug("Loading LIVE streams for: {0}", show_name)
                 streams = self._get_live_stream(stream_data, show_name, episode_name)
             else:
                 self.logger.debug("Loading VOD streams for: {0}/{1}", show_name, episode_name)

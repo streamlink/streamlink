@@ -1,8 +1,12 @@
 import imp
+import locale
 import pkgutil
 import re
 import sys
 import traceback
+
+import requests
+from streamlink.utils.l10n import Localization
 
 from . import plugins, __version__
 from .compat import urlparse, is_win32
@@ -20,7 +24,7 @@ def print_small_exception(start_after):
 
     for i, trace in enumerate(tb):
         if trace[2] == start_after:
-            index = i+1
+            index = i + 1
             break
 
     lines = traceback.format_list(tb[index:])
@@ -50,7 +54,7 @@ class Streamlink(object):
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
             "http-stream-timeout": 60.0,
-            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
+            "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
@@ -62,7 +66,8 @@ class Streamlink(object):
             "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-video-transcode": "copy",
-            "ffmpeg-audio-transcode": "copy"
+            "ffmpeg-audio-transcode": "copy",
+            "locale": None
         })
         self.plugins = {}
         self.logger = Logger()
@@ -168,23 +173,23 @@ class Streamlink(object):
         rtmp-timeout             (float) Timeout for reading data from
                                  RTMP streams, default: ``60.0``
 
-        ffmpeg-ffmpeg           (str) Specify the location of the
-                                ffmpeg executable use by Muxing streams
-                                e.g. ``/usr/local/bin/ffmpeg``
+        ffmpeg-ffmpeg            (str) Specify the location of the
+                                 ffmpeg executable use by Muxing streams
+                                 e.g. ``/usr/local/bin/ffmpeg``
 
-        ffmpeg-verbose          (bool) Log stderr from ffmpeg to the
-                                console
+        ffmpeg-verbose           (bool) Log stderr from ffmpeg to the
+                                 console
 
-        ffmpeg-verbose-path     (str) Specify the location of the
-                                ffmpeg stderr log file
+        ffmpeg-verbose-path      (str) Specify the location of the
+                                 ffmpeg stderr log file
 
-        ffmpeg-video-transcode  (str) The codec to use if transcoding
-                                video when muxing with ffmpeg
-                                e.g. ``h264``
+        ffmpeg-video-transcode   (str) The codec to use if transcoding
+                                 video when muxing with ffmpeg
+                                 e.g. ``h264``
 
-        ffmpeg-audio-transcode  (str) The codec to use if transcoding
-                                audio when muxing with ffmpeg
-                                e.g. ``aac``
+        ffmpeg-audio-transcode   (str) The codec to use if transcoding
+                                 audio when muxing with ffmpeg
+                                 e.g. ``aac``
 
         stream-segment-attempts  (int) How many attempts should be done
                                  to download each segment, default: ``3``.
@@ -205,6 +210,10 @@ class Streamlink(object):
                                  stream, default: ``60.0``.
                                  General option used by streams not
                                  covered by other options.
+
+        locale                   (str) Locale setting, in the RFC 1766 format
+                                 eg. en_US or es_ES
+                                 default: ``system locale``.
         ======================== =========================================
 
         """
@@ -246,6 +255,15 @@ class Streamlink(object):
             self.http.trust_env = value
         elif key == "http-ssl-verify":
             self.http.verify = value
+        elif key == "http-disable-dh":
+            if value:
+                requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':!DH'
+                try:
+                    requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST = \
+                        requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS.encode("ascii")
+                except AttributeError:
+                    # no ssl to disable the cipher on
+                    pass
         elif key == "http-ssl-cert":
             self.http.cert = value
         elif key == "http-timeout":
@@ -449,6 +467,10 @@ class Streamlink(object):
     @property
     def version(self):
         return __version__
+
+    @property
+    def localization(self):
+        return Localization(self.get_option("locale"))
 
 
 __all__ = ["Streamlink"]

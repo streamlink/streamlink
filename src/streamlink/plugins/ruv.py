@@ -97,7 +97,7 @@ class Ruv(Plugin):
                 yield quality, RTMPStream(
                     self.session,
                     {
-                        "rtmp": RTMP_LIVE_URL.format(stream_id, i+1),
+                        "rtmp": RTMP_LIVE_URL.format(stream_id, i + 1),
                         "pageUrl": self.url,
                         "live": True
                     }
@@ -107,7 +107,7 @@ class Ruv(Plugin):
             for i, quality_hls in enumerate(qualities_hls):
                 yield quality_hls, HLSStream(
                     self.session,
-                    HLS_RUV_LIVE_URL.format(i+1)
+                    HLS_RUV_LIVE_URL.format(i + 1)
                 )
 
         else:

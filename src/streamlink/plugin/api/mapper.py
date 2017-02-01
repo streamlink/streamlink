@@ -10,6 +10,7 @@ class StreamMapper(object):
     :param cmp: This callable is used to compare each mapping's key
                 with a value.
     """
+
     def __init__(self, cmp=eq):
         self._map = []
         self._cmp = cmp

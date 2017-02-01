@@ -57,6 +57,7 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
 
     Originally written by Jakub Roztocil of the httpie project.
     """
+
     def __init__(self, max_help_position=4, *args, **kwargs):
         # A smaller indent for args help.
         kwargs["max_help_position"] = max_help_position
@@ -134,7 +135,7 @@ parser = ArgumentParser(
     fromfile_prefix_chars="@",
     formatter_class=HelpFormatter,
     add_help=False,
-    usage="%(prog)s [OPTIONS] [URL] [STREAM]",
+    usage="%(prog)s [OPTIONS] <URL> [STREAM]",
     description=dedent("""
     Streamlink is command-line utility that extracts streams from
     various services and pipes them into a video player of choice.
@@ -271,6 +272,20 @@ general.add_argument(
     action="store_true",
     help="""
     Runs a version check and exits.
+    """
+)
+general.add_argument(
+    "--locale",
+    type=str,
+    metavar="LOCALE",
+    help="""
+    The preferred locale setting, for selecting the preferred
+    subtitle and audio language.
+
+    The locale is formatted as [language_code]_[country_code],
+     eg. eg. en_US or es_ES
+
+    Default is system locale.
     """
 )
 
@@ -728,7 +743,6 @@ transport.add_argument(
 
     This is generic option used by streams not covered by other options,
     such as stream protocols specific to plugins, e.g. UStream.
-
     Default is 60.0.
     """)
 transport.add_argument(
@@ -883,6 +897,15 @@ http.add_argument(
     """
 )
 http.add_argument(
+    "--http-disable-dh",
+    action="store_true",
+    help="""
+    Disable Diffie Hellman key exchange
+
+    Usually a bad idea, only use this if you know what you're doing.
+    """
+)
+http.add_argument(
     "--http-ssl-cert",
     metavar="FILENAME",
     help="""
@@ -1001,16 +1024,6 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--crunchyroll-locale",
-    metavar="LOCALE",
-    help="""
-    Indicate which locale to use for Crunchyroll subtitles.
-
-    The locale is formatted as [language_code]_[country_code], by default
-    en_US is used.
-    """
-)
-plugin.add_argument(
     "--livestation-email",
     metavar="EMAIL",
     help="""
@@ -1039,7 +1052,31 @@ plugin.add_argument(
     A BTV account password to use with --btv-username.
     """
 )
+plugin.add_argument(
+    "--schoolism-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your Schoolism account, required to access any Schoolism stream.
+    """
+)
+plugin.add_argument(
+    "--schoolism-password",
+    metavar="PASSWORD",
+    help="""
+    A Schoolism account password to use with --schoolism-email.
+    """
+)
+plugin.add_argument(
+    "--schoolism-part",
+    type=int,
+    default=1,
+    metavar="PART",
+    help="""
+    Play part number PART of the lesson
 
+    Defaults is 1
+    """
+)
 
 # Deprecated options
 stream.add_argument(
@@ -1102,6 +1139,11 @@ http.add_argument(
 http.add_argument(
     "--http-query-params",
     metavar="PARAMS",
+    help=argparse.SUPPRESS
+)
+plugin.add_argument(
+    "--crunchyroll-locale",
+    metavar="LOCALE",
     help=argparse.SUPPRESS
 )
 

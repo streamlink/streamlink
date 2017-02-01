@@ -73,7 +73,7 @@ class Buffer(object):
 class RingBuffer(Buffer):
     """Circular buffer for use in multi-threaded consumer/filler."""
 
-    def __init__(self, size=8192*4):
+    def __init__(self, size=8192 * 4):
         Buffer.__init__(self)
 
         self.buffer_size = size
@@ -129,7 +129,7 @@ class RingBuffer(Buffer):
                 write_len = min(self.free, data_left)
                 written = data_total - data_left
 
-                Buffer.write(self, data[written:written+write_len])
+                Buffer.write(self, data[written:written + write_len])
                 data_left -= write_len
 
                 self._check_events()

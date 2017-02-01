@@ -33,6 +33,10 @@ if version_info[0] == 2:
     deps.append("backports.shutil_which")
     deps.append("backports.shutil_get_terminal_size")
 
+# for localization
+deps.append("iso-639")
+deps.append("iso3166")
+
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
 if environ.get("NO_DEPS"):
@@ -42,7 +46,7 @@ srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="streamlink",
-      version="0.2.0",
+      version="0.3.0",
       description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",

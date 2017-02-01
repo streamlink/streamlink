@@ -91,7 +91,7 @@ _stream_schema = validate.Schema(
             }],
         )
     },
-    {
+        {
         "name": validate.text,
         "varnishUrl": validate.text
     })
@@ -422,7 +422,7 @@ class UStreamTV(Plugin):
 
     @classmethod
     def stream_weight(cls, stream):
-        match = re.match("mobile_(\w+)", stream)
+        match = re.match(r"mobile_(\w+)", stream)
         if match:
             weight, group = Plugin.stream_weight(match.group(1))
             weight -= 1
@@ -534,9 +534,9 @@ class UStreamTV(Plugin):
                                        self.url, provider_name,
                                        stream_index, password)
                 elif provider_url.startswith("rtmp"):
-                        playpath = stream_info["streamName"]
-                        stream = self._create_rtmp_stream(provider_url,
-                                                          playpath)
+                    playpath = stream_info["streamName"]
+                    stream = self._create_rtmp_stream(provider_url,
+                                                      playpath)
 
                 if stream:
                     streams[stream_name] = stream

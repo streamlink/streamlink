@@ -25,7 +25,7 @@ class INE(Plugin):
                 validate.transform(json.loads),
                 {"playlist": [
                     {"sources": [{"file": validate.text,
-                                 "type": validate.text}]}
+                                  "type": validate.text}]}
                 ]}
             )
         )

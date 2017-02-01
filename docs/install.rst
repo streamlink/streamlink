@@ -18,6 +18,9 @@ Distribution                         Installing
                                         # pacaur -S streamlink-git
 
                                      `Installing AUR packages`_
+`Fedora`_                            .. code-block:: console
+
+                                        # dnf install streamlink
 `Gentoo Linux`_                      .. code-block:: console
 
                                         # emerge net-misc/streamlink
@@ -41,6 +44,7 @@ Distribution                         Installing
 
 .. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
+.. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
@@ -62,7 +66,7 @@ Mac OS X                             .. code-block:: console
                                         # easy_install -U streamlink
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 
-`Chocolatey`_                        .. code-block:: powershell
+`Chocolatey`_                        .. code-block:: console
 
                                         C:\> choco install streamlink
 ==================================== ===========================================
@@ -76,6 +80,7 @@ Distribution/Platform                Maintainer
 ==================================== ===========================================
 Arch                                 Josip Ponjavic <josipponjavic at gmail.com>
 Chocolatey                           Scott Walters <me at scowalt.com>
+Fedora                               Mohamed El Morabity <melmorabity at fedoraproject.org>
 Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
@@ -95,14 +100,16 @@ can install Streamlink via source.
 
 There are a few different methods to do this,
 `pip <http://pip.readthedocs.org/en/latest/installing.html>`_ the Python package
-manager, :command:`easy_install` the older package manager included with
-`python-setuptools`_ or by checking out the latest code with
-`Git <http://git-scm.com/downloads>`_.
+manager, or by checking out the latest code with
+`Git <http://git-scm.com/downloads>`_. Using :command:`easy_install` is no longer recommended.
 
 .. note::
 
     For some Linux distributions the Python headers package needs to be installed before installing streamlink
     (``python-devel`` in RedHat, Fedora, etc.).
+
+    Ensure that you are using an up-to-date version of :command:`pip`, at least version **6** is recommended.
+
 
 The commands listed here will also upgrade any existing version of Streamlink.
 
@@ -149,6 +156,8 @@ Name                                 Notes
 `python-requests`_                   At least version **1.0**.
 `python-singledispatch`_             Only needed on Python versions older than **3.4**.
 `pycryptodome`_                      Required to play some encrypted streams
+`iso-639`_                           Used for localization settings, provides language information
+`iso3166`_                           Used for localization settings, provides country information
 
 **Optional**
 --------------------------------------------------------------------------------
@@ -169,6 +178,8 @@ Name                                 Notes
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
 .. _ffmpeg: https://www.ffmpeg.org/
+.. _iso-639: https://pypi.python.org/pypi/iso-639
+.. _iso3166: https://pypi.python.org/pypi/iso3166
 
 
 Installing without root permissions
@@ -215,9 +226,9 @@ Windows binaries
     Windows XP is not supported.
     Windows Vista requires at least SP2 to be installed. 
 
-You can download the latest stable Windows installer `here <https://github.com/streamlink/streamlink/releases>`_.
+You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
 
-You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`_.
+You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
 
 This is a installer which contains:
 

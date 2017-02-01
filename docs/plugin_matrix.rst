@@ -30,16 +30,16 @@ bigo                - live.bigo.tv       Yes   --
                     - bigoweb.co
 bilibili            live.bilibili.com    Yes   ?
 bliptv              blip.tv              --    Yes
-bnt                 - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
-                    - bgonair.com
+bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
+btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
+canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
+                    - c8.fr
+                    - cstar.fr
+cdnbg               - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
+                    - bgonair.bg
                     - kanal3.bg
                     - bitelevision.com
                     - nova.bg
-bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
-btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
-canaplus            - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
-                    - c8.fr
-                    - cstar.fr
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com
@@ -63,6 +63,7 @@ dogus               - startv.com.tr      Yes   No
                     - ntvspor.net
                     - kralmuzik.com.tr
                     - ntv.com.tr
+                    - eurostartv.com.tr
 dommune             dommune.com          Yes   --
 douyutv             douyutv.com          Yes   --
 dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
@@ -80,6 +81,7 @@ furstream           furstre.am           Yes   No
 gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
+gulli               replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
 hitbox              hitbox.tv            Yes   Yes
 huajiao             huajiao.com          Yes   No    
 ine                 ine.com              ---   Yes
@@ -109,17 +111,23 @@ orf_tvthek          tvthek.orf.at        Yes   Yes
 pandatv             panda.tv             Yes   ?
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
+playtv              playtv.fr            Yes   --    Streams may be geo-restricted to France.
 pluzz               pluzz.francetv.fr    Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
 powerapp            powerapp.com.tr      Yes   No
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rtve                rtve.es              Yes   No
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
+schoolism           schoolism.com        --    Yes   Requires a login and a subscription.
 seemeplay           seemeplay.ru         Yes   Yes
 servustv            servustv.com         ?     ?
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportal             sportal.bg           Yes   No
 sportschau          sportschau.de        Yes   No
+srgssr              - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
+                    - rts.ch
+                    - rsi.ch
+                    - rtr.ch
 ssh101              ssh101.com           Yes   No
 streamboat          streamboat.tv        Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
@@ -130,6 +138,8 @@ streamupcom         streamup.com         Yes   --
 svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - svtflow.se
                     - oppetarkiv.se
+swisstxt            - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
+                    - rsi.ch
 tf1                 - tf1.fr             Yes   No    Streams may be geo-restricted to France.
                     - lci.fr
 tga                 - star.plu.cn        Yes   No

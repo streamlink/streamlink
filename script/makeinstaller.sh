@@ -42,6 +42,9 @@ format=bundled
 packages=requests
          streamlink
          streamlink_cli
+         iso639
+         iso3166
+         pkg_resources
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
@@ -158,6 +161,13 @@ SubSectionEnd
     RMDir /r "\$INSTDIR\ffmpeg"
 [% endblock %]
 
+[% block install_commands %]
+    ; Remove any existing bin dir from %PATH% to avoid duplicates
+    [% if has_commands %]
+    nsExec::ExecToLog '[[ python ]] -Es "\$INSTDIR\_system_path.py" remove "\$INSTDIR\bin"'
+    [% endif %]
+    [[ super() ]]
+[% endblock install_commands %]
 
 [% block install_shortcuts %]
     ; Remove shortcut from previous releases

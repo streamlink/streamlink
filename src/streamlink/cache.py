@@ -30,7 +30,7 @@ class Cache(object):
             try:
                 with open(self.filename, "r") as fd:
                     self._cache = json.load(fd)
-            except:
+            except Exception:
                 self._cache = {}
         else:
             self._cache = {}

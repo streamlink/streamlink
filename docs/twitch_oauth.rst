@@ -1,5 +1,7 @@
 .. _twitch_oauth:
 
+:orphan:
+
 Twitch OAuth authentication
 ===========================
 

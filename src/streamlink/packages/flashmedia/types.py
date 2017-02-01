@@ -41,6 +41,7 @@ class PrimitiveType(Struct):
 
         return self.unpack(data)[0]
 
+
 class PrimitiveClassType(PrimitiveType):
     def __init__(self, format, cls):
         self.cls = cls
@@ -215,7 +216,6 @@ class HighLowCombo(PrimitiveType):
         return (ret,)
 
 
-
 class FixedPoint(PrimitiveType):
     def __init__(self, format, bits):
         self.divider = float(1 << bits)
@@ -243,6 +243,7 @@ class FixedPoint(PrimitiveType):
         val /= self.divider
 
         return (val,)
+
 
 class PaddedBytes(PrimitiveType):
     def __init__(self, size, padding):
@@ -340,6 +341,7 @@ FourCC = PaddedBytes(4, " ")
 ScriptDataNumber = DoubleBE
 ScriptDataBoolean = PrimitiveType("?")
 
+
 class U3264(DynamicType):
     @classmethod
     def size(cls, val, version):
@@ -404,6 +406,7 @@ class String(DynamicType):
         return pack_bytes_into(buf, offset,
                                val.encode(encoding, errors))
 
+
 class CString(String):
     EndMarker = b"\x00"
 
@@ -447,6 +450,7 @@ class CString(String):
 class ScriptDataType(object):
     __identifier__ = 0
 
+
 class ScriptDataString(String):
     __size_primitive__ = U16BE
 
@@ -484,12 +488,14 @@ class ScriptDataString(String):
 
         return (data, offset)
 
+
 class ScriptDataLongString(ScriptDataString):
     __size_primitive__ = U32BE
 
 
 class ScriptDataObjectEnd(Exception):
     pass
+
 
 class ScriptDataObject(OrderedDict, ScriptDataType):
     __identifier__ = SCRIPT_DATA_TYPE_OBJECT
@@ -591,19 +597,20 @@ class ScriptDataECMAArray(ScriptDataObject):
 
     @classmethod
     def read(cls, fd):
-        U32BE.read(fd) # Length
+        U32BE.read(fd)  # Length
         val = ScriptDataObject.read(fd)
 
         return cls(val)
 
     @classmethod
     def unpack_from(cls, buf, offset):
-        U32BE.unpack_from(buf, offset) # Length
+        U32BE.unpack_from(buf, offset)  # Length
         offset += U32BE.size
 
         val, offset = ScriptDataObject.unpack_from(buf, offset)
 
         return (cls(val), offset)
+
 
 class ScriptDataStrictArray(DynamicType):
     @classmethod
@@ -880,6 +887,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
 class AMF0Value(ScriptDataValue):
     pass
 
+
 class AMF0String(ScriptDataString):
     pass
 
@@ -888,8 +896,10 @@ AMF0Number = ScriptDataNumber
 
 AMF3Double = ScriptDataNumber
 
+
 class AMF3Type(ScriptDataType):
     pass
+
 
 class AMF3Integer(DynamicType, AMF3Type):
     __identifier__ = AMF3_TYPE_INTEGER
@@ -924,18 +934,18 @@ class AMF3Integer(DynamicType, AMF3Type):
             offset += 1
         elif val < 0x4000:
             buf[offset] = (val >> 7 & 0x7f) | 0x80
-            buf[offset+1] = val & 0x7f
+            buf[offset + 1] = val & 0x7f
             offset += 2
         elif val < 0x200000:
             buf[offset] = (val >> 14 & 0x7f) | 0x80
-            buf[offset+1] = (val >> 7 & 0x7f) | 0x80
-            buf[offset+2] = val & 0x7f
+            buf[offset + 1] = (val >> 7 & 0x7f) | 0x80
+            buf[offset + 2] = val & 0x7f
             offset += 3
         elif val < 0x40000000:
             buf[offset] = (val >> 22 & 0x7f) | 0x80
-            buf[offset+1] = (val >> 15 & 0x7f) | 0x80
-            buf[offset+2] = (val >> 8 & 0x7f) | 0x80
-            buf[offset+3] = val & 0xff
+            buf[offset + 1] = (val >> 15 & 0x7f) | 0x80
+            buf[offset + 2] = (val >> 8 & 0x7f) | 0x80
+            buf[offset + 3] = val & 0xff
             offset += 4
 
         return offset
@@ -1103,7 +1113,6 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
                 for member in traits.__members__:
                     size += AMF3String.size(member, cache=str_cache)
 
-
             for member in traits.__members__:
                 value = getattr(val, member)
                 size += AMF3Value.size(value, str_cache=str_cache,
@@ -1165,14 +1174,12 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
                 for member in traits.__members__:
                     chunks.append(AMF3String(member, cache=str_cache))
 
-
             for member in traits.__members__:
                 value = getattr(val, member)
                 value = AMF3Value.pack(value, str_cache=str_cache,
                                        object_cache=object_cache,
                                        traits_cache=traits_cache)
                 chunks.append(value)
-
 
             if traits.__dynamic__:
                 if isinstance(val, AMF3Object):
@@ -1259,6 +1266,7 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
 
         return obj
 
+
 class AMF3Array(OrderedDict):
     def __init__(self, *args, **kwargs):
         if args and isinstance(args[0], list):
@@ -1281,6 +1289,7 @@ class AMF3Array(OrderedDict):
     def dense_values(self):
         for key in self.dense_keys():
             yield self[key]
+
 
 class AMF3ArrayPacker(DynamicType, AMF3Type):
     __identifier__ = AMF3_TYPE_ARRAY
@@ -1401,6 +1410,7 @@ class AMF3Date(object):
     def __init__(self, time):
         self.time = time
 
+
 class AMF3DatePacker(DynamicType, AMF3Type):
     __identifier__ = AMF3_TYPE_ARRAY
 
@@ -1439,6 +1449,7 @@ class AMF3DatePacker(DynamicType, AMF3Type):
             cache.append(date)
 
             return date
+
 
 class AMF3Value(DynamicType):
     PrimitiveReaders = {
@@ -1538,8 +1549,8 @@ class AMF3Value(DynamicType):
         elif isinstance(val, (AMF3Array, list)):
             chunks.append(U8(AMF3_TYPE_ARRAY))
             chunks.append(AMF3ArrayPacker.pack(val, str_cache=str_cache,
-                                              object_cache=object_cache,
-                                              traits_cache=traits_cache))
+                                               object_cache=object_cache,
+                                               traits_cache=traits_cache))
 
         elif isinstance(val, string_types):
             chunks.append(U8(AMF3_TYPE_STRING))
@@ -1587,8 +1598,8 @@ class AMF3Value(DynamicType):
 
         elif type_ == AMF3_TYPE_ARRAY:
             return AMF3ArrayPacker.read(fd, str_cache=str_cache,
-                                         object_cache=object_cache,
-                                         traits_cache=traits_cache)
+                                        object_cache=object_cache,
+                                        traits_cache=traits_cache)
 
         elif type_ == AMF3_TYPE_OBJECT:
             return AMF3ObjectPacker.read(fd, str_cache=str_cache, object_cache=object_cache,

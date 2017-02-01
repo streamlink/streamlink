@@ -5,16 +5,10 @@ import threading
 import subprocess
 
 import sys
-from streamlink.packages import pbs
-from streamlink.packages.pbs import CommandNotFound
 from streamlink.stream import Stream
+from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
-try:
-    from subprocess import DEVNULL
-    devnull = lambda: DEVNULL
-except ImportError:
-    devnull = lambda: open(os.path.devnull, 'w')
-
+from streamlink.compat import devnull, which
 
 class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
@@ -27,7 +21,7 @@ class MuxedStream(Stream):
     def open(self):
         fds = []
         for substream in self.substreams:
-            fds.append(substream.open())
+            fds.append(substream and substream.open())
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
     @classmethod
@@ -35,7 +29,7 @@ class MuxedStream(Stream):
         return FFMPEGMuxer.is_usable(session)
 
 
-class FFMPEGMuxer(object):
+class FFMPEGMuxer(StreamIO):
     __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
 
     @staticmethod
@@ -60,27 +54,36 @@ class FFMPEGMuxer(object):
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
-            raise Exception("cannot use FFMPEG")
+            raise StreamError("cannot use FFMPEG")
 
         self.session = session
         self.process = None
         self.logger = session.logger.new_module("stream.mp4mux-ffmpeg")
         self.streams = streams
-        self.pipes = [NamedPipe("foo-{}-{}".format(os.getpid(), random.randint(0, 1000))) for _ in streams]
+
+        self.pipes = [NamedPipe("foo-{}-{}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
         self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
                              for stream, np in
-                             zip(streams, self.pipes)]
+                             zip(self.streams, self.pipes)]
 
         ofmt = options.pop("format", "matroska")
         outpath = options.pop("outpath", "pipe:1")
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
+        metadata = options.pop("metadata", {})
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
             self._cmd.extend(["-i", np.path])
 
-        self._cmd.extend(['-c:v', videocodec, '-c:a', audiocodec, '-f', ofmt, outpath])
+        self._cmd.extend(['-c:v', videocodec])
+        self._cmd.extend(['-c:a', audiocodec])
+
+        for stream, data in metadata.items():
+            for datum in data:
+                self._cmd.extend(["-metadata:{0}".format(stream), datum])
+
+        self._cmd.extend(['-f', ofmt, outpath])
         self.logger.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
         self.close_errorlog = False
 
@@ -91,7 +94,6 @@ class FFMPEGMuxer(object):
             self.close_errorlog = True
         else:
             self.errorlog = devnull()
-
 
     def open(self):
         for t in self.pipe_threads:
@@ -111,11 +113,8 @@ class FFMPEGMuxer(object):
         if session.options.get("ffmpeg-ffmpeg"):
             command.append(session.options.get("ffmpeg-ffmpeg"))
         for cmd in command or cls.__commands__:
-            try:
-                pbs.create_command(cmd)
+            if which(cmd):
                 return cmd
-            except CommandNotFound:
-                continue
 
     def read(self, size=-1):
         data = self.process.stdout.read(size)

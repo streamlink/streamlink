@@ -60,9 +60,9 @@ _channels_schema = validate.Schema(
 )
 
 _video_schema = validate.Schema(
-    { "Data": [{
+    {"Data": [{
         "Assets": validate.all(
-            [{ validate.optional("Links"): validate.all(
+            [{validate.optional("Links"): validate.all(
                 [{
                     "Target": validate.text,
                     "Uri": validate.text

@@ -1,6 +1,7 @@
 import sys
 
 from streamlink.plugin.api.validate import xml_element, text
+from streamlink.utils import update_scheme
 
 try:
     import xml.etree.cElementTree as ET
@@ -42,7 +43,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual({"test": 1}, parse_json("""{"test": 1}""", schema=validate.Schema({"test": 1})))
         self.assertRaises(PluginError, parse_json, """{"test: 1}""")
         self.assertRaises(IOError, parse_json, """{"test: 1}""", exception=IOError)
-        self.assertRaises(PluginError, parse_json, """{"test: 1}"""*10)
+        self.assertRaises(PluginError, parse_json, """{"test: 1}""" * 10)
 
     def test_parse_xml(self):
         expected = ET.Element("test", {"foo": "bar"})
@@ -64,10 +65,9 @@ class TestUtil(unittest.TestCase):
 
     def test_parse_xml_fail(self):
         self.assertRaises(PluginError,
-                          parse_xml, u"1"*1000)
+                          parse_xml, u"1" * 1000)
         self.assertRaises(IOError,
-                          parse_xml, u"1"*1000, exception=IOError)
-
+                          parse_xml, u"1" * 1000, exception=IOError)
 
     def test_parse_xml_validate(self):
         expected = ET.Element("test", {"foo": "bar"})
@@ -80,3 +80,17 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(
             {"test": "1", "foo": "bar"},
             parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": validate.text, "foo": "bar"})))
+
+    def test_update_scheme(self):
+        self.assertEqual(
+            "https://example.com/foo",
+            update_scheme("https://other.com/bar", "//example.com/foo")
+        )
+        self.assertEqual(
+            "http://example.com/foo",
+            update_scheme("http://other.com/bar", "//example.com/foo")
+        )
+        self.assertEqual(
+            "http://example.com/foo",
+            update_scheme("https://other.com/bar", "http://example.com/foo")
+        )

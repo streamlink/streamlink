@@ -10,6 +10,7 @@ try:
 except ImportError:
     from html.parser import HTMLParser
 
+
 def html_unescape(s):
     parser = HTMLParser()
     return parser.unescape(s)
@@ -37,6 +38,7 @@ _schema = validate.Schema(
         )
     )
 )
+
 
 class Vidio(Plugin):
     @classmethod

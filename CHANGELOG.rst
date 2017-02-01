@@ -1,3 +1,128 @@
+streamlink 0.3.0 (2017-01-24)
+-------------------------------
+
+Release 0.3.0 of Streamlink!
+
+A lot of updates to each plugin (thank you @beardypig !), automated Windows releases, PEP8 formatting throughout Streamlink are some of the few updates to this release as we near a stable 1.0.0 release. 
+
+Main features are:
+  - Lot's of maintaining / updates to plugins
+  - General bug and doc fixes
+  - Major improvements to development (github issue templates, automatically created releases)
+
+::
+
+    Agustín Carrasco <asermax@gmail.com> (1):
+          Links on crunchy's rss no longer contain the show name in the url (#379)
+    
+    Brainzyy <Brainzyy@users.noreply.github.com> (1):
+          Add basic tests for stream.me plugin (#391)
+    
+    Javier Cantero <jcantero@escomposlinux.org> (2):
+          plugins/twitch: use version v3 of the API
+          plugins/twitch: use kraken URL
+    
+    John Smith <v2.0@protonmail.com> (3):
+          Added support for bongacams.com streams (#329)
+          streamlink_cli.main: close stream_fd on exit (#427)
+          streamlink_cli.utils.progress: write new line at finish (#442)
+    
+    Max Riegler <rinukkusu@sub-r.de> (1):
+          plugins.chaturbate: new regex (#457)
+    
+    Michiel Sikma <michiel@wedemandhtml.com> (1):
+          Update PLAYER_VERSION, as old one does not return data. Add ability to use streams with /embed/video in the URL, from embedded players. (#311)
+    
+    Mohamed El Morabity <melmorabity@users.noreply.github.com> (6):
+          Add support for pluzz.francetv.fr (#343)
+          Fix ArteTV plugin (#385)
+          Add support for Canal+ TV group channels (#416)
+          Update installation instructions for Fedora (#443)
+          Add support for Play TV (#439)
+          Use token generator for HLS streams, as for HDS ones (#466)
+    
+    RosadinTV <rosadintv@outlook.com> (1):
+          --can-handle-url-no-redirect parameter added (#333)
+    
+    Stefan Hanreich <stefanhani@gmail.com> (1):
+          added chocolatey to the documentation (#380)
+    
+    bastimeyer <mail@bastimeyer.de> (3):
+          Automatically create Github releases
+          Set changelog in automated github releases
+          Add a github issue template
+    
+    beardypig <beardypig@users.noreply.github.com> (55):
+          plugins.tvcatchup: site layout changed, updated the stream regex to accommodate the change (#338)
+          plugins.streamlive: streamlive.to have added some extra protection to their streams which currently prevents us from capturing them (#339)
+          cli: add command line option to specific logging path for subprocess errorlog
+          plugins.trtspor: added support for trtspor.com (#349)
+          plugins.kanal7: fixed page change in kanal7 live stream (#348)
+          plugins.picarto: Remove the unreliable rtmp stream (#353)
+          packaging: removed the built in backports infavour of including them as dependencies when required (#355)
+          Boost the test coverage a bit (#362)
+          plugins: all regex string should be raw (#361)
+          ci: build and test on Python 3.6 (+3.7 on travis, with allowed failure) (#360)
+          packages.flashmedia: fix bug in AMFMessage (#359)
+          tests: use mock from unittest when available otherwise fallback to mock (#358)
+          stream.hls: try to retry stream segments (#357)
+          tests: add codecov config file (#363)
+          plugins.picarto: updated plugin to use tech_switch divs to find the stream parameters
+          plugins.mitele: support for live streams on mitele.es
+          docs: add a note about python-devel needing to be installed in some cases
+          docs/release: generate the changelog as rst instead of md
+          plugins.adultswim: support https urls
+          use iso 8601 date format for the changelog
+          plugins.tf1: added plugin to support tf1.fr and lci.fr
+          plugins.raiplay: added plugin to support raiplay.it
+          plugins.vaughnlive: updated player version and info URL (#383)
+          plugins.tv8cat: added support for tv8.cat live stream (#390)
+          Fix TF1.fr plugin (#389)
+          plugins.stream: fix a default scheme handling for urls
+          Add support for some Bulgarian live streams (#392)
+          rtmp: fix bug in redirect for rtmp streams
+          plugins.sportal: added support for the live stream on sportal.bg
+          plugins.bnt: update the user agent string for the http requests
+          plugins.ssh101: update to support new site layout
+          Optionally use FFMPEG to mux separate video and audio streams (#224)
+          Support for 4K videos in YouTube (#225)
+          windows-installer: add the version info to the installer file
+          include CHANGELOG.rst instead of .md in the egg
+          stream.hls: output duplicate streams for HLS when multiple streams of the same quality are available
+          stream.ffmpegmux: fix support for avconv, avconv will be used if ffmpeg is not found
+          Adultswin VOD support (#406)
+          Move streamlink_cli.utils.named_pipe in to streamlink.utils
+          plugins.rtve: update plugin to support new streaming method
+          stream.hds: omit HDS streams that are protected by DRM
+          Adultswin VOD fix for live show replays (#418)
+          plugins.rtve: add support for legacy stream URLs
+          installer: remove the streamlink bin dir from %PATH% before installing
+          plugins.twitch: only check hosted channels when playing a live stream
+          docs: tweaks to docs and docs build process
+          Fix iframe detection for BTN/cdn.bg streams (#437)
+          fix some regex that give deprecation warnings in python 3.6
+          plugins.adultswim: correct behaviour for archived streams
+          plugins.nineanime: add scheme to grabber api url if not present
+          session: add an option to disable Diffie Hellman key exchange
+          plugins.srgssr: added support for srg ssr sites: srf, rts and rsi
+          plugins.srgssr: fixed bug in api URL and fixed akamai urls with authparams
+          cli: try to terminate the player process before killing it (if terminate takes too long)
+          plugins.swisstxt: add support for the SRG SSR sites sports sections
+    
+    fozzy <fozzysec@gmail.com> (1):
+          Add plugin for huajiao.com and zhanqi.tv (#334)
+    
+    sqrt2 <sqrt2@users.noreply.github.com> (1):
+          Fix swf_url in livestream.com plugin (#428)
+    
+    stepshal <nessento@openmailbox.org> (1):
+          Remove trailing.
+    
+    stepshal <stepshal@users.noreply.github.com> (2):
+          Add blank line after class or function definition (#408)
+          PEP8 (#414)
+    
+
 streamlink 0.2.0 (2016-12-16)
 -----------------------------
 

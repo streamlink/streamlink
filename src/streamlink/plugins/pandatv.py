@@ -15,28 +15,28 @@ OD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv"
 _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 
 _room_schema = validate.Schema(
-        {
-            "data": validate.any(
-                validate.text,
-                dict,
-                {
-                    "videoinfo": validate.any(
-                        validate.text,
-                        {
-                            "room_key": validate.text,
-                            "plflag": validate.text,
-                            "status": validate.text,
-                            "stream_addr": {
-                                "HD": validate.text,
-                                "OD": validate.text,
-                                "SD": validate.text
-                            }
+    {
+        "data": validate.any(
+            validate.text,
+            dict,
+            {
+                "videoinfo": validate.any(
+                    validate.text,
+                    {
+                        "room_key": validate.text,
+                        "plflag": validate.text,
+                        "status": validate.text,
+                        "stream_addr": {
+                            "HD": validate.text,
+                            "OD": validate.text,
+                            "SD": validate.text
                         }
-                    )
-                }
-            )
-        },
-        validate.get("data"))
+                    }
+                )
+            }
+        )
+    },
+    validate.get("data"))
 
 
 class pandatv(Plugin):
@@ -67,7 +67,7 @@ class pandatv(Plugin):
 
         streams = {}
         plflag = videoinfo.get('plflag')
-        if not plflag or not '_' in plflag:
+        if plflag or not '_' not in plflag:
             self.logger.error("Please Check PandaTV Room API")
             return
         plflag = plflag.split('_')[1]

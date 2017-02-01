@@ -106,13 +106,11 @@ class ArgparseDirective(Directive):
                 metavar = " ".join(metavar)
 
             if metavar:
-                optional = arg.options.get("nargs") == "?"
-                if optional:
-                    metavar = "[{0}]".format(metavar)
-
                 options = []
                 for a in arg.args:
                     if a.startswith("-"):
+                        if arg.options.get("nargs") == "?":
+                            metavar = "[{0}]".format(metavar)
                         options.append("{0} {1}".format(a, metavar))
                     else:
                         options.append(metavar)

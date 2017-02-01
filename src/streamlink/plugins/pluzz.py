@@ -11,7 +11,7 @@ from streamlink.stream import HDSStream, HLSStream
 class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
     API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}&catalogue=Pluzz'
-    HDS_TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
+    TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
     _url_re = re.compile(r'http://pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)')
     _video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
@@ -36,6 +36,7 @@ class Pluzz(Plugin):
                     validate.url(),
                 ),
                 'statut': validate.text,
+                'drm': bool,
                 'geoblocage': validate.any(
                     None,
                     [validate.all(validate.text)]
@@ -56,11 +57,9 @@ class Pluzz(Plugin):
         )
     })
 
-
     @classmethod
     def can_handle_url(cls, url):
         return Pluzz._url_re.match(url)
-
 
     def _get_streams(self):
         # Retrieve geolocation data
@@ -89,13 +88,26 @@ class Pluzz(Plugin):
         videos = http.json(res, schema=self._api_schema)
         now = time.time()
 
+        offline = False
+        geolocked = False
+        drm = False
+        expired = False
         for video in videos['videos']:
+            video_url = video['url']
+
             # Check whether video format is available
             if video['statut'] != 'ONLINE':
+                offline = offline or True
                 continue
 
             # Check whether video format is geo-locked
             if video['geoblocage'] is not None and country_code not in video['geoblocage']:
+                geolocked = geolocked or True
+                continue
+
+            # Check whether video is DRM-protected
+            if video['drm']:
+                drm = drm or True
                 continue
 
             # Check whether video format is expired
@@ -105,13 +117,17 @@ class Pluzz(Plugin):
                 if available:
                     break
             if not available:
+                expired = expired or True
                 continue
 
-            video_url = video['url']
             # TODO: add DASH streams once supported
+            if '.mpd' in video_url:
+                continue
+
+            res = http.get(self.TOKEN_URL.format(video_url))
+            video_url = res.text
+
             if '.f4m' in video_url and swf_url is not None:
-                res = http.get(self.HDS_TOKEN_URL.format(video_url))
-                video_url = res.text
                 for bitrate, stream in HDSStream.parse_manifest(self.session, video_url, pvswf=swf_url).items():
                     # HDS videos with data in their manifest fragment token
                     # doesn't seem to be supported by HDSStream. Ignore such
@@ -124,6 +140,15 @@ class Pluzz(Plugin):
             elif '.m3u8' in video_url:
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield stream
+
+        if offline:
+            self.logger.error('Failed to access stream, may be due to offline content')
+        if geolocked:
+            self.logger.error('Failed to access stream, may be due to geo-restricted content')
+        if drm:
+            self.logger.error('Failed to access stream, may be due to DRM-protected content')
+        if expired:
+            self.logger.error('Failed to access stream, may be due to expired content')
 
 
 __plugin__ = Pluzz

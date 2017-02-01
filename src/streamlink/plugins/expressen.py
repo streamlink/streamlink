@@ -5,7 +5,7 @@ from streamlink.plugin.api import http
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 
 
-STREAMS_INFO_URL = "http://www.expressen.se/Handlers/WebTvHandler.ashx?id={0}";
+STREAMS_INFO_URL = "http://www.expressen.se/Handlers/WebTvHandler.ashx?id={0}"
 
 _url_re = re.compile(r"http(s)?://(?:\w+.)?\.expressen\.se")
 _meta_xmlurl_id_re = re.compile(r'<meta.+xmlUrl=http%3a%2f%2fwww.expressen.se%2fHandlers%2fWebTvHandler.ashx%3fid%3d([0-9]*)" />')
@@ -21,24 +21,24 @@ class Expressen(Plugin):
 
         match = _meta_xmlurl_id_re.search(res.text)
         if not match:
-            return;
+            return
 
         xml_info_url = STREAMS_INFO_URL.format(match.group(1))
         video_info_res = http.get(xml_info_url)
         parsed_info = http.xml(video_info_res)
 
-        live_el = parsed_info.find("live");
+        live_el = parsed_info.find("live")
         live = live_el is not None and live_el.text == "1"
 
-        streams = { }
+        streams = {}
 
-        hdsurl_el = parsed_info.find("hdsurl");
+        hdsurl_el = parsed_info.find("hdsurl")
         if hdsurl_el is not None and hdsurl_el.text is not None:
             hdsurl = hdsurl_el.text
             streams.update(HDSStream.parse_manifest(self.session, hdsurl))
 
         if live:
-            vurls_el = parsed_info.find("vurls");
+            vurls_el = parsed_info.find("vurls")
             if vurls_el is not None:
                 for i, vurl_el in enumerate(vurls_el):
                     bitrate = vurl_el.get("bitrate")
@@ -49,7 +49,7 @@ class Expressen(Plugin):
                     streams[name] = RTMPStream(self.session, params)
 
         parsed_urls = set()
-        mobileurls_el = parsed_info.find("mobileurls");
+        mobileurls_el = parsed_info.find("mobileurls")
         if mobileurls_el is not None:
             for mobileurl_el in mobileurls_el:
                 text = mobileurl_el.text

@@ -12,7 +12,7 @@ from itertools import chain
 from time import sleep
 
 from streamlink import (Streamlink, StreamError, PluginError,
-                          NoPluginError)
+                        NoPluginError)
 from streamlink.cache import Cache
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
@@ -445,7 +445,8 @@ def format_valid_streams(plugin, streams):
         if name in STREAM_SYNONYMS:
             continue
 
-        synonymfilter = lambda n: stream is streams[n] and n is not name
+        def synonymfilter(n):
+            return stream is streams[n] and n is not name
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:
@@ -654,6 +655,9 @@ def setup_http_session():
     if args.http_no_ssl_verify:
         streamlink.set_option("http-ssl-verify", False)
 
+    if args.http_disable_dh:
+        streamlink.set_option("http-disable-dh", True)
+
     if args.http_ssl_cert:
         streamlink.set_option("http-ssl-cert", args.http_ssl_cert)
 
@@ -767,6 +771,8 @@ def setup_options():
 
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
+    streamlink.set_option("locale", args.locale)
+
 
     # Deprecated options
     if args.hds_fragment_buffer:
@@ -779,23 +785,23 @@ def setup_plugin_options():
     """Sets Streamlink plugin options."""
     if args.twitch_cookie:
         streamlink.set_plugin_option("twitch", "cookie",
-                                       args.twitch_cookie)
+                                     args.twitch_cookie)
 
     if args.twitch_oauth_token:
         streamlink.set_plugin_option("twitch", "oauth_token",
-                                       args.twitch_oauth_token)
+                                     args.twitch_oauth_token)
 
     if args.twitch_disable_hosting:
         streamlink.set_plugin_option("twitch", "disable_hosting",
-                                       args.twitch_disable_hosting)
+                                     args.twitch_disable_hosting)
 
     if args.ustream_password:
         streamlink.set_plugin_option("ustreamtv", "password",
-                                       args.ustream_password)
+                                     args.ustream_password)
 
     if args.crunchyroll_username:
         streamlink.set_plugin_option("crunchyroll", "username",
-                                       args.crunchyroll_username)
+                                     args.crunchyroll_username)
 
     if args.crunchyroll_username and not args.crunchyroll_password:
         crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
@@ -804,22 +810,22 @@ def setup_plugin_options():
 
     if crunchyroll_password:
         streamlink.set_plugin_option("crunchyroll", "password",
-                                       crunchyroll_password)
+                                     crunchyroll_password)
     if args.crunchyroll_purge_credentials:
         streamlink.set_plugin_option("crunchyroll", "purge_credentials",
-                                       args.crunchyroll_purge_credentials)
+                                     args.crunchyroll_purge_credentials)
 
     if args.crunchyroll_locale:
         streamlink.set_plugin_option("crunchyroll", "locale",
-                                       args.crunchyroll_locale)
+                                     args.crunchyroll_locale)
 
     if args.livestation_email:
         streamlink.set_plugin_option("livestation", "email",
-                                       args.livestation_email)
+                                     args.livestation_email)
 
     if args.livestation_password:
         streamlink.set_plugin_option("livestation", "password",
-                                       args.livestation_password)
+                                     args.livestation_password)
 
     if args.btv_username:
         streamlink.set_plugin_option("btv", "username", args.btv_username)
@@ -831,6 +837,18 @@ def setup_plugin_options():
 
     if btv_password:
         streamlink.set_plugin_option("btv", "password", btv_password)
+
+    if args.schoolism_email:
+        streamlink.set_plugin_option("schoolism", "email", args.schoolism_email)
+    if args.schoolism_email and not args.schoolism_password:
+        schoolism_password = console.askpass("Enter Schoolism password: ")
+    else:
+        schoolism_password = args.schoolism_password
+    if schoolism_password:
+        streamlink.set_plugin_option("schoolism", "password", schoolism_password)
+
+    if args.schoolism_part:
+        streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
 
     # Deprecated options
     if args.jtv_legacy_names:
@@ -931,16 +949,14 @@ def main():
             # Close output
             if output:
                 output.close()
-
-            # Make sure current stream gets properly cleaned up
+            console.msg("Interrupted! Exiting...")
+        finally:
             if stream_fd:
-                console.msg("Interrupted! Closing currently open stream...")
                 try:
+                    console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
                     sys.exit()
-            else:
-                console.msg("Interrupted! Exiting...")
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:

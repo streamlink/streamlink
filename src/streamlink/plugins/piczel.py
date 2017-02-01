@@ -11,61 +11,62 @@ RTMP_URL = "rtmp://piczel.tv:1935/live/{0}"
 _url_re = re.compile(r"https://piczel.tv/watch/(\w+)")
 
 _streams_schema = validate.Schema(
-	{
-		"type": validate.text,
-		"data": [
-			{
-				"id": int,
-				"live": bool,
-				"slug": validate.text
-			}
-		]
-	}
+    {
+        "type": validate.text,
+        "data": [
+            {
+                "id": int,
+                "live": bool,
+                "slug": validate.text
+            }
+        ]
+    }
 )
 
+
 class Piczel(Plugin):
-	@classmethod
-	def can_handle_url(cls, url):
-		return _url_re.match(url)
+    @classmethod
+    def can_handle_url(cls, url):
+        return _url_re.match(url)
 
-	def _get_streams(self):
-		match = _url_re.match(self.url)
-		if not match:
-			return
+    def _get_streams(self):
+        match = _url_re.match(self.url)
+        if not match:
+            return
 
-		channel_name = match.group(1)
+        channel_name = match.group(1)
 
-		res = http.get(STREAMS_URL.format(channel_name))
-		streams = http.json(res, schema=_streams_schema)
-		if streams["type"] not in ("multi", "stream"):
-			return
+        res = http.get(STREAMS_URL.format(channel_name))
+        streams = http.json(res, schema=_streams_schema)
+        if streams["type"] not in ("multi", "stream"):
+            return
 
-		for stream in streams["data"]:
-			if stream["slug"] != channel_name:
-				continue
+        for stream in streams["data"]:
+            if stream["slug"] != channel_name:
+                continue
 
-			if not stream["live"]:
-				return
+            if not stream["live"]:
+                return
 
-			streams = {}
+            streams = {}
 
-			try:
-				streams.update(HLSStream.parse_variant_playlist(self.session, HLS_URL.format(stream["id"])))
-			except IOError as e:
-				# fix for hosted offline streams
-				if "404 Client Error" in str(e):
-					return
-				raise
+            try:
+                streams.update(HLSStream.parse_variant_playlist(self.session, HLS_URL.format(stream["id"])))
+            except IOError as e:
+                # fix for hosted offline streams
+                if "404 Client Error" in str(e):
+                    return
+                raise
 
-			streams["rtmp"] = RTMPStream(self.session, {
-				"rtmp": RTMP_URL.format(stream["id"]),
-				"pageUrl": self.url,
-				"live": True
-			})
+            streams["rtmp"] = RTMPStream(self.session, {
+                "rtmp": RTMP_URL.format(stream["id"]),
+                "pageUrl": self.url,
+                "live": True
+            })
 
-			return streams
+            return streams
 
-		return
+        return
 
 
 __plugin__ = Piczel

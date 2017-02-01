@@ -1,4 +1,5 @@
-import re, json
+import re
+import json
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http
@@ -9,6 +10,7 @@ _vod_url_re = re.compile(r'https?://tvthek\.orf\.at/pro(gram|file)/(?P<showtitle
 _json_re = re.compile(r'<div class="jsb_ jsb_VideoPlaylist" data-jsb="(?P<json>[^"]+)">')
 
 MODE_STREAM, MODE_VOD = 0, 1
+
 
 class ORFTVThek(Plugin):
     @classmethod
