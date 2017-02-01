@@ -68,11 +68,11 @@ class Pandatv(Plugin):
             hd = _hd_re.search(res.text).group(1)
             od = _od_re.search(res.text).group(1)
         except AttributeError:
-            self.logger.info("Please enter the correct room number!")
+            self.logger.info("Not a valid room url.")
             return
 
         if status != '2':
-            self.logger.info("Channel offline now!")
+            self.logger.info("Stream current unavailable.")
             return
 
         ts = int(time.time())
