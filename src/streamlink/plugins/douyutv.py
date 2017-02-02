@@ -110,7 +110,7 @@ class Douyutv(Plugin):
             return
 
         if room["show_status"] != 1:
-            self.logger.info("Stream current unavailable.")
+            self.logger.info("Stream currently unavailable.")
             return
 
         ts = int(time.time() / 60)
