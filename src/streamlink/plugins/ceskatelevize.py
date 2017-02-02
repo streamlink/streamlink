@@ -31,7 +31,10 @@ _playlist_info_re = re.compile(
     r'{"type":"([a-z]+)","id":"([0-9]+)"'
 )
 _playlist_url_schema = validate.Schema({
-    "url": validate.url()
+    "url": validate.any(
+                validate.url(),
+                "error_region"
+            )
 })
 _playlist_schema = validate.Schema({
     "playlist": [{
@@ -121,6 +124,10 @@ class Ceskatelevize(Plugin):
             headers=headers
         )
         json_data = http.json(response, schema=_playlist_url_schema)
+
+        if json_data['url'] == "error_region":
+            self.logger.error("This stream is not available in your territory")
+            return
 
         # fetch playlist
         response = http.post(json_data['url'])
