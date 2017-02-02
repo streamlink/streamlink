@@ -50,8 +50,11 @@ class App17(Plugin):
         else:
             res = http.get(self.url)
 
-        status = _status_re.search(res.text).group(1)
-        if status != 'true':
+        status = _status_re.search(res.text)
+        if not status:
+            return
+
+        if status.group(1) != 'true':
             self.logger.info("Stream currently unavailable.")
             return
 
