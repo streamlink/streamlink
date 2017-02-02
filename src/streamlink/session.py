@@ -53,6 +53,7 @@ class Streamlink(object):
             "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
+            "hls-playlist-reload-attempts": 3,
             "http-stream-timeout": 60.0,
             "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
             "rtmp-timeout": 60.0,

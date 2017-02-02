@@ -601,6 +601,17 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--hls-playlist-reload-attempts",
+    type=num(int, min=0),
+    metavar="ATTEMPTS",
+    help="""
+    How many attempts should be done to reload the HLS playlist
+    before giving up.
+
+    Default is 3.
+    """
+)
+transport.add_argument(
     "--hls-segment-threads",
     type=num(int, max=10),
     metavar="THREADS",

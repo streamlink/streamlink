@@ -1,5 +1,14 @@
+import struct
 from collections import defaultdict, namedtuple
 
+<<<<<<< Updated upstream
+import requests
+
+=======
+from Crypto.Cipher import AES
+
+from streamlink.stream import hls_playlist
+>>>>>>> Stashed changes
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.utils.l10n import Localization
 
@@ -86,6 +95,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                                          stream=True,
                                          timeout=self.timeout,
                                          exception=StreamError,
+                                         retries=self.retries,
                                          **request_params)
         except StreamError as err:
             self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
@@ -119,7 +129,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             else:
                 for chunk in res.iter_content(chunk_size):
                     self.reader.buffer.write(chunk)
-        except StreamError as err:
+        except (StreamError, requests.exceptions.RequestException) as err:
             self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
             return self.write(sequence,
                               self.fetch(sequence, retries=self.retries),
@@ -139,6 +149,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_sequences = []
         self.playlist_reload_time = 15
         self.live_edge = self.session.options.get("hls-live-edge")
+        self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
 
         self.reload_playlist()
 
@@ -150,6 +161,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.logger.debug("Reloading playlist")
         res = self.session.http.get(self.stream.url,
                                     exception=StreamError,
+                                    retries=self.playlist_reload_retries,
                                     **self.reader.request_params)
 
         try:
@@ -366,6 +378,8 @@ class HLSStream(HTTPStream):
             if check_streams:
                 try:
                     session_.http.get(playlist.uri, **request_params)
+                except KeyboardInterrupt:
+                    raise
                 except Exception:
                     continue
 
