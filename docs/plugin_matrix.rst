@@ -115,6 +115,7 @@ powerapp            powerapp.com.tr      Yes   No
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rtve                rtve.es              Yes   No
+rtvs                rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 schoolism           schoolism.com        --    Yes   Requires a login and a subscription.
 seemeplay           seemeplay.ru         Yes   Yes
