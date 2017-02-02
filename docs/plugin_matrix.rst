@@ -40,6 +40,7 @@ cdnbg               - tv.bnt.bg          Yes   No    Streams may be geo-restrict
                     - kanal3.bg
                     - bitelevision.com
                     - nova.bg
+ceskatelevize       ceskatelevize.cz     Yes   Yes   Streams may be geo-restricted to Czechia.
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com
@@ -49,7 +50,6 @@ cinergroup          - showtv.com.tr      Yes   No
 connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
-czech_tv            ceskatelevize.cz     Yes   Yes   Streams may be geo-restricted to Czechia.
 dailymotion         dailymotion.com      Yes   Yes
 dingittv            dingit.tv            Yes   Yes
 disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.

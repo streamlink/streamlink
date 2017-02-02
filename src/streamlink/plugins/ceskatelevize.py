@@ -79,7 +79,8 @@ def _find_player_url(response):
 
     return 'http://ceskatelevize.cz/'+url
 
-class CzechTV(Plugin):
+
+class Ceskatelevize(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
@@ -128,4 +129,4 @@ class CzechTV(Plugin):
         return HLSStream.parse_variant_playlist(self.session, playlist)
 
 
-__plugin__ = CzechTV
+__plugin__ = Ceskatelevize
