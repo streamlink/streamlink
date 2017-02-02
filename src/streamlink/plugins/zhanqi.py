@@ -6,6 +6,9 @@ from streamlink.stream import HTTPStream, HLSStream
 
 API_URL = "https://www.zhanqi.tv/api/static/v2.1/room/domain/{0}.json"
 
+STATUS_ONLINE = 4
+STATUS_OFFLINE = 0
+
 _url_re = re.compile(r"""
     http(s)?://(www\.)?zhanqi.tv
     /(?P<channel>[^/]+)
@@ -40,8 +43,8 @@ class Zhanqitv(Plugin):
             self.logger.info("Not a valid room url.")
             return
 
-        if room["status"] != 4:
-            self.logger.info("Stream current unavailable.")
+        if room["status"] != STATUS_ONLINE:
+            self.logger.info("Stream currently unavailable.")
             return
 
         hls_url = "http://dlhls.cdn.zhanqi.tv/zqlive/{room[videoId]}_1024/index.m3u8?Dnion_vsnae={room[videoId]}".format(room=room)
