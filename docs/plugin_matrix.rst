@@ -40,6 +40,7 @@ cdnbg               - tv.bnt.bg          Yes   No    Streams may be geo-restrict
                     - kanal3.bg
                     - bitelevision.com
                     - nova.bg
+ceskatelevize       ceskatelevize.cz     Yes   Yes   Streams may be geo-restricted to Czechia.
 chaturbate          chaturbate.com       Yes   No
 cinergroup          - showtv.com.tr      Yes   No
                     - haberturk.com
