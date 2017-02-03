@@ -95,7 +95,8 @@ changelog_rst() {
   DATE=$(date +"%Y-%m-%d")
   CHANGELOG=$(cat CHANGELOG.rst)
   HEADER="$CLI $1 ($DATE)"
-  echo -e "$HEADER\n----------\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
+  UNDERLINE=$(printf %s "$HEADER" | tr -c '-' '[_*]')
+  echo -e "$HEADER\n$UNDERLINE\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
   echo "Changes have been written to CHANGELOG.rst"
   cd ..
 }
@@ -123,15 +124,10 @@ git_commit() {
 
 sign() {
   # Tarball it!
-  cp -r $CLI $CLI-$1
-  sudo rm -rf $CLI-$1/.git*
-  sudo tar czf $CLI-$1.tar.gz $CLI-$1
-  if [ $? -eq 0 ]; then
-        echo TARBALL OK
-  else
-        echo TARBALL FAIL
-        exit
-  fi
+  cd $CLI
+  python setup.py sdist
+  mv dist/$CLI-$1.tar.gz ..
+  cd ..
 
   # Sign it!
   echo -e "SIGN THE TARBALL!\n"
