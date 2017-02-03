@@ -4,7 +4,8 @@ try:
 except ImportError:
     from mock import patch
 
-from streamlink.utils.l10n import Localization
+
+from streamlink.utils.l10n import Localization, Country, Language
 
 
 class TestLocalization(unittest.TestCase):
@@ -13,7 +14,7 @@ class TestLocalization(unittest.TestCase):
         self.assertEqual("en_US", l.language_code)
 
     def test_bad_language_code(self):
-        self.assertRaises(ValueError, Localization, "enUS")
+        self.assertRaises(LookupError, Localization, "enUS")
 
     def test_equivalent(self):
         l = Localization("en_US")
@@ -52,21 +53,35 @@ class TestLocalization(unittest.TestCase):
                          Localization.get_country("United States").name)
 
     def test_get_country_miss(self):
-        self.assertRaises(ValueError, Localization.get_country, "XE")
-        self.assertRaises(ValueError, Localization.get_country, "XEX")
-        self.assertRaises(ValueError, Localization.get_country, "Nowhere")
+        self.assertRaises(LookupError, Localization.get_country, "XE")
+        self.assertRaises(LookupError, Localization.get_country, "XEX")
+        self.assertRaises(LookupError, Localization.get_country, "Nowhere")
 
     def test_get_language(self):
         self.assertEqual("eng",
-                         Localization.get_language("en").part2b)
+                         Localization.get_language("en").alpha3)
         self.assertEqual("fre",
-                         Localization.get_language("fra").part2b)
-        self.assertEqual("fre",
-                         Localization.get_language("fre").part2b)
+                         Localization.get_language("fra").bibliographic)
+        self.assertEqual("fra",
+                         Localization.get_language("fre").alpha3)
         self.assertEqual("gre",
-                         Localization.get_language("gre").part2b)
+                         Localization.get_language("gre").bibliographic)
 
     def test_get_language_miss(self):
-        self.assertRaises(ValueError, Localization.get_language, "00")
-        self.assertRaises(ValueError, Localization.get_language, "000")
-        self.assertRaises(ValueError, Localization.get_language, "0000")
+        self.assertRaises(LookupError, Localization.get_language, "00")
+        self.assertRaises(LookupError, Localization.get_language, "000")
+        self.assertRaises(LookupError, Localization.get_language, "0000")
+
+    def test_country_compare(self):
+        a = Country("AA", "AAA", "001", "Test")
+        b = Country("AA", "AAA", "001", "Test")
+        self.assertEqual(a, b)
+
+    def test_language_compare(self):
+        a = Language("AA", "AAA", "Test")
+        b = Language("AA", None, "Test")
+        self.assertEqual(a, b)
+
+        a = Language("BB", "BBB", "Test")
+        b = Language("AA", None, "Test")
+        self.assertNotEqual(a, b)
