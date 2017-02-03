@@ -1,5 +1,5 @@
 streamlink 0.3.1 (2017-02-03)
-----------
+-----------------------------
 0.3.1 release of Streamlink
 
 A *minor* release, we update our source code upload to *not* include the ffmpeg.exe binary as well as update a multitude of plugins.
