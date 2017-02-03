@@ -1,29 +1,21 @@
+import struct
 from collections import defaultdict, namedtuple
 
+from Crypto.Cipher import AES
+
+from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
-from streamlink.utils.l10n import Localization
-
-try:
-    from Crypto.Cipher import AES
-    import struct
-
-
-    def num_to_iv(n):
-        return struct.pack(">8xq", n)
-
-
-    CAN_DECRYPT = True
-except ImportError:
-    CAN_DECRYPT = False
-
-from . import hls_playlist
-from .http import HTTPStream
-from .segmented import (SegmentedStreamReader,
-                        SegmentedStreamWriter,
-                        SegmentedStreamWorker)
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.segmented import (SegmentedStreamReader,
+                                         SegmentedStreamWriter,
+                                         SegmentedStreamWorker)
 from ..exceptions import StreamError
 
 Sequence = namedtuple("Sequence", "num segment")
+
+
+def num_to_iv(n):
+    return struct.pack(">8xq", n)
 
 
 class HLSStreamWriter(SegmentedStreamWriter):
@@ -83,48 +75,37 @@ class HLSStreamWriter(SegmentedStreamWriter):
         try:
             request_params = self.create_request_params(sequence)
             return self.session.http.get(sequence.segment.uri,
-                                         stream=True,
                                          timeout=self.timeout,
                                          exception=StreamError,
+                                         retries=self.retries,
                                          **request_params)
         except StreamError as err:
             self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
-            return self.fetch(sequence, retries - 1)
-
-    def write(self, sequence, res, chunk_size=8192, retries=None):
-        retries = retries or self.retries
-        if retries == 0:
-            self.logger.error("Failed to open segment {0}", sequence.num)
             return
-        try:
-            if sequence.segment.key and sequence.segment.key.method != "NONE":
-                try:
-                    decryptor = self.create_decryptor(sequence.segment.key,
-                                                      sequence.num)
-                except StreamError as err:
-                    self.logger.error("Failed to create decryptor: {0}", err)
-                    self.close()
-                    return
 
-                for chunk in res.iter_content(chunk_size):
-                    # If the input data is not a multiple of 16, cut off any garbage
-                    garbage_len = len(chunk) % 16
-                    if garbage_len:
-                        self.logger.debug("Cutting off {0} bytes of garbage "
-                                          "before decrypting", garbage_len)
-                        decrypted_chunk = decryptor.decrypt(chunk[:-garbage_len])
-                    else:
-                        decrypted_chunk = decryptor.decrypt(chunk)
-                    self.reader.buffer.write(decrypted_chunk)
-            else:
-                for chunk in res.iter_content(chunk_size):
-                    self.reader.buffer.write(chunk)
-        except StreamError as err:
-            self.logger.error("Failed to open segment {0}: {1}", sequence.num, err)
-            return self.write(sequence,
-                              self.fetch(sequence, retries=self.retries),
-                              chunk_size=chunk_size,
-                              retries=retries - 1)
+    def write(self, sequence, res, chunk_size=8192):
+        if sequence.segment.key and sequence.segment.key.method != "NONE":
+            try:
+                decryptor = self.create_decryptor(sequence.segment.key,
+                                                  sequence.num)
+            except StreamError as err:
+                self.logger.error("Failed to create decryptor: {0}", err)
+                self.close()
+                return
+
+            for chunk in res.iter_content(chunk_size):
+                # If the input data is not a multiple of 16, cut off any garbage
+                garbage_len = len(chunk) % 16
+                if garbage_len:
+                    self.logger.debug("Cutting off {0} bytes of garbage "
+                                      "before decrypting", garbage_len)
+                    decrypted_chunk = decryptor.decrypt(chunk[:-garbage_len])
+                else:
+                    decrypted_chunk = decryptor.decrypt(chunk)
+                self.reader.buffer.write(decrypted_chunk)
+        else:
+            for chunk in res.iter_content(chunk_size):
+                self.reader.buffer.write(chunk)
 
         self.logger.debug("Download of segment {0} complete", sequence.num)
 
@@ -139,6 +120,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_sequences = []
         self.playlist_reload_time = 15
         self.live_edge = self.session.options.get("hls-live-edge")
+        self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
 
         self.reload_playlist()
 
@@ -150,8 +132,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.logger.debug("Reloading playlist")
         res = self.session.http.get(self.stream.url,
                                     exception=StreamError,
+                                    retries=self.playlist_reload_retries,
                                     **self.reader.request_params)
-
         try:
             playlist = hls_playlist.load(res.text, res.url)
         except ValueError as err:
@@ -176,9 +158,6 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
             self.logger.debug("Segments in this playlist are encrypted")
-
-            if not CAN_DECRYPT:
-                raise StreamError("Need pyCrypto or pycryptodome installed to decrypt this stream")
 
         self.playlist_changed = ([s.num for s in self.playlist_sequences] !=
                                  [s.num for s in sequences])
@@ -366,6 +345,8 @@ class HLSStream(HTTPStream):
             if check_streams:
                 try:
                     session_.http.get(playlist.uri, **request_params)
+                except KeyboardInterrupt:
+                    raise
                 except Exception:
                     continue
 

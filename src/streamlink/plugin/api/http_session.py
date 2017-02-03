@@ -1,10 +1,13 @@
+import time
 from requests import Session, __build__ as requests_version
 from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
+
 from streamlink.packages.requests_file import FileAdapter
 
 try:
     from requests.packages.urllib3.util import Timeout
+
     TIMEOUT_ADAPTER_NEEDED = requests_version < 0x020300
 except ImportError:
     TIMEOUT_ADAPTER_NEEDED = False
@@ -142,25 +145,39 @@ class HTTPSession(Session):
         schema = kwargs.pop("schema", None)
         session = kwargs.pop("session", None)
         timeout = kwargs.pop("timeout", self.timeout)
+        total_retries = kwargs.pop("retries", 0)
+        retry_backoff = kwargs.pop("retry_backoff", 0.3)
+        retry_max_backoff = kwargs.pop("retry_max_backoff", 10.0)
+        retries = 0
 
         if session:
             headers.update(session.headers)
             params.update(session.params)
 
-        try:
-            res = Session.request(self, method, url,
-                                  headers=headers,
-                                  params=params,
-                                  timeout=timeout,
-                                  proxies=proxies,
-                                  *args, **kwargs)
-            if raise_for_status and res.status_code not in acceptable_status:
-                res.raise_for_status()
-        except (RequestException, IOError) as rerr:
-            err = exception("Unable to open URL: {url} ({err})".format(url=url,
-                                                                       err=rerr))
-            err.err = rerr
-            raise err
+        while True:
+            try:
+                res = Session.request(self, method, url,
+                                      headers=headers,
+                                      params=params,
+                                      timeout=timeout,
+                                      proxies=proxies,
+                                      *args, **kwargs)
+                if raise_for_status and res.status_code not in acceptable_status:
+                    res.raise_for_status()
+                break
+            except KeyboardInterrupt:
+                raise
+            except Exception as rerr:
+                if retries >= total_retries:
+                    err = exception("Unable to open URL: {url} ({err})".format(url=url,
+                                                                               err=rerr))
+                    err.err = rerr
+                    raise err
+                retries += 1
+                # back off retrying, but only to a maximum sleep time
+                delay = min(retry_max_backoff,
+                            retry_backoff * (2 ** (retries - 1)))
+                time.sleep(delay)
 
         if schema:
             res = schema.validate(res.text, name="response text", exception=PluginError)
