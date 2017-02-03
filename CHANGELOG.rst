@@ -1,3 +1,60 @@
+streamlink 0.3.1 (2017-02-03)
+----------
+0.3.1 release of Streamlink
+
+A *minor* release, we update our source code upload to *not* include the ffmpeg.exe binary as well as update a multitude of plugins.
+
+Thanks again for all the contributions as well as updates!
+
+::
+
+    Charlie Drage <charlie@charliedrage.com> (1):
+          Updating the release script.
+    
+    Forrest <gravyboat@users.noreply.github.com> (1):
+          Update license and debian copyright (#515)
+    
+    Forrest Alvarez <gravyboat@users.noreply.github.com> (1):
+          Update license and debian copyright
+    
+    John Smith <v2.0@protonmail.com> (1):
+          plugins.bongacams: a few small changes (#429)
+    
+    Mohamed El Morabity <melmorabity@fedoraproject.org> (1):
+          Check whether videos are DRM-protected Add log messages when no stream is available
+    
+    Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+          Add support for replay.gulli.fr (#468)
+    
+    beardypig <beardypig@users.noreply.github.com> (20):
+          plugins.schoolism: add support for schoolism.com
+          stream.hls_playlist: invalid durations in EXTINF lines are ignored
+          plugins.livecoding: update to support the new domain: liveedu.tv
+          plugins.srgssr: fix playlist reload auth issue
+          Play twitch VOD stream from the beginning even if is still being recorded
+          cli: wait for process to exit, not exit with non-0 error code
+          Fix bug in customized Windows install
+          add a general locale setting which can be used by plugins
+          stream.hls: support external audio tracks
+          plugins.turkuvaz: add referer to the secure token request
+          localization: search for language codes in part2t+part2b+part3
+          localization: invalid language/country codes are always inequivalent
+          stream.hls: only support external audio tracks if ffmpeg is available
+          installer: include the missing pkg_resources package
+          Rewritten StreamProcess class (#441)
+          plugins.dogus: fix for ntv streams not being found
+          plugins.dogus: add support for eurostartv live stream
+          plugins.twitch: update public API calls to use v5 API (#484)
+          plugins.filmon: support for new site layout (#508)
+          Support for Ceskatelevize streams (#520)
+    
+    fozzy <fozzysec@gmail.com> (1):
+          Add support for Huya.com in issue #425 (#465)
+    
+    steven7851 <steven7851@msn.com> (1):
+          plugins.douyutv: fix room id regex (#514)
+    
+
 streamlink 0.3.0 (2017-01-24)
 -------------------------------
 
