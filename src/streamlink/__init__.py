@@ -12,7 +12,7 @@ Full documentation is available at https://streamlink.github.io.
 
 
 __title__ = "streamlink"
-__version__ = "0.3.0"
+__version__ = "0.3.1"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink"
 __copyright__ = "Copyright 2016 Streamlink"
