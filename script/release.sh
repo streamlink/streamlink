@@ -123,15 +123,10 @@ git_commit() {
 
 sign() {
   # Tarball it!
-  cp -r $CLI $CLI-$1
-  sudo rm -rf $CLI-$1/.git*
-  sudo tar czf $CLI-$1.tar.gz $CLI-$1
-  if [ $? -eq 0 ]; then
-        echo TARBALL OK
-  else
-        echo TARBALL FAIL
-        exit
-  fi
+  cd $CLI
+  python setup.py sdist
+  mv dist/$CLI-$1.tar.gz ..
+  cd ..
 
   # Sign it!
   echo -e "SIGN THE TARBALL!\n"
