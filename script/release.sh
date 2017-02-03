@@ -95,7 +95,8 @@ changelog_rst() {
   DATE=$(date +"%Y-%m-%d")
   CHANGELOG=$(cat CHANGELOG.rst)
   HEADER="$CLI $1 ($DATE)"
-  echo -e "$HEADER\n----------\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
+  UNDERLINE=$(printf %s "$HEADER" | tr -c '-' '[_*]')
+  echo -e "$HEADER\n$UNDERLINE\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
   echo "Changes have been written to CHANGELOG.rst"
   cd ..
 }
