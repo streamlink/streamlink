@@ -5,19 +5,21 @@ import time
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream, HLSStream
+from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 
 class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
-    API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}&catalogue=Pluzz'
+    API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}&catalogue={1}'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
-    _url_re = re.compile(r'http://pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)')
-    _video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
-    _player_re = re.compile(r'<script type="text/javascript" src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
+    _url_re = re.compile(r'http://(pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)|www\.ludo\.fr/heros/[\w-]+)')
+    _pluzz_video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
+    _ludo_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@Ludo"')
+    _player_re = re.compile(r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
     _swf_re = re.compile(r'getUrl\("(?P<swf>/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai.+?\.swf)"\)')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
+    _mp4_bitrate_re = re.compile(r'.*-(?P<bitrate>[0-9]+k)\.mp4')
 
     _geo_schema = validate.Schema({
         'reponse': {
@@ -69,7 +71,13 @@ class Pluzz(Plugin):
 
         # Retrieve URL page and search for video ID
         res = http.get(self.url)
-        match = self._video_id_re.search(res.text)
+        if 'pluzz.francetv.fr' in self.url:
+            video_re = self._pluzz_video_id_re
+            catalogue = 'Pluzz'
+        elif 'www.ludo.fr' in self.url:
+            video_re = self._ludo_video_id_re
+            catalogue = 'Ludo'
+        match = video_re.search(res.text)
         if match is None:
             return
         video_id = match.group('video_id')
@@ -84,7 +92,7 @@ class Pluzz(Plugin):
             if match is not None:
                 swf_url = os.path.dirname(player_url) + match.group('swf')
 
-        res = http.get(self.API_URL.format(video_id))
+        res = http.get(self.API_URL.format(video_id, catalogue))
         videos = http.json(res, schema=self._api_schema)
         now = time.time()
 
@@ -124,8 +132,9 @@ class Pluzz(Plugin):
             if '.mpd' in video_url:
                 continue
 
-            res = http.get(self.TOKEN_URL.format(video_url))
-            video_url = res.text
+            if catalogue == 'Pluzz' or '.f4m' in video_url:
+                res = http.get(self.TOKEN_URL.format(video_url))
+                video_url = res.text
 
             if '.f4m' in video_url and swf_url is not None:
                 for bitrate, stream in HDSStream.parse_manifest(self.session, video_url, pvswf=swf_url).items():
@@ -140,6 +149,13 @@ class Pluzz(Plugin):
             elif '.m3u8' in video_url:
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield stream
+            elif '.mp4' in video_url:
+                match = self._mp4_bitrate_re.match(video_url)
+                if match is not None:
+                    bitrate = match.group('bitrate')
+                else:
+                    bitrate = video['format']
+                yield bitrate, HTTPStream(self.session, video_url)
 
         if offline:
             self.logger.error('Failed to access stream, may be due to offline content')
