@@ -817,6 +817,9 @@ def setup_plugin_options():
     if args.crunchyroll_purge_credentials:
         streamlink.set_plugin_option("crunchyroll", "purge_credentials",
                                      args.crunchyroll_purge_credentials)
+    if args.crunchyroll_session_id:
+        streamlink.set_plugin_option("crunchyroll", "session_id",
+                                     args.crunchyroll_session_id)
 
     if args.crunchyroll_locale:
         streamlink.set_plugin_option("crunchyroll", "locale",

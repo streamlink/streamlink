@@ -1035,6 +1035,14 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
+    "--crunchyroll-session-id",
+    metavar="SESSION_ID",
+    help="""
+    Set a specific session ID for crunchyroll, can be used to bypass
+    region restrictions
+    """
+)
+plugin.add_argument(
     "--livestation-email",
     metavar="EMAIL",
     help="""
