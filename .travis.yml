@@ -16,6 +16,7 @@ matrix:
 before_install:
   - pip install --disable-pip-version-check --upgrade pip
   - pip install -r dev-requirements.txt
+  - pip install pycountry 
   - pip install -r docs-requirements.txt
 
 install:
