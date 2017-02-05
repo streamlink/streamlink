@@ -13,9 +13,9 @@ class Pluzz(Plugin):
     API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}&catalogue={1}'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
-    _url_re = re.compile(r'http://(pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)|www\.ludo\.fr/heros/[\w-]+)')
+    _url_re = re.compile(r'http://(pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)|www\.(ludo|zouzous)\.fr/heros/[\w-]+)')
     _pluzz_video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
-    _ludo_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@Ludo"')
+    _other_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _player_re = re.compile(r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
     _swf_re = re.compile(r'getUrl\("(?P<swf>/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai.+?\.swf)"\)')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
@@ -73,14 +73,15 @@ class Pluzz(Plugin):
         res = http.get(self.url)
         if 'pluzz.francetv.fr' in self.url:
             video_re = self._pluzz_video_id_re
-            catalogue = 'Pluzz'
-        elif 'www.ludo.fr' in self.url:
-            video_re = self._ludo_video_id_re
-            catalogue = 'Ludo'
+        else:
+            video_re = self._other_video_id_re
         match = video_re.search(res.text)
         if match is None:
             return
+        catalogue = 'Pluzz'
         video_id = match.group('video_id')
+        if 'catalogue' in match.groupdict():
+            catalogue = match.group('catalogue')
 
         # Retrieve SWF player URL
         match = self._player_re.search(res.text)
