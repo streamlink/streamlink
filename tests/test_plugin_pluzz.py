@@ -15,8 +15,12 @@ class TestPluginPluzz(unittest.TestCase):
         self.assertTrue(Pluzz.can_handle_url("http://pluzz.francetv.fr/franceinfo"))
         self.assertTrue(Pluzz.can_handle_url("http://pluzz.francetv.fr/videos/jt20h.html"))
         self.assertTrue(Pluzz.can_handle_url("http://pluzz.francetv.fr/videos/jt_1213_franche_comte.html"))
+        self.assertTrue(Pluzz.can_handle_url("http://www.ludo.fr/heros/the-batman"))
+        self.assertTrue(Pluzz.can_handle_url("http://www.ludo.fr/heros/il-etait-une-fois-la-vie"))
 
         # shouldn't match
         self.assertFalse(Pluzz.can_handle_url("http://pluzz.francetv.fr/"))
+        self.assertFalse(Pluzz.can_handle_url("http://www.ludo.fr/"))
+        self.assertFalse(Pluzz.can_handle_url("http://www.ludo.fr/jeux"))
         self.assertFalse(Pluzz.can_handle_url("http://www.tvcatchup.com/"))
         self.assertFalse(Pluzz.can_handle_url("http://www.youtube.com/"))
