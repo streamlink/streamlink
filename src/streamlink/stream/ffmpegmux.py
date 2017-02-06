@@ -5,6 +5,8 @@ import threading
 import subprocess
 
 import sys
+
+from streamlink import StreamError
 from streamlink.stream import Stream
 from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
@@ -61,7 +63,7 @@ class FFMPEGMuxer(StreamIO):
         self.logger = session.logger.new_module("stream.mp4mux-ffmpeg")
         self.streams = streams
 
-        self.pipes = [NamedPipe("foo-{}-{}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
+        self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
         self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
                              for stream, np in
                              zip(self.streams, self.pipes)]
