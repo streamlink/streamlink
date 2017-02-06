@@ -481,7 +481,7 @@ class Twitch(Plugin):
                            tags=playlist_tags, duration=playlist_duration)
 
     def _get_video_streams(self):
-        self.logger.debug("Getting video steams for {} (type={})".format(self.video_id, self.video_type))
+        self.logger.debug("Getting video steams for {0} (type={1})".format(self.video_id, self.video_type))
         self._authenticate()
 
         if self.video_type == "b":
@@ -530,7 +530,7 @@ class Twitch(Plugin):
             return host_info["target_login"]
 
     def _get_hls_streams(self, stream_type="live"):
-        self.logger.debug("Getting {} HLS streams for {}".format(stream_type, self.channel))
+        self.logger.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
         self._authenticate()
         self._hosted_chain.append(self.channel)
 
@@ -539,10 +539,10 @@ class Twitch(Plugin):
             if hosted_channel and self.options.get("disable_hosting"):
                 self.logger.info("hosting was disabled by command line option")
             elif hosted_channel:
-                self.logger.info("switching to {}", hosted_channel)
+                self.logger.info("switching to {0}", hosted_channel)
                 if hosted_channel in self._hosted_chain:
                     self.logger.error(u"A loop of hosted channels has been detected, "
-                                      "cannot find a playable stream. ({})".format(u" -> ".join(self._hosted_chain + [hosted_channel])))
+                                      "cannot find a playable stream. ({0})".format(u" -> ".join(self._hosted_chain + [hosted_channel])))
                     return {}
                 self.channel = hosted_channel
                 return self._get_hls_streams(stream_type)
@@ -554,7 +554,7 @@ class Twitch(Plugin):
             sig, token = self._access_token(stream_type)
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
         else:
-            self.logger.debug("Unknown HLS stream type: {}".format(stream_type))
+            self.logger.debug("Unknown HLS stream type: {0}".format(stream_type))
             return {}
 
         try:

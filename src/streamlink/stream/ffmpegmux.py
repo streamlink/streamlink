@@ -5,6 +5,8 @@ import threading
 import subprocess
 
 import sys
+
+from streamlink import StreamError
 from streamlink.stream import Stream
 from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
@@ -34,7 +36,7 @@ class FFMPEGMuxer(StreamIO):
 
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
-        self.logger.debug("Starting copy to pipe: {}".format(pipe.path))
+        self.logger.debug("Starting copy to pipe: {0}".format(pipe.path))
         pipe.open("wb")
         while not stream.closed:
             try:
@@ -44,13 +46,13 @@ class FFMPEGMuxer(StreamIO):
                 else:
                     break
             except IOError:
-                self.logger.error("Pipe copy aborted: {}".format(pipe.path))
+                self.logger.error("Pipe copy aborted: {0}".format(pipe.path))
                 return
         try:
             pipe.close()
         except IOError:  # might fail closing, but that should be ok for the pipe
             pass
-        self.logger.debug("Pipe copy complete: {}".format(pipe.path))
+        self.logger.debug("Pipe copy complete: {0}".format(pipe.path))
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
@@ -61,7 +63,7 @@ class FFMPEGMuxer(StreamIO):
         self.logger = session.logger.new_module("stream.mp4mux-ffmpeg")
         self.streams = streams
 
-        self.pipes = [NamedPipe("foo-{}-{}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
+        self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
         self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
                              for stream, np in
                              zip(self.streams, self.pipes)]
@@ -84,7 +86,7 @@ class FFMPEGMuxer(StreamIO):
                 self._cmd.extend(["-metadata:{0}".format(stream), datum])
 
         self._cmd.extend(['-f', ofmt, outpath])
-        self.logger.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
+        self.logger.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))
         self.close_errorlog = False
 
         if session.options.get("ffmpeg-verbose"):

@@ -37,13 +37,13 @@ class INE(Plugin):
 
     def _get_streams(self):
         vid = self.url_re.match(self.url).group(1)
-        self.logger.debug("Found video ID: {}", vid)
+        self.logger.debug("Found video ID: {0}", vid)
 
         page = http.get(self.play_url.format(vid=vid))
         js_url_m = self.js_re.search(page.text)
         if js_url_m:
             js_url = js_url_m.group(1)
-            self.logger.debug("Loading player JS: {}", js_url)
+            self.logger.debug("Loading player JS: {0}", js_url)
 
             res = http.get(js_url)
             data = self.setup_schema.validate(res.text)

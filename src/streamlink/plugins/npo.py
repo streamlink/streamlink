@@ -25,7 +25,7 @@ class NPO(Plugin):
         return _url_re.match(url)
 
     def get_token(self):
-        url = 'http://ida.omroep.nl/npoplayer/i.js?s={}'.format(quote(self.url))
+        url = 'http://ida.omroep.nl/npoplayer/i.js?s={0}'.format(quote(self.url))
         token = http.get(url, headers=HTTP_HEADERS).text
         token = re.compile(r'token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
 
@@ -53,14 +53,14 @@ class NPO(Plugin):
         return ''.join(secured)
 
     def _get_meta(self):
-        html = http.get('http://www.npo.nl/live/{}'.format(self.npo_id), headers=HTTP_HEADERS).text
+        html = http.get('http://www.npo.nl/live/{0}'.format(self.npo_id), headers=HTTP_HEADERS).text
         program_id = re.compile(r'data-prid="(.*?)"', re.DOTALL + re.IGNORECASE).search(html).group(1)
-        meta = http.get('http://e.omroep.nl/metadata/{}'.format(program_id), headers=HTTP_HEADERS).text
+        meta = http.get('http://e.omroep.nl/metadata/{0}'.format(program_id), headers=HTTP_HEADERS).text
         meta = re.compile(r'({.*})', re.DOTALL + re.IGNORECASE).search(meta).group(1)
         return json.loads(meta)
 
     def _get_vod_streams(self):
-        url = 'http://ida.omroep.nl/odi/?prid={}&puboptions=adaptive,h264_bb,h264_sb,h264_std&adaptive=no&part=1&token={}'\
+        url = 'http://ida.omroep.nl/odi/?prid={0}&puboptions=adaptive,h264_bb,h264_sb,h264_std&adaptive=no&part=1&token={1}'\
             .format(quote(self.npo_id), quote(self.get_token()))
         res = http.get(url, headers=HTTP_HEADERS)
 
@@ -75,7 +75,7 @@ class NPO(Plugin):
         meta = self._get_meta()
         stream = [x for x in meta['streams'] if x['type'] == 'hls'][0]['url']
 
-        url = 'http://ida.omroep.nl/aapi/?type=jsonp&stream={}&token={}'.format(stream, self.get_token())
+        url = 'http://ida.omroep.nl/aapi/?type=jsonp&stream={0}&token={1}'.format(stream, self.get_token())
         streamdata = http.get(url, headers=HTTP_HEADERS).json()
         deeplink = http.get(streamdata['stream'], headers=HTTP_HEADERS).text
         deeplink = re.compile(r'"(.*?)"', re.DOTALL + re.IGNORECASE).search(deeplink).group(1)

@@ -53,7 +53,7 @@ class NRK(Plugin):
         program_id = _id_re.search(self.url).group(1)
 
         # Extract media URL.
-        json_url = urljoin(baseurl, "mediaelement/{}".format(program_id))
+        json_url = urljoin(baseurl, "mediaelement/{0}".format(program_id))
         res = http.get(json_url, cookies=cookie)
         media_element = http.json(res, schema=_mediaelement_schema)
         media_url = media_element["mediaUrl"]

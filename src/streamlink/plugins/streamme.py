@@ -15,7 +15,7 @@ class StreamMe(Plugin):
 
     def _get_streams(self):
         username = _RE_URL.match(self.url).group(1)
-        url = 'https://www.stream.me/api-user/v1/{}/channel'.format(username)
+        url = 'https://www.stream.me/api-user/v1/{0}/channel'.format(username)
         data = http.get(url).json()
         try:
             m3u8 = data['_embedded']['streams'][0]['_links']['hlsmp4']['href']
