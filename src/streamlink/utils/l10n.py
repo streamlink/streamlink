@@ -117,7 +117,10 @@ class Localization(object):
     @language_code.setter
     def language_code(self, language_code):
         if language_code is None:
-            language_code, _ = locale.getdefaultlocale()
+            try:
+                language_code, _ = locale.getdefaultlocale()
+            except ValueError:
+                language_code = None
             if language_code is None or language_code == "C":
                 # cannot be determined
                 language_code = DEFAULT_LANGUAGE_CODE
