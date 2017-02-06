@@ -150,7 +150,8 @@ class Pluzz(Plugin):
             elif '.m3u8' in video_url:
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield stream
-            elif '.mp4' in video_url:
+            # HBB TV streams are not provided anymore by France Televisions
+            elif '.mp4' in video_url and '/hbbtv/' not in video_url:
                 match = self._mp4_bitrate_re.match(video_url)
                 if match is not None:
                     bitrate = match.group('bitrate')
