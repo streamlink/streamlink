@@ -2,7 +2,6 @@ language: python
 
 matrix:
   include:
-  - python: '2.6'
   - python: '2.7'
   - python: '3.3'
   - python: '3.4'
@@ -11,6 +10,7 @@ matrix:
   - python: '3.6'
   - python: '3.7-dev'
   allow_failures:
+  - python: '2.6'
   - python: '3.7-dev'
 
 before_install:

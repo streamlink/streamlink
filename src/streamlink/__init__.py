@@ -9,7 +9,17 @@ An API is also provided that allows direct access to stream data.
 Full documentation is available at https://streamlink.github.io.
 
 """
+import warnings
+from sys import version_info
 
+
+if version_info[:2] == (2, 6):
+    warnings.warn(
+        "Python 2.6 is no longer supported by the Python core team, please "
+        "upgrade your Python. A future version of streamlink will drop "
+        "support for Python 2.6",
+        DeprecationWarning
+    )
 
 __title__ = "streamlink"
 __version__ = "0.3.1"
