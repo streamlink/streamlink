@@ -80,6 +80,8 @@ class Language(object):
                             pass
                     if not l:
                         raise KeyError(language)
+                else:
+                    raise KeyError(language)
                 return Language(l.alpha2, l.part3, l.name, l.part2b or l.part2t)
         except (LookupError, KeyError):
             raise LookupError("Invalid language code: {0}".format(language))
