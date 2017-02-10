@@ -97,8 +97,7 @@ class PlayerOutput(Output):
     @property
     def running(self):
         sleep(0.5)
-        self.player.poll()
-        return self.player.returncode is None
+        return self.player.poll() is None
 
     def _create_arguments(self):
         if self.namedpipe:
