@@ -45,7 +45,7 @@ install:
   # install dev requirements, for testing, etc.
   - "pip install -r dev-requirements.txt"
   - "pip install pycountry" 
-  - "pip install ."
+  - "build.cmd %PYTHON%\\python.exe -m pip install ."
 
 build: off
 
