@@ -4,19 +4,19 @@ import unittest
 import re
 
 from streamlink.plugin.api import http
-from streamlink.plugins.huomao import *
+from streamlink.plugins.huomao import Huomao
 
 class TestPluginHuomao(unittest.TestCase):
 
     def setUp(self):
 
         # Create a mock source HTML with some example data:
-        #   room_id             = 123456 
+        #   room_id             = 123456
         #   stream_id           = 9qsvyF24659
         #   stream_url          = http://live-ws.huomaotv.cn/live/
         #   stream_quality      = source, _720 and _480
         #   stream_quality_name = source, 720 and 480
-        self.MockHtml = """
+        self.mock_html = """
             <input id="html_stream" value="9qsvyF24659" type="hidden">
             <!--            urls:{-->
             <!--                1: 'http://live-ws.huomaotv.cn/live/'+stream+'/playlist.m3u8',-->
@@ -24,31 +24,31 @@ class TestPluginHuomao(unittest.TestCase):
             <!--                3: 'http://live-ws.huomaotv.cn/live/'+stream+'_480/playlist.m3u8'-->
             <!--            },-->
         """
-        
+
         # Create a mock Huomao object.
-        self.MockHuomao = Huomao("http://www.huomao.com/123456/")
+        self.mock_huomao = Huomao("http://www.huomao.com/123456/")
 
     def tearDown(self):
-        self.MockHtml = None
-        self.MockHuomao = None
+        self.mock_html = None
+        self.mock_huomao = None
 
     def test_get_stream_id(self):
-        
+
         # Assert that the stream_id from is correctly extracted from the mock HTML.
-        self.assertEqual(get_stream_id(self.MockHuomao, self.MockHtml), "9qsvyF24659")
+        self.assertEqual(self.mock_huomao.get_stream_id(self.mock_html), "9qsvyF24659")
 
     def test_get_stream_quality(self):
 
         # Assert that the stream_url, stream_quality and stream_quality_name
         # is correctly extracted from the mock HTML.
-        self.assertEqual(get_stream_info(self.MockHuomao, self.MockHtml), [
+        self.assertEqual(self.mock_huomao.get_stream_info(self.mock_html), [
             ["http://live-ws.huomaotv.cn/live/", "", "source"],
             ["http://live-ws.huomaotv.cn/live/", "_720", "720"],
             ["http://live-ws.huomaotv.cn/live/", "_480", "480"]
         ])
 
     def test_can_handle_url(self):
-        
+
         # Assert that an URL containing the http:// prefix is correctly read.
         self.assertTrue(Huomao.can_handle_url("http://www.huomao.com/123456"))
         self.assertTrue(Huomao.can_handle_url("http://www.huomao.tv/123456"))
