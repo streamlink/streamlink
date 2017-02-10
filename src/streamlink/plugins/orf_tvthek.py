@@ -43,7 +43,7 @@ class ORFTVThek(Plugin):
             try:
                 if source['delivery'] != 'hls':
                     continue
-                url = source['src'].replace('\/', '/')
+                url = source['src'].replace(r'\/', '/')
             except KeyError:
                 continue
             stream = HLSStream.parse_variant_playlist(self.session, url)
