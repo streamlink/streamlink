@@ -1,13 +1,15 @@
-# NOTE: Since a documented API is nowhere to be found for Huomao; this plugin
-# simply extracts the videos stream_id, stream_url and stream_quality by
-# scraping the HTML and JS of one of Huomaos mobile webpages.
+"""
+NOTE: Since a documented API is nowhere to be found for Huomao; this plugin
+simply extracts the videos stream_id, stream_url and stream_quality by
+scraping the HTML and JS of one of Huomaos mobile webpages.
 
-# When viewing a stream on huomao.com, the base URL references a room_id. This
-# room_id is mapped one-to-one to a stream_id which references the actual .flv
-# video. Both stream_id, stream_url and stream_quality can be found in the
-# HTML and JS source of the mobile_page. Since one stream can occur in many
-# different qualities, we scrape all stream_url and stream_quality occurences
-# and return each option to the user.
+When viewing a stream on huomao.com, the base URL references a room_id. This
+room_id is mapped one-to-one to a stream_id which references the actual .flv
+video. Both stream_id, stream_url and stream_quality can be found in the
+HTML and JS source of the mobile_page. Since one stream can occur in many
+different qualities, we scrape all stream_url and stream_quality occurences
+and return each option to the user.
+"""
 
 import re
 
@@ -53,8 +55,8 @@ class Huomao(Plugin):
     def can_handle_url(self, url):
         return url_re.match(url)
 
-    # Returns the stream_id contained in the HTML.
     def get_stream_id(self, html):
+        """Returns the stream_id contained in the HTML."""
         stream_id = stream_id_pattern.search(html)
 
         if not stream_id:
@@ -62,9 +64,13 @@ class Huomao(Plugin):
 
         return stream_id.group("stream_id")
 
-    # Returns a list of each stream_url, stream_quality_url and stream_quality_name
-    # occurence in the JS.
     def get_stream_info(self, html):
+        """Returns a nested list of different stream options.
+
+        Each entry in the list will contain a stream_url, stream_quality_url
+        and stream_quality_name for each stream occurence that was found in
+        the JS.
+        """
         stream_info = stream_info_pattern.findall(html)
 
         if not stream_info:
