@@ -9,7 +9,7 @@ from streamlink.stream import HLSStream
 
 API_URL = "https://api.crunchyroll.com/{0}.0.json"
 API_DEFAULT_LOCALE = "en_US"
-API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {})"
+API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {0})"
 API_HEADERS = {
     "Host": "api.crunchyroll.com",
     "Accept-Encoding": "gzip, deflate",
