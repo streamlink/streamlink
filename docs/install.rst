@@ -146,12 +146,12 @@ To install Streamlink from source you will need these dependencies.
 ==================================== ===========================================
 Name                                 Notes
 ==================================== ===========================================
-`Python`_                            At least version **2.6** or **3.3**.
+`Python`_                            At least version **2.7** or **3.3**.
 `python-setuptools`_
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-argparse`_                   Only needed on Python **2.6**.
+`python-argparse`_                   Only needed on Python versions older than **2.7**.
 `python-futures`_                    Only needed on Python **2.x**.
 `python-requests`_                   At least version **1.0**.
 `python-singledispatch`_             Only needed on Python versions older than **3.4**.

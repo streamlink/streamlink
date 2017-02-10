@@ -5,7 +5,7 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
 PAGE_URL = "https://www.tigerdile.com/stream/"
-ROOT_URL = "rtmp://stream.tigerdile.com/live/{}"
+ROOT_URL = "rtmp://stream.tigerdile.com/live/{0}"
 STREAM_TYPES = ["rtmp"]
 
 _url_re = re.compile(r"""

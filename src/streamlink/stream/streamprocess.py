@@ -124,12 +124,12 @@ class StreamProcess(Stream):
         """
         stderr = stderr or self.stderr
         cmd = self.bake(self._check_cmd(), parameters, arguments, short_option_prefix, long_option_prefix)
-        self.logger.debug("Spawning command: {}", subprocess.list2cmdline(cmd))
+        self.logger.debug("Spawning command: {0}", subprocess.list2cmdline(cmd))
 
         try:
             process = subprocess.Popen(cmd, stderr=stderr, stdout=subprocess.PIPE)
         except (OSError, IOError) as err:
-            raise StreamError("Failed to start process: {} ({})".format(self._check_cmd(), str(err)))
+            raise StreamError("Failed to start process: {0} ({1})".format(self._check_cmd(), str(err)))
 
         if timeout:
             elapsed = 0
@@ -140,7 +140,7 @@ class StreamProcess(Stream):
             # kill after the timeout has expired and the process still hasn't ended
             if not process.poll():
                 try:
-                    self.logger.debug("Process timeout expired ({}s), killing process".format(timeout))
+                    self.logger.debug("Process timeout expired ({0}s), killing process".format(timeout))
                     process.kill()
                 except Exception:
                     pass

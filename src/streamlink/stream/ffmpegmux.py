@@ -36,7 +36,7 @@ class FFMPEGMuxer(StreamIO):
 
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
-        self.logger.debug("Starting copy to pipe: {}".format(pipe.path))
+        self.logger.debug("Starting copy to pipe: {0}".format(pipe.path))
         pipe.open("wb")
         while not stream.closed:
             try:
@@ -46,13 +46,13 @@ class FFMPEGMuxer(StreamIO):
                 else:
                     break
             except IOError:
-                self.logger.error("Pipe copy aborted: {}".format(pipe.path))
+                self.logger.error("Pipe copy aborted: {0}".format(pipe.path))
                 return
         try:
             pipe.close()
         except IOError:  # might fail closing, but that should be ok for the pipe
             pass
-        self.logger.debug("Pipe copy complete: {}".format(pipe.path))
+        self.logger.debug("Pipe copy complete: {0}".format(pipe.path))
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
@@ -86,7 +86,7 @@ class FFMPEGMuxer(StreamIO):
                 self._cmd.extend(["-metadata:{0}".format(stream), datum])
 
         self._cmd.extend(['-f', ofmt, outpath])
-        self.logger.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
+        self.logger.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))
         self.close_errorlog = False
 
         if session.options.get("ffmpeg-verbose"):
