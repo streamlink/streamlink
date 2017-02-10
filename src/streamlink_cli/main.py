@@ -349,10 +349,9 @@ def handle_stream(plugin, streams, stream_name):
         console.msg_json(stream)
 
     elif args.stream_url:
-        url = stream_to_url(stream)
-        if url:
-            console.msg("{0}", url)
-        else:
+        try:
+            console.msg("{0}", stream.to_url())
+        except TypeError:
             console.exit("The stream specified cannot be translated to a URL")
 
     # Output the stream

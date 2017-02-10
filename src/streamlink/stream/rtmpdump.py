@@ -1,13 +1,12 @@
 import re
 
-from time import sleep
-
 import subprocess
+from operator import itemgetter
 
 from streamlink.stream.streamprocess import StreamProcess
 from streamlink.compat import str, which
 from streamlink.exceptions import StreamError
-from streamlink.utils import rtmpparse
+from streamlink.utils import rtmpparse, escape_librtmp
 
 
 class RTMPStream(StreamProcess):
@@ -127,3 +126,26 @@ class RTMPStream(StreamProcess):
         cmd = session.options.get("rtmp-rtmpdump")
 
         return which(cmd) is not None
+
+    def to_url(self):
+        stream_params = dict(self.params)
+        params = [stream_params.pop("rtmp", "")]
+
+        if "swfVfy" in self.params:
+            stream_params["swfUrl"] = self.params["swfVfy"]
+            stream_params["swfVfy"] = True
+
+        if "swfhash" in self.params:
+            stream_params["swfVfy"] = True
+            stream_params.pop("swfhash", None)
+            stream_params.pop("swfsize", None)
+
+        # sort the keys for stability of output
+        for key, value in sorted(stream_params.items(), key=itemgetter(0)):
+            if isinstance(value, list):
+                for svalue in value:
+                    params.append("{0}={1}".format(key, escape_librtmp(svalue)))
+            else:
+                params.append("{0}={1}".format(key, escape_librtmp(value)))
+
+        return " ".join(params)

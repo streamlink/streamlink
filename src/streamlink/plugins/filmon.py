@@ -48,6 +48,13 @@ class FilmOnHLS(HLSStream):
         else:
             return self._url
 
+    def to_url(self):
+        url = self.url
+        expires = self.watch_timeout - time.time()
+        if expires < 0:
+            raise TypeError("Stream has expired and cannot be converted to a URL")
+        return url
+
 
 class FilmOnAPI(object):
     channel_url = "http://www.filmon.com/api-v2/channel/{0}?protocol=hls"
