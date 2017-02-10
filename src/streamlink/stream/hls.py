@@ -39,6 +39,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         if self.key_uri != key.uri:
             res = self.session.http.get(key.uri, exception=StreamError,
+                                        retries=self.retries,
                                         **self.reader.request_params)
             self.key_data = res.content
             self.key_uri = key.uri
