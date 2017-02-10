@@ -48,44 +48,44 @@ stream_info_pattern = re.compile(r"""
     /playlist.m3u8'
 """, re.VERBOSE)
 
-# Returns the stream_id contained in the HTML.
-def get_stream_id(self, html):
-    stream_id = stream_id_pattern.search(html)
-
-    if not stream_id:
-        self.logger.error("Failed to extract stream_id.")
-
-    return stream_id.group("stream_id")
-
-# Returns a list of each stream_url, stream_quality_url and stream_quality_name
-# occurence in the JS.
-def get_stream_info(self, html):
-    stream_info = stream_info_pattern.findall(html)
-
-    if not stream_info:
-        self.logger.error("Failed to extract stream_info.")
-
-    # Rename the "" quality to "source" by transforming the tuples to a
-    # list and reassigning.
-    stream_info_list = []
-    for info in stream_info:
-        if not info[2]:
-            stream_info_list.append([info[0], info[1], "source"])
-        else:
-            stream_info_list.append(list(info))
-
-    return stream_info_list
-
 class Huomao(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return url_re.match(url)
 
+    # Returns the stream_id contained in the HTML.
+    def get_stream_id(self, html):
+        stream_id = stream_id_pattern.search(html)
+
+        if not stream_id:
+            self.logger.error("Failed to extract stream_id.")
+
+        return stream_id.group("stream_id")
+
+    # Returns a list of each stream_url, stream_quality_url and stream_quality_name
+    # occurence in the JS.
+    def get_stream_info(self, html):
+        stream_info = stream_info_pattern.findall(html)
+
+        if not stream_info:
+            self.logger.error("Failed to extract stream_info.")
+
+        # Rename the "" quality to "source" by transforming the tuples to a
+        # list and reassigning.
+        stream_info_list = []
+        for info in stream_info:
+            if not info[2]:
+                stream_info_list.append([info[0], info[1], "source"])
+            else:
+                stream_info_list.append(list(info))
+
+        return stream_info_list
+
     def _get_streams(self):
         room_id = url_re.search(self.url).group("room_id")
         html = http.get(mobile_url.format(room_id))
-        stream_id = get_stream_id(self, html.text)
-        stream_info = get_stream_info(self, html.text)
+        stream_id = self.get_stream_id(html.text)
+        stream_info = self.get_stream_info(html.text)
 
         streams = {}
         for info in stream_info:
