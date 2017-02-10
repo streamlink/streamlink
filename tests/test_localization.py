@@ -1,4 +1,5 @@
 import unittest
+
 try:
     from unittest.mock import patch
 except ImportError:
@@ -6,14 +7,23 @@ except ImportError:
 
 import streamlink.utils.l10n as l10n
 
+try:
+    import iso639
+    import iso3166
 
-class TestLocalization(unittest.TestCase):
-    def setUp(self):
-        l10n.PYCOUNTRY = False
+    ISO639 = True
+except ImportError:
+    ISO639 = False
 
-    def test_pycountry(self):
-        self.assertEqual(False, l10n.PYCOUNTRY)
+try:
+    import pycountry
 
+    PYCOUNTRY = True
+except ImportError:
+    PYCOUNTRY = False
+
+
+class LocalizationTestsMixin(object):
     def test_language_code(self):
         l = l10n.Localization("en_US")
         self.assertEqual("en_US", l.language_code)
@@ -90,3 +100,26 @@ class TestLocalization(unittest.TestCase):
         a = l10n.Language("BB", "BBB", "Test")
         b = l10n.Language("AA", None, "Test")
         self.assertNotEqual(a, b)
+
+
+@unittest.skipIf(not ISO639, "iso639+iso3166 modules are required to test iso639+iso3166 Localization")
+class TestLocalization(LocalizationTestsMixin, unittest.TestCase):
+    def setUp(self):
+        l10n.PYCOUNTRY = False
+
+    def test_pycountry(self):
+        self.assertEqual(False, l10n.PYCOUNTRY)
+
+
+@unittest.skipIf(not PYCOUNTRY, "pycountry module required to test pycountry Localization")
+class TestLocalizationPyCountry(LocalizationTestsMixin, unittest.TestCase):
+    """Duplicate of all the Localization tests but using PyCountry instead of the iso* modules"""
+
+    def setUp(self):
+        from pycountry import languages, countries
+        l10n.countries = countries
+        l10n.languages = languages
+        l10n.PYCOUNTRY = True
+
+    def test_pycountry(self):
+        self.assertEqual(True, l10n.PYCOUNTRY)
