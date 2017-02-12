@@ -11,8 +11,8 @@ class FoxTR(Plugin):
     """
     Support for Turkish Fox live stream: http://www.fox.com.tr/canli-yayin
     """
-    url_re = re.compile(r"http?://www.fox.com.tr/canli-yayin")
-    playervars_re = re.compile(r"desktop.*?:.*?\[.*?\{.*?src.*?:.*?'(.*?)'", re.DOTALL)
+    url_re = re.compile(r"https?://www.fox.com.tr/canli-yayin")
+    playervars_re = re.compile(r"desktop\s*:\s*\[\s*\{\s*src\s*:\s*'(.*?)'", re.DOTALL)
 
     @classmethod
     def can_handle_url(cls, url):
