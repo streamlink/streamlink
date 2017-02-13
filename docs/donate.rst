@@ -22,8 +22,8 @@ Streamlink Team
 - `Flattr <https://flattr.com/thing/3956088>`_
 - `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`_
 
-`Gravyboat <https://github.com/gravyboat`_
-------------------------------------------
+`Gravyboat <https://github.com/gravyboat>`_
+-------------------------------------------
 
 - `Bitcoin <https://blockchain.info/qr?data=1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`_ (`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`)
 - `Flattr <https://flattr.com/profile/gravyboat>`_
