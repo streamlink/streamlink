@@ -17,14 +17,14 @@ Streamlink Team
 `Bastimeyer <https://github.com/bastimeyer>`_
 ---------------------------------------------
 
-- `Bitcoin <https://blockchain.info/qr?data=1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8>`_ (`1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8`)
-- `Dogecoin <https://blockchain.info/qr?data=DGkVP7AMUHr2TbVnWy6QyZqSMvCkeEo1ab>`_ (`DGkVP7AMUHr2TbVnWy6QyZqSMvCkeEo1ab`)
-- `Flattr <https://flattr.com/thing/3956088>`_
-- `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`_
+- `Bitcoin <https://blockchain.info/qr?data=1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8>`__ (`1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8`)
+- `Dogecoin <https://blockchain.info/qr?data=DGkVP7AMUHr2TbVnWy6QyZqSMvCkeEo1ab>`__ (`DGkVP7AMUHr2TbVnWy6QyZqSMvCkeEo1ab`)
+- `Flattr <https://flattr.com/thing/3956088>`__
+- `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`__
 
 `Gravyboat <https://github.com/gravyboat>`_
 -------------------------------------------
 
-- `Bitcoin <https://blockchain.info/qr?data=1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`_ (`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`)
-- `Flattr <https://flattr.com/profile/gravyboat>`_
-- `Gratipay <https://gratipay.com/~gravyboat/>`_
+- `Bitcoin <https://blockchain.info/qr?data=1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`__ (`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`)
+- `Flattr <https://flattr.com/profile/gravyboat>`__
+- `Gratipay <https://gratipay.com/~gravyboat/>`__
