@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HTTPStream, HDSStream, RTMPStream
+from streamlink.stream import HTTPStream, HDSStream, HLSStream
 
 MEDIA_URL = "http://www.ardmediathek.de/play/media/{0}"
 SWF_URL = "http://www.ardmediathek.de/ard/static/player/base/flash/PluginFlash.swf"
@@ -16,7 +16,7 @@ QUALITY_MAP = {
 }
 
 _url_re = re.compile(r"http(s)?://(\w+\.)?ardmediathek.de/tv")
-_media_id_re = re.compile(r"/play/config/(\d+)")
+_media_id_re = re.compile(r"/play/(?:media|config)/(\d+)")
 _media_schema = validate.Schema({
     "_mediaArray": [{
         "_mediaStreamArray": [{
@@ -32,6 +32,10 @@ _smil_schema = validate.Schema(
             validate.xml_find("head/meta"),
             validate.get("base"),
             validate.url(scheme="http")
+        ),
+        "cdn": validate.all(
+            validate.xml_find("head/meta"),
+            validate.get("cdn")
         ),
         "videos": validate.all(
             validate.xml_findall("body/seq/video"),
@@ -61,17 +65,8 @@ class ard_mediathek(Plugin):
         url = info["_stream"] + HDCORE_PARAMETER
         return HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL).items()
 
-    def _get_rtmp_streams(self, info):
-        name = QUALITY_MAP.get(info["_quality"], "live")
-        params = {
-            "rtmp": info["_server"].strip(),
-            "playpath": info["_stream"],
-            "pageUrl": self.url,
-            "swfVfy": SWF_URL,
-            "live": True
-        }
-        stream = RTMPStream(self.session, params)
-        yield name, stream
+    def _get_hls_streams(self, info):
+        return HLSStream.parse_variant_playlist(self.session, info["_stream"]).items()
 
     def _get_smil_streams(self, info):
         res = http.get(info["_stream"])
@@ -79,7 +74,7 @@ class ard_mediathek(Plugin):
 
         for video in smil["videos"]:
             url = "{0}/{1}{2}".format(smil["base"], video, HDCORE_PARAMETER)
-            streams = HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL)
+            streams = HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL, is_akamai=smil["cdn"] == "akamai")
 
             # TODO: Replace with "yield from" when dropping Python 2.
             for stream in streams.items():
@@ -93,6 +88,8 @@ class ard_mediathek(Plugin):
         else:
             return
 
+        self.logger.debug("Found media id: {0}", media_id)
+
         res = http.get(MEDIA_URL.format(media_id))
         media = http.json(res, schema=_media_schema)
 
@@ -104,25 +101,23 @@ class ard_mediathek(Plugin):
                     if not stream_:
                         continue
                     stream_ = stream_[0]
-                stream_ = stream_.strip()
 
-                if server.startswith("rtmp://"):
-                    parser = self._get_rtmp_streams
-                    parser_name = "RTMP"
-                elif stream_.endswith(".f4m"):
+                if stream_.endswith(".f4m"):
                     parser = self._get_hds_streams
                     parser_name = "HDS"
                 elif stream_.endswith(".smil"):
                     parser = self._get_smil_streams
                     parser_name = "SMIL"
+                elif stream_.endswith(".m3u8"):
+                    parser = self._get_hls_streams
+                    parser_name = "HLS"
                 elif stream_.startswith("http"):
                     parser = self._get_http_streams
                     parser_name = "HTTP"
 
                 try:
-                    # TODO: Replace with "yield from" when dropping Python 2.
-                    for stream in parser(stream):
-                        yield stream
+                    for s in parser(stream):
+                        yield s
                 except IOError as err:
                     self.logger.error("Failed to extract {0} streams: {1}",
                                       parser_name, err)
