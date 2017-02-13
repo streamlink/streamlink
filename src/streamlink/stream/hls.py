@@ -298,6 +298,7 @@ class HLSStream(HTTPStream):
         streams = {}
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
+            audio_streams = []
             fallback_audio = None
             default_audio = None
             preferred_audio = None
@@ -306,17 +307,24 @@ class HLSStream(HTTPStream):
                 if media.type == "VIDEO" and media.name:
                     names["name"] = media.name
                 elif media.type == "AUDIO":
-                    if not fallback_audio and media.default:
-                        fallback_audio = media
+                    audio_streams.append(media)
 
-                    # if the media is "audoselect" and it better matches the users preferences, use that
-                    # instead of default
-                    if not default_audio and (media.autoselect and locale.equivalent(language=media.language)):
-                        default_audio = media
+            for media in audio_streams:
+                if not fallback_audio and media.default:
+                    fallback_audio = media
 
-                    # select the first audio stream that matches the users explict language selection
-                    if (not preferred_audio or media.default) and locale.explicit and locale.equivalent(language=media.language):
-                        preferred_audio = media
+                # if the media is "audoselect" and it better matches the users preferences, use that
+                # instead of default
+                if not default_audio and (media.autoselect and locale.equivalent(language=media.language)):
+                    default_audio = media
+
+                # select the first audio stream that matches the users explict language selection
+                if (not preferred_audio or media.default) and locale.explicit and locale.equivalent(
+                        language=media.language):
+                    preferred_audio = media
+
+            # final fallback on the first audio stream listed
+            fallback_audio = fallback_audio or (len(audio_streams) and audio_streams[0])
 
             if playlist.stream_info.resolution:
                 width, height = playlist.stream_info.resolution
