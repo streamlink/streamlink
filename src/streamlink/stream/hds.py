@@ -23,7 +23,7 @@ from .wrappers import StreamIOIterWrapper
 
 from ..cache import Cache
 from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
-from ..exceptions import StreamError
+from ..exceptions import StreamError, PluginError
 from ..utils import absolute_url, swfdecompress
 
 from ..packages.flashmedia import F4V, F4VError
@@ -431,9 +431,12 @@ class HDSStream(Stream):
         :param url: The URL to the manifest.
         :param timeout: How long to wait for data to be returned from
                         from the stream before raising an error.
+        :param is_akamai: force adding of the akamai parameters
         :param pvswf: URL of player SWF for Akamai HD player verification.
         """
-        logger = session.logger.new_module("hls.parse_manifest")
+        logger = session.logger.new_module("hds.parse_manifest")
+        # private argument, should only be used in recursive calls
+        raise_for_drm = request_params.pop("raise_for_drm", False)
 
         if not request_params:
             request_params = {}
@@ -457,6 +460,9 @@ class HDSStream(Stream):
 
         if manifest.findtext("drmAdditionalHeader"):
             logger.debug("Omitting HDS stream protected by DRM: {}", url)
+            if raise_for_drm:
+                raise PluginError("{} is protected by DRM".format(url))
+            logger.warning("Some or all streams are unavailable as they are protected by DRM")
             return {}
 
         parsed = urlparse(url)
@@ -491,6 +497,8 @@ class HDSStream(Stream):
 
             params = cls._pv_params(session, pvswf, pvtoken, **request_params)
             request_params["params"].update(params)
+
+        child_drm = False
 
         for media in manifest.findall("media"):
             url = media.attrib.get("url")
@@ -533,9 +541,15 @@ class HDSStream(Stream):
 
             elif href:
                 url = absolute_url(baseurl, href)
-                child_streams = cls.parse_manifest(session, url,
-                                                   timeout=timeout,
-                                                   **request_params)
+                try:
+                    child_streams = cls.parse_manifest(session, url,
+                                                       timeout=timeout,
+                                                       is_akamai=is_akamai,
+                                                       raise_for_drm=True,
+                                                       **request_params)
+                except PluginError:
+                    child_drm = True
+                    child_streams = {}
 
                 for name, stream in child_streams.items():
                     # Override stream name if bitrate is available in parent
@@ -546,6 +560,8 @@ class HDSStream(Stream):
                         name = bitrate + "k"
 
                     streams[name] = stream
+        if child_drm:
+            logger.warning("Some or all streams are unavailable as they are protected by DRM")
 
         return streams
 
