@@ -47,15 +47,13 @@ class Zhanqitv(Plugin):
             self.logger.info("Stream currently unavailable.")
             return
 
-        hls_url = "http://dlhls.cdn.zhanqi.tv/zqlive/{room[videoId]}_1024/index.m3u8?Dnion_vsnae={room[videoId]}".format(room=room)
-        hls_stream = HLSStream(self.session, hls_url)
-        if hls_stream:
-            yield "hls", hls_stream
+        url = "http://wshdl.load.cdn.zhanqi.tv/zqlive/{room[videoId]}.flv?get_url=".format(room=room)
+        stream = HTTPStream(self.session, url)
+        yield "live", stream
 
-        http_url = "http://wshdl.load.cdn.zhanqi.tv/zqlive/{room[videoId]}.flv?get_url=".format(room=room)
-        http_stream = HTTPStream(self.session, http_url)
-        if http_stream:
-            yield "live", http_stream
+        url = "http://dlhls.cdn.zhanqi.tv/zqlive/{room[videoId]}_1024/index.m3u8?Dnion_vsnae={room[videoId]}".format(room=room)
+        stream = HLSStream(self.session, url)
+        yield "live", stream
 
 
 __plugin__ = Zhanqitv
