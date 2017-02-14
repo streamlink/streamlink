@@ -484,7 +484,7 @@ def handle_url():
         console.exit(u"{0}", err)
 
     if not streams:
-        console.exit("No streams found on this URL: {0}", args.url)
+        console.exit("No playable streams found on this URL: {0}", args.url)
 
     if args.best_stream_default:
         args.default_stream = ["best"]
