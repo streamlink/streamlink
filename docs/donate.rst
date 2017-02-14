@@ -23,7 +23,7 @@ Streamlink Team
 - `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`__
 
 `Beardypig <https://github.com/beardypig>`_
----------------------------------------------
+-------------------------------------------
 
 - `Bitcoin <https://blockchain.info/qr?data=1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh>`__ (`1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh`)
 
