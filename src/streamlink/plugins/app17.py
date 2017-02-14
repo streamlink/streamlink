@@ -18,8 +18,7 @@ _user_api_schema = validate.Schema(validate.all(
     validate.get("data"),
     {
         "liveStreamID": int,
-        "userIsOnLive": int,
-
+        "userIsOnLive": int
     }
 ))
 
@@ -65,10 +64,15 @@ class App17(Plugin):
                 })
         yield "live", stream
 
-        prefix = url.replace("rtmp:", "http:")
-        url = prefix + "/playlist.m3u8"
-        for stream in HLSStream.parse_variant_playlist(self.session, url).items():
-            yield stream
+        prefix = url.replace("rtmp:", "http:").replace(".flv", ".m3u8")
+        if '.m3u8' not in prefix:
+            url = prefix + "/playlist.m3u8"
+            for stream in HLSStream.parse_variant_playlist(self.session, url).items():
+                yield stream
+        else:
+            url = prefix
+            stream = HLSStream(self.session, url)
+            yield "live", stream
 
 
 __plugin__ = App17
