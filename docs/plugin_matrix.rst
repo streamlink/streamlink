@@ -18,6 +18,7 @@ afreecatv           afreeca.tv           Yes   No
 aftonbladet         aftonbladet.se       Yes   Yes
 alieztv             aliez.tv             Yes   Yes
 antenna             antenna.gr           --    Yes
+app17               17app.co             Yes   --
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
