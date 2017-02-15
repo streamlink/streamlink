@@ -22,12 +22,12 @@ class BigoStream(Stream):
             self.sid = int(sid)
             self.uid = int(uid)
         except ValueError:
-            raise PluginError("invalid sid or uid parameter for Bigo Stream: {}/{}".format(self.sid, self.uid))
+            raise PluginError("invalid sid or uid parameter for Bigo Stream: {0}/{1}".format(self.sid, self.uid))
         self.ip = ip
         try:
             self.port = int(port)
         except ValueError:
-            raise PluginError("invalid port number for Bigo Stream: {}:{}".format(self.ip, self.port))
+            raise PluginError("invalid port number for Bigo Stream: {0}:{1}".format(self.ip, self.port))
         self.con = None
 
     def open(self):

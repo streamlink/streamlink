@@ -71,7 +71,7 @@ class bongacams(Plugin):
         if '/profile/' in r.url:
             raise NoStreamsError(self.url)
         if not r.ok:
-            self.logger.debug("Status code for {}: {}", r.url, r.status_code)
+            self.logger.debug("Status code for {0}: {1}", r.url, r.status_code)
             raise NoStreamsError(self.url)
         if len(http_session.cookies) == 0:
             raise PluginError("Can't get a cookies")
@@ -88,12 +88,12 @@ class bongacams(Plugin):
         match = swf_re.search(r.text)
         if match:
             swf_url = urljoin(baseurl, match.group())
-            self.logger.debug("swf url found: {}", swf_url)
+            self.logger.debug("swf url found: {0}", swf_url)
         else:
             # most likely it means that country/region banned
             # can try use default swf-url
             swf_url = urljoin(baseurl, CONST_DEFAULT_SWF_LOCATION)
-            self.logger.debug("swf url not found. Will try {}", swf_url)
+            self.logger.debug("swf url not found. Will try {0}", swf_url)
 
         # create amf query
         amf_message = AMFMessage("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
@@ -107,7 +107,7 @@ class bongacams(Plugin):
         http_session.close()
 
         if r.status_code != 200:
-            raise PluginError("unexpected status code for {}: {}", r.url, r.status_code)
+            raise PluginError("unexpected status code for {0}: {1}", r.url, r.status_code)
 
         amf_response = AMFPacket.deserialize(BytesIO(r.content))
 
@@ -115,7 +115,7 @@ class bongacams(Plugin):
             raise PluginError("unexpected response from amf gate")
 
         stream_source_info = amf_msg_schema.validate(amf_response.messages[0].value)
-        self.logger.debug("source stream info:\n{}", stream_source_info)
+        self.logger.debug("source stream info:\n{0}", stream_source_info)
 
         stream_params = {
             "live": True,
@@ -133,7 +133,7 @@ class bongacams(Plugin):
                      "S:{0}".format(stream_source_info['localData']['dataKey'])]
         }
 
-        self.logger.debug("Stream params:\n{}", stream_params)
+        self.logger.debug("Stream params:\n{0}", stream_params)
         stream = RTMPStream(self.session, stream_params)
 
         return {'live': stream}

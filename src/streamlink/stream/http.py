@@ -78,3 +78,6 @@ class HTTPStream(Stream):
             fd = StreamIOThreadWrapper(self.session, fd, timeout=timeout)
 
         return fd
+
+    def to_url(self):
+        return self.url

@@ -116,7 +116,7 @@ class AdultSwim(Plugin):
                 yield q, s
 
         else:
-            self.logger.error("Couldn't find the stream ID for this stream: {}".format(show))
+            self.logger.error("Couldn't find the stream ID for this stream: {0}".format(show))
 
     def _get_streams(self):
         # get the page
@@ -147,7 +147,7 @@ class AdultSwim(Plugin):
                     yield q, s
 
         else:
-            self.logger.error("Couldn't find the stream data for this stream: {}".format(show_name))
+            self.logger.error("Couldn't find the stream data for this stream: {0}".format(show_name))
 
 
 __plugin__ = AdultSwim

@@ -1,3 +1,34 @@
+streamlink 0.3.2 (2017-02-10)
+-----------------------------
+0.3.2 release of Streamlink!
+
+A minor bug release of 0.3.2 to fix a few issues with stream providers. 
+
+Thanks to all whom have contributed to this (tiny) release!
+
+::
+
+    Charlie Drage <charlie@charliedrage.com> (3):
+          Update release script again to include sdist
+          Fix underlining issue
+          Fix the CHANGELOG.rst
+    
+    Sven <sven@androd.se> (1):
+          Adding Huomao plugin with possibility for different stream qualities.
+    
+    beardypig <beardypig@users.noreply.github.com> (7):
+          Ensure retries with HLS Streams (#522)
+          utils.l10n: add Country/Language classes, use pycountry is the iso modules are not available
+          plugins.crunchyroll: added option to set the session id to a specific value
+          CI: add pycountry for testing
+          plugins.openrectv: add source quality for openrectv
+          utils.l10n: default to en_US when an invalid locale is set
+          stream.hls: pick a better default stream language
+    
+    intact <intact.devel@gmail.com> (1):
+          Add Rtvs.sk Plugin
+    
+
 streamlink 0.3.1 (2017-02-03)
 -----------------------------
 0.3.1 release of Streamlink

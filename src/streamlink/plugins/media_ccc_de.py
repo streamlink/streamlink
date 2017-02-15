@@ -30,16 +30,16 @@ API_URL_STREAMING_MEDIA = "https://streaming.media.ccc.de/streams/v1.json"
 
 # http(s)://media.ccc.de/path/to/talk.html
 _url_media_re = re.compile(r"(?P<scheme>http|https)"
-                           "://"
-                           "(?P<server>media\.ccc\.de)"
-                           "/")
+                           r"://"
+                           r"(?P<server>media\.ccc\.de)"
+                           r"/")
 # https://streaming.media.ccc.de/room/
 _url_streaming_media_re = re.compile(r"(?P<scheme>http|https)"
-                                     "://"
-                                     "(?P<server>streaming\.media\.ccc\.de)"
-                                     "/"
-                                     "(?P<room>.*)"
-                                     "/")
+                                     r"://"
+                                     r"(?P<server>streaming\.media\.ccc\.de)"
+                                     r"/"
+                                     r"(?P<room>.*)"
+                                     r"/")
 
 
 def get_event_id(url):

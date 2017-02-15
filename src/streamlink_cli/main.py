@@ -349,10 +349,9 @@ def handle_stream(plugin, streams, stream_name):
         console.msg_json(stream)
 
     elif args.stream_url:
-        url = stream_to_url(stream)
-        if url:
-            console.msg("{0}", url)
-        else:
+        try:
+            console.msg("{0}", stream.to_url())
+        except TypeError:
             console.exit("The stream specified cannot be translated to a URL")
 
     # Output the stream
@@ -484,7 +483,7 @@ def handle_url():
         console.exit(u"{0}", err)
 
     if not streams:
-        console.exit("No streams found on this URL: {0}", args.url)
+        console.exit("No playable streams found on this URL: {0}", args.url)
 
     if args.best_stream_default:
         args.default_stream = ["best"]
@@ -817,6 +816,9 @@ def setup_plugin_options():
     if args.crunchyroll_purge_credentials:
         streamlink.set_plugin_option("crunchyroll", "purge_credentials",
                                      args.crunchyroll_purge_credentials)
+    if args.crunchyroll_session_id:
+        streamlink.set_plugin_option("crunchyroll", "session_id",
+                                     args.crunchyroll_session_id)
 
     if args.crunchyroll_locale:
         streamlink.set_plugin_option("crunchyroll", "locale",

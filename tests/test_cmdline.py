@@ -32,8 +32,14 @@ class TestCommandLineInvocation(unittest.TestCase):
     @patch('sys.argv')
     def _test_args(self, args, commandline, mock_argv, mock_popen, mock_setup_streamlink, passthrough=False):
         mock_argv.__getitem__.side_effect = lambda x: args[x]
-        mock_popen().returncode = None
-        mock_popen().poll.return_value = None
+
+        def side_effect(results):
+            def fn(*args):
+                result = results.pop(0)
+                return result
+            return fn
+
+        mock_popen().poll.side_effect = side_effect([None, 0])
 
         streamlink_cli.main.main()
         mock_setup_streamlink.assert_called_with()

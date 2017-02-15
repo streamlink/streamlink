@@ -18,6 +18,7 @@ afreecatv           afreeca.tv           Yes   No
 aftonbladet         aftonbladet.se       Yes   Yes
 alieztv             aliez.tv             Yes   Yes
 antenna             antenna.gr           --    Yes
+app17               17app.co             Yes   --
 ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
 ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
 artetv              arte.tv              Yes   Yes
@@ -85,6 +86,7 @@ goodgame            goodgame.ru          Yes   No    Only HLS streams are availa
 gulli               replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
 hitbox              hitbox.tv            Yes   Yes
 huajiao             huajiao.com          Yes   No    
+huomao              huomao.com           Yes   No
 huya                huya.com             Yes   No    Temporarily only HLS streams available.
 ine                 ine.com              ---   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
@@ -167,6 +169,7 @@ tv8cat              tv8.cat              Yes   No    Streams may be geo-restrict
 tv360               tv360.com.tr         Yes   No
 tvcatchup           - tvcatchup.com      Yes   No    Streams may be geo-restricted to Great Britain.
 tvplayer            tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
+tvrplus             tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
 ustreamtv           ustream.tv           Yes   Yes   Currently broken.
