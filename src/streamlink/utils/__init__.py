@@ -235,6 +235,19 @@ def swfverify(url):  # pragma: no cover
     return h.hexdigest(), len(swf)
 
 
+def escape_librtmp(value):
+    if isinstance(value, bool):
+        value = "1" if value else "0"
+    if isinstance(value, int):
+        value = str(value)
+
+    # librtmp expects some characters to be escaped
+    value = value.replace("\\", "\\5c")
+    value = value.replace(" ", "\\20")
+    value = value.replace('"', "\\22")
+    return value
+
 __all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
-           "parse_xml", "res_xml", "rtmpparse", "prepend_www", "NamedPipe"]
+           "parse_xml", "res_xml", "rtmpparse", "prepend_www", "NamedPipe",
+           "escape_librtmp"]
