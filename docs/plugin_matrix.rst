@@ -112,6 +112,7 @@ nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restrict
 oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
 openrectv           openrec.tv           Yes   Yes
 orf_tvthek          tvthek.orf.at        Yes   Yes
+ovvatv              ovva.tv              Yes   No
 pandatv             panda.tv             Yes   ?
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
