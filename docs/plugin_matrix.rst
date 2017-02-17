@@ -126,6 +126,7 @@ rtvs                rtvs.sk              Yes   No    Streams may be geo-restrict
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 schoolism           schoolism.com        --    Yes   Requires a login and a subscription.
 seemeplay           seemeplay.ru         Yes   Yes
+seetv               seetv.tv             Yes   No    Streams that are embedded from other sites will not work.
 servustv            servustv.com         ?     ?
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportal             sportal.bg           Yes   No
