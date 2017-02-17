@@ -150,6 +150,7 @@ tf1                 - tf1.fr             Yes   No    Streams may be geo-restrict
                     - lci.fr
 tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
+                    - star.longzhu.com
 tigerdile           tigerdile.com        Yes   --
 trt                 trt.net.tr           Yes   No    Some streams may be geo-restricted to Turkey.
 trtspor             trtspor.com          Yes   No    Some streams are geo-restricted to Turkey.
