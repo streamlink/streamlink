@@ -101,6 +101,7 @@ class Pluzz(Plugin):
         geolocked = False
         drm = False
         expired = False
+
         for video in videos['videos']:
             video_url = video['url']
 
@@ -156,7 +157,9 @@ class Pluzz(Plugin):
                 if match is not None:
                     bitrate = match.group('bitrate')
                 else:
-                    bitrate = video['format']
+                    # Fallback bitrate (seems all France Televisions MP4 videos
+                    # seem have such bitrate)
+                    bitrate = '1500k'
                 yield bitrate, HTTPStream(self.session, video_url)
 
         if offline:
