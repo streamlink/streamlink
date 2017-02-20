@@ -12,6 +12,7 @@ class Stream(object):
 
     def __init__(self, session):
         self.session = session
+        self.logger = self.session.logger.new_module("stream.".format(self.shortname()))
 
     def __repr__(self):
         return "<Stream()>"

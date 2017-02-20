@@ -12,6 +12,7 @@ from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
 from streamlink.compat import devnull, which
 
+
 class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
 
@@ -23,6 +24,7 @@ class MuxedStream(Stream):
     def open(self):
         fds = []
         for substream in self.substreams:
+            self.logger.debug("Opening {0} substream".format(substream.shortname()))
             fds.append(substream and substream.open())
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 

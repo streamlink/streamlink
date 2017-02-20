@@ -2,23 +2,27 @@ import base64
 import json
 import random
 import re
+import tempfile
 import time
+import warnings
 
 from Crypto.Cipher import AES, PKCS1_v1_5
 from Crypto.PublicKey import RSA
 from Crypto.Util import number
 
-from streamlink.compat import urljoin, urlparse, urlunparse
+from streamlink.compat import urljoin, urlparse
 from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
+from streamlink.stream.ffmpegmux import MuxedStream, FFMPEGMuxer
+from streamlink.stream.file import FileStream
 
 HDCORE_VERSION = "3.2.0"
 
 _url_re = re.compile(r"https?://www.daisuki.net/[^/]+/[^/]+/anime/watch\..+")
-_flashvars_re = re.compile(r"var\s+flashvars\s*=\s*{([^}]*?)};", re.DOTALL)
+_flashvars_re = re.compile(r"var\s+flashvars\s*=\s*\{([^}]*?)};", re.DOTALL)
 _flashvar_re = re.compile(r"""(['"])(.*?)\1\s*:\s*(['"])(.*?)\3""")
 _clientlibs_re = re.compile(r"""<script.*?src=(['"])(.*?/clientlibs_anime_watch.*?\.js)\1""")
 
@@ -54,6 +58,46 @@ _language_schema = validate.Schema(
     validate.xml_findtext("./country_code")
 )
 
+_xml_to_srt_schema = validate.Schema(
+    validate.xml_findall(".//body/div"),
+    [
+        validate.all(
+            validate.xml_findall("./p"),
+            validate.transform(lambda x: list(enumerate(x, 1))),
+            [
+                validate.all(
+                    validate.union({
+                        "i": validate.get(0),
+                        "begin": validate.all(
+                            validate.get(1),
+                            validate.getattr("attrib"),
+                            validate.get("begin"),
+                            validate.transform(lambda s: s.replace(".", ","))
+                        ),
+                        "end": validate.all(
+                            validate.get(1),
+                            validate.getattr("attrib"),
+                            validate.get("end"),
+                            validate.transform(lambda s: s.replace(".", ","))
+                        ),
+                        "text": validate.all(
+                            validate.get(1),
+                            validate.getattr("text"),
+                            validate.transform(lambda s: s.strip()),
+                            validate.transform(lambda s: s.replace("<br />", "\n"))
+                        )
+                    }),
+                    validate.transform(
+                        lambda d: "{i}\n{begin} --> {end}\n{text}\n".format(**d)
+                    )
+                )
+            ],
+            validate.transform(lambda s: '\n'.join(s))
+        )
+    ],
+    validate.get(0)
+)
+
 _init_schema = validate.Schema(
     {
         "rtn": validate.all(
@@ -82,7 +126,9 @@ def aes_decrypt(key, ciphertext):
 def rsa_encrypt(key, plaintext):
     pubkey = RSA.importKey(key)
     cipher = PKCS1_v1_5.new(pubkey)
-    return base64.b64encode(cipher.encrypt(plaintext))
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        return base64.b64encode(cipher.encrypt(plaintext))
 
 
 def get_public_key(cache, url):
@@ -110,6 +156,10 @@ def get_public_key(cache, url):
 
 
 class Daisuki(Plugin):
+    options = PluginOptions({
+        "mux_subtitles": False
+    })
+
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
@@ -161,10 +211,23 @@ class Daisuki(Plugin):
             return
         hlsstream_url = init_data["play_url"]
 
-        if "caption_url" in init_data:
-            self.logger.info("Subtitles: {0}".format(init_data["caption_url"]))
+        streams = HLSStream.parse_variant_playlist(self.session, hlsstream_url)
 
-        return HLSStream.parse_variant_playlist(self.session, hlsstream_url)
+        if "caption_url" in init_data:
+            if self.get_option("mux_subtitles") and FFMPEGMuxer.is_usable(self.session):
+                res = http.get(init_data["caption_url"])
+                srt = http.xml(res, ignore_ns=True, schema=_xml_to_srt_schema)
+                subfile = tempfile.TemporaryFile()
+                subfile.write(srt.encode("utf8"))
+                subfile.seek(0)
+                for n, s in streams.items():
+                    yield n, MuxedStream(self.session, s, FileStream(self.session, fileobj=subfile))
+                return
+            else:
+                self.logger.info("Subtitles: {0}".format(init_data["caption_url"]))
+
+        for s in streams.items():
+            yield s
 
 
 __plugin__ = Daisuki
