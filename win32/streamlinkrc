@@ -66,3 +66,6 @@ ffmpeg-ffmpeg=ffmpeg.exe
 
 # Number of threads to use when streaming HDS streams
 #hds-segment-threads=1
+
+# Disable version check
+no-version-check
