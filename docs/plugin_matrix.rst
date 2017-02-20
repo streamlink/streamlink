@@ -118,6 +118,8 @@ periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
 playtv              playtv.fr            Yes   --    Streams may be geo-restricted to France.
 pluzz               pluzz.francetv.fr    Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
+                    ludo.fr
+                    zouzous.fr
 powerapp            powerapp.com.tr      Yes   No
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
