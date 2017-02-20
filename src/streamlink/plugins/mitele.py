@@ -6,7 +6,6 @@ from base64 import b64decode
 from datetime import datetime
 from uuid import uuid4
 
-from streamlink.cache import Cache
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
@@ -63,10 +62,6 @@ class Mitele(Plugin):
             }
         }
     })
-
-    def __init__(self, url):
-        super(Mitele, self).__init__(url)
-        self.cache = Cache("mitele.cache")
 
     @classmethod
     def can_handle_url(cls, url):
