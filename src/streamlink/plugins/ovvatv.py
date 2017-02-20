@@ -50,7 +50,7 @@ class ovvaTV(Plugin):
             data = self.data_re.search(res.text)
             if data:
                 try:
-                    ovva_url = parse_json(b64decode(data.group(1)), schema=self.ovva_data_schema)
+                    ovva_url = parse_json(b64decode(data.group(1)).decode("utf8"), schema=self.ovva_data_schema)
                     stream_url = http.get(ovva_url, schema=self.ovva_redirect_schema)
                 except PluginError as e:
                     self.logger.error("Could not find stream URL: {0}", e)
