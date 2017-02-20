@@ -96,7 +96,7 @@ class M3U8Parser(object):
         match = re.match("#(?P<tag>[\w-]+)(:(?P<value>.+))?", line)
 
         if match:
-            return match.group("tag"), match.group("value").strip()
+            return match.group("tag"), (match.group("value") or "").strip()
 
         return None, None
 
