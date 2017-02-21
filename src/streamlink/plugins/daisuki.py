@@ -18,6 +18,7 @@ from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream, FFMPEGMuxer
 from streamlink.stream.file import FileStream
+from streamlink.utils.l10n import Language
 
 HDCORE_VERSION = "3.2.0"
 
@@ -61,41 +62,45 @@ _language_schema = validate.Schema(
 _xml_to_srt_schema = validate.Schema(
     validate.xml_findall(".//body/div"),
     [
-        validate.all(
-            validate.xml_findall("./p"),
-            validate.transform(lambda x: list(enumerate(x, 1))),
-            [
-                validate.all(
-                    validate.union({
-                        "i": validate.get(0),
-                        "begin": validate.all(
-                            validate.get(1),
-                            validate.getattr("attrib"),
-                            validate.get("begin"),
-                            validate.transform(lambda s: s.replace(".", ","))
-                        ),
-                        "end": validate.all(
-                            validate.get(1),
-                            validate.getattr("attrib"),
-                            validate.get("end"),
-                            validate.transform(lambda s: s.replace(".", ","))
-                        ),
-                        "text": validate.all(
-                            validate.get(1),
-                            validate.getattr("text"),
-                            validate.transform(lambda s: s.strip()),
-                            validate.transform(lambda s: s.replace("<br />", "\n"))
+        validate.union([validate.all(
+                validate.getattr("attrib"),
+                validate.get("{http://www.w3.org/XML/1998/namespace}lang")
+            ),
+            validate.all(
+                validate.xml_findall("./p"),
+                validate.transform(lambda x: list(enumerate(x, 1))),
+                [
+                    validate.all(
+                        validate.union({
+                            "i": validate.get(0),
+                            "begin": validate.all(
+                                validate.get(1),
+                                validate.getattr("attrib"),
+                                validate.get("begin"),
+                                validate.transform(lambda s: s.replace(".", ","))
+                            ),
+                            "end": validate.all(
+                                validate.get(1),
+                                validate.getattr("attrib"),
+                                validate.get("end"),
+                                validate.transform(lambda s: s.replace(".", ","))
+                            ),
+                            "text": validate.all(
+                                validate.get(1),
+                                validate.getattr("text"),
+                                validate.transform(lambda s: s.strip()),
+                                validate.transform(lambda s: s.replace("<br />", "\n"))
+                            )
+                        }),
+                        validate.transform(
+                            lambda d: "{i}\n{begin} --> {end}\n{text}\n".format(**d)
                         )
-                    }),
-                    validate.transform(
-                        lambda d: "{i}\n{begin} --> {end}\n{text}\n".format(**d)
                     )
-                )
-            ],
-            validate.transform(lambda s: '\n'.join(s))
-        )
-    ],
-    validate.get(0)
+                ],
+                validate.transform(lambda s: '\n'.join(s))
+            )
+        ])
+    ]
 )
 
 _init_schema = validate.Schema(
@@ -217,11 +222,19 @@ class Daisuki(Plugin):
             if self.get_option("mux_subtitles") and FFMPEGMuxer.is_usable(self.session):
                 res = http.get(init_data["caption_url"])
                 srt = http.xml(res, ignore_ns=True, schema=_xml_to_srt_schema)
-                subfile = tempfile.TemporaryFile()
-                subfile.write(srt.encode("utf8"))
-                subfile.seek(0)
+                subfiles = []
+                metadata = {}
+                for i, lang, srt in ((i, s[0], s[1]) for i, s in enumerate(srt)):
+                    subfile = tempfile.TemporaryFile()
+                    subfile.write(srt.encode("utf8"))
+                    subfile.seek(0)
+                    subfiles.append(FileStream(self.session, fileobj=subfile))
+                    metadata["s:s:{0}".format(i)] = ["language={0}".format(lang)]
+
                 for n, s in streams.items():
-                    yield n, MuxedStream(self.session, s, FileStream(self.session, fileobj=subfile))
+                    yield n, MuxedStream(self.session, s, *subfiles,
+                                         maps=list(range(0, len(metadata)+1)),
+                                         metadata=metadata)
                 return
             else:
                 self.logger.info("Subtitles: {0}".format(init_data["caption_url"]))
