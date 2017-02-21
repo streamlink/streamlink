@@ -40,8 +40,6 @@ class StreamProcess(Stream):
         self.parameters = params or {}
         self.arguments = args or []
         self.timeout = timeout
-        self.logger = session.logger.new_module("stream.process")
-
         self.errorlog = self.session.options.get("subprocess-errorlog")
         self.errorlog_path = self.session.options.get("subprocess-errorlog-path")
 

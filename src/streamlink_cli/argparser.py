@@ -1096,6 +1096,13 @@ plugin.add_argument(
     Defaults is 1
     """
 )
+plugin.add_argument(
+    "--daisuki-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream
+    """
+)
 
 # Deprecated options
 stream.add_argument(

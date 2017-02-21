@@ -26,7 +26,6 @@ class RTMPStream(StreamProcess):
         self.cmd = self.session.options.get("rtmp-rtmpdump")
         self.timeout = self.session.options.get("rtmp-timeout")
         self.redirect = redirect
-        self.logger = session.logger.new_module("stream.rtmp")
 
         # set rtmpdump logging level
         if self.session.options.get("subprocess-errorlog-path") or \

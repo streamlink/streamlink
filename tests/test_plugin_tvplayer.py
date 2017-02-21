@@ -1,6 +1,8 @@
 import json
 import unittest
 
+from streamlink import Streamlink
+
 try:
     from unittest.mock import patch, Mock, ANY
 except ImportError:
@@ -10,6 +12,9 @@ from streamlink.stream import HLSStream
 
 
 class TestPluginTVPlayer(unittest.TestCase):
+    def setUp(self):
+        self.session = Streamlink()
+
     def test_can_handle_url(self):
         # should match
         self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/watch/"))
@@ -48,7 +53,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         mock_http.get.return_value = page_resp
         mock_http.post.return_value = api_resp
         mock_http.json.return_value = api_data
-        hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(None, "http://test.se/stream1")}
+        hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
