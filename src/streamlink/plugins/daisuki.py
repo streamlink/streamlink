@@ -18,7 +18,6 @@ from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream, FFMPEGMuxer
 from streamlink.stream.file import FileStream
-from streamlink.utils.l10n import Language
 
 HDCORE_VERSION = "3.2.0"
 
@@ -87,9 +86,7 @@ _xml_to_srt_schema = validate.Schema(
                             ),
                             "text": validate.all(
                                 validate.get(1),
-                                validate.getattr("text"),
-                                validate.transform(lambda s: s.strip()),
-                                validate.transform(lambda s: s.replace("<br />", "\n"))
+                                validate.transform(lambda x: '\n'.join([s.strip() for s in x.itertext()]))
                             )
                         }),
                         validate.transform(
