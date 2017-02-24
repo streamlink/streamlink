@@ -21,8 +21,11 @@ class TestPlugin(Plugin):
     })
 
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return "test.se" in url
+
+    def _get_title(self):
+        return "Test \"Title\""
 
     def _get_streams(self):
         if "empty" in self.url:

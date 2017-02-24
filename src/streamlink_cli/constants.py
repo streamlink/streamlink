@@ -6,6 +6,10 @@ from .compat import is_win32
 
 DEFAULT_PLAYER_ARGUMENTS = "{filename}"
 
+DEFAULT_FORMAT_ARGUMENTS = {
+    "title": "Untitled"
+}
+
 if is_win32:
     APPDATA = os.environ["APPDATA"]
     CONFIG_FILES = [os.path.join(APPDATA, "streamlink", "streamlinkrc")]
