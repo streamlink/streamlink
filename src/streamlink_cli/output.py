@@ -112,10 +112,10 @@ class PlayerOutput(Output):
         else:
             filename = "-"
 
-		if not is_win32:
-			title = shlex_quote(self.format_args["title"])
-		else:
-			title = subprocess.list2cmdline([self.format_args["title"]])
+        if not is_win32:
+            title = shlex_quote(self.format_args["title"])
+        else:
+            title = subprocess.list2cmdline([self.format_args["title"]])
 
         args = self.args.format(filename=filename, title=title)
         cmd = self.cmd
