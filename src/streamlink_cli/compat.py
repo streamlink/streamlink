@@ -33,5 +33,9 @@ def shlex_quote(s):
     if _find_unsafe(s) is None:
         return s
 
+    # use single quotes, and put single quotes into double quotes
+    # the string $'b is then quoted as '$'"'"'b'
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "file",
            "shlex_quote", "get_terminal_size"]
