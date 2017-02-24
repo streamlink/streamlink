@@ -111,14 +111,15 @@ class PlayerOutput(Output):
             filename = self.http.url
         else:
             filename = "-"
-
+        
+        if self.format_args["title"] is None:
+            self.format_args["title"] = DEFAULT_FORMAT_ARGUMENTS["title"]
         if not is_win32:
             title = shlex_quote(self.format_args["title"].encode('utf8'))
-            title = title.replace("$","$$")
         else:
             title = subprocess.list2cmdline([self.format_args["title"].encode('utf8')])
-            title = title.replace("$","$$")
-
+        title = title.replace("$","$$")
+        
         args = self.args.encode('utf8').format(filename=filename, title=title)
         cmd = self.cmd
         if is_win32:
