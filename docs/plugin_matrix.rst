@@ -52,6 +52,7 @@ connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
 dailymotion         dailymotion.com      Yes   Yes
+daisuki             daisuki.net          No    Yes
 dingittv            dingit.tv            Yes   Yes
 disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.
                     - disneychannel.de

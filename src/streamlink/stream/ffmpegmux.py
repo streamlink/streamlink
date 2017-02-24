@@ -12,6 +12,7 @@ from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
 from streamlink.compat import devnull, which
 
+
 class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
 
@@ -23,6 +24,7 @@ class MuxedStream(Stream):
     def open(self):
         fds = []
         for substream in self.substreams:
+            self.logger.debug("Opening {0} substream".format(substream.shortname()))
             fds.append(substream and substream.open())
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
@@ -73,6 +75,7 @@ class FFMPEGMuxer(StreamIO):
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
         metadata = options.pop("metadata", {})
+        maps = options.pop("maps", [])
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
@@ -80,6 +83,9 @@ class FFMPEGMuxer(StreamIO):
 
         self._cmd.extend(['-c:v', videocodec])
         self._cmd.extend(['-c:a', audiocodec])
+
+        for m in maps:
+            self._cmd.extend(["-map", str(m)])
 
         for stream, data in metadata.items():
             for datum in data:

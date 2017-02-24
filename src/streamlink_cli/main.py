@@ -855,6 +855,9 @@ def setup_plugin_options():
     if args.schoolism_part:
         streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
 
+    if args.daisuki_mux_subtitles:
+        streamlink.set_plugin_option("daisuki", "mux_subtitles", args.daisuki_mux_subtitles)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
