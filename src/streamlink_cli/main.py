@@ -484,17 +484,6 @@ def handle_url():
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
 
-        if args.player:
-            plugin.title = plugin.stream_title()
-            if plugin.title is None:
-                if hasattr(plugin,"channel"):
-                    plugin.title = plugin.channel
-                else:
-                    plugin.title = args.url
-            else:
-                plugin.title = plugin.title.replace('"','``')
-            args.player = args.player.replace("{title}", plugin.title)
-
         if args.retry_streams:
             streams = fetch_streams_infinite(plugin, args.retry_streams)
         else:
