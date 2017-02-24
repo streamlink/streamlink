@@ -122,8 +122,21 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_reload_time = 15
         self.live_edge = self.session.options.get("hls-live-edge")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
+        self.duration_offset_start = self.session.options.get("hls-offset-start")
+        self.duration_offset_end = self.session.options.get("hls-offset-end")
 
         self.reload_playlist()
+
+        if self.playlist_end is None:
+            if self.duration_offset_start > 0:
+                self.logger.info("Time offsets disabled for live stream")
+            # live playlist, force offset durations back to None
+            self.duration_offset_start = 0
+            self.duration_offset_end = None
+        else:
+            self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
+            if self.duration_offset_end:
+                self.playlist_end = self.duration_to_sequence(self.duration_offset_end, self.playlist_sequences)
 
     def reload_playlist(self):
         if self.closed:
@@ -182,6 +195,13 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
     def valid_sequence(self, sequence):
         return sequence.num >= self.playlist_sequence
+
+    def duration_to_sequence(self, duration, sequences):
+        d = 0
+        for sequence in sequences:
+            if d >= duration:
+                return sequence.num
+            d += sequence.segment.duration
 
     def iter_segments(self):
         while not self.closed:

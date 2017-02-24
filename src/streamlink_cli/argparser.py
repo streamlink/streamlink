@@ -23,6 +23,7 @@ _option_re = re.compile("""
     \s*
     (?P<value>.*) # The value, anything goes.
 """, re.VERBOSE)
+_hours_minutes_seconds_re = re.compile(r"(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)")
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -136,6 +137,23 @@ def boolean(value):
         raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths+falses)))
 
     return value.lower() in truths
+
+def hours_minutes_seconds(value):
+    """
+    converts hours:minutes:seconds to seconds
+    :param value: hh:mm:ss
+    :return: seconds
+    """
+    match = _hours_minutes_seconds_re.match(value)
+    if not match:
+        raise ValueError
+    s = 0
+    s += int(match.group("hours")) * 60 * 60
+    s += int(match.group("minutes")) * 60
+    s += int(match.group("seconds"))
+
+    return s
+
 
 parser = ArgumentParser(
     fromfile_prefix_chars="@",
@@ -697,6 +715,26 @@ transport.add_argument(
     Timeout for reading data from HLS streams.
 
     Default is 60.0.
+    """)
+transport.add_argument(
+    "--hls-offset-start",
+    type=hours_minutes_seconds,
+    metavar="HH:MM:SS",
+    default=None,
+    help="""
+    Amount of time to skip from the beginning of the stream, VOD streams only.
+
+    Default is 00:00:00.
+    """)
+transport.add_argument(
+    "--hls-offset-end",
+    type=hours_minutes_seconds,
+    metavar="HH:MM:SS",
+    default=None,
+    help="""
+    The time in the stream to end at, VOD streams only.
+
+    Default is END.
     """)
 transport.add_argument(
     "--hls-audio-select",
