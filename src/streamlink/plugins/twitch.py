@@ -290,6 +290,7 @@ class Twitch(Plugin):
         if match.get("videos_id"):
             self.video_type = "v"
         self.video_id = match.get("video_id") or match.get("videos_id")
+        self.title = None
         self.clip_name = match.get("clip_name")
         self._hosted_chain = []
 
@@ -490,6 +491,7 @@ class Twitch(Plugin):
         try:
             videos = self.api.videos(self.video_type + self.video_id,
                                      schema=_video_schema)
+            self.title = videos["title"]
         except PluginError as err:
             if "HTTP/1.1 0 ERROR" in str(err):
                 raise NoStreamsError(self.url)
@@ -598,6 +600,10 @@ class Twitch(Plugin):
             return self._get_clips()
         else:
             return self._get_hls_streams("live")
-
+    def _get_title(self):
+        if self.title is None:
+            info = self.api.channel_info(self.channel)
+            self.title = info["status"] + " - " + self.channel
+        return self.title
 
 __plugin__ = Twitch

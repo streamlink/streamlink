@@ -323,5 +323,10 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
+    def stream_title(self):
+        return self._get_title()
+
+    def _get_title(self):
+        return None
 
 __all__ = ["Plugin"]
