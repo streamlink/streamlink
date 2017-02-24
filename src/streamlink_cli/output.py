@@ -113,11 +113,13 @@ class PlayerOutput(Output):
             filename = "-"
 
         if not is_win32:
-            title = shlex_quote(self.format_args["title"])
+            title = shlex_quote(self.format_args["title"].encode('utf8'))
+            title = title.replace("$","$$")
         else:
-            title = subprocess.list2cmdline([self.format_args["title"]])
+            title = subprocess.list2cmdline([self.format_args["title"].encode('utf8')])
+            title = title.replace("$","$$")
 
-        args = self.args.format(filename=filename, title=title)
+        args = self.args.encode('utf8').format(filename=filename, title=title)
         cmd = self.cmd
         if is_win32:
             return cmd + " " + args

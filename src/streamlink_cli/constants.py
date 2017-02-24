@@ -4,10 +4,10 @@ from streamlink import __version__ as LIVESTREAMER_VERSION
 
 from .compat import is_win32
 
-DEFAULT_PLAYER_ARGUMENTS = "{filename}"
+DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
 
 DEFAULT_FORMAT_ARGUMENTS = {
-    "title": "Untitled"
+    "title": u"Untitled"
 }
 
 if is_win32:

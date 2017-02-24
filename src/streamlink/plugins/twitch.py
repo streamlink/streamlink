@@ -604,7 +604,7 @@ class Twitch(Plugin):
     def _get_title(self):
         if self.title is None:
             info = self.api.channel_info(self.channel_id)
-            self.title = str(info["status"]) + " - " + self.channel
+            self.title = unicode(info["status"]) + " - " + self.channel
         return self.title
 
 __plugin__ = Twitch
