@@ -601,6 +601,7 @@ class Twitch(Plugin):
             return self._get_clips()
         else:
             return self._get_hls_streams("live")
+
     def _get_title(self):
         if self.title is None:
             info = self.api.channel_info(self.channel)
