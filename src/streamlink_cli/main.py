@@ -46,7 +46,7 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output():
+def create_output(format_args=None):
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -87,7 +87,8 @@ def create_output():
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
-                           namedpipe=namedpipe, http=http)
+                           namedpipe=namedpipe, http=http,
+                           format_args=format_args)
 
     return out
 
@@ -135,7 +136,8 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
         server = create_http_server()
         player = output = PlayerOutput(args.player, args=args.player_args,
                                        filename=server.url,
-                                       quiet=not args.verbose_player)
+                                       quiet=not args.verbose_player,
+                                       format_args=format_args)
 
         try:
             console.logger.info("Starting player: {0}", args.player)
@@ -192,14 +194,16 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(stream):
+def output_stream_passthrough(stream, plugin=None):
     """Prepares a filename to be passed to the player."""
     global output
 
+    format_args = create_format_args(stream, plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
-                          quiet=not args.verbose_player)
+                          quiet=not args.verbose_player,
+                          format_args=format_args)
 
     try:
         console.logger.info("Starting player: {0}", args.player)
@@ -240,7 +244,13 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(stream):
+def create_format_args(stream=None, plugin=None):
+    return {
+        "title": plugin.stream_title()
+    }
+
+
+def output_stream(stream, plugin=None):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -253,7 +263,8 @@ def output_stream(stream):
     else:
         return
 
-    output = create_output()
+    format_args = create_format_args(stream, plugin)
+    output = create_output(format_args=format_args)
 
     try:
         output.open()
@@ -369,7 +380,7 @@ def handle_stream(plugin, streams, stream_name):
             if stream_type in args.player_passthrough and not file_output:
                 console.logger.info("Opening stream: {0} ({1})", stream_name,
                                     stream_type)
-                success = output_stream_passthrough(stream)
+                success = output_stream_passthrough(stream, plugin=plugin)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
                                           port=args.player_external_http_port)
@@ -378,7 +389,7 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 console.logger.info("Opening stream: {0} ({1})", stream_name,
                                     stream_type)
-                success = output_stream(stream)
+                success = output_stream(stream, plugin=plugin)
 
             if success:
                 break

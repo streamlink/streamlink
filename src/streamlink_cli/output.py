@@ -5,10 +5,8 @@ import sys
 
 from time import sleep
 
-import re
-
-from .compat import is_win32, stdout
-from .constants import DEFAULT_PLAYER_ARGUMENTS
+from .compat import is_win32, stdout, shlex_quote
+from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_FORMAT_ARGUMENTS
 from .utils import ignored
 
 if is_win32:
@@ -65,12 +63,16 @@ class FileOutput(Output):
     def _write(self, data):
         self.fd.write(data)
 
+    def exists(self):
+        if self.filename:
+            return os.path.isfile(self.filename)
+
 
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=False,
-                 namedpipe=None):
+                 namedpipe=None, format_args=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
@@ -79,6 +81,7 @@ class PlayerOutput(Output):
         self.quiet = quiet
 
         self.filename = filename
+        self.format_args = format_args or DEFAULT_FORMAT_ARGUMENTS
         self.namedpipe = namedpipe
         self.http = http
 
@@ -109,7 +112,9 @@ class PlayerOutput(Output):
         else:
             filename = "-"
 
-        args = self.args.format(filename=filename)
+        title = shlex_quote(self.format_args["title"])
+
+        args = self.args.format(filename=filename, title=title)
         cmd = self.cmd
         if is_win32:
             return cmd + " " + args
