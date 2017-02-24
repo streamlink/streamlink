@@ -721,6 +721,12 @@ def setup_options():
     if args.hls_audio_select:
         streamlink.set_option("hls-audio-select", args.hls_audio_select)
 
+    if args.hls_offset_start:
+        streamlink.set_option("hls-offset-start", args.hls_offset_start)
+
+    if args.hls_offset_end:
+        streamlink.set_option("hls-offset-end", args.hls_offset_end)
+
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
 
