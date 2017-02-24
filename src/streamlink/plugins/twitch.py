@@ -200,8 +200,9 @@ class TwitchAPI(object):
         else:
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
-        headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
-                   'Client-ID': TWITCH_CLIENT_ID}
+        headers = {'Client-ID': TWITCH_CLIENT_ID}
+        if "/kraken/channels/" not in path:
+            headers['Accept'] = 'application/vnd.twitchtv.v{0}+json'.format(self.version)
 
         # The certificate used by Twitch cannot be verified on some OpenSSL versions.
         res = http.get(url, params=params, verify=False, headers=headers)
@@ -603,7 +604,7 @@ class Twitch(Plugin):
     def _get_title(self):
         if self.title is None:
             info = self.api.channel_info(self.channel)
-            self.title = info["status"] + " - " + self.channel
+            self.title = str(info["status"]) + " - " + self.channel
         return self.title
 
 __plugin__ = Twitch

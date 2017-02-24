@@ -473,6 +473,10 @@ def handle_url():
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
 
+        if args.player:
+            plugin.title = plugin.stream_title()
+            args.player = args.player.replace("{title}", plugin.stream_title())
+
         if args.retry_streams:
             streams = fetch_streams_infinite(plugin, args.retry_streams)
         else:
