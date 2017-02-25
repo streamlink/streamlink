@@ -5,7 +5,7 @@ import sys
 
 from time import sleep
 
-from .compat import is_win32, stdout, shlex_quote
+from .compat import is_win32, stdout, shlex_quote, is_py2, is_py3
 from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_FORMAT_ARGUMENTS
 from .utils import ignored
 
@@ -116,12 +116,22 @@ class PlayerOutput(Output):
             self.format_args["title"] = DEFAULT_FORMAT_ARGUMENTS["title"]
 
         if not is_win32:
-            title = shlex_quote(self.format_args["title"].encode('utf8'))
+            if is_py2:
+                title = shlex_quote(self.format_args["title"].encode('utf8'))
+            elif is_py3:
+                title = shlex_quote(self.format_args["title"])
         else:
-            title = subprocess.list2cmdline([self.format_args["title"].encode('utf8')])
+            if is_py2:
+                title = subprocess.list2cmdline([self.format_args["title"].encode('utf8')])
+            elif is_py3:
+                title = subprocess.list2cmdline([self.format_args["title"]])
         title = title.replace("$","$$")
         
-        args = self.args.encode('utf8').format(filename=filename, title=title)
+        if is_py2:
+            args = self.args.encode('utf8').format(filename=filename, title=title)
+        elif is_py3:
+            args = self.args.format(filename=filename, title=title)
+
         cmd = self.cmd
         if is_win32:
             return cmd + " " + args
