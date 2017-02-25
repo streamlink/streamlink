@@ -114,6 +114,7 @@ class PlayerOutput(Output):
         
         if self.format_args["title"] is None:
             self.format_args["title"] = DEFAULT_FORMAT_ARGUMENTS["title"]
+
         if not is_win32:
             title = shlex_quote(self.format_args["title"].encode('utf8'))
         else:
