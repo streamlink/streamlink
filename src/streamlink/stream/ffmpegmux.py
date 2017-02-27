@@ -19,13 +19,32 @@ class MuxedStream(Stream):
     def __init__(self, session, *substreams, **options):
         super(MuxedStream, self).__init__(session)
         self.substreams = substreams
+        self.subtitles = options.pop("subtitles", {})
         self.options = options
 
     def open(self):
         fds = []
-        for substream in self.substreams:
+        metadata = self.options.get("metadata", {})
+        maps = self.options.get("maps", [])
+        # only update the maps values if they haven't been set
+        update_maps = not maps
+        for i, substream in enumerate(self.substreams):
             self.logger.debug("Opening {0} substream".format(substream.shortname()))
+            if update_maps:
+                maps.append(len(fds))
             fds.append(substream and substream.open())
+
+        for i, subtitle in enumerate(self.subtitles.items()):
+            language, substream = subtitle
+            self.logger.debug("Opening {0} subtitle stream".format(substream.shortname()))
+            if update_maps:
+                maps.append(len(fds))
+            fds.append(substream and substream.open())
+            metadata["s:s:{0}".format(i)] = ["language={0}".format(language)]
+
+        self.options["metadata"] = metadata
+        self.options["maps"] = maps
+
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
     @classmethod
