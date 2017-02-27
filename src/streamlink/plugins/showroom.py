@@ -16,6 +16,8 @@ _url_re = re.compile(r'''^https?://
 ''', re.VERBOSE)
 
 _room_id_re = re.compile(r'"roomId":(?P<room_id>\d+),')
+_room_id_alt_re = re.compile(r'content="showroom:///room\?room_id=(?P<room_id>\d+)"')
+_room_id_lookup_failure_log = 'Failed to find room_id for {0} using {1} regex'
 
 _api_status_url = 'https://www.showroom-live.com/room/is_live?room_id={room_id}'
 _api_data_url = 'https://www.showroom-live.com/room/get_live_data?room_id={room_id}'
@@ -44,7 +46,11 @@ _api_data_schema = validate.Schema(
                 "default": int
             }
         ]),
-        "is_live": int
+        "is_live": int,
+        "room": {
+            "room_url_key": validate.text
+        },
+        "telop": validate.text
     }
 )
 _rtmp_quality_lookup = {
@@ -82,6 +88,11 @@ _info_pages = set((
 
 
 class Showroom(Plugin):
+    @staticmethod
+    def _get_stream_info(room_id):
+        res = http.get(_api_data_url.format(room_id=room_id))
+        return http.json(res, schema=_api_data_schema)
+
     @classmethod
     def can_handle_url(cls, url):
         match = _url_re.match(url)
@@ -98,24 +109,55 @@ class Showroom(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-        self.room_id = self._find_room_id()
+        self._room_id = None
+        self._info = None
+        self._title = None
 
-    def _find_room_id(self):
+    @property
+    def telop(self):
+        if self._info:
+            return self._info['telop']
+        else:
+            return ""
+
+    @property
+    def room_id(self):
+        if self._room_id is None:
+            self._room_id = self._get_room_id()
+        return self._room_id
+
+    def _get_room_id(self):
+        """
+        Locates unique identifier ("room_id") for the room.
+
+        Returns the room_id as a string, or None if no room_id was found
+        """
         match_dict = _url_re.match(self.url).groupdict()
-        if not match_dict:
-            return '0'
+
         if match_dict['room_id'] is not None:
             return match_dict['room_id']
         else:
             res = http.get(self.url)
             match = _room_id_re.search(res.text)
             if not match:
-                return '0'
+                title = self.url.rsplit('/', 1)[-1]
+                self.logger.debug(_room_id_lookup_failure_log.format(title, 'primary'))
+                match = _room_id_alt_re.search(res.text)
+                if not match:
+                    self.logger.debug(_room_id_lookup_failure_log.format(title, 'secondary'))
+                    return  # Raise exception?
             return match.group('room_id')
 
-    def _get_stream_info(self):
-        res = http.get(_api_data_url.format(room_id=self.room_id))
-        return http.json(res, schema=_api_data_schema)
+    def _get_title(self):
+        if self._title is None:
+            if 'profile?room_id=' not in self.url:
+                self._title = self.url.rsplit('/', 1)[-1]
+            else:
+                if self._info is None:
+                    # TODO: avoid this
+                    self._info = self._get_stream_info(self.room_id)
+                self._title = self._info.get('room').get('room_url_key')
+        return self._title
 
     def _get_hls_stream(self, stream_info):
         hls_url = stream_info['url']
@@ -131,15 +173,16 @@ class Showroom(Plugin):
         return quality, RTMPStream(self.session, params=params)
 
     def _get_streams(self):
-        self.logger.debug("Getting streams for {0}".format(self.url.rsplit('/', 1)[1]))
-        info = self._get_stream_info()
-        if not info or not info['is_live']:
+        self._info = self._get_stream_info(self.room_id)
+        if not self._info or not self._info['is_live']:
             return
 
-        for stream_info in info.get("streaming_url_list_rtmp", []):
+        self.logger.debug("Getting streams for {0}".format(self._get_title()))
+
+        for stream_info in self._info.get("streaming_url_list_rtmp", []):
             yield self._get_rtmp_stream(stream_info)
 
-        for stream_info in info.get("streaming_url_list", []):
+        for stream_info in self._info.get("streaming_url_list", []):
             streams = self._get_hls_stream(stream_info)
 
             # TODO: Replace with "yield from" when dropping Python 2.
