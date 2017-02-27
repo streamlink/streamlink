@@ -858,6 +858,9 @@ def setup_plugin_options():
     if args.daisuki_mux_subtitles:
         streamlink.set_plugin_option("daisuki", "mux_subtitles", args.daisuki_mux_subtitles)
 
+    if args.rtve_mux_subtitles:
+        streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
