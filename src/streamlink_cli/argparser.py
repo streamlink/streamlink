@@ -261,10 +261,14 @@ general.add_argument(
     """
 )
 general.add_argument(
-    "--no-version-check",
-    action="store_true",
+    "--auto-version-check",
+    type=str,
+    choices=["yes", "no"],
+    default="no",
     help="""
-    Do not check for new Streamlink releases.
+    Enable or disable the automatic check for a new version of Streamlink.
+
+    Default is no
     """
 )
 general.add_argument(
@@ -1170,6 +1174,11 @@ http.add_argument(
 plugin.add_argument(
     "--crunchyroll-locale",
     metavar="LOCALE",
+    help=argparse.SUPPRESS
+)
+general.add_argument(
+    "--no-version-check",
+    action="store_true",
     help=argparse.SUPPRESS
 )
 
