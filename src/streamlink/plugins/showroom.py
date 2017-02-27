@@ -50,7 +50,7 @@ _api_data_schema = validate.Schema(
         "room": {
             "room_url_key": validate.text
         },
-        "telop": validate.text
+        "telop": validate.any(None, validate.text)
     }
 )
 _rtmp_quality_lookup = {
