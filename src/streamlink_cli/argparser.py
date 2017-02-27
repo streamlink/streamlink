@@ -1103,6 +1103,13 @@ plugin.add_argument(
     Automatically mux available subtitles in to the output stream
     """
 )
+plugin.add_argument(
+    "--rtve-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream
+    """
+)
 
 # Deprecated options
 stream.add_argument(
