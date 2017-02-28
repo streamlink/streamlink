@@ -9,7 +9,7 @@ _url_re = re.compile(r'''^https?://
         (?:\w*.)?
         showroom-live.com/
         (?:
-            (?P<room_title>\w+$)
+            (?P<room_title>[\w-]+$)
             |
             room/profile\?room_id=(?P<room_id>\d+)$
         )
