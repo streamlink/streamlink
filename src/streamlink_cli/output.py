@@ -2,12 +2,14 @@ import os
 import shlex
 import subprocess
 import sys
+import re
 
 from time import sleep
 
 from .compat import is_win32, stdout, shlex_quote, is_py2, is_py3
 from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_FORMAT_ARGUMENTS
 from .utils import ignored
+from .utils.player import sanitizeTitle
 
 if is_win32:
     import msvcrt
@@ -112,21 +114,14 @@ class PlayerOutput(Output):
         else:
             filename = "-"
         
-        if self.format_args["title"] is None:
-            self.format_args["title"] = DEFAULT_FORMAT_ARGUMENTS["title"]
-
-        if not is_win32:
-            if is_py2:
-                title = shlex_quote(self.format_args["title"].encode('utf8'))[1:-1]
-            elif is_py3:
-                title = shlex_quote(self.format_args["title"])[1:-1]
+        reTitle = re.compile(r'(?<=@@)(\s*.*\s*)(?=@@)').search(self.args) #matches the outermost @@ wrappers
+        if not reTitle:
+            title = sanitizeTitle(self.format_args["title"]) #e.g. streamlink -p mpv -a '--title={title} {filename}' https://www.twitch.tv/coolstreamer source
         else:
-            if is_py2:
-                title = subprocess.list2cmdline([self.format_args["title"].encode('utf8')])
-            elif is_py3:
-                title = subprocess.list2cmdline([self.format_args["title"]])
-        title = title.replace("$","$$")
-        
+            processed = re.sub(r'(?<=[^\{])({title})(?=[^\}])',self.format_args["title"],reTitle.group(0)) #replace {title} but not {{title}}
+            title = sanitizeTitle(processed) #e.g. streamlink -p mpv -a '--title=@@foo {title} bar@@ {filename}' https://www.twitch.tv/coolstreamer source
+            self.args = re.sub(r'(@@\s*.*\s*@@)','{title}',self.args) #replace @@foo {title} bar@@ with {title} since {title} holds the wholeTitle now
+
         if is_py2:
             args = self.args.encode('utf8').format(filename=filename, title=title)
         elif is_py3:

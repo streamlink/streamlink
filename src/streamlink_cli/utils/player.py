@@ -3,6 +3,8 @@ import sys
 
 import subprocess
 
+from ..compat import is_win32, shlex_quote, is_py2, is_py3
+from ..constants import DEFAULT_FORMAT_ARGUMENTS
 
 def check_paths(exes, paths):
     for path in paths:
@@ -36,3 +38,20 @@ def find_default_player():
     if path:
         # Quote command because it can contain space
         return subprocess.list2cmdline([path])
+
+def sanitizeTitle(wholeTitle):
+    if wholeTitle is None:
+        wholeTitle = DEFAULT_FORMAT_ARGUMENTS["title"]
+    
+    if not is_win32:
+        if is_py2:
+            title = shlex_quote(wholeTitle.encode('utf8'))
+        elif is_py3:
+            title = shlex_quote(wholeTitle)
+    else:
+        if is_py2:
+            title = subprocess.list2cmdline([wholeTitle.encode('utf8')])
+        elif is_py3:
+            title = subprocess.list2cmdline([wholeTitle])
+    title = title.replace("$","$$")
+    return title
