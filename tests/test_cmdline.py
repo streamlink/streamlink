@@ -83,14 +83,14 @@ class TestCommandLineInvocation(unittest.TestCase):
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_title_expand_in_player(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
-                         "-a", '''--input-title-format "{title}" {filename}''',
+                         "-a", '''--input-title-format '{title}' {filename}''',
                          "http://test.se", "test"],
                         ["/usr/bin/vlc", "--input-title-format", 'Test "Title"', "-"])
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_title_expand_in_player_pass_through(self):
         self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "/usr/bin/vlc",
-                         "-a", '''--input-title-format "{title}" {filename}''',
+                         "-a", '''--input-title-format '{title}' {filename}''',
                          "test.se", "rtmp"],
                         ["/usr/bin/vlc", "--input-title-format", 'Test "Title"', "rtmp://test.se"],
                         passthrough=True)
@@ -98,14 +98,14 @@ class TestCommandLineInvocation(unittest.TestCase):
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_title_expand_in_player(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
-                         "-a", '''--input-title-format "foo {title} bar" {filename}''',
+                         "-a", '''--input-title-format 'foo {title} bar' {filename}''',
                          "http://test.se", "test"],
                         ["/usr/bin/vlc", "--input-title-format", 'foo Test "Title" bar', "-"])
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_title_expand_in_player_pass_through_surrounded(self):
         self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "/usr/bin/vlc",
-                         "-a", '''--input-title-format "foo {title} bar" {filename}''',
+                         "-a", '''--input-title-format 'foo {title} bar' {filename}''',
                          "test.se", "rtmp"],
                         ["/usr/bin/vlc", "--input-title-format", 'foo Test "Title" bar', "rtmp://test.se"],
                         passthrough=True)
