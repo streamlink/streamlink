@@ -80,6 +80,8 @@ expressen           expressen.se         Yes   Yes
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 foxtr               fox.com.tr           Yes   No
+funimationnow       - funimation.com     --    Yes
+                    - funimationnow.uk
 furstream           furstre.am           Yes   No
 gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No

@@ -1110,6 +1110,24 @@ plugin.add_argument(
     Automatically mux available subtitles in to the output stream
     """
 )
+plugin.add_argument(
+    "--funimation-language",
+    type=str,
+    choices=["en", "ja", "english", "japanese"],
+    default="english",
+    help="""
+    The audio language to use for Funimation streams; japanese or english
+
+    Default is english
+    """
+)
+plugin.add_argument(
+    "--funimation-mux-subtitles",
+    action="store_true",
+    help="""
+    Enable automatically including available subtitles in to the output stream
+    """
+)
 
 # Deprecated options
 stream.add_argument(

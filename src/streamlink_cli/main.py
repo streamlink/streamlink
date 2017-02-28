@@ -861,6 +861,15 @@ def setup_plugin_options():
     if args.rtve_mux_subtitles:
         streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
 
+    if args.funimation_mux_subtitles:
+        streamlink.set_plugin_option("funimationnow", "mux_subtitles", True)
+
+    if args.funimation_language:
+        # map en->english, ja->japanese
+        lang = {"en": "english", "ja": "japanese"}.get(args.funimation_language.lower(),
+                                                       args.funimation_language.lower())
+        streamlink.set_plugin_option("funimationnow", "language", lang)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
