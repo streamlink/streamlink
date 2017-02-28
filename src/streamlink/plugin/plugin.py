@@ -327,6 +327,6 @@ class Plugin(object):
         return self._get_title()
 
     def _get_title(self):
-        return None
+        return self.url
 
 __all__ = ["Plugin"]
