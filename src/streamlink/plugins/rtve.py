@@ -58,12 +58,22 @@ class Rtve(Plugin):
     """, re.VERBOSE)
     cdn_schema = validate.Schema(
         validate.transform(parse_xml),
-        validate.xml_findtext(".//url")
+        validate.xml_findall(".//preset"),
+        [
+            validate.union({
+                "quality": validate.all(validate.getattr("attrib"),
+                                        validate.get("type")),
+                "urls": validate.all(
+                    validate.xml_findall(".//url"),
+                    [validate.getattr("text")]
+                )
+            })
+        ]
     )
     subtitles_api = "http://www.rtve.es/api/videos/{id}/subtitulos.json"
     subtitles_schema = validate.Schema({
-        "page": {
-            "items": [{
+            "page": {
+                "items": [{
                     "src": validate.url(),
                     "lang": validate.text
                 }]
@@ -71,6 +81,20 @@ class Rtve(Plugin):
         },
         validate.get("page"),
         validate.get("items"))
+    video_api = "http://www.rtve.es/api/videos/{id}.json"
+    video_schema = validate.Schema({
+            "page": {
+                "items": [{
+                    "qualities": [{
+                        "preset": validate.text,
+                        "height": int
+                    }]
+                }]
+            }
+        },
+        validate.get("page"),
+        validate.get("items"),
+        validate.get(0))
     options = PluginOptions({
         "mux_subtitles": False
     })
@@ -93,13 +117,33 @@ class Rtve(Plugin):
         res = http.get(self.subtitles_api.format(id=content_id))
         return http.json(res, schema=self.subtitles_schema)
 
+    def _get_quality_map(self, content_id):
+        res = http.get(self.video_api.format(id=content_id))
+        data = http.json(res, schema=self.video_schema)
+        qmap = {}
+        for item in data["qualities"]:
+            qname = {"MED": "Media", "HIGH": "Alta"}.get(item["preset"], item["preset"])
+            qmap[qname] = u"{0}p".format(item["height"])
+        return qmap
+
     def _get_streams(self):
+        streams = []
         content_id = self._get_content_id()
         if content_id:
             self.logger.debug("Found content with id: {0}", content_id)
-            hls_url = self.zclient.get_cdn_list(content_id, schema=self.cdn_schema)
-            self.logger.debug("Got stream URL: {0}", hls_url)
-            streams = HLSStream.parse_variant_playlist(self.session, hls_url)
+            stream_data = self.zclient.get_cdn_list(content_id, schema=self.cdn_schema)
+            quality_map = None
+
+            for stream in stream_data:
+                for url in stream["urls"]:
+                    if url.endswith("m3u8"):
+                        streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
+                    elif url.endswith("mp4"):
+                        if quality_map is None:  # only make the request when it is necessary
+                            quality_map = self._get_quality_map(content_id)
+                        # rename the HTTP sources to match the HLS sources
+                        quality = quality_map.get(stream["quality"], stream["quality"])
+                        streams.append((quality, HTTPStream(self.session, url)))
 
             subtitles = None
             if self.get_option("mux_subtitles"):
@@ -109,10 +153,10 @@ class Rtve(Plugin):
                 for i, subtitle in enumerate(subtitles):
                     substreams[subtitle["lang"]] = HTTPStream(self.session, subtitle["src"])
 
-                for q, s in streams.items():
+                for q, s in streams:
                     yield q, MuxedStream(self.session, s, subtitles=substreams)
             else:
-                for s in streams.items():
+                for s in streams:
                     yield s
 
 
