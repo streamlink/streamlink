@@ -25,7 +25,7 @@ class TestPlugin(Plugin):
         return "test.se" in url
 
     def _get_title(self):
-        return "Test \"Title\""
+        return self.url[self.url.index("&title=")+len("&title="):]
 
     def _get_streams(self):
         if "empty" in self.url:
