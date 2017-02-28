@@ -163,14 +163,14 @@ class TestCommandLineInvocation(unittest.TestCase):
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_player_title_expand_in_player_surrounded_win32(self):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
-                         "-a", '''--input-title-format "foo_{title}_bar" {filename}''',
+                         "-a", '''--input-title-format 'foo_{title}_bar' {filename}''',
                          "http://test.se", "test"],
                         '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "foo_Test \\"Title\\"_bar" -''')
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_player_title_expand_in_player_pass_through_surrounded_win32(self):
         self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
-                         "-a", '''--input-title-format "foo_{title}_bar" {filename}''',
+                         "-a", '''--input-title-format 'foo_{title}_bar' {filename}''',
                          "test.se", "rtmp"],
                         '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "foo_Test \\"Title\\"_bar" \"rtmp://test.se\"''',
                         passthrough=True)
