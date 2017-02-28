@@ -249,7 +249,7 @@ def create_format_args(stream=None, plugin=None):
 		return {
 			"title": plugin.stream_title()
 		}
-	return
+    return
 
 
 def output_stream(stream, plugin=None):
