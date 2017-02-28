@@ -59,12 +59,11 @@ _rtmp_quality_lookup = {
     "低画質": "low",
     "low spec": "low"
 }
-# original is usually 360p, but may also be 720p, 398p, or 198p
-# regardless it is the best quality available at the time
+# changes here must also be updated in test_plugin_showroom
 _quality_weights = {
     "original": 720,
     "other": 360,
-    "low": 198
+    "low": 160
 }
 # pages that definitely aren't rooms
 _info_pages = set((
