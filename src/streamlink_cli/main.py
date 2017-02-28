@@ -928,7 +928,7 @@ def main():
     setup_http_session()
     check_root()
 
-    if args.version_check or args.auto_version_check == "yes":
+    if args.version_check or (not args.no_version_check and args.auto_version_check):
         with ignored(Exception):
             check_version(force=args.version_check)
 
