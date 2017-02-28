@@ -96,7 +96,7 @@ class TestCommandLineInvocation(unittest.TestCase):
                         passthrough=True)
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
-    def test_open_player_title_expand_in_player(self):
+    def test_open_player_title_expand_in_player_surrounded(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
                          "-a", '''--input-title-format 'foo {title} bar' {filename}''',
                          "http://test.se", "test"],
