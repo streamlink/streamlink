@@ -117,9 +117,9 @@ class PlayerOutput(Output):
 
         if not is_win32:
             if is_py2:
-                title = shlex_quote(self.format_args["title"].encode('utf8'))
+                title = shlex_quote(self.format_args["title"].encode('utf8'))[1:-1]
             elif is_py3:
-                title = shlex_quote(self.format_args["title"])
+                title = shlex_quote(self.format_args["title"])[1:-1]
         else:
             if is_py2:
                 title = subprocess.list2cmdline([self.format_args["title"].encode('utf8')])
