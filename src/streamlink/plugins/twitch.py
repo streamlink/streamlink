@@ -4,7 +4,7 @@ import warnings
 from random import random
 
 import requests
-from streamlink.compat import urlparse, is_py2, is_py3
+from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError, StreamError
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http, validate
@@ -604,10 +604,7 @@ class Twitch(Plugin):
     def _get_title(self):
         if self.title is None:
             info = self.api.channel_info(self.channel_id)
-            if is_py2:
-                self.title = self.channel + " - " + unicode(info["status"]) 
-            elif is_py3:
-                self.title = self.channel + " - " + str(info["status"])
+            self.title = u"{0} - {1}".format(self.channel,info["status"])
         return self.title
 
 __plugin__ = Twitch
