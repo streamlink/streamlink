@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import RTMPStream  # HLSStream
+from streamlink.stream import RTMPStream
 
 _url_re = re.compile(r'''^https?://
         (?:\w*.)?
@@ -22,11 +22,6 @@ _room_id_lookup_failure_log = 'Failed to find room_id for {0} using {1} regex'
 _api_status_url = 'https://www.showroom-live.com/room/is_live?room_id={room_id}'
 _api_data_url = 'https://www.showroom-live.com/room/get_live_data?room_id={room_id}'
 
-# _api_status_schema = validate.Schema(
-#     {
-#         "ok": int
-#     }
-# )
 _api_data_schema = validate.Schema(
     {
         "streaming_url_list_rtmp": validate.all([
@@ -38,14 +33,6 @@ _api_data_schema = validate.Schema(
                 "is_default": int
             }
         ]),
-        # "streaming_url_list": validate.all([
-        #     {
-        #         "url": validate.text,
-        #         "id": int,
-        #         "label": validate.text,
-        #         "default": int
-        #     }
-        # ]),
         "is_live": int,
         "room": {
             "room_url_key": validate.text
@@ -158,12 +145,6 @@ class Showroom(Plugin):
                 self._title = self._info.get('room').get('room_url_key')
         return self._title
 
-    # def _get_hls_stream(self, stream_info):
-    #     hls_url = stream_info['url']
-    #     return HLSStream.parse_variant_playlist(self.session,
-    #                                             hls_url,
-    #                                             name_key='pixels')
-
     def _get_rtmp_stream(self, stream_info):
         rtmp_url = '/'.join((stream_info['url'], stream_info['stream_name']))
         quality = _rtmp_quality_lookup.get(stream_info['label'], "other")
@@ -180,13 +161,6 @@ class Showroom(Plugin):
 
         for stream_info in self._info.get("streaming_url_list_rtmp", []):
             yield self._get_rtmp_stream(stream_info)
-
-            # for stream_info in self._info.get("streaming_url_list", []):
-            #     streams = self._get_hls_stream(stream_info)
-            #
-            #     # TODO: Replace with "yield from" when dropping Python 2.
-            #     for stream in streams.items():
-            #         yield stream
 
 
 __plugin__ = Showroom
