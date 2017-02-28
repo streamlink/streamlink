@@ -246,9 +246,9 @@ def open_stream(stream):
 
 def create_format_args(stream=None, plugin=None):
     if plugin is not None:
-		return {
-			"title": plugin.stream_title()
-		}
+        return {
+            "title": plugin.stream_title()
+        }
     return
 
 
