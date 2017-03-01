@@ -284,6 +284,26 @@ Accessing a stream that requires extra parameters to be passed along
 
     $ streamlink "rtmp://streaming.server.net/playpath live=1 swfVfy=http://server.net/flashplayer.swf"
 
+When passing parameters to the built-in stream plugins the values will either be treated as plain
+strings, as is the case in the above example for ``swfVry``, or they will be interpreted as Python literals. For
+example you can pass a Python dict or Python list as one of the parameters.
+
+.. code-block:: console
+
+    $ streamlink "rtmp://streaming.server.net/playpath conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']"
+    $ streamlink "hls://streaming.server.net/playpath params={'token': 'magicToken'}"
+
+In the above examples ``conn`` will be passed as the Python list:
+
+.. code-block:: python
+
+    ['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']
+
+and ``params`` will be passed as the Python dict:
+
+.. code-block:: python
+
+    {'token': 'magicToken'}
 
 Most streaming technologies simply requires you to pass a HTTP URL, this is
 a Adobe HDS stream:
