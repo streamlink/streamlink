@@ -25,12 +25,13 @@ SCHEME_REGEX = re.compile(r"^\w+://(.+)")
 
 class StreamURL(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         parsed = urlparse(url)
 
         return parsed.scheme in PROTOCOL_MAP
 
-    def _parse_params(self, params):
+    @staticmethod
+    def _parse_params(params):
         rval = {}
         matches = re.findall(PARAMS_REGEX, params)
 
@@ -59,7 +60,7 @@ class StreamURL(Plugin):
         if cls != RTMPStream and not SCHEME_REGEX.match(urlnoproto):
             urlnoproto = "http://{0}".format(urlnoproto)
 
-        params = (" ").join(split[1:])
+        params = " ".join(split[1:])
         params = self._parse_params(params)
 
         if cls == RTMPStream:
