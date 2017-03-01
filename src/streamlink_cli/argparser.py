@@ -1128,6 +1128,20 @@ plugin.add_argument(
     Enable automatically including available subtitles in to the output stream
     """
 )
+plugin.add_argument(
+    "--tvplayer-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with tvplayer.com.
+    """
+)
+plugin.add_argument(
+    "--tvplayer-password",
+    metavar="PASSWORD",
+    help="""
+    A TVPlayer account password to use with --tvplayer-email.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
