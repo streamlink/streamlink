@@ -3,9 +3,10 @@ import re
 import sys
 import time
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
+from streamlink.stream.ffmpegmux import MuxedStream
 
 
 class Pluzz(Plugin):
@@ -56,7 +57,21 @@ class Pluzz(Plugin):
                     }]
                 )
             }]
+        ),
+        'subtitles': validate.any(
+            [],
+            validate.all(
+                [{
+                    'type': validate.text,
+                    'url': validate.url(),
+                    'format': validate.text
+                }]
+            )
         )
+    })
+
+    options = PluginOptions({
+        "mux_subtitles": False
     })
 
     @classmethod
@@ -102,6 +117,7 @@ class Pluzz(Plugin):
         drm = False
         expired = False
 
+        streams = []
         for video in videos['videos']:
             video_url = video['url']
 
@@ -147,10 +163,10 @@ class Pluzz(Plugin):
                     pvtoken = stream.request_params['params'].get('pvtoken', '')
                     match = self._hds_pv_data_re.search(pvtoken)
                     if match is None:
-                        yield bitrate, stream
+                        streams.append((bitrate, stream))
             elif '.m3u8' in video_url:
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                    yield stream
+                    streams.append(stream)
             # HBB TV streams are not provided anymore by France Televisions
             elif '.mp4' in video_url and '/hbbtv/' not in video_url:
                 match = self._mp4_bitrate_re.match(video_url)
@@ -160,7 +176,21 @@ class Pluzz(Plugin):
                     # Fallback bitrate (seems all France Televisions MP4 videos
                     # seem have such bitrate)
                     bitrate = '1500k'
-                yield bitrate, HTTPStream(self.session, video_url)
+                streams.append((bitrate, HTTPStream(self.session, video_url)))
+
+        if self.get_option("mux_subtitles") and videos['subtitles'] != []:
+            substreams = {}
+            for subtitle in videos['subtitles']:
+                # TTML subtitles are available but not supported by FFmpeg
+                if subtitle['format'] == 'ttml':
+                    continue
+                substreams[subtitle['type']] = HTTPStream(self.session, subtitle['url'])
+
+            for quality, stream in streams:
+                yield quality, MuxedStream(self.session, stream, subtitles=substreams)
+        else:
+            for stream in streams:
+                yield stream
 
         if offline:
             self.logger.error('Failed to access stream, may be due to offline content')
