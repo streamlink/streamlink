@@ -77,13 +77,15 @@ def create_output(plugin):
 
     """
 
-    if args.output:
+    if args.output and not args.record:
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
             out = check_file_output(args.output, args.force)
-    elif args.stdout:
+    elif args.stdout and not args.record:
         out = FileOutput(fd=stdout)
+    elif args.stdout and args.record:
+        console.exit("The option --record can't be used with --stdout.")
     else:
         http = namedpipe = None
 
@@ -104,12 +106,19 @@ def create_output(plugin):
             http = create_http_server()
 
         title = create_title(plugin)
+
+        if args.output and args.record:
+            record = check_file_output(args.output, args.force)
+        else:
+            record = None
+
         log.info("Starting player: {0}", args.player)
+
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http,
-                           title=title)
+                           record=record, title=title)
 
     return out
 
