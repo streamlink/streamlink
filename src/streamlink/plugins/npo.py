@@ -12,12 +12,14 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+from streamlink.utils import parse_json
 
 
 class NPO(Plugin):
     api_url = "http://ida.omroep.nl/app.php/{endpoint}"
-    url_re = re.compile(r"http(s)?://(\w+\.)?npo.nl/")
-    prid_re = re.compile(r'data(-alt)?-prid="(\w+)"')
+    url_re = re.compile(r"https?://(\w+\.)?(npo.nl|zapp.nl|zappelin.nl)/")
+    prid_re = re.compile(r'''(?:data(-alt)?-)?prid\s*[=:]\s*(?P<q>["'])(\w+)(?P=q)''')
+    react_re = re.compile(r'''data-react-props\s*=\s*(?P<q>["'])(?P<data>.*?)(?P=q)''')
 
     auth_schema = validate.Schema({"token": validate.text}, validate.get("token"))
     streams_schema = validate.Schema({
@@ -61,13 +63,21 @@ class NPO(Plugin):
 
     def _get_prid(self, subtitles=False):
         res = http.get(self.url)
-        # Locate the asset id for the content on the page
         bprid = None
-        for alt, prid in self.prid_re.findall(res.text):
+
+        # Locate the asset id for the content on the page
+        for alt, _, prid in self.prid_re.findall(res.text):
             if alt and subtitles:
                 bprid = prid
             elif bprid is None:
                 bprid = prid
+
+        if bprid is None:
+            m = self.react_re.search(res.text)
+            if m:
+                data = parse_json(m.group("data").replace("&quot;", '"'))
+                bprid = data.get("mid")
+
         return bprid
 
     def _get_streams(self):
@@ -81,13 +91,16 @@ class NPO(Plugin):
                                     schema=self.streams_schema)
 
             for stream in streams:
-                if stream["format"] == "hls":
-                    # using type=json removes the javascript function wrapper
-                    info_url = stream["url"].replace("type=jsonp", "type=json")
+                if stream["format"] in ("adaptive", "hls"):
+                    if stream["contentType"] == "url":
+                        stream_url = stream["url"]
+                    else:
+                        # using type=json removes the javascript function wrapper
+                        info_url = stream["url"].replace("type=jsonp", "type=json")
 
-                    # find the actual stream URL
-                    stream_url = http.json(http.get(info_url),
-                                           schema=self.stream_info_schema)
+                        # find the actual stream URL
+                        stream_url = http.json(http.get(info_url),
+                                               schema=self.stream_info_schema)
 
                     for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
                         yield s
