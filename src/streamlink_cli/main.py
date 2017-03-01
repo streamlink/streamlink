@@ -904,6 +904,9 @@ def setup_plugin_options():
     if animelab_password:
         streamlink.set_plugin_option("animelab", "password", animelab_password)
 
+    if args.npo_subtitles:
+        streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

@@ -1177,6 +1177,13 @@ plugin.add_argument(
     A TVPlayer account password to use with --animelab-email.
     """
 )
+plugin.add_argument(
+    "--npo-subtitles",
+    action="store_true",
+    help="""
+    Include subtitles for the deaf or hard of hearing, if available
+    """
+)
 
 # Deprecated options
 stream.add_argument(

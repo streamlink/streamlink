@@ -7,7 +7,7 @@ Supports:
 
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -17,7 +17,7 @@ from streamlink.stream import HLSStream
 class NPO(Plugin):
     api_url = "http://ida.omroep.nl/app.php/{endpoint}"
     url_re = re.compile(r"http(s)?://(\w+\.)?npo.nl/")
-    prid_re = re.compile(r'data-prid="(\w+)"')
+    prid_re = re.compile(r'data(-alt)?-prid="(\w+)"')
 
     auth_schema = validate.Schema({"token": validate.text}, validate.get("token"))
     streams_schema = validate.Schema({
@@ -35,6 +35,9 @@ class NPO(Plugin):
         validate.all({"errorcode": 0, "url": validate.url()},
                      validate.get("url"))
     ))
+    options = PluginOptions({
+        "subtitles": False
+    })
 
     @classmethod
     def can_handle_url(cls, url):
@@ -56,14 +59,22 @@ class NPO(Plugin):
             self._token = self.api_call("auth", schema=self.auth_schema)
         return self._token
 
-    def _get_streams(self):
+    def _get_prid(self, subtitles=False):
         res = http.get(self.url)
         # Locate the asset id for the content on the page
-        prid_m = self.prid_re.search(res.text)
+        bprid = None
+        for alt, prid in self.prid_re.findall(res.text):
+            if alt and subtitles:
+                bprid = prid
+            elif bprid is None:
+                bprid = prid
+        return bprid
 
-        if prid_m:
-            asset_id = prid_m.group(1)
+    def _get_streams(self):
+        asset_id = self._get_prid(self.get_option("subtitles"))
 
+        if asset_id:
+            self.logger.debug("Found asset id: {0}", asset_id)
             streams = self.api_call(asset_id,
                                     params=dict(adaptive="yes",
                                                 token=self.token),
