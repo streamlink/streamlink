@@ -71,7 +71,7 @@ class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=None,
-                 namedpipe=None, title=None):
+                 namedpipe=None, record=None, title=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
@@ -85,6 +85,7 @@ class PlayerOutput(Output):
         self.title = title
         self.player = None
         self.player_name = self.supported_player(self.cmd)
+        self.record = record
 
         if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
@@ -195,6 +196,8 @@ class PlayerOutput(Output):
 
     def _open(self):
         try:
+            if self.record:
+                self.record.open()
             if self.call and self.filename:
                 self._open_call()
             else:
@@ -240,6 +243,9 @@ class PlayerOutput(Output):
         elif not self.filename:
             self.player.stdin.close()
 
+        if self.record:
+            self.record.close()
+
         if self.kill:
             with ignored(Exception):
                 self.player.terminate()
@@ -254,6 +260,9 @@ class PlayerOutput(Output):
         self.player.wait()
 
     def _write(self, data):
+        if self.record:
+            self.record.write(data)
+
         if self.namedpipe:
             self.namedpipe.write(data)
         elif self.http:

@@ -500,6 +500,13 @@ def build_parser():
         Write stream data to stdout instead of playing it.
         """
     )
+    output.add_argument(
+        "-R", "--record",
+        action="store_true",
+        help="""
+        When using -o, enable recording the stream while also playing it.
+        """
+    )
 
     stream = parser.add_argument_group("Stream options")
     stream.add_argument(
