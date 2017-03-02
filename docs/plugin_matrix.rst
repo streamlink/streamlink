@@ -206,6 +206,7 @@ vidio               vidio.com            Yes   Yes
 wattv               wat.tv               --    Yes
 webtv               web.tv               Yes   --
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
+wwenetwork          network.wwe.com      Yes   Yes   Requires an account to access any content.
 younow              younow.com           Yes   --
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
                     - youtu.be
