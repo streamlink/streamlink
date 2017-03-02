@@ -20,7 +20,7 @@ _should_not_match = (
     "http://www.crunchyroll.com/gintama"
 )
 _stream_weights = {
-    'original': (720, "quality"),
+    'high': (720, "quality"),
     'other': (360, "quality"),
     'low': (160, "quality")
 }
