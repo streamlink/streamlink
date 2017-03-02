@@ -881,6 +881,9 @@ def setup_plugin_options():
     if tvplayer_password:
         streamlink.set_plugin_option("tvplayer", "password", tvplayer_password)
 
+    if args.pluzz_mux_subtitles:
+        streamlink.set_plugin_option("pluzz", "mux_subtitles", args.pluzz_mux_subtitles)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

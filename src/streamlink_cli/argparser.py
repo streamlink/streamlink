@@ -1142,6 +1142,13 @@ plugin.add_argument(
     A TVPlayer account password to use with --tvplayer-email.
     """
 )
+plugin.add_argument(
+    "--pluzz-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream
+    """
+)
 
 # Deprecated options
 stream.add_argument(
