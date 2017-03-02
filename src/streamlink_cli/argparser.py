@@ -1149,6 +1149,20 @@ plugin.add_argument(
     Automatically mux available subtitles in to the output stream
     """
 )
+plugin.add_argument(
+    "--wwenetwork-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your WWE Network account, required to access any WWE Network stream.
+    """
+)
+plugin.add_argument(
+    "--wwenetwork-password",
+    metavar="PASSWORD",
+    help="""
+    A WWE Network account password to use with --wwenetwork-email.
+    """
+)
 
 # Deprecated options
 stream.add_argument(

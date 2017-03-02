@@ -884,6 +884,15 @@ def setup_plugin_options():
     if args.pluzz_mux_subtitles:
         streamlink.set_plugin_option("pluzz", "mux_subtitles", args.pluzz_mux_subtitles)
 
+    if args.wwenetwork_email:
+        streamlink.set_plugin_option("wwenetwork", "email", args.wwenetwork_email)
+    if args.wwenetwork_email and not args.wwenetwork_password:
+        wwenetwork_password = console.askpass("Enter WWE Network password: ")
+    else:
+        wwenetwork_password = args.wwenetwork_password
+    if wwenetwork_password:
+        streamlink.set_plugin_option("wwenetwork", "password", wwenetwork_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
