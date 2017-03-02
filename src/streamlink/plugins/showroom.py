@@ -41,14 +41,14 @@ _api_data_schema = validate.Schema(
     }
 )
 _rtmp_quality_lookup = {
-    "オリジナル画質": "original",
-    "original spec": "original",
+    "オリジナル画質": "high",
+    "original spec": "high",
     "低画質": "low",
     "low spec": "low"
 }
 # changes here must also be updated in test_plugin_showroom
 _quality_weights = {
-    "original": 720,
+    "high": 720,
     "other": 360,
     "low": 160
 }
