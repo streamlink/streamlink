@@ -1163,6 +1163,20 @@ plugin.add_argument(
     A WWE Network account password to use with --wwenetwork-email.
     """
 )
+plugin.add_argument(
+    "--animelab-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with animelab.com.
+    """
+)
+plugin.add_argument(
+    "--animelab-password",
+    metavar="PASSWORD",
+    help="""
+    A TVPlayer account password to use with --animelab-email.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
