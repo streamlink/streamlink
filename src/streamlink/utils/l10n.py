@@ -28,7 +28,7 @@ class Country(object):
         try:
             if PYCOUNTRY:
                 c = countries.lookup(country)
-                return Country(c.alpha_2, c.alpha_3, c.numeric, c.name, c.official_name)
+                return Country(c.alpha_2, c.alpha_3, c.numeric, c.name, getattr(c, "official_name", c.name))
             else:
                 c = countries.get(country)
                 return Country(c.alpha2, c.alpha3, c.numeric, c.name, c.apolitical_name)
