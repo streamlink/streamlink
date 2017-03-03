@@ -8,8 +8,10 @@ from streamlink.stream import HLSStream
 
 
 class TVPlayer(Plugin):
-    API_URL = "http://api.tvplayer.com/api/v2/stream/live"
-    LOGIN_URL = "https://tvplayer.com/account/login"
+    api_url = "http://api.tvplayer.com/api/v2/stream/live"
+    login_url = "https://tvplayer.com/account/login"
+    update_url = "https://tvplayer.com/account/update-detail"
+    dummy_postcode = "SE1 9LT"  # location of ITV HQ in London
 
     url_re = re.compile(r"https?://(?:www.)?tvplayer.com/(:?watch/?|watch/(.+)?)")
     stream_attrs_re = re.compile(r'var\s+(validate|platform|resourceId|token)\s+=\s*(.*?);', re.S)
@@ -40,10 +42,10 @@ class TVPlayer(Plugin):
         http.headers.update({"User-Agent": useragents.CHROME})
 
     def authenticate(self, username, password):
-        res = http.get(self.LOGIN_URL)
+        res = http.get(self.login_url)
         match = self.login_token_re.search(res.text)
         token = match and match.group(1)
-        res2 = http.post(self.LOGIN_URL, data=dict(email=username, password=password, token=token),
+        res2 = http.post(self.login_url, data=dict(email=username, password=password, token=token),
                          allow_redirects=False)
         # there is a 302 redirect on a successful login
         return res2.status_code == 302
@@ -56,11 +58,18 @@ class TVPlayer(Plugin):
         self.url = self.url.replace("https", "http")  # https redirects to http
         res = http.get(self.url)
 
+        if "enter your postcode" in res.text:
+            self.logger.info("Setting your postcode to: {0}. "
+                             "This can be changed in the settings on tvplayer.com", self.dummy_postcode)
+            res = http.post(self.update_url,
+                            data=dict(postcode=self.dummy_postcode),
+                            params=dict(return_url=self.url))
+
         stream_attrs = dict((k, v.strip('"')) for k, v in self.stream_attrs_re.findall(res.text))
 
         if "resourceId" in stream_attrs and "validate" in stream_attrs and "platform" in stream_attrs:
             # get the stream urls
-            res = http.post(self.API_URL, data=dict(
+            res = http.post(self.api_url, data=dict(
                 service=1,
                 id=stream_attrs["resourceId"],
                 validate=stream_attrs["validate"],
@@ -68,7 +77,6 @@ class TVPlayer(Plugin):
                 token=stream_attrs.get("token")))
 
             stream_data = http.json(res, schema=self.stream_schema)
-            print(stream_data)
 
             if stream_data.get("drmToken"):
                 self.logger.error("This stream is protected by DRM can cannot be played")
