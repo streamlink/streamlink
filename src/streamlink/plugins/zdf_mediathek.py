@@ -100,7 +100,8 @@ class zdf_mediathek(Plugin):
         for quality in format_["qualities"]:
             for track in quality["audio"]["tracks"]:
                 option = self._parse_track(track, parser, name)
-                qualities.update(option)
+                if option:
+                    qualities.update(option)
 
         return qualities
 
