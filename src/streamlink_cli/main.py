@@ -893,6 +893,17 @@ def setup_plugin_options():
     if wwenetwork_password:
         streamlink.set_plugin_option("wwenetwork", "password", wwenetwork_password)
 
+    if args.animelab_email:
+        streamlink.set_plugin_option("animelab", "email", args.animelab_email)
+
+    if args.animelab_email and not args.animelab_password:
+        animelab_password = console.askpass("Enter AnimeLab password: ")
+    else:
+        animelab_password = args.animelab_password
+
+    if animelab_password:
+        streamlink.set_plugin_option("animelab", "password", animelab_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
