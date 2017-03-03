@@ -16,7 +16,7 @@ def html_unescape(s):
     return parser.unescape(s)
 
 
-_url_re = re.compile(r"https?://(?:www\.)?vidio\.com/(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)")
+_url_re = re.compile(r"https?://(?:www\.)?vidio\.com/(?:en/)?(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)")
 _clipdata_re = re.compile(r"""data-json-clips\s*=\s*(['"])(.*?)\1""")
 
 _schema = validate.Schema(
