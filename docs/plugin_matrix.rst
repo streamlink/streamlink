@@ -21,7 +21,8 @@ animelab            animelab.com         --    Yes   Requires a login. Streams m
 antenna             antenna.gr           --    Yes
 app17               17app.co             Yes   --
 ard_live            daserste.de          Yes   Yes   Streams may be geo-restricted to Germany.
-ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
+ard_mediathek       - ardmediathek.de    Yes   Yes   Streams may be geo-restricted to Germany.
+                    - mediathek... [5]_
 artetv              arte.tv              Yes   Yes
 atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
 azubutv             azubu.tv             Yes   No
@@ -222,3 +223,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [2] streamingvideoprovider.co.uk
 .. [3] original.livestream.com
 .. [4] streaming.media.ccc.de
+.. [5] mediathek.daserste.de

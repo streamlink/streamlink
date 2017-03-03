@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HTTPStream, HDSStream, HLSStream
+from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 MEDIA_URL = "http://www.ardmediathek.de/play/media/{0}"
 SWF_URL = "http://www.ardmediathek.de/ard/static/player/base/flash/PluginFlash.swf"
@@ -15,7 +15,7 @@ QUALITY_MAP = {
     0: "144p"
 }
 
-_url_re = re.compile(r"http(s)?://(\w+\.)?ardmediathek.de/tv")
+_url_re = re.compile(r"http(s)?://(?:(\w+\.)?ardmediathek.de/tv|mediathek.daserste.de/)")
 _media_id_re = re.compile(r"/play/(?:media|config)/(\d+)")
 _media_schema = validate.Schema({
     "_mediaArray": [{
@@ -76,7 +76,6 @@ class ard_mediathek(Plugin):
             url = "{0}/{1}{2}".format(smil["base"], video, HDCORE_PARAMETER)
             streams = HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL, is_akamai=smil["cdn"] == "akamai")
 
-            # TODO: Replace with "yield from" when dropping Python 2.
             for stream in streams.items():
                 yield stream
 
@@ -95,7 +94,6 @@ class ard_mediathek(Plugin):
 
         for media in media["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:
-                server = stream.get("_server", "").strip()
                 stream_ = stream["_stream"]
                 if isinstance(stream_, list):
                     if not stream_:
