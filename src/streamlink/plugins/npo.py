@@ -6,90 +6,104 @@ Supports:
 """
 
 import re
-import json
 
-from streamlink.compat import quote
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
-from streamlink.stream import HTTPStream, HLSStream
-
-_url_re = re.compile(r"http(s)?://(\w+\.)?npo.nl/")
-HTTP_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1944.9 Safari/537.36"
-}
+from streamlink.plugin.api import useragents
+from streamlink.plugin.api import validate
+from streamlink.stream import HLSStream
+from streamlink.utils import parse_json
 
 
 class NPO(Plugin):
+    api_url = "http://ida.omroep.nl/app.php/{endpoint}"
+    url_re = re.compile(r"https?://(\w+\.)?(npo.nl|zapp.nl|zappelin.nl)/")
+    prid_re = re.compile(r'''(?:data(-alt)?-)?prid\s*[=:]\s*(?P<q>["'])(\w+)(?P=q)''')
+    react_re = re.compile(r'''data-react-props\s*=\s*(?P<q>["'])(?P<data>.*?)(?P=q)''')
+
+    auth_schema = validate.Schema({"token": validate.text}, validate.get("token"))
+    streams_schema = validate.Schema({
+        "items": [
+            [{
+                "label": validate.text,
+                "contentType": validate.text,
+                "url": validate.url(),
+                "format": validate.text
+            }]
+        ]
+    }, validate.get("items"), validate.get(0))
+    stream_info_schema = validate.Schema(validate.any(
+        validate.url(),
+        validate.all({"errorcode": 0, "url": validate.url()},
+                     validate.get("url"))
+    ))
+    options = PluginOptions({
+        "subtitles": False
+    })
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls.url_re.match(url) is not None
 
-    def get_token(self):
-        url = 'http://ida.omroep.nl/npoplayer/i.js?s={0}'.format(quote(self.url))
-        token = http.get(url, headers=HTTP_HEADERS).text
-        token = re.compile(r'token.*?"(.*?)"', re.DOTALL + re.IGNORECASE).search(token).group(1)
+    def __init__(self, url):
+        super(NPO, self).__init__(url)
+        self._token = None
+        http.headers.update({"User-Agent": useragents.CHROME})
 
-        # Great the have a ['en','ok','t'].reverse() decurity option in npoplayer.js
-        secured = list(token)
-        token = list(token)
+    def api_call(self, endpoint, schema=None, params=None):
+        url = self.api_url.format(endpoint=endpoint)
+        res = http.get(url, params=params)
+        return http.json(res, schema=schema)
 
-        first = -1
-        second = -1
-        for i, c in enumerate(token):
-            if c.isdigit() and 4 < i < len(token):
-                if first == -1:
-                    first = i
-                else:
-                    second = i
-                    break
+    @property
+    def token(self):
+        if not self._token:
+            self._token = self.api_call("auth", schema=self.auth_schema)
+        return self._token
 
-        if first == -1:
-            first = 12
-        if second == -1:
-            second = 13
+    def _get_prid(self, subtitles=False):
+        res = http.get(self.url)
+        bprid = None
 
-        secured[first] = token[second]
-        secured[second] = token[first]
-        return ''.join(secured)
+        # Locate the asset id for the content on the page
+        for alt, _, prid in self.prid_re.findall(res.text):
+            if alt and subtitles:
+                bprid = prid
+            elif bprid is None:
+                bprid = prid
 
-    def _get_meta(self):
-        html = http.get('http://www.npo.nl/live/{0}'.format(self.npo_id), headers=HTTP_HEADERS).text
-        program_id = re.compile(r'data-prid="(.*?)"', re.DOTALL + re.IGNORECASE).search(html).group(1)
-        meta = http.get('http://e.omroep.nl/metadata/{0}'.format(program_id), headers=HTTP_HEADERS).text
-        meta = re.compile(r'({.*})', re.DOTALL + re.IGNORECASE).search(meta).group(1)
-        return json.loads(meta)
+        if bprid is None:
+            m = self.react_re.search(res.text)
+            if m:
+                data = parse_json(m.group("data").replace("&quot;", '"'))
+                bprid = data.get("mid")
 
-    def _get_vod_streams(self):
-        url = 'http://ida.omroep.nl/odi/?prid={0}&puboptions=adaptive,h264_bb,h264_sb,h264_std&adaptive=no&part=1&token={1}'\
-            .format(quote(self.npo_id), quote(self.get_token()))
-        res = http.get(url, headers=HTTP_HEADERS)
-
-        data = res.json()
-
-        streams = {}
-        stream = http.get(data['streams'][0].replace('jsonp', 'json'), headers=HTTP_HEADERS).json()
-        streams['best'] = streams['high'] = HTTPStream(self.session, stream['url'])
-        return streams
-
-    def _get_live_streams(self):
-        meta = self._get_meta()
-        stream = [x for x in meta['streams'] if x['type'] == 'hls'][0]['url']
-
-        url = 'http://ida.omroep.nl/aapi/?type=jsonp&stream={0}&token={1}'.format(stream, self.get_token())
-        streamdata = http.get(url, headers=HTTP_HEADERS).json()
-        deeplink = http.get(streamdata['stream'], headers=HTTP_HEADERS).text
-        deeplink = re.compile(r'"(.*?)"', re.DOTALL + re.IGNORECASE).search(deeplink).group(1)
-        playlist_url = deeplink.replace("\\/", "/")
-        return HLSStream.parse_variant_playlist(self.session, playlist_url)
+        return bprid
 
     def _get_streams(self):
-        urlparts = self.url.split('/')
-        self.npo_id = urlparts[-1]
+        asset_id = self._get_prid(self.get_option("subtitles"))
 
-        if (urlparts[-2] == 'live'):
-            return self._get_live_streams()
-        else:
-            return self._get_vod_streams()
+        if asset_id:
+            self.logger.debug("Found asset id: {0}", asset_id)
+            streams = self.api_call(asset_id,
+                                    params=dict(adaptive="yes",
+                                                token=self.token),
+                                    schema=self.streams_schema)
+
+            for stream in streams:
+                if stream["format"] in ("adaptive", "hls"):
+                    if stream["contentType"] == "url":
+                        stream_url = stream["url"]
+                    else:
+                        # using type=json removes the javascript function wrapper
+                        info_url = stream["url"].replace("type=jsonp", "type=json")
+
+                        # find the actual stream URL
+                        stream_url = http.json(http.get(info_url),
+                                               schema=self.stream_info_schema)
+
+                    for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
+                        yield s
 
 
 __plugin__ = NPO
