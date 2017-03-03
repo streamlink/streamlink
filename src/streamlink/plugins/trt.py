@@ -14,7 +14,7 @@ class TRT(Plugin):
     """
     Support for the live TV streams on http://www.trt.net.tr/, some streams may be geo-locked
     """
-    url_re = re.compile(r"http://www.trt.net.tr/Anasayfa/canli.aspx.*")
+    url_re = re.compile(r"http://www.trt.net.tr/anasayfa/canli.aspx.*", re.I)
     stream_data_re = re.compile(r'<script>eval\(dcm1\("(.*?)"\)\);')
     f4mm_re = re.compile(r'''(?P<q>["'])(?P<url>http[^"']+?.f4m)(?P=q);''')
     m3u8_re = re.compile(r'''(?P<q>["'])(?P<url>http[^"']+?.m3u8)(?P=q);''')
@@ -32,7 +32,7 @@ class TRT(Plugin):
             res = http.get(self.url)
             stream_data_m = self.stream_data_re.search(res.text)
             if stream_data_m:
-                script_vars = b64decode(stream_data_m.group(1))
+                script_vars = b64decode(stream_data_m.group(1)).decode("utf8")
                 url_m = self.m3u8_re.search(script_vars)
 
                 hls_url = url_m and url_m.group("url")
