@@ -1103,6 +1103,87 @@ plugin.add_argument(
     Automatically mux available subtitles in to the output stream
     """
 )
+plugin.add_argument(
+    "--rtve-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream
+    """
+)
+plugin.add_argument(
+    "--funimation-language",
+    type=str,
+    choices=["en", "ja", "english", "japanese"],
+    default="english",
+    help="""
+    The audio language to use for Funimation streams; japanese or english
+
+    Default is english
+    """
+)
+plugin.add_argument(
+    "--funimation-mux-subtitles",
+    action="store_true",
+    help="""
+    Enable automatically including available subtitles in to the output stream
+    """
+)
+plugin.add_argument(
+    "--tvplayer-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with tvplayer.com.
+    """
+)
+plugin.add_argument(
+    "--tvplayer-password",
+    metavar="PASSWORD",
+    help="""
+    A TVPlayer account password to use with --tvplayer-email.
+    """
+)
+plugin.add_argument(
+    "--pluzz-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream
+    """
+)
+plugin.add_argument(
+    "--wwenetwork-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your WWE Network account, required to access any WWE Network stream.
+    """
+)
+plugin.add_argument(
+    "--wwenetwork-password",
+    metavar="PASSWORD",
+    help="""
+    A WWE Network account password to use with --wwenetwork-email.
+    """
+)
+plugin.add_argument(
+    "--animelab-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with animelab.com.
+    """
+)
+plugin.add_argument(
+    "--animelab-password",
+    metavar="PASSWORD",
+    help="""
+    A TVPlayer account password to use with --animelab-email.
+    """
+)
+plugin.add_argument(
+    "--npo-subtitles",
+    action="store_true",
+    help="""
+    Include subtitles for the deaf or hard of hearing, if available
+    """
+)
 
 # Deprecated options
 stream.add_argument(

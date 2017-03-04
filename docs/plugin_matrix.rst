@@ -17,10 +17,12 @@ afreeca             afreecatv.com        Yes   No
 afreecatv           afreeca.tv           Yes   No
 aftonbladet         aftonbladet.se       Yes   Yes
 alieztv             aliez.tv             Yes   Yes
+animelab            animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 antenna             antenna.gr           --    Yes
 app17               17app.co             Yes   --
-ard_live            live.daserste.de     Yes   --    Streams may be geo-restricted to Germany.
-ard_mediathek       ardmediathek.de      Yes   Yes   Streams may be geo-restricted to Germany.
+ard_live            daserste.de          Yes   Yes   Streams may be geo-restricted to Germany.
+ard_mediathek       - ardmediathek.de    Yes   Yes   Streams may be geo-restricted to Germany.
+                    - mediathek... [5]_
 artetv              arte.tv              Yes   Yes
 atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
 azubutv             azubu.tv             Yes   No
@@ -74,12 +76,15 @@ dplay               - dplay.se           --    Yes   Streams may be geo-restrict
                     - dplay.no
                     - dplay.dk
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
+earthcam            earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
 eurocom             eurocom.bg           Yes   No
 euronews            euronews.com         Yes   No
 expressen           expressen.se         Yes   Yes
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 foxtr               fox.com.tr           Yes   No
+funimationnow       - funimation.com     --    Yes
+                    - funimationnow.uk
 furstream           furstre.am           Yes   No
 gaminglive          gaminglive.tv        Yes   Yes
 gomexp              gomexp.com           Yes   No
@@ -107,7 +112,9 @@ mlgtv               mlg.tv               Yes   --
 nhkworld            nhk.or.jp/nhkworld   Yes   No
 nineanime           9anime.to            --    Yes
 nos                 nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
-npo                 npo.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
+npo                 - npo.nl             Yes   Yes   Streams may be geo-restricted to Netherlands.
+                    - zapp.nl
+                    - zappelin.nl
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
 oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
@@ -131,6 +138,7 @@ schoolism           schoolism.com        --    Yes   Requires a login and a subs
 seemeplay           seemeplay.ru         Yes   Yes
 seetv               seetv.tv             Yes   No    Streams that are embedded from other sites will not work.
 servustv            servustv.com         ?     ?
+showroom            showroom-live.com    Yes   No    Only RTMP streams are available.
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportal             sportal.bg           Yes   No
 sportschau          sportschau.de        Yes   No
@@ -202,6 +210,7 @@ vidio               vidio.com            Yes   Yes
 wattv               wat.tv               --    Yes
 webtv               web.tv               Yes   --
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
+wwenetwork          network.wwe.com      Yes   Yes   Requires an account to access any content.
 younow              younow.com           Yes   --
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
                     - youtu.be
@@ -214,3 +223,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [2] streamingvideoprovider.co.uk
 .. [3] original.livestream.com
 .. [4] streaming.media.ccc.de
+.. [5] mediathek.daserste.de

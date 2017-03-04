@@ -52,7 +52,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         api_resp.text = json.dumps(api_data)
         mock_http.get.return_value = page_resp
         mock_http.post.return_value = api_resp
-        mock_http.json.return_value = api_data
+        mock_http.json.return_value = api_data["tvplayer"]["response"]
         hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
@@ -62,13 +62,15 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.assertTrue("test" in streams)
 
         # test the url is used correctly
-        mock_http.get.assert_called_with("http://tvplayer.com/watch/dave", headers=ANY)
+        mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
         # test that the correct API call is made
-        mock_http.post.assert_called_with("http://api.tvplayer.com/api/v2/stream/live", data=dict(id=u"1234",
+        mock_http.post.assert_called_with("http://api.tvplayer.com/api/v2/stream/live", data=dict(service=1,
+                                                                                                  id=u"1234",
                                                                                                   validate=u"foo",
-                                                                                                  platform=u"test"))
+                                                                                                  platform=u"test",
+                                                                                                  token=None))
         # test that the correct URL is used for the HLSStream
-        hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1", headers=ANY)
+        hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1")
 
     @patch('streamlink.plugins.tvplayer.http')
     def test_get_invalid_page(self, mock_http):
@@ -86,4 +88,5 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.assertEqual({}, streams)
 
         # test the url is used correctly
-        mock_http.get.assert_called_with("http://tvplayer.com/watch/dave", headers=ANY)
+
+        mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")

@@ -858,6 +858,55 @@ def setup_plugin_options():
     if args.daisuki_mux_subtitles:
         streamlink.set_plugin_option("daisuki", "mux_subtitles", args.daisuki_mux_subtitles)
 
+    if args.rtve_mux_subtitles:
+        streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
+
+    if args.funimation_mux_subtitles:
+        streamlink.set_plugin_option("funimationnow", "mux_subtitles", True)
+
+    if args.funimation_language:
+        # map en->english, ja->japanese
+        lang = {"en": "english", "ja": "japanese"}.get(args.funimation_language.lower(),
+                                                       args.funimation_language.lower())
+        streamlink.set_plugin_option("funimationnow", "language", lang)
+
+    if args.tvplayer_email:
+        streamlink.set_plugin_option("tvplayer", "email", args.tvplayer_email)
+
+    if args.tvplayer_email and not args.tvplayer_password:
+        tvplayer_password = console.askpass("Enter TVPlayer password: ")
+    else:
+        tvplayer_password = args.tvplayer_password
+
+    if tvplayer_password:
+        streamlink.set_plugin_option("tvplayer", "password", tvplayer_password)
+
+    if args.pluzz_mux_subtitles:
+        streamlink.set_plugin_option("pluzz", "mux_subtitles", args.pluzz_mux_subtitles)
+
+    if args.wwenetwork_email:
+        streamlink.set_plugin_option("wwenetwork", "email", args.wwenetwork_email)
+    if args.wwenetwork_email and not args.wwenetwork_password:
+        wwenetwork_password = console.askpass("Enter WWE Network password: ")
+    else:
+        wwenetwork_password = args.wwenetwork_password
+    if wwenetwork_password:
+        streamlink.set_plugin_option("wwenetwork", "password", wwenetwork_password)
+
+    if args.animelab_email:
+        streamlink.set_plugin_option("animelab", "email", args.animelab_email)
+
+    if args.animelab_email and not args.animelab_password:
+        animelab_password = console.askpass("Enter AnimeLab password: ")
+    else:
+        animelab_password = args.animelab_password
+
+    if animelab_password:
+        streamlink.set_plugin_option("animelab", "password", animelab_password)
+
+    if args.npo_subtitles:
+        streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
