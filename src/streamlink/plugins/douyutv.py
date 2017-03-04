@@ -125,7 +125,7 @@ class Douyutv(Plugin):
         did = uuid.uuid4().hex.upper()
 
         #use new API key and modified MD5 algorithm
-        sign = stupidMD5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8"))
+        sign = stupidMD5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)))
 
         data = {
             "cdn": "ws",

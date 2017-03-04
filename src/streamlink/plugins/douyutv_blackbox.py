@@ -7,7 +7,7 @@ def stupidMD5(s):
     # s = '8101252B10B1008684E2B988C3C72A33F832Ba2053899224e8a92974c729dceed1cc99b3d828224809284'
     hashstr = md5(s)
     mid = [int(hashstr[i:i + 2], 16) for i in range(0, len(hashstr), 2)]
-    F_func_173e8124cdbdc90d([c for c in s], mid)
+    F_func_173e8124cdbdc90d([ord(c) for c in s], mid)
     return ''.join('{:02x}'.format(x) for x in mid)
 
 
@@ -201,7 +201,7 @@ def rstr2binl(input):
     output = [0] * ((len(input) >> 2) + 1)
     length8 = len(input) * 8
     for i in range(0, length8, 8):
-        output[i >> 5] |= ((input[int(i / 8)]) & 0xFF) << i % 32
+        output[i >> 5] |= (ord(input[int(i / 8)]) & 0xFF) << i % 32
 
     return output
 
