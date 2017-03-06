@@ -10,12 +10,17 @@ from streamlink.stream import HTTPStream, HLSStream
 
 #new API and key from https://gist.github.com/spacemeowx2/629b1d131bd7e240a7d28742048e80fc by spacemeowx2
 MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
-LAPI_URL = "http://coapi.douyucdn.cn/lapi/live/thirdPart/getPlay/{0}?rate=0"
+LAPI_URL = "http://coapi.douyucdn.cn/lapi/live/thirdPart/getPlay/{0}?rate={1}"
 
 LAPI_SECRET = "9TUk5fjjUjg9qIMH3sdnh"
 
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
+STREAM_WEIGHTS = {
+        "low": 540,
+        "middle":  720,
+        "source": 1080
+        }
 
 _url_re = re.compile(r"""
     http(s)?://(www\.)?douyu.com
@@ -76,8 +81,14 @@ _lapi_schema = validate.Schema(
 
 class Douyutv(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream in STREAM_WEIGHTS:
+            return STREAM_WEIGHTS[stream], "douyutv"
+        return Plugin.stream_weight(stream)
 
     #quality:
     # 0:source 2:middle 1:low
@@ -90,8 +101,7 @@ class Douyutv(Plugin):
             "aid": 'pcclient'
         }
 
-        res = http.get(LAPI_URL.format(channel), headers=data)
-        print(res.text)
+        res = http.get(LAPI_URL.format(channel, quality), headers=data)
         room = http.json(res, schema=_lapi_schema)
         return room
 
@@ -122,7 +132,14 @@ class Douyutv(Plugin):
             return
 
         room_source = self._get_room_json(channel, 0)
-        yield "live", HTTPStream(self.session, room_source['live_url'])
-        yield "live", HLSStream(self.session, room_source['hls_url'])
+        yield "source", HTTPStream(self.session, room_source['live_url'])
+        yield "source", HLSStream(self.session, room_source['hls_url'])
 
+        room_middle = self._get_room_json(channel, 2)
+        yield "middle", HTTPStream(self.session, room_middle['live_url'])
+        yield "middle", HLSStream(self.session, room_middle['hls_url'])
+
+        room_low = self._get_room_json(channel, 1)
+        yield "low", HTTPStream(self.session, room_low['live_url'])
+        yield "low", HLSStream(self.session, room_low['hls_url'])
 __plugin__ = Douyutv
