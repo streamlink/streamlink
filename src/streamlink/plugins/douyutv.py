@@ -9,9 +9,15 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import HTTPStream
 
+#algorithm for https://github.com/spacemeowx2/DouyuHTML5Player/blob/master/src/douyu/blackbox.js
+#python version by debugzxcv at https://gist.github.com/debugzxcv/85bb2750d8a5e29803f2686c47dc236b
+from streamlink.plugins.douyutv_blackbox import stupidMD5
+
 MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
 LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
-LAPI_SECRET = "A12Svb&%1UUmf@hC"
+
+#new API key from https://github.com/spacemeowx2/DouyuHTML5Player/commit/5065e5e8e60f1eddf2eb8370b6fcb9136c6685a4
+LAPI_SECRET = "a2053899224e8a92974c729dceed1cc99b3d8282"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
@@ -117,7 +123,9 @@ class Douyutv(Plugin):
 
         ts = int(time.time() / 60)
         did = uuid.uuid4().hex.upper()
-        sign = hashlib.md5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8")).hexdigest()
+
+        #use new API key and modified MD5 algorithm
+        sign = stupidMD5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)))
 
         data = {
             "cdn": "ws",
