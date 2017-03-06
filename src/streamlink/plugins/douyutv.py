@@ -17,10 +17,10 @@ LAPI_SECRET = "9TUk5fjjUjg9qIMH3sdnh"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
-        "low": 540,
-        "middle":  720,
-        "source": 1080
-        }
+    "low": 540,
+    "medium": 720,
+    "source": 1080
+    }
 
 _url_re = re.compile(r"""
     http(s)?://(www\.)?douyu.com
