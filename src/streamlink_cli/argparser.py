@@ -131,6 +131,14 @@ def keyvalue(value):
     return match.group("key", "value")
 
 
+def boolean(value):
+    truths = ["yes", "1", "true", "on"]
+    falses = ["no", "0", "false", "off"]
+    if value.lower() not in truths+falses:
+        raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths+falses)))
+
+    return value.lower() in truths
+
 parser = ArgumentParser(
     fromfile_prefix_chars="@",
     formatter_class=HelpFormatter,
@@ -261,10 +269,14 @@ general.add_argument(
     """
 )
 general.add_argument(
-    "--no-version-check",
-    action="store_true",
+    "--auto-version-check",
+    type=boolean,
+    metavar="{yes,true,1,on,no,false,0,off}",
+    default=False,
     help="""
-    Do not check for new Streamlink releases.
+    Enable or disable the automatic check for a new version of Streamlink.
+
+    Default is no
     """
 )
 general.add_argument(
@@ -1251,6 +1263,11 @@ http.add_argument(
 plugin.add_argument(
     "--crunchyroll-locale",
     metavar="LOCALE",
+    help=argparse.SUPPRESS
+)
+general.add_argument(
+    "--no-version-check",
+    action="store_true",
     help=argparse.SUPPRESS
 )
 
