@@ -15,7 +15,7 @@ Streamlink Team
 ---------------
 
 Bastimeyer 
-----------
+^^^^^^^^^^
 
 - `Github <https://github.com/bastimeyer>`__
 - `Bitcoin <https://blockchain.info/qr?data=1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8>`__ (`1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8`)
@@ -24,13 +24,13 @@ Bastimeyer
 - `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`__
 
 Beardypig 
----------
+^^^^^^^^^
 
 - `Github <https://github.com/beardypig>`__
 - `Bitcoin <https://blockchain.info/qr?data=1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh>`__ (`1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh`)
 
 Gravyboat
----------
+^^^^^^^^^
 
 - `Github <https://github.com/gravyboat>`__
 - `Bitcoin <https://blockchain.info/qr?data=1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`__ (`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`)
