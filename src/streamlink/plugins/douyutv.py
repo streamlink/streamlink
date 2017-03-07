@@ -91,7 +91,7 @@ class Douyutv(Plugin):
         return Plugin.stream_weight(stream)
 
     #quality:
-    # 0:source 2:middle 1:low
+    # 0:source 2:medium 1:low
     def _get_room_json(self, channel, quality):
         ts = int(time.time())
         sign = hashlib.md5("lapi/live/thirdPart/getPlay/{0}?aid=pcclient&rate={1}&time={2}{3}".format(channel, quality, ts, LAPI_SECRET).encode('ascii')).hexdigest()
@@ -135,9 +135,9 @@ class Douyutv(Plugin):
         yield "source", HTTPStream(self.session, room_source['live_url'])
         yield "source", HLSStream(self.session, room_source['hls_url'])
 
-        room_middle = self._get_room_json(channel, 2)
-        yield "middle", HTTPStream(self.session, room_middle['live_url'])
-        yield "middle", HLSStream(self.session, room_middle['hls_url'])
+        room_medium = self._get_room_json(channel, 2)
+        yield "medium", HTTPStream(self.session, room_medium['live_url'])
+        yield "medium", HLSStream(self.session, room_medium['hls_url'])
 
         room_low = self._get_room_json(channel, 1)
         yield "low", HTTPStream(self.session, room_low['live_url'])
