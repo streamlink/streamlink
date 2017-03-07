@@ -146,7 +146,7 @@ class WWENetwork(Plugin):
                 if info.get("session_key"):
                     self.session_key = info.get("session_key")
                 for url in info["urls"]:
-                    for s in HLSStream.parse_variant_playlist(self.session, url).items():
+                    for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items():
                         yield s
             else:
                 raise PluginError("Could not load streams: {message} ({code})".format(**info["status"]))
