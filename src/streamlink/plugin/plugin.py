@@ -7,6 +7,10 @@ from ..cache import Cache
 from ..exceptions import PluginError, NoStreamsError
 from ..options import Options
 
+# FIXME: This is a crude attempt at making a bitrate's
+# weight end up similar to the weight of a resolution.
+# Someone who knows math, please fix.
+BIT_RATE_WEIGHT_RATIO = 2.8
 
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
@@ -37,27 +41,27 @@ def stream_weight(stream):
         if stream in weights:
             return weights[stream], group
 
-    match = re.match("^(\d+)([k]|[p])?(\d*)([\+])?$", stream)
+    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?$", stream)
 
     if match:
-        if match.group(2) == "k":
+        name_type = match.group(2)
+        if name_type == "k":  # bit rate
             bitrate = int(match.group(1))
-
-            # FIXME: This is a crude attempt at making a bitrate's
-            # weight end up similar to the weight of a resolution.
-            # Someone who knows math, please fix.
-            weight = bitrate / 2.8
+            weight = bitrate / BIT_RATE_WEIGHT_RATIO
 
             return weight, "bitrate"
 
-        elif match.group(2) == "p":
+        elif name_type == "p":  # resolution
             weight = int(match.group(1))
 
-            if match.group(3):
+            if match.group(3):  # fps eg. 60p or 50p
                 weight += int(match.group(3))
 
             if match.group(4) == "+":
                 weight += 1
+
+            if match.group(5):  # bit rate classifier for resolution
+                weight += int(match.group(5)) / BIT_RATE_WEIGHT_RATIO
 
             return weight, "pixels"
 
@@ -85,7 +89,7 @@ def stream_type_priority(stream_types, stream):
 
 
 def stream_sorting_filter(expr, stream_weight):
-    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w\+]+)", expr)
+    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w+]+)", expr)
 
     if not match:
         raise PluginError("Invalid filter expression: {0}".format(expr))
