@@ -271,7 +271,7 @@ class HLSStream(HTTPStream):
     @classmethod
     def parse_variant_playlist(cls, session_, url, name_key="name",
                                name_prefix="", check_streams=False,
-                               force_restart=False,
+                               force_restart=False, name_fmt=None,
                                **request_params):
         """Attempts to parse a variant playlist and return its streams.
 
@@ -279,8 +279,10 @@ class HLSStream(HTTPStream):
         :param name_key: Prefer to use this key as stream name, valid keys are:
                          name, pixels, bitrate.
         :param name_prefix: Add this prefix to the stream names.
+        :param check_streams: Only allow streams that are accessible.
         :param force_restart: Start at the first segment even for a live stream
-        :param check_streams: Only allow streams that are accesible.
+        :param name_fmt: A format string for the name, allowed format keys are
+                         name, pixels, bitrate.
         """
         logger = session_.logger.new_module("hls.parse_variant_playlist")
         locale = session_.localization
@@ -338,8 +340,11 @@ class HLSStream(HTTPStream):
                 else:
                     names["bitrate"] = "{0}k".format(bw / 1000.0)
 
-            stream_name = (names.get(name_key) or names.get("name") or
-                           names.get("pixels") or names.get("bitrate"))
+            if name_fmt:
+                stream_name = name_fmt.format(**names)
+            else:
+                stream_name = (names.get(name_key) or names.get("name") or
+                               names.get("pixels") or names.get("bitrate"))
 
             if not stream_name:
                 continue
