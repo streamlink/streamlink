@@ -228,7 +228,7 @@ Windows binaries
 
 You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
 
-You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
+Alternatively, you can download the latest `nightly Windows installer <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
 
 This is a installer which contains:
 
@@ -243,7 +243,7 @@ and performs the following tasks:
   :command:`streamlink` directly from the command prompt without specifying
   its directory)
 
-To build the installer, you need to have NSIS and pynsist installed on your
+To build the installer, you need to have ``NSIS`` and ``pynsist`` installed on your
 system.
 
 
