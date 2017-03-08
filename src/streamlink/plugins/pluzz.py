@@ -18,7 +18,7 @@ class Pluzz(Plugin):
     _pluzz_video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
     _other_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _player_re = re.compile(r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
-    _swf_re = re.compile(r'getUrl\("(?P<swf>/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai.+?\.swf)"\)')
+    _swf_re = re.compile(r'//staticftv-a\.akamaihd\.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
     _mp4_bitrate_re = re.compile(r'.*-(?P<bitrate>[0-9]+k)\.mp4')
 
@@ -106,7 +106,7 @@ class Pluzz(Plugin):
             res = http.get(player_url)
             match = self._swf_re.search(res.text)
             if match is not None:
-                swf_url = os.path.dirname(player_url) + match.group('swf')
+                swf_url = 'http:' + match.group(0)
 
         res = http.get(self.API_URL.format(video_id, catalogue))
         videos = http.json(res, schema=self._api_schema)
