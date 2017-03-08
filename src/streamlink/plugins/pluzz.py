@@ -7,6 +7,7 @@ from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
+from streamlink.utils import update_scheme
 
 
 class Pluzz(Plugin):
@@ -102,11 +103,11 @@ class Pluzz(Plugin):
         match = self._player_re.search(res.text)
         swf_url = None
         if match is not None:
-            player_url = 'http:' + match.group('player')
+            player_url = update_scheme(self.url, match.group('player'))
             res = http.get(player_url)
             match = self._swf_re.search(res.text)
             if match is not None:
-                swf_url = 'http:' + match.group(0)
+                swf_url = update_scheme(self.url, match.group(0))
 
         res = http.get(self.API_URL.format(video_id, catalogue))
         videos = http.json(res, schema=self._api_schema)
