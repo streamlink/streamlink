@@ -214,7 +214,7 @@ wwenetwork          network.wwe.com      Yes   Yes   Requires an account to acce
 younow              younow.com           Yes   --
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
                     - youtu.be
-zdf_mediathek       zdf.de               Yes   Yes
+zdf_mediathek       zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
 zhanqitv            zhanqi.tv            Yes   No
 =================== ==================== ===== ===== ===========================
 
