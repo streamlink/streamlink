@@ -718,6 +718,9 @@ def setup_options():
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
 
+    if args.hls_audio_select:
+        streamlink.set_option("hls-audio-select", args.hls_audio_select)
+
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
 
