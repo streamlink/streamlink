@@ -653,6 +653,15 @@ transport.add_argument(
     Default is 60.0.
     """)
 transport.add_argument(
+    "--hls-audio-select",
+    type=str,
+    metavar="CODE",
+    help="""
+    Selects a specific audio source, by language code, when multiple audio sources are available.
+
+    Note: This is only useful in special circumstances where the regular locale option fails.
+    """)
+transport.add_argument(
     "--http-stream-timeout",
     type=num(float, min=0),
     metavar="TIMEOUT",
