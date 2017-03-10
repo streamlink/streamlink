@@ -6,7 +6,7 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import RTMPStream
 
 PLAYER_VERSION = "0.1.1.782"
-INFO_URL = "http://mvn.vaughnsoft.net/video/edge/soon_depricated_Q2_2017-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
+INFO_URL = "http://mvn.vaughnsoft.net/video/edge/soon__depricated_Q2_2017-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
 
 DOMAIN_MAP = {
     "breakers": "btv",
