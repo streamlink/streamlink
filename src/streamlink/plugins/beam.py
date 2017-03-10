@@ -4,6 +4,7 @@ from streamlink.compat import urlparse, parse_qsl, urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream
+from streamlink.stream import HTTPStream
 from streamlink.stream import RTMPStream
 
 _url_re = re.compile(r"http(s)?://(\w+.)?beam.pro/(?P<channel>[^/?]+)")
@@ -24,9 +25,10 @@ class Beam(Plugin):
             }]
         },
         validate.get("vods"),
-        validate.filter(lambda x: x["format"] == "hls"),
+        validate.filter(lambda x: x["format"] in ("raw", "hls")),
         [validate.union({
             "url": validate.get("baseUrl"),
+            "format": validate.get("format"),
             "height": validate.all(validate.get("data"), validate.get("Height"))
         })])
     _assets_schema = validate.Schema(
@@ -61,9 +63,13 @@ class Beam(Plugin):
 
     def _get_vod_stream(self, vod_id):
         res = http.get(self.api_url.format(type="recordings", id=vod_id))
-        for hls_base in http.json(res, schema=self._vod_schema):
-            hls_url = urljoin(hls_base["url"], "manifest.m3u8")
-            yield "{0}p".format(hls_base["height"]), HLSStream(self.session, hls_url)
+        for sdata in http.json(res, schema=self._vod_schema):
+            if sdata["format"] == "hls":
+                hls_url = urljoin(sdata["url"], "manifest.m3u8")
+                yield "{0}p".format(sdata["height"]), HLSStream(self.session, hls_url)
+            elif sdata["format"] == "raw":
+                raw_url = urljoin(sdata["url"], "source.mp4")
+                yield "{0}p".format(sdata["height"]), HTTPStream(self.session, raw_url)
 
     def _get_live_stream(self, channel):
         res = http.get(self.api_url.format(type="channels", id=channel))
