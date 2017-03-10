@@ -27,6 +27,7 @@ artetv              arte.tv              Yes   Yes
 atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
 azubutv             azubu.tv             Yes   No
 bambuser            bambuser.com         Yes   Yes
+bbciplayer          bbc.co.uk/iplayer    Yes   Yes   Streams may be geo-restricted to the United Kingdom.
 beam                beam.pro             Yes   No
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bigo                - live.bigo.tv       Yes   --
