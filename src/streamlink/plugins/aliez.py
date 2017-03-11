@@ -8,13 +8,15 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import HTTPStream, RTMPStream
 
 _url_re = re.compile(r"""
-    http(s)?://(\w+\.)?aliez.tv
+    http(s)?://(\w+\.)?aliez.\w+/
     (?:
-        /live/[^/]+
-    )?
-    (?:
-        /video/\d+/[^/]+
-    )?
+        (?:
+            live/[^/]+
+        )|
+        (?:
+            video/\d+/[^/]+
+        )
+    )
 """, re.VERBOSE)
 _file_re = re.compile(r"\"?file\"?:\s+['\"]([^'\"]+)['\"]")
 _swf_url_re = re.compile(r"swfobject.embedSWF\(\"([^\"]+)\",")
