@@ -39,6 +39,11 @@ btv                 btv.bg               Yes   No    Requires login, and geo-res
 canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
                     - c8.fr
                     - cstar.fr
+canlitv             - canlitv.com        Yes   --
+                    - canlitv.life
+                    - canlitvlive.co
+                    - canlitvlive.live
+                    - ecanlitvizle.net
 cdnbg               - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                     - bgonair.bg
                     - kanal3.bg
