@@ -1064,21 +1064,6 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--livestation-email",
-    metavar="EMAIL",
-    help="""
-    A Livestation account email to access restricted or premium
-    quality streams.
-    """
-)
-plugin.add_argument(
-    "--livestation-password",
-    metavar="PASSWORD",
-    help="""
-    A Livestation account password to use with --livestation-email.
-    """
-)
-plugin.add_argument(
     "--btv-username",
     metavar="USERNAME",
     help="""
