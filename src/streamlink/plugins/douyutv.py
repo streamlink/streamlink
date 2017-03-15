@@ -29,8 +29,8 @@ _url_re = re.compile(r"""
     )?
     douyu.com/
     (?:
-        show/(?P<vid>.+)|
-        (?P<channel>[^/]+)
+        show/(?P<vid>[^/&?]+)|
+        (?P<channel>[^/&?]+)
     )
 """, re.VERBOSE)
 
