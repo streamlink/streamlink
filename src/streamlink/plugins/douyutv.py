@@ -6,11 +6,13 @@ import uuid
 from requests.adapters import HTTPAdapter
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import http, validate
 from streamlink.stream import HTTPStream
 
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
 MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
-LAPI_URL = "https://coapi.douyucdn.cn/lapi/live/thirdPart/getPlay/{0}"
+LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
+LAPI_SECRET = "A12Svb&%1UUmf@hC"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
@@ -19,12 +21,12 @@ STREAM_WEIGHTS = {
     "source": 1080
 }
 
-_url_re = re.compile(r"""
+_url_re = re.compile("""
     http(s)?://(www\.)?douyu.com
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_room_id_re = re.compile(r'"room_id\\*"\s*:\s*(\d+),')
+_room_id_re = re.compile(r'"room_id"\s*:\s*(\d+),')
 _room_id_alt_re = re.compile(r'data-room_id="(\d+)"')
 
 _room_id_schema = validate.Schema(
@@ -68,7 +70,8 @@ _room_schema = validate.Schema(
 _lapi_schema = validate.Schema(
     {
         "data": validate.any(None, {
-            "live_url": validate.text
+            "rtmp_url": validate.text,
+            "rtmp_live": validate.text
         })
     },
     validate.get("data")
@@ -91,9 +94,9 @@ class Douyutv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        http.headers.update({'User-Agent': useragents.CHROME})
-        http.verify = False
-        http.mount('https://', HTTPAdapter(max_retries=99))
+        http.headers.update({"User-Agent": USER_AGENT})
+        http.verify=False
+        http.mount('http://', HTTPAdapter(max_retries=99))
 
         #Thanks to @ximellon for providing method.
         try:
@@ -106,50 +109,58 @@ class Douyutv(Plugin):
         res = http.get(MAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
-            self.logger.info("Not a valid room url.")
             return
 
         if room["show_status"] != SHOW_STATUS_ONLINE:
-            self.logger.info("Stream currently unavailable.")
             return
 
-        ts = int(time.time())
+        ts = int(time.time() / 60)
+        did = uuid.uuid4().hex.upper()
+        sign = hashlib.md5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)).encode("utf-8")).hexdigest()
 
-        sign = hashlib.md5(("lapi/live/thirdPart/getPlay/{0}?aid=pcclient&rate=0&time={1}9TUk5fjjUjg9qIMH3sdnh".format(channel, ts)).encode('ascii')).hexdigest()
-        headers = {
-            "auth": sign,
-            "time": str(ts),
-            "aid": "pcclient"
+        data = {
+            "cdn": "ws",
+            "rate": "0",
+            "tt": ts,
+            "did": did,
+            "sign": sign
         }
-        res = http.get(LAPI_URL.format(channel) + "?rate=0", headers=headers)
+
+        res = http.post(LAPI_URL.format(channel), data=data)
         room = http.json(res, schema=_lapi_schema)
-        url = room["live_url"]
+
+        url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         stream = HTTPStream(self.session, url)
         yield "source", stream
 
-        sign = hashlib.md5(("lapi/live/thirdPart/getPlay/{0}?aid=pcclient&rate=2&time={1}9TUk5fjjUjg9qIMH3sdnh".format(channel, ts)).encode('ascii')).hexdigest()
-        headers = {
-            "auth": sign,
-            "time": str(ts),
-            "aid": "pcclient"
+        data = {
+            "cdn": "ws",
+            "rate": "2",
+            "tt": ts,
+            "did": did,
+            "sign": sign
         }
-        res = http.get(LAPI_URL.format(channel) + "?rate=2", headers=headers)
+
+        res = http.post(LAPI_URL.format(channel), data=data)
         room = http.json(res, schema=_lapi_schema)
-        url = room["live_url"]
+
+        url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         stream = HTTPStream(self.session, url)
         yield "middle", stream
 
-        sign = hashlib.md5(("lapi/live/thirdPart/getPlay/{0}?aid=pcclient&rate=1&time={1}9TUk5fjjUjg9qIMH3sdnh".format(channel, ts)).encode('ascii')).hexdigest()
-        headers = {
-            "auth": sign,
-            "time": str(ts),
-            "aid": "pcclient"
+        data = {
+            "cdn": "ws",
+            "rate": "1",
+            "tt": ts,
+            "did": did,
+            "sign": sign
         }
-        res = http.get(LAPI_URL.format(channel) + "?rate=1", headers=headers)
+
+        res = http.post(LAPI_URL.format(channel), data=data)
         room = http.json(res, schema=_lapi_schema)
-        url = room["live_url"]
+
+        url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         stream = HTTPStream(self.session, url)
         yield "low", stream
-
 
 __plugin__ = Douyutv
