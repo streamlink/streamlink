@@ -121,22 +121,25 @@ class Douyutv(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        channel = match.group("channel")
         subdomain = match.group("subdomain")
 
-        http.headers.update({'User-Agent': useragents.CHROME})
         http.verify = False
         http.mount('https://', HTTPAdapter(max_retries=99))
 
         if subdomain == 'v':
             vid = match.group("vid")
-            http.headers.update({'User-Agent': useragents.ANDROID, 'X-Requested-With': 'XMLHttpRequest'})
-            res = http.get(VAPI_URL.format(vid))
+            headers = {
+                "User-Agent": useragents.ANDROID,
+                "X-Requested-With": "XMLHttpRequest"
+            }
+            res = http.get(VAPI_URL.format(vid), headers=headers)
             room = http.json(res, schema=_vapi_schema)
             yield "source", HLSStream(self.session, room["video_url"])
             return
 
         #Thanks to @ximellon for providing method.
+        channel = match.group("channel")
+        http.headers.update({'User-Agent': useragents.CHROME})
         try:
             channel = int(channel)
         except ValueError:
