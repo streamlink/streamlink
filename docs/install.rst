@@ -9,9 +9,9 @@ Linux and BSD packages
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
-`Arch Linux (aur)`_                  .. code-block:: console
+`Arch Linux`_                        .. code-block:: console
 
-                                        # pacaur -S streamlink
+                                        # pacman -S streamlink
 
 `Arch Linux (aur, git)`_             .. code-block:: console
 
@@ -42,7 +42,7 @@ Distribution                         Installing
                                         # xbps-install streamlink
 ==================================== ===========================================
 
-.. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
+.. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
@@ -78,7 +78,8 @@ Package maintainers
 ==================================== ===========================================
 Distribution/Platform                Maintainer
 ==================================== ===========================================
-Arch                                 Josip Ponjavic <josipponjavic at gmail.com>
+Arch                                 Giancarlo Razzolini <grazzolini at archlinux.org>
+Arch (aur, git)                      Josip Ponjavic <josipponjavic at gmail.com>
 Chocolatey                           Scott Walters <me at scowalt.com>
 Fedora                               Mohamed El Morabity <melmorabity at fedoraproject.org>
 Gentoo                               soredake <fdsfgs at krutt.org>
