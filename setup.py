@@ -25,8 +25,12 @@ if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
 
 deps.append("requests>=2.2,!=2.12.0,!=2.12.1,<3.0")
 
-# this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.6
-deps.append("pycryptodome>=3.4.3,<4")
+# for encrypted streams
+if environ.get("STREAMLINK_USE_PYCRYPTO"):
+    deps.append("pycrypto")
+else:
+    # this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.6
+    deps.append("pycryptodome>=3.4.3,<4")
 
 # shutil.get_terminal_size and which were added in Python 3.3
 if version_info[0] == 2:
