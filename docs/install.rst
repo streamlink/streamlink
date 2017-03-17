@@ -169,6 +169,17 @@ Name                                 Notes
                                      audio and video streams, eg. YouTube 1080p+
 ==================================== ===========================================
 
+Using pycrypto and pycountry
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With these two environment variables it is possible to use `pycrypto`_ instead of
+`pycryptodome`_ and `pycountry`_ instead of `iso-639`_ and `iso3166`_.
+
+.. code-block:: console
+
+    $ export STREAMLINK_USE_PYCRYPTO="true"
+    $ export STREAMLINK_USE_PYCOUNTRY="true"
+
 .. _Python: http://python.org/
 .. _python-setuptools: http://pypi.python.org/pypi/setuptools
 .. _python-argparse: http://pypi.python.org/pypi/argparse
@@ -176,6 +187,8 @@ Name                                 Notes
 .. _python-requests: http://python-requests.org/
 .. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
+.. _pycountry: https://pypi.python.org/pypi/pycountry
+.. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _python-librtmp: https://github.com/chrippa/python-librtmp
 .. _ffmpeg: https://www.ffmpeg.org/
