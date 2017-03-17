@@ -9,6 +9,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
+from streamlink.stream import HLSStream
 from streamlink.utils import parse_xml, parse_json
 
 
@@ -24,12 +25,19 @@ class BBCiPlayer(Plugin):
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = ("http://open.live.bbc.co.uk/mediaselector/5/select/"
-               "version/2.0/mediaset/pc/vpid/{vpid}/atk/{vpid_hash}/asn/1/")
+               "version/2.0/mediaset/{platform}/vpid/{vpid}/atk/{vpid_hash}/asn/1/")
+    platforms = ("pc", "iptv-all")
+
     mediaselector_schema = validate.Schema(
         validate.transform(partial(parse_xml, ignore_ns=True)),
-        validate.xml_findall(".//media[@kind='video']//connection[@transferFormat='hds']"),
-        [validate.all(validate.getattr("attrib"), validate.get("href"))],
-        validate.transform(lambda x: list(set(x)))  # unique
+        validate.union({
+            "hds": validate.xml_findall(".//media[@kind='video']//connection[@transferFormat='hds']"),
+            "hls": validate.xml_findall(".//media[@kind='video']//connection[@transferFormat='hls']")
+        }),
+        {validate.text: validate.all(
+            [validate.all(validate.getattr("attrib"), validate.get("href"))],
+            validate.transform(lambda x: list(set(x)))  # unique
+        )}
     )
 
     @classmethod
@@ -53,9 +61,15 @@ class BBCiPlayer(Plugin):
         return m and m.group(1)
 
     def mediaselector(self, vpid):
-        url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid))
-        stream_urls = http.get(url, schema=self.mediaselector_schema)
-        return stream_urls
+        for platform in self.platforms:
+            url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
+            stream_urls = http.get(url, schema=self.mediaselector_schema)
+            for surl in stream_urls.get("hls"):
+                for s in HLSStream.parse_variant_playlist(self.session, surl).items():
+                    yield s
+            for surl in stream_urls.get("hds"):
+                for s in HDSStream.parse_manifest(self.session, surl).items():
+                    yield s
 
     def _get_streams(self):
         m = self.url_re.match(self.url)
@@ -67,10 +81,8 @@ class BBCiPlayer(Plugin):
             vpid = self.find_vpid(self.url)
             if vpid:
                 self.logger.debug("Found VPID: {0}", vpid)
-                s = self.mediaselector(vpid)
-                for url in s:
-                    for s in HDSStream.parse_manifest(self.session, url).items():
-                        yield s
+                for s in self.mediaselector(vpid):
+                    yield s
             else:
                 self.logger.error("Could not find VPID for episode {0}", episode_id)
         elif channel_name:
@@ -78,9 +90,8 @@ class BBCiPlayer(Plugin):
             tvip = self.find_tvip(self.url)
             if tvip:
                 self.logger.debug("Found TVIP: {0}", tvip)
-                s = self.mediaselector(tvip)
-                for url in s:
-                    for s in HDSStream.parse_manifest(self.session, url).items():
-                        yield s
+                for s in self.mediaselector(tvip):
+                    yield s
+
 
 __plugin__ = BBCiPlayer
