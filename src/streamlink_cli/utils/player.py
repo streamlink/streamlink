@@ -53,5 +53,5 @@ def sanitizeTitle(wholeTitle):
             title = subprocess.list2cmdline([wholeTitle.encode('utf8')])
         elif is_py3:
             title = subprocess.list2cmdline([wholeTitle])
-    title = title.replace("$","$$")
+    #title = title.replace("$","$$") #TODO: possibly support a limited amount of players' title format codes. This is one of them for both VLC and MPV
     return title
