@@ -58,14 +58,14 @@ class App17(Plugin):
             return
 
         url = _rtmp_re.search(res.text).group(1)
-        if '.flv' in url:
-            yield "live", HTTPStream(self.session, url)
-        else:
+        if 'rtmp:' in url:
             stream = RTMPStream(self.session, {
                     "rtmp": url,
                     "live": True
                     })
             yield "live", stream
+        else:
+            yield "live", HTTPStream(self.session, url)
 
         prefix = url.replace("rtmp:", "http:").replace(".flv", ".m3u8")
         if '.m3u8' not in prefix:
