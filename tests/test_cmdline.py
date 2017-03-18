@@ -116,12 +116,12 @@ class TestCommandLineInvocation(unittest.TestCase):
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_space_path_player_win32(self):
-        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe", "http://test.se&title=Test \"Title\"", "test"],
                         "c:\\Program Files\\VideoLAN\\VLC\\vlc.exe -")
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_space_quote_path_player_win32(self):
-        self._test_args(["streamlink", "-p", "\"c:\\Program Files\\VideoLAN\VLC\\vlc.exe\"", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "\"c:\\Program Files\\VideoLAN\VLC\\vlc.exe\"", "http://test.se&title=Test \"Title\"", "test"],
                         "\"c:\\Program Files\\VideoLAN\\VLC\\vlc.exe\" -")
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
