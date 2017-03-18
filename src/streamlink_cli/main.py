@@ -827,14 +827,6 @@ def setup_plugin_options():
         streamlink.set_plugin_option("crunchyroll", "locale",
                                      args.crunchyroll_locale)
 
-    if args.livestation_email:
-        streamlink.set_plugin_option("livestation", "email",
-                                     args.livestation_email)
-
-    if args.livestation_password:
-        streamlink.set_plugin_option("livestation", "password",
-                                     args.livestation_password)
-
     if args.btv_username:
         streamlink.set_plugin_option("btv", "username", args.btv_username)
 
