@@ -12,7 +12,9 @@ except ImportError:  # pragma: no cover
 
     PYCOUNTRY = True
 
-DEFAULT_LANGUAGE_CODE = "en_US"
+DEFAULT_LANGUAGE = "en"
+DEFAULT_COUNTRY = "US"
+DEFAULT_LANGUAGE_CODE = "{0}_{1}".format(DEFAULT_LANGUAGE, DEFAULT_COUNTRY)
 
 
 class Country(object):
@@ -116,8 +118,15 @@ class Localization(object):
     def language_code(self):
         return self._language_code
 
+    def _parse_locale_code(self, language_code):
+        parts = language_code.split("_", 1)
+        if len(parts) != 2 or len(parts[0]) != 2 or len(parts[1]) != 2:
+                raise LookupError("Invalid language code: {0}".format(language_code))
+        return self.get_language(parts[0]), self.get_country(parts[1])
+
     @language_code.setter
     def language_code(self, language_code):
+        is_system_locale = language_code is None
         if language_code is None:
             try:
                 language_code, _ = locale.getdefaultlocale()
@@ -125,16 +134,19 @@ class Localization(object):
                 language_code = None
             if language_code is None or language_code == "C":
                 # cannot be determined
-                language_code = DEFAULT_LANGUAGE_CODE
+                language_code = DEFAULT_LANGUAGE
 
-        parts = language_code.split("_", 1)
-
-        if len(parts) != 2 or len(parts[0]) != 2 or len(parts[1]) != 2:
-            raise LookupError("Invalid language code: {0}".format(language_code))
-
-        self._language_code = language_code
-        self.language = self.get_language(parts[0])
-        self.country = self.get_country(parts[1])
+        try:
+            self.language, self.country = self._parse_locale_code(language_code)
+            self._language_code = language_code
+        except LookupError:
+            if is_system_locale:
+                # If the system locale returns an invalid code, use the default
+                self.language = self.get_language(DEFAULT_LANGUAGE)
+                self.country = self.get_country(DEFAULT_COUNTRY)
+                self._language_code = DEFAULT_LANGUAGE_CODE
+            else:
+                raise
 
     def equivalent(self, language=None, country=None):
         equivalent = True
