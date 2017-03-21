@@ -1,13 +1,6 @@
 from __future__ import print_function
-
-import json
 import re
 from random import randint
-
-import itertools
-
-import time
-
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
@@ -18,7 +11,7 @@ from streamlink.stream import HTTPStream
 
 
 class UHSClient(object):
-    WS_URL = "http://r{0}-1-{1}-{2}-{3}.ums.ustream.tv"
+    API_URL = "https://r{0}-1-{1}-{2}-{3}.ums.ustream.tv"
     APP_ID, APP_VERSION = 2, 1
     api_schama = validate.Schema([{
         "args": [object],
@@ -29,7 +22,6 @@ class UHSClient(object):
         "cmd": "tracking"
     }], validate.length(1), validate.get(0), validate.get("args"), validate.get(0))
     module_info_schema = validate.Schema(
-        validate.get("args"),
         [validate.get("stream")],
         validate.filter(lambda r: r is not None)
     )
@@ -40,7 +32,7 @@ class UHSClient(object):
         self.logger = session.logger.new_module("plugin.ustream.apiclient")
         self.media_id = media_id
         self.application = application
-        self.url = options.pop("url", None)
+        self.referrer = options.pop("referrer", None)
         self._host = None
         self.rsid = self.generate_rsid()
         self.rpin = self.generate_rpin()
@@ -50,12 +42,11 @@ class UHSClient(object):
         self._cluster = options.pop("cluster", "live")
 
     def connect(self, **options):
-        options.pop("url", None)
         result = self.send_command(type="viewer", appId=self._app_id,
                                    appVersion=self._app_version,
                                    rsid=self.rsid,
                                    rpin=self.rpin,
-                                   referrer=self.url or "unknown",
+                                   referrer=self.referrer,
                                    media=str(self.media_id),
                                    application=self.application,
                                    schema=self.connect_schama)
@@ -72,15 +63,16 @@ class UHSClient(object):
         return "{0:x}:{1:x}".format(randint(0, 1e10), randint(0, 1e10))
 
     def generate_rpin(self):
-        return "_rpin.{0:x}".format(randint(0, 1e15))
+        return "_rpin.{0}".format(randint(0, 1e15))
 
     def send_command(self, schema=None, **args):
-        res = http.get(self.host, params=args)
+        res = http.get(self.host, params=args, headers={"Referer": self.referrer})
         return http.json(res, schema=schema or self.api_schama)
 
     @property
     def host(self):
-        host = self._host or self.WS_URL.format(randint(0, 0xffffff), self.media_id, self.application, self._cluster)
+        host = self._host or self.API_URL.format(randint(0, 0xffffff), self.media_id, self.application,
+                                                 "lps-" + self._cluster)
         return urljoin(host, "/1/ustream")
 
 
@@ -91,7 +83,7 @@ class UStream(Plugin):
             (/embed/|/channel/id/)(?P<channel_id>\d+)
         )?
         (?:
-            /recorded/(?P<video_id>\d+)
+            (/embed)?/recorded/(?P<video_id>\d+)
         )?
     """, re.VERBOSE)
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
@@ -100,23 +92,55 @@ class UStream(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
-    def _api_get_streams(self, media_id, application, cluster="live", retries=3):
+    def _api_get_streams(self, media_id, application, cluster="live", referrer=None, retries=3):
         if retries > 0:
-            app_id = 11 if application == "channel" else 2
-            app_ver = 2 if application == "channel" else 3
-            self.api = UHSClient(self.session, media_id, application, url=self.url, cluster=cluster, app_id=app_id, app_version=app_ver)
+            app_id = 11
+            app_ver = 2
+            referrer = referrer or self.url
+            self.api = UHSClient(self.session, media_id, application, referrer=referrer, cluster=cluster, app_id=app_id,
+                                 app_version=app_ver)
+            self.logger.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}, "
+                              "app_id={4}, app_ver={5}",
+                              media_id, application, referrer, cluster, app_id, app_ver)
             if self.api.connect():
-                for result in self.api.ping():
-                    if result["cmd"] == "moduleInfo":
-                        for stream in UHSClient.module_info_schema.validate(result):
-                            for s in self._parse_module_stream(stream):
-                                yield s
-                    if result["cmd"] == "reject":
-                        for s in self._api_get_streams(media_id,
-                                                       application,
-                                                       cluster=result["args"][0]["cluster"]["name"],
-                                                       retries=retries-1):
-                            yield s
+                for i in range(5):  # make at most five requests to get the moduleInfo
+                    for result in self.api.ping():
+                        if result["cmd"] == "moduleInfo":
+                            return self.handle_module_info(result["args"], media_id, application, cluster, referrer,
+                                                           retries)
+                        elif result["cmd"] == "reject":
+                            return self.handle_reject(result["args"], media_id, application, cluster, referrer, retries)
+                        else:
+                            self.logger.debug("Unknown command: {0}", result["cmd"])
+        return []
+
+    def handle_module_info(self, args, media_id, application, cluster="live", referrer=None, retries=3):
+        for streams in UHSClient.module_info_schema.validate(args):
+            if isinstance(streams, list):
+                for stream in streams:
+                    for s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
+                        yield s
+            elif isinstance(streams, dict):
+                for stream in streams.get("streams", []):
+                    name = "{0}k".format(stream["bitrate"])
+                    for surl in stream["streamName"]:
+                        yield name, HTTPStream(self.session, surl)
+            elif streams == "offline":
+                self.logger.warning("This stream is currently offline")
+
+    def handle_reject(self, args, media_id, application, cluster="live", referrer=None, retries=3):
+        for arg in args:
+            if "cluster" in arg:
+                self.logger.debug("Switching cluster to {0}", arg["cluster"]["name"])
+                cluster = arg["cluster"]["name"]
+            if "referrerLock" in arg:
+                referrer = arg["referrerLock"]["redirectUrl"]
+
+        return self._api_get_streams(media_id,
+                                     application,
+                                     cluster=cluster,
+                                     referrer=referrer,
+                                     retries=retries - 1)
 
     def _get_streams(self):
         # establish a mobile non-websockets api connection
@@ -145,19 +169,6 @@ class UStream(Plugin):
         res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
         m = self.media_id_re.search(res.text)
         return m and m.group(1)
-
-    def _parse_module_stream(self, streams):
-        if isinstance(streams, list):
-            for stream in streams:
-                for s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
-                    yield s
-        elif isinstance(streams, dict):
-            for stream in streams.get("streams", []):
-                name = "{0}k".format(stream["bitrate"])
-                for surl in stream["streamName"]:
-                    yield name, HTTPStream(self.session, surl)
-        elif streams == "offline":
-            self.logger.warning("This stream is currently offline")
 
 
 __plugin__ = UStream
