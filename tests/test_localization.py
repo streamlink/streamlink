@@ -63,6 +63,13 @@ class LocalizationTestsMixin(object):
         self.assertEqual("en_US", l.language_code)
         self.assertTrue(l.equivalent(language="en", country="US"))
 
+    @patch("locale.getdefaultlocale")
+    def test_default_invalid(self, getdefaultlocale):
+        getdefaultlocale.return_value = ("en_150", None)
+        l = l10n.Localization()
+        self.assertEqual("en_US", l.language_code)
+        self.assertTrue(l.equivalent(language="en", country="US"))
+
     def test_get_country(self):
         self.assertEqual("US",
                          l10n.Localization.get_country("USA").alpha2)
