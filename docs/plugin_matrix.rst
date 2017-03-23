@@ -76,7 +76,8 @@ dogus               - startv.com.tr      Yes   No
                     - ntv.com.tr
                     - eurostartv.com.tr
 dommune             dommune.com          Yes   --
-douyutv             douyutv.com          Yes   --
+douyutv             - douyu.com          Yes   Yes
+                    - v.douyu.com
 dplay               - dplay.se           --    Yes   Streams may be geo-restricted.
                                                      Only non-premium streams currently supported.
                     - dplay.no
