@@ -1,5 +1,6 @@
 import operator
 import re
+from collections import OrderedDict
 
 from functools import partial
 
@@ -254,7 +255,7 @@ class Plugin(object):
                                 key=partial(stream_type_priority,
                                             stream_types))
 
-        streams = {}
+        streams = OrderedDict()
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
@@ -307,13 +308,18 @@ class Plugin(object):
         elif callable(sorting_excludes):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
+        final_sorted_streams = OrderedDict()
+        
+        for stream_name in sorted(streams, key=stream_weight_only):
+            final_sorted_streams[stream_name] = streams[stream_name]
+        
         if len(sorted_streams) > 0:
             best = sorted_streams[-1]
             worst = sorted_streams[0]
-            streams["best"] = streams[best]
-            streams["worst"] = streams[worst]
-
-        return streams
+            final_sorted_streams["worst"] = streams[worst]
+            final_sorted_streams["best"] = streams[best]
+        
+        return final_sorted_streams
 
     def get_streams(self, *args, **kwargs):
         """Deprecated since version 1.9.0.
