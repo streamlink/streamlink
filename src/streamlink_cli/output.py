@@ -101,7 +101,7 @@ class PlayerOutput(Output):
 
     def _create_arguments(self):
         if self.namedpipe:
-            filename = self.namedpipe.path
+            filename = "stream://\\\\\\.\\pipe\\" + self.namedpipe.name
         elif self.filename:
             filename = self.filename
         elif self.http:

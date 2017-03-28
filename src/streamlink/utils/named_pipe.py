@@ -19,6 +19,7 @@ class NamedPipe(object):
     def __init__(self, name):
         self.fifo = None
         self.pipe = None
+        self.name = name
 
         if is_win32:
             self.path = os.path.join("\\\\.\\pipe", name)
