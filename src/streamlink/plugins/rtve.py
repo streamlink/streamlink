@@ -122,7 +122,7 @@ class Rtve(Plugin):
         data = http.json(res, schema=self.video_schema)
         qmap = {}
         for item in data["qualities"]:
-            qname = {"MED": "Media", "HIGH": "Alta"}.get(item["preset"], item["preset"])
+            qname = {"MED": "Media", "HIGH": "Alta", "ORIGINAL": "Original"}.get(item["preset"], item["preset"])
             qmap[qname] = u"{0}p".format(item["height"])
         return qmap
 
@@ -137,8 +137,12 @@ class Rtve(Plugin):
             for stream in stream_data:
                 for url in stream["urls"]:
                     if url.endswith("m3u8"):
-                        streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
-                    elif url.endswith("mp4"):
+                        try:
+                            streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
+                        except OSError:
+                            self.logger.debug("Failed to load m3u8 url: {0}", url)
+                    elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi")) and
+                            http.head(url, raise_for_status=False).status_code == 200):
                         if quality_map is None:  # only make the request when it is necessary
                             quality_map = self._get_quality_map(content_id)
                         # rename the HTTP sources to match the HLS sources
