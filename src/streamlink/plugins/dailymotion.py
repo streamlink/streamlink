@@ -32,9 +32,14 @@ _rtmp_re = re.compile(r"""
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?
     dailymotion.com
-    (/embed)?/(video|live)
-    /(?P<media_id>[^_?/]+)
+    (?:
+        (/embed)?/(video|live)
+        /(?P<media_id>[^_?/]+)
+    |
+        /(?P<channel_name>[A-Za-z0-9-_]+)
+    )
 """, re.VERBOSE)
+featured_re = re.compile(r"""user_feature_video_id"\s*:\s*(\d+)""")
 
 _media_inner_schema = validate.Schema([{
     "layerList": [{
@@ -194,8 +199,15 @@ class DailyMotion(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         media_id = match.group("media_id")
+        if not media_id and match.group("channel_name"):
+            self.logger.debug("Channel page, attempting to play featured video")
+            res = http.get(self.url)
+            media_id_m = featured_re.search(res.text)
+            media_id = media_id_m and media_id_m.group(1)
 
-        return self._get_streams_from_media(media_id)
+        if media_id:
+            self.logger.debug("Found media ID: {0}", media_id)
+            return self._get_streams_from_media(media_id)
 
 
 __plugin__ = DailyMotion
