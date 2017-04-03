@@ -1,6 +1,7 @@
-from __future__ import print_function
 import re
 from random import randint
+from threading import Thread, Event
+
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
@@ -8,10 +9,11 @@ from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
+from streamlink.stream.hls import HLSStreamReader
 
 
 class UHSClient(object):
-    API_URL = "https://r{0}-1-{1}-{2}-{3}.ums.ustream.tv"
+    API_URL = "http://r{0}-1-{1}-{2}-{3}.ums.ustream.tv"
     APP_ID, APP_VERSION = 2, 1
     api_schama = validate.Schema([{
         "args": [object],
@@ -56,7 +58,7 @@ class UHSClient(object):
         self.logger.debug("Got new host={0}, and connectionId={1}", self._host, self._connection_id)
         return True
 
-    def ping(self, schema=None):
+    def poll(self, schema=None):
         return self.send_command(connectionId=self._connection_id, schema=schema)
 
     def generate_rsid(self):
@@ -66,14 +68,46 @@ class UHSClient(object):
         return "_rpin.{0}".format(randint(0, 1e15))
 
     def send_command(self, schema=None, **args):
-        res = http.get(self.host, params=args, headers={"Referer": self.referrer})
+        res = http.get(self.host,
+                       params=args,
+                       headers={"Referer": self.referrer,
+                                "User-Agent": useragents.IPHONE_6},
+                       retries=5,
+                       timeout=5.0)
         return http.json(res, schema=schema or self.api_schama)
 
     @property
     def host(self):
         host = self._host or self.API_URL.format(randint(0, 0xffffff), self.media_id, self.application,
-                                                 "lps-" + self._cluster)
+                                                 "lp-" + self._cluster)
         return urljoin(host, "/1/ustream")
+
+
+class UStreamHLSStream(HLSStream):
+    class APIPoller(Thread):
+        def __init__(self, api, interval=10.0):
+            Thread.__init__(self)
+            self.stopped = Event()
+            self.api = api
+            self.interval = interval
+
+        def stop(self):
+            self.stopped.set()
+
+        def run(self):
+            while not self.stopped.wait(self.interval):
+                self.api.poll()
+
+    def __init__(self, session_, url, api, force_restart=False, **args):
+        super(UStreamHLSStream, self).__init__(session_, url, force_restart, **args)
+        self.poller = self.APIPoller(api)
+        self.poller.setDaemon(True)
+        self.poller.start()
+
+    def open(self):
+        reader = HLSStreamReader(self)
+        reader.open()
+        return reader
 
 
 class UStream(Plugin):
@@ -104,7 +138,7 @@ class UStream(Plugin):
                               media_id, application, referrer, cluster, app_id, app_ver)
             if self.api.connect():
                 for i in range(5):  # make at most five requests to get the moduleInfo
-                    for result in self.api.ping():
+                    for result in self.api.poll():
                         if result["cmd"] == "moduleInfo":
                             return self.handle_module_info(result["args"], media_id, application, cluster, referrer,
                                                            retries)
@@ -118,8 +152,8 @@ class UStream(Plugin):
         for streams in UHSClient.module_info_schema.validate(args):
             if isinstance(streams, list):
                 for stream in streams:
-                    for s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
-                        yield s
+                    for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
+                        yield q, UStreamHLSStream(self.session, s.url, self.api)
             elif isinstance(streams, dict):
                 for stream in streams.get("streams", []):
                     name = "{0}k".format(stream["bitrate"])
