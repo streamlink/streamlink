@@ -3,7 +3,7 @@ from random import randint
 from threading import Thread, Event
 
 from streamlink.compat import urljoin
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -46,6 +46,7 @@ class UHSClient(object):
         self._app_id = options.pop("app_id", self.APP_ID)
         self._app_version = options.pop("app_version", self.APP_VERSION)
         self._cluster = options.pop("cluster", "live")
+        self._password = options.pop("password")
 
     def connect(self, **options):
         result = self.send_command(type="viewer", appId=self._app_id,
@@ -55,7 +56,8 @@ class UHSClient(object):
                                    referrer=self.referrer,
                                    media=str(self.media_id),
                                    application=self.application,
-                                   schema=self.connect_schama)
+                                   schema=self.connect_schama,
+                                   password=self._password)
 
         self._host = "http://{0}".format(result["host"])
         self._connection_id = result["connectionId"]
@@ -128,6 +130,9 @@ class UStreamTV(Plugin):
         )?
     """, re.VERBOSE)
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
+    options = PluginOptions({
+        "password": None
+    })
 
     @classmethod
     def can_handle_url(cls, url):
@@ -139,7 +144,7 @@ class UStreamTV(Plugin):
             app_ver = 2
             referrer = referrer or self.url
             self.api = UHSClient(self.session, media_id, application, referrer=referrer, cluster=cluster, app_id=app_id,
-                                 app_version=app_ver)
+                                 app_version=app_ver, password=self.get_option("password"))
             self.logger.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}, "
                               "app_id={4}, app_ver={5}",
                               media_id, application, referrer, cluster, app_id, app_ver)

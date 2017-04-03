@@ -186,7 +186,7 @@ tvrby               tvr.by               Yes   No    Streams may be geo-restrict
 tvrplus             tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
-ustreamtv           ustream.tv           Yes   Yes   Currently broken.
+ustreamtv           ustream.tv           Yes   Yes
 vaughnlive          - vaughnlive.tv      Yes   --
                     - breakers.tv
                     - instagib.tv
