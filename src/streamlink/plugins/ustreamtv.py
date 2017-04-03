@@ -110,7 +110,7 @@ class UStreamHLSStream(HLSStream):
         return reader
 
 
-class UStream(Plugin):
+class UStreamTV(Plugin):
     url_re = re.compile(r"""
     https?://(www\.)?ustream\.tv
         (?:
@@ -205,4 +205,4 @@ class UStream(Plugin):
         return m and m.group(1)
 
 
-__plugin__ = UStream
+__plugin__ = UStreamTV
