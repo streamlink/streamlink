@@ -902,6 +902,17 @@ def setup_plugin_options():
     if args.npo_subtitles:
         streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
 
+    if args.liveedu_email:
+        streamlink.set_plugin_option("liveedu", "email", args.liveedu_email)
+
+    if args.liveedu_email and not args.liveedu_password:
+        liveedu_password = console.askpass("Enter LiveEdu.tv password: ")
+    else:
+        liveedu_password = args.liveedu_password
+
+    if liveedu_password:
+        streamlink.set_plugin_option("liveedu", "password", liveedu_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
