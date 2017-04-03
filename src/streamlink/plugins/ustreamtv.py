@@ -13,6 +13,10 @@ from streamlink.stream.hls import HLSStreamReader
 
 
 class UHSClient(object):
+    """
+    API Client, reverse engineered by observing the interactions
+    between the web browser and the ustream servers.
+    """
     API_URL = "http://r{0}-1-{1}-{2}-{3}.ums.ustream.tv"
     APP_ID, APP_VERSION = 2, 1
     api_schama = validate.Schema([{
@@ -85,6 +89,9 @@ class UHSClient(object):
 
 class UStreamHLSStream(HLSStream):
     class APIPoller(Thread):
+        """
+        Poll the UStream API so that stream URLs stay valid, otherwise they expire after 30 seconds.
+        """
         def __init__(self, api, interval=10.0):
             Thread.__init__(self)
             self.stopped = Event()
