@@ -35,6 +35,7 @@ bigo                - live.bigo.tv       Yes   --
                     - bigoweb.co
 bilibili            live.bilibili.com    Yes   ?
 bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
+brightcove          players.brig... [6]_ Yes   Yes
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 camsoda             camsoda.com          Yes   No
 canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
@@ -227,3 +228,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [3] original.livestream.com
 .. [4] streaming.media.ccc.de
 .. [5] mediathek.daserste.de
+.. [6] players.brightcove.net

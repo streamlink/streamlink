@@ -1,11 +1,10 @@
 import re
 
 from streamlink import PluginError
-from streamlink.plugin.api import http, validate
-from streamlink.plugin.api import useragents
-from streamlink.stream import HLSStream
-from streamlink.stream import HTTPStream
-from streamlink.stream import RTMPStream
+from streamlink.plugin import Plugin
+from streamlink.plugin.api import http, validate, useragents
+from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.utils import urlparse, parse_qsl
 
 
 class BrightcovePlayer(object):
@@ -85,3 +84,26 @@ class BrightcovePlayer(object):
             elif source.get("src") and source.get("src").endswith(".mp4"):
                 yield q, HTTPStream(self.session, source.get("src"))
 
+    @classmethod
+    def from_url(cls, session, url):
+        purl = urlparse(url)
+        querys = dict(parse_qsl(purl.query))
+
+        account_id, player_id, _ = purl.path.lstrip("/").split("/", 3)
+        video_id = querys.get("videoId")
+
+        bp = cls(session, account_id=account_id, player_id=player_id)
+        return bp.get_streams(video_id)
+
+
+class Brightcove(Plugin):
+    url_re = re.compile(r"https?://players.brightcove.net/.*?/.*?/index.html")
+
+    @classmethod
+    def can_handle_url(cls, url):
+        cls.url_re.match(url) is not None
+
+    def _get_streams(self):
+        return BrightcovePlayer.from_url(self.url)
+
+__plugin__ = Brightcove
