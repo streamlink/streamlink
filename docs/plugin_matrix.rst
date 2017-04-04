@@ -96,6 +96,8 @@ furstream           furstre.am           Yes   No
 garena              garena.live          Yes   --
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
+googledrive         - docs.google.com    --    Yes
+                    - drive.google.com
 gulli               replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
 hitbox              hitbox.tv            Yes   Yes
 huajiao             huajiao.com          Yes   No    
