@@ -109,7 +109,8 @@ huya                huya.com             Yes   No    Temporarily only HLS stream
 ine                 ine.com              ---   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 kanal7              kanal7.com           Yes   No
-livecoding          livecoding.tv        Yes   --
+liveedu             - liveedu.tv         Yes   --    Some streams require a login.
+                    - livecoding.tv
 liveme              liveme.com           Yes   --
 livestream          new.livestream.com   Yes   --
 media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.

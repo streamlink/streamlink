@@ -1190,6 +1190,20 @@ plugin.add_argument(
     Include subtitles for the deaf or hard of hearing, if available
     """
 )
+plugin.add_argument(
+    "--liveedu-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with liveedu.tv.
+    """
+)
+plugin.add_argument(
+    "--liveedu-password",
+    metavar="PASSWORD",
+    help="""
+    A LiveEdu account password to use with --liveedu-email.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
