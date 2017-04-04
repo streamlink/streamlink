@@ -119,6 +119,7 @@ mediaklikk          mediaklikk.hu        Yes   No    Streams may be geo-restrict
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele              mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mlgtv               mlg.tv               Yes   --
+nbc                 nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nhkworld            nhk.or.jp/nhkworld   Yes   No
 nineanime           9anime.to            --    Yes
 nos                 nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
@@ -173,6 +174,7 @@ tf1                 - tf1.fr             Yes   No    Streams may be geo-restrict
 tga                 - star.plu.cn        Yes   No
                     - star.tga.plu.cn
                     - star.longzhu.com
+theplatform         player.thepl... [7]_ No    Yes
 tigerdile           tigerdile.com        Yes   --
 trt                 trt.net.tr           Yes   No    Some streams may be geo-restricted to Turkey.
 trtspor             trtspor.com          Yes   No    Some streams are geo-restricted to Turkey.
@@ -233,3 +235,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [4] streaming.media.ccc.de
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
+.. [7] player.theplatform.com
