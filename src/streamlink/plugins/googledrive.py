@@ -7,7 +7,7 @@ from streamlink.stream import HTTPStream
 
 
 class GoogleDocs(Plugin):
-    url_re = re.compile(r"https://docs.google.com/file/d/([^/]+)/?")
+    url_re = re.compile(r"https?://(?:drive|docs).google.com/file/d/([^/]+)/?")
     api_url = "https://docs.google.com/get_video_info"
 
     @classmethod
