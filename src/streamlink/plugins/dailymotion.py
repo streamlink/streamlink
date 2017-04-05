@@ -1,3 +1,4 @@
+import json
 import re
 
 from functools import reduce
@@ -40,6 +41,7 @@ _url_re = re.compile(r"""
     )
 """, re.VERBOSE)
 featured_re = re.compile(r"""user_feature_video_id"\s*:\s*(\d+)""")
+chromecast_re = re.compile(r'''stream_chromecast_url"\s*:\s*(?P<url>".*?")''')
 
 _media_inner_schema = validate.Schema([{
     "layerList": [{
@@ -196,18 +198,32 @@ class DailyMotion(Plugin):
                     stream = self._create_flv_playlist(failover)
                     yield name, stream
 
+    def _chrome_cast_stream_fallback(self, page=None):
+        self.logger.debug("Trying to find Chromecast URL as a fallback")
+        # get the page if not already available
+        page = page or http.get(self.url, cookies=COOKIES)
+        m = chromecast_re.search(page.text)
+        if m:
+            url = json.loads(m.group("url"))
+            return HLSStream.parse_variant_playlist(self.session, url)
+
     def _get_streams(self):
         match = _url_re.match(self.url)
+        page = None
         media_id = match.group("media_id")
         if not media_id and match.group("channel_name"):
             self.logger.debug("Channel page, attempting to play featured video")
-            res = http.get(self.url)
-            media_id_m = featured_re.search(res.text)
+            page = http.get(self.url, cookies=COOKIES)
+            media_id_m = featured_re.search(page.text)
             media_id = media_id_m and media_id_m.group(1)
 
         if media_id:
             self.logger.debug("Found media ID: {0}", media_id)
-            return self._get_streams_from_media(media_id)
+            streams = list(self._get_streams_from_media(media_id))
+            if streams:
+                return streams
+
+        return self._chrome_cast_stream_fallback(page)
 
 
 __plugin__ = DailyMotion
