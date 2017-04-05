@@ -255,7 +255,7 @@ class Plugin(object):
                                 key=partial(stream_type_priority,
                                             stream_types))
 
-        streams = OrderedDict()
+        streams = {}
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
