@@ -224,6 +224,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
     def fragment_count(self):
         table = self.fragmentruntable.payload.fragment_run_entry_table
         first_fragment, end_fragment = None, None
+        max_end_fragment = 0
 
         for i, fragmentrun in enumerate(table):
             if fragmentrun.discontinuity_indicator is not None:
@@ -239,10 +240,15 @@ class HDSStreamWorker(SegmentedStreamWorker):
             fragment_duration = (fragmentrun.first_fragment_timestamp +
                                  fragmentrun.fragment_duration)
 
+            max_end_fragment = max(fragmentrun.first_fragment, max_end_fragment)
+
             if self.timestamp > fragment_duration:
                 offset = ((self.timestamp - fragment_duration) /
                           fragmentrun.fragment_duration)
                 end_fragment += int(offset)
+
+        # don't go past the last fragment
+        end_fragment = min(max_end_fragment, end_fragment)
 
         if first_fragment is None:
             first_fragment = 1
