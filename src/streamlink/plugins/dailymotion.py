@@ -1,3 +1,4 @@
+import json
 import re
 
 from functools import reduce
@@ -23,6 +24,7 @@ QUALITY_MAP = {
     "source": "hds"
 }
 STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
+USER_INFO_URL = "https://api.dailymotion.com/user/{0}"
 
 _rtmp_re = re.compile(r"""
     (?P<host>rtmp://[^/]+)
@@ -39,7 +41,8 @@ _url_re = re.compile(r"""
         /(?P<channel_name>[A-Za-z0-9-_]+)
     )
 """, re.VERBOSE)
-featured_re = re.compile(r"""user_feature_video_id"\s*:\s*(\d+)""")
+username_re = re.compile(r'''data-username\s*=\s*"(.*?)"''')
+chromecast_re = re.compile(r'''stream_chromecast_url"\s*:\s*(?P<url>".*?")''')
 
 _media_inner_schema = validate.Schema([{
     "layerList": [{
@@ -196,18 +199,45 @@ class DailyMotion(Plugin):
                     stream = self._create_flv_playlist(failover)
                     yield name, stream
 
+    def _chrome_cast_stream_fallback(self):
+        self.logger.debug("Trying to find Chromecast URL as a fallback")
+        # get the page if not already available
+        page = http.get(self.url, cookies=COOKIES)
+        m = chromecast_re.search(page.text)
+        if m:
+            url = json.loads(m.group("url"))
+            return HLSStream.parse_variant_playlist(self.session, url)
+
+    def get_featured_video(self):
+        self.logger.debug("Channel page, attempting to play featured video")
+        page = http.get(self.url, cookies=COOKIES)
+        username_m = username_re.search(page.text)
+        username = username_m and username_m.group(1)
+        if username:
+            self.logger.debug("Found username: {0}", username)
+            res = http.get(USER_INFO_URL.format(username),
+                           params={"fields": "videostar.url"})
+
+            data = http.json(res)
+            if "videostar.url" in data and self.can_handle_url(data["videostar.url"]):
+                return data["videostar.url"]
+
     def _get_streams(self):
         match = _url_re.match(self.url)
         media_id = match.group("media_id")
+
         if not media_id and match.group("channel_name"):
-            self.logger.debug("Channel page, attempting to play featured video")
-            res = http.get(self.url)
-            media_id_m = featured_re.search(res.text)
-            media_id = media_id_m and media_id_m.group(1)
+            self.url = self.get_featured_video()
+            match = _url_re.match(self.url)
+            media_id = match.group("media_id")
 
         if media_id:
             self.logger.debug("Found media ID: {0}", media_id)
-            return self._get_streams_from_media(media_id)
+            streams = list(self._get_streams_from_media(media_id))
+            if streams:
+                return streams
+
+        return self._chrome_cast_stream_fallback()
 
 
 __plugin__ = DailyMotion
