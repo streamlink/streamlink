@@ -28,7 +28,7 @@ class Chaturbate(Plugin):
         match = _url_re.match(self.url)
         username = match.group("username")
 
-        CSRFToken = str(uuid.uuid4().get_hex().upper()[0:32])
+        CSRFToken = str(uuid.uuid4().hex.upper()[0:32])
 
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
