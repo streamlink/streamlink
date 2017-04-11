@@ -249,6 +249,7 @@ def output_stream(stream):
         try:
             stream_fd, prebuffer = open_stream(stream)
             success_open = True
+            break
         except StreamError as err:
             console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
 
