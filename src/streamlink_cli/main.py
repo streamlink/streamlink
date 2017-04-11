@@ -249,7 +249,7 @@ def output_stream(stream):
             stream_fd, prebuffer = open_stream(stream)
             break
         except StreamError as err:
-            console.logger.error("{0}", err)
+            console.exit("Could not open stream {0} ({1})", stream, err)
     else:
         return
 
