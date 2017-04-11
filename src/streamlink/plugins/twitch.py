@@ -247,7 +247,7 @@ class TwitchAPI(object):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
     def clip_status(self, channel, clip_name, schema):
-        return http.json(self.call_subdomain("clips", "/api/v1/clips/" + channel + "/" + clip_name + "/status", format=""), schema=schema)
+        return http.json(self.call_subdomain("clips", "/api/v2/clips/" + clip_name + "/status", format=""), schema=schema)
 
     # Unsupported/Removed private API calls
 
@@ -282,19 +282,36 @@ class Twitch(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-        match = _url_re.match(url).groupdict()
-        self._channel = match.get("channel") and match.get("channel").lower()
-        self._channel_id = None
-        self.subdomain = match.get("subdomain")
-        self.video_type = match.get("video_type")
-        if match.get("videos_id"):
-            self.video_type = "v"
-        self.video_id = match.get("video_id") or match.get("videos_id")
-        self.clip_name = match.get("clip_name")
         self._hosted_chain = []
-
+        match = _url_re.match(url).groupdict()
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)
+        self.subdomain = match.get("subdomain")
+        self.video_id = None
+        self.video_type = None
+        self._channel_id = None
+        self._channel = None
+        self.clip_name = None
+
+        if self.subdomain == "player":
+            # pop-out player
+            if self.params.get("video"):
+                try:
+                    self.video_type = self.params["video"][0]
+                    self.video_id = self.params["video"][1:]
+                except IndexError:
+                    self.logger.debug("Invalid video param: {0}", self.params["video"])
+            self._channel = self.params.get("channel")
+        elif self.subdomain == "clips":
+            # clip share URL
+            self.clip_name = match.get("channel")
+        else:
+            self._channel = match.get("channel") and match.get("channel").lower()
+            self.video_type = match.get("video_type")
+            if match.get("videos_id"):
+                self.video_type = "v"
+            self.video_id = match.get("video_id") or match.get("videos_id")
+            self.clip_name = match.get("clip_name")
 
         self.api = TwitchAPI(beta=self.subdomain == "beta", version=5)
         self.usher = UsherService()
@@ -596,7 +613,7 @@ class Twitch(Plugin):
                 return self._get_video_streams()
         elif self.clip_name:
             return self._get_clips()
-        else:
+        elif self._channel:
             return self._get_hls_streams("live")
 
 
