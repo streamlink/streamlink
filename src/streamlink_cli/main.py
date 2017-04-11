@@ -314,9 +314,9 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                 break
     except IOError as err:
         console.exit("Error when reading from stream: {0}, exiting", err)
-
-    stream.close()
-    console.logger.info("Stream ended")
+    finally:
+        stream.close()
+        console.logger.info("Stream ended")
 
 
 def handle_stream(plugin, streams, stream_name):
