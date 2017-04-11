@@ -250,7 +250,7 @@ def output_stream(stream):
             stream_fd, prebuffer = open_stream(stream)
             success_open = True
         except StreamError as err:
-            console.log.error("Try {0}/{1}: Could not open stream {2} ({3})", i, args.retry_open, stream, err)
+            console.log.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
 
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
