@@ -18,7 +18,10 @@ class BrightcovePlayer(object):
             validate.optional("height"): validate.any(int, None),
             validate.optional("avg_bitrate"): validate.any(int, None),
             validate.optional("src"): validate.url(),
-            validate.optional("app_name"): validate.url(scheme="rtmp"),
+            validate.optional("app_name"): validate.any(
+                validate.url(scheme="rtmp"),
+                validate.url(scheme="rtmpe")
+            ),
             validate.optional("stream_name"): validate.text,
             validate.optional("type"): validate.text
         }]
