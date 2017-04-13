@@ -73,7 +73,7 @@ class BrightcovePlayer(object):
                 q = "live"
 
             if ((source.get("type") == "application/x-mpegURL" and source.get("src")) or
-                    (source.get("src") and source.get("src").endswith(".m3u8"))):
+                    (source.get("src") and ".m3u8" in source.get("src"))):
                 for s in HLSStream.parse_variant_playlist(self.session, source.get("src")).items():
                     yield s
             elif source.get("app_name"):
