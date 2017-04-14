@@ -23,6 +23,7 @@ class CanalPlus(Plugin):
     _video_id_re = re.compile(r'\bdata-video="(?P<video_id>[0-9]+)"')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+k)\.mp4')
     _api_schema = validate.Schema({
+        'TYPE': validate.text,
         'MEDIA': validate.Schema({
             'VIDEOS': validate.Schema({
                 validate.text: validate.any(
@@ -73,7 +74,8 @@ class CanalPlus(Plugin):
             parsed.append(video_url)
 
             try:
-                if '.f4m' in video_url:
+                # HDS streams don't seem to work for live videos
+                if '.f4m' in video_url and videos['TYPE'] != 'CHAINE LIVE':
                     for stream in HDSStream.parse_manifest(self.session,
                                                            video_url,
                                                            params={'hdcore': self.HDCORE_VERSION},
