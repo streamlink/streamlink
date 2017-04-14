@@ -31,6 +31,8 @@ bambuser            bambuser.com         Yes   Yes
 bbciplayer          bbc.co.uk/iplayer    Yes   Yes   Streams may be geo-restricted to the United Kingdom.
 beam                beam.pro             Yes   Yes
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
+bfmtv               bfmtv.com            Yes   Yes
+                    01net.com
 bigo                - live.bigo.tv       Yes   --
                     - bigoweb.co
 bilibili            live.bilibili.com    Yes   ?
