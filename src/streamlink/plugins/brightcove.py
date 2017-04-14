@@ -18,7 +18,10 @@ class BrightcovePlayer(object):
             validate.optional("height"): validate.any(int, None),
             validate.optional("avg_bitrate"): validate.any(int, None),
             validate.optional("src"): validate.url(),
-            validate.optional("app_name"): validate.url(scheme="rtmp"),
+            validate.optional("app_name"): validate.any(
+                validate.url(scheme="rtmp"),
+                validate.url(scheme="rtmpe")
+            ),
             validate.optional("stream_name"): validate.text,
             validate.optional("type"): validate.text
         }]
@@ -73,7 +76,7 @@ class BrightcovePlayer(object):
                 q = "live"
 
             if ((source.get("type") == "application/x-mpegURL" and source.get("src")) or
-                    (source.get("src") and source.get("src").endswith(".m3u8"))):
+                    (source.get("src") and ".m3u8" in source.get("src"))):
                 for s in HLSStream.parse_variant_playlist(self.session, source.get("src")).items():
                     yield s
             elif source.get("app_name"):
