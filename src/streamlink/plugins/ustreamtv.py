@@ -2,6 +2,8 @@ import re
 from random import randint
 from threading import Thread, Event
 
+import time
+
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
@@ -10,6 +12,10 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
 from streamlink.stream.hls import HLSStreamReader
+
+
+class ModuleInfoNoStreams(Exception):
+    pass
 
 
 class UHSClient(object):
@@ -150,18 +156,31 @@ class UStreamTV(Plugin):
                               media_id, application, referrer, cluster, app_id, app_ver)
             if self.api.connect():
                 for i in range(5):  # make at most five requests to get the moduleInfo
-                    for result in self.api.poll():
-                        if result["cmd"] == "moduleInfo":
-                            return self.handle_module_info(result["args"], media_id, application, cluster, referrer,
-                                                           retries)
-                        elif result["cmd"] == "reject":
-                            return self.handle_reject(result["args"], media_id, application, cluster, referrer, retries)
-                        else:
-                            self.logger.debug("Unknown command: {0}", result["cmd"])
-        return []
+                    try:
+                        for s in self._do_poll(media_id, application, cluster, referrer, retries):
+                            yield s
+                    except ModuleInfoNoStreams:
+                        self.logger.debug("Retrying moduleInfo request")
+                        time.sleep(1)
+                    else:
+                        break
+
+    def _do_poll(self, media_id, application, cluster="live", referrer=None, retries=3):
+        for result in self.api.poll():
+            if result["cmd"] == "moduleInfo":
+                for s in self.handle_module_info(result["args"], media_id, application, cluster,
+                                                 referrer, retries):
+                    yield s
+            elif result["cmd"] == "reject":
+                for s in self.handle_reject(result["args"], media_id, application, cluster, referrer, retries):
+                    yield s
+            else:
+                self.logger.debug("Unknown command: {0}({1})", result["cmd"], result["args"])
 
     def handle_module_info(self, args, media_id, application, cluster="live", referrer=None, retries=3):
+        has_results = False
         for streams in UHSClient.module_info_schema.validate(args):
+            has_results = True
             if isinstance(streams, list):
                 for stream in streams:
                     for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
@@ -173,6 +192,9 @@ class UStreamTV(Plugin):
                         yield name, HTTPStream(self.session, surl)
             elif streams == "offline":
                 self.logger.warning("This stream is currently offline")
+
+        if not has_results:
+            raise ModuleInfoNoStreams
 
     def handle_reject(self, args, media_id, application, cluster="live", referrer=None, retries=3):
         for arg in args:
