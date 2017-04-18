@@ -11,5 +11,6 @@ class TestPluginTelefe(unittest.TestCase):
         self.assertTrue(Telefe.can_handle_url("http://telefe.com/dulce-amor/capitulos/capitulo-01/"))
 
         # shouldn't match
-        self.assertFalse(Telefe.can_handle_url("http://local.local/"))
-        self.assertFalse(Telefe.can_handle_url("http://localhost.localhost/"))
+        self.assertFalse(Telefe.can_handle_url("http://telefe.com/"))
+        self.assertFalse(Telefe.can_handle_url("http://www.telefeinternacional.com.ar/"))
+        self.assertFalse(Telefe.can_handle_url("http://marketing.telefe.com/"))
