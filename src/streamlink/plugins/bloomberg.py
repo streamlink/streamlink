@@ -11,18 +11,19 @@ class Bloomberg(Plugin):
     VOD_API_URL = 'https://www.bloomberg.com/api/embed?id={0}'
     PLAYER_URL = 'https://cdn.gotraffic.net/projector/latest/bplayer.js'
     CHANNEL_MAP = {
-        'europe': 'EU',
-        'us': 'US',
-        'asia': 'ASIA',
-        'stream': 'EVENT',
-        'emea': 'EMEA_EVENT',
-        'asia_stream': 'ASIA_EVENT'
+        'audio': 'BBG_RADIO',
+        'live/europe': 'EU',
+        'live/us': 'US',
+        'live/asia': 'ASIA',
+        'live/stream': 'EVENT',
+        'live/emea': 'EMEA_EVENT',
+        'live/asia_stream': 'ASIA_EVENT'
     }
 
     _url_re = re.compile(r'''
         https?://www\.bloomberg\.com/(
             news/videos/[^/]+/[^/]+ |
-            live/(?P<channel>stream|emea|asia_stream|europe|us|asia)/?
+            (?P<channel>live/(?:stream|emea|asia_stream|europe|us|asia)|audio)/?
         )
 ''', re.VERBOSE)
     _live_player_re = re.compile(r'APP_BUNDLE:"(?P<live_player_url>.+?/app.js)"')
@@ -117,12 +118,12 @@ class Bloomberg(Plugin):
         return streams
 
     def _get_streams(self):
-        if '/live/' in self.url:
-            # Live
-            streams = self._get_live_streams()
-        else:
+        if '/news/videos/' in self.url:
             # VOD
             streams = self._get_vod_streams()
+        else:
+            # Live
+            streams = self._get_live_streams()
 
         for video_url in streams:
             if '.f4m' in video_url:
