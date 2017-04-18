@@ -467,6 +467,15 @@ output.add_argument(
 
 stream = parser.add_argument_group("Stream options")
 stream.add_argument(
+    "--url",
+    dest="url_param",
+    metavar="URL",
+    help="""
+    Alternative parameter to specify a URL to attempt to
+    extract streams from.
+    """
+)
+stream.add_argument(
     "--default-stream",
     type=comma_list,
     metavar="STREAM",
