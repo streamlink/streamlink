@@ -36,6 +36,7 @@ bfmtv               bfmtv.com            Yes   Yes
 bigo                - live.bigo.tv       Yes   --
                     - bigoweb.co
 bilibili            live.bilibili.com    Yes   ?
+bloomberg           bloomberg.com        Yes   Yes
 bongacams           bongacams.com        Yes   No    Only RTMP streams are available.
 brightcove          players.brig... [6]_ Yes   Yes
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
