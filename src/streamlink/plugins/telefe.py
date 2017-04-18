@@ -15,35 +15,35 @@ class Telefe(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url, headers={'User-Agent': useragents.CHROME})
-        busqueda_video = res.text
-        busqueda_video = busqueda_video[busqueda_video.index('{"top":{"view":"PlayerContainer","model":{'):]
-        busqueda_video = busqueda_video[: busqueda_video.index('}]}}') +4] + "}"
+        video_search = res.text
+        video_search = video_search[video_search.index('{"top":{"view":"PlayerContainer","model":{'):]
+        video_search = video_search[: video_search.index('}]}}') +4] + "}"
         
-        url_video_encontrado_hls  = ""
-        url_video_encontrado_http = ""
+        video_url_found_hls  = ""
+        video_url_found_http = ""
 
-        json_busqueda_video = parse_json(busqueda_video)
-        json_busqueda_video_sources = json_busqueda_video["top"]["model"]["videos"][0]["sources"]
-        self.logger.debug('ID encontrado: {0}', json_busqueda_video["top"]["model"]["id"])
-        for video_source_actual in json_busqueda_video_sources:
-            if "HLS" in video_source_actual["type"]:
-                url_video_encontrado_hls = "http://telefe.com" + video_source_actual["url"]
-                self.logger.debug("Contenido HLS disponible")
-            if "HTTP" in video_source_actual["type"]:
-                url_video_encontrado_http = "http://telefe.com" + video_source_actual["url"]
-                self.logger.debug("Contenido HTTP disponible")
+        json_video_search = parse_json(video_search)
+        json_video_search_sources = json_video_search["top"]["model"]["videos"][0]["sources"]
+        self.logger.debug('Video ID found: {0}', json_video_search["top"]["model"]["id"])
+        for current_video_source in json_video_search_sources:
+            if "HLS" in current_video_source["type"]:
+                video_url_found_hls = "http://telefe.com" + current_video_source["url"]
+                self.logger.debug("HLS content available")
+            if "HTTP" in current_video_source["type"]:
+                video_url_found_http = "http://telefe.com" + current_video_source["url"]
+                self.logger.debug("HTTP content available")
         
         http.headers = {'Referer': self.url,
             'User-Agent': useragents.CHROME,
             'X-Requested-With': 'ShockwaveFlash/25.0.0.148'}
             
-        if url_video_encontrado_hls:
-            hls_streams = HLSStream.parse_variant_playlist(self.session, url_video_encontrado_hls)
+        if video_url_found_hls:
+            hls_streams = HLSStream.parse_variant_playlist(self.session, video_url_found_hls)
             for s in hls_streams.items():
                 yield s  
 
-        if url_video_encontrado_http:
-            yield "http", HTTPStream(self.session, url_video_encontrado_http)   
+        if video_url_found_http:
+            yield "http", HTTPStream(self.session, video_url_found_http)   
                
 
 
