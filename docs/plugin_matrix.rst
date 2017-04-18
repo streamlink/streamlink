@@ -99,6 +99,7 @@ foxtr               fox.com.tr           Yes   No
 funimationnow       - funimation.com     --    Yes
                     - funimationnow.uk
 furstream           furstre.am           Yes   No
+gardenersworld      gardenersworld.com   --    Yes
 garena              garena.live          Yes   --
 gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
