@@ -166,6 +166,7 @@ positional.add_argument(
     A URL to attempt to extract streams from.
 
     If it's a HTTP URL then "http://" can be omitted.
+    The URL can also be specified using the --url option.
     """
 )
 positional.add_argument(
@@ -471,8 +472,11 @@ stream.add_argument(
     dest="url_param",
     metavar="URL",
     help="""
-    Alternative parameter to specify a URL to attempt to
-    extract streams from.
+    A URL to attempt to extract streams from.
+
+    If it's a HTTP URL then "http://" can be omitted.
+
+    This is an alternative to setting the URL using a positional argument.
     """
 )
 stream.add_argument(
