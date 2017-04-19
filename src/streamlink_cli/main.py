@@ -580,6 +580,9 @@ def setup_args(config_files=[]):
     if args.stream:
         args.stream = [stream.lower() for stream in args.stream]
 
+    if not args.url and args.url_param:
+        args.url = args.url_param
+
 
 def setup_config_args():
     config_files = []

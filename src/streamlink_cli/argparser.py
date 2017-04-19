@@ -164,6 +164,7 @@ positional.add_argument(
     A URL to attempt to extract streams from.
 
     If it's a HTTP URL then "http://" can be omitted.
+    The URL can also be specified using the --url option.
     """
 )
 positional.add_argument(
@@ -464,6 +465,18 @@ output.add_argument(
 )
 
 stream = parser.add_argument_group("Stream options")
+stream.add_argument(
+    "--url",
+    dest="url_param",
+    metavar="URL",
+    help="""
+    A URL to attempt to extract streams from.
+
+    If it's a HTTP URL then "http://" can be omitted.
+
+    This is an alternative to setting the URL using a positional argument.
+    """
+)
 stream.add_argument(
     "--default-stream",
     type=comma_list,
