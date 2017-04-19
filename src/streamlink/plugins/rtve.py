@@ -2,6 +2,8 @@ import base64
 import re
 
 from Crypto.Cipher import Blowfish
+
+from streamlink import PluginError
 from streamlink.compat import bytes, is_py3
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
@@ -139,7 +141,7 @@ class Rtve(Plugin):
                     if url.endswith("m3u8"):
                         try:
                             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
-                        except OSError:
+                        except (IOError, OSError):
                             self.logger.debug("Failed to load m3u8 url: {0}", url)
                     elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi")) and
                             http.head(url, raise_for_status=False).status_code == 200):
