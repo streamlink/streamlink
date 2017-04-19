@@ -1,6 +1,5 @@
 import argparse
 import re
-
 from string import printable
 from textwrap import dedent
 
@@ -8,7 +7,6 @@ from .constants import (
     LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
 )
 from .utils import find_default_player
-
 
 _filesize_re = re.compile("""
     (?P<size>\d+(\.\d+)?)
@@ -502,9 +500,11 @@ stream.add_argument(
     A comma-delimited list of stream types to allow.
 
     The order will be used to separate streams when there are multiple
-    streams with the same name but different stream types.
+    streams with the same name but different stream types. Any stream type
+    not listed will be omitted from the available streams list.  A ``*``
+    can be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
-    Default is "rtmp,hls,hds,http,akamaihd".
+    Default is "rtmp,hls,hds,http,akamaihd,*".
     """
 )
 stream.add_argument(
