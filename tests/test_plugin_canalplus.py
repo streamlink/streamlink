@@ -17,7 +17,7 @@ class TestPluginCanalPlus(unittest.TestCase):
         self.assertTrue(CanalPlus.can_handle_url("http://www.cstar.fr/emissions/pid8754-wild-transport.html"))
         self.assertTrue(CanalPlus.can_handle_url("http://www.cstar.fr/musique/pid6282-les-tops.html?vid=1430143"))
         self.assertTrue(CanalPlus.can_handle_url("http://replay.cstar.fr/video/1430245"))
-        self.assertTrue(CanalPlus.can_handle_url("http://cnews.fr/direct"))
+        self.assertTrue(CanalPlus.can_handle_url("http://www.cnews.fr/direct"))
         self.assertTrue(CanalPlus.can_handle_url("http://www.cnews.fr/politique/video/des-electeurs-toujours-autant-indecis-174769"))
         self.assertTrue(CanalPlus.can_handle_url("http://www.cnews.fr/magazines/plus-de-recul/de-recul-du-14042017-174594"))
 
