@@ -18,7 +18,7 @@ class Telefe(Plugin):
         video_search = res.text
         video_search = video_search[video_search.index('{"top":{"view":"PlayerContainer","model":{'):]
         video_search = video_search[: video_search.index('}]}}') +4] + "}"
-        
+
         video_url_found_hls  = ""
         video_url_found_http = ""
 
@@ -32,19 +32,17 @@ class Telefe(Plugin):
             if "HTTP" in current_video_source["type"]:
                 video_url_found_http = "http://telefe.com" + current_video_source["url"]
                 self.logger.debug("HTTP content available")
-        
+
         http.headers = {'Referer': self.url,
             'User-Agent': useragents.CHROME,
             'X-Requested-With': 'ShockwaveFlash/25.0.0.148'}
-            
+
         if video_url_found_hls:
             hls_streams = HLSStream.parse_variant_playlist(self.session, video_url_found_hls)
             for s in hls_streams.items():
-                yield s  
+                yield s
 
         if video_url_found_http:
-            yield "http", HTTPStream(self.session, video_url_found_http)   
-               
-
+            yield "http", HTTPStream(self.session, video_url_found_http)
 
 __plugin__ = Telefe
