@@ -1,10 +1,9 @@
-import re, html
+import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, useragents, validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
-
 
 class ElTreceTV(Plugin):
     _url_re = re.compile(r'https?://(?:www\.)?eltrecetv.com.ar/.+')
@@ -17,7 +16,7 @@ class ElTreceTV(Plugin):
 
         video_url_found_hls = ""
 
-        if self.url[self.url.index('eltrecetv.com.ar/') +17:].startswith("vivo"):
+        if "eltrecetv.com.ar/vivo" in self.url.lower():
             http.headers = {'Referer': self.url,
             'User-Agent': "ArtearPlayer/3.2.42 (Linux;Android 4.4.2) ExoPlayerLib/1.5.9"}
             video_url_found_hls = "http://stream.eltrecetv.com.ar/live13/13tv/13tv1/playlist.m3u8"
@@ -28,14 +27,13 @@ class ElTreceTV(Plugin):
             video_search = res.text
             video_search = video_search[video_search.index('data-kaltura="') +14:]
             video_search = video_search[: video_search.index('"')]
-            video_search = html.unescape(video_search)            
+            video_search = video_search.replace("&quot;", '"')
             json_video_search = parse_json(video_search)
             video_url_found_hls = "https://vodgc.com/p/111/sp/11100/playManifest/entryId/" + json_video_search["entryId"] + "/format/applehttp/protocol/https/a.m3u8"
-         
+
         if video_url_found_hls:
             hls_streams = HLSStream.parse_variant_playlist(self.session, video_url_found_hls)
             for s in hls_streams.items():
-                yield s  
-               
+                yield s
 
 __plugin__ = ElTreceTV
