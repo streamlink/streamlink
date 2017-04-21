@@ -177,6 +177,7 @@ svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restrict
                     - oppetarkiv.se
 swisstxt            - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
                     - rsi.ch
+telefe              telefe.com           No    Yes   Streams are geo-restricted to Argentina.
 tf1                 - tf1.fr             Yes   No    Streams may be geo-restricted to France.
                     - lci.fr
 tga                 - star.plu.cn        Yes   No
