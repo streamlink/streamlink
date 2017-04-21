@@ -45,6 +45,7 @@ camsoda             camsoda.com          Yes   No
 canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
                     - c8.fr
                     - cstar.fr
+                    - cnews.fr
 canlitv             - canlitv.com        Yes   --
                     - canlitv.life
                     - canlitvlive.co
