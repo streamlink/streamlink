@@ -113,14 +113,14 @@ class PlayerOutput(Output):
             filename = self.http.url
         else:
             filename = "-"
-        
-        reTitle = re.compile(r'(?<=@@)(\s*.*\s*)(?=@@)').search(self.args) #matches the outermost @@ wrappers
+
+        reTitle = re.compile(r'(?<=@:\/@)(\s*.*\s*)(?=@:\/@)').search(self.args) #matches the outermost @:/@ wrappers
         if not reTitle:
             title = sanitizeTitle(self.format_args["title"]) #e.g. streamlink -p mpv -a '--title={title} {filename}' https://www.twitch.tv/coolstreamer source
         else:
             processed = re.sub(r'(?<=[^\{])({title})(?=[^\}])',self.format_args["title"],reTitle.group(0)) #replace {title} but not {{title}}
-            title = sanitizeTitle(processed) #e.g. streamlink -p mpv -a '--title=@@foo {title} bar@@ {filename}' https://www.twitch.tv/coolstreamer source
-            self.args = re.sub(r'(@@\s*.*\s*@@)','{title}',self.args) #replace @@foo {title} bar@@ with {title} since {title} holds the wholeTitle now
+            title = sanitizeTitle(processed) #e.g. streamlink -p mpv -a '--title=@:/@foo {title} bar@:/@ {filename}' https://www.twitch.tv/coolstreamer source
+            self.args = re.sub(r'(@:\/@\s*.*\s*@:\/@)','{title}',self.args) #replace @:/@foo {title} bar@:/@ with {title} since {title} holds the wholeTitle now
 
         if is_py2:
             args = self.args.encode('utf8').format(filename=filename, title=title)
