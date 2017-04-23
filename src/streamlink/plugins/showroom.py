@@ -74,7 +74,7 @@ _info_pages = set((
 
 
 class Showroom(Plugin):
-    @staticmethod
+    @classmethod
     def can_handle_url(cls, url):
         match = _url_re.match(url)
         if not match or match.group("room_title") in _info_pages:
