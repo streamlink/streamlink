@@ -150,6 +150,7 @@ pluzz               - pluzz.francetv.fr  Yes   Yes   Streams may be geo-restrict
 powerapp            powerapp.com.tr      Yes   No
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
+rte                 rte.ie/player        Yes   Yes
 rtve                rtve.es              Yes   No
 rtvs                rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
