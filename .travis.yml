@@ -24,7 +24,7 @@ install:
 
 script:
   - python -m pytest tests/
-  - coverage run setup.py test
+  - coverage run -m pytest tests/
   # test building the docs
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
