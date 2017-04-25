@@ -135,7 +135,8 @@ npo                 - npo.nl             Yes   Yes   Streams may be geo-restrict
                     - zappelin.nl
 nrk                 - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                     - radio.nrk.no
-oldlivestream       original.liv... [3]_ Yes   No    Only mobile streams are supported.
+oldlivestream       - original.li.. [3]_ Yes   No    Only mobile streams are supported.
+                    - cdn.livestream.com
 openrectv           openrec.tv           Yes   Yes
 orf_tvthek          tvthek.orf.at        Yes   Yes
 ovvatv              ovva.tv              Yes   No
@@ -194,6 +195,7 @@ turkuvaz            - atv.com.tr         Yes   No
                     - aspor.com.tr
                     - minikago.com.tr
                     - minikacocuk.com.tr
+tv1channel          tv1channel.org       Yes   Yes
 tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
