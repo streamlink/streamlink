@@ -5,7 +5,7 @@ from streamlink.stream import HLSStream
 
 PLAYLIST_URL = "http://x{0}x.api.channel.livestream.com/3.0/playlist.m3u8"
 
-_url_re = re.compile(r"http(s)?://original.livestream.com/(?P<channel>[^&?/]+)")
+_url_re = re.compile(r"http(s)?://(cdn|original)\.livestream\.com/(embed/)?(?P<channel>[^&?/]+)")
 
 
 class OldLivestream(Plugin):
