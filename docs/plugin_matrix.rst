@@ -65,6 +65,7 @@ cinergroup          - showtv.com.tr      Yes   No
 connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
+cyro                cyro.se              --    Yes
 dailymotion         dailymotion.com      Yes   Yes
 daisuki             daisuki.net          No    Yes
 deutschewelle       dw.com               Yes   No
