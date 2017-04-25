@@ -194,6 +194,7 @@ turkuvaz            - atv.com.tr         Yes   No
                     - aspor.com.tr
                     - minikago.com.tr
                     - minikacocuk.com.tr
+tv1channel          tv1channel.org       Yes   Yes
 tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
