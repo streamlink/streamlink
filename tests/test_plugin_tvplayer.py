@@ -1,4 +1,3 @@
-import json
 import unittest
 
 from streamlink import Streamlink
@@ -31,28 +30,28 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.assertFalse(TVPlayer.can_handle_url("http://www.tvcatchup.com/"))
         self.assertFalse(TVPlayer.can_handle_url("http://www.youtube.com/"))
 
+    @patch('streamlink.plugins.tvplayer.TVPlayer._get_stream_data')
     @patch('streamlink.plugins.tvplayer.http')
     @patch('streamlink.plugins.tvplayer.HLSStream')
-    def test_get_streams(self, hlsstream, mock_http):
-        api_data = {
-            "tvplayer": {
-                "status": "200 OK",
-                "response": {
+    def test_get_streams(self, hlsstream, mock_http, mock_get_stream_data):
+        mock_get_stream_data.return_value = {
                     "stream": "http://test.se/stream1"
                 }
-            }
-        }
+
         page_resp = Mock()
         page_resp.text = u"""
-        var validate = "foo";
-        var resourceId = "1234";
-        var platform = "test";
+                    <div class="video-js theoplayer-skin theo-seekbar-above-controls content-box vjs-fluid"
+                 data-resource= "89"
+                 data-token = "1324567894561268987948596154656418448489159"
+                                    data-content-type="live"
+                    data-environment="live"
+                    data-subscription="free"
+                    data-channel-id="89">
+                <div id="channel-info" class="channel-info">
+                    <div class="row visible-xs visible-sm">
         """
-        api_resp = Mock()
-        api_resp.text = json.dumps(api_data)
+
         mock_http.get.return_value = page_resp
-        mock_http.post.return_value = api_resp
-        mock_http.json.return_value = api_data["tvplayer"]["response"]
         hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
@@ -64,11 +63,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         # test the url is used correctly
         mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
         # test that the correct API call is made
-        mock_http.post.assert_called_with("http://api.tvplayer.com/api/v2/stream/live", data=dict(service=1,
-                                                                                                  id=u"1234",
-                                                                                                  validate=u"foo",
-                                                                                                  platform=u"test",
-                                                                                                  token=None))
+        mock_get_stream_data.assert_called_with(resource="89", token="1324567894561268987948596154656418448489159")
         # test that the correct URL is used for the HLSStream
         hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1")
 
