@@ -95,6 +95,7 @@ earthcam            earthcam.com         Yes   Yes   Only works for the cams hos
 eurocom             eurocom.bg           Yes   No
 euronews            euronews.com         Yes   No
 expressen           expressen.se         Yes   Yes
+facebook            facebook.com         Yes   No    Only 360p HLS streams.
 filmon              filmon.com           Yes   Yes   Only SD quality streams.
 filmon_us           filmon.us            Yes   Yes
 foxtr               fox.com.tr           Yes   No

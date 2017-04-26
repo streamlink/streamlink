@@ -5,7 +5,8 @@ from streamlink.stream import HLSStream
 
 _playlist_url = "https://www.facebook.com/video/playback/playlist.m3u8?v={0}"
 
-_url_re = re.compile(r"http(s)?://(www\.)?facebook.com/[^/]+/videos/(?P<video_id>[\w\-\=]+)")
+_url_re = re.compile(r"http(s)?://(www\.)?facebook\.com/[^/]+/videos/(?P<video_id>\d+)")
+
 
 class Facebook(Plugin):
     @classmethod
