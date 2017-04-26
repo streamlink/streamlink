@@ -969,8 +969,14 @@ def check_version(force=False):
     if force or not latest_version:
         res = requests.get("https://pypi.python.org/pypi/streamlink/json")
         data = res.json()
-        latest_version = data.get("info").get("version")
-        cache.set("latest_version", latest_version, (60 * 60 * 24))
+        versions = sorted([StrictVersion(version)
+                           for version, info
+                           in data.get("releases", {}).items()
+                           if len(info)],
+                          reverse=True)
+        if len(versions):
+            latest_version = str(versions[0])
+            cache.set("latest_version", latest_version, (60 * 60 * 24))
 
     version_info_printed = cache.get("version_info_printed")
     if not force and version_info_printed:
