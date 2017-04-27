@@ -4,6 +4,7 @@ from threading import Thread, Event
 
 import time
 
+from streamlink import PluginError
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
@@ -70,8 +71,18 @@ class UHSClient(object):
         self.logger.debug("Got new host={0}, and connectionId={1}", self._host, self._connection_id)
         return True
 
-    def poll(self, schema=None):
-        return self.send_command(connectionId=self._connection_id, schema=schema)
+    def poll(self, schema=None, retries=5, timeout=5.0):
+        stime = time.time()
+        try:
+            r = self.send_command(connectionId=self._connection_id,
+                                  schema=schema,
+                                  retries=retries,
+                                  timeout=timeout)
+        except PluginError as err:
+            self.logger.debug("poll took {0:.2f}s: {1}", time.time() - stime, err)
+        else:
+            self.logger.debug("poll took {0:.2f}s", time.time() - stime)
+            return r
 
     def generate_rsid(self):
         return "{0:x}:{1:x}".format(randint(0, 1e10), randint(0, 1e10))
@@ -79,13 +90,14 @@ class UHSClient(object):
     def generate_rpin(self):
         return "_rpin.{0}".format(randint(0, 1e15))
 
-    def send_command(self, schema=None, **args):
+    def send_command(self, schema=None, retries=5, timeout=5.0, **args):
         res = http.get(self.host,
                        params=args,
                        headers={"Referer": self.referrer,
                                 "User-Agent": useragents.IPHONE_6},
-                       retries=5,
-                       timeout=5.0)
+                       retries=retries,
+                       timeout=timeout,
+                       retry_max_backoff=0.5)
         return http.json(res, schema=schema or self.api_schama)
 
     @property
@@ -110,18 +122,27 @@ class UStreamHLSStream(HLSStream):
             self.stopped.set()
 
         def run(self):
-            while not self.stopped.wait(self.interval):
-                self.api.poll()
+            while not self.stopped.wait(1.0):
+                res = self.api.poll(retries=30, timeout=self.interval)
+                if not res:
+                    continue
+                for cmd_args in res:
+                    self.api.logger.debug("poll response: {0}", cmd_args)
+                    if cmd_args["cmd"] == "warning":
+                        self.api.logger.warning("{code}: {message}", **cmd_args["args"])
+
 
     def __init__(self, session_, url, api, force_restart=False, **args):
         super(UStreamHLSStream, self).__init__(session_, url, force_restart, **args)
+        self.logger = session_.logger.new_module("stream.ustream-hls")
         self.poller = self.APIPoller(api)
         self.poller.setDaemon(True)
-        self.poller.start()
 
     def open(self):
         reader = HLSStreamReader(self)
         reader.open()
+        self.poller.start()
+        self.logger.debug("Starting API polling thread")
         return reader
 
 
@@ -166,16 +187,18 @@ class UStreamTV(Plugin):
                         break
 
     def _do_poll(self, media_id, application, cluster="live", referrer=None, retries=3):
-        for result in self.api.poll():
-            if result["cmd"] == "moduleInfo":
-                for s in self.handle_module_info(result["args"], media_id, application, cluster,
-                                                 referrer, retries):
-                    yield s
-            elif result["cmd"] == "reject":
-                for s in self.handle_reject(result["args"], media_id, application, cluster, referrer, retries):
-                    yield s
-            else:
-                self.logger.debug("Unknown command: {0}({1})", result["cmd"], result["args"])
+        res = self.api.poll()
+        if res:
+            for result in res:
+                if result["cmd"] == "moduleInfo":
+                    for s in self.handle_module_info(result["args"], media_id, application, cluster,
+                                                     referrer, retries):
+                        yield s
+                elif result["cmd"] == "reject":
+                    for s in self.handle_reject(result["args"], media_id, application, cluster, referrer, retries):
+                        yield s
+                else:
+                    self.logger.debug("Unknown command: {0}({1})", result["cmd"], result["args"])
 
     def handle_module_info(self, args, media_id, application, cluster="live", referrer=None, retries=3):
         has_results = False
