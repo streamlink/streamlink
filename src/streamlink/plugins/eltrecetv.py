@@ -24,7 +24,7 @@ class ElTreceTV(Plugin):
             http.headers = {'Referer': self.url,
             'User-Agent': useragents.CHROME}
             res = http.get(self.url)
-            _player_re = re.compile(r'''data\-kaltura="([^"]+)"''')
+            _player_re = re.compile(r'''data-kaltura="([^"]+)"''')
             match = _player_re.search(res.text)
             if not match:
                 return
