@@ -19,16 +19,17 @@ class Zattoo(Plugin):
     API_WATCH_VOD = '{0}/zapi/avod/videos/{1}/watch'
 
     _url_re = re.compile(r'''
-        (?P<base_url>https?://
-        (?:
+        https?://
+        (?P<base_url>
         zattoo\.com
         |
         tvonline\.ewe\.de
         |
         nettv\.netcologne\.de
-        ))/(?:watch/(?P<channel>[^/\s]+)
+        )/(?:watch/(?P<channel>[^/\s]+)
         |
-        ondemand/watch/(?P<vod_id>[^-]+)-)''', re.VERBOSE)
+        ondemand/watch/(?P<vod_id>[^-]+)-)
+        ''', re.VERBOSE)
 
     _app_token_re = re.compile(r"""window\.appToken\s+=\s+'([^']+)'""")
 
@@ -57,7 +58,7 @@ class Zattoo(Plugin):
         self._uuid = self._session_attributes.get('uuid')
         self._expires = self._session_attributes.get('expires')
 
-        self.base_url = Zattoo._url_re.match(url).group('base_url')
+        self.base_url = 'https://{0}'.format(Zattoo._url_re.match(url).group('base_url'))
         self.headers = {
             'User-Agent': useragents.CHROME,
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -129,12 +130,28 @@ class Zattoo(Plugin):
             'pzuid': self._session_attributes.get('pzuid')
         }
 
+        watch_url = []
         if channel:
             params, watch_url = self._watch_live(channel, cookies)
         elif vod_id:
-            params, watch_url = self._watch_vod(vod_id, cookies)
+            params, watch_url = self._watch_vod(vod_id)
 
-        res = http.post(watch_url, headers=self.headers, data=params, cookies=cookies)
+        if not watch_url:
+            return
+
+        res = []
+        try:
+            res = http.post(watch_url, headers=self.headers, data=params, cookies=cookies)
+        except Exception as e:
+            if '404 Client Error' in str(e):
+                self.logger.error('Unfortunately streaming is not permitted in this country or this channel does not exist.')
+            elif '402 Client Error: Payment Required' in str(e):
+                self.logger.error('Paid subscription required for this channel.')
+                self.logger.info('If paid subscription exist, wait 24 hours or remove the "plugin-cache.json" file.')
+            else:
+                self.logger.error('{0}'.format(e))
+            return
+
         data = http.json(res)
 
         if data['success']:
@@ -143,10 +160,9 @@ class Zattoo(Plugin):
                     yield s
 
     def _watch_live(self, channel, cookies):
-        self.logger.debug('_watch_live ...')
+        self.logger.debug('_watch_live ... Channel: {0}'.format(channel))
         watch_url = self.API_WATCH.format(self.base_url)
 
-        # get CID from channels list
         channels_url = self.API_CHANNELS.format(self.base_url, self._session_attributes.get('power_guide_hash'))
         res = http.get(channels_url, headers=self.headers, cookies=cookies)
         data = http.json(res, schema=self._channels_schema)
@@ -157,12 +173,18 @@ class Zattoo(Plugin):
                 c_list.append(c)
 
         cid = []
+        zattoo_list = []
         for c in c_list:
+            zattoo_list.append(c['display_alias'])
             if c['display_alias'] == channel:
                 cid = c['cid']
-                self.logger.debug('CHANNEL ID: {0}'.format(cid))
+
+        self.logger.debug('Available zattoo channels in this country: {0}'.format(', '.join(sorted(zattoo_list))))
+
         if not cid:
-            return
+            cid = channel
+
+        self.logger.debug('CHANNEL ID: {0}'.format(cid))
 
         params = {
             'cid': cid,
@@ -171,7 +193,7 @@ class Zattoo(Plugin):
         }
         return params, watch_url
 
-    def _watch_vod(self, vod_id, cookies):
+    def _watch_vod(self, vod_id):
         self.logger.debug('_watch_vod ...')
         watch_url = self.API_WATCH_VOD.format(self.base_url, vod_id)
         params = {
