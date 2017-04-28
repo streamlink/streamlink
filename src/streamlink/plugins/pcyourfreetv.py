@@ -1,16 +1,18 @@
 import re
 
+from streamlink.compat import parse_qsl, unquote
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
 
 class PCYourFreeTV(Plugin):
-    LIVE_TV_URL = 'http://pc-yourfreetv.com/index_livetv.php?page_id=1'
+    LIVE_TV_URL = 'http://pc-yourfreetv.com/indexlivetv.php?page_id=1'
 
     _login_url = 'http://pc-yourfreetv.com/home.php'
-    _url_re = re.compile(r'http://pc-yourfreetv\.com/index_player\.php\?channel=.+?&page_id=\d+')
-    _token_re = re.compile(r'\b(?P<token_key>auth_[0-9a-f]+)=(?P<token_value>[0-9a-f]+)\b')
+    _url_re = re.compile(r'http://pc-yourfreetv\.com/indexplayer\.php\?channel=.+?&page_id=\d+')
+    _token_re = re.compile(r'\bsrc="indexplayer\.php\?channel=.+?&(?P<tokens>.+?)"')
+    _player_re = re.compile(r"<script language=JavaScript>m='(?P<player>.+?)'", re.DOTALL)
     _video_url_re = re.compile(r"jwplayer\('.+?'\)\.setup\({.+?file: \"(?P<video_url>[^\"]+?)\".+?}\);", re.DOTALL)
 
     options = PluginOptions({
@@ -51,14 +53,21 @@ class PCYourFreeTV(Plugin):
         match = self._token_re.search(res.text)
         if match is None:
             return
-        token_key = match.group('token_key')
-        token_value = match.group('token_value')
 
         # Retrieve URL page and search for stream data
-        res = http.get(self.url, params={token_key: token_value})
-        match = self._video_url_re.search(res.text)
+        res = http.get(self.url, params=parse_qsl(match.group('tokens')))
+        match = self._player_re.search(res.text)
         if match is None:
             return
+
+        while match is not None:
+            player = unquote(match.group('player'))
+            match = self._player_re.search(player)
+
+        match = self._video_url_re.search(player)
+        if match is None:
+            return
+
         video_url = match.group('video_url')
         if '.m3u8' in video_url:
             streams = HLSStream.parse_variant_playlist(self.session, video_url)
