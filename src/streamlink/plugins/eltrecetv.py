@@ -24,11 +24,11 @@ class ElTreceTV(Plugin):
             http.headers = {'Referer': self.url,
             'User-Agent': useragents.CHROME}
             res = http.get(self.url)
-            video_search = res.text
-            video_search = video_search[video_search.index('data-kaltura="') +14:]
-            video_search = video_search[: video_search.index('"')]
-            video_search = video_search.replace("&quot;", '"')
-            json_video_search = parse_json(video_search)
+            _player_re = re.compile(r'''data\-kaltura="([^"]+)"''')
+            match = _player_re.search(res.text)
+            if not match:
+                return
+            json_video_search = parse_json(match.group(1).replace("&quot;", '"'))
             video_url_found_hls = "https://vodgc.com/p/111/sp/11100/playManifest/entryId/" + json_video_search["entryId"] + "/format/applehttp/protocol/https/a.m3u8"
 
         if video_url_found_hls:
