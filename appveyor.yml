@@ -8,14 +8,12 @@ environment:
     - PYTHON: "C:\\Python36"
     - PYTHON: "C:\\Python27-x64"
     - PYTHON: "C:\\Python33-x64"
-      DISTUTILS_USE_SDK: "1"
     - PYTHON: "C:\\Python34-x64"
-      DISTUTILS_USE_SDK: "1"
     - PYTHON: "C:\\Python35-x64"
     - PYTHON: "C:\\Python36-x64"
 
 install:
-    # If there is a newer build queued for the same PR, cancel this one.
+  # If there is a newer build queued for the same PR, cancel this one.
   # The AppVeyor 'rollout builds' option is supposed to serve the same
   # purpose but it is problematic because it tends to cancel builds pushed
   # directly to master instead of just PR builds (or the converse).
@@ -40,7 +38,7 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --disable-pip-version-check --user --upgrade pip setuptools"
 
   # install dev requirements, for testing, etc.
   - "pip install -r dev-requirements.txt"
