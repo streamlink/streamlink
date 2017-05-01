@@ -2,7 +2,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import RTMPStream
 
 _url_re = re.compile(r'''^https?://
@@ -74,11 +74,6 @@ _info_pages = set((
 
 
 class Showroom(Plugin):
-    @staticmethod
-    def _get_stream_info(room_id):
-        res = http.get(_api_data_url.format(room_id=room_id))
-        return http.json(res, schema=_api_data_schema)
-
     @classmethod
     def can_handle_url(cls, url):
         match = _url_re.match(url)
@@ -95,6 +90,10 @@ class Showroom(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
+        self._headers = {
+            'Referer': self.url,
+            'User-Agent': useragents.FIREFOX
+        }
         self._room_id = None
         self._info = None
         self._title = None
@@ -112,6 +111,10 @@ class Showroom(Plugin):
             self._room_id = self._get_room_id()
         return self._room_id
 
+    def _get_stream_info(self, room_id):
+        res = http.get(_api_data_url.format(room_id=room_id), headers=self._headers)
+        return http.json(res, schema=_api_data_schema)
+
     def _get_room_id(self):
         """
         Locates unique identifier ("room_id") for the room.
@@ -123,7 +126,7 @@ class Showroom(Plugin):
         if match_dict['room_id'] is not None:
             return match_dict['room_id']
         else:
-            res = http.get(self.url)
+            res = http.get(self.url, headers=self._headers)
             match = _room_id_re.search(res.text)
             if not match:
                 title = self.url.rsplit('/', 1)[-1]
