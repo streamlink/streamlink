@@ -92,6 +92,7 @@ dplay               - dplay.se           --    Yes   Streams may be geo-restrict
                     - dplay.dk
 drdk                dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 earthcam            earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
+eltrecetv           eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
 eurocom             eurocom.bg           Yes   No
 euronews            euronews.com         Yes   No
 expressen           expressen.se         Yes   Yes
