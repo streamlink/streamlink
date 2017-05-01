@@ -8,25 +8,32 @@ from streamlink.stream import HLSStream
 
 
 class TVPlayer(Plugin):
+    context_url = "http://tvplayer.com/watch/context"
     api_url = "http://api.tvplayer.com/api/v2/stream/live"
     login_url = "https://tvplayer.com/account/login"
     update_url = "https://tvplayer.com/account/update-detail"
     dummy_postcode = "SE1 9LT"  # location of ITV HQ in London
 
     url_re = re.compile(r"https?://(?:www.)?tvplayer.com/(:?watch/?|watch/(.+)?)")
-    stream_attrs_re = re.compile(r'var\s+(validate|platform|resourceId|token)\s+=\s*(.*?);', re.S)
+    stream_attrs_re = re.compile(r'data-(resource|token)\s*=\s*"(.*?)"', re.S)
     login_token_re = re.compile(r'input.*?name="token".*?value="(\w+)"')
     stream_schema = validate.Schema({
         "tvplayer": validate.Schema({
             "status": u'200 OK',
             "response": validate.Schema({
-                    "stream": validate.url(scheme=validate.any("http")),
-                    validate.optional("drmToken"): validate.any(None, validate.text)
-                })
+                "stream": validate.url(scheme=validate.any("http")),
+                validate.optional("drmToken"): validate.any(None, validate.text)
             })
-        },
+        })
+    },
         validate.get("tvplayer"),
         validate.get("response"))
+    context_schema = validate.Schema({
+        "validate": validate.text,
+        "platform": {
+            "key": validate.text
+        }
+    })
     options = PluginOptions({
         "email": None,
         "password": None
@@ -50,6 +57,21 @@ class TVPlayer(Plugin):
         # there is a 302 redirect on a successful login
         return res2.status_code == 302
 
+    def _get_stream_data(self, resource, token, service=1):
+        # Get the context info (validation token and platform)
+        context_res = http.get(self.context_url, params={"resource": resource,
+                                                         "nonce": token})
+        context_data = http.json(context_res, schema=self.context_schema)
+
+        # get the stream urls
+        res = http.post(self.api_url, data=dict(
+            service=service,
+            id=resource,
+            validate=context_data["validate"],
+            platform=context_data["platform"]["key"]))
+
+        return http.json(res, schema=self.stream_schema)
+
     def _get_streams(self):
         if self.get_option("email") and self.get_option("password"):
             self.authenticate(self.get_option("email"), self.get_option("password"))
@@ -67,25 +89,19 @@ class TVPlayer(Plugin):
 
         stream_attrs = dict((k, v.strip('"')) for k, v in self.stream_attrs_re.findall(res.text))
 
-        if "resourceId" in stream_attrs and "validate" in stream_attrs and "platform" in stream_attrs:
-            # get the stream urls
-            res = http.post(self.api_url, data=dict(
-                service=1,
-                id=stream_attrs["resourceId"],
-                validate=stream_attrs["validate"],
-                platform=stream_attrs["platform"],
-                token=stream_attrs.get("token")))
+        if "resource" in stream_attrs and "token" in stream_attrs:
+            stream_data = self._get_stream_data(**stream_attrs)
 
-            stream_data = http.json(res, schema=self.stream_schema)
-
-            if stream_data.get("drmToken"):
-                self.logger.error("This stream is protected by DRM can cannot be played")
-                return
-            else:
-                return HLSStream.parse_variant_playlist(self.session, stream_data["stream"])
+            if stream_data:
+                if stream_data.get("drmToken"):
+                    self.logger.error("This stream is protected by DRM can cannot be played")
+                    return
+                else:
+                    return HLSStream.parse_variant_playlist(self.session, stream_data["stream"])
         else:
             if "need to login" in res.text:
-                self.logger.error("You need to login using --tvplayer-email/--tvplayer-password to view this stream")
+                self.logger.error(
+                    "You need to login using --tvplayer-email/--tvplayer-password to view this stream")
 
 
 __plugin__ = TVPlayer
