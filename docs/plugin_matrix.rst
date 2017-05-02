@@ -206,6 +206,8 @@ tv8                 tv8.com.tr           Yes   No
 tv8cat              tv8.cat              Yes   No    Streams may be geo-restricted to Spain/Catalunya.
 tv360               tv360.com.tr         Yes   No
 tvcatchup           tvcatchup.com        Yes   No    Streams may be geo-restricted to Great Britain.
+tvnbg               - tvn.bg             Yes   -
+                    - live.tvn.bg
 tvplayer            tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 tvrby               tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus             tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
