@@ -21,7 +21,7 @@ class TVPlayer(Plugin):
         "tvplayer": validate.Schema({
             "status": u'200 OK',
             "response": validate.Schema({
-                "stream": validate.url(scheme=validate.any("http")),
+                "stream": validate.url(scheme=validate.any("http", "https")),
                 validate.optional("drmToken"): validate.any(None, validate.text)
             })
         })
