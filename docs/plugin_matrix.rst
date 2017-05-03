@@ -20,6 +20,7 @@ alieztv             aliez.tv             Yes   Yes
 aljazeeraen         aljazeera.com        Yes   Yes   English version of the site.
 animelab            animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 antenna             antenna.gr           --    Yes
+apac                a-pac.tv             Yes   --
 app17               17app.co             Yes   --
 ard_live            daserste.de          Yes   Yes   Streams may be geo-restricted to Germany.
 ard_mediathek       - ardmediathek.de    Yes   Yes   Streams may be geo-restricted to Germany.
