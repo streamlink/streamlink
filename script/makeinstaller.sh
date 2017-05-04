@@ -6,7 +6,7 @@ set -e # stop on error
 command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to build the installer. Aborting."; exit 1; }
 command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
 
-
+STREAMLINK_ASSET_BASE=${STREAMLINK_ASSET_BASE:-"https://raw.githubusercontent.com/beardypig/streamlink-assets/master"}
 STREAMLINK_VERSION_PLAIN=$(python setup.py --version)
 # For travis nightly builds generate a version number with commit hash
 if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
@@ -17,6 +17,17 @@ else
     STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
     STREAMLINK_VERSION="${STREAMLINK_VERSION_PLAIN}"
     STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
+fi
+
+# Optionally build an XP compatible installer
+if [ -n "${XP_COMPAT}" ]; then
+    PYNSIST_PY_VERSION=${PYNSIST_PY_VERSION:-3.4.4}
+    PYNSIST_PY_FORMAT=${PYNSIST_PY_FORMAT:-installer}
+    # append winxp to the installer name
+    STREAMLINK_INSTALLER="${STREAMLINK_INSTALLER}-winxp"
+else
+    PYNSIST_PY_VERSION=${PYNSIST_PY_VERSION:-3.5.2}
+    PYNSIST_PY_FORMAT=${PYNSIST_PY_FORMAT:-bundled}
 fi
 
 build_dir="$(pwd)/build"
@@ -35,8 +46,8 @@ entry_point=streamlink_cli.main:main
 icon=../win32/doggo.ico
 
 [Python]
-version=3.5.2
-format=bundled
+version=${PYNSIST_PY_VERSION}
+format=${PYNSIST_PY_FORMAT}
 
 [Include]
 packages=requests
@@ -57,10 +68,16 @@ nsi_template=installer_tmpl.nsi
 installer_name=${dist_dir}/${STREAMLINK_INSTALLER}.exe
 EOF
 
+if [[ "${PYNSIST_PY_FORMAT}" == "bundled" ]]; then
+    template_base=msvcrt
+else
+    template_base=installpy
+fi
+
 cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 !include "FileFunc.nsh"
 !include "TextFunc.nsh"
-[% extends "pyapp_msvcrt.nsi" %]
+[% extends "pyapp_${template_base}.nsi" %]
 
 [% block modernui %]
     ; let the user review all changes being made to the system first
@@ -206,11 +223,21 @@ cp "win32/streamlinkrc" "${nsis_dir}/streamlinkrc"
 cp -r "win32/ffmpeg" "${nsis_dir}/"
 cp -r "win32/rtmpdump" "${nsis_dir}/"
 
+# Downloading external assets
+wget -c -O "${nsis_dir}/ffmpeg/ffmpeg.exe" "${STREAMLINK_ASSET_BASE}/win32/ffmpeg/ffmpeg.exe"
+wget -c -O "${nsis_dir}/rtmpdump/rtmpdump.exe" "${STREAMLINK_ASSET_BASE}/win32/rtmpdump/rtmpdump.exe"
+wget -c -O "${nsis_dir}/rtmpdump/librtmp.dll" "${STREAMLINK_ASSET_BASE}/win32/rtmpdump/librtmp.dll"
+
 pynsist build/streamlink.cfg
 
 # Make a copy of this build for the "latest" nightly
 if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
-    cp "${dist_dir}/${STREAMLINK_INSTALLER}.exe" "${dist_dir}/streamlink-latest.exe"
+    if [ -n "${XP_COMPAT}" ]; then
+        latest_path="${dist_dir}/streamlink-latest-winxp.exe"
+    else
+        latest_path="${dist_dir}/streamlink-latest.exe"
+    fi
+    cp "${dist_dir}/${STREAMLINK_INSTALLER}.exe" "${latest_path}"
 fi
 
 echo "Success!" 1>&2

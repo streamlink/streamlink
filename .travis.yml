@@ -1,4 +1,5 @@
 language: python
+sudo: required
 
 matrix:
   include:
@@ -16,7 +17,7 @@ matrix:
 before_install:
   - pip install --disable-pip-version-check --upgrade pip
   - pip install -r dev-requirements.txt
-  - pip install pycountry 
+  - pip install pycountry
   - pip install -r docs-requirements.txt
 
 install:
@@ -28,6 +29,8 @@ script:
   # test building the docs
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
+  # build the XP installer
+  - if [[ $BUILD_INSTALLER == 'yes' ]]; then env XP_COMPAT=1 ./script/makeinstaller.sh; fi
 
 after_success:
   # push the docs only if the build was successful
@@ -42,7 +45,7 @@ addons:
 deploy:
   - provider: releases
     api_key: "${RELEASES_API_KEY}"
-    file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
+    file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}*.exe"
     file_glob: true
     skip_cleanup: true
     on:

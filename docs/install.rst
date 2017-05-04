@@ -234,12 +234,12 @@ Windows binaries
 
 .. important::
 
-    Windows XP is not supported.
+    Windows XP support is provided by a separate installer, and has only been tested with SP 3 installed.
     Windows Vista requires at least SP2 to be installed. 
 
-You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
-
+You can download the latest stable Windows installers from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
 Alternatively, you can download the latest `nightly Windows installer <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
+Also available is the `Windows XP compatible installer <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest-winxp.exe>`__.
 
 This is a installer which contains:
 
