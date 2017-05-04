@@ -239,7 +239,7 @@ Windows binaries
 
 You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
 
-Alternatively, you can download the latest `nightly Windows installer <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
+Alternatively, you can download the latest `nightly Windows installer <https://dl.bintray.com/streamlink/streamlink-nightly/streamlink-latest.exe>`__.
 
 This is a installer which contains:
 
