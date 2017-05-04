@@ -1,19 +1,17 @@
 import re
 
-from streamlink.compat import parse_qsl, unquote
+from streamlink.compat import unquote
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
 
 class PCYourFreeTV(Plugin):
-    LIVE_TV_URL = 'http://pc-yourfreetv.com/indexlivetv.php?page_id=1'
-
     _login_url = 'http://pc-yourfreetv.com/home.php'
-    _url_re = re.compile(r'http://pc-yourfreetv\.com/indexplayer\.php\?channel=.+?&page_id=\d+')
-    _token_re = re.compile(r'\bsrc="indexplayer\.php\?channel=.+?&(?P<tokens>.+?)"')
+    _url_re = re.compile(r'http://pc-yourfreetv\.com/index_player\.php\?channel=.+?&page_id=\d+')
+    _iframe_re = re.compile(r"<iframe .*?\bsrc='(?P<iframe>.+?)'.*?</iframe>")
     _player_re = re.compile(r"<script language=JavaScript>m='(?P<player>.+?)'", re.DOTALL)
-    _video_url_re = re.compile(r"jwplayer\('.+?'\)\.setup\({.+?file: \"(?P<video_url>[^\"]+?)\".+?}\);", re.DOTALL)
+    _video_url_re = re.compile(r'new YourFreeTV.Player\({source: "(?P<video_url>[^"]+?)".+?}.*\);', re.DOTALL)
 
     options = PluginOptions({
         'username': None,
@@ -48,14 +46,13 @@ class PCYourFreeTV(Plugin):
         if self.login(username, password):
             self.logger.info("Successfully logged in as {0}", username)
 
-        # Get a fresh authorization token
-        res = http.get(self.LIVE_TV_URL)
-        match = self._token_re.search(res.text)
+        # Retrieve URL iframe
+        res = http.get(self.url)
+        match = self._iframe_re.search(res.text)
         if match is None:
             return
 
-        # Retrieve URL page and search for stream data
-        res = http.get(self.url, params=parse_qsl(match.group('tokens')))
+        res = http.get(match.group('iframe'))
         match = self._player_re.search(res.text)
         if match is None:
             return
