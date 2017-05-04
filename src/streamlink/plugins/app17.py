@@ -3,7 +3,7 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.plugin.api.utils import parse_json
-from streamlink.stream import HLSStream, RTMPStream
+from streamlink.stream import HLSStream, RTMPStream, HTTPStream
 
 API_URL = "https://api-dsa.17app.co/api/v1/liveStreams/isUserOnLiveStream"
 ROOM_URL = "http://17app.co/share/live/{0}"
@@ -58,11 +58,14 @@ class App17(Plugin):
             return
 
         url = _rtmp_re.search(res.text).group(1)
-        stream = RTMPStream(self.session, {
-                "rtmp": url,
-                "live": True
-                })
-        yield "live", stream
+        if 'rtmp:' in url:
+            stream = RTMPStream(self.session, {
+                    "rtmp": url,
+                    "live": True
+                    })
+            yield "live", stream
+        else:
+            yield "live", HTTPStream(self.session, url)
 
         prefix = url.replace("rtmp:", "http:").replace(".flv", ".m3u8")
         if '.m3u8' not in prefix:
@@ -71,8 +74,7 @@ class App17(Plugin):
                 yield stream
         else:
             url = prefix
-            stream = HLSStream(self.session, url)
-            yield "live", stream
+            yield "live", HLSStream(self.session, url)
 
 
 __plugin__ = App17

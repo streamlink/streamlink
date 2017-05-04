@@ -1,3 +1,64 @@
+streamlink 0.5.0 (2017-04-04)
+-----------------------------
+Streamlink 0.5.0!
+
+Lot's of contributions since the last release. As always, lot's of updating to plugins!
+
+One of the new features is the addition of Google Drive / Google Docs, you can now stream videos stored on Google Docs.
+
+We've also gone ahead and removed dead plugins (sites which have gone down) as well as added pycrypto as a dependency for future plugins.
+
+Again, many thanks for those who have contributed!
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating](https://streamlink.github.io/donate.html).
+
+Thank you very much!
+
+::
+
+    CallMeJuf <CallMeJuf@users.noreply.github.com> (2):
+          Aliez plugin now accepts any TLD (#696)
+          New Periscope URL #748
+    
+    Daniel Draper <Germandrummer92@gmail.com> (2):
+          More robust url regex for bigo plugin.
+          More robust url regex for bigo plugin, added unittest
+    
+    Josip Ponjavic <josipponjavic@gmail.com> (4):
+          fix vaugnlive info_url
+          Update archlinux installation instructions and maintainer info
+          setup: choose pycrypto as a dependency using an environment variable
+          Add info about pycrypto and pycountry variables to install doc
+    
+    Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+          plugins.pluzz: fix SWF player URL search to bring back HDS stream support (#679)
+    
+    back-to <back-to@users.noreply.github.com> (5):
+          plugins.camsoda Added support for camsoda.com
+          plugins.canlitv - Added new plugin canlitv
+          Removed dead plugins (#702)
+          plugins.camsoda - Added tests and small update for the plugin
+          plugins.garena - Added new plugin garena
+    
+    beardypig <beardypig@users.noreply.github.com> (11):
+          plugins.bbciplayer: add support for BBC iPlayer live and VOD
+          plugins.vaughnlive: updated player version and info URL
+          plugins.vaughnlive: search for player version, etc in the swf file
+          plugins.beam: add support for VOD and HLS streams for live (#694)
+          plugins.bbciplayer: add support for HLS streams
+          utils.l10n: use default locale if the system returns an invalid locale
+          plugins.dailymotion: play the featured video from channel pages
+          plugins.rtve: support for avi/mov VOD streams
+          plugins.googledocs: plugin to support playing videos stored on google docs
+          plugins.googledocs: updated the url regex and added a status check
+          plugins.googledrive: add googledrive support
+    
+    steven7851 <steven7851@msn.com> (3):
+          plugins.17media: Add support for HTTP stream
+          plugins.17media: fix rtmp stream
+          plugins.douyutv: support vod (#706)
+    
+
 streamlink 0.4.0 (2017-03-09)
 -----------------------------
 0.4.0 of Streamlink!

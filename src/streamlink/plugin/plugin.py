@@ -84,7 +84,10 @@ def stream_type_priority(stream_types, stream):
     try:
         prio = stream_types.index(stream_type)
     except ValueError:
-        prio = 99
+        try:
+            prio = stream_types.index("*")
+        except ValueError:
+            prio = 99
 
     return prio
 
@@ -259,7 +262,8 @@ class Plugin(object):
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
-            if stream_type not in stream_types:
+            # Use * as wildcard to match other stream types
+            if "*" not in stream_types and stream_type not in stream_types:
                 continue
 
             # drop _alt from any stream names

@@ -9,6 +9,10 @@ The main purpose of streamlink is to convert CPU-heavy flash plugins to a less C
 
 Streamlink is a fork of the [livestreamer](https://github.com/chrippa/livestreamer) project.
 
+Please note that by using this application you're bypassing ads run by
+sites such as Twitch.tv. Please consider donating or paying for subscription
+services when they are available for the content you consume and enjoy.
+
 # Installation
 
 Streamlink can be installed by using Python or through the installers below.

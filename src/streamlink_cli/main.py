@@ -244,14 +244,17 @@ def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
+    success_open = False
     for i in range(args.retry_open):
         try:
             stream_fd, prebuffer = open_stream(stream)
+            success_open = True
             break
         except StreamError as err:
-            console.logger.error("{0}", err)
-    else:
-        return
+            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
+
+    if not success_open:
+        console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
     output = create_output()
 
@@ -307,14 +310,14 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
                     console.logger.info("HTTP connection closed")
                 else:
-                    console.logger.error("Error when writing to output: {0}", err)
+                    console.exit("Error when writing to output: {0}, exiting", err)
 
                 break
     except IOError as err:
-        console.logger.error("Error when reading from stream: {0}", err)
-
-    stream.close()
-    console.logger.info("Stream ended")
+        console.exit("Error when reading from stream: {0}, exiting", err)
+    finally:
+        stream.close()
+        console.logger.info("Stream ended")
 
 
 def handle_stream(plugin, streams, stream_name):
@@ -576,6 +579,9 @@ def setup_args(config_files=[]):
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
         args.stream = [stream.lower() for stream in args.stream]
+
+    if not args.url and args.url_param:
+        args.url = args.url_param
 
 
 def setup_config_args():
@@ -901,6 +907,28 @@ def setup_plugin_options():
 
     if args.npo_subtitles:
         streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
+
+    if args.liveedu_email:
+        streamlink.set_plugin_option("liveedu", "email", args.liveedu_email)
+
+    if args.liveedu_email and not args.liveedu_password:
+        liveedu_password = console.askpass("Enter LiveEdu.tv password: ")
+    else:
+        liveedu_password = args.liveedu_password
+
+    if liveedu_password:
+        streamlink.set_plugin_option("liveedu", "password", liveedu_password)
+
+    if args.pcyourfreetv_username:
+        streamlink.set_plugin_option("pcyourfreetv", "username", args.pcyourfreetv_username)
+
+    if args.pcyourfreetv_username and not args.pcyourfreetv_password:
+        pcyourfreetv_password = console.askpass("Enter pc-yourfreetv.com password: ")
+    else:
+        pcyourfreetv_password = args.pcyourfreetv_password
+
+    if pcyourfreetv_password:
+        streamlink.set_plugin_option("pcyourfreetv", "password", pcyourfreetv_password)
 
     # Deprecated options
     if args.jtv_legacy_names:

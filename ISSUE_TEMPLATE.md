@@ -1,7 +1,9 @@
 *Thanks for reporting an issue!*
-*Please read the contribution guidelines first!*
+*Please read the contribution guidelines first! (see the link above)*
+*Also check the list of known issues before reporting an issue!*
 
 *Feel free to use the following template. Be as detailed as possible.*
+*Please see the text preview to avoid unnecessary formatting errors.*
 *Don't forget to remove this text before submitting.*
 
 ----
@@ -9,9 +11,9 @@
 ### Checklist
 
 - [x] This is a bug report.
-- [ ] This is a plugin request.
 - [ ] This is a feature request.
-- [ ] I used the search function to find already opened/closed issues or pull requests.
+- [ ] This is a plugin (improvement) request.
+- [ ] I have read the contribution guidelines.
 
 ### Description
 
@@ -21,13 +23,16 @@
 
 ...
 
-### Reproduction steps / Stream URLs to test
+### Reproduction steps / Explicit stream URLs to test
 
 1. ...
 2. ...
 3. ...
 
-### Environment details (operating system, python version, etc.)
+### Environment details
+
+Operating system and version: ...
+Streamlink and Python version: ...
 
 ...
 

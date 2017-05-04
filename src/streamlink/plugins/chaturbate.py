@@ -1,37 +1,53 @@
 import re
+import uuid
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
-_url_re = re.compile(r"http(s)?://(\w+.)?chaturbate.com/[^/?&]+")
-_playlist_url_re = re.compile(r"var hlsSource\w+ = '(?P<url>[^']+)';")
-_schema = validate.Schema(
-    validate.transform(_playlist_url_re.search),
-    validate.any(
-        None,
-        validate.all(
-            validate.get("url"),
-            validate.url(
-                scheme="http",
-                path=validate.endswith(".m3u8")
-            )
-        )
-    )
+API_HLS = "https://chaturbate.com/get_edge_hls_url_ajax/"
+
+_url_re = re.compile(r"https?://(\w+\.)?chaturbate\.com/(?P<username>\w+)")
+
+_post_schema = validate.Schema(
+    {
+        "url": validate.text,
+        "room_status": validate.text,
+        "success": int
+    }
 )
 
 
 class Chaturbate(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
     def _get_streams(self):
-        playlist_url = http.get(self.url, schema=_schema)
-        if not playlist_url:
-            return
+        match = _url_re.match(self.url)
+        username = match.group("username")
 
-        return HLSStream.parse_variant_playlist(self.session, playlist_url)
+        CSRFToken = str(uuid.uuid4().hex.upper()[0:32])
 
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRFToken": CSRFToken,
+            "X-Requested-With": "XMLHttpRequest",
+            "Referer": self.url,
+        }
+
+        cookies = {
+            "csrftoken": CSRFToken,
+        }
+
+        post_data = "room_slug={0}&bandwidth=high".format(username)
+
+        res = http.post(API_HLS, headers=headers, cookies=cookies, data=post_data)
+        data = http.json(res, schema=_post_schema)
+
+        if data["success"] is True and data["room_status"] == "public":
+            for s in HLSStream.parse_variant_playlist(self.session, data["url"]).items():
+                yield s
 
 __plugin__ = Chaturbate

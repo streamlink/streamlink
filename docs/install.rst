@@ -163,8 +163,6 @@ Name                                 Notes
 **Optional**
 --------------------------------------------------------------------------------
 `RTMPDump`_                          Required to play RTMP streams.
-`python-librtmp`_                    Required by the *ustreamtv* plugin to be
-                                     able to use non-mobile streams.
 `ffmpeg`_                            Required to play streams that are made up of separate
                                      audio and video streams, eg. YouTube 1080p+
 ==================================== ===========================================
@@ -190,7 +188,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _pycountry: https://pypi.python.org/pypi/pycountry
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
-.. _python-librtmp: https://github.com/chrippa/python-librtmp
 .. _ffmpeg: https://www.ffmpeg.org/
 .. _iso-639: https://pypi.python.org/pypi/iso-639
 .. _iso3166: https://pypi.python.org/pypi/iso3166

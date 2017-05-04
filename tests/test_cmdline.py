@@ -27,10 +27,11 @@ class TestCommandLineInvocation(unittest.TestCase):
     Test that when invoked for the command line arguments are parsed as expected
     """
 
+    @patch('streamlink_cli.main.CONFIG_FILES', ["/dev/null"])
     @patch('streamlink_cli.main.setup_streamlink', side_effect=setup_streamlink)
     @patch('subprocess.Popen')
     @patch('sys.argv')
-    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_setup_streamlink, passthrough=False):
+    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_setup_streamlink, passthrough=False, exit_code=0):
         mock_argv.__getitem__.side_effect = lambda x: args[x]
 
         def side_effect(results):
@@ -41,7 +42,13 @@ class TestCommandLineInvocation(unittest.TestCase):
 
         mock_popen().poll.side_effect = side_effect([None, 0])
 
-        streamlink_cli.main.main()
+        actual_exit_code = 0
+        try:
+            streamlink_cli.main.main()
+        except SystemExit as exc:
+            actual_exit_code = exc.code
+
+        self.assertEqual(exit_code, actual_exit_code)
         mock_setup_streamlink.assert_called_with()
         if not passthrough:
             mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)

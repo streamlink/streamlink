@@ -6,18 +6,20 @@ from itertools import chain
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream, HLSStream, HTTPStream, RTMPStream
+from streamlink.plugin.api import http
+from streamlink.plugin.api import validate
+from streamlink.stream import HDSStream
+from streamlink.stream import HLSStream
+from streamlink.stream import HTTPStream
 
-SWF_URL = "http://www.arte.tv/player/v2/jwplayer6/mediaplayer.6.6.swf"
-JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{}/{}"
-JSON_LIVE_URL = "https://api.arte.tv/api/player/v1/livestream/{}"
+JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{0}/{1}"
+JSON_LIVE_URL = "https://api.arte.tv/api/player/v1/livestream/{0}"
 
 _url_re = re.compile(r"""
-    https?://(?:\w+\.)?arte.tv/guide/
+    https?://(?:\w+\.)?arte\.tv/(?:guide/)?
     (?P<language>[a-z]{2})/
     (?:
-        (?P<video_id>.+?)/.+ | # VOD
+        (?:videos/)?(?P<video_id>(?!RC\-|videos)[^/]+?)/.+ | # VOD
         (?:direct|live)        # Live TV
     )
 """, re.VERBOSE)
@@ -31,62 +33,57 @@ _video_schema = validate.Schema({
                     "height": int,
                     "mediaType": validate.text,
                     "url": validate.text,
-                    validate.optional("streamer"): validate.text
+                    "versionShortLibelle": validate.text
                 },
             },
-        ),
-        "VTY": validate.text
+        )
     }
 })
 
 
 class ArteTV(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
-    def _create_stream(self, stream, is_live):
+    def _create_stream(self, stream, language):
         stream_name = "{0}p".format(stream["height"])
         stream_type = stream["mediaType"]
         stream_url = stream["url"]
+        stream_language = stream["versionShortLibelle"]
 
-        if stream_type in ("hls", "mp4"):
-            if urlparse(stream_url).path.endswith("m3u8"):
+        if language == "de":
+            language = ["DE", "VOST-DE", "VA", "VOA", "Dt. Live"]
+        elif language == "en":
+            language = ["ANG", "VOST-ANG"]
+        elif language == "es":
+            language = ["ESP", "VOST-ESP"]
+        elif language == "fr":
+            language = ["FR", "VOST-FR", "VF", "VOF", "Frz. Live"]
+        elif language == "pl":
+            language = ["POL", "VOST-POL"]
+
+        if stream_language in language:
+            if stream_type in ("hls", "mp4"):
+                if urlparse(stream_url).path.endswith("m3u8"):
+                    try:
+                        streams = HLSStream.parse_variant_playlist(self.session, stream_url)
+
+                        for stream in streams.items():
+                            yield stream
+                    except IOError as err:
+                        self.logger.error("Failed to extract HLS streams: {0}", err)
+                else:
+                    yield stream_name, HTTPStream(self.session, stream_url)
+
+            elif stream_type == "f4m":
                 try:
-                    streams = HLSStream.parse_variant_playlist(self.session, stream_url)
+                    streams = HDSStream.parse_manifest(self.session, stream_url)
 
-                    # TODO: Replace with "yield from" when dropping Python 2.
                     for stream in streams.items():
                         yield stream
                 except IOError as err:
-                    self.logger.error("Failed to extract HLS streams: {0}", err)
-            else:
-                yield stream_name, HTTPStream(self.session, stream_url)
-
-        elif stream_type == "f4m":
-            try:
-                streams = HDSStream.parse_manifest(self.session, stream_url)
-
-                for stream in streams.items():
-                    yield stream
-            except IOError as err:
-                self.logger.error("Failed to extract HDS streams: {0}", err)
-
-        elif stream_type == "rtmp":
-            params = {
-                "rtmp": stream["streamer"],
-                "playpath": stream["url"],
-                "swfVfy": SWF_URL,
-                "pageUrl": self.url,
-            }
-
-            if is_live:
-                params["live"] = True
-            else:
-                params["playpath"] = "mp4:{0}".format(params["playpath"])
-
-            stream = RTMPStream(self.session, params)
-            yield stream_name, stream
+                    self.logger.error("Failed to extract HDS streams: {0}", err)
 
     def _get_streams(self):
         match = _url_re.match(self.url)
@@ -102,9 +99,8 @@ class ArteTV(Plugin):
         if not video["videoJsonPlayer"]["VSR"]:
             return
 
-        is_live = video["videoJsonPlayer"]["VTY"] == "LIVE"
         vsr = video["videoJsonPlayer"]["VSR"].values()
-        streams = (self._create_stream(stream, is_live) for stream in vsr)
+        streams = (self._create_stream(stream, language) for stream in vsr)
 
         return chain.from_iterable(streams)
 

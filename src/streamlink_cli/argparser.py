@@ -1,6 +1,5 @@
 import argparse
 import re
-
 from string import printable
 from textwrap import dedent
 
@@ -8,7 +7,6 @@ from .constants import (
     LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
 )
 from .utils import find_default_player
-
 
 _filesize_re = re.compile("""
     (?P<size>\d+(\.\d+)?)
@@ -166,6 +164,7 @@ positional.add_argument(
     A URL to attempt to extract streams from.
 
     If it's a HTTP URL then "http://" can be omitted.
+    The URL can also be specified using the --url option.
     """
 )
 positional.add_argument(
@@ -467,6 +466,18 @@ output.add_argument(
 
 stream = parser.add_argument_group("Stream options")
 stream.add_argument(
+    "--url",
+    dest="url_param",
+    metavar="URL",
+    help="""
+    A URL to attempt to extract streams from.
+
+    If it's a HTTP URL then "http://" can be omitted.
+
+    This is an alternative to setting the URL using a positional argument.
+    """
+)
+stream.add_argument(
     "--default-stream",
     type=comma_list,
     metavar="STREAM",
@@ -502,9 +513,11 @@ stream.add_argument(
     A comma-delimited list of stream types to allow.
 
     The order will be used to separate streams when there are multiple
-    streams with the same name but different stream types.
+    streams with the same name but different stream types. Any stream type
+    not listed will be omitted from the available streams list.  A ``*``
+    can be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
-    Default is "rtmp,hls,hds,http,akamaihd".
+    Default is "rtmp,hls,hds,http,akamaihd,*".
     """
 )
 stream.add_argument(
@@ -1188,6 +1201,34 @@ plugin.add_argument(
     action="store_true",
     help="""
     Include subtitles for the deaf or hard of hearing, if available
+    """
+)
+plugin.add_argument(
+    "--liveedu-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with liveedu.tv.
+    """
+)
+plugin.add_argument(
+    "--liveedu-password",
+    metavar="PASSWORD",
+    help="""
+    A LiveEdu account password to use with --liveedu-email.
+    """
+)
+plugin.add_argument(
+    "--pcyourfreetv-username",
+    metavar="USERNAME",
+    help="""
+    The username used to register with pc-yourfreetv.com.
+    """
+)
+plugin.add_argument(
+    "--pcyourfreetv-password",
+    metavar="PASSWORD",
+    help="""
+    A pc-yourfreetv.com account password to use with --pcyourfreetv-username.
     """
 )
 
