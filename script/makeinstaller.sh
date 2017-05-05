@@ -208,10 +208,5 @@ cp -r "win32/rtmpdump" "${nsis_dir}/"
 
 pynsist build/streamlink.cfg
 
-# Make a copy of this build for the "latest" nightly
-if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
-    cp "${dist_dir}/${STREAMLINK_INSTALLER}.exe" "${dist_dir}/streamlink-latest.exe"
-fi
-
 echo "Success!" 1>&2
 echo "The installer should be in ${dist_dir}." 1>&2
