@@ -3,6 +3,8 @@ import math
 
 from Crypto.Cipher import AES
 
+from streamlink.compat import is_py3
+
 
 def evp_bytestokey(password, salt, key_len, iv_len):
     """
@@ -26,4 +28,7 @@ def decrypt_openssl(data, passphrase, key_length=32):
         key, iv = evp_bytestokey(passphrase, salt, key_length, AES.block_size)
         d = AES.new(key, AES.MODE_CBC, iv)
         out = d.decrypt(data[AES.block_size:])
-        return out[:-out[-1]]
+        if is_py3:
+            return out[:-out[-1]]
+        else:
+            return out[:-ord(out[-1])]
