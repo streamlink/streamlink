@@ -88,6 +88,8 @@ def create_output(plugin):
             out = check_file_output(args.output, args.force)
     elif args.stdout and not args.record:
         out = FileOutput(fd=stdout)
+    elif args.stdout and args.record:
+        console.exit("The option --record can't be used with --stdout.")
     else:
         http = namedpipe = None
 
