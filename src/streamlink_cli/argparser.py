@@ -318,7 +318,7 @@ player.add_argument(
     Paths can also be passed via this option in the event the
     player's path has not been set in the configuration file:
 
-    "streamlink <link> --player='path\to\mpc-hc64.exe'"
+    "streamlink <link> --player=path\to\mpc-hc64.exe"
 
     To use a player that is located in a path with spaces you must
     quote the path:
