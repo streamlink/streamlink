@@ -307,9 +307,18 @@ player.add_argument(
     default=find_default_player(),
     help="""
     Player to feed stream data to. This is a shell-like syntax to
-    support passing options to the player. For example:
+    support using a specific player, for example:
+
+      "streamlink <url> --player=mpc-hc"
+    
+    Options may also be passed to the player. For example:
 
       "vlc --file-caching=5000"
+
+    Paths can also be passed via this option in the event the
+    player's path has not been set in the configuration file:
+
+    "streamlink <link> --player='path\to\mpc-hc64.exe'"
 
     To use a player that is located in a path with spaces you must
     quote the path:
