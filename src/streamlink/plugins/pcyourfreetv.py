@@ -11,7 +11,7 @@ class PCYourFreeTV(Plugin):
     _url_re = re.compile(r'http://pc-yourfreetv\.com/index_player\.php\?channel=.+?&page_id=\d+')
     _iframe_re = re.compile(r"<iframe .*?\bsrc='(?P<iframe>.+?)'.*?</iframe>")
     _player_re = re.compile(r"<script language=JavaScript>m='(?P<player>.+?)'", re.DOTALL)
-    _video_url_re = re.compile(r'new YourFreeTV.Player\({source: "(?P<video_url>[^"]+?)".+?}.*\);', re.DOTALL)
+    _video_url_re = re.compile(r'new [a-zA-Z0-9]+.Player\({source: "(?P<video_url>[^"]+?)".+?}.*\);', re.DOTALL)
 
     options = PluginOptions({
         'username': None,
@@ -53,13 +53,13 @@ class PCYourFreeTV(Plugin):
             return
 
         res = http.get(match.group('iframe'))
-        match = self._player_re.search(res.text)
-        if match is None:
+        players = self._player_re.findall(res.text)
+        if len(players) == 0 is None:
             return
 
-        while match is not None:
-            player = unquote(match.group('player'))
-            match = self._player_re.search(player)
+        while len(players) > 0:
+            player = unquote(players[-1])
+            players = self._player_re.findall(player)
 
         match = self._video_url_re.search(player)
         if match is None:
