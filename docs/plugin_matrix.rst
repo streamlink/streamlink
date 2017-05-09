@@ -149,7 +149,7 @@ pcyourfreetv        pc-yourfreetv.com    Yes   --    Requires a login.
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
 playtv              playtv.fr            Yes   --    Streams may be geo-restricted to France.
-pluzz               - pluzz.francetv.fr  Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
+pluzz               - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                     - ludo.fr
                     - zouzous.fr
 powerapp            powerapp.com.tr      Yes   No
