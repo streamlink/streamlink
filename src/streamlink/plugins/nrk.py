@@ -13,7 +13,7 @@ COOKIE_PARAMS = (
 
 _id_re = re.compile(r"/(?:program|direkte|serie/[^/]+)/([^/]+)")
 _url_re = re.compile(r"https?://(tv|radio).nrk.no/")
-_api_baseurl_re = re.compile(r'apiBaseUrl:\s*"(?P<baseurl>[^"]+)"')
+_api_baseurl_re = re.compile(r'''apiBaseUrl:\s*["'](?P<baseurl>[^"']+)["']''')
 
 _schema = validate.Schema(
     validate.transform(_api_baseurl_re.search),
