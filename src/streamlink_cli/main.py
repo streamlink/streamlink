@@ -232,6 +232,7 @@ def open_stream(stream):
         console.logger.debug("Pre-buffering 8192 bytes")
         prebuffer = stream_fd.read(8192)
     except IOError as err:
+        stream_fd.close()
         raise StreamError("Failed to read data from stream: {0}".format(err))
 
     if not prebuffer:
@@ -261,6 +262,7 @@ def output_stream(stream):
     try:
         output.open()
     except (IOError, OSError) as err:
+        stream_fd.close()
         if isinstance(output, PlayerOutput):
             console.exit("Failed to start player: {0} ({1})",
                          args.player, err)
