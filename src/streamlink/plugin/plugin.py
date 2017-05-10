@@ -13,6 +13,8 @@ from ..options import Options
 # Someone who knows math, please fix.
 BIT_RATE_WEIGHT_RATIO = 2.8
 
+ALT_WEIGHT_MOD = 0.01
+
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
         "live": 1080,
@@ -42,18 +44,26 @@ def stream_weight(stream):
         if stream in weights:
             return weights[stream], group
 
-    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?$", stream)
+    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?(?:_(alt)(\d)?)?$", stream)
 
     if match:
+        weight = 0
+
+        if match.group(6):
+            if match.group(7):
+                weight -= ALT_WEIGHT_MOD * int(match.group(7))
+            else:
+                weight -= ALT_WEIGHT_MOD
+
         name_type = match.group(2)
         if name_type == "k":  # bit rate
             bitrate = int(match.group(1))
-            weight = bitrate / BIT_RATE_WEIGHT_RATIO
+            weight += bitrate / BIT_RATE_WEIGHT_RATIO
 
             return weight, "bitrate"
 
         elif name_type == "p":  # resolution
-            weight = int(match.group(1))
+            weight += int(match.group(1))
 
             if match.group(3):  # fps eg. 60p or 50p
                 weight += int(match.group(3))
