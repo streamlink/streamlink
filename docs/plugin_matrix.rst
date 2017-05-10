@@ -145,7 +145,6 @@ openrectv           openrec.tv           Yes   Yes
 orf_tvthek          tvthek.orf.at        Yes   Yes
 ovvatv              ovva.tv              Yes   No
 pandatv             panda.tv             Yes   ?
-pcyourfreetv        pc-yourfreetv.com    Yes   --    Requires a login.
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto             picarto.tv           Yes   --
 playtv              playtv.fr            Yes   --    Streams may be geo-restricted to France.

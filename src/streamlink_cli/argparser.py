@@ -1217,20 +1217,6 @@ plugin.add_argument(
     A LiveEdu account password to use with --liveedu-email.
     """
 )
-plugin.add_argument(
-    "--pcyourfreetv-username",
-    metavar="USERNAME",
-    help="""
-    The username used to register with pc-yourfreetv.com.
-    """
-)
-plugin.add_argument(
-    "--pcyourfreetv-password",
-    metavar="PASSWORD",
-    help="""
-    A pc-yourfreetv.com account password to use with --pcyourfreetv-username.
-    """
-)
 
 # Deprecated options
 stream.add_argument(
