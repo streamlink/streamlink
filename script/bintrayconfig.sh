@@ -82,3 +82,12 @@ cat > "${build_dir}/bintray-nightly.json" <<EOF
 EOF
 
 echo "Wrote Bintray config to: ${build_dir}/bintray-nightly.json"
+
+# update repo to full clone and get the tags
+git fetch --unshallow
+git fetch --tags
+latest_tag=$(git describe --tags --abbrev=0)
+tag_changes_json=$(git log ${latest_tag}..HEAD --no-merges --pretty=format:" * [\`%h\`](https://github.com/streamlink/streamlink/commit/%H) %s" | sed ':a;N;$!ba;s/\n/\\n/g' | sed 's/"/\\"/g')
+echo "{\"bintray\": {\"content\": \"**This build includes the following changes since [v${latest_tag}](https://github.com/streamlink/streamlink/releases/tag/${latest_tag})**\n\n${tag_changes_json}\"}}" > "${build_dir}/bintray-changelog.json"
+
+echo "Wrote changelog to ${build_dir}/bintray-changelog.json"
