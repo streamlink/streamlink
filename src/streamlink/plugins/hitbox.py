@@ -8,16 +8,16 @@ from streamlink.plugin.api import StreamMapper, http, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import absolute_url
 
-HLS_PLAYLIST_BASE = "http://www.hitbox.tv{0}"
-LIVE_API = "http://www.hitbox.tv/api/media/live/{0}?showHidden=true"
-PLAYER_API = "http://www.hitbox.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
+HLS_PLAYLIST_BASE = "http://www.smashcast.tv{0}"
+LIVE_API = "http://www.smashcast.tv/api/media/live/{0}?showHidden=true"
+PLAYER_API = "http://www.smashcast.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
 SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
 SWF_URL = SWF_BASE + "flowplayer.commercial-3.2.16.swf"
-VOD_BASE_URL = "http://www.hitbox.tv/"
+VOD_BASE_URL = "http://www.smashcast.tv/"
 
 _quality_re = re.compile(r"(\d+p)$")
 _url_re = re.compile(r"""
-    http(s)?://(www\.)?hitbox.tv
+    http(s)?://(www\.)?(hitbox|smashcast).tv
     /(?P<channel>[^/]+)
     (?:
         /(?P<media_id>[^/]+)
@@ -76,7 +76,7 @@ _player_schema = validate.Schema(
 
 class Hitbox(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
     def _get_quality(self, label):
