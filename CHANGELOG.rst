@@ -1,3 +1,116 @@
+streamlink 0.6.0 (2017-05-11)
+-----------------------------
+Another release of Streamlink!
+
+We've updated more plugins, improved documentation, and moved out nightly builds to Bintray (S3 was costing *wayyyy* too much).
+
+Again, many thanks for those who've contributed!
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating](https://streamlink.github.io/donate.html).
+
+Thank you very much!
+
+::
+
+    Daniel Draper <Germandrummer92@users.noreply.github.com> (1):
+          Will exit with exit code 1 if stream cannot be opened. (#785)
+    
+    Forrest Alvarez <gravyboat@users.noreply.github.com> (3):
+          Update readme so users are aware using Streamlink bypasses ads
+          Forgot a )
+          Make notice more agnostic
+    
+    Mohamed El Morabity <melmorabity@fedoraproject.org> (18):
+          Disable HDS streams which are no more available
+          Add support for pc-yourfreetv.com
+          Add support for BFMTV
+          Add support for Cam4
+          Disable HDS streams for live videos
+          Add support for Bloomberg
+          Add support for Bloomberg Radio live stream
+          Add support for cnews.fr
+          Fix unit tests for canalplus plugin
+          Add authentication token to http queries
+          Add rte.ie/player support
+          Add support for HLS streams
+          Update for new page layout
+          Update for new new page layout
+          Fix for new layout
+          Pluzz platform replaced by new france.tv website
+          Update documentation
+          Always use token generator for streams from france.tv
+    
+    Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+          plugins.brightcove: support for HLS stream URLs with query strings + RTMPE stream URLs (#790)
+    
+    RosadinTV <rosadintv@outlook.com> (5):
+          Update plugin_matrix.rst
+          Add telefe.py
+          Add test_plugin_telefe.py
+          Update telefe.py
+          Add support for ElTreceTV (VOD & Live) (#816)
+    
+    Sebastian Meyer <mail@bastimeyer.de> (1):
+          Improve contribution guidelines (#772)
+    
+    back-to <back-to@users.noreply.github.com> (9):
+          [chaturbate] New API for HLS url
+          [chaturbate] Fixed python 3.5 bug and added regex tests
+          [VRTbe] new plugin for vrt.be/vrtnu
+          [oldlivestream] New regex for cdn subdomains and embeded streams
+          [tv1channel.org] New Plugin for embeded streams on tv1channel.org
+          [cyro] New plugin for embeded streams from cyro.se
+          [Facebook] Added unittests
+          [ArteTV] new regex, removed rtmp and better result for available streams
+          [NRK.NO] fixed regex for _api_baseurl_re
+    
+    beardypig <beardypig@protonmail.com> (15):
+          travis: use pytest to run the tests for coverage
+          Revert "stream.hds: ensure the live edge does not go past the latest fragment"
+          plugins.azubutv: plugin removed
+          plugins.ustreamtv: log timeout errors and adjust retries for polling
+          appveyor: update config to fix builds on Python 3.3
+          plugin.tvplayer: update to support new site layout
+          plugin.tvplayer: update tests to match new plugin
+          plugins.tvplayer: allow https stream URLs
+          plugins.tvnbg: add support for live streams on tvn.bg
+          plugins.apac: add ustream apac wrapper
+          Deploy nightly builds to Bintray instead of S3
+          plugins.streann: support for ott.streann.com
+          utils.crypto: fix openssl_decrypt for py27
+          build: update the bintray release notes for nightlies
+          plugins.streamable: support for videos on streamable.com
+    
+    beardypig <beardypig@users.noreply.github.com> (20):
+          plugins.ustreamtv: support for the new ustream.tv API
+          plugins.ustreamtv: add suppot for redirectLocked embedded streams
+          plugins.livecodingtv: renamed to livedu, and updated for new site
+          plugins.ustreamtv: continue to poll the ustream API when streaming
+          plugins.ustreamtv: rename the plugin class back to UStreamTV
+          docs: remove references to python-librtmp
+          plugins.ustream: add some comments
+          plugins.ustreamtv: support for password protected streams
+          plugins.nbc: support vod from nbc.com
+          plugins.nbcsports: add support for nbcsports.com via theplatform
+          stream.hds: ensure the live edge does not go past the latest fragment
+          Dailymotion feature video and backup stream fallback (#773)
+          plugin.gardenersworld: support for VOD on gardenersworld.com
+          plugins.twitch: support for pop-out player URLS and fixed clips
+          tests: cmdline tests can fail if there are some config options set
+          plugins.ustreamtv: fix moduleInfo retry loop
+          cli: add --url option that can be used in config files to set a URL
+          cli: clarification of the --url option
+          cli: add wildcard to --stream-types option
+          plugins.rtve: stop IOError bubbling up on 404 errors
+    
+    wlerin <wlerin@gmail.com> (2):
+          Send Referer and UserAgent headers
+          Fix method decorator
+    
+    zp@users.noreply.github.com <zp@users.noreply.github.com> (1):
+          New plugin for Facebook 360p streams https://gist.github.com/zp/c461761565dba764c90548758ee5ae9f
+    
+
 streamlink 0.5.0 (2017-04-04)
 -----------------------------
 Streamlink 0.5.0!
