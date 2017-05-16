@@ -20,7 +20,7 @@ class BBCiPlayer(Plugin):
             live/(?P<channel_name>\w+)
         )
     """, re.VERBOSE)
-    vpid_re = re.compile(r'"vpid"\s*:\s*"(\w+)"')
+    vpid_re = re.compile(r'"ident_id"\s*:\s*"(\w+)"')
     tvip_re = re.compile(r'event_master_brand=(\w+?)&')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
