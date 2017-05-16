@@ -1231,6 +1231,20 @@ plugin.add_argument(
     A pc-yourfreetv.com account password to use with --pcyourfreetv-username.
     """
 )
+plugin.add_argument(
+    "--bbciplayer-username",
+    metavar="USERNAME",
+    help="""
+    The username used to register with bbc.co.uk.
+    """
+)
+plugin.add_argument(
+    "--bbciplayer-password",
+    metavar="PASSWORD",
+    help="""
+    A bbc.co.uk account password to use with --bbciplayer-username.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
