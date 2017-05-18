@@ -64,14 +64,25 @@ Platform                             Installing
 Mac OS X                             .. code-block:: console
 
                                         # easy_install -U streamlink
+`Homebrew`_                          .. code-block:: console
+
+                                        # brew install streamlink
+
+                                     `Installing Homebrew packages`_
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 
 `Chocolatey`_                        .. code-block:: console
 
                                         C:\> choco install streamlink
+
+                                     `Installing Chocolatey packages`_
 ==================================== ===========================================
 
+.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+
+.. _Installing Homebrew packages: https://brew.sh
+.. _Installing Chocolatey packages: https://chocolatey.org
 
 Package maintainers
 -------------------
