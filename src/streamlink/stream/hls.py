@@ -124,6 +124,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
         self.duration_offset_start = self.session.options.get("hls-offset-start")
         self.duration_offset_end = self.session.options.get("hls-offset-end")
+        self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         self.reload_playlist()
 
@@ -186,7 +187,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.playlist_end = last_sequence.num
 
         if self.playlist_sequence < 0:
-            if self.playlist_end is None and not self.stream.force_restart:
+            if self.playlist_end is None and not self.hls_live_restart:
                 edge_index = -(min(len(sequences), max(int(self.live_edge), 1)))
                 edge_sequence = sequences[edge_index]
                 self.playlist_sequence = edge_sequence.num
