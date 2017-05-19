@@ -708,6 +708,15 @@ transport.add_argument(
     Default is 10.0.
     """)
 transport.add_argument(
+    "--hls-audio-select",
+    type=str,
+    metavar="CODE",
+    help="""
+    Selects a specific audio source, by language code, when multiple audio sources are available.
+
+    Note: This is only useful in special circumstances where the regular locale option fails.
+    """)
+transport.add_argument(
     "--hls-timeout",
     type=num(float, min=0),
     metavar="TIMEOUT",
@@ -737,15 +746,10 @@ transport.add_argument(
     Default is END.
     """)
 transport.add_argument(
-    "--hls-audio-select",
-    type=str,
-    metavar="CODE",
+    "--hls-live-restart",
+    action="store_true",
     help="""
-    Selects a specific audio source by language code
-    when multiple audio sources are available.
-
-    Note: This is only useful in special circumstances
-    where the regular locale option fails.
+    Skip to the beginning of a live stream, or as far back as possible.
     """)
 transport.add_argument(
     "--http-stream-timeout",

@@ -727,6 +727,9 @@ def setup_options():
     if args.hls_offset_end:
         streamlink.set_option("hls-offset-end", args.hls_offset_end)
 
+    if args.hls_live_restart:
+        streamlink.set_option("hls-live-restart", args.hls_live_restart)
+
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
 
