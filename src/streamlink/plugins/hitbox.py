@@ -9,7 +9,7 @@ from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import absolute_url
 
 HLS_PLAYLIST_BASE = "http://www.smashcast.tv{0}"
-LIVE_API = "http://www.smashcast.tv/api/media/live/{0}?showHidden=true"
+LIVE_API = "http://www.smashcast.tv/api/media/live/{0}?showHidden=true&liveonly=false"
 PLAYER_API = "http://www.smashcast.tv/api/player/config/{0}/{1}?embed=false&showHidden=true"
 SWF_BASE = "http://edge.vie.hitbox.tv/static/player/flowplayer/"
 SWF_URL = SWF_BASE + "flowplayer.commercial-3.2.16.swf"
@@ -20,13 +20,15 @@ _url_re = re.compile(r"""
     http(s)?://(www\.)?(hitbox|smashcast).tv
     /(?P<channel>[^/]+)
     (?:
-        /(?P<media_id>[^/]+)
+        (?:/videos)?/(?P<media_id>[^/]+)
     )?
 """, re.VERBOSE)
 
 _live_schema = validate.Schema(
     {
         "livestream": [{
+            "media_user_name": validate.text,
+            validate.optional("media_hosted_media"): object,
             "media_is_live": validate.all(
                 validate.text,
                 validate.transform(int),
@@ -172,9 +174,15 @@ class Hitbox(Plugin):
             return
 
         channel, media_id = match.group("channel", "media_id")
-        if channel != "video":
+        self.logger.debug("Matched URL: channel={0}, media_id={1}".format(channel, media_id))
+        if not media_id:
             res = http.get(LIVE_API.format(channel))
             livestream = http.json(res, schema=_live_schema)
+            if livestream["media_hosted_media"]:
+                hosted = _live_schema.validate(livestream["media_hosted_media"])
+                self.logger.info("{0} is hosting {1}", livestream["media_user_name"], hosted["media_user_name"])
+                livestream = hosted
+
             if not livestream["media_is_live"]:
                 return
 
