@@ -30,6 +30,7 @@ class TVPlayer(Plugin):
         validate.get("response"))
     context_schema = validate.Schema({
         "validate": validate.text,
+        validate.optional("token"): validate.text,
         "platform": {
             "key": validate.text
         }
@@ -59,6 +60,7 @@ class TVPlayer(Plugin):
 
     def _get_stream_data(self, resource, token, service=1):
         # Get the context info (validation token and platform)
+        self.logger.debug("Getting stream information for resource={0}".format(resource))
         context_res = http.get(self.context_url, params={"resource": resource,
                                                          "nonce": token})
         context_data = http.json(context_res, schema=self.context_schema)
@@ -68,13 +70,15 @@ class TVPlayer(Plugin):
             service=service,
             id=resource,
             validate=context_data["validate"],
+            token=context_data["token"],
             platform=context_data["platform"]["key"]))
 
         return http.json(res, schema=self.stream_schema)
 
     def _get_streams(self):
         if self.get_option("email") and self.get_option("password"):
-            self.authenticate(self.get_option("email"), self.get_option("password"))
+            if not self.authenticate(self.get_option("email"), self.get_option("password")):
+                self.logger.warning("Failed to login as {0}".format(self.get_option("email")))
 
         # find the list of channels from the html in the page
         self.url = self.url.replace("https", "http")  # https redirects to http
