@@ -306,27 +306,33 @@ player.add_argument(
     metavar="COMMAND",
     default=find_default_player(),
     help="""
-    Player to feed stream data to. This is a shell-like syntax to
-    support using a specific player, for example:
+    Player to feed stream data to. By default, VLC will be used
+    if it can be found in its default location.
 
-      "streamlink <url> --player=mpc-hc"
+    This is a shell-like syntax to support using a specific player:
+
+      "streamlink --player=vlc <url> <quality>"
+
+    Absolute or relative paths can also be passed via this option
+    in the event the player's executable can not be resolved:
+
+      streamlink --player=/path/to/vlc <url> <quality>
+
+      streamlink --player=./vlc-player/vlc <url> <quality>
+
+    To use a player that is located in a path with spaces you must
+    quote the parameter or its value:
+
+      streamlink "--player=/path/with spaces/vlc" <url> <quality>
+
+      streamlink --player "/path/with spaces/mpc-hc64.exe" <url> <quality
     
     Options may also be passed to the player. For example:
 
-      "vlc --file-caching=5000"
+      streamlink --player "vlc --file-caching=5000" <url> <quality>
 
-    Paths can also be passed via this option in the event the
-    player's path has not been set in the configuration file:
-
-      "streamlink --player="path\to\mpc-hc64.exe" <url> <quality>"
-
-    To use a player that is located in a path with spaces you must
-    quote the path:
-
-      "'/path/with spaces/vlc' --file-caching=5000"
-
-    By default VLC will be used if it can be found in its default
-    location.
+    As an alternative to this, see the --player-args parameter,
+    which does not log the customer player arguments.
     """
 )
 player.add_argument(
