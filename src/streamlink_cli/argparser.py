@@ -325,7 +325,7 @@ player.add_argument(
 
       streamlink "--player=/path/with spaces/vlc" <url> <quality>
 
-      streamlink --player "/path/with spaces/mpc-hc64.exe" <url> <quality
+      streamlink --player "C:\path\with spaces\mpc-hc64.exe" <url> <quality
     
     Options may also be passed to the player. For example:
 
