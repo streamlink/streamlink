@@ -311,22 +311,20 @@ player.add_argument(
 
     This is a shell-like syntax to support using a specific player:
 
-      "streamlink --player=vlc <url> <quality>"
+      streamlink --player=vlc <url> <quality>
 
     Absolute or relative paths can also be passed via this option
     in the event the player's executable can not be resolved:
 
       streamlink --player=/path/to/vlc <url> <quality>
-
       streamlink --player=./vlc-player/vlc <url> <quality>
 
     To use a player that is located in a path with spaces you must
     quote the parameter or its value:
 
       streamlink "--player=/path/with spaces/vlc" <url> <quality>
+      streamlink --player "C:\path\with spaces\mpc-hc64.exe" <url> <quality>
 
-      streamlink --player "C:\path\with spaces\mpc-hc64.exe" <url> <quality
-    
     Options may also be passed to the player. For example:
 
       streamlink --player "vlc --file-caching=5000" <url> <quality>
