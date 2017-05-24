@@ -70,7 +70,7 @@ class TVPlayer(Plugin):
             service=service,
             id=resource,
             validate=context_data["validate"],
-            token=context_data["token"],
+            token=context_data.get("token"),
             platform=context_data["platform"]["key"]))
 
         return http.json(res, schema=self.stream_schema)
