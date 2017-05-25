@@ -29,7 +29,7 @@ _Argument = namedtuple("Argument", ["args", "options"])
 _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
 _note_re = re.compile(r"Note: (.*)\n\n", re.DOTALL)
-_option_re = re.compile(r"(--[\w-]+)")
+_option_re = re.compile(r"(?m)^((?!\s{2}).*)(--[\w-]+)")
 
 
 class ArgumentParser(object):
@@ -73,6 +73,17 @@ class ArgparseDirective(Directive):
         # non-indented text.
         help = dedent(help)
 
+        # Replace option references with links.
+        # Do this before indenting blocks and notes.
+        help = _option_re.sub(
+            lambda m: (
+                "{0}:option:`{1}`".format(m.group(1), m.group(2))
+                if m.group(2) in self._available_options
+                else m.group(0)
+            ),
+            help
+        )
+
         # Create simple blocks.
         help = _block_re.sub("::\n\n  ", help)
 
@@ -82,16 +93,6 @@ class ArgparseDirective(Directive):
         # Create note directives from "Note: " paragraphs.
         help = _note_re.sub(
             lambda m: ".. note::\n\n" + indent(m.group(1)) + "\n\n",
-            help
-        )
-
-        # Replace option references with links.
-        help = _option_re.sub(
-            lambda m: (
-                ":option:`{0}`".format(m.group(1))
-                if m.group(1) in self._available_options
-                else m.group(1)
-            ),
             help
         )
 
