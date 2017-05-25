@@ -31,6 +31,7 @@ class App17(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         page = match.group("page")
+        channel = match.group("channel")
 
         http.headers.update({'User-Agent': useragents.CHROME})
 
@@ -38,6 +39,16 @@ class App17(Plugin):
             res = http.get(self.url)
             userid = _userid_re.search(res.text).group(1)
             api = http.post(API_URL, data={"targetUserID": userid})
+            data = http.json(api, schema=_user_api_schema)
+            rid = data["liveStreamID"]
+            if rid == 0:
+                self.logger.info("Stream currently unavailable.")
+                return
+
+            url = ROOM_URL.format(rid)
+            res = http.get(url)
+        elif page == 'profile':
+            api = http.post(API_URL, data={"targetUserID": channel})
             data = http.json(api, schema=_user_api_schema)
             rid = data["liveStreamID"]
             if rid == 0:
@@ -67,13 +78,16 @@ class App17(Plugin):
         else:
             yield "live", HTTPStream(self.session, url)
 
-        prefix = url.replace("rtmp:", "http:").replace(".flv", ".m3u8")
-        if '.m3u8' not in prefix:
-            url = prefix + "/playlist.m3u8"
+        prefix = url.replace("rtmp:", "http:").replace(".flv", "/playlist.m3u8")
+        if '17app.co' in prefix:
+            if '/playlist.m3u8' not in prefix:
+                url = prefix + "/playlist.m3u8"
+            else:
+                url = prefix
             for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                 yield stream
         else:
-            url = prefix
+            url = url.replace(".flv", ".m3u8")
             yield "live", HLSStream(self.session, url)
 
 
