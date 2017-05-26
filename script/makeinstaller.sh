@@ -45,6 +45,14 @@ packages=requests
          iso639
          iso3166
          pkg_resources
+         six
+         appdirs
+         packaging
+         pyparsing
+         urllib3
+         idna
+         chardet
+         certifi
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
