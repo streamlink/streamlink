@@ -114,6 +114,6 @@ class HTTPServer(object):
         if not client_only:
             try:
                 self.socket.shutdown(2)
-            except OSError:
+            except (OSError, socket.error):
                 pass
             self.socket.close()

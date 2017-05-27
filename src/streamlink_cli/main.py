@@ -919,6 +919,17 @@ def setup_plugin_options():
     if liveedu_password:
         streamlink.set_plugin_option("liveedu", "password", liveedu_password)
 
+    if args.bbciplayer_username:
+        streamlink.set_plugin_option("bbciplayer", "username", args.bbciplayer_username)
+
+    if args.bbciplayer_username and not args.bbciplayer_password:
+        bbciplayer_password = console.askpass("Enter bbc.co.uk account password: ")
+    else:
+        bbciplayer_password = args.bbciplayer_password
+
+    if bbciplayer_password:
+        streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

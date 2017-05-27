@@ -56,7 +56,7 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: $BUILD_INSTALLER = yes
+      condition: $BUILD_INSTALLER == yes
   - provider: bintray
     file: build/bintray-nightly.json
     user: "${BINTRAY_USER}"
@@ -64,7 +64,7 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-      condition: $BUILD_INSTALLER = yes && $TRAVIS_EVENT_TYPE == cron
+      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
   - provider: bintray
     file: build/bintray-latest.json
     user: "${BINTRAY_USER}"
@@ -72,4 +72,7 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-      condition: $BUILD_INSTALLER = yes && $TRAVIS_EVENT_TYPE == cron
+      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
+
+after_deploy:
+  - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' ]]; then ./script/bintrayupdate.sh; fi

@@ -64,14 +64,25 @@ Platform                             Installing
 Mac OS X                             .. code-block:: console
 
                                         # easy_install -U streamlink
+`Homebrew`_                          .. code-block:: console
+
+                                        # brew install streamlink
+
+                                     `Installing Homebrew packages`_
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 
 `Chocolatey`_                        .. code-block:: console
 
                                         C:\> choco install streamlink
+
+                                     `Installing Chocolatey packages`_
 ==================================== ===========================================
 
+.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+
+.. _Installing Homebrew packages: https://brew.sh
+.. _Installing Chocolatey packages: https://chocolatey.org
 
 Package maintainers
 -------------------
@@ -237,11 +248,13 @@ Windows binaries
     Windows XP is not supported.
     Windows Vista requires at least SP2 to be installed. 
 
-You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
+A Windows installer of the latest **stable release** can be found on the `GitHub releases page <https://github.com/streamlink/streamlink/releases/latest>`__.
 
-Alternatively, you can download the latest `nightly Windows installer <https://dl.bintray.com/streamlink/streamlink-nightly/streamlink-latest.exe>`__.
+Alternatively, a Windows installer of the `latest development build <https://dl.bintray.com/streamlink/streamlink-nightly/streamlink-latest.exe>`__ for testing purposes is available,
+with a summary of the changes in the `release notes <https://bintray.com/streamlink/streamlink-nightly/streamlink/latest#release>`__. This development build is updated once per day,
+and a list of `previous builds <https://dl.bintray.com/streamlink/streamlink-nightly/>`__ is provided.
 
-This is a installer which contains:
+This is an installer which contains:
 
 - A compiled version of Streamlink that does not require an existing Python
   installation

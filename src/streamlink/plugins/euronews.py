@@ -9,24 +9,14 @@ from streamlink.stream import HLSStream, HTTPStream
 class Euronews(Plugin):
     _url_re = re.compile(r"http(?:s)?://(\w+)\.?euronews.com/(live|.*)")
     _re_vod = re.compile(r'<meta\s+property="og:video"\s+content="(http.*?)"\s*/>')
-    _live_api_url = "http://fr.euronews.com/api/watchlive.json"
+    _live_api_url = "http://{0}.euronews.com/api/watchlive.json"
     _live_schema = validate.Schema({
         u"url": validate.url()
     })
     _stream_api_schema = validate.Schema({
         u'status': u'ok',
-        u'primary': {
-            validate.text: {
-                validate.optional(u'hls'): validate.url(),
-                validate.optional(u'rtsp'): validate.url(scheme="rtsp")
-            }
-        },
-        validate.optional(u'backup'): {
-            validate.text: {
-                validate.optional(u'hls'): validate.url(),
-                validate.optional(u'rtsp'): validate.url(scheme="rtsp")
-            }
-        }
+        u'primary': validate.url(),
+        validate.optional(u'backup'): validate.url()
     })
 
     @classmethod
@@ -43,20 +33,17 @@ class Euronews(Plugin):
         if len(video_urls):
             return dict(vod=HTTPStream(self.session, video_urls[0]))
 
-    def _get_live_streams(self, language):
+    def _get_live_streams(self, subdomain):
         """
         Get the live stream in a particular language
-        :param language:
+        :param subdomain:
         :return:
         """
-        res = http.get(self._live_api_url)
+        res = http.get(self._live_api_url.format(subdomain))
         live_res = http.json(res, schema=self._live_schema)
         api_res = http.get(live_res[u"url"])
         stream_data = http.json(api_res, schema=self._stream_api_schema)
-        # find the stream in the requested language
-        if language in stream_data[u'primary']:
-            playlist_url = stream_data[u'primary'][language][u"hls"]
-            return HLSStream.parse_variant_playlist(self.session, playlist_url)
+        return HLSStream.parse_variant_playlist(self.session, stream_data[u'primary'])
 
     def _get_streams(self):
         """
@@ -64,13 +51,10 @@ class Euronews(Plugin):
         :return:
         """
         match = self._url_re.match(self.url)
-        language, path = match.groups()
-
-        # remap domain to language (default to english)
-        language = {"www": "en", "": "en", "arabic": "ar"}.get(language, language)
+        subdomain, path = match.groups()
 
         if path == "live":
-            return self._get_live_streams(language)
+            return self._get_live_streams(subdomain)
         else:
             return self._get_vod_stream()
 

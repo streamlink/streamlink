@@ -112,7 +112,8 @@ goodgame            goodgame.ru          Yes   No    Only HLS streams are availa
 googledrive         - docs.google.com    --    Yes
                     - drive.google.com
 gulli               replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
-hitbox              hitbox.tv            Yes   Yes
+hitbox              - hitbox.tv          Yes   Yes
+                    - smashcast.tv
 huajiao             huajiao.com          Yes   No    
 huomao              huomao.com           Yes   No
 huya                huya.com             Yes   No    Temporarily only HLS streams available.
