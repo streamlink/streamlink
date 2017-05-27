@@ -1231,20 +1231,6 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--pcyourfreetv-username",
-    metavar="USERNAME",
-    help="""
-    The username used to register with pc-yourfreetv.com.
-    """
-)
-plugin.add_argument(
-    "--pcyourfreetv-password",
-    metavar="PASSWORD",
-    help="""
-    A pc-yourfreetv.com account password to use with --pcyourfreetv-username.
-    """
-)
-plugin.add_argument(
     "--bbciplayer-username",
     metavar="USERNAME",
     help="""

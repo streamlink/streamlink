@@ -919,17 +919,6 @@ def setup_plugin_options():
     if liveedu_password:
         streamlink.set_plugin_option("liveedu", "password", liveedu_password)
 
-    if args.pcyourfreetv_username:
-        streamlink.set_plugin_option("pcyourfreetv", "username", args.pcyourfreetv_username)
-
-    if args.pcyourfreetv_username and not args.pcyourfreetv_password:
-        pcyourfreetv_password = console.askpass("Enter pc-yourfreetv.com password: ")
-    else:
-        pcyourfreetv_password = args.pcyourfreetv_password
-
-    if pcyourfreetv_password:
-        streamlink.set_plugin_option("pcyourfreetv", "password", pcyourfreetv_password)
-
     if args.bbciplayer_username:
         streamlink.set_plugin_option("bbciplayer", "username", args.bbciplayer_username)
 
