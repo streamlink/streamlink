@@ -153,6 +153,7 @@ playtv              playtv.fr            Yes   --    Streams may be geo-restrict
 pluzz               - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                     - ludo.fr
                     - zouzous.fr
+		    - france3-reg.. [8]_
 powerapp            powerapp.com.tr      Yes   No
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
@@ -257,3 +258,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
+.. [8] france3-regions.francetvinfo.fr
