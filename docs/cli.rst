@@ -136,7 +136,7 @@ or for a option without value::
 
 .. note::
     Any quotes used will be part of the value, so only use when the value needs them,
-    e.g. specifiying a player with a path containing spaces.
+    e.g. specifying a player with a path containing spaces.
 
 Example
 ^^^^^^^
@@ -219,7 +219,7 @@ You can login like this:
 Once logged in, the plugin makes sure to save the session credentials to avoid
 asking your username and password again.
 
-Neverthless, these credentials are valid for a limited amount of time, so it
+Nevertheless, these credentials are valid for a limited amount of time, so it
 might be a good idea to save your username and password in your
 :ref:`configuration file <cli-streamlinkrc>` anyway.
 
