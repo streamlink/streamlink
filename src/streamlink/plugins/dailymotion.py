@@ -128,7 +128,12 @@ class DailyMotion(Plugin):
                 continue
 
             if quality == "hds":
-                streams = HDSStream.parse_manifest(self.session, res.url)
+                self.logger.debug('PLAYLIST URL: {0}'.format(res.url))
+                try:
+                    streams = HDSStream.parse_manifest(self.session, res.url)
+                except:
+                    streams = HLSStream.parse_variant_playlist(self.session, res.url)
+
                 for name, stream in streams.items():
                     if key == "source":
                         name += "+"
