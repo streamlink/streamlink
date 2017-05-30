@@ -28,7 +28,7 @@ _Argument = namedtuple("Argument", ["args", "options"])
 
 _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
-_note_re = re.compile(r"Note: (.*)\n\n", re.DOTALL)
+_note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
 _option_re = re.compile(r"(?m)^((?!\s{2}).*)(--[\w-]+)")
 
 
