@@ -163,8 +163,10 @@ positional.add_argument(
     help="""
     A URL to attempt to extract streams from.
 
-    If it's a HTTP URL then "http://" can be omitted.
-    The URL can also be specified using the --url option.
+    Usually, the protocol of http(s) URLs can be omitted ("https://"),
+    depending on the implementation of the plugin being used.
+
+    Alternatively, the URL can also be specified by using the --url option.
     """
 )
 positional.add_argument(
@@ -175,13 +177,13 @@ positional.add_argument(
     help="""
     Stream to play.
 
-    Use "best" or "worst" for highest or lowest quality available.
+    Use "best" or "worst" for selecting the highest or lowest available quality.
 
     Fallback streams can be specified by using a comma-separated list:
 
       "720p,480p,best"
 
-    If no stream is specified and --default-stream is not used then a
+    If no stream is specified and --default-stream is not used, then a
     list of available streams will be printed.
     """
 )
@@ -224,7 +226,8 @@ general.add_argument(
     "--can-handle-url-no-redirect",
     metavar="URL",
     help="""
-    Same as --can-handle-url but without following redirects when looking up the URL.
+    Same as --can-handle-url but without following redirects
+    when looking up the URL.
     """
 )
 general.add_argument(
@@ -275,7 +278,7 @@ general.add_argument(
     help="""
     Enable or disable the automatic check for a new version of Streamlink.
 
-    Default is no
+    Default is "no".
     """
 )
 general.add_argument(
@@ -294,7 +297,7 @@ general.add_argument(
     subtitle and audio language.
 
     The locale is formatted as [language_code]_[country_code],
-     eg. eg. en_US or es_ES
+    eg. en_US or es_ES.
 
     Default is system locale.
     """
@@ -330,7 +333,7 @@ player.add_argument(
       streamlink --player "vlc --file-caching=5000" <url> <quality>
 
     As an alternative to this, see the --player-args parameter,
-    which does not log the customer player arguments.
+    which does not log any custom player arguments.
     """
 )
 player.add_argument(
@@ -340,7 +343,8 @@ player.add_argument(
     help="""
     This option allows you to customize the default arguments which
     are put together with the value of --player to create a command
-    to execute.
+    to execute. Unlike the --player parameter, custom player
+    arguments will not be logged.
 
     This value can contain formatting variables surrounded by curly
     braces, {{ and }}. If you need to include a brace character, it
@@ -357,6 +361,11 @@ player.add_argument(
     need to add arguments after the filename.
 
     Default is "{0}".
+
+    Example:
+
+      streamlink -p vlc -a "--play-and-exit {{filename}}" <url> <quality>
+
     """.format(DEFAULT_PLAYER_ARGUMENTS)
 )
 player.add_argument(
@@ -393,7 +402,6 @@ player.add_argument(
     This makes it possible to handle stream disconnects if your player
     is capable of reconnecting to a HTTP stream. This is usually
     done by setting your player to a "repeat mode".
-
     """
 )
 player.add_argument(
@@ -485,9 +493,11 @@ stream.add_argument(
     help="""
     A URL to attempt to extract streams from.
 
-    If it's a HTTP URL then "http://" can be omitted.
+    Usually, the protocol of http(s) URLs can be omitted (https://),
+    depending on the implementation of the plugin being used.
 
-    This is an alternative to setting the URL using a positional argument.
+    This is an alternative to setting the URL using a positional argument
+    and can be useful if set in a config file.
     """
 )
 stream.add_argument(
@@ -495,7 +505,16 @@ stream.add_argument(
     type=comma_list,
     metavar="STREAM",
     help="""
-    Open this stream when no stream argument is specified, e.g. "best".
+    Stream to play.
+
+    Use "best" or "worst" for selecting the highest or lowest available quality.
+
+    Fallback streams can be specified by using a comma-separated list:
+
+      "720p,480p,best"
+
+    This is an alternative to setting the stream using a positional argument
+    and can be useful if set in a config file.
     """
 )
 stream.add_argument(
@@ -528,7 +547,8 @@ stream.add_argument(
     The order will be used to separate streams when there are multiple
     streams with the same name but different stream types. Any stream type
     not listed will be omitted from the available streams list.  A ``*``
-    can be used as a wildcard to match any other type of stream, eg. muxed-stream.
+    can be used as a wildcard to match any other type of stream,
+    eg. muxed-stream.
 
     Default is "rtmp,hls,hds,http,akamaihd,*".
     """
@@ -683,9 +703,11 @@ transport.add_argument(
     type=str,
     metavar="CODE",
     help="""
-    Selects a specific audio source, by language code, when multiple audio sources are available.
+    Selects a specific audio source by language code
+    when multiple audio sources are available.
 
-    Note: This is only useful in special circumstances where the regular locale option fails.
+    Note: This is only useful in special circumstances
+    where the regular locale option fails.
     """)
 transport.add_argument(
     "--http-stream-timeout",
@@ -801,6 +823,7 @@ transport.add_argument(
 
     This is generic option used by streams not covered by other options,
     such as stream protocols specific to plugins, e.g. UStream.
+
     Default is 60.0.
     """)
 transport.add_argument(
@@ -814,7 +837,7 @@ transport.add_argument(
     "--subprocess-cmdline", "--cmdline", "-c",
     action="store_true",
     help="""
-    Print command-line used internally to play stream.
+    Print the command-line used internally to play the stream.
 
     This is only available on RTMP streams.
     """
@@ -844,7 +867,7 @@ transport.add_argument(
     "--ffmpeg-ffmpeg",
     metavar="FILENAME",
     help="""
-    FFMPEG is used to access mux separate video and audio streams.
+    FFMPEG is used to access or mux separate video and audio streams.
     You can specify the location of the ffmpeg executable if it is
     not in your PATH.
 
@@ -855,7 +878,7 @@ transport.add_argument(
     "--ffmpeg-verbose",
     action="store_true",
     help="""
-    Write the console output from ffmpeg to the console
+    Write the console output from ffmpeg to the console.
     """
 )
 transport.add_argument(
@@ -863,14 +886,16 @@ transport.add_argument(
     type=str,
     metavar="PATH",
     help="""
-    Path to write the output from the ffmpeg console
+    Path to write the output from the ffmpeg console.
     """
 )
 transport.add_argument(
     "--ffmpeg-video-transcode",
     metavar="CODEC",
     help="""
-    When muxing streams transcode the video to this CODEC, defaults to copy (no transcode)
+    When muxing streams transcode the video to this CODEC.
+
+    Default is "copy".
 
     Example: "h264"
     """
@@ -879,7 +904,9 @@ transport.add_argument(
     "--ffmpeg-audio-transcode",
     metavar="CODEC",
     help="""
-    When muxing streams transcode the audio to this CODEC, defaults to copy (no transcode)
+    When muxing streams transcode the audio to this CODEC.
+
+    Default is "copy".
 
     Example: "aac"
     """
@@ -892,7 +919,7 @@ http.add_argument(
     help="""
     A HTTP proxy to use for all HTTP requests.
 
-    Example: http://hostname:port/
+    Example: "http://hostname:port/"
     """
 )
 http.add_argument(
@@ -901,7 +928,7 @@ http.add_argument(
     help="""
     A HTTPS capable proxy to use for all HTTPS requests.
 
-    Example: http://hostname:port/
+    Example: "https://hostname:port/"
     """
 )
 http.add_argument(
@@ -1003,8 +1030,7 @@ plugin.add_argument(
     help="""
     Attempts to load plugins from these directories.
 
-    Multiple directories can be used by separating them with a
-    semi-colon.
+    Multiple directories can be used by separating them with a semicolon.
     """
 )
 plugin.add_argument(
@@ -1037,7 +1063,6 @@ plugin.add_argument(
     Note: This method is the old and clunky way of authenticating with
     Twitch, using --twitch-oauth-authenticate is the recommended and
     simpler way of doing it now.
-
     """
 )
 plugin.add_argument(
@@ -1086,7 +1111,7 @@ plugin.add_argument(
     metavar="SESSION_ID",
     help="""
     Set a specific session ID for crunchyroll, can be used to bypass
-    region restrictions
+    region restrictions.
     """
 )
 plugin.add_argument(
@@ -1107,7 +1132,8 @@ plugin.add_argument(
     "--schoolism-email",
     metavar="EMAIL",
     help="""
-    The email associated with your Schoolism account, required to access any Schoolism stream.
+    The email associated with your Schoolism account,
+    required to access any Schoolism stream.
     """
 )
 plugin.add_argument(
@@ -1123,23 +1149,23 @@ plugin.add_argument(
     default=1,
     metavar="PART",
     help="""
-    Play part number PART of the lesson
+    Play part number PART of the lesson.
 
-    Defaults is 1
+    Defaults is 1.
     """
 )
 plugin.add_argument(
     "--daisuki-mux-subtitles",
     action="store_true",
     help="""
-    Automatically mux available subtitles in to the output stream
+    Automatically mux available subtitles in to the output stream.
     """
 )
 plugin.add_argument(
     "--rtve-mux-subtitles",
     action="store_true",
     help="""
-    Automatically mux available subtitles in to the output stream
+    Automatically mux available subtitles in to the output stream.
     """
 )
 plugin.add_argument(
@@ -1148,16 +1174,16 @@ plugin.add_argument(
     choices=["en", "ja", "english", "japanese"],
     default="english",
     help="""
-    The audio language to use for Funimation streams; japanese or english
+    The audio language to use for Funimation streams; japanese or english.
 
-    Default is english
+    Default is "english".
     """
 )
 plugin.add_argument(
     "--funimation-mux-subtitles",
     action="store_true",
     help="""
-    Enable automatically including available subtitles in to the output stream
+    Enable automatically including available subtitles in to the output stream.
     """
 )
 plugin.add_argument(
@@ -1178,14 +1204,15 @@ plugin.add_argument(
     "--pluzz-mux-subtitles",
     action="store_true",
     help="""
-    Automatically mux available subtitles in to the output stream
+    Automatically mux available subtitles in to the output stream.
     """
 )
 plugin.add_argument(
     "--wwenetwork-email",
     metavar="EMAIL",
     help="""
-    The email associated with your WWE Network account, required to access any WWE Network stream.
+    The email associated with your WWE Network account,
+    required to access any WWE Network stream.
     """
 )
 plugin.add_argument(
@@ -1213,7 +1240,7 @@ plugin.add_argument(
     "--npo-subtitles",
     action="store_true",
     help="""
-    Include subtitles for the deaf or hard of hearing, if available
+    Include subtitles for the deaf or hard of hearing, if available.
     """
 )
 plugin.add_argument(
