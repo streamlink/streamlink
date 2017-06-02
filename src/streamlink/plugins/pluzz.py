@@ -15,10 +15,11 @@ class Pluzz(Plugin):
     PLAYER_GENERATOR_URL = 'https://sivideo.webservices.francetelevisions.fr/assets/staticmd5/getUrl?id=jquery.player.7.js'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
-    _url_re = re.compile(r'https?://((?:www)\.france\.tv/.+\.html|www\.(ludo|zouzous)\.fr/heros/[\w-]+|france3-regions\.francetvinfo\.fr/.+?/tv/direct)')
+    _url_re = re.compile(r'https?://((?:www)\.france\.tv/.+\.html|www\.(ludo|zouzous)\.fr/heros/[\w-]+|(sport|france3-regions)\.francetvinfo\.fr/.+?/(tv/direct)?)')
     _pluzz_video_id_re = re.compile(r'data-main-video="(?P<video_id>.+?)"')
     _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _f3_regions_video_id_re = re.compile(r'"http://videos\.francetv\.fr/video/(?P<video_id>.+)@Regions"')
+    _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
     _player_re = re.compile(r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
     _swf_re = re.compile(r'//staticftv-a\.akamaihd\.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
@@ -35,7 +36,10 @@ class Pluzz(Plugin):
     _api_schema = validate.Schema({
         'videos': validate.all(
             [{
-                'format': validate.text,
+                'format': validate.any(
+                    None,
+                    validate.text
+                ),
                 'url': validate.any(
                     None,
                     validate.url(),
@@ -96,6 +100,8 @@ class Pluzz(Plugin):
             match = self._jeunesse_video_id_re.search(res.text)
         elif 'france3-regions.francetvinfo.fr' in self.url:
             match = self._f3_regions_video_id_re.search(res.text)
+        elif 'sport.francetvinfo.fr' in self.url:
+            match = self._sport_video_id_re.search(res.text)
         if match is None:
             return
         video_id = match.group('video_id')
