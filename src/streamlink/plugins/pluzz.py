@@ -36,7 +36,10 @@ class Pluzz(Plugin):
     _api_schema = validate.Schema({
         'videos': validate.all(
             [{
-                'format': validate.text,
+                'format': validate.any(
+                    None,
+                    validate.text
+                ),
                 'url': validate.any(
                     None,
                     validate.url(),
