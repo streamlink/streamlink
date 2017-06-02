@@ -6,6 +6,7 @@ from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
 from streamlink.plugins.common_jwplayer import _js_to_json
 
+
 class TV5Monde(Plugin):
     _url_re = re.compile(r'http://(.+\.)?(tv|tivi)5monde(plus(afrique)?)?\.com')
     _videos_re = re.compile(r'"?(?:files|sources)"?:\s*(?P<videos>\[.+?\])')
@@ -39,7 +40,6 @@ class TV5Monde(Plugin):
             return videos
 
         return []
-
 
     def _get_embed_streams(self, page):
         match = self._videos_embed_re.search(page)
