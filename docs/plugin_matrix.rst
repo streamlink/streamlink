@@ -206,6 +206,9 @@ tv3cat              tv3.cat              Yes   Yes   Streams may be geo-restrict
 tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                      Only non-premium streams currently supported.
                     - fotbollskanalen.se
+tv5monde            - tv5monde.com       Yes   Yes   Streams may be geo-restricted to France, Belgium and Switzerland.
+                    - tv5mondeplus.com
+		    - tv5mondepl... [9]_
 tv8                 tv8.com.tr           Yes   No
 tv8cat              tv8.cat              Yes   No    Streams may be geo-restricted to Spain/Catalunya.
 tv360               tv360.com.tr         Yes   No
@@ -258,3 +261,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
 .. [8] france3-regions.francetvinfo.fr
+.. [9] tv5mondeplusafrique.com
