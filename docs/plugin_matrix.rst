@@ -69,7 +69,7 @@ cybergame           cybergame.tv         Yes   Yes
 cyro                cyro.se              --    Yes
 dailymotion         dailymotion.com      Yes   Yes
 daisuki             daisuki.net          No    Yes
-deutschewelle       dw.com               Yes   No
+deutschewelle       dw.com               Yes   Yes
 dingittv            dingit.tv            Yes   Yes
 disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.
                     - disneychannel.de
