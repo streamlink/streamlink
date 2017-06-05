@@ -22,7 +22,6 @@ class RadioNet(Plugin):
                     'stationType': validate.text,
                     'streamUrls': validate.all([{
                         'bitRate': int,
-                        'streamStatus': validate.text,
                         'streamUrl': validate.url()
                     }])
                 },
@@ -48,9 +47,10 @@ class RadioNet(Plugin):
             if stream['streamUrl'] in stream_urls:
                 continue
 
-            if stream['streamStatus'] != 'VALID':
-                continue
-            bitrate = '{}k'.format(stream['bitRate'])
+            if stream['bitRate'] > 0:
+                bitrate = '{}k'.format(stream['bitRate'])
+            else:
+                bitrate = 'live'
             yield bitrate, HTTPStream(self.session, stream['streamUrl'])
             stream_urls.append(stream['streamUrl'])
 
