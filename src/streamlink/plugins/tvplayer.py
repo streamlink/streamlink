@@ -62,7 +62,7 @@ class TVPlayer(Plugin):
         # Get the context info (validation token and platform)
         self.logger.debug("Getting stream information for resource={0}".format(resource))
         context_res = http.get(self.context_url, params={"resource": resource,
-                                                         "nonce": token})
+                                                         "gen": token})
         context_data = http.json(context_res, schema=self.context_schema)
 
         # get the stream urls
