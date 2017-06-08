@@ -57,12 +57,12 @@ def create_output():
 
     """
 
-    if args.output:
+    if args.output and not args.record:
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
             out = check_file_output(args.output, args.force)
-    elif args.stdout:
+    elif args.stdout and not args.record:
         out = FileOutput(fd=stdout)
     else:
         http = namedpipe = None
@@ -83,11 +83,17 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
+        if args.output and args.record:
+            record = check_file_output(args.output, args.force)
+        else:
+            record = None
+
         console.logger.info("Starting player: {0}", args.player)
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
-                           namedpipe=namedpipe, http=http)
+                           namedpipe=namedpipe, http=http,
+                           record=record)
 
     return out
 
