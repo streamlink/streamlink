@@ -22,6 +22,7 @@ animelab            animelab.com         --    Yes   Requires a login. Streams m
 antenna             antenna.gr           --    Yes
 apac                a-pac.tv             Yes   --
 app17               17app.co             Yes   --
+arconai             arconai.tv           Yes   Yes   Only SD quality streams
 ard_live            daserste.de          Yes   Yes   Streams may be geo-restricted to Germany.
 ard_mediathek       - ardmediathek.de    Yes   Yes   Streams may be geo-restricted to Germany.
                     - mediathek... [5]_
