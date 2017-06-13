@@ -20,6 +20,7 @@
 
 # MPC-HC, must be at least version 1.7 to be used
 #player="C:\Program Files (x86)\MPC-HC\mpc-hc.exe"
+#player="C:\Program Files\MPC-HC\mpc-hc64.exe"
 
 # MPlayer2
 #player=C:\mplayer2\mplayer2.exe -cache 4096
