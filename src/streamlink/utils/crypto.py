@@ -1,5 +1,4 @@
 import hashlib
-import math
 
 from Crypto.Cipher import AES
 
@@ -28,7 +27,11 @@ def decrypt_openssl(data, passphrase, key_length=32):
         key, iv = evp_bytestokey(passphrase, salt, key_length, AES.block_size)
         d = AES.new(key, AES.MODE_CBC, iv)
         out = d.decrypt(data[AES.block_size:])
-        if is_py3:
-            return out[:-out[-1]]
-        else:
-            return out[:-ord(out[-1])]
+        return unpad_pkcs5(out)
+
+
+def unpad_pkcs5(padded):
+    if is_py3:
+        return padded[:-padded[-1]]
+    else:
+        return padded[:-ord(padded[-1])]
