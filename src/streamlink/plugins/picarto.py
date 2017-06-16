@@ -15,7 +15,7 @@ class Picarto(Plugin):
     HLS_URL = "https://{server}/hls/{channel}/index.m3u8?token={token}"
 
     _url_re = re.compile(r"""
-        https?://(?:\w+\.)?picarto\.tv/([^&?/]+)
+        https?://(?:\w+\.)?picarto\.tv/(?:videopopout/)?([^&?/]+)
     """, re.VERBOSE)
 
     # divs with tech_switch class
@@ -26,6 +26,8 @@ class Picarto(Plugin):
     _place_stream_re = re.compile(r"""
         <script>\s*placeStream\s*\((.*?)\);?\s*</script>
     """, re.VERBOSE)
+    # <source ...>
+    _source_re = re.compile(r'''source src="(http[^"]+)"''')
 
     @classmethod
     def can_handle_url(cls, url):
@@ -69,10 +71,22 @@ class Picarto(Plugin):
         }
         return RTMPStream(self.session, params=params)
 
+    def _get_vod_stream(self, page):
+        m = self._source_re.search(page.text)
+        if m:
+            return HLSStream.parse_variant_playlist(self.session, m.group(1))
+
     def _get_streams(self):
         page = http.get(self.url)
 
         page_channel = self._url_re.match(self.url).group(1)
+        if page_channel.endswith(".flv"):
+            self.logger.debug("Possible VOD stream...")
+            vod_streams = self._get_vod_stream(page)
+            if vod_streams:
+                for s in vod_streams.items():
+                    yield s
+                return
 
         if "does not exist" in page.text:
             self.logger.error("The channel {0} does not exist".format(page_channel))
