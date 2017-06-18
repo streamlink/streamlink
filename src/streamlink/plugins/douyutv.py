@@ -7,7 +7,7 @@ from requests.adapters import HTTPAdapter
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
-from streamlink.stream import HTTPStream, RTMPStream
+from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 
 #algorithm for https://github.com/spacemeowx2/DouyuHTML5Player/blob/master/src/douyu/blackbox.js
 #python version by debugzxcv at https://gist.github.com/debugzxcv/85bb2750d8a5e29803f2686c47dc236b
