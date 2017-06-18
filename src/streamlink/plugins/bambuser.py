@@ -11,7 +11,7 @@ API_CONTEXT = "b_broadcastpage"
 API_KEY = "005f64509e19a868399060af746a00aa"
 API_URL_VIDEO = "http://player-c.api.bambuser.com/getVideo.json"
 
-_url_re = re.compile("http(s)?://(\w+.)?bambuser.com/v/(?P<video_id>\d+)")
+_url_re = re.compile(r"http(s)?://(\w+.)?bambuser.com/v/(?P<video_id>\d+)")
 _video_schema = validate.Schema({
     validate.optional("error"): validate.text,
     validate.optional("result"): {

@@ -57,4 +57,5 @@ class LoggerModule(object):
     def debug(self, msg, *args, **kwargs):
         self.manager.msg(self.module, 4, msg, *args, **kwargs)
 
+
 __all__ = ["Logger"]

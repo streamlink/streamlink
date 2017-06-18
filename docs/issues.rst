@@ -11,8 +11,8 @@ Streams are buffering/lagging
 Enable caching in your player
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default most players do not cache the data they receive from Livestreamer.
-Caching can reduce the amount of buffering you run into because the player will 
+By default most players do not cache the data they receive from Streamlink.
+Caching can reduce the amount of buffering you run into because the player will
 have some breathing room between receiving the data and playing it.
 
 ============= ======================== ======================================
@@ -34,7 +34,7 @@ Multi-threaded streaming
 
 On segmented streaming protocols (such as HLS and HDS) it's possible to use
 multiple threads to potentially increase the throughput.
-Each stream type has it's own option, these options are currently available:
+Each stream type has its own option, and these are the ones that are currently available:
 
 =================================== ============================================
 Option                              Used by these plugins
@@ -50,4 +50,3 @@ Option                              Used by these plugins
 
     Using 2 or 3 threads should be enough to see an impact on live streams,
     any more will likely not show much effect.
-

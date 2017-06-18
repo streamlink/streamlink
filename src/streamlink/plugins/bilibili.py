@@ -14,12 +14,13 @@ STREAM_WEIGHTS = {
     "source": 1080
 }
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://live.bilibili.com
     /(?P<channel>[^/]+)
 """, re.VERBOSE)
 
-_room_re = re.compile('var ROOMID = (\\d+)')
+_room_re = re.compile(r'var ROOMID = (\d+)')
+
 
 class Bilibili(Plugin):
     @classmethod
@@ -36,10 +37,10 @@ class Bilibili(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         channel = match.group("channel")
-        
+
         html_page = http.get(self.url).content.decode('utf-8')
         room_id = _room_re.search(html_page).group(1)
-    
+
         ts = int(time.time() / 60)
         sign = hashlib.md5(("{0}{1}".format(channel, API_SECRET, ts)).encode("utf-8")).hexdigest()
 
@@ -53,5 +54,6 @@ class Bilibili(Plugin):
             url = stream_list["url"]
             stream = HTTPStream(self.session, url)
             yield name, stream
+
 
 __plugin__ = Bilibili

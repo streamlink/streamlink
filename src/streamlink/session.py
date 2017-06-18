@@ -1,8 +1,12 @@
 import imp
+import locale
 import pkgutil
 import re
 import sys
 import traceback
+
+import requests
+from streamlink.utils.l10n import Localization
 
 from . import plugins, __version__
 from .compat import urlparse, is_win32
@@ -20,7 +24,7 @@ def print_small_exception(start_after):
 
     for i, trace in enumerate(tb):
         if trace[2] == start_after:
-            index = i+1
+            index = i + 1
             break
 
     lines = traceback.format_list(tb[index:])
@@ -49,8 +53,9 @@ class Streamlink(object):
             "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
             "hls-timeout": 60.0,
+            "hls-playlist-reload-attempts": 3,
             "http-stream-timeout": 60.0,
-            "ringbuffer-size": 1024 * 1024 * 16, # 16 MB
+            "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
             "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
@@ -58,7 +63,12 @@ class Streamlink(object):
             "stream-segment-threads": 1,
             "stream-segment-timeout": 10.0,
             "stream-timeout": 60.0,
-            "subprocess-errorlog": False
+            "subprocess-errorlog": False,
+            "subprocess-errorlog-path": None,
+            "ffmpeg-ffmpeg": None,
+            "ffmpeg-video-transcode": "copy",
+            "ffmpeg-audio-transcode": "copy",
+            "locale": None
         })
         self.plugins = {}
         self.logger = Logger()
@@ -74,113 +84,138 @@ class Streamlink(object):
 
         **Available options**:
 
-        ======================= =========================================
-        hds-live-edge           (float) Specify the time live HDS
-                                streams will start from the edge of
-                                stream, default: ``10.0``
+        ======================== =========================================
+        hds-live-edge            ( float) Specify the time live HDS
+                                 streams will start from the edge of
+                                 stream, default: ``10.0``
 
-        hds-segment-attempts    (int) How many attempts should be done
-                                to download each HDS segment, default: ``3``
+        hds-segment-attempts     (int) How many attempts should be done
+                                 to download each HDS segment, default: ``3``
 
-        hds-segment-threads     (int) The size of the thread pool used
-                                to download segments, default: ``1``
+        hds-segment-threads      (int) The size of the thread pool used
+                                 to download segments, default: ``1``
 
-        hds-segment-timeout     (float) HDS segment connect and read
-                                timeout, default: ``10.0``
+        hds-segment-timeout      (float) HDS segment connect and read
+                                 timeout, default: ``10.0``
 
-        hds-timeout             (float) Timeout for reading data from
-                                HDS streams, default: ``60.0``
+        hds-timeout              (float) Timeout for reading data from
+                                 HDS streams, default: ``60.0``
 
-        hls-live-edge           (int) How many segments from the end
-                                to start live streams on, default: ``3``
+        hls-live-edge            (int) How many segments from the end
+                                 to start live streams on, default: ``3``
 
-        hls-segment-attempts    (int) How many attempts should be done
-                                to download each HLS segment, default: ``3``
+        hls-segment-attempts     (int) How many attempts should be done
+                                 to download each HLS segment, default: ``3``
 
-        hls-segment-threads     (int) The size of the thread pool used
-                                to download segments, default: ``1``
+        hls-segment-threads      (int) The size of the thread pool used
+                                 to download segments, default: ``1``
 
-        hls-segment-timeout     (float) HLS segment connect and read
-                                timeout, default: ``10.0``
+        hls-segment-timeout      (float) HLS segment connect and read
+                                 timeout, default: ``10.0``
 
-        hls-timeout             (float) Timeout for reading data from
-                                HLS streams, default: ``60.0``
+        hls-timeout              (float) Timeout for reading data from
+                                 HLS streams, default: ``60.0``
 
-        http-proxy              (str) Specify a HTTP proxy to use for
-                                all HTTP requests
+        http-proxy               (str) Specify a HTTP proxy to use for
+                                 all HTTP requests
 
-        https-proxy             (str) Specify a HTTPS proxy to use for
-                                all HTTPS requests
+        https-proxy              (str) Specify a HTTPS proxy to use for
+                                 all HTTPS requests
 
-        http-cookies            (dict or str) A dict or a semi-colon (;)
-                                delimited str of cookies to add to each
-                                HTTP request, e.g. ``foo=bar;baz=qux``
+        http-cookies             (dict or str) A dict or a semi-colon (;)
+                                 delimited str of cookies to add to each
+                                 HTTP request, e.g. ``foo=bar;baz=qux``
 
-        http-headers            (dict or str) A dict or semi-colon (;)
-                                delimited str of headers to add to each
-                                HTTP request, e.g. ``foo=bar;baz=qux``
+        http-headers             (dict or str) A dict or semi-colon (;)
+                                 delimited str of headers to add to each
+                                 HTTP request, e.g. ``foo=bar;baz=qux``
 
-        http-query-params       (dict or str) A dict or a ampersand (&)
-                                delimited string of query parameters to
-                                add to each HTTP request,
-                                e.g. ``foo=bar&baz=qux``
+        http-query-params        (dict or str) A dict or a ampersand (&)
+                                 delimited string of query parameters to
+                                 add to each HTTP request,
+                                 e.g. ``foo=bar&baz=qux``
 
-        http-trust-env          (bool) Trust HTTP settings set in the
-                                environment, such as environment
-                                variables (HTTP_PROXY, etc) and
-                                ~/.netrc authentication
+        http-trust-env           (bool) Trust HTTP settings set in the
+                                 environment, such as environment
+                                 variables (HTTP_PROXY, etc) and
+                                 ~/.netrc authentication
 
-        http-ssl-verify         (bool) Verify SSL certificates,
-                                default: ``True``
+        http-ssl-verify          (bool) Verify SSL certificates,
+                                 default: ``True``
 
-        http-ssl-cert           (str or tuple) SSL certificate to use,
-                                can be either a .pem file (str) or a
-                                .crt/.key pair (tuple)
+        http-ssl-cert            (str or tuple) SSL certificate to use,
+                                 can be either a .pem file (str) or a
+                                 .crt/.key pair (tuple)
 
-        http-timeout            (float) General timeout used by all HTTP
-                                requests except the ones covered by
-                                other options, default: ``20.0``
+        http-timeout             (float) General timeout used by all HTTP
+                                 requests except the ones covered by
+                                 other options, default: ``20.0``
 
-        http-stream-timeout     (float) Timeout for reading data from
-                                HTTP streams, default: ``60.0``
+        http-stream-timeout      (float) Timeout for reading data from
+                                 HTTP streams, default: ``60.0``
 
-        subprocess-errorlog     (bool) Log errors from subprocesses to
-                                a file located in the temp directory
+        subprocess-errorlog      (bool) Log errors from subprocesses to
+                                 a file located in the temp directory
 
-        ringbuffer-size         (int) The size of the internal ring
-                                buffer used by most stream types,
-                                default: ``16777216`` (16MB)
+        subprocess-errorlog-path (str) Log errors from subprocesses to
+                                 a specific file
 
-        rtmp-proxy              (str) Specify a proxy (SOCKS) that RTMP
-                                streams will use
+        ringbuffer-size          (int) The size of the internal ring
+                                 buffer used by most stream types,
+                                 default: ``16777216`` (16MB)
 
-        rtmp-rtmpdump           (str) Specify the location of the
-                                rtmpdump executable used by RTMP streams,
-                                e.g. ``/usr/local/bin/rtmpdump``
+        rtmp-proxy               (str) Specify a proxy (SOCKS) that RTMP
+                                 streams will use
 
-        rtmp-timeout            (float) Timeout for reading data from
-                                RTMP streams, default: ``60.0``
+        rtmp-rtmpdump            (str) Specify the location of the
+                                 rtmpdump executable used by RTMP streams,
+                                 e.g. ``/usr/local/bin/rtmpdump``
 
-        stream-segment-attempts (int) How many attempts should be done
-                                to download each segment, default: ``3``.
-                                General option used by streams not
-                                covered by other options.
+        rtmp-timeout             (float) Timeout for reading data from
+                                 RTMP streams, default: ``60.0``
 
-        stream-segment-threads  (int) The size of the thread pool used
-                                to download segments, default: ``1``.
-                                General option used by streams not
-                                covered by other options.
+        ffmpeg-ffmpeg            (str) Specify the location of the
+                                 ffmpeg executable use by Muxing streams
+                                 e.g. ``/usr/local/bin/ffmpeg``
 
-        stream-segment-timeout  (float) Segment connect and read
-                                timeout, default: ``10.0``.
-                                General option used by streams not
-                                covered by other options.
+        ffmpeg-verbose           (bool) Log stderr from ffmpeg to the
+                                 console
 
-        stream-timeout          (float) Timeout for reading data from
-                                stream, default: ``60.0``.
-                                General option used by streams not
-                                covered by other options.
-        ======================= =========================================
+        ffmpeg-verbose-path      (str) Specify the location of the
+                                 ffmpeg stderr log file
+
+        ffmpeg-video-transcode   (str) The codec to use if transcoding
+                                 video when muxing with ffmpeg
+                                 e.g. ``h264``
+
+        ffmpeg-audio-transcode   (str) The codec to use if transcoding
+                                 audio when muxing with ffmpeg
+                                 e.g. ``aac``
+
+        stream-segment-attempts  (int) How many attempts should be done
+                                 to download each segment, default: ``3``.
+                                 General option used by streams not
+                                 covered by other options.
+
+        stream-segment-threads   (int) The size of the thread pool used
+                                 to download segments, default: ``1``.
+                                 General option used by streams not
+                                 covered by other options.
+
+        stream-segment-timeout   (float) Segment connect and read
+                                 timeout, default: ``10.0``.
+                                 General option used by streams not
+                                 covered by other options.
+
+        stream-timeout           (float) Timeout for reading data from
+                                 stream, default: ``60.0``.
+                                 General option used by streams not
+                                 covered by other options.
+
+        locale                   (str) Locale setting, in the RFC 1766 format
+                                 eg. en_US or es_ES
+                                 default: ``system locale``.
+        ======================== =========================================
 
         """
 
@@ -191,6 +226,8 @@ class Streamlink(object):
             key = "rtmp-proxy"
         elif key == "errorlog":
             key = "subprocess-errorlog"
+        elif key == "errorlog-path":
+            key = "subprocess-errorlog-path"
 
         if key == "http-proxy":
             if not re.match("^http(s)?://", value):
@@ -219,6 +256,15 @@ class Streamlink(object):
             self.http.trust_env = value
         elif key == "http-ssl-verify":
             self.http.verify = value
+        elif key == "http-disable-dh":
+            if value:
+                requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += ':!DH'
+                try:
+                    requests.packages.urllib3.contrib.pyopenssl.DEFAULT_SSL_CIPHER_LIST = \
+                        requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS.encode("ascii")
+                except AttributeError:
+                    # no ssl to disable the cipher on
+                    pass
         elif key == "http-ssl-cert":
             self.http.cert = value
         elif key == "http-timeout":
@@ -343,6 +389,29 @@ class Streamlink(object):
 
         raise NoPluginError
 
+    def resolve_url_no_redirect(self, url):
+        """Attempts to find a plugin that can use this URL.
+
+        The default protocol (http) will be prefixed to the URL if
+        not specified.
+
+        Raises :exc:`NoPluginError` on failure.
+
+        :param url: a URL to match against loaded plugins
+
+        """
+        parsed = urlparse(url)
+
+        if len(parsed.scheme) == 0:
+            url = "http://" + url
+
+        for name, plugin in self.plugins.items():
+            if plugin.can_handle_url(url):
+                obj = plugin(url)
+                return obj
+
+        raise NoPluginError
+
     def streams(self, url, **params):
         """Attempts to find a plugin and extract streams from the *url*.
 
@@ -399,5 +468,10 @@ class Streamlink(object):
     @property
     def version(self):
         return __version__
+
+    @property
+    def localization(self):
+        return Localization(self.get_option("locale"))
+
 
 __all__ = ["Streamlink"]

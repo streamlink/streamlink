@@ -2,6 +2,7 @@ import unittest
 
 from streamlink.options import Options
 
+
 class TestOptions(unittest.TestCase):
     def setUp(self):
         self.options = Options({
@@ -15,6 +16,6 @@ class TestOptions(unittest.TestCase):
         self.options.set("a_option", "option")
         self.assertEqual(self.options.get("a_option"), "option")
 
+
 if __name__ == "__main__":
     unittest.main()
-

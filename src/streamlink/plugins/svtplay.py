@@ -6,7 +6,7 @@ from streamlink.stream import HLSStream, HDSStream
 
 API_URL = "http://www.svt.se/videoplayer-api/video/{0}"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://
     (www\.)?
     (?:
@@ -74,8 +74,8 @@ class SVTPlay(Plugin):
             vid = match.group("id")
             res = http.get(API_URL.format(vid))
 
-            videos = http.json(res, schema = _video_schema)
-            mapper = StreamMapper(cmp = lambda format, video: video["format"] == format)
+            videos = http.json(res, schema=_video_schema)
+            mapper = StreamMapper(cmp=lambda format, video: video["format"] == format)
             mapper.map("hls", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
             mapper.map("hds", self._create_streams, "HDS", HDSStream.parse_manifest)
         else:
@@ -87,5 +87,6 @@ class SVTPlay(Plugin):
             mapper.map("flash", self._create_streams, "HDS", HDSStream.parse_manifest)
 
         return mapper(videos)
+
 
 __plugin__ = SVTPlay

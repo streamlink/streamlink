@@ -2,6 +2,7 @@
 
 import struct
 
+
 class Packet(object):
     exception = IOError
 
@@ -52,6 +53,7 @@ class Packet(object):
     def __bytes__(self):
         return self.serialize()
 
+
 class TagData(Packet):
     @property
     def size(self):
@@ -59,5 +61,6 @@ class TagData(Packet):
             return self.data.size
         else:
             return len(self.data)
+
 
 __all__ = ["Packet", "TagData"]

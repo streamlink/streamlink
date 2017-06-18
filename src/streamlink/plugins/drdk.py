@@ -60,9 +60,9 @@ _channels_schema = validate.Schema(
 )
 
 _video_schema = validate.Schema(
-    { "Data": [{
+    {"Data": [{
         "Assets": validate.all(
-            [{ validate.optional("Links"): validate.all(
+            [{validate.optional("Links"): validate.all(
                 [{
                     "Target": validate.text,
                     "Uri": validate.text
@@ -136,5 +136,6 @@ class DRDK(Plugin):
                     self.logger.error("Failed to load {0} streams: {1}", type, err)
 
         return streams
+
 
 __plugin__ = DRDK

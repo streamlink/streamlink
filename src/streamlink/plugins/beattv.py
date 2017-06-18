@@ -42,7 +42,7 @@ QUALITY_MAP = {
     "web_hd": 12
 }
 
-_url_re = re.compile("http(s)?://(\w+\.)?be-at.tv/")
+_url_re = re.compile(r"http(s)?://(\w+\.)?be-at.tv/")
 _schema = validate.Schema(
     validate.any(
         None,
@@ -262,7 +262,7 @@ class BeatStream(Stream):
     def open(self):
         if not CAN_DECRYPT:
             raise StreamError(
-                "pyCrypto needs to be installed to decrypt this stream"
+                "pyCrypto or pycryptodome needs to be installed to decrypt this stream"
             )
 
         reader = BeatStreamReader(self)
@@ -286,7 +286,7 @@ class BeatTV(Plugin):
 
     def _get_stream_info(self, url):
         res = http.get(url, headers=HEADERS)
-        match = re.search("embed.swf\?p=(\d+)", res.text)
+        match = re.search(r"embed.swf\?p=(\d+)", res.text)
         if not match:
             return
         program = match.group(1)

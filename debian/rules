@@ -1,0 +1,19 @@
+#! /usr/bin/make -f
+
+# Place streamlink executable in the correct place right away. This
+# also avoids overwrites by the Python 3 build, regardless of order.
+export PYBUILD_INSTALL_ARGS_python2 = --install-scripts usr/share/streamlink/
+
+%:
+	dh $@ --with python2,python3,sphinxdoc --buildsystem=pybuild
+
+override_dh_auto_install:
+	python setup.py build_sphinx -b man
+	python setup.py build_sphinx -b html
+	dh_auto_install
+
+override_dh_compress:
+	dh_compress -X.html
+
+override_dh_installchangelogs:
+	dh_installchangelogs CHANGELOG.md

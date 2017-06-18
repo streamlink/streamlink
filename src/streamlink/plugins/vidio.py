@@ -10,17 +10,19 @@ try:
 except ImportError:
     from html.parser import HTMLParser
 
+
 def html_unescape(s):
     parser = HTMLParser()
     return parser.unescape(s)
 
-_url_re = re.compile(r"https?://(?:www\.)?vidio\.com/(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)")
+
+_url_re = re.compile(r"https?://(?:www\.)?vidio\.com/(?:en/)?(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)")
 _clipdata_re = re.compile(r"""data-json-clips\s*=\s*(['"])(.*?)\1""")
 
 _schema = validate.Schema(
     validate.transform(_clipdata_re.search),
     validate.any(
-        None, 
+        None,
         validate.all(
             validate.get(2),
             validate.transform(html_unescape),
@@ -37,6 +39,7 @@ _schema = validate.Schema(
     )
 )
 
+
 class Vidio(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -50,5 +53,6 @@ class Vidio(Plugin):
         for clip in clips:
             for source in clip["sources"]:
                 return HLSStream.parse_variant_playlist(self.session, source["file"])
+
 
 __plugin__ = Vidio

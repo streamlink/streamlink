@@ -12,14 +12,14 @@ from streamlink.stream import HDSStream, HLSStream, HTTPStream
 STREAM_TYPES = {
     "hds": {
         "parser": HDSStream.parse_manifest,
-#         "params": { "pvswf": SWF_URL },
+        #         "params": { "pvswf": SWF_URL },
         "file": "manifest.f4m"
     },
     "hls": {
         "parser": HLSStream.parse_variant_playlist,
-        "file" : "master.m3u8"
+        "file": "master.m3u8"
     },
-    "http" : {}
+    "http": {}
 }
 
 # For now we only handle MP4.
@@ -27,11 +27,11 @@ STREAM_FORMATS = ("mp4")
 
 INFO_URL = "http://www.vgtv.no/data/actions/videostatus/"
 
-_url_re = re.compile("https?://(www\.)?(vgtv|vg).no")
-_content_id_re = re.compile("(?:data-videoid=\"|videostatus/\?id=)(\d+)")
+_url_re = re.compile(r"https?://(www\.)?(vgtv|vg).no")
+_content_id_re = re.compile(r"(?:data-videoid=\"|videostatus/\?id=)(\d+)")
 _url_id_re = re.compile((
-    "https?://(?:www\.)?vgtv.no/"
-    "(?:(?:#!/)?video/|(?:#!|\?)id=)(\d+)"
+    r"https?://(?:www\.)?vgtv.no/"
+    r"(?:(?:#!/)?video/|(?:#!|\?)id=)(\d+)"
 ))
 
 _video_schema = validate.Schema({
@@ -45,11 +45,11 @@ _video_schema = validate.Schema({
                 validate.filter(lambda k, v: k in STREAM_FORMATS),
                 {
                     validate.text: [{
-                        "bitrate" : int,
+                        "bitrate": int,
                         "paths": [{
                             "address": validate.text,
-                            "port" : int,
-                            "path" : validate.text,
+                            "port": int,
+                            "path": validate.text,
                             "filename": validate.text,
                             "application": validate.text,
                         }],
@@ -59,6 +59,7 @@ _video_schema = validate.Schema({
         }
     )
 })
+
 
 class VGTV(Plugin):
     @classmethod
@@ -102,10 +103,10 @@ class VGTV(Plugin):
 
         # HDS/HLS: Get all variants and produce a playlist URL.
         for f in ('hds', 'hls'):
-            if not f in info["formats"]:
+            if f not in info["formats"]:
                 next
 
-            if not "mp4" in info["formats"][f]:
+            if "mp4" not in info["formats"][f]:
                 next
 
             streamtype = STREAM_TYPES[f]
@@ -116,7 +117,7 @@ class VGTV(Plugin):
             for stream in info["formats"][f]["mp4"]:
                 for p in stream["paths"]:
                     url = self._build_url(**p)
-                    variant = p["filename"][:-4] # strip ".mp4"
+                    variant = p["filename"][:-4]  # strip ".mp4"
 
                     if url in f_streams:
                         f_streams[url].append(variant)
@@ -155,5 +156,6 @@ class VGTV(Plugin):
                 streams[stream_name] = HTTPStream(self.session, url)
 
         return streams
+
 
 __plugin__ = VGTV

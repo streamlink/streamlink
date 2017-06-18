@@ -7,7 +7,7 @@ from streamlink.plugin.api import http, validate
 
 DATA_URL = "http://www.dommune.com/freedommunezero2012/live/data/data.json"
 
-_url_re = re.compile("http(s)?://(\w+\.)?dommune.com")
+_url_re = re.compile(r"http(s)?://(\w+\.)?dommune.com")
 _data_schema = validate.Schema({
     "channel": validate.text,
     "channel2": validate.text

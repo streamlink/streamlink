@@ -12,7 +12,7 @@ from itertools import chain
 from time import sleep
 
 from streamlink import (Streamlink, StreamError, PluginError,
-                          NoPluginError)
+                        NoPluginError)
 from streamlink.cache import Cache
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
@@ -244,14 +244,17 @@ def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
+    success_open = False
     for i in range(args.retry_open):
         try:
             stream_fd, prebuffer = open_stream(stream)
+            success_open = True
             break
         except StreamError as err:
-            console.logger.error("{0}", err)
-    else:
-        return
+            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
+
+    if not success_open:
+        console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
     output = create_output()
 
@@ -307,14 +310,14 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
                     console.logger.info("HTTP connection closed")
                 else:
-                    console.logger.error("Error when writing to output: {0}", err)
+                    console.exit("Error when writing to output: {0}, exiting", err)
 
                 break
     except IOError as err:
-        console.logger.error("Error when reading from stream: {0}", err)
-
-    stream.close()
-    console.logger.info("Stream ended")
+        console.exit("Error when reading from stream: {0}, exiting", err)
+    finally:
+        stream.close()
+        console.logger.info("Stream ended")
 
 
 def handle_stream(plugin, streams, stream_name):
@@ -349,10 +352,9 @@ def handle_stream(plugin, streams, stream_name):
         console.msg_json(stream)
 
     elif args.stream_url:
-        url = stream_to_url(stream)
-        if url:
-            console.msg("{0}", url)
-        else:
+        try:
+            console.msg("{0}", stream.to_url())
+        except TypeError:
             console.exit("The stream specified cannot be translated to a URL")
 
     # Output the stream
@@ -403,9 +405,9 @@ def fetch_streams_infinite(plugin, interval):
 
     if not streams:
         console.logger.info("Waiting for streams, retrying every {0} "
-                            "second(s)", args.retry_streams)
+                            "second(s)", interval)
     while not streams:
-        sleep(args.retry_streams)
+        sleep(interval)
 
         try:
             streams = fetch_streams(plugin)
@@ -445,7 +447,8 @@ def format_valid_streams(plugin, streams):
         if name in STREAM_SYNONYMS:
             continue
 
-        synonymfilter = lambda n: stream is streams[n] and n is not name
+        def synonymfilter(n):
+            return stream is streams[n] and n is not name
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:
@@ -483,7 +486,7 @@ def handle_url():
         console.exit(u"{0}", err)
 
     if not streams:
-        console.exit("No streams found on this URL: {0}", args.url)
+        console.exit("No playable streams found on this URL: {0}", args.url)
 
     if args.best_stream_default:
         args.default_stream = ["best"]
@@ -533,7 +536,7 @@ def authenticate_twitch_oauth():
        access to their Twitch account."""
 
     client_id = TWITCH_CLIENT_ID
-    redirect_uri = "http://streamlink.tanuki.se/en/develop/twitch_oauth.html"
+    redirect_uri = "https://streamlink.github.io/twitch_oauth.html"
     url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
            "?response_type=token&client_id={0}&redirect_uri="
            "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
@@ -576,6 +579,9 @@ def setup_args(config_files=[]):
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
         args.stream = [stream.lower() for stream in args.stream]
+
+    if not args.url and args.url_param:
+        args.url = args.url_param
 
 
 def setup_config_args():
@@ -654,6 +660,9 @@ def setup_http_session():
     if args.http_no_ssl_verify:
         streamlink.set_option("http-ssl-verify", False)
 
+    if args.http_disable_dh:
+        streamlink.set_option("http-disable-dh", True)
+
     if args.http_ssl_cert:
         streamlink.set_option("http-ssl-cert", args.http_ssl_cert)
 
@@ -703,6 +712,9 @@ def setup_options():
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
+    if args.hls_playlist_reload_attempts:
+        streamlink.set_option("hls-playlist-reload-attempts", args.hls_playlist_reload_attempts)
+
     if args.hls_segment_threads:
         streamlink.set_option("hls-segment-threads", args.hls_segment_threads)
 
@@ -711,6 +723,9 @@ def setup_options():
 
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
+
+    if args.hls_audio_select:
+        streamlink.set_option("hls-audio-select", args.hls_audio_select)
 
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
@@ -754,7 +769,21 @@ def setup_options():
     if args.stream_timeout:
         streamlink.set_option("stream-timeout", args.stream_timeout)
 
+    if args.ffmpeg_ffmpeg:
+        streamlink.set_option("ffmpeg-ffmpeg", args.ffmpeg_ffmpeg)
+    if args.ffmpeg_verbose:
+        streamlink.set_option("ffmpeg-verbose", args.ffmpeg_verbose)
+    if args.ffmpeg_verbose_path:
+        streamlink.set_option("ffmpeg-verbose-path", args.ffmpeg_verbose_path)
+    if args.ffmpeg_video_transcode:
+        streamlink.set_option("ffmpeg-video-transcode", args.ffmpeg_video_transcode)
+    if args.ffmpeg_audio_transcode:
+        streamlink.set_option("ffmpeg-audio-transcode", args.ffmpeg_audio_transcode)
+
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
+    streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
+    streamlink.set_option("locale", args.locale)
+
 
     # Deprecated options
     if args.hds_fragment_buffer:
@@ -767,19 +796,23 @@ def setup_plugin_options():
     """Sets Streamlink plugin options."""
     if args.twitch_cookie:
         streamlink.set_plugin_option("twitch", "cookie",
-                                       args.twitch_cookie)
+                                     args.twitch_cookie)
 
     if args.twitch_oauth_token:
         streamlink.set_plugin_option("twitch", "oauth_token",
-                                       args.twitch_oauth_token)
+                                     args.twitch_oauth_token)
+
+    if args.twitch_disable_hosting:
+        streamlink.set_plugin_option("twitch", "disable_hosting",
+                                     args.twitch_disable_hosting)
 
     if args.ustream_password:
         streamlink.set_plugin_option("ustreamtv", "password",
-                                       args.ustream_password)
+                                     args.ustream_password)
 
     if args.crunchyroll_username:
         streamlink.set_plugin_option("crunchyroll", "username",
-                                       args.crunchyroll_username)
+                                     args.crunchyroll_username)
 
     if args.crunchyroll_username and not args.crunchyroll_password:
         crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
@@ -788,22 +821,114 @@ def setup_plugin_options():
 
     if crunchyroll_password:
         streamlink.set_plugin_option("crunchyroll", "password",
-                                       crunchyroll_password)
+                                     crunchyroll_password)
     if args.crunchyroll_purge_credentials:
         streamlink.set_plugin_option("crunchyroll", "purge_credentials",
-                                       args.crunchyroll_purge_credentials)
+                                     args.crunchyroll_purge_credentials)
+    if args.crunchyroll_session_id:
+        streamlink.set_plugin_option("crunchyroll", "session_id",
+                                     args.crunchyroll_session_id)
 
     if args.crunchyroll_locale:
         streamlink.set_plugin_option("crunchyroll", "locale",
-                                       args.crunchyroll_locale)
+                                     args.crunchyroll_locale)
 
-    if args.livestation_email:
-        streamlink.set_plugin_option("livestation", "email",
-                                       args.livestation_email)
+    if args.btv_username:
+        streamlink.set_plugin_option("btv", "username", args.btv_username)
 
-    if args.livestation_password:
-        streamlink.set_plugin_option("livestation", "password",
-                                       args.livestation_password)
+    if args.btv_username and not args.btv_password:
+        btv_password = console.askpass("Enter BTV password: ")
+    else:
+        btv_password = args.btv_password
+
+    if btv_password:
+        streamlink.set_plugin_option("btv", "password", btv_password)
+
+    if args.schoolism_email:
+        streamlink.set_plugin_option("schoolism", "email", args.schoolism_email)
+    if args.schoolism_email and not args.schoolism_password:
+        schoolism_password = console.askpass("Enter Schoolism password: ")
+    else:
+        schoolism_password = args.schoolism_password
+    if schoolism_password:
+        streamlink.set_plugin_option("schoolism", "password", schoolism_password)
+
+    if args.schoolism_part:
+        streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
+
+    if args.daisuki_mux_subtitles:
+        streamlink.set_plugin_option("daisuki", "mux_subtitles", args.daisuki_mux_subtitles)
+
+    if args.rtve_mux_subtitles:
+        streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
+
+    if args.funimation_mux_subtitles:
+        streamlink.set_plugin_option("funimationnow", "mux_subtitles", True)
+
+    if args.funimation_language:
+        # map en->english, ja->japanese
+        lang = {"en": "english", "ja": "japanese"}.get(args.funimation_language.lower(),
+                                                       args.funimation_language.lower())
+        streamlink.set_plugin_option("funimationnow", "language", lang)
+
+    if args.tvplayer_email:
+        streamlink.set_plugin_option("tvplayer", "email", args.tvplayer_email)
+
+    if args.tvplayer_email and not args.tvplayer_password:
+        tvplayer_password = console.askpass("Enter TVPlayer password: ")
+    else:
+        tvplayer_password = args.tvplayer_password
+
+    if tvplayer_password:
+        streamlink.set_plugin_option("tvplayer", "password", tvplayer_password)
+
+    if args.pluzz_mux_subtitles:
+        streamlink.set_plugin_option("pluzz", "mux_subtitles", args.pluzz_mux_subtitles)
+
+    if args.wwenetwork_email:
+        streamlink.set_plugin_option("wwenetwork", "email", args.wwenetwork_email)
+    if args.wwenetwork_email and not args.wwenetwork_password:
+        wwenetwork_password = console.askpass("Enter WWE Network password: ")
+    else:
+        wwenetwork_password = args.wwenetwork_password
+    if wwenetwork_password:
+        streamlink.set_plugin_option("wwenetwork", "password", wwenetwork_password)
+
+    if args.animelab_email:
+        streamlink.set_plugin_option("animelab", "email", args.animelab_email)
+
+    if args.animelab_email and not args.animelab_password:
+        animelab_password = console.askpass("Enter AnimeLab password: ")
+    else:
+        animelab_password = args.animelab_password
+
+    if animelab_password:
+        streamlink.set_plugin_option("animelab", "password", animelab_password)
+
+    if args.npo_subtitles:
+        streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
+
+    if args.liveedu_email:
+        streamlink.set_plugin_option("liveedu", "email", args.liveedu_email)
+
+    if args.liveedu_email and not args.liveedu_password:
+        liveedu_password = console.askpass("Enter LiveEdu.tv password: ")
+    else:
+        liveedu_password = args.liveedu_password
+
+    if liveedu_password:
+        streamlink.set_plugin_option("liveedu", "password", liveedu_password)
+
+    if args.bbciplayer_username:
+        streamlink.set_plugin_option("bbciplayer", "username", args.bbciplayer_username)
+
+    if args.bbciplayer_username and not args.bbciplayer_password:
+        bbciplayer_password = console.askpass("Enter bbc.co.uk account password: ")
+    else:
+        bbciplayer_password = args.bbciplayer_password
+
+    if bbciplayer_password:
+        streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
 
     # Deprecated options
     if args.jtv_legacy_names:
@@ -833,11 +958,8 @@ def setup_plugin_options():
 
 def check_root():
     if hasattr(os, "getuid"):
-        if os.geteuid() == 0 and not args.yes_run_as_root:
-            print("streamlink is not supposed to be run as root. "
-                  "If you really must you can do it by passing "
-                  "--yes-run-as-root.")
-            sys.exit(1)
+        if os.geteuid() == 0:
+            console.logger.info("streamlink is running as root! Be careful!")
 
 
 def check_version(force=False):
@@ -871,14 +993,14 @@ def check_version(force=False):
 
 def main():
     setup_args()
-    check_root()
     setup_streamlink()
     setup_plugins()
     setup_config_args()
     setup_console()
     setup_http_session()
+    check_root()
 
-    if args.version_check or not args.no_version_check:
+    if args.version_check or (not args.no_version_check and args.auto_version_check):
         with ignored(Exception):
             check_version(force=args.version_check)
 
@@ -887,6 +1009,13 @@ def main():
     elif args.can_handle_url:
         try:
             streamlink.resolve_url(args.can_handle_url)
+        except NoPluginError:
+            sys.exit(1)
+        else:
+            sys.exit(0)
+    elif args.can_handle_url_no_redirect:
+        try:
+            streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
             sys.exit(1)
         else:
@@ -900,16 +1029,14 @@ def main():
             # Close output
             if output:
                 output.close()
-
-            # Make sure current stream gets properly cleaned up
+            console.msg("Interrupted! Exiting...")
+        finally:
             if stream_fd:
-                console.msg("Interrupted! Closing currently open stream...")
                 try:
+                    console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
                     sys.exit()
-            else:
-                console.msg("Interrupted! Exiting...")
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
@@ -918,6 +1045,6 @@ def main():
         usage = parser.format_usage()
         msg = (
             "{usage}\nUse -h/--help to see the available options or "
-            "read the manual at http://docs.streamlink.io/"
+            "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)

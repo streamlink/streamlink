@@ -7,8 +7,8 @@ from streamlink.stream import HLSStream, RTMPStream
 
 CHANNEL_URL = "http://www.mobileonline.tv/channel.php"
 
-_url_re = re.compile("http(s)?://(\w+\.)?(ilive.to|streamlive.to)/.*/(?P<channel>\d+)")
-_link_re = re.compile("<a href=(\S+) target=\"_blank\"")
+_url_re = re.compile(r"http(s)?://(\w+\.)?(ilive.to|streamlive.to)/.*/(?P<channel>\d+)")
+_link_re = re.compile(r"<a href=(\S+) target=\"_blank\"")
 _schema = validate.Schema(
     validate.transform(_link_re.findall),
 )
@@ -43,6 +43,7 @@ class StreamLive(Plugin):
         stream = RTMPStream(self.session, params)
         return "live", stream
 
+    @Plugin.broken(315)
     def _get_streams(self):
         channel = _url_re.match(self.url).group("channel")
         urls = http.get(CHANNEL_URL, params=dict(n=channel), schema=_schema)
@@ -54,5 +55,6 @@ class StreamLive(Plugin):
         mapper.map("rtmp", self._create_rtmp_stream)
 
         return mapper(urls)
+
 
 __plugin__ = StreamLive

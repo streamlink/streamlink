@@ -6,24 +6,24 @@ Command-Line Interface
 Tutorial
 --------
 
-Livestreamer is command-line application, this means the commands described
+Streamlink is command-line application, this means the commands described
 here should be typed into a terminal. On Windows this means you should open
 the `command prompt`_ or `PowerShell`_, on Mac OS X open the `Terminal`_ app
 and if you're on Linux or BSD you probably already know the drill.
 
-The way Livestreamer works is that it's only a means to extract and transport
-the streams, and the playback is done by an external video player. Livestreamer
+The way Streamlink works is that it's only a means to extract and transport
+the streams, and the playback is done by an external video player. Streamlink
 works best with `VLC`_ or `mpv`_, which are also cross-platform, but other players
 may be compatible too, see the :ref:`Players` page for a complete overview.
 
-Now to get into actually using Livestreamer, let's say you want to watch the
-stream located on http://twitch.tv/day9tv, you start off by telling Livestreamer
+Now to get into actually using Streamlink, let's say you want to watch the
+stream located on http://twitch.tv/day9tv, you start off by telling Streamlink
 where to attempt to extract streams from. This is done by giving the URL to the
-command :command:`livestreamer` as the first argument:
+command :command:`streamlink` as the first argument:
 
 .. code-block:: console
 
-    $ livestreamer twitch.tv/day9tv
+    $ streamlink twitch.tv/day9tv
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
     Available streams: audio, high, low, medium, mobile (worst), source (best)
 
@@ -33,16 +33,28 @@ command :command:`livestreamer` as the first argument:
     e.g. just ``twitch.tv/day9tv`` is enough and quicker to type.
 
 
-This command will tell Livestreamer to attempt to extract streams from the URL
+This command will tell Streamlink to attempt to extract streams from the URL
 specified, and if it's successful, print out a list of available streams to choose
 from.
 
+In some cases  (`Supported streaming protocols`_)  local files are supported
+using the ``file://`` protocol, for example a local HLS playlist can be played.
+Relative file paths and absolute paths are supported. All path separators are ``/``,
+even on Windows.
+
+.. code-block:: console
+
+    $ streamlink hlsvariant://file://C:/hls/playlist.m3u8
+    [cli][info] Found matching plugin stream for URL hlsvariant://file://C:/hls/playlist.m3u8
+    Available streams: 180p (worst), 272p, 408p, 554p, 818p, 1744p (best)
+
+
 To select a stream and start playback, we simply add the stream name as a second
-argument to the :command:`livestreamer` command:
+argument to the :command:`streamlink` command:
 
 .. sourcecode:: console
 
-    $ livestreamer twitch.tv/day9tv source
+    $ streamlink twitch.tv/day9tv source
     [cli][info] Found matching plugin twitch for URL twitch.tv/day9tv
     [cli][info] Opening stream: source (hls)
     [cli][info] Starting player: vlc
@@ -50,14 +62,14 @@ argument to the :command:`livestreamer` command:
 
 The stream you chose should now be playing in the player. It's a common use case
 to just want start the highest quality stream and not be bothered with what it's
-named. To do this just specify ``best`` as the stream name and Livestreamer will
+named. To do this just specify ``best`` as the stream name and Streamlink will
 attempt to rank the streams and open the one of highest quality. You can also
 specify ``worst`` to get the lowest quality.
 
-Now that you have a basic grasp of how Livestreamer works, you may want to look
+Now that you have a basic grasp of how Streamlink works, you may want to look
 into customizing it to your own needs, such as:
 
-- Creating a :ref:`configuration file <cli-livestreamerrc>` of options you
+- Creating a :ref:`configuration file <cli-streamlinkrc>` of options you
   want to use
 - Setting up your player to :ref:`cache some data <issues-player_caching>`
   before playing the stream to help avoiding buffering issues
@@ -70,24 +82,31 @@ into customizing it to your own needs, such as:
 .. _mpv: http://mpv.io/
 
 
-.. _cli-livestreamerrc:
+.. _cli-streamlinkrc:
 
 Configuration file
 ------------------
 
-Writing the command-line options every time is inconvenient, that's why Livestreamer
+Writing the command-line options every time is inconvenient, that's why Streamlink
 is capable of reading options from a configuration file instead.
 
-Livestreamer will look for config files in different locations depending on
+Streamlink will look for config files in different locations depending on
 your platform:
 
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config
-                  - ~/.livestreamerrc
-Windows           %APPDATA%\\livestreamer\\livestreamerrc
+Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config
+                  - ~/.streamlinkrc
+Windows           %APPDATA%\\streamlink\\streamlinkrc
 ================= ====================================================
+
+.. note::
+  Currently the Windows installer does not create the streamlinkrc file. This
+  is a known issue being tracked
+  `here <https://github.com/streamlink/streamlink/issues/81>`_. An example
+  configuration file is available in the
+  `repo <https://github.com/streamlink/streamlink/blob/master/win32/streamlinkrc>`_.
 
 You can also specify the location yourself using the :option:`--config` option.
 
@@ -117,7 +136,7 @@ or for a option without value::
 
 .. note::
     Any quotes used will be part of the value, so only use when the value needs them,
-    e.g. specifiying a player with a path containing spaces.
+    e.g. specifying a player with a path containing spaces.
 
 Example
 ^^^^^^^
@@ -140,7 +159,7 @@ can be accomplished by placing those settings inside a plugin specific
 config file. Options inside these config files will override the main
 config file when a URL matching the plugin is used.
 
-Livestreamer expects this config to be named like the main config but
+Streamlink expects this config to be named like the main config but
 with ``.<plugin name>`` attached to the end.
 
 Examples
@@ -149,9 +168,9 @@ Examples
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - $XDG_CONFIG_HOME/livestreamer/config\ **.twitch**
-                  - ~/.livestreamerrc\ **.ustreamtv**
-Windows           %APPDATA%\\livestreamer\\livestreamerrc\ **.youtube**
+Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config\ **.twitch**
+                  - ~/.streamlinkrc\ **.ustreamtv**
+Windows           %APPDATA%\\streamlink\\streamlinkrc\ **.youtube**
 ================= ====================================================
 
 Have a look at the :ref:`list of plugins <plugin_matrix>` to see
@@ -164,19 +183,19 @@ Plugin specific usage
 Authenticating with Twitch
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-It's possible to access subscription content on Twitch by giving Livestreamer
+It's possible to access subscription content on Twitch by giving Streamlink
 access to your account.
 
-Authentication is done by creating an OAuth token that Livestreamer will
+Authentication is done by creating an OAuth token that Streamlink will
 use to access your account. It's done like this:
 
 .. sourcecode:: console
 
-    $ livestreamer --twitch-oauth-authenticate
+    $ streamlink --twitch-oauth-authenticate
 
 
 This will open a web browser where Twitch will ask you if you want to give
-Livestreamer permission to access your account, then forwards you to a page
+Streamlink permission to access your account, then forwards you to a page
 with further instructions on how to use it.
 
 
@@ -191,18 +210,18 @@ You can login like this:
 
 .. sourcecode:: console
 
-    $ livestreamer --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link
+    $ streamlink --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link
 
 .. note::
 
-    If you omit the password, livestreamer will ask for it.
+    If you omit the password, streamlink will ask for it.
 
 Once logged in, the plugin makes sure to save the session credentials to avoid
 asking your username and password again.
 
-Neverthless, these credentials are valid for a limited amount of time, so it
+Nevertheless, these credentials are valid for a limited amount of time, so it
 might be a good idea to save your username and password in your
-:ref:`configuration file <cli-livestreamerrc>` anyway.
+:ref:`configuration file <cli-streamlinkrc>` anyway.
 
 .. warning::
 
@@ -230,27 +249,27 @@ in again using your username and password.
 Sideloading plugins
 -------------------
 
-Livestreamer will attempt to load standalone plugins from these directories:
+Streamlink will attempt to load standalone plugins from these directories:
 
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) $XDG_CONFIG_HOME/livestreamer/plugins
-Windows           %APPDATA%\\livestreamer\\plugins
+Unix-like (POSIX) $XDG_CONFIG_HOME/streamlink/plugins
+Windows           %APPDATA%\\streamlink\\plugins
 ================= ====================================================
 
 .. note::
 
     If a plugin is added with the same name as a built-in plugin then
     the added plugin will take precedence. This is useful if you want
-    to upgrade plugins independently of the Livestreamer version.
+    to upgrade plugins independently of the Streamlink version.
 
 
 Playing built-in streaming protocols directly
 ---------------------------------------------
 
 There are many types of streaming protocols used by services today and
-Livestreamer supports most of them. It's possible to tell Livestreamer
+Streamlink supports most of them. It's possible to tell Streamlink
 to access a streaming protocol directly instead of relying on a plugin
 to extract the streams from a URL for you.
 
@@ -263,15 +282,35 @@ Accessing a stream that requires extra parameters to be passed along
 
 .. code-block:: console
 
-    $ livestreamer "rtmp://streaming.server.net/playpath live=1 swfVfy=http://server.net/flashplayer.swf"
+    $ streamlink "rtmp://streaming.server.net/playpath live=1 swfVfy=http://server.net/flashplayer.swf"
 
+When passing parameters to the built-in stream plugins the values will either be treated as plain
+strings, as is the case in the above example for ``swfVry``, or they will be interpreted as Python literals. For
+example you can pass a Python dict or Python list as one of the parameters.
+
+.. code-block:: console
+
+    $ streamlink "rtmp://streaming.server.net/playpath conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']"
+    $ streamlink "hls://streaming.server.net/playpath params={'token': 'magicToken'}"
+
+In the above examples ``conn`` will be passed as the Python list:
+
+.. code-block:: python
+
+    ['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']
+
+and ``params`` will be passed as the Python dict:
+
+.. code-block:: python
+
+    {'token': 'magicToken'}
 
 Most streaming technologies simply requires you to pass a HTTP URL, this is
 a Adobe HDS stream:
 
 .. code-block:: console
 
-    $ livestreamer hds://streaming.server.net/playpath/manifest.f4m
+    $ streamlink hds://streaming.server.net/playpath/manifest.f4m
 
 
 Supported streaming protocols
@@ -282,12 +321,12 @@ Name                           Prefix
 ============================== =================================================
 Adobe HTTP Dynamic Streaming   hds://
 Akamai HD Adaptive Streaming   akamaihd://
-Apple HTTP Live Streaming      hls:// hlsvariant://
+Apple HTTP Live Streaming      hls:// hlsvariant:// [1]_
 Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
-Progressive HTTP, HTTPS, etc   httpstream://
+Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 ============================== =================================================
 
-
+.. [1] supports local files using the file:// protocol
 .. _cli-options:
 
 Command-line usage
@@ -295,9 +334,9 @@ Command-line usage
 
 .. code-block:: console
 
-    $ livestreamer [OPTIONS] [URL] [STREAM]
+    $ streamlink [OPTIONS] <URL> [STREAM]
 
 
 .. argparse::
-    :module: livestreamer_cli.argparser
+    :module: streamlink_cli.argparser
     :attr: parser

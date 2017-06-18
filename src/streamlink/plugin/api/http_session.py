@@ -1,9 +1,13 @@
+import time
 from requests import Session, __build__ as requests_version
 from requests.adapters import HTTPAdapter
 from requests.exceptions import RequestException
 
+from streamlink.packages.requests_file import FileAdapter
+
 try:
     from requests.packages.urllib3.util import Timeout
+
     TIMEOUT_ADAPTER_NEEDED = requests_version < 0x020300
 except ImportError:
     TIMEOUT_ADAPTER_NEEDED = False
@@ -66,9 +70,36 @@ class HTTPSession(Session):
             self.mount("http://", HTTPAdapterWithReadTimeout())
             self.mount("https://", HTTPAdapterWithReadTimeout())
 
+        self.mount('file://', FileAdapter())
+
+    @classmethod
+    def determine_json_encoding(cls, sample):
+        """
+        Determine which Unicode encoding the JSON text sample is encoded with
+
+        RFC4627 (http://www.ietf.org/rfc/rfc4627.txt) suggests that the encoding of JSON text can be determined
+        by checking the pattern of NULL bytes in first 4 octets of the text.
+        :param sample: a sample of at least 4 bytes of the JSON text
+        :return: the most likely encoding of the JSON text
+        """
+        nulls_at = [i for i, j in enumerate(bytearray(sample[:4])) if j == 0]
+        if nulls_at == [0, 1, 2]:
+            return "UTF-32BE"
+        elif nulls_at == [0, 2]:
+            return "UTF-16BE"
+        elif nulls_at == [1, 2, 3]:
+            return "UTF-32LE"
+        elif nulls_at == [1, 3]:
+            return "UTF-16LE"
+        else:
+            return "UTF-8"
+
     @classmethod
     def json(cls, res, *args, **kwargs):
         """Parses JSON from a response."""
+        # if an encoding is already set then use the provided encoding
+        if res.encoding is None:
+            res.encoding = cls.determine_json_encoding(res.content[:4])
         return parse_json(res.text, *args, **kwargs)
 
     @classmethod
@@ -114,25 +145,39 @@ class HTTPSession(Session):
         schema = kwargs.pop("schema", None)
         session = kwargs.pop("session", None)
         timeout = kwargs.pop("timeout", self.timeout)
+        total_retries = kwargs.pop("retries", 0)
+        retry_backoff = kwargs.pop("retry_backoff", 0.3)
+        retry_max_backoff = kwargs.pop("retry_max_backoff", 10.0)
+        retries = 0
 
         if session:
             headers.update(session.headers)
             params.update(session.params)
 
-        try:
-            res = Session.request(self, method, url,
-                                  headers=headers,
-                                  params=params,
-                                  timeout=timeout,
-                                  proxies=proxies,
-                                  *args, **kwargs)
-            if raise_for_status and res.status_code not in acceptable_status:
-                res.raise_for_status()
-        except (RequestException, IOError) as rerr:
-            err = exception("Unable to open URL: {url} ({err})".format(url=url,
-                                                                       err=rerr))
-            err.err = rerr
-            raise err
+        while True:
+            try:
+                res = Session.request(self, method, url,
+                                      headers=headers,
+                                      params=params,
+                                      timeout=timeout,
+                                      proxies=proxies,
+                                      *args, **kwargs)
+                if raise_for_status and res.status_code not in acceptable_status:
+                    res.raise_for_status()
+                break
+            except KeyboardInterrupt:
+                raise
+            except Exception as rerr:
+                if retries >= total_retries:
+                    err = exception("Unable to open URL: {url} ({err})".format(url=url,
+                                                                               err=rerr))
+                    err.err = rerr
+                    raise err
+                retries += 1
+                # back off retrying, but only to a maximum sleep time
+                delay = min(retry_max_backoff,
+                            retry_backoff * (2 ** (retries - 1)))
+                time.sleep(delay)
 
         if schema:
             res = schema.validate(res.text, name="response text", exception=PluginError)

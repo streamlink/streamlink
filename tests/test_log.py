@@ -11,6 +11,7 @@ if is_py2:
 else:
     from io import StringIO
 
+
 class TestSession(unittest.TestCase):
     def setUp(self):
         self.output = StringIO()
@@ -30,6 +31,6 @@ class TestSession(unittest.TestCase):
         self.logger.debug("test")
         self.assertEqual(self.output.getvalue(), "[test][debug] test\n")
 
+
 if __name__ == "__main__":
     unittest.main()
-

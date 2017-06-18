@@ -10,7 +10,7 @@ STREAM_INFO_URL = "https://api.periscope.tv/api/v2/getAccessPublic"
 STATUS_GONE = 410
 STATUS_UNAVAILABLE = (STATUS_GONE,)
 
-_url_re = re.compile(r"http(s)?://(www\.)?periscope.tv/w/(?P<broadcast_id>[\w\-\=]+)")
+_url_re = re.compile(r"http(s)?://(www\.)?(periscope|pscp)\.tv/[^/]+/(?P<broadcast_id>[\w\-\=]+)")
 _stream_schema = validate.Schema(
     validate.any(
         None,
@@ -46,11 +46,12 @@ class Periscope(Plugin):
 
         playlist_url = http.json(res, schema=_stream_schema)
         if "hls_url" in playlist_url:
-            return HLSStream.parse_variant_playlist(self.session, playlist_url["hls_url"])
+            return dict(replay=HLSStream(self.session, playlist_url["hls_url"]))
         elif "replay_url" in playlist_url:
             self.logger.info("Live Stream ended, using replay instead")
             return dict(replay=HLSStream(self.session, playlist_url["replay_url"]))
         else:
             return
+
 
 __plugin__ = Periscope

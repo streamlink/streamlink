@@ -29,7 +29,7 @@ from ...exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "url", "startswith", "endswith",
+    "transform", "text", "union", "url", "startswith", "endswith", "contains",
     "xml_element", "xml_find", "xml_findall", "xml_findtext",
     "validate", "Schema", "SchemaContainer"
 ]
@@ -46,6 +46,8 @@ _map = map
 
 
 _re_match_attr = ("group", "groups", "groupdict", "re")
+
+
 def _is_re_match(value):
     return _all(_hasattr(value, a) for a in _re_match_attr)
 
@@ -69,6 +71,7 @@ class SchemaContainer(object):
 
 class transform(object):
     """Applies function to value to transform it."""
+
     def __init__(self, func):
         # text is an alias for basestring on Python 2, which cannot be
         # instantiated and therefore can't be used to transform the value,
@@ -81,6 +84,7 @@ class transform(object):
 
 class optional(object):
     """An optional key used in a dict or union-dict."""
+
     def __init__(self, key):
         self.key = key
 
@@ -95,6 +99,7 @@ class attr(SchemaContainer):
 
 class xml_element(object):
     """A XML element."""
+
     def __init__(self, tag=None, text=None, attrib=None):
         self.tag = tag
         self.text = text
@@ -133,6 +138,17 @@ def endswith(string):
         return True
 
     return ends_with
+
+
+def contains(string):
+    """Checks if the string value contains another string."""
+    def contains_str(value):
+        validate(text, value)
+        if not string in value:
+            raise ValueError("'{0}' does not contain '{1}'".format(value, string))
+        return True
+
+    return contains_str
 
 
 def get(item, default=None):
@@ -471,4 +487,3 @@ class Schema(object):
 @validate.register(Schema)
 def validate_schema(schema, value):
     return schema.validate(value, exception=ValueError)
-

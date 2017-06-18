@@ -1,13 +1,13 @@
 from ..exceptions import StreamError
-from .stream import Stream
+from streamlink.stream.stream import Stream
 
-from .akamaihd import AkamaiHDStream
-from .hds import HDSStream
-from .hls import HLSStream
-from .http import HTTPStream
-from .rtmpdump import RTMPStream
-from .streamprocess import StreamProcess
-from .wrappers import StreamIOWrapper, StreamIOIterWrapper, StreamIOThreadWrapper
+from streamlink.stream.akamaihd import AkamaiHDStream
+from streamlink.stream.hds import HDSStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
+from streamlink.stream.streamprocess import StreamProcess
+from streamlink.stream.wrappers import StreamIOWrapper, StreamIOIterWrapper, StreamIOThreadWrapper
 
-from .flvconcat import extract_flv_header_tags
-from .playlist import Playlist, FLVPlaylist
+from streamlink.stream.flvconcat import extract_flv_header_tags
+from streamlink.stream.playlist import Playlist, FLVPlaylist

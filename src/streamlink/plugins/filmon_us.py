@@ -9,17 +9,17 @@ from streamlink.stream import RTMPStream, HTTPStream
 SWF_LIVE_URL = "https://www.filmon.com/tv/modules/FilmOnTV/files/flashapp/filmon/FilmonPlayer.swf"
 SWF_VIDEO_URL = "http://www.filmon.us/application/themes/base/flash/MediaPlayer.swf"
 
-_url_re = re.compile("http(s)?://(\w+\.)?filmon.us")
+_url_re = re.compile(r"http(s)?://(\w+\.)?filmon.us")
 _live_export_re = re.compile(
     "<iframe src=\"(https://www.filmon.com/channel/export[^\"]+)\""
 )
-_live_json_re = re.compile("var startupChannel = (.+);")
-_replay_json_re = re.compile("var standByVideo = encodeURIComponent\('(.+)'\);")
+_live_json_re = re.compile(r"var startupChannel = (.+);")
+_replay_json_re = re.compile(r"var standByVideo = encodeURIComponent\('(.+)'\);")
 _history_re = re.compile(
-    "helpers.common.flash.flashplayerinstall\({url:'([^']+)',"
+    r"helpers.common.flash.flashplayerinstall\(\{url:'([^']+)',"
 )
 _video_flashvars_re = re.compile(
-    "<embed width=\"486\" height=\"326\" flashvars=\"([^\"]+)\""
+    r"<embed width=\"486\" height=\"326\" flashvars=\"([^\"]+)\""
 )
 
 _live_schema = validate.Schema({
@@ -78,6 +78,7 @@ _schema = validate.Schema(
     })
 )
 
+
 class Filmon_us(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -129,5 +130,6 @@ class Filmon_us(Plugin):
             return dict(history=stream)
 
         return
+
 
 __plugin__ = Filmon_us

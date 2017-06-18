@@ -34,6 +34,12 @@ class TestSession(unittest.TestCase):
         self.assertTrue(isinstance(channel, Plugin))
         self.assertTrue(isinstance(channel, plugins["testplugin"]))
 
+    def test_resolve_url_no_redirect(self):
+        plugins = self.session.get_plugins()
+        channel = self.session.resolve_url_no_redirect("http://test.se/channel")
+        self.assertTrue(isinstance(channel, Plugin))
+        self.assertTrue(isinstance(channel, plugins["testplugin"]))
+
     def test_options(self):
         self.session.set_option("test_option", "option")
         self.assertEqual(self.session.get_option("test_option"), "option")
@@ -90,6 +96,7 @@ class TestSession(unittest.TestCase):
 
         self.assertTrue("support" in streams)
         self.assertTrue(isinstance(streams["support"], HTTPStream))
+
 
 if __name__ == "__main__":
     unittest.main()

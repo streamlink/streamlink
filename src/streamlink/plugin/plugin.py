@@ -1,12 +1,15 @@
 import operator
 import re
-
 from functools import partial
 
 from ..cache import Cache
 from ..exceptions import PluginError, NoStreamsError
 from ..options import Options
 
+# FIXME: This is a crude attempt at making a bitrate's
+# weight end up similar to the weight of a resolution.
+# Someone who knows math, please fix.
+BIT_RATE_WEIGHT_RATIO = 2.8
 
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
@@ -18,8 +21,8 @@ QUALITY_WEIGTHS_EXTRA = {
     },
     "quality": {
         "ehq": 720,
-        "hq":  576,
-        "sq":  360,
+        "hq": 576,
+        "sq": 360,
     },
 }
 
@@ -37,27 +40,27 @@ def stream_weight(stream):
         if stream in weights:
             return weights[stream], group
 
-    match = re.match("^(\d+)([k]|[p])?(\d*)([\+])?$", stream)
+    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?$", stream)
 
     if match:
-        if match.group(2) == "k":
+        name_type = match.group(2)
+        if name_type == "k":  # bit rate
             bitrate = int(match.group(1))
-
-            # FIXME: This is a crude attempt at making a bitrate's
-            # weight end up similar to the weight of a resolution.
-            # Someone who knows math, please fix.
-            weight = bitrate / 2.8
+            weight = bitrate / BIT_RATE_WEIGHT_RATIO
 
             return weight, "bitrate"
 
-        elif match.group(2) == "p":
+        elif name_type == "p":  # resolution
             weight = int(match.group(1))
 
-            if match.group(3):
+            if match.group(3):  # fps eg. 60p or 50p
                 weight += int(match.group(3))
 
             if match.group(4) == "+":
                 weight += 1
+
+            if match.group(5):  # bit rate classifier for resolution
+                weight += int(match.group(5)) / BIT_RATE_WEIGHT_RATIO
 
             return weight, "pixels"
 
@@ -79,13 +82,16 @@ def stream_type_priority(stream_types, stream):
     try:
         prio = stream_types.index(stream_type)
     except ValueError:
-        prio = 99
+        try:
+            prio = stream_types.index("*")
+        except ValueError:
+            prio = 99
 
     return prio
 
 
 def stream_sorting_filter(expr, stream_weight):
-    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w\+]+)", expr)
+    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w+]+)", expr)
 
     if not match:
         raise PluginError("Invalid filter expression: {0}".format(expr))
@@ -254,8 +260,13 @@ class Plugin(object):
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
-            if stream_type not in stream_types:
+            # Use * as wildcard to match other stream types
+            if "*" not in stream_types and stream_type not in stream_types:
                 continue
+
+            # drop _alt from any stream names
+            if name.endswith("_alt"):
+                name = name[:-len("_alt")]
 
             existing = streams.get(name)
             if existing:
@@ -286,8 +297,9 @@ class Plugin(object):
             streams[name.lower()] = stream
 
         # Create the best/worst synonmys
-        stream_weight_only = lambda s: (self.stream_weight(s)[0] or
-                                        (len(streams) == 1 and 1))
+        def stream_weight_only(s):
+            return (self.stream_weight(s)[0] or
+                    (len(streams) == 1 and 1))
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
 

@@ -5,10 +5,11 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream
 
-_url_re = re.compile("(http(s)?://(\w+\.)?antenna.gr)/webtv/watch\?cid=.+")
-_playlist_re = re.compile("playlist:\s*\"(/templates/data/jplayer\?cid=[^\"]+)")
-_manifest_re = re.compile("jwplayer:source\s+file=\"([^\"]+)\"")
-_swf_re = re.compile("<jwplayer:provider>(http[^<]+)</jwplayer:provider>")
+_url_re = re.compile(r"(http(s)?://(\w+\.)?antenna.gr)/webtv/watch\?cid=.+")
+_playlist_re = re.compile(r"playlist:\s*\"(/templates/data/jplayer\?cid=[^\"]+)")
+_manifest_re = re.compile(r"jwplayer:source\s+file=\"([^\"]+)\"")
+_swf_re = re.compile(r"<jwplayer:provider>(http[^<]+)</jwplayer:provider>")
+
 
 class Antenna(Plugin):
     @classmethod
@@ -37,13 +38,14 @@ class Antenna(Plugin):
 
         # Find SWF
         match = _swf_re.search(res.text)
-        swf_url = match.group(1);
+        swf_url = match.group(1)
 
         streams = {}
         streams.update(
             HDSStream.parse_manifest(self.session, manifest_url, pvswf=swf_url)
         )
-        
+
         return streams
+
 
 __plugin__ = Antenna

@@ -30,7 +30,7 @@ class Cache(object):
             try:
                 with open(self.filename, "r") as fd:
                     self._cache = json.load(fd)
-            except:
+            except Exception:
                 self._cache = {}
         else:
             self._cache = {}
@@ -89,5 +89,6 @@ class Cache(object):
             return self._cache[key]["value"]
         else:
             return default
+
 
 __all__ = ["Cache"]

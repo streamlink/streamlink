@@ -1,24 +1,78 @@
 language: python
 
-sudo: false
+matrix:
+  include:
+  - python: '2.7'
+  - python: '3.3'
+  - python: '3.4'
+  - python: '3.5'
+    env: BUILD_DOCS=yes BUILD_INSTALLER=yes STREAMLINK_INSTALLER_DIST_DIR=$TRAVIS_BUILD_DIR/dist/nsis
+  - python: '3.6'
+  - python: '3.7-dev'
+  allow_failures:
+  - python: '2.6'
+  - python: '3.7-dev'
 
-python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-
-before_install: 
-  - pip install pytest pytest-cov coveralls coverage
-  - travis_retry gem install --version 0.8.9 faraday
+before_install:
+  - pip install --disable-pip-version-check --upgrade pip
+  - pip install -r dev-requirements.txt
+  - pip install pycountry 
+  - pip install -r docs-requirements.txt
 
 install:
   - python setup.py install
 
-script: 
-  - python -m pytest -vv --cov streamlink
+script:
+  - python -m pytest tests/
+  - coverage run -m pytest tests/
+  # test building the docs
+  - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
+  - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
 
 after_success:
-  - sh .travis/build-win32.sh
-  - coveralls
+  # push the docs only if the build was successful
+  - bash script/pushdocs.sh
+  - codecov
+
+addons:
+  apt:
+    packages:
+    - nsis
+
+before_deploy:
+  - ./script/bintrayconfig.sh
+
+deploy:
+  - provider: releases
+    api_key: "${RELEASES_API_KEY}"
+    file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
+    file_glob: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $BUILD_INSTALLER = yes
+  - provider: script
+    script: python script/github_releases.py
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $BUILD_INSTALLER == yes
+  - provider: bintray
+    file: build/bintray-nightly.json
+    user: "${BINTRAY_USER}"
+    key: "${BINTRAY_KEY}"
+    skip_cleanup: true
+    on:
+      branch: master
+      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
+  - provider: bintray
+    file: build/bintray-latest.json
+    user: "${BINTRAY_USER}"
+    key: "${BINTRAY_KEY}"
+    skip_cleanup: true
+    on:
+      branch: master
+      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
+
+after_deploy:
+  - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' ]]; then ./script/bintrayupdate.sh; fi

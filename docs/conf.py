@@ -34,7 +34,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Streamlink'
-copyright = '2011-2015, Christopher Rosell'
+copyright = '2017, Streamlink'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -135,10 +135,6 @@ html_static_path = ['_static']
 # using the given strftime format.
 #html_last_updated_fmt = '%b %d, %Y'
 
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-#html_use_smartypants = True
-
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 
@@ -186,9 +182,8 @@ htmlhelp_basename = 'streamlinkdoc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('cli', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Christopher Rosell'], 1)
+    ('cli', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Streamlink Contributors'], 1)
 ]
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
-

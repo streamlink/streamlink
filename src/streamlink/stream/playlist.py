@@ -4,6 +4,7 @@ from ..exceptions import StreamError
 
 __all__ = ["Playlist", "FLVPlaylist"]
 
+
 class Playlist(Stream):
     """Abstract base class for playlist type streams."""
 
@@ -69,4 +70,3 @@ class FLVPlaylist(Playlist):
         fd.open(self.streams)
 
         return fd
-

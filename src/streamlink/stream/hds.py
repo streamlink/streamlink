@@ -2,8 +2,10 @@ from __future__ import division
 
 import base64
 import hmac
+import random
 import re
 import os.path
+import string
 
 from binascii import unhexlify
 from collections import namedtuple
@@ -21,7 +23,7 @@ from .wrappers import StreamIOIterWrapper
 
 from ..cache import Cache
 from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
-from ..exceptions import StreamError
+from ..exceptions import StreamError, PluginError
 from ..utils import absolute_url, swfdecompress
 
 from ..packages.flashmedia import F4V, F4VError
@@ -68,11 +70,15 @@ class HDSStreamWriter(SegmentedStreamWriter):
             return
 
         try:
+            request_params = self.stream.request_params.copy()
+            params = request_params.pop("params", {})
+            params.pop("g", None)
             return self.session.http.get(fragment.url,
                                          stream=True,
                                          timeout=self.timeout,
                                          exception=StreamError,
-                                         **self.stream.request_params)
+                                         params=params,
+                                         **request_params)
         except StreamError as err:
             self.logger.error("Failed to open fragment {0}-{1}: {2}",
                               fragment.segment, fragment.fragment, err)
@@ -258,7 +264,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 # Check for the last fragment of the stream
                 if fragmentrun.discontinuity_indicator == 0:
                     if i > 0:
-                        prev = table[i-1]
+                        prev = table[i - 1]
                         self.end_fragment = prev.first_fragment
 
                     break
@@ -274,8 +280,8 @@ class HDSStreamWorker(SegmentedStreamWorker):
         table = self.segmentruntable.payload.segment_run_entry_table
 
         for segment, start, end in self.iter_segment_table(table):
-            if fragment >= (start + 1) and fragment <= (end + 1):
-                break
+            if start - 1 <= fragment <= end:
+                return segment
         else:
             segment = 1
 
@@ -418,15 +424,19 @@ class HDSStream(Stream):
         return reader
 
     @classmethod
-    def parse_manifest(cls, session, url, timeout=60, pvswf=None,
+    def parse_manifest(cls, session, url, timeout=60, pvswf=None, is_akamai=False,
                        **request_params):
         """Parses a HDS manifest and returns its substreams.
 
         :param url: The URL to the manifest.
         :param timeout: How long to wait for data to be returned from
                         from the stream before raising an error.
+        :param is_akamai: force adding of the akamai parameters
         :param pvswf: URL of player SWF for Akamai HD player verification.
         """
+        logger = session.logger.new_module("hds.parse_manifest")
+        # private argument, should only be used in recursive calls
+        raise_for_drm = request_params.pop("raise_for_drm", False)
 
         if not request_params:
             request_params = {}
@@ -440,12 +450,20 @@ class HDSStream(Stream):
         request_params.pop("timeout", None)
         request_params.pop("url", None)
 
-        if "akamaihd" in url:
+        if "akamaihd" in url or is_akamai:
             request_params["params"]["hdcore"] = HDCORE_VERSION
+            request_params["params"]["g"] = cls.cache_buster_string(12)
 
         res = session.http.get(url, exception=IOError, **request_params)
         manifest = session.http.xml(res, "manifest XML", ignore_ns=True,
                                     exception=IOError)
+
+        if manifest.findtext("drmAdditionalHeader"):
+            logger.debug("Omitting HDS stream protected by DRM: {}", url)
+            if raise_for_drm:
+                raise PluginError("{} is protected by DRM".format(url))
+            logger.warning("Some or all streams are unavailable as they are protected by DRM")
+            return {}
 
         parsed = urlparse(url)
         baseurl = manifest.findtext("baseURL")
@@ -479,6 +497,8 @@ class HDSStream(Stream):
 
             params = cls._pv_params(session, pvswf, pvtoken, **request_params)
             request_params["params"].update(params)
+
+        child_drm = False
 
         for media in manifest.findall("media"):
             url = media.attrib.get("url")
@@ -521,9 +541,15 @@ class HDSStream(Stream):
 
             elif href:
                 url = absolute_url(baseurl, href)
-                child_streams = cls.parse_manifest(session, url,
-                                                   timeout=timeout,
-                                                   **request_params)
+                try:
+                    child_streams = cls.parse_manifest(session, url,
+                                                       timeout=timeout,
+                                                       is_akamai=is_akamai,
+                                                       raise_for_drm=True,
+                                                       **request_params)
+                except PluginError:
+                    child_drm = True
+                    child_streams = {}
 
                 for name, stream in child_streams.items():
                     # Override stream name if bitrate is available in parent
@@ -534,6 +560,8 @@ class HDSStream(Stream):
                         name = bitrate + "k"
 
                     streams[name] = stream
+        if child_drm:
+            logger.warning("Some or all streams are unavailable as they are protected by DRM")
 
         return streams
 
@@ -586,3 +614,7 @@ class HDSStream(Stream):
         params.extend(parse_qsl(hdntl, keep_blank_values=True))
 
         return params
+
+    @staticmethod
+    def cache_buster_string(length):
+        return "".join([random.choice(string.ascii_uppercase) for i in range(length)])

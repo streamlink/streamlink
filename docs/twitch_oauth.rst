@@ -1,5 +1,7 @@
 .. _twitch_oauth:
 
+:orphan:
+
 Twitch OAuth authentication
 ===========================
 
@@ -25,11 +27,10 @@ Twitch OAuth authentication
     </script>
 
 
-You successfully authenticated Livestreamer with Twitch.
+You successfully authenticated Streamlink with Twitch.
 
-Paste this into your :ref:`configuration file <cli-livestreamerrc>`:
+Paste this into your :ref:`configuration file <cli-streamlinkrc>`:
 
 .. code-block:: bash
 
     twitch-oauth-token=
-

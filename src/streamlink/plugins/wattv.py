@@ -9,8 +9,8 @@ from streamlink.stream import HDSStream
 # (tv/wat/player/media/Media.as)
 TOKEN_SECRET = '9b673b13fa4682ed14c3cfa5af5310274b514c4133e9b3a81e6e3aba009l2564'
 
-_url_re = re.compile("http(s)?://(\w+\.)?wat.tv/")
-_video_id_re = re.compile("href=\"http://m.wat.tv/video/([^\"]+)", re.IGNORECASE)
+_url_re = re.compile(r"http(s)?://(\w+\.)?wat.tv/")
+_video_id_re = re.compile(r"href=\"http://m.wat.tv/video/([^\"]+)", re.IGNORECASE)
 
 
 class WAT(Plugin):
@@ -64,5 +64,6 @@ class WAT(Plugin):
         token = "{0}/{1}".format(token.hexdigest(), timestamp_hex)
 
         return token
+
 
 __plugin__ = WAT

@@ -79,3 +79,5 @@ class HTTPStream(Stream):
 
         return fd
 
+    def to_url(self):
+        return self.url

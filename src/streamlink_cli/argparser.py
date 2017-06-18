@@ -1,6 +1,5 @@
 import argparse
 import re
-
 from string import printable
 from textwrap import dedent
 
@@ -8,7 +7,6 @@ from .constants import (
     LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
 )
 from .utils import find_default_player
-
 
 _filesize_re = re.compile("""
     (?P<size>\d+(\.\d+)?)
@@ -57,6 +55,7 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
 
     Originally written by Jakub Roztocil of the httpie project.
     """
+
     def __init__(self, max_help_position=4, *args, **kwargs):
         # A smaller indent for args help.
         kwargs["max_help_position"] = max_help_position
@@ -130,18 +129,26 @@ def keyvalue(value):
     return match.group("key", "value")
 
 
+def boolean(value):
+    truths = ["yes", "1", "true", "on"]
+    falses = ["no", "0", "false", "off"]
+    if value.lower() not in truths+falses:
+        raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths+falses)))
+
+    return value.lower() in truths
+
 parser = ArgumentParser(
     fromfile_prefix_chars="@",
     formatter_class=HelpFormatter,
     add_help=False,
-    usage="%(prog)s [OPTIONS] [URL] [STREAM]",
+    usage="%(prog)s [OPTIONS] <URL> [STREAM]",
     description=dedent("""
     Streamlink is command-line utility that extracts streams from
     various services and pipes them into a video player of choice.
     """),
     epilog=dedent("""
     For more in-depth documention see:
-      http://docs.streamlink.io/
+      https://streamlink.github.io
 
     Please report broken plugins or bugs to the issue tracker on Github:
       https://github.com/streamlink/streamlink/issues
@@ -156,7 +163,10 @@ positional.add_argument(
     help="""
     A URL to attempt to extract streams from.
 
-    If it's a HTTP URL then "http://" can be omitted.
+    Usually, the protocol of http(s) URLs can be omitted ("https://"),
+    depending on the implementation of the plugin being used.
+
+    Alternatively, the URL can also be specified by using the --url option.
     """
 )
 positional.add_argument(
@@ -167,13 +177,13 @@ positional.add_argument(
     help="""
     Stream to play.
 
-    Use "best" or "worst" for highest or lowest quality available.
+    Use "best" or "worst" for selecting the highest or lowest available quality.
 
     Fallback streams can be specified by using a comma-separated list:
 
       "720p,480p,best"
 
-    If no stream is specified and --default-stream is not used then a
+    If no stream is specified and --default-stream is not used, then a
     list of available streams will be printed.
     """
 )
@@ -210,6 +220,14 @@ general.add_argument(
     Returns status code 1 for false and 0 for true.
 
     Useful for external scripting.
+    """
+)
+general.add_argument(
+    "--can-handle-url-no-redirect",
+    metavar="URL",
+    help="""
+    Same as --can-handle-url but without following redirects
+    when looking up the URL.
     """
 )
 general.add_argument(
@@ -253,10 +271,14 @@ general.add_argument(
     """
 )
 general.add_argument(
-    "--no-version-check",
-    action="store_true",
+    "--auto-version-check",
+    type=boolean,
+    metavar="{yes,true,1,on,no,false,0,off}",
+    default=False,
     help="""
-    Do not check for new Streamlink releases.
+    Enable or disable the automatic check for a new version of Streamlink.
+
+    Default is "no".
     """
 )
 general.add_argument(
@@ -267,9 +289,18 @@ general.add_argument(
     """
 )
 general.add_argument(
-    "--yes-run-as-root",
-    action="store_true",
-    help=argparse.SUPPRESS
+    "--locale",
+    type=str,
+    metavar="LOCALE",
+    help="""
+    The preferred locale setting, for selecting the preferred
+    subtitle and audio language.
+
+    The locale is formatted as [language_code]_[country_code],
+    eg. en_US or es_ES.
+
+    Default is system locale.
+    """
 )
 
 player = parser.add_argument_group("Player options")
@@ -278,18 +309,31 @@ player.add_argument(
     metavar="COMMAND",
     default=find_default_player(),
     help="""
-    Player to feed stream data to. This is a shell-like syntax to
-    support passing options to the player. For example:
+    Player to feed stream data to. By default, VLC will be used
+    if it can be found in its default location.
 
-      "vlc --file-caching=5000"
+    This is a shell-like syntax to support using a specific player:
+
+      streamlink --player=vlc <url> <quality>
+
+    Absolute or relative paths can also be passed via this option
+    in the event the player's executable can not be resolved:
+
+      streamlink --player=/path/to/vlc <url> <quality>
+      streamlink --player=./vlc-player/vlc <url> <quality>
 
     To use a player that is located in a path with spaces you must
-    quote the path:
+    quote the parameter or its value:
 
-      "'/path/with spaces/vlc' --file-caching=5000"
+      streamlink "--player=/path/with spaces/vlc" <url> <quality>
+      streamlink --player "C:\path\with spaces\mpc-hc64.exe" <url> <quality>
 
-    By default VLC will be used if it can be found in its default
-    location.
+    Options may also be passed to the player. For example:
+
+      streamlink --player "vlc --file-caching=5000" <url> <quality>
+
+    As an alternative to this, see the --player-args parameter,
+    which does not log any custom player arguments.
     """
 )
 player.add_argument(
@@ -299,7 +343,8 @@ player.add_argument(
     help="""
     This option allows you to customize the default arguments which
     are put together with the value of --player to create a command
-    to execute.
+    to execute. Unlike the --player parameter, custom player
+    arguments will not be logged.
 
     This value can contain formatting variables surrounded by curly
     braces, {{ and }}. If you need to include a brace character, it
@@ -316,6 +361,11 @@ player.add_argument(
     need to add arguments after the filename.
 
     Default is "{0}".
+
+    Example:
+
+      streamlink -p vlc -a "--play-and-exit {{filename}}" <url> <quality>
+
     """.format(DEFAULT_PLAYER_ARGUMENTS)
 )
 player.add_argument(
@@ -352,7 +402,6 @@ player.add_argument(
     This makes it possible to handle stream disconnects if your player
     is capable of reconnecting to a HTTP stream. This is usually
     done by setting your player to a "repeat mode".
-
     """
 )
 player.add_argument(
@@ -438,11 +487,34 @@ output.add_argument(
 
 stream = parser.add_argument_group("Stream options")
 stream.add_argument(
+    "--url",
+    dest="url_param",
+    metavar="URL",
+    help="""
+    A URL to attempt to extract streams from.
+
+    Usually, the protocol of http(s) URLs can be omitted (https://),
+    depending on the implementation of the plugin being used.
+
+    This is an alternative to setting the URL using a positional argument
+    and can be useful if set in a config file.
+    """
+)
+stream.add_argument(
     "--default-stream",
     type=comma_list,
     metavar="STREAM",
     help="""
-    Open this stream when no stream argument is specified, e.g. "best".
+    Stream to play.
+
+    Use "best" or "worst" for selecting the highest or lowest available quality.
+
+    Fallback streams can be specified by using a comma-separated list:
+
+      "720p,480p,best"
+
+    This is an alternative to setting the stream using a positional argument
+    and can be useful if set in a config file.
     """
 )
 stream.add_argument(
@@ -473,9 +545,12 @@ stream.add_argument(
     A comma-delimited list of stream types to allow.
 
     The order will be used to separate streams when there are multiple
-    streams with the same name but different stream types.
+    streams with the same name but different stream types. Any stream type
+    not listed will be omitted from the available streams list.  A ``*``
+    can be used as a wildcard to match any other type of stream,
+    eg. muxed-stream.
 
-    Default is "rtmp,hls,hds,http,akamaihd".
+    Default is "rtmp,hls,hds,http,akamaihd,*".
     """
 )
 stream.add_argument(
@@ -584,6 +659,17 @@ transport.add_argument(
     """
 )
 transport.add_argument(
+    "--hls-playlist-reload-attempts",
+    type=num(int, min=0),
+    metavar="ATTEMPTS",
+    help="""
+    How many attempts should be done to reload the HLS playlist
+    before giving up.
+
+    Default is 3.
+    """
+)
+transport.add_argument(
     "--hls-segment-threads",
     type=num(int, max=10),
     metavar="THREADS",
@@ -611,6 +697,17 @@ transport.add_argument(
     Timeout for reading data from HLS streams.
 
     Default is 60.0.
+    """)
+transport.add_argument(
+    "--hls-audio-select",
+    type=str,
+    metavar="CODE",
+    help="""
+    Selects a specific audio source by language code
+    when multiple audio sources are available.
+
+    Note: This is only useful in special circumstances
+    where the regular locale option fails.
     """)
 transport.add_argument(
     "--http-stream-timeout",
@@ -740,7 +837,7 @@ transport.add_argument(
     "--subprocess-cmdline", "--cmdline", "-c",
     action="store_true",
     help="""
-    Print command-line used internally to play stream.
+    Print the command-line used internally to play the stream.
 
     This is only available on RTMP streams.
     """
@@ -755,7 +852,65 @@ transport.add_argument(
     Useful when debugging rtmpdump related issues.
     """
 )
+transport.add_argument(
+    "--subprocess-errorlog-path", "--errorlog-path",
+    type=str,
+    metavar="PATH",
+    help="""
+    Log the subprocess errorlog to a specific file rather than a temporary file.
+    Takes precedence over subprocess-errorlog.
 
+    Useful when debugging rtmpdump related issues.
+    """
+)
+transport.add_argument(
+    "--ffmpeg-ffmpeg",
+    metavar="FILENAME",
+    help="""
+    FFMPEG is used to access or mux separate video and audio streams.
+    You can specify the location of the ffmpeg executable if it is
+    not in your PATH.
+
+    Example: "/usr/local/bin/ffmpeg"
+    """
+)
+transport.add_argument(
+    "--ffmpeg-verbose",
+    action="store_true",
+    help="""
+    Write the console output from ffmpeg to the console.
+    """
+)
+transport.add_argument(
+    "--ffmpeg-verbose-path",
+    type=str,
+    metavar="PATH",
+    help="""
+    Path to write the output from the ffmpeg console.
+    """
+)
+transport.add_argument(
+    "--ffmpeg-video-transcode",
+    metavar="CODEC",
+    help="""
+    When muxing streams transcode the video to this CODEC.
+
+    Default is "copy".
+
+    Example: "h264"
+    """
+)
+transport.add_argument(
+    "--ffmpeg-audio-transcode",
+    metavar="CODEC",
+    help="""
+    When muxing streams transcode the audio to this CODEC.
+
+    Default is "copy".
+
+    Example: "aac"
+    """
+)
 
 http = parser.add_argument_group("HTTP options")
 http.add_argument(
@@ -764,7 +919,7 @@ http.add_argument(
     help="""
     A HTTP proxy to use for all HTTP requests.
 
-    Example: http://hostname:port/
+    Example: "http://hostname:port/"
     """
 )
 http.add_argument(
@@ -773,7 +928,7 @@ http.add_argument(
     help="""
     A HTTPS capable proxy to use for all HTTPS requests.
 
-    Example: http://hostname:port/
+    Example: "https://hostname:port/"
     """
 )
 http.add_argument(
@@ -827,6 +982,15 @@ http.add_argument(
     """
 )
 http.add_argument(
+    "--http-disable-dh",
+    action="store_true",
+    help="""
+    Disable Diffie Hellman key exchange
+
+    Usually a bad idea, only use this if you know what you're doing.
+    """
+)
+http.add_argument(
     "--http-ssl-cert",
     metavar="FILENAME",
     help="""
@@ -866,8 +1030,7 @@ plugin.add_argument(
     help="""
     Attempts to load plugins from these directories.
 
-    Multiple directories can be used by separating them with a
-    semi-colon.
+    Multiple directories can be used by separating them with a semicolon.
     """
 )
 plugin.add_argument(
@@ -900,7 +1063,13 @@ plugin.add_argument(
     Note: This method is the old and clunky way of authenticating with
     Twitch, using --twitch-oauth-authenticate is the recommended and
     simpler way of doing it now.
-
+    """
+)
+plugin.add_argument(
+    "--twitch-disable-hosting",
+    action="store_true",
+    help="""
+    Do not open the stream if the target channel is hosting another channel.
     """
 )
 plugin.add_argument(
@@ -938,31 +1107,170 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--crunchyroll-locale",
-    metavar="LOCALE",
+    "--crunchyroll-session-id",
+    metavar="SESSION_ID",
     help="""
-    Indicate which locale to use for Crunchyroll subtitles.
-
-    The locale is formatted as [language_code]_[country_code], by default
-    en_US is used.
+    Set a specific session ID for crunchyroll, can be used to bypass
+    region restrictions.
     """
 )
 plugin.add_argument(
-    "--livestation-email",
-    metavar="EMAIL",
+    "--btv-username",
+    metavar="USERNAME",
     help="""
-    A Livestation account email to access restricted or premium
-    quality streams.
+    A BTV username required to access any stream.
     """
 )
 plugin.add_argument(
-    "--livestation-password",
+    "--btv-password",
     metavar="PASSWORD",
     help="""
-    A Livestation account password to use with --livestation-email.
+    A BTV account password to use with --btv-username.
     """
 )
+plugin.add_argument(
+    "--schoolism-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your Schoolism account,
+    required to access any Schoolism stream.
+    """
+)
+plugin.add_argument(
+    "--schoolism-password",
+    metavar="PASSWORD",
+    help="""
+    A Schoolism account password to use with --schoolism-email.
+    """
+)
+plugin.add_argument(
+    "--schoolism-part",
+    type=int,
+    default=1,
+    metavar="PART",
+    help="""
+    Play part number PART of the lesson.
 
+    Defaults is 1.
+    """
+)
+plugin.add_argument(
+    "--daisuki-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream.
+    """
+)
+plugin.add_argument(
+    "--rtve-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream.
+    """
+)
+plugin.add_argument(
+    "--funimation-language",
+    type=str,
+    choices=["en", "ja", "english", "japanese"],
+    default="english",
+    help="""
+    The audio language to use for Funimation streams; japanese or english.
+
+    Default is "english".
+    """
+)
+plugin.add_argument(
+    "--funimation-mux-subtitles",
+    action="store_true",
+    help="""
+    Enable automatically including available subtitles in to the output stream.
+    """
+)
+plugin.add_argument(
+    "--tvplayer-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with tvplayer.com.
+    """
+)
+plugin.add_argument(
+    "--tvplayer-password",
+    metavar="PASSWORD",
+    help="""
+    A TVPlayer account password to use with --tvplayer-email.
+    """
+)
+plugin.add_argument(
+    "--pluzz-mux-subtitles",
+    action="store_true",
+    help="""
+    Automatically mux available subtitles in to the output stream.
+    """
+)
+plugin.add_argument(
+    "--wwenetwork-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your WWE Network account,
+    required to access any WWE Network stream.
+    """
+)
+plugin.add_argument(
+    "--wwenetwork-password",
+    metavar="PASSWORD",
+    help="""
+    A WWE Network account password to use with --wwenetwork-email.
+    """
+)
+plugin.add_argument(
+    "--animelab-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with animelab.com.
+    """
+)
+plugin.add_argument(
+    "--animelab-password",
+    metavar="PASSWORD",
+    help="""
+    A TVPlayer account password to use with --animelab-email.
+    """
+)
+plugin.add_argument(
+    "--npo-subtitles",
+    action="store_true",
+    help="""
+    Include subtitles for the deaf or hard of hearing, if available.
+    """
+)
+plugin.add_argument(
+    "--liveedu-email",
+    metavar="EMAIL",
+    help="""
+    The email address used to register with liveedu.tv.
+    """
+)
+plugin.add_argument(
+    "--liveedu-password",
+    metavar="PASSWORD",
+    help="""
+    A LiveEdu account password to use with --liveedu-email.
+    """
+)
+plugin.add_argument(
+    "--bbciplayer-username",
+    metavar="USERNAME",
+    help="""
+    The username used to register with bbc.co.uk.
+    """
+)
+plugin.add_argument(
+    "--bbciplayer-password",
+    metavar="PASSWORD",
+    help="""
+    A bbc.co.uk account password to use with --bbciplayer-username.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
@@ -1025,6 +1333,16 @@ http.add_argument(
 http.add_argument(
     "--http-query-params",
     metavar="PARAMS",
+    help=argparse.SUPPRESS
+)
+plugin.add_argument(
+    "--crunchyroll-locale",
+    metavar="LOCALE",
+    help=argparse.SUPPRESS
+)
+general.add_argument(
+    "--no-version-check",
+    action="store_true",
     help=argparse.SUPPRESS
 )
 

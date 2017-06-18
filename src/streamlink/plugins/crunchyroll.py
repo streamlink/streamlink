@@ -9,7 +9,7 @@ from streamlink.stream import HLSStream
 
 API_URL = "https://api.crunchyroll.com/{0}.0.json"
 API_DEFAULT_LOCALE = "en_US"
-API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {})"
+API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {0})"
 API_HEADERS = {
     "Host": "api.crunchyroll.com",
     "Accept-Encoding": "gzip, deflate",
@@ -25,6 +25,11 @@ STREAM_WEIGHTS = {
     "high": 720,
     "ultra": 1080,
 }
+STREAM_NAMES = {
+    "120k": "low",
+    "328k": "mid",
+    "864k": "high"
+}
 
 
 def parse_timestamp(ts):
@@ -36,12 +41,12 @@ def parse_timestamp(ts):
     )
 
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(\w+\.)?crunchyroll\.
     (?:
         com|de|es|fr|co.jp
     )
-    /[^/&?]+
+    (?:/[^/&?]+)?
     /[^/&?]+-(?P<media_id>\d+)
 """, re.VERBOSE)
 
@@ -58,13 +63,13 @@ _media_schema = validate.Schema(
             {
                 "streams": validate.all(
                     [{
-                        "quality": validate.text,
+                        "quality": validate.any(validate.text, None),
                         "url": validate.url(
                             scheme="http",
                             path=validate.endswith(".m3u8")
-                        )
-                    }],
-                    validate.filter(lambda s: s["quality"] != "adaptive")
+                        ),
+                        validate.optional("video_encode_id"): validate.text
+                    }]
                 )
             }
         )
@@ -78,7 +83,8 @@ _login_schema = validate.Schema({
         validate.transform(parse_timestamp)
     ),
     "user": {
-        "username": validate.text
+        "username": validate.any(validate.text, None),
+        "email": validate.text
     }
 })
 _session_schema = validate.Schema(
@@ -91,6 +97,7 @@ _session_schema = validate.Schema(
 
 class CrunchyrollAPIError(Exception):
     """Exception thrown by the Crunchyroll API when an error occurs"""
+
     def __init__(self, msg, code):
         Exception.__init__(self, msg)
         self.msg = msg
@@ -198,7 +205,8 @@ class Crunchyroll(Plugin):
         "username": None,
         "password": None,
         "purge_credentials": None,
-        "locale": API_DEFAULT_LOCALE
+        "locale": None,
+        "session_id": None,
     })
 
     @classmethod
@@ -227,11 +235,32 @@ class Crunchyroll(Plugin):
         if not info:
             return
 
-        # TODO: Use dict comprehension here after dropping Python 2.6 support.
-        return dict(
-            (stream["quality"], HLSStream(self.session, stream["url"]))
-            for stream in info["streams"]
-        )
+        streams = {}
+
+        # The adaptive quality stream sometimes a subset of all the other streams listed, ultra is no included
+        has_adaptive = any([s[u"quality"] == u"adaptive" for s in info[u"streams"]])
+        if has_adaptive:
+            self.logger.debug(u"Loading streams from adaptive playlist")
+            for stream in filter(lambda x: x[u"quality"] == u"adaptive", info[u"streams"]):
+                for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
+                    # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
+                    name = STREAM_NAMES.get(q, q)
+                    streams[name] = s
+
+        # If there is no adaptive quality stream then parse each individual result
+        for stream in info[u"streams"]:
+            if stream[u"quality"] != u"adaptive":
+                # the video_encode_id indicates that the stream is not a variant playlist
+                if u"video_encode_id" in stream:
+                    streams[stream[u"quality"]] = HLSStream(self.session, stream[u"url"])
+                else:
+                    # otherwise the stream url is actually a list of stream qualities
+                    for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
+                        # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
+                        name = STREAM_NAMES.get(q, q)
+                        streams[name] = s
+
+        return streams
 
     def _get_device_id(self):
         """Returns the saved device id or creates a new one and saves it."""
@@ -253,15 +282,17 @@ class Crunchyroll(Plugin):
         if self.options.get("purge_credentials"):
             self.cache.set("session_id", None, 0)
             self.cache.set("auth", None, 0)
+            self.cache.set("session_id", None, 0)
 
         current_time = datetime.datetime.utcnow()
         device_id = self._get_device_id()
-        locale = self.options.get("locale")
+        # use the crunchyroll locale as an override, for backwards compatibility
+        locale = self.get_option("locale") or self.session.localization.language_code
         api = CrunchyrollAPI(
-            self.cache.get("session_id"), self.cache.get("auth"), locale
+            self.options.get("session_id") or self.cache.get("session_id"), self.cache.get("auth"), locale
         )
 
-        self.logger.debug("Creating session")
+        self.logger.debug("Creating session with locale: {0}", locale)
         try:
             api.session_id = api.start_session(device_id, schema=_session_schema)
         except CrunchyrollAPIError as err:
@@ -289,7 +320,7 @@ class Crunchyroll(Plugin):
                 api.auth = login["auth"]
 
                 self.logger.info("Successfully logged in as '{0}'",
-                                 login["user"]["username"])
+                                 login["user"]["username"] or login["user"]["email"])
 
                 expires = (login["expires"] - current_time).total_seconds()
                 self.cache.set("auth", login["auth"], expires)
@@ -302,5 +333,6 @@ class Crunchyroll(Plugin):
             )
 
         return api
+
 
 __plugin__ = Crunchyroll

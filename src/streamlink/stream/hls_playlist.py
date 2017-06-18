@@ -4,10 +4,7 @@ from binascii import unhexlify
 from collections import namedtuple
 from itertools import starmap
 
-try:
-    from urlparse import urljoin
-except ImportError:
-    from urllib.parse import urljoin
+from streamlink.compat import urljoin, urlparse
 
 __all__ = ["load", "M3U8Parser"]
 
@@ -99,7 +96,7 @@ class M3U8Parser(object):
         match = re.match("#(?P<tag>[\w-]+)(:(?P<value>.+))?", line)
 
         if match:
-            return match.group("tag"), match.group("value").strip()
+            return match.group("tag"), (match.group("value") or "").strip()
 
         return None, None
 
@@ -125,6 +122,7 @@ class M3U8Parser(object):
         match = re.match("(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?", value)
         if match:
             return float(match.group("duration")), match.group("title")
+        return (0, None)
 
     def parse_hex(self, value):
         value = value[2:]
@@ -186,7 +184,8 @@ class M3U8Parser(object):
         elif line.startswith("#EXT-X-KEY"):
             attr = self.parse_tag(line, self.parse_attributes)
             iv = attr.get("IV")
-            if iv: iv = self.parse_hex(iv)
+            if iv:
+                iv = self.parse_hex(iv)
             self.state["key"] = Key(attr.get("METHOD"),
                                     self.uri(attr.get("URI")),
                                     iv, attr.get("KEYFORMAT"),
@@ -258,7 +257,7 @@ class M3U8Parser(object):
         return self.m3u8
 
     def uri(self, uri):
-        if uri and uri.startswith("http"):
+        if uri and urlparse(uri).scheme:
             return uri
         elif self.base_uri and uri:
             return urljoin(self.base_uri, uri)

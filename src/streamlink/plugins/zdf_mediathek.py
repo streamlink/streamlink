@@ -2,9 +2,10 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream, HLSStream, RTMPStream
+from streamlink.stream import HDSStream, HLSStream
 
-API_URL = "http://www.zdf.de/ZDFmediathek/xmlservice/web/beitragsDetails"
+API_URL = "https://api.zdf.de"
+
 QUALITY_WEIGHTS = {
     "hd": 720,
     "veryhigh": 480,
@@ -12,6 +13,7 @@ QUALITY_WEIGHTS = {
     "med": 176,
     "low": 112
 }
+
 STREAMING_TYPES = {
     "h264_aac_f4f_http_f4m_http": (
         "HDS", HDSStream.parse_manifest
@@ -21,24 +23,43 @@ STREAMING_TYPES = {
     )
 }
 
-_url_re = re.compile("""
-    http(s)?://(\w+\.)?zdf.de/zdfmediathek(\#)?/.+
-    /(live|video)
-    /(?P<video_id>\d+)
+_url_re = re.compile(r"""
+    http(s)?://(\w+\.)?zdf.de/
 """, re.VERBOSE | re.IGNORECASE)
 
+_documents_schema = validate.Schema(
+    {
+        "mainVideoContent": {
+            "http://zdf.de/rels/target": {
+                "http://zdf.de/rels/streams/ptmd": validate.text
+            },
+        },
+    }
+)
+
 _schema = validate.Schema(
-    validate.xml_findall("video/formitaeten/formitaet"),
-    [
-        validate.union({
-            "type": validate.get("basetype"),
-            "quality": validate.xml_findtext("quality"),
-            "url": validate.all(
-                validate.xml_findtext("url"),
-                validate.url()
-            )
-        })
-    ]
+    {
+        "priorityList": [
+            {
+                "formitaeten": [
+                    {
+                        "type": validate.text,
+                        "qualities": [
+                            {
+                                "audio": {
+                                    "tracks": [
+                                        {
+                                            "uri": validate.text
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
 )
 
 
@@ -55,41 +76,63 @@ class zdf_mediathek(Plugin):
 
         return Plugin.stream_weight(key)
 
-    def _create_rtmp_stream(self, url):
-        return RTMPStream(self.session, {
-            "rtmp": self._get_meta_url(url),
-            "pageUrl": self.url,
-        })
+    def _extract_streams(self, response):
+        if "priorityList" not in response:
+            self.logger.error("Invalid response! Contains no priorityList!")
 
-    def _get_meta_url(self, url):
-        res = http.get(url, exception=IOError)
-        root = http.xml(res, exception=IOError)
-        return root.findtext("default-stream-url")
+        for priority in response["priorityList"]:
+            for format_ in priority["formitaeten"]:
+                yield self._extract_from_format(format_)
+
+    def _parse_track(self, track, parser, name):
+        try:
+            return parser(self.session, track["uri"])
+        except IOError as err:
+            self.logger.error("Failed to extract {0} streams: {1}", name, err)
+
+    def _extract_from_format(self, format_):
+        qualities = {}
+
+        if format_["type"] not in STREAMING_TYPES:
+            return qualities
+
+        name, parser = STREAMING_TYPES[format_["type"]]
+        for quality in format_["qualities"]:
+            for track in quality["audio"]["tracks"]:
+                option = self._parse_track(track, parser, name)
+                if option:
+                    qualities.update(option)
+
+        return qualities
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        video_id = match.group("video_id")
-        res = http.get(API_URL, params=dict(ak="web", id=video_id))
-        fmts = http.xml(res, schema=_schema)
+        title = self.url.rsplit('/', 1)[-1]
+        if title.endswith(".html"):
+            title = title[:-5]
+        if title == "live-tv":
+            self.logger.info("Klicken Sie mit der rechten Maustaste auf dem Player (im Browser) und waehlen Sie 'Beitrags-Url kopieren', um einen gueltigen Link fuer streamlink zu erhalten.")
+            return
+
+        headers = {
+            "Api-Auth": "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32",
+            "Referer": self.url
+        }
+
+        request_url = "https://api.zdf.de/content/documents/%s.json?profile=player" % title
+        res = http.get(request_url, headers=headers)
+        document = http.json(res, schema=_documents_schema)
+
+        stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
+        stream_request_url = API_URL + stream_request_url
+
+        res = http.get(stream_request_url, headers=headers)
+        res = http.json(res, schema=_schema)
 
         streams = {}
-        for fmt in fmts:
-            if fmt["type"] in STREAMING_TYPES:
-                name, parser = STREAMING_TYPES[fmt["type"]]
-                try:
-                    streams.update(parser(self.session, fmt["url"]))
-                except IOError as err:
-                    self.logger.error("Failed to extract {0} streams: {1}",
-                                      name, err)
-
-            elif fmt["type"] == "h264_aac_mp4_rtmp_zdfmeta_http":
-                name = fmt["quality"]
-                try:
-                    streams[name] = self._create_rtmp_stream(fmt["url"])
-                except IOError as err:
-                    self.logger.error("Failed to extract RTMP stream '{0}': {1}",
-                                      name, err)
+        for format_ in self._extract_streams(res):
+            streams.update(format_)
 
         return streams
+
 
 __plugin__ = zdf_mediathek

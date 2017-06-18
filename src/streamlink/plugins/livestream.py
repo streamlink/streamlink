@@ -6,7 +6,7 @@ from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import AkamaiHDStream, HLSStream
 
-_url_re = re.compile("http(s)?://(www\.)?livestream.com/")
+_url_re = re.compile(r"http(s)?://(www\.)?livestream.com/")
 _stream_config_schema = validate.Schema({
     "event": {
         "stream_info": validate.any({
@@ -22,7 +22,10 @@ _stream_config_schema = validate.Schema({
             ),
         }, None)
     },
-    validate.optional("playerUri"): validate.text
+    validate.optional("playerUri"): validate.text,
+    validate.optional("viewerPlusSwfUrl"): validate.url(scheme="http"),
+    validate.optional("lsPlayerSwfUrl"): validate.text,
+    validate.optional("hdPlayerSwfUrl"): validate.text
 })
 _smil_schema = validate.Schema(validate.union({
     "http_base": validate.all(
@@ -93,17 +96,20 @@ class Livestream(Plugin):
 
         play_url = stream_info.get("play_url")
         if play_url:
-            swf_url = info.get("playerUri")
+            swf_url = info.get("playerUri") or info.get("hdPlayerSwfUrl") or info.get("lsPlayerSwfUrl") or info.get("viewerPlusSwfUrl")
             if swf_url:
                 if not swf_url.startswith("http"):
-                    swf_url = "http://" + swf_url
+                    if swf_url.startswith("//"):
+                        swf_url = "http:" + swf_url
+                    else:
+                        swf_url = "http://" + swf_url
 
                 # Work around broken SSL.
                 swf_url = swf_url.replace("https://", "http://")
 
             qualities = stream_info["qualities"]
             for bitrate, stream in self._parse_smil(play_url, swf_url):
-                name = "{0}k".format(bitrate / 1000)
+                name = "{0:d}k".format(int(bitrate / 1000))
                 for quality in qualities:
                     if quality["bitrate"] == bitrate:
                         name = "{0}p".format(quality["height"])
@@ -117,5 +123,6 @@ class Livestream(Plugin):
             # TODO: Replace with "yield from" when dropping Python 2.
             for stream in streams.items():
                 yield stream
+
 
 __plugin__ = Livestream

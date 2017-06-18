@@ -1,10 +1,43 @@
 # Streamlink
 
+[![Build Status](https://travis-ci.org/streamlink/streamlink.svg?branch=master)](https://travis-ci.org/streamlink/streamlink)
+[![codecov.io](http://codecov.io/github/streamlink/streamlink/coverage.svg?branch=master)](http://codecov.io/github/streamlink/streamlink?branch=master)
+
 Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC, or alternatively, a browser.
 
 The main purpose of streamlink is to convert CPU-heavy flash plugins to a less CPU-intensive format.
 
 Streamlink is a fork of the [livestreamer](https://github.com/chrippa/livestreamer) project.
+
+Please note that by using this application you're bypassing ads run by
+sites such as Twitch.tv. Please consider donating or paying for subscription
+services when they are available for the content you consume and enjoy.
+
+# Installation
+
+Streamlink can be installed by using Python or through the installers below.
+
+**Installation via Python pip:**
+```
+sudo pip install streamlink
+```
+Note: For Windows, omit "sudo"
+
+**Manual installation via Python:**
+```
+git clone https://github.com/streamlink/streamlink
+sudo python setup.py install
+```
+
+**Installers for Windows/Mac/Linux:**
+
+  - [Mac OSX](https://streamlink.github.io/install.html#other-platforms)
+
+  - [Windows](https://streamlink.github.io/install.html#windows-binaries)
+
+  - [Windows portable version](https://streamlink.github.io/install.html#windows-portable-version)
+
+  - [Linux and BSD](https://streamlink.github.io/install.html#linux-and-bsd-packages)
 
 # Features
 
@@ -19,27 +52,20 @@ Major streaming services such as:
 
 Are supported.
 
-A full list of plugins can be found in the plugin directory:
+A full list of plugins can be found on the [plugin page](https://streamlink.github.io/plugin_matrix.html).
 
-```
-src/streamlink/plugins
-▶ ls
-afreeca.py        common_jwplayer.py  drdk.py        letontv.py        periscope.py               tga.py         viasat_embed.py
-afreecatv.py      common_swf.py       euronews.py    livestation.py    picarto.py                 tv3cat.py      viasat.py
-aftonbladet.py    connectcast.py      filmon.py      livestream.py     rtve.py                    tv4play.py     wattv.py
-alieztv.py        crunchyroll.py      filmon_us.py   media_ccc_de.py   sbsdiscovery.py            tvcatchup.py   weeb.py
-ard_live.py       cybergame.py        furstream.py   mips.py           seemeplay.py               tvplayer.py    youtube.py
-ard_mediathek.py  dailymotion.py      gaminglive.py  mlgtv.py          speedrunslive.py           twitch.py      zdf_mediathek.py
-artetv.py         disney_de.py        gomexp.py      nhkworld.py       ssh101.py                  ustreamtv.py
-azubutv.py        dmcloud_embed.py    goodgame.py    nos.py            streamingvideoprovider.py  vaughnlive.py
-bambuser.py       dmcloud.py          hitbox.py      npo.py            streamlive.py              veetle.py
-beattv.py         dommune.py          __init__.py    nrk.py            stream.py                  vgtv.py
-chaturbate.py     douyutv.py          itvplayer.py   oldlivestream.py  svtplay.py                 viagame.py
-```
 
 # Quickstart
 
-We've only just recently forked, but please be patient while we update the code :) (September 17, 2016)
+After installation simply use:
+```
+streamlink twitch.tv/lirik source
+```
+
+And Streamlink will automatically open a default video player and begin streaming!
+
+For full details on how to use Streamlink visit our documentation at [streamlink.github.io](https://streamlink.github.io)
+
 
 # Contributing
 

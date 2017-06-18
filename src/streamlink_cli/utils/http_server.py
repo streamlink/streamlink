@@ -23,6 +23,7 @@ class HTTPRequest(BaseHTTPRequestHandler):
 class HTTPServer(object):
     def __init__(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.conn = self.host = self.port = None
         self.bound = False
 
@@ -111,4 +112,8 @@ class HTTPServer(object):
             self.conn.close()
 
         if not client_only:
+            try:
+                self.socket.shutdown(2)
+            except (OSError, socket.error):
+                pass
             self.socket.close()

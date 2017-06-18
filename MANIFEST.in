@@ -1,10 +1,10 @@
 include AUTHORS
 include CHANGELOG.rst
-include CONTRIBUTING.rst
-include README.rst
+include README.md
 include LICENSE*
-include requirements-docs.txt
+include *requirements.txt
 
 recursive-include docs *
+prune docs/_build
 recursive-include examples *
 recursive-include tests *py

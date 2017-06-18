@@ -10,6 +10,7 @@ class StreamMapper(object):
     :param cmp: This callable is used to compare each mapping's key
                 with a value.
     """
+
     def __init__(self, cmp=eq):
         self._map = []
         self._cmp = cmp
@@ -41,9 +42,12 @@ class StreamMapper(object):
                 yield value
             else:
                 try:
-                    # TODO: Replace with "yield from" when dropping Python 2.
-                    for __ in value:
-                        yield __
+                    if isinstance(value, dict):
+                        for __ in value.items():
+                            yield __
+                    else:
+                        for __ in value:
+                            yield __
                 except TypeError:
                     # Non-iterable returned
                     continue

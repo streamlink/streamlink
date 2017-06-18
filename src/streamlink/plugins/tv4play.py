@@ -10,14 +10,12 @@ from streamlink.stream import HDSStream, RTMPStream
 ASSET_URL = "http://prima.tv4play.se/api/web/asset/{0}/play"
 SWF_URL = "http://www.tv4play.se/flash/tv4video.swf"
 
-_url_re = re.compile("""
+_url_re = re.compile(r"""
     http(s)?://(www\.)?
     (?:
-        tv4play.se/program/[^\?/]+
-    )?
-    (?:
+        tv4play.se/program/[^\?/]+|
         fotbollskanalen.se/video
-    )?
+    )
     .+(video_id|videoid)=(?P<video_id>\d+)
 """, re.VERBOSE)
 
@@ -70,5 +68,6 @@ class TV4Play(Plugin):
                 streams[name] = RTMPStream(self.session, params)
 
         return streams
+
 
 __plugin__ = TV4Play

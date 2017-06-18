@@ -12,7 +12,7 @@ if is_py2:
     file = file
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]").search
 
-    from .packages.shutil_backport import get_terminal_size
+    from backports.shutil_get_terminal_size import get_terminal_size
 
 elif is_py3:
     input = input
