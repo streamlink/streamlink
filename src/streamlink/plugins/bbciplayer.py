@@ -20,13 +20,13 @@ class BBCiPlayer(Plugin):
             live/(?P<channel_name>\w+)
         )
     """, re.VERBOSE)
-    vpid_re = re.compile(r'"ident_id"\s*:\s*"(\w+)"')
+    mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*mediator.bind\(({.*}), .*\);', re.DOTALL)
     tvip_re = re.compile(r'event_master_brand=(\w+?)&')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*(\{.*?});')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
-    api_url = ("http://open.live.bbc.co.uk/mediaselector/5/select/"
-               "version/2.0/mediaset/{platform}/vpid/{vpid}/atk/{vpid_hash}/asn/1/")
+    api_url = ("http://open.live.bbc.co.uk/mediaselector/6/select/"
+               "version/2.0/mediaset/{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/")
     platforms = ("pc", "iptv-all")
     config_url = "http://www.bbc.co.uk/idcta/config"
     auth_url = "https://account.bbc.com/signin"
@@ -42,16 +42,25 @@ class BBCiPlayer(Plugin):
             }
          }
     )
+    mediator_schema = validate.Schema(
+        {
+            "episode": {
+                "versions": [{"id": validate.text}]
+            }
+        },
+        validate.get("episode"), validate.get("versions"), validate.get(0), validate.get("id")
+    )
     mediaselector_schema = validate.Schema(
-        validate.transform(partial(parse_xml, ignore_ns=True)),
-        validate.union({
-            "hds": validate.xml_findall(".//media[@kind='video']//connection[@transferFormat='hds']"),
-            "hls": validate.xml_findall(".//media[@kind='video']//connection[@transferFormat='hls']")
-        }),
-        {validate.text: validate.all(
-            [validate.all(validate.getattr("attrib"), validate.get("href"))],
-            validate.transform(lambda x: list(set(x)))  # unique
-        )}
+        validate.transform(parse_json),
+        {"media": [
+            {"connection": [{
+                "href": validate.url(),
+                validate.optional("transferFormat"): validate.text
+                }],
+             "kind": validate.text}
+        ]},
+        validate.get("media"),
+        validate.filter(lambda x: x["kind"] == "video")
     )
     options = PluginOptions({
         "password": None,
@@ -70,8 +79,9 @@ class BBCiPlayer(Plugin):
         self.logger.debug("Looking for vpid on {0}", url)
         # Use pre-fetched page if available
         res = res or http.get(url)
-        m = self.vpid_re.search(res.text)
-        return m and m.group(1)
+        m = self.mediator_re.search(res.text)
+        vpid = m and parse_json(m.group(1), schema=self.mediator_schema)
+        return vpid
 
     def find_tvip(self, url):
         self.logger.debug("Looking for tvip on {0}", url)
@@ -83,12 +93,14 @@ class BBCiPlayer(Plugin):
         for platform in self.platforms:
             url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
             stream_urls = http.get(url, schema=self.mediaselector_schema)
-            for surl in stream_urls.get("hls"):
-                for s in HLSStream.parse_variant_playlist(self.session, surl).items():
-                    yield s
-            for surl in stream_urls.get("hds"):
-                for s in HDSStream.parse_manifest(self.session, surl).items():
-                    yield s
+            for media in stream_urls:
+                for connection in media["connection"]:
+                    if connection["transferFormat"] == "hds":
+                        for s in HDSStream.parse_manifest(self.session, connection["href"]).items():
+                            yield s
+                    if connection["transferFormat"] == "hls":
+                        for s in HLSStream.parse_variant_playlist(self.session, connection["href"]).items():
+                            yield s
 
     def login(self, ptrt_url, context="tvandiplayer"):
         # get the site config, to find the signin url
