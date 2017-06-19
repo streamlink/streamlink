@@ -39,16 +39,26 @@ version=3.5.2
 format=bundled
 
 [Include]
-packages=requests
-         streamlink
+; dep tree
+;   streamlink+streamlink_cli
+;       - pkg-resources (indirect)
+;           - pyparsing
+;           - packaging
+;           - six
+;       - iso639
+;       - iso3166
+;       - pycryptodome
+;       - requests
+;           - certifi
+;           - idna
+;           - urllib3
+packages=streamlink
          streamlink_cli
-         iso639
-         iso3166
          pkg_resources
          six
-         appdirs
-         packaging
-         pyparsing
+         iso639
+         iso3166
+         requests
          urllib3
          idna
          chardet
