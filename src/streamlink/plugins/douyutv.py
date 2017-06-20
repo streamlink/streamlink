@@ -15,8 +15,10 @@ from streamlink.plugins.douyutv_blackbox import stupidMD5
 
 MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
 LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
-LAPI_SECRET = "a2053899224e8a92974c729dceed1cc99b3d8282"
 VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
+
+#API key from https://github.com/spacemeowx2/DouyuHTML5Player/commit/5065e5e8e60f1eddf2eb8370b6fcb9136c6685a4
+LAPI_SECRET = "a2053899224e8a92974c729dceed1cc99b3d8282"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
