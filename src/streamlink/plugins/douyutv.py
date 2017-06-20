@@ -13,11 +13,10 @@ from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 #python version by debugzxcv at https://gist.github.com/debugzxcv/85bb2750d8a5e29803f2686c47dc236b
 from streamlink.plugins.douyutv_blackbox import stupidMD5
 
-MAPI_URL = "https://m.douyu.com/html5/live?roomId={0}"
+WAPI_URL = "https://www.douyu.com/swf_api/room/{0}?cdn=&nofan=yes&_t={1}&sign={2}"
 LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
 VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
-
-#API key from https://github.com/spacemeowx2/DouyuHTML5Player/commit/5065e5e8e60f1eddf2eb8370b6fcb9136c6685a4
+WAPI_SECRET = "bLFlashflowlad92"
 LAPI_SECRET = "a2053899224e8a92974c729dceed1cc99b3d8282"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
@@ -152,7 +151,10 @@ class Douyutv(Plugin):
             if channel == 0:
                 channel = http.get(self.url, schema=_room_id_alt_schema)
 
-        res = http.get(MAPI_URL.format(channel))
+        ts = int(time.time() / 60)
+        sign = hashlib.md5(("{0}{1}{2}".format(channel, WAPI_SECRET, ts)).encode("utf-8")).hexdigest()
+
+        res = http.get(WAPI_URL.format(channel, ts, sign))
         room = http.json(res, schema=_room_schema)
         if not room:
             self.logger.info("Not a valid room url.")
@@ -162,7 +164,6 @@ class Douyutv(Plugin):
             self.logger.info("Stream currently unavailable.")
             return
 
-        ts = int(time.time() / 60)
         did = uuid.uuid4().hex.upper()
         sign = stupidMD5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)))
 
