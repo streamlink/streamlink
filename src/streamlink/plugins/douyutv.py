@@ -40,7 +40,7 @@ _url_re = re.compile(r"""
 """, re.VERBOSE)
 
 _room_id_re = re.compile(r'"room_id\\*"\s*:\s*(\d+),')
-_room_id_alt_re = re.compile(r'data-onlineid="(\d+)"')
+_room_id_alt_re = re.compile(r'data-onlineid=(\d+)')
 
 _room_id_schema = validate.Schema(
     validate.all(
@@ -148,7 +148,7 @@ class Douyutv(Plugin):
             channel = int(channel)
         except ValueError:
             channel = http.get(self.url, schema=_room_id_schema)
-            if channel == 0:
+            if channel is None:
                 channel = http.get(self.url, schema=_room_id_alt_schema)
 
         ts = int(time.time() / 60)
