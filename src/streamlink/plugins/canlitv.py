@@ -8,7 +8,7 @@ from streamlink.stream import HLSStream
 EMBED_URL_1 = "http://www.canlitv.life/kanallar.php?kanal={0}"
 EMBED_URL_2 = "http://www.ecanlitvizle.net/embed.php?kanal={0}"
 
-_m3u8_re = re.compile(r"file:(?:\s+)?(?:\'|\")(?P<url>[^\"']+)(?:\'|\")")
+_m3u8_re = re.compile(r"""file\s*:\s*['"](?P<url>[^"']+)['"]""")
 _url_re = re.compile(r"""http(s)?://(?:www\.)?(?P<domain>
     canlitv\.(com|life)
     |

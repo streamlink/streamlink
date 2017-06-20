@@ -1,9 +1,23 @@
 import unittest
 
-from streamlink.plugins.canlitv import Canlitv
+from streamlink.plugins.canlitv import Canlitv, _m3u8_re
 
 
 class TestPluginCanlitv(unittest.TestCase):
+    def test_m3u8_re(self):
+        def test_re(text):
+            m = _m3u8_re.search(text)
+            self.assertTrue(m and len(m.group("url")) > 0)
+
+        test_re('file: "test" ')
+        test_re('file:"test"')
+        test_re('file : "test"')
+        test_re('file   :   "test"  ')
+        test_re("file: 'test'")
+        test_re("file :'test'")
+        test_re("file : 'test'")
+        test_re("file   :   'test'")
+
     def test_can_handle_url(self):
         # should match
         self.assertTrue(Canlitv.can_handle_url("http://www.canlitv.com/channel"))
