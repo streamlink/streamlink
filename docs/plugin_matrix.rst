@@ -149,7 +149,7 @@ orf_tvthek          tvthek.orf.at        Yes   Yes
 ovvatv              ovva.tv              Yes   No
 pandatv             panda.tv             Yes   ?
 periscope           periscope.tv         Yes   Yes   Replay/VOD is supported.
-picarto             picarto.tv           Yes   --
+picarto             picarto.tv           Yes   Yes
 playtv              playtv.fr            Yes   --    Streams may be geo-restricted to France.
 pluzz               - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                     - ludo.fr
