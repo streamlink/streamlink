@@ -15,7 +15,7 @@ class INE(Plugin):
             (.*?)""", re.VERBOSE)
     play_url = "https://streaming.ine.com/play/{vid}/watch"
     js_re = re.compile(r'''script type="text/javascript" src="(https://content.jwplatform.com/players/.*?)"''')
-    jwplayer_re = re.compile(r'''jwplayer\(".*?"\).setup\((\{.*\})\);''', re.DOTALL)
+    jwplayer_re = re.compile(r'''jwConfig\s*=\s*(\{.*\});''', re.DOTALL)
     setup_schema = validate.Schema(
         validate.transform(jwplayer_re.search),
         validate.any(
