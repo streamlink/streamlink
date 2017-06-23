@@ -1271,6 +1271,20 @@ plugin.add_argument(
     A bbc.co.uk account password to use with --bbciplayer-username.
     """
 )
+plugin.add_argument(
+    "--ufctv-username",
+    metavar="USERNAME",
+    help="""
+    The username used to register with ufc.tv.
+    """
+)
+plugin.add_argument(
+    "--ufctv-password",
+    metavar="PASSWORD",
+    help="""
+    A ufc.tv account password to use with --ufctv-username.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
