@@ -6,7 +6,7 @@ from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream, RTMPStream, HTTPStream
 
 API_URL = "https://api-dsa.17app.co/api/v1/liveStreams/isUserOnLiveStream"
-ROOM_URL = "http://17app.co/share/live/{0}"
+ROOM_URL = "http://17.media/share/live/{0}"
 
 _url_re = re.compile(r"http://(17app.co|17.media)/share/(?P<page>[^/]+)/(?P<channel>[^/&?]+)")
 _userid_re = re.compile(r'"userID"\s*:\s*"(.+?)"')
