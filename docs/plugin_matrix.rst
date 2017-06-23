@@ -210,7 +210,7 @@ tv4play             - tv4play.se         Yes   Yes   Streams may be geo-restrict
                     - fotbollskanalen.se
 tv5monde            - tv5monde.com       Yes   Yes   Streams may be geo-restricted to France, Belgium and Switzerland.
                     - tv5mondeplus.com
-		    - tv5mondepl... [9]_
+                    - tv5mondepl... [9]_
 tv8                 tv8.com.tr           Yes   No
 tv8cat              tv8.cat              Yes   No    Streams may be geo-restricted to Spain/Catalunya.
 tv360               tv360.com.tr         Yes   No
@@ -222,6 +222,7 @@ tvrby               tvr.by               Yes   No    Streams may be geo-restrict
 tvrplus             tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
+ufctv               ufc.tv               Yes   Yes   Authentication required for premium streams.
 ustreamtv           ustream.tv           Yes   Yes
 vaughnlive          - vaughnlive.tv      Yes   --
                     - breakers.tv

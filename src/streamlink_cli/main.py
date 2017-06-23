@@ -930,6 +930,17 @@ def setup_plugin_options():
     if bbciplayer_password:
         streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
 
+    if args.ufctv_username:
+        streamlink.set_plugin_option("ufctv", "username", args.ufctv_username)
+
+    if args.ufctv_username and not args.ufctv_password:
+        ufctv_password = console.askpass("Enter ufc.tv account password: ")
+    else:
+        ufctv_password = args.ufctv_password
+
+    if ufctv_password:
+        streamlink.set_plugin_option("ufctv", "password", ufctv_password)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
