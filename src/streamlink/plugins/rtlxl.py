@@ -11,7 +11,7 @@ class rtlxl(Plugin):
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
-			
+
     def _get_streams(self):
         match = _url_re.match(self.url)
         uuid = match.group("uuid")
