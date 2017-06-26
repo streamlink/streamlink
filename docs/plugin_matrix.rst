@@ -115,7 +115,7 @@ googledrive         - docs.google.com    --    Yes
 gulli               replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
 hitbox              - hitbox.tv          Yes   Yes
                     - smashcast.tv
-huajiao             huajiao.com          Yes   No    
+huajiao             huajiao.com          Yes   No
 huomao              huomao.com           Yes   No
 huya                huya.com             Yes   No    Temporarily only HLS streams available.
 ine                 ine.com              ---   Yes
@@ -156,6 +156,16 @@ pluzz               - france.tv          Yes   Yes   Streams may be geo-restrict
                     - zouzous.fr
 		    - france3-reg.. [8]_
 powerapp            powerapp.com.tr      Yes   No
+radionet            - radio.net          Yes   --
+                    - radio.at
+		    - radio.de
+		    - radio.dk
+		    - radio.es
+		    - radio.fr
+		    - radio.it
+		    - radio.pl
+		    - radio.pt
+		    - radio.se
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rte                 rte.ie/player        Yes   Yes
