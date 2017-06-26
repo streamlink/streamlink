@@ -24,6 +24,9 @@ except (ImportError, AttributeError):
 from ...exceptions import PluginError
 from ...utils import parse_json, parse_xml
 
+import warnings
+warnings.simplefilter("ignore")
+
 __all__ = ["HTTPSession"]
 
 
