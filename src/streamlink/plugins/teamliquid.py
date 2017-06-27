@@ -5,8 +5,6 @@ from streamlink.plugin.api import http
 
 
 _url_re = re.compile(r'''https?://(?:www\.)?teamliquid\.net/video/streams/''')
-_afreecaRe = re.compile('View on Afreeca')
-_twitchRe = re.compile('View on Twitch.tv')
 
 
 class Teamliquid(Plugin):
@@ -15,19 +13,14 @@ class Teamliquid(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
-        
-        afreeca=_afreecaRe.findall(res.text)
-        twitch=_twitchRe.findall(res.text)
+        res = http.get(self.url)     
+       
+        stream_address_re = re.compile(r'''href\s*=\s*"([^"]+)"\s*>\s*View on''')
 
-        if afreeca:
-            streamAddressRe=re.compile('http://play.afreeca.com/[^">/]+')
-            url=streamAddressRe.findall(res.text)[0]
-            return self.session.streams(url)
-        
-        elif twitch:
-            streamAddressRe=re.compile('http://www.twitch.tv/[^">/]+')
-            url=streamAddressRe.findall(res.text)[0]
-            return self.session.streams(url)
+        stream_url_match = stream_address_re.search(res.text)
+        if stream_url_match:
+            stream_url = stream_url_match.group(1)
+            self.logger.info("Attempting to play streams from {0}", stream_url)
+            return self.session.streams(stream_url)
             
 __plugin__ = Teamliquid
