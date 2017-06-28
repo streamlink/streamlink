@@ -1299,6 +1299,14 @@ plugin.add_argument(
     A zattoo account password to use with --zattoo-email.
     """
 )
+plugin.add_argument(
+    "--zattoo-purge-credentials",
+    action="store_true",
+    help="""
+    Purge cached zattoo credentials to initiate a new session
+    and reauthenticate.
+    """
+)
 
 # Deprecated options
 stream.add_argument(

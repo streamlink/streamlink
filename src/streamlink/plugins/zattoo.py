@@ -48,7 +48,8 @@ class Zattoo(Plugin):
 
     options = PluginOptions({
         'email': None,
-        'password': None
+        'password': None,
+        'purge_credentials': None
     })
 
     def __init__(self, url):
@@ -147,9 +148,9 @@ class Zattoo(Plugin):
                 self.logger.error('Unfortunately streaming is not permitted in this country or this channel does not exist.')
             elif '402 Client Error: Payment Required' in str(e):
                 self.logger.error('Paid subscription required for this channel.')
-                self.logger.info('If paid subscription exist, wait 24 hours or remove the "plugin-cache.json" file.')
+                self.logger.info('If paid subscription exist, use --zattoo-purge-credentials to start a new session.')
             else:
-                self.logger.error('{0}'.format(e))
+                self.logger.error(str(e))
             return
 
         data = http.json(res)
@@ -206,11 +207,20 @@ class Zattoo(Plugin):
         email = self.get_option('email')
         password = self.get_option('password')
 
+        if self.options.get('purge_credentials'):
+            self._session_attributes.set('beaker.session.id', None, expires=0)
+            self._session_attributes.set('expires', None, expires=0)
+            self._session_attributes.set('power_guide_hash', None, expires=0)
+            self._session_attributes.set('pzuid', None, expires=0)
+            self._session_attributes.set('uuid', None, expires=0)
+            self._authed = False
+            self.logger.info('All credentials were successfully removed.')
+
         if not self._authed and (not email and not password):
             self.logger.error('A login for Zattoo is required, use --zattoo-email EMAIL --zattoo-password PASSWORD to set them')
             return
 
-        if self._expires:
+        if self._authed:
             if self._expires < time.time():
                 # login after 24h
                 expires = time.time() + 3600 * 24
