@@ -23,7 +23,7 @@ if version_info[0] == 2:
 if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
     deps.append("singledispatch")
 
-deps.append("requests>=2.2,!=2.12.0,!=2.12.1,<3.0")
+deps.append("requests>=2.2,!=2.12.0,!=2.12.1,!=2.16.0,!=2.16.1,!=2.16.2,!=2.16.3,!=2.16.4,!=2.16.5,!=2.17.1,<3.0")
 
 # for encrypted streams
 if environ.get("STREAMLINK_USE_PYCRYPTO"):
