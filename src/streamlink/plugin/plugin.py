@@ -1,5 +1,7 @@
 import operator
 import re
+from collections import OrderedDict
+
 from functools import partial
 
 from ..cache import Cache
@@ -10,6 +12,8 @@ from ..options import Options
 # weight end up similar to the weight of a resolution.
 # Someone who knows math, please fix.
 BIT_RATE_WEIGHT_RATIO = 2.8
+
+ALT_WEIGHT_MOD = 0.01
 
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
@@ -40,18 +44,26 @@ def stream_weight(stream):
         if stream in weights:
             return weights[stream], group
 
-    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?$", stream)
+    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?(?:_(alt)(\d)?)?$", stream)
 
     if match:
+        weight = 0
+
+        if match.group(6):
+            if match.group(7):
+                weight -= ALT_WEIGHT_MOD * int(match.group(7))
+            else:
+                weight -= ALT_WEIGHT_MOD
+
         name_type = match.group(2)
         if name_type == "k":  # bit rate
             bitrate = int(match.group(1))
-            weight = bitrate / BIT_RATE_WEIGHT_RATIO
+            weight += bitrate / BIT_RATE_WEIGHT_RATIO
 
             return weight, "bitrate"
 
         elif name_type == "p":  # resolution
-            weight = int(match.group(1))
+            weight += int(match.group(1))
 
             if match.group(3):  # fps eg. 60p or 50p
                 weight += int(match.group(3))
@@ -310,13 +322,18 @@ class Plugin(object):
         elif callable(sorting_excludes):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
+        final_sorted_streams = OrderedDict()
+        
+        for stream_name in sorted(streams, key=stream_weight_only):
+            final_sorted_streams[stream_name] = streams[stream_name]
+        
         if len(sorted_streams) > 0:
             best = sorted_streams[-1]
             worst = sorted_streams[0]
-            streams["best"] = streams[best]
-            streams["worst"] = streams[worst]
-
-        return streams
+            final_sorted_streams["worst"] = streams[worst]
+            final_sorted_streams["best"] = streams[best]
+        
+        return final_sorted_streams
 
     def get_streams(self, *args, **kwargs):
         """Deprecated since version 1.9.0.
