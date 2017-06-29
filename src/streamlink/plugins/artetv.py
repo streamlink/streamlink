@@ -12,7 +12,7 @@ from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
 
-JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{0}/{1}"
+JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{0}/{1}?platform=ARTE_NEXT"
 JSON_LIVE_URL = "https://api.arte.tv/api/player/v1/livestream/{0}"
 
 _url_re = re.compile(r"""
@@ -53,13 +53,13 @@ class ArteTV(Plugin):
         stream_language = stream["versionShortLibelle"]
 
         if language == "de":
-            language = ["DE", "VOST-DE", "VA", "VOA", "Dt. Live"]
+            language = ["DE", "VOST-DE", "VA", "VOA", "Dt. Live", "OV", "OmU"]
         elif language == "en":
             language = ["ANG", "VOST-ANG"]
         elif language == "es":
             language = ["ESP", "VOST-ESP"]
         elif language == "fr":
-            language = ["FR", "VOST-FR", "VF", "VOF", "Frz. Live"]
+            language = ["FR", "VOST-FR", "VF", "VOF", "Frz. Live", "VO", "ST mal"]
         elif language == "pl":
             language = ["POL", "VOST-POL"]
 
