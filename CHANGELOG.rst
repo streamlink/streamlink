@@ -1,3 +1,114 @@
+streamlink 0.7.0 (2017-06-30)
+-----------------------------
+0.7.0 of Streamlink!
+
+Since our May release, we've incorporated quite a few changes!
+
+Outlined are the major features in this month's release:
+
+  - Stream types will now be sorted accordingly in terms of quality
+  - TeamLiquid.net Plugin added
+  - Numerous plugin & bug fixes
+  - Updated HomeBrew package
+  - Improved CLI documentation
+
+Many thanks to those who've contributed in this release!
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating](https://streamlink.github.io/donate.html).
+
+
+::
+
+    Alex Shafer <shafer.alex@gmail.com> (1):
+          Return sorted list of streams. (#731)
+    
+    Alexandre Hitchcox <alexandre@hitchcox.me> (1):
+          Allow live channel links without '/c/' prefix
+    
+    Alexis Murzeau <amubtdx@outlook.fr> (1):
+          docs: fix typo: specifiying, neverthless
+    
+    CatKasha <CatKasha@users.noreply.github.com> (1):
+          Add MPC-HC x64 in streamlinkrc
+    
+    Forrest <gravyboat@users.noreply.github.com> (1):
+          Add a few more examples to the player option (#896)
+    
+    Jacob Malmberg <jacobma@kth.se> (3):
+          Here's the plugin I wrote for teamliquid.net (w/ some help from https://github.com/back-to)
+          Tests for teamliquid plugin
+          Now with RE!
+    
+    Mohamed El Morabity <melmorabity@fedoraproject.org> (9):
+          Update for live API changes
+          Add unit tests for Euronews plugin
+          Drop pcyourfreetv plugin
+          Add support for regional France 3 streams
+          Add support for TV5Monde
+          PEP8
+          Add support for VOD/audio streams
+          Add support for radio.net
+          Ignore unreliable stream status returned by radio.net
+    
+    Sebastian Meyer <mail@bastimeyer.de> (1):
+          Homebrew package (#929)
+    
+    back-to <back-to@users.noreply.github.com> (2):
+          [dailymotion] fix for broken .f4m file that is a .m3u8 file (only livestreams)
+          [arte] vod api url update & add new/missing languages
+    
+    bastimeyer <mail@bastimeyer.de> (2):
+          docs: fix parameters being linked in code blocks
+          Improve CLI documentation
+    
+    beardypig <beardypig@protonmail.com> (1):
+          plugins.hitbox: add support for smashcast.tv
+    
+    beardypig <beardypig@users.noreply.github.com> (21):
+          plugins.bbciplayer: update to reflect slight site layout change
+          plugins.bbciplayer: add option to login to a bbc account
+          http_server: handle socket closed exception for Python 2.7
+          docs: update Sphinx config to fix the rendering of --
+          docs: pin sphinx to 1.6.+ so that no future changes affect the docs
+          plugins.tvplayer: fix bug with some channels not loading
+          plugins.hitbox: fix new VOD urls, and add support for hosted streams
+          plugins.tvplayer: fix bug with some channels when not authenticated
+          setup: exclude requests version 2.16 through 2.17.1
+          win32: fix missing modules when using windows installer
+          bbciplayer: fix for api changes to iplayer
+          tvplayer: updated to match change token parameter name
+          plugins.looch: support for live and vod streams on looch.tv
+          plugins.webtv: decrypt the stream URL when applicable
+          plugins.dogan: small api change for teve2.com.tr
+          plugins.kanal7: fix for nested iframes
+          win32: update the dependencies for the windows installer
+          plugins.canlitv: simplified and fixed the m3u8 regex
+          plugins.picarto: support for VOD
+          plugins.ine: update to extract the relocated jwplayer config
+          plugin.ufctv: support for free and premium vod/live streams
+    
+    cirrus <nailzuk@gmail.com> (3):
+          Create arconia.py
+          Rename arconia.py to arconai.py
+          Create plugin_matrix.rst
+    
+    steven7851 <steven7851@msn.com> (4):
+          plugins.app17: fix hls url and support UID page
+          little change
+          plugins.app17: change ROOM_URL
+          [douyu] temporary fix by revert to previously commit (#1015)
+    
+    whizzoo <grenardus@gmail.com> (2):
+          Restore support for RTL XL
+          plugin.rtlxl: Remove spaces from line 14
+    
+    yhel <joel.delahayes@gmail.com> (1):
+          Don't return an error when the stream is offline
+    
+    yhel <yhelae@gmail.com> (1):
+          Add capability of extracting current sport.francetv stream
+    
+
 streamlink 0.6.0 (2017-05-11)
 -----------------------------
 Another release of Streamlink!
