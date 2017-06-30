@@ -22,7 +22,7 @@ if version_info[:2] == (2, 6):
     )
 
 __title__ = "streamlink"
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink"
 __copyright__ = "Copyright 2016 Streamlink"
