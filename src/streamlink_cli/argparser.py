@@ -1285,6 +1285,28 @@ plugin.add_argument(
     A ufc.tv account password to use with --ufctv-username.
     """
 )
+plugin.add_argument(
+    "--zattoo-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your zattoo account, required to access any zattoo stream.
+    """
+)
+plugin.add_argument(
+    "--zattoo-password",
+    metavar="PASSWORD",
+    help="""
+    A zattoo account password to use with --zattoo-email.
+    """
+)
+plugin.add_argument(
+    "--zattoo-purge-credentials",
+    action="store_true",
+    help="""
+    Purge cached zattoo credentials to initiate a new session
+    and reauthenticate.
+    """
+)
 
 # Deprecated options
 stream.add_argument(

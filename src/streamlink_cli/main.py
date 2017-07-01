@@ -941,6 +941,19 @@ def setup_plugin_options():
     if ufctv_password:
         streamlink.set_plugin_option("ufctv", "password", ufctv_password)
 
+    if args.zattoo_email:
+        streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
+    if args.zattoo_email and not args.zattoo_password:
+        zattoo_password = console.askpass("Enter zattoo password: ")
+    else:
+        zattoo_password = args.zattoo_password
+    if zattoo_password:
+        streamlink.set_plugin_option("zattoo", "password", zattoo_password)
+
+    if args.zattoo_purge_credentials:
+        streamlink.set_plugin_option("zattoo", "purge_credentials",
+                                     args.zattoo_purge_credentials)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "

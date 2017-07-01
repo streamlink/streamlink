@@ -154,18 +154,18 @@ playtv              playtv.fr            Yes   --    Streams may be geo-restrict
 pluzz               - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                     - ludo.fr
                     - zouzous.fr
-		    - france3-reg.. [8]_
+                    - france3-reg.. [8]_
 powerapp            powerapp.com.tr      Yes   No
 radionet            - radio.net          Yes   --
                     - radio.at
-		    - radio.de
-		    - radio.dk
-		    - radio.es
-		    - radio.fr
-		    - radio.it
-		    - radio.pl
-		    - radio.pt
-		    - radio.se
+                    - radio.de
+                    - radio.dk
+                    - radio.es
+                    - radio.fr
+                    - radio.it
+                    - radio.pl
+                    - radio.pt
+                    - radio.se
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rte                 rte.ie/player        Yes   Yes
@@ -261,6 +261,9 @@ wwenetwork          network.wwe.com      Yes   Yes   Requires an account to acce
 younow              younow.com           Yes   --
 youtube             - youtube.com        Yes   Yes   Protected videos are not supported.
                     - youtu.be
+zattoo              - zattoo.com         Yes   Yes
+                    - nettv.net... [10]_
+                    - tvonline.ewe.de
 zdf_mediathek       zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
 zhanqitv            zhanqi.tv            Yes   No
 =================== ==================== ===== ===== ===========================
@@ -275,3 +278,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [7] player.theplatform.com
 .. [8] france3-regions.francetvinfo.fr
 .. [9] tv5mondeplusafrique.com
+.. [10] nettv.netcologne.de
