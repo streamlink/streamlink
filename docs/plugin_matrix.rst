@@ -170,6 +170,7 @@ radionet            - radio.net          Yes   --
 raiplay             raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 rtlxl               rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rte                 rte.ie/player        Yes   Yes
+rtpplay             rtp.pt/play          Yes   Yes   Streams may be geo-restricted to Portugal.
 rtve                rtve.es              Yes   No
 rtvs                rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                 ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
