@@ -3,7 +3,7 @@ import unittest
 from streamlink.plugins.rtpplay import RTPPlay
 
 
-class TestPluginEurocom(unittest.TestCase):
+class TestPluginRTPPlay(unittest.TestCase):
     def test_can_handle_url(self):
         # should match
         self.assertTrue(RTPPlay.can_handle_url("http://www.rtp.pt/play/"))
