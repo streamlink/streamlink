@@ -6,7 +6,7 @@ from streamlink.stream import HLSStream
 
 
 class RTPPLay(Plugin):
-    _url_re = re.compile(r"https?:\/\/www.rtp.pt")
+    _url_re = re.compile(r"https?:\/\/www.rtp.pt\/play\/")
     _m3u8_re = re.compile(r"file:(?:\s+)?(?:\'|\")(?P<url>[^\"']+)(?:\'|\")")
 
     @classmethod
