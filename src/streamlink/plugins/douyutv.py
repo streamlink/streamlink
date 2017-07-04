@@ -113,7 +113,7 @@ class Douyutv(Plugin):
 
     def _get_room_json(self, channel, rate, ts, did, sign):
         data = {
-            "ver": "2017061511",
+            "ver": "2017070301",
             "cdn": "ws", #cdns: ["ws", "tct", "ws2", "dl"]
             "rate": rate,
             "tt": ts,
