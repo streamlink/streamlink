@@ -255,6 +255,7 @@ viasat              - tv3play.se         Yes   Yes   Streams may be geo-restrict
                     - play.tv3.lt
                     - juicyplay.se
 vidio               vidio.com            Yes   Yes
+vk                  vk.com               Yes   Yes
 vrtbe               vrt.be/vrtnu         Yes   Yes
 wattv               wat.tv               --    Yes
 webtv               web.tv               Yes   --
