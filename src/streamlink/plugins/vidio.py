@@ -1,43 +1,16 @@
+'''
+Plugin for vidio.com
+- https://www.vidio.com/live/5075-dw-tv-stream
+- https://www.vidio.com/watch/766861-5-rekor-fantastis-zidane-bersama-real-madrid
+'''
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.plugin.api.utils import parse_json
+from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
-try:
-    from HTMLParser import HTMLParser
-except ImportError:
-    from html.parser import HTMLParser
-
-
-def html_unescape(s):
-    parser = HTMLParser()
-    return parser.unescape(s)
-
-
 _url_re = re.compile(r"https?://(?:www\.)?vidio\.com/(?:en/)?(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)")
-_clipdata_re = re.compile(r"""data-json-clips\s*=\s*(['"])(.*?)\1""")
-
-_schema = validate.Schema(
-    validate.transform(_clipdata_re.search),
-    validate.any(
-        None,
-        validate.all(
-            validate.get(2),
-            validate.transform(html_unescape),
-            validate.transform(parse_json),
-            [{
-                "sources": [{
-                    "file": validate.url(
-                        scheme="http",
-                        path=validate.endswith(".m3u8")
-                    )
-                }]
-            }]
-        )
-    )
-)
+_playlist_re = re.compile(r'''hls-url=["'](?P<url>[^"']+)["']''')
 
 
 class Vidio(Plugin):
@@ -46,13 +19,17 @@ class Vidio(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        clips = http.get(self.url, schema=_schema)
-        if not clips:
+        res = http.get(self.url)
+
+        match = _playlist_re.search(res.text)
+        if match is None:
             return
 
-        for clip in clips:
-            for source in clip["sources"]:
-                return HLSStream.parse_variant_playlist(self.session, source["file"])
+        url = match.group('url')
 
+        if url:
+            self.logger.debug('HLS URL: {0}'.format(url))
+            for s in HLSStream.parse_variant_playlist(self.session, url).items():
+                yield s
 
 __plugin__ = Vidio
