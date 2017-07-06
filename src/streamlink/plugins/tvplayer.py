@@ -15,7 +15,7 @@ class TVPlayer(Plugin):
     dummy_postcode = "SE1 9LT"  # location of ITV HQ in London
 
     url_re = re.compile(r"https?://(?:www.)?tvplayer.com/(:?watch/?|watch/(.+)?)")
-    stream_attrs_re = re.compile(r'data-(resource|token)\s*=\s*"(.*?)"', re.S)
+    stream_attrs_re = re.compile(r'data-(resource|token|channel-id)\s*=\s*"(.*?)"', re.S)
     login_token_re = re.compile(r'input.*?name="token".*?value="(\w+)"')
     stream_schema = validate.Schema({
         "tvplayer": validate.Schema({
@@ -58,20 +58,22 @@ class TVPlayer(Plugin):
         # there is a 302 redirect on a successful login
         return res2.status_code == 302
 
-    def _get_stream_data(self, resource, token, service=1):
+    def _get_stream_data(self, resource, channel_id, token, service=1):
         # Get the context info (validation token and platform)
         self.logger.debug("Getting stream information for resource={0}".format(resource))
         context_res = http.get(self.context_url, params={"resource": resource,
                                                          "gen": token})
         context_data = http.json(context_res, schema=self.context_schema)
+        self.logger.debug("Context data: {0}", str(context_data))
 
         # get the stream urls
         res = http.post(self.api_url, data=dict(
             service=service,
-            id=resource,
+            id=channel_id,
             validate=context_data["validate"],
             token=context_data.get("token"),
-            platform=context_data["platform"]["key"]))
+            platform=context_data["platform"]["key"]),
+                        raise_for_status=False)
 
         return http.json(res, schema=self.stream_schema)
 
@@ -91,7 +93,8 @@ class TVPlayer(Plugin):
                             data=dict(postcode=self.dummy_postcode),
                             params=dict(return_url=self.url))
 
-        stream_attrs = dict((k, v.strip('"')) for k, v in self.stream_attrs_re.findall(res.text))
+        stream_attrs = dict((k.replace("-", "_"), v.strip('"')) for k, v in self.stream_attrs_re.findall(res.text))
+        self.logger.debug("Got stream attrs: {0}", str(stream_attrs))
 
         if "resource" in stream_attrs and "token" in stream_attrs:
             stream_data = self._get_stream_data(**stream_attrs)
