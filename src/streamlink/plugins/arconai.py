@@ -1,14 +1,13 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.plugin.api.utils import parse_json
+from streamlink.plugin.api import http
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
-_url_re = re.compile(r"https://www.arconaitv.me/([^/]+)/")
+_url_re = re.compile(r'''https?://(www\.)?arconaitv\.me/stream\.php\?id=\d+''')
+_playlist_re = re.compile(r'''source\ssrc=["'](?P<url>[^"']+)["']''')
 
-SOURCES_RE = re.compile(r" data-item='([^']+)' ")
-USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.81 Safari/537.36"
 
 class ArconaiTv(Plugin):
     @classmethod
@@ -16,19 +15,21 @@ class ArconaiTv(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        page = http.get(self.url)
-        match = SOURCES_RE.search(page.text)
+        headers = {
+            'User-Agent': useragents.CHROME,
+            'Referer': self.url
+        }
+
+        res = http.get(self.url, headers=headers)
+
+        match = _playlist_re.search(res.text)
         if match is None:
             return
 
-        sources = parse_json(match.group(1))
-        if "sources" not in sources or not isinstance(sources["sources"], list):
-            return
+        url = match.group('url')
 
-        for source in sources["sources"]:
-            if "src" not in source or not source["src"].endswith(".m3u8"):
-                continue
-
-            yield "live", HLSStream(self.session, source["src"], headers={"User-Agent": USER_AGENT})
+        if url:
+            self.logger.debug('HLS URL: {0}'.format(url))
+            yield 'live', HLSStream(self.session, url, headers=headers)
 
 __plugin__ = ArconaiTv
