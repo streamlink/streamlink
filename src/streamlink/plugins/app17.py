@@ -3,7 +3,7 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.plugin.api.utils import parse_json
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream import HLSStream, RTMPStream, HTTPStream
 
 API_URL = "https://api-dsa.17app.co/api/v1/liveStreams/isUserOnLiveStream"
 ROOM_URL = "http://17.media/share/live/{0}"
@@ -68,15 +68,23 @@ class App17(Plugin):
             self.logger.info("Stream currently unavailable.")
             return
 
-        url = _rtmp_re.search(res.text).group(1)
-        yield "live", HTTPStream(self.session, url)
+        http_url = _rtmp_re.search(res.text).group(1)
+        yield "live", HTTPStream(self.session, http_url)
 
-        if 'wansu-global-pull-rtmp' in url:
-            url = url.replace(".flv", "/playlist.m3u8")
+        if 'pull-rtmp' in http_url:
+            url = http_url.replace("http:", "rtmp:").replace(".flv", "")
+            stream = RTMPStream(self.session, {
+                    "rtmp": url,
+                    "live": True
+                    })
+            yield "live", stream
+
+        if 'wansu-global-pull-rtmp' in http_url:
+            url = http_url.replace(".flv", "/playlist.m3u8")
             for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                 yield stream
         else:
-            url = url.replace(".flv", ".m3u8")
+            url = http_url.replace(".flv", ".m3u8")
             yield "live", HLSStream(self.session, url)
 
 
