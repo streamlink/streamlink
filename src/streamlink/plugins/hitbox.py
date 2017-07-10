@@ -178,7 +178,7 @@ class Hitbox(Plugin):
         if not media_id:
             res = http.get(LIVE_API.format(channel))
             livestream = http.json(res, schema=_live_schema)
-            if livestream["media_hosted_media"]:
+            if livestream.get("media_hosted_media"):
                 hosted = _live_schema.validate(livestream["media_hosted_media"])
                 self.logger.info("{0} is hosting {1}", livestream["media_user_name"], hosted["media_user_name"])
                 livestream = hosted
