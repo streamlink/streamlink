@@ -78,12 +78,8 @@ class App17(Plugin):
         else:
             yield "live", HTTPStream(self.session, url)
 
-        if '17app.co' in url:
-            prefix = url.replace("rtmp:", "http:").replace(".flv", "/playlist.m3u8")
-            if '/playlist.m3u8' not in prefix:
-                url = prefix + "/playlist.m3u8"
-            else:
-                url = prefix
+        if 'wansu-global-pull-rtmp' in url:
+            url = url.replace(".flv", "/playlist.m3u8")
             for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                 yield stream
         else:
