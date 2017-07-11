@@ -81,6 +81,7 @@ class UFCTV(Plugin):
         if video:
             self.logger.debug("Found {type}: {name}", **video)
             surl = self._get_stream_url(video['id'], video.get('type', "video"))
+            surl = surl.replace("_iphone.mp4", ".mp4")
             if surl:
                 return HLSStream.parse_variant_playlist(self.session, surl)
             else:
