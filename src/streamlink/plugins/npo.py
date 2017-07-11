@@ -1,8 +1,13 @@
 """Plugin for NPO: Nederlandse Publieke Omroep
 
 Supports:
-   VODs: http://www.npo.nl/het-zandkasteel/POMS_S_NTR_059963
-   Live: http://www.npo.nl/live/nederland-1
+   VODs:
+    - https://www.npo.nl/nos-journaal/07-07-2017/POW_03375651
+    - https://www.zapp.nl/topdoks/gemist/VPWON_1276930
+    - https://zappelin.nl/10-voor/gemist/VPWON_1271522
+   Live:
+    - https://www.npo.nl/live/npo-1
+    - https://zappelin.nl/tv-kijken
 """
 
 import re
@@ -12,12 +17,14 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
 
 
 class NPO(Plugin):
     api_url = "http://ida.omroep.nl/app.php/{endpoint}"
-    url_re = re.compile(r"https?://(\w+\.)?(npo.nl|zapp.nl|zappelin.nl)/")
+    url_re = re.compile(r"https?://(\w+\.)?(npo\.nl|zapp\.nl|zappelin\.nl)/")
+    media_id_re = re.compile(r'''<npo-player\smedia-id=["'](?P<media_id>[^"']+)["']''')
     prid_re = re.compile(r'''(?:data(-alt)?-)?prid\s*[=:]\s*(?P<q>["'])(\w+)(?P=q)''')
     react_re = re.compile(r'''data-react-props\s*=\s*(?P<q>["'])(?P<data>.*?)(?P=q)''')
 
@@ -78,6 +85,11 @@ class NPO(Plugin):
                 data = parse_json(m.group("data").replace("&quot;", '"'))
                 bprid = data.get("mid")
 
+        if bprid is None:
+            m = self.media_id_re.search(res.text)
+            if m:
+                bprid = m.group('media_id')
+
         return bprid
 
     def _get_streams(self):
@@ -91,7 +103,7 @@ class NPO(Plugin):
                                     schema=self.streams_schema)
 
             for stream in streams:
-                if stream["format"] in ("adaptive", "hls"):
+                if stream["format"] in ("adaptive", "hls", "mp4"):
                     if stream["contentType"] == "url":
                         stream_url = stream["url"]
                     else:
@@ -102,8 +114,10 @@ class NPO(Plugin):
                         stream_url = http.json(http.get(info_url),
                                                schema=self.stream_info_schema)
 
-                    for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
-                        yield s
-
+                    if stream["format"] in ("adaptive", "hls"):
+                        for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
+                            yield s
+                    elif stream["format"] in ("mp3", "mp4"):
+                        yield "vod", HTTPStream(self.session, stream_url)
 
 __plugin__ = NPO
