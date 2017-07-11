@@ -68,26 +68,23 @@ class App17(Plugin):
             self.logger.info("Stream currently unavailable.")
             return
 
-        url = _rtmp_re.search(res.text).group(1)
-        if 'rtmp:' in url:
+        http_url = _rtmp_re.search(res.text).group(1)
+        yield "live", HTTPStream(self.session, http_url)
+
+        if 'pull-rtmp' in http_url:
+            url = http_url.replace("http:", "rtmp:").replace(".flv", "")
             stream = RTMPStream(self.session, {
                     "rtmp": url,
                     "live": True
                     })
             yield "live", stream
-        else:
-            yield "live", HTTPStream(self.session, url)
 
-        if '17app.co' in url:
-            prefix = url.replace("rtmp:", "http:").replace(".flv", "/playlist.m3u8")
-            if '/playlist.m3u8' not in prefix:
-                url = prefix + "/playlist.m3u8"
-            else:
-                url = prefix
+        if 'wansu-global-pull-rtmp' in http_url:
+            url = http_url.replace(".flv", "/playlist.m3u8")
             for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                 yield stream
         else:
-            url = url.replace(".flv", ".m3u8")
+            url = http_url.replace(".flv", ".m3u8")
             yield "live", HLSStream(self.session, url)
 
 
