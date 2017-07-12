@@ -100,7 +100,9 @@ Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 wkuipers <wietse at kuiprs.nl>
 Windows binaries                     beardypig <beardypig at protonmail.com>
-Windows port. version                RosadinTV
+Windows port. version                RosadinTV <RosadinTV at outlook.com>
+
+                                     beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
 
@@ -274,10 +276,26 @@ system.
 Windows portable version
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Instructions:
+==================================== ===========================================
+Maintainer                           Links
+==================================== ===========================================
+RosadinTV                            `Latest precompiled stable release`__
 
-- Download https://github.com/streamlink/streamlink-portable/archive/master.zip
+                                     `Latest builder`__
+                                     
+                                     `More info`__
 
-- Extract the "Streamlink for Windows (Compiled)" folder from the ZIP file
+Beardypig                            `Latest precompiled stable release`__
 
-- Check README.txt file for requirements and run "Streamlink for Windows.exe"
+                                     `Latest builder`__
+
+                                     `More info`__
+==================================== ===========================================
+
+__ https://github.com/streamlink/streamlink-portable/releases/latest
+__ https://github.com/streamlink/streamlink-portable/archive/master.zip
+__ https://github.com/streamlink/streamlink-portable
+
+__ https://github.com/beardypig/streamlink-portable/releases/latest
+__ https://github.com/beardypig/streamlink-portable/archive/master.zip
+__ https://github.com/beardypig/streamlink-portable
