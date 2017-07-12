@@ -41,7 +41,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         page_resp = Mock()
         page_resp.text = u"""
                     <div class="video-js theoplayer-skin theo-seekbar-above-controls content-box vjs-fluid"
-                 data-resource= "89"
+                 data-resource= "bbcone"
                  data-token = "1324567894561268987948596154656418448489159"
                                     data-content-type="live"
                     data-environment="live"
@@ -54,6 +54,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         mock_http.get.return_value = page_resp
         hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
+        TVPlayer.bind(self.session, "test.plugin.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
         streams = plugin.get_streams()
@@ -63,7 +64,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         # test the url is used correctly
         mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
         # test that the correct API call is made
-        mock_get_stream_data.assert_called_with(resource="89", token="1324567894561268987948596154656418448489159")
+        mock_get_stream_data.assert_called_with(resource="bbcone", channel_id="89", token="1324567894561268987948596154656418448489159")
         # test that the correct URL is used for the HLSStream
         hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1")
 
@@ -76,6 +77,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         """
         mock_http.get.return_value = page_resp
 
+        TVPlayer.bind(self.session, "test.plugin.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
         streams = plugin.get_streams()
