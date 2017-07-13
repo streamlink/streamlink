@@ -1,4 +1,3 @@
-import hashlib
 import re
 import time
 import uuid
@@ -13,10 +12,9 @@ from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 #python version by debugzxcv at https://gist.github.com/debugzxcv/85bb2750d8a5e29803f2686c47dc236b
 from streamlink.plugins.douyutv_blackbox import stupidMD5
 
-WAPI_URL = "https://www.douyu.com/swf_api/room/{0}?cdn=&nofan=yes&_t={1}&sign={2}"
+OAPI_URL = "http://open.douyucdn.cn/api/RoomApi/room/{0}"
 LAPI_URL = "https://www.douyu.com/lapi/live/getPlay/{0}"
 VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
-WAPI_SECRET = "bLFlashflowlad92"
 LAPI_SECRET = "a2053899224e8a92974c729dceed1cc99b3d8282"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
@@ -71,7 +69,7 @@ _room_id_alt_schema = validate.Schema(
 _room_schema = validate.Schema(
     {
         "data": validate.any(None, {
-            "show_status": validate.all(
+            "room_status": validate.all(
                 validate.text,
                 validate.transform(int)
             )
@@ -113,7 +111,7 @@ class Douyutv(Plugin):
 
     def _get_room_json(self, channel, rate, ts, did, sign):
         data = {
-            "ver": "2017070301",
+            "ver": "2017071231",
             "cdn": "ws", #cdns: ["ws", "tct", "ws2", "dl"]
             "rate": rate,
             "tt": ts,
@@ -144,7 +142,7 @@ class Douyutv(Plugin):
 
         #Thanks to @ximellon for providing method.
         channel = match.group("channel")
-        http.headers.update({'User-Agent': useragents.CHROME})
+        http.headers.update({'User-Agent': useragents.CHROME, 'Referer': self.url})
         try:
             channel = int(channel)
         except ValueError:
@@ -152,19 +150,17 @@ class Douyutv(Plugin):
             if channel is None:
                 channel = http.get(self.url, schema=_room_id_alt_schema)
 
-        ts = int(time.time() / 60)
-        sign = hashlib.md5(("{0}{1}{2}".format(channel, WAPI_SECRET, ts)).encode("utf-8")).hexdigest()
-
-        res = http.get(WAPI_URL.format(channel, ts, sign))
+        res = http.get(OAPI_URL.format(channel))
         room = http.json(res, schema=_room_schema)
         if not room:
             self.logger.info("Not a valid room url.")
             return
 
-        if room["show_status"] != SHOW_STATUS_ONLINE:
+        if room["room_status"] != SHOW_STATUS_ONLINE:
             self.logger.info("Stream currently unavailable.")
             return
 
+        ts = int(time.time() / 60)
         did = uuid.uuid4().hex.upper()
         sign = stupidMD5(("{0}{1}{2}{3}".format(channel, did, LAPI_SECRET, ts)))
 
