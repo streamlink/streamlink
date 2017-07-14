@@ -30,10 +30,12 @@ class App17(Plugin):
             return
 
         http_url = _rtmp_re.search(res.text).group(1)
+        if 'pull-rtmp' in http_url:
+            http_url = http_url.replace("http:", "https:")
         yield "live", HTTPStream(self.session, http_url)
 
         if 'pull-rtmp' in http_url:
-            url = http_url.replace("http:", "rtmp:").replace(".flv", "")
+            url = http_url.replace("https:", "rtmp:").replace(".flv", "")
             stream = RTMPStream(self.session, {
                     "rtmp": url,
                     "live": True
