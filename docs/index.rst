@@ -66,3 +66,5 @@ See their respective sections for more information on how to use them.
     api
     changelog
     donate
+    applications
+    thirdparty
