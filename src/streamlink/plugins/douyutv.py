@@ -8,11 +8,9 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 
-OAPI_URL = "http://open.douyucdn.cn/api/RoomApi/room/{0}"
-LAPI_URL = "https://capi.douyucdn.cn/api/v1/{0}&auth={1}"
-AUTH_STR = "room/{0}?aid=androidhd1&cdn={1}&client_sys=android&time={2}"
+API_URL = "https://capi.douyucdn.cn/api/v1/{0}&auth={1}"
 VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
-LAPI_SECRET = "Y237pxTx2In5ayGz"
+API_SECRET = "Y237pxTx2In5ayGz"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
@@ -66,21 +64,19 @@ _room_id_alt_schema = validate.Schema(
 _room_schema = validate.Schema(
     {
         "data": validate.any(None, {
-            "room_status": validate.all(
+            "show_status": validate.all(
                 validate.text,
                 validate.transform(int)
-            )
-        })
-    },
-    validate.get("data")
-)
-
-_lapi_schema = validate.Schema(
-    {
-        "data": validate.any(None, {
+            ),
             "rtmp_url": validate.text,
             "rtmp_live": validate.text,
-            "hls_url": validate.text
+            "hls_url": validate.text,
+            "rtmp_multi_bitrate": validate.all(
+                validate.any([], {
+                    validate.text: validate.text
+                }),
+                validate.transform(dict)
+            )
         })
     },
     validate.get("data")
@@ -125,9 +121,7 @@ class Douyutv(Plugin):
             yield "source", HLSStream(self.session, room["video_url"])
             return
 
-        #Thanks to @ximellon for providing method.
         channel = match.group("channel")
-        http.headers.update({'User-Agent': useragents.CHROME, 'Referer': self.url})
         try:
             channel = int(channel)
         except ValueError:
@@ -135,34 +129,45 @@ class Douyutv(Plugin):
             if channel is None:
                 channel = http.get(self.url, schema=_room_id_alt_schema)
 
-        res = http.get(OAPI_URL.format(channel))
+        http.headers.update({'User-Agent': useragents.ANDROID})
+        cdns = ["ws", "tct", "ws2", "dl"]
+        ts = int(time.time())
+        suffix = "room/{0}?aid=androidhd1&cdn={1}&client_sys=android&time={2}".format(channel, cdns[0], ts)
+        sign = hashlib.md5((suffix + API_SECRET).encode()).hexdigest()
+
+        res = http.get(API_URL.format(suffix, sign))
         room = http.json(res, schema=_room_schema)
         if not room:
             self.logger.info("Not a valid room url.")
             return
 
-        if room["room_status"] != SHOW_STATUS_ONLINE:
+        if room["show_status"] != SHOW_STATUS_ONLINE:
             self.logger.info("Stream currently unavailable.")
             return
 
-        #API by ERioK
-        http.headers.update({'User-Agent': useragents.ANDROID})
-        cdns = ['ws', 'ws2', 'tct', 'dl']
-        api_url = AUTH_STR.format(channel, cdns[0], int(time.time()))
-        sign = hashlib.md5((api_url + LAPI_SECRET).encode()).hexdigest()
-        res = http.get(LAPI_URL.format(api_url, sign))
-        room = http.json(res, schema=_lapi_schema)
+        url = room["hls_url"]
+        yield "source", HLSStream(self.session, url)
 
         url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
-        yield 'live', HLSStream(self.session, room['hls_url'])
         if 'rtmp:' in url:
             stream = RTMPStream(self.session, {
                     "rtmp": url,
                     "live": True
                     })
-            yield 'live', stream
+            yield "live", stream
         else:
-            yield 'live', HTTPStream(self.session, url)
+            yield "live", HTTPStream(self.session, url)
+
+        for name, url in room["rtmp_multi_bitrate"].items():
+            url = "{room[rtmp_url]}/{url}".format(room=room, url=url)
+            if 'rtmp:' in url:
+                stream = RTMPStream(self.session, {
+                        "rtmp": url,
+                        "live": True
+                        })
+                yield name, stream
+            else:
+                yield name, HTTPStream(self.session, url)
 
 
 __plugin__ = Douyutv
