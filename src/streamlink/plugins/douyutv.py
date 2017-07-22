@@ -14,8 +14,8 @@ API_SECRET = "Y237pxTx2In5ayGz"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
-    "low": 540,
-    "medium": 720,
+    "middle": 720,
+    "middle2": 720,
     "source": 1080
 }
 
@@ -146,7 +146,7 @@ class Douyutv(Plugin):
             return
 
         url = room["hls_url"]
-        yield "live", HLSStream(self.session, url)
+        yield "source", HLSStream(self.session, url)
 
         url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         if 'rtmp:' in url:
@@ -154,9 +154,9 @@ class Douyutv(Plugin):
                     "rtmp": url,
                     "live": True
                     })
-            yield "live", stream
+            yield "source", stream
         else:
-            yield "live", HTTPStream(self.session, url)
+            yield "source", HTTPStream(self.session, url)
 
         for name, url in room["rtmp_multi_bitrate"].items():
             url = "{room[rtmp_url]}/{url}".format(room=room, url=url)
