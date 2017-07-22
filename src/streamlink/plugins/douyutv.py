@@ -146,7 +146,7 @@ class Douyutv(Plugin):
             return
 
         url = room["hls_url"]
-        yield "source", HLSStream(self.session, url)
+        yield "live", HLSStream(self.session, url)
 
         url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         if 'rtmp:' in url:
