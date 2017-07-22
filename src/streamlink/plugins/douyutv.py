@@ -14,9 +14,10 @@ API_SECRET = "Y237pxTx2In5ayGz"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
-    "medium": 720,
-    "source": 1080
-}
+        "low": 540,
+        "medium": 720,
+        "source": 1080
+        }
 
 _url_re = re.compile(r"""
     http(s)?://
@@ -157,10 +158,13 @@ class Douyutv(Plugin):
         else:
             yield "source", HTTPStream(self.session, url)
 
+        multi_streams = {
+                "middle": "low",
+                "middle2": "medium"
+                }
         for name, url in room["rtmp_multi_bitrate"].items():
             url = "{room[rtmp_url]}/{url}".format(room=room, url=url)
-            if 'middle' in name:
-                name = "medium"
+            name = multi_streams[name]
             if 'rtmp:' in url:
                 stream = RTMPStream(self.session, {
                         "rtmp": url,
