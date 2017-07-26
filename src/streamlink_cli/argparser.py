@@ -23,7 +23,7 @@ _option_re = re.compile("""
     \s*
     (?P<value>.*) # The value, anything goes.
 """, re.VERBOSE)
-_hours_minutes_seconds_re = re.compile(r"(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)")
+_hours_minutes_seconds_re = re.compile(r"-?(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)")
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -137,6 +137,7 @@ def boolean(value):
         raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths+falses)))
 
     return value.lower() in truths
+
 
 def hours_minutes_seconds(value):
     """
@@ -726,24 +727,28 @@ transport.add_argument(
     Default is 60.0.
     """)
 transport.add_argument(
-    "--hls-offset-start",
+    "--hls-start-offset",
     type=hours_minutes_seconds,
     metavar="HH:MM:SS",
     default=None,
     help="""
-    Amount of time to skip from the beginning of the stream, VOD streams only.
+    Amount of time to skip from the beginning of the stream.
+    For live streams, this is a negative offset from the end of the stream.
 
     Default is 00:00:00.
     """)
 transport.add_argument(
-    "--hls-offset-end",
+    "--hls-duration",
     type=hours_minutes_seconds,
     metavar="HH:MM:SS",
     default=None,
     help="""
-    The time in the stream to end at, VOD streams only.
+    Limit the playback duration, useful for watching segments of a stream. The actual duration may be slightly
+    longer, as it is rounded to the nearest HLS segment.
 
-    Default is END.
+    Has no effect on live streams.
+
+    Default is unlimited.
     """)
 transport.add_argument(
     "--hls-live-restart",

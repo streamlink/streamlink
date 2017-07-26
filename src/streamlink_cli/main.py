@@ -721,11 +721,11 @@ def setup_options():
     if args.hls_audio_select:
         streamlink.set_option("hls-audio-select", args.hls_audio_select)
 
-    if args.hls_offset_start:
-        streamlink.set_option("hls-offset-start", args.hls_offset_start)
+    if args.hls_start_offset:
+        streamlink.set_option("hls-start-offset", args.hls_start_offset)
 
-    if args.hls_offset_end:
-        streamlink.set_option("hls-offset-end", args.hls_offset_end)
+    if args.hls_duration:
+        streamlink.set_option("hls-duration", args.hls_duration)
 
     if args.hls_live_restart:
         streamlink.set_option("hls-live-restart", args.hls_live_restart)
