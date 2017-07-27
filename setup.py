@@ -15,9 +15,9 @@ if version_info[0] == 2:
     if version_info[1] <= 6:
         # Require backport of argparse on Python 2.6
         deps.append("argparse")
-        # require pyOpenSSL and idna for 2.6 compatibility
-        deps.append("pyOpenSSL")
-        deps.append("idna")
+
+    if version_info[1] < 7 or (version_info[1] == 7 and version_info[2] <= 9):
+        deps.append("urllib3[secure]")
 
 # Require singledispatch on Python <3.4
 if version_info[0] == 2 or (version_info[0] == 3 and version_info[1] < 4):
