@@ -1,9 +1,7 @@
 import random
 import re
-
 import itertools
-
-import time
+import ssl
 import websocket
 
 from streamlink.plugin import Plugin
@@ -23,7 +21,9 @@ class VLWebSocket(websocket.WebSocket):
     def __init__(self, **_):
         self.session = _.pop("session")
         self.logger = self.session.logger.new_module("plugins.vaughnlive.websocket")
-        super(VLWebSocket, self).__init__(**_)
+        sslopt = _.pop("sslopt", {})
+        sslopt["cert_reqs"] = ssl.CERT_NONE
+        super(VLWebSocket, self).__init__(sslopt=sslopt, **_)
 
     def send(self, payload, opcode=websocket.ABNF.OPCODE_TEXT):
         self.logger.debug("Sending message: {0}", payload)
