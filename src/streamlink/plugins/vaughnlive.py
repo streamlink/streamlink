@@ -6,12 +6,11 @@ import websocket
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, http
-from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
 
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?
-    (?P<domain>vaughnlive|breakers|instagib|vapers).tv
+    (?P<domain>vaughnlive|breakers|instagib|vapers|pearltime).tv
     (/embed/video)?
     /(?P<channel>[^/&?]+)
 """, re.VERBOSE)
@@ -39,25 +38,12 @@ class VaughnLive(Plugin):
     servers = ["wss://sapi-ws-{0}x{1:02}.vaughnlive.tv".format(x, y) for x, y in itertools.product(range(1, 3),
                                                                                                    range(1, 6))]
     origin = "https://vaughnlive.tv"
-    special_channels = ["mark", "notmark", "newzviewz", "dragons_80", "rt_news", "tech_corner", "squills"]
-    hls_server_map = {
-        "594140c69edad": "hls-ord-1a.vaughnsoft.net/",
-        "585c4cab1bef1": "hls-ord-2a.vaughnsoft.net/",
-        "5940d648b3929": "hls-ord-3a.vaughnsoft.net/",
-        "5941854b39bc4": "hls-ord-4a.vaughnsoft.net/",
-    }
-    hls_server_default = "hls-ord-1a.vaughnsoft.net"
     rtmp_server_map = {
         "594140c69edad": "198.255.17.18",
         "585c4cab1bef1": "198.255.17.26",
         "5940d648b3929": "198.255.17.34",
         "5941854b39bc4": "198.255.17.66"}
-    name_remap = {
-        "#vl": "live",
-        "#btv": "btv",
-        "#pt": "pt",
-        "#igb": "instagib",
-        "#vtv": "vtv"}
+    name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
 
     @classmethod
     def can_handle_url(cls, url):
@@ -89,24 +75,6 @@ class VaughnLive(Plugin):
         action, message = ws.recv()
         return self.parse_ack(action, message)
 
-    def _get_hls_streams(self, server, channel, token, ingest, quality="source"):
-        hls_server = self.hls_server_map.get(server, self.hls_server_default) + ingest
-
-        self.logger.debug("hlsServer: {0}", hls_server)
-
-        url = "https://{0}/live/live_{1}{2}/playlist.m3u8?{3}".format(hls_server,
-                                                                      channel,
-                                                                      {"source": ""}.get(quality, ""),
-                                                                      token)
-
-        try:
-            headers = {"User-Agent": useragents.CHROME, "Referer": self.url}
-            http.get(url, headers=headers)
-            for _, s in HLSStream.parse_variant_playlist(self.session, url, headers=headers).items():
-                yield "live", s
-        except:
-            self.logger.debug("Failed to load HLS Stream: {0}", url)
-
     def _get_rtmp_streams(self, server, domain, channel, token):
         rtmp_server = self.rtmp_server_map.get(server, server)
 
@@ -131,9 +99,6 @@ class VaughnLive(Plugin):
             if not is_live:
                 self.logger.info("Stream is currently off air")
             else:
-                for s in self._get_hls_streams(server, channel, token, ingest):
-                    yield s
-
                 for s in self._get_rtmp_streams(server, domain, channel, token):
                     yield s
 
