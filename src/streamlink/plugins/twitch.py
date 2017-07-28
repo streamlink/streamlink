@@ -203,8 +203,7 @@ class TwitchAPI(object):
         headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
                    'Client-ID': TWITCH_CLIENT_ID}
 
-        # The certificate used by Twitch cannot be verified on some OpenSSL versions.
-        res = http.get(url, params=params, verify=False, headers=headers)
+        res = http.get(url, params=params, headers=headers)
 
         if format == "json":
             return http.json(res, schema=schema)
