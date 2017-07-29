@@ -88,7 +88,7 @@ class VaughnLive(Plugin):
         })
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
 
         m = self.api_re.search(res.text)
         stream_name = m and m.group(1)
