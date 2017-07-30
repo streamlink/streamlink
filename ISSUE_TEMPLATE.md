@@ -39,3 +39,6 @@ Streamlink and Python version: ...
 ### Comments, logs, screenshots, etc.
 
 ...
+
+
+[Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)
