@@ -2,13 +2,17 @@ Donating
 --------
 
 Thank you for considering a donation to the Streamlink team! Streamlink is an
-organization composed of a geographically diverse group of individuals. As such
-please make your donation directly to the appropriate team member. Note that
+organization composed of a geographically diverse group of individuals.
+We accept donations/tips in a variety of ways. If you would like to donate
+directly to a specific user, please review their details in the team section
+below. If you would prefer to donate to the team as a whole, please use our
+`Open Collective <https://opencollective.com/streamlink>`_. Note that
 donations are not tax deductible as Streamlink does not operate as a charitable
-organization. Your donation to a team member may be used in any way and does
-not come with expectations of work to be provided or as payment for future
-work. If you would like a specific feature implemented considering creating a
-bounty on `Bountysource <https://www.bountysource.com/teams/streamlink>`_.
+organization. Your donation to the team or a team member may be used in any
+way and does not come with expectations of work to be provided or as payment
+for future work. If you would like a specific feature implemented consider
+creating a bounty on
+`Bountysource <https://www.bountysource.com/teams/streamlink>`_.
 
 ---------------
 Streamlink Team
