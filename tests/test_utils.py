@@ -83,14 +83,18 @@ class TestUtil(unittest.TestCase):
 
     def test_update_scheme(self):
         self.assertEqual(
-            "https://example.com/foo",
+            "https://example.com/foo",  # becomes https
             update_scheme("https://other.com/bar", "//example.com/foo")
         )
         self.assertEqual(
-            "http://example.com/foo",
+            "http://example.com/foo",  # becomes http
             update_scheme("http://other.com/bar", "//example.com/foo")
         )
         self.assertEqual(
-            "http://example.com/foo",
+            "http://example.com/foo",  # remains unchanged
             update_scheme("https://other.com/bar", "http://example.com/foo")
+        )
+        self.assertEqual(
+            "https://example.com/foo",  # becomes https
+            update_scheme("https://other.com/bar", "example.com/foo")
         )

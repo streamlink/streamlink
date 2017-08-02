@@ -1,8 +1,11 @@
 import unittest
 
+try:
+    from unittest.mock import patch, ANY
+except ImportError:
+    from mock import patch, ANY
 from streamlink import Streamlink
-from streamlink.plugins.stream import StreamURL
-from streamlink.plugin.plugin import stream_weight
+from streamlink.plugin.plugin import stream_weight, parse_params
 from streamlink.stream import *
 
 
@@ -24,15 +27,36 @@ class TestPluginStream(unittest.TestCase):
         self.assertTrue(isinstance(stream, AkamaiHDStream))
         self.assertEqual(stream.url, url)
 
-    def _test_hls(self, surl, url):
+    @patch('streamlink.stream.HLSStream.parse_variant_playlist')
+    def _test_hls(self, surl, url, mock_parse):
+        mock_parse.return_value = {}
+
         channel = self.session.resolve_url(surl)
         streams = channel.get_streams()
 
         self.assertTrue("live" in streams)
+        mock_parse.assert_called_with(self.session, url)
 
         stream = streams["live"]
         self.assertTrue(isinstance(stream, HLSStream))
         self.assertEqual(stream.url, url)
+
+    @patch('streamlink.stream.HLSStream.parse_variant_playlist')
+    def _test_hlsvariant(self, surl, url, mock_parse):
+        mock_parse.return_value = {"best": HLSStream(self.session, url)}
+
+        channel = self.session.resolve_url(surl)
+        streams = channel.get_streams()
+
+        mock_parse.assert_called_with(self.session, url)
+
+        self.assertFalse("live" in streams)
+        self.assertTrue("best" in streams)
+
+        stream = streams["best"]
+        self.assertTrue(isinstance(stream, HLSStream))
+        self.assertEqual(stream.url, url)
+
 
     def _test_rtmp(self, surl, url, params):
         channel = self.session.resolve_url(surl)
@@ -77,6 +101,12 @@ class TestPluginStream(unittest.TestCase):
         self._test_hls("hls://hostname.se/playlist.m3u8",
                        "http://hostname.se/playlist.m3u8")
 
+        self._test_hlsvariant("hls://hostname.se/playlist.m3u8",
+                              "http://hostname.se/playlist.m3u8")
+
+        self._test_hlsvariant("hls://https://hostname.se/playlist.m3u8",
+                              "https://hostname.se/playlist.m3u8")
+
     def test_plugin_akamaihd(self):
         self._test_akamaihd("akamaihd://http://hostname.se/stream",
                             "http://hostname.se/stream")
@@ -97,15 +127,15 @@ class TestPluginStream(unittest.TestCase):
     def test_parse_params(self):
         self.assertEqual(
             dict(verify=False, params=dict(key="a value")),
-            StreamURL._parse_params("""verify=False params={'key': 'a value'}""")
+            parse_params("""verify=False params={'key': 'a value'}""")
         )
         self.assertEqual(
             dict(verify=False),
-            StreamURL._parse_params("""verify=False""")
+            parse_params("""verify=False""")
         )
         self.assertEqual(
             dict(conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']),
-            StreamURL._parse_params(""""conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']""")
+            parse_params(""""conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']""")
         )
 
     def test_stream_weight(self):
