@@ -36,9 +36,19 @@ Third Party Applications
 
 .. content list start
 
+Chatty for macOS
+----------------
 
-.. replace this line with the first entry
+.. image:: https://raw.githubusercontent.com/dehesselle/chatty/macos/macos/app_screenshot.png
+    :alt: Chatty for macOS
 
+:Description: Chatty packaged for macOS and bundled with Streamlink
+:Type: Twitch chat client
+:OS: |MacOS|
+:Author: `Rene de Hesselle <https://github.com/dehesselle>`_
+:Website: n/a
+:Source code: https://github.com/dehesselle/chatty
+:Info: A Java based chat client for Twitch. It's Chatty from Tduva, I'm just maintaining a macOS version for convenience. It comes bundled with Java and Streamlink, no installation/3rd party runtimes required.
 
 .. content list end
 
