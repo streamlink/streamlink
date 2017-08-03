@@ -1,16 +1,13 @@
 import imp
 import pkgutil
-import re
 import sys
 import traceback
-
 import requests
 
 from streamlink.utils import update_scheme
 from streamlink.utils.l10n import Localization
-
 from . import plugins, __version__
-from .compat import urlparse, is_win32
+from .compat import is_win32
 from .exceptions import NoPluginError, PluginError
 from .logger import Logger
 from .options import Options
@@ -350,7 +347,7 @@ class Streamlink(object):
         """
         self.logger.set_output(output)
 
-    def resolve_url(self, url):
+    def resolve_url(self, url, follow_redirect=True):
         """Attempts to find a plugin that can use this URL.
 
         The default protocol (http) will be prefixed to the URL if
@@ -359,30 +356,33 @@ class Streamlink(object):
         Raises :exc:`NoPluginError` on failure.
 
         :param url: a URL to match against loaded plugins
+        :param follow_redirect: follow redirects
 
         """
-        parsed = urlparse(url)
+        url = update_scheme("http://", url)
 
-        if len(parsed.scheme) == 0:
-            url = "http://" + url
-
+        available_plugins = []
         for name, plugin in self.plugins.items():
             if plugin.can_handle_url(url):
-                obj = plugin(url)
-                return obj
+                available_plugins.append(plugin)
 
-        # Attempt to handle a redirect URL
-        try:
-            res = self.http.head(url, allow_redirects=True, acceptable_status=[501])
+        available_plugins.sort(key=lambda x: x.priority(url), reverse=True)
+        if available_plugins:
+            return available_plugins[0](url)
 
-            # Fall back to GET request if server doesn't handle HEAD.
-            if res.status_code == 501:
-                res = self.http.get(url, stream=True)
+        if follow_redirect:
+            # Attempt to handle a redirect URL
+            try:
+                res = self.http.head(url, allow_redirects=True, acceptable_status=[501])
 
-            if res.url != url:
-                return self.resolve_url(res.url)
-        except PluginError:
-            pass
+                # Fall back to GET request if server doesn't handle HEAD.
+                if res.status_code == 501:
+                    res = self.http.get(url, stream=True)
+
+                if res.url != url:
+                    return self.resolve_url(res.url, follow_redirect=follow_redirect)
+            except PluginError:
+                pass
 
         raise NoPluginError
 
@@ -397,17 +397,7 @@ class Streamlink(object):
         :param url: a URL to match against loaded plugins
 
         """
-        parsed = urlparse(url)
-
-        if len(parsed.scheme) == 0:
-            url = "http://" + url
-
-        for name, plugin in self.plugins.items():
-            if plugin.can_handle_url(url):
-                obj = plugin(url)
-                return obj
-
-        raise NoPluginError
+        return self.resolve_url(url, follow_redirect=False)
 
     def streams(self, url, **params):
         """Attempts to find a plugin and extract streams from the *url*.
