@@ -30,7 +30,7 @@ LiveStreamLinkGUI
 
 :Description: A lightweight BASH script
 :Type: Graphical User Interface
-:OS: Linux and any other OS that supports BASH, Zenity, and typical *nix commands
+:OS: |Linux| |MacOS| And any other OS that supports BASH, Zenity, and typical \*nix commands
 :Author: `Mouse <https://github.com/techmouse>`_
 :Website: https://github.com/techmouse/livestreamlinkgui
 :Source code: https://github.com/techmouse/livestreamlinkgui
