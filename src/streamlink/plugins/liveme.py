@@ -10,7 +10,7 @@ from streamlink.stream import HTTPStream
 
 
 class LiveMe(Plugin):
-    url_re = re.compile(r"https?://(www.)?liveme.com/media/play/(.*)")
+    url_re = re.compile(r"https?://(www.)?liveme\.com/live\.html\?videoid=(\d+)")
     api_url = "http://live.ksmobile.net/live/queryinfo?userid=1&videoid={id}"
     api_schema = validate.Schema(validate.all({
         "status": "200",
