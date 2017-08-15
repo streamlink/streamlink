@@ -46,6 +46,9 @@ else:
 
 deps.append("websocket-client")
 
+# Support for SOCKS proxies
+deps.append("requests[socks]")
+
 # When we build an egg for the Win32 bootstrap we don't want dependency
 # information built into it.
 if environ.get("NO_DEPS"):

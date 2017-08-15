@@ -52,6 +52,7 @@ format=bundled
 ;           - certifi
 ;           - idna
 ;           - urllib3
+;           - PySocks
 ;       - websocket-client
 packages=streamlink
          streamlink_cli
