@@ -179,6 +179,7 @@ seemeplay           seemeplay.ru         Yes   Yes
 seetv               seetv.tv             Yes   No    Streams that are embedded from other sites will not work.
 servustv            servustv.com         ?     ?
 showroom            showroom-live.com    Yes   No    Only RTMP streams are available.
+skai                skai.gr              Yes   No    Only embedded youtube live streams are supported
 speedrunslive       speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
 sportal             sportal.bg           Yes   No
 sportschau          sportschau.de        Yes   No
