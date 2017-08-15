@@ -1,11 +1,12 @@
 import imp
-import locale
 import pkgutil
 import re
 import sys
 import traceback
 
 import requests
+
+from streamlink.utils import update_scheme
 from streamlink.utils.l10n import Localization
 
 from . import plugins, __version__
@@ -230,13 +231,9 @@ class Streamlink(object):
             key = "subprocess-errorlog-path"
 
         if key == "http-proxy":
-            if not re.match("^http(s)?://", value):
-                value = "http://" + value
-            self.http.proxies["http"] = value
+            self.http.proxies["http"] = update_scheme("http://", value)
         elif key == "https-proxy":
-            if not re.match("^http(s)?://", value):
-                value = "https://" + value
-            self.http.proxies["https"] = value
+            self.http.proxies["https"] = update_scheme("https://", value)
         elif key == "http-cookies":
             if isinstance(value, dict):
                 self.http.cookies.update(value)
