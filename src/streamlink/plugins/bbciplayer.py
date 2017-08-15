@@ -20,7 +20,7 @@ class BBCiPlayer(Plugin):
             live/(?P<channel_name>\w+)
         )
     """, re.VERBOSE)
-    mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*mediator.bind\(({.*}), .*\);', re.DOTALL)
+    mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*(\{.*?})\);', re.DOTALL)
     tvip_re = re.compile(r'event_master_brand=(\w+?)&')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*(\{.*?});')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
@@ -92,6 +92,7 @@ class BBCiPlayer(Plugin):
     def mediaselector(self, vpid):
         for platform in self.platforms:
             url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
+            self.logger.debug("Info API request: {0}", url)
             stream_urls = http.get(url, schema=self.mediaselector_schema)
             for media in stream_urls:
                 for connection in media["connection"]:
@@ -126,14 +127,16 @@ class BBCiPlayer(Plugin):
             self.logger.error("Could not authenticate, could not find the authentication nonce")
 
     def _get_streams(self):
+        if not self.get_option("username"):
+            self.logger.error("BBC iPlayer requires an account you must login using "
+                              "--bbciplayer-username and --bbciplayer-password")
+            return
         self.logger.info("A TV License is required to watch BBC iPlayer streams, see the BBC website for more "
                          "information: https://www.bbc.co.uk/iplayer/help/tvlicence")
-        page_res = None
-        if self.get_option("username"):
-            page_res = self.login(self.url)
-            if not page_res:
-                self.logger.error("Could not authenticate, check your username and password")
-                return
+        page_res = self.login(self.url)
+        if not page_res:
+            self.logger.error("Could not authenticate, check your username and password")
+            return
 
         m = self.url_re.match(self.url)
         episode_id = m.group("episode_id")
