@@ -42,6 +42,11 @@ FILTER_OPERATORS = {
 
 PARAMS_REGEX = r"(\w+)=({.+?}|\[.+?\]|\(.+?\)|'(?:[^'\\]|\\')*'|\"(?:[^\"\\]|\\\")*\"|\S+)"
 
+HIGH_PRIORITY = 30
+NORMAL_PRIORITY = 20
+LOW_PRIORITY = 10
+NO_PRIORITY = 0
+
 
 def stream_weight(stream):
     for group, weights in QUALITY_WEIGTHS_EXTRA.items():
@@ -217,6 +222,15 @@ class Plugin(object):
             return func
 
         return decorator
+
+    @classmethod
+    def priority(cls, url):
+        """
+        Return the plugin priority for a given URL, by default it returns
+        NORMAL priority.
+        :return: priority level
+        """
+        return NORMAL_PRIORITY
 
     def streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.

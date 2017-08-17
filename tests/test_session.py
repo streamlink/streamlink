@@ -1,7 +1,14 @@
 import os
 import unittest
 
-from streamlink import Streamlink, PluginError, NoPluginError
+from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
+
+try:
+    from unittest.mock import MagicMock
+except ImportError:
+    from mock import MagicMock
+
+from streamlink import Streamlink, NoPluginError
 from streamlink.plugins import Plugin
 from streamlink.stream import *
 
@@ -33,6 +40,30 @@ class TestSession(unittest.TestCase):
         channel = self.session.resolve_url("http://test.se/channel")
         self.assertTrue(isinstance(channel, Plugin))
         self.assertTrue(isinstance(channel, plugins["testplugin"]))
+
+    def test_resolve_url_priority(self):
+        from tests.plugins.testplugin import TestPlugin
+
+        class HighPriority(TestPlugin):
+            @classmethod
+            def priority(cls, url):
+                return HIGH_PRIORITY
+
+        class LowPriority(TestPlugin):
+            @classmethod
+            def priority(cls, url):
+                return LOW_PRIORITY
+
+        self.session.plugins = {
+            "test_plugin": TestPlugin,
+            "test_plugin_low": LowPriority,
+            "test_plugin_high": HighPriority,
+        }
+        channel = self.session.resolve_url_no_redirect("http://test.se/channel")
+        plugins = self.session.get_plugins()
+
+        self.assertTrue(isinstance(channel, plugins["test_plugin_high"]))
+        self.assertEqual(HIGH_PRIORITY, channel.priority(channel.url))
 
     def test_resolve_url_no_redirect(self):
         plugins = self.session.get_plugins()
