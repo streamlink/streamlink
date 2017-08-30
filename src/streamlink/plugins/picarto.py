@@ -88,7 +88,7 @@ class Picarto(Plugin):
                     yield s
                 return
 
-        if "does not exist" in page.text:
+        if "This channel does not exist" in page.text:
             self.logger.error("The channel {0} does not exist".format(page_channel))
             return
 
