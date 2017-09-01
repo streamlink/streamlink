@@ -26,7 +26,7 @@ class Bloomberg(Plugin):
             (?P<channel>live/(?:stream|emea|asia_stream|europe|us|asia)|audio)/?
         )
 ''', re.VERBOSE)
-    _live_player_re = re.compile(r'APP_BUNDLE:"(?P<live_player_url>.+?/app.js)"')
+    _live_player_re = re.compile(r'{APP_BUNDLE:"(?P<live_player_url>.+?/app.js)"')
     _js_to_json_re = partial(re.compile(r'(\w+):(["\']|\d?\.?\d+,|true|false|\[|{)').sub, r'"\1":\2')
     _video_id_re = re.compile(r'data-bmmr-id=\\"(?P<video_id>.+?)\\"')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
