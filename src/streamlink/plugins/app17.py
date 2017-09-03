@@ -30,8 +30,7 @@ class App17(Plugin):
             return
 
         http_url = _rtmp_re.search(res.text).group(1)
-        if 'pull-rtmp' in http_url:
-            http_url = http_url.replace("http:", "https:")
+        http_url = http_url.replace("http:", "https:")
         yield "live", HTTPStream(self.session, http_url)
 
         if 'pull-rtmp' in http_url:
@@ -42,7 +41,7 @@ class App17(Plugin):
                     })
             yield "live", stream
 
-        if 'wansu-global-pull-rtmp' in http_url:
+        if 'wansu-' in http_url:
             url = http_url.replace(".flv", "/playlist.m3u8")
             for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                 yield stream
