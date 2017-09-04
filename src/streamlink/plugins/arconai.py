@@ -5,7 +5,7 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
-_url_re = re.compile(r'''https?://(www\.)?arconaitv\.me/stream\.php\?id=\d+''')
+_url_re = re.compile(r'''https?://(www\.)?arconaitv\.co/stream\.php\?id=\d+''')
 _playlist_re = re.compile(r'''source\ssrc=["'](?P<url>[^"']+)["']''')
 
 
