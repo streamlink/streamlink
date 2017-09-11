@@ -4,8 +4,8 @@ import struct
 
 from streamlink import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
-from streamlink.stream import Stream
+from streamlink.plugin.api import http, useragents
+from streamlink.stream import Stream, HLSStream
 
 
 class BigoStream(Stream):
@@ -47,9 +47,12 @@ class BigoStream(Stream):
 
 
 class Bigo(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?(bigo\.tv/\d+|bigoweb\.co/show/\d+)")
+    _url_re = re.compile(r"^https?://(www\.)?(bigo\.tv|bigoweb\.co/show)/[\w\d]+$")
     _flashvars_re = flashvars = re.compile(
         r'''^\s*(?<!<!--)<param.*value="tmp=(\d+)&channel=(\d+)&srv=(\d+\.\d+\.\d+\.\d+)&port=(\d+)"''',
+        re.M)
+    _video_re = re.compile(
+        r'^\s*(?<!<!--)<source id="videoSrc" src="(http://.*\.m3u8)"',
         re.M)
 
     @classmethod
@@ -59,13 +62,13 @@ class Bigo(Plugin):
     def _get_streams(self):
         page = http.get(self.url,
                         allow_redirects=True,
-                        headers={"User-Agent": "Mozilla/5.0 (MSIE 10.0; Windows NT 6.1; Trident/5.0)"})
-        flashvars = self._flashvars_re.search(page.text)
-        if not flashvars:
+                        headers={"User-Agent": useragents.IPHONE_6})
+        videomatch = self._video_re.search(page.text)
+        if not videomatch:
             return
 
-        sid, uid, ip, port = flashvars.groups()
-        yield "live", BigoStream(self.session, sid, uid, ip, port)
+        videourl = videomatch.group(1)
+        yield "live", HLSStream(self.session, videourl)
 
 
 __plugin__ = Bigo
