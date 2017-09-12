@@ -1,3 +1,114 @@
+Streamlink 0.8.1 (2017-09-12)
+-----------------------------
+0.8.1 of Streamlink!
+
+97 commits have occured since the last release, including a large majority of plugin changes.
+
+Here's the outline of what's new:
+
+  - Multiple plugin fixes (twitch, vaughlive, hitbox, etc.)
+  - Donations! We've gone ahead and joined the Open Collective at https://opencollective.com/streamlink
+  - Multiple doc updates
+  - Support for SOCKS proxies
+  - Code refactoring
+
+Many thanks to those who've contributed in this release!
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+
+::
+
+    Benedikt Gollatz <ben@differentialschokolade.org> (1):
+          Fix player URL extraction in bloomberg plugin
+    
+    Forrest <gravyboat@users.noreply.github.com> (1):
+          Update donation docs to note open collective (#1105)
+    
+    Journey <timtag1190@gmail.com> (2):
+          Update Arconaitv to new url
+          fix arconai test plugin
+    
+    Pascal Romahn <pascal.romahn@gmail.com> (1):
+          The site always contains the text "does not exist". This should resolve issue https://github.com/streamlink/streamlink/issues/1193
+    
+    RosadinTV <rosadintv@outlook.com> (2):
+          Update Windows portable version documentation
+          Fix documentation font-size
+    
+    Sad Paladin <SadPaladin@users.noreply.github.com> (1):
+          plugins.vk: add support for vk.com vod/livestreams
+    
+    Xavier Damman <xdamman@gmail.com> (1):
+          Added backers and sponsors on the README
+    
+    back-to <back-to@users.noreply.github.com> (5):
+          [zattoo] New plugin for zattoo.com / tvonline.ewe.de / nettv.netcologne.com (#1039)
+          [vidio] Fixed Plugin, new Regex for HLS URL
+          [arconai] Fixed plugin for new website
+          [npo] Update for new website layout, Added HTTPStream support
+          [liveme] url regex update
+    
+    bastimeyer <mail@bastimeyer.de> (3):
+          docs: add a third party applications list
+          docs: add an official streamlink applications list
+          Restructure README.md
+    
+    beardypig <beardypig@users.noreply.github.com> (17):
+          plugins.brittv: support for live streams on brittv.co.uk
+          plugins.hitbox: fix bug when checking for hosted channels
+          plugins.tvplayer: small update to channel id extraction
+          plugins.vaughnlive: support for the new vaughnlive website layout
+          plugins.vaughnlive: work around for a ssl websocket issue
+          plugins.vaughnlive: drop HLS stream support for vaughnlive
+          plugins.twitch: enable certificate verification for twitch api
+          Resolve InsecurePlatformWarnings for older Python2.7 versions
+          cli: remove the deprecation warnings for some of the http options
+          plugins.vaughnlive: set a user agent for the initial page request
+          plugins.adultswim: fix for some live streams
+          plugins: separated the built-in plugins in to separate plugins
+          cli: support for SOCKS proxies
+          plugins.bbciplayer: fix for page formatting changes and login
+          plugins.cdnbg: support for updated layout and extra channels
+          plugins: add priority ordering to plugins
+          plugins.bbciplayer: support for older VOD streams
+    
+    fozzy <fozzy@fozzy.co> (10):
+          remove unused code
+          fix douyutv plugin by using new API
+          update douyutv.py to support multiple rates by steven7851
+          update HLS Stream name to 'live'
+          update weights for streams
+          fix stream name
+          update stream name, middle and middle2 are of different quality
+          Add support for skai.gr
+          add eol
+          remove unused importing
+    
+    jgilf <james.gilfillan92@gmail.com> (2):
+          Update ufctv.py
+          Update ufctv.py
+    
+    sdfwv <sdfwv@protonmail.ch> (1):
+          [bongacams] replace RTMP with HLS Fixed streamlink/streamlink#1074
+    
+    steven7851 <steven7851@msn.com> (8):
+          plugins.douyutv: update post data
+          plugins.app17: fix HLS url
+          plugins.app17: RTMPStream is no longer used
+          plugins.app17: return RTMPStream back
+          plugins.douyutv: use douyu open API
+          plugins.app17: new layout
+          plugins.app17: use https
+          plugins.app17: fix wansu cdn url
+    
+    supergonkas <supergonkas@gmail.com> (1):
+          Add support for RTP Play (#1051)
+    
+    unnutricious <unnutricious@protonmail.com> (2):
+          bigo: add support for hls streams
+          bigo: improve plugin url regex
+    
+
 streamlink 0.7.0 (2017-06-30)
 -----------------------------
 0.7.0 of Streamlink!
