@@ -54,7 +54,7 @@ class BBCiPlayer(Plugin):
         validate.transform(parse_json),
         {"media": [
             {"connection": [{
-                "href": validate.url(),
+                validate.optional("href"): validate.url(),
                 validate.optional("transferFormat"): validate.text
                 }],
              "kind": validate.text}
@@ -96,10 +96,10 @@ class BBCiPlayer(Plugin):
             stream_urls = http.get(url, schema=self.mediaselector_schema)
             for media in stream_urls:
                 for connection in media["connection"]:
-                    if connection["transferFormat"] == "hds":
+                    if connection.get("transferFormat") == "hds":
                         for s in HDSStream.parse_manifest(self.session, connection["href"]).items():
                             yield s
-                    if connection["transferFormat"] == "hls":
+                    if connection.get("transferFormat") == "hls":
                         for s in HLSStream.parse_variant_playlist(self.session, connection["href"]).items():
                             yield s
 
