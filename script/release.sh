@@ -64,14 +64,11 @@ replaceversion() {
   OLD_VERSION=`python setup.py --version`
   echo "OLD VERSION:" $OLD_VERSION
 
-  echo "1. Replaced .py versioning"
-  find . -name '*.py' -type f -exec sed -i "s/$OLD_VERSION/$1/g" {} \;
+  echo "1. Replaced __init__.py versioning"
+  sed -i "s/$OLD_VERSION/$1/g" src/streamlink/__init__.py
 
-  echo "2. Replaced docs versioning"
-  find docs/ -name '*.md' -type f -exec sed -i "s/$OLD_VERSION/$1/g" {} \;
-
-  echo "3. Replaced README.md versioning"
-  sed -i "s/$OLD_VERSION/$1/g" README.md
+  echo "2. Replaced setup.py versioning"
+  sed -i "s/$OLD_VERSION/$1/g" setup.py
   
   cd ..
 }
