@@ -52,7 +52,7 @@ format=bundled
 ;           - certifi
 ;           - idna
 ;           - urllib3
-;           - PySocks
+;           - socks / sockshandler
 ;       - websocket-client
 packages=streamlink
          streamlink_cli
@@ -66,6 +66,8 @@ packages=streamlink
          chardet
          certifi
          websocket
+         socks
+         sockshandler
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
