@@ -16,6 +16,7 @@ class TVPlayer(Plugin):
 
     url_re = re.compile(r"https?://(?:www.)?tvplayer.com/(:?watch/?|watch/(.+)?)")
     stream_attrs_re = re.compile(r'data-(resource|token|channel-id)\s*=\s*"(.*?)"', re.S)
+    data_id_re = re.compile(r'data-id\s*=\s*"(.*?)"', re.S)
     login_token_re = re.compile(r'input.*?name="token".*?value="(\w+)"')
     stream_schema = validate.Schema({
         "tvplayer": validate.Schema({
@@ -77,6 +78,23 @@ class TVPlayer(Plugin):
 
         return http.json(res, schema=self.stream_schema)
 
+    def _get_stream_attrs(self, page):
+        stream_attrs = dict((k.replace("-", "_"), v.strip('"')) for k, v in self.stream_attrs_re.findall(page.text))
+
+        if not stream_attrs.get("channel_id"):
+            m = self.data_id_re.search(page.text)
+            stream_attrs["channel_id"] = m and m.group(1)
+
+        self.logger.debug("Got stream attributes: {0}", str(stream_attrs))
+        valid = True
+        for a in ("channel_id", "resource", "token"):
+            if a not in stream_attrs:
+                self.logger.debug("Missing '{0}' from stream attributes", a)
+                valid = False
+
+        return stream_attrs if valid else {}
+
+
     def _get_streams(self):
         if self.get_option("email") and self.get_option("password"):
             if not self.authenticate(self.get_option("email"), self.get_option("password")):
@@ -93,10 +111,8 @@ class TVPlayer(Plugin):
                             data=dict(postcode=self.dummy_postcode),
                             params=dict(return_url=self.url))
 
-        stream_attrs = dict((k.replace("-", "_"), v.strip('"')) for k, v in self.stream_attrs_re.findall(res.text))
-        self.logger.debug("Got stream attrs: {0}", str(stream_attrs))
-
-        if "resource" in stream_attrs and "token" in stream_attrs:
+        stream_attrs = self._get_stream_attrs(res)
+        if stream_attrs:
             stream_data = self._get_stream_data(**stream_attrs)
 
             if stream_data:
