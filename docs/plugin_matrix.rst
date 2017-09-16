@@ -259,6 +259,7 @@ vidio               vidio.com            Yes   Yes
 vk                  vk.com               Yes   Yes
 vrtbe               vrt.be/vrtnu         Yes   Yes
 wattv               wat.tv               --    Yes
+webcast_india_gov   webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv               web.tv               Yes   --
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 wwenetwork          network.wwe.com      Yes   Yes   Requires an account to access any content.
