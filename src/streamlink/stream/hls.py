@@ -114,6 +114,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 class HLSStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
         SegmentedStreamWorker.__init__(self, *args, **kwargs)
+        self.stream = self.reader.stream
 
         self.playlist_changed = False
         self.playlist_end = None
@@ -122,8 +123,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_reload_time = 15
         self.live_edge = self.session.options.get("hls-live-edge")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
-        self.duration_offset_start = self.session.options.get("hls-start-offset")
-        self.duration_limit = self.session.options.get("hls-duration")
+        self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
+        self.duration_limit = int(self.session.options.get("hls-duration") or self.stream.duration)
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         self.reload_playlist()
@@ -205,6 +206,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
     def duration_to_sequence(self, duration, sequences):
         d = 0
+        default = -1
 
         sequences_order = sequences if duration > 0 else reversed(sequences)
 
@@ -212,9 +214,10 @@ class HLSStreamWorker(SegmentedStreamWorker):
             if d >= abs(duration):
                 return sequence.num
             d += sequence.segment.duration
+            default = sequence.num
 
         # could not skip far enough, so return the default
-        return -1
+        return default
 
     def iter_segments(self):
         while not self.closed:
@@ -279,9 +282,11 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
 
-    def __init__(self, session_, url, force_restart=False, **args):
+    def __init__(self, session_, url, force_restart=False, start_offset=0, duration=None, **args):
         HTTPStream.__init__(self, session_, url, **args)
         self.force_restart = force_restart
+        self.start_offset = start_offset
+        self.duration = duration
 
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
@@ -305,6 +310,7 @@ class HLSStream(HTTPStream):
     def parse_variant_playlist(cls, session_, url, name_key="name",
                                name_prefix="", check_streams=False,
                                force_restart=False, name_fmt=None,
+                               start_offset=0, duration=None,
                                **request_params):
         """Attempts to parse a variant playlist and return its streams.
 
@@ -412,9 +418,12 @@ class HLSStream(HTTPStream):
                                         video=playlist.uri,
                                         audio=external_audio and external_audio.uri,
                                         force_restart=force_restart,
+                                        start_offset=start_offset,
+                                        duration=duration,
                                         **request_params)
             else:
-                stream = HLSStream(session_, playlist.uri, force_restart=force_restart, **request_params)
+                stream = HLSStream(session_, playlist.uri, force_restart=force_restart,
+                                   start_offset=start_offset, duration=duration, **request_params)
             streams[name_prefix + stream_name] = stream
 
         return streams
