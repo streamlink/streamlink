@@ -38,10 +38,11 @@ class VaughnLive(Plugin):
                                                                                                    range(1, 6))]
     origin = "https://vaughnlive.tv"
     rtmp_server_map = {
-        "594140c69edad": "198.255.17.18",
-        "585c4cab1bef1": "198.255.17.26",
-        "5940d648b3929": "198.255.17.34",
-        "5941854b39bc4": "198.255.17.66"}
+        "594140c69edad": "66.90.93.42",
+        "585c4cab1bef1": "66.90.93.34",
+        "5940d648b3929": "66.90.93.42",
+        "5941854b39bc4": "66.90.93.34"  # "198.255.0.10"
+    }
     name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
     domain_map = {"vaughnlive": "#vl", "breakers": "#btv", "instagib": "#igb", "vapers": "#vtv", "pearltime": "#pt"}
 
