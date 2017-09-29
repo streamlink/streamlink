@@ -1010,6 +1010,8 @@ def check_version(force=False):
 
 
 def main():
+    error_code = 0
+
     setup_args()
     setup_streamlink()
     setup_plugins()
@@ -1043,21 +1045,21 @@ def main():
             setup_options()
             setup_plugin_options()
             handle_url()
-        except KeyboardInterrupt as keyboard_interrupt:
+        except KeyboardInterrupt:
             # Close output
             if output:
                 output.close()
             console.msg("Interrupted! Exiting...")
-            interrupt = keyboard_interrupt
+            error_code = 130
         finally:
             if stream_fd:
                 try:
                     console.logger.info("Closing currently open stream...")
                     stream_fd.close()
-                    if 'interrupt' in locals():
-                        sys.exit(130)
                 except KeyboardInterrupt:
-                    sys.exit(130)
+                    error_code = 130
+                finally:
+                    sys.exit(error_code)
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
