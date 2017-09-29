@@ -1043,18 +1043,21 @@ def main():
             setup_options()
             setup_plugin_options()
             handle_url()
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as keyboard_interrupt:
             # Close output
             if output:
                 output.close()
             console.msg("Interrupted! Exiting...")
+            interrupt = keyboard_interrupt
         finally:
             if stream_fd:
                 try:
                     console.logger.info("Closing currently open stream...")
                     stream_fd.close()
+                    if 'interrupt' in locals():
+                        sys.exit(130)
                 except KeyboardInterrupt:
-                    sys.exit()
+                    sys.exit(130)
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
