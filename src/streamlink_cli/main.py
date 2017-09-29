@@ -1010,6 +1010,8 @@ def check_version(force=False):
 
 
 def main():
+    error_code = 0
+
     setup_args()
     setup_streamlink()
     setup_plugins()
@@ -1028,16 +1030,12 @@ def main():
         try:
             streamlink.resolve_url(args.can_handle_url)
         except NoPluginError:
-            sys.exit(1)
-        else:
-            sys.exit(0)
+            error_code = 1
     elif args.can_handle_url_no_redirect:
         try:
             streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
-            sys.exit(1)
-        else:
-            sys.exit(0)
+            error_code = 1
     elif args.url:
         try:
             setup_options()
@@ -1048,13 +1046,14 @@ def main():
             if output:
                 output.close()
             console.msg("Interrupted! Exiting...")
+            error_code = 130
         finally:
             if stream_fd:
                 try:
                     console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
-                    sys.exit()
+                    error_code = 130
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
@@ -1066,3 +1065,5 @@ def main():
             "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)
+
+    sys.exit(error_code)
