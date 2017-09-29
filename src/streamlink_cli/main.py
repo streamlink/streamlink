@@ -1030,16 +1030,12 @@ def main():
         try:
             streamlink.resolve_url(args.can_handle_url)
         except NoPluginError:
-            sys.exit(1)
-        else:
-            sys.exit(0)
+            error_code = 1
     elif args.can_handle_url_no_redirect:
         try:
             streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
-            sys.exit(1)
-        else:
-            sys.exit(0)
+            error_code = 1
     elif args.url:
         try:
             setup_options()
@@ -1058,8 +1054,6 @@ def main():
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
-                finally:
-                    sys.exit(error_code)
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
@@ -1071,3 +1065,5 @@ def main():
             "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)
+
+    sys.exit(error_code)
