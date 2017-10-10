@@ -149,7 +149,13 @@ def parse_params(params):
         except Exception:
             pass
 
-        rval[key] = value
+        if key in rval:
+            if not isinstance(rval[key], list):
+                rval[key] = [rval[key], value]
+            else:
+                rval[key].append(value)
+        else:
+            rval[key] = value
 
     return rval
 
