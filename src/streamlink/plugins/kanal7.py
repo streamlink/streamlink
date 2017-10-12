@@ -3,6 +3,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
+from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -10,7 +11,7 @@ from streamlink.stream import HLSStream
 class Kanal7(Plugin):
     url_re = re.compile(r"https?://(?:www.)?kanal7.com/canli-izle")
     iframe_re = re.compile(r'iframe .*?src="(http://[^"]*?)"')
-    stream_re = re.compile(r'src: "(http[^"]*?)"')
+    stream_re = re.compile(r'src="(http[^"]*?)"')
 
     @classmethod
     def can_handle_url(cls, url):
@@ -34,7 +35,7 @@ class Kanal7(Plugin):
                 stream_m = self.stream_re.search(ires.text)
                 stream_url = stream_m and stream_m.group(1)
                 if stream_url:
-                    yield "live", HLSStream(self.session, stream_url)
+                    yield "live", HLSStream(self.session, stream_url, headers={"Referer": iframe2})
             else:
                 self.logger.error("Could not find second iframe, has the page layout changed?")
         else:
