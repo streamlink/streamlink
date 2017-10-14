@@ -41,7 +41,7 @@ class VaughnLive(Plugin):
         "594140c69edad": "66.90.93.42",
         "585c4cab1bef1": "66.90.93.34",
         "5940d648b3929": "66.90.93.42",
-        "5941854b39bc4": "66.90.93.34"  # "198.255.0.10"
+        "5941854b39bc4": "198.255.0.10"
     }
     name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
     domain_map = {"vaughnlive": "#vl", "breakers": "#btv", "instagib": "#igb", "vapers": "#vtv", "pearltime": "#pt"}
