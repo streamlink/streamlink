@@ -81,8 +81,7 @@ dogan               - teve2.com.tr       Yes   Yes   VOD is supported for teve2 
                     - dreamtv.com.tr
                     - cnnturk.com
                     - dreamturk.com.tr
-dogus               - startv.com.tr      Yes   No
-                    - ntvspor.net
+dogus               - ntvspor.net        Yes   No
                     - kralmuzik.com.tr
                     - ntv.com.tr
                     - eurostartv.com.tr
@@ -188,6 +187,7 @@ srgssr              - srf.ch             Yes   No    Streams are geo-restricted 
                     - rsi.ch
                     - rtr.ch
 ssh101              ssh101.com           Yes   No
+startv              startv.com.tr        Yes   No
 streamable          streamable.com       -     Yes
 streamboat          streamboat.tv        Yes   No
 streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
