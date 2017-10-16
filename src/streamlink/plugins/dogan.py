@@ -44,6 +44,11 @@ class Dogan(Plugin):
 
     def _get_content_id(self):
         res = http.get(self.url)
+        # find the contentId
+        content_id_m = self.content_id_re.search(res.text)
+        if content_id_m:
+            return content_id_m.group(1)
+
         # find the PlayerCtrl div
         player_ctrl_m = self.playerctrl_re.search(res.text)
         if player_ctrl_m:
@@ -52,10 +57,6 @@ class Dogan(Plugin):
             content_id_m = self.data_id_re.search(player_ctrl_div)
             if content_id_m:
                 return content_id_m.group("id")
-
-        # use the fall back regex
-        content_id_m = self.content_id_re.search(res.text)
-        return content_id_m and content_id_m.group(1)
 
     def _get_hls_url(self, content_id):
         # make the api url relative to the current domain
