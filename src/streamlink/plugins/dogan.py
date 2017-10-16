@@ -24,7 +24,7 @@ class Dogan(Plugin):
     """, re.VERBOSE)
     playerctrl_re = re.compile(r'''<div[^>]*?ng-controller=(?P<quote>["'])(?:Live)?PlayerCtrl(?P=quote).*?>''', re.DOTALL)
     data_id_re = re.compile(r'''data-id=(?P<quote>["'])(?P<id>\w+)(?P=quote)''')
-    content_id_re = re.compile(r'"contentId", "(\w+)"')
+    content_id_re = re.compile(r'"content(?:I|i)d", "(\w+)"')
     content_api = "/actions/content/media/{id}"
     new_content_api = "/action/media/{id}"
     content_api_schema = validate.Schema({
@@ -32,7 +32,7 @@ class Dogan(Plugin):
         "Media": {
             "Link": {
                 "DefaultServiceUrl": validate.url(),
-                validate.optional("ServiceUrl"): validate.url(),
+                validate.optional("ServiceUrl"): validate.any(validate.url(), ""),
                 "SecurePath": validate.text,
             }
         }
