@@ -24,7 +24,7 @@ class Dogan(Plugin):
     """, re.VERBOSE)
     playerctrl_re = re.compile(r'''<div[^>]*?ng-controller=(?P<quote>["'])(?:Live)?PlayerCtrl(?P=quote).*?>''', re.DOTALL)
     data_id_re = re.compile(r'''data-id=(?P<quote>["'])(?P<id>\w+)(?P=quote)''')
-    content_id_re = re.compile(r'"contentId", "(\w+)"')
+    content_id_re = re.compile(r'"content(?:I|i)d", "(\w+)"')
     content_api = "/actions/content/media/{id}"
     new_content_api = "/action/media/{id}"
     content_api_schema = validate.Schema({
@@ -32,7 +32,7 @@ class Dogan(Plugin):
         "Media": {
             "Link": {
                 "DefaultServiceUrl": validate.url(),
-                validate.optional("ServiceUrl"): validate.url(),
+                validate.optional("ServiceUrl"): validate.any(validate.url(), ""),
                 "SecurePath": validate.text,
             }
         }
@@ -44,6 +44,11 @@ class Dogan(Plugin):
 
     def _get_content_id(self):
         res = http.get(self.url)
+        # find the contentId
+        content_id_m = self.content_id_re.search(res.text)
+        if content_id_m:
+            return content_id_m.group(1)
+
         # find the PlayerCtrl div
         player_ctrl_m = self.playerctrl_re.search(res.text)
         if player_ctrl_m:
@@ -52,10 +57,6 @@ class Dogan(Plugin):
             content_id_m = self.data_id_re.search(player_ctrl_div)
             if content_id_m:
                 return content_id_m.group("id")
-
-        # use the fall back regex
-        content_id_m = self.content_id_re.search(res.text)
-        return content_id_m and content_id_m.group(1)
 
     def _get_hls_url(self, content_id):
         # make the api url relative to the current domain
