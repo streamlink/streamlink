@@ -15,6 +15,7 @@ OD_URL_PATTERN = "https://pl{0}.live.panda.tv/live_panda/{1}_small.flv?sign={2}&
 _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 _room_id_re = re.compile(r'data-room-id="(\d+)"')
 _status_re = re.compile(r'"status"\s*:\s*"(\d+)"\s*,\s*"display_type"')
+_room_key_re = re.compile(r'"room_key"\s*:\s*"(.+?)"')
 _sd_re = re.compile(r'"SD"\s*:\s*"(\d+)"')
 _hd_re = re.compile(r'"HD"\s*:\s*"(\d+)"')
 _od_re = re.compile(r'"OD"\s*:\s*"(\d+)"')
@@ -59,6 +60,7 @@ class Pandatv(Plugin):
 
         try:
             status = _status_re.search(res.text).group(1)
+            room_key = _room_key_re.search(res.text).group(1)
             sd = _sd_re.search(res.text).group(1)
             hd = _hd_re.search(res.text).group(1)
             od = _od_re.search(res.text).group(1)
