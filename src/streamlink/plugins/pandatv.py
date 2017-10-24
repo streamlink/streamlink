@@ -91,7 +91,9 @@ class Pandatv(Plugin):
             return
 
         plflag0 = plflag.split('_')[1]
-        if plflag0 != '3':
+        if plflag0 == '30':
+            plflag1 = '29'
+        elif plflag0 != '3':
             plflag1 = '4'
         else:
             plflag1 = '3'
