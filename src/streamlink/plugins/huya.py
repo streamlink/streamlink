@@ -10,7 +10,7 @@ from streamlink.plugin.api import useragents
 HUYA_URL = "http://m.huya.com/%s"
 
 _url_re = re.compile(r'http(s)?://(www\.)?huya.com/(?P<channel>[^/]+)', re.VERBOSE)
-_hls_re = re.compile(r'^\s*<source\s+src="(?P<url>[^"]+)"/>', re.MULTILINE)
+_hls_re = re.compile(r'^\s*<video\s+id="html5player-video"\s+src="(?P<url>[^"]+)"', re.MULTILINE)
 
 _hls_schema = validate.Schema(
         validate.all(
