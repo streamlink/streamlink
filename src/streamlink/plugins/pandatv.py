@@ -41,7 +41,7 @@ _room_schema = validate.Schema(
 
 class Pandatv(Plugin):
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
     def _get_streams(self):
@@ -92,18 +92,24 @@ class Pandatv(Plugin):
             self.logger.info("Please Check PandaTV Room API")
             return
 
-        plflag0 = plflag.split('_')[1]
-        if plflag0 == '30':
-            plflag1 = '29'
-        elif plflag0 != '3':
-            plflag1 = '4'
-        else:
-            plflag1 = '3'
-
         plflag_list = json.loads(plflag_list)
+        backup = plflag_list["backup"]
         rid = plflag_list["auth"]["rid"]
         sign = plflag_list["auth"]["sign"]
         ts = plflag_list["auth"]["time"]
+
+        backup.append(plflag)
+        plflag0 = backup
+        plflag0 = [i.split('_')[1] for i in plflag0] 
+
+        # let wangsu cdn priority, flag can see here in "H5PLAYER_CDN_LINES":
+        # https://www.panda.tv/cmstatic/global-config.js
+        if '3' in plflag0:
+            plflag1 = '3'
+        elif '4' in plflag0:
+            plflag1 = '4'
+        else:
+            plflag1 = plflag0[0]
 
         if sd == '1':
             streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
