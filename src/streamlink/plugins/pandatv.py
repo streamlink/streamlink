@@ -3,10 +3,12 @@ import types
 import time
 import json
 
+from streamlink.compat import quote
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HTTPStream
 
+ROOM_API = "https://www.panda.tv/api_room_v3?token=&hostid={0}&roomid={1}&roomkey={2}&_={3}&param={4}&time={5}&sign={6}"
 ROOM_API_V2 = "https://www.panda.tv/api_room_v2?roomid={0}&_={1}"
 SD_URL_PATTERN = "https://pl{0}.live.panda.tv/live_panda/{1}.flv?sign={2}&ts={3}&rid={4}"
 HD_URL_PATTERN = "https://pl{0}.live.panda.tv/live_panda/{1}_mid.flv?sign={2}&ts={3}&rid={4}"
@@ -16,6 +18,10 @@ _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 _room_id_re = re.compile(r'data-room-id="(\d+)"')
 _status_re = re.compile(r'"status"\s*:\s*"(\d+)"\s*,\s*"display_type"')
 _room_key_re = re.compile(r'"room_key"\s*:\s*"(.+?)"')
+_hostid_re = re.compile(r'\\"hostid\\"\s*:\s*\\"(.+?)\\"')
+_param_re = re.compile(r'"param"\s*:\s*"(.+?)"\s*,\s*"time"')
+_time_re = re.compile(r'"time"\s*:\s*(\d+)')
+_sign_re = re.compile(r'"sign"\s*:\s*"(.+?)"')
 _sd_re = re.compile(r'"SD"\s*:\s*"(\d+)"')
 _hd_re = re.compile(r'"HD"\s*:\s*"(\d+)"')
 _od_re = re.compile(r'"OD"\s*:\s*"(\d+)"')
@@ -61,6 +67,10 @@ class Pandatv(Plugin):
         try:
             status = _status_re.search(res.text).group(1)
             room_key = _room_key_re.search(res.text).group(1)
+            hostid = _hostid_re.search(res.text).group(1)
+            param = _param_re.search(res.text).group(1)
+            tt = _time_re.search(res.text).group(1)
+            sign = _sign_re.search(res.text).group(1)
             sd = _sd_re.search(res.text).group(1)
             hd = _hd_re.search(res.text).group(1)
             od = _od_re.search(res.text).group(1)
@@ -73,7 +83,9 @@ class Pandatv(Plugin):
             return
 
         ts = int(time.time())
-        url = ROOM_API_V2.format(channel, ts)
+        param = param.replace("\\", "")
+        param = quote(param)
+        url = ROOM_API.format(hostid, channel, room_key, ts, param, tt, sign)
         room = http.get(url)
         data = http.json(room, schema=_room_schema)
         if not isinstance(data, dict):
