@@ -116,11 +116,10 @@ class Pandatv(Plugin):
 
         # let wangsu cdn priority, flag can see here in "H5PLAYER_CDN_LINES":
         # https://www.panda.tv/cmstatic/global-config.js
-        if '3' in plflag0:
-            plflag1 = '3'
-        elif '4' in plflag0:
-            plflag1 = '4'
-        else:
+        lines = ["3", "4"]
+        try:
+            plflag1 = [i for i in plflag0 if i in lines][0]
+        except IndexError:
             plflag1 = plflag0[0]
 
         if sd == '1':
