@@ -57,7 +57,7 @@ class Zattoo(Plugin):
         self._session_attributes = Cache(filename='plugin-cache.json', key_prefix='zattoo:attributes')
         self._authed = self._session_attributes.get('beaker.session.id') and self._session_attributes.get('pzuid') and self._session_attributes.get('power_guide_hash')
         self._uuid = self._session_attributes.get('uuid')
-        self._expires = self._session_attributes.get('expires')
+        self._expires = self._session_attributes.get('expires', 946684800)
 
         self.base_url = 'https://{0}'.format(Zattoo._url_re.match(url).group('base_url'))
         self.headers = {
