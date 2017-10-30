@@ -1,4 +1,5 @@
-from __future__ import print_function
+import math
+import random
 import re
 
 from streamlink.plugin import Plugin
@@ -11,7 +12,7 @@ from streamlink.stream import HTTPStream
 
 class LiveMe(Plugin):
     url_re = re.compile(r"https?://(www.)?liveme\.com/live\.html\?videoid=(\d+)")
-    api_url = "http://live.ksmobile.net/live/queryinfo?userid=1&videoid={id}"
+    api_url = "https://live.ksmobile.net/live/queryinfo"
     api_schema = validate.Schema(validate.all({
         "status": "200",
         "data": {
@@ -26,6 +27,16 @@ class LiveMe(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
+    def _random_t(self, t):
+        n = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
+        e = len(n)
+        a = ""
+        r = 0
+        while (r < t):
+            a += n[math.floor(random.randrange(e))]
+            r += 1
+        return a
+
     def _make_stream(self, url):
         if url and url.endswith("flv"):
             return HTTPStream(self.session, url)
@@ -37,8 +48,16 @@ class LiveMe(Plugin):
         video_id = url_params.get("videoid")
 
         if video_id:
-            self.logger.debug("Found Video ID: {}", video_id)
-            res = http.get(self.api_url.format(id=video_id))
+            vali = '{0}l{1}m{2}'.format(self._random_t(4), self._random_t(4), self._random_t(5))
+            data = {
+                'userid': 1,
+                'videoid': video_id,
+                'area': '',
+                'h5': 1,
+                'vali': vali
+            }
+            self.logger.debug("Found Video ID: {0}".format(video_id))
+            res = http.post(self.api_url, data=data)
             data = http.json(res, schema=self.api_schema)
             hls = self._make_stream(data["video_info"]["hlsvideosource"])
             video = self._make_stream(data["video_info"]["videosource"])
