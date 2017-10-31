@@ -1,4 +1,3 @@
-import math
 import random
 import re
 
@@ -28,14 +27,7 @@ class LiveMe(Plugin):
         return cls.url_re.match(url) is not None
 
     def _random_t(self, t):
-        n = "ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678"
-        e = len(n)
-        a = ""
-        r = 0
-        while (r < t):
-            a += n[math.floor(random.randrange(e))]
-            r += 1
-        return a
+        return "".join(random.choice("ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678") for _ in range(t))
 
     def _make_stream(self, url):
         if url and url.endswith("flv"):
