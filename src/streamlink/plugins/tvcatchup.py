@@ -6,7 +6,7 @@ from streamlink.stream import HLSStream
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
 _url_re = re.compile(r"http://(?:www\.)?tvcatchup.com/watch/\w+")
-_stream_re = re.compile(r'''(?P<q>["'])(?P<stream_url>https?://.*m3u8\?.*clientKey=.*?)(?P=q)''')
+_stream_re = re.compile(r'''source.*?(?P<q>["'])(?P<stream_url>https?://.*m3u8\?.*clientKey=.*?)(?P=q)''')
 
 
 class TVCatchup(Plugin):
