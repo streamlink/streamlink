@@ -25,6 +25,10 @@ from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
+try:
+    ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)
+except AttributeError:
+    pass  # Not windows
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = streamlink = plugin = stream_fd = output = None
