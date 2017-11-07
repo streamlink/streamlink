@@ -24,8 +24,8 @@ _api_status_url = 'https://www.showroom-live.com/room/is_live?room_id={room_id}'
 _api_stream_url = 'https://www.showroom-live.com/api/live/streaming_url?room_id={room_id}'
 
 _api_stream_schema = validate.Schema(
-    {
-        "streaming_url_list_rtmp": validate.all([
+    validate.any({
+        "streaming_url_list": validate.all([
             {
                 "url": validate.text,
                 validate.optional("stream_name"): validate.text,
@@ -35,13 +35,10 @@ _api_stream_schema = validate.Schema(
                 "type": validate.text,
                 "quality": int,
             }
-        ]),
-        # "is_live": int,
-        # "room": {
-        #     "room_url_key": validate.text
-        # },
-        # "telop": validate.any(None, validate.text)
-    }
+        ])
+    },
+    {}
+    )
 )
 
 # the "low latency" streams are rtmp, the others are hls
