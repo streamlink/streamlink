@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import HLSStream, RTMPStream
-from streamlink.exceptions import NoStreamsError
 
 _url_re = re.compile(r'''^https?://
     (?:\w*.)?
