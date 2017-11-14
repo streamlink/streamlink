@@ -1,3 +1,73 @@
+streamlink 0.9.0 (2017-11-14)
+-----------------------------
+Streamlink 0.9.0 has been released!
+
+This release is mostly code refactoring as well as module inclusion.
+
+Features:
+
+  - Updates to multiple plugins (electrecetv, tvplayer, Teve2, cnnturk, kanald)
+  - SOCKS module being included in the Streamlink installer (PySocks)
+
+Many thanks to those who've contributed in this release!
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+
+
+::
+
+    Alexis Murzeau <amubtdx@outlook.fr> (2):
+          docs: add new line before codeblock to fix them
+          Fix sphinx warning on Directive class
+    
+    Charlie Drage <charlie@charliedrage.com> (1):
+          Update the release script
+    
+    Emrah Er <emraher@users.noreply.github.com> (1):
+          plugins.canlitv: fix URLs (#1281)
+    
+    Jake Robertson <jake@faltro.com> (3):
+          exit with code 130 after a KeyboardInterrupt
+          refactor error code determination
+          unify sys.exit() calls
+    
+    RosadinTV <rosadintv@outlook.com> (5):
+          Update eltrecetv.py
+          Update eltrecetv.py
+          Update plugin_matrix.rst
+          Add webcast_india_gov.py
+          Add test_webcast_india_gov.py
+    
+    back-to <back-to@users.noreply.github.com> (3):
+          [zattoo] It won't work with None in Python 3.6, set always a default date instead of None.
+          [liveme] API update (#1298)
+          Ignore WinError 10053 / WSAECONNABORTED
+    
+    beardypig <beardypig@users.noreply.github.com> (10):
+          plugins.tvplayer: extract the channel id when logged in as a subscriber
+          installer: include the socks proxy modules
+          plugins.kanal7: update for page layout change and referrer check
+          plugins.turkuvaz: fix some turkuvaz sites and add support for anews
+          plugins.cinergroup: support for different showtv url
+          plugins.dogus/startv: fix dogus sites
+          plugins.dogan: fix for teve2 and cnnturk
+          plugins.dogan: fix for kanald
+          plugins.tvcatchup: HLS source extraction update
+          setup: fix PySocks module dependency
+    
+    ficofabrid <31028711+ficofabrid@users.noreply.github.com> (1):
+          Add a single newline at the end of the file. (#1235)
+    
+    fozzy <fozzy@fozzy.co> (1):
+          fix huya.com plugin
+    
+    steven7851 <steven7851@msn.com> (1):
+          plugins.pandatv: fix APIv3 (#1286)
+    
+    wlerin <wlerin@gmail.com> (1):
+          plugin.showroom: update to new api (#1311)
+    
+
 Streamlink 0.8.1 (2017-09-12)
 -----------------------------
 0.8.1 of Streamlink!
