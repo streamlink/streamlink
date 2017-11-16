@@ -2,6 +2,7 @@ import random
 import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
+from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -12,10 +13,10 @@ class Turkuvaz(Plugin):
     """
 
     _url_re = re.compile(r"""https?://(?:www.)?
-            (?:
-                (atv|a2tv|ahaber|aspor|minikago|minikacocuk).com.tr/webtv/canli-yayin|
-                (atvavrupa).tv/webtv/videoizle/atv_avrupa/canli_yayin
-            )""", re.VERBOSE)
+                             (?:(atvavrupa).tv|
+                                (atv|a2tv|ahaber|aspor|minikago|minikacocuk|anews).com.tr)
+                                /webtv/(live-broadcast|canli-yayin)""",
+                         re.VERBOSE)
     _hls_url = "http://trkvz-live.ercdn.net/{channel}/{channel}.m3u8"
     _token_url = "http://videotoken.tmgrup.com.tr/webtv/secure"
     _token_schema = validate.Schema(validate.all(
@@ -36,15 +37,19 @@ class Turkuvaz(Plugin):
         # remap the domain to channel
         channel = {"atv": "atvhd",
                    "ahaber": "ahaberhd",
-                   "aspor": "asporhd"}.get(domain, domain)
-
+                   "aspor": "asporhd",
+                   "anews": "anewshd",
+                   "minikacocuk": "minikagococuk"}.get(domain, domain)
         hls_url = self._hls_url.format(channel=channel)
         # get the secure HLS URL
         res = http.get(self._token_url,
-                       params={"url": hls_url},
-                       headers={"Referer": self.url})
+                       params="url={0}".format(hls_url),
+                       headers={"Referer": self.url,
+                                "User-Agent": useragents.CHROME})
+
         secure_hls_url = http.json(res, schema=self._token_schema)
 
+        self.logger.debug("Found HLS URL: {0}".format(secure_hls_url))
         return HLSStream.parse_variant_playlist(self.session, secure_hls_url)
 
 

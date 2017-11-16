@@ -2,17 +2,17 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.stream import RTMPStream
+from streamlink.plugin.api import http, validate, useragents
+from streamlink.stream import HLSStream, RTMPStream
 
 _url_re = re.compile(r'''^https?://
-        (?:\w*.)?
-        showroom-live.com/
-        (?:
-            (?P<room_title>[\w-]+$)
-            |
-            room/profile\?room_id=(?P<room_id>\d+)$
-        )
+    (?:\w*.)?
+    showroom-live.com/
+    (?:
+        (?P<room_title>[\w-]+$)
+        |
+        room/profile\?room_id=(?P<room_id>\d+)$
+    )
 ''', re.VERBOSE)
 
 _room_id_re = re.compile(r'"roomId":(?P<room_id>\d+),')
@@ -20,30 +20,35 @@ _room_id_alt_re = re.compile(r'content="showroom:///room\?room_id=(?P<room_id>\d
 _room_id_lookup_failure_log = 'Failed to find room_id for {0} using {1} regex'
 
 _api_status_url = 'https://www.showroom-live.com/room/is_live?room_id={room_id}'
-_api_data_url = 'https://www.showroom-live.com/room/get_live_data?room_id={room_id}'
+_api_stream_url = 'https://www.showroom-live.com/api/live/streaming_url?room_id={room_id}'
 
-_api_data_schema = validate.Schema(
-    {
-        "streaming_url_list_rtmp": validate.all([
+_api_stream_schema = validate.Schema(
+    validate.any({
+        "streaming_url_list": validate.all([
             {
                 "url": validate.text,
-                "stream_name": validate.text,
+                validate.optional("stream_name"): validate.text,
                 "id": int,
                 "label": validate.text,
-                "is_default": int
+                "is_default": int,
+                "type": validate.text,
+                "quality": int,
             }
-        ]),
-        "is_live": int,
-        "room": {
-            "room_url_key": validate.text
-        },
-        "telop": validate.any(None, validate.text)
-    }
+        ])
+    },
+    {}
+    )
 )
+
+# the "low latency" streams are rtmp, the others are hls
 _rtmp_quality_lookup = {
     "オリジナル画質": "high",
+    "オリジナル画質(低遅延)": "high",
+    "original spec(low latency)": "high",
     "original spec": "high",
     "低画質": "low",
+    "低画質(低遅延)": "low",
+    "low spec(low latency)": "low",
     "low spec": "low"
 }
 # changes here must also be updated in test_plugin_showroom
@@ -74,11 +79,6 @@ _info_pages = set((
 
 
 class Showroom(Plugin):
-    @staticmethod
-    def _get_stream_info(room_id):
-        res = http.get(_api_data_url.format(room_id=room_id))
-        return http.json(res, schema=_api_data_schema)
-
     @classmethod
     def can_handle_url(cls, url):
         match = _url_re.match(url)
@@ -95,16 +95,12 @@ class Showroom(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
+        self._headers = {
+            'Referer': self.url,
+            'User-Agent': useragents.FIREFOX
+        }
         self._room_id = None
-        self._info = None
-        self._title = None
-
-    @property
-    def telop(self):
-        if self._info:
-            return self._info['telop']
-        else:
-            return ""
+        self._stream_urls = None
 
     @property
     def room_id(self):
@@ -123,7 +119,7 @@ class Showroom(Plugin):
         if match_dict['room_id'] is not None:
             return match_dict['room_id']
         else:
-            res = http.get(self.url)
+            res = http.get(self.url, headers=self._headers)
             match = _room_id_re.search(res.text)
             if not match:
                 title = self.url.rsplit('/', 1)[-1]
@@ -134,16 +130,9 @@ class Showroom(Plugin):
                     return  # Raise exception?
             return match.group('room_id')
 
-    def _get_title(self):
-        if self._title is None:
-            if 'profile?room_id=' not in self.url:
-                self._title = self.url.rsplit('/', 1)[-1]
-            else:
-                if self._info is None:
-                    # TODO: avoid this
-                    self._info = self._get_stream_info(self.room_id)
-                self._title = self._info.get('room').get('room_url_key')
-        return self._title
+    def _get_stream_info(self, room_id):
+        res = http.get(_api_stream_url.format(room_id=room_id), headers=self._headers)
+        return http.json(res, schema=_api_stream_schema)
 
     def _get_rtmp_stream(self, stream_info):
         rtmp_url = '/'.join((stream_info['url'], stream_info['stream_name']))
@@ -153,14 +142,15 @@ class Showroom(Plugin):
         return quality, RTMPStream(self.session, params=params)
 
     def _get_streams(self):
-        self._info = self._get_stream_info(self.room_id)
-        if not self._info or not self._info['is_live']:
+        info = self._get_stream_info(self.room_id)
+        if not info:
             return
 
-        self.logger.debug("Getting streams for {0}".format(self._get_title()))
-
-        for stream_info in self._info.get("streaming_url_list_rtmp", []):
-            yield self._get_rtmp_stream(stream_info)
-
+        for stream_info in info.get("streaming_url_list", []):
+            if stream_info["type"] == "rtmp":
+                yield self._get_rtmp_stream(stream_info)
+            elif stream_info["type"] == "hls":
+                for s in HLSStream.parse_variant_playlist(self.session, stream_info["url"]).items():
+                    yield s
 
 __plugin__ = Showroom

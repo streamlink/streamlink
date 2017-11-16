@@ -9,9 +9,9 @@ Linux and BSD packages
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
-`Arch Linux (aur)`_                  .. code-block:: console
+`Arch Linux`_                        .. code-block:: console
 
-                                        # pacaur -S streamlink
+                                        # pacman -S streamlink
 
 `Arch Linux (aur, git)`_             .. code-block:: console
 
@@ -42,7 +42,7 @@ Distribution                         Installing
                                         # xbps-install streamlink
 ==================================== ===========================================
 
-.. _Arch Linux (aur): https://aur.archlinux.org/packages/streamlink/
+.. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
@@ -64,21 +64,33 @@ Platform                             Installing
 Mac OS X                             .. code-block:: console
 
                                         # easy_install -U streamlink
+`Homebrew`_                          .. code-block:: console
+
+                                        # brew install streamlink
+
+                                     `Installing Homebrew packages`_
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 
 `Chocolatey`_                        .. code-block:: console
 
                                         C:\> choco install streamlink
+
+                                     `Installing Chocolatey packages`_
 ==================================== ===========================================
 
+.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+
+.. _Installing Homebrew packages: https://brew.sh
+.. _Installing Chocolatey packages: https://chocolatey.org
 
 Package maintainers
 -------------------
 ==================================== ===========================================
 Distribution/Platform                Maintainer
 ==================================== ===========================================
-Arch                                 Josip Ponjavic <josipponjavic at gmail.com>
+Arch                                 Giancarlo Razzolini <grazzolini at archlinux.org>
+Arch (aur, git)                      Josip Ponjavic <josipponjavic at gmail.com>
 Chocolatey                           Scott Walters <me at scowalt.com>
 Fedora                               Mohamed El Morabity <melmorabity at fedoraproject.org>
 Gentoo                               soredake <fdsfgs at krutt.org>
@@ -88,7 +100,7 @@ Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 wkuipers <wietse at kuiprs.nl>
 Windows binaries                     beardypig <beardypig at protonmail.com>
-Windows port. version                RosadinTV
+Windows port. version                RosadinTV <RosadinTV at outlook.com>, beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
 
@@ -162,11 +174,20 @@ Name                                 Notes
 **Optional**
 --------------------------------------------------------------------------------
 `RTMPDump`_                          Required to play RTMP streams.
-`python-librtmp`_                    Required by the *ustreamtv* plugin to be
-                                     able to use non-mobile streams.
 `ffmpeg`_                            Required to play streams that are made up of separate
                                      audio and video streams, eg. YouTube 1080p+
 ==================================== ===========================================
+
+Using pycrypto and pycountry
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+With these two environment variables it is possible to use `pycrypto`_ instead of
+`pycryptodome`_ and `pycountry`_ instead of `iso-639`_ and `iso3166`_.
+
+.. code-block:: console
+
+    $ export STREAMLINK_USE_PYCRYPTO="true"
+    $ export STREAMLINK_USE_PYCOUNTRY="true"
 
 .. _Python: http://python.org/
 .. _python-setuptools: http://pypi.python.org/pypi/setuptools
@@ -175,8 +196,9 @@ Name                                 Notes
 .. _python-requests: http://python-requests.org/
 .. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
+.. _pycountry: https://pypi.python.org/pypi/pycountry
+.. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
-.. _python-librtmp: https://github.com/chrippa/python-librtmp
 .. _ffmpeg: https://www.ffmpeg.org/
 .. _iso-639: https://pypi.python.org/pypi/iso-639
 .. _iso3166: https://pypi.python.org/pypi/iso3166
@@ -226,11 +248,13 @@ Windows binaries
     Windows XP is not supported.
     Windows Vista requires at least SP2 to be installed. 
 
-You can download the latest stable Windows installer from the `GitHub Releases Page <https://github.com/streamlink/streamlink/releases/latest>`__.
+A Windows installer of the latest **stable release** can be found on the `GitHub releases page <https://github.com/streamlink/streamlink/releases/latest>`__.
 
-You can download the latest nightly Windows installer `here <https://streamlink-builds.s3.amazonaws.com/nightly/windows/streamlink-latest.exe>`__.
+Alternatively, a Windows installer of the `latest development build <https://dl.bintray.com/streamlink/streamlink-nightly/streamlink-latest.exe>`__ for testing purposes is available,
+with a summary of the changes in the `release notes <https://bintray.com/streamlink/streamlink-nightly/streamlink/latest#release>`__. This development build is updated once per day,
+and a list of `previous builds <https://dl.bintray.com/streamlink/streamlink-nightly/>`__ is provided.
 
-This is a installer which contains:
+This is an installer which contains:
 
 - A compiled version of Streamlink that does not require an existing Python
   installation
@@ -243,17 +267,33 @@ and performs the following tasks:
   :command:`streamlink` directly from the command prompt without specifying
   its directory)
 
-To build the installer, you need to have NSIS and pynsist installed on your
+To build the installer, you need to have ``NSIS`` and ``pynsist`` installed on your
 system.
 
 
 Windows portable version
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Instructions:
+==================================== ===========================================
+Maintainer                           Links
+==================================== ===========================================
+RosadinTV                            `Latest precompiled stable release`__
 
-- Download https://github.com/streamlink/streamlink-portable/archive/master.zip
+                                     `Latest builder`__
+                                     
+                                     `More info`__
 
-- Extract the "Streamlink for Windows (Compiled)" folder from the ZIP file
+Beardypig                            `Latest precompiled stable release`__
 
-- Check README.txt file for requirements and run "Streamlink for Windows.exe"
+                                     `Latest builder`__
+
+                                     `More info`__
+==================================== ===========================================
+
+__ https://github.com/streamlink/streamlink-portable/releases/latest
+__ https://github.com/streamlink/streamlink-portable/archive/master.zip
+__ https://github.com/streamlink/streamlink-portable
+
+__ https://github.com/beardypig/streamlink-portable/releases/latest
+__ https://github.com/beardypig/streamlink-portable/archive/master.zip
+__ https://github.com/beardypig/streamlink-portable

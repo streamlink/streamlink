@@ -16,7 +16,7 @@ class CinerGroup(Plugin):
     """
     url_re = re.compile(r"""https?://(?:www.)?
         (?:
-            showtv.com.tr/canli-yayin/showtv|
+            showtv.com.tr/canli-yayin(/showtv)?|
             haberturk.com/canliyayin|
             showmax.com.tr/canliyayin|
             showturk.com.tr/canli-yayin/showturk|

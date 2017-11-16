@@ -136,7 +136,7 @@ or for a option without value::
 
 .. note::
     Any quotes used will be part of the value, so only use when the value needs them,
-    e.g. specifiying a player with a path containing spaces.
+    e.g. specifying a player with a path containing spaces.
 
 Example
 ^^^^^^^
@@ -219,7 +219,7 @@ You can login like this:
 Once logged in, the plugin makes sure to save the session credentials to avoid
 asking your username and password again.
 
-Neverthless, these credentials are valid for a limited amount of time, so it
+Nevertheless, these credentials are valid for a limited amount of time, so it
 might be a good idea to save your username and password in your
 :ref:`configuration file <cli-streamlinkrc>` anyway.
 
@@ -328,6 +328,23 @@ Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 
 .. [1] supports local files using the file:// protocol
 .. _cli-options:
+
+Proxy Support
+-------------
+
+You can use the :option:`--http-proxy` and :option:`--https-proxy` options to
+change the proxy server that Streamlink will use for HTTP and HTTPS requests respectively.
+As HTTP and HTTPS requests can be handled by separate proxies, you may need to specify both
+options if the plugin you use makes HTTP and HTTPS requests.
+
+Both HTTP and SOCKS5 proxies are supported, authentication is supported for both types.
+
+For example:
+
+.. code-block:: console
+
+    $ streamlink --http-proxy "http://user:pass@10.10.1.10:3128/" --https-proxy "socks5://10.10.1.10:1242"
+
 
 Command-line usage
 ------------------

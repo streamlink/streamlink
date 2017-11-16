@@ -107,7 +107,7 @@ _url_re = re.compile(r"""
         )
         |
         (?:
-            /c/(?P<liveChannel>[^/?]+)/live
+            /(c/)?(?P<liveChannel>[^/?]+)/live
         )
     )
 """, re.VERBOSE)

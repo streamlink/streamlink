@@ -1,105 +1,106 @@
 import random
 import re
+import itertools
+import ssl
+import websocket
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import useragents, http
 from streamlink.stream import RTMPStream
-
-PLAYER_VERSION = "0.1.1.782"
-INFO_URL = "http://mvn.vaughnsoft.net/video/edge/soon_depricated_Q2_2017-{domain}_{channel}?{version}_{ms}-{ms}-{random}"
-
-DOMAIN_MAP = {
-    "breakers": "btv",
-    "vapers": "vtv",
-    "vaughnlive": "live",
-}
 
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?
-    (?P<domain>vaughnlive|breakers|instagib|vapers).tv
+    (?P<domain>vaughnlive|breakers|instagib|vapers|pearltime).tv
     (/embed/video)?
     /(?P<channel>[^/&?]+)
 """, re.VERBOSE)
 
-_swf_player_re = re.compile(r'swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"')
 
-_schema = validate.Schema(
-    validate.any(
-        validate.all(u"<error></error>", validate.transform(lambda x: None)),
-        validate.all(
-            validate.transform(lambda s: s.split(";")),
-            validate.length(3),
-            validate.union({
-                "server": validate.all(
-                    validate.get(0),
-                    validate.text
-                ),
-                "token": validate.all(
-                    validate.get(1),
-                    validate.text,
-                    validate.startswith(":mvnkey-"),
-                    validate.transform(lambda s: s[len(":mvnkey-"):])
-                ),
-                "ingest": validate.all(
-                    validate.get(2),
-                    validate.text
-                )
-            })
-        )
-    )
-)
+class VLWebSocket(websocket.WebSocket):
+    def __init__(self, **_):
+        self.session = _.pop("session")
+        self.logger = self.session.logger.new_module("plugins.vaughnlive.websocket")
+        sslopt = _.pop("sslopt", {})
+        sslopt["cert_reqs"] = ssl.CERT_NONE
+        super(VLWebSocket, self).__init__(sslopt=sslopt, **_)
+
+    def send(self, payload, opcode=websocket.ABNF.OPCODE_TEXT):
+        self.logger.debug("Sending message: {0}", payload)
+        return super(VLWebSocket, self).send(payload + "\n\x00", opcode)
+
+    def recv(self):
+        d = super(VLWebSocket, self).recv().replace("\n", "").replace("\x00", "")
+        return d.split(" ", 1)
 
 
 class VaughnLive(Plugin):
+    api_re = re.compile(r'new sApi\("(#(vl|igb|btv|pt|vtv)-[^"]+)",')
+    servers = ["wss://sapi-ws-{0}x{1:02}.vaughnlive.tv".format(x, y) for x, y in itertools.product(range(1, 3),
+                                                                                                   range(1, 6))]
+    origin = "https://vaughnlive.tv"
+    rtmp_server_map = {
+        "594140c69edad": "198.255.17.18",
+        "585c4cab1bef1": "198.255.17.26",
+        "5940d648b3929": "198.255.17.34",
+        "5941854b39bc4": "198.255.17.66"}
+    name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
+
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
-    def _get_streams(self):
-        res = http.get(self.url)
-        match = _swf_player_re.search(res.text)
-        if match is None:
-            return
-        swfUrl = "http://vaughnlive.tv" + match.group(1)
-        self.logger.debug("Using swf url: {0}", swfUrl)
+    def api_url(self):
+        return random.choice(self.servers)
 
-        match = _url_re.match(self.url)
-        params = {}
-        params["channel"] = match.group("channel").lower()
-        params["domain"] = DOMAIN_MAP.get(match.group("domain"), match.group("domain"))
-        params["version"] = PLAYER_VERSION
-        params["ms"] = random.randint(0, 999)
-        params["random"] = random.random()
-        info_url = INFO_URL.format(**params)
-        self.logger.debug("Loading info url: {0}", INFO_URL.format(**params))
-        info = http.get(info_url, schema=_schema)
-        if not info:
-            self.logger.info("This stream is currently available")
-            return
+    def parse_ack(self, action, message):
+        if action.endswith("3"):
+            channel, _, viewers, token, server, choked, is_live, chls, trns, ingest = message.split(";")
+            is_live = is_live == "1"
+            viewers = int(viewers)
+            self.logger.debug("Viewers: {0}, isLive={1}", viewers, is_live)
+            domain, channel = channel.split("-", 1)
+            return is_live, server, domain, channel, token, ingest
+        else:
+            self.logger.error("Unhandled action format: {0}", action)
 
-        app = "live"
-        if info["server"] in ["198.255.17.18:1337", "198.255.17.66:1337", "50.7.188.2:1337"]:
-            if info["ingest"] == "SJC":
-                app = "live-sjc"
-            elif info["ingest"] == "NYC":
-                app = "live-nyc"
-            elif info["ingest"] == "ORD":
-                app = "live-ord"
-            elif info["ingest"] == "AMS":
-                app = "live-ams"
-            elif info["ingest"] == "DEN":
-                app = "live-den"
+    def _get_info(self, stream_name):
+        server = self.api_url()
+        self.logger.debug("Connecting to API: {0}", server)
+        ws = websocket.create_connection(server,
+                                         header=["User-Agent: {0}".format(useragents.CHROME)],
+                                         origin=self.origin,
+                                         class_=VLWebSocket,
+                                         session=self.session)
+        ws.send("MVN LOAD3 {0}".format(stream_name))
+        action, message = ws.recv()
+        return self.parse_ack(action, message)
 
-        stream = RTMPStream(self.session, {
-            "rtmp": "rtmp://{0}/live".format(info["server"]),
-            "app": "{0}?{1}".format(app, info["token"]),
-            "swfVfy": swfUrl,
+    def _get_rtmp_streams(self, server, domain, channel, token):
+        rtmp_server = self.rtmp_server_map.get(server, server)
+
+        url = "rtmp://{0}/live?{1}".format(rtmp_server, token)
+
+        yield "live", RTMPStream(self.session, params={
+            "rtmp": url,
             "pageUrl": self.url,
-            "live": True,
-            "playpath": "{domain}_{channel}".format(**params),
+            "playpath": "{0}_{1}".format(self.name_remap.get(domain, "live"), channel),
+            "live": True
         })
 
-        return dict(live=stream)
+    def _get_streams(self):
+        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+
+        m = self.api_re.search(res.text)
+        stream_name = m and m.group(1)
+
+        if stream_name:
+            is_live, server, domain, channel, token, ingest = self._get_info(stream_name)
+
+            if not is_live:
+                self.logger.info("Stream is currently off air")
+            else:
+                for s in self._get_rtmp_streams(server, domain, channel, token):
+                    yield s
 
 
 __plugin__ = VaughnLive

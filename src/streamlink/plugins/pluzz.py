@@ -1,4 +1,3 @@
-import os.path
 import re
 import sys
 import time
@@ -7,18 +6,22 @@ from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
+from streamlink.utils import update_scheme
 
 
 class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
-    API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}&catalogue={1}'
+    API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}'
+    PLAYER_GENERATOR_URL = 'https://sivideo.webservices.francetelevisions.fr/assets/staticmd5/getUrl?id=jquery.player.7.js'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
-    _url_re = re.compile(r'http://(pluzz\.francetv\.fr/(videos/.+\.html|[\w-]+)|www\.(ludo|zouzous)\.fr/heros/[\w-]+)')
-    _pluzz_video_id_re = re.compile(r'id="current_video" href="http://.+?\.(?:francetv|francetelevisions)\.fr/(?:video/|\?id-video=)(?P<video_id>.+?)"')
-    _other_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
+    _url_re = re.compile(r'https?://((?:www)\.france\.tv/.+\.html|www\.(ludo|zouzous)\.fr/heros/[\w-]+|(sport|france3-regions)\.francetvinfo\.fr/.+?/(tv/direct)?)')
+    _pluzz_video_id_re = re.compile(r'data-main-video="(?P<video_id>.+?)"')
+    _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
+    _f3_regions_video_id_re = re.compile(r'"http://videos\.francetv\.fr/video/(?P<video_id>.+)@Regions"')
+    _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
     _player_re = re.compile(r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
-    _swf_re = re.compile(r'getUrl\("(?P<swf>/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai.+?\.swf)"\)')
+    _swf_re = re.compile(r'//staticftv-a\.akamaihd\.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
     _mp4_bitrate_re = re.compile(r'.*-(?P<bitrate>[0-9]+k)\.mp4')
 
@@ -33,7 +36,10 @@ class Pluzz(Plugin):
     _api_schema = validate.Schema({
         'videos': validate.all(
             [{
-                'format': validate.text,
+                'format': validate.any(
+                    None,
+                    validate.text
+                ),
                 'url': validate.any(
                     None,
                     validate.url(),
@@ -70,6 +76,8 @@ class Pluzz(Plugin):
         )
     })
 
+    _player_schema = validate.Schema({'result': validate.url()})
+
     options = PluginOptions({
         "mux_subtitles": False
     })
@@ -86,29 +94,28 @@ class Pluzz(Plugin):
 
         # Retrieve URL page and search for video ID
         res = http.get(self.url)
-        if 'pluzz.francetv.fr' in self.url:
-            video_re = self._pluzz_video_id_re
-        else:
-            video_re = self._other_video_id_re
-        match = video_re.search(res.text)
+        if 'france.tv' in self.url:
+            match = self._pluzz_video_id_re.search(res.text)
+        elif 'ludo.fr' in self.url or 'zouzous.fr' in self.url:
+            match = self._jeunesse_video_id_re.search(res.text)
+        elif 'france3-regions.francetvinfo.fr' in self.url:
+            match = self._f3_regions_video_id_re.search(res.text)
+        elif 'sport.francetvinfo.fr' in self.url:
+            match = self._sport_video_id_re.search(res.text)
         if match is None:
             return
-        catalogue = 'Pluzz'
         video_id = match.group('video_id')
-        if 'catalogue' in match.groupdict():
-            catalogue = match.group('catalogue')
 
         # Retrieve SWF player URL
-        match = self._player_re.search(res.text)
         swf_url = None
+        res = http.get(self.PLAYER_GENERATOR_URL)
+        player_url = update_scheme(self.url, http.json(res, schema=self._player_schema)['result'])
+        res = http.get(player_url)
+        match = self._swf_re.search(res.text)
         if match is not None:
-            player_url = 'http:' + match.group('player')
-            res = http.get(player_url)
-            match = self._swf_re.search(res.text)
-            if match is not None:
-                swf_url = os.path.dirname(player_url) + match.group('swf')
+            swf_url = update_scheme(self.url, match.group(0))
 
-        res = http.get(self.API_URL.format(video_id, catalogue))
+        res = http.get(self.API_URL.format(video_id))
         videos = http.json(res, schema=self._api_schema)
         now = time.time()
 
@@ -150,12 +157,15 @@ class Pluzz(Plugin):
             if '.mpd' in video_url:
                 continue
 
-            if catalogue == 'Pluzz' or '.f4m' in video_url:
+            if '.f4m' in video_url or 'france.tv' in self.url:
                 res = http.get(self.TOKEN_URL.format(video_url))
                 video_url = res.text
 
             if '.f4m' in video_url and swf_url is not None:
-                for bitrate, stream in HDSStream.parse_manifest(self.session, video_url, pvswf=swf_url).items():
+                for bitrate, stream in HDSStream.parse_manifest(self.session,
+                                                                video_url,
+                                                                is_akamai=True,
+                                                                pvswf=swf_url).items():
                     # HDS videos with data in their manifest fragment token
                     # doesn't seem to be supported by HDSStream. Ignore such
                     # stream (but HDS stream having only the hdntl parameter in

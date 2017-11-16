@@ -48,8 +48,8 @@ class PlayTV(Plugin):
         for language in streams:
             for protocol, bitrates in list(streams[language].items()):
                 # - Ignore non-supported protocols (RTSP, DASH)
-                # - Ignore deprecated Flash (RTMPE) streams (PlayTV doesn't provide anymore a Flash player)
-                if protocol in ['rtsp', 'flash', 'dash']:
+                # - Ignore deprecated Flash (RTMPE/HDS) streams (PlayTV doesn't provide anymore a Flash player)
+                if protocol in ['rtsp', 'flash', 'dash', 'hds']:
                     continue
 
                 for bitrate in bitrates['bitrates']:

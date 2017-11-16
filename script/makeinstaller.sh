@@ -39,12 +39,35 @@ version=3.5.2
 format=bundled
 
 [Include]
-packages=requests
-         streamlink
+; dep tree
+;   streamlink+streamlink_cli
+;       - pkg-resources (indirect)
+;           - pyparsing
+;           - packaging
+;           - six
+;       - iso639
+;       - iso3166
+;       - pycryptodome
+;       - requests
+;           - certifi
+;           - idna
+;           - urllib3
+;           - socks / sockshandler
+;       - websocket-client
+packages=streamlink
          streamlink_cli
+         pkg_resources
+         six
          iso639
          iso3166
-         pkg_resources
+         requests
+         urllib3
+         idna
+         chardet
+         certifi
+         websocket
+         socks
+         sockshandler
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
@@ -207,11 +230,6 @@ cp -r "win32/ffmpeg" "${nsis_dir}/"
 cp -r "win32/rtmpdump" "${nsis_dir}/"
 
 pynsist build/streamlink.cfg
-
-# Make a copy of this build for the "latest" nightly
-if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
-    cp "${dist_dir}/${STREAMLINK_INSTALLER}.exe" "${dist_dir}/streamlink-latest.exe"
-fi
 
 echo "Success!" 1>&2
 echo "The installer should be in ${dist_dir}." 1>&2

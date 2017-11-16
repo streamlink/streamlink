@@ -25,6 +25,10 @@ from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
+try:
+    ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)
+except AttributeError:
+    pass  # Not windows
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = streamlink = plugin = stream_fd = output = None
@@ -244,14 +248,17 @@ def output_stream(stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
+    success_open = False
     for i in range(args.retry_open):
         try:
             stream_fd, prebuffer = open_stream(stream)
+            success_open = True
             break
         except StreamError as err:
-            console.logger.error("{0}", err)
-    else:
-        return
+            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
+
+    if not success_open:
+        console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
     output = create_output()
 
@@ -307,14 +314,14 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
                     console.logger.info("HTTP connection closed")
                 else:
-                    console.logger.error("Error when writing to output: {0}", err)
+                    console.exit("Error when writing to output: {0}, exiting", err)
 
                 break
     except IOError as err:
-        console.logger.error("Error when reading from stream: {0}", err)
-
-    stream.close()
-    console.logger.info("Stream ended")
+        console.exit("Error when reading from stream: {0}, exiting", err)
+    finally:
+        stream.close()
+        console.logger.info("Stream ended")
 
 
 def handle_stream(plugin, streams, stream_name):
@@ -577,6 +584,9 @@ def setup_args(config_files=[]):
     if args.stream:
         args.stream = [stream.lower() for stream in args.stream]
 
+    if not args.url and args.url_param:
+        args.url = args.url_param
+
 
 def setup_config_args():
     config_files = []
@@ -667,18 +677,12 @@ def setup_http_session():
         streamlink.set_option("http-timeout", args.http_timeout)
 
     if args.http_cookies:
-        console.logger.warning("The option --http-cookies is deprecated since "
-                               "version 1.11.0, use --http-cookie instead.")
         streamlink.set_option("http-cookies", args.http_cookies)
 
     if args.http_headers:
-        console.logger.warning("The option --http-headers is deprecated since "
-                               "version 1.11.0, use --http-header instead.")
         streamlink.set_option("http-headers", args.http_headers)
 
     if args.http_query_params:
-        console.logger.warning("The option --http-query-params is deprecated since "
-                               "version 1.11.0, use --http-query-param instead.")
         streamlink.set_option("http-query-params", args.http_query_params)
 
 
@@ -717,6 +721,9 @@ def setup_options():
 
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
+
+    if args.hls_audio_select:
+        streamlink.set_option("hls-audio-select", args.hls_audio_select)
 
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
@@ -824,14 +831,6 @@ def setup_plugin_options():
         streamlink.set_plugin_option("crunchyroll", "locale",
                                      args.crunchyroll_locale)
 
-    if args.livestation_email:
-        streamlink.set_plugin_option("livestation", "email",
-                                     args.livestation_email)
-
-    if args.livestation_password:
-        streamlink.set_plugin_option("livestation", "password",
-                                     args.livestation_password)
-
     if args.btv_username:
         streamlink.set_plugin_option("btv", "username", args.btv_username)
 
@@ -907,6 +906,52 @@ def setup_plugin_options():
     if args.npo_subtitles:
         streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
 
+    if args.liveedu_email:
+        streamlink.set_plugin_option("liveedu", "email", args.liveedu_email)
+
+    if args.liveedu_email and not args.liveedu_password:
+        liveedu_password = console.askpass("Enter LiveEdu.tv password: ")
+    else:
+        liveedu_password = args.liveedu_password
+
+    if liveedu_password:
+        streamlink.set_plugin_option("liveedu", "password", liveedu_password)
+
+    if args.bbciplayer_username:
+        streamlink.set_plugin_option("bbciplayer", "username", args.bbciplayer_username)
+
+    if args.bbciplayer_username and not args.bbciplayer_password:
+        bbciplayer_password = console.askpass("Enter bbc.co.uk account password: ")
+    else:
+        bbciplayer_password = args.bbciplayer_password
+
+    if bbciplayer_password:
+        streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
+
+    if args.ufctv_username:
+        streamlink.set_plugin_option("ufctv", "username", args.ufctv_username)
+
+    if args.ufctv_username and not args.ufctv_password:
+        ufctv_password = console.askpass("Enter ufc.tv account password: ")
+    else:
+        ufctv_password = args.ufctv_password
+
+    if ufctv_password:
+        streamlink.set_plugin_option("ufctv", "password", ufctv_password)
+
+    if args.zattoo_email:
+        streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
+    if args.zattoo_email and not args.zattoo_password:
+        zattoo_password = console.askpass("Enter zattoo password: ")
+    else:
+        zattoo_password = args.zattoo_password
+    if zattoo_password:
+        streamlink.set_plugin_option("zattoo", "password", zattoo_password)
+
+    if args.zattoo_purge_credentials:
+        streamlink.set_plugin_option("zattoo", "purge_credentials",
+                                     args.zattoo_purge_credentials)
+
     # Deprecated options
     if args.jtv_legacy_names:
         console.logger.warning("The option --jtv/twitch-legacy-names is "
@@ -969,6 +1014,8 @@ def check_version(force=False):
 
 
 def main():
+    error_code = 0
+
     setup_args()
     setup_streamlink()
     setup_plugins()
@@ -977,7 +1024,7 @@ def main():
     setup_http_session()
     check_root()
 
-    if args.version_check or not args.no_version_check:
+    if args.version_check or (not args.no_version_check and args.auto_version_check):
         with ignored(Exception):
             check_version(force=args.version_check)
 
@@ -987,16 +1034,12 @@ def main():
         try:
             streamlink.resolve_url(args.can_handle_url)
         except NoPluginError:
-            sys.exit(1)
-        else:
-            sys.exit(0)
+            error_code = 1
     elif args.can_handle_url_no_redirect:
         try:
             streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
-            sys.exit(1)
-        else:
-            sys.exit(0)
+            error_code = 1
     elif args.url:
         try:
             setup_options()
@@ -1007,13 +1050,14 @@ def main():
             if output:
                 output.close()
             console.msg("Interrupted! Exiting...")
+            error_code = 130
         finally:
             if stream_fd:
                 try:
                     console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
-                    sys.exit()
+                    error_code = 130
     elif args.twitch_oauth_authenticate:
         authenticate_twitch_oauth()
     elif args.help:
@@ -1025,3 +1069,5 @@ def main():
             "read the manual at https://streamlink.github.io"
         ).format(usage=usage)
         console.msg(msg)
+
+    sys.exit(error_code)

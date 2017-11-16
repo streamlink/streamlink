@@ -3,7 +3,6 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream
-from streamlink.plugin.api.utils import parse_query
 
 API_URL = "https://api.zdf.de"
 
@@ -85,7 +84,7 @@ class zdf_mediathek(Plugin):
             for format_ in priority["formitaeten"]:
                 yield self._extract_from_format(format_)
 
-    def _parse_track(self, track, parser):
+    def _parse_track(self, track, parser, name):
         try:
             return parser(self.session, track["uri"])
         except IOError as err:
@@ -100,25 +99,33 @@ class zdf_mediathek(Plugin):
         name, parser = STREAMING_TYPES[format_["type"]]
         for quality in format_["qualities"]:
             for track in quality["audio"]["tracks"]:
-                option = self._parse_track(track, parser)
-                qualities.update(option)
+                option = self._parse_track(track, parser, name)
+                if option:
+                    qualities.update(option)
 
         return qualities
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
         title = self.url.rsplit('/', 1)[-1]
         if title.endswith(".html"):
             title = title[:-5]
+        if title == "live-tv":
+            self.logger.info("Klicken Sie mit der rechten Maustaste auf dem Player (im Browser) und waehlen Sie 'Beitrags-Url kopieren', um einen gueltigen Link fuer streamlink zu erhalten.")
+            return
+
+        headers = {
+            "Api-Auth": "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32",
+            "Referer": self.url
+        }
 
         request_url = "https://api.zdf.de/content/documents/%s.json?profile=player" % title
-        res = http.get(request_url, headers={"Api-Auth": "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32"})
+        res = http.get(request_url, headers=headers)
         document = http.json(res, schema=_documents_schema)
 
         stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
         stream_request_url = API_URL + stream_request_url
 
-        res = http.get(stream_request_url)
+        res = http.get(stream_request_url, headers=headers)
         res = http.json(res, schema=_schema)
 
         streams = {}

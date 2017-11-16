@@ -29,7 +29,7 @@ from ...exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "url", "startswith", "endswith",
+    "transform", "text", "union", "url", "startswith", "endswith", "contains",
     "xml_element", "xml_find", "xml_findall", "xml_findtext",
     "validate", "Schema", "SchemaContainer"
 ]
@@ -138,6 +138,17 @@ def endswith(string):
         return True
 
     return ends_with
+
+
+def contains(string):
+    """Checks if the string value contains another string."""
+    def contains_str(value):
+        validate(text, value)
+        if not string in value:
+            raise ValueError("'{0}' does not contain '{1}'".format(value, string))
+        return True
+
+    return contains_str
 
 
 def get(item, default=None):

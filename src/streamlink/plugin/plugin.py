@@ -1,5 +1,7 @@
+import ast
 import operator
 import re
+from collections import OrderedDict
 
 from functools import partial
 
@@ -7,6 +9,12 @@ from ..cache import Cache
 from ..exceptions import PluginError, NoStreamsError
 from ..options import Options
 
+# FIXME: This is a crude attempt at making a bitrate's
+# weight end up similar to the weight of a resolution.
+# Someone who knows math, please fix.
+BIT_RATE_WEIGHT_RATIO = 2.8
+
+ALT_WEIGHT_MOD = 0.01
 
 QUALITY_WEIGTHS_EXTRA = {
     "other": {
@@ -32,32 +40,48 @@ FILTER_OPERATORS = {
 }
 
 
+PARAMS_REGEX = r"(\w+)=({.+?}|\[.+?\]|\(.+?\)|'(?:[^'\\]|\\')*'|\"(?:[^\"\\]|\\\")*\"|\S+)"
+
+HIGH_PRIORITY = 30
+NORMAL_PRIORITY = 20
+LOW_PRIORITY = 10
+NO_PRIORITY = 0
+
+
 def stream_weight(stream):
     for group, weights in QUALITY_WEIGTHS_EXTRA.items():
         if stream in weights:
             return weights[stream], group
 
-    match = re.match("^(\d+)([k]|[p])?(\d*)([\+])?$", stream)
+    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?(?:_(alt)(\d)?)?$", stream)
 
     if match:
-        if match.group(2) == "k":
-            bitrate = int(match.group(1))
+        weight = 0
 
-            # FIXME: This is a crude attempt at making a bitrate's
-            # weight end up similar to the weight of a resolution.
-            # Someone who knows math, please fix.
-            weight = bitrate / 2.8
+        if match.group(6):
+            if match.group(7):
+                weight -= ALT_WEIGHT_MOD * int(match.group(7))
+            else:
+                weight -= ALT_WEIGHT_MOD
+
+        name_type = match.group(2)
+        if name_type == "k":  # bit rate
+            bitrate = int(match.group(1))
+            weight += bitrate / BIT_RATE_WEIGHT_RATIO
 
             return weight, "bitrate"
 
-        elif match.group(2) == "p":
-            weight = int(match.group(1))
+        elif name_type == "p":  # resolution
+            weight += int(match.group(1))
 
-            if match.group(3):
+            if match.group(3):  # fps eg. 60p or 50p
                 weight += int(match.group(3))
 
             if match.group(4) == "+":
                 weight += 1
+
+            if match.group(5):  # bit rate classifier for resolution
+                weight += int(match.group(5)) / BIT_RATE_WEIGHT_RATIO
 
             return weight, "pixels"
 
@@ -79,13 +103,16 @@ def stream_type_priority(stream_types, stream):
     try:
         prio = stream_types.index(stream_type)
     except ValueError:
-        prio = 99
+        try:
+            prio = stream_types.index("*")
+        except ValueError:
+            prio = 99
 
     return prio
 
 
 def stream_sorting_filter(expr, stream_weight):
-    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w\+]+)", expr)
+    match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w+]+)", expr)
 
     if not match:
         raise PluginError("Invalid filter expression: {0}".format(expr))
@@ -103,6 +130,28 @@ def stream_sorting_filter(expr, stream_weight):
         return True
 
     return func
+
+
+def parse_url_params(url):
+    split = url.split(" ", 1)
+    url = split[0]
+    params = split[1] if len(split) > 1 else ''
+    return url, parse_params(params)
+
+
+def parse_params(params):
+    rval = {}
+    matches = re.findall(PARAMS_REGEX, params)
+
+    for key, value in matches:
+        try:
+            value = ast.literal_eval(value)
+        except Exception:
+            pass
+
+        rval[key] = value
+
+    return rval
 
 
 class Plugin(object):
@@ -173,6 +222,15 @@ class Plugin(object):
             return func
 
         return decorator
+
+    @classmethod
+    def priority(cls, url):
+        """
+        Return the plugin priority for a given URL, by default it returns
+        NORMAL priority.
+        :return: priority level
+        """
+        return NORMAL_PRIORITY
 
     def streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
@@ -254,7 +312,8 @@ class Plugin(object):
         for name, stream in sorted_streams:
             stream_type = type(stream).shortname()
 
-            if stream_type not in stream_types:
+            # Use * as wildcard to match other stream types
+            if "*" not in stream_types and stream_type not in stream_types:
                 continue
 
             # drop _alt from any stream names
@@ -303,13 +362,18 @@ class Plugin(object):
         elif callable(sorting_excludes):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
+        final_sorted_streams = OrderedDict()
+        
+        for stream_name in sorted(streams, key=stream_weight_only):
+            final_sorted_streams[stream_name] = streams[stream_name]
+        
         if len(sorted_streams) > 0:
             best = sorted_streams[-1]
             worst = sorted_streams[0]
-            streams["best"] = streams[best]
-            streams["worst"] = streams[worst]
-
-        return streams
+            final_sorted_streams["worst"] = streams[worst]
+            final_sorted_streams["best"] = streams[best]
+        
+        return final_sorted_streams
 
     def get_streams(self, *args, **kwargs):
         """Deprecated since version 1.9.0.

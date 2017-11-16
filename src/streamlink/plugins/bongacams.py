@@ -1,30 +1,21 @@
+import json
 import re
-import time
 
-from io import BytesIO
-from hashlib import md5
-
-from streamlink.compat import bytes, urljoin, urlparse, urlunparse
+from streamlink.compat import urljoin, urlparse, urlunparse
 from streamlink.exceptions import PluginError, NoStreamsError
-from streamlink.packages.flashmedia.types import AMF0String, AMF0Value, U32BE
-from streamlink.packages.flashmedia import AMFPacket, AMFMessage
-from streamlink.plugin.api import validate, http
+from streamlink.plugin.api import validate, http, useragents
 from streamlink.plugin import Plugin
-from streamlink.stream import RTMPStream
+from streamlink.stream import HLSStream
+from streamlink.utils import update_scheme
 
-
-CONST_FLASH_VER = "WIN 24,0,0,186"
-CONST_DEFAULT_SWF_LOCATION = '/swf/chat/BCamChat.swf?cache=20161226150'
 CONST_AMF_GATEWAY_LOCATION = '/tools/amf.php'
 CONST_AMF_GATEWAY_PARAM = 'x-country'
 CONST_DEFAULT_COUNTRY_CODE = 'en'
 
 CONST_HEADERS = {}
-CONST_HEADERS['User-Agent'] = 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
-CONST_HEADERS['User-Agent'] += 'Chrome/54.0.2840.99 Safari/537.36 OPR/41.0.2353.69'
+CONST_HEADERS['User-Agent'] = useragents.CHROME
 
-url_re = re.compile(r"(http(s)?://)?(\w{2}.)?(bongacams.com)/([\w\d_-]+)")
-swf_re = re.compile(r"/swf/\w+/\w+.swf\?cache=\d+")
+url_re = re.compile(r"(http(s)?://)?(\w{2}.)?(bongacams\.com)/([\w\d_-]+)")
 
 amf_msg_schema = validate.Schema({
     "status": "success",
@@ -32,9 +23,7 @@ amf_msg_schema = validate.Schema({
         "username": validate.text
     },
     "localData": {
-        "NC_ConnUrl": validate.url(scheme="rtmp"),
-        "NC_AccessKey": validate.length(32),
-        "dataKey": validate.length(32),
+        "videoServerUrl": validate.text
     },
     "performerData": {
         "username": validate.text,
@@ -47,10 +36,6 @@ class bongacams(Plugin):
     def can_handle_url(self, url):
         return url_re.match(url)
 
-    def _get_stream_uid(self, username):
-        m = md5(username.encode('utf-8') + str(time.time()).encode('utf-8'))
-        return m.hexdigest()
-
     def _get_streams(self):
         match = url_re.match(self.url)
 
@@ -58,13 +43,12 @@ class bongacams(Plugin):
         stream_page_domain = match.group(4)
         stream_page_path = match.group(5)
         country_code = CONST_DEFAULT_COUNTRY_CODE
-        is_paid_show = False
 
         # create http session and set headers
         http_session = http
         http_session.headers.update(CONST_HEADERS)
 
-        # get swf url and cookies
+        # get cookies
         r = http_session.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
 
         # redirect to profile page means stream is offline
@@ -85,58 +69,48 @@ class bongacams(Plugin):
         amf_gateway_url = urljoin(baseurl, CONST_AMF_GATEWAY_LOCATION)
         stream_page_url = urljoin(baseurl, stream_page_path)
 
-        match = swf_re.search(r.text)
-        if match:
-            swf_url = urljoin(baseurl, match.group())
-            self.logger.debug("swf url found: {0}", swf_url)
-        else:
-            # most likely it means that country/region banned
-            # can try use default swf-url
-            swf_url = urljoin(baseurl, CONST_DEFAULT_SWF_LOCATION)
-            self.logger.debug("swf url not found. Will try {0}", swf_url)
+        headers = {
+            'User-Agent': useragents.CHROME,
+            'Referer': stream_page_url,
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
 
-        # create amf query
-        amf_message = AMFMessage("svDirectAmf.getRoomData", "/1", [stream_page_path, is_paid_show])
-        amf_packet = AMFPacket(version=0)
-        amf_packet.messages.append(amf_message)
-
+        data = 'method=getRoomData&args%5B%5D={0}&args%5B%5D=false'.format(stream_page_path)
+        self.logger.debug('DATA: {0}'.format(str(data)))
         # send request and close http-session
         r = http_session.post(url=amf_gateway_url,
+                              headers=headers,
                               params={CONST_AMF_GATEWAY_PARAM: country_code},
-                              data=bytes(amf_packet.serialize()))
+                              data=data)
         http_session.close()
 
         if r.status_code != 200:
             raise PluginError("unexpected status code for {0}: {1}", r.url, r.status_code)
 
-        amf_response = AMFPacket.deserialize(BytesIO(r.content))
-
-        if len(amf_response.messages) != 1 or amf_response.messages[0].target_uri != "/1/onResult":
-            raise PluginError("unexpected response from amf gate")
-
-        stream_source_info = amf_msg_schema.validate(amf_response.messages[0].value)
+        stream_source_info = amf_msg_schema.validate(json.loads(r.text))
         self.logger.debug("source stream info:\n{0}", stream_source_info)
 
-        stream_params = {
-            "live": True,
-            "realtime": True,
-            "flashVer": CONST_FLASH_VER,
-            "swfUrl": swf_url,
-            "tcUrl": stream_source_info['localData']['NC_ConnUrl'],
-            "rtmp": stream_source_info['localData']['NC_ConnUrl'],
-            "pageUrl": stream_page_url,
-            "playpath": "%s?uid=%s" % (''.join(('stream_', stream_page_path)),
-                                       self._get_stream_uid(stream_source_info['userData']['username'])),
-            "conn": ["S:{0}".format(stream_source_info['userData']['username']),
-                     "S:{0}".format(stream_source_info['localData']['NC_AccessKey']),
-                     "B:0",
-                     "S:{0}".format(stream_source_info['localData']['dataKey'])]
-        }
+        if not stream_source_info:
+            return
 
-        self.logger.debug("Stream params:\n{0}", stream_params)
-        stream = RTMPStream(self.session, stream_params)
+        urlnoproto = stream_source_info['localData']['videoServerUrl']
+        urlnoproto = update_scheme('https://', urlnoproto)
+        performer = stream_source_info['performerData']['username']
 
-        return {'live': stream}
+        hls_url = '{0}/hls/stream_{1}/playlist.m3u8'.format(urlnoproto, performer)
+
+        if hls_url:
+            self.logger.debug('HLS URL: {0}'.format(hls_url))
+            try:
+                for s in HLSStream.parse_variant_playlist(self.session, hls_url, headers=headers).items():
+                    yield s
+            except Exception as e:
+                if '404' in str(e):
+                    self.logger.error('Stream is currently offline or private')
+                else:
+                    self.logger.error(str(e))
+                return
 
 
 __plugin__ = bongacams

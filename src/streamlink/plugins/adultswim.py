@@ -24,7 +24,7 @@ class AdultSwim(Plugin):
     live_schema = validate.Schema({
         u"streams": {
             validate.text: {u"stream": validate.text,
-                            u"isLive": bool,
+                            validate.optional(u"isLive"): bool,
                             u"archiveEpisodes": [{
                                 u"id": validate.text,
                                 u"slug": validate.text,
@@ -88,7 +88,7 @@ class AdultSwim(Plugin):
             for epi in show_info[u"archiveEpisodes"]:
                 if epi[u"slug"] == episode:
                     stream_id = epi[u"id"]
-        elif show_info["isLive"] or not len(show_info[u"archiveEpisodes"]):
+        elif show_info.get("isLive") or not len(show_info[u"archiveEpisodes"]):
             self.logger.debug("Loading LIVE streams for: {0}", show)
             stream_id = show_info[u"stream"]
         else:  # off-air
