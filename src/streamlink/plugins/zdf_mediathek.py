@@ -3,6 +3,7 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream
+from streamlink.utils import parse_json
 
 API_URL = "https://api.zdf.de"
 
@@ -26,6 +27,22 @@ STREAMING_TYPES = {
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?zdf.de/
 """, re.VERBOSE | re.IGNORECASE)
+_api_json_re = re.compile(r'''data-zdfplayer-jsb=["'](?P<json>{.+?})["']''', re.S)
+
+_api_schema = validate.Schema(
+    validate.transform(_api_json_re.search),
+    validate.any(
+        None,
+        validate.all(
+            validate.get("json"),
+            validate.transform(parse_json),
+            {
+                "content": validate.text,
+                "apiToken": validate.text
+            },
+        )
+    )
+)
 
 _documents_schema = validate.Schema(
     {
@@ -106,20 +123,16 @@ class zdf_mediathek(Plugin):
         return qualities
 
     def _get_streams(self):
-        title = self.url.rsplit('/', 1)[-1]
-        if title.endswith(".html"):
-            title = title[:-5]
-        if title == "live-tv":
-            self.logger.info("Klicken Sie mit der rechten Maustaste auf dem Player (im Browser) und waehlen Sie 'Beitrags-Url kopieren', um einen gueltigen Link fuer streamlink zu erhalten.")
+        zdf_json = http.get(self.url, schema=_api_schema)
+        if zdf_json is None:
             return
 
         headers = {
-            "Api-Auth": "Bearer d2726b6c8c655e42b68b0db26131b15b22bd1a32",
+            "Api-Auth": "Bearer {0}".format(zdf_json['apiToken']),
             "Referer": self.url
         }
 
-        request_url = "https://api.zdf.de/content/documents/%s.json?profile=player" % title
-        res = http.get(request_url, headers=headers)
+        res = http.get(zdf_json['content'], headers=headers)
         document = http.json(res, schema=_documents_schema)
 
         stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
