@@ -208,7 +208,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         d = 0
         default = -1
 
-        sequences_order = sequences if duration > 0 else reversed(sequences)
+        sequences_order = sequences if duration >= 0 else reversed(sequences)
 
         for sequence in sequences_order:
             if d >= abs(duration):
