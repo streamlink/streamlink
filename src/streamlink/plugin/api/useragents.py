@@ -19,6 +19,6 @@ SAFARI_8 = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
             "AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12")
 SAFARI_7 = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) "
             "AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A")
-FIREFOX = "Mozilla/5.0 (Windows NT 10.0; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0"
+FIREFOX = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:52.0) Gecko/20100101 Firefox/52.0"
 FIREFOX_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10; rv:33.0) Gecko/20100101 Firefox/33.0"
 OPERA = "Opera/9.80 (Windows NT 6.0) Presto/2.12.388 Version/12.14"
