@@ -158,6 +158,33 @@ def update_scheme(current, target):
         return target
 
 
+def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
+              ignore_query=False, ignore_fragment=False):
+    """
+    Compare two URLs and return True if they are equal, some parts of the URLs can be ignored
+    :param first: URL
+    :param second: URL
+    :param ignore_scheme: ignore the scheme
+    :param ignore_netloc: ignore the netloc
+    :param ignore_path: ignore the path
+    :param ignore_params: ignore the params
+    :param ignore_query: ignore the query string
+    :param ignore_fragment: ignore the fragment
+    :return: result of comparison
+    """
+    # <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
+
+    firstp = urlparse(first)
+    secondp = urlparse(second)
+
+    return ((firstp.scheme == secondp.scheme or ignore_scheme) and
+            (firstp.netloc == secondp.netloc or ignore_netloc) and
+            (firstp.path == secondp.path or ignore_path) and
+            (firstp.params == secondp.params or ignore_params) and
+            (firstp.query == secondp.query or ignore_query) and
+            (firstp.fragment == secondp.fragment or ignore_fragment))
+
+
 #####################################
 # Deprecated functions, do not use. #
 #####################################

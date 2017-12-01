@@ -970,6 +970,14 @@ def setup_plugin_options():
 
     if args.afreeca_username:
         streamlink.set_plugin_option("afreeca", "username", args.afreeca_username)
+    if args.btsports_email:
+        streamlink.set_plugin_option("btsports", "email", args.btsports_email)
+    if args.btsports_email and not args.btsports_password:
+        btsports_password = console.askpass("Enter BT Sport password: ")
+    else:
+        btsports_password = args.btsports_password
+    if btsports_password:
+        streamlink.set_plugin_option("btsports", "password", btsports_password)
 
     if args.afreeca_username and not args.afreeca_password:
         afreeca_password = console.askpass("Enter afreecatv account password: ")

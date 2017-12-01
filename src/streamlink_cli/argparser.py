@@ -1426,6 +1426,20 @@ plugin.add_argument(
     """
 )
 
+plugin.add_argument(
+    "--btsports-email",
+    metavar="EMAIL",
+    help="""
+    The email associated with your BT Sport account, required to access any BT Sport stream.
+    """
+)
+plugin.add_argument(
+    "--btsports-password",
+    metavar="PASSWORD",
+    help="""
+    A btsports account password to use with --btsports-email.
+    """
+)
 # Deprecated options
 stream.add_argument(
     "--best-stream-default",
