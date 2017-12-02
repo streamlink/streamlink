@@ -30,10 +30,10 @@ class OlympicChannel(Plugin):
     def _get_live_streams(self, lang, path):
         """
         Get the live stream in a particular language
-        :param subdomain:
+        :param lang:
+        :param path:
         :return:
         """
-
         res = http.get(self._live_api_url.format(lang, path))
         live_res = http.json(res)['default']['uid']
         post_data = '{"channel_url":"/api/channels/%s/"}' % live_res
@@ -42,15 +42,13 @@ class OlympicChannel(Plugin):
 
     def _get_streams(self):
         """
-        Find the streams for euronews
+        Find the streams for OlympicChannel
         :return:
         """
         match = self._url_re.match(self.url)
         type_of_stream = match.group('type')
-
         lang = re.search(r"/../", self.url).group(0)
         
-
         if type_of_stream == 'tv':
             path = re.search(r"/livestream-\d/$", self.url).group(0)
             return self._get_live_streams(lang, path)
