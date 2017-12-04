@@ -32,7 +32,6 @@ Name                                                  Stdin Pipe Named Pipe HTTP
 `Daum Pot Player <http://potplayer.daum.net>`_        No         No         Yes [1]_
 `MPC-HC <http://mpc-hc.org/>`_                        Yes [2]_   No         Yes [1]_
 `MPlayer <http://mplayerhq.hu>`_                      Yes        Yes        Yes
-`MPlayer2 <http://mplayer2.org>`_                     Yes        Yes        Yes
 `mpv <http://mpv.io>`_                                Yes        Yes        Yes
 `QuickTime <http://apple.com/quicktime>`_             No         No         No
 `VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
