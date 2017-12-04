@@ -11,7 +11,7 @@ from streamlink.stream import HLSStream
 class Kanal7(Plugin):
     url_re = re.compile(r"https?://(?:www.)?kanal7.com/canli-izle")
     iframe_re = re.compile(r'iframe .*?src="(http://[^"]*?)"')
-    stream_re = re.compile(r'src="(http[^"]*?)"')
+    stream_re = re.compile(r'''tp_file\s+=\s+['"](http[^"]*?)['"]''')
 
     @classmethod
     def can_handle_url(cls, url):
