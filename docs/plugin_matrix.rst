@@ -30,7 +30,6 @@ artetv              arte.tv              Yes   Yes
 atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
 bambuser            bambuser.com         Yes   Yes
 bbciplayer          bbc.co.uk/iplayer    Yes   Yes   Streams may be geo-restricted to the United Kingdom.
-beam                beam.pro             Yes   Yes
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bfmtv               bfmtv.com            Yes   Yes
                     01net.com
@@ -131,6 +130,7 @@ media_ccc_de        - media.ccc.de       Yes   Yes   Only mp4 and HLS are suppor
 mediaklikk          mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
 mips                mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele              mitele.es            Yes   No    Streams may be geo-restricted to Spain.
+mixer               mixer.com            Yes   Yes
 mlgtv               mlg.tv               Yes   --
 nbc                 nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports           nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
