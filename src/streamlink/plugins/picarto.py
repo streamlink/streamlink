@@ -24,9 +24,9 @@ class Picarto(Plugin):
     <div\s+class=".*?tech_switch.*?"(.*?)>
     """, re.VERBOSE)
     # Stream status regex - extracted from playersettings
-    # group(1) = token, group(2) = online status (string true/false)
+    # group(1) = token, group(2) = online status (string true/false), group(3) = "Channel"
     _stream_status_re = re.compile(r"""
-        <script>\s[\s\S]*?token:\s?(.*?),[\s\S]*?online:\s(.*?),[\s\S]*?
+        <script>\s[\s\S]*?token:\s?(.*?),[\s\S]*?online:\s(.*?),[\s\S]*?channel:\s(.*?),[\s\S]*?
         </script>
     """, re.VERBOSE)
     # <source ...>
@@ -95,8 +95,16 @@ class Picarto(Plugin):
         server = None
         token = "public"
 
+        match = self._stream_status_re.search(page.text)
+        if match:
+            channel = match.group(3).strip(" \"")
+            print(channel)
+        else:
+            self.logger.error("Channel name cannot be extracted from page.")
+            return
+
         # Extract preferred edge server and available techs from channel API
-        channel_server_res = http.post(self.API_CHANNEL_INFO, data={"loadbalancinginfo": page_channel})
+        channel_server_res = http.post(self.API_CHANNEL_INFO, data={"loadbalancinginfo": channel})
         info_json = json.loads(channel_server_res.text)
         pref = info_json["preferedEdge"]
         for i in info_json["edges"]:
@@ -106,14 +114,14 @@ class Picarto(Plugin):
         self.logger.debug("Using load balancing server {0} : {1} for channel {2}",
                           pref,
                           server,
-                          page_channel)
+                          channel)
 
         for i in info_json["techs"]:
             if i["label"] == "HLS":
-                for s in self._create_hls_stream(server, page_channel, token).items():
+                for s in self._create_hls_stream(server, channel, token).items():
                     yield s
             elif i["label"] == "RTMP Flash":
-                stream = self._create_flash_stream(server, page_channel, token)
+                stream = self._create_flash_stream(server, channel, token)
                 yield "live", stream
 
 
