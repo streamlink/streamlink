@@ -19,7 +19,7 @@ class BTV(Plugin):
 
     api_url = "http://www.btv.bg/lbin/global/player_config.php"
     check_login_url = "http://www.btv.bg/lbin/userRegistration/check_user_login.php"
-    login_url = "http://www.btv.bg/bin/registration2/login.php?action=login&settings=0"
+    login_url = "https://www.btv.bg/bin/registration2/login.php?action=login&settings=0"
 
     media_id_re = re.compile(r"media_id=(\d+)")
     src_re = re.compile(r"src: \"(http.*?)\"")
@@ -41,7 +41,10 @@ class BTV(Plugin):
 
     def login(self, username, password):
         res = http.post(self.login_url, data={"username": username, "password": password})
-        return res.text.startswith("success")
+        if "success_logged_in" in res.text:
+            return True
+        else:
+            return False
 
     def get_hls_url(self, media_id):
         res = http.get(self.api_url, params=dict(media_id=media_id))
@@ -51,7 +54,7 @@ class BTV(Plugin):
             return
 
     def _get_streams(self):
-        if not self.options.get("username") or not self.options.get("username"):
+        if not self.options.get("username") or not self.options.get("password"):
             self.logger.error("BTV requires registration, set the username and password"
                               " with --btv-username and --btv-password")
         elif self.login(self.options.get("username"), self.options.get("password")):
