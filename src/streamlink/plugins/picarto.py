@@ -10,38 +10,23 @@ from streamlink.stream import RTMPStream
 
 
 class Picarto(Plugin):
-    API_CHANNEL_INFO = "https://picarto.tv/process/channel"
+    CHANNEL_API_URL = "https://api.picarto.tv/v1/channel/name/{channel}"
+    VIDEO_API_URL = "https://picarto.tv/process/channel"
     RTMP_URL = "rtmp://{server}:1935/play/"
     RTMP_PLAYPATH = "golive+{channel}?token={token}"
     HLS_URL = "https://{server}/hls/{channel}/index.m3u8?token={token}"
 
+    # Regex for all usable URLs
     _url_re = re.compile(r"""
         https?://(?:\w+\.)?picarto\.tv/(?:videopopout/)?([^&?/]+)
     """, re.VERBOSE)
 
-    # divs with tech_switch class
-    _tech_switch_re = re.compile(r"""
-    <div\s+class=".*?tech_switch.*?"(.*?)>
-    """, re.VERBOSE)
-    # Stream status regex - extracted from playersettings
-    # group(1) = token, group(2) = online status (string true/false), group(3) = "Channel"
-    _stream_status_re = re.compile(r"""
-        <script>\s[\s\S]*?token:\s?(.*?),[\s\S]*?online:\s(.*?),[\s\S]*?channel:\s(.*?),[\s\S]*?
-        </script>
-    """, re.VERBOSE)
-    # <source ...>
-    _source_re = re.compile(r'''source src="(http[^"]+)"''')
+    # Regex for VOD extraction
+    _vod_re = re.compile(r'''vod: "(https?://[\S]+?/index.m3u8)",''')
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
-
-    @classmethod
-    def _stream_online(cls, page):
-        match = cls._stream_status_re.search(page.text)
-        if match:
-            return match.group(2).strip() == "true"
-        return False
 
     def _create_hls_stream(self, server, channel, token):
         streams = HLSStream.parse_variant_playlist(self.session,
@@ -68,43 +53,43 @@ class Picarto(Plugin):
         return RTMPStream(self.session, params=params)
 
     def _get_vod_stream(self, page):
-        m = self._source_re.search(page.text)
+        m = self._vod_re.search(page.text)
         if m:
             return HLSStream.parse_variant_playlist(self.session, m.group(1))
 
     def _get_streams(self):
-        page = http.get(self.url)
+        url_channel_name = self._url_re.match(self.url).group(1)
 
-        page_channel = self._url_re.match(self.url).group(1)
-        if page_channel.endswith(".flv"):
+        # Handle VODs first, since their "channel name" is different
+        if url_channel_name.endswith(".flv"):
             self.logger.debug("Possible VOD stream...")
+            page = http.get(self.url)
             vod_streams = self._get_vod_stream(page)
             if vod_streams:
                 for s in vod_streams.items():
                     yield s
                 return
+            else:
+                self.logger.warning("Probably a VOD stream but no VOD found?")
 
-        if "This channel does not exist" in page.text:
-            self.logger.error("The channel {0} does not exist".format(page_channel))
+        ci = http.get(self.CHANNEL_API_URL.format(channel=url_channel_name), raise_for_status=False)
+
+        if ci.status_code == 404:
+            self.logger.error("The channel {0} does not exist".format(url_channel_name))
             return
 
-        if not self._stream_online(page):
-            self.logger.error("The channel {0} is currently offline".format(page_channel))
+        channel_api_json = json.loads(ci.text)
+
+        if channel_api_json["online"] != True:
+            self.logger.error("The channel {0} is currently offline".format(url_channel_name))
             return
 
         server = None
         token = "public"
+        channel = channel_api_json["name"]
 
-        match = self._stream_status_re.search(page.text)
-        if match:
-            channel = match.group(3).strip(" \"")
-            print(channel)
-        else:
-            self.logger.error("Channel name cannot be extracted from page.")
-            return
-
-        # Extract preferred edge server and available techs from channel API
-        channel_server_res = http.post(self.API_CHANNEL_INFO, data={"loadbalancinginfo": channel})
+        # Extract preferred edge server and available techs from the undocumented channel API
+        channel_server_res = http.post(self.VIDEO_API_URL, data={"loadbalancinginfo": channel})
         info_json = json.loads(channel_server_res.text)
         pref = info_json["preferedEdge"]
         for i in info_json["edges"]:
