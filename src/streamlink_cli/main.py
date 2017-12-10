@@ -1049,12 +1049,12 @@ def main():
             # Close output
             if output:
                 output.close()
-            console.msg("Interrupted! Exiting\…")
+            console.msg("Interrupted! Exiting...")
             error_code = 130
         finally:
             if stream_fd:
                 try:
-                    console.logger.info("Closing currently open stream\…")
+                    console.logger.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
