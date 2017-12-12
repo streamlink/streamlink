@@ -10,7 +10,7 @@ STREAM_TYPES = ["rtmp"]
 
 _url_re = re.compile(r"""
     https?://(?:www|sfw)\.tigerdile\.com
-    \/stream\/(.*)\/""", re.VERBOSE)
+    \/stream\/(.+)\/?""", re.VERBOSE)
 
 
 class Tigerdile(Plugin):
