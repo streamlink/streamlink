@@ -29,14 +29,17 @@
 2. ...
 3. ...
 
-### Environment details
+### Logs
 
-Operating system and version: ...
-Streamlink and Python version: ...
+_Logs are always required for bugs, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l)
+Make sure to **remove username and password** from it.
+For the log use https://gist.github.com/ or_
 
-...
+```
+REPLACE THIS TEXT WITH YOUR LOG
+```
 
-### Comments, logs, screenshots, etc.
+### Comments, screenshots, etc.
 
 ...
 
