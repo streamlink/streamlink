@@ -6,7 +6,6 @@ from streamlink.plugins.canalplus import CanalPlus
 class TestPluginCanalPlus(unittest.TestCase):
     def test_can_handle_url(self):
         # should match
-        self.assertTrue(CanalPlus.can_handle_url("http://www.canalplus.fr/emissions/pid8596-the-tonight-show.html"))
         self.assertTrue(CanalPlus.can_handle_url("https://www.mycanal.fr/docus-infos/l-info-du-vrai-du-13-12-politique-les-affaires-reprennent/p/1473830"))
         self.assertTrue(CanalPlus.can_handle_url("https://www.mycanal.fr/sport/infosport-laurey-et-claudia/p/1473752"))
         self.assertTrue(CanalPlus.can_handle_url("https://www.mycanal.fr/docus-infos/ses-debuts-a-madrid-extrait-le-k-benzema/p/1469050"))
