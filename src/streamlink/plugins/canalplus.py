@@ -6,23 +6,36 @@ from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 
 class CanalPlus(Plugin):
-    API_URL = 'http://service.canal-plus.com/video/rest/getVideos/{0}/{1}?format=json'
-    CHANNEL_MAP = {'canalplus': 'cplus', 'c8': 'd8', 'cstar': 'd17', 'cnews': 'itele'}
+	# NOTE : no live url for the moment
+    API_URL = 'https://secure-service.canal-plus.com/video/rest/getVideosLiees/cplus/{0}?format=json'
     HDCORE_VERSION = '3.1.0'
     # Secret parameter needed to download HTTP videos on canalplus.fr
     SECRET = 'pqzerjlsmdkjfoiuerhsdlfknaes'
 
     _url_re = re.compile(r'''
-        http://
+        https://
         (
-            www\.(?P<channel>canalplus|c8|cstar)\.fr/(direct|.*pid.+?\.html(\?(?P<video_id>[0-9]+))?) |
-            replay\.(?P<replay_channel>c8|cstar)\.fr/video/(?P<replay_video_id>[0-9]+) |
+            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+) |
             www\.cnews\.fr/.+
         )
 ''', re.VERBOSE)
     _video_id_re = re.compile(r'(\bdata-video="|<meta property="og:video" content=".+?&videoId=)(?P<video_id>[0-9]+)"')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+k)\.mp4')
-    _api_schema = validate.Schema({
+    array_schema = validate.Schema(validate.all([{
+        'ID': validate.text,
+        'ID_DM': validate.text,
+        'TYPE': validate.text,
+        'MEDIA': validate.Schema({
+            'VIDEOS': validate.Schema({
+                validate.text: validate.any(
+                    validate.url(),
+                    ''
+                )
+            })
+        })
+    }]))
+    object_schema = validate.Schema({
+        'ID': validate.text,
         'ID_DM': validate.text,
         'TYPE': validate.text,
         'MEDIA': validate.Schema({
@@ -45,8 +58,7 @@ class CanalPlus(Plugin):
     def _get_streams(self):
         # Get video ID and channel from URL
         match = self._url_re.match(self.url)
-        channel = match.group('channel') or match.group('replay_channel') or 'cnews'
-        video_id = match.group('video_id') or match.group('replay_video_id')
+        video_id = match.group('video_id')
         if video_id is None:
             # Retrieve URL page and search for video ID
             res = http.get(self.url)
@@ -55,15 +67,22 @@ class CanalPlus(Plugin):
                 return
             video_id = match.group('video_id')
 
-        res = http.get(self.API_URL.format(self.CHANNEL_MAP[channel], video_id))
-        videos = http.json(res, schema=self._api_schema)
+        res = http.get(self.API_URL.format(video_id))
+        try:
+            videos_list = http.json(res, schema=self.array_schema)
+            for vid in videos_list:
+                if vid['ID'] == video_id:
+                    videos = vid
+        except Exception:
+            videos = http.json(res, schema=self.object_schema)
         parsed = []
         headers = {'User-Agent': self._user_agent}
 
         # Some videos may be also available on Dailymotion (especially on CNews)
-        if videos['ID_DM'] != '':
-            for stream in self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items():
-                yield stream
+        # note : disable dailymotion until plugin is fixed
+        #if videos['ID_DM'] != '':
+        #    for stream in self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items():
+        #        yield stream
 
         for quality, video_url in list(videos['MEDIA']['VIDEOS'].items()):
             # Ignore empty URLs
