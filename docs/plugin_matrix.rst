@@ -43,10 +43,7 @@ brittv              brittv.co.uk         Yes   --
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 cam4                cam4.com             Yes   No
 camsoda             camsoda.com          Yes   No
-canalplus           - canalplus.fr       Yes   Yes   Streams may be geo-restricted to France.
-                    - c8.fr
-                    - cstar.fr
-                    - cnews.fr
+canalplus           mycanal.fr           No    Yes   Streams may be geo-restricted to France.
 canlitv             - canlitv.com        Yes   --
                     - canlitv.life
                     - canlitvlive.co
