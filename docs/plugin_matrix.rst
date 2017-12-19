@@ -243,19 +243,16 @@ vaughnlive          - vaughnlive.tv      Yes   --
                     - instagib.tv
                     - vapers.tv
 vgtv                vgtv.no              Yes   Yes
-viasat              - tv3play.se         Yes   Yes   Streams may be geo-restricted.
-                    - tv3play.no
-                    - tv3play.dk
-                    - tv3play.ee
-                    - tv3play.lt
-                    - tv3play.lv
-                    - tv6play.se
+viasat              - juicyplay.dk       Yes   Yes   Streams may be geo-restricted.
+                    - play.nova.bg
+                    - skaties.lv
+                    - tv3.dk
+                    - tv3.ee
+                    - tv3.lt
                     - tv6play.no
-                    - tv8play.se
-                    - tv10play.se
-                    - viasat4play.no
-                    - play.tv3.lt
-                    - juicyplay.se
+                    - viafree.dk
+                    - viafree.no
+                    - viafree.se
 vidio               vidio.com            Yes   Yes
 vk                  vk.com               Yes   Yes
 vrtbe               vrt.be/vrtnu         Yes   Yes
