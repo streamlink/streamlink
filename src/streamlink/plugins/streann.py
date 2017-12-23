@@ -9,6 +9,7 @@ import re
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_qsd
 from streamlink.utils.crypto import decrypt_openssl
@@ -16,7 +17,7 @@ from streamlink.utils.crypto import decrypt_openssl
 
 class Streann(Plugin):
     url_re = re.compile(r"https?://ott\.streann.com/streaming/player\.html")
-    base_url = "http://ott.streann.com"
+    base_url = "https://ott.streann.com"
     get_time_url = base_url + "/web/services/public/get-server-time"
     token_url = base_url + "/loadbalancer/services/web-players/{playerId}/token/{type}/{dataId}/{deviceId}"
     stream_url = base_url + "/loadbalancer/services/web-players/{type}s-reseller/{dataId}/{playerId}/{token}/{resellerId}/playlist.m3u8?date={time}&device-type=web&device-name=web&device-os=web&device-id={deviceId}"
@@ -56,8 +57,15 @@ class Streann(Plugin):
         pdata = dict(arg1=base64.b64encode("www.ellobo106.com".encode("utf8")),
                      arg2=base64.b64encode(self.time.encode("utf8")))
 
+        headers = {
+            "User-Agent": useragents.FIREFOX,
+            "Referer": self.url,
+            "X-Requested-With": "XMLHttpRequest",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+
         res = http.post(self.token_url.format(deviceId=self.device_id, **config),
-                        data=pdata)
+                        data=pdata, headers=headers)
         data = http.json(res)
         return data["token"]
 
