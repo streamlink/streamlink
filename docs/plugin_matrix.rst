@@ -157,6 +157,7 @@ pluzz               - france.tv          Yes   Yes   Streams may be geo-restrict
                     - zouzous.fr
                     - france3-reg.. [8]_
 powerapp            powerapp.com.tr      Yes   No
+qq                  live.qq.com          Yes   No
 radionet            - radio.net          Yes   --
                     - radio.at
                     - radio.de
