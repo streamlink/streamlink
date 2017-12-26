@@ -6,17 +6,16 @@ from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 
 class CanalPlus(Plugin):
-    API_URL = 'http://service.canal-plus.com/video/rest/getVideos/{0}/{1}?format=json'
-    CHANNEL_MAP = {'canalplus': 'cplus', 'c8': 'd8', 'cstar': 'd17', 'cnews': 'itele'}
+    # NOTE : no live url for the moment
+    API_URL = 'https://secure-service.canal-plus.com/video/rest/getVideos/cplus/{0}?format=json'
     HDCORE_VERSION = '3.1.0'
     # Secret parameter needed to download HTTP videos on canalplus.fr
     SECRET = 'pqzerjlsmdkjfoiuerhsdlfknaes'
 
     _url_re = re.compile(r'''
-        http://
+        (https|http)://
         (
-            www\.(?P<channel>canalplus|c8|cstar)\.fr/(direct|.*pid.+?\.html(\?(?P<video_id>[0-9]+))?) |
-            replay\.(?P<replay_channel>c8|cstar)\.fr/video/(?P<replay_video_id>[0-9]+) |
+            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+) |
             www\.cnews\.fr/.+
         )
 ''', re.VERBOSE)
@@ -45,8 +44,7 @@ class CanalPlus(Plugin):
     def _get_streams(self):
         # Get video ID and channel from URL
         match = self._url_re.match(self.url)
-        channel = match.group('channel') or match.group('replay_channel') or 'cnews'
-        video_id = match.group('video_id') or match.group('replay_video_id')
+        video_id = match.group('video_id')
         if video_id is None:
             # Retrieve URL page and search for video ID
             res = http.get(self.url)
@@ -55,7 +53,7 @@ class CanalPlus(Plugin):
                 return
             video_id = match.group('video_id')
 
-        res = http.get(self.API_URL.format(self.CHANNEL_MAP[channel], video_id))
+        res = http.get(self.API_URL.format(video_id))
         videos = http.json(res, schema=self._api_schema)
         parsed = []
         headers = {'User-Agent': self._user_agent}
