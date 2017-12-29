@@ -10,7 +10,7 @@ from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 
 API_URL = "https://capi.douyucdn.cn/api/v1/{0}&auth={1}"
 VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
-API_SECRET = "Y237pxTx2In5ayGz"
+API_SECRET = "zNzMV1y4EMxOHS6I5WKm"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
@@ -129,10 +129,10 @@ class Douyutv(Plugin):
             if channel is None:
                 channel = http.get(self.url, schema=_room_id_alt_schema)
 
-        http.headers.update({'User-Agent': useragents.ANDROID})
+        http.headers.update({'User-Agent': useragents.WINDOWS_PHONE_8})
         cdns = ["ws", "tct", "ws2", "dl"]
         ts = int(time.time())
-        suffix = "room/{0}?aid=androidhd1&cdn={1}&client_sys=android&time={2}".format(channel, cdns[0], ts)
+        suffix = "room/{0}?aid=wp&cdn={1}&client_sys=wp&time={2}".format(channel, cdns[0], ts)
         sign = hashlib.md5((suffix + API_SECRET).encode()).hexdigest()
 
         res = http.get(API_URL.format(suffix, sign))
