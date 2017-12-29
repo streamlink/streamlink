@@ -9,10 +9,10 @@ from streamlink.plugin.api import http, validate
 from streamlink.stream import HTTPStream
 
 ROOM_API = "https://www.panda.tv/api_room_v3?token=&hostid={0}&roomid={1}&roomkey={2}&_={3}&param={4}&time={5}&sign={6}"
-ROOM_API_V2 = "https://www.panda.tv/api_room_v2?roomid={0}&_={1}"
-SD_URL_PATTERN = "https://pl{0}.live.panda.tv/live_panda/{1}.flv?sign={2}&ts={3}&rid={4}"
-HD_URL_PATTERN = "https://pl{0}.live.panda.tv/live_panda/{1}_mid.flv?sign={2}&ts={3}&rid={4}"
-OD_URL_PATTERN = "https://pl{0}.live.panda.tv/live_panda/{1}_small.flv?sign={2}&ts={3}&rid={4}"
+ROOM_API_V2 = "https://www.panda.tv/api_room_v21?token=&roomid={0}&_={1}"
+SD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}.flv?sign={2}&ts={3}&rid={4}"
+HD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_mid.flv?sign={2}&ts={3}&rid={4}"
+OD_URL_PATTERN = "http://pl{0}.live.panda.tv/live_panda/{1}_small.flv?sign={2}&ts={3}&rid={4}"
 
 _url_re = re.compile(r"http(s)?://(\w+.)?panda.tv/(?P<channel>[^/&?]+)")
 _room_id_re = re.compile(r'data-room-id="(\d+)"')
@@ -75,7 +75,7 @@ class Pandatv(Plugin):
             hd = _hd_re.search(res.text).group(1)
             od = _od_re.search(res.text).group(1)
         except AttributeError:
-            self.logger.info("Not a valid room url.")
+            self.logger.info("API error, please create a new issue.")
             return
 
         if status != '2':
@@ -89,19 +89,19 @@ class Pandatv(Plugin):
         room = http.get(url)
         data = http.json(room, schema=_room_schema)
         if not isinstance(data, dict):
-            self.logger.info("Please Check PandaTV Room API")
+            self.logger.info("API error, please create a new issue.")
             return
 
         videoinfo = data.get('videoinfo')
         plflag_list = videoinfo.get('plflag_list')
         if not videoinfo or not plflag_list:
-            self.logger.info("Please Check PandaTV Room API")
+            self.logger.info("API error, please create a new issue.")
             return
 
         streams = {}
         plflag = videoinfo.get('plflag')
         if not plflag or '_' not in plflag:
-            self.logger.info("Please Check PandaTV Room API")
+            self.logger.info("API error, please create a new issue.")
             return
 
         plflag_list = json.loads(plflag_list)
@@ -120,7 +120,7 @@ class Pandatv(Plugin):
         try:
             plflag1 = [i for i in plflag0 if i in lines][0]
         except IndexError:
-            plflag1 = plflag0[0]
+            plflag1 = plflag0[::-1][0]
 
         if sd == '1':
             streams['ehq'] = HTTPStream(self.session, SD_URL_PATTERN.format(plflag1, room_key, sign, ts, rid))
