@@ -4,6 +4,7 @@ import re
 from functools import reduce
 
 from streamlink.compat import urlparse, range
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream, RTMPStream
@@ -23,7 +24,7 @@ QUALITY_MAP = {
     "auto": "hds",
     "source": "hds"
 }
-STREAM_INFO_URL = "http://www.dailymotion.com/sequence/full/{0}"
+STREAM_INFO_URL = "https://www.dailymotion.com/sequence/full/{0}"
 USER_INFO_URL = "https://api.dailymotion.com/user/{0}"
 
 _rtmp_re = re.compile(r"""
@@ -41,7 +42,6 @@ _url_re = re.compile(r"""
         /(?P<channel_name>[A-Za-z0-9-_]+)
     )
 """, re.VERBOSE)
-username_re = re.compile(r'''data-username\s*=\s*"(.*?)"''')
 chromecast_re = re.compile(r'''stream_chromecast_url"\s*:\s*(?P<url>".*?")''')
 
 _media_inner_schema = validate.Schema([{
@@ -53,7 +53,7 @@ _media_inner_schema = validate.Schema([{
                     "name": validate.text,
                     validate.optional("param"): dict
                 }],
-                validate.filter(lambda l: l["name"] in ("video", "reporting"))
+                validate.filter(lambda l: l["name"] in ("video", "reporting", "message"))
             )
         }]
     }]
@@ -79,6 +79,15 @@ _vod_manifest_schema = validate.Schema({
         validate.optional("failover"): [validate.text]
     }]
 })
+_live_id_schema = validate.Schema(
+    {
+        "total": int,
+        "list": validate.any(
+            [],
+            [{"id": validate.text}]
+        )
+    }
+)
 
 
 class DailyMotion(Plugin):
@@ -90,7 +99,7 @@ class DailyMotion(Plugin):
         res = http.get(STREAM_INFO_URL.format(media_id), cookies=COOKIES)
         media = http.json(res, schema=_media_schema)
 
-        params = extra_params = swf_url = None
+        params = extra_params = swf_url = message = None
         for __ in media:
             for __ in __["layerList"]:
                 for __ in __.get("sequenceList", []):
@@ -101,9 +110,12 @@ class DailyMotion(Plugin):
                         elif name == "reporting":
                             extra_params = layer.get("param", {})
                             extra_params = extra_params.get("extraParams", {})
+                        elif name == "message":
+                            message = layer.get("param")
 
         if not params:
-            return
+            self.logger.error(message.get("title"))
+            return []
 
         if extra_params:
             swf_url = extra_params.get("videoSwfURL")
@@ -213,28 +225,34 @@ class DailyMotion(Plugin):
             url = json.loads(m.group("url"))
             return HLSStream.parse_variant_playlist(self.session, url)
 
-    def get_featured_video(self):
-        self.logger.debug("Channel page, attempting to play featured video")
-        page = http.get(self.url, cookies=COOKIES)
-        username_m = username_re.search(page.text)
-        username = username_m and username_m.group(1)
-        if username:
-            self.logger.debug("Found username: {0}", username)
-            res = http.get(USER_INFO_URL.format(username),
-                           params={"fields": "videostar.url"})
+    def get_live_id(self, username):
+        """Get the livestream videoid from a username.
+           https://developer.dailymotion.com/tools/apiexplorer#/user/videos/list
+        """
+        params = {
+            "flags": "live_onair"
+        }
+        api_user_videos = USER_INFO_URL.format(username) + "/videos"
+        try:
+            res = http.get(api_user_videos.format(username),
+                           params=params)
+        except Exception as e:
+            self.logger.error("invalid username")
+            raise NoStreamsError(self.url)
 
-            data = http.json(res)
-            if "videostar.url" in data and self.can_handle_url(data["videostar.url"]):
-                return data["videostar.url"]
+        data = http.json(res, schema=_live_id_schema)
+        if data["total"] > 0:
+            media_id = data["list"][0]["id"]
+            return media_id
+        return False
 
     def _get_streams(self):
         match = _url_re.match(self.url)
         media_id = match.group("media_id")
+        username = match.group("channel_name")
 
-        if not media_id and match.group("channel_name"):
-            self.url = self.get_featured_video()
-            match = _url_re.match(self.url)
-            media_id = match.group("media_id")
+        if not media_id and username:
+            media_id = self.get_live_id(username)
 
         if media_id:
             self.logger.debug("Found media ID: {0}", media_id)
