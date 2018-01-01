@@ -7,7 +7,7 @@ When viewing a stream on huomao.com, the base URL references a room_id. This
 room_id is mapped one-to-one to a stream_id which references the actual .flv
 video. Both stream_id, stream_url and stream_quality can be found in the
 HTML and JS source of the mobile_page. Since one stream can occur in many
-different qualities, we scrape all stream_url and stream_quality occurences
+different qualities, we scrape all stream_url and stream_quality occurrences
 and return each option to the user.
 """
 
@@ -68,7 +68,7 @@ class Huomao(Plugin):
         """Returns a nested list of different stream options.
 
         Each entry in the list will contain a stream_url, stream_quality_url
-        and stream_quality_name for each stream occurence that was found in
+        and stream_quality_name for each stream occurrence that was found in
         the JS.
         """
         stream_info = stream_info_pattern.findall(html)

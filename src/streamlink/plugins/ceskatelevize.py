@@ -9,7 +9,7 @@ Following channels are working:
     * CT Decko - http://decko.ceskatelevize.cz/zive/
     * CT Art - http://www.ceskatelevize.cz/art/zive/
 
-Additionaly, videos from iVysilani archive should work as well.
+Additionally, videos from iVysilani archive should work as well.
 """
 import re
 
