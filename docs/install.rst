@@ -222,10 +222,10 @@ instead.
     Installing streamlink into the environment
     (myenv)$ pip install streamlink
 
-    Using streamlink in the enviroment
+    Using streamlink in the environment
     (myenv)$ streamlink ...
 
-    Deactivating the enviroment
+    Deactivating the environment
     (myenv)$ deactivate
 
     Using streamlink without activating the environment
