@@ -103,7 +103,7 @@ def parse_media_json(json_object):
 
 
 def parse_streaming_media_json(json_object, room_from_url):
-    """Filter all availabe live streams for given json and room name.
+    """Filter all available live streams for given json and room name.
 
     API-Doku: https://github.com/voc/streaming-website#json-api
 
