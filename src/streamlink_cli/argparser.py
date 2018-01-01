@@ -147,7 +147,7 @@ parser = ArgumentParser(
     various services and pipes them into a video player of choice.
     """),
     epilog=dedent("""
-    For more in-depth documention see:
+    For more in-depth documentation see:
       https://streamlink.github.io
 
     Please report broken plugins or bugs to the issue tracker on Github:
