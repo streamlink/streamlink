@@ -96,6 +96,10 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
     !define MUI_FINISHPAGE_RUN_FUNCTION "OpenDocs"
     !define MUI_FINISHPAGE_RUN_NOTCHECKED
 
+    ; make global installation mode the default choice
+    ; see MULTIUSER_PAGE_INSTALLMODE macro below
+    !undef MULTIUSER_INSTALLMODE_DEFAULT_CURRENTUSER
+
     Function OpenDocs
         ExecShell "" "https://streamlink.github.io/cli.html"
     FunctionEnd
@@ -128,6 +132,7 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 [% block ui_pages %]
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_COMPONENTS
+!insertmacro MULTIUSER_PAGE_INSTALLMODE
 !insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
