@@ -928,16 +928,16 @@ def setup_plugin_options():
     if bbciplayer_password:
         streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
 
-    if args.ufctv_username:
-        streamlink.set_plugin_option("ufctv", "username", args.ufctv_username)
+    if args.neulion_username:
+        streamlink.set_plugin_option("neulion", "username", args.neulion_username)
 
-    if args.ufctv_username and not args.ufctv_password:
-        ufctv_password = console.askpass("Enter ufc.tv account password: ")
+    if args.neulion_username and not args.neulion_password:
+        neulion_password = console.askpass("Enter ufc.tv account password: ")
     else:
-        ufctv_password = args.ufctv_password
+        neulion_password = args.neulion_password
 
-    if ufctv_password:
-        streamlink.set_plugin_option("ufctv", "password", ufctv_password)
+    if neulion_password:
+        streamlink.set_plugin_option("neulion", "password", neulion_password)
 
     if args.zattoo_email:
         streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
