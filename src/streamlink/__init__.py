@@ -22,7 +22,6 @@ if version_info[:2] == (2, 6):
     )
 
 __title__ = "streamlink"
-__version__ = "0.12.1"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink"
 __copyright__ = "Copyright 2018 Streamlink"
@@ -84,3 +83,7 @@ from .api import streams
 from .exceptions import (StreamlinkError, PluginError, NoStreamsError,
                          NoPluginError, StreamError)
 from .session import Streamlink
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
