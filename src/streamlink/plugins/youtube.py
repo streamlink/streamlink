@@ -132,6 +132,8 @@ class YouTube(Plugin):
         249: 48,
         250: 64,
         251: 160,
+        256: 256,
+        258: 258,
     }
 
     @classmethod
