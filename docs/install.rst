@@ -1,5 +1,9 @@
 .. _install:
 
+.. |br| raw:: html
+
+  <br />
+
 Installation
 ============
 
@@ -245,30 +249,41 @@ Windows binaries
 
 .. important::
 
-    Windows XP is not supported.
+    Windows XP is not supported. |br|
     Windows Vista requires at least SP2 to be installed. 
 
-A Windows installer of the latest **stable release** can be found on the `GitHub releases page <https://github.com/streamlink/streamlink/releases/latest>`__.
+==================================== ====================================
+Release                              Notes
+==================================== ====================================
+`Stable release`_                    Download the installer from the `GitHub releases page`_.
 
-Alternatively, a Windows installer of the `latest development build <https://dl.bintray.com/streamlink/streamlink-nightly/streamlink-latest.exe>`__ for testing purposes is available,
-with a summary of the changes in the `release notes <https://bintray.com/streamlink/streamlink-nightly/streamlink/latest#release>`__. This development build is updated once per day,
-and a list of `previous builds <https://dl.bintray.com/streamlink/streamlink-nightly/>`__ is provided.
+`Development build`_                 For testing purposes only! Updated once per day. |br|
+                                     Download the installer from `Bintray`_. |br|
+                                     See the `list of recent changes`_ since the last stable release.
+==================================== ====================================
 
-This is an installer which contains:
+.. _Stable release:
+.. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
+.. _Development build:
+.. _Bintray: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#files
+.. _list of recent changes: https://bintray.com/streamlink/streamlink-nightly/streamlink/latest#release
 
-- A compiled version of Streamlink that does not require an existing Python
-  installation
+These installers contain:
+
+- A compiled version of Streamlink that **does not require an existing Python
+  installation**
 - `RTMPDump`_ for viewing RTMP streams
 - `ffmpeg`_ for muxing streams
 
-and performs the following tasks:
+and perform the following tasks:
 
-- Adds Streamlink to your ``$PATH`` (making it possible to use
-  :command:`streamlink` directly from the command prompt without specifying
-  its directory)
+- Add Streamlink to the system's list of installed applications. |br|
+  An uninstaller will automatically be created during installation.
+- Add Streamlink's installation directory to the system's ``PATH`` environment variable. |br|
+  This allows the user to run the ``streamlink`` command globally
+  from the command prompt or powershell without specifying its directory.
 
-To build the installer, you need to have ``NSIS`` and ``pynsist`` installed on your
-system.
+To build the installer on your own, ``NSIS`` and ``pynsist`` need to be installed.
 
 
 Windows portable version
