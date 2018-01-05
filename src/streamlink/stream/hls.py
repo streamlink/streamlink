@@ -17,6 +17,17 @@ Sequence = namedtuple("Sequence", "num segment")
 def num_to_iv(n):
     return struct.pack(">8xq", n)
 
+def pkcs7_decode(paddedData, keySize = 16):
+        '''
+        Remove the PKCS#7 padding
+        '''
+        # Use ord + [-1:] to support both python 2 and 3
+        val = ord(paddedData[-1:])
+        if val > keySize:
+            raise StreamError("Input is not padded or padding is corrupt, got padding size of {0}".format(val))
+
+        return paddedData[:-val]
+
 
 class HLSStreamWriter(SegmentedStreamWriter):
     def __init__(self, reader, *args, **kwargs):
@@ -94,16 +105,17 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            for chunk in res.iter_content(chunk_size):
-                # If the input data is not a multiple of 16, cut off any garbage
-                garbage_len = len(chunk) % 16
-                if garbage_len:
-                    self.logger.debug("Cutting off {0} bytes of garbage "
-                                      "before decrypting", garbage_len)
-                    decrypted_chunk = decryptor.decrypt(chunk[:-garbage_len])
-                else:
-                    decrypted_chunk = decryptor.decrypt(chunk)
-                self.reader.buffer.write(decrypted_chunk)
+            data = res.content
+            # If the input data is not a multiple of 16, cut off any garbage
+            garbage_len = len(data) % 16
+            if garbage_len:
+                self.logger.debug("Cutting off {0} bytes of garbage "
+                                  "before decrypting", garbage_len)
+                decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
+            else:
+                decrypted_chunk = decryptor.decrypt(data)
+
+            self.reader.buffer.write(pkcs7_decode(decrypted_chunk))
         else:
             for chunk in res.iter_content(chunk_size):
                 self.reader.buffer.write(chunk)
