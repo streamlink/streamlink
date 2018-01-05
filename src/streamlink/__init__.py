@@ -21,6 +21,10 @@ if version_info[:2] == (2, 6):
         DeprecationWarning
     )
 
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
 __title__ = "streamlink"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink"
@@ -84,6 +88,3 @@ from .exceptions import (StreamlinkError, PluginError, NoStreamsError,
                          NoPluginError, StreamError)
 from .session import Streamlink
 
-from ._version import get_versions
-__version__ = get_versions()['version']
-del get_versions
