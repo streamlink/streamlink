@@ -2,15 +2,17 @@ from __future__ import print_function
 
 import base64
 import re
-from functools import partial
 from hashlib import sha1
+from urlparse import urlparse, parse_qs
+
+import requests
 
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_xml, parse_json
+from streamlink.utils import parse_json
 
 
 class BBCiPlayer(Plugin):
@@ -28,20 +30,9 @@ class BBCiPlayer(Plugin):
     api_url = ("http://open.live.bbc.co.uk/mediaselector/6/select/"
                "version/2.0/mediaset/{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/")
     platforms = ("pc", "iptv-all")
-    config_url = "http://www.bbc.co.uk/idcta/config"
+    session_url = "https://session.bbc.com/session"
     auth_url = "https://account.bbc.com/signin"
 
-    config_schema = validate.Schema(
-        validate.transform(parse_json),
-        {
-            "signin_url": validate.url(),
-            "identity": {
-                "cookieAgeDays": int,
-                "accessTokenCookieName": validate.text,
-                "idSignedInCookieName": validate.text
-            }
-         }
-    )
     mediator_schema = validate.Schema(
         {
             "episode": {
@@ -78,14 +69,14 @@ class BBCiPlayer(Plugin):
     def find_vpid(self, url, res=None):
         self.logger.debug("Looking for vpid on {0}", url)
         # Use pre-fetched page if available
-        res = res or http.get(url)
+        res = res or self.http_session.get(url)
         m = self.mediator_re.search(res.text)
         vpid = m and parse_json(m.group(1), schema=self.mediator_schema)
         return vpid
 
     def find_tvip(self, url):
         self.logger.debug("Looking for tvip on {0}", url)
-        res = http.get(url)
+        res = self.http_session.get(url)
         m = self.tvip_re.search(res.text)
         return m and m.group(1)
 
@@ -93,7 +84,7 @@ class BBCiPlayer(Plugin):
         for platform in self.platforms:
             url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
             self.logger.debug("Info API request: {0}", url)
-            stream_urls = http.get(url, schema=self.mediaselector_schema)
+            stream_urls = http.get(url, schema=self.mediaselector_schema, session=self.http_session)
             for media in stream_urls:
                 for connection in media["connection"]:
                     if connection.get("transferFormat") == "hds":
@@ -105,28 +96,54 @@ class BBCiPlayer(Plugin):
 
     def login(self, ptrt_url, context="tvandiplayer"):
         # get the site config, to find the signin url
-        config = http.get(self.config_url, params=dict(ptrt=ptrt_url), schema=self.config_schema)
+        nonce_res = self.http_session.get(
+            self.session_url,
+            params=dict(ptrt=ptrt_url)
+        )
 
-        res = http.get(config["signin_url"],
-                       params=dict(userOrigin=context, context=context),
-                       headers={"Referer": self.url})
+        # Extract the redirect URL from the last call
+        last_redirect_url = urlparse(nonce_res.history[-1].request.url)
+        last_redirect_query = parse_qs(last_redirect_url.query)
+        # Extract the nonce from the query string in the redirect URL
+        final_url = urlparse(last_redirect_query['goto'][0])
+        goto_url = parse_qs(final_url.query)
+        goto_url_query = parse_json(goto_url['state'][0])
+
+        # Store the nonce we can use for future queries
+        http_nonce = goto_url_query['nonce']
+
+        res = self.http_session.post(
+            self.auth_url,
+            params=dict(
+                ptrt=ptrt_url,
+                nonce=http_nonce
+            ),
+            data=dict(
+                jsEnabled=True,
+                username=self.get_option("username"),
+                password=self.get_option('password'),
+                attempts=0
+            ),
+            headers={"Referer": self.url})
         m = self.account_locals_re.search(res.text)
-        if m:
-            auth_data = parse_json(m.group(1))
-            res = http.post(self.auth_url,
-                            params=dict(context=auth_data["userOrigin"],
-                                        ptrt=auth_data["ptrt"]["value"],
-                                        userOrigin=auth_data["userOrigin"],
-                                        nonce=auth_data["nonce"]),
-                            data=dict(jsEnabled="false", attempts=0, username=self.get_option("username"),
-                                      password=self.get_option("password")))
-            # redirects to ptrt_url on successful login
-            if res.url == ptrt_url:
-                return res
-        else:
+        no_history = len(res.history) == 0
+        bad_goto_url = True
+        if not no_history:
+            goto_url = str(res.history[-1].url)
+            # If the user did not provide a 'www.' URL, we have to remove it so string comparison works.
+            prefix = "http://www."
+            if goto_url.startswith(prefix) and not ptrt_url.startswith(prefix):
+                goto_url = "http://" + goto_url[len(prefix):]
+            bad_goto_url = goto_url != ptrt_url
+        if no_history or bad_goto_url:
             self.logger.error("Could not authenticate, could not find the authentication nonce")
+            return None
+
+        # redirects to ptrt_url on successful login
+        return self.http_session
 
     def _get_streams(self):
+        self.http_session = requests.Session()
         if not self.get_option("username"):
             self.logger.error("BBC iPlayer requires an account you must login using "
                               "--bbciplayer-username and --bbciplayer-password")
