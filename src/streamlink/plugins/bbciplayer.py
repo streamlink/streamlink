@@ -1,12 +1,16 @@
 from __future__ import print_function
 
+from future.standard_library import install_aliases
+
+install_aliases()
+
+from urllib.parse import urlparse
+
 import base64
 import re
 from hashlib import sha1
-from urlparse import urlparse, parse_qs
 
 import requests
-
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate

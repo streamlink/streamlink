@@ -45,6 +45,7 @@ else:
     deps.append("iso3166")
 
 deps.append("websocket-client")
+deps.append("future")
 
 # Support for SOCKS proxies
 deps.append("PySocks!=1.5.7,>=1.5.6")  # requests[socks] uses this version
