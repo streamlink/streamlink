@@ -123,14 +123,13 @@ class BBCiPlayer(Plugin):
                         for s in HLSStream.parse_variant_playlist(self.session, connection["href"]).items():
                             yield s
 
-    def login(self, ptrt_url, context="tvandiplayer"):
-        # get the site config, to find the signin url
-        nonce_res = http.get(
+    def login(self, ptrt_url):
+        session_res = http.get(
             self.session_url,
             params=dict(ptrt=ptrt_url)
         )
 
-        http_nonce = self._extract_nonce(nonce_res)
+        http_nonce = self._extract_nonce(session_res)
 
         res = http.post(
             self.auth_url,
