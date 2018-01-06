@@ -4,8 +4,8 @@ import unittest
 
 from requests import Response, Request
 
-from streamlink.plugins.bbciplayer import BBCiPlayer
 from streamlink.compat import urlencode
+from streamlink.plugins.bbciplayer import BBCiPlayer
 
 
 class TestPluginBBCiPlayer(unittest.TestCase):
