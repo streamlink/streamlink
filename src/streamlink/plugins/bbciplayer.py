@@ -88,6 +88,16 @@ class BBCiPlayer(Plugin):
         return goto_url_query['nonce']
 
     def _validate_login(self, result_history, ptrt_url):
+        """
+        Check that the last redirect in the auth flow, matches our provided snapback URL
+
+        :param result_history:
+        :param ptrt_url: The snapback URL to redirect to after successful authentication
+        :type result_history: list[requests.Response]
+        :type ptrt_url: string
+        :return: Whether authentication was successful
+        :rtype: bool
+        """
         no_history = len(result_history) == 0
         bad_goto_url = True
         if not no_history:
@@ -146,7 +156,7 @@ class BBCiPlayer(Plugin):
         """
         Create session using BBC ID. See https://www.bbc.co.uk/usingthebbc/account/
 
-        :param ptrt_url: The snapback URL to return to after successful authentication
+        :param ptrt_url: The snapback URL to redirect to after successful authentication
         :type ptrt_url: string
         :return: Whether authentication was successful
         :rtype: bool
