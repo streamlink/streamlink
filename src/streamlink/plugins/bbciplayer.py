@@ -1,11 +1,5 @@
 from __future__ import print_function
 
-from future.standard_library import install_aliases
-
-install_aliases()
-
-from urllib.parse import urlparse
-
 import base64
 import re
 from hashlib import sha1
@@ -17,6 +11,7 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
+from streamlink.compat import parse_qsl, urlparse
 
 
 class BBCiPlayer(Plugin):
