@@ -4,14 +4,13 @@ import base64
 import re
 from hashlib import sha1
 
-import requests
+from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
-from streamlink.compat import parse_qsl, urlparse
 
 
 class BBCiPlayer(Plugin):
@@ -46,8 +45,8 @@ class BBCiPlayer(Plugin):
             {"connection": [{
                 validate.optional("href"): validate.url(),
                 validate.optional("transferFormat"): validate.text
-                }],
-             "kind": validate.text}
+            }],
+                "kind": validate.text}
         ]},
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video")
