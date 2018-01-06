@@ -65,17 +65,47 @@ class BBCiPlayer(Plugin):
     def _hash_vpid(cls, vpid):
         return sha1(cls.hash + str(vpid).encode("utf8")).hexdigest()
 
+    @classmethod
+    def _extract_nonce(cls, http_result):
+        # Extract the redirect URL from the last call
+        last_redirect_url = urlparse(http_result.history[-1].request.url)
+        last_redirect_query = dict(parse_qsl(last_redirect_url.query))
+        # Extract the nonce from the query string in the redirect URL
+        final_url = urlparse(last_redirect_query['goto'])
+        goto_url = dict(parse_qsl(final_url.query))
+        goto_url_query = parse_json(goto_url['state'])
+
+        # Return the nonce we can use for future queries
+        return goto_url_query['nonce']
+
+    def _validate_login(self, result_history, ptrt_url):
+        no_history = len(result_history) == 0
+        bad_goto_url = True
+        if not no_history:
+            goto_url = str(result_history[-1].url)
+            # If the user did not provide a 'www.' URL, we have to remove it so string comparison works.
+            prefix = "http://www."
+            if goto_url.startswith(prefix) and not ptrt_url.startswith(prefix):
+                goto_url = "http://" + goto_url[len(prefix):]
+            bad_goto_url = goto_url != ptrt_url
+        if no_history or bad_goto_url:
+            self.logger.error("Could not authenticate, could not find the authentication nonce")
+            return False
+
+        # redirects to ptrt_url on successful login
+        return True
+
     def find_vpid(self, url, res=None):
         self.logger.debug("Looking for vpid on {0}", url)
         # Use pre-fetched page if available
-        res = res or self.http_session.get(url)
+        res = res or http.get(url)
         m = self.mediator_re.search(res.text)
         vpid = m and parse_json(m.group(1), schema=self.mediator_schema)
         return vpid
 
     def find_tvip(self, url):
         self.logger.debug("Looking for tvip on {0}", url)
-        res = self.http_session.get(url)
+        res = http.get(url)
         m = self.tvip_re.search(res.text)
         return m and m.group(1)
 
@@ -83,7 +113,7 @@ class BBCiPlayer(Plugin):
         for platform in self.platforms:
             url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
             self.logger.debug("Info API request: {0}", url)
-            stream_urls = http.get(url, schema=self.mediaselector_schema, session=self.http_session)
+            stream_urls = http.get(url, schema=self.mediaselector_schema)
             for media in stream_urls:
                 for connection in media["connection"]:
                     if connection.get("transferFormat") == "hds":
@@ -95,23 +125,14 @@ class BBCiPlayer(Plugin):
 
     def login(self, ptrt_url, context="tvandiplayer"):
         # get the site config, to find the signin url
-        nonce_res = self.http_session.get(
+        nonce_res = http.get(
             self.session_url,
             params=dict(ptrt=ptrt_url)
         )
 
-        # Extract the redirect URL from the last call
-        last_redirect_url = urlparse(nonce_res.history[-1].request.url)
-        last_redirect_query = parse_qs(last_redirect_url.query)
-        # Extract the nonce from the query string in the redirect URL
-        final_url = urlparse(last_redirect_query['goto'][0])
-        goto_url = parse_qs(final_url.query)
-        goto_url_query = parse_json(goto_url['state'][0])
+        http_nonce = self._extract_nonce(nonce_res)
 
-        # Store the nonce we can use for future queries
-        http_nonce = goto_url_query['nonce']
-
-        res = self.http_session.post(
+        res = http.post(
             self.auth_url,
             params=dict(
                 ptrt=ptrt_url,
@@ -124,33 +145,18 @@ class BBCiPlayer(Plugin):
                 attempts=0
             ),
             headers={"Referer": self.url})
-        m = self.account_locals_re.search(res.text)
-        no_history = len(res.history) == 0
-        bad_goto_url = True
-        if not no_history:
-            goto_url = str(res.history[-1].url)
-            # If the user did not provide a 'www.' URL, we have to remove it so string comparison works.
-            prefix = "http://www."
-            if goto_url.startswith(prefix) and not ptrt_url.startswith(prefix):
-                goto_url = "http://" + goto_url[len(prefix):]
-            bad_goto_url = goto_url != ptrt_url
-        if no_history or bad_goto_url:
-            self.logger.error("Could not authenticate, could not find the authentication nonce")
-            return None
 
-        # redirects to ptrt_url on successful login
-        return self.http_session
+        return self._validate_login(res.history, ptrt_url)
 
     def _get_streams(self):
-        self.http_session = requests.Session()
         if not self.get_option("username"):
             self.logger.error("BBC iPlayer requires an account you must login using "
                               "--bbciplayer-username and --bbciplayer-password")
             return
         self.logger.info("A TV License is required to watch BBC iPlayer streams, see the BBC website for more "
                          "information: https://www.bbc.co.uk/iplayer/help/tvlicence")
-        page_res = self.login(self.url)
-        if not page_res:
+        auth_successful = self.login(self.url)
+        if not auth_successful:
             self.logger.error("Could not authenticate, check your username and password")
             return
 
@@ -160,7 +166,7 @@ class BBCiPlayer(Plugin):
 
         if episode_id:
             self.logger.debug("Loading streams for episode: {0}", episode_id)
-            vpid = self.find_vpid(self.url, res=page_res)
+            vpid = self.find_vpid(self.url)
             if vpid:
                 self.logger.debug("Found VPID: {0}", vpid)
                 for s in self.mediaselector(vpid):
@@ -174,5 +180,6 @@ class BBCiPlayer(Plugin):
                 self.logger.debug("Found TVIP: {0}", tvip)
                 for s in self.mediaselector(tvip):
                     yield s
+
 
 __plugin__ = BBCiPlayer
