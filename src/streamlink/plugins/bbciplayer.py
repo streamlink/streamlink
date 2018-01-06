@@ -170,8 +170,7 @@ class BBCiPlayer(Plugin):
             return
         self.logger.info("A TV License is required to watch BBC iPlayer streams, see the BBC website for more "
                          "information: https://www.bbc.co.uk/iplayer/help/tvlicence")
-        auth_successful = self.login(self.url)
-        if not auth_successful:
+        if not self.login(self.url):
             self.logger.error("Could not authenticate, check your username and password")
             return
 
