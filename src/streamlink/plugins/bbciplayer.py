@@ -66,6 +66,16 @@ class BBCiPlayer(Plugin):
 
     @classmethod
     def _extract_nonce(cls, http_result):
+        """
+        Given an HTTP response from the sessino endpoint, extract the nonce, so we can "sign" requests with it.
+        We don't really sign the requests in the traditional sense of a nonce, we just incude them in the auth requests.
+
+        :param http_result: HTTP response from the bbc session endpoint.
+        :type http_result: requests.Response
+        :return: nonce to "sign" url requests with
+        :rtype: string
+        """
+
         # Extract the redirect URL from the last call
         last_redirect_url = urlparse(http_result.history[-1].request.url)
         last_redirect_query = dict(parse_qsl(last_redirect_url.query))
@@ -95,6 +105,16 @@ class BBCiPlayer(Plugin):
         return True
 
     def find_vpid(self, url, res=None):
+        """
+        Find the Video Packet ID in the HTML for the provided URL
+
+        :param url: URL to download, if res is not provided.
+        :param res: Provide a cached version of the HTTP response to search
+        :type url: string
+        :type res: requests.Response
+        :return: Video Packet ID for a Programme in iPlayer
+        :rtype: string
+        """
         self.logger.debug("Looking for vpid on {0}", url)
         # Use pre-fetched page if available
         res = res or http.get(url)
@@ -123,6 +143,14 @@ class BBCiPlayer(Plugin):
                             yield s
 
     def login(self, ptrt_url):
+        """
+        Create session using BBC ID. See https://www.bbc.co.uk/usingthebbc/account/
+
+        :param ptrt_url: The snapback URL to return to after successful authentication
+        :type ptrt_url: string
+        :return: Whether authentication was successful
+        :rtype: bool
+        """
         session_res = http.get(
             self.session_url,
             params=dict(ptrt=ptrt_url)
