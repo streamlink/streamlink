@@ -27,7 +27,6 @@ class BBCiPlayer(Plugin):
     mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*({.*?})\);', re.DOTALL)
     tvip_re = re.compile(r'event_master_brand=(\w+?)&')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
-    www_sub_domain_re = re.compile(r'(?P<prefix>https?)://(?P<has_www>www\.)?')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = ("http://open.live.bbc.co.uk/mediaselector/6/select/"
