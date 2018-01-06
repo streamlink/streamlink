@@ -45,36 +45,4 @@ class TestPluginBBCiPlayer(unittest.TestCase):
 
         self.assertEqual(BBCiPlayer._extract_nonce(mock_response), mock_nonce)
 
-    def test_validate_login_success(self):
-        plugin = BBCiPlayer("")
-        plugin.logger = logging.getLogger('mock-logger')
 
-        result_history = [
-            Response(),
-        ]
-        response = Response()
-        response.history = result_history
-
-        response.url = "http://www.example.com/equal"
-        self.assertTrue(plugin._validate_login(response, "http://example.com/equal"))
-
-        response.url = "https://www.example.com/equal"
-        self.assertTrue(plugin._validate_login(response, "http://example.com/equal"))
-
-        response.url = "http://www.example.com/equal"
-        self.assertTrue(plugin._validate_login(response, "https://example.com/equal"))
-
-        response.url = "http://example.com/equal"
-        self.assertTrue(plugin._validate_login(response, "http://example.com/equal"))
-
-        response.history = []
-        self.assertFalse(plugin._validate_login(response, "http://example.com/irrelevant"))
-
-        response.url = "http://example.com/not-equal"
-        self.assertFalse(plugin._validate_login(response, "http://example.com/unequal"))
-
-        response.url = "https://example.com/not-equal"
-        self.assertFalse(plugin._validate_login(response, "http://example.com/unequal"))
-
-        response.url = "http://example.com/not-equal"
-        self.assertFalse(plugin._validate_login(response, "https://example.com/unequal"))
