@@ -93,43 +93,6 @@ class BBCiPlayer(Plugin):
         # Return the nonce we can use for future queries
         return goto_url_query['nonce']
 
-    def _validate_login(self, result, ptrt_url):
-        """
-        Check that the last redirect in the auth flow, matches our provided snapback URL
-
-        :param result: HTTP response from the BBC ID sign-in endpoint
-        :param ptrt_url: The snapback URL to redirect to after successful authentication
-        :type result: requests.Response
-        :type ptrt_url: string
-        :return: Whether authentication was successful
-        :rtype: bool
-        """
-        no_history = len(result.history) == 0
-        bad_goto_url = True
-        if not no_history:
-            goto_url = str(result.url)
-            # If the user did not provide a 'www.' URL, we have to remove it so string comparison works.
-
-            goto = self.www_sub_domain_re.match(goto_url).groupdict()
-            ptrt = self.www_sub_domain_re.match(ptrt_url).groupdict()
-
-            if goto['has_www'] != ptrt['has_www']:
-                # It's not a typo to use "goto" as the replacement in both.
-                # The intention here is to check whether the ptrt_url will result in the same
-                # resource being returned to the user, so for the purposes of validation,
-                # we can ignore both the protocol, and any www subdomain.
-                goto_url = self.www_sub_domain_re.sub(goto['prefix'] + "://", goto_url)
-                ptrt_url = self.www_sub_domain_re.sub(goto['prefix'] + '://', ptrt_url)
-
-            bad_goto_url = goto_url != ptrt_url
-
-        if no_history or bad_goto_url:
-            self.logger.error("Could not authenticate, could not find the authentication nonce")
-            return False
-
-        # redirects to ptrt_url on successful login
-        return True
-
     def find_vpid(self, url, res=None):
         """
         Find the Video Packet ID in the HTML for the provided URL
@@ -198,7 +161,7 @@ class BBCiPlayer(Plugin):
             ),
             headers={"Referer": self.url})
 
-        return self._validate_login(res, ptrt_url)
+        return len(res.history) != 0
 
     def _get_streams(self):
         if not self.get_option("username"):
