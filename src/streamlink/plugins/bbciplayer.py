@@ -14,15 +14,20 @@ from streamlink.utils import parse_json
 
 
 class BBCiPlayer(Plugin):
+    """
+    Allows streaming of live channels from bbc.co.uk/iplayer/live/* and of iPlayer programmes from
+    bbc.co.uk/iplayer/episode/*
+    """
     url_re = re.compile(r"""https?://(?:www\.)?bbc.co.uk/iplayer/
         (
             episode/(?P<episode_id>\w+)|
             live/(?P<channel_name>\w+)
         )
     """, re.VERBOSE)
-    mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*(\{.*?})\);', re.DOTALL)
+    mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*({.*?})\);', re.DOTALL)
     tvip_re = re.compile(r'event_master_brand=(\w+?)&')
-    account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*(\{.*?});')
+    account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
+    www_sub_domain_re = re.compile(r'(?P<prefix>https?)://(?P<has_www>www\.)?')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = ("http://open.live.bbc.co.uk/mediaselector/6/select/"
@@ -58,6 +63,7 @@ class BBCiPlayer(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
+        """ Confirm plugin can handle URL """
         return cls.url_re.match(url) is not None
 
     @classmethod
@@ -87,26 +93,36 @@ class BBCiPlayer(Plugin):
         # Return the nonce we can use for future queries
         return goto_url_query['nonce']
 
-    def _validate_login(self, result_history, ptrt_url):
+    def _validate_login(self, result, ptrt_url):
         """
         Check that the last redirect in the auth flow, matches our provided snapback URL
 
-        :param result_history:
+        :param result: HTTP response from the BBC ID sign-in endpoint
         :param ptrt_url: The snapback URL to redirect to after successful authentication
-        :type result_history: list[requests.Response]
+        :type result: requests.Response
         :type ptrt_url: string
         :return: Whether authentication was successful
         :rtype: bool
         """
-        no_history = len(result_history) == 0
+        no_history = len(result.history) == 0
         bad_goto_url = True
         if not no_history:
-            goto_url = str(result_history[-1].url)
+            goto_url = str(result.url)
             # If the user did not provide a 'www.' URL, we have to remove it so string comparison works.
-            prefix = "http://www."
-            if goto_url.startswith(prefix) and not ptrt_url.startswith(prefix):
-                goto_url = "http://" + goto_url[len(prefix):]
+
+            goto = self.www_sub_domain_re.match(goto_url).groupdict()
+            ptrt = self.www_sub_domain_re.match(ptrt_url).groupdict()
+
+            if goto['has_www'] != ptrt['has_www']:
+                # It's not a typo to use "goto" as the replacement in both.
+                # The intention here is to check whether the ptrt_url will result in the same
+                # resource being returned to the user, so for the purposes of validation,
+                # we can ignore both the protocol, and any www subdomain.
+                goto_url = self.www_sub_domain_re.sub(goto['prefix'] + "://", goto_url)
+                ptrt_url = self.www_sub_domain_re.sub(goto['prefix'] + '://', ptrt_url)
+
             bad_goto_url = goto_url != ptrt_url
+
         if no_history or bad_goto_url:
             self.logger.error("Could not authenticate, could not find the authentication nonce")
             return False
@@ -182,7 +198,7 @@ class BBCiPlayer(Plugin):
             ),
             headers={"Referer": self.url})
 
-        return self._validate_login(res.history, ptrt_url)
+        return self._validate_login(res, ptrt_url)
 
     def _get_streams(self):
         if not self.get_option("username"):

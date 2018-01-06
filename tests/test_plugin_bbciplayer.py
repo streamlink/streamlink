@@ -51,15 +51,30 @@ class TestPluginBBCiPlayer(unittest.TestCase):
 
         result_history = [
             Response(),
-            Response(),
-            Response()
         ]
+        response = Response()
+        response.history = result_history
 
-        result_history[2].url = "http://www.example.com/equal"
-        self.assertTrue(plugin._validate_login(result_history, "http://example.com/equal"))
+        response.url = "http://www.example.com/equal"
+        self.assertTrue(plugin._validate_login(response, "http://example.com/equal"))
 
-        result_history[2].url = "http://example.com/equal"
-        self.assertTrue(plugin._validate_login(result_history, "http://example.com/equal"))
+        response.url = "https://www.example.com/equal"
+        self.assertTrue(plugin._validate_login(response, "http://example.com/equal"))
 
-        result_history[2].url = "http://example.com/not-equal"
-        self.assertFalse(plugin._validate_login(result_history, "http://example.com/equal"))
+        response.url = "http://www.example.com/equal"
+        self.assertTrue(plugin._validate_login(response, "https://example.com/equal"))
+
+        response.url = "http://example.com/equal"
+        self.assertTrue(plugin._validate_login(response, "http://example.com/equal"))
+
+        response.history = []
+        self.assertFalse(plugin._validate_login(response, "http://example.com/irrelevant"))
+
+        response.url = "http://example.com/not-equal"
+        self.assertFalse(plugin._validate_login(response, "http://example.com/unequal"))
+
+        response.url = "https://example.com/not-equal"
+        self.assertFalse(plugin._validate_login(response, "http://example.com/unequal"))
+
+        response.url = "http://example.com/not-equal"
+        self.assertFalse(plugin._validate_login(response, "https://example.com/unequal"))
