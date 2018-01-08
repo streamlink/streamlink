@@ -47,6 +47,7 @@ class ORFTVThek(Plugin):
             except KeyError:
                 continue
             stream = HLSStream.parse_variant_playlist(self.session, url)
+            self.session.new_http_session()
             streams.update(stream)
 
         return streams
