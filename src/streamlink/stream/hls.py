@@ -136,15 +136,17 @@ class HLSStreamWorker(SegmentedStreamWorker):
             # live playlist, force offset durations back to None
             self.duration_offset_start = -self.duration_offset_start
 
-        self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
-        if self.duration_limit and self.playlist_end:
-            self.playlist_end = self.duration_to_sequence(self.duration_offset_start + self.duration_limit,
-                                                          self.playlist_sequences)
-        self.logger.debug("First Sequence: {0}; Last Sequence: {1}",
-                          self.playlist_sequences[0].num, self.playlist_sequences[-1].num)
-        self.logger.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
-                          self.duration_offset_start, self.duration_limit, self.playlist_sequence,
-                          self.playlist_end)
+        if self.duration_offset_start != 0:
+            self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
+            if self.duration_limit and self.playlist_end:
+                self.playlist_end = self.duration_to_sequence(self.duration_offset_start + self.duration_limit,
+                                                              self.playlist_sequences)
+        if self.playlist_sequences:
+            self.logger.debug("First Sequence: {0}; Last Sequence: {1}",
+                              self.playlist_sequences[0].num, self.playlist_sequences[-1].num)
+            self.logger.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
+                              self.duration_offset_start, self.duration_limit, self.playlist_sequence,
+                              self.playlist_end)
 
     def reload_playlist(self):
         if self.closed:
