@@ -5,13 +5,12 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HTTPStream, HLSStream
-from streamlink.compat import parse_qsl
 from streamlink.stream.ffmpegmux import MuxedStream
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
 API_SEARCH_URL = API_BASE + "/search"
-API_VIDEO_INFO = "http://youtube.com/get_video_info"
+API_VIDEO_INFO = "https://youtube.com/get_video_info"
 HLS_HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -207,11 +206,16 @@ class YouTube(Plugin):
         if not video_id:
             return
 
-        params = {
-            "video_id": video_id,
-            "el": "player_embedded"
-        }
-        res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
+        for el in ("detailpage", "embedded"):
+            params = {
+                "video_id": video_id,
+                "el": el
+            }
+            res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
+            if "status=fail" in res.text:
+                continue
+            break
+
         return parse_query(res.text, name="config", schema=_config_schema)
 
     def _get_streams(self):
