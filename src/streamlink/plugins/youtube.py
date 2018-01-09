@@ -212,7 +212,12 @@ class YouTube(Plugin):
                 "el": el
             }
             res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
-            if "status=fail" in res.text:
+            info_parsed = parse_query(res.text)
+            if info_parsed.get("status") == "fail":
+                self.logger.debug("get_video_info - {0}: {1}".format(
+                    el,
+                    info_parsed.get("reason"))
+                )
                 continue
             break
 
