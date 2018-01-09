@@ -454,9 +454,6 @@ class Streamlink(object):
         if file:
             file.close()
 
-    def new_http_session(self):
-        self.http.close()
-
     @property
     def version(self):
         return __version__
