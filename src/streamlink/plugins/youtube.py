@@ -77,6 +77,7 @@ _config_schema = validate.Schema(
         ),
         validate.optional("hlsvp"): validate.text,
         validate.optional("live_playback"): validate.transform(bool),
+        validate.optional("reason"): validate.text,
         "status": validate.text
     }
 )
@@ -212,7 +213,7 @@ class YouTube(Plugin):
                 "el": el
             }
             res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
-            info_parsed = parse_query(res.text)
+            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 self.logger.debug("get_video_info - {0}: {1}".format(
                     el,
@@ -221,7 +222,7 @@ class YouTube(Plugin):
                 continue
             break
 
-        return parse_query(res.text, name="config", schema=_config_schema)
+        return info_parsed
 
     def _get_streams(self):
         info = self._get_stream_info(self.url)
