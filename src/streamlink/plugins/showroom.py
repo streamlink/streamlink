@@ -153,4 +153,5 @@ class Showroom(Plugin):
                 for s in HLSStream.parse_variant_playlist(self.session, stream_info["url"]).items():
                     yield s
 
+
 __plugin__ = Showroom

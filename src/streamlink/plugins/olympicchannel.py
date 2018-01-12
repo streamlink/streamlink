@@ -60,4 +60,5 @@ class OlympicChannel(Plugin):
             path = re.search(r"/playback/.*/$", self.url).group(0)
             return self._get_vod_streams()
 
+
 __plugin__ = OlympicChannel

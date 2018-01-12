@@ -23,4 +23,5 @@ class Teamliquid(Plugin):
             self.logger.info("Attempting to play streams from {0}", stream_url)
             return self.session.streams(stream_url)
 
+
 __plugin__ = Teamliquid

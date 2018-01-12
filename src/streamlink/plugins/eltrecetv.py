@@ -38,4 +38,5 @@ class ElTreceTV(Plugin):
             except:
                 self.logger.error("The requested VOD content is unavailable.")
 
+
 __plugin__ = ElTreceTV

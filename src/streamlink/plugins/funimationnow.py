@@ -166,4 +166,5 @@ class FunimationNow(Plugin):
         else:
             self.logger.error("Could not find experience ID?!")
 
+
 __plugin__ = FunimationNow

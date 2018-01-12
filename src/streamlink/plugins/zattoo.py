@@ -235,4 +235,5 @@ class Zattoo(Plugin):
 
         return self._watch()
 
+
 __plugin__ = Zattoo

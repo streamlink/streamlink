@@ -161,4 +161,5 @@ class StreamProcess(Stream):
 
         return cmd
 
+
 __all__ = ["StreamProcess"]

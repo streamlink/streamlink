@@ -85,4 +85,5 @@ class Streann(Plugin):
                                                                            token=self.get_token(**config),
                                                                            **config))
 
+
 __plugin__ = Streann

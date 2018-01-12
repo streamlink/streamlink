@@ -26,4 +26,5 @@ class TVRPlus(Plugin):
         if stream_url:
             return HLSStream.parse_variant_playlist(self.session, stream_url)
 
+
 __plugin__ = TVRPlus

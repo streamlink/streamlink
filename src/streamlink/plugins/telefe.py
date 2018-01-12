@@ -45,4 +45,5 @@ class Telefe(Plugin):
         if video_url_found_http:
             yield "http", HTTPStream(self.session, video_url_found_http)
 
+
 __plugin__ = Telefe

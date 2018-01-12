@@ -75,4 +75,5 @@ class SeeTV(Plugin):
             else:
                 self.logger.error(data["text"])
 
+
 __plugin__ = SeeTV

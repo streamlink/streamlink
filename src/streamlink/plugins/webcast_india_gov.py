@@ -26,4 +26,5 @@ class WebcastIndiaGov(Plugin):
         except:
             self.logger.error("The requested channel is unavailable.")
 
+
 __plugin__ = WebcastIndiaGov

@@ -89,4 +89,5 @@ class UFCTV(Plugin):
         else:
             self.logger.error("Could not find any video info on the page")
 
+
 __plugin__ = UFCTV

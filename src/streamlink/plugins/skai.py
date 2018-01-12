@@ -28,4 +28,5 @@ class Skai(Plugin):
         if channel_id:
             return self.session.streams(YOUTUBE_URL.format(channel_id))
 
+
 __plugin__ = Skai

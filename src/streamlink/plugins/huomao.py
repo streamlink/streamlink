@@ -100,4 +100,5 @@ class Huomao(Plugin):
 
         return streams
 
+
 __plugin__ = Huomao

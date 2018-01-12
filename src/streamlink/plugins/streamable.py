@@ -37,4 +37,5 @@ class Streamable(Plugin):
             res = min(info["width"], info["height"])
             yield "{0}p".format(res), HTTPStream(self.session, stream_url)
 
+
 __plugin__ = Streamable

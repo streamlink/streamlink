@@ -61,4 +61,5 @@ class Canlitv(Plugin):
             except IOError as err:
                 self.logger.error("Failed to extract streams: {0}", err)
 
+
 __plugin__ = Canlitv

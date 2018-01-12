@@ -22,4 +22,5 @@ class rtlxl(Plugin):
 
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
 
+
 __plugin__ = rtlxl
