@@ -14,9 +14,9 @@ _youtube_url_schema = validate.Schema(
                 validate.all(
                     validate.get(1),
                     validate.text
-                    )
                 )
             )
+        )
         )
 class Skai(Plugin):
     @classmethod

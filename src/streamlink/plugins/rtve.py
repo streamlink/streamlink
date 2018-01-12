@@ -80,7 +80,7 @@ class Rtve(Plugin):
                     "lang": validate.text
                 }]
             }
-        },
+    },
         validate.get("page"),
         validate.get("items"))
     video_api = "http://www.rtve.es/api/videos/{id}.json"
@@ -93,7 +93,7 @@ class Rtve(Plugin):
                     }]
                 }]
             }
-        },
+    },
         validate.get("page"),
         validate.get("items"),
         validate.get(0))

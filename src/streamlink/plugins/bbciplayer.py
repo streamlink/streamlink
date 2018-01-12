@@ -56,7 +56,7 @@ class BBCiPlayer(Plugin):
             {"connection": [{
                 validate.optional("href"): validate.url(),
                 validate.optional("transferFormat"): validate.text
-                }],
+            }],
              "kind": validate.text}
         ]},
         validate.get("media"),
