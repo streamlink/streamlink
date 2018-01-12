@@ -16,4 +16,4 @@ class TestPluginTeamliquid(unittest.TestCase):
         self.assertFalse(Teamliquid.can_handle_url("http://www.teamliquid.net/video/Check"))
         self.assertFalse(Teamliquid.can_handle_url("http://www.teamliquid.com/video/streams/Check"))
         self.assertFalse(Teamliquid.can_handle_url("http://www.teamliquid.net/video/stream/Check"))
-        
+

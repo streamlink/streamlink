@@ -22,7 +22,7 @@ class Skai(Plugin):
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
-    
+
     def _get_streams(self):
         channel_id = http.get(self.url, schema = _youtube_url_schema)
         if channel_id:

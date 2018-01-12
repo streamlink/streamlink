@@ -72,7 +72,7 @@ audio_only.m3u8
         for i in range(4):
             playlistEnd = playlistEnd + "#EXTINF:1.000,\n{0}\n".format(streamNameTemplate.format(i))
             self.mediaSequence += 1
-        
+
         return playlist + playlistEnd
 
 
