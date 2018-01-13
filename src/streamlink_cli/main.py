@@ -719,6 +719,9 @@ def setup_options():
     if args.hls_segment_timeout:
         streamlink.set_option("hls-segment-timeout", args.hls_segment_timeout)
 
+    if args.hls_segment_ignore_names:
+        streamlink.set_option("hls-segment-ignore-names", args.hls_segment_ignore_names)
+
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
 
