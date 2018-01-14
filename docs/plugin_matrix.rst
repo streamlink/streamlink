@@ -267,6 +267,7 @@ zattoo              - zattoo.com         Yes   Yes
                     - nettv.net... [10]_
                     - tvonline.ewe.de
 zdf_mediathek       zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
+zengatv             zengatv.com          Yes   No
 zhanqitv            zhanqi.tv            Yes   No
 =================== ==================== ===== ===== ===========================
 
