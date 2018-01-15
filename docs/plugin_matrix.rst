@@ -132,6 +132,17 @@ mixer               mixer.com            Yes   Yes
 mlgtv               mlg.tv               Yes   --
 nbc                 nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports           nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
+neulion             - fanpass.co.nz      Yes   Yes   Authentication required for premium streams. Streams may be geo-restricted.
+                    - nba.com
+                    - rugbypass.com
+                    - elevensports.be
+                    - elevensports.lu
+                    - elevensports.pl
+                    - elevensports.sg
+                    - elevensports.tw
+                    - elevensports.tw
+                    - tennischa... [11]_
+                    - ufc.tv
 nhkworld            nhk.or.jp/nhkworld   Yes   No
 nineanime           9anime.to            --    Yes
 nos                 nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
@@ -235,7 +246,6 @@ tvrby               tvr.by               Yes   No    Streams may be geo-restrict
 tvrplus             tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 twitch              twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                      subscription streams.
-ufctv               ufc.tv               Yes   Yes   Authentication required for premium streams.
 ustreamtv           ustream.tv           Yes   Yes
 vaughnlive          - vaughnlive.tv      Yes   --
                     - breakers.tv
@@ -282,3 +292,4 @@ zhanqitv            zhanqi.tv            Yes   No
 .. [8] france3-regions.francetvinfo.fr
 .. [9] tv5mondeplusafrique.com
 .. [10] nettv.netcologne.de
+.. [11] tennischanneleverywhere.com
