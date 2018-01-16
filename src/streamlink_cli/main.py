@@ -988,7 +988,7 @@ def check_root():
             console.logger.info("streamlink is running as root! Be careful!")
 
 
-def check_current_versions():
+def log_current_versions():
     """Show current installed versions"""
     if args.loglevel == "debug":
         # MAC OS X
@@ -1047,7 +1047,7 @@ def main():
     setup_console()
     setup_http_session()
     check_root()
-    check_current_versions()
+    log_current_versions()
 
     if args.version_check or (not args.no_version_check and args.auto_version_check):
         with ignored(Exception):

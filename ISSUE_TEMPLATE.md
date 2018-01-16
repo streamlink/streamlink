@@ -31,9 +31,9 @@
 
 ### Logs
 
-_Logs are always required for bugs, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l)
-Make sure to **remove username and password** from it.
-For the log use https://gist.github.com/ or_
+_Logs are always required for a bug report, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l)
+Make sure to **remove username and password**
+You can upload your logs to https://gist.github.com/ or_
 
 ```
 REPLACE THIS TEXT WITH YOUR LOG
