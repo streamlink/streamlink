@@ -57,7 +57,6 @@ class TestPluginStream(unittest.TestCase):
         self.assertTrue(isinstance(stream, HLSStream))
         self.assertEqual(stream.url, url)
 
-
     def _test_rtmp(self, surl, url, params):
         channel = self.session.resolve_url(surl)
         streams = channel.get_streams()

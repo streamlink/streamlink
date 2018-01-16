@@ -13,14 +13,17 @@ from streamlink.session import Streamlink
 from functools import partial
 import requests_mock
 
+
 def pkcs7_encode(data, keySize):
     val = keySize - (len(data) % keySize)
     return b''.join([data, bytes(bytearray(val * [val]))])
+
 
 def encrypt(data, key, iv):
     aesCipher = AES.new(key, AES.MODE_CBC, iv)
     encrypted_data = aesCipher.encrypt(pkcs7_encode(data, len(key)))
     return encrypted_data
+
 
 class TestHLS(unittest.TestCase):
     """
@@ -72,12 +75,10 @@ audio_only.m3u8
         for i in range(4):
             playlistEnd = playlistEnd + "#EXTINF:1.000,\n{0}\n".format(streamNameTemplate.format(i))
             self.mediaSequence += 1
-        
+
         return playlist + playlistEnd
 
-
-
-    def start_streamlink(self, masterPlaylist, kwargs = {}):
+    def start_streamlink(self, masterPlaylist, kwargs={}):
         print("Executing streamlink")
         streamlink = Streamlink()
 
@@ -93,7 +94,7 @@ audio_only.m3u8
         return data
 
     def test_hls_non_encrypted(self):
-        streams = [ os.urandom(1024) for i in range(4) ]
+        streams = [os.urandom(1024) for i in range(4)]
         masterPlaylist = self.getMasterPlaylist()
         firstSequence = self.mediaSequence
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
@@ -104,7 +105,7 @@ audio_only.m3u8
                 mock.get("http://mocked/path/stream{0}.ts".format(i), content=stream)
 
             # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8", {'start_offset':1,'duration':1})
+            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8", {'start_offset': 1, 'duration': 1})
 
         # Check result
         expectedResult = b''.join(streams[1:3])
@@ -115,8 +116,8 @@ audio_only.m3u8
         aesKey = os.urandom(16)
         aesIv = os.urandom(16)
         # Generate stream data files
-        clearStreams = [ os.urandom(1024) for i in range(4) ]
-        encryptedStreams = [ encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams ]
+        clearStreams = [os.urandom(1024) for i in range(4)]
+        encryptedStreams = [encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams]
 
         masterPlaylist = self.getMasterPlaylist()
         playlist1 = self.getPlaylist(aesIv, "stream{0}.ts.enc")
@@ -125,7 +126,7 @@ audio_only.m3u8
         streamlinkResult = None
         with requests_mock.Mocker() as mock:
             mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
-            mock.get("http://mocked/path/playlist.m3u8", [{'text':playlist1}, {'text':playlist2}])
+            mock.get("http://mocked/path/playlist.m3u8", [{'text': playlist1}, {'text': playlist2}])
             mock.get("http://mocked/path/encryption_key.key", content=aesKey)
             for i, encryptedStream in enumerate(encryptedStreams):
                 mock.get("http://mocked/path/stream{0}.ts.enc".format(i), content=encryptedStream)

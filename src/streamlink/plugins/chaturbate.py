@@ -50,4 +50,5 @@ class Chaturbate(Plugin):
             for s in HLSStream.parse_variant_playlist(self.session, data["url"]).items():
                 yield s
 
+
 __plugin__ = Chaturbate

@@ -32,8 +32,8 @@ _plu_schema = validate.Schema(
                 "securityUrl": validate.url(scheme=validate.any("rtmp", "http")),
                 "resolution": validate.text,
                 "ext": validate.text
-                }]
-         }]
+            }]
+        }]
     }
 )
 

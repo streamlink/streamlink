@@ -35,11 +35,9 @@ class CanalPlus(Plugin):
     })
     _user_agent = useragents.CHROME
 
-
     @classmethod
     def can_handle_url(cls, url):
         return CanalPlus._url_re.match(url)
-
 
     def _get_streams(self):
         # Get video ID and channel from URL

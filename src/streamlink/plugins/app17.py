@@ -36,9 +36,9 @@ class App17(Plugin):
         if 'pull-rtmp' in http_url:
             url = http_url.replace("https:", "rtmp:").replace(".flv", "")
             stream = RTMPStream(self.session, {
-                    "rtmp": url,
-                    "live": True
-                    })
+                "rtmp": url,
+                "live": True
+            })
             yield "live", stream
 
         if 'wansu-' in http_url:

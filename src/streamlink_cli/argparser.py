@@ -133,8 +133,8 @@ def keyvalue(value):
 def boolean(value):
     truths = ["yes", "1", "true", "on"]
     falses = ["no", "0", "false", "off"]
-    if value.lower() not in truths+falses:
-        raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths+falses)))
+    if value.lower() not in truths + falses:
+        raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths + falses)))
 
     return value.lower() in truths
 

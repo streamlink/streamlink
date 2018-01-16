@@ -39,7 +39,7 @@ class OlympicChannel(Plugin):
         post_data = '{"channel_url":"/api/channels/%s/"}' % live_res
         try:
             stream_data = http.json(http.post(self._stream_get_url, data=post_data))['stream_url']
-        except:
+        except BaseException:
             stream_data = http.json(http.post(self._stream_get_url, data=post_data))['channel_url']
         return HLSStream.parse_variant_playlist(self.session, stream_data)
 
@@ -51,13 +51,14 @@ class OlympicChannel(Plugin):
         match = self._url_re.match(self.url)
         type_of_stream = match.group('type')
         lang = re.search(r"/../", self.url).group(0)
-        
+
         if type_of_stream == 'tv':
             path = re.search(r"tv/.*-\d/$", self.url).group(0)
-            
+
             return self._get_live_streams(lang, path)
         elif type_of_stream == 'playback':
             path = re.search(r"/playback/.*/$", self.url).group(0)
             return self._get_vod_streams()
+
 
 __plugin__ = OlympicChannel

@@ -97,4 +97,5 @@ class EarthCam(Plugin):
                               "snapshot mode and not live stream can be played.")
             return
 
+
 __plugin__ = EarthCam

@@ -38,9 +38,9 @@ class Country(object):
             raise LookupError("Invalid country code: {0}".format(country))
 
     def __eq__(self, other):
-        return ((self.alpha2 and self.alpha2 == other.alpha2)
-                or (self.alpha3 and self.alpha3 == other.alpha3)
-                or (self.numeric and self.numeric == other.numeric))
+        return ((self.alpha2 and self.alpha2 == other.alpha2) or
+                (self.alpha3 and self.alpha3 == other.alpha3) or
+                (self.numeric and self.numeric == other.numeric))
 
     def __str__(self):
         if is_py2:
@@ -89,9 +89,9 @@ class Language(object):
             raise LookupError("Invalid language code: {0}".format(language))
 
     def __eq__(self, other):
-        return ((self.alpha2 and self.alpha2 == other.alpha2)
-                or (self.alpha3 and self.alpha3 == other.alpha3)
-                or (self.bibliographic and self.bibliographic == other.bibliographic))
+        return ((self.alpha2 and self.alpha2 == other.alpha2) or
+                (self.alpha3 and self.alpha3 == other.alpha3) or
+                (self.bibliographic and self.bibliographic == other.bibliographic))
 
     def __str__(self):
         if is_py2:
@@ -121,7 +121,7 @@ class Localization(object):
     def _parse_locale_code(self, language_code):
         parts = language_code.split("_", 1)
         if len(parts) != 2 or len(parts[0]) != 2 or len(parts[1]) != 2:
-                raise LookupError("Invalid language code: {0}".format(language_code))
+            raise LookupError("Invalid language code: {0}".format(language_code))
         return self.get_language(parts[0]), self.get_country(parts[1])
 
     @language_code.setter

@@ -112,6 +112,7 @@ class UStreamHLSStream(HLSStream):
         """
         Poll the UStream API so that stream URLs stay valid, otherwise they expire after 30 seconds.
         """
+
         def __init__(self, api, interval=10.0):
             Thread.__init__(self)
             self.stopped = Event()
@@ -130,7 +131,6 @@ class UStreamHLSStream(HLSStream):
                     self.api.logger.debug("poll response: {0}", cmd_args)
                     if cmd_args["cmd"] == "warning":
                         self.api.logger.warning("{code}: {message}", **cmd_args["args"])
-
 
     def __init__(self, session_, url, api, force_restart=False, **args):
         super(UStreamHLSStream, self).__init__(session_, url, force_restart, **args)

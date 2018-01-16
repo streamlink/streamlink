@@ -50,6 +50,7 @@ stream_info_pattern = re.compile(r"""
     /playlist.m3u8'
 """, re.VERBOSE)
 
+
 class Huomao(Plugin):
     @classmethod
     def can_handle_url(self, url):
@@ -96,8 +97,9 @@ class Huomao(Plugin):
         streams = {}
         for info in stream_info:
             streams[info[2]] = HTTPStream(self.session,
-                info[0] + stream_id + info[1] + ".flv")
+                                          info[0] + stream_id + info[1] + ".flv")
 
         return streams
+
 
 __plugin__ = Huomao

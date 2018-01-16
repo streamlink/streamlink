@@ -25,10 +25,11 @@ _room_id_schema = validate.Schema(
     {
         "data": validate.any(None, {
             "room_id": int
-            })
+        })
     },
     validate.get("data")
-    )
+)
+
 
 class Bilibili(Plugin):
     @classmethod

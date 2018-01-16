@@ -7,6 +7,7 @@ from streamlink.stream import HDSStream, HLSStream, RTMPStream
 
 _url_re = re.compile("""http(?:s)?://(?:\w+\.)?rtl.nl/video/(?P<uuid>.*?)\Z""", re.IGNORECASE)
 
+
 class rtlxl(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -16,10 +17,11 @@ class rtlxl(Plugin):
         match = _url_re.match(self.url)
         uuid = match.group("uuid")
         videourlfeed = http.get('https://tm-videourlfeed.rtl.nl/api/url/{}?device=pc&drm&format=hls'.format(uuid)).text
-   
+
         videourlfeedjson = json.loads(videourlfeed)
         playlist_url = videourlfeedjson["url"]
-        
+
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
+
 
 __plugin__ = rtlxl

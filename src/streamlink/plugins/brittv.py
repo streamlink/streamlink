@@ -28,4 +28,5 @@ class BritTV(Plugin):
                 if "adblock" not in url:
                     yield "live", HLSStream(self.session, url)
 
+
 __plugin__ = BritTV

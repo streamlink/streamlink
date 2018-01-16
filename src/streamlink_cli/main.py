@@ -255,7 +255,7 @@ def output_stream(stream):
             success_open = True
             break
         except StreamError as err:
-            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
+            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i + 1, args.retry_open, stream, err)
 
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
@@ -790,7 +790,6 @@ def setup_options():
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)
-
 
     # Deprecated options
     if args.hds_fragment_buffer:
