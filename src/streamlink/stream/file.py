@@ -6,6 +6,7 @@ from streamlink.stream import Stream
 
 class FileStream(Stream):
     __shortname__ = "file"
+
     def __init__(self, session, path=None, fileobj=None):
         super(FileStream, self).__init__(session)
         self.path = path

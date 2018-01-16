@@ -114,7 +114,7 @@ class DeutscheWelle(Plugin):
             if video["system-bitrate"] > 0:
                 # If width is available, use it to select the best stream
                 # amongst those with same bitrate
-                quality = "{}k".format((video["system-bitrate"] + video.get("width", 0))//1000)
+                quality = "{}k".format((video["system-bitrate"] + video.get("width", 0)) // 1000)
             else:
                 quality = default_quality
 

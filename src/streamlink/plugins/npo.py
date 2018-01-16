@@ -120,4 +120,5 @@ class NPO(Plugin):
                     elif stream["format"] in ("mp3", "mp4"):
                         yield "vod", HTTPStream(self.session, stream_url)
 
+
 __plugin__ = NPO

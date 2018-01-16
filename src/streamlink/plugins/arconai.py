@@ -32,4 +32,5 @@ class ArconaiTv(Plugin):
             self.logger.debug('HLS URL: {0}'.format(url))
             yield 'live', HLSStream(self.session, url, headers=headers)
 
+
 __plugin__ = ArconaiTv

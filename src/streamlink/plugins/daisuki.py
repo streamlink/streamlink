@@ -62,9 +62,9 @@ _xml_to_srt_schema = validate.Schema(
     validate.xml_findall(".//body/div"),
     [
         validate.union([validate.all(
-                validate.getattr("attrib"),
-                validate.get("{http://www.w3.org/XML/1998/namespace}lang")
-            ),
+            validate.getattr("attrib"),
+            validate.get("{http://www.w3.org/XML/1998/namespace}lang")
+        ),
             validate.all(
                 validate.xml_findall("./p"),
                 validate.transform(lambda x: list(enumerate(x, 1))),
@@ -95,7 +95,7 @@ _xml_to_srt_schema = validate.Schema(
                     )
                 ],
                 validate.transform(lambda s: '\n'.join(s))
-            )
+        )
         ])
     ]
 )
@@ -230,7 +230,7 @@ class Daisuki(Plugin):
 
                 for n, s in streams.items():
                     yield n, MuxedStream(self.session, s, *subfiles,
-                                         maps=list(range(0, len(metadata)+1)),
+                                         maps=list(range(0, len(metadata) + 1)),
                                          metadata=metadata)
                 return
             else:

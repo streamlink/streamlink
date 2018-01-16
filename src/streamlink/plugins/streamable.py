@@ -32,9 +32,10 @@ class Streamable(Plugin):
         data = http.get(self.url, schema=self.config_schema)
 
         for info in data["files"].values():
-            stream_url = update_scheme(self.url,  info["url"])
+            stream_url = update_scheme(self.url, info["url"])
             # pick the smaller of the two dimensions, for landscape v. portrait videos
             res = min(info["width"], info["height"])
             yield "{0}p".format(res), HTTPStream(self.session, stream_url)
+
 
 __plugin__ = Streamable

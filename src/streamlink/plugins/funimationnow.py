@@ -13,8 +13,8 @@ from streamlink.stream.ffmpegmux import MuxedStream
 
 class Experience(object):
     api_base = "https://prod-api-funimationnow.dadcdigital.com/api"
-    show_api_url = api_base+"/source/catalog/title/experience/{experience_id}/"
-    sources_api_url = api_base+"/source/catalog/video/{experience_id}/signed/"
+    show_api_url = api_base + "/source/catalog/title/experience/{experience_id}/"
+    sources_api_url = api_base + "/source/catalog/video/{experience_id}/signed/"
     languages = ["english", "japanese"]
     alphas = ["uncut", "simulcast"]
 
@@ -165,5 +165,6 @@ class FunimationNow(Plugin):
 
         else:
             self.logger.error("Could not find experience ID?!")
+
 
 __plugin__ = FunimationNow

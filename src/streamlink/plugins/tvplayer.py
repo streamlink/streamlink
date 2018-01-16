@@ -74,7 +74,7 @@ class TVPlayer(Plugin):
             validate=context_data["validate"],
             token=context_data.get("token"),
             platform=context_data["platform"]["key"]),
-                        raise_for_status=False)
+            raise_for_status=False)
 
         return http.json(res, schema=self.stream_schema)
 
@@ -93,7 +93,6 @@ class TVPlayer(Plugin):
                 valid = False
 
         return stream_attrs if valid else {}
-
 
     def _get_streams(self):
         if self.get_option("email") and self.get_option("password"):

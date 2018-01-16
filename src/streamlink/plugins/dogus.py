@@ -43,5 +43,4 @@ class Dogus(Plugin):
                                                 headers={"Referer": self.url})
 
 
-
 __plugin__ = Dogus

@@ -40,7 +40,7 @@ class BBCiPlayer(Plugin):
                 "accessTokenCookieName": validate.text,
                 "idSignedInCookieName": validate.text
             }
-         }
+        }
     )
     mediator_schema = validate.Schema(
         {
@@ -56,8 +56,8 @@ class BBCiPlayer(Plugin):
             {"connection": [{
                 validate.optional("href"): validate.url(),
                 validate.optional("transferFormat"): validate.text
-                }],
-             "kind": validate.text}
+            }],
+                "kind": validate.text}
         ]},
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video")
@@ -158,5 +158,6 @@ class BBCiPlayer(Plugin):
                 self.logger.debug("Found TVIP: {0}", tvip)
                 for s in self.mediaselector(tvip):
                     yield s
+
 
 __plugin__ = BBCiPlayer

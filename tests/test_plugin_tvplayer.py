@@ -35,8 +35,8 @@ class TestPluginTVPlayer(unittest.TestCase):
     @patch('streamlink.plugins.tvplayer.HLSStream')
     def test_get_streams(self, hlsstream, mock_http, mock_get_stream_data):
         mock_get_stream_data.return_value = {
-                    "stream": "http://test.se/stream1"
-                }
+            "stream": "http://test.se/stream1"
+        }
 
         page_resp = Mock()
         page_resp.text = u"""

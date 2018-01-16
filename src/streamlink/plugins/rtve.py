@@ -74,26 +74,26 @@ class Rtve(Plugin):
     )
     subtitles_api = "http://www.rtve.es/api/videos/{id}/subtitulos.json"
     subtitles_schema = validate.Schema({
-            "page": {
-                "items": [{
-                    "src": validate.url(),
-                    "lang": validate.text
-                }]
-            }
-        },
+        "page": {
+            "items": [{
+                "src": validate.url(),
+                "lang": validate.text
+            }]
+        }
+    },
         validate.get("page"),
         validate.get("items"))
     video_api = "http://www.rtve.es/api/videos/{id}.json"
     video_schema = validate.Schema({
-            "page": {
-                "items": [{
-                    "qualities": [{
-                        "preset": validate.text,
-                        "height": int
-                    }]
+        "page": {
+            "items": [{
+                "qualities": [{
+                    "preset": validate.text,
+                    "height": int
                 }]
-            }
-        },
+            }]
+        }
+    },
         validate.get("page"),
         validate.get("items"),
         validate.get(0))

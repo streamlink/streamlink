@@ -14,7 +14,7 @@ class TVRPlus(Plugin):
         validate.all(
             validate.transform(hls_file_re.search),
             validate.any(None, validate.get("url"))
-         ),
+        ),
     )
 
     @classmethod
@@ -25,5 +25,6 @@ class TVRPlus(Plugin):
         stream_url = self.stream_schema.validate(http.get(self.url).text)
         if stream_url:
             return HLSStream.parse_variant_playlist(self.session, stream_url)
+
 
 __plugin__ = TVRPlus
