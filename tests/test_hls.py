@@ -93,7 +93,7 @@ audio_only.m3u8
         return data
 
     def test_hls_non_encrypted(self):
-        streams = [ os.urandom(1024) for i in range(4) ]
+        streams = [ os.urandom(1024) for i in range(4)]
         masterPlaylist = self.getMasterPlaylist()
         firstSequence = self.mediaSequence
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
@@ -115,8 +115,8 @@ audio_only.m3u8
         aesKey = os.urandom(16)
         aesIv = os.urandom(16)
         # Generate stream data files
-        clearStreams = [ os.urandom(1024) for i in range(4) ]
-        encryptedStreams = [ encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams ]
+        clearStreams = [ os.urandom(1024) for i in range(4)]
+        encryptedStreams = [ encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams]
 
         masterPlaylist = self.getMasterPlaylist()
         playlist1 = self.getPlaylist(aesIv, "stream{0}.ts.enc")
