@@ -33,7 +33,7 @@ _plu_schema = validate.Schema(
                 "resolution": validate.text,
                 "ext": validate.text
             }]
-         }]
+        }]
     }
 )
 

@@ -112,7 +112,7 @@ class Pandatv(Plugin):
 
         backup.append(plflag)
         plflag0 = backup
-        plflag0 = [i.split('_')[1] for i in plflag0] 
+        plflag0 = [i.split('_')[1] for i in plflag0]
 
         # let wangsu cdn priority, flag can see here in "H5PLAYER_CDN_LINES":
         # https://www.panda.tv/cmstatic/global-config.js

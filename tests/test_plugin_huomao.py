@@ -6,6 +6,7 @@ import re
 from streamlink.plugin.api import http
 from streamlink.plugins.huomao import Huomao
 
+
 class TestPluginHuomao(unittest.TestCase):
 
     def setUp(self):
@@ -97,4 +98,4 @@ class TestPluginHuomao(unittest.TestCase):
 # Possibility to run unittest separately as a normal python script.
 if __name__ == "__main__":
     suite = unittest.TestLoader().loadTestsFromTestCase(TestPluginHuomao)
-    unittest.TextTestRunner(verbosity = 2).run(suite)
+    unittest.TextTestRunner(verbosity=2).run(suite)

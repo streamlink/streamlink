@@ -73,14 +73,14 @@ class WWENetwork(Plugin):
 
         self._authed = "Authentication Error" not in res.text
         if self._authed:
-            self._session_attributes.set("ipid", res.cookies.get("ipid"), expires=3600*1.5)
-            self._session_attributes.set("fprt", res.cookies.get("fprt"), expires=3600*1.5)
+            self._session_attributes.set("ipid", res.cookies.get("ipid"), expires=3600 * 1.5)
+            self._session_attributes.set("fprt", res.cookies.get("fprt"), expires=3600 * 1.5)
 
         return self._authed
 
     def _update_session_attribute(self, key, value):
         if value:
-            self._session_attributes.set(key, value, expires=3600*1.5)  # 1h30m expiry
+            self._session_attributes.set(key, value, expires=3600 * 1.5)  # 1h30m expiry
             http.cookies.set(key, value)
 
     @property

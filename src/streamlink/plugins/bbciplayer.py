@@ -40,7 +40,7 @@ class BBCiPlayer(Plugin):
                 "accessTokenCookieName": validate.text,
                 "idSignedInCookieName": validate.text
             }
-         }
+        }
     )
     mediator_schema = validate.Schema(
         {
@@ -57,7 +57,7 @@ class BBCiPlayer(Plugin):
                 validate.optional("href"): validate.url(),
                 validate.optional("transferFormat"): validate.text
             }],
-             "kind": validate.text}
+                "kind": validate.text}
         ]},
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video")

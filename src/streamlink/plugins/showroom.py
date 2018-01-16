@@ -36,7 +36,7 @@ _api_stream_schema = validate.Schema(
             }
         ])
     },
-    {}
+        {}
     )
 )
 

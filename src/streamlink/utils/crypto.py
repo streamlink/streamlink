@@ -18,7 +18,7 @@ def evp_bytestokey(password, salt, key_len, iv_len):
     while len(d) < key_len + iv_len:
         d_i = hashlib.md5(d_i + password + salt).digest()
         d += d_i
-    return d[:key_len], d[key_len:key_len+iv_len]
+    return d[:key_len], d[key_len:key_len + iv_len]
 
 
 def decrypt_openssl(data, passphrase, key_length=32):

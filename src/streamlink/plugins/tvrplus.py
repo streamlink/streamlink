@@ -14,7 +14,7 @@ class TVRPlus(Plugin):
         validate.all(
             validate.transform(hls_file_re.search),
             validate.any(None, validate.get("url"))
-         ),
+        ),
     )
 
     @classmethod

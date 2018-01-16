@@ -143,7 +143,7 @@ class DailyMotion(Plugin):
                 self.logger.debug('PLAYLIST URL: {0}'.format(res.url))
                 try:
                     streams = HDSStream.parse_manifest(self.session, res.url)
-                except:
+                except BaseException:
                     streams = HLSStream.parse_variant_playlist(self.session, res.url)
 
                 for name, stream in streams.items():

@@ -30,6 +30,7 @@ _room_id_schema = validate.Schema(
     validate.get("data")
 )
 
+
 class Bilibili(Plugin):
     @classmethod
     def can_handle_url(self, url):
