@@ -207,19 +207,27 @@ class YouTube(Plugin):
         if not video_id:
             return
 
-        for el in ("detailpage", "embedded"):
-            params = {
-                "video_id": video_id,
-                "el": el
-            }
+        # normal
+        _params_1 = {"el": "detailpage"}
+        # age restricted
+        _params_2 = {"el": "embedded"}
+        # embedded restricted
+        _params_3 = {"eurl": "https://youtube.googleapis.com/v/{0}".format(video_id)}
+
+        count = 0
+        for _params in (_params_1, _params_2, _params_3):
+            count += 1
+            params = {"video_id": video_id}
+            params.update(_params)
+
             res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
             info_parsed = parse_query(res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 self.logger.debug("get_video_info - {0}: {1}".format(
-                    el,
-                    info_parsed.get("reason"))
+                    count, info_parsed.get("reason"))
                 )
                 continue
+            self.logger.debug("get_video_info - {0}: Found data".format(count))
             break
 
         return info_parsed
