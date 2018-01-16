@@ -34,16 +34,17 @@ class VLWebSocket(websocket.WebSocket):
 
 
 class VaughnLive(Plugin):
-    api_re = re.compile(r'new sApi\("(#(vl|igb|btv|pt|vtv)-[^"]+)",')
     servers = ["wss://sapi-ws-{0}x{1:02}.vaughnlive.tv".format(x, y) for x, y in itertools.product(range(1, 3),
                                                                                                    range(1, 6))]
     origin = "https://vaughnlive.tv"
     rtmp_server_map = {
-        "594140c69edad": "198.255.17.18",
-        "585c4cab1bef1": "198.255.17.26",
-        "5940d648b3929": "198.255.17.34",
-        "5941854b39bc4": "198.255.17.66"}
+        "594140c69edad": "66.90.93.42",
+        "585c4cab1bef1": "66.90.93.34",
+        "5940d648b3929": "66.90.93.42",
+        "5941854b39bc4": "198.255.0.10"
+    }
     name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
+    domain_map = {"vaughnlive": "#vl", "breakers": "#btv", "instagib": "#igb", "vapers": "#vtv", "pearltime": "#pt"}
 
     @classmethod
     def can_handle_url(cls, url):
@@ -88,12 +89,11 @@ class VaughnLive(Plugin):
         })
 
     def _get_streams(self):
-        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        m = _url_re.match(self.url)
+        if m:
+            stream_name = "{0}-{1}".format(self.domain_map[(m.group("domain").lower())],
+                                           m.group("channel"))
 
-        m = self.api_re.search(res.text)
-        stream_name = m and m.group(1)
-
-        if stream_name:
             is_live, server, domain, channel, token, ingest = self._get_info(stream_name)
 
             if not is_live:
