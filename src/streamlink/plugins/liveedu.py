@@ -115,4 +115,5 @@ class LiveEdu(Plugin):
                     for s in HLSStream.parse_variant_playlist(self.session, url["src"]).items():
                         yield s
 
+
 __plugin__ = LiveEdu

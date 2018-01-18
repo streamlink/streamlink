@@ -34,7 +34,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Streamlink'
-copyright = '2017, Streamlink'
+copyright = '2018, Streamlink'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -138,7 +138,7 @@ html_theme_options = {
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
 
-#html_sidebars = {
+# html_sidebars = {
 #    'index': ['sidebarintro.html', 'sourcelink.html', 'searchbox.html'],
 #    '**': ['sidebarlogo.html', 'localtoc.html', 'relations.html',
 #           'sourcelink.html', 'searchbox.html']

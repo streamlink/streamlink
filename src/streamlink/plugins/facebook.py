@@ -21,4 +21,5 @@ class Facebook(Plugin):
 
         return HLSStream.parse_variant_playlist(self.session, playlist)
 
+
 __plugin__ = Facebook

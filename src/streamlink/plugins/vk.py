@@ -9,6 +9,7 @@ from streamlink.stream import HTTPStream, HLSStream
 from streamlink.utils import parse_json, update_scheme
 from streamlink.utils.crypto import unpad_pkcs5
 
+
 class VK(Plugin):
     _url_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/video-[0-9]*_[0-9]*")
     _url_catalog_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/videos-[0-9]*")
@@ -29,7 +30,7 @@ class VK(Plugin):
         # If this is a 'videos' catalog URL with an video ID in the GET request, get that instead
         parsed_url = urlparse(url)
         if parsed_url.path.startswith('/videos-'):
-            query = {v[0]:v[1] for v in [q.split('=') for q in parsed_url.query.split('&')] if v[0] == 'z'}
+            query = {v[0]: v[1] for v in [q.split('=') for q in parsed_url.query.split('&')] if v[0] == 'z'}
             try:
                 true_path = unquote(query['z']).split('/')[0]
                 return parsed_url.scheme + '://' + parsed_url.netloc + '/' + true_path
@@ -93,5 +94,6 @@ class VK(Plugin):
                         yield str(q), HTTPStream(self.session, s)
             except IOError:
                 self.logger.warning("Could not open the stream, perhaps the channel is offline")
+
 
 __plugin__ = VK

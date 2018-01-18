@@ -144,7 +144,7 @@ def contains(string):
     """Checks if the string value contains another string."""
     def contains_str(value):
         validate(text, value)
-        if not string in value:
+        if string not in value:
             raise ValueError("'{0}' does not contain '{1}'".format(value, string))
         return True
 

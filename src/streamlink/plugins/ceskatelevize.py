@@ -32,9 +32,9 @@ _playlist_info_re = re.compile(
 )
 _playlist_url_schema = validate.Schema({
     "url": validate.any(
-                validate.url(),
-                "error_region"
-            )
+        validate.url(),
+        "error_region"
+    )
 })
 _playlist_schema = validate.Schema({
     "playlist": [{
@@ -76,11 +76,11 @@ def _find_player_url(response):
             # there's no hash in the URL, try to find it
             matches = _hash_re.search(response.text)
             if matches:
-                url = tmp_url+'&hash='+matches.group(1)
+                url = tmp_url + '&hash=' + matches.group(1)
         else:
             url = tmp_url
 
-    return 'http://ceskatelevize.cz/'+url
+    return 'http://ceskatelevize.cz/' + url
 
 
 class Ceskatelevize(Plugin):

@@ -22,7 +22,7 @@ class ThePlatform(Plugin):
         m = self.release_re.search(res.text)
         release_url = m and m.group(1)
         if release_url:
-            api_url = release_url+"&formats=m3u,mpeg4"
+            api_url = release_url + "&formats=m3u,mpeg4"
             res = http.get(api_url, allow_redirects=False, raise_for_status=False)
             if res.status_code == 302:
                 stream_url = res.headers.get("Location")

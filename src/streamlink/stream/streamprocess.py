@@ -55,7 +55,7 @@ class StreamProcess(Stream):
         return self.parameters
 
     @classmethod
-    def is_usable(cls, session): 
+    def is_usable(cls, session):
         raise NotImplementedError
 
     def open(self):
@@ -85,7 +85,7 @@ class StreamProcess(Stream):
             else:  # long argument
                 return "{0}{1}".format(long_option_prefix, key.replace("_", "-"))
 
-        # sorted for stability 
+        # sorted for stability
         for k, v in sorted(parameters.items(), key=itemgetter(0)):
             if not isinstance(v, list):  # long argument
                 cmdline.append(to_option(k))
@@ -160,5 +160,6 @@ class StreamProcess(Stream):
             raise StreamError("Unable to find `{0}' command".format(self.cmd))
 
         return cmd
+
 
 __all__ = ["StreamProcess"]

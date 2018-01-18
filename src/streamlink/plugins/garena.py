@@ -66,4 +66,5 @@ class Garena(Plugin):
                     s = HLSStream(self.session, stream["url"])
                     yield n, s
 
+
 __plugin__ = Garena

@@ -23,7 +23,7 @@ def verifyjson(json, key):
     if not isinstance(json, dict):
         raise PluginError("JSON result is not a dict")
 
-    if not key in json:
+    if key not in json:
         raise PluginError("Missing '{0}' key in JSON".format(key))
 
     return json[key]

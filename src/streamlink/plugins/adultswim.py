@@ -71,7 +71,7 @@ class AdultSwim(Plugin):
         mapper = StreamMapper(lambda fmt, strm: strm["url"].endswith(fmt))
         mapper.map(".m3u8", self._make_hls_hds_stream, HLSStream.parse_variant_playlist)
         mapper.map(".f4m", self._make_hls_hds_stream, HDSStream.parse_manifest, is_akamai=True)
-        mapper.map(".mp4", lambda s: (s["bitrate"]+"k", HTTPStream(self.session, s["url"])))
+        mapper.map(".mp4", lambda s: (s["bitrate"] + "k", HTTPStream(self.session, s["url"])))
 
         for q, s in mapper(streams):
             yield q, s
@@ -99,7 +99,6 @@ class AdultSwim(Plugin):
             else:
                 self.logger.error("This stream is currently offline")
                 return
-
 
         if stream_id:
             api_url = self.API_URL.format(id=stream_id)

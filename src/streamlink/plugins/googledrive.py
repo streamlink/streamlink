@@ -29,4 +29,5 @@ class GoogleDocs(Plugin):
         else:
             self.logger.error("{0} (ID: {1})", data["reason"], docid)
 
+
 __plugin__ = GoogleDocs

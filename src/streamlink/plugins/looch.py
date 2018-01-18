@@ -61,7 +61,6 @@ class Looch(Plugin):
         for playback in data["playback"]:
             yield "{0}p".format(res), HTTPStream(self.session, playback["uri"])
 
-
     def _get_streams(self):
         match = self.url_re.match(self.url)
         self.logger.debug("Matched URL: name={name}, video_id={video_id}", **match.groupdict())

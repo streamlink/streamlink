@@ -363,16 +363,16 @@ class Plugin(object):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
         final_sorted_streams = OrderedDict()
-        
+
         for stream_name in sorted(streams, key=stream_weight_only):
             final_sorted_streams[stream_name] = streams[stream_name]
-        
+
         if len(sorted_streams) > 0:
             best = sorted_streams[-1]
             worst = sorted_streams[0]
             final_sorted_streams["worst"] = streams[worst]
             final_sorted_streams["best"] = streams[best]
-        
+
         return final_sorted_streams
 
     def get_streams(self, *args, **kwargs):
