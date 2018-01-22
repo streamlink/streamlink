@@ -5,13 +5,12 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HTTPStream, HLSStream
-from streamlink.compat import parse_qsl
 from streamlink.stream.ffmpegmux import MuxedStream
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
 API_SEARCH_URL = API_BASE + "/search"
-API_VIDEO_INFO = "http://youtube.com/get_video_info"
+API_VIDEO_INFO = "https://youtube.com/get_video_info"
 HLS_HEADERS = {
     "User-Agent": "Mozilla/5.0"
 }
@@ -78,6 +77,7 @@ _config_schema = validate.Schema(
         ),
         validate.optional("hlsvp"): validate.text,
         validate.optional("live_playback"): validate.transform(bool),
+        validate.optional("reason"): validate.text,
         "status": validate.text
     }
 )
@@ -207,12 +207,30 @@ class YouTube(Plugin):
         if not video_id:
             return
 
-        params = {
-            "video_id": video_id,
-            "el": "player_embedded"
-        }
-        res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
-        return parse_query(res.text, name="config", schema=_config_schema)
+        # normal
+        _params_1 = {"el": "detailpage"}
+        # age restricted
+        _params_2 = {"el": "embedded"}
+        # embedded restricted
+        _params_3 = {"eurl": "https://youtube.googleapis.com/v/{0}".format(video_id)}
+
+        count = 0
+        for _params in (_params_1, _params_2, _params_3):
+            count += 1
+            params = {"video_id": video_id}
+            params.update(_params)
+
+            res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
+            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
+            if info_parsed.get("status") == "fail":
+                self.logger.debug("get_video_info - {0}: {1}".format(
+                    count, info_parsed.get("reason"))
+                )
+                continue
+            self.logger.debug("get_video_info - {0}: Found data".format(count))
+            break
+
+        return info_parsed
 
     def _get_streams(self):
         info = self._get_stream_info(self.url)
