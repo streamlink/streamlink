@@ -1,3 +1,91 @@
+streamlink 0.10.0 (2018-01-23)
+------------------------------
+Streamlink 0.10.0!
+
+There's been a lot of activity since our November release.
+
+Changes:
+
+  - Multiple plugin updates (too many to list, see below for the plugin changes!)
+  - HLS seeking support (https://github.com/streamlink/streamlink/pull/1303)
+  - Changes to the Windows binary (docs: https://github.com/streamlink/streamlink/pull/1408 minor changes to install directory: https://github.com/streamlink/streamlink/pull/1407)
+
+
+::
+
+    Alexis Murzeau <amubtdx@gmail.com> (3):
+          docs: remove flattr-badge.png image
+          Fix various typos in comments and documentation
+          Implement PKCS#7 padding decoding with AES-128 HLS
+    
+    BZHDeveloper <inizan.yannick@gmail.com> (1):
+          [canalplus] Update plugin according to website changes (#1378)
+    
+    Mohamed El Morabity <melmorabity@fedoraproject.org> (1):
+          [pluzz] Fix video ID regex for France 3 Régions streams
+    
+    RosadinTV <rosadintv@outlook.com> (1):
+          Welcome 2018 (#1410)
+    
+    Sean Greenslade <sean@seangreenslade.com> (4):
+          Reworked picarto.tv plugin to deal with website changes. (#1359)
+          Tweaked tigerdile URL regex to allow missing trailing slash.
+          Added tigerdile HLS support and proper API poll for offline streams.
+          Added basic URL tests for tigerdile.
+    
+    back-to <back-to@users.noreply.github.com> (5):
+          [zdf] apiToken update
+          [camsoda] Fixed broken plugin
+          [mixer] moved beam.py to mixer.py file requires two commits, for a proper commit history
+          [mixer] replaced beam.pro with mixer.com
+          [docs] Removed MPlayer2 - Domain expired - Not maintained anymore
+    
+    back-to <backto@protonmail.ch> (13):
+          [BTV] Fixed login return message
+          [qq] New Plugin for live.qq.com
+          [mlgtv] Fixed broken Plugin streamlink/streamlink#1362
+          [viasat] Added support for urls without a stream_id - removed dead domains from _url_re - added a error message for geo blocking - new regex for stream_id from image url - Removed old embed plugin - try to find an iframe if no stream_id was found. - added tests
+          [streann] Added headers for post request
+          [Dailymotion] Fixed livestream id from channelpage
+          [neulion] renamed ufctv.py to neulion.py
+          [neulion] Updated the ufctv plugin to make it useable for other domains
+          [youtube] added Audio m4a itag 256 and 258
+          [hls] Don't try to skip a stream if the offset is 0, don't raise KeyError if the m3u8 file is empty this allows the file to reload.
+          [zengatv] New Plugin for zengatv.com
+          [mitele] Update for different api response - fallback if not hls_url was found, just the suffix. - added url tests
+          [youtube] New params for get_video_info (#1423)
+    
+    bastimeyer <mail@bastimeyer.de> (2):
+          nsis: restore old install dir, keep multiuser
+          docs: rewrite Windows binaries install section
+    
+    beardypig <beardypig@users.noreply.github.com> (12):
+          plugins.vaughnlive: try to guess the stream ID from the channel name
+          plugins.vaughnlive: updated rtmp server map
+          Update server map
+          stream.hls: add options to skip some time at the start/end of VOD streams
+          stream.hls: add option to restart live stream, if possible
+          stream.hls: remove the end offset and replace with duration
+          hls: add absolute start offset and duration options to the HLStream API
+          duratio bug
+          Fix bug with hls start offset = 0
+          EOL Python 3.3
+          plugins.kanal7: update to stream player URL config
+          plugins.huya: fix stream URL scheme prefix
+    
+    fozzy <fozzy@fozzy.co> (1):
+          fix plugin for bilibili to adapt the new API
+    
+    hicrop <35128217+hicrop@users.noreply.github.com> (1):
+          PEP8 (#1427)
+    
+    steven7851 <steven7851@msn.com> (1):
+          [Douyutv] fix API
+    
+    xela722 <alex0722@comcast.net> (1):
+          Add plugin for olympicchannel.com (#1353)
+    
+
 streamlink 0.9.0 (2017-11-14)
 -----------------------------
 Streamlink 0.9.0 has been released!
