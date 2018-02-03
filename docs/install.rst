@@ -10,6 +10,8 @@ Installation
 Linux and BSD packages
 ----------------------
 
+.. rst-class:: table-custom-layout
+
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
@@ -59,8 +61,11 @@ Distribution                         Installing
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _Installing NixOS packages: https://nixos.org/wiki/Install/remove_software#How_to_install_software
 
+
 Other platforms
 ---------------
+
+.. rst-class:: table-custom-layout
 
 ==================================== ===========================================
 Platform                             Installing
@@ -88,8 +93,12 @@ Microsoft Windows                    See `Windows binaries`_ and `Windows portab
 .. _Installing Homebrew packages: https://brew.sh
 .. _Installing Chocolatey packages: https://chocolatey.org
 
+
 Package maintainers
 -------------------
+
+.. rst-class:: table-custom-layout
+
 ==================================== ===========================================
 Distribution/Platform                Maintainer
 ==================================== ===========================================
@@ -104,7 +113,8 @@ Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 wkuipers <wietse at kuiprs.nl>
 Windows binaries                     beardypig <beardypig at protonmail.com>
-Windows port. version                RosadinTV <RosadinTV at outlook.com>, beardypig <beardypig at protonmail.com>
+Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
+                                     beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
 
@@ -128,6 +138,8 @@ manager, or by checking out the latest code with
 
 
 The commands listed here will also upgrade any existing version of Streamlink.
+
+.. rst-class:: table-custom-layout
 
 ==================================== ===========================================
 Version                              Installing
@@ -158,6 +170,8 @@ Dependencies
 ^^^^^^^^^^^^
 
 To install Streamlink from source you will need these dependencies.
+
+.. rst-class:: table-custom-layout
 
 ==================================== ===========================================
 Name                                 Notes
@@ -250,7 +264,9 @@ Windows binaries
 .. important::
 
     Windows XP is not supported. |br|
-    Windows Vista requires at least SP2 to be installed. 
+    Windows Vista requires at least SP2 to be installed.
+
+.. rst-class:: table-custom-layout
 
 ==================================== ====================================
 Release                              Notes
@@ -289,19 +305,17 @@ To build the installer on your own, ``NSIS`` and ``pynsist`` need to be installe
 Windows portable version
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. rst-class:: table-custom-layout
+
 ==================================== ===========================================
 Maintainer                           Links
 ==================================== ===========================================
-RosadinTV                            `Latest precompiled stable release`__
-
-                                     `Latest builder`__
-                                     
+RosadinTV                            `Latest precompiled stable release`__ |br|
+                                     `Latest builder`__ |br|
                                      `More info`__
 
-Beardypig                            `Latest precompiled stable release`__
-
-                                     `Latest builder`__
-
+Beardypig                            `Latest precompiled stable release`__ |br|
+                                     `Latest builder`__ |br|
                                      `More info`__
 ==================================== ===========================================
 
