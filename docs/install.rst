@@ -47,12 +47,12 @@ Distribution                         Installing
 `NixOS`_                             `Installing NixOS packages`_
 `Solus`_                             .. code-block:: console
 
-                                        # eopkg install streamlink
+                                        $ sudo eopkg install streamlink
 `Ubuntu`_                            .. code-block:: console
 
-                                        # add-apt-repository ppa:nilarimogard/webupd8
-                                        # apt update
-                                        # apt install streamlink
+                                        $ sudo add-apt-repository ppa:nilarimogard/webupd8
+                                        $ sudo apt update
+                                        $ sudo apt install streamlink
 `Void`_                              .. code-block:: console
 
                                         # xbps-install streamlink
