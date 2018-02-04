@@ -24,6 +24,16 @@ Distribution                         Installing
                                         # pacaur -S streamlink-git
 
                                      `Installing AUR packages`_
+`Debian (sid, testing)`_             .. code-block:: console
+
+                                        # apt update
+                                        # apt install streamlink
+`Debian (stable)`_                   .. code-block:: console
+
+                                        # wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | apt-key add -
+                                        # echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | tee "/etc/apt/sources.list.d/streamlink.list"
+                                        # apt update
+                                        # apt install streamlink
 `Fedora`_                            .. code-block:: console
 
                                         # dnf install streamlink
@@ -50,6 +60,8 @@ Distribution                         Installing
 
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
+.. _Debian (sid, testing): https://packages.debian.org/unstable/streamlink
+.. _Debian (stable): https://bintray.com/amurzeau/streamlink-debian/streamlink
 .. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
@@ -105,6 +117,7 @@ Distribution/Platform                Maintainer
 Arch                                 Giancarlo Razzolini <grazzolini at archlinux.org>
 Arch (aur, git)                      Josip Ponjavic <josipponjavic at gmail.com>
 Chocolatey                           Scott Walters <me at scowalt.com>
+Debian                               Alexis Murzeau <amubtdx at gmail.com>
 Fedora                               Mohamed El Morabity <melmorabity at fedoraproject.org>
 Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
