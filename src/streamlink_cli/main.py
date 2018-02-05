@@ -1,5 +1,6 @@
 import errno
 import os
+import platform
 import requests
 import sys
 import signal
@@ -9,8 +10,11 @@ from contextlib import closing
 from distutils.version import StrictVersion
 from functools import partial
 from itertools import chain
+from socks import __version__ as socks_version
 from time import sleep
+from websocket import __version__ as websocket_version
 
+from streamlink import __version__ as streamlink_version
 from streamlink import (Streamlink, StreamError, PluginError,
                         NoPluginError)
 from streamlink.cache import Cache
@@ -992,6 +996,26 @@ def check_root():
             console.logger.info("streamlink is running as root! Be careful!")
 
 
+def log_current_versions():
+    """Show current installed versions"""
+    if args.loglevel == "debug":
+        # MAC OS X
+        if sys.platform == "darwin":
+            os_version = "macOS {0}".format(platform.mac_ver()[0])
+        # Windows
+        elif sys.platform.startswith("win"):
+            os_version = "{0} {1}".format(platform.system(), platform.release())
+        # linux / other
+        else:
+            os_version = platform.platform()
+
+        console.logger.debug("OS:         {0}".format(os_version))
+        console.logger.debug("Python:     {0}".format(platform.python_version()))
+        console.logger.debug("Streamlink: {0}".format(streamlink_version))
+        console.logger.debug("Requests({0}), Socks({1}), Websocket({2})".format(
+            requests.__version__, socks_version, websocket_version))
+
+
 def check_version(force=False):
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
@@ -1031,6 +1055,7 @@ def main():
     setup_console()
     setup_http_session()
     check_root()
+    log_current_versions()
 
     if args.version_check or (not args.no_version_check and args.auto_version_check):
         with ignored(Exception):
