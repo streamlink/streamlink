@@ -1,3 +1,4 @@
+import re
 import struct
 from collections import defaultdict, namedtuple
 
@@ -36,11 +37,19 @@ class HLSStreamWriter(SegmentedStreamWriter):
         kwargs["retries"] = options.get("hls-segment-attempts")
         kwargs["threads"] = options.get("hls-segment-threads")
         kwargs["timeout"] = options.get("hls-segment-timeout")
+        kwargs["ignore_names"] = options.get("hls-segment-ignore-names")
         SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
 
         self.byterange_offsets = defaultdict(int)
         self.key_data = None
         self.key_uri = None
+        if self.ignore_names:
+            # creates a regex from a list of segment names,
+            # this will be used to ignore segments.
+            self.ignore_names = list(set(self.ignore_names))
+            self.ignore_names = "|".join(list(map(re.escape, self.ignore_names)))
+            self.ignore_names_re = re.compile(r"(?:{blacklist})\.ts".format(
+                    blacklist=self.ignore_names),  re.IGNORECASE)
 
     def create_decryptor(self, key, sequence):
         if key.method != "AES-128":
@@ -87,6 +96,11 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         try:
             request_params = self.create_request_params(sequence)
+            # skip ignored segment names
+            if self.ignore_names and self.ignore_names_re.search(sequence.segment.uri):
+                self.logger.debug("Skipping segment {0}".format(sequence.num))
+                return
+
             return self.session.http.get(sequence.segment.uri,
                                          timeout=self.timeout,
                                          exception=StreamError,
