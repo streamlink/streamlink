@@ -1,118 +1,170 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.stream import RTMPStream, HLSStream
+from streamlink.plugin import PluginOptions
+from streamlink.plugin.api import http
+from streamlink.plugin.api import validate
+from streamlink.stream import HLSStream
 
-CHANNEL_INFO_URL = "http://live.afreecatv.com:8057/api/get_broad_state_list.php"
-KEEP_ALIVE_URL = "{server}/stream_keepalive.html"
-STREAM_INFO_URLS = {
-    "rtmp": "http://sessionmanager01.afreeca.tv:6060/broad_stream_assign.html",
-    "hls": "http://resourcemanager.afreeca.tv:9090/broad_stream_assign.html"
-}
-HLS_KEY_URL = "http://api.m.afreeca.com/broad/a/watch"
+CHANNEL_API_URL = "http://live.afreecatv.com:8057/afreeca/player_live_api.php"
+STREAM_INFO_URLS = "{rmd}/broad_stream_assign.html"
 
 CHANNEL_RESULT_ERROR = 0
 CHANNEL_RESULT_OK = 1
 
+QUALITYS = ["original", "hd", "sd"]
 
-_url_re = re.compile(r"http(s)?://(\w+\.)?afreeca(tv)?.com/(?P<username>\w+)(/\d+)?")
+QUALITY_WEIGHTS = {
+    "original": 1080,
+    "hd": 720,
+    "sd": 480
+}
+
+_url_re = re.compile(r"http(s)?://(?P<cdn>\w+\.)?afreeca(tv)?\.com/(?P<username>\w+)(/\d+)?")
 
 _channel_schema = validate.Schema(
     {
         "CHANNEL": {
             "RESULT": validate.transform(int),
-            "BROAD_INFOS": [{
-                "list": [{
-                    "nBroadNo": validate.text
-                }]
-            }]
+            validate.optional("BPWD"): validate.text,
+            validate.optional("BNO"): validate.text,
+            validate.optional("RMD"): validate.text,
+            validate.optional("AID"): validate.text,
+            validate.optional("CDN"): validate.text
         }
     },
     validate.get("CHANNEL")
 )
+
 _stream_schema = validate.Schema(
     {
         validate.optional("view_url"): validate.url(
             scheme=validate.any("rtmp", "http")
-        )
+        ),
+        "stream_status": validate.text
     }
 )
 
 
 class AfreecaTV(Plugin):
+
+    login_url = "https://member.afreecatv.com:8111/login/LoginAction.php"
+
+    options = PluginOptions({
+        "username": None,
+        "password": None
+    })
+
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
 
-    def _get_channel_info(self, username):
-        headers = {
-            "Referer": self.url
-        }
-        params = {
-            "uid": username
-        }
-        res = http.get(CHANNEL_INFO_URL, params=params, headers=headers)
+    @classmethod
+    def stream_weight(cls, key):
+        weight = QUALITY_WEIGHTS.get(key)
+        if weight:
+            return weight, "afreeca"
 
+        return Plugin.stream_weight(key)
+
+    def _get_channel_info(self, username):
+        data = {
+            "bid": username,
+            "mode": "landing",
+            "player_type": "html5"
+        }
+
+        res = http.post(CHANNEL_API_URL, data=data)
         return http.json(res, schema=_channel_schema)
 
-    def _get_hls_key(self, broadcast, username):
+    def _get_hls_key(self, broadcast, username, quality):
         headers = {
             "Referer": self.url
         }
+
         data = {
-            "bj_id": username,
-            "broad_no": broadcast
+            "bid": username,
+            "bno": broadcast,
+            "pwd": "",
+            "quality": quality,
+            "type": "pwd"
         }
-        res = http.post(HLS_KEY_URL, data=data, headers=headers)
+        res = http.post(CHANNEL_API_URL, data=data, headers=headers)
+        return http.json(res, schema=_channel_schema)
 
-        return http.json(res)
-
-    def _get_stream_info(self, broadcast, type):
+    def _get_stream_info(self, broadcast, quality, cdn, rmd):
         params = {
-            "return_type": "gs_cdn",
-            "use_cors": "true",
-            "cors_origin_url": "m.afreeca.com",
-            "broad_no": "{broadcast}-mobile-hd-{type}".format(**locals()),
-            "broad_key": "{broadcast}-flash-hd-{type}".format(**locals())
+            "return_type": cdn,
+            "broad_key": "{broadcast}-flash-{quality}-hls".format(**locals())
         }
-        res = http.get(STREAM_INFO_URLS[type], params=params)
+        res = http.get(STREAM_INFO_URLS.format(rmd=rmd), params=params)
         return http.json(res, schema=_stream_schema)
 
-    def _get_hls_stream(self, broadcast, username):
-        keyjson = self._get_hls_key(broadcast, username)
-        if keyjson["result"] != CHANNEL_RESULT_OK:
+    def _get_hls_stream(self, broadcast, username, quality, cdn, rmd):
+        keyjson = self._get_hls_key(broadcast, username, quality)
+
+        if keyjson["RESULT"] != CHANNEL_RESULT_OK:
             return
-        key = keyjson["data"]["hls_authentication_key"]
-        info = self._get_stream_info(broadcast, "hls")
+        key = keyjson["AID"]
+
+        info = self._get_stream_info(broadcast, quality, cdn, rmd)
+
         if "view_url" in info:
             return HLSStream(self.session, info["view_url"], params=dict(aid=key))
 
-    def _get_rtmp_stream(self, broadcast):
-        info = self._get_stream_info(broadcast, "rtmp")
-        if "view_url" in info:
-            params = dict(rtmp=info["view_url"])
-            return RTMPStream(self.session, params=params, redirect=True)
+    def _login(self, username, password):
+        data = {
+            "szWork": "login",
+            "szType": "json",
+            "szUid": username,
+            "szPassword": password,
+            "isSaveId": "true",
+            "isSavePw": "false",
+            "isSaveJoin": "false"
+        }
+
+        res = http.post(self.login_url, data=data)
+        res = http.json(res)
+        if res["RESULT"] == 1:
+            return True
+        else:
+            return False
 
     def _get_streams(self):
+        if not self.session.get_option("hls-segment-ignore-names"):
+            ignore_segment = ["_0", "_1", "_2"]
+            self.session.set_option("hls-segment-ignore-names", ignore_segment)
+
+        login_username = self.get_option("username")
+        login_password = self.get_option("password")
+        if login_username and login_password:
+            self.logger.debug("Attempting login as {0}".format(login_username))
+            if self._login(login_username, login_password):
+                self.logger.info("Successfully logged in as {0}".format(login_username))
+            else:
+                self.logger.info("Failed to login as {0}".format(login_username))
+
         match = _url_re.match(self.url)
         username = match.group("username")
 
         channel = self._get_channel_info(username)
-        if channel["RESULT"] != CHANNEL_RESULT_OK:
+        if channel.get("BPWD") == "Y":
+            self.logger.error("Stream is Password-Protected")
+            return
+        elif channel.get("RESULT") == -6:
+            self.logger.error("Login required")
+            return
+        elif channel.get("RESULT") != CHANNEL_RESULT_OK:
             return
 
-        broadcast = channel["BROAD_INFOS"][0]["list"][0]["nBroadNo"]
-        if not broadcast:
+        (broadcast, rmd, cdn) = (channel["BNO"], channel["RMD"], channel["CDN"])
+        if not (broadcast and rmd and cdn):
             return
 
-        flash_stream = self._get_rtmp_stream(broadcast)
-        if flash_stream:
-            yield "live", flash_stream
-
-        mobile_stream = self._get_hls_stream(broadcast, username)
-        if mobile_stream:
-            yield "live", mobile_stream
+        for qkey in QUALITYS:
+            hls_stream = self._get_hls_stream(broadcast, username, qkey, cdn, rmd)
+            if hls_stream:
+                yield qkey, hls_stream
 
 
 __plugin__ = AfreecaTV
