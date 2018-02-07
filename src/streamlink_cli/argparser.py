@@ -1372,6 +1372,20 @@ plugin.add_argument(
     and reauthenticate.
     """
 )
+plugin.add_argument(
+    "--afreeca-username",
+    metavar="USERNAME",
+    help="""
+    The username used to register with afreecatv.com.
+    """
+)
+plugin.add_argument(
+    "--afreeca-password",
+    metavar="PASSWORD",
+    help="""
+    A afreecatv.com account password to use with --afreeca-username.
+    """
+)
 
 # Deprecated options
 stream.add_argument(
