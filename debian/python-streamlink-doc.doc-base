@@ -1,9 +1,0 @@
-Document: python-streamlink-doc
-Title: streamlink documentation
-Author: Streamlink Team
-Abstract: The documentation explains the usage and how to write new plugins
-Section: Programming/Python
-
-Format: HTML
-Files: /usr/share/doc/python-streamlink-doc/html/*.html
-Index: /usr/share/doc/python-streamlink-doc/html/index.html
