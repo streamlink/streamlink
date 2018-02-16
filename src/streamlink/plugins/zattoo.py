@@ -16,6 +16,7 @@ class Zattoo(Plugin):
     API_LOGIN = '{0}/zapi/v2/account/login'
     API_CHANNELS = '{0}/zapi/v2/cached/channels/{1}?details=False'
     API_WATCH = '{0}/zapi/watch'
+    API_WATCH_REC = '{0}/zapi/watch/recording/{1}'
     API_WATCH_VOD = '{0}/zapi/avod/videos/{1}/watch'
 
     _url_re = re.compile(r'''
@@ -26,9 +27,14 @@ class Zattoo(Plugin):
         tvonline\.ewe\.de
         |
         nettv\.netcologne\.de
-        )/(?:watch/(?P<channel>[^/\s]+)
-        |
-        ondemand/watch/(?P<vod_id>[^-]+)-)
+        )/
+        (?:
+            (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/(?P<recording_id>\d+)))
+            |
+            watch/(?P<channel>[^/\s]+)
+            |
+            ondemand/watch/(?P<vod_id>[^-]+)-
+        )
         ''', re.VERBOSE)
 
     _app_token_re = re.compile(r"""window\.appToken\s+=\s+'([^']+)'""")
@@ -122,9 +128,11 @@ class Zattoo(Plugin):
         self.logger.debug('_watch ...')
         match = self._url_re.match(self.url)
         if not match:
+            self.logger.debug('_watch ... no match')
             return
         channel = match.group('channel')
         vod_id = match.group('vod_id')
+        recording_id = match.group('recording_id')
 
         cookies = {
             'beaker.session.id': self._session_attributes.get('beaker.session.id'),
@@ -136,8 +144,11 @@ class Zattoo(Plugin):
             params, watch_url = self._watch_live(channel, cookies)
         elif vod_id:
             params, watch_url = self._watch_vod(vod_id)
+        elif recording_id:
+            params, watch_url = self._watch_recording(recording_id)
 
         if not watch_url:
+            self.logger.debug('Missing watch_url')
             return
 
         res = []
@@ -153,6 +164,7 @@ class Zattoo(Plugin):
                 self.logger.error(str(e))
             return
 
+        self.logger.debug('Found post data')
         data = http.json(res)
 
         if data['success']:
@@ -189,6 +201,15 @@ class Zattoo(Plugin):
 
         params = {
             'cid': cid,
+            'https_watch_urls': True,
+            'stream_type': 'hls'
+        }
+        return params, watch_url
+
+    def _watch_recording(self, recording_id):
+        self.logger.debug('_watch_recording ...')
+        watch_url = self.API_WATCH_REC.format(self.base_url, recording_id)
+        params = {
             'https_watch_urls': True,
             'stream_type': 'hls'
         }
