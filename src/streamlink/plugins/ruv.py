@@ -6,15 +6,11 @@ from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 
 from streamlink.plugin.api import http
+from streamlink.plugin.api import validate
 
-HLS_RUV_LIVE_URL = """http://ruvruv-live.hls.adaptive.level3.net/ruv/{0}/\
-index/stream{1}.m3u8"""
-
-HLS_RADIO_LIVE_URL = """http://sip-live.hds.adaptive.level3.net/hls-live/\
-ruv-{0}/_definst_/live/stream1.m3u8"""
-
-HLS_SARPURINN_URL = """http://sip-ruv-vod.dcp.adaptive.level3.net/\
-{0}/{1}{2}"""
+# URL to the RUV LIVE API
+RUV_LIVE_API = """http://www.ruv.is/sites/all/themes/at_ruv/scripts/\
+ruv-stream.php?channel={0}&format=json"""
 
 
 _live_url_re = re.compile(r"""^(?:https?://)?(?:www\.)?ruv\.is/
@@ -43,33 +39,26 @@ _sarpurinn_url_re = re.compile(r"""^(?:https?://)?(?:www\.)?ruv\.is/spila/
                                     /?
                                     """, re.VERBOSE)
 
-_single_re = re.compile(r"""(?:http://)?sip-ruv-vod.dcp.adaptive.level3.net/
-                            (?P<status>
-                                lokad|
-                                opid
-                            )
+_single_re = re.compile(r"""(?P<url>http://[0-9a-zA-Z\-\.]*/
+                            (lokad|opid)
                             /
-                            (?P<date>[0-9]+/[0-9][0-9]/[0-9][0-9]/)?
-                            (?P<id>[A-Z0-9\$_]+)
-                            \.mp4\.m3u8
+                            ([0-9]+/[0-9][0-9]/[0-9][0-9]/)?
+                            ([A-Z0-9\$_]+\.mp4\.m3u8)
+                            )
                          """, re.VERBOSE)
 
-_multi_re = re.compile(r"""(?:http://)?sip-ruv-vod.dcp.adaptive.level3.net/
-                            (?P<status>
-                                lokad|
-                                opid
-                            )
-                            /manifest.m3u8\?tlm=hls&streams=
+_multi_re = re.compile(r"""(?P<base_url>http://[0-9a-zA-Z\-\.]*/
+                            (lokad|opid)
+                            /)
+                            manifest.m3u8\?tlm=hls&streams=
                             (?P<streams>[0-9a-zA-Z\/\.\,:]+)
                          """, re.VERBOSE)
+
 
 class Ruv(Plugin):
     @classmethod
     def can_handle_url(cls, url):
-        if _live_url_re.match(url):
-            return True
-        else:
-            return _sarpurinn_url_re.match(url)
+        return _live_url_re.match(url) or _sarpurinn_url_re.match(url)
 
     def __init__(self, url):
         Plugin.__init__(self, url)
@@ -85,75 +74,69 @@ class Ruv(Plugin):
             # Remove dashes
             self.stream_id.replace("-", "")
 
+            # Rondo is identified as ras3
             if self.stream_id == "rondo":
                 self.stream_id = "ras3"
         else:
             self.live = False
 
     def _get_live_streams(self):
-        if self.stream_id == "ruv" or self.stream_id == "ruv2":
-            qualities_hls = ["240p", "360p", "480p", "720p"]
-            for i, quality_hls in enumerate(qualities_hls):
-                yield quality_hls, HLSStream(
-                    self.session,
-                    HLS_RUV_LIVE_URL.format(self.stream_id, i+1)
-                )
-        else:
-            yield "audio", HLSStream(
-                self.session,
-                HLS_RADIO_LIVE_URL.format(self.stream_id)
-            )
+        # Get JSON API
+        res = http.get(RUV_LIVE_API.format(self.stream_id))
+
+        # Parse the JSON API
+        json_res = http.json(res)
+
+        for url in json_res["result"]:
+            if url.startswith("rtmp:"):
+                continue
+
+            # Get available streams
+            streams = HLSStream.parse_variant_playlist(self.session, url)
+
+            for quality, hls in streams.items():
+                yield quality, hls
 
     def _get_sarpurinn_streams(self):
-        res = http.get(self.url)
+        # Get HTML page
+        res = http.get(self.url).text
+        lines = "\n".join([l for l in res.split("\n") if "video.src" in l])
+        multi_stream_match = _multi_re.search(lines)
 
-        multi_stream_match = _multi_re.search(res.text)
-
-        if multi_stream_match and multi_stream_match.group("streams") is not None:
-            status = multi_stream_match.group("status")
+        if multi_stream_match and multi_stream_match.group("streams"):
+            base_url = multi_stream_match.group("base_url")
             streams = multi_stream_match.group("streams").split(",")
 
             for stream in streams:
                 if stream.count(":") != 1:
                     continue
 
-                [url, quality] = stream.split(":")
+                [token, quality] = stream.split(":")
                 quality = int(quality)
                 key = ""
 
                 if quality <= 500:
-                  key = "240p"
+                    key = "240p"
                 elif quality <= 800:
-                  key = "360p"
+                    key = "360p"
                 elif quality <= 1200:
-                  key = "480p"
+                    key = "480p"
                 elif quality <= 2400:
-                  key = "720p"
+                    key = "720p"
                 else:
-                  key = "1080p"
+                    key = "1080p"
 
                 yield key, HLSStream(
                     self.session,
-                    HLS_SARPURINN_URL.format(status, "", url)
+                    base_url + token
                 )
 
         else:
-            single_stream_match = _single_re.search(res.text)
+            single_stream_match = _single_re.search(lines)
 
             if single_stream_match:
-                status = single_stream_match.group("status")
-                date = single_stream_match.group("date")
-                token = single_stream_match.group("id")
-                key = "576p"
-
-                # Set date as an empty string instread of None
-                if date is None:
-                    date = ""
-
-                yield key, HLSStream(
-                    self.session,
-                    HLS_SARPURINN_URL.format(status, date, token + ".mp4.m3u8")
-                )
+                url = single_stream_match.group("url")
+                yield "576p", HLSStream(self.session, url)
 
     def _get_streams(self):
         if self.live:
