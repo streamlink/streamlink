@@ -1335,22 +1335,6 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--neulion-username",
-    "--ufctv-username",
-    metavar="USERNAME",
-    help="""
-    The username used to register with your neulion provider.
-    """
-)
-plugin.add_argument(
-    "--neulion-password",
-    "--ufctv-password",
-    metavar="PASSWORD",
-    help="""
-    A neulion provider account password to use with --neulion-username.
-    """
-)
-plugin.add_argument(
     "--zattoo-email",
     metavar="EMAIL",
     help="""
