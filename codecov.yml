@@ -14,7 +14,6 @@ coverage:
   status:
     changes: false
     patch: false
-    project: 
+    project:
       default:
-        target: 40
-
+        target: 30
