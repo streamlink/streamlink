@@ -40,13 +40,13 @@ install:
 
   # install dev requirements, for testing, etc.
   - "pip install -r dev-requirements.txt"
-  - "pip install pycountry" 
-  - "build.cmd %PYTHON%\\python.exe -m pip install ."
+  - "pip install pycountry"
+  - "build.cmd %PYTHON%\\python.exe -m pip install -e ."
 
 build: off
 
 test_script:
-  - "build.cmd %PYTHON%\\python.exe -m coverage run setup.py test"
+  - "build.cmd %PYTHON%\\python.exe -m pytest --cov"
 
 after_test:
   - rm -rf tests/coverages

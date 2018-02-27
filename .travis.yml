@@ -13,17 +13,16 @@ matrix:
   - python: '3.7-dev'
 
 before_install:
-  - pip install --disable-pip-version-check --upgrade pip
+  - pip install --disable-pip-version-check --upgrade pip setuptools
   - pip install -r dev-requirements.txt
-  - pip install pycountry 
+  - pip install pycountry
   - pip install -r docs-requirements.txt
 
 install:
-  - python setup.py install
+  - pip install -e .
 
 script:
-  - python -m pytest tests/
-  - coverage run -m pytest tests/
+  - pytest --cov
   # test building the docs
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
