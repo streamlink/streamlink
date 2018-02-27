@@ -6,12 +6,13 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+from streamlink.utils import update_scheme
 
 
 class Kanal7(Plugin):
     url_re = re.compile(r"https?://(?:www.)?kanal7.com/canli-izle")
-    iframe_re = re.compile(r'iframe .*?src="(http://[^"]*?)"')
-    stream_re = re.compile(r'''tp_file\s+=\s+['"](http[^"]*?)['"]''')
+    iframe_re = re.compile(r'iframe .*?src="((?:http:)?//[^"]*?)"')
+    stream_re = re.compile(r'''video-source\s*=\s*['"](http[^"']*?)['"]''')
 
     @classmethod
     def can_handle_url(cls, url):
@@ -23,6 +24,7 @@ class Kanal7(Plugin):
         iframe = self.iframe_re.search(res.text)
         iframe_url = iframe and iframe.group(1)
         if iframe_url:
+            iframe_url = update_scheme(self.url, iframe_url)
             self.logger.debug("Found iframe: {}", iframe_url)
         return iframe_url
 
