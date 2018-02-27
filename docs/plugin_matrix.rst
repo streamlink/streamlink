@@ -114,6 +114,7 @@ hitbox              - hitbox.tv          Yes   Yes
 huajiao             huajiao.com          Yes   No
 huomao              huomao.com           Yes   No
 huya                huya.com             Yes   No    Temporarily only HLS streams available.
+idf1                idf1.fr              Yes   Yes
 ine                 ine.com              ---   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 kanal7              kanal7.com           Yes   No
