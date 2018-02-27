@@ -2,6 +2,7 @@ import pkgutil
 import sys
 
 import imp
+import six
 from streamlink import Streamlink
 
 if sys.version_info[0:2] == (2, 6):
@@ -36,8 +37,8 @@ class PluginTestMeta(type):
         return type.__new__(mcs, name, bases, dict)
 
 
+@six.add_metaclass(PluginTestMeta)
 class TestPlugins(unittest.TestCase):
     """
     Test that an instance of each plugin can be created.
     """
-    __metaclass__ = PluginTestMeta

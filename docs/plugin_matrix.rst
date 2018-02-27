@@ -102,7 +102,6 @@ filmon_us           filmon.us            Yes   Yes
 foxtr               fox.com.tr           Yes   No
 funimationnow       - funimation.com     --    Yes
                     - funimationnow.uk
-furstream           furstre.am           Yes   No
 gardenersworld      gardenersworld.com   --    Yes
 garena              garena.live          Yes   --
 gomexp              gomexp.com           Yes   No
