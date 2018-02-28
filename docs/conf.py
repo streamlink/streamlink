@@ -42,7 +42,7 @@ copyright = '2018, Streamlink'
 
 #
 # The short X.Y version.
-version = streamlink_version
+version = streamlink_version.split('+')[0]
 # The full version, including alpha/beta/rc tags.
 release = streamlink_version
 
