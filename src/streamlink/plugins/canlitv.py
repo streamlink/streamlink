@@ -6,7 +6,7 @@ from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 EMBED_URL_1 = "http://www.canlitv.plus/kanallar.php?kanal={0}"
-EMBED_URL_2 = "http://www.ecanlitvizle.net/embed.php?kanal={0}"
+EMBED_URL_2 = "http://www.ecanlitvizle.live/embed.php?kanal={0}"
 
 _m3u8_re = re.compile(r"""file\s*:\s*['"](?P<url>[^"']+)['"]""")
 _url_re = re.compile(r"""http(s)?://(?:www\.)?(?P<domain>
@@ -14,7 +14,7 @@ _url_re = re.compile(r"""http(s)?://(?:www\.)?(?P<domain>
     |
     canlitvlive\.(io|co|live|site)
     |
-    ecanlitvizle\.net
+    ecanlitvizle\.(net|live|tv)
     )
     /(izle/|(?:onizleme|tv)\.php\?kanal=)?
     (?P<channel>[\w\-\=]+)""", re.VERBOSE)
@@ -35,9 +35,9 @@ class Canlitv(Plugin):
             "User-Agent": useragents.FIREFOX
         }
 
-        if domain == "canlitv.plus":
+        if domain.startswith("canlitv"):
             res = http.get(EMBED_URL_1.format(channel), headers=headers)
-        elif domain == "ecanlitvizle.net":
+        elif domain.startswith("ecanlitvizle"):
             res = http.get(EMBED_URL_2.format(channel), headers=headers)
         else:
             res = http.get(self.url, headers=headers)
