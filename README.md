@@ -26,6 +26,7 @@ sudo pip install streamlink
 
 ```bash
 git clone https://github.com/streamlink/streamlink
+cd streamlink
 sudo python setup.py install
 ```
 
