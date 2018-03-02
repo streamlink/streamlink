@@ -28,6 +28,7 @@ ard_mediathek       - ardmediathek.de    Yes   Yes   Streams may be geo-restrict
                     - mediathek... [5]_
 artetv              arte.tv              Yes   Yes
 atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
+balticlivecam       balticlivecam.com    Yes   --
 bambuser            bambuser.com         Yes   Yes
 bbciplayer          bbc.co.uk/iplayer    Yes   Yes   Streams may be geo-restricted to the United Kingdom.
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
