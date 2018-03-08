@@ -77,7 +77,8 @@ changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
   LOG=$(git shortlog --email --no-merges --pretty=%s ${1}.. | sed  's/^/    /')
-  echo -e "::\n\n$LOG" > ../changes.txt
+  echo -e "WRITE YOUR LOG HERE\n\nIf you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+\n\n::\n\n$LOG" > ../changes.txt
   echo "Changelog has been written to changes.txt"
   echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
   echo "Open changes.txt and add the release information"
