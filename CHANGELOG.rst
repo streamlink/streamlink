@@ -15,6 +15,7 @@ Here's what's new:
 	- Neulion plugin removed due to DMCA notice (https://github.com/streamlink/streamlink/pull/1497)
 	- And many more updates to numerous other plugins!
 
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
 
 ::
 
@@ -86,6 +87,7 @@ Changes:
   - HLS seeking support (https://github.com/streamlink/streamlink/pull/1303)
   - Changes to the Windows binary (docs: https://github.com/streamlink/streamlink/pull/1408 minor changes to install directory: https://github.com/streamlink/streamlink/pull/1407)
 
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
 
 ::
 
