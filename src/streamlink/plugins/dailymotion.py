@@ -62,8 +62,9 @@ class DailyMotion(Plugin):
                     for s in HLSStream.parse_variant_playlist(self.session, stream['url']).items():
                         yield s
                 elif stream['type'] == 'video/mp4':
-                    bitrate = quality + 'p'
-                    yield bitrate, HTTPStream(self.session, stream['url'])
+                    # Drop FPS in quality
+                    resolution = re.sub('@[0-9]+', '', quality) + 'p'
+                    yield resolution, HTTPStream(self.session, stream['url'])
 
     def get_live_id(self, username):
         """Get the livestream videoid from a username.
