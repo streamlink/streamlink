@@ -38,4 +38,3 @@ class TestPluginCanlitv(unittest.TestCase):
         self.assertFalse(Canlitv.can_handle_url("http://www.canlitvlive.io"))
         self.assertFalse(Canlitv.can_handle_url("http://www.canlitvlive.site"))
         self.assertFalse(Canlitv.can_handle_url("http://www.ecanlitvizle.net"))
-

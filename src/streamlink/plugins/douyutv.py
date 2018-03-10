@@ -10,14 +10,14 @@ from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 
 API_URL = "https://capi.douyucdn.cn/api/v1/{0}&auth={1}"
 VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
-API_SECRET = "Y237pxTx2In5ayGz"
+API_SECRET = "zNzMV1y4EMxOHS6I5WKm"
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_OFFLINE = 2
 STREAM_WEIGHTS = {
-        "low": 540,
-        "medium": 720,
-        "source": 1080
-        }
+    "low": 540,
+    "medium": 720,
+    "source": 1080
+}
 
 _url_re = re.compile(r"""
     http(s)?://
@@ -129,10 +129,10 @@ class Douyutv(Plugin):
             if channel is None:
                 channel = http.get(self.url, schema=_room_id_alt_schema)
 
-        http.headers.update({'User-Agent': useragents.ANDROID})
+        http.headers.update({'User-Agent': useragents.WINDOWS_PHONE_8})
         cdns = ["ws", "tct", "ws2", "dl"]
         ts = int(time.time())
-        suffix = "room/{0}?aid=androidhd1&cdn={1}&client_sys=android&time={2}".format(channel, cdns[0], ts)
+        suffix = "room/{0}?aid=wp&cdn={1}&client_sys=wp&time={2}".format(channel, cdns[0], ts)
         sign = hashlib.md5((suffix + API_SECRET).encode()).hexdigest()
 
         res = http.get(API_URL.format(suffix, sign))
@@ -151,25 +151,25 @@ class Douyutv(Plugin):
         url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
         if 'rtmp:' in url:
             stream = RTMPStream(self.session, {
-                    "rtmp": url,
-                    "live": True
-                    })
+                "rtmp": url,
+                "live": True
+            })
             yield "source", stream
         else:
             yield "source", HTTPStream(self.session, url)
 
         multi_streams = {
-                "middle": "low",
-                "middle2": "medium"
-                }
+            "middle": "low",
+            "middle2": "medium"
+        }
         for name, url in room["rtmp_multi_bitrate"].items():
             url = "{room[rtmp_url]}/{url}".format(room=room, url=url)
             name = multi_streams[name]
             if 'rtmp:' in url:
                 stream = RTMPStream(self.session, {
-                        "rtmp": url,
-                        "live": True
-                        })
+                    "rtmp": url,
+                    "live": True
+                })
                 yield name, stream
             else:
                 yield name, HTTPStream(self.session, url)

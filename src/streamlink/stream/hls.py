@@ -1,3 +1,4 @@
+import re
 import struct
 from collections import defaultdict, namedtuple
 
@@ -18,17 +19,37 @@ def num_to_iv(n):
     return struct.pack(">8xq", n)
 
 
+def pkcs7_decode(paddedData, keySize=16):
+    '''
+    Remove the PKCS#7 padding
+    '''
+    # Use ord + [-1:] to support both python 2 and 3
+    val = ord(paddedData[-1:])
+    if val > keySize:
+        raise StreamError("Input is not padded or padding is corrupt, got padding size of {0}".format(val))
+
+    return paddedData[:-val]
+
+
 class HLSStreamWriter(SegmentedStreamWriter):
     def __init__(self, reader, *args, **kwargs):
         options = reader.stream.session.options
         kwargs["retries"] = options.get("hls-segment-attempts")
         kwargs["threads"] = options.get("hls-segment-threads")
         kwargs["timeout"] = options.get("hls-segment-timeout")
+        kwargs["ignore_names"] = options.get("hls-segment-ignore-names")
         SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
 
         self.byterange_offsets = defaultdict(int)
         self.key_data = None
         self.key_uri = None
+        if self.ignore_names:
+            # creates a regex from a list of segment names,
+            # this will be used to ignore segments.
+            self.ignore_names = list(set(self.ignore_names))
+            self.ignore_names = "|".join(list(map(re.escape, self.ignore_names)))
+            self.ignore_names_re = re.compile(r"(?:{blacklist})\.ts".format(
+                    blacklist=self.ignore_names),  re.IGNORECASE)
 
     def create_decryptor(self, key, sequence):
         if key.method != "AES-128":
@@ -75,6 +96,11 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         try:
             request_params = self.create_request_params(sequence)
+            # skip ignored segment names
+            if self.ignore_names and self.ignore_names_re.search(sequence.segment.uri):
+                self.logger.debug("Skipping segment {0}".format(sequence.num))
+                return
+
             return self.session.http.get(sequence.segment.uri,
                                          timeout=self.timeout,
                                          exception=StreamError,
@@ -94,16 +120,17 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            for chunk in res.iter_content(chunk_size):
-                # If the input data is not a multiple of 16, cut off any garbage
-                garbage_len = len(chunk) % 16
-                if garbage_len:
-                    self.logger.debug("Cutting off {0} bytes of garbage "
-                                      "before decrypting", garbage_len)
-                    decrypted_chunk = decryptor.decrypt(chunk[:-garbage_len])
-                else:
-                    decrypted_chunk = decryptor.decrypt(chunk)
-                self.reader.buffer.write(decrypted_chunk)
+            data = res.content
+            # If the input data is not a multiple of 16, cut off any garbage
+            garbage_len = len(data) % 16
+            if garbage_len:
+                self.logger.debug("Cutting off {0} bytes of garbage "
+                                  "before decrypting", garbage_len)
+                decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
+            else:
+                decrypted_chunk = decryptor.decrypt(data)
+
+            self.reader.buffer.write(pkcs7_decode(decrypted_chunk))
         else:
             for chunk in res.iter_content(chunk_size):
                 self.reader.buffer.write(chunk)
@@ -114,6 +141,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 class HLSStreamWorker(SegmentedStreamWorker):
     def __init__(self, *args, **kwargs):
         SegmentedStreamWorker.__init__(self, *args, **kwargs)
+        self.stream = self.reader.stream
 
         self.playlist_changed = False
         self.playlist_end = None
@@ -122,8 +150,30 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_reload_time = 15
         self.live_edge = self.session.options.get("hls-live-edge")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
+        self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
+        self.duration_limit = self.stream.duration or (int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
+        self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         self.reload_playlist()
+
+        if self.playlist_end is None:
+            if self.duration_offset_start > 0:
+                self.logger.debug("Time offsets negative for live streams, skipping back {0} seconds",
+                                  self.duration_offset_start)
+            # live playlist, force offset durations back to None
+            self.duration_offset_start = -self.duration_offset_start
+
+        if self.duration_offset_start != 0:
+            self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
+            if self.duration_limit and self.playlist_end:
+                self.playlist_end = self.duration_to_sequence(self.duration_offset_start + self.duration_limit,
+                                                              self.playlist_sequences)
+        if self.playlist_sequences:
+            self.logger.debug("First Sequence: {0}; Last Sequence: {1}",
+                              self.playlist_sequences[0].num, self.playlist_sequences[-1].num)
+            self.logger.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
+                              self.duration_offset_start, self.duration_limit, self.playlist_sequence,
+                              self.playlist_end)
 
     def reload_playlist(self):
         if self.closed:
@@ -173,7 +223,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.playlist_end = last_sequence.num
 
         if self.playlist_sequence < 0:
-            if self.playlist_end is None and not self.stream.force_restart:
+            if self.playlist_end is None and not self.hls_live_restart:
                 edge_index = -(min(len(sequences), max(int(self.live_edge), 1)))
                 edge_sequence = sequences[edge_index]
                 self.playlist_sequence = edge_sequence.num
@@ -182,6 +232,21 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
     def valid_sequence(self, sequence):
         return sequence.num >= self.playlist_sequence
+
+    def duration_to_sequence(self, duration, sequences):
+        d = 0
+        default = -1
+
+        sequences_order = sequences if duration >= 0 else reversed(sequences)
+
+        for sequence in sequences_order:
+            if d >= abs(duration):
+                return sequence.num
+            d += sequence.segment.duration
+            default = sequence.num
+
+        # could not skip far enough, so return the default
+        return default
 
     def iter_segments(self):
         while not self.closed:
@@ -246,9 +311,11 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
 
-    def __init__(self, session_, url, force_restart=False, **args):
+    def __init__(self, session_, url, force_restart=False, start_offset=0, duration=None, **args):
         HTTPStream.__init__(self, session_, url, **args)
         self.force_restart = force_restart
+        self.start_offset = start_offset
+        self.duration = duration
 
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
@@ -272,6 +339,7 @@ class HLSStream(HTTPStream):
     def parse_variant_playlist(cls, session_, url, name_key="name",
                                name_prefix="", check_streams=False,
                                force_restart=False, name_fmt=None,
+                               start_offset=0, duration=None,
                                **request_params):
         """Attempts to parse a variant playlist and return its streams.
 
@@ -379,9 +447,12 @@ class HLSStream(HTTPStream):
                                         video=playlist.uri,
                                         audio=external_audio and external_audio.uri,
                                         force_restart=force_restart,
+                                        start_offset=start_offset,
+                                        duration=duration,
                                         **request_params)
             else:
-                stream = HLSStream(session_, playlist.uri, force_restart=force_restart, **request_params)
+                stream = HLSStream(session_, playlist.uri, force_restart=force_restart,
+                                   start_offset=start_offset, duration=duration, **request_params)
             streams[name_prefix + stream_name] = stream
 
         return streams

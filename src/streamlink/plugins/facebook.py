@@ -13,6 +13,7 @@ class Facebook(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
+    @Plugin.broken(990)
     def _get_streams(self):
         match = _url_re.match(self.url)
         video = match.group("video_id")
@@ -20,5 +21,6 @@ class Facebook(Plugin):
         playlist = _playlist_url.format(video)
 
         return HLSStream.parse_variant_playlist(self.session, playlist)
+
 
 __plugin__ = Facebook

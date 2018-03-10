@@ -1,5 +1,6 @@
 import errno
 import os
+import platform
 import requests
 import sys
 import signal
@@ -9,8 +10,11 @@ from contextlib import closing
 from distutils.version import StrictVersion
 from functools import partial
 from itertools import chain
+from socks import __version__ as socks_version
 from time import sleep
+from websocket import __version__ as websocket_version
 
+from streamlink import __version__ as streamlink_version
 from streamlink import (Streamlink, StreamError, PluginError,
                         NoPluginError)
 from streamlink.cache import Cache
@@ -255,7 +259,7 @@ def output_stream(stream):
             success_open = True
             break
         except StreamError as err:
-            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i+1, args.retry_open, stream, err)
+            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i + 1, args.retry_open, stream, err)
 
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
@@ -719,11 +723,23 @@ def setup_options():
     if args.hls_segment_timeout:
         streamlink.set_option("hls-segment-timeout", args.hls_segment_timeout)
 
+    if args.hls_segment_ignore_names:
+        streamlink.set_option("hls-segment-ignore-names", args.hls_segment_ignore_names)
+
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
 
     if args.hls_audio_select:
         streamlink.set_option("hls-audio-select", args.hls_audio_select)
+
+    if args.hls_start_offset:
+        streamlink.set_option("hls-start-offset", args.hls_start_offset)
+
+    if args.hls_duration:
+        streamlink.set_option("hls-duration", args.hls_duration)
+
+    if args.hls_live_restart:
+        streamlink.set_option("hls-live-restart", args.hls_live_restart)
 
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
@@ -781,7 +797,6 @@ def setup_options():
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)
-
 
     # Deprecated options
     if args.hds_fragment_buffer:
@@ -854,9 +869,6 @@ def setup_plugin_options():
     if args.schoolism_part:
         streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
 
-    if args.daisuki_mux_subtitles:
-        streamlink.set_plugin_option("daisuki", "mux_subtitles", args.daisuki_mux_subtitles)
-
     if args.rtve_mux_subtitles:
         streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
 
@@ -928,17 +940,6 @@ def setup_plugin_options():
     if bbciplayer_password:
         streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
 
-    if args.ufctv_username:
-        streamlink.set_plugin_option("ufctv", "username", args.ufctv_username)
-
-    if args.ufctv_username and not args.ufctv_password:
-        ufctv_password = console.askpass("Enter ufc.tv account password: ")
-    else:
-        ufctv_password = args.ufctv_password
-
-    if ufctv_password:
-        streamlink.set_plugin_option("ufctv", "password", ufctv_password)
-
     if args.zattoo_email:
         streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
     if args.zattoo_email and not args.zattoo_password:
@@ -952,36 +953,42 @@ def setup_plugin_options():
         streamlink.set_plugin_option("zattoo", "purge_credentials",
                                      args.zattoo_purge_credentials)
 
-    # Deprecated options
-    if args.jtv_legacy_names:
-        console.logger.warning("The option --jtv/twitch-legacy-names is "
-                               "deprecated and will be removed in the future.")
+    if args.afreeca_username:
+        streamlink.set_plugin_option("afreeca", "username", args.afreeca_username)
 
-    if args.jtv_cookie:
-        console.logger.warning("The option --jtv-cookie is deprecated and "
-                               "will be removed in the future.")
+    if args.afreeca_username and not args.afreeca_password:
+        afreeca_password = console.askpass("Enter afreecatv account password: ")
+    else:
+        afreeca_password = args.afreeca_password
 
-    if args.jtv_password:
-        console.logger.warning("The option --jtv-password is deprecated "
-                               "and will be removed in the future.")
-
-    if args.gomtv_username:
-        console.logger.warning("The option --gomtv-username is deprecated "
-                               "and will be removed in the future.")
-
-    if args.gomtv_password:
-        console.logger.warning("The option --gomtv-password is deprecated "
-                               "and will be removed in the future.")
-
-    if args.gomtv_cookie:
-        console.logger.warning("The option --gomtv-cookie is deprecated "
-                               "and will be removed in the future.")
+    if afreeca_password:
+        streamlink.set_plugin_option("afreeca", "password", afreeca_password)
 
 
 def check_root():
     if hasattr(os, "getuid"):
         if os.geteuid() == 0:
             console.logger.info("streamlink is running as root! Be careful!")
+
+
+def log_current_versions():
+    """Show current installed versions"""
+    if args.loglevel == "debug":
+        # MAC OS X
+        if sys.platform == "darwin":
+            os_version = "macOS {0}".format(platform.mac_ver()[0])
+        # Windows
+        elif sys.platform.startswith("win"):
+            os_version = "{0} {1}".format(platform.system(), platform.release())
+        # linux / other
+        else:
+            os_version = platform.platform()
+
+        console.logger.debug("OS:         {0}".format(os_version))
+        console.logger.debug("Python:     {0}".format(platform.python_version()))
+        console.logger.debug("Streamlink: {0}".format(streamlink_version))
+        console.logger.debug("Requests({0}), Socks({1}), Websocket({2})".format(
+            requests.__version__, socks_version, websocket_version))
 
 
 def check_version(force=False):
@@ -1023,6 +1030,7 @@ def main():
     setup_console()
     setup_http_session()
     check_root()
+    log_current_versions()
 
     if args.version_check or (not args.no_version_check and args.auto_version_check):
         with ignored(Exception):

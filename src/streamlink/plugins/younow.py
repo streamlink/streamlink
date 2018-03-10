@@ -16,14 +16,14 @@ def getStreamURL(channel):
     url = jsonapi + channel
     res = http.get(url)
     streamerinfo = http.json(res)
-    #print(streamerinfo)
+    # print(streamerinfo)
 
     if not any("media" in s for s in streamerinfo):
         print("User offline or invalid")
         return
     else:
         streamdata = streamerinfo['media']
-        #print(streamdata)
+        # print(streamdata)
         streamurl = "rtmp://" + streamdata['host'] + streamdata['app'] + "/" + streamdata['stream']
         #print (streamurl)
 

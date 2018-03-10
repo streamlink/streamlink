@@ -12,7 +12,7 @@ from streamlink.stream import HLSStream
 
 class Dogan(Plugin):
     """
-    Support for the live streams from Doğan Media Group channels
+    Support for the live streams from Dogan Media Group channels
     """
     url_re = re.compile(r"""
         https?://(?:www.)?

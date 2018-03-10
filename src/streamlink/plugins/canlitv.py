@@ -48,7 +48,7 @@ class Canlitv(Plugin):
             hls_url = url_match.group("url")
 
             if domain in ("canlitvlive.live", "canlitvlive.site"):
-                 hls_url = "http:" + hls_url
+                hls_url = "http:" + hls_url
 
             self.logger.debug("Found URL: {0}".format(hls_url))
 
@@ -60,5 +60,6 @@ class Canlitv(Plugin):
                     yield "live", HLSStream(self.session, hls_url)
             except IOError as err:
                 self.logger.error("Failed to extract streams: {0}", err)
+
 
 __plugin__ = Canlitv

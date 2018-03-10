@@ -11,7 +11,7 @@ CHANNEL_INFO_URL = "http://api.plu.cn/tga/streams/%s"
 QQ_STREAM_INFO_URL = "http://info.zb.qq.com/?cnlid=%d&cmd=2&stream=%d&system=1&sdtfrom=113"
 PLU_STREAM_INFO_URL = "http://livestream.plu.cn/live/getlivePlayurl?roomId=%d"
 _quality_re = re.compile(r"\d+x(\d+)$")
-_url_re = re.compile(r"http://star\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9]+)")
+_url_re = re.compile(r"http://(star|y)\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9]+)")
 
 _channel_schema = validate.Schema(
     {
@@ -32,8 +32,8 @@ _plu_schema = validate.Schema(
                 "securityUrl": validate.url(scheme=validate.any("rtmp", "http")),
                 "resolution": validate.text,
                 "ext": validate.text
-                }]
-         }]
+            }]
+        }]
     }
 )
 

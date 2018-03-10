@@ -62,4 +62,5 @@ class CDNBG(Plugin):
                                                     stream_url,
                                                     headers={"User-Agent": useragents.CHROME})
 
+
 __plugin__ = CDNBG

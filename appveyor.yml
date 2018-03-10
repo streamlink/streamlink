@@ -2,12 +2,10 @@ environment:
 
   matrix:
     - PYTHON: "C:\\Python27"
-    - PYTHON: "C:\\Python33"
     - PYTHON: "C:\\Python34"
     - PYTHON: "C:\\Python35"
     - PYTHON: "C:\\Python36"
     - PYTHON: "C:\\Python27-x64"
-    - PYTHON: "C:\\Python33-x64"
     - PYTHON: "C:\\Python34-x64"
     - PYTHON: "C:\\Python35-x64"
     - PYTHON: "C:\\Python36-x64"
@@ -42,13 +40,13 @@ install:
 
   # install dev requirements, for testing, etc.
   - "pip install -r dev-requirements.txt"
-  - "pip install pycountry" 
-  - "build.cmd %PYTHON%\\python.exe -m pip install ."
+  - "pip install pycountry"
+  - "build.cmd %PYTHON%\\python.exe -m pip install -e ."
 
 build: off
 
 test_script:
-  - "build.cmd %PYTHON%\\python.exe -m coverage run setup.py test"
+  - "build.cmd %PYTHON%\\python.exe -m pytest --cov"
 
 after_test:
   - rm -rf tests/coverages

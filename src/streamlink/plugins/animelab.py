@@ -86,5 +86,4 @@ class AnimeLab(Plugin):
                     yield q, s
 
 
-
 __plugin__ = AnimeLab

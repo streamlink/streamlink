@@ -11,7 +11,6 @@ class TVNBG(Plugin):
     iframe_re = re.compile(r'<iframe.*?src="([^"]+)".*?></iframe>')
     src_re = re.compile(r'<source.*?src="([^"]+)".*?/>')
 
-
     @classmethod
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None

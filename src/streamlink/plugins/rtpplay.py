@@ -14,7 +14,7 @@ class RTPPlay(Plugin):
         return RTPPlay._url_re.match(url)
 
     def _get_streams(self):
-        
+
         headers = {
             "User-Agent": useragents.CHROME
         }
@@ -22,7 +22,7 @@ class RTPPlay(Plugin):
         res = http.get(self.url, headers=headers)
 
         url_match = RTPPlay._m3u8_re.search(res.text)
-        
+
         if url_match:
             hls_url = url_match.group("url")
 
@@ -36,5 +36,6 @@ class RTPPlay(Plugin):
                     yield "live", HLSStream(self.session, hls_url)
             except IOError as err:
                 self.logger.error("Failed to extract streams: {0}", err)
+
 
 __plugin__ = RTPPlay
