@@ -20,7 +20,6 @@ alieztv             aliez.tv             Yes   Yes
 aljazeeraen         aljazeera.com        Yes   Yes   English version of the site.
 animelab            animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 antenna             antenna.gr           --    Yes
-apac                a-pac.tv             Yes   --
 app17               17app.co             Yes   --
 arconai             arconai.tv           Yes   Yes   Only SD quality streams
 ard_live            daserste.de          Yes   Yes   Streams may be geo-restricted to Germany.
@@ -28,7 +27,6 @@ ard_mediathek       - ardmediathek.de    Yes   Yes   Streams may be geo-restrict
                     - mediathek... [5]_
 artetv              arte.tv              Yes   Yes
 atresplayer         atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
-bambuser            bambuser.com         Yes   Yes
 bbciplayer          bbc.co.uk/iplayer    Yes   Yes   Streams may be geo-restricted to the United Kingdom.
 beattv              be-at.tv             Yes   Yes   Playlist not implemented yet.
 bfmtv               bfmtv.com            Yes   Yes
@@ -62,17 +60,12 @@ cinergroup          - showtv.com.tr      Yes   No
                     - showmax.com.tr
                     - showturk.com.tr
                     - bloomberght.com
-connectcast         connectcast.tv       Yes   Yes
 crunchyroll         crunchyroll.com      --    Yes
 cybergame           cybergame.tv         Yes   Yes
 cyro                cyro.se              --    Yes
 dailymotion         dailymotion.com      Yes   Yes
-daisuki             daisuki.net          No    Yes
 deutschewelle       dw.com               Yes   Yes
 dingittv            dingit.tv            Yes   Yes
-disney_de           - video.disney.de    Yes   Yes   Streams may be geo-restricted to Germany.
-                    - disneychannel.de
-dmcloud             api.dmcloud.net      Yes   --
 dogan               - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
                     - kanald.com.tr
                     - dreamtv.com.tr
@@ -104,7 +97,6 @@ funimationnow       - funimation.com     --    Yes
                     - funimationnow.uk
 gardenersworld      gardenersworld.com   --    Yes
 garena              garena.live          Yes   --
-gomexp              gomexp.com           Yes   No
 goodgame            goodgame.ru          Yes   No    Only HLS streams are available.
 googledrive         - docs.google.com    --    Yes
                     - drive.google.com
@@ -194,7 +186,6 @@ streamingvi... [1]_ streamingvid... [2]_ Yes   --    RTMP streams requires rtmpd
                                                      K-S-V patches.
 streamlive          streamlive.to        Yes   --
 streamme            stream.me            Yes   --
-streamupcom         streamup.com         Yes   --
 svtplay             - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                     - svtflow.se
                     - oppetarkiv.se
@@ -254,7 +245,6 @@ viasat              - juicyplay.dk       Yes   Yes   Streams may be geo-restrict
 vidio               vidio.com            Yes   Yes
 vk                  vk.com               Yes   Yes
 vrtbe               vrt.be/vrtnu         Yes   Yes
-wattv               wat.tv               --    Yes
 webcast_india_gov   webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv               web.tv               Yes   --
 weeb                weeb.tv              Yes   --    Requires rtmpdump with K-S-V patches.
