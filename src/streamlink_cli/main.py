@@ -353,7 +353,7 @@ def handle_stream(plugin, streams, stream_name):
 
             console.msg("{0}", cmdline)
         else:
-            console.exit("The stream specified cannot be translated to a command")
+            console.exit("The specified stream cannot be translated to a command")
 
     # Print JSON representation of the stream
     elif console.json:
@@ -363,7 +363,7 @@ def handle_stream(plugin, streams, stream_name):
         try:
             console.msg("{0}", stream.to_url())
         except TypeError:
-            console.exit("The stream specified cannot be translated to a URL")
+            console.exit("The specified stream cannot be translated to a URL")
 
     # Output the stream
     else:
@@ -968,7 +968,7 @@ def setup_plugin_options():
 def check_root():
     if hasattr(os, "getuid"):
         if os.geteuid() == 0:
-            console.logger.info("streamlink is running as root! Be careful!")
+            console.logger.info("Streamlink is running as root! Be careful!")
 
 
 def log_current_versions():
@@ -1013,7 +1013,7 @@ def check_version(force=False):
                             "available!".format(latest_version))
         cache.set("version_info_printed", True, (60 * 60 * 6))
     elif force:
-        console.logger.info("Your Streamlink version ({0}) is up to date!",
+        console.logger.info("Your Streamlink version ({0}) is up to date.",
                             installed_version)
 
     if force:
