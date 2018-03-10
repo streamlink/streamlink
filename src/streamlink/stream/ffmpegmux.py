@@ -126,7 +126,7 @@ class FFMPEGMuxer(StreamIO):
         for t in self.pipe_threads:
             t.daemon = True
             t.start()
-        self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE, stderr=self.errorlog)
+        self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=self.errorlog)
 
         return self
 
