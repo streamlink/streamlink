@@ -1218,13 +1218,6 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
-    "--daisuki-mux-subtitles",
-    action="store_true",
-    help="""
-    Automatically mux available subtitles in to the output stream.
-    """
-)
-plugin.add_argument(
     "--rtve-mux-subtitles",
     action="store_true",
     help="""
@@ -1386,37 +1379,6 @@ transport.add_argument(
     "--hds-fragment-buffer",
     type=int,
     metavar="fragments",
-    help=argparse.SUPPRESS
-)
-plugin.add_argument(
-    "--jtv-legacy-names", "--twitch-legacy-names",
-    action="store_true",
-    help=argparse.SUPPRESS
-)
-plugin.add_argument(
-    "--gomtv-cookie",
-    metavar="cookie",
-    help=argparse.SUPPRESS
-)
-plugin.add_argument(
-    "--gomtv-username",
-    metavar="username",
-    help=argparse.SUPPRESS
-)
-plugin.add_argument(
-    "--gomtv-password",
-    metavar="password",
-    nargs="?",
-    const=True,
-    default=None,
-    help=argparse.SUPPRESS
-)
-plugin.add_argument(
-    "--jtv-cookie",
-    help=argparse.SUPPRESS
-)
-plugin.add_argument(
-    "--jtv-password", "--twitch-password",
     help=argparse.SUPPRESS
 )
 http.add_argument(
