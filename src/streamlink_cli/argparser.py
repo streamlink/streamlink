@@ -42,9 +42,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         name, value = option.group("name", "value")
         if name and value:
-            yield "--{0}={1}".format(name, value)
+            yield u"--{0}={1}".format(name, value)
         elif name:
-            yield "--{0}".format(name)
+            yield u"--{0}".format(name)
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -375,6 +375,10 @@ player.add_argument(
       This is the filename that the player will use.
       It's usually "-" (stdin), but can also be a URL or a file
       depending on the options used.
+
+    title
+      The title of the specified stream if made available
+      by the stream's plugin, or the stream's URL otherwise.
 
     It's usually enough to use --player instead of this unless you
     need to add arguments after the filename.

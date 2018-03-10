@@ -61,30 +61,60 @@ class TestCommandLineInvocation(unittest.TestCase):
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_regular_path_player(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/vlc", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "/usr/bin/vlc", "http://test.se&title=Test \"Title\"", "test"],
                         ["/usr/bin/vlc", "-"])
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_space_path_player(self):
-        self._test_args(["streamlink", "-p", "\"/Applications/Video Player/VLC/vlc\"", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "\"/Applications/Video Player/VLC/vlc\"", "http://test.se&title=Test \"Title\"", "test"],
                         ["/Applications/Video Player/VLC/vlc", "-"])
         # escaped
-        self._test_args(["streamlink", "-p", "/Applications/Video\ Player/VLC/vlc", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "/Applications/Video\ Player/VLC/vlc", "http://test.se&title=Test \"Title\"", "test"],
                         ["/Applications/Video Player/VLC/vlc", "-"])
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_extra_args_in_player(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc",
                          "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
-                         "http://test.se", "test"],
+                         "http://test.se/&title=Test \"Title\"", "test"],
                         ["/usr/bin/vlc", "--input-title-format", 'Poker "Stars"', "-"])
 
     @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
     def test_open_player_extra_args_in_player_pass_through(self):
         self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "/usr/bin/vlc",
                          "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
-                         "test.se", "rtmp"],
+                         "test.se&title=Test \"Title\"", "rtmp"],
                         ["/usr/bin/vlc", "--input-title-format", 'Poker "Stars"', "rtmp://test.se"],
+                        passthrough=True)
+
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+    def test_open_player_title_expand_in_player(self):
+        self._test_args(["streamlink", "-p", "/usr/bin/vlc",
+                         "-a", '''--input-title-format {title} {filename}''',
+                         "http://test.se&title=Test \"Title\"", "test"],
+                        ["/usr/bin/vlc", "--input-title-format", 'Test "Title"', "-"])
+
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+    def test_open_player_title_expand_in_player_pass_through(self):
+        self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "/usr/bin/vlc",
+                         "-a", '''--input-title-format {title} {filename}''',
+                         "test.se&title=Test \"Title\"", "rtmp"],
+                        ["/usr/bin/vlc", "--input-title-format", 'Test "Title"', "rtmp://test.se"],
+                        passthrough=True)
+
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+    def test_open_player_title_expand_in_player_surrounded(self):
+        self._test_args(["streamlink", "-p", "/usr/bin/vlc",
+                         "-a", '''--input-title-format @:/@foo {title} bar@:/@ {filename}''',
+                         "http://test.se&title=Test \"Title\"", "test"],
+                        ["/usr/bin/vlc", "--input-title-format", 'foo Test "Title" bar', "-"])
+
+    @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
+    def test_open_player_title_expand_in_player_pass_through_surrounded(self):
+        self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "/usr/bin/vlc",
+                         "-a", '''--input-title-format @:/@foo {title} bar@:/@ {filename}''',
+                         "test.se&title=Test \"Title\"", "rtmp"],
+                        ["/usr/bin/vlc", "--input-title-format", 'foo Test "Title" bar', "rtmp://test.se"],
                         passthrough=True)
 
     #
@@ -93,35 +123,66 @@ class TestCommandLineInvocation(unittest.TestCase):
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_space_path_player_win32(self):
-        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe", "http://test.se&title=Test \"Title\"", "test"],
                         "c:\\Program Files\\VideoLAN\\VLC\\vlc.exe -")
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_space_quote_path_player_win32(self):
-        self._test_args(["streamlink", "-p", "\"c:\\Program Files\\VideoLAN\VLC\\vlc.exe\"", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "\"c:\\Program Files\\VideoLAN\VLC\\vlc.exe\"", "http://test.se&title=Test \"Title\"", "test"],
                         "\"c:\\Program Files\\VideoLAN\\VLC\\vlc.exe\" -")
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_player_args_with_quote_in_player_win32(self):
         self._test_args(["streamlink", "-p",
                          '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "Poker \\"Stars\\""''',
-                         "http://test.se", "test"],
+                         "http://test.se&title=Test \"Title\"", "test"],
                         '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "Poker \\"Stars\\"" -''')
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_player_extra_args_in_player_win32(self):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
                          "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
-                         "http://test.se", "test"],
+                         "http://test.se&title=Test \"Title\"", "test"],
                         '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "Poker \\"Stars\\"" -''')
 
     @unittest.skipIf(not is_win32, "test only applicable on Windows")
     def test_open_player_extra_args_in_player_pass_through_win32(self):
         self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
                          "-a", '''--input-title-format "Poker \\"Stars\\"" {filename}''',
-                         "test.se", "rtmp"],
+                         "test.se&title=Test \"Title\"", "rtmp"],
                         '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "Poker \\"Stars\\"" \"rtmp://test.se\"''',
                         passthrough=True)
+
+    @unittest.skipIf(not is_win32, "test only applicable on Windows")
+    def test_open_player_title_expand_in_player_win32(self):
+        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
+                         "-a", '''--input-title-format {title} {filename}''',
+                         "http://test.se&title=Test \"Title\"", "test"],
+                        '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "Test \\"Title\\"" -''')
+
+    @unittest.skipIf(not is_win32, "test only applicable on Windows")
+    def test_open_player_title_expand_in_player_pass_through_win32(self):
+        self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
+                         "-a", '''--input-title-format {title} {filename}''',
+                         "test.se&title=Test \"Title\"", "rtmp"],
+                        '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "Test \\"Title\\"" \"rtmp://test.se\"''',
+                        passthrough=True)
+
+    @unittest.skipIf(not is_win32, "test only applicable on Windows")
+    def test_open_player_title_expand_in_player_surrounded_win32(self):
+        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
+                         "-a", '''--input-title-format @:/@foo {title} bar@:/@ {filename}''',
+                         "http://test.se&title=Test \"Title\"", "test"],
+                        '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "foo Test \\"Title\\" bar" -''')
+
+    @unittest.skipIf(not is_win32, "test only applicable on Windows")
+    def test_open_player_title_expand_in_player_pass_through_surrounded_win32(self):
+        self._test_args(["streamlink", "--player-passthrough", "rtmp", "-p", "c:\\Program Files\\VideoLAN\VLC\\vlc.exe",
+                         "-a", '''--input-title-format @:/@foo {title} bar@:/@ {filename}''',
+                         "test.se&title=Test \"Title\"", "rtmp"],
+                        '''c:\\Program Files\\VideoLAN\VLC\\vlc.exe --input-title-format "foo Test \\"Title\\" bar" \"rtmp://test.se\"''',
+                        passthrough=True)
+
 
 
 if __name__ == "__main__":

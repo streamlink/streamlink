@@ -506,6 +506,7 @@ class Twitch(Plugin):
         try:
             videos = self.api.videos(self.video_type + self.video_id,
                                      schema=_video_schema)
+            self.title = videos["title"]
         except PluginError as err:
             if "HTTP/1.1 0 ERROR" in str(err):
                 raise NoStreamsError(self.url)
@@ -615,5 +616,10 @@ class Twitch(Plugin):
         elif self._channel:
             return self._get_hls_streams("live")
 
+    def _get_title(self):
+        if self.title is None:
+            info = self.api.channel_info(self.channel_id)
+            self.title = u"{0} - {1}".format(self.channel,info["status"])
+        return self.title
 
 __plugin__ = Twitch

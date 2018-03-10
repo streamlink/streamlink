@@ -2,14 +2,14 @@ import os
 import shlex
 import subprocess
 import sys
+import re
 
 from time import sleep
 
-import re
-
-from .compat import is_win32, stdout
-from .constants import DEFAULT_PLAYER_ARGUMENTS
+from .compat import is_win32, stdout, shlex_quote, is_py2, is_py3
+from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_FORMAT_ARGUMENTS
 from .utils import ignored
+from .utils.player import sanitizeTitle
 
 if is_win32:
     import msvcrt
@@ -65,12 +65,16 @@ class FileOutput(Output):
     def _write(self, data):
         self.fd.write(data)
 
+    def exists(self):
+        if self.filename:
+            return os.path.isfile(self.filename)
+
 
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=False,
-                 namedpipe=None):
+                 namedpipe=None, format_args=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
@@ -79,6 +83,7 @@ class PlayerOutput(Output):
         self.quiet = quiet
 
         self.filename = filename
+        self.format_args = format_args or DEFAULT_FORMAT_ARGUMENTS
         self.namedpipe = namedpipe
         self.http = http
 
@@ -109,7 +114,19 @@ class PlayerOutput(Output):
         else:
             filename = "-"
 
-        args = self.args.format(filename=filename)
+        reTitle = re.compile(r'(?<=@:\/@)(\s*.*\s*)(?=@:\/@)').search(self.args) #matches the outermost @:/@ wrappers
+        if not reTitle:
+            title = sanitizeTitle(self.format_args["title"]) #e.g. streamlink -p mpv -a '--title={title} {filename}' https://www.twitch.tv/coolstreamer source
+        else:
+            processed = re.sub(r'(?<=[^\{])({title})(?=[^\}])',self.format_args["title"],reTitle.group(0)) #replace {title} but not {{title}}
+            title = sanitizeTitle(processed) #e.g. streamlink -p mpv -a '--title=@:/@foo {title} bar@:/@ {filename}' https://www.twitch.tv/coolstreamer source
+            self.args = re.sub(r'(@:\/@\s*.*\s*@:\/@)','{title}',self.args) #replace @:/@foo {title} bar@:/@ with {title} since {title} holds the wholeTitle now
+
+        if is_py2:
+            args = self.args.encode('utf8').format(filename=filename, title=title)
+        elif is_py3:
+            args = self.args.format(filename=filename, title=title)
+
         cmd = self.cmd
         if is_win32:
             return cmd + " " + args

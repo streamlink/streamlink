@@ -92,6 +92,7 @@ _search_schema = validate.Schema(
     validate.get("items")
 )
 
+_title_re = re.compile(r'(?<=\<title\>)(\s*.*\s*)(?= - YouTube\<\/title\>)')
 _channelid_re = re.compile(r'meta itemprop="channelId" content="([^"]+)"')
 _livechannelid_re = re.compile(r'meta property="og:video:url" content="([^"]+)')
 _url_re = re.compile(r"""
@@ -303,6 +304,13 @@ class YouTube(Plugin):
                               "try youtube-dl instead")
 
         return streams
+
+    def _get_title(self):
+        res = http.get(self.url)
+        match = _title_re.search(res.text)
+        if not match:
+            return
+        return match.group(0)
 
 
 __plugin__ = YouTube

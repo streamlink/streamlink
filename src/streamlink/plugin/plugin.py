@@ -387,5 +387,14 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
+    def stream_title(self):
+        title = self._get_title()
+        if title is not None:
+            return title
+        else:
+            return self.url
+
+    def _get_title(self):
+        return None
 
 __all__ = ["Plugin"]
