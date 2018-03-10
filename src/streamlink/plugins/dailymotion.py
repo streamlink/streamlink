@@ -9,7 +9,7 @@ COOKIES = {
     "family_filter": "off",
     "ff": "off"
 }
-STREAM_INFO_URL = "http://www.dailymotion.com/player/metadata/video/{0}"
+STREAM_INFO_URL = "https://www.dailymotion.com/player/metadata/video/{0}"
 USER_INFO_URL = "https://api.dailymotion.com/user/{0}"
 
 _url_re = re.compile(r"""
