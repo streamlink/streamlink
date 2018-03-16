@@ -78,6 +78,8 @@ _config_schema = validate.Schema(
         validate.optional("hlsvp"): validate.text,
         validate.optional("live_playback"): validate.transform(bool),
         validate.optional("reason"): validate.text,
+        validate.optional("livestream"): validate.text,
+        validate.optional("live_playback"): validate.text,
         "status": validate.text
     }
 )
@@ -137,7 +139,7 @@ class YouTube(Plugin):
     }
 
     @classmethod
-    def can_handle_url(self, url):
+    def can_handle_url(cls, url):
         return _url_re.match(url)
 
     @classmethod
@@ -157,13 +159,58 @@ class YouTube(Plugin):
 
         return weight, group
 
+    def _create_adaptive_streams(self, info, streams, protected):
+        adaptive_streams = {}
+        best_audio_itag = None
+
+        # Extract audio streams from the DASH format list
+        for stream_info in info.get("adaptive_fmts", []):
+            if stream_info.get("s"):
+                protected = True
+                continue
+
+            stream_params = dict(parse_qsl(stream_info["url"]))
+            if "itag" not in stream_params:
+                continue
+            itag = int(stream_params["itag"])
+            # extract any high quality streams only available in adaptive formats
+            adaptive_streams[itag] = stream_info["url"]
+
+            stream_type, stream_format = stream_info["type"]
+            if stream_type == "audio":
+                stream = HTTPStream(self.session, stream_info["url"])
+                name = "audio_{0}".format(stream_format)
+                streams[name] = stream
+
+                # find the best quality audio stream m4a, opus or vorbis
+                if best_audio_itag is None or self.adp_audio[itag] > self.adp_audio[best_audio_itag]:
+                    best_audio_itag = itag
+
+        if best_audio_itag and adaptive_streams and MuxedStream.is_usable(self.session):
+            aurl = adaptive_streams[best_audio_itag]
+            for itag, name in self.adp_video.items():
+                if itag in adaptive_streams:
+                    vurl = adaptive_streams[itag]
+                    self.logger.debug("MuxedStream: v {video} a {audio} = {name}".format(
+                        audio=best_audio_itag,
+                        name=name,
+                        video=itag,
+                    ))
+                    streams[name] = MuxedStream(self.session,
+                                                HTTPStream(self.session, vurl),
+                                                HTTPStream(self.session, aurl))
+
+        return streams, protected
+
     def _find_channel_video(self):
         res = http.get(self.url)
         match = _channelid_re.search(res.text)
         if not match:
             return
 
-        return self._get_channel_video(match.group(1))
+        channel_id = match.group(1)
+        self.logger.debug("Found channel_id: {0}".format(channel_id))
+        return self._get_channel_video(channel_id)
 
     def _get_channel_video(self, channel_id):
         query = {
@@ -178,6 +225,7 @@ class YouTube(Plugin):
 
         for video in videos:
             video_id = video["id"]["videoId"]
+            self.logger.debug("Found video_id: {0}".format(video_id))
             return video_id
 
     def _find_canonical_stream_info(self):
@@ -233,9 +281,15 @@ class YouTube(Plugin):
         return info_parsed
 
     def _get_streams(self):
+        is_live = False
+
         info = self._get_stream_info(self.url)
         if not info:
             return
+
+        if info.get("livestream") == '1' or info.get("live_playback") == '1':
+            self.logger.debug("This video is live.")
+            is_live = True
 
         formats = info.get("fmt_list")
         streams = {}
@@ -253,40 +307,8 @@ class YouTube(Plugin):
 
             streams[name] = stream
 
-        adaptive_streams = {}
-        best_audio_itag = None
-
-        # Extract audio streams from the DASH format list
-        for stream_info in info.get("adaptive_fmts", []):
-            if stream_info.get("s"):
-                protected = True
-                continue
-
-            stream_params = dict(parse_qsl(stream_info["url"]))
-            if "itag" not in stream_params:
-                continue
-            itag = int(stream_params["itag"])
-            # extract any high quality streams only available in adaptive formats
-            adaptive_streams[itag] = stream_info["url"]
-
-            stream_type, stream_format = stream_info["type"]
-            if stream_type == "audio":
-                stream = HTTPStream(self.session, stream_info["url"])
-                name = "audio_{0}".format(stream_format)
-                streams[name] = stream
-
-                # find the best quality audio stream m4a, opus or vorbis
-                if best_audio_itag is None or self.adp_audio[itag] > self.adp_audio[best_audio_itag]:
-                    best_audio_itag = itag
-
-        if best_audio_itag and adaptive_streams and MuxedStream.is_usable(self.session):
-            aurl = adaptive_streams[best_audio_itag]
-            for itag, name in self.adp_video.items():
-                if itag in adaptive_streams:
-                    vurl = adaptive_streams[itag]
-                    streams[name] = MuxedStream(self.session,
-                                                HTTPStream(self.session, vurl),
-                                                HTTPStream(self.session, aurl))
+        if is_live is False:
+            streams, protected = self._create_adaptive_streams(info, streams, protected)
 
         hls_playlist = info.get("hlsvp")
         if hls_playlist:
