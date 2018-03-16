@@ -1363,6 +1363,20 @@ plugin.add_argument(
     A afreecatv.com account password to use with --afreeca-username.
     """
 )
+plugin.add_argument(
+    "--pixiv-username",
+    metavar="USERNAME",
+    help="""
+    The email/username used to register with pixiv.net
+    """
+)
+plugin.add_argument(
+    "--pixiv-password",
+    metavar="PASSWORD",
+    help="""
+    A pixiv.net account password to use with --pixiv-username
+    """
+)
 
 # Deprecated options
 stream.add_argument(
