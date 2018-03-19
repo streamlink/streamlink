@@ -9,7 +9,7 @@ class PlayTV(Plugin):
     FORMATS_URL = 'http://playtv.fr/player/initialize/{0}/'
     API_URL = 'http://playtv.fr/player/play/{0}/?format={1}&language={2}&bitrate={3}'
 
-    _url_re = re.compile(r'http://playtv\.fr/television/(?P<channel>[^/]+)/?')
+    _url_re = re.compile(r'http://(?:playtv\.fr/television|play\.tv/live-tv/\d+)/(?P<channel>[^/]+)/?')
 
     _formats_schema = validate.Schema({
         'streams': validate.any(
