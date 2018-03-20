@@ -402,8 +402,9 @@ def fetch_streams(plugin):
                               sorting_excludes=args.stream_sorting_excludes)
 
 
-def fetch_streams_infinite(plugin, interval):
-    """Attempts to fetch streams until some are returned."""
+def fetch_streams_with_retry(plugin, interval, count):
+    """Attempts to fetch streams repeatedly
+       until some are returned or limit hit."""
 
     try:
         streams = fetch_streams(plugin)
@@ -414,6 +415,8 @@ def fetch_streams_infinite(plugin, interval):
     if not streams:
         console.logger.info("Waiting for streams, retrying every {0} "
                             "second(s)", interval)
+    attempts = 0
+
     while not streams:
         sleep(interval)
 
@@ -421,6 +424,11 @@ def fetch_streams_infinite(plugin, interval):
             streams = fetch_streams(plugin)
         except PluginError as err:
             console.logger.error(u"{0}", err)
+
+        if count > 0:
+            attempts += 1
+            if attempts >= count:
+                break
 
     return streams
 
@@ -484,8 +492,15 @@ def handle_url():
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
 
-        if args.retry_streams:
-            streams = fetch_streams_infinite(plugin, args.retry_streams)
+        if args.retry_max or args.retry_streams:
+            retry_streams = 1
+            retry_max = 0
+            if args.retry_streams:
+                retry_streams = args.retry_streams
+            if args.retry_max:
+                retry_max = args.retry_max
+            streams = fetch_streams_with_retry(plugin, retry_streams,
+                                               retry_max)
         else:
             streams = fetch_streams(plugin)
     except NoPluginError:
