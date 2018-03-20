@@ -541,8 +541,23 @@ stream.add_argument(
     metavar="DELAY",
     type=num(float, min=0),
     help="""
-    Will retry fetching streams until streams are found while
-    waiting DELAY (seconds) between each attempt.
+    Retry fetching the list of available streams until streams are found
+    while waiting DELAY second(s) between each attempt. If unset, only one
+    attempt will be made to fetch the list of streams available.
+
+    The number of fetch retry attempts can be capped with --retry-max.
+    """
+)
+stream.add_argument(
+    "--retry-max",
+    metavar="COUNT",
+    type=num(int, min=-1),
+    help="""
+    When using --retry-streams, stop retrying the fetch after COUNT retry
+    attempt(s). Fetch will retry infinitely if COUNT is zero or unset.
+
+    If --retry-max is set without setting --retry-streams, the delay between
+    retries will default to 1 second.
     """
 )
 stream.add_argument(
@@ -551,7 +566,8 @@ stream.add_argument(
     type=num(int, min=0),
     default=1,
     help="""
-    Will try ATTEMPTS times to open the stream until giving up.
+    After a successful fetch, try ATTEMPTS time(s)
+    to open the stream until giving up.
 
     Default is 1.
     """
