@@ -392,26 +392,28 @@ player.add_argument(
     metavar="TITLE",
     help="""
     This option allows you to supply a title to be displayed in the 
-    title bar of the window that the player is launched in.
+    title bar of the window that the player is launched in. If you need
+    to include a brace character, it can be escaped by doubling
+    e.g. {{{{ and }}}}.
     
     This option is only supported for the following players: {0}.
     
-    title
+    {{title}}
       If available, this is the title of the stream.
       Otherwise, it is the string "{1}"
       
-    author
+    {{author}}
       If available, this is the author of the stream.
       Otherwise, it is the string "{2}"
       
-    category
+    {{category}}
       If available, this is the category the stream has been placed into.
           For twitch, this is the game being played
           For youtube, it's the category e.g. Gaming, Sports, Music...
       Otherwise, it is the string "{3}"
 
-    game
-      This is just a synonym for {category} which may make more sense for
+    {{game}}
+      This is just a synonym for {{category}} which may make more sense for
       platforms like Twitch. "Game being played" is a way to categorize
       the stream, so it doesn't need its own seperate handling.
       
@@ -420,6 +422,7 @@ player.add_argument(
                 DEFAULT_STREAM_METADATA['author'],
                 DEFAULT_STREAM_METADATA['category'])
     #Instead of using this option, you may also use the following flags:
+    #--tca
     #--tac
     #--cta
     #--cat

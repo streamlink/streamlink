@@ -626,17 +626,17 @@ class Twitch(Plugin):
 
     def _get_title(self):
         if self.title is None:
-            self.set_info()
+            self.set_title_info()
         return self.title
 
     def _get_category(self):
         if self.category is None:
-            self.set_info()
+            self.set_title_info()
         return self.category
 
     def _get_author(self):
         if self.author is None:
-            self.set_info()
+            self.set_title_info()
         return self.author
 
 __plugin__ = Twitch

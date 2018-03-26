@@ -177,7 +177,6 @@ class YouTube(Plugin):
         self.title = None
         self.channel_id = None
         self.category_id = None
-        self.channel_region = None
 
     @classmethod
     def can_handle_url(self, url):
