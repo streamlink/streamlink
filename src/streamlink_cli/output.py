@@ -117,19 +117,19 @@ class PlayerOutput(Output):
             if self.cmd in SUPPORTED_PLAYERS['vlc']:
                 self.title.replace("$","$$") #see https://wiki.videolan.org/Documentation:Format_String/
                 if is_win32:
-                    return subprocess.list2cmdline([cmd + " --input-title-format=\"" + self.title + "\" " + args])
+                    return cmd + " --input-title-format=\"" + self.title + "\" " + args
                 return shlex.split(cmd) + shlex.split("--input-title-format=" + shlex_quote(self.title)) + shlex.split(args)
 
             #mpv
             if self.cmd in SUPPORTED_PLAYERS['mpv']:
                 self.title.replace("$","$$") #see https://mpv.io/manual/stable/#property-expansion
                 if is_win32:
-                    return subprocess.list2cmdline([cmd + " --input-title-format=\"" + self.title + "\" " + args])
+                    return cmd + " --input-title-format=\"" + self.title + "\" " + args
                 return shlex.split(cmd) + shlex.split("--title=" + shlex_quote(self.title)) + shlex.split(args)
 
         #other player
         if is_win32:
-            return subprocess.list2cmdline([cmd + " " + args])
+            return cmd + " " + args
         return shlex.split(cmd) + shlex.split(args)
 
     def _open(self):
