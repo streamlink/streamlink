@@ -115,14 +115,14 @@ class PlayerOutput(Output):
         if self.title is not None:
             #vlc
             if self.cmd in SUPPORTED_PLAYERS['vlc']:
-                self.title.replace("$","$$") #see https://wiki.videolan.org/Documentation:Format_String/
+                self.title.replace("$","$$").replace("\$$","$") #see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
                 if is_win32:
                     return cmd + " --input-title-format=\"" + self.title + "\" " + args
                 return shlex.split(cmd) + shlex.split("--input-title-format=" + shlex_quote(self.title)) + shlex.split(args)
 
             #mpv
             if self.cmd in SUPPORTED_PLAYERS['mpv']:
-                self.title.replace("$","$$") #see https://mpv.io/manual/stable/#property-expansion
+                self.title.replace("$","$$").replace("\$$","$") #see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$
                 if is_win32:
                     return cmd + " --input-title-format=\"" + self.title + "\" " + args
                 return shlex.split(cmd) + shlex.split("--title=" + shlex_quote(self.title)) + shlex.split(args)
