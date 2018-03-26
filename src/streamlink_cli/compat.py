@@ -1,7 +1,6 @@
 import os
 import re
 import sys
-from shlex import quote
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
@@ -20,6 +19,7 @@ elif is_py3:
     stdout = sys.stdout.buffer
     from io import IOBase as file
     from shutil import get_terminal_size
+    from shlex import quote
 
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
