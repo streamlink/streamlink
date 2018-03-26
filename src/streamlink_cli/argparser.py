@@ -4,7 +4,7 @@ from string import printable
 from textwrap import dedent
 
 from .constants import (
-    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
+    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 )
 from .utils import find_default_player
 
@@ -42,9 +42,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         name, value = option.group("name", "value")
         if name and value:
-            yield "--{0}={1}".format(name, value)
+            yield u"--{0}={1}".format(name, value)
         elif name:
-            yield "--{0}".format(name)
+            yield u"--{0}".format(name)
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -386,6 +386,47 @@ player.add_argument(
       streamlink -p vlc -a "--play-and-exit {{filename}}" <url> <quality>
 
     """.format(DEFAULT_PLAYER_ARGUMENTS)
+)
+player.add_argument(
+    "-t", "--title",
+    metavar="TITLE",
+    help="""
+    This option allows you to supply a title to be displayed in the 
+    title bar of the window that the player is launched in.
+    
+    This option is only supported for the following players: {0}.
+    
+    title
+      If available, this is the title of the stream.
+      Otherwise, it is the string "{1}"
+      
+    author
+      If available, this is the author of the stream.
+      Otherwise, it is the string "{2}"
+      
+    category
+      If available, this is the category the stream has been placed into.
+          For twitch, this is the game being played
+          For youtube, it's the category e.g. Gaming, Sports, Music...
+      Otherwise, it is the string "{3}"
+
+    game
+      This is just a synonym for {category} which may make more sense for
+      platforms like Twitch. "Game being played" is a way to categorize
+      the stream, so it doesn't need its own seperate handling.
+      
+    """.format( ', '.join(SUPPORTED_PLAYERS.keys()),
+                DEFAULT_STREAM_METADATA['title'],
+                DEFAULT_STREAM_METADATA['author'],
+                DEFAULT_STREAM_METADATA['category'])
+    #Instead of using this option, you may also use the following flags:
+    #--tac
+    #--cta
+    #--cat
+    #--act
+    #--atc
+    #--ta
+    #--at #TODO implement or don't implement, project owners have not given opinion
 )
 player.add_argument(
     "-v", "--verbose-player",

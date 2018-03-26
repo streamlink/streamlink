@@ -7,8 +7,8 @@ from time import sleep
 
 import re
 
-from .compat import is_win32, stdout
-from .constants import DEFAULT_PLAYER_ARGUMENTS
+from .compat import is_win32, stdout, shlex_quote
+from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 from .utils import ignored
 
 if is_win32:
@@ -70,7 +70,7 @@ class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=False,
-                 namedpipe=None):
+                 namedpipe=None, title=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
@@ -81,6 +81,7 @@ class PlayerOutput(Output):
         self.filename = filename
         self.namedpipe = namedpipe
         self.http = http
+        self.title = title
 
         if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
@@ -108,12 +109,27 @@ class PlayerOutput(Output):
             filename = self.http.url
         else:
             filename = "-"
-
         args = self.args.format(filename=filename)
         cmd = self.cmd
-        if is_win32:
-            return cmd + " " + args
+        
+        if self.title is not None:
+            #vlc
+            if self.cmd in SUPPORTED_PLAYERS['vlc']:
+                self.title.replace("$","$$") #see https://wiki.videolan.org/Documentation:Format_String/
+                if is_win32:
+                    return subprocess.list2cmdline([cmd + " --input-title-format=\"" + self.title + "\" " + args])
+                return shlex.split(cmd) + shlex.split("--input-title-format=" + shlex_quote(self.title)) + shlex.split(args)
 
+            #mpv
+            if self.cmd in SUPPORTED_PLAYERS['mpv']:
+                self.title.replace("$","$$") #see https://mpv.io/manual/stable/#property-expansion
+                if is_win32:
+                    return subprocess.list2cmdline([cmd + " --input-title-format=\"" + self.title + "\" " + args])
+                return shlex.split(cmd) + shlex.split("--title=" + shlex_quote(self.title)) + shlex.split(args)
+
+        #other player
+        if is_win32:
+            return subprocess.list2cmdline([cmd + " " + args])
         return shlex.split(cmd) + shlex.split(args)
 
     def _open(self):

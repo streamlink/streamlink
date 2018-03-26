@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+from shlex import quote
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
@@ -28,6 +29,10 @@ def shlex_quote(s):
 
     Backported from Python 3.3 standard library module shlex.
     """
+    
+    if is_py3: #use the latest version instead of backporting if it's available
+        return quote(s)
+        
     if not s:
         return "''"
     if _find_unsafe(s) is None:

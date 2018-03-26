@@ -291,6 +291,9 @@ class Twitch(Plugin):
         self._channel_id = None
         self._channel = None
         self.clip_name = None
+        self.author = None #may have different capitalization than self._channel
+        self.category = None
+        self.title = None
 
         if self.subdomain == "player":
             # pop-out player
@@ -615,5 +618,25 @@ class Twitch(Plugin):
         elif self._channel:
             return self._get_hls_streams("live")
 
+    def set_title_info(self):
+        info = self.api.channel_info(self.channel_id)
+        self.title = info["status"]
+        self.category = info["game"]
+        self.author = info["display_name"]
+
+    def _get_title(self):
+        if self.title is None:
+            self.set_info()
+        return self.title
+
+    def _get_category(self):
+        if self.category is None:
+            self.set_info()
+        return self.category
+
+    def _get_author(self):
+        if self.author is None:
+            self.set_info()
+        return self.author
 
 __plugin__ = Twitch

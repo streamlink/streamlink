@@ -91,6 +91,40 @@ _search_schema = validate.Schema(
     },
     validate.get("items")
 )
+_title_info_schema = validate.Schema(
+    {
+        "items": [{
+            "snippet": { #description, stream start time, and tags are in here too.
+                "title"      : validate.text,
+                "categoryId" : validate.text,
+                "channelId"  : validate.text
+            }
+        }]
+    },
+    validate.get("items")
+)
+_channel_info_schema = validate.Schema(
+    {
+        "items": [{
+            "brandingSettings": {
+                "channel": { #you can also get default language and country code here
+                    "title": validate.text
+                }
+            }
+        }]
+    },
+    validate.get("items")
+)
+_category_info_schema = validate.Schema(
+    {
+        "items": [{
+            "snippet": {
+                "title": validate.text
+            }
+        }]
+    },
+    validate.get("items")
+)
 
 _channelid_re = re.compile(r'meta itemprop="channelId" content="([^"]+)"')
 _livechannelid_re = re.compile(r'meta property="og:video:url" content="([^"]+)')
@@ -135,6 +169,15 @@ class YouTube(Plugin):
         256: 256,
         258: 258,
     }
+
+    def __init__(self, url):
+        Plugin.__init__(self, url)
+        self.author = None
+        self.category = None
+        self.title = None
+        self.channel_id = None
+        self.category_id = None
+        self.channel_region = None
 
     @classmethod
     def can_handle_url(self, url):
@@ -304,5 +347,56 @@ class YouTube(Plugin):
 
         return streams
 
+    def set_title_info(self):
+        query = {
+            "part": "id,snippet",
+            "id" : self._find_channel_video(),
+            "key": API_KEY
+        }
+        res = http.get(API_BASE+"/videos", params=query)
+        allInfo = http.json(res, schema=_title_info_schema)
+
+        for info in allInfo:
+            self.title = info["snippet"]["title"]
+            self.channel_id = info["snippet"]["channelId"]
+            self.category_id = info["snippet"]["categoryId"]
+            return
+
+    def _get_title(self):
+        if self.title is None:
+            self.set_title_info()
+        return self.title
+
+    def _get_category(self):
+        if self.category is None:
+            if self.category_id is None:
+                self.set_title_info()
+            #translate from category_id to category name
+            query = {
+                "part": "snippet",
+                "id" : self.category_id,
+                "key": API_KEY
+            }
+            res = http.get(API_BASE+"/videoCategories", params=query)
+            allInfo = http.json(res, schema=_category_info_schema)
+            for info in allInfo:
+                self.category = info["snippet"]["title"]
+        return self.category
+
+    def _get_author(self):
+        if self.author is None:
+            if self.channel_id is None:
+                self.set_title_info()
+            #translate from channel_id to channel display name
+            query = {
+                "part": "brandingSettings",
+                "id" : self.channel_id,
+                "key": API_KEY
+            }
+            res = http.get(API_BASE+"/channels", params=query)
+            allInfo = http.json(res, schema=_channel_info_schema)
+            for info in allInfo:
+                self.author = info["brandingSettings"]["channel"]["title"]
+        return self.author
 
 __plugin__ = YouTube

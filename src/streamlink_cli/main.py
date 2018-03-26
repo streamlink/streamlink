@@ -22,7 +22,7 @@ from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 
 from .argparser import parser
-from .compat import stdout, is_win32
+from .compat import stdout, is_win32, is_py2, is_py3
 from .console import ConsoleOutput
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
@@ -91,11 +91,14 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
+        title = create_title(streamlink.resolve_url(args.url))
+
         console.logger.info("Starting player: {0}", args.player)
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
-                           namedpipe=namedpipe, http=http)
+                           namedpipe=namedpipe, http=http,
+                           title=title)
 
     return out
 
@@ -115,7 +118,17 @@ def create_http_server(host=None, port=0):
 
     return http
 
-
+def create_title(plugin=None):
+    if is_py2:
+        if (args.title is not None) and (plugin is not None):
+            return args.encode('utf8').title.format(title=plugin._get_title(),author=plugin._get_author(),category=plugin._get_category(),game=plugin._get_category())
+        else:
+            return args.encode('utf8').url
+    elif is_py3:
+        if (args.title is not None) and (plugin is not None):
+            return args.title.format(title=plugin._get_title(),author=plugin._get_author(),category=plugin._get_category(),game=plugin._get_category())
+        else:
+            return args.url
 def iter_http_requests(server, player):
     """Repeatedly accept HTTP connections on a server.
 

@@ -387,5 +387,13 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
+    def _get_title(self):
+        raise NotImplementedError
+
+    def _get_author(self):
+        raise NotImplementedError
+
+    def _get_category(self):
+        raise NotImplementedError
 
 __all__ = ["Plugin"]
