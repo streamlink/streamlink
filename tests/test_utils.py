@@ -76,6 +76,20 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
+    def test_parse_xml_entities_fail(self):
+        self.assertRaises(PluginError,
+                          parse_xml, u"""<test foo="bar &"/>""")
+
+
+    def test_parse_xml_entities(self):
+        expected = ET.Element("test", {"foo": "bar &"})
+        actual = parse_xml(u"""<test foo="bar &"/>""",
+                           schema=validate.Schema(xml_element(tag="test", attrib={"foo": text})),
+                           invalid_char_entities=True)
+        self.assertEqual(expected.tag, actual.tag)
+        self.assertEqual(expected.attrib, actual.attrib)
+
+
     def test_parse_qsd(self):
         self.assertEqual(
             {"test": "1", "foo": "bar"},

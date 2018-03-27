@@ -7,7 +7,7 @@ try:
 except ImportError:  # pragma: no cover
     import xml.etree.ElementTree as ET
 
-from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse
+from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse, is_py3
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
 
@@ -67,7 +67,7 @@ def parse_json(data, name="JSON", exception=PluginError, schema=None):
     return json_data
 
 
-def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=None):
+def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=None, invalid_char_entities=False):
     """Wrapper around ElementTree.fromstring with some extras.
 
     Provides these extra features:
@@ -77,9 +77,14 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
     """
     if is_py2 and isinstance(data, unicode):
         data = data.encode("utf8")
+    elif is_py3:
+        data = bytearray(data, "utf8")
 
     if ignore_ns:
-        data = re.sub(" xmlns=\"(.+?)\"", "", data)
+        data = re.sub(br" xmlns=\"(.+?)\"", b"", data)
+
+    if invalid_char_entities:
+        data = re.sub(br'&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)', b'&amp;', data)
 
     try:
         tree = ET.fromstring(data)
