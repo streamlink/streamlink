@@ -38,10 +38,10 @@ class VaughnLive(Plugin):
                                                                                                    range(1, 6))]
     origin = "https://vaughnlive.tv"
     rtmp_server_map = {
-        "594140c69edad": "66.90.93.42",
-        "585c4cab1bef1": "66.90.93.34",
-        "5940d648b3929": "66.90.93.42",
-        "5941854b39bc4": "198.255.0.10"
+        "594140c69edad": "192.240.105.171:1935",
+        "585c4cab1bef1": "192.240.105.171:1935",
+        "5940d648b3929": "192.240.105.171:1935",
+        "5941854b39bc4": "192.240.105.171:1935"
     }
     name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
     domain_map = {"vaughnlive": "#vl", "breakers": "#btv", "instagib": "#igb", "vapers": "#vtv", "pearltime": "#pt"}
@@ -99,6 +99,7 @@ class VaughnLive(Plugin):
             if not is_live:
                 self.logger.info("Stream is currently off air")
             else:
+                self.logger.info("Stream powered by VaughnSoft - remember to support them.")
                 for s in self._get_rtmp_streams(server, domain, channel, token):
                     yield s
 
