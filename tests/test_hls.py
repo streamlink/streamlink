@@ -11,9 +11,9 @@ from binascii import hexlify
 from streamlink.stream import hls
 from streamlink.session import Streamlink
 from functools import partial
+from mock import patch, Mock
 import requests_mock
 import pytest
-
 
 def pkcs7_encode(data, keySize):
     val = keySize - (len(data) % keySize)
@@ -143,6 +143,7 @@ audio_only.m3u8
         self.assertEqual(streamlinkResult, expectedResult)
 
 
+@patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
 class TestHlsExtAudio(unittest.TestCase):
     playlist = """
 #EXTM3U
