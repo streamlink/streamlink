@@ -742,12 +742,22 @@ transport.add_argument(
 )
 transport.add_argument(
     "--hls-audio-select",
-    type=str,
+    type=comma_list,
     metavar="CODE",
     help="""
-    Selects a specific audio source, by language code, when multiple audio sources are available.
+    Selects a specific audio source or sources, by language code or name,
+    when multiple audio sources are available. Can be * to download all audio
+    sources.
 
-    Note: This is only useful in special circumstances where the regular locale option fails.
+    Examples:
+
+      --hls-audio-select "English,German"
+      --hls-audio-select "en,de"
+      --hls-audio-select "*"
+
+    Note: This is only useful in special circumstances where the
+    regular locale option fails, such as when multiple sources of the
+    same language exists.
     """)
 transport.add_argument(
     "--hls-timeout",
