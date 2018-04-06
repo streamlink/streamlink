@@ -289,7 +289,13 @@ class MuxedHLSStream(MuxedStream):
     __shortname__ = "hls-multi"
 
     def __init__(self, session, video, audio, force_restart=False, ffmpeg_options=None, **args):
-        substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), [video, audio])
+        tracks = [video]
+        if audio:
+            if isinstance(audio, list):
+                tracks.extend(audio)
+            else:
+                tracks.append(audio)
+        substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), tracks)
         ffmpeg_options = ffmpeg_options or {}
 
         super(MuxedHLSStream, self).__init__(session, *substreams, format="mpegts", **ffmpeg_options)
@@ -357,7 +363,7 @@ class HLSStream(HTTPStream):
         # Backwards compatibility with "namekey" and "nameprefix" params.
         name_key = request_params.pop("namekey", name_key)
         name_prefix = request_params.pop("nameprefix", name_prefix)
-        audio_select = session_.options.get("hls-audio-select")
+        audio_select = session_.options.get("hls-audio-select") or []
 
         res = session_.http.get(url, exception=IOError, **request_params)
 
@@ -370,34 +376,38 @@ class HLSStream(HTTPStream):
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []
-            fallback_audio = None
-            default_audio = None
-            preferred_audio = None
-
+            fallback_audio = []
+            default_audio = []
+            preferred_audio = []
             for media in playlist.media:
                 if media.type == "VIDEO" and media.name:
                     names["name"] = media.name
                 elif media.type == "AUDIO":
                     audio_streams.append(media)
-
             for media in audio_streams:
+                # Media without a uri is not relevant as external audio
+                if not media.uri:
+                    continue
+
                 if not fallback_audio and media.default:
-                    fallback_audio = media
+                    fallback_audio = [media]
 
                 # if the media is "audoselect" and it better matches the users preferences, use that
                 # instead of default
                 if not default_audio and (media.autoselect and locale.equivalent(language=media.language)):
-                    default_audio = media
+                    default_audio = [media]
 
                 # select the first audio stream that matches the users explict language selection
-                if ((media.language == audio_select or media.name == audio_select) or
+                if (('*' in audio_select or media.language in audio_select or
+                                   media.name in audio_select) or
                     ((not preferred_audio or media.default) and
                         locale.explicit and
                         locale.equivalent(language=media.language))):
-                    preferred_audio = media
+                    preferred_audio.append(media)
 
             # final fallback on the first audio stream listed
-            fallback_audio = fallback_audio or (len(audio_streams) and audio_streams[0])
+            fallback_audio = fallback_audio or (len(audio_streams) and
+                                                audio_streams[0].uri and [audio_streams[0]])
 
             if playlist.stream_info.resolution:
                 width, height = playlist.stream_info.resolution
@@ -438,14 +448,18 @@ class HLSStream(HTTPStream):
                     continue
 
             external_audio = preferred_audio or default_audio or fallback_audio
-            if external_audio and external_audio.uri and FFMPEGMuxer.is_usable(session_):
-                logger.debug("Using external audio track for stream {0} (language={1}, name={2})".format(
-                    name_prefix + stream_name,
-                    external_audio.language, external_audio.name or "N/A"))
+
+            if external_audio and FFMPEGMuxer.is_usable(session_):
+                external_audio_msg = ", ".join([
+                    "(language={0}, name={1})".format(x.language, (x.name or "N/A"))
+                    for x in external_audio
+                ])
+                logger.debug("Using external audio tracks for stream {0} {1}", name_prefix + stream_name,
+                             external_audio_msg)
 
                 stream = MuxedHLSStream(session_,
                                         video=playlist.uri,
-                                        audio=external_audio and external_audio.uri,
+                                        audio=[x.uri for x in external_audio if x.uri],
                                         force_restart=force_restart,
                                         start_offset=start_offset,
                                         duration=duration,
