@@ -44,6 +44,8 @@ class ABweb(Plugin):
         ])
     )
 
+    expires_time = 3600 * 24
+
     options = PluginOptions({
         'username': None,
         'password': None,
@@ -54,11 +56,15 @@ class ABweb(Plugin):
         super(ABweb, self).__init__(url)
         self._session_attributes = Cache(filename='plugin-cache.json', key_prefix='abweb:attributes')
         self._authed = self._session_attributes.get('ASP.NET_SessionId') and self._session_attributes.get('.abportail1')
-        self._expires = self._session_attributes.get('expires', time.time() + 3600 * 24)
+        self._expires = self._session_attributes.get('expires', time.time() + self.expires_time)
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
+
+    def set_expires_time_cache(self):
+        expires = time.time() + self.expires_time
+        self._session_attributes.set('expires', expires, expires=self.expires_time)
 
     def get_iframe_url(self):
         self.logger.debug('search for an iframe')
@@ -119,6 +125,7 @@ class ABweb(Plugin):
 
         if self._session_attributes.get('ASP.NET_SessionId') and self._session_attributes.get('.abportail1'):
             self.logger.debug('New session data')
+            self.set_expires_time_cache()
             return True
         else:
             self.logger.error('Failed to login, check your username/password')
@@ -145,8 +152,7 @@ class ABweb(Plugin):
             if self._expires < time.time():
                 self.logger.debug('get new cached cookies')
                 # login after 24h
-                expires = time.time() + 3600 * 24
-                self._session_attributes.set('expires', expires, expires=3600 * 24)
+                self.set_expires_time_cache()
                 self._authed = False
             else:
                 self.logger.info('Attempting to authenticate using cached cookies')
