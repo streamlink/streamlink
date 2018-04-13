@@ -11,10 +11,11 @@ from streamlink.utils.crypto import unpad_pkcs5
 
 
 class VK(Plugin):
-    _url_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/video-[0-9]*_[0-9]*")
+    _url_re = re.compile(r"http(s)?://(\w\.)?vk.com/(video\?z\=)?video[0-9]*_[0-9]*")
     _url_catalog_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/videos-[0-9]*")
-    _livestream_sources_re = re.compile(r"<source src=\\\"(.*?)\\\" type=\\\"application\\\/vnd\.apple\.mpegurl\\\">")
-    _vod_sources_re = re.compile(r"<source src=\\\"(.*?)\\\" type=\\\"video\\\/mp4\\\">")
+    _livestream_sources_re = re.compile(r"src=(?:\\)?\"(.*)(?:\\)?\" type=(?:\\)?\"application(?:\\)?\/vnd\.apple\.mpegurl(?:\\)?\"") 
+
+    _vod_sources_re = re.compile(r"<source src=(?:\\)?\"(https?:(?:\\)?/(?:\\)?/cs.*(?:\\)?)\" type=(?:\\)?\"video(?:\\)?\/mp4(?:\\)?\" (?:\\)?/>")
     _vod_quality_re = re.compile(r"\.([0-9]*?)\.mp4")
 
     @classmethod
@@ -23,7 +24,7 @@ class VK(Plugin):
             url = cls.follow_vk_redirect(url)
             if url is None:
                 return False
-        return cls._url_re.match(url) is not None
+        return cls._url_re.match(url)
 
     @classmethod
     def follow_vk_redirect(cls, url):
@@ -57,7 +58,7 @@ class VK(Plugin):
         # Try and find an HLS source (livestream)
         stream_urls = self._livestream_sources_re.findall(res.text)
         if len(stream_urls):
-            stream_url = stream_urls[0].replace('\/', '/')
+            stream_url = stream_urls[0].replace('\\/', '\/')
             self.logger.debug("Found live stream at {}", stream_url)
             try:
                 # try to parse the stream as a variant playlist
@@ -70,7 +71,6 @@ class VK(Plugin):
                     yield 'live', HLSStream(self.session, stream_url, headers=headers)
             except IOError:
                 self.logger.warning("Could not open the stream, perhaps the channel is offline")
-            return
 
         # Try and find a set of MP4 sources (VOD)
         vod_urls = self._vod_sources_re.findall(res.text)
