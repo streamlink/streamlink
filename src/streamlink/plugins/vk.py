@@ -11,8 +11,8 @@ from streamlink.utils.crypto import unpad_pkcs5
 
 
 class VK(Plugin):
-    _url_re = re.compile(r"http(?:s)?://(\w\.)?vk.com/(video\?z\=)?video(?:-)?[0-9]*_[0-9]*")
-    _url_catalog_re = re.compile(r"http(?:s)?://(\w\.)?vk.com/video(s)?-[0-9]*(?:_[0-9]*)?")
+    _url_re = re.compile(r"http(s)?://(\w+\.)?vk.com/(video\?z\=)?video(-)?[0-9]*_[0-9]*")
+    _url_catalog_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/video(s)?-[0-9]*(?:_[0-9]*)?")
     _livestream_sources_re = re.compile(r"src=(?:\\)?\"(.*)(?:\\)?\" type=(?:\\)?\"application(?:\\)?\/vnd\.apple\.mpegurl(?:\\)?\"") 
 
     _vod_sources_re = re.compile(r"<source src=(?:\\)?\"(https?:(?:\\)?/(?:\\)?/cs.*(?:\\)?)\" type=(?:\\)?\"video(?:\\)?\/mp4(?:\\)?\" (?:\\)?/>")
@@ -24,7 +24,7 @@ class VK(Plugin):
             url = cls.follow_vk_redirect(url)
             if url is None:
                 return False
-        return cls._url_re.match(url)
+        return cls._url_re.match(url) is not None
 
     @classmethod
     def follow_vk_redirect(cls, url):
