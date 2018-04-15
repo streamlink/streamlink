@@ -26,6 +26,10 @@ class TestPluginVK(unittest.TestCase):
         self.assertTrue(VK.can_handle_url("http://vk.com/video-24136539_456239830"))
         self.assertTrue(VK.can_handle_url("https://www.vk.com/video-34453259_456241787"))
         self.assertTrue(VK.can_handle_url("https://vk.com/videos-24136539?z=video-24136539_456241155%2Fpl_-24136539_-2"))
+        self.assertTrue(VK.can_handle_url("https://vk.com/video34453259_456241787"))
+        self.assertTrue(VK.can_handle_url("https://www.vk.com/video34453259_456241787"))
+        self.assertTrue(VK.can_handle_url("https://vk.com/video?z=video44031131_456239067"))
+        self.assertTrue(VK.can_handle_url("https://www.vk.com/video?z=video44031131_456239067"))
 
         # shouldn't match
         self.assertFalse(VK.can_handle_url("https://vk.com/"))
