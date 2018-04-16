@@ -11,6 +11,8 @@ class TF1(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?(?:tf1\.fr/(tf1|tmc|tfx|tf1-series-films)/direct|(lci).fr/direct)/?")
     embed_url = "http://www.wat.tv/embedframe/live{0}"
     embed_re = re.compile(r"urlLive.*?:.*?\"(http.*?)\"", re.MULTILINE)
+    url_base_re = re.compile(r"(.+?((?=\?)|$))")
+    hdnea_re = re.compile(r"hdnea=(.+?((?=&)|$))")
     api_url = "http://www.wat.tv/get/{0}/591997"
     swf_url = "http://www.wat.tv/images/v70/PlayerLite.swf"
     hds_channel_remap = {"tf1": "androidliveconnect", "lci": "androidlivelci", "tfx" : "nt1live", "tf1-series-films" : "hd1live" }
@@ -42,7 +44,9 @@ class TF1(Plugin):
         m = self.embed_re.search(embed_page.text)
         if m:
             hls_stream_url = m.group(1)
-
+            mu = self.url_base_re.search (hls_stream_url)
+            mh = self.hdnea_re.search (hls_stream_url)
+            hls_stream_url = "{0}?hdnea={1}".format(mu.group(1), mh.group(1))
             try:
                 for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
                     yield s
