@@ -77,8 +77,36 @@ changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
   LOG=$(git shortlog --email --no-merges --pretty=%s ${1}.. | sed  's/^/    /')
-  echo -e "WRITE YOUR LOG HERE\n\nIf you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
-\n\n::\n\n$LOG" > ../changes.txt
+  echo "Streamlink $2
+
+!!!WRITE YOUR RELEASE NOTES HERE!!
+
+# Installation
+
+**Installing with Pip:**
+
+\`\`\`sh
+sudo pip install streamlink
+\`\`\`
+
+**Manual installation:**
+
+\`\`\`sh
+curl -L https://github.com/streamlink/streamlink/releases/download/$2/streamlink-$2.tar.gz -O streamlink.tar.gz
+tar xvf streamlink.tar.gz
+cd streamlink
+sudo python setup.py install
+\`\`\`
+
+# Supporting Streamlink
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+
+
+::
+
+
+$LOG" > ../changes.txt
   echo "Changelog has been written to changes.txt"
   echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
   echo "Open changes.txt and add the release information"
@@ -260,7 +288,7 @@ main() {
               replaceversion $VERSION
               ;;
           "Generate changelog")
-              changelog $PREV_VERSION
+              changelog $PREV_VERSION $VERSION
               ;;
           "Generate changelog for release")
               changelog_rst $VERSION
