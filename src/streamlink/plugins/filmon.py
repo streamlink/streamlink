@@ -76,6 +76,8 @@ class FilmOnAPI(object):
         },
         validate.get("data")
     )
+    
+    _special_case_channels = ("sat-1-schweiz",)
 
     def channel(self, channel):
         res = http.get(self.channel_url.format(channel))
@@ -134,7 +136,7 @@ class Filmon(Plugin):
                 yield stream["quality"], FilmOnHLS(self.session, vod_id=vod_id, quality=stream["quality"])
 
         else:
-            if not channel or channel == "sat-1-schweiz":
+            if not channel or channel in self._special_case_channels:
                 channel = http.get(self.url, schema=self._channel_id_schema)
             data = self.api.channel(channel)
             for stream in data["streams"]:
