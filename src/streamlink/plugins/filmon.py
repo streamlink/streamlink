@@ -95,7 +95,7 @@ class Filmon(Plugin):
         )
     """, re.VERBOSE)
 
-    _channel_id_re = re.compile(r'channel_id\s*?=\s*"(\d+)"')
+    _channel_id_re = re.compile(r"""channel_id\s*?=\s*"?(\d+)["']""")
     _channel_id_schema = validate.Schema(
         validate.transform(_channel_id_re.search),
         validate.any(None, validate.get(1))
@@ -134,7 +134,7 @@ class Filmon(Plugin):
                 yield stream["quality"], FilmOnHLS(self.session, vod_id=vod_id, quality=stream["quality"])
 
         else:
-            if not channel:
+            if not channel or channel == "sat-1-schweiz":
                 channel = http.get(self.url, schema=self._channel_id_schema)
             data = self.api.channel(channel)
             for stream in data["streams"]:
