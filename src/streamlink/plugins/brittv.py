@@ -10,7 +10,7 @@ from streamlink.stream import HLSStream
 class BritTV(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?brittv\.co.uk/watch/")
     js_re = re.compile(r"""/js/brittv\.player\.js\.php\?key=([^'"]+)['"]""")
-    player_re = re.compile(r"file: '(http://[^']+)'")
+    player_re = re.compile(r'''src\s*:\s*(?P<quote>['"])(https?://.+?)(?P=quote)''')
 
     @classmethod
     def can_handle_url(cls, url):
@@ -24,6 +24,7 @@ class BritTV(Plugin):
             js_url = m.group(0)
             res = http.get(urljoin(self.url, js_url))
 
+            self.logger.debug("Looking for stream URL...")
             for url in self.player_re.findall(res.text):
                 if "adblock" not in url:
                     yield "live", HLSStream(self.session, url)
