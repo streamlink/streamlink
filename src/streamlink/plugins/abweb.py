@@ -1,17 +1,13 @@
 import re
 import time
 
-from functools import partial
-
 from streamlink.cache import Cache
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin import PluginOptions
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils import update_scheme
 
 
@@ -22,27 +18,13 @@ class ABweb(Plugin):
 
     login_url = 'http://www.abweb.com/BIS-TV-Online/Default.aspx'
 
-    _js_to_json = partial(re.compile(r"(\w+):\s").sub, r'"\1":')
-
     _url_re = re.compile(r'https?://(?:www\.)?abweb\.com/BIS-TV-Online/bistvo-tele-universal.aspx', re.IGNORECASE)
-    _hls_re = re.compile(r'''["'](?P<url>[^"']+\.m3u8)["']''')
+    _hls_re = re.compile(r'''["']file["']:\s?["'](?P<url>[^"']+\.m3u8[^"']+)["']''')
     _iframe_re = re.compile(r'''<iframe[^>]+src=["'](?P<url>[^"']+)["']''')
-    _sources_re = re.compile(r'''sources:\s?(?P<data>\133.*?\])''', re.DOTALL)
 
     _input_re = re.compile(r'''(<input[^>]+>)''')
     _name_re = re.compile(r'''name=["']([^"']*)["']''')
     _value_re = re.compile(r'''value=["']([^"']*)["']''')
-
-    _sources_schema = validate.Schema(
-        validate.transform(_js_to_json),
-        validate.transform(parse_json),
-        validate.all([
-            {
-                'src': validate.text,
-                'type': validate.text,
-            }
-        ])
-    )
 
     expires_time = 3600 * 24
 
@@ -75,17 +57,17 @@ class ABweb(Plugin):
 
         iframe_url = m.group('url')
         iframe_url = update_scheme('http://', iframe_url)
-        self.logger.debug('URL={0}'.format(iframe_url))
+        self.logger.debug('IFRAME URL={0}'.format(iframe_url))
         return iframe_url
 
-    def get_sources(self, iframe_url):
-        self.logger.debug('search for stream sources')
+    def get_hls_url(self, iframe_url):
+        self.logger.debug('search for hls url')
         res = http.get(iframe_url)
-        m = self._sources_re.search(res.text)
+        m = self._hls_re.search(res.text)
         if not m:
             raise PluginError('No playlist found.')
 
-        return self._sources_schema.validate(m.group('data'))
+        return m and m.group('url')
 
     def _login(self, username, password):
         '''login and update cached cookies'''
@@ -163,19 +145,18 @@ class ABweb(Plugin):
             return
 
         iframe_url = self.get_iframe_url()
-        data = self.get_sources(iframe_url)
+        http.headers.update({'Referer': iframe_url})
 
-        for source in data:
-            self.logger.debug('Found stream of type: {0}'.format(source['type']))
-            if source['type'] == 'application/x-mpegurl':
-                url = update_scheme(self.url, source['src'])
-                self.logger.debug('URL={0}'.format(url))
-                variant = HLSStream.parse_variant_playlist(self.session, url)
-                if variant:
-                    for q, s in variant.items():
-                        yield q, s
-                else:
-                    yield 'live', HLSStream(self.session, url)
+        hls_url = self.get_hls_url(iframe_url)
+        hls_url = update_scheme(self.url, hls_url)
+
+        self.logger.debug('URL={0}'.format(hls_url))
+        variant = HLSStream.parse_variant_playlist(self.session, hls_url)
+        if variant:
+            for q, s in variant.items():
+                yield q, s
+        else:
+            yield 'live', HLSStream(self.session, hls_url)
 
 
 __plugin__ = ABweb
