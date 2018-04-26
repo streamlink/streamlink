@@ -63,14 +63,6 @@ deploy:
     on:
       branch: master
       condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
-  - provider: bintray
-    file: build/bintray-latest.json
-    user: "${BINTRAY_USER}"
-    key: "${BINTRAY_KEY}"
-    skip_cleanup: true
-    on:
-      branch: master
-      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
 
 after_deploy:
   - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' ]]; then ./script/bintrayupdate.sh; fi
