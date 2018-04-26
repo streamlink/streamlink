@@ -46,7 +46,7 @@ class App17(Plugin):
             for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                 yield stream
         else:
-            url = http_url.replace(".flv", ".m3u8")
+            url = http_url.replace("live-hdl", "live-hls").replace(".flv", ".m3u8")
             yield "live", HLSStream(self.session, url)
 
 
