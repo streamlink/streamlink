@@ -25,7 +25,7 @@ class BritTV(Plugin):
             res = http.get(urljoin(self.url, js_url))
 
             self.logger.debug("Looking for stream URL...")
-            for url in self.player_re.findall(res.text):
+            for _, url in self.player_re.findall(res.text):
                 if "adblock" not in url:
                     yield "live", HLSStream(self.session, url)
 
