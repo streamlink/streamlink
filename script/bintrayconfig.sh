@@ -21,37 +21,6 @@ else
     STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
 fi
 
-cat > "${build_dir}/bintray-latest.json" <<EOF
-{
-  "package": {
-    "subject": "streamlink",
-    "repo": "streamlink-nightly",
-    "name": "streamlink"
-  },
-
-  "version": {
-    "name": "latest",
-    "released": "$(date +'%Y-%m-%d')",
-    "desc": "Latest version of the installer (${STREAMLINK_VERSION})"
-  },
-
-  "files": [
-    {
-      "includePattern": "${dist_dir}/${STREAMLINK_INSTALLER}.exe",
-      "uploadPattern": "streamlink-latest.exe",
-      "matrixParams": {
-        "override": 1,
-        "publish": 1
-      }
-    }
-  ],
-
-  "publish": true
-}
-EOF
-
-echo "Wrote Bintray config to: ${build_dir}/bintray-latest.json"
-
 cat > "${build_dir}/bintray-nightly.json" <<EOF
 {
   "package": {
