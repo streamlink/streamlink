@@ -1,6 +1,8 @@
 import json
 import re
 import zlib
+import collections
+import functools
 
 try:
     import xml.etree.cElementTree as ET
@@ -183,6 +185,18 @@ def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_pa
             (firstp.params == secondp.params or ignore_params) and
             (firstp.query == secondp.query or ignore_query) and
             (firstp.fragment == secondp.fragment or ignore_fragment))
+
+
+def memoize(obj):
+    cache = obj.cache = {}
+
+    @functools.wraps(obj)
+    def memoizer(*args, **kwargs):
+        key = str(args) + str(kwargs)
+        if key not in cache:
+            cache[key] = obj(*args, **kwargs)
+        return cache[key]
+    return memoizer
 
 
 #####################################

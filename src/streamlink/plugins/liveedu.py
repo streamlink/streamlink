@@ -1,7 +1,7 @@
 import re
 
 from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
@@ -31,10 +31,20 @@ class LiveEdu(Plugin):
         "videosURL": validate.text
     })
 
-    options = PluginOptions({
-        "email": None,
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "email",
+            requires=["password"],
+            metavar="EMAIL",
+            help="The email address used to register with liveedu.tv."
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="A LiveEdu account password to use with --liveedu-email."
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):

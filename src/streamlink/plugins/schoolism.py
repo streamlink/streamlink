@@ -3,7 +3,7 @@ from __future__ import print_function
 import re
 from functools import partial
 
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -41,11 +41,35 @@ class Schoolism(Plugin):
         )
     )
 
-    options = PluginOptions({
-        "email": None,
-        "password": None,
-        "part": 1
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "email",
+            required=True,
+            requires=["password"],
+            metavar="EMAIL",
+            help="""
+        The email associated with your Schoolism account,
+        required to access any Schoolism stream.
+        """
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="A Schoolism account password to use with --schoolism-email."
+        ),
+        PluginArgument(
+            "part",
+            type=int,
+            default=1,
+            metavar="PART",
+            help="""
+        Play part number PART of the lesson.
+
+        Defaults is 1.
+        """
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):

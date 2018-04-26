@@ -4,7 +4,7 @@ import sys
 import traceback
 import requests
 
-from streamlink.utils import update_scheme
+from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
 from .compat import is_win32
@@ -349,6 +349,7 @@ class Streamlink(object):
         """
         self.logger.set_output(output)
 
+    @memoize
     def resolve_url(self, url, follow_redirect=True):
         """Attempts to find a plugin that can use this URL.
 

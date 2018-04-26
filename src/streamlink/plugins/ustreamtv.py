@@ -6,7 +6,7 @@ import time
 
 from streamlink import PluginError
 from streamlink.compat import urljoin
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -157,9 +157,13 @@ class UStreamTV(Plugin):
         )?
     """, re.VERBOSE)
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
-    options = PluginOptions({
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument("password",
+                       sensitive=True,
+                       metavar="PASSWORD",
+                       help="""
+    A password to access password protected UStream.tv channels.
+    """))
 
     @classmethod
     def can_handle_url(cls, url):
