@@ -38,7 +38,7 @@ class ITVPlayer(Plugin):
     def production_id(self):
         if self._stream not in CHANNEL_MAP:
             res = http.get(self.url, verify=False)
-            production_id_match = re.findall(r"&productionId=(.*?)['&\"]", res.text, flags=re.DOTALL)
+            production_id_match = re.findall(r'data-video-production-id="(.+?)"', res.text)
             if production_id_match:
                 return unquote(production_id_match[0])
             else:
@@ -53,14 +53,14 @@ class ITVPlayer(Plugin):
 
         headers = {'Content-Length': '{0:d}'.format(len(soap_message)),
                    'Content-Type': 'text/xml; charset=utf-8',
-                   'Host': 'mercury.itv.com',
+                   'Host': 'secure-mercury.itv.com',
                    'Origin': 'http://www.itv.com',
                    'Referer': 'http://www.itv.com/Mercury/Mercury_VideoPlayer.swf?v=null',
                    'SOAPAction': "http://tempuri.org/PlaylistService/GetPlaylist",
                    'User-Agent': ITV_PLAYER_USER_AGENT,
                    "X-Requested-With": "ShockwaveFlash/16.0.0.305"}
 
-        res = http.post("http://mercury.itv.com/PlaylistService.svc?wsdl",
+        res = http.post("https://secure-mercury.itv.com/PlaylistService.svc?wsdl",
                         headers=headers,
                         data=soap_message)
 

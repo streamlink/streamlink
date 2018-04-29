@@ -36,11 +36,11 @@ install:
 
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip setuptools"
+  - "build.cmd %PYTHON%\\python.exe -m pip install --disable-pip-version-check --user --upgrade pip setuptools"
 
   # install dev requirements, for testing, etc.
-  - "pip install -r dev-requirements.txt"
-  - "pip install pycountry"
+  - "build.cmd %PYTHON%\\python.exe -m pip install -r dev-requirements.txt"
+  - "build.cmd %PYTHON%\\python.exe -m pip install pycountry"
   - "build.cmd %PYTHON%\\python.exe -m pip install -e ."
 
 build: off
