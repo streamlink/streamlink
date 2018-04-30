@@ -3,9 +3,9 @@ import re
 import time
 from collections import defaultdict
 from collections import namedtuple
-from itertools import count, repeat, izip
+from itertools import count, repeat
 
-from streamlink.compat import urlparse, urljoin, urlunparse
+from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
 
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc
@@ -141,8 +141,8 @@ class MPDNode(object):
             raise MPDParsingError("expected to find {}/{} required [{}..{})".format(
                 self.__tag__, cls.__tag__, minimum, maximum or "unbound"))
 
-        return map(lambda x: cls(x[1], root=self.root, parent=self, i=x[0], base_url=self.base_url),
-                   enumerate(children))
+        return list(map(lambda x: cls(x[1], root=self.root, parent=self, i=x[0], base_url=self.base_url),
+                   enumerate(children)))
 
     def only_child(self, cls, minimum=0):
         children = self.children(cls, minimum=minimum, maximum=1)
@@ -228,8 +228,10 @@ class BaseURL(MPDNode):
         if urlparse(other).scheme:
             return other
         elif url:
-            if not url.endswith("/"):
-                url += "/"
+            parts = list(urlsplit(url))
+            if not parts[2].endswith("/"):
+                parts[2] += "/"
+            url = urlunsplit(parts)
             return urljoin(url, other)
         else:
             return other
@@ -394,10 +396,7 @@ class SegmentTemplate(MPDNode):
             yield number, available_at
 
     def format_media(self, **kwargs):
-        if self.startNumber:
-            for number, available_at in self.segment_numbers():
-                yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
-        elif self.segmentTimeline:
+        if self.segmentTimeline:
             t = 0
             for segment in self.segmentTimeline.segments:
                 t = t or segment.t
@@ -406,6 +405,9 @@ class SegmentTemplate(MPDNode):
                     yield self.make_url(self.media.format(Time=t, **kwargs)), 0
                     self.root.timelines[self.parent.id] = t
                 t += segment.d
+        elif self.startNumber:
+            for number, available_at in self.segment_numbers():
+                yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
         else:
             yield self.make_url(self.media.format(**kwargs)), 0
 
