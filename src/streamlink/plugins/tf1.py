@@ -1,6 +1,7 @@
 from __future__ import print_function
 import re
 
+from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, useragents
 from streamlink.stream import HDSStream
@@ -41,8 +42,9 @@ class TF1(Plugin):
 
         m = self.embed_re.search(embed_page.text)
         if m:
-            hls_stream_url = m.group(1)
-
+            o = urlparse(m.group(1))
+            prms = dict(parse_qsl(o.query))
+            hls_stream_url = "{0}://{1}{2}?hdnea={3}".format(o.scheme, o.netloc, o.path, prms["hdnea"])
             try:
                 for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
                     yield s
