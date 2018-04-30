@@ -315,6 +315,7 @@ class AdaptationSet(MPDNode):
         self.baseURLs = self.children(BaseURL)
         self.representations = self.children(Representation, minimum=1)
         self.segmentTemplate = self.only_child(SegmentTemplate)
+        self.contentProtection = self.children(ContentProtection, minimum=1)
 
 
 class SegmentTemplate(MPDNode):
@@ -493,3 +494,15 @@ class TimelineSegment(MPDNode):
 
         self.t = self.attr("t", parser=int)
         self.d = self.attr("d", parser=int)
+
+
+class ContentProtection(MPDNode):
+    __tag__ = "ContentProtection"
+
+
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super(ContentProtection, self).__init__(node, root, parent, *args, **kwargs)
+
+        self.schemeIdUri = self.attr(u"schemeIdUri")
+        self.value = self.attr(u"value")
+        self.default_KID = self.attr(u"default_KID")

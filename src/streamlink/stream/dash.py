@@ -1,5 +1,5 @@
 import itertools
-from streamlink import StreamError
+from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin.api import http
 from streamlink.stream import Stream
@@ -122,6 +122,8 @@ class DASHStream(Stream):
         video, audio = [], []
 
         for aset in mpd.periods[0].adaptionSets:
+            if aset.contentProtection:
+                raise PluginError("{} is protected by DRM".format(url))
             for rep in aset.representations:
                 if rep.mimeType.startswith("video"):
                     video.append(rep)
