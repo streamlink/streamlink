@@ -12,6 +12,7 @@ is limited.
 =================== ==================== ===== ===== ===========================
 Name                URL(s)               Live  VOD   Notes
 =================== ==================== ===== ===== ===========================
+abweb               abweb.com            Yes   No    Requires a login and a subscription.
 adultswim           adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
 afreeca             afreecatv.com        Yes   No
 afreecatv           afreeca.tv           Yes   No
