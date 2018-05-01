@@ -83,8 +83,10 @@ class MPDParsers(object):
             return float(frame_rate)
 
     @staticmethod
-    def timedelta(seconds):
-        return datetime.timedelta(seconds=int(seconds))
+    def timedelta(timescale=1):
+        def _timedelta(seconds):
+            return datetime.timedelta(seconds=int(float(seconds) / float(timescale)))
+        return _timedelta
 
 
 class MPDParsingError(Exception):
@@ -315,7 +317,7 @@ class AdaptationSet(MPDNode):
         self.baseURLs = self.children(BaseURL)
         self.representations = self.children(Representation, minimum=1)
         self.segmentTemplate = self.only_child(SegmentTemplate)
-        self.contentProtection = self.children(ContentProtection, minimum=1)
+        self.contentProtection = self.children(ContentProtection)
 
 
 class SegmentTemplate(MPDNode):
@@ -328,7 +330,7 @@ class SegmentTemplate(MPDNode):
         self.duration = self.attr(u"duration", parser=int)
         self.timescale = self.attr(u"timescale", parser=int, default=1)
         self.startNumber = self.attr(u"startNumber", parser=int)
-        self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta)
+        self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta(self.timescale))
 
         if self.duration:
             self.duration_seconds = self.duration / float(self.timescale)
@@ -376,8 +378,9 @@ class SegmentTemplate(MPDNode):
         """
         if self.root.type == u"static":
             available_iter = repeat(0)
-            if self.period.duration.seconds:
-                number_iter = range(self.startNumber, int(self.period.duration.seconds / self.duration_seconds) + 1)
+            duration = self.period.duration.seconds or self.root.mediaPresentationDuration.seconds
+            if duration:
+                number_iter = range(self.startNumber, int(duration / self.duration_seconds) + 1)
             else:
                 number_iter = count(self.startNumber)
         else:
@@ -406,7 +409,7 @@ class SegmentTemplate(MPDNode):
                     yield self.make_url(self.media.format(Time=t, **kwargs)), 0
                     self.root.timelines[self.parent.id] = t
                 t += segment.d
-        elif self.startNumber:
+        elif self.startNumber is not None:
             for number, available_at in self.segment_numbers():
                 yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
         else:
@@ -448,7 +451,7 @@ class Representation(MPDNode):
         Segments are yielded when they are available
 
         Segments appear on a time line, for dynamic content they are only available at a certain time
-        and sometimes for a limited time. For static content they are all available at the time same.
+        and sometimes for a limited time. For static content they are all available at the same time.
 
         :param kwargs: extra args to pass to the segment template
         :return: yields Segments
@@ -463,7 +466,9 @@ class Representation(MPDNode):
         segmentTemplate = self.segmentTemplate or walk_back_get_attr("segmentTemplate")
 
         if segmentTemplate:
-            for segment in segmentTemplate.segments(RepresentationID=self.id, **kwargs):
+            for segment in segmentTemplate.segments(RepresentationID=self.id,
+                                                    Bandwidth=int(self.bandwidth * 1000),
+                                                    **kwargs):
                 if segment.init:
                     yield segment
                 else:

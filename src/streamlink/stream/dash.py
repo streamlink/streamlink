@@ -23,7 +23,6 @@ class DASHStreamWriter(SegmentedStreamWriter):
 
         try:
             return self.session.http.get(segment.url,
-                                         stream=True,
                                          timeout=self.timeout,
                                          exception=StreamError)
         except StreamError as err:
@@ -112,6 +111,7 @@ class DASHStream(Stream):
 
     @classmethod
     def parse_manifest(cls, session, url):
+        ret = {}
         res = http.get(url)
 
         urlp = list(urlparse(url))
@@ -135,7 +135,9 @@ class DASHStream(Stream):
             vid_name = "{:0.0f}{}".format(vid.height or vid.bandwidth, "p" if vid.height else "k")
             if len(audio) > 1:
                 vid_name += "+a{:0.0f}k".format(aud.bandwidth)
-            yield vid_name, stream
+            ret[vid_name] = stream
+
+        return ret
 
     def open(self):
         video = DASHStreamReader(self, self.video_representation.id)
