@@ -474,7 +474,7 @@ def build_parser():
         - {0}
     
         Make sure your player can handle the stream type when using this.
-        """.format("\n    - ".join(STREAM_PASSTHROUGH))
+        """.format("\n        - ".join(STREAM_PASSTHROUGH))
     )
     player.add_argument(
         "--player-no-close",
@@ -838,13 +838,14 @@ def build_parser():
         It also allows you to temporary pause as long as the ringbuffer
         doesn't get full since we continue to download the stream in the
         background.
+        
+        Default is "16M".
     
         Note: A smaller size is recommended on lower end systems (such as
         Raspberry Pi) when playing stream types that require some extra
         processing (such as HDS) to avoid unnecessary background
         processing.
-    
-        Default is "16M".
+        
         """)
     transport.add_argument(
         "--rtmp-proxy", "--rtmpdump-proxy",

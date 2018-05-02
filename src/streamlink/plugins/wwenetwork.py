@@ -46,6 +46,7 @@ class WWENetwork(Plugin):
     arguments = PluginArguments(
         PluginArgument(
             "email",
+            required=True,
             metavar="EMAIL",
             requires=["password"],
             help="""

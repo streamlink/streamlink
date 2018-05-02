@@ -1002,3 +1002,10 @@ def main():
         console.msg(msg)
 
     sys.exit(error_code)
+
+
+def parser_helper():
+    setup_streamlink()
+    parser = build_parser()
+    setup_plugin_args(parser)
+    return parser
