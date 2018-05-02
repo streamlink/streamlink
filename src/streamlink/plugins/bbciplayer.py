@@ -12,6 +12,7 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
+from streamlink.stream.dash import DASHStream
 from streamlink.utils import parse_json
 
 
@@ -157,6 +158,9 @@ class BBCiPlayer(Plugin):
                         yield s
                 if stream_type == "hls":
                     for s in HLSStream.parse_variant_playlist(self.session, url).items():
+                        yield s
+                if connection.get("transferFormat") == "dash":
+                    for s in DASHStream.parse_manifest(self.session, connection["href"]).items():
                         yield s
 
     def login(self, ptrt_url):
