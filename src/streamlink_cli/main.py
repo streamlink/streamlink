@@ -467,6 +467,7 @@ def format_valid_streams(plugin, streams):
 
         def synonymfilter(n):
             return stream is streams[n] and n is not name
+
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:
@@ -837,23 +838,23 @@ def setup_options():
                                "--ringbuffer-size instead")
 
 
-def setup_plugin_args(parser):
+def setup_plugin_args(session, parser):
     """Sets Streamlink plugin options."""
 
     plugin_args = parser.add_argument_group("Plugin options")
-    for pname, plugin in streamlink.plugins.items():
+    for pname, plugin in session.plugins.items():
         for parg in plugin.arguments:
             plugin_args.add_argument(parg.argument_name(pname), **parg.options)
 
 
-def setup_plugin_options():
+def setup_plugin_options(session):
     """Sets Streamlink plugin options."""
 
-    for pname, plugin in streamlink.plugins.items():
+    for pname, plugin in session.plugins.items():
         required = []
         for parg in plugin.arguments:
             value = getattr(args, parg.option_name(pname))
-            streamlink.set_plugin_option(pname, parg.name, value)
+            session.set_plugin_option(pname, parg.name, value)
             # if the value is set, check to see if any of the required arguments are not set
             if value:
                 try:
@@ -865,10 +866,10 @@ def setup_plugin_options():
         if required:
             for req in required:
                 prompt = req.prompt or "Enter {0} password".format(pname)
-                streamlink.set_plugin_option(pname, req.name,
-                                             console.askpass(prompt + ": ")
-                                             if req.sensitive else
-                                             console.ask(prompt + ": "))
+                session.set_plugin_option(pname, req.name,
+                                          console.askpass(prompt + ": ")
+                                          if req.sensitive else
+                                          console.ask(prompt + ": "))
 
     if args.abweb_username:
         streamlink.set_plugin_option("abweb", "username", args.abweb_username)
@@ -946,7 +947,7 @@ def main():
     setup_args(parser, ignore_unknown=True)
     setup_streamlink()
     setup_plugins()
-    setup_plugin_args(parser)
+    setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
     setup_config_args(parser)
@@ -974,7 +975,7 @@ def main():
     elif args.url:
         try:
             setup_options()
-            setup_plugin_options()
+            setup_plugin_options(streamlink)
             handle_url()
         except KeyboardInterrupt:
             # Close output
@@ -1005,7 +1006,7 @@ def main():
 
 
 def parser_helper():
-    setup_streamlink()
+    session = Streamlink()
     parser = build_parser()
-    setup_plugin_args(parser)
+    setup_plugin_args(session, parser)
     return parser

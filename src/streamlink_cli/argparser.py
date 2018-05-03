@@ -8,14 +8,14 @@ from .constants import (
 )
 from .utils import find_default_player
 
-_filesize_re = re.compile("""
+_filesize_re = re.compile(r"""
     (?P<size>\d+(\.\d+)?)
     (?P<modifier>[Kk]|[Mm])?
     (?:[Bb])?
 """, re.VERBOSE)
-_keyvalue_re = re.compile("(?P<key>[^=]+)\s*=\s*(?P<value>.*)")
-_printable_re = re.compile("[{0}]".format(printable))
-_option_re = re.compile("""
+_keyvalue_re = re.compile(r"(?P<key>[^=]+)\s*=\s*(?P<value>.*)")
+_printable_re = re.compile(r"[{0}]".format(printable))
+_option_re = re.compile(r"""
     (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
     \s*
     (?P<op>=)? # Separating the option and the value with a equals sign is
@@ -356,7 +356,7 @@ def build_parser():
         quote the parameter or its value:
     
           streamlink "--player=/path/with spaces/vlc" <url> <quality>
-          streamlink --player "C:\path\with spaces\mpc-hc64.exe" <url> <quality>
+          streamlink --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> <quality>
     
         Options may also be passed to the player. For example:
     

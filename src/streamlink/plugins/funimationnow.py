@@ -100,7 +100,6 @@ class FunimationNow(Plugin):
         PluginArgument(
             "language",
             argument_name="funimation-language",
-            type=str,
             choices=["en", "ja", "english", "japanese"],
             default="english",
             help="""

@@ -3,9 +3,9 @@ import unittest
 from streamlink import Streamlink
 
 try:
-    from unittest.mock import patch, Mock, ANY
+    from unittest.mock import patch, Mock, ANY, MagicMock, call
 except ImportError:
-    from mock import patch, Mock, ANY
+    from mock import patch, Mock, ANY, mock, MagicMock, call
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
 
@@ -87,3 +87,21 @@ class TestPluginTVPlayer(unittest.TestCase):
         # test the url is used correctly
 
         mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
+
+    def test_arguments(self):
+        from streamlink_cli.main import setup_plugin_args
+        session = Streamlink()
+        parser = MagicMock()
+        plugin_parser = MagicMock()
+        parser.add_argument_group = MagicMock(return_value=plugin_parser)
+
+        session.plugins = {
+            'tvplayer': TVPlayer
+        }
+
+        setup_plugin_args(session, parser)
+
+        self.assertSequenceEqual(plugin_parser.add_argument.mock_calls,
+                                 [call('--tvplayer-email', metavar="EMAIL", help=ANY),
+                                  call('--tvplayer-password', metavar="PASSWORD", help=ANY)],
+                                 )
