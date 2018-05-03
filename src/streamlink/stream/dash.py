@@ -119,12 +119,12 @@ class DASHStream(Stream):
         :return: a dict of name -> DASHStream instances
         """
         ret = {}
-        res = http.get(url)
+        res = session.http.get(url)
 
         urlp = list(urlparse(url))
         urlp[2], _ = urlp[2].rsplit("/", 1)
 
-        mpd = MPD(http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
+        mpd = MPD(session.http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
 
         video, audio = [], []
 
@@ -137,19 +137,24 @@ class DASHStream(Stream):
                 elif rep.mimeType.startswith("audio"):
                     audio.append(rep)
 
+        if not audio:
+            audio = [None]
+
         for vid, aud in itertools.product(video, audio):
             stream = DASHStream(session, mpd, vid, aud)
             vid_name = "{:0.0f}{}".format(vid.height or vid.bandwidth, "p" if vid.height else "k")
-            if len(audio) > 1:
+            if audio and len(audio) > 1:
                 vid_name += "+a{:0.0f}k".format(aud.bandwidth)
             ret[vid_name] = stream
-
         return ret
 
     def open(self):
         video = DASHStreamReader(self, self.video_representation.id)
-        audio = DASHStreamReader(self, self.audio_representation.id)
         video.open()
-        audio.open()
-        muxer = FFMPEGMuxer(self.session, video, audio).open()
-        return muxer
+
+        if self.audio_representation:
+            audio = DASHStreamReader(self, self.audio_representation.id)
+            audio.open()
+            return FFMPEGMuxer(self.session, video, audio).open()
+        else:
+            return video
