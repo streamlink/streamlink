@@ -2,8 +2,8 @@ import itertools
 from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin.api import http
-from streamlink.stream import Stream
-from streamlink.stream import StreamIOIterWrapper
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOIterWrapper
 from streamlink.stream.dash_manifest import MPD, sleeper
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
@@ -111,6 +111,13 @@ class DASHStream(Stream):
 
     @classmethod
     def parse_manifest(cls, session, url):
+        """
+        Attempt to parse a DASH manifest file and return its streams
+
+        :param session: Streamlink session instance
+        :param url: URL of the manifest file
+        :return: a dict of name -> DASHStream instances
+        """
         ret = {}
         res = http.get(url)
 
