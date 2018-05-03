@@ -1,7 +1,6 @@
 import itertools
 from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
-from streamlink.plugin.api import http
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper
 from streamlink.stream.dash_manifest import MPD, sleeper
@@ -78,7 +77,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
         self.logger.debug("Reloading manifest")
         res = self.session.http.get(self.mpd.url, exception=StreamError)
 
-        self.mpd = MPD(http.xml(res, ignore_ns=True),
+        self.mpd = MPD(self.session.http.xml(res, ignore_ns=True),
                        base_url=self.mpd.base_url,
                        url=self.mpd.url,
                        timelines=self.mpd.timelines)
