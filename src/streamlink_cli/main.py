@@ -871,19 +871,6 @@ def setup_plugin_options(session):
                                           if req.sensitive else
                                           console.ask(prompt + ": "))
 
-    if args.abweb_username:
-        streamlink.set_plugin_option("abweb", "username", args.abweb_username)
-    if args.abweb_username and not args.abweb_password:
-        abweb_password = console.askpass("Enter ABweb password: ")
-    else:
-        abweb_password = args.abweb_password
-    if abweb_password:
-        streamlink.set_plugin_option("abweb", "password", abweb_password)
-
-    if args.abweb_purge_credentials:
-        streamlink.set_plugin_option("abweb", "purge_credentials",
-                                     args.abweb_purge_credentials)
-
 
 def check_root():
     if hasattr(os, "getuid"):
