@@ -18,17 +18,17 @@ class Options(object):
 
 
 class Argument(object):
-    def __init__(self, name, required=False, name_override=None, requires=None, prompt=None, sensitive=False, **options):
+    def __init__(self, name, required=False, argument_name=None, requires=None, prompt=None, sensitive=False, **options):
         self.required = required
         self.name = name
         self.options = options
-        self._name_override = name_override
+        self._argument_name = argument_name
         self.requires = requires and (list(requires) if isinstance(requires, (list, tuple)) else [requires]) or []
         self.prompt = prompt
         self.sensitive = sensitive
 
     def _name(self, plugin):
-        return self._name_override or "{0}-{1}".format(plugin, self.name).strip("-")
+        return self._argument_name or "{0}-{1}".format(plugin, self.name).strip("-")
 
     def argument_name(self, plugin):
         return "--" + self._name(plugin)

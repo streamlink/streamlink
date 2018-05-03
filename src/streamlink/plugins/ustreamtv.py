@@ -159,6 +159,7 @@ class UStreamTV(Plugin):
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
     arguments = PluginArguments(
         PluginArgument("password",
+                       argument_name="ustream-password",
                        sensitive=True,
                        metavar="PASSWORD",
                        help="""

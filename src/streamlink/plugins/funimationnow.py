@@ -99,6 +99,7 @@ class FunimationNow(Plugin):
     arguments = PluginArguments(
         PluginArgument(
             "language",
+            argument_name="funimation-language",
             type=str,
             choices=["en", "ja", "english", "japanese"],
             default="english",
@@ -110,6 +111,7 @@ class FunimationNow(Plugin):
         ),
         PluginArgument(
             "mux-subtitles",
+            argument_name="funimation-mux-subtitles",
             action="store_true",
             help="""
             Enable automatically including available subtitles in to the output stream.
