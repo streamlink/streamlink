@@ -44,7 +44,10 @@ class MPEGDASH(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
+        m = cls._url_re.match(url)
+        if m:
+            url_path = urlparse(m.group(2)).path
+            return m.group(1) is not None or url_path.endswith(".mpd")
 
     def _get_streams(self):
         mpdurl = self._url_re.match(self.url).group(2)
