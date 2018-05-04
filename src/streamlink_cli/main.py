@@ -864,7 +864,7 @@ def setup_plugin_options(session, plugin):
             try:
                 for rparg in plugin.arguments.requires(parg.name):
                     required[rparg.name] = rparg
-            except RecursionError:
+            except RuntimeError:
                 console.logger.error("{0} plugin has a configuration error and the arguments "
                                      "cannot be parsed".format(pname))
                 break
