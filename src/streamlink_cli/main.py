@@ -493,6 +493,7 @@ def handle_url():
 
     try:
         plugin = streamlink.resolve_url(args.url)
+        setup_plugin_options(streamlink, plugin)
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
 
@@ -849,10 +850,8 @@ def setup_plugin_args(session, parser):
             plugin_args.add_argument(parg.argument_name(pname), **parg.options)
 
 
-def setup_plugin_options(session):
+def setup_plugin_options(session, plugin):
     """Sets Streamlink plugin options."""
-
-    plugin = streamlink.resolve_url(args.url)
     pname = plugin.module
     required = OrderedDict({})
     for parg in plugin.arguments:
@@ -969,7 +968,6 @@ def main():
     elif args.url:
         try:
             setup_options()
-            setup_plugin_options(streamlink)
             handle_url()
         except KeyboardInterrupt:
             # Close output
