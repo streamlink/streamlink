@@ -41,6 +41,26 @@ class TestDASHStream(unittest.TestCase):
         )
 
     @patch('streamlink.stream.dash.MPD')
+    def test_parse_manifest_audio_only(self, mpdClass):
+        mpd = mpdClass.return_value = Mock(periods=[
+            Mock(adaptionSets=[
+                Mock(contentProtection=None,
+                     representations=[
+                         Mock(id=1, mimeType="audio/mp4", bandwidth=128.0),
+                         Mock(id=2, mimeType="audio/mp4", bandwidth=256.0)
+                     ])
+            ])
+        ])
+
+        streams = DASHStream.parse_manifest(self.session, "http://test.bar/foo.mpd")
+        mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+        self.assertSequenceEqual(
+            sorted(list(streams.keys())),
+            sorted(["a128k", "a256k"])
+        )
+
+    @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_single(self, mpdClass):
         mpd = mpdClass.return_value = Mock(periods=[
             Mock(adaptionSets=[

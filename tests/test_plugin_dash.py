@@ -3,7 +3,7 @@ import unittest
 from mock import patch
 
 from streamlink import Streamlink
-from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY
+from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, BIT_RATE_WEIGHT_RATIO
 from streamlink.plugins.dash import MPEGDASH
 
 
@@ -29,10 +29,11 @@ class TestPluginMPEGDASH(unittest.TestCase):
         self.assertEqual(MPEGDASH.priority("http://example.com/bar"), NO_PRIORITY)
 
     def test_stream_weight(self):
-        self.assertEqual(MPEGDASH.stream_weight("720p"), (720, 'pixels'))
-        self.assertEqual(MPEGDASH.stream_weight("1080p"), (1080, 'pixels'))
-        self.assertEqual(MPEGDASH.stream_weight("720p+a128k"), (720+128, 'pixels'))
-        self.assertEqual(MPEGDASH.stream_weight("720p+a0k"), (720, 'pixels'))
+        self.assertAlmostEqual(MPEGDASH.stream_weight("720p"), (720, 'pixels'))
+        self.assertAlmostEqual(MPEGDASH.stream_weight("1080p"), (1080, 'pixels'))
+        self.assertAlmostEqual(MPEGDASH.stream_weight("720p+a128k"), (720+128, 'pixels'))
+        self.assertAlmostEqual(MPEGDASH.stream_weight("720p+a0k"), (720, 'pixels'))
+        self.assertAlmostEqual(MPEGDASH.stream_weight("a128k"), (128 / BIT_RATE_WEIGHT_RATIO, 'bitrate'))
 
     @patch("streamlink.stream.DASHStream.parse_manifest")
     def test_get_streams_prefix(self, parse_manifest):

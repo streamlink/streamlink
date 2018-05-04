@@ -99,7 +99,7 @@ class DASHStream(Stream):
     def __init__(self,
                  session,
                  mpd,
-                 video_representation,
+                 video_representation=None,
                  audio_representation=None,
                  period=0):
         super(DASHStream, self).__init__(session)
@@ -127,6 +127,7 @@ class DASHStream(Stream):
 
         video, audio = [], []
 
+        # Search for suitable video and audio representations
         for aset in mpd.periods[0].adaptionSets:
             if aset.contentProtection:
                 raise PluginError("{} is protected by DRM".format(url))
@@ -136,24 +137,35 @@ class DASHStream(Stream):
                 elif rep.mimeType.startswith("audio"):
                     audio.append(rep)
 
+        if not video:
+            video = [None]
+
         if not audio:
             audio = [None]
 
         for vid, aud in itertools.product(video, audio):
             stream = DASHStream(session, mpd, vid, aud)
-            vid_name = "{:0.0f}{}".format(vid.height or vid.bandwidth, "p" if vid.height else "k")
+            stream_name = []
+
+            if vid:
+                stream_name.append("{:0.0f}{}".format(vid.height or vid.bandwidth, "p" if vid.height else "k"))
             if audio and len(audio) > 1:
-                vid_name += "+a{:0.0f}k".format(aud.bandwidth)
-            ret[vid_name] = stream
+                stream_name.append("a{:0.0f}k".format(aud.bandwidth))
+            ret['+'.join(stream_name)] = stream
         return ret
 
     def open(self):
-        video = DASHStreamReader(self, self.video_representation.id)
-        video.open()
+        if self.video_representation:
+            video = DASHStreamReader(self, self.video_representation.id)
+            video.open()
 
         if self.audio_representation:
             audio = DASHStreamReader(self, self.audio_representation.id)
             audio.open()
+
+        if self.video_representation and self.audio_representation:
             return FFMPEGMuxer(self.session, video, audio).open()
-        else:
+        elif self.video_representation:
             return video
+        elif self.audio_representation:
+            return audio
