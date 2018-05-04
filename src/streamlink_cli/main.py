@@ -850,26 +850,29 @@ def setup_plugin_args(session, parser):
 def setup_plugin_options(session):
     """Sets Streamlink plugin options."""
 
-    for pname, plugin in session.plugins.items():
-        required = []
-        for parg in plugin.arguments:
-            value = getattr(args, parg.option_name(pname))
-            session.set_plugin_option(pname, parg.name, value)
-            # if the value is set, check to see if any of the required arguments are not set
-            if value:
-                try:
-                    required = list(plugin.arguments.requires(parg.name))
-                except RecursionError:
-                    console.logger.error("{0} plugin has a configuration error and the arguments "
-                                         "cannot be parsed".format(pname))
-                    break
-        if required:
-            for req in required:
-                prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
-                session.set_plugin_option(pname, req.name,
-                                          console.askpass(prompt + ": ")
-                                          if req.sensitive else
-                                          console.ask(prompt + ": "))
+    plugin = streamlink.resolve_url(args.url)
+    pname = plugin.module
+    required = []
+    for parg in plugin.arguments:
+        if parg.required:
+            required.append(parg)
+        value = getattr(args, parg.option_name(pname))
+        session.set_plugin_option(pname, parg.name, value)
+        # if the value is set, check to see if any of the required arguments are not set
+        if parg.required or value:
+            try:
+                required.extend(list(plugin.arguments.requires(parg.name)))
+            except RecursionError:
+                console.logger.error("{0} plugin has a configuration error and the arguments "
+                                     "cannot be parsed".format(pname))
+                break
+    if required:
+        for req in required:
+            prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
+            session.set_plugin_option(pname, req.name,
+                                      console.askpass(prompt + ": ")
+                                      if req.sensitive else
+                                      console.ask(prompt + ": "))
 
 
 def check_root():
