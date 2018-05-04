@@ -23,12 +23,14 @@ class TestOptions(unittest.TestCase):
 
 class TestArgument(unittest.TestCase):
     def test_name(self):
-        self.assertEqual(Argument("test").argument_name("plugin"), "--plugin-test")
-        self.assertEqual(Argument("test").option_name("plugin"), "plugin_test")
+        self.assertEqual(Argument("test-arg").argument_name("plugin"), "--plugin-test-arg")
+        self.assertEqual(Argument("test-arg").namespace_name("plugin"), "plugin_test_arg")
+        self.assertEqual(Argument("test-arg").option_name, "test_arg")
 
     def test_name_override(self):
         self.assertEqual(Argument("test", argument_name="override-name").argument_name("plugin"), "--override-name")
-        self.assertEqual(Argument("test", argument_name="override-name").option_name("plugin"), "override_name")
+        self.assertEqual(Argument("test", argument_name="override-name").namespace_name("plugin"), "override_name")
+        self.assertEqual(Argument("test", argument_name="override-name").option_name, "test")
 
 
 class TestArguments(unittest.TestCase):

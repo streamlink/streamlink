@@ -1,6 +1,7 @@
 import errno
 import os
 import platform
+from collections import OrderedDict
 from gettext import gettext
 
 import requests
@@ -497,15 +498,16 @@ def handle_url():
 
         plugin_args = []
         for parg in plugin.arguments:
-            value = plugin.get_option(parg.name)
+            value = plugin.get_option(parg.option_name)
             if value:
                 plugin_args.append((parg, value))
 
         if plugin_args:
             console.logger.debug("Plugin specific arguments:")
             for parg, value in plugin_args:
-                console.logger.debug(" {0}={1}".format(parg.argument_name(plugin.module),
-                                                       value if not parg.sensitive else ("*" * 8)))
+                console.logger.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
+                                                             value if not parg.sensitive else ("*" * 8),
+                                                             parg.option_name))
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -852,27 +854,29 @@ def setup_plugin_options(session):
 
     plugin = streamlink.resolve_url(args.url)
     pname = plugin.module
-    required = []
+    required = OrderedDict({})
     for parg in plugin.arguments:
         if parg.required:
-            required.append(parg)
-        value = getattr(args, parg.option_name(pname))
-        session.set_plugin_option(pname, parg.name, value)
+            required[parg.name] = parg
+        value = getattr(args, parg.namespace_name(pname))
+        session.set_plugin_option(pname, parg.option_name, value)
         # if the value is set, check to see if any of the required arguments are not set
         if parg.required or value:
             try:
-                required.extend(list(plugin.arguments.requires(parg.name)))
+                for rparg in plugin.arguments.requires(parg.name):
+                    required[rparg.name] = rparg
             except RecursionError:
                 console.logger.error("{0} plugin has a configuration error and the arguments "
                                      "cannot be parsed".format(pname))
                 break
     if required:
-        for req in required:
-            prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
-            session.set_plugin_option(pname, req.name,
-                                      console.askpass(prompt + ": ")
-                                      if req.sensitive else
-                                      console.ask(prompt + ": "))
+        for req in required.values():
+            if not session.get_plugin_option(pname, req.option_name):
+                prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
+                session.set_plugin_option(pname, req.option_name,
+                                          console.askpass(prompt + ": ")
+                                          if req.sensitive else
+                                          console.ask(prompt + ": "))
 
 
 def check_root():

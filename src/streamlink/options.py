@@ -33,8 +33,12 @@ class Argument(object):
     def argument_name(self, plugin):
         return "--" + self._name(plugin)
 
-    def option_name(self, plugin):
+    def namespace_name(self, plugin):
         return self._name(plugin).replace('-', '_')
+
+    @property
+    def option_name(self):
+        return self.name.replace("-", "_")
 
 
 class Arguments(object):
