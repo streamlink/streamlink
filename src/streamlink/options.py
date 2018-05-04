@@ -61,13 +61,13 @@ class Arguments(object):
                 raise KeyError("{0} is not a valid argument for this plugin".format(reqname))
 
             if required.name in results:
-                raise RecursionError("cycle detected in plugin argument config")
+                raise RuntimeError("cycle detected in plugin argument config")
             results.add(required.name)
             yield required
 
             for r in self.requires(required.name):
                 if r.name in results:
-                    raise RecursionError("cycle detected in plugin argument config")
+                    raise RuntimeError("cycle detected in plugin argument config")
                 results.add(r.name)
                 yield r
 

@@ -74,7 +74,7 @@ class TestArguments(unittest.TestCase):
 
         args = Arguments(test1, test2)
 
-        self.assertRaises(RecursionError, lambda: list(args.requires("test1")))
+        self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
 
     def test_requires_cycle_deep(self):
         test1 = Argument("test1", requires="test2")
@@ -83,14 +83,14 @@ class TestArguments(unittest.TestCase):
 
         args = Arguments(test1, test2, test3)
 
-        self.assertRaises(RecursionError, lambda: list(args.requires("test1")))
+        self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
 
     def test_requires_cycle_self(self):
         test1 = Argument("test1", requires="test1")
 
         args = Arguments(test1)
 
-        self.assertRaises(RecursionError, lambda: list(args.requires("test1")))
+        self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
 
 
 if __name__ == "__main__":

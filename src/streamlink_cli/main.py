@@ -865,7 +865,7 @@ def setup_plugin_options(session):
                     break
         if required:
             for req in required:
-                prompt = req.prompt or "Enter {0} password".format(pname)
+                prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
                 session.set_plugin_option(pname, req.name,
                                           console.askpass(prompt + ": ")
                                           if req.sensitive else
