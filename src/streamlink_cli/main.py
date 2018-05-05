@@ -499,7 +499,7 @@ def handle_url():
 
         plugin_args = []
         for parg in plugin.arguments:
-            value = plugin.get_option(parg.option_name)
+            value = plugin.get_option(parg.dest)
             if value:
                 plugin_args.append((parg, value))
 
@@ -508,7 +508,7 @@ def handle_url():
             for parg, value in plugin_args:
                 console.logger.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
                                                              value if not parg.sensitive else ("*" * 8),
-                                                             parg.option_name))
+                                                             parg.dest))
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -857,8 +857,8 @@ def setup_plugin_options(session, plugin):
     for parg in plugin.arguments:
         if parg.required:
             required[parg.name] = parg
-        value = getattr(args, parg.namespace_name(pname))
-        session.set_plugin_option(pname, parg.option_name, value)
+        value = getattr(args, parg.namespace_dest(pname))
+        session.set_plugin_option(pname, parg.dest, value)
         # if the value is set, check to see if any of the required arguments are not set
         if parg.required or value:
             try:
@@ -870,9 +870,9 @@ def setup_plugin_options(session, plugin):
                 break
     if required:
         for req in required.values():
-            if not session.get_plugin_option(pname, req.option_name):
+            if not session.get_plugin_option(pname, req.dest):
                 prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
-                session.set_plugin_option(pname, req.option_name,
+                session.set_plugin_option(pname, req.dest,
                                           console.askpass(prompt + ": ")
                                           if req.sensitive else
                                           console.ask(prompt + ": "))

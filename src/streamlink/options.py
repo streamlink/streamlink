@@ -18,11 +18,30 @@ class Options(object):
 
 
 class Argument(object):
-    def __init__(self, name, required=False, argument_name=None, requires=None, prompt=None, sensitive=False, **options):
+    """
+        :class:`Argument` accepts most of the same parameters as :func:`ArgumentParser.add_argument`,
+        except requires is a special case as in this case it is only enforced if the plugin is in use.
+        In addition the name parameter is the name relative to the plugin eg. username, password, etc.
+
+    """
+    def __init__(self, name, required=False, requires=None, prompt=None, sensitive=False, argument_name=None,
+                 dest=None, **options):
+        """
+        :param name: name of the argument, without -- or plugin name prefixes, eg. ``"password"``, ``"mux-subtitles"``, etc.
+        :param required (bool): if the argument is required for the plugin
+        :param requires: list of the arguments which this argument requires, eg ``["password"]``
+        :param prompt: if the argument is required and not given, this prompt will show at run time
+        :param sensitive (bool): if the argument is sensitive (passwords, etc) and should be masked in logs and if
+                              prompted use askpass
+        :param argument_name:
+        :param option_name:
+        :param options: arguments passed to :func:`ArgumentParser.add_argument`, excluding requires, and dest
+        """
         self.required = required
         self.name = name
         self.options = options
-        self._argument_name = argument_name
+        self._argument_name = argument_name  # override the cli argument name
+        self._dest = dest  # override for the plugin option name
         self.requires = requires and (list(requires) if isinstance(requires, (list, tuple)) else [requires]) or []
         self.prompt = prompt
         self.sensitive = sensitive
@@ -33,15 +52,36 @@ class Argument(object):
     def argument_name(self, plugin):
         return "--" + self._name(plugin)
 
-    def namespace_name(self, plugin):
+    def namespace_dest(self, plugin):
         return self._name(plugin).replace('-', '_')
 
     @property
-    def option_name(self):
-        return self.name.replace("-", "_")
+    def dest(self):
+        return self._dest or self.name.replace("-", "_")
 
 
 class Arguments(object):
+    """
+    Provides a wrapper around a list of :class:`Argument`. For example
+
+    .. code-block:: python
+
+        class PluginExample(Plugin):
+            arguments = PluginArguments(
+                PluginArgument("username",
+                               help="The username for your account.",
+                               metavar="EMAIL",
+                               requires=["password"]),  // requires the password too
+                PluginArgument("password",
+                               sensitive=True,  // should be masked in logs, etc.
+                               help="The password for your account.",
+                               metavar="PASSWORD")
+            )
+
+    This will add the ``--plugin-username`` and ``--plugin-password`` arguments to the CLI
+    (assuming the plugin module is ``plugin``).
+
+    """
     def __init__(self, *args):
         self.arguments = OrderedDict((arg.name, arg) for arg in args)
 
@@ -54,8 +94,10 @@ class Arguments(object):
     def requires(self, name):
         """
         Find all the arguments required by name
-        :param name:
-        :return:
+
+        :param name: name of the argument the find the dependencies
+
+        :return: list of dependant arguments
         """
         results = set([name])
         argument = self.get(name)
