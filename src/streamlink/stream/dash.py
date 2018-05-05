@@ -61,7 +61,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
                         if self.closed:
                             break
                         yield segment
-                        self.logger.debug("Adding segment {0} to queue", segment.url)
+                        #self.logger.debug("Adding segment {0} to queue", segment.url)
 
                     if self.mpd.type == "dynamic":
                         self.reload()
