@@ -14,16 +14,20 @@ class LiveRussia(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url)
-        iframe_url = self.check_re(self.iframe_re, res.text)
-        res = http.get(iframe_url)
-        stream_url = self.check_re(self.stream_re, res.text)
-        return HLSStream.parse_variant_playlist(self.session, stream_url)
+        iframe_result = re.search(self.iframe_re, res.text)
 
-    def check_re(self, search, text):
-        re_result = re.search(search, text)
-        if re_result:
-            return re_result.group(1)
-        self.logger.error("The requested content is unavailable.")
+        if not iframe_result:
+            self.logger.error("The requested content is unavailable.")
+            return
+
+        res = http.get(iframe_result.group(1))
+        stream_url_result = re.search(self.stream_re, res.text)
+
+        if not stream_url_result:
+            self.logger.error("The requested content is unavailable.")
+            return
+
+        return HLSStream.parse_variant_playlist(self.session, stream_url_result.group(1))
 
 
 __plugin__ = LiveRussia
