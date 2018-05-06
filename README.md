@@ -23,7 +23,7 @@ sudo pip install streamlink
 ```
 
 #### Manual installation via Python
-
+  
 ```bash
 git clone https://github.com/streamlink/streamlink
 cd streamlink
@@ -55,7 +55,7 @@ A list of all supported plugins can be found on the [plugin page][streamlink-plu
 
 # Quickstart
 
-After installing, simply use:
+After installing, simply use:  
 
 ```
 streamlink STREAMURL best
@@ -84,6 +84,9 @@ Thank you to all our backers! \[[Become a backer][opencollective-backer]\]
 ## Sponsors
 
 Support this project by becoming a sponsor. Your logo will show up here with a link to your website. \[[Become a sponsor][opencollective-sponsor]\]
+
+
+
 
 [![Open Collective Streamlink Sponsor](https://opencollective.com/streamlink/sponsor/0/avatar.svg)](https://opencollective.com/streamlink/sponsor/0/website)
 [![Open Collective Streamlink Sponsor](https://opencollective.com/streamlink/sponsor/1/avatar.svg)](https://opencollective.com/streamlink/sponsor/1/website)
@@ -120,3 +123,6 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
   [opencollective-sponsor]: https://opencollective.com/streamlink#sponsor
   [opencollective-backers-badge]: https://opencollective.com/streamlink/backers/badge.svg
   [opencollective-sponsors-badge]: https://opencollective.com/streamlink/sponsors/badge.svg
+  
+  Support for www.liveonlinetv247.info
+  
