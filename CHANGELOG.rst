@@ -1,3 +1,38 @@
+streamlink 0.12.1 (2018-05-07)
+------------------------------
+Streamlink 0.12.1
+
+Small release to fix a Pip / Windows .exe generation bug! Download the new release below.
+
+# Installation
+
+**Installing with Pip:**
+
+```sh
+sudo pip install streamlink
+```
+
+**Manual installation:**
+
+```sh
+curl -L https://github.com/streamlink/streamlink/releases/download/0.12.1/streamlink-0.12.1.tar.gz -O streamlink.tar.gz
+tar xvf streamlink.tar.gz
+cd streamlink
+sudo python setup.py install
+```
+
+# Supporting Streamlink
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+
+
+::
+
+
+    Charlie Drage <charlie@charliedrage.com> (1):
+          0.12.0 Release
+    
+
 streamlink 0.12.0 (2018-05-07)
 ------------------------------
 Streamlink 0.12.0
