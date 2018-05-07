@@ -1,3 +1,111 @@
+streamlink 0.12.0 (2018-05-07)
+------------------------------
+Streamlink 0.12.0
+
+Thanks for all the contributors to this month's release!
+
+New updates:
+
+  - A *ton* of plugin updates (like always! see below for a list of updates)
+  - Ignoring a bunch of useless files when developing (https://github.com/streamlink/streamlink/pull/1570)
+  - A new option to limit the number of fetch retries (https://github.com/streamlink/streamlink/pull/1375)
+  - YouTube has been updated to not use MuxedStream for livestreams (https://github.com/streamlink/streamlink/pull/1556)
+  - Bug fix with ffmpegmux (https://github.com/streamlink/streamlink/pull/1502)
+  - Removed dead plugins and deprecated options (https://github.com/streamlink/streamlink/pull/1546)
+
+
+# Installation
+
+**Installing with Pip:**
+
+```sh
+sudo pip install streamlink
+```
+
+**Manual installation:**
+
+```sh
+curl -L https://github.com/streamlink/streamlink/releases/download/0.12.0/streamlink-0.12.0.tar.gz -O streamlink.tar.gz
+tar xvf streamlink.tar.gz
+cd streamlink
+sudo python setup.py install
+```
+
+# Supporting Streamlink
+
+If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+
+
+::
+
+
+    Alexis Murzeau <amubtdx@gmail.com> (2):
+          Avoid use of non-ASCII in dogan plugin
+          Fix test_plugins.py encoding errors in containerized environment (#1582)
+    
+    BZHDeveloper <inizan.yannick@gmail.com> (1):
+          [TF1] Fix plugin (Fixes #1579) (#1606)
+    
+    Charlie Drage <charlie@charliedrage.com> (4):
+          Add OpenCollective message to release script
+          Manually update CHANGELOG.rst
+          Remove livestream.patch
+          Update release script
+    
+    Igor Piddubnyi <igor.piddubnyi@gmail.com> (3):
+          Plugin implementation for live.russia.tv
+          Fix review coments
+          Correctly exit on error
+    
+    James Prance <jpts@users.noreply.github.com> (1):
+          Small tweaks to fix ITV player. Fixes #1622 (#1623)
+    
+    Mattias Amnefelt <mattiasa@avm.se> (1):
+          stream.hls: change --hls-audio-select to take a list and wildcard (#1591)
+    
+    Mohamed El Morabity <melmorabity@fedoraproject.com> (1):
+          Add support for international Play TV website
+    
+    Mohamed El Morabity <melmorabity@fedoraproject.org> (1):
+          Add support for RTBF
+    
+    Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+          [dailymotion] Fix for new stream data API (#1543)
+    
+    Sean Greenslade <sean@seangreenslade.com> (1):
+          Added retry-max option to limit the number of fetch retries.
+    
+    back-to <backto@protonmail.ch> (9):
+          [ffmpegmux] Fixed bug of an invisible terminal
+          [TVRPlus] Fix for hls_re and use headers for HLSStream
+          [streann] Fixed broken plugin
+          Removed some dead plugins and some Deprecated options
+          [youtube] Don't use MuxedStream for livestreams
+          [pixiv] New plugin for sketch.pixiv.net (#1550)
+          [TVP] New Plugin for Telewizja Polska S.A.
+          [build] Fixed AppVeyor build pip10 error (#1605)
+          [ABweb] New plugin for BIS Livestreams of french AB Groupe (#1595)
+    
+    bastimeyer <mail@bastimeyer.de> (2):
+          plugins.welt: add plugin
+          Add OS + editor file/directory names to .gitignore
+    
+    beardypig <beardypig@users.noreply.github.com> (7):
+          plugins.rtve: add an option to parse_xml to try to fix invalid character entities
+          plugins.vaughnlive: Updated server map
+          plugins.brittv: fixed script layout change
+          build/deploy: do not deploy streamlink-latest, and remove old nightlies (#1624)
+          plugins.brittv: fix issue with stream url extraction, from 7018fc8 (#1625)
+          plugins.raiplay: add user-agent header to stream redirect request
+          plugins.dogan: update for page layout change
+    
+    fozzy <fozzy@fozzy.co> (1):
+          update plugin for longzhu.com to support new url pattern
+    
+    steven7851 <steven7851@msn.com> (1):
+          [app17] Fix HLS URL (#1600)
+    
+
 streamlink 0.11.0 (2018-03-08)
 ------------------------------
 
