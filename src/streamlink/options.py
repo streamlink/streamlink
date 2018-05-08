@@ -1,18 +1,36 @@
 from collections import OrderedDict
 
 
+def _normalise_option_name(name):
+    return name.replace('-', '_')
+
+
 class Options(object):
+    """
+    For storing options to be used by plugins, with default values.
+
+    Note: Option names are normalised by replacing "-" with "_", this means that the keys
+    ``example-one`` and ``example_one`` are equivalent.
+    """
     def __init__(self, defaults=None):
         if not defaults:
             defaults = {}
 
-        self.defaults = defaults
-        self.options = defaults.copy()
+        self.defaults = self._normalise_dict(defaults)
+        self.options = self.defaults.copy()
+
+    @classmethod
+    def _normalise_dict(cls, src):
+        dest = {}
+        for key, value in src.items():
+            dest[_normalise_option_name(key)] = value
+        return dest
 
     def set(self, key, value):
-        self.options[key] = value
+        self.options[_normalise_option_name(key)] = value
 
     def get(self, key):
+        key = _normalise_option_name(key)
         if key in self.options:
             return self.options[key]
 
@@ -22,6 +40,7 @@ class Argument(object):
         :class:`Argument` accepts most of the same parameters as :func:`ArgumentParser.add_argument`,
         except requires is a special case as in this case it is only enforced if the plugin is in use.
         In addition the name parameter is the name relative to the plugin eg. username, password, etc.
+
 
     """
     def __init__(self, name, required=False, requires=None, prompt=None, sensitive=False, argument_name=None,
@@ -45,6 +64,7 @@ class Argument(object):
         self.requires = requires and (list(requires) if isinstance(requires, (list, tuple)) else [requires]) or []
         self.prompt = prompt
         self.sensitive = sensitive
+        self._default = options.get("default")
 
     def _name(self, plugin):
         return self._argument_name or "{0}-{1}".format(plugin, self.name).strip("-")
@@ -58,6 +78,10 @@ class Argument(object):
     @property
     def dest(self):
         return self._dest or self.name.replace("-", "_")
+
+    @property
+    def default(self):  # read-only
+        return self._default
 
 
 class Arguments(object):

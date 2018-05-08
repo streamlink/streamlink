@@ -1,8 +1,16 @@
 import sys
+
+from streamlink_cli.main import setup_plugin_args
+
 if sys.version_info[0:2] == (2, 6):
     import unittest2 as unittest
 else:
     import unittest
+
+try:
+    from unittest.mock import Mock
+except ImportError:
+    from mock import Mock
 
 from streamlink.options import Options, Arguments, Argument
 
@@ -10,7 +18,8 @@ from streamlink.options import Options, Arguments, Argument
 class TestOptions(unittest.TestCase):
     def setUp(self):
         self.options = Options({
-            "a_default": "default"
+            "a_default": "default",
+            "another-default": "default2"
         })
 
     def test_options(self):
@@ -19,6 +28,12 @@ class TestOptions(unittest.TestCase):
 
         self.options.set("a_option", "option")
         self.assertEqual(self.options.get("a_option"), "option")
+
+    def test_options_name_normalised(self):
+        self.assertEqual(self.options.get("a_default"), "default")
+        self.assertEqual(self.options.get("a-default"), "default")
+        self.assertEqual(self.options.get("another-default"), "default2")
+        self.assertEqual(self.options.get("another_default"), "default2")
 
 
 class TestArgument(unittest.TestCase):
@@ -79,8 +94,8 @@ class TestArguments(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
 
     def test_requires_cycle_deep(self):
-        test1 = Argument("test1", requires="test2")
-        test2 = Argument("test2", requires="test3")
+        test1 = Argument("test1", requires="test-2")
+        test2 = Argument("test-2", requires="test3")
         test3 = Argument("test3", requires="test1")
 
         args = Arguments(test1, test2, test3)
@@ -93,6 +108,26 @@ class TestArguments(unittest.TestCase):
         args = Arguments(test1)
 
         self.assertRaises(RuntimeError, lambda: list(args.requires("test1")))
+
+
+class TestSetupOptions(unittest.TestCase):
+    def test_set_defaults(self):
+        session = Mock()
+        plugin = Mock()
+        parser = Mock()
+
+        session.plugins = {"mock": plugin}
+        plugin.arguments = Arguments(
+            Argument("test1", default="default1"),
+            Argument("test2", default="default2"),
+            Argument("test3")
+        )
+
+        setup_plugin_args(session, parser)
+
+        self.assertEqual(plugin.options.get("test1"), "default1")
+        self.assertEqual(plugin.options.get("test2"), "default2")
+        self.assertEqual(plugin.options.get("test3"), None)
 
 
 if __name__ == "__main__":

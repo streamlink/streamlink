@@ -23,6 +23,7 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
+from streamlink.plugin import PluginOptions
 
 from .argparser import build_parser
 from .compat import stdout, is_win32
@@ -846,8 +847,12 @@ def setup_plugin_args(session, parser):
 
     plugin_args = parser.add_argument_group("Plugin options")
     for pname, plugin in session.plugins.items():
+        defaults = {}
         for parg in plugin.arguments:
             plugin_args.add_argument(parg.argument_name(pname), **parg.options)
+            defaults[parg.dest] = parg.default
+
+        plugin.options = PluginOptions(defaults)
 
 
 def setup_plugin_options(session, plugin):
