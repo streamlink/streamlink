@@ -5,7 +5,6 @@ import warnings
 from streamlink import logger, Streamlink
 from streamlink.compat import is_py2
 
-
 if is_py2:
     from io import BytesIO as StringIO
 else:
