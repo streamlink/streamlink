@@ -329,7 +329,7 @@ class SegmentTemplate(MPDNode):
         self.media = self.attr(u"media", parser=MPDParsers.segment_template)
         self.duration = self.attr(u"duration", parser=int)
         self.timescale = self.attr(u"timescale", parser=int, default=1)
-        self.startNumber = self.attr(u"startNumber", parser=int)
+        self.startNumber = self.attr(u"startNumber", parser=int, default=1)
         self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta(self.timescale))
 
         if self.duration:
@@ -409,11 +409,9 @@ class SegmentTemplate(MPDNode):
                     yield self.make_url(self.media.format(Time=t, **kwargs)), 0
                     self.root.timelines[self.parent.id] = t
                 t += segment.d
-        elif self.startNumber is not None:
+        else:
             for number, available_at in self.segment_numbers():
                 yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
-        else:
-            yield self.make_url(self.media.format(**kwargs)), 0
 
 
 class Representation(MPDNode):
