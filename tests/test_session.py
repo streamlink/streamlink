@@ -2,6 +2,9 @@ import os
 import unittest
 
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
+from streamlink.session import print_small_exception
+from tests.mock import MagicMock, patch, call
+
 from streamlink import Streamlink, NoPluginError
 from streamlink.plugins import Plugin
 from streamlink.stream import *
@@ -117,6 +120,23 @@ class TestSession(unittest.TestCase):
 
         self.assertTrue("support" in streams)
         self.assertTrue(isinstance(streams["support"], HTTPStream))
+
+    @patch("streamlink.session.sys.stderr")
+    def test_short_exception(self, stderr):
+        try:
+            raise RuntimeError("test exception")
+        except RuntimeError:
+            print_small_exception("test_short_exception")
+            self.assertSequenceEqual(
+                [call('RuntimeError: test exception\n'), call('\n')],
+                stderr.write.mock_calls)
+
+    def test_set_and_get_locale(self):
+        session = Streamlink()
+        session.set_option("locale", "en_US")
+        self.assertEqual(session.localization.country.alpha2, "US")
+        self.assertEqual(session.localization.language.alpha2, "en")
+        self.assertEqual(session.localization.language_code, "en_US")
 
 
 if __name__ == "__main__":
