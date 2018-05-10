@@ -164,6 +164,10 @@ class MPDNode(object):
                 yield f(node)
             node = node.parent
 
+    def walk_back_get_attr(self, attr):
+        parent_attrs = [getattr(n, attr) for n in self.walk_back() if hasattr(n, attr)]
+        return parent_attrs[0] if len(parent_attrs) else None
+
     @property
     def base_url(self):
         base_url = self._base_url
@@ -322,8 +326,8 @@ class AdaptationSet(MPDNode):
         self.subsegmentStartsWithSAP = self.attr(u"subsegmentStartsWithSAP", default=0, parser=int)
 
         self.baseURLs = self.children(BaseURL)
-        self.representations = self.children(Representation, minimum=1)
         self.segmentTemplate = self.only_child(SegmentTemplate)
+        self.representations = self.children(Representation, minimum=1)
         self.contentProtection = self.children(ContentProtection)
 
 
@@ -332,11 +336,13 @@ class SegmentTemplate(MPDNode):
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super(SegmentTemplate, self).__init__(node, root, parent, *args, **kwargs)
+        self.defaultSegmentTemplate = self.walk_back_get_attr('segmentTemplate')
+
         self.initialization = self.attr(u"initialization", parser=MPDParsers.segment_template)
         self.media = self.attr(u"media", parser=MPDParsers.segment_template)
-        self.duration = self.attr(u"duration", parser=int)
-        self.timescale = self.attr(u"timescale", parser=int, default=1)
-        self.startNumber = self.attr(u"startNumber", parser=int, default=1)
+        self.duration = self.attr(u"duration", parser=int, default=self.defaultSegmentTemplate.duration if self.defaultSegmentTemplate else None)
+        self.timescale = self.attr(u"timescale", parser=int, default=self.defaultSegmentTemplate.timescale if self.defaultSegmentTemplate else 1)
+        self.startNumber = self.attr(u"startNumber", parser=int, default=self.defaultSegmentTemplate.startNumber if self.defaultSegmentTemplate else 1)
         self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta(self.timescale))
 
         if self.duration:
@@ -347,8 +353,7 @@ class SegmentTemplate(MPDNode):
         self.period = list(self.walk_back(Period))[0]
 
         # children
-        timeline = self.children(SegmentTimeline, maximum=1)
-        self.segmentTimeline = timeline[0] if len(timeline) else None
+        self.segmentTimeline = self.only_child(SegmentTimeline)
 
     def segments(self, **kwargs):
         if kwargs.pop("init", True):
@@ -401,8 +406,11 @@ class SegmentTemplate(MPDNode):
                 seconds_since_start = (now - self.root.availabilityStartTime).total_seconds()
                 available_start = int(datetime_to_seconds(now))
 
-            number_iter = count(self.startNumber + int(seconds_since_start / self.duration_seconds))
-            available_iter = count(available_start + 3, step=self.duration_seconds)
+            # if there is no delay, use a delay of 3 seconds
+            suggested_delay = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
+
+            number_iter = count(self.startNumber + int((seconds_since_start - suggested_delay) / self.duration_seconds))
+            available_iter = count(available_start - suggested_delay, step=self.duration_seconds)
 
         for number, available_at in izip(number_iter, available_iter):
             yield number, available_at
@@ -463,13 +471,9 @@ class Representation(MPDNode):
         :return: yields Segments
         """
 
-        def walk_back_get_attr(attr):
-            parent_attrs = [getattr(n, attr) for n in self.walk_back() if hasattr(n, attr)]
-            return parent_attrs[0] if len(parent_attrs) else None
-
-        segmentBase = self.segmentBase or walk_back_get_attr("segmentBase")
-        segmentList = self.segmentList or walk_back_get_attr("segmentList")
-        segmentTemplate = self.segmentTemplate or walk_back_get_attr("segmentTemplate")
+        segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
+        segmentList = self.segmentList or self.walk_back_get_attr("segmentList")
+        segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
 
         if segmentTemplate:
             for segment in segmentTemplate.segments(RepresentationID=self.id,
