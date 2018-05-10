@@ -19,6 +19,8 @@ from streamlink.stream import *
 class TestDASHStream(unittest.TestCase):
     def setUp(self):
         self.session = MagicMock()
+        self.test_url = "http://test.bar/foo.mpd"
+        self.session.http.get.return_value = Mock(url=self.test_url)
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_video_only(self, mpdClass):
@@ -32,7 +34,7 @@ class TestDASHStream(unittest.TestCase):
             ])
         ])
 
-        streams = DASHStream.parse_manifest(self.session, "http://test.bar/foo.mpd")
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
@@ -52,7 +54,7 @@ class TestDASHStream(unittest.TestCase):
             ])
         ])
 
-        streams = DASHStream.parse_manifest(self.session, "http://test.bar/foo.mpd")
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
@@ -73,7 +75,7 @@ class TestDASHStream(unittest.TestCase):
             ])
         ])
 
-        streams = DASHStream.parse_manifest(self.session, "http://test.bar/foo.mpd")
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
@@ -95,7 +97,7 @@ class TestDASHStream(unittest.TestCase):
             ])
         ])
 
-        streams = DASHStream.parse_manifest(self.session, "http://test.bar/foo.mpd")
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
         self.assertSequenceEqual(
@@ -109,7 +111,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertRaises(PluginError,
                           DASHStream.parse_manifest,
-                          self.session, "http://test.bar/foo.mpd")
+                          self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
     @patch('streamlink.stream.dash.DASHStreamReader')
@@ -141,8 +143,10 @@ class TestDASHStream(unittest.TestCase):
 
 
 class TestDASHStreamWorker(unittest.TestCase):
+
+    @patch('streamlink.stream.dash_manifest.time.sleep')
     @patch('streamlink.stream.dash.MPD')
-    def test_dynamic_reload(self, mpdClass):
+    def test_dynamic_reload(self, mpdClass, sleep):
         reader = MagicMock()
         worker = DASHStreamWorker(reader)
         reader.representation_id = 1
@@ -151,6 +155,7 @@ class TestDASHStreamWorker(unittest.TestCase):
         segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
         representation.segments.return_value = [segments[0]]
         mpdClass.return_value = worker.mpd = Mock(dynamic=True,
+                                                  publishTime=1,
                                                   periods=[
                                                       Mock(adaptionSets=[
                                                           Mock(contentProtection=None,
@@ -161,6 +166,8 @@ class TestDASHStreamWorker(unittest.TestCase):
                                                   ])
         worker.mpd.type = "dynamic"
         worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
+        worker.mpd.periods[0].duration.total_seconds.return_value = 0
+
         segment_iter = worker.iter_segments()
 
         representation.segments.return_value = segments[:1]
@@ -170,7 +177,6 @@ class TestDASHStreamWorker(unittest.TestCase):
         representation.segments.return_value = segments[1:]
         self.assertSequenceEqual([next(segment_iter), next(segment_iter)], segments[1:])
         representation.segments.assert_called_with(init=False)
-
     def test_static(self):
         reader = MagicMock()
         worker = DASHStreamWorker(reader)
@@ -179,7 +185,8 @@ class TestDASHStreamWorker(unittest.TestCase):
         representation = Mock(id=1, mimeType="video/mp4", height=720)
         segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
         representation.segments.return_value = [segments[0]]
-        worker.mpd = Mock(dynamic=True,
+        worker.mpd = Mock(dynamic=False,
+                          publishTime=1,
                           periods=[
                               Mock(adaptionSets=[
                                   Mock(contentProtection=None,
@@ -190,6 +197,7 @@ class TestDASHStreamWorker(unittest.TestCase):
                           ])
         worker.mpd.type = "static"
         worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
+        worker.mpd.periods[0].duration.total_seconds.return_value = 0
 
         representation.segments.return_value = segments
         self.assertSequenceEqual(list(worker.iter_segments()), segments)
