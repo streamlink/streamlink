@@ -119,6 +119,7 @@ class DASHStream(Stream):
         """
         ret = {}
         res = session.http.get(url)
+        url = res.url
 
         urlp = list(urlparse(url))
         urlp[2], _ = urlp[2].rsplit("/", 1)
