@@ -33,6 +33,7 @@ Segment = namedtuple("Segment", "url duration init content available_at")
 def datetime_to_seconds(dt):
     return (dt - datetime.datetime(1970, 1, 1, tzinfo=utc)).total_seconds()
 
+
 @contextmanager
 def sleeper(duration):
     s = time.time()
@@ -52,8 +53,6 @@ def sleep_until(walltime):
 class MPDParsers(object):
     @staticmethod
     def bool_str(v):
-        if v.lower() not in ("true", "false"):
-            raise MPDParsingError("bool must be true or false")
         return v.lower() == "true"
 
     @staticmethod
@@ -72,13 +71,20 @@ class MPDParsers(object):
 
     @staticmethod
     def segment_template(url_template):
-        return re.compile(r"\$(\w+)\$").sub(r"{\1}", url_template)
+        end = 0
+        res = ""
+        for m in re.compile(r"(.*?)\$(\w+)(?:%(\w+))?\$").finditer(url_template):
+            _, end = m.span()
+            res += "{0}{{{1}{2}}}".format(m.group(1),
+                                          m.group(2),
+                                          (":" + m.group(3)) if m.group(3) else "")
+        return (res + url_template[end:]).format
 
     @staticmethod
     def frame_rate(frame_rate):
         if "/" in frame_rate:
             a, b = frame_rate.split("/")
-            return float(a)/float(b)
+            return float(a) / float(b)
         else:
             return float(frame_rate)
 
@@ -86,6 +92,7 @@ class MPDParsers(object):
     def timedelta(timescale=1):
         def _timedelta(seconds):
             return datetime.timedelta(seconds=int(float(seconds) / float(timescale)))
+
         return _timedelta
 
 
@@ -129,7 +136,7 @@ class MPDNode(object):
                 return value
         elif inherited:
             if self.parent and hasattr(self.parent, key) and getattr(self.parent, key):
-                    return getattr(self.parent, key)
+                return getattr(self.parent, key)
 
         if required:
             raise MPDParsingError("could not find required attribute {tag}@{attr} ".format(attr=key, tag=self.__tag__))
@@ -144,7 +151,7 @@ class MPDNode(object):
                 self.__tag__, cls.__tag__, minimum, maximum or "unbound"))
 
         return list(map(lambda x: cls(x[1], root=self.root, parent=self, i=x[0], base_url=self.base_url),
-                   enumerate(children)))
+                        enumerate(children)))
 
     def only_child(self, cls, minimum=0):
         children = self.children(cls, minimum=minimum, maximum=1)
@@ -361,8 +368,7 @@ class SegmentTemplate(MPDNode):
 
     def format_initialization(self, **kwargs):
         if self.initialization:
-            return self.make_url(self.initialization.format(**kwargs))
-
+            return self.make_url(self.initialization(**kwargs))
 
     def segment_numbers(self):
         """
@@ -386,8 +392,10 @@ class SegmentTemplate(MPDNode):
         else:
             now = datetime.datetime.now(utc)
             if self.presentationTimeOffset:
-                seconds_since_start = ((now - self.presentationTimeOffset) - self.root.availabilityStartTime).total_seconds()
-                available_start_date = self.root.availabilityStartTime + self.presentationTimeOffset + datetime.timedelta(seconds=seconds_since_start)
+                seconds_since_start = (
+                (now - self.presentationTimeOffset) - self.root.availabilityStartTime).total_seconds()
+                available_start_date = self.root.availabilityStartTime + self.presentationTimeOffset + datetime.timedelta(
+                    seconds=seconds_since_start)
                 available_start = int(datetime_to_seconds(available_start_date))
             else:
                 seconds_since_start = (now - self.root.availabilityStartTime).total_seconds()
@@ -406,12 +414,12 @@ class SegmentTemplate(MPDNode):
                 t = t or segment.t
                 # check the start time from MPD
                 if t > self.root.timelines[self.parent.id]:
-                    yield self.make_url(self.media.format(Time=t, **kwargs)), 0
+                    yield self.make_url(self.media(Time=t, **kwargs)), 0
                     self.root.timelines[self.parent.id] = t
                 t += segment.d
         else:
             for number, available_at in self.segment_numbers():
-                yield self.make_url(self.media.format(Number=number, **kwargs)), available_at
+                yield self.make_url(self.media(Number=number, **kwargs)), available_at
 
 
 class Representation(MPDNode):
@@ -501,7 +509,6 @@ class TimelineSegment(MPDNode):
 
 class ContentProtection(MPDNode):
     __tag__ = "ContentProtection"
-
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super(ContentProtection, self).__init__(node, root, parent, *args, **kwargs)
