@@ -47,6 +47,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
 
     def iter_segments(self):
         init = True
+        back_off_factor = 1
         while not self.closed:
             # find the representation by ID
             representation = None
@@ -54,17 +55,20 @@ class DASHStreamWorker(SegmentedStreamWorker):
                 for rep in aset.representations:
                     if rep.id == self.reader.representation_id:
                         representation = rep
-            min_wait = self.mpd.minimumUpdatePeriod.total_seconds() if self.mpd.minimumUpdatePeriod else 5
-            with sleeper(min_wait):
+            refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(), self.mpd.periods[0].duration.total_seconds()) or 5
+            with sleeper(refresh_wait * back_off_factor):
                 if representation:
                     for segment in representation.segments(init=init):
                         if self.closed:
                             break
                         yield segment
-                        #self.logger.debug("Adding segment {0} to queue", segment.url)
+                        # self.logger.debug("Adding segment {0} to queue", segment.url)
 
                     if self.mpd.type == "dynamic":
-                        self.reload()
+                        if not self.reload():
+                            back_off_factor = max(back_off_factor * 1.3, 10.0)
+                        else:
+                            back_off_factor = 1
                     else:
                         return
                     init = False
@@ -74,13 +78,19 @@ class DASHStreamWorker(SegmentedStreamWorker):
             return
 
         self.reader.buffer.wait_free()
-        self.logger.debug("Reloading manifest")
+        self.logger.debug("Reloading manifest ({0})".format(self.reader.representation_id))
         res = self.session.http.get(self.mpd.url, exception=StreamError)
 
-        self.mpd = MPD(self.session.http.xml(res, ignore_ns=True),
-                       base_url=self.mpd.base_url,
-                       url=self.mpd.url,
-                       timelines=self.mpd.timelines)
+        new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
+                      base_url=self.mpd.base_url,
+                      url=self.mpd.url,
+                      timelines=self.mpd.timelines)
+
+        changed = new_mpd.publishTime > self.mpd.publishTime
+        if changed:
+            self.mpd = new_mpd
+
+        return changed
 
 
 class DASHStreamReader(SegmentedStreamReader):
@@ -170,3 +180,6 @@ class DASHStream(Stream):
             return video
         elif self.audio_representation:
             return audio
+
+    def to_url(self):
+        return self.mpd.url

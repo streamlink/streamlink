@@ -67,7 +67,7 @@ class MPDParsers(object):
 
     @staticmethod
     def datetime(dt):
-        return parse_datetime(dt)
+        return parse_datetime(dt).replace(tzinfo=utc)
 
     @staticmethod
     def segment_template(url_template):
@@ -196,13 +196,13 @@ class MPD(MPDNode):
         self.id = self.attr(u"id")
         self.profiles = self.attr(u"profiles", required=True)
         self.type = self.attr(u"type", default=u"static", parser=MPDParsers.type)
-        self.minimumUpdatePeriod = self.attr(u"minimumUpdatePeriod", parser=MPDParsers.duration)
+        self.minimumUpdatePeriod = self.attr(u"minimumUpdatePeriod", parser=MPDParsers.duration, default=Duration())
         self.minBufferTime = self.attr(u"minBufferTime", parser=MPDParsers.duration, required=True)
         self.timeShiftBufferDepth = self.attr(u"timeShiftBufferDepth", parser=MPDParsers.duration)
-        self.availabilityStartTime = self.attr(u"availabilityStartTime", parser=parse_datetime,
+        self.availabilityStartTime = self.attr(u"availabilityStartTime", parser=MPDParsers.datetime,
                                                default=datetime.datetime.fromtimestamp(0, utc),  # earliest date
                                                required=self.type == "dynamic")
-        self.publishTime = self.attr(u"publishTime", parser=parse_datetime, required=self.type == "dynamic")
+        self.publishTime = self.attr(u"publishTime", parser=MPDParsers.datetime, required=self.type == "dynamic")
         self.mediaPresentationDuration = self.attr(u"mediaPresentationDuration", parser=MPDParsers.duration)
         self.suggestedPresentationDelay = self.attr(u"suggestedPresentationDelay", parser=MPDParsers.duration)
 
