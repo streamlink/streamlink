@@ -138,7 +138,7 @@ class TestDASHStream(unittest.TestCase):
                                                      call().open(),
                                                      call(stream, 2),
                                                      call().open()])
-        self.assertSequenceEqual(muxer.mock_calls, [call(self.session, open_reader, open_reader),
+        self.assertSequenceEqual(muxer.mock_calls, [call(self.session, open_reader, open_reader, copyts=True),
                                                     call().open()])
 
 
