@@ -417,17 +417,27 @@ class SegmentTemplate(MPDNode):
 
     def format_media(self, **kwargs):
         if self.segmentTimeline:
+            # if there is no delay, use a delay of 3 seconds
+            suggested_delay = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
+
             t = 0
+            available_at = datetime_to_seconds(self.root.publishTime)
+
             for segment in self.segmentTimeline.segments:
                 t = t or segment.t
                 # check the start time from MPD
-                if t > self.root.timelines[self.parent.id]:
-                    yield self.make_url(self.media(Time=t, **kwargs)), 0
-                    self.root.timelines[self.parent.id] = t
-                t += segment.d
+                for repeated_i in range(segment.r + 1):
+                    available_at += (segment.d / self.timescale)
+
+                    if t > self.root.timelines[self.parent.id]:
+                        yield (self.make_url(self.media(Time=t, **kwargs)),
+                               available_at + suggested_delay)
+                        self.root.timelines[self.parent.id] = t
+                    t += segment.d
         else:
             for number, available_at in self.segment_numbers():
-                yield self.make_url(self.media(Number=number, **kwargs)), available_at
+                yield (self.make_url(self.media(Number=number, **kwargs)),
+                       available_at)
 
 
 class Representation(MPDNode):
@@ -498,6 +508,8 @@ class SegmentTimeline(MPDNode):
     def __init__(self, node, *args, **kwargs):
         super(SegmentTimeline, self).__init__(node, *args, **kwargs)
 
+        self.timescale = self.walk_back_get_attr("timescale")
+
         self.segments = self.children(TimelineSegment)
 
 
@@ -509,6 +521,7 @@ class TimelineSegment(MPDNode):
 
         self.t = self.attr("t", parser=int)
         self.d = self.attr("d", parser=int)
+        self.r = self.attr("r", parser=int, default=0)
 
 
 class ContentProtection(MPDNode):
