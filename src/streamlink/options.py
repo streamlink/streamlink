@@ -5,6 +5,10 @@ def _normalise_option_name(name):
     return name.replace('-', '_')
 
 
+def _normalise_argument_name(name):
+    return name.replace('_', '-').strip("-")
+
+
 class Options(object):
     """
     For storing options to be used by plugins, with default values.
@@ -67,17 +71,17 @@ class Argument(object):
         self._default = options.get("default")
 
     def _name(self, plugin):
-        return self._argument_name or "{0}-{1}".format(plugin, self.name).strip("-")
+        return self._argument_name or _normalise_argument_name("{0}-{1}".format(plugin, self.name))
 
     def argument_name(self, plugin):
         return "--" + self._name(plugin)
 
     def namespace_dest(self, plugin):
-        return self._name(plugin).replace('-', '_')
+        return _normalise_option_name(self._name(plugin))
 
     @property
     def dest(self):
-        return self._dest or self.name.replace("-", "_")
+        return self._dest or _normalise_option_name(self.name)
 
     @property
     def default(self):  # read-only

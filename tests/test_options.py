@@ -42,6 +42,11 @@ class TestArgument(unittest.TestCase):
         self.assertEqual(Argument("test-arg").namespace_dest("plugin"), "plugin_test_arg")
         self.assertEqual(Argument("test-arg").dest, "test_arg")
 
+    def test_name_plugin(self):
+        self.assertEqual(Argument("test-arg").argument_name("test_plugin"), "--test-plugin-test-arg")
+        self.assertEqual(Argument("test-arg").namespace_dest("test_plugin"), "test_plugin_test_arg")
+        self.assertEqual(Argument("test-arg").dest, "test_arg")
+
     def test_name_override(self):
         self.assertEqual(Argument("test", argument_name="override-name").argument_name("plugin"), "--override-name")
         self.assertEqual(Argument("test", argument_name="override-name").namespace_dest("plugin"), "override_name")
