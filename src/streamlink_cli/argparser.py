@@ -169,7 +169,7 @@ def build_parser():
         epilog=dedent("""
         For more in-depth documentation see:
           https://streamlink.github.io
-    
+
         Please report broken plugins or bugs to the issue tracker on Github:
           https://github.com/streamlink/streamlink/issues
         """)
@@ -182,10 +182,10 @@ def build_parser():
         nargs="?",
         help="""
         A URL to attempt to extract streams from.
-    
+
         Usually, the protocol of http(s) URLs can be omitted ("https://"),
         depending on the implementation of the plugin being used.
-    
+
         Alternatively, the URL can also be specified by using the --url option.
         """
     )
@@ -196,13 +196,13 @@ def build_parser():
         type=comma_list,
         help="""
         Stream to play.
-    
+
         Use "best" or "worst" for selecting the highest or lowest available quality.
-    
+
         Fallback streams can be specified by using a comma-separated list:
-    
+
           "720p,480p,best"
-    
+
         If no stream is specified and --default-stream is not used, then a
         list of available streams will be printed.
         """
@@ -246,9 +246,9 @@ def build_parser():
         metavar="URL",
         help="""
         Check if Streamlink has a plugin that can handle the specified URL.
-    
+
         Returns status code 1 for false and 0 for true.
-    
+
         Useful for external scripting.
         """
     )
@@ -266,7 +266,7 @@ def build_parser():
         metavar="FILENAME",
         help="""
         Load options from this config file.
-    
+
         Can be repeated to load multiple files, in which case
         the options are merged on top of each other where the
         last config has highest priority.
@@ -278,7 +278,7 @@ def build_parser():
         default="info",
         help="""
         Set the log message threshold.
-    
+
         Valid levels are: none, error, warning, info, debug
         """
     )
@@ -287,7 +287,7 @@ def build_parser():
         action="store_true",
         help="""
         Hide all log output.
-    
+
         Alias for "--loglevel none".
         """
     )
@@ -296,7 +296,7 @@ def build_parser():
         action="store_true",
         help="""
         Output JSON representations instead of the normal text output.
-    
+
         Useful for external scripting.
         """
     )
@@ -307,7 +307,7 @@ def build_parser():
         default=False,
         help="""
         Enable or disable the automatic check for a new version of Streamlink.
-    
+
         Default is "no".
         """
     )
@@ -325,10 +325,10 @@ def build_parser():
         help="""
         The preferred locale setting, for selecting the preferred
         subtitle and audio language.
-    
+
         The locale is formatted as [language_code]_[country_code],
         eg. en_US or es_ES.
-    
+
         Default is system locale.
         """
     )
@@ -341,27 +341,27 @@ def build_parser():
         help="""
         Player to feed stream data to. By default, VLC will be used
         if it can be found in its default location.
-    
+
         This is a shell-like syntax to support using a specific player:
-    
+
           streamlink --player=vlc <url> <quality>
-    
+
         Absolute or relative paths can also be passed via this option
         in the event the player's executable can not be resolved:
-    
+
           streamlink --player=/path/to/vlc <url> <quality>
           streamlink --player=./vlc-player/vlc <url> <quality>
-    
+
         To use a player that is located in a path with spaces you must
         quote the parameter or its value:
-    
+
           streamlink "--player=/path/with spaces/vlc" <url> <quality>
           streamlink --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> <quality>
-    
+
         Options may also be passed to the player. For example:
-    
+
           streamlink --player "vlc --file-caching=5000" <url> <quality>
-    
+
         As an alternative to this, see the --player-args parameter,
         which does not log any custom player arguments.
         """
@@ -375,27 +375,27 @@ def build_parser():
         are put together with the value of --player to create a command
         to execute. Unlike the --player parameter, custom player
         arguments will not be logged.
-    
+
         This value can contain formatting variables surrounded by curly
         braces, {{ and }}. If you need to include a brace character, it
         can be escaped by doubling, e.g. {{{{ and }}}}.
-    
+
         Formatting variables available:
-    
+
         filename
           This is the filename that the player will use.
           It's usually "-" (stdin), but can also be a URL or a file
           depending on the options used.
-    
+
         It's usually enough to use --player instead of this unless you
         need to add arguments after the filename.
-    
+
         Default is "{0}".
-    
+
         Example:
-    
+
           streamlink -p vlc -a "--play-and-exit {{filename}}" <url> <quality>
-    
+
         """.format(DEFAULT_PLAYER_ARGUMENTS)
     )
     player.add_argument(
@@ -428,7 +428,7 @@ def build_parser():
         Make the player read the stream through HTTP, but unlike
         --player-http it will continuously try to open the stream if the
         player requests it.
-    
+
         This makes it possible to handle stream disconnects if your player
         is capable of reconnecting to a HTTP stream. This is usually
         done by setting your player to a "repeat mode".
@@ -441,11 +441,11 @@ def build_parser():
         Serve stream data through HTTP without running any player. This is useful
         to allow external devices like smartphones or streaming boxes to watch
         streams they wouldn't be able to otherwise.
-    
+
         Behavior will be similar to the continuous HTTP option, but no player
         program will be started, and the server will listen on all available
         connections instead of just in the local (loopback) interface.
-    
+
         The URLs that can be used to access the stream will be printed to the
         console, and the server can be interrupted using CTRL-C.
         """
@@ -468,11 +468,11 @@ def build_parser():
         help="""
         A comma-delimited list of stream types to pass to the player as a
         URL to let it handle the transport of the stream instead.
-    
+
         Stream types that can be converted into a playable URL are:
-    
+
         - {0}
-    
+
         Make sure your player can handle the stream type when using this.
         """.format("\n        - ".join(STREAM_PASSTHROUGH))
     )
@@ -482,10 +482,10 @@ def build_parser():
         help="""
         By default Streamlink will close the player when the stream ends.
         This is to avoid "dead" GUI players lingering after a stream ends.
-    
+
         It does however have the side-effect of sometimes closing a player
         before it has played back all of its cached data.
-    
+
         This option will instead let the player decide when to exit.
         """
     )
@@ -496,7 +496,7 @@ def build_parser():
         metavar="FILENAME",
         help="""
         Write stream data to FILENAME instead of playing it.
-    
+
         You will be prompted if the file already exists.
         """
     )
@@ -522,10 +522,10 @@ def build_parser():
         metavar="URL",
         help="""
         A URL to attempt to extract streams from.
-    
+
         Usually, the protocol of http(s) URLs can be omitted (https://),
         depending on the implementation of the plugin being used.
-    
+
         This is an alternative to setting the URL using a positional argument
         and can be useful if set in a config file.
         """
@@ -536,13 +536,13 @@ def build_parser():
         metavar="STREAM",
         help="""
         Stream to play.
-    
+
         Use "best" or "worst" for selecting the highest or lowest available quality.
-    
+
         Fallback streams can be specified by using a comma-separated list:
-    
+
           "720p,480p,best"
-    
+
         This is an alternative to setting the stream using a positional argument
         and can be useful if set in a config file.
         """
@@ -555,7 +555,7 @@ def build_parser():
         Retry fetching the list of available streams until streams are found
         while waiting DELAY second(s) between each attempt. If unset, only one
         attempt will be made to fetch the list of streams available.
-    
+
         The number of fetch retry attempts can be capped with --retry-max.
         """
     )
@@ -566,7 +566,7 @@ def build_parser():
         help="""
         When using --retry-streams, stop retrying the fetch after COUNT retry
         attempt(s). Fetch will retry infinitely if COUNT is zero or unset.
-    
+
         If --retry-max is set without setting --retry-streams, the delay between
         retries will default to 1 second.
         """
@@ -579,7 +579,7 @@ def build_parser():
         help="""
         After a successful fetch, try ATTEMPTS time(s)
         to open the stream until giving up.
-    
+
         Default is 1.
         """
     )
@@ -589,13 +589,13 @@ def build_parser():
         type=comma_list,
         help="""
         A comma-delimited list of stream types to allow.
-    
+
         The order will be used to separate streams when there are multiple
         streams with the same name but different stream types. Any stream type
         not listed will be omitted from the available streams list.  A ``*``
         can be used as a wildcard to match any other type of stream,
         eg. muxed-stream.
-    
+
         Default is "rtmp,hls,hds,http,akamaihd,*".
         """
     )
@@ -605,25 +605,25 @@ def build_parser():
         type=comma_list,
         help="""
         Fine tune best/worst synonyms by excluding unwanted streams.
-    
+
         Uses a filter expression in the format:
-    
+
           [operator]<value>
-    
+
         Valid operators are >, >=, < and <=. If no operator is specified
         then equality is tested.
-    
+
         For example this will exclude streams ranked higher than "480p":
-    
+
           ">480p"
-    
+
         Multiple filters can be used by separating each expression with
         a comma.
-    
+
         For example this will exclude streams from two quality types:
-    
+
           ">480p,>medium"
-    
+
         """
     )
 
@@ -634,7 +634,7 @@ def build_parser():
         metavar="SECONDS",
         help="""
         The time live HDS streams will start from the edge of stream.
-    
+
         Default is 10.0.
         """
     )
@@ -645,7 +645,7 @@ def build_parser():
         help="""
         How many attempts should be done to download each HDS segment
         before giving up.
-    
+
         Default is 3.
         """
     )
@@ -656,7 +656,7 @@ def build_parser():
         help="""
         The size of the thread pool used to download HDS segments.
         Minimum value is 1 and maximum is 10.
-    
+
         Default is 1.
         """
     )
@@ -666,7 +666,7 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         HDS segment connect and read timeout.
-    
+
         Default is 10.0.
         """
     )
@@ -676,7 +676,7 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         Timeout for reading data from HDS streams.
-    
+
         Default is 60.0.
         """
     )
@@ -686,10 +686,10 @@ def build_parser():
         metavar="SEGMENTS",
         help="""
         How many segments from the end to start live HLS streams on.
-    
+
         The lower the value the lower latency from the source you will be,
         but also increases the chance of buffering.
-    
+
         Default is 3.
         """
     )
@@ -700,7 +700,7 @@ def build_parser():
         help="""
         How many attempts should be done to download each HLS segment
         before giving up.
-    
+
         Default is 3.
         """
     )
@@ -711,7 +711,7 @@ def build_parser():
         help="""
         How many attempts should be done to reload the HLS playlist
         before giving up.
-    
+
         Default is 3.
         """
     )
@@ -722,7 +722,7 @@ def build_parser():
         help="""
         The size of the thread pool used to download HLS segments.
         Minimum value is 1 and maximum is 10.
-    
+
         Default is 1.
         """
     )
@@ -732,7 +732,7 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         HLS segment connect and read timeout.
-    
+
         Default is 10.0.
         """)
     transport.add_argument(
@@ -741,13 +741,13 @@ def build_parser():
         type=comma_list,
         help="""
         A comma-delimited list of segment names that will not be fetched.
-    
+
         Example: --hls-segment-ignore-names 000,001,002
-    
+
         This will ignore every segment that ends with 000.ts, 001.ts and 002.ts
-    
+
         Default is None.
-    
+
         Note: The --hls-timeout must be increased, to a time that is longer than the ignored break.
         """
     )
@@ -759,13 +759,13 @@ def build_parser():
         Selects a specific audio source or sources, by language code or name,
         when multiple audio sources are available. Can be * to download all audio
         sources.
-    
+
         Examples:
-    
+
           --hls-audio-select "English,German"
           --hls-audio-select "en,de"
           --hls-audio-select "*"
-    
+
         Note: This is only useful in special circumstances where the
         regular locale option fails, such as when multiple sources of the
         same language exists.
@@ -776,7 +776,7 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         Timeout for reading data from HLS streams.
-    
+
         Default is 60.0.
         """)
     transport.add_argument(
@@ -787,7 +787,7 @@ def build_parser():
         help="""
         Amount of time to skip from the beginning of the stream.
         For live streams, this is a negative offset from the end of the stream.
-    
+
         Default is 00:00:00.
         """)
     transport.add_argument(
@@ -798,9 +798,9 @@ def build_parser():
         help="""
         Limit the playback duration, useful for watching segments of a stream. The actual duration may be slightly
         longer, as it is rounded to the nearest HLS segment.
-    
+
         Has no effect on live streams.
-    
+
         Default is unlimited.
         """)
     transport.add_argument(
@@ -815,7 +815,7 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         Timeout for reading data from HTTP streams.
-    
+
         Default is 60.0.
         """
     )
@@ -826,33 +826,33 @@ def build_parser():
         help="""
         The maximum size of ringbuffer. Add a M or K suffix to specify mega
         or kilo bytes instead of bytes.
-    
+
         The ringbuffer is used as a temporary storage between the stream
         and the player. This is to allows us to download the stream faster
         than the player wants to read it.
-    
+
         The smaller the size, the higher chance of the player buffering
         if there are download speed dips and the higher size the more data
         we can use as a storage to catch up from speed dips.
-    
+
         It also allows you to temporary pause as long as the ringbuffer
         doesn't get full since we continue to download the stream in the
         background.
-        
+
         Default is "16M".
-    
+
         Note: A smaller size is recommended on lower end systems (such as
         Raspberry Pi) when playing stream types that require some extra
         processing (such as HDS) to avoid unnecessary background
         processing.
-        
+
         """)
     transport.add_argument(
         "--rtmp-proxy", "--rtmpdump-proxy",
         metavar="PROXY",
         help="""
         A SOCKS proxy that RTMP streams will use.
-    
+
         Example: 127.0.0.1:9050
         """
     )
@@ -862,7 +862,7 @@ def build_parser():
         help="""
         RTMPDump is used to access RTMP streams. You can specify the
         location of the rtmpdump executable if it is not in your PATH.
-    
+
         Example: "/usr/local/bin/rtmpdump"
         """
     )
@@ -872,7 +872,7 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         Timeout for reading data from RTMP streams.
-    
+
         Default is 60.0.
         """
     )
@@ -882,10 +882,10 @@ def build_parser():
         metavar="ATTEMPTS",
         help="""
         How many attempts should be done to download each segment before giving up.
-    
+
         This is generic option used by streams not covered by other options,
         such as stream protocols specific to plugins, e.g. UStream.
-    
+
         Default is 3.
         """
     )
@@ -896,10 +896,10 @@ def build_parser():
         help="""
         The size of the thread pool used to download segments.
         Minimum value is 1 and maximum is 10.
-    
+
         This is generic option used by streams not covered by other options,
         such as stream protocols specific to plugins, e.g. UStream.
-    
+
         Default is 1.
         """
     )
@@ -909,10 +909,10 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         Segment connect and read timeout.
-    
+
         This is generic option used by streams not covered by other options,
         such as stream protocols specific to plugins, e.g. UStream.
-    
+
         Default is 10.0.
         """)
     transport.add_argument(
@@ -921,10 +921,10 @@ def build_parser():
         metavar="TIMEOUT",
         help="""
         Timeout for reading data from streams.
-    
+
         This is generic option used by streams not covered by other options,
         such as stream protocols specific to plugins, e.g. UStream.
-    
+
         Default is 60.0.
         """)
     transport.add_argument(
@@ -939,7 +939,7 @@ def build_parser():
         action="store_true",
         help="""
         Print the command-line used internally to play the stream.
-    
+
         This is only available on RTMP streams.
         """
     )
@@ -949,7 +949,7 @@ def build_parser():
         help="""
         Log possible errors from internal subprocesses to a temporary file.
         The file will be saved in your systems temporary directory.
-    
+
         Useful when debugging rtmpdump related issues.
         """
     )
@@ -960,7 +960,7 @@ def build_parser():
         help="""
         Log the subprocess errorlog to a specific file rather than a temporary file.
         Takes precedence over subprocess-errorlog.
-    
+
         Useful when debugging rtmpdump related issues.
         """
     )
@@ -971,7 +971,7 @@ def build_parser():
         FFMPEG is used to access or mux separate video and audio streams.
         You can specify the location of the ffmpeg executable if it is
         not in your PATH.
-    
+
         Example: "/usr/local/bin/ffmpeg"
         """
     )
@@ -995,9 +995,9 @@ def build_parser():
         metavar="CODEC",
         help="""
         When muxing streams transcode the video to this CODEC.
-    
+
         Default is "copy".
-    
+
         Example: "h264"
         """
     )
@@ -1006,9 +1006,9 @@ def build_parser():
         metavar="CODEC",
         help="""
         When muxing streams transcode the audio to this CODEC.
-    
+
         Default is "copy".
-    
+
         Example: "aac"
         """
     )
@@ -1019,7 +1019,7 @@ def build_parser():
         metavar="HTTP_PROXY",
         help="""
         A HTTP proxy to use for all HTTP requests.
-    
+
         Example: "http://hostname:port/"
         """
     )
@@ -1028,7 +1028,7 @@ def build_parser():
         metavar="HTTPS_PROXY",
         help="""
         A HTTPS capable proxy to use for all HTTPS requests.
-    
+
         Example: "https://hostname:port/"
         """
     )
@@ -1039,7 +1039,7 @@ def build_parser():
         action="append",
         help="""
         A cookie to add to each HTTP request.
-    
+
         Can be repeated to add multiple cookies.
         """
     )
@@ -1050,7 +1050,7 @@ def build_parser():
         action="append",
         help="""
         A header to add to each HTTP request.
-    
+
         Can be repeated to add multiple headers.
         """
     )
@@ -1061,7 +1061,7 @@ def build_parser():
         action="append",
         help="""
         A query parameter to add to each HTTP request.
-    
+
         Can be repeated to add multiple query parameters.
         """
     )
@@ -1078,7 +1078,7 @@ def build_parser():
         action="store_true",
         help="""
         Don't attempt to verify SSL certificates.
-    
+
         Usually a bad idea, only use this if you know what you're doing.
         """
     )
@@ -1087,7 +1087,7 @@ def build_parser():
         action="store_true",
         help="""
         Disable Diffie Hellman key exchange
-    
+
         Usually a bad idea, only use this if you know what you're doing.
         """
     )
@@ -1096,7 +1096,7 @@ def build_parser():
         metavar="FILENAME",
         help="""
         SSL certificate to use.
-    
+
         Expects a .pem file.
         """
     )
@@ -1106,7 +1106,7 @@ def build_parser():
         nargs=2,
         help="""
         SSL certificate to use.
-    
+
         Expects a .crt and a .key file.
         """
     )
@@ -1117,11 +1117,10 @@ def build_parser():
         help="""
         General timeout used by all HTTP requests except the ones covered
         by other options.
-    
+
         Default is 20.0.
         """
     )
-
 
     # Deprecated options
     stream.add_argument(

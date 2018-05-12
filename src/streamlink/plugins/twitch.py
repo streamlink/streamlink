@@ -4,9 +4,10 @@ import warnings
 from random import random
 
 import requests
+
 from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError, StreamError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import (
