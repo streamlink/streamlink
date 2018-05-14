@@ -59,20 +59,6 @@ clone() {
   cd ..
 }
 
-replaceversion() {
-  cd $CLI
-  OLD_VERSION=`python setup.py --version`
-  echo "OLD VERSION:" $OLD_VERSION
-
-  echo "1. Replaced __init__.py versioning"
-  sed -i "s/$OLD_VERSION/$1/g" src/streamlink/__init__.py
-
-  echo "2. Replaced setup.py versioning"
-  sed -i "s/$OLD_VERSION/$1/g" setup.py
-  
-  cd ..
-}
-
 changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
@@ -151,6 +137,7 @@ git_commit() {
 sign() {
   # Tarball it!
   cd $CLI
+  git tag $1
   python setup.py sdist
   mv dist/$CLI-$1.tar.gz ..
   cd ..
@@ -267,7 +254,6 @@ main() {
   PS3='Please enter your choice: '
   options=(
   "Git clone master"
-  "Replace version number"
   "Generate changelog"
   "Generate changelog for release"
   "Create PR"
@@ -283,9 +269,6 @@ main() {
       case $opt in
           "Git clone master")
               clone $VERSION
-              ;;
-          "Replace version number")
-              replaceversion $VERSION
               ;;
           "Generate changelog")
               changelog $PREV_VERSION $VERSION
