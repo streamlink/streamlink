@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import versioneer
 from os import environ
 from os.path import abspath, dirname, join
 from setuptools import setup, find_packages
@@ -63,7 +64,8 @@ srcdir = join(dirname(abspath(__file__)), "src/")
 sys_path.insert(0, srcdir)
 
 setup(name="streamlink",
-      version="0.12.1",
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",

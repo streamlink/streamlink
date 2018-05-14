@@ -6,18 +6,13 @@ set -e # stop on error
 command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to build the installer. Aborting."; exit 1; }
 command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
 
-
-STREAMLINK_VERSION_PLAIN=$(python setup.py --version)
 # For travis nightly builds generate a version number with commit hash
-if [ -n "${TRAVIS_BRANCH}" ] && [ -z "${TRAVIS_TAG}" ]; then
-    STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER}"
-    STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION_PLAIN}-${TRAVIS_BUILD_NUMBER}-${TRAVIS_COMMIT:0:7}"
-    STREAMLINK_VERSION="${STREAMLINK_VERSION_PLAIN}+${TRAVIS_COMMIT:0:7}"
-else
-    STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
-    STREAMLINK_VERSION="${STREAMLINK_VERSION_PLAIN}"
-    STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
-fi
+STREAMLINK_VERSION=$(python setup.py --version)
+STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
+STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
+
+# include the build number
+STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
 
 build_dir="$(pwd)/build"
 nsis_dir="${build_dir}/nsis"
@@ -25,7 +20,10 @@ nsis_dir="${build_dir}/nsis"
 dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
 mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}"
 
-echo "Building ${STREAMLINK_INSTALLER} (v${STREAMLINK_VERSION})..." 1>&2
+echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
+python setup.py build 1>&2
+
+echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
 
 cat > "${build_dir}/streamlink.cfg" <<EOF
 [Application]
@@ -54,9 +52,7 @@ format=bundled
 ;           - urllib3
 ;           - socks / sockshandler
 ;       - websocket-client
-packages=streamlink
-         streamlink_cli
-         pkg_resources
+packages=pkg_resources
          six
          iso639
          iso3166
@@ -71,6 +67,9 @@ packages=streamlink
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
+      ../build/lib/streamlink > \$INSTDIR\pkgs
+      ../build/lib/streamlink_cli > \$INSTDIR\pkgs
+
 [Command streamlink]
 entry_point=streamlink_cli.main:main
 
