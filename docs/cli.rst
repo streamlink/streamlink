@@ -337,13 +337,19 @@ change the proxy server that Streamlink will use for HTTP and HTTPS requests res
 As HTTP and HTTPS requests can be handled by separate proxies, you may need to specify both
 options if the plugin you use makes HTTP and HTTPS requests.
 
-Both HTTP and SOCKS5 proxies are supported, authentication is supported for both types.
+Both HTTP and SOCKS proxies are supported, authentication is supported for both types.
 
 For example:
 
 .. code-block:: console
 
     $ streamlink --http-proxy "http://user:pass@10.10.1.10:3128/" --https-proxy "socks5://10.10.1.10:1242"
+
+.. note::
+
+    When using a SOCKS proxy the ``socks4`` and ``socks5`` schemes mean that DNS lookups are done locally, rather than
+    on the proxy server. To have the proxy server perform the DNS lookups the ``socks4a`` and ``socks5h`` schemes should
+    be used instead.
 
 
 Command-line usage
