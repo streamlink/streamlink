@@ -9,7 +9,7 @@ command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build 
 # For travis nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
-STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
+STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION/\+/_}"
 
 # include the build number
 STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
