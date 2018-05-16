@@ -9,7 +9,7 @@ from streamlink.stream import HLSStream
 
 
 class TF1(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?(?:tf1\.fr/(tf1|tmc|tfx|tf1-series-films)/direct|(lci).fr/direct)/?")
+    url_re = re.compile(r"https?://(?:www\.)?(?:tf1\.fr/(tf1|tmc|tfx|tf1-series-films|lci)/direct|(lci).fr/direct)/?")
     embed_url = "http://www.wat.tv/embedframe/live{0}"
     embed_re = re.compile(r"urlLive.*?:.*?\"(http.*?)\"", re.MULTILINE)
     api_url = "http://www.wat.tv/get/{0}/591997"
