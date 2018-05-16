@@ -12,7 +12,7 @@ dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
 # For travis nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
-STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION}"
+STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION/\+/_}"
 
 
 cat > "${build_dir}/bintray-nightly.json" <<EOF
