@@ -341,7 +341,7 @@ Both HTTP and SOCKS proxies are supported, authentication is supported for both 
 
 .. note::
     When using a SOCKS proxy the ``socks4`` and ``socks5`` schemes mean that DNS lookups are done
-    locally, rather than on the proxy server. To have the proxy server perform the DNS lookups the
+    locally, rather than on the proxy server. To have the proxy server perform the DNS lookups, the
     ``socks4a`` and ``socks5h`` schemes should be used instead.
 
 For example:
