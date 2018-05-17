@@ -6,7 +6,8 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream import HLSStream, HTTPStream
+from streamlink.utils import update_scheme
 
 
 class INE(Plugin):
@@ -23,10 +24,8 @@ class INE(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(json.loads),
-                {"playlist": [
-                    {"sources": [{"file": validate.text,
-                                  "type": validate.text}]}
-                ]}
+                {"playlist": str},
+                validate.get("playlist")
             )
         )
     )
@@ -46,10 +45,15 @@ class INE(Plugin):
             self.logger.debug("Loading player JS: {0}", js_url)
 
             res = http.get(js_url)
-            data = self.setup_schema.validate(res.text)
+            metadata_url = update_scheme(self.url, self.setup_schema.validate(res.text))
+            data = http.json(http.get(metadata_url))
+
             for source in data["playlist"][0]["sources"]:
-                if source["type"] == "hls":
-                    return HLSStream.parse_variant_playlist(self.session, "https:" + source["file"])
+                if source["type"] == "application/vnd.apple.mpegurl":
+                    for s in HLSStream.parse_variant_playlist(self.session, source["file"]).items():
+                        yield s
+                elif source["type"] == "video/mp4":
+                    yield "{0}p".format(source["height"]), HTTPStream(self.session, source["file"])
 
 
 __plugin__ = INE
