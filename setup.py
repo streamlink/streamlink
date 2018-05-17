@@ -1,11 +1,13 @@
 #!/usr/bin/env python
-
+import codecs
 import os
-import versioneer
 from os import environ
-from os.path import abspath, dirname, join
-from setuptools import setup, find_packages
+from os import path
 from sys import version_info, path as sys_path
+
+from setuptools import setup, find_packages
+
+import versioneer
 
 deps = []
 
@@ -60,8 +62,12 @@ if os.name == "nt" and version_info < (3, 0):
 if environ.get("NO_DEPS"):
     deps = []
 
-srcdir = join(dirname(abspath(__file__)), "src/")
+this_directory = path.abspath(path.dirname(__file__))
+srcdir = path.join(this_directory, "src/")
 sys_path.insert(0, srcdir)
+
+with codecs.open(path.join(this_directory, 'README.md'), 'r', 'utf8') as f:
+    long_description = f.read()
 
 setup(name="streamlink",
       version=versioneer.get_version(),
@@ -69,6 +75,8 @@ setup(name="streamlink",
       description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",
+      long_description=long_description,
+      long_description_content_type='text/markdown',
       url="https://github.com/streamlink/streamlink",
       author="Streamlink",
       author_email="charlie@charliedrage.com",  # temp until we have a mailing list / global email
