@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import codecs
 import os
+import versioneer
+
 from os import environ
 from os import path
 from sys import version_info, path as sys_path
-
 from setuptools import setup, find_packages
-
-import versioneer
 
 deps = []
 
@@ -89,12 +88,17 @@ setup(name="streamlink",
       install_requires=deps,
       test_suite="tests",
       classifiers=["Development Status :: 5 - Production/Stable",
+                   "License :: OSI Approved :: BSD License",
                    "Environment :: Console",
+                   "Intended Audience :: End Users/Desktop",
                    "Operating System :: POSIX",
                    "Operating System :: Microsoft :: Windows",
+                   "Operating System :: MacOS",
                    "Programming Language :: Python :: 2.7",
-                   "Programming Language :: Python :: 3.3",
                    "Programming Language :: Python :: 3.4",
+                   "Programming Language :: Python :: 3.5",
+                   "Programming Language :: Python :: 3.6",
+                   "Programming Language :: Python :: 3.7",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
                    "Topic :: Multimedia :: Video",
