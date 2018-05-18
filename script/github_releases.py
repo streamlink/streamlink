@@ -56,10 +56,10 @@ def github_api_call(method, repo, url, api_key, **kwargs):
 
 def main(tag, repo, api_key, dry_run=False):
     try:
-        file = path.abspath(path.join(path.dirname(__file__), "../CHANGELOG.md"))
-        log.debug("Opening changelog file: {}".format(file))
+        cl_path = path.abspath(path.join(path.dirname(__file__), "../CHANGELOG.md"))
+        log.debug("Opening changelog file: {}".format(cl_path))
 
-        with open(file, 'r') as fh:
+        with open(cl_path, 'r') as fh:
             contents = fh.read()
             if not contents:
                 raise ValueError("Missing changelog file")
