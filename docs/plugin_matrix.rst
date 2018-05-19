@@ -111,6 +111,7 @@ idf1                idf1.fr              Yes   Yes
 ine                 ine.com              ---   Yes
 itvplayer           itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 kanal7              kanal7.com           Yes   No
+kingkong            www.kingkong.com.tw  Yes   Yes
 liveedu             - liveedu.tv         Yes   --    Some streams require a login.
                     - livecoding.tv
 liveme              liveme.com           Yes   --
