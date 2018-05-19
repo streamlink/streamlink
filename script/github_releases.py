@@ -1,20 +1,18 @@
 #!/usr/bin/env python
+import argparse
 import logging
+import re
+from os import getenv, path
 from pprint import pprint
+from sys import exit
 
 import requests
-import argparse
-import re
-
-from sys import exit, stderr
-from os import getenv, path
 
 log = logging.getLogger(__name__)
 
 RE_LOG_HEADER = re.compile(r"## streamlink\s+(\d+\.\d+\.\d+(?:-\S+)?)\s+\(\d{4}-\d{2}-\d{2}\)\n+", flags=re.IGNORECASE)
 RE_GITLOG = re.compile(r"(.*?)(```\n.*?\n```)", re.DOTALL)
-
-template = """
+TEMPLATE = """
 {changelog}
 
 ## Installation
@@ -89,7 +87,7 @@ def main(tag, repo, api_key, dry_run=False):
         # Update release name and body
         payload = {
             "name": "Streamlink {0}".format(tag),
-            "body": template.format(changelog=changelog.strip(), gitlog=gitlog.strip())
+            "body": TEMPLATE.format(changelog=changelog.strip(), gitlog=gitlog.strip())
         }
         if not dry_run:
             github_api_call("PATCH", repo, data["id"], api_key, json=payload)
@@ -103,7 +101,6 @@ def main(tag, repo, api_key, dry_run=False):
     except Exception:
         log.exception("Failed to update release info.")
         return 1
-
 
 
 if __name__ == "__main__":
