@@ -40,6 +40,7 @@ bongacams           bongacams.com        Yes   No
 brightcove          players.brig... [6]_ Yes   Yes
 brittv              brittv.co.uk         Yes   --
 btv                 btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
+btsports            sport.bt.com         Yes   Yes   Requires subscription account
 cam4                cam4.com             Yes   No
 camsoda             camsoda.com          Yes   No
 canalplus           - mycanal.fr         No    Yes   Streams may be geo-restricted to France.
