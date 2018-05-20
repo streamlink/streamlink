@@ -132,6 +132,11 @@
         <div class="rst-content">
           {% include "breadcrumbs.html" %}
           <div role="main">
+            {% if release != version %}
+            <div class="admonition version-warning">
+              <p class="admonition-title">You are reading the documentation for the in-development version of {{ project }}.</p>
+            </div>
+            {% endif %}
             {% block body %}{% endblock %}
           </div>
           {% include "footer.html" %}

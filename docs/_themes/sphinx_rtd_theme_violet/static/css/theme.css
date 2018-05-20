@@ -2425,6 +2425,22 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   background: #e7f2fa;
 }
 
+.rst-conent .version-warning {
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 12px;
+  line-height: 24px;
+  margin-bottom: 24px;
+}
+
+.rst-content .version-warning .admonition-title {
+  background: #6f5499;
+}
+
+.rst-content .version-warning .admonition-title a {
+  color: #fcfcfc;
+}
+
 .wy-alert-title, .rst-content .admonition-title {
   color: white;
   font-weight: bold;
@@ -4366,7 +4382,6 @@ nav.stickynav {
 }
 
 .rst-versions {
-  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -4386,12 +4401,11 @@ nav.stickynav {
 }
 .rst-versions .rst-current-version {
   padding: 12px;
-  background-color: #efefef;
+  background-color: #6f5499;
   display: block;
   text-align: right;
   font-size: 90%;
   cursor: pointer;
-  color: #27ae60;
   *zoom: 1;
 }
 .rst-versions .rst-current-version:before, .rst-versions .rst-current-version:after {
@@ -4442,7 +4456,7 @@ nav.stickynav {
 .rst-versions .rst-other-versions dd a {
   display: inline-block;
   padding: 6px;
-  color: #fcfcfc;
+  color: #6f5499;
 }
 .rst-versions.rst-badge {
   width: auto;
