@@ -66,7 +66,7 @@ changelog() {
   echo "
 !!!WRITE YOUR RELEASE NOTES HERE!!!
 
-\`\`\`
+\`\`\`text
 ${LOG}
 \`\`\`" > ../changes.txt
   echo "Changelog has been written to changes.txt"

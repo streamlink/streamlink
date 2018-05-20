@@ -6,7 +6,7 @@ Streamlink 0.12.1
 
 Small release to fix a pip / Windows.exe generation bug!
 
-```
+```text
 Charlie Drage <charlie@charliedrage.com> (1):
       0.12.0 Release
 ```
@@ -27,7 +27,7 @@ New updates:
   - Bug fix with ffmpegmux (https://github.com/streamlink/streamlink/pull/1502)
   - Removed dead plugins and deprecated options (https://github.com/streamlink/streamlink/pull/1546)
 
-```
+```text
 Alexis Murzeau <amubtdx@gmail.com> (2):
       Avoid use of non-ASCII in dogan plugin
       Fix test_plugins.py encoding errors in containerized environment (#1582)
@@ -112,7 +112,7 @@ Here's what's new:
   - Neulion plugin removed due to DMCA notice (https://github.com/streamlink/streamlink/pull/1497)
   - And many more updates to numerous other plugins!
 
-```
+```text
 Alexis Murzeau <amubtdx@gmail.com> (3):
       Remove Debian directory
       docs/install: use sudo for Ubuntu and Solus
@@ -182,7 +182,7 @@ Changes:
   - HLS seeking support (https://github.com/streamlink/streamlink/pull/1303)
   - Changes to the Windows binary (docs: https://github.com/streamlink/streamlink/pull/1408 minor changes to install directory: https://github.com/streamlink/streamlink/pull/1407)
 
-```
+```text
 Alexis Murzeau <amubtdx@gmail.com> (3):
       docs: remove flattr-badge.png image
       Fix various typos in comments and documentation
@@ -271,7 +271,7 @@ Features:
 Many thanks to those who've contributed in this release!
 
 
-```
+```text
 Alexis Murzeau <amubtdx@outlook.fr> (2):
       docs: add new line before codeblock to fix them
       Fix sphinx warning on Directive class
@@ -341,7 +341,7 @@ Here's the outline of what's new:
 
 Many thanks to those who've contributed in this release!
 
-```
+```text
 Benedikt Gollatz <ben@differentialschokolade.org> (1):
       Fix player URL extraction in bloomberg plugin
 
@@ -453,7 +453,7 @@ Many thanks to those who've contributed in this release!
 If you think that this application is helpful, please consider supporting the maintainers by [donating](https://streamlink.github.io/donate.html).
 
 
-```
+```text
 Alex Shafer <shafer.alex@gmail.com> (1):
       Return sorted list of streams. (#731)
 
@@ -555,7 +555,7 @@ Again, many thanks for those who've contributed!
 
 Thank you very much!
 
-```
+```text
 Daniel Draper <Germandrummer92@users.noreply.github.com> (1):
       Will exit with exit code 1 if stream cannot be opened. (#785)
 
@@ -670,7 +670,7 @@ Again, many thanks for those who have contributed!
 
 Thank you very much!
 
-```
+```text
 CallMeJuf <CallMeJuf@users.noreply.github.com> (2):
       Aliez plugin now accepts any TLD (#696)
       New Periscope URL #748
@@ -734,7 +734,7 @@ The major features of this release are:
 
 Many thanks to all contributors who have contributed in this release!
 
-```
+```text
 406NotAcceptable <406NotAcceptable@somewhere> (2):
       plugins.afreecatv: API changes
       plugins.connectcast: API changes
@@ -892,7 +892,7 @@ A minor bug release of 0.3.2 to fix a few issues with stream providers.
 
 Thanks to all whom have contributed to this (tiny) release!
 
-```
+```text
 Charlie Drage <charlie@charliedrage.com> (3):
       Update release script again to include sdist
       Fix underlining issue
@@ -923,7 +923,7 @@ A *minor* release, we update our source code upload to *not* include the ffmpeg.
 
 Thanks again for all the contributions as well as updates!
 
-```
+```text
 Charlie Drage <charlie@charliedrage.com> (1):
       Updating the release script.
 
@@ -984,7 +984,7 @@ Main features are:
   - General bug and doc fixes
   - Major improvements to development (github issue templates, automatically created releases)
 
-```
+```text
 Agustín Carrasco <asermax@gmail.com> (1):
       Links on crunchy's rss no longer contain the show name in the url (#379)
 
@@ -1114,7 +1114,7 @@ The main features are:
 
 Again, thank you everyone whom contributed to this release! :D
 
-```
+```text
 Beardypig <beardypig@users.noreply.github.com> (6):
       Turkish Streams Part III (#292)
       coverage: include streamlink_cli in the coverage, but exclude the vendored packages (#302)
@@ -1205,7 +1205,7 @@ The main features are:
    root, we trust that you know what you're doing)
  -  Fix stream quality naming issue
 
-```
+```text
 Beardypig <beardypig@users.noreply.github.com> (13):
       fix stream quality naming issue with py2 vs. py3, fixing #89 (#96)
       updated connectcast plugin to support the new rtmp streams; fixes #93 (#95)
@@ -1302,7 +1302,7 @@ https://streamlink.github.io
 As always, below is a `git shortlog` of all changes from the previous
 release of Streamlink (0.0.1) to now (0.0.2).
 
-```
+```text
 Brainzyy <Brainzyy@users.noreply.github.com> (1):
       add stream.me to the docs
 
@@ -1383,7 +1383,7 @@ serve as a base-point as we continue development of "Streamlink".
 New releases will include a list of changes as we add new features /
 code refactors to the existing code-base.
 
-```
+```text
 Agustin Carrasco <asermax@gmail.com> (2):
       plugins.crunchyroll: added support for locale selection
       plugins.crunchyroll: use locale parameter on the header's user-agent as well

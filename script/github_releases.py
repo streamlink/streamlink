@@ -11,7 +11,7 @@ import requests
 log = logging.getLogger(__name__)
 
 RE_LOG_HEADER = re.compile(r"## streamlink\s+(\d+\.\d+\.\d+(?:-\S+)?)\s+\(\d{4}-\d{2}-\d{2}\)\n+", flags=re.IGNORECASE)
-RE_GITLOG = re.compile(r"(.*?)(```\n.*?\n```)", re.DOTALL)
+RE_GITLOG = re.compile(r"(.*?)(```text\n.*?\n```)", re.DOTALL)
 TEMPLATE = """
 {changelog}
 
@@ -36,7 +36,6 @@ sudo python setup.py install
 
 If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
 
-----
 
 {gitlog}
 """
