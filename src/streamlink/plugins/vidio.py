@@ -19,7 +19,7 @@ class Vidio(Plugin):
     csrf_tokens_url = "https://www.vidio.com/csrf_tokens"
     tokens_url = "https://www.vidio.com/live/{id}/tokens"
     token_schema = validate.Schema(validate.transform(parse_json),
-                                   {"token": str},
+                                   {"token": validate.text},
                                    validate.get("token"))
 
     @classmethod
