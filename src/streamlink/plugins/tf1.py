@@ -6,6 +6,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
+from streamlink.utils.url import update_qsd
 
 
 class TF1(Plugin):
@@ -50,9 +51,8 @@ class TF1(Plugin):
 
         m = self.embed_re.search(embed_page.text)
         if m:
-            o = urlparse(m.group(1))
-            prms = dict(parse_qsl(o.query))
-            hls_stream_url = "{0}://{1}{2}?hdnea={3}".format(o.scheme, o.netloc, o.path, prms["hdnea"])
+            # remove all query string arguments except hdnea
+            hls_stream_url = update_qsd(m.group(1), {"hdnea": None}, remove="*")
             try:
                 for s in HLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
                     yield s
