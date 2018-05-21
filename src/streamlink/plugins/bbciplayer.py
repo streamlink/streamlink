@@ -2,8 +2,10 @@ from __future__ import print_function
 
 import base64
 import re
+from collections import defaultdict
 from hashlib import sha1
 
+from streamlink import PluginError
 from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.plugin.api import http
@@ -25,7 +27,8 @@ class BBCiPlayer(Plugin):
         )
     """, re.VERBOSE)
     mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*({.*?})\);', re.DOTALL)
-    tvip_re = re.compile(r'event_master_brand=(\w+?)&')
+    tvip_re = re.compile(r'channel"\s*:\s*{\s*"id"\s*:\s*"(\w+?)"')
+    tvip_master_re = re.compile(r'event_master_brand=(\w+?)&')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
@@ -110,25 +113,35 @@ class BBCiPlayer(Plugin):
         vpid = m and parse_json(m.group(1), schema=self.mediator_schema)
         return vpid
 
-    def find_tvip(self, url):
-        self.logger.debug("Looking for tvip on {0}", url)
+    def find_tvip(self, url, master=False):
+        self.logger.debug("Looking for {0} tvip on {1}", "master" if master else "", url)
         res = http.get(url)
-        m = self.tvip_re.search(res.text)
+        if master:
+            m = self.tvip_master_re.search(res.text)
+        else:
+            m = self.tvip_re.search(res.text)
         return m and m.group(1)
 
     def mediaselector(self, vpid):
+        urls = defaultdict(set)
         for platform in self.platforms:
             url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
             self.logger.debug("Info API request: {0}", url)
-            stream_urls = http.get(url, schema=self.mediaselector_schema)
-            for media in stream_urls:
+            medias = http.get(url, schema=self.mediaselector_schema)
+            for media in medias:
                 for connection in media["connection"]:
-                    if connection.get("transferFormat") == "hds":
-                        for s in HDSStream.parse_manifest(self.session, connection["href"]).items():
-                            yield s
-                    if connection.get("transferFormat") == "hls":
-                        for s in HLSStream.parse_variant_playlist(self.session, connection["href"]).items():
-                            yield s
+                    urls[connection.get("transferFormat")].add(connection["href"])
+
+        for stream_type, urls in urls.items():
+            self.logger.debug("{0} {1} streams", len(urls), stream_type)
+            for url in list(urls):
+                self.logger.debug("  {0}", url)
+                if stream_type == "hds":
+                    for s in HDSStream.parse_manifest(self.session, url).items():
+                        yield s
+                if stream_type == "hls":
+                    for s in HLSStream.parse_variant_playlist(self.session, url).items():
+                        yield s
 
     def login(self, ptrt_url):
         """
@@ -188,6 +201,17 @@ class BBCiPlayer(Plugin):
                 self.logger.error("Could not find VPID for episode {0}", episode_id)
         elif channel_name:
             self.logger.debug("Loading stream for live channel: {0}", channel_name)
+            if self.get_option("hd"):
+                tvip = self.find_tvip(self.url, master=True) + "_hd"
+                if tvip:
+                    self.logger.debug("Trying HD stream {0}...", tvip)
+                    try:
+                        for s in self.mediaselector(tvip):
+                            yield s
+                    except PluginError:
+                        self.logger.error("Failed to get HD streams, falling back to SD")
+                    else:
+                        return
             tvip = self.find_tvip(self.url)
             if tvip:
                 self.logger.debug("Found TVIP: {0}", tvip)
