@@ -955,6 +955,9 @@ def setup_plugin_options():
     if bbciplayer_password:
         streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
 
+    if args.bbciplayer_hd:
+        streamlink.set_plugin_option("bbciplayer", "hd", True)
+
     if args.zattoo_email:
         streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
     if args.zattoo_email and not args.zattoo_password:
