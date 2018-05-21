@@ -97,24 +97,6 @@ class TestUtil(unittest.TestCase):
             {"test": "1", "foo": "bar"},
             parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": validate.text, "foo": "bar"})))
 
-    def test_update_scheme(self):
-        self.assertEqual(
-            "https://example.com/foo",  # becomes https
-            update_scheme("https://other.com/bar", "//example.com/foo")
-        )
-        self.assertEqual(
-            "http://example.com/foo",  # becomes http
-            update_scheme("http://other.com/bar", "//example.com/foo")
-        )
-        self.assertEqual(
-            "http://example.com/foo",  # remains unchanged
-            update_scheme("https://other.com/bar", "http://example.com/foo")
-        )
-        self.assertEqual(
-            "https://example.com/foo",  # becomes https
-            update_scheme("https://other.com/bar", "example.com/foo")
-        )
-
     def test_url_equal(self):
         self.assertTrue(url_equal("http://test.com/test", "http://test.com/test"))
         self.assertFalse(url_equal("http://test.com/test", "http://test.com/test2"))
