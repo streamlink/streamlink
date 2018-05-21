@@ -1,19 +1,12 @@
-import sys
+import os.path
+import os.path
 import tempfile
 
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-import os.path
 import streamlink_cli.main
-
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
-from streamlink_cli.main import check_file_output, resolve_stream_name
+from streamlink_cli.main import resolve_stream_name, check_file_output
 from streamlink_cli.output import FileOutput
+from tests import unittest
+from tests.mock import Mock, patch
 
 
 class TestCLIMain(unittest.TestCase):

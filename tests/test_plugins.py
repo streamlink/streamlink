@@ -1,16 +1,12 @@
-import pkgutil
-import sys
-
 import imp
-import six
-from streamlink import Streamlink
-
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-import streamlink.plugins
 import os.path
+import pkgutil
+import six
+
+from tests import unittest
+
+import streamlink.plugins
+from streamlink import Streamlink
 
 
 class PluginTestMeta(type):

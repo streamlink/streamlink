@@ -1,15 +1,10 @@
 import sys
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+from tests import unittest
+from tests.mock import patch, ANY
 
 import os.path
 import streamlink_cli.main
-try:
-    from unittest.mock import patch, ANY
-except ImportError:
-    from mock import patch, ANY
+
 from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
 

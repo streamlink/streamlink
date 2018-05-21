@@ -1,13 +1,12 @@
-import os
 import unittest
-
-from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
-from streamlink.session import print_small_exception
-from tests.mock import MagicMock, patch, call
+import os
 
 from streamlink import Streamlink, NoPluginError
+from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
+from streamlink.session import print_small_exception
 from streamlink.stream import *
+from tests.mock import patch, call
 
 
 class TestSession(unittest.TestCase):

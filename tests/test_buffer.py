@@ -1,4 +1,4 @@
-import unittest
+from tests import unittest
 
 from streamlink.buffers import Buffer, RingBuffer
 
