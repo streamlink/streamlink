@@ -4,12 +4,13 @@ import re
 
 from streamlink import NoPluginError
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import http
+from streamlink.plugin.api.utils import itertags
 from streamlink.utils import update_scheme
 
 
 class GardenersWorld(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?gardenersworld\.com/")
-    iframe_re = re.compile('''iframe src=(?P<quote>["'])(?P<url>.*?)(?P=quote)''')
 
     @classmethod
     def can_handle_url(cls, url):
@@ -17,13 +18,13 @@ class GardenersWorld(Plugin):
 
     def _get_streams(self):
         page = self.session.http.get(self.url)
-        iframe = self.iframe_re.search(page.text)
-        if iframe:
-            self.logger.debug("Handing off of {0}".format(iframe.group("url")))
+        for iframe in itertags(page.text, u"iframe"):
+            url = iframe.attributes["src"]
+            self.logger.debug("Handing off of {0}".format(url))
             try:
-                return self.session.streams(update_scheme(self.url, iframe.group("url")))
+                return self.session.streams(update_scheme(self.url, url))
             except NoPluginError:
-                self.logger.error("Handing off of {0} failed".format(iframe.group("url")))
+                self.logger.error("Handing off of {0} failed".format(url))
                 return None
 
 
