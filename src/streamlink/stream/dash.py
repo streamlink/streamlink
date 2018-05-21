@@ -51,7 +51,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
         while not self.closed:
             # find the representation by ID
             representation = None
-            for aset in self.mpd.periods[0].adaptionSets:
+            for aset in self.mpd.periods[0].adaptationSets:
                 for rep in aset.representations:
                     if rep.id == self.reader.representation_id:
                         representation = rep
@@ -139,7 +139,7 @@ class DASHStream(Stream):
         video, audio = [], []
 
         # Search for suitable video and audio representations
-        for aset in mpd.periods[0].adaptionSets:
+        for aset in mpd.periods[0].adaptationSets:
             if aset.contentProtection:
                 raise PluginError("{} is protected by DRM".format(url))
             for rep in aset.representations:

@@ -1,16 +1,7 @@
-import sys
-
 from streamlink.stream.dash import DASHStreamWorker
 
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-
-try:
-    from unittest.mock import MagicMock, patch, ANY, Mock, call
-except ImportError:
-    from mock import MagicMock, patch, ANY, Mock, call
+from tests import unittest
+from tests.mock import MagicMock, patch, ANY, Mock, call
 
 from streamlink import PluginError
 from streamlink.stream import *
@@ -25,7 +16,7 @@ class TestDASHStream(unittest.TestCase):
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_video_only(self, mpdClass):
         mpd = mpdClass.return_value = Mock(periods=[
-            Mock(adaptionSets=[
+            Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
                          Mock(id=1, mimeType="video/mp4", height=720),
@@ -45,7 +36,7 @@ class TestDASHStream(unittest.TestCase):
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_only(self, mpdClass):
         mpd = mpdClass.return_value = Mock(periods=[
-            Mock(adaptionSets=[
+            Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
                          Mock(id=1, mimeType="audio/mp4", bandwidth=128.0),
@@ -65,7 +56,7 @@ class TestDASHStream(unittest.TestCase):
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_single(self, mpdClass):
         mpd = mpdClass.return_value = Mock(periods=[
-            Mock(adaptionSets=[
+            Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
                          Mock(id=1, mimeType="video/mp4", height=720),
@@ -86,7 +77,7 @@ class TestDASHStream(unittest.TestCase):
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_multi(self, mpdClass):
         mpd = mpdClass.return_value = Mock(periods=[
-            Mock(adaptionSets=[
+            Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
                          Mock(id=1, mimeType="video/mp4", height=720),
@@ -107,7 +98,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_drm(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[Mock(adaptionSets=[Mock(contentProtection="DRM")])])
+        mpd = mpdClass.return_value = Mock(periods=[Mock(adaptationSets=[Mock(contentProtection="DRM")])])
 
         self.assertRaises(PluginError,
                           DASHStream.parse_manifest,
@@ -157,7 +148,7 @@ class TestDASHStreamWorker(unittest.TestCase):
         mpdClass.return_value = worker.mpd = Mock(dynamic=True,
                                                   publishTime=1,
                                                   periods=[
-                                                      Mock(adaptionSets=[
+                                                      Mock(adaptationSets=[
                                                           Mock(contentProtection=None,
                                                                representations=[
                                                                    representation
@@ -177,6 +168,7 @@ class TestDASHStreamWorker(unittest.TestCase):
         representation.segments.return_value = segments[1:]
         self.assertSequenceEqual([next(segment_iter), next(segment_iter)], segments[1:])
         representation.segments.assert_called_with(init=False)
+
     def test_static(self):
         reader = MagicMock()
         worker = DASHStreamWorker(reader)
@@ -188,7 +180,7 @@ class TestDASHStreamWorker(unittest.TestCase):
         worker.mpd = Mock(dynamic=False,
                           publishTime=1,
                           periods=[
-                              Mock(adaptionSets=[
+                              Mock(adaptationSets=[
                                   Mock(contentProtection=None,
                                        representations=[
                                            representation

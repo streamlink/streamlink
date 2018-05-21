@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import datetime
 import re
 import time
@@ -72,7 +73,7 @@ class MPDParsers(object):
     def segment_template(url_template):
         end = 0
         res = ""
-        for m in re.compile(r"(.*?)\$(\w+)(?:%(\w+))?\$").finditer(url_template):
+        for m in re.compile(r"(.*?)\$(\w+)(?:%([\w.]+))?\$").finditer(url_template):
             _, end = m.span()
             res += "{0}{{{1}{2}}}".format(m.group(1),
                                           m.group(2),
@@ -211,7 +212,8 @@ class MPD(MPDNode):
         if self.location:
             self.url = self.location.text
             urlp = list(urlparse(self.url))
-            urlp[2], _ = urlp[2].rsplit("/", 1)
+            if urlp[2]:
+                urlp[2], _ = urlp[2].rsplit("/", 1)
             self._base_url = urlunparse(urlp)
 
         self.baseURLs = self.children(BaseURL)
@@ -271,7 +273,7 @@ class Period(MPDNode):
 
         self.baseURLs = self.children(BaseURL)
         self.segmentBase = self.only_child(SegmentBase)
-        self.adaptionSets = self.children(AdaptationSet, minimum=1)
+        self.adaptationSets = self.children(AdaptationSet, minimum=1)
         self.segmentList = self.only_child(SegmentList)
         self.segmentTemplate = self.only_child(SegmentTemplate)
         self.sssetIdentifier = self.only_child(AssetIdentifier)
