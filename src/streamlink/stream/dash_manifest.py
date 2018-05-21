@@ -9,7 +9,6 @@ from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, url
 
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc
-
 else:
     class UTC(datetime.tzinfo):
         def utcoffset(self, dt):
@@ -421,6 +420,7 @@ class SegmentTemplate(MPDNode):
             suggested_delay = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
 
             t = 0
+            n = self.startNumber
             available_at = datetime_to_seconds(self.root.publishTime)
 
             for segment in self.segmentTimeline.segments:
@@ -430,10 +430,11 @@ class SegmentTemplate(MPDNode):
                     available_at += (segment.d / self.timescale)
 
                     if t > self.root.timelines[self.parent.id]:
-                        yield (self.make_url(self.media(Time=t, **kwargs)),
+                        yield (self.make_url(self.media(Time=t, Number=n, **kwargs)),
                                available_at + suggested_delay)
                         self.root.timelines[self.parent.id] = t
                     t += segment.d
+                    n += 1
         else:
             for number, available_at in self.segment_numbers():
                 yield (self.make_url(self.media(Number=number, **kwargs)),
