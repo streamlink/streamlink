@@ -1354,6 +1354,13 @@ plugin.add_argument(
     """
 )
 plugin.add_argument(
+    "--bbciplayer-hd",
+    action="store_true",
+    help="""
+    Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD. 
+    """
+)
+plugin.add_argument(
     "--zattoo-email",
     metavar="EMAIL",
     help="""
