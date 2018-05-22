@@ -10,11 +10,6 @@ from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, ut
 from tests import unittest
 from tests.resources import xml
 
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
-
 
 class TestMPDParsers(unittest.TestCase):
     def test_utc(self):
@@ -123,8 +118,24 @@ class TestMPDParser(unittest.TestCase):
             init_segment = next(segments)
             self.assertEqual(init_segment.url, "http://test.se/hd-5-init.mp4")
 
-            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 3))))
+            video_segments = [(x.url, x.available_at) for x in itertools.islice(segments, 3)]
             self.assertSequenceEqual(video_segments[:3],
-                                     ['http://test.se/hd-5_000311235.mp4',
-                                      'http://test.se/hd-5_000311236.mp4',
-                                      'http://test.se/hd-5_000311237.mp4'])
+                                     [('http://test.se/hd-5_000311235.mp4', 1526996220 - 40),
+                                      ('http://test.se/hd-5_000311236.mp4', 1526996225 - 40),
+                                      ('http://test.se/hd-5_000311237.mp4', 1526996230 - 40)
+                                      ])
+
+    def test_segments_static_no_publish_time(self):
+        with xml("dash/test_5.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[1].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/dash/150633-video_eng=194000.dash")
+
+            video_segments = [x.url for x in itertools.islice(segments, 3)]
+            self.assertSequenceEqual(video_segments,
+                                     ['http://test.se/dash/150633-video_eng=194000-0.dash',
+                                      'http://test.se/dash/150633-video_eng=194000-2000.dash',
+                                      'http://test.se/dash/150633-video_eng=194000-4000.dash',
+                                      ])

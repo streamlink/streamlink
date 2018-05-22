@@ -28,10 +28,10 @@ from isodate import parse_datetime, parse_duration, Duration
 from contextlib import contextmanager
 
 Segment = namedtuple("Segment", "url duration init content available_at")
-
+epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
 def datetime_to_seconds(dt):
-    return (dt - datetime.datetime(1970, 1, 1, tzinfo=utc)).total_seconds()
+    return (dt - epoch_start).total_seconds()
 
 
 @contextmanager
@@ -191,7 +191,7 @@ class MPD(MPDNode):
         super(MPD, self).__init__(node, root=self, *args, **kwargs)
         # parser attributes
         self.url = url
-        self.timelines = defaultdict(int)
+        self.timelines = defaultdict(lambda: -1)
         self.timelines.update(kwargs.pop("timelines", {}))
         self.id = self.attr(u"id")
         self.profiles = self.attr(u"profiles", required=True)
@@ -423,7 +423,7 @@ class SegmentTemplate(MPDNode):
 
             t = 0
             n = self.startNumber
-            available_at = datetime_to_seconds(self.root.publishTime)
+            available_at = datetime_to_seconds(self.root.publishTime) if self.root.publishTime else 0
 
             for segment in self.segmentTimeline.segments:
                 t = t or segment.t
