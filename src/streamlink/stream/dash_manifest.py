@@ -4,7 +4,7 @@ import re
 import time
 from collections import defaultdict
 from collections import namedtuple
-from itertools import count, repeat
+from itertools import repeat
 
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
 
@@ -30,8 +30,16 @@ from contextlib import contextmanager
 Segment = namedtuple("Segment", "url duration init content available_at")
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
+
 def datetime_to_seconds(dt):
     return (dt - epoch_start).total_seconds()
+
+
+def count(firstval=0, step=1):
+    x = firstval
+    while 1:
+        yield x
+        x += step
 
 
 @contextmanager
@@ -44,8 +52,8 @@ def sleeper(duration):
 
 
 def sleep_until(walltime):
-    c = time.time()
-    time_to_wait = walltime - c
+    c = datetime.datetime.now(tz=utc)
+    time_to_wait = (walltime - c).total_seconds()
     if time_to_wait > 0:
         time.sleep(time_to_wait)
 
@@ -341,9 +349,12 @@ class SegmentTemplate(MPDNode):
 
         self.initialization = self.attr(u"initialization", parser=MPDParsers.segment_template)
         self.media = self.attr(u"media", parser=MPDParsers.segment_template)
-        self.duration = self.attr(u"duration", parser=int, default=self.defaultSegmentTemplate.duration if self.defaultSegmentTemplate else None)
-        self.timescale = self.attr(u"timescale", parser=int, default=self.defaultSegmentTemplate.timescale if self.defaultSegmentTemplate else 1)
-        self.startNumber = self.attr(u"startNumber", parser=int, default=self.defaultSegmentTemplate.startNumber if self.defaultSegmentTemplate else 1)
+        self.duration = self.attr(u"duration", parser=int,
+                                  default=self.defaultSegmentTemplate.duration if self.defaultSegmentTemplate else None)
+        self.timescale = self.attr(u"timescale", parser=int,
+                                   default=self.defaultSegmentTemplate.timescale if self.defaultSegmentTemplate else 1)
+        self.startNumber = self.attr(u"startNumber", parser=int,
+                                     default=self.defaultSegmentTemplate.startNumber if self.defaultSegmentTemplate else 1)
         self.presentationTimeOffset = self.attr(u"presentationTimeOffset", parser=MPDParsers.timedelta(self.timescale))
 
         if self.duration:
@@ -389,7 +400,7 @@ class SegmentTemplate(MPDNode):
         :return:
         """
         if self.root.type == u"static":
-            available_iter = repeat(0)
+            available_iter = repeat(epoch_start)
             duration = self.period.duration.seconds or self.root.mediaPresentationDuration.seconds
             if duration:
                 number_iter = range(self.startNumber, int(duration / self.duration_seconds) + 1)
@@ -398,20 +409,22 @@ class SegmentTemplate(MPDNode):
         else:
             now = datetime.datetime.now(utc)
             if self.presentationTimeOffset:
-                seconds_since_start = (
-                (now - self.presentationTimeOffset) - self.root.availabilityStartTime).total_seconds()
-                available_start_date = self.root.availabilityStartTime + self.presentationTimeOffset + datetime.timedelta(
-                    seconds=seconds_since_start)
-                available_start = int(datetime_to_seconds(available_start_date))
+                since_start = (now - self.presentationTimeOffset) - self.root.availabilityStartTime
+                available_start_date = self.root.availabilityStartTime + self.presentationTimeOffset + since_start
+                available_start = available_start_date
             else:
-                seconds_since_start = (now - self.root.availabilityStartTime).total_seconds()
-                available_start = int(datetime_to_seconds(now))
+                since_start = now - self.root.availabilityStartTime
+                available_start = now
 
             # if there is no delay, use a delay of 3 seconds
-            suggested_delay = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
+            suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()
+                                                          if self.root.suggestedPresentationDelay
+                                                          else 3))
 
-            number_iter = count(self.startNumber + int((seconds_since_start - suggested_delay) / self.duration_seconds))
-            available_iter = count(available_start - suggested_delay, step=self.duration_seconds)
+            number_iter = count(self.startNumber +
+                                int((since_start - suggested_delay).total_seconds() / self.duration_seconds))
+            available_iter = count(available_start - suggested_delay,
+                                   step=datetime.timedelta(seconds=self.duration_seconds))
 
         for number, available_at in izip(number_iter, available_iter):
             yield number, available_at
@@ -419,17 +432,19 @@ class SegmentTemplate(MPDNode):
     def format_media(self, **kwargs):
         if self.segmentTimeline:
             # if there is no delay, use a delay of 3 seconds
-            suggested_delay = self.root.suggestedPresentationDelay.total_seconds() if self.root.suggestedPresentationDelay else 3
+            suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()
+                                                          if self.root.suggestedPresentationDelay
+                                                          else 3))
 
             t = 0
             n = self.startNumber
-            available_at = datetime_to_seconds(self.root.publishTime) if self.root.publishTime else 0
+            available_at = self.root.publishTime or epoch_start
 
             for segment in self.segmentTimeline.segments:
                 t = t or segment.t
                 # check the start time from MPD
                 for repeated_i in range(segment.r + 1):
-                    available_at += (segment.d / self.timescale)
+                    available_at += datetime.timedelta(seconds=segment.d / self.timescale)
 
                     if t > self.root.timelines[self.parent.id]:
                         yield (self.make_url(self.media(Time=t, Number=n, **kwargs)),

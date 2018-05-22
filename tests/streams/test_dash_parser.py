@@ -6,7 +6,9 @@ from freezegun import freeze_time
 import itertools
 from operator import attrgetter
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc
+from freezegun.api import FakeDatetime
+
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, datetime_to_seconds
 from tests import unittest
 from tests.resources import xml
 
@@ -109,21 +111,34 @@ class TestMPDParser(unittest.TestCase):
                                       'http://test.se/video-time=1525450864000-2800000-0.m4s?z32=',
                                       'http://test.se/video-time=1525450868000-2800000-0.m4s?z32='])
 
-    @freeze_time("2018-5-22 13:37:00")
     def test_segments_dynamic_number(self):
-        with xml("dash/test_4.mpd") as mpd_xml:
-            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)) as frozen_datetime:
+            with xml("dash/test_4.mpd") as mpd_xml:
+                mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
 
-            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
-            init_segment = next(segments)
-            self.assertEqual(init_segment.url, "http://test.se/hd-5-init.mp4")
+                segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+                init_segment = next(segments)
+                self.assertEqual(init_segment.url, "http://test.se/hd-5-init.mp4")
 
-            video_segments = [(x.url, x.available_at) for x in itertools.islice(segments, 3)]
-            self.assertSequenceEqual(video_segments[:3],
-                                     [('http://test.se/hd-5_000311235.mp4', 1526996220 - 40),
-                                      ('http://test.se/hd-5_000311236.mp4', 1526996225 - 40),
-                                      ('http://test.se/hd-5_000311237.mp4', 1526996230 - 40)
-                                      ])
+                video_segments = []
+                for _ in range(3):
+                    seg = next(segments)
+                    video_segments.append((seg.url,
+                                           seg.available_at,
+                                           datetime.datetime.now(tz=utc)))
+                    frozen_datetime.tick(5)
+
+                self.assertSequenceEqual(video_segments,
+                                         [('http://test.se/hd-5_000311235.mp4',
+                                           datetime.datetime(2018, 5, 22, 13, 36, 20, tzinfo=utc),
+                                           datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)),
+                                          ('http://test.se/hd-5_000311236.mp4',
+                                           datetime.datetime(2018, 5, 22, 13, 36, 25, tzinfo=utc),
+                                           datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=utc)),
+                                          ('http://test.se/hd-5_000311237.mp4',
+                                           datetime.datetime(2018, 5, 22, 13, 36, 30, tzinfo=utc),
+                                           datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=utc))
+                                          ])
 
     def test_segments_static_no_publish_time(self):
         with xml("dash/test_5.mpd") as mpd_xml:
