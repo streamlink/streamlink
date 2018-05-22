@@ -71,7 +71,12 @@ class BBCiPlayer(Plugin):
             metavar="PASSWORD",
             help="A bbc.co.uk account password to use with --bbciplayer-username.",
             prompt = "Enter bbc.co.uk account password"
-        )
+        ),
+        PluginArgument(
+            "hd",
+            action="store_true",
+            help="Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD."
+        ),
     )
 
     @classmethod
