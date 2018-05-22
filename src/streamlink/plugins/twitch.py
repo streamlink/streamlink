@@ -270,14 +270,6 @@ class Twitch(Plugin):
         An OAuth token to use for Twitch authentication.
         Use --twitch-oauth-authenticate to create a token.
         """),
-        PluginArgument("oauth-authenticate",
-                       action="store_true",
-                       help="""
-        Open a web browser where you can grant Streamlink access
-        to your Twitch account which creates a token for use with
-        --twitch-oauth-token.
-        """
-                       ),
         PluginArgument("cookie",
                        sensitive=True,
                        metavar="COOKIES",

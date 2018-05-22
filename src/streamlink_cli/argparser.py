@@ -332,6 +332,15 @@ def build_parser():
         Default is system locale.
         """
     )
+    general.add_argument(
+        "--twitch-oauth-authenticate",
+        action="store_true",
+        help="""
+        Open a web browser where you can grant Streamlink access
+        to your Twitch account which creates a token for use with
+        --twitch-oauth-token.
+        """
+    )
 
     player = parser.add_argument_group("Player options")
     player.add_argument(
