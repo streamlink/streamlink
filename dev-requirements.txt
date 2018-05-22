@@ -6,4 +6,5 @@ coverage
 mock
 requests-mock
 pynsist
+freezegun
 unittest2; python_version < '2.7'

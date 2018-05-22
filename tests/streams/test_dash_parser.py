@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 import datetime
+from freezegun import freeze_time
 
 import itertools
 from operator import attrgetter
@@ -8,6 +9,11 @@ from operator import attrgetter
 from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc
 from tests import unittest
 from tests.resources import xml
+
+try:
+    from unittest.mock import patch
+except ImportError:
+    from mock import patch
 
 
 class TestMPDParsers(unittest.TestCase):
@@ -76,3 +82,49 @@ class TestMPDParser(unittest.TestCase):
                                       'http://test.se/tracks-v3/dvr-1526842800-697.g_m4v?t=3398000',
                                       'http://test.se/tracks-v3/dvr-1526842800-698.g_m4v?t=3403000',
                                       'http://test.se/tracks-v3/dvr-1526842800-699.g_m4v?t=3408000'])
+
+    def test_segments_static_number(self):
+        with xml("dash/test_2.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[3].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/video/250kbit/init.mp4")
+
+            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 100000))))
+            self.assertEqual(len(video_segments), 444)
+            self.assertSequenceEqual(video_segments[:5],
+                                     ['http://test.se/video/250kbit/segment_1.m4s',
+                                      'http://test.se/video/250kbit/segment_2.m4s',
+                                      'http://test.se/video/250kbit/segment_3.m4s',
+                                      'http://test.se/video/250kbit/segment_4.m4s',
+                                      'http://test.se/video/250kbit/segment_5.m4s'])
+
+    def test_segments_dynamic_time(self):
+        with xml("dash/test_3.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/video-2800000-0.mp4?z32=")
+
+            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 3))))
+            self.assertSequenceEqual(video_segments[:3],
+                                     ['http://test.se/video-time=1525450860000-2800000-0.m4s?z32=',
+                                      'http://test.se/video-time=1525450864000-2800000-0.m4s?z32=',
+                                      'http://test.se/video-time=1525450868000-2800000-0.m4s?z32='])
+
+    @freeze_time("2018-5-22 13:37:00")
+    def test_segments_dynamic_number(self):
+        with xml("dash/test_4.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/hd-5-init.mp4")
+
+            video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 3))))
+            self.assertSequenceEqual(video_segments[:3],
+                                     ['http://test.se/hd-5_000311235.mp4',
+                                      'http://test.se/hd-5_000311236.mp4',
+                                      'http://test.se/hd-5_000311237.mp4'])
