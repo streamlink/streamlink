@@ -22,14 +22,19 @@ class TestPluginMatrix(unittest.TestCase):
 
     def setUp(self):
         self.session = Streamlink()
-        self.docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../docs"))
+        docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../docs"))
 
-    def test_plugin_docs_matrix(self):
-        with open(os.path.join(self.docs_dir, "plugin_matrix.rst")) as plfh:
+        with open(os.path.join(docs_dir, "plugin_matrix.rst")) as plfh:
             parts = self.title_re.split(plfh.read())
-            plugins_in_docs = list(self.plugin_re.findall(parts[3]))
+            self.plugins_in_docs = list(self.plugin_re.findall(parts[3]))
 
+    def test_plugin_has_docs_matrix(self):
         for pname in self.session.plugins.keys():
             if pname not in self.built_in_plugins:
-                self.assertIn(pname, plugins_in_docs, "{0} is not in plugin matrix".format(pname))
+                self.assertIn(pname, self.plugins_in_docs, "{0} is not in plugin matrix".format(pname))
+
+
+    def test_docs_matrix_has_plugin(self):
+        for pname in self.plugins_in_docs:
+            self.assertIn(pname, self.session.plugins, "{0} plugin does not exist".format(pname))
 
