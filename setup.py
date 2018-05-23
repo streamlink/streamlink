@@ -56,7 +56,7 @@ if os.name == "nt" and version_info < (3, 0):
     # Required due to missing socket.inet_ntop & socket.inet_pton method in Windows Python 2.x
     deps.append("win-inet-pton")
 
-# When we build an egg for the Win32 bootstrap we don't want dependency
+# When we build an egg for the Win32 bootstrap we don"t want dependency
 # information built into it.
 if environ.get("NO_DEPS"):
     deps = []
@@ -65,7 +65,7 @@ this_directory = path.abspath(path.dirname(__file__))
 srcdir = path.join(this_directory, "src/")
 sys_path.insert(0, srcdir)
 
-with codecs.open(path.join(this_directory, 'README.md'), 'r', 'utf8') as f:
+with codecs.open(path.join(this_directory, "README.md"), 'r', "utf8") as f:
     long_description = f.read()
 
 setup(name="streamlink",
@@ -75,8 +75,14 @@ setup(name="streamlink",
                   "from various services and pipes them into a video player of "
                   "choice.",
       long_description=long_description,
-      long_description_content_type='text/markdown',
+      long_description_content_type="text/markdown",
       url="https://github.com/streamlink/streamlink",
+      project_urls={
+          "Documentation": "https://streamlink.github.io/",
+          "Tracker": "https://github.com/streamlink/streamlink/issues",
+          "Source": "https://github.com/streamlink/streamlink",
+          "Funding": "https://opencollective.com/streamlink"
+      },
       author="Streamlink",
       author_email="charlie@charliedrage.com",  # temp until we have a mailing list / global email
       license="Simplified BSD",
@@ -87,6 +93,7 @@ setup(name="streamlink",
       },
       install_requires=deps,
       test_suite="tests",
+      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
       classifiers=["Development Status :: 5 - Production/Stable",
                    "License :: OSI Approved :: BSD License",
                    "Environment :: Console",
