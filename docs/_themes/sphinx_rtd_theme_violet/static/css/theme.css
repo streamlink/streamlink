@@ -2425,7 +2425,7 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   background: #e7f2fa;
 }
 
-.rst-conent .version-warning {
+.rst-content .version-warning {
   padding-left: 12px;
   padding-right: 12px;
   padding-top: 12px;
