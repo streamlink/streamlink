@@ -1,8 +1,8 @@
 import ast
+import logging
 import operator
 import re
 from collections import OrderedDict
-
 from functools import partial
 
 from ..cache import Cache
@@ -171,7 +171,7 @@ class Plugin(object):
     def bind(cls, session, module):
         cls.cache = Cache(filename="plugin-cache.json",
                           key_prefix=module)
-        cls.logger = session.logger.new_module("plugin." + module)
+        cls.logger = logging.getLogger("streamlink.plugin." + module)
         cls.module = module
         cls.session = session
 

@@ -7,6 +7,8 @@ from .stream import StreamIO
 from ..buffers import RingBuffer
 from ..compat import queue
 
+log = logging.getLogger(__name__)
+
 
 class SegmentedStreamWorker(Thread):
     """The general worker thread.
@@ -21,7 +23,6 @@ class SegmentedStreamWorker(Thread):
         self.writer = reader.writer
         self.stream = reader.stream
         self.session = reader.stream.session
-        self.logger = reader.logger
 
         self._wait = None
 
@@ -31,7 +32,7 @@ class SegmentedStreamWorker(Thread):
     def close(self):
         """Shuts down the thread."""
         if not self.closed:
-            self.logger.debug("Closing worker thread")
+            log.debug("Closing worker thread")
 
         self.closed = True
         if self._wait:
@@ -75,7 +76,6 @@ class SegmentedStreamWriter(Thread):
         self.reader = reader
         self.stream = reader.stream
         self.session = reader.stream.session
-        self.logger = reader.logger
 
         if not retries:
             retries = self.session.options.get("stream-segment-attempts")
@@ -98,7 +98,7 @@ class SegmentedStreamWriter(Thread):
     def close(self):
         """Shuts down the thread."""
         if not self.closed:
-            self.logger.debug("Closing writer thread")
+            log.debug("Closing writer thread")
 
         self.closed = True
         self.reader.buffer.close()

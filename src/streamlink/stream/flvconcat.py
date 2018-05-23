@@ -1,5 +1,6 @@
 from __future__ import division
 
+import logging
 from collections import namedtuple
 from io import IOBase
 from itertools import chain, islice
@@ -18,8 +19,7 @@ from ..packages.flashmedia.tag import (AAC_PACKET_TYPE_SEQUENCE_HEADER,
                                        TAG_TYPE_VIDEO)
 
 __all__ = ["extract_flv_header_tags", "FLVTagConcat", "FLVTagConcatIO"]
-
-
+log = logging.getLogger(__name__)
 FLVHeaderTags = namedtuple("FLVHeaderTags", "metadata aac vc")
 
 
@@ -278,13 +278,11 @@ class FLVTagConcatWorker(Thread):
 
 class FLVTagConcatIO(IOBase):
     __worker__ = FLVTagConcatWorker
-    __log_name__ = "stream.flv_concat"
 
     def __init__(self, session, duration=None, tags=[], skip_header=None,
                  timeout=30, **concater_params):
         self.session = session
         self.timeout = timeout
-        self.logger = session.logger.new_module(self.__log_name__)
 
         self.concater_params = concater_params
         self.duration = duration

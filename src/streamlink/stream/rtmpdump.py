@@ -1,12 +1,16 @@
+import logging
 import re
 
 import subprocess
 from operator import itemgetter
 
+from streamlink import logger
 from streamlink.stream.streamprocess import StreamProcess
 from streamlink.compat import str, which
 from streamlink.exceptions import StreamError
 from streamlink.utils import rtmpparse, escape_librtmp
+
+log = logging.getLogger(__name__)
 
 
 class RTMPStream(StreamProcess):
@@ -34,7 +38,7 @@ class RTMPStream(StreamProcess):
             for p in self.logging_parameters:
                 self.parameters.pop(p, None)
 
-            if self.session.logger.Levels[self.session.logger.level] == "debug":
+            if logger.root.level == logging.DEBUG:
                 self.parameters["debug"] = True
             else:
                 self.parameters["verbose"] = True
@@ -76,7 +80,7 @@ class RTMPStream(StreamProcess):
         # and explicitly set verbose
         params["verbose"] = True
 
-        self.logger.debug("Attempting to find tcURL redirect")
+        log.debug("Attempting to find tcURL redirect")
 
         process = self.spawn(params, timeout=timeout, stderr=subprocess.PIPE)
         self._update_redirect(process.stderr.read())
@@ -90,7 +94,7 @@ class RTMPStream(StreamProcess):
             redirect = m.group(1)
 
         if redirect:
-            self.logger.debug("Found redirect tcUrl: {0}", redirect)
+            log.debug("Found redirect tcUrl: {0}", redirect)
 
             if "rtmp" in self.parameters:
                 tcurl, playpath = rtmpparse(self.parameters["rtmp"])

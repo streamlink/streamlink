@@ -3,6 +3,7 @@ import re
 from string import printable
 from textwrap import dedent
 
+from streamlink import logger
 from .constants import (
     LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
 )
@@ -275,12 +276,14 @@ def build_parser():
     general.add_argument(
         "-l", "--loglevel",
         metavar="LEVEL",
+        choices=logger.levels,
         default="info",
         help="""
         Set the log message threshold.
-
-        Valid levels are: none, error, warning, info, debug
-        """
+        Can be repeated to load multiple files, in which case
+        the options are merged on top of each other where the
+        last config has highest priority.
+    """
     )
     general.add_argument(
         "-Q", "--quiet",

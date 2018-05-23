@@ -1,17 +1,22 @@
 import imp
+import logging
 import pkgutil
 import sys
 import traceback
 import requests
 
+from streamlink import logger
+from streamlink.logger import DeprecatedLogger, StreamlinkLogger
 from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
 from .compat import is_win32
 from .exceptions import NoPluginError, PluginError
-from .logger import Logger
 from .options import Options
 from .plugin import api
+
+logging.setLoggerClass(StreamlinkLogger)  # for backwards compatibility (deprecated methods)
+log = logging.getLogger(__name__)
 
 
 def print_small_exception(start_after):
@@ -71,7 +76,7 @@ class Streamlink(object):
             "locale": None
         })
         self.plugins = {}
-        self.logger = Logger()
+        self.logger = DeprecatedLogger(log)  # for backwards compatibility
         self.load_builtin_plugins()
 
     def set_option(self, key, value):
@@ -338,8 +343,7 @@ class Streamlink(object):
         :param level: level of logging to output
 
         """
-
-        self.logger.set_level(level)
+        logger.root.setLevel(level=level)
 
     def set_logoutput(self, output):
         """Sets the log output used by this session.
@@ -347,7 +351,7 @@ class Streamlink(object):
         :param output: a file-like object with a write method
 
         """
-        self.logger.set_output(output)
+        pass
 
     @memoize
     def resolve_url(self, url, follow_redirect=True):

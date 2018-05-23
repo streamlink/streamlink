@@ -1,5 +1,5 @@
 import re
-
+import logging
 import time
 
 from streamlink import StreamError
@@ -13,7 +13,7 @@ class FilmOnHLS(HLSStream):
 
     def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
         super(FilmOnHLS, self).__init__(session_, None, **args)
-        self.logger = self.session.logger.new_module("stream.hls-filmon")
+        self.logger = logging.getLogger("streamlink.stream.hls-filmon")
         self.channel = channel
         self.vod_id = vod_id
         if self.channel is None and self.vod_id is None:
