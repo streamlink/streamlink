@@ -1,10 +1,5 @@
 language: python
 
-env:
-  global:
-    # Doctr deploy key for streamlink/streamlink.github.io
-    - secure: "e9rxQKoEqdJvk8l66qqpBtYN8uhnizwynCzAGTLb6q1wx7PA8V9zGqByMTBKEo+/BnfRTTxahcxHPu21qujLxvL6cbYraDBYSLJj06gQgIFnAueXbtHb/9Yjhdzlvz9jLwYA2S2LgZInor2FfduEIQlSivSlKSLIyO+JRh/1pa005+Gndx0DHMrFMdFO2+YisZksJxwpXgCwIqa4d4rLkLjg9p4a7E713CcDz1OhUNNyA2oGe8SMm96oq9z2O5CJrQ6E2weKflqu+LEITJylC3Pkz5klp9XK1BsQdA8J5aD5FdIxQIdam9Xjg03V5ww71RIHGSvKcOPu1sHpkpVuW6gc35Texk3M2Bl6OSKes2k49RmegTg/qhh16w/en8hm5Knymrkwq0/KPInjvOjg6d2g5781Mkr68cXGxI7PFb6on7LG5O0R6azrhJx5BAnUsfEb5E+CJ/c75os5fe/XDCcxNkCyM5uVlUeBRvKdr+Cq5CfCUm6x1EkxYf6E982fUcXnHWn6ofrW4wz+FRrtdYOh2GNtHq6SNcRpZvSN1am4Ztu3xTtT8kxne7ECqis9SFLIbPN1YI2b2d9nkE9W9xZu7eK9OpIb4f/wJtLJRp8+CWsQ2SN8milSvOYiK9XqvRlr+lW1hlLY27m492lKX+s6hYJ+7HljCJTJ9EXihnI="
-
 matrix:
   include:
   - python: '2.7'
