@@ -14,7 +14,7 @@ QUALITIES = {
 }
 
 _url_re = re.compile(r"https?://(?:www\.)?goodgame.ru/channel/(?P<user>[^/]+)")
-_apidata_re = re.compile(r'var\s+ApiData\s*=\s*({.*?})\s*;', re.MULTILINE)
+_apidata_re = re.compile(r'''(?P<quote>["']?)channel(?P=quote)\s*:\s*(?P<data>{.*?})\s*,''')
 _ddos_re = re.compile(r'document.cookie="(__DDOS_[^;]+)')
 
 
@@ -41,14 +41,19 @@ class GoodGame(Plugin):
             res = http.get(self.url, headers=headers)
 
         match = _apidata_re.search(res.text)
-        if not match:
+        channel_info = match and parse_json(match.group("data"))
+        if not channel_info:
+            self.logger.error("Could not find channel info")
             return
 
-        stream_data = parse_json(match.group(1))
-        self.logger.debug("Found channel info for {channel_key}", **stream_data)
+        self.logger.debug("Found channel info: channelkey={channelkey} pid={streamkey} online={status}",
+                          **channel_info)
+        if not channel_info['status']:
+            self.logger.debug("Channel appears to be offline")
+
         streams = {}
         for name, url_suffix in QUALITIES.items():
-            url = HLS_URL_FORMAT.format(stream_data["channel_id"], url_suffix)
+            url = HLS_URL_FORMAT.format(channel_info['streamkey'], url_suffix)
             if not self._check_stream(url):
                 continue
 
