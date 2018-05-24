@@ -140,6 +140,11 @@ ok_live                 ok.ru                Yes   --
 oldlivestream           - original.li.. [3]_ Yes   No    Only mobile streams are supported.
                         - cdn.livestream.com
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
+onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
+                        - ctc.ru
+                        - chetv.ru
+                        - ctclove.ru
+                        - domashny.ru
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
 ovvatv                  ovva.tv              Yes   No
