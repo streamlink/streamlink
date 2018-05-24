@@ -77,7 +77,7 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
     """
     if is_py2 and isinstance(data, unicode):
         data = data.encode("utf8")
-    elif is_py3:
+    elif is_py3 and isinstance(data, str):
         data = bytearray(data, "utf8")
 
     if ignore_ns:
