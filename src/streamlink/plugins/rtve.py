@@ -139,7 +139,7 @@ class Rtve(Plugin):
 
             for stream in stream_data:
                 for url in stream["urls"]:
-                    if url.endswith("m3u8"):
+                    if ".m3u8" in url:
                         try:
                             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
                         except (IOError, OSError):
