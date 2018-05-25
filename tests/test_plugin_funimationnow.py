@@ -34,13 +34,13 @@ class TestPluginFunimationNow(unittest.TestCase):
         parser.add_argument_group = MagicMock(return_value=plugin_parser)
 
         session.plugins = {
-            'ustreamtv': FunimationNow
+            'funimationnow': FunimationNow
         }
 
         setup_plugin_args(session, parser)
 
         self.assertSequenceEqual(plugin_parser.add_argument.mock_calls,
                                  [call('--funimation-language',
-                                      choices=["en", "ja", "english", "japanese"],
-                                      default="english", help=ANY),
+                                       choices=["en", "ja", "english", "japanese"],
+                                       default="english", help=ANY),
                                   call('--funimation-mux-subtitles', action="store_true", help=ANY)])
