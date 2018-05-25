@@ -90,6 +90,7 @@ ellobo                  ellobo106.com        Yes   -
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
 eurocom                 eurocom.bg           Yes   No
 euronews                euronews.com         Yes   No
+europaplus              europaplus.ru        Yes   --
 expressen               expressen.se         Yes   Yes
 facebook                facebook.com         Yes   No    Only 360p HLS streams.
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
