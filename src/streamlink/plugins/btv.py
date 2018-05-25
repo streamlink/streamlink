@@ -7,14 +7,28 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
-from streamlink.plugin import PluginOptions
+from streamlink.plugin import PluginArgument, PluginArguments
 
 
 class BTV(Plugin):
-    options = PluginOptions({
-        "username": None,
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "username",
+            metavar="USERNAME",
+            requires=["password"],
+            help="""
+        A BTV username required to access any stream.
+        """
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="""
+        A BTV account password to use with --btv-username.
+        """
+        )
+    )
     url_re = re.compile(r"https?://(?:www\.)?btv\.bg/live/?")
 
     api_url = "http://www.btv.bg/lbin/global/player_config.php"
@@ -31,7 +45,7 @@ class BTV(Plugin):
                          validate.any(
                              None,
                              validate.get(1), validate.url()
-            ))
+                         ))
         )
     )
 

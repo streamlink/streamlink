@@ -360,5 +360,6 @@ Command-line usage
 
 
 .. argparse::
-    :module: streamlink_cli.argparser
-    :attr: parser
+    :module: streamlink_cli.main
+    :attr: parser_helper
+

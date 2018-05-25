@@ -5,7 +5,7 @@ from streamlink import PluginError
 from streamlink.compat import urljoin
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
-from streamlink.plugin import PluginOptions
+from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -41,10 +41,25 @@ class Pixiv(Plugin):
     login_url_get = "https://accounts.pixiv.net/login"
     login_url_post = "https://accounts.pixiv.net/api/login"
 
-    options = PluginOptions({
-        "username": None,
-        "password": None
-    })
+    arguments = PluginArguments(
+
+        PluginArgument(
+            "username",
+            requires=["password"],
+            metavar="USERNAME",
+            help="""
+        The email/username used to register with pixiv.net
+        """
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="""
+        A pixiv.net account password to use with --pixiv-username
+        """
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):

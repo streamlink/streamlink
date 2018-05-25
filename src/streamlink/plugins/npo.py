@@ -12,7 +12,7 @@ Supports:
 
 import re
 
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -44,9 +44,15 @@ class NPO(Plugin):
         validate.all({"errorcode": 0, "url": validate.url()},
                      validate.get("url"))
     ))
-    options = PluginOptions({
-        "subtitles": False
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "subtitles",
+            action="store_true",
+            help="""
+        Include subtitles for the deaf or hard of hearing, if available.
+        """
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):

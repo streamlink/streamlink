@@ -1,9 +1,10 @@
+import argparse
 import random
 import re
 import string
 import datetime
 
-from streamlink.plugin import Plugin, PluginError, PluginOptions
+from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HLSStream
 
@@ -201,13 +202,50 @@ class CrunchyrollAPI(object):
 
 
 class Crunchyroll(Plugin):
-    options = PluginOptions({
-        "username": None,
-        "password": None,
-        "purge_credentials": None,
-        "locale": None,
-        "session_id": None,
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "username",
+            metavar="USERNAME",
+            requires=["password"],
+            help="A Crunchyroll username to allow access to restricted streams."
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            nargs="?",
+            const=None,
+            default=None,
+            help="""
+            A Crunchyroll password for use with --crunchyroll-username.
+
+            If left blank you will be prompted.
+            """
+        ),
+        PluginArgument(
+            "purge-credentials",
+            action="store_true",
+            help="""
+            Purge cached Crunchyroll credentials to initiate a new session
+            and reauthenticate.
+            """
+        ),
+        PluginArgument(
+            "session-id",
+            sensitive=True,
+            metavar="SESSION_ID",
+            help="""
+            Set a specific session ID for crunchyroll, can be used to bypass
+            region restrictions.
+            """
+        ),
+        # Deprecated, uses the general locale setting
+        PluginArgument(
+            "locale",
+            metavar="LOCALE",
+            help=argparse.SUPPRESS
+        )
+    )
 
     @classmethod
     def can_handle_url(self, url):
