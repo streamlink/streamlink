@@ -890,7 +890,7 @@ def check_root():
 
 def log_current_versions():
     """Show current installed versions"""
-    if args.loglevel == "debug":
+    if logger.root.isEnabledFor(logging.DEBUG):
         # MAC OS X
         if sys.platform == "darwin":
             os_version = "macOS {0}".format(platform.mac_ver()[0])
@@ -938,12 +938,7 @@ def check_version(force=False):
 
 
 def setup_logging(stream=sys.stdout, level="info"):
-    # set the custom Logger class
-    logging.setLoggerClass(logger.StreamlinkLogger)
-    handler = logging.StreamHandler(stream)
-    handler.setFormatter(logger.StringFormatter("[%(name)s][%(levelname)s] %(message)s"))
-    logging.root.addHandler(handler)
-    logger.root.setLevel(level)
+    logger.basicConfig(stream=stream, level=level, format="[{name}][{levelname}] {message}", style="{")
 
 
 def main():
@@ -958,8 +953,7 @@ def main():
         console_out = sys.stderr
     else:
         console_out = sys.stdout
-
-    setup_logging(stream=console_out, level=args.loglevel)
+    setup_logging(console_out, args.loglevel)
     setup_streamlink()
     setup_plugins()
     setup_plugin_args(streamlink, parser)

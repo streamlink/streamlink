@@ -3,12 +3,10 @@ import logging
 import pkgutil
 import sys
 import traceback
-import warnings
 
 import requests
 
-from streamlink import logger
-from streamlink.logger import StreamlinkLogger
+from streamlink.logger import StreamlinkLogger, Logger
 from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
@@ -80,7 +78,7 @@ class Streamlink(object):
         })
         self.plugins = {}
         self.load_builtin_plugins()
-        self._logger = log
+        self._logger = None
 
 
     @property
@@ -89,8 +87,8 @@ class Streamlink(object):
         Backwards compatible logger property
         :return: Logger instance
         """
-        warnings.warn("This logger method has been deprecated, use the standard logging module",
-                      category=DeprecationWarning, stacklevel=2)
+        if not self._logger:
+            self._logger = Logger()
         return self._logger
 
     def set_option(self, key, value):
@@ -357,7 +355,7 @@ class Streamlink(object):
         :param level: level of logging to output
 
         """
-        logger.root.setLevel(level=level)
+        self.logger.set_level(level)
 
     def set_logoutput(self, output):
         """Sets the log output used by this session.
@@ -365,7 +363,7 @@ class Streamlink(object):
         :param output: a file-like object with a write method
 
         """
-        pass
+        self.logger.set_output(output)
 
     @memoize
     def resolve_url(self, url, follow_redirect=True):
