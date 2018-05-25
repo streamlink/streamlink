@@ -3,10 +3,12 @@ import logging
 import pkgutil
 import sys
 import traceback
+import warnings
+
 import requests
 
 from streamlink import logger
-from streamlink.logger import DeprecatedLogger, StreamlinkLogger
+from streamlink.logger import StreamlinkLogger
 from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
@@ -15,7 +17,8 @@ from .exceptions import NoPluginError, PluginError
 from .options import Options
 from .plugin import api
 
-logging.setLoggerClass(StreamlinkLogger)  # for backwards compatibility (deprecated methods)
+# Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
+logging.setLoggerClass(StreamlinkLogger)
 log = logging.getLogger(__name__)
 
 
@@ -76,8 +79,19 @@ class Streamlink(object):
             "locale": None
         })
         self.plugins = {}
-        self.logger = DeprecatedLogger(log)  # for backwards compatibility
         self.load_builtin_plugins()
+        self._logger = log
+
+
+    @property
+    def logger(self):
+        """
+        Backwards compatible logger property
+        :return: Logger instance
+        """
+        warnings.warn("This logger method has been deprecated, use the standard logging module",
+                      category=DeprecationWarning, stacklevel=2)
+        return self._logger
 
     def set_option(self, key, value):
         """Sets general options used by plugins and streams originating

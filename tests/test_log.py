@@ -20,6 +20,10 @@ class TestSession(unittest.TestCase):
         self.output = StringIO()
         setup_logging(self.output)
         self.log = logging.getLogger("streamlink.test")
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+
+    def tearDown(self):
+        warnings.simplefilter('default', DeprecationWarning)  # restore filter
 
     def test_level(self):
         logger.root.setLevel("info")

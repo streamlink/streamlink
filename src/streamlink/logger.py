@@ -23,20 +23,6 @@ root = logging.getLogger("streamlink")
 levels = [logging.getLevelName(l) for l in (NOTSET, CRITICAL, ERROR, WARN, INFO, DEBUG, TRACE)]
 
 
-class DeprecatedLogger(object):
-    """
-    Wrapper to warn developers when using deprecated logging methods
-    """
-    def __init__(self, logger):
-        self.__logger = logger
-
-    def __getattr__(self, item):
-        if item in self.__dict__:
-            return getattr(self, item)
-        warnings.warn("This logging method has been deprecated, use the standard logging module", DeprecationWarning)
-        return getattr(self.__logger, item)
-
-
 
 class _CompatLogRecord(logging.LogRecord):
     """
@@ -89,7 +75,7 @@ class StreamlinkLogger(logging.getLoggerClass()):
     @staticmethod
     def new_module(name):
         warnings.warn("Logger.new_module has been deprecated, use the standard logging.getLogger method",
-                      DeprecationWarning)
+                      category=DeprecationWarning, stacklevel=2)
         return logging.getLogger("streamlink.{0}".format(name))
 
     @staticmethod
@@ -98,7 +84,7 @@ class StreamlinkLogger(logging.getLoggerClass()):
         No-op, must be set in the log handler
         """
         warnings.warn("Logger.set_output has been deprecated, use the standard logging module",
-                      DeprecationWarning)
+                      category=DeprecationWarning, stacklevel=2)
 
 
 class StringFormatter(logging.Formatter):
