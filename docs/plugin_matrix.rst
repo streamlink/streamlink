@@ -99,6 +99,7 @@ funimationnow           - funimation.com     --    Yes
                         - funimationnow.uk
 gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
+goltelevision           goltelevision.com    Yes   No    Streams may be geo-restricted to Spain.
 goodgame                goodgame.ru          Yes   No    Only HLS streams are available.
 googledrive             - docs.google.com    --    Yes
                         - drive.google.com
