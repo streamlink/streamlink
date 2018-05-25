@@ -1,6 +1,9 @@
 import errno
 import os
 import platform
+from collections import OrderedDict
+from gettext import gettext
+
 import requests
 import sys
 import signal
@@ -20,8 +23,9 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
+from streamlink.plugin import PluginOptions
 
-from .argparser import parser
+from .argparser import build_parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
@@ -465,6 +469,7 @@ def format_valid_streams(plugin, streams):
 
         def synonymfilter(n):
             return stream is streams[n] and n is not name
+
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:
@@ -489,8 +494,22 @@ def handle_url():
 
     try:
         plugin = streamlink.resolve_url(args.url)
+        setup_plugin_options(streamlink, plugin)
         console.logger.info("Found matching plugin {0} for URL {1}",
                             plugin.module, args.url)
+
+        plugin_args = []
+        for parg in plugin.arguments:
+            value = plugin.get_option(parg.dest)
+            if value:
+                plugin_args.append((parg, value))
+
+        if plugin_args:
+            console.logger.debug("Plugin specific arguments:")
+            for parg, value in plugin_args:
+                console.logger.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
+                                                             value if not parg.sensitive else ("*" * 8),
+                                                             parg.dest))
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -588,7 +607,7 @@ def load_plugins(dirs):
                                    "a directory!", directory)
 
 
-def setup_args(config_files=[]):
+def setup_args(parser, config_files=[], ignore_unknown=False):
     """Parses arguments."""
     global args
     arglist = sys.argv[1:]
@@ -597,7 +616,10 @@ def setup_args(config_files=[]):
     for config_file in filter(os.path.isfile, config_files):
         arglist.insert(0, "@" + config_file)
 
-    args = parser.parse_args(arglist)
+    args, unknown = parser.parse_known_args(arglist)
+    if unknown and not ignore_unknown:
+        msg = gettext('unrecognized arguments: %s')
+        parser.error(msg % ' '.join(unknown))
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
@@ -607,7 +629,7 @@ def setup_args(config_files=[]):
         args.url = args.url_param
 
 
-def setup_config_args():
+def setup_config_args(parser):
     config_files = []
 
     if args.url:
@@ -625,7 +647,7 @@ def setup_config_args():
             break
 
     if config_files:
-        setup_args(config_files)
+        setup_args(parser, config_files)
 
 
 def setup_console():
@@ -820,199 +842,45 @@ def setup_options():
                                "--ringbuffer-size instead")
 
 
-def setup_plugin_options():
+def setup_plugin_args(session, parser):
     """Sets Streamlink plugin options."""
-    if args.twitch_cookie:
-        streamlink.set_plugin_option("twitch", "cookie",
-                                     args.twitch_cookie)
 
-    if args.twitch_oauth_token:
-        streamlink.set_plugin_option("twitch", "oauth_token",
-                                     args.twitch_oauth_token)
+    plugin_args = parser.add_argument_group("Plugin options")
+    for pname, plugin in session.plugins.items():
+        defaults = {}
+        for parg in plugin.arguments:
+            plugin_args.add_argument(parg.argument_name(pname), **parg.options)
+            defaults[parg.dest] = parg.default
 
-    if args.twitch_disable_hosting:
-        streamlink.set_plugin_option("twitch", "disable_hosting",
-                                     args.twitch_disable_hosting)
+        plugin.options = PluginOptions(defaults)
 
-    if args.ustream_password:
-        streamlink.set_plugin_option("ustreamtv", "password",
-                                     args.ustream_password)
 
-    if args.crunchyroll_username:
-        streamlink.set_plugin_option("crunchyroll", "username",
-                                     args.crunchyroll_username)
-
-    if args.crunchyroll_username and not args.crunchyroll_password:
-        crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
-    else:
-        crunchyroll_password = args.crunchyroll_password
-
-    if crunchyroll_password:
-        streamlink.set_plugin_option("crunchyroll", "password",
-                                     crunchyroll_password)
-    if args.crunchyroll_purge_credentials:
-        streamlink.set_plugin_option("crunchyroll", "purge_credentials",
-                                     args.crunchyroll_purge_credentials)
-    if args.crunchyroll_session_id:
-        streamlink.set_plugin_option("crunchyroll", "session_id",
-                                     args.crunchyroll_session_id)
-
-    if args.crunchyroll_locale:
-        streamlink.set_plugin_option("crunchyroll", "locale",
-                                     args.crunchyroll_locale)
-
-    if args.btv_username:
-        streamlink.set_plugin_option("btv", "username", args.btv_username)
-
-    if args.btv_username and not args.btv_password:
-        btv_password = console.askpass("Enter BTV password: ")
-    else:
-        btv_password = args.btv_password
-
-    if btv_password:
-        streamlink.set_plugin_option("btv", "password", btv_password)
-
-    if args.schoolism_email:
-        streamlink.set_plugin_option("schoolism", "email", args.schoolism_email)
-    if args.schoolism_email and not args.schoolism_password:
-        schoolism_password = console.askpass("Enter Schoolism password: ")
-    else:
-        schoolism_password = args.schoolism_password
-    if schoolism_password:
-        streamlink.set_plugin_option("schoolism", "password", schoolism_password)
-
-    if args.schoolism_part:
-        streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
-
-    if args.rtve_mux_subtitles:
-        streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
-
-    if args.funimation_mux_subtitles:
-        streamlink.set_plugin_option("funimationnow", "mux_subtitles", True)
-
-    if args.funimation_language:
-        # map en->english, ja->japanese
-        lang = {"en": "english", "ja": "japanese"}.get(args.funimation_language.lower(),
-                                                       args.funimation_language.lower())
-        streamlink.set_plugin_option("funimationnow", "language", lang)
-
-    if args.tvplayer_email:
-        streamlink.set_plugin_option("tvplayer", "email", args.tvplayer_email)
-
-    if args.tvplayer_email and not args.tvplayer_password:
-        tvplayer_password = console.askpass("Enter TVPlayer password: ")
-    else:
-        tvplayer_password = args.tvplayer_password
-
-    if tvplayer_password:
-        streamlink.set_plugin_option("tvplayer", "password", tvplayer_password)
-
-    if args.pluzz_mux_subtitles:
-        streamlink.set_plugin_option("pluzz", "mux_subtitles", args.pluzz_mux_subtitles)
-
-    if args.wwenetwork_email:
-        streamlink.set_plugin_option("wwenetwork", "email", args.wwenetwork_email)
-    if args.wwenetwork_email and not args.wwenetwork_password:
-        wwenetwork_password = console.askpass("Enter WWE Network password: ")
-    else:
-        wwenetwork_password = args.wwenetwork_password
-    if wwenetwork_password:
-        streamlink.set_plugin_option("wwenetwork", "password", wwenetwork_password)
-
-    if args.animelab_email:
-        streamlink.set_plugin_option("animelab", "email", args.animelab_email)
-
-    if args.animelab_email and not args.animelab_password:
-        animelab_password = console.askpass("Enter AnimeLab password: ")
-    else:
-        animelab_password = args.animelab_password
-
-    if animelab_password:
-        streamlink.set_plugin_option("animelab", "password", animelab_password)
-
-    if args.npo_subtitles:
-        streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
-
-    if args.liveedu_email:
-        streamlink.set_plugin_option("liveedu", "email", args.liveedu_email)
-
-    if args.liveedu_email and not args.liveedu_password:
-        liveedu_password = console.askpass("Enter LiveEdu.tv password: ")
-    else:
-        liveedu_password = args.liveedu_password
-
-    if liveedu_password:
-        streamlink.set_plugin_option("liveedu", "password", liveedu_password)
-
-    if args.bbciplayer_username:
-        streamlink.set_plugin_option("bbciplayer", "username", args.bbciplayer_username)
-
-    if args.bbciplayer_username and not args.bbciplayer_password:
-        bbciplayer_password = console.askpass("Enter bbc.co.uk account password: ")
-    else:
-        bbciplayer_password = args.bbciplayer_password
-
-    if bbciplayer_password:
-        streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
-
-    if args.bbciplayer_hd:
-        streamlink.set_plugin_option("bbciplayer", "hd", True)
-
-    if args.zattoo_email:
-        streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
-    if args.zattoo_email and not args.zattoo_password:
-        zattoo_password = console.askpass("Enter zattoo password: ")
-    else:
-        zattoo_password = args.zattoo_password
-    if zattoo_password:
-        streamlink.set_plugin_option("zattoo", "password", zattoo_password)
-
-    if args.zattoo_purge_credentials:
-        streamlink.set_plugin_option("zattoo", "purge_credentials",
-                                     args.zattoo_purge_credentials)
-
-    if args.afreeca_username:
-        streamlink.set_plugin_option("afreeca", "username", args.afreeca_username)
-    if args.btsports_email:
-        streamlink.set_plugin_option("btsports", "email", args.btsports_email)
-    if args.btsports_email and not args.btsports_password:
-        btsports_password = console.askpass("Enter BT Sport password: ")
-    else:
-        btsports_password = args.btsports_password
-    if btsports_password:
-        streamlink.set_plugin_option("btsports", "password", btsports_password)
-
-    if args.afreeca_username and not args.afreeca_password:
-        afreeca_password = console.askpass("Enter afreecatv account password: ")
-    else:
-        afreeca_password = args.afreeca_password
-
-    if afreeca_password:
-        streamlink.set_plugin_option("afreeca", "password", afreeca_password)
-
-    if args.pixiv_username:
-        streamlink.set_plugin_option("pixiv", "username", args.pixiv_username)
-
-    if args.pixiv_username and not args.pixiv_password:
-        pixiv_password = console.askpass("Enter pixiv account password: ")
-    else:
-        pixiv_password = args.pixiv_password
-
-    if pixiv_password:
-        streamlink.set_plugin_option("pixiv", "password", pixiv_password)
-
-    if args.abweb_username:
-        streamlink.set_plugin_option("abweb", "username", args.abweb_username)
-    if args.abweb_username and not args.abweb_password:
-        abweb_password = console.askpass("Enter ABweb password: ")
-    else:
-        abweb_password = args.abweb_password
-    if abweb_password:
-        streamlink.set_plugin_option("abweb", "password", abweb_password)
-
-    if args.abweb_purge_credentials:
-        streamlink.set_plugin_option("abweb", "purge_credentials",
-                                     args.abweb_purge_credentials)
+def setup_plugin_options(session, plugin):
+    """Sets Streamlink plugin options."""
+    pname = plugin.module
+    required = OrderedDict({})
+    for parg in plugin.arguments:
+        if parg.required:
+            required[parg.name] = parg
+        value = getattr(args, parg.namespace_dest(pname))
+        session.set_plugin_option(pname, parg.dest, value)
+        # if the value is set, check to see if any of the required arguments are not set
+        if parg.required or value:
+            try:
+                for rparg in plugin.arguments.requires(parg.name):
+                    required[rparg.name] = rparg
+            except RuntimeError:
+                console.logger.error("{0} plugin has a configuration error and the arguments "
+                                     "cannot be parsed".format(pname))
+                break
+    if required:
+        for req in required.values():
+            if not session.get_plugin_option(pname, req.dest):
+                prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
+                session.set_plugin_option(pname, req.dest,
+                                          console.askpass(prompt + ": ")
+                                          if req.sensitive else
+                                          console.ask(prompt + ": "))
 
 
 def check_root():
@@ -1072,11 +940,15 @@ def check_version(force=False):
 
 def main():
     error_code = 0
+    parser = build_parser()
 
-    setup_args()
+    setup_args(parser, ignore_unknown=True)
     setup_streamlink()
     setup_plugins()
-    setup_config_args()
+    setup_plugin_args(streamlink, parser)
+    # call setup args again once the plugin specific args have been added
+    setup_args(parser)
+    setup_config_args(parser)
     setup_console()
     setup_http_session()
     check_root()
@@ -1101,7 +973,6 @@ def main():
     elif args.url:
         try:
             setup_options()
-            setup_plugin_options()
             handle_url()
         except KeyboardInterrupt:
             # Close output
@@ -1129,3 +1000,10 @@ def main():
         console.msg(msg)
 
     sys.exit(error_code)
+
+
+def parser_helper():
+    session = Streamlink()
+    parser = build_parser()
+    setup_plugin_args(session, parser)
+    return parser
