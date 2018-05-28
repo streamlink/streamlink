@@ -62,37 +62,13 @@ clone() {
 changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
-  LOG=$(git shortlog --email --no-merges --pretty=%s ${1}.. | sed  's/^/    /')
-  echo "Streamlink $2
+  LOG=$(git shortlog --email --no-merges --pretty=%s ${1}..)
+  echo "
+!!!WRITE YOUR RELEASE NOTES HERE!!!
 
-!!!WRITE YOUR RELEASE NOTES HERE!!
-
-# Installation
-
-**Installing with Pip:**
-
-\`\`\`sh
-sudo pip install streamlink
-\`\`\`
-
-**Manual installation:**
-
-\`\`\`sh
-curl -L https://github.com/streamlink/streamlink/releases/download/$2/streamlink-$2.tar.gz -O streamlink.tar.gz
-tar xvf streamlink.tar.gz
-cd streamlink
-sudo python setup.py install
-\`\`\`
-
-# Supporting Streamlink
-
-If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
-
-
-::
-
-
-$LOG" > ../changes.txt
+\`\`\`text
+${LOG}
+\`\`\`" > ../changes.txt
   echo "Changelog has been written to changes.txt"
   echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
   echo "Open changes.txt and add the release information"
@@ -100,16 +76,15 @@ $LOG" > ../changes.txt
   cd ..
 }
 
-changelog_rst() {
-  echo "Generating CHANGELOG.rst"
+changelog_md() {
+  echo "Generating CHANGELOG.md"
   CHANGES=$(cat changes.txt)
   cd $CLI
   DATE=$(date +"%Y-%m-%d")
-  CHANGELOG=$(cat CHANGELOG.rst)
+  CHANGELOG=$(cat CHANGELOG.md)
   HEADER="$CLI $1 ($DATE)"
-  UNDERLINE=$(printf %s "$HEADER" | tr -c '-' '[-*]')
-  echo -e "$HEADER\n$UNDERLINE\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
-  echo "Changes have been written to CHANGELOG.rst"
+  echo -e "# $HEADER\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.md
+  echo "Changes have been written to CHANGELOG.md"
   cd ..
 }
 
@@ -274,7 +249,7 @@ main() {
               changelog $PREV_VERSION $VERSION
               ;;
           "Generate changelog for release")
-              changelog_rst $VERSION
+              changelog_md $VERSION
               ;;
           "Create PR")
               git_commit $VERSION
