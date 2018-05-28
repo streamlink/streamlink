@@ -166,7 +166,9 @@ class Pluzz(Plugin):
             if '.mpd' in video_url:
                 continue
 
-            if '.f4m' in video_url or 'france.tv' in self.url:
+            if ('.f4m' in video_url or
+                'france.tv' in self.url or
+                'sport.francetvinfo.fr' in self.url):
                 res = http.get(self.TOKEN_URL.format(video_url))
                 video_url = res.text
 
