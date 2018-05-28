@@ -175,6 +175,11 @@ class Pluzz(Plugin):
                     if match is None:
                         streams.append((bitrate, stream))
             elif '.m3u8' in video_url:
+                # Roland Garros 2018
+                # uses TOKEN to generate stream URL
+                if 'sport.francetvinfo.fr' in self.url:
+                    res = http.get(self.TOKEN_URL.format(video_url))
+                    video_url = res.text
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     streams.append(stream)
             # HBB TV streams are not provided anymore by France Televisions
