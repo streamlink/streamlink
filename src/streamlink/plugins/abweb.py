@@ -4,7 +4,7 @@ import time
 from streamlink.cache import Cache
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin import PluginOptions
+from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
@@ -28,11 +28,31 @@ class ABweb(Plugin):
 
     expires_time = 3600 * 24
 
-    options = PluginOptions({
-        'username': None,
-        'password': None,
-        'purge_credentials': None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "username",
+            required=True,
+            requires=["password"],
+            metavar="USERNAME",
+            help="The username associated with your ABweb account, required to access any ABweb stream.",
+            prompt="Enter ABweb username"
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="A ABweb account password to use with --abweb-username.",
+            prompt="Enter ABweb password"
+        ),
+        PluginArgument(
+            "purge-credentials",
+            action="store_true",
+            help="""
+        Purge cached ABweb credentials to initiate a new session
+        and reauthenticate.
+        """
+        )
+    )
 
     def __init__(self, url):
         super(ABweb, self).__init__(url)

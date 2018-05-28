@@ -90,6 +90,7 @@ ellobo                  ellobo106.com        Yes   -
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
 eurocom                 eurocom.bg           Yes   No
 euronews                euronews.com         Yes   No
+europaplus              europaplus.ru        Yes   --
 expressen               expressen.se         Yes   Yes
 facebook                facebook.com         Yes   No    Only 360p HLS streams.
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
@@ -99,6 +100,7 @@ funimationnow           - funimation.com     --    Yes
                         - funimationnow.uk
 gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
+goltelevision           goltelevision.com    Yes   No    Streams may be geo-restricted to Spain.
 goodgame                goodgame.ru          Yes   No    Only HLS streams are available.
 googledrive             - docs.google.com    --    Yes
                         - drive.google.com
@@ -140,6 +142,11 @@ ok_live                 ok.ru                Yes   --
 oldlivestream           - original.li.. [3]_ Yes   No    Only mobile streams are supported.
                         - cdn.livestream.com
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
+onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
+                        - ctc.ru
+                        - chetv.ru
+                        - ctclove.ru
+                        - domashny.ru
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
 ovvatv                  ovva.tv              Yes   No

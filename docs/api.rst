@@ -26,6 +26,15 @@ Plugins
 .. autoclass:: Plugin
     :members:
 
+.. module:: streamlink.options
+.. autoclass:: Arguments
+    :members:
+
+.. autoclass:: Argument
+    :members:
+
+    .. automethod:: __init__
+
 
 Streams
 -------

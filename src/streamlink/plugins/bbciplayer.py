@@ -7,7 +7,7 @@ from hashlib import sha1
 
 from streamlink import PluginError
 from streamlink.compat import parse_qsl, urlparse
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
@@ -58,10 +58,26 @@ class BBCiPlayer(Plugin):
         validate.get("media"),
         validate.filter(lambda x: x["kind"] == "video")
     )
-    options = PluginOptions({
-        "password": None,
-        "username": None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "username",
+            requires=["password"],
+            metavar="USERNAME",
+            help="The username used to register with bbc.co.uk."
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="A bbc.co.uk account password to use with --bbciplayer-username.",
+            prompt = "Enter bbc.co.uk account password"
+        ),
+        PluginArgument(
+            "hd",
+            action="store_true",
+            help="Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD."
+        ),
+    )
 
     @classmethod
     def can_handle_url(cls, url):
