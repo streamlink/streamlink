@@ -182,17 +182,6 @@ push() {
   echo "!!!"
 }
 
-upload_pypi_test() {
-  cd $CLI
-  python setup.py sdist upload -r pypitest
-  cd ..
-}
-
-upload_pypi() {
-  cd $CLI
-  python setup.py sdist upload -r pypi
-  cd ..
-}
 
 clean() {
   rm -rf $CLI $CLI-$1 $CLI-$1.tar.gz $CLI-$1.tar.gz.asc $CLI-$1.exe changes.txt
@@ -234,8 +223,6 @@ main() {
   "Create PR"
   "Tarball and sign - requires gpg key"
   "Upload the tarball and source code to GitHub release page"
-  "Test upload to pypi"
-  "Upload to pypi"
   "Clean"
   "Quit")
   select opt in "${options[@]}"
@@ -259,12 +246,6 @@ main() {
               ;;
           "Upload the tarball and source code to GitHub release page")
               push $VERSION
-              ;;
-          "Test upload to pypi")
-              upload_pypi_test
-              ;;
-          "Upload to pypi")
-              upload_pypi
               ;;
           "Clean")
               clean $VERSION
