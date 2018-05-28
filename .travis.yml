@@ -30,10 +30,6 @@ script:
   - pytest --cov
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
-  - if [[ $BUILD_SDIST == 'yes' && ! -z "${TRAVIS_TAG}" ]]; then
-      openssl aes-256-cbc -K $encrypted_eeb8b970d3a3_key -iv $encrypted_eeb8b970d3a3_iv -in signing.key.enc -out "${SDIST_KEY_FILE}" -d &&
-      ./script/sdistsign.sh;
-    fi
 
 after_success:
   # push the docs only if the build was successful
@@ -57,9 +53,10 @@ deploy:
     on:
       tags: true
       condition: $BUILD_INSTALLER = yes
+      repo: streamlink/streamlink
   - provider: releases
     api_key: "${RELEASES_API_KEY}"
-    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}.*"
+    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
     file_glob: true
     skip_cleanup: true
     on:
@@ -82,13 +79,11 @@ deploy:
       branch: master
       condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
       repo: streamlink/streamlink
-  - provider: pypi
-    user: "${PYPI_USER}"
-    password: "${PYPI_PASSWORD}"
-    distributions: "sdist bdist_wheel"
+  - provider: script
+    script: ./script/sdistsign.sh
     on:
       tags: true
-      condition: $DEPLOY_PYPI == yes
+      condition: $BUILD_SDIST == yes
       repo: streamlink/streamlink
 
 after_deploy:
