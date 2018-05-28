@@ -44,6 +44,9 @@ share/
 pip-selfcheck.json
 .pytest_cache/
 
+# ignore any key files
+*.key
+
 # coverage
 .coverage
 coverage.xml

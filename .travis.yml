@@ -1,11 +1,16 @@
 language: python
+env:
+  global:
+  - STREAMLINK_DIST_DIR=${TRAVIS_BUILD_DIR}/dist
+  - STREAMLINK_INSTALLER_DIST_DIR=${STREAMLINK_DIST_DIR}/nsis
+  - SDIST_KEY_FILE="${TRAVIS_BUILD_DIR}/signing.key"
 
 matrix:
   include:
   - python: '2.7'
   - python: '3.4'
   - python: '3.5'
-    env: BUILD_DOCS=yes BUILD_INSTALLER=yes STREAMLINK_INSTALLER_DIST_DIR=$TRAVIS_BUILD_DIR/dist/nsis DEPLOY_PYPI=yes
+    env: BUILD_DOCS=yes BUILD_INSTALLER=yes BUILD_SDIST=yes DEPLOY_PYPI=yes
   - python: '3.6'
   - python: '3.7-dev'
   allow_failures:
@@ -23,9 +28,12 @@ install:
 
 script:
   - pytest --cov
-  # test building the docs
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
+  - if [[ $BUILD_SDIST == 'yes' && ! -z "${TRAVIS_TAG}" ]]; then
+      openssl aes-256-cbc -K $encrypted_eeb8b970d3a3_key -iv $encrypted_eeb8b970d3a3_iv -in signing.key.enc -out "${SDIST_KEY_FILE}" -d &&
+      ./script/sdistsign.sh;
+    fi
 
 after_success:
   # push the docs only if the build was successful
@@ -49,6 +57,14 @@ deploy:
     on:
       tags: true
       condition: $BUILD_INSTALLER = yes
+  - provider: releases
+    api_key: "${RELEASES_API_KEY}"
+    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}.*"
+    file_glob: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: "$BUILD_SDIST = yes"
       repo: streamlink/streamlink
   - provider: script
     script: python script/github_releases.py
