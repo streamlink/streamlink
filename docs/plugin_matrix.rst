@@ -247,6 +247,7 @@ tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-rest
 twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                          subscription streams.
 ustreamtv               ustream.tv           Yes   Yes
+ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
 vaughnlive              - vaughnlive.tv      Yes   --
                         - breakers.tv
                         - instagib.tv
