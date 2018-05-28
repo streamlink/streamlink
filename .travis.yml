@@ -5,7 +5,7 @@ matrix:
   - python: '2.7'
   - python: '3.4'
   - python: '3.5'
-    env: BUILD_DOCS=yes BUILD_INSTALLER=yes STREAMLINK_INSTALLER_DIST_DIR=$TRAVIS_BUILD_DIR/dist/nsis
+    env: BUILD_DOCS=yes BUILD_INSTALLER=yes STREAMLINK_INSTALLER_DIST_DIR=$TRAVIS_BUILD_DIR/dist/nsis DEPLOY_PYPI=yes
   - python: '3.6'
   - python: '3.7-dev'
   allow_failures:
@@ -49,12 +49,14 @@ deploy:
     on:
       tags: true
       condition: $BUILD_INSTALLER = yes
+      repo: streamlink/streamlink
   - provider: script
     script: python script/github_releases.py
     skip_cleanup: true
     on:
       tags: true
       condition: $BUILD_INSTALLER == yes
+      repo: streamlink/streamlink
   - provider: bintray
     file: build/bintray-nightly.json
     user: "${BINTRAY_USER}"
@@ -63,6 +65,15 @@ deploy:
     on:
       branch: master
       condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
+      repo: streamlink/streamlink
+  - provider: pypi
+    user: "${PYPI_USER}"
+    password: "${PYPI_PASSWORD}"
+    distributions: "sdist bdist_wheel"
+    on:
+      tags: true
+      condition: $DEPLOY_PYPI == yes
+      repo: streamlink/streamlink
 
 after_deploy:
   - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' ]]; then ./script/bintrayupdate.sh; fi
