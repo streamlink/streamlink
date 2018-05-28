@@ -24,7 +24,10 @@ extensions = ['sphinx.ext.autodoc', 'ext_argparse', 'ext_github', 'ext_releasere
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+source_parsers = {
+   '.md': 'recommonmark.parser.CommonMarkParser',
+}
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
