@@ -5,7 +5,7 @@ import tempfile
 import streamlink_cli.main
 from streamlink_cli.main import resolve_stream_name, check_file_output
 from streamlink_cli.output import FileOutput
-from tests import unittest
+import unittest
 from tests.mock import Mock, patch
 
 

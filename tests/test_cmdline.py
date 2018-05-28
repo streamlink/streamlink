@@ -1,5 +1,5 @@
 import sys
-from tests import unittest
+import unittest
 from tests.mock import patch, ANY
 
 import os.path

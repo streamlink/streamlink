@@ -1,5 +1,5 @@
 from streamlink.plugins.adultswim import AdultSwim
-from tests import unittest
+import unittest
 
 
 class TestPluginAdultSwim(unittest.TestCase):

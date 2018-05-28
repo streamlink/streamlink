@@ -1,6 +1,6 @@
 import os.path
 
-from tests import unittest
+import unittest
 from tests.mock import patch
 
 from streamlink import Streamlink

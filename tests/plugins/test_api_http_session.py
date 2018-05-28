@@ -1,7 +1,7 @@
 # coding=utf-8
 import requests
 
-from tests import unittest
+import unittest
 from tests.mock import patch, PropertyMock
 
 from streamlink.exceptions import PluginError

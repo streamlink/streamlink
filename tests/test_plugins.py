@@ -3,7 +3,7 @@ import os.path
 import pkgutil
 import six
 
-from tests import unittest
+import unittest
 
 import streamlink.plugins
 from streamlink import Streamlink

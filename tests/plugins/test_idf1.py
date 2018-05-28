@@ -1,4 +1,4 @@
-from tests import unittest
+import unittest
 
 from streamlink.plugins.idf1 import IDF1
 

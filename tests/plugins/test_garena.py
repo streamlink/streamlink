@@ -1,5 +1,5 @@
 import json
-from tests import unittest
+import unittest
 
 from streamlink import Streamlink
 

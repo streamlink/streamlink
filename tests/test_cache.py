@@ -8,7 +8,7 @@ import streamlink.cache
 
 from shutil import rmtree
 import time
-from tests import unittest
+import unittest
 from tests.mock import patch
 
 is_py2 = (sys.version_info[0] == 2)

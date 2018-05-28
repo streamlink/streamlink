@@ -1,4 +1,4 @@
-from tests import unittest
+import unittest
 
 from streamlink.plugins.streann import Streann
 

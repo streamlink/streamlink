@@ -1,4 +1,4 @@
-from tests import unittest
+import unittest
 
 import pytest
 from mock import patch

@@ -1,6 +1,6 @@
 import json
 import logging
-from tests import unittest
+import unittest
 
 from requests import Response, Request
 

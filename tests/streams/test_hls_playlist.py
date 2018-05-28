@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from streamlink.stream.hls_playlist import load, StreamInfo, Resolution, Media
-from tests import unittest
+import unittest
 from tests.resources import text
 
 

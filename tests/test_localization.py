@@ -1,4 +1,4 @@
-from tests import unittest
+import unittest
 from tests.mock import patch
 
 import streamlink.utils.l10n as l10n

@@ -7,7 +7,7 @@ from streamlink.stream import HTTPStream
 from streamlink.stream import RTMPStream
 from streamlink.stream import Stream
 from streamlink_cli.utils import stream_to_url
-from tests import unittest
+import unittest
 from tests.mock import patch, PropertyMock
 
 

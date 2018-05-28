@@ -1,6 +1,6 @@
 # coding: utf8
 import re
-from tests import unittest
+import unittest
 
 from xml.etree.ElementTree import Element
 

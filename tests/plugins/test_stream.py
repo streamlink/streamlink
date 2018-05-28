@@ -1,7 +1,7 @@
 from streamlink import Streamlink
 from streamlink.plugin.plugin import stream_weight, parse_params
 from streamlink.stream import *
-from tests import unittest
+import unittest
 from tests.mock import patch
 
 

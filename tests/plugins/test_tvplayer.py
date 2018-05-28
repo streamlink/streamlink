@@ -1,4 +1,4 @@
-from tests import unittest
+import unittest
 from tests.mock import patch, Mock, ANY, MagicMock, call
 
 from streamlink import Streamlink
