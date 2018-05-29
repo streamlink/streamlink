@@ -5,7 +5,7 @@ from streamlink.compat import urlencode, unquote, urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.plugin import stream_weight
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream import HLSStream, HTTPStream, DASHStream
 from streamlink.utils import update_scheme
 
 
@@ -17,6 +17,9 @@ class OneTV(Plugin):
     _1tv_api = "//stream.1tv.ru/api/playlist/1tvch_as_array.json"
     _ctc_api = "//media.1tv.ru/api/v1/ctc/playlist/{channel}_as_array.json"
     _session_api = "//stream.1tv.ru/get_hls_session"
+    _channel_remap = {"chetv": "ctc-che",
+                      "ctclove": "ctc-love",
+                      "domashny": "ctc-dom"}
 
     @classmethod
     def can_handle_url(cls, url):
@@ -29,7 +32,8 @@ class OneTV(Plugin):
     @property
     def channel(self):
         match = self._url_re.match(self.url)
-        return match and match.group("channel")
+        c = match and match.group("channel")
+        return self._channel_remap.get(c, c)
 
     @property
     def live_api_url(self):
@@ -73,10 +77,20 @@ class OneTV(Plugin):
             res = http.get(self.live_api_url, data={"r": random.randint(1, 100000)})
             live_data = http.json(res)
 
-            for url in live_data.get("hls", [])[:1]:  # only take the first, they are all the same streams
+            # all the streams are equal for each type, so pick a random one
+            hls_streams = live_data.get("hls")
+            if hls_streams:
+                url = random.choice(hls_streams)
                 url = url + '&' + urlencode(self.hls_session())  # TODO: use update_qsd
                 for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items():
                     yield s
+
+            mpd_streams = live_data.get("mpd")
+            if mpd_streams:
+                url = random.choice(mpd_streams)
+                for s in DASHStream.parse_manifest(self.session, url).items():
+                    yield s
+
         elif self.channel == "1tv":
             self.logger.debug("Attempting to find VOD stream...", self.channel)
             vod_data = self.vod_data()
