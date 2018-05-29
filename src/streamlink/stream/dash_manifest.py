@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import datetime
 import re
 import time
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from itertools import repeat, count
 
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
@@ -432,7 +432,7 @@ class SegmentTemplate(MPDNode):
             # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
             number_iter = count(self.startNumber +
                                 int((
-                                    since_start - suggested_delay - self.root.minBufferTime).total_seconds() / self.duration_seconds))
+                                        since_start - suggested_delay - self.root.minBufferTime).total_seconds() / self.duration_seconds))
 
             # the time the segment number is available at NOW
             available_iter = count_dt(available_start,
@@ -443,27 +443,42 @@ class SegmentTemplate(MPDNode):
 
     def format_media(self, **kwargs):
         if self.segmentTimeline:
-            # if there is no delay, use a delay of 3 seconds
-            suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()
-                                                          if self.root.suggestedPresentationDelay
-                                                          else 3))
+            if self.root.type == "dynamic":
+                # if there is no delay, use a delay of 3 seconds
+                suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()
+                                                              if self.root.suggestedPresentationDelay
+                                                              else 3))
+                publish_time = self.root.publishTime or epoch_start
 
-            t = 0
-            n = self.startNumber
-            available_at = self.root.publishTime or epoch_start
+                # transform the time line in to a segment list
+                timeline = []
+                available_at = publish_time
+                for segment, n in reversed(list(zip(self.segmentTimeline.segments, count(self.startNumber)))):
+                    # the last segment in the timeline is the most recent
+                    # so, work backwards and calculate when each of the segments was
+                    # available, based on the durations relative to the publish time
+                    url = self.make_url(self.media(Time=segment.t, Number=n, **kwargs))
+                    duration = datetime.timedelta(seconds=segment.d / self.timescale)
 
-            for segment in self.segmentTimeline.segments:
-                t = t or segment.t
-                # check the start time from MPD
-                for repeated_i in range(segment.r + 1):
-                    available_at += datetime.timedelta(seconds=segment.d / self.timescale)
+                    # once the suggested_delay is reach stop
+                    if self.root.timelines[self.parent.id] == -1 and publish_time - available_at >= suggested_delay:
+                        break
 
+                    timeline.append((url, available_at, segment.t))
+
+                    available_at -= duration  # walk backwards in time
+
+                # return the segments in chronological order
+                for url, available_at, t in reversed(timeline):
                     if t > self.root.timelines[self.parent.id]:
-                        yield (self.make_url(self.media(Time=t, Number=n, **kwargs)),
-                               available_at + suggested_delay)
                         self.root.timelines[self.parent.id] = t
-                    t += segment.d
-                    n += 1
+                        yield (url, available_at)
+
+            else:
+                for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
+                    yield (self.make_url(self.media(Time=segment.t, Number=n, **kwargs)),
+                           datetime.timedelta(seconds=segment.d / self.timescale))
+
         else:
             for number, available_at in self.segment_numbers():
                 yield (self.make_url(self.media(Number=number, **kwargs)),
@@ -533,20 +548,31 @@ class SubRepresentation(MPDNode):
 
 class SegmentTimeline(MPDNode):
     __tag__ = "SegmentTimeline"
+    TimelineSegment = namedtuple("TimelineSegment", "t d")
 
     def __init__(self, node, *args, **kwargs):
         super(SegmentTimeline, self).__init__(node, *args, **kwargs)
 
         self.timescale = self.walk_back_get_attr("timescale")
 
-        self.segments = self.children(TimelineSegment)
+        self.timeline_segments = self.children(_TimelineSegment)
+
+    @property
+    def segments(self):
+        t = 0
+        for tsegment in self.timeline_segments:
+            t = t or tsegment.t
+            # check the start time from MPD
+            for repeated_i in range(tsegment.r + 1):
+                yield self.TimelineSegment(t, tsegment.d)
+                t += tsegment.d
 
 
-class TimelineSegment(MPDNode):
+class _TimelineSegment(MPDNode):
     __tag__ = "S"
 
     def __init__(self, node, *args, **kwargs):
-        super(TimelineSegment, self).__init__(node, *args, **kwargs)
+        super(_TimelineSegment, self).__init__(node, *args, **kwargs)
 
         self.t = self.attr("t", parser=int)
         self.d = self.attr("d", parser=int)

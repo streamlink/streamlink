@@ -66,7 +66,6 @@ class TestMPDParsers(unittest.TestCase):
 class TestMPDParser(unittest.TestCase):
     maxDiff = None
 
-
     def test_segments_number_time(self):
         with xml("dash/test_1.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -76,12 +75,11 @@ class TestMPDParser(unittest.TestCase):
             self.assertEqual(init_segment.url, "http://test.se/tracks-v3/init-1526842800.g_m4v")
 
             video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 5))))
+            # suggested delay is 11 seconds, each segment is 5 seconds long - so there should be 3
             self.assertSequenceEqual(video_segments,
-                                     ['http://test.se/tracks-v3/dvr-1526842800-695.g_m4v?t=3388000',
-                                      'http://test.se/tracks-v3/dvr-1526842800-696.g_m4v?t=3393000',
-                                      'http://test.se/tracks-v3/dvr-1526842800-697.g_m4v?t=3398000',
-                                      'http://test.se/tracks-v3/dvr-1526842800-698.g_m4v?t=3403000',
-                                      'http://test.se/tracks-v3/dvr-1526842800-699.g_m4v?t=3408000'])
+                                     ['http://test.se/tracks-v3/dvr-1526842800-698.g_m4v?t=3403000',
+                                      'http://test.se/tracks-v3/dvr-1526842800-699.g_m4v?t=3408000',
+                                      'http://test.se/tracks-v3/dvr-1526842800-700.g_m4v?t=3413000'])
 
     def test_segments_static_number(self):
         with xml("dash/test_2.mpd") as mpd_xml:
@@ -109,10 +107,9 @@ class TestMPDParser(unittest.TestCase):
             self.assertEqual(init_segment.url, "http://test.se/video-2800000-0.mp4?z32=")
 
             video_segments = list(map(attrgetter("url"), (itertools.islice(segments, 3))))
-            self.assertSequenceEqual(video_segments[:3],
-                                     ['http://test.se/video-time=1525450860000-2800000-0.m4s?z32=',
-                                      'http://test.se/video-time=1525450864000-2800000-0.m4s?z32=',
-                                      'http://test.se/video-time=1525450868000-2800000-0.m4s?z32='])
+            # default suggested delay is 3 seconds, each segment is 4 seconds long - so there should be 1 segment
+            self.assertSequenceEqual(video_segments,
+                                     ['http://test.se/video-time=1525450872000-2800000-0.m4s?z32='])
 
     def test_segments_dynamic_number(self):
         with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)) as frozen_datetime:
@@ -152,3 +149,35 @@ class TestMPDParser(unittest.TestCase):
                                       'http://test.se/dash/150633-video_eng=194000-2000.dash',
                                       'http://test.se/dash/150633-video_eng=194000-4000.dash',
                                       ])
+
+    def test_segments_dynamic_timeline_continue(self):
+        with xml("dash/test_6_p1.mpd") as mpd_xml_p1:
+            with xml("dash/test_6_p2.mpd") as mpd_xml_p2:
+                mpd_p1 = MPD(mpd_xml_p1, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+                segments_p1 = mpd_p1.periods[0].adaptationSets[0].representations[0].segments()
+                init_segment = next(segments_p1)
+                self.assertEqual(init_segment.url, "http://test.se/video/init.mp4")
+
+                video_segments_p1 = [x.url for x in itertools.islice(segments_p1, 100)]
+                self.assertSequenceEqual(video_segments_p1,
+                                         ['http://test.se/video/1006000.mp4',
+                                          'http://test.se/video/1007000.mp4',
+                                          'http://test.se/video/1008000.mp4',
+                                          'http://test.se/video/1009000.mp4',
+                                          'http://test.se/video/1010000.mp4'])
+
+                # Continue in the next manifest
+                mpd_p2 = MPD(mpd_xml_p2,
+                             base_url=mpd_p1.base_url,
+                             url=mpd_p1.url,
+                             timelines=mpd_p1.timelines)
+
+                segments_p2 = mpd_p2.periods[0].adaptationSets[0].representations[0].segments(init=False)
+                video_segments_p2 = [x.url for x in itertools.islice(segments_p2, 100)]
+                self.assertSequenceEqual(video_segments_p2,
+                                         ['http://test.se/video/1011000.mp4',
+                                          'http://test.se/video/1012000.mp4',
+                                          'http://test.se/video/1013000.mp4',
+                                          'http://test.se/video/1014000.mp4',
+                                          'http://test.se/video/1015000.mp4'])
