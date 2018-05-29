@@ -1,3 +1,5 @@
+import concurrent.futures.thread
+
 from concurrent import futures
 from threading import Thread, Event
 
@@ -100,7 +102,9 @@ class SegmentedStreamWriter(Thread):
 
         self.closed = True
         self.reader.buffer.close()
-        self.executor.shutdown(wait=True)
+        self.executor.shutdown(wait=False)
+        if concurrent.futures.thread._threads_queues:
+            concurrent.futures.thread._threads_queues.clear()
 
     def put(self, segment):
         """Adds a segment to the download pool and write queue."""
@@ -191,11 +195,6 @@ class SegmentedStreamReader(StreamIO):
     def close(self):
         self.worker.close()
         self.writer.close()
-
-        for thread in (self.worker, self.writer):
-            if thread.is_alive():
-                thread.join()
-
         self.buffer.close()
 
     def read(self, size):
