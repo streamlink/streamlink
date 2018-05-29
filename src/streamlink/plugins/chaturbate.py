@@ -46,7 +46,8 @@ class Chaturbate(Plugin):
         res = http.post(API_HLS, headers=headers, cookies=cookies, data=post_data)
         data = http.json(res, schema=_post_schema)
 
-        if data["success"] is True and data["room_status"] == "public":
+        self.logger.info("Stream status: {0}".format(data["room_status"]))
+        if (data["success"] is True and data["room_status"] == "public" and data["url"]):
             for s in HLSStream.parse_variant_playlist(self.session, data["url"]).items():
                 yield s
 
