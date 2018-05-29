@@ -6,6 +6,9 @@ import time
 from collections import defaultdict, namedtuple
 from itertools import repeat, count
 
+from isodate import parse_datetime, parse_duration, Duration
+from contextlib import contextmanager
+
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
 
 if hasattr(datetime, "timezone"):
@@ -21,11 +24,7 @@ else:
         def dst(self, dt):
             return datetime.timedelta(0)
 
-
     utc = UTC()
-
-from isodate import parse_datetime, parse_duration, Duration
-from contextlib import contextmanager
 
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
@@ -431,8 +430,8 @@ class SegmentTemplate(MPDNode):
 
             # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
             number_iter = count(self.startNumber +
-                                int((
-                                        since_start - suggested_delay - self.root.minBufferTime).total_seconds() / self.duration_seconds))
+                                int((since_start - suggested_delay - self.root.minBufferTime).total_seconds() /
+                                    self.duration_seconds))
 
             # the time the segment number is available at NOW
             available_iter = count_dt(available_start,
