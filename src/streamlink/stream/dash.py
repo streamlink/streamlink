@@ -1,9 +1,13 @@
 import itertools
+
+import datetime
+import os.path
+
 from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper
-from streamlink.stream.dash_manifest import MPD, sleeper
+from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 
@@ -21,6 +25,13 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return
 
         try:
+            now = datetime.datetime.now(tz=utc)
+            if segment.available_at > now:
+                time_to_wait = (segment.available_at - now).total_seconds()
+                fname = os.path.basename(urlparse(segment.url).path)
+                self.logger.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
+
+                sleep_until(segment.available_at)
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
                                          exception=StreamError)
@@ -33,7 +44,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
             if not self.closed:
                 self.reader.buffer.write(chunk)
             else:
-                self.logger.debug("Download of segment: {} aborted".format(segment.url))
+                self.logger.warning("Download of segment: {} aborted".format(segment.url))
                 return
 
         self.logger.debug("Download of segment: {} complete".format(segment.url))
@@ -55,7 +66,8 @@ class DASHStreamWorker(SegmentedStreamWorker):
                 for rep in aset.representations:
                     if rep.id == self.reader.representation_id:
                         representation = rep
-            refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(), self.mpd.periods[0].duration.total_seconds()) or 5
+            refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(),
+                               self.mpd.periods[0].duration.total_seconds()) or 5
             with sleeper(refresh_wait * back_off_factor):
                 if representation:
                     for segment in representation.segments(init=init):

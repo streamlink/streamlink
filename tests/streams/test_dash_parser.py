@@ -64,6 +64,9 @@ class TestMPDParsers(unittest.TestCase):
 
 
 class TestMPDParser(unittest.TestCase):
+    maxDiff = None
+
+
     def test_segments_number_time(self):
         with xml("dash/test_1.mpd") as mpd_xml:
             mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
@@ -124,19 +127,14 @@ class TestMPDParser(unittest.TestCase):
                 for _ in range(3):
                     seg = next(segments)
                     video_segments.append((seg.url,
-                                           seg.available_at,
-                                           datetime.datetime.now(tz=utc)))
-                    frozen_datetime.tick(5)
+                                           seg.available_at))
 
                 self.assertSequenceEqual(video_segments,
                                          [('http://test.se/hd-5_000311235.mp4',
-                                           datetime.datetime(2018, 5, 22, 13, 36, 20, tzinfo=utc),
                                            datetime.datetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)),
                                           ('http://test.se/hd-5_000311236.mp4',
-                                           datetime.datetime(2018, 5, 22, 13, 36, 25, tzinfo=utc),
                                            datetime.datetime(2018, 5, 22, 13, 37, 5, tzinfo=utc)),
                                           ('http://test.se/hd-5_000311237.mp4',
-                                           datetime.datetime(2018, 5, 22, 13, 36, 30, tzinfo=utc),
                                            datetime.datetime(2018, 5, 22, 13, 37, 10, tzinfo=utc))
                                           ])
 

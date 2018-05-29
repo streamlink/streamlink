@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
+
 import datetime
 import re
 import time
 from collections import defaultdict
-from collections import namedtuple
-from itertools import repeat
+from itertools import repeat, count
 
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
 
@@ -27,17 +27,25 @@ else:
 from isodate import parse_datetime, parse_duration, Duration
 from contextlib import contextmanager
 
-Segment = namedtuple("Segment", "url duration init content available_at")
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
+
+
+class Segment(object):
+    def __init__(self, url, duration, init=False, content=True, available_at=epoch_start):
+        self.url = url
+        self.duration = duration
+        self.init = init
+        self.content = content
+        self.available_at = available_at
 
 
 def datetime_to_seconds(dt):
     return (dt - epoch_start).total_seconds()
 
 
-def count(firstval=0, step=1):
+def count_dt(firstval=datetime.datetime.now(tz=utc), step=datetime.timedelta(seconds=1)):
     x = firstval
-    while 1:
+    while True:
         yield x
         x += step
 
@@ -371,7 +379,7 @@ class SegmentTemplate(MPDNode):
         if kwargs.pop("init", True):
             init_url = self.format_initialization(**kwargs)
             if init_url:
-                yield Segment(init_url, 0, True, False, 0)
+                yield Segment(init_url, 0, True, False)
         for media_url, available_at in self.format_media(**kwargs):
             yield Segment(media_url, self.duration_seconds, False, True, available_at)
 
@@ -421,10 +429,14 @@ class SegmentTemplate(MPDNode):
                                                           if self.root.suggestedPresentationDelay
                                                           else 3))
 
+            # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
             number_iter = count(self.startNumber +
-                                int((since_start - suggested_delay).total_seconds() / self.duration_seconds))
-            available_iter = count(available_start - suggested_delay,
-                                   step=datetime.timedelta(seconds=self.duration_seconds))
+                                int((
+                                    since_start - suggested_delay - self.root.minBufferTime).total_seconds() / self.duration_seconds))
+
+            # the time the segment number is available at NOW
+            available_iter = count_dt(available_start,
+                                      step=datetime.timedelta(seconds=self.duration_seconds))
 
         for number, available_at in izip(number_iter, available_iter):
             yield number, available_at
@@ -510,10 +522,9 @@ class Representation(MPDNode):
                 if segment.init:
                     yield segment
                 else:
-                    sleep_until(segment.available_at)
                     yield segment
         else:
-            yield Segment(self.base_url, 0, True, True, 0)
+            yield Segment(self.base_url, 0, True, True)
 
 
 class SubRepresentation(MPDNode):
