@@ -109,7 +109,7 @@ class StringFormatter(logging.Formatter):
 
     def format(self, record):
         for rbase in self.remove_base:
-            record.name = record.name.replace(rbase+".", "")
+            record.name = record.name.replace(rbase + ".", "")
         record.levelname = record.levelname.lower()
 
         record.message = record.getMessage()
@@ -209,4 +209,4 @@ def basicConfig(**kwargs):
             root.setLevel(level)
 
 
-__all__ = ["StreamlinkLogHandler", "Logger", "basicConfig", "root", "levels"]
+__all__ = ["StreamlinkLogger", "Logger", "basicConfig", "root", "levels"]
