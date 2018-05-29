@@ -280,10 +280,9 @@ def build_parser():
         default="info",
         help="""
         Set the log message threshold.
-        Can be repeated to load multiple files, in which case
-        the options are merged on top of each other where the
-        last config has highest priority.
-    """
+
+        Valid levels are: none, error, warning, info, debug, trace
+        """
     )
     general.add_argument(
         "-Q", "--quiet",
