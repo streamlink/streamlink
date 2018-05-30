@@ -20,7 +20,7 @@ class SteamLoginFailed(Exception):
 
 
 class SteamBroadcastPlugin(Plugin):
-    _url_re = re.compile(r"http://steamcommunity.com/broadcast/watch/(\d+)")
+    _url_re = re.compile(r"https?://steamcommunity.com/broadcast/watch/(\d+)")
     _get_broadcast_url = "http://steamcommunity.com/broadcast/getbroadcastmpd/"
     _user_agent = "streamlink/{}".format(streamlink.__version__)
     _broadcast_schema = Schema({
@@ -96,7 +96,7 @@ class SteamBroadcastPlugin(Plugin):
 
         rsa = RSA.construct((rsadata["publickey_mod"], rsadata["publickey_exp"]))
         cipher = PKCS1_v1_5.new(rsa)
-        return base64.b64encode(cipher.encrypt(password)), rsadata["timestamp"]
+        return base64.b64encode(cipher.encrypt(password.encode("utf8"))), rsadata["timestamp"]
 
     def dologin(self, email, password, emailauth="", emailsteamid="", captchagid="-1", captcha_text="", twofactorcode=""):
         """
@@ -127,7 +127,8 @@ class SteamBroadcastPlugin(Plugin):
             if resp.get(u"captcha_needed"):
                 # special case for captcha
                 captchagid = resp[u"captcha_gid"]
-                self.logger.error("Captcha result required, open this URL to see the captcha: {}".format(self._captcha_url.format(captchagid)))
+                self.logger.error("Captcha result required, open this URL to see the captcha: {}".format(
+                    self._captcha_url.format(captchagid)))
                 captcha_text = self.console.ask("Captcha text: ")
                 if not captcha_text:
                     return False
@@ -162,12 +163,9 @@ class SteamBroadcastPlugin(Plugin):
             self.logger.error("Something when wrong when logging in to Steam")
             return False
 
-    def login(self):
-        email = self.options.get("email")
-        if email:
-            password = self.options.get("password")
-            self.logger.info("Atempting to login to Steam as {}".format(email))
-            return self.dologin(email, password)
+    def login(self, email, password):
+        self.logger.info("Attempting to login to Steam as {}".format(email))
+        return self.dologin(email, password)
 
     def _get_broadcast_stream(self, steamid, viewertoken=0):
         res = http.get(self._get_broadcast_url,
@@ -178,24 +176,22 @@ class SteamBroadcastPlugin(Plugin):
 
     def _get_streams(self):
         streamdata = None
-        # extract the steam ID from the URL
-        if self.login():
-            print([c.name for c in http.cookies])
+        if self.login(self.options.get("email"), self.options.get("password")):
+            # extract the steam ID from the URL
+            steamid = self._url_re.match(self.url).group(1)
 
-        steamid = self._url_re.match(self.url).group(1)
+            while streamdata is None or streamdata[u"success"] in ("waiting", "waiting_for_start"):
+                streamdata = self._get_broadcast_stream(steamid)
 
-        while streamdata is None or streamdata[u"success"] in ("waiting", "waiting_for_start"):
-            streamdata = self._get_broadcast_stream(steamid)
-
-            if streamdata[u"success"] == "ready":
-                return DASHStream.parse_manifest(self.session, streamdata["url"])
-            elif streamdata[u"success"] == "unavailable":
-                self.logger.error("This stream is currently unavailable")
-                return
-            else:
-                r = streamdata[u"retry"] / 1000.0
-                self.logger.info("Waiting for stream, will retry again in {} seconds...".format(r))
-                time.sleep(r)
+                if streamdata[u"success"] == "ready":
+                    return DASHStream.parse_manifest(self.session, streamdata["url"])
+                elif streamdata[u"success"] == "unavailable":
+                    self.logger.error("This stream is currently unavailable")
+                    return
+                else:
+                    r = streamdata[u"retry"] / 1000.0
+                    self.logger.info("Waiting for stream, will retry again in {} seconds...".format(r))
+                    time.sleep(r)
 
 
 __plugin__ = SteamBroadcastPlugin
