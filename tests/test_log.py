@@ -1,10 +1,10 @@
+import logging
 import unittest
+import warnings
 
-from streamlink.logger import Logger
+from streamlink import logger, Streamlink
 from streamlink.compat import is_py2
 
-# Docs says StringIO is suppose to take non-unicode strings
-# but it doesn't, so let's use BytesIO instead there...
 
 if is_py2:
     from io import BytesIO as StringIO
@@ -12,24 +12,95 @@ else:
     from io import StringIO
 
 
-class TestSession(unittest.TestCase):
-    def setUp(self):
-        self.output = StringIO()
-        self.manager = Logger()
-        self.manager.set_output(self.output)
-        self.logger = self.manager.new_module("test")
+class TestLogging(unittest.TestCase):
+    @classmethod
+    def _new_logger(cls):
+        output = StringIO()
+        logger.basicConfig(stream=output, format="[{name}][{levelname}] {message}", style="{")
+        return logging.getLogger("streamlink.test"), output
 
     def test_level(self):
-        self.logger.debug("test")
-        self.assertEqual(self.output.tell(), 0)
-        self.manager.set_level("debug")
-        self.logger.debug("test")
-        self.assertNotEqual(self.output.tell(), 0)
+        log, output = self._new_logger()
+        logger.root.setLevel("info")
+        log.debug("test")
+        self.assertEqual(output.tell(), 0)
+
+        logger.root.setLevel("debug")
+        log.debug("test")
+        self.assertNotEqual(output.tell(), 0)
 
     def test_output(self):
-        self.manager.set_level("debug")
-        self.logger.debug("test")
-        self.assertEqual(self.output.getvalue(), "[test][debug] test\n")
+        log, output = self._new_logger()
+        logger.root.setLevel("debug")
+        log.debug("test")
+        self.assertEqual(output.getvalue(), "[test][debug] test\n")
+
+    def test_trace_output(self):
+        log, output = self._new_logger()
+        logger.root.setLevel("trace")
+        log.trace("test")
+        self.assertEqual(output.getvalue(), "[test][trace] test\n")
+
+    def test_trace_no_output(self):
+        log, output = self._new_logger()
+        logger.root.setLevel("debug")
+        log.trace("test")
+        self.assertEqual(output.getvalue(), "")
+
+    def test_debug_out_at_trace(self):
+        log, output = self._new_logger()
+        logger.root.setLevel("trace")
+        log.debug("test")
+        self.assertEqual(output.getvalue(), "[test][debug] test\n")
+
+
+
+
+class TestDeprecatedLogger(unittest.TestCase):
+    def setUp(self):
+        warnings.resetwarnings()
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+
+    def tearDown(self):
+        warnings.simplefilter('default', DeprecationWarning)  # restore filter
+
+    def _new_logger(self):
+        output = StringIO()
+        manager = logger.Logger()
+        manager.set_output(output)
+        return manager, output
+
+    def test_level(self):
+        manager, output = self._new_logger()
+
+        log = manager.new_module("test_level")
+        log.debug("test")
+        self.assertEqual(output.tell(), 0)
+        manager.set_level("debug")
+        log.debug("test")
+        self.assertNotEqual(output.tell(), 0)
+
+    def test_output(self):
+        manager, output = self._new_logger()
+
+        log = manager.new_module("test_output")
+        manager.set_level("debug")
+        log.debug("test")
+        self.assertEqual(output.getvalue(), "[test_output][debug] test\n")
+
+    def test_deprecated_session_logger(self):
+        session = Streamlink()
+        output = StringIO()
+
+        new_log = session.logger.new_module("test")
+        session.set_logoutput(output)
+        session.set_loglevel("info")
+
+        new_log.info("test1")
+
+        # regular python loggers shouldn't log here
+        logging.getLogger("streamlink.test").critical("should not log")
+        self.assertEqual(output.getvalue(), "[test][info] test1\n")
 
 
 if __name__ == "__main__":

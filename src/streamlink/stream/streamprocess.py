@@ -1,3 +1,4 @@
+import logging
 import subprocess
 from operator import itemgetter
 
@@ -8,6 +9,8 @@ from streamlink.exceptions import StreamError
 
 import time
 import tempfile
+
+log = logging.getLogger(__name__)
 
 
 class StreamProcessIO(StreamIOThreadWrapper):
@@ -122,7 +125,7 @@ class StreamProcess(Stream):
         """
         stderr = stderr or self.stderr
         cmd = self.bake(self._check_cmd(), parameters, arguments, short_option_prefix, long_option_prefix)
-        self.logger.debug("Spawning command: {0}", subprocess.list2cmdline(cmd))
+        log.debug("Spawning command: {0}", subprocess.list2cmdline(cmd))
 
         try:
             process = subprocess.Popen(cmd, stderr=stderr, stdout=subprocess.PIPE)
@@ -138,7 +141,7 @@ class StreamProcess(Stream):
             # kill after the timeout has expired and the process still hasn't ended
             if not process.poll():
                 try:
-                    self.logger.debug("Process timeout expired ({0}s), killing process".format(timeout))
+                    log.debug("Process timeout expired ({0}s), killing process".format(timeout))
                     process.kill()
                 except Exception:
                     pass

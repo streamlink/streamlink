@@ -1,3 +1,4 @@
+import logging
 import re
 
 from collections import namedtuple
@@ -237,7 +238,7 @@ class BeatStreamReader(SegmentedStreamReader):
     __writer__ = BeatStreamWriter
 
     def __init__(self, stream, *args, **kwargs):
-        self.logger = stream.session.logger.new_module("stream.beat")
+        self.logger = logging.getLogger("streamlink.stream.beat")
 
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
 
