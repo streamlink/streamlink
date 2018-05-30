@@ -52,6 +52,7 @@ format=bundled
 ;           - urllib3
 ;           - socks / sockshandler
 ;       - websocket-client
+;       - isodate
 packages=pkg_resources
          six
          iso639
@@ -64,6 +65,7 @@ packages=pkg_resources
          websocket
          socks
          sockshandler
+         isodate
 pypi_wheels=pycryptodome==3.4.3
 
 files=../win32/LICENSE.txt > \$INSTDIR
