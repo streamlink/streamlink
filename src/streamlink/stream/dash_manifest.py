@@ -1,14 +1,14 @@
 from __future__ import unicode_literals
 
+import logging
 import datetime
 import re
 import time
+
 from collections import defaultdict, namedtuple
 from itertools import repeat, count
-
 from isodate import parse_datetime, parse_duration, Duration
 from contextlib import contextmanager
-
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
 
 if hasattr(datetime, "timezone"):
@@ -26,6 +26,7 @@ else:
 
     utc = UTC()
 
+log = logging.getLogger(__name__)
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
 
@@ -406,6 +407,7 @@ class SegmentTemplate(MPDNode):
         in the simplest case the segment number is based on the time since the availabilityStartTime
         :return:
         """
+        log.debug("Generating segment numbers for {0} playlist (id={1})".format(self.root.type, self.parent.id))
         if self.root.type == u"static":
             available_iter = repeat(epoch_start)
             duration = self.period.duration.seconds or self.root.mediaPresentationDuration.seconds
@@ -442,6 +444,7 @@ class SegmentTemplate(MPDNode):
 
     def format_media(self, **kwargs):
         if self.segmentTimeline:
+            log.debug("Generating segment timeline for {0} playlist (id={1}))".format(self.root.type, self.parent.id))
             if self.root.type == "dynamic":
                 # if there is no delay, use a delay of 3 seconds
                 suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()

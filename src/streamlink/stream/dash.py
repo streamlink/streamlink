@@ -1,5 +1,5 @@
 import itertools
-
+import logging
 import datetime
 import os.path
 
@@ -10,6 +10,8 @@ from streamlink.stream.wrappers import StreamIOIterWrapper
 from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+
+log = logging.getLogger(__name__)
 
 
 class DASHStreamWriter(SegmentedStreamWriter):
@@ -29,14 +31,14 @@ class DASHStreamWriter(SegmentedStreamWriter):
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
                 fname = os.path.basename(urlparse(segment.url).path)
-                self.logger.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
+                log.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
 
                 sleep_until(segment.available_at)
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
                                          exception=StreamError)
         except StreamError as err:
-            self.logger.error("Failed to open segment {0}: {1}", segment.url, err)
+            log.error("Failed to open segment {0}: {1}", segment.url, err)
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
@@ -44,10 +46,10 @@ class DASHStreamWriter(SegmentedStreamWriter):
             if not self.closed:
                 self.reader.buffer.write(chunk)
             else:
-                self.logger.warning("Download of segment: {} aborted".format(segment.url))
+                log.warning("Download of segment: {} aborted".format(segment.url))
                 return
 
-        self.logger.debug("Download of segment: {} complete".format(segment.url))
+        log.debug("Download of segment: {} complete".format(segment.url))
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
@@ -74,7 +76,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
                         if self.closed:
                             break
                         yield segment
-                        # self.logger.debug("Adding segment {0} to queue", segment.url)
+                        # log.debug("Adding segment {0} to queue", segment.url)
 
                     if self.mpd.type == "dynamic":
                         if not self.reload():
@@ -90,7 +92,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
             return
 
         self.reader.buffer.wait_free()
-        self.logger.debug("Reloading manifest ({0})".format(self.reader.representation_id))
+        log.debug("Reloading manifest ({0})".format(self.reader.representation_id))
         res = self.session.http.get(self.mpd.url, exception=StreamError)
 
         new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
@@ -111,8 +113,9 @@ class DASHStreamReader(SegmentedStreamReader):
 
     def __init__(self, stream, representation_id, *args, **kwargs):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
-        self.logger = stream.session.logger.new_module("stream.dash")
         self.representation_id = representation_id
+        log.debug("Opening DASH reader for: {0}".format(self.representation_id))
+
 
 
 class DASHStream(Stream):
