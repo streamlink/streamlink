@@ -1,11 +1,13 @@
+import itertools
+import logging
 import random
 import re
-import itertools
 import ssl
+
 import websocket
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, http
+from streamlink.plugin.api import useragents
 from streamlink.stream import RTMPStream
 
 _url_re = re.compile(r"""
@@ -19,7 +21,7 @@ _url_re = re.compile(r"""
 class VLWebSocket(websocket.WebSocket):
     def __init__(self, **_):
         self.session = _.pop("session")
-        self.logger = self.session.logger.new_module("plugins.vaughnlive.websocket")
+        self.logger = logging.getLogger("streamlink.plugins.vaughnlive.websocket")
         sslopt = _.pop("sslopt", {})
         sslopt["cert_reqs"] = ssl.CERT_NONE
         super(VLWebSocket, self).__init__(sslopt=sslopt, **_)

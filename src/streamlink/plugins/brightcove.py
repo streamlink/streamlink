@@ -1,6 +1,6 @@
 import random
 import re
-from binascii import hexlify
+import logging
 from io import BytesIO
 
 from streamlink import PluginError
@@ -60,7 +60,7 @@ class BrightcovePlayer(object):
 
     def __init__(self, session, account_id, player_id="default_default"):
         self.session = session
-        self.logger = session.logger.new_module("plugins.brightcove")
+        self.logger = logging.getLogger("streamlink.plugins.brightcove")
         self.logger.debug("Creating player for account {0} (player_id={1})", account_id, player_id)
         self.account_id = account_id
         self.player_id = player_id
