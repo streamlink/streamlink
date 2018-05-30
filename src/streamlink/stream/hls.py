@@ -1,17 +1,17 @@
+import logging
 import re
 import struct
-from collections import defaultdict, namedtuple
 
+from collections import defaultdict, namedtuple
 from Crypto.Cipher import AES
 
+from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader,
                                          SegmentedStreamWriter,
                                          SegmentedStreamWorker)
-from ..exceptions import StreamError
-import logging
 
 log = logging.getLogger(__name__)
 Sequence = namedtuple("Sequence", "num segment")
@@ -154,7 +154,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.duration_limit = self.stream.duration or (
-        int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
+            int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
         self.reload_playlist()
@@ -168,15 +168,13 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if self.duration_offset_start != 0:
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
-            if self.duration_limit and self.playlist_end:
-                self.playlist_end = self.duration_to_sequence(self.duration_offset_start + self.duration_limit,
-                                                              self.playlist_sequences)
+
         if self.playlist_sequences:
             log.debug("First Sequence: {0}; Last Sequence: {1}",
                       self.playlist_sequences[0].num, self.playlist_sequences[-1].num)
             log.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
-                      self.duration_offset_start, self.duration_limit, self.playlist_sequence,
-                      self.playlist_end)
+                      self.duration_offset_start, self.duration_limit,
+                      self.playlist_sequence, self.playlist_end)
 
     def reload_playlist(self):
         if self.closed:
@@ -252,10 +250,15 @@ class HLSStreamWorker(SegmentedStreamWorker):
         return default
 
     def iter_segments(self):
+        total_duration = 0
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
                 log.debug("Adding segment {0} to queue", sequence.num)
                 yield sequence
+                total_duration += sequence.segment.duration
+                if self.duration_limit and total_duration >= self.duration_limit:
+                    log.info("Stopping stream early after {0}".format(self.duration_limit))
+                    return
 
                 # End of stream
                 stream_end = self.playlist_end and sequence.num >= self.playlist_end
@@ -277,7 +280,6 @@ class HLSStreamReader(SegmentedStreamReader):
 
     def __init__(self, stream, *args, **kwargs):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
-        log = logging.getLogger("streamlink.stream.hls")
         self.request_params = dict(stream.args)
         self.timeout = stream.session.options.get("hls-timeout")
 
@@ -400,11 +402,9 @@ class HLSStream(HTTPStream):
                     default_audio = [media]
 
                 # select the first audio stream that matches the users explict language selection
-                if (('*' in audio_select or media.language in audio_select or
-                             media.name in audio_select) or
-                        ((not preferred_audio or media.default) and
-                             locale.explicit and
-                             locale.equivalent(language=media.language))):
+                if (('*' in audio_select or media.language in audio_select or media.name in audio_select) or
+                        ((not preferred_audio or media.default) and locale.explicit and locale.equivalent(
+                            language=media.language))):
                     preferred_audio.append(media)
 
             # final fallback on the first audio stream listed
