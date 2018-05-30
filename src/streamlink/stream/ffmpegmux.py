@@ -98,6 +98,7 @@ class FFMPEGMuxer(StreamIO):
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
+        copyts = options.pop("copyts", False)
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
@@ -108,6 +109,9 @@ class FFMPEGMuxer(StreamIO):
 
         for m in maps:
             self._cmd.extend(["-map", str(m)])
+
+        if copyts:
+            self._cmd.extend(["-copyts"])
 
         for stream, data in metadata.items():
             for datum in data:

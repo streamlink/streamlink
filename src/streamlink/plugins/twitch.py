@@ -591,7 +591,7 @@ class Twitch(Plugin):
 
             # only get the token once the channel has been resolved
             sig, token = self._access_token(stream_type)
-            url = self.usher.channel(self.channel, sig=sig, token=token)
+            url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
         elif stream_type == "video":
             sig, token = self._access_token(stream_type)
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)

@@ -20,6 +20,7 @@ if is_py2:
     _str = str
     str = unicode
     range = xrange
+    from itertools import izip
 
     def bytes(b, enc="ascii"):
         return _str(b)
@@ -28,14 +29,15 @@ elif is_py3:
     bytes = bytes
     str = str
     range = range
+    izip = zip
 
 try:
     from urllib.parse import (
-        urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, urlencode
+        urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, urlencode, urlsplit, urlunsplit
     )
     import queue
 except ImportError:
-    from urlparse import urlparse, urlunparse, urljoin, parse_qsl
+    from urlparse import urlparse, urlunparse, urljoin, parse_qsl, urlsplit, urlunsplit
     from urllib import quote, unquote, urlencode
     import Queue as queue
 
@@ -47,4 +49,5 @@ except ImportError:
 
 __all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
-           "unquote", "queue", "range", "urlencode", "devnull", "which"]
+           "unquote", "queue", "range", "urlencode", "devnull", "which",
+           "izip", "urlsplit", "urlunsplit"]

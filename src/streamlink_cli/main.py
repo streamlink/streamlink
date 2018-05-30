@@ -248,9 +248,11 @@ def open_stream(stream):
         log.debug("Pre-buffering 8192 bytes")
         prebuffer = stream_fd.read(8192)
     except IOError as err:
+        stream_fd.close()
         raise StreamError("Failed to read data from stream: {0}".format(err))
 
     if not prebuffer:
+        stream_fd.close()
         raise StreamError("No data returned from stream")
 
     return stream_fd, prebuffer

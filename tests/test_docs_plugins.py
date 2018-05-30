@@ -15,7 +15,7 @@ class TestPluginMatrix(unittest.TestCase):
     Test that each plugin has an entry in the plugin matrix
     """
     longMessage = False
-    built_in_plugins = ['akamaihd', 'http', 'hds', 'rtmp', 'hls']
+    built_in_plugins = ['akamaihd', 'http', 'hds', 'rtmp', 'hls', 'dash']
 
     title_re = re.compile("\n[= ]+\n")
     plugin_re = re.compile("^([\w_]+)\s", re.MULTILINE)

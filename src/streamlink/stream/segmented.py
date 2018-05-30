@@ -17,7 +17,7 @@ class SegmentedStreamWorker(Thread):
     writer thread.
     """
 
-    def __init__(self, reader):
+    def __init__(self, reader, **kwargs):
         self.closed = False
         self.reader = reader
         self.writer = reader.writer
@@ -26,7 +26,7 @@ class SegmentedStreamWorker(Thread):
 
         self._wait = None
 
-        Thread.__init__(self)
+        Thread.__init__(self, name="Thread-{0}".format(self.__class__.__name__))
         self.daemon = True
 
     def close(self):
@@ -57,6 +57,8 @@ class SegmentedStreamWorker(Thread):
 
     def run(self):
         for segment in self.iter_segments():
+            if self.closed:
+                break
             self.writer.put(segment)
 
         # End of stream, tells the writer to exit
@@ -92,7 +94,7 @@ class SegmentedStreamWriter(Thread):
         self.executor = futures.ThreadPoolExecutor(max_workers=threads)
         self.futures = queue.Queue(size)
 
-        Thread.__init__(self)
+        Thread.__init__(self, name="Thread-{0}".format(self.__class__.__name__))
         self.daemon = True
 
     def close(self):
@@ -124,7 +126,7 @@ class SegmentedStreamWriter(Thread):
         while not self.closed:
             try:
                 queue_.put(value, block=True, timeout=1)
-                break
+                return
             except queue.Full:
                 continue
 
