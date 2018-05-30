@@ -797,7 +797,7 @@ def build_parser():
         default=None,
         help="""
         Amount of time to skip from the beginning of the stream.
-        For live streams, this is a negative offset from the end of the stream.
+        For live streams, this is a negative offset from the end of the stream (rewind).
 
         Default is 00:00:00.
         """)
@@ -809,8 +809,6 @@ def build_parser():
         help="""
         Limit the playback duration, useful for watching segments of a stream. The actual duration may be slightly
         longer, as it is rounded to the nearest HLS segment.
-
-        Has no effect on live streams.
 
         Default is unlimited.
         """)

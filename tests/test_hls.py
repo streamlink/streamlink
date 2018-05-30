@@ -1,19 +1,19 @@
-import sys
+import logging
 import os
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-
-from Crypto.Cipher import AES
+import unittest
 from binascii import hexlify
-
-from streamlink.stream import hls
-from streamlink.session import Streamlink
 from functools import partial
-from mock import patch, Mock
-import requests_mock
+
 import pytest
+import requests_mock
+from Crypto.Cipher import AES
+from mock import patch, Mock
+
+from streamlink.session import Streamlink
+from streamlink.stream import hls
+
+log = logging.getLogger(__name__)
+
 
 def pkcs7_encode(data, keySize):
     val = keySize - (len(data) % keySize)
@@ -79,8 +79,9 @@ audio_only.m3u8
 
         return playlist + playlistEnd
 
-    def start_streamlink(self, masterPlaylist, kwargs={}):
-        print("Executing streamlink")
+    def start_streamlink(self, masterPlaylist, kwargs=None):
+        kwargs = kwargs or {}
+        log.info("Executing streamlink")
         streamlink = Streamlink()
 
         # Set to default value to avoid a test fail if the default change
@@ -91,11 +92,11 @@ audio_only.m3u8
         stream = masterStream["1080p (source)"].open()
         data = b"".join(iter(partial(stream.read, 8192), b""))
         stream.close()
-        print("End of streamlink execution")
+        log.info("End of streamlink execution")
         return data
 
     def test_hls_non_encrypted(self):
-        streams = [os.urandom(1024) for i in range(4)]
+        streams = [os.urandom(1024) for _ in range(4)]
         masterPlaylist = self.getMasterPlaylist()
         firstSequence = self.mediaSequence
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
@@ -106,10 +107,11 @@ audio_only.m3u8
                 mock.get("http://mocked/path/stream{0}.ts".format(i), content=stream)
 
             # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8", {'start_offset': 1, 'duration': 1})
+            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8",
+                                                     {'start_offset': 1, 'duration': 1})
 
-        # Check result
-        expectedResult = b''.join(streams[1:3])
+        # Check result, each segment is 1 second, with duration=1 only one segment should be returned
+        expectedResult = b''.join(streams[1:2])
         self.assertEqual(streamlinkResult, expectedResult)
 
     def test_hls_encryted_aes128(self):
