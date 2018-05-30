@@ -6,6 +6,7 @@ from streamlink.stream.hds import HDSStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.rtmpdump import RTMPStream
+from streamlink.stream.dash import DASHStream
 from streamlink.stream.streamprocess import StreamProcess
 from streamlink.stream.wrappers import StreamIOWrapper, StreamIOIterWrapper, StreamIOThreadWrapper
 

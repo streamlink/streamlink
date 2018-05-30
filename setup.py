@@ -46,6 +46,7 @@ else:
     deps.append("iso-639")
     deps.append("iso3166")
 
+deps.append("isodate")
 deps.append("websocket-client")
 
 # Support for SOCKS proxies
