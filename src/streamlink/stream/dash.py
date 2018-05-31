@@ -6,7 +6,6 @@ import os.path
 from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
 from streamlink.stream.stream import Stream
-from streamlink.stream.wrappers import StreamIOIterWrapper
 from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
