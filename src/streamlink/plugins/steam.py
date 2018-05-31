@@ -21,7 +21,7 @@ class SteamLoginFailed(Exception):
 
 class SteamBroadcastPlugin(Plugin):
     _url_re = re.compile(r"https?://steamcommunity.com/broadcast/watch/(\d+)")
-    _get_broadcast_url = "http://steamcommunity.com/broadcast/getbroadcastmpd/"
+    _get_broadcast_url = "https://steamcommunity.com/broadcast/getbroadcastmpd/"
     _user_agent = "streamlink/{}".format(streamlink.__version__)
     _broadcast_schema = Schema({
         "success": validate.any("ready", "unavailable", "waiting", "waiting_to_start"),
