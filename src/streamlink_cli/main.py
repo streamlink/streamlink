@@ -728,13 +728,13 @@ def setup_http_session():
         streamlink.set_option("http-query-params", args.http_query_params)
 
 
-def setup_plugins():
+def setup_plugins(extra_plugin_dir=None):
     """Loads any additional plugins."""
     if os.path.isdir(PLUGINS_DIR):
         load_plugins([PLUGINS_DIR])
 
-    if args.plugin_dirs:
-        load_plugins(args.plugin_dirs)
+    if extra_plugin_dir:
+        load_plugins(extra_plugin_dir)
 
 
 def setup_streamlink():
@@ -957,7 +957,8 @@ def main():
         console_out = sys.stdout
     setup_logging(console_out, args.loglevel)
     setup_streamlink()
-    setup_plugins()
+    # load additional plugins
+    setup_plugins(args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
