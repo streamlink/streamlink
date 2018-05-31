@@ -962,6 +962,8 @@ def main():
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
     setup_config_args(parser)
+    # update the logging level if changed by a plugin specific config
+    logger.root.setLevel(args.loglevel)
     setup_console(console_out)
     setup_http_session()
     check_root()
