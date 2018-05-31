@@ -32,8 +32,8 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 time_to_wait = (segment.available_at - now).total_seconds()
                 fname = os.path.basename(urlparse(segment.url).path)
                 log.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
-
                 sleep_until(segment.available_at)
+
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
                                          exception=StreamError)
@@ -42,7 +42,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
-        for chunk in StreamIOIterWrapper(res.iter_content(chunk_size)):
+        for chunk in res.iter_content(chunk_size):
             if not self.closed:
                 self.reader.buffer.write(chunk)
             else:
