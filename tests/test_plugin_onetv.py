@@ -31,16 +31,16 @@ class TestPluginOneTV(unittest.TestCase):
         self.assertEqual(OneTV("http://1tv.ru/live").channel,
                          "1tv")
         self.assertEqual(OneTV("http://www.ctclove.ru/online").channel,
-                         "ctclove")
+                         "ctc-love")
         self.assertEqual(OneTV("http://domashny.ru/online").channel,
-                         "domashny")
+                         "ctc-dom")
 
     def test_live_api_url(self):
         self.assertEqual(OneTV("http://1tv.ru/live").live_api_url,
                          "http://stream.1tv.ru/api/playlist/1tvch_as_array.json")
 
         self.assertEqual(OneTV("https://www.ctclove.ru/online").live_api_url,
-                         "https://media.1tv.ru/api/v1/ctc/playlist/ctclove_as_array.json")
+                         "https://media.1tv.ru/api/v1/ctc/playlist/ctc-love_as_array.json")
 
         self.assertEqual(OneTV("http://domashny.ru/online").live_api_url,
-                         "http://media.1tv.ru/api/v1/ctc/playlist/domashny_as_array.json")
+                         "http://media.1tv.ru/api/v1/ctc/playlist/ctc-dom_as_array.json")
