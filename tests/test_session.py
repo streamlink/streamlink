@@ -1,5 +1,9 @@
 import os
-import unittest
+import sys
+if sys.version_info[0:2] == (2, 6):
+    import unittest2 as unittest
+else:
+    import unittest
 
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 
@@ -21,11 +25,7 @@ class TestSession(unittest.TestCase):
         self.session.load_plugins(self.PluginPath)
 
     def test_exceptions(self):
-        try:
-            self.session.resolve_url("invalid url")
-            self.assertTrue(False)
-        except NoPluginError:
-            self.assertTrue(True)
+        self.assertRaises(NoPluginError, self.session.resolve_url, "invalid url")
 
     def test_load_plugins(self):
         plugins = self.session.get_plugins()

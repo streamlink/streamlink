@@ -24,7 +24,10 @@ extensions = ['sphinx.ext.autodoc', 'ext_argparse', 'ext_github', 'ext_releasere
 templates_path = ['_templates']
 
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+source_parsers = {
+   '.md': 'recommonmark.parser.CommonMarkParser',
+}
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -42,7 +45,7 @@ copyright = '2018, Streamlink'
 
 #
 # The short X.Y version.
-version = streamlink_version
+version = streamlink_version.split('+')[0]
 # The full version, including alpha/beta/rc tags.
 release = streamlink_version
 

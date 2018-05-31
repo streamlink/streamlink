@@ -21,18 +21,23 @@ class PluginTestMeta(type):
             file, pathname, desc = imp.find_module(pname, [plugin_path])
             module = imp.load_module(pname, file, pathname, desc)
             if hasattr(module, "__plugin__"):
-                plugins.append((pname, file, pathname, desc))
+                plugins.append((pname))
 
         session = Streamlink()
 
-        def gentest(pname, file, pathname, desc):
+        def gentest(pname):
             def load_plugin_test(self):
+                # Reset file variable to ensure it is still open when doing
+                # load_plugin else python might open the plugin source .py
+                # using ascii encoding instead of utf-8.
+                # See also open() call here: imp._HackedGetData.get_data
+                file, pathname, desc = imp.find_module(pname, [plugin_path])
                 session.load_plugin(pname, file, pathname, desc)
 
             return load_plugin_test
 
-        for pname, file, pathname, desc in plugins:
-            dict['test_{0}_load'.format(pname)] = gentest(pname, file, pathname, desc)
+        for pname in plugins:
+            dict['test_{0}_load'.format(pname)] = gentest(pname)
 
         return type.__new__(mcs, name, bases, dict)
 

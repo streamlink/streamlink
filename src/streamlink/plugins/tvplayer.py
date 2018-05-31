@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import re
 
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
@@ -36,10 +36,16 @@ class TVPlayer(Plugin):
             "key": validate.text
         }
     })
-    options = PluginOptions({
-        "email": None,
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument("email",
+                       help="The email address used to register with tvplayer.com.",
+                       metavar="EMAIL",
+                       requires=["password"]),
+        PluginArgument("password",
+                       sensitive=True,
+                       help="The password for your tvplayer.com account.",
+                       metavar="PASSWORD")
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -96,6 +102,7 @@ class TVPlayer(Plugin):
 
     def _get_streams(self):
         if self.get_option("email") and self.get_option("password"):
+            self.logger.debug("Logging in as {0}".format(self.get_option("email")))
             if not self.authenticate(self.get_option("email"), self.get_option("password")):
                 self.logger.warning("Failed to login as {0}".format(self.get_option("email")))
 

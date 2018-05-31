@@ -1,17 +1,23 @@
 import imp
+import logging
 import pkgutil
 import sys
 import traceback
+
 import requests
 
-from streamlink.utils import update_scheme
+from streamlink.logger import StreamlinkLogger, Logger
+from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
 from .compat import is_win32
 from .exceptions import NoPluginError, PluginError
-from .logger import Logger
 from .options import Options
 from .plugin import api
+
+# Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
+logging.setLoggerClass(StreamlinkLogger)
+log = logging.getLogger(__name__)
 
 
 def print_small_exception(start_after):
@@ -71,8 +77,19 @@ class Streamlink(object):
             "locale": None
         })
         self.plugins = {}
-        self.logger = Logger()
         self.load_builtin_plugins()
+        self._logger = None
+
+
+    @property
+    def logger(self):
+        """
+        Backwards compatible logger property
+        :return: Logger instance
+        """
+        if not self._logger:
+            self._logger = Logger()
+        return self._logger
 
     def set_option(self, key, value):
         """Sets general options used by plugins and streams originating
@@ -338,7 +355,6 @@ class Streamlink(object):
         :param level: level of logging to output
 
         """
-
         self.logger.set_level(level)
 
     def set_logoutput(self, output):
@@ -349,6 +365,7 @@ class Streamlink(object):
         """
         self.logger.set_output(output)
 
+    @memoize
     def resolve_url(self, url, follow_redirect=True):
         """Attempts to find a plugin that can use this URL.
 

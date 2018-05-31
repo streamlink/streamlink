@@ -2,7 +2,7 @@ import re
 import sys
 import time
 
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -15,13 +15,16 @@ class Pluzz(Plugin):
     PLAYER_GENERATOR_URL = 'https://sivideo.webservices.francetelevisions.fr/assets/staticmd5/getUrl?id=jquery.player.7.js'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
 
-    _url_re = re.compile(r'https?://((?:www)\.france\.tv/.+\.html|www\.(ludo|zouzous)\.fr/heros/[\w-]+|(sport|france3-regions)\.francetvinfo\.fr/.+?/(tv/direct)?)')
+    _url_re = re.compile(
+        r'https?://((?:www)\.france\.tv/.+\.html|www\.(ludo|zouzous)\.fr/heros/[\w-]+|(sport|france3-regions)\.francetvinfo\.fr/.+?/(tv/direct)?)')
     _pluzz_video_id_re = re.compile(r'data-main-video="(?P<video_id>.+?)"')
     _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _f3_regions_video_id_re = re.compile(r'"http://videos\.francetv\.fr/video/(?P<video_id>.+?)@Regions"')
     _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
-    _player_re = re.compile(r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
-    _swf_re = re.compile(r'//staticftv-a\.akamaihd\.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf')
+    _player_re = re.compile(
+        r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
+    _swf_re = re.compile(
+        r'//staticftv-a\.akamaihd\.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
     _mp4_bitrate_re = re.compile(r'.*-(?P<bitrate>[0-9]+k)\.mp4')
 
@@ -78,9 +81,15 @@ class Pluzz(Plugin):
 
     _player_schema = validate.Schema({'result': validate.url()})
 
-    options = PluginOptions({
-        "mux_subtitles": False
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "mux-subtitles",
+            action="store_true",
+            help="""
+        Automatically mux available subtitles in to the output stream.
+        """
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -157,7 +166,9 @@ class Pluzz(Plugin):
             if '.mpd' in video_url:
                 continue
 
-            if '.f4m' in video_url or 'france.tv' in self.url:
+            if ('.f4m' in video_url or
+                'france.tv' in self.url or
+                'sport.francetvinfo.fr' in self.url):
                 res = http.get(self.TOKEN_URL.format(video_url))
                 video_url = res.text
 

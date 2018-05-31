@@ -1,6 +1,10 @@
 import errno
+import logging
 import os
 import platform
+from collections import OrderedDict
+from gettext import gettext
+
 import requests
 import sys
 import signal
@@ -20,8 +24,10 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
+from streamlink.plugin import PluginOptions
 
-from .argparser import parser
+import streamlink.logger as logger
+from .argparser import build_parser
 from .compat import stdout, is_win32
 from .console import ConsoleOutput
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
@@ -37,12 +43,14 @@ QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = streamlink = plugin = stream_fd = output = None
 
+log = logging.getLogger("streamlink.console")
+
 
 def check_file_output(filename, force):
     """Checks if file already exists and ask the user if it should
     be overwritten if it does."""
 
-    console.logger.debug("Checking file output")
+    log.debug("Checking file output")
 
     if os.path.isfile(filename) and not force:
         answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
@@ -82,7 +90,7 @@ def create_output():
 
         if args.player_fifo:
             pipename = "streamlinkpipe-{0}".format(os.getpid())
-            console.logger.info("Creating pipe {0}", pipename)
+            log.info("Creating pipe {0}", pipename)
 
             try:
                 namedpipe = NamedPipe(pipename)
@@ -91,7 +99,7 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
-        console.logger.info("Starting player: {0}", args.player)
+        log.info("Starting player: {0}", args.player)
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
@@ -146,7 +154,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                                        quiet=not args.verbose_player)
 
         try:
-            console.logger.info("Starting player: {0}", args.player)
+            log.info("Starting player: {0}", args.player)
             if player:
                 player.open()
         except OSError as err:
@@ -156,13 +164,13 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
         server = create_http_server(host=None, port=port)
         player = None
 
-        console.logger.info("Starting server, access with one of:")
+        log.info("Starting server, access with one of:")
         for url in server.urls:
-            console.logger.info(" " + url)
+            log.info(" " + url)
 
     for req in iter_http_requests(server, player):
         user_agent = req.headers.get("User-Agent") or "unknown player"
-        console.logger.info("Got HTTP request from {0}".format(user_agent))
+        log.info("Got HTTP request from {0}".format(user_agent))
 
         stream_fd = prebuffer = None
         while not stream_fd and (not player or player.running):
@@ -175,23 +183,23 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                         stream = streams[stream_name]
                         break
                 else:
-                    console.logger.info("Stream not available, will re-fetch "
-                                        "streams in 10 sec")
+                    log.info("Stream not available, will re-fetch "
+                             "streams in 10 sec")
                     sleep(10)
                     continue
             except PluginError as err:
-                console.logger.error(u"Unable to fetch new streams: {0}", err)
+                log.error(u"Unable to fetch new streams: {0}", err)
                 continue
 
             try:
-                console.logger.info("Opening stream: {0} ({1})", stream_name,
-                                    type(stream).shortname())
+                log.info("Opening stream: {0} ({1})", stream_name,
+                         type(stream).shortname())
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
-                console.logger.error("{0}", err)
+                log.error("{0}", err)
 
         if stream_fd and prebuffer:
-            console.logger.debug("Writing stream to player")
+            log.debug("Writing stream to player")
             read_stream(stream_fd, server, prebuffer)
 
         server.close(True)
@@ -210,7 +218,7 @@ def output_stream_passthrough(stream):
                           quiet=not args.verbose_player)
 
     try:
-        console.logger.info("Starting player: {0}", args.player)
+        log.info("Starting player: {0}", args.player)
         output.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", args.player, err)
@@ -237,12 +245,14 @@ def open_stream(stream):
     # Read 8192 bytes before proceeding to check for errors.
     # This is to avoid opening the output unnecessarily.
     try:
-        console.logger.debug("Pre-buffering 8192 bytes")
+        log.debug("Pre-buffering 8192 bytes")
         prebuffer = stream_fd.read(8192)
     except IOError as err:
+        stream_fd.close()
         raise StreamError("Failed to read data from stream: {0}".format(err))
 
     if not prebuffer:
+        stream_fd.close()
         raise StreamError("No data returned from stream")
 
     return stream_fd, prebuffer
@@ -259,7 +269,7 @@ def output_stream(stream):
             success_open = True
             break
         except StreamError as err:
-            console.logger.error("Try {0}/{1}: Could not open stream {2} ({3})", i + 1, args.retry_open, stream, err)
+            log.error("Try {0}/{1}: Could not open stream {2} ({3})", i + 1, args.retry_open, stream, err)
 
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
@@ -277,7 +287,7 @@ def output_stream(stream):
                          args.output, err)
 
     with closing(output):
-        console.logger.debug("Writing stream to output")
+        log.debug("Writing stream to output")
         read_stream(stream_fd, output, prebuffer)
 
     return True
@@ -307,16 +317,16 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                 output.player.poll()
 
                 if output.player.returncode is not None:
-                    console.logger.info("Player closed")
+                    log.info("Player closed")
                     break
 
             try:
                 output.write(data)
             except IOError as err:
                 if is_player and err.errno in ACCEPTABLE_ERRNO:
-                    console.logger.info("Player closed")
+                    log.info("Player closed")
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
-                    console.logger.info("HTTP connection closed")
+                    log.info("HTTP connection closed")
                 else:
                     console.exit("Error when writing to output: {0}, exiting", err)
 
@@ -325,7 +335,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
         console.exit("Error when reading from stream: {0}, exiting", err)
     finally:
         stream.close()
-        console.logger.info("Stream ended")
+        log.info("Stream ended")
 
 
 def handle_stream(plugin, streams, stream_name):
@@ -378,8 +388,8 @@ def handle_stream(plugin, streams, stream_name):
             stream_type = type(stream).shortname()
 
             if stream_type in args.player_passthrough and not file_output:
-                console.logger.info("Opening stream: {0} ({1})", stream_name,
-                                    stream_type)
+                log.info("Opening stream: {0} ({1})", stream_name,
+                         stream_type)
                 success = output_stream_passthrough(stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
@@ -387,8 +397,8 @@ def handle_stream(plugin, streams, stream_name):
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
-                console.logger.info("Opening stream: {0} ({1})", stream_name,
-                                    stream_type)
+                log.info("Opening stream: {0} ({1})", stream_name,
+                         stream_type)
                 success = output_stream(stream)
 
             if success:
@@ -409,12 +419,12 @@ def fetch_streams_with_retry(plugin, interval, count):
     try:
         streams = fetch_streams(plugin)
     except PluginError as err:
-        console.logger.error(u"{0}", err)
+        log.error(u"{0}", err)
         streams = None
 
     if not streams:
-        console.logger.info("Waiting for streams, retrying every {0} "
-                            "second(s)", interval)
+        log.info("Waiting for streams, retrying every {0} "
+                 "second(s)", interval)
     attempts = 0
 
     while not streams:
@@ -423,7 +433,7 @@ def fetch_streams_with_retry(plugin, interval, count):
         try:
             streams = fetch_streams(plugin)
         except PluginError as err:
-            console.logger.error(u"{0}", err)
+            log.error(u"{0}", err)
 
         if count > 0:
             attempts += 1
@@ -465,6 +475,7 @@ def format_valid_streams(plugin, streams):
 
         def synonymfilter(n):
             return stream is streams[n] and n is not name
+
         synonyms = list(filter(synonymfilter, streams.keys()))
 
         if len(synonyms) > 0:
@@ -489,8 +500,22 @@ def handle_url():
 
     try:
         plugin = streamlink.resolve_url(args.url)
-        console.logger.info("Found matching plugin {0} for URL {1}",
-                            plugin.module, args.url)
+        setup_plugin_options(streamlink, plugin)
+        log.info("Found matching plugin {0} for URL {1}",
+                 plugin.module, args.url)
+
+        plugin_args = []
+        for parg in plugin.arguments:
+            value = plugin.get_option(parg.dest)
+            if value:
+                plugin_args.append((parg, value))
+
+        if plugin_args:
+            log.debug("Plugin specific arguments:")
+            for parg, value in plugin_args:
+                log.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
+                                                             value if not parg.sensitive else ("*" * 8),
+                                                             parg.dest))
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -521,7 +546,7 @@ def handle_url():
         validstreams = format_valid_streams(plugin, streams)
         for stream_name in args.stream:
             if stream_name in streams:
-                console.logger.info("Available streams: {0}", validstreams)
+                log.info("Available streams: {0}", validstreams)
                 handle_stream(plugin, streams, stream_name)
                 return
 
@@ -584,11 +609,11 @@ def load_plugins(dirs):
         if os.path.isdir(directory):
             streamlink.load_plugins(directory)
         else:
-            console.logger.warning("Plugin path {0} does not exist or is not "
-                                   "a directory!", directory)
+            log.warning("Plugin path {0} does not exist or is not "
+                        "a directory!", directory)
 
 
-def setup_args(config_files=[]):
+def setup_args(parser, config_files=[], ignore_unknown=False):
     """Parses arguments."""
     global args
     arglist = sys.argv[1:]
@@ -597,7 +622,10 @@ def setup_args(config_files=[]):
     for config_file in filter(os.path.isfile, config_files):
         arglist.insert(0, "@" + config_file)
 
-    args = parser.parse_args(arglist)
+    args, unknown = parser.parse_known_args(arglist)
+    if unknown and not ignore_unknown:
+        msg = gettext('unrecognized arguments: %s')
+        parser.error(msg % ' '.join(unknown))
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
@@ -607,7 +635,7 @@ def setup_args(config_files=[]):
         args.url = args.url_param
 
 
-def setup_config_args():
+def setup_config_args(parser):
     config_files = []
 
     if args.url:
@@ -625,34 +653,29 @@ def setup_config_args():
             break
 
     if config_files:
-        setup_args(config_files)
+        setup_args(parser, config_files)
 
 
-def setup_console():
+def setup_console(output):
     """Console setup."""
     global console
 
     # All console related operations is handled via the ConsoleOutput class
-    console = ConsoleOutput(sys.stdout, streamlink)
-
-    # Console output should be on stderr if we are outputting
-    # a stream to stdout.
-    if args.stdout or args.output == "-":
-        console.set_output(sys.stderr)
+    console = ConsoleOutput(output, streamlink)
 
     # We don't want log output when we are printing JSON or a command-line.
     if not any(getattr(args, attr) for attr in QUIET_OPTIONS):
         console.set_level(args.loglevel)
 
     if args.quiet_player:
-        console.logger.warning("The option --quiet-player is deprecated since "
-                               "version 1.4.3 as hiding player output is now "
-                               "the default.")
+        log.warning("The option --quiet-player is deprecated since "
+                    "version 1.4.3 as hiding player output is now "
+                    "the default.")
 
     if args.best_stream_default:
-        console.logger.warning("The option --best-stream-default is deprecated "
-                               "since version 1.9.0, use '--default-stream best' "
-                               "instead.")
+        log.warning("The option --best-stream-default is deprecated "
+                    "since version 1.9.0, use '--default-stream best' "
+                    "instead.")
 
     console.json = args.json
 
@@ -815,191 +838,61 @@ def setup_options():
 
     # Deprecated options
     if args.hds_fragment_buffer:
-        console.logger.warning("The option --hds-fragment-buffer is deprecated "
-                               "and will be removed in the future. Use "
-                               "--ringbuffer-size instead")
+        log.warning("The option --hds-fragment-buffer is deprecated "
+                    "and will be removed in the future. Use "
+                    "--ringbuffer-size instead")
 
 
-def setup_plugin_options():
+def setup_plugin_args(session, parser):
     """Sets Streamlink plugin options."""
-    if args.twitch_cookie:
-        streamlink.set_plugin_option("twitch", "cookie",
-                                     args.twitch_cookie)
 
-    if args.twitch_oauth_token:
-        streamlink.set_plugin_option("twitch", "oauth_token",
-                                     args.twitch_oauth_token)
+    plugin_args = parser.add_argument_group("Plugin options")
+    for pname, plugin in session.plugins.items():
+        defaults = {}
+        for parg in plugin.arguments:
+            plugin_args.add_argument(parg.argument_name(pname), **parg.options)
+            defaults[parg.dest] = parg.default
 
-    if args.twitch_disable_hosting:
-        streamlink.set_plugin_option("twitch", "disable_hosting",
-                                     args.twitch_disable_hosting)
+        plugin.options = PluginOptions(defaults)
 
-    if args.ustream_password:
-        streamlink.set_plugin_option("ustreamtv", "password",
-                                     args.ustream_password)
 
-    if args.crunchyroll_username:
-        streamlink.set_plugin_option("crunchyroll", "username",
-                                     args.crunchyroll_username)
-
-    if args.crunchyroll_username and not args.crunchyroll_password:
-        crunchyroll_password = console.askpass("Enter Crunchyroll password: ")
-    else:
-        crunchyroll_password = args.crunchyroll_password
-
-    if crunchyroll_password:
-        streamlink.set_plugin_option("crunchyroll", "password",
-                                     crunchyroll_password)
-    if args.crunchyroll_purge_credentials:
-        streamlink.set_plugin_option("crunchyroll", "purge_credentials",
-                                     args.crunchyroll_purge_credentials)
-    if args.crunchyroll_session_id:
-        streamlink.set_plugin_option("crunchyroll", "session_id",
-                                     args.crunchyroll_session_id)
-
-    if args.crunchyroll_locale:
-        streamlink.set_plugin_option("crunchyroll", "locale",
-                                     args.crunchyroll_locale)
-
-    if args.btv_username:
-        streamlink.set_plugin_option("btv", "username", args.btv_username)
-
-    if args.btv_username and not args.btv_password:
-        btv_password = console.askpass("Enter BTV password: ")
-    else:
-        btv_password = args.btv_password
-
-    if btv_password:
-        streamlink.set_plugin_option("btv", "password", btv_password)
-
-    if args.schoolism_email:
-        streamlink.set_plugin_option("schoolism", "email", args.schoolism_email)
-    if args.schoolism_email and not args.schoolism_password:
-        schoolism_password = console.askpass("Enter Schoolism password: ")
-    else:
-        schoolism_password = args.schoolism_password
-    if schoolism_password:
-        streamlink.set_plugin_option("schoolism", "password", schoolism_password)
-
-    if args.schoolism_part:
-        streamlink.set_plugin_option("schoolism", "part", args.schoolism_part)
-
-    if args.rtve_mux_subtitles:
-        streamlink.set_plugin_option("rtve", "mux_subtitles", args.rtve_mux_subtitles)
-
-    if args.funimation_mux_subtitles:
-        streamlink.set_plugin_option("funimationnow", "mux_subtitles", True)
-
-    if args.funimation_language:
-        # map en->english, ja->japanese
-        lang = {"en": "english", "ja": "japanese"}.get(args.funimation_language.lower(),
-                                                       args.funimation_language.lower())
-        streamlink.set_plugin_option("funimationnow", "language", lang)
-
-    if args.tvplayer_email:
-        streamlink.set_plugin_option("tvplayer", "email", args.tvplayer_email)
-
-    if args.tvplayer_email and not args.tvplayer_password:
-        tvplayer_password = console.askpass("Enter TVPlayer password: ")
-    else:
-        tvplayer_password = args.tvplayer_password
-
-    if tvplayer_password:
-        streamlink.set_plugin_option("tvplayer", "password", tvplayer_password)
-
-    if args.pluzz_mux_subtitles:
-        streamlink.set_plugin_option("pluzz", "mux_subtitles", args.pluzz_mux_subtitles)
-
-    if args.wwenetwork_email:
-        streamlink.set_plugin_option("wwenetwork", "email", args.wwenetwork_email)
-    if args.wwenetwork_email and not args.wwenetwork_password:
-        wwenetwork_password = console.askpass("Enter WWE Network password: ")
-    else:
-        wwenetwork_password = args.wwenetwork_password
-    if wwenetwork_password:
-        streamlink.set_plugin_option("wwenetwork", "password", wwenetwork_password)
-
-    if args.animelab_email:
-        streamlink.set_plugin_option("animelab", "email", args.animelab_email)
-
-    if args.animelab_email and not args.animelab_password:
-        animelab_password = console.askpass("Enter AnimeLab password: ")
-    else:
-        animelab_password = args.animelab_password
-
-    if animelab_password:
-        streamlink.set_plugin_option("animelab", "password", animelab_password)
-
-    if args.npo_subtitles:
-        streamlink.set_plugin_option("npo", "subtitles", args.npo_subtitles)
-
-    if args.liveedu_email:
-        streamlink.set_plugin_option("liveedu", "email", args.liveedu_email)
-
-    if args.liveedu_email and not args.liveedu_password:
-        liveedu_password = console.askpass("Enter LiveEdu.tv password: ")
-    else:
-        liveedu_password = args.liveedu_password
-
-    if liveedu_password:
-        streamlink.set_plugin_option("liveedu", "password", liveedu_password)
-
-    if args.bbciplayer_username:
-        streamlink.set_plugin_option("bbciplayer", "username", args.bbciplayer_username)
-
-    if args.bbciplayer_username and not args.bbciplayer_password:
-        bbciplayer_password = console.askpass("Enter bbc.co.uk account password: ")
-    else:
-        bbciplayer_password = args.bbciplayer_password
-
-    if bbciplayer_password:
-        streamlink.set_plugin_option("bbciplayer", "password", bbciplayer_password)
-
-    if args.zattoo_email:
-        streamlink.set_plugin_option("zattoo", "email", args.zattoo_email)
-    if args.zattoo_email and not args.zattoo_password:
-        zattoo_password = console.askpass("Enter zattoo password: ")
-    else:
-        zattoo_password = args.zattoo_password
-    if zattoo_password:
-        streamlink.set_plugin_option("zattoo", "password", zattoo_password)
-
-    if args.zattoo_purge_credentials:
-        streamlink.set_plugin_option("zattoo", "purge_credentials",
-                                     args.zattoo_purge_credentials)
-
-    if args.afreeca_username:
-        streamlink.set_plugin_option("afreeca", "username", args.afreeca_username)
-
-    if args.afreeca_username and not args.afreeca_password:
-        afreeca_password = console.askpass("Enter afreecatv account password: ")
-    else:
-        afreeca_password = args.afreeca_password
-
-    if afreeca_password:
-        streamlink.set_plugin_option("afreeca", "password", afreeca_password)
-
-    if args.pixiv_username:
-        streamlink.set_plugin_option("pixiv", "username", args.pixiv_username)
-
-    if args.pixiv_username and not args.pixiv_password:
-        pixiv_password = console.askpass("Enter pixiv account password: ")
-    else:
-        pixiv_password = args.pixiv_password
-
-    if pixiv_password:
-        streamlink.set_plugin_option("pixiv", "password", pixiv_password)
+def setup_plugin_options(session, plugin):
+    """Sets Streamlink plugin options."""
+    pname = plugin.module
+    required = OrderedDict({})
+    for parg in plugin.arguments:
+        if parg.required:
+            required[parg.name] = parg
+        value = getattr(args, parg.namespace_dest(pname))
+        session.set_plugin_option(pname, parg.dest, value)
+        # if the value is set, check to see if any of the required arguments are not set
+        if parg.required or value:
+            try:
+                for rparg in plugin.arguments.requires(parg.name):
+                    required[rparg.name] = rparg
+            except RuntimeError:
+                console.logger.error("{0} plugin has a configuration error and the arguments "
+                                     "cannot be parsed".format(pname))
+                break
+    if required:
+        for req in required.values():
+            if not session.get_plugin_option(pname, req.dest):
+                prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
+                session.set_plugin_option(pname, req.dest,
+                                          console.askpass(prompt + ": ")
+                                          if req.sensitive else
+                                          console.ask(prompt + ": "))
 
 
 def check_root():
     if hasattr(os, "getuid"):
         if os.geteuid() == 0:
-            console.logger.info("streamlink is running as root! Be careful!")
+            log.info("streamlink is running as root! Be careful!")
 
 
 def log_current_versions():
     """Show current installed versions"""
-    if args.loglevel == "debug":
+    if logger.root.isEnabledFor(logging.DEBUG):
         # MAC OS X
         if sys.platform == "darwin":
             os_version = "macOS {0}".format(platform.mac_ver()[0])
@@ -1010,10 +903,10 @@ def log_current_versions():
         else:
             os_version = platform.platform()
 
-        console.logger.debug("OS:         {0}".format(os_version))
-        console.logger.debug("Python:     {0}".format(platform.python_version()))
-        console.logger.debug("Streamlink: {0}".format(streamlink_version))
-        console.logger.debug("Requests({0}), Socks({1}), Websocket({2})".format(
+        log.debug("OS:         {0}".format(os_version))
+        log.debug("Python:     {0}".format(platform.python_version()))
+        log.debug("Streamlink: {0}".format(streamlink_version))
+        log.debug("Requests({0}), Socks({1}), Websocket({2})".format(
             requests.__version__, socks_version, websocket_version))
 
 
@@ -1035,25 +928,43 @@ def check_version(force=False):
     latest_version = StrictVersion(latest_version)
 
     if latest_version > installed_version:
-        console.logger.info("A new version of Streamlink ({0}) is "
-                            "available!".format(latest_version))
+        log.info("A new version of Streamlink ({0}) is "
+                 "available!".format(latest_version))
         cache.set("version_info_printed", True, (60 * 60 * 6))
     elif force:
-        console.logger.info("Your Streamlink version ({0}) is up to date!",
-                            installed_version)
+        log.info("Your Streamlink version ({0}) is up to date!",
+                 installed_version)
 
     if force:
         sys.exit()
 
 
+def setup_logging(stream=sys.stdout, level="info"):
+    logger.basicConfig(stream=stream, level=level, format="[{name}][{levelname}] {message}", style="{")
+
+
 def main():
     error_code = 0
+    parser = build_parser()
 
-    setup_args()
+    setup_args(parser, ignore_unknown=True)
+
+    # Console output should be on stderr if we are outputting
+    # a stream to stdout.
+    if args.stdout or args.output == "-":
+        console_out = sys.stderr
+    else:
+        console_out = sys.stdout
+    setup_logging(console_out, args.loglevel)
     setup_streamlink()
     setup_plugins()
-    setup_config_args()
-    setup_console()
+    setup_plugin_args(streamlink, parser)
+    # call setup args again once the plugin specific args have been added
+    setup_args(parser)
+    setup_config_args(parser)
+    # update the logging level if changed by a plugin specific config
+    logger.root.setLevel(args.loglevel)
+    setup_console(console_out)
     setup_http_session()
     check_root()
     log_current_versions()
@@ -1077,7 +988,6 @@ def main():
     elif args.url:
         try:
             setup_options()
-            setup_plugin_options()
             handle_url()
         except KeyboardInterrupt:
             # Close output
@@ -1088,7 +998,7 @@ def main():
         finally:
             if stream_fd:
                 try:
-                    console.logger.info("Closing currently open stream...")
+                    log.info("Closing currently open stream...")
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
@@ -1105,3 +1015,10 @@ def main():
         console.msg(msg)
 
     sys.exit(error_code)
+
+
+def parser_helper():
+    session = Streamlink()
+    parser = build_parser()
+    setup_plugin_args(session, parser)
+    return parser

@@ -1,4 +1,5 @@
 import re
+import logging
 from random import randint
 from threading import Thread, Event
 
@@ -6,7 +7,7 @@ import time
 
 from streamlink import PluginError
 from streamlink.compat import urljoin
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -42,7 +43,7 @@ class UHSClient(object):
     def __init__(self, session, media_id, application, **options):
         self.session = session
         http.headers.update({"User-Agent": useragents.IPHONE_6})
-        self.logger = session.logger.new_module("plugin.ustream.apiclient")
+        self.logger = logging.getLogger("streamlink.plugin.ustream.apiclient")
         self.media_id = media_id
         self.application = application
         self.referrer = options.pop("referrer", None)
@@ -134,7 +135,7 @@ class UStreamHLSStream(HLSStream):
 
     def __init__(self, session_, url, api, force_restart=False, **args):
         super(UStreamHLSStream, self).__init__(session_, url, force_restart, **args)
-        self.logger = session_.logger.new_module("stream.ustream-hls")
+        self.logger = logging.getLogger("streamlink.stream.ustream-hls")
         self.poller = self.APIPoller(api)
         self.poller.setDaemon(True)
 
@@ -157,9 +158,14 @@ class UStreamTV(Plugin):
         )?
     """, re.VERBOSE)
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
-    options = PluginOptions({
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument("password",
+                       argument_name="ustream-password",
+                       sensitive=True,
+                       metavar="PASSWORD",
+                       help="""
+    A password to access password protected UStream.tv channels.
+    """))
 
     @classmethod
     def can_handle_url(cls, url):

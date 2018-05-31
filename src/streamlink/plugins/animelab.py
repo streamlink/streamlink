@@ -2,7 +2,7 @@ from __future__ import print_function
 import re
 from pprint import pprint
 
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
@@ -35,10 +35,20 @@ class AnimeLab(Plugin):
             )
         })
     )
-    options = PluginOptions({
-        "email": None,
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "email",
+            requires=["password"],
+            metavar="EMAIL",
+            help="The email address used to register with animelab.com."
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="A animelab.com account password to use with --animelab-email."
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):

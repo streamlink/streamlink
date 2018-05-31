@@ -53,7 +53,8 @@ def get_parser(module_name, attr):
     argparse.ArgumentParser = ArgumentParser
     module = __import__(module_name, globals(), locals(), [attr])
     argparse.ArgumentParser = _ArgumentParser
-    return getattr(module, attr)
+    parser = getattr(module, attr)
+    return parser if not(callable(parser)) else parser.__call__()
 
 
 def indent(value, length=4):

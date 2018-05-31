@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin import PluginOptions
+from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -47,13 +47,22 @@ _stream_schema = validate.Schema(
 
 
 class AfreecaTV(Plugin):
-
     login_url = "https://member.afreecatv.com:8111/login/LoginAction.php"
 
-    options = PluginOptions({
-        "username": None,
-        "password": None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "username",
+            requires=["password"],
+            metavar="USERNAME",
+            help="The username used to register with afreecatv.com."
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="A afreecatv.com account password to use with --afreeca-username."
+        )
+    )
 
     @classmethod
     def can_handle_url(self, url):

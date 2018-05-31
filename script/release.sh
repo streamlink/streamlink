@@ -59,26 +59,16 @@ clone() {
   cd ..
 }
 
-replaceversion() {
-  cd $CLI
-  OLD_VERSION=`python setup.py --version`
-  echo "OLD VERSION:" $OLD_VERSION
-
-  echo "1. Replaced __init__.py versioning"
-  sed -i "s/$OLD_VERSION/$1/g" src/streamlink/__init__.py
-
-  echo "2. Replaced setup.py versioning"
-  sed -i "s/$OLD_VERSION/$1/g" setup.py
-  
-  cd ..
-}
-
 changelog() {
   cd $CLI
   echo "Getting commit changes. Writing to ../changes.txt"
-  LOG=$(git shortlog --email --no-merges --pretty=%s ${1}.. | sed  's/^/    /')
-  echo -e "WRITE YOUR LOG HERE\n\nIf you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
-\n\n::\n\n$LOG" > ../changes.txt
+  LOG=$(git shortlog --email --no-merges --pretty=%s ${1}..)
+  echo "
+!!!WRITE YOUR RELEASE NOTES HERE!!!
+
+\`\`\`text
+${LOG}
+\`\`\`" > ../changes.txt
   echo "Changelog has been written to changes.txt"
   echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
   echo "Open changes.txt and add the release information"
@@ -86,16 +76,15 @@ changelog() {
   cd ..
 }
 
-changelog_rst() {
-  echo "Generating CHANGELOG.rst"
+changelog_md() {
+  echo "Generating CHANGELOG.md"
   CHANGES=$(cat changes.txt)
   cd $CLI
   DATE=$(date +"%Y-%m-%d")
-  CHANGELOG=$(cat CHANGELOG.rst)
+  CHANGELOG=$(cat CHANGELOG.md)
   HEADER="$CLI $1 ($DATE)"
-  UNDERLINE=$(printf %s "$HEADER" | tr -c '-' '[-*]')
-  echo -e "$HEADER\n$UNDERLINE\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
-  echo "Changes have been written to CHANGELOG.rst"
+  echo -e "# $HEADER\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.md
+  echo "Changes have been written to CHANGELOG.md"
   cd ..
 }
 
@@ -123,6 +112,7 @@ git_commit() {
 sign() {
   # Tarball it!
   cd $CLI
+  git tag $1
   python setup.py sdist
   mv dist/$CLI-$1.tar.gz ..
   cd ..
@@ -192,17 +182,6 @@ push() {
   echo "!!!"
 }
 
-upload_pypi_test() {
-  cd $CLI
-  python setup.py sdist upload -r pypitest
-  cd ..
-}
-
-upload_pypi() {
-  cd $CLI
-  python setup.py sdist upload -r pypi
-  cd ..
-}
 
 clean() {
   rm -rf $CLI $CLI-$1 $CLI-$1.tar.gz $CLI-$1.tar.gz.asc $CLI-$1.exe changes.txt
@@ -239,14 +218,11 @@ main() {
   PS3='Please enter your choice: '
   options=(
   "Git clone master"
-  "Replace version number"
   "Generate changelog"
   "Generate changelog for release"
   "Create PR"
   "Tarball and sign - requires gpg key"
   "Upload the tarball and source code to GitHub release page"
-  "Test upload to pypi"
-  "Upload to pypi"
   "Clean"
   "Quit")
   select opt in "${options[@]}"
@@ -256,14 +232,11 @@ main() {
           "Git clone master")
               clone $VERSION
               ;;
-          "Replace version number")
-              replaceversion $VERSION
-              ;;
           "Generate changelog")
-              changelog $PREV_VERSION
+              changelog $PREV_VERSION $VERSION
               ;;
           "Generate changelog for release")
-              changelog_rst $VERSION
+              changelog_md $VERSION
               ;;
           "Create PR")
               git_commit $VERSION
@@ -273,12 +246,6 @@ main() {
               ;;
           "Upload the tarball and source code to GitHub release page")
               push $VERSION
-              ;;
-          "Test upload to pypi")
-              upload_pypi_test
-              ;;
-          "Upload to pypi")
-              upload_pypi
               ;;
           "Clean")
               clean $VERSION

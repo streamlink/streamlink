@@ -1,7 +1,7 @@
 import sys
 
 from streamlink.plugin.api.validate import xml_element, text
-from streamlink.utils import update_scheme
+from streamlink.utils import update_scheme, url_equal
 
 try:
     import xml.etree.cElementTree as ET
@@ -76,6 +76,20 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
+    def test_parse_xml_entities_fail(self):
+        self.assertRaises(PluginError,
+                          parse_xml, u"""<test foo="bar &"/>""")
+
+
+    def test_parse_xml_entities(self):
+        expected = ET.Element("test", {"foo": "bar &"})
+        actual = parse_xml(u"""<test foo="bar &"/>""",
+                           schema=validate.Schema(xml_element(tag="test", attrib={"foo": text})),
+                           invalid_char_entities=True)
+        self.assertEqual(expected.tag, actual.tag)
+        self.assertEqual(expected.attrib, actual.attrib)
+
+
     def test_parse_qsd(self):
         self.assertEqual(
             {"test": "1", "foo": "bar"},
@@ -98,3 +112,15 @@ class TestUtil(unittest.TestCase):
             "https://example.com/foo",  # becomes https
             update_scheme("https://other.com/bar", "example.com/foo")
         )
+
+    def test_url_equal(self):
+        self.assertTrue(url_equal("http://test.com/test", "http://test.com/test"))
+        self.assertFalse(url_equal("http://test.com/test", "http://test.com/test2"))
+
+        self.assertTrue(url_equal("http://test.com/test", "http://test.com/test2", ignore_path=True))
+        self.assertTrue(url_equal("http://test.com/test", "https://test.com/test", ignore_scheme=True))
+        self.assertFalse(url_equal("http://test.com/test", "https://test.com/test"))
+
+        self.assertTrue(url_equal("http://test.com/test", "http://test.com/test#hello", ignore_fragment=True))
+        self.assertTrue(url_equal("http://test.com/test", "http://test2.com/test", ignore_netloc=True))
+        self.assertFalse(url_equal("http://test.com/test", "http://test2.com/test1", ignore_netloc=True))

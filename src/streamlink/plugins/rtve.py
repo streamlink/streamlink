@@ -1,11 +1,12 @@
 import base64
 import re
+from functools import partial
 
 from Crypto.Cipher import Blowfish
 
 from streamlink import PluginError
 from streamlink.compat import bytes, is_py3
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -59,7 +60,7 @@ class Rtve(Plugin):
         https?://(?:www\.)?rtve\.es/(?:directo|noticias|television|deportes|alacarta|drmn)/.*?/?
     """, re.VERBOSE)
     cdn_schema = validate.Schema(
-        validate.transform(parse_xml),
+        validate.transform(partial(parse_xml, invalid_char_entities=True)),
         validate.xml_findall(".//preset"),
         [
             validate.union({
@@ -97,9 +98,15 @@ class Rtve(Plugin):
         validate.get("page"),
         validate.get("items"),
         validate.get(0))
-    options = PluginOptions({
-        "mux_subtitles": False
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "mux-subtitles",
+            action="store_true",
+            help="""
+        Automatically mux available subtitles in to the output stream.
+        """
+        )
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -138,13 +145,13 @@ class Rtve(Plugin):
 
             for stream in stream_data:
                 for url in stream["urls"]:
-                    if url.endswith("m3u8"):
+                    if ".m3u8" in url:
                         try:
                             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
                         except (IOError, OSError):
                             self.logger.debug("Failed to load m3u8 url: {0}", url)
                     elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi")) and
-                            http.head(url, raise_for_status=False).status_code == 200):
+                                  http.head(url, raise_for_status=False).status_code == 200):
                         if quality_map is None:  # only make the request when it is necessary
                             quality_map = self._get_quality_map(content_id)
                         # rename the HTTP sources to match the HLS sources

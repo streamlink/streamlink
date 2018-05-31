@@ -1,5 +1,5 @@
 import re
-
+import logging
 import time
 
 from streamlink import StreamError
@@ -13,7 +13,7 @@ class FilmOnHLS(HLSStream):
 
     def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
         super(FilmOnHLS, self).__init__(session_, None, **args)
-        self.logger = self.session.logger.new_module("stream.hls-filmon")
+        self.logger = logging.getLogger("streamlink.stream.hls-filmon")
         self.channel = channel
         self.vod_id = vod_id
         if self.channel is None and self.vod_id is None:
@@ -89,16 +89,17 @@ class FilmOnAPI(object):
 class Filmon(Plugin):
     url_re = re.compile(r"""https?://(?:\w+\.)?filmon.(?:tv|com)/
         (?:
-            (tv|channel)/(?P<channel>[^/]+)|
+            tv/|
+            channel/(?P<channel>\d+)|
             vod/view/(?P<vod_id>\d+)-|
             group/
         )
     """, re.VERBOSE)
 
-    _channel_id_re = re.compile(r'channel_id\s*?=\s*"(\d+)"')
+    _channel_id_re = re.compile(r"""channel_id\s*=\s*(?P<quote>['"]?)(?P<value>\d+)(?P=quote)""")
     _channel_id_schema = validate.Schema(
         validate.transform(_channel_id_re.search),
-        validate.any(None, validate.get(1))
+        validate.any(None, validate.get("value"))
     )
 
     quality_weights = {
@@ -136,6 +137,7 @@ class Filmon(Plugin):
         else:
             if not channel:
                 channel = http.get(self.url, schema=self._channel_id_schema)
+                self.logger.debug("Found channel ID: {0}", channel)
             data = self.api.channel(channel)
             for stream in data["streams"]:
                 yield stream["quality"], FilmOnHLS(self.session, channel=channel, quality=stream["quality"])

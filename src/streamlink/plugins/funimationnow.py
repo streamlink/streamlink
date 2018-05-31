@@ -3,7 +3,7 @@ from __future__ import print_function
 import random
 import re
 
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
@@ -96,10 +96,28 @@ class Experience(object):
 
 
 class FunimationNow(Plugin):
-    options = PluginOptions({
-        "language": "english",
-        "mux_subtitles": False
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "language",
+            argument_name="funimation-language",
+            choices=["en", "ja", "english", "japanese"],
+            default="english",
+            help="""
+            The audio language to use for Funimation streams; japanese or english.
+
+            Default is "english".
+            """
+        ),
+        PluginArgument(
+            "mux-subtitles",
+            argument_name="funimation-mux-subtitles",
+            action="store_true",
+            help="""
+            Enable automatically including available subtitles in to the output stream.
+            """
+        )
+    )
+
     url_re = re.compile(r"""
         https?://(?:www\.)funimation(.com|now.uk)
     """, re.VERBOSE)
@@ -114,7 +132,9 @@ class FunimationNow(Plugin):
         http.headers = {"User-Agent": useragents.CHROME}
         res = http.get(self.url)
 
-        rlanguage = self.get_option("language")
+        # remap en to english, and ja to japanese
+        rlanguage = {"en": "english", "ja": "japanese"}.get(self.get_option("language").lower(),
+                                                            self.get_option("language").lower())
 
         id_m = self.experience_id_re.search(res.text)
         experience_id = id_m and int(id_m.group(1))
@@ -152,14 +172,16 @@ class FunimationNow(Plugin):
                 if ".m3u8" in url:
                     for q, s in HLSStream.parse_variant_playlist(self.session, url).items():
                         if self.get_option("mux_subtitles") and subtitles:
-                            yield q, MuxedStream(self.session, s, subtitles, metadata=stream_metadata, disposition=disposition)
+                            yield q, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
+                                                 disposition=disposition)
                         else:
                             yield q, s
                 elif ".mp4" in url:
                     # TODO: fix quality
                     s = HTTPStream(self.session, url)
                     if self.get_option("mux_subtitles") and subtitles:
-                        yield self.mp4_quality, MuxedStream(self.session, s, subtitles, metadata=stream_metadata, disposition=disposition)
+                        yield self.mp4_quality, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
+                                                            disposition=disposition)
                     else:
                         yield self.mp4_quality, s
 
