@@ -15,7 +15,6 @@ _nameToLevel = dict([(name, level) for level, name in _levelToName.items()])
 for level, name in _levelToName.items():
     logging.addLevelName(level, name)
 
-root = logging.getLogger("streamlink")
 levels = [name for _, name in _levelToName.items()]
 _config_lock = Lock()
 
@@ -48,8 +47,8 @@ class _LogRecord(_CompatLogRecord):
 
 
 class StreamlinkLogger(logging.getLoggerClass()):
-    def __init__(self, name):
-        super(StreamlinkLogger, self).__init__(name)
+    def __init__(self, name, level=logging.NOTSET):
+        super(StreamlinkLogger, self).__init__(name, level)
 
     def trace(self, message, *args, **kws):
         if self.isEnabledFor(TRACE):
@@ -72,7 +71,8 @@ class StreamlinkLogger(logging.getLoggerClass()):
                 rv.__dict__[key] = extra[key]
         return rv
 
-    set_level = root.setLevel  # set log level for the root streamlink logger
+    def set_level(self, level):
+        self.setLevel(level)
 
     @staticmethod
     def new_module(name):
@@ -90,6 +90,8 @@ class StreamlinkLogger(logging.getLoggerClass()):
 
 
 logging.setLoggerClass(StreamlinkLogger)
+root = logging.getLogger("streamlink")
+root.setLevel(logging.WARNING)
 
 
 class StringFormatter(logging.Formatter):

@@ -1,13 +1,9 @@
 import unittest
 
 from streamlink import Streamlink
-
-try:
-    from unittest.mock import patch, Mock, ANY, MagicMock, call
-except ImportError:
-    from mock import patch, Mock, ANY, mock, MagicMock, call
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
+from tests.mock import patch, Mock, ANY, MagicMock, call
 
 
 class TestPluginTVPlayer(unittest.TestCase):
@@ -54,7 +50,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         mock_http.get.return_value = page_resp
         hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
-        TVPlayer.bind(self.session, "test.plugin.tvplayer")
+        TVPlayer.bind(self.session, "test.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
         streams = plugin.get_streams()
@@ -77,7 +73,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         """
         mock_http.get.return_value = page_resp
 
-        TVPlayer.bind(self.session, "test.plugin.tvplayer")
+        TVPlayer.bind(self.session, "test.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
         streams = plugin.get_streams()
