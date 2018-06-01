@@ -4,6 +4,7 @@ import struct
 
 from collections import defaultdict, namedtuple
 from Crypto.Cipher import AES
+from time import time
 
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
@@ -157,6 +158,21 @@ class HLSStreamWorker(SegmentedStreamWorker):
             int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
 
+        self.sequence_ignore_number = (self.session.options.get("hls-segment-ignore-number")
+                                       or 0)
+
+        # set a timestamp, if it was not set previously
+        if not self.session.cached_data.get("timestamp"):
+            self.session.cached_data.update({"timestamp": int(time())})
+
+        self.session_reload_segment = (self.session.options.get("hls-session-reload-segment")
+                                       or self.stream.session_reload_segment
+                                       or False)
+        self.session_reload_segment_status = False
+        self.session_reload_time = int(self.session.options.get("hls-session-reload-time")
+                                       or self.stream.session_reload_time
+                                       or 0)
+
         self.reload_playlist()
 
         if self.playlist_end is None:
@@ -175,6 +191,41 @@ class HLSStreamWorker(SegmentedStreamWorker):
             log.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
                       self.duration_offset_start, self.duration_limit,
                       self.playlist_sequence, self.playlist_end)
+
+    def reload_session(self):
+        """Replaces the current stream with a new stream"""
+        self.session.cached_data.update({"timestamp": int(time())})
+
+        cache_stream_name = self.session.cached_data.get("stream_name")
+        cache_stream_url = self.session.cached_data.get("url")
+
+        if not (cache_stream_name and cache_stream_url):
+            log.warning("Missing cached data for hls-session-reload,"
+                        "your Streamlink Application is not setup correctly.")
+            return
+
+        log.debug("Current stream: {0} - {1}".format(
+            cache_stream_name, cache_stream_url))
+        log.debug("Reloading session playlist")
+        streams = self.session.streams(cache_stream_url)
+
+        if not streams:
+            log.debug("No stream found for hls-session-reload,"
+                      " stream is not available.")
+            return
+
+        # overwrite the stream
+        self.stream = streams[cache_stream_name]
+        log.debug("New stream_url: {0}".format(self.stream.url))
+
+    def reload_session_invalid_sequence_check(self):
+        # only allows reload_session(),
+        # if the last reload is older than 10 seconds
+        if self.session_reload_segment and (int(time() - self.session.cached_data["timestamp"]) >= 10):
+            # if a reload_playlist() fails because of invalid sequences,
+            # it will allow the usage of reload_session() on the next
+            # failed try of reload_playlist()
+            self.session_reload_segment_status = True
 
     def reload_playlist(self):
         if self.closed:
@@ -219,6 +270,12 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if not self.playlist_changed:
             self.playlist_reload_time = max(self.playlist_reload_time / 2, 1)
+            # uses reload_session() on the 2nd reload_playlist()
+            # if the playlist did not change
+            if self.session_reload_segment and self.session_reload_segment_status is True:
+                log.debug("Expected reload_session() - invalid sequences")
+                self.reload_session()
+                self.session_reload_segment_status = False
 
         if playlist.is_endlist:
             self.playlist_end = last_sequence.num
@@ -232,7 +289,15 @@ class HLSStreamWorker(SegmentedStreamWorker):
                 self.playlist_sequence = first_sequence.num
 
     def valid_sequence(self, sequence):
-        return sequence.num >= self.playlist_sequence
+        if sequence.num >= self.playlist_sequence:
+            return True
+        elif self.sequence_ignore_number and sequence.num <= (self.playlist_sequence - self.sequence_ignore_number):
+            log.warning("Added invalid segment number.")
+            self.reload_session_invalid_sequence_check()
+            return True
+        else:
+            self.reload_session_invalid_sequence_check()
+            return False
 
     def duration_to_sequence(self, duration, sequences):
         d = 0
@@ -252,6 +317,9 @@ class HLSStreamWorker(SegmentedStreamWorker):
     def iter_segments(self):
         total_duration = 0
         while not self.closed:
+            if self.session_reload_time and ((self.session.cached_data["timestamp"] + self.session_reload_time) < int(time())):
+                log.debug("Expected reload_session() - time")
+                self.reload_session()
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
                 log.debug("Adding segment {0} to queue", sequence.num)
                 yield sequence
@@ -272,6 +340,9 @@ class HLSStreamWorker(SegmentedStreamWorker):
                     self.reload_playlist()
                 except StreamError as err:
                     log.warning("Failed to reload playlist: {0}", err)
+                    if (self.session_reload_time or self.session_reload_segment):
+                        log.warning("Unexpected reload_session() - StreamError")
+                        self.reload_session()
 
 
 class HLSStreamReader(SegmentedStreamReader):
@@ -322,11 +393,16 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
 
-    def __init__(self, session_, url, force_restart=False, start_offset=0, duration=None, **args):
+    def __init__(self, session_, url, force_restart=False, start_offset=0,
+                 duration=None, session_reload_time=0,
+                 session_reload_segment=False,
+                 **args):
         HTTPStream.__init__(self, session_, url, **args)
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
+        self.session_reload_time = session_reload_time
+        self.session_reload_segment = session_reload_segment
 
     def __repr__(self):
         return "<HLSStream({0!r})>".format(self.url)
@@ -351,6 +427,8 @@ class HLSStream(HTTPStream):
                                name_prefix="", check_streams=False,
                                force_restart=False, name_fmt=None,
                                start_offset=0, duration=None,
+                               session_reload_time=0,
+                               session_reload_segment=False,
                                **request_params):
         """Attempts to parse a variant playlist and return its streams.
 
@@ -362,6 +440,10 @@ class HLSStream(HTTPStream):
         :param force_restart: Start at the first segment even for a live stream
         :param name_fmt: A format string for the name, allowed format keys are
                          name, pixels, bitrate.
+        :param session_reload_time: replaces the current Streamlink session
+                                    after the given time in seconds.
+        :param session_reload_segment: replaces the current Streamlink session
+                                       if the playlist reload fails twice.
         """
         locale = session_.localization
         # Backwards compatibility with "namekey" and "nameprefix" params.
@@ -468,7 +550,10 @@ class HLSStream(HTTPStream):
                                         **request_params)
             else:
                 stream = HLSStream(session_, playlist.uri, force_restart=force_restart,
-                                   start_offset=start_offset, duration=duration, **request_params)
+                                   start_offset=start_offset, duration=duration,
+                                   session_reload_time=session_reload_time,
+                                   session_reload_segment=session_reload_segment,
+                                   **request_params)
             streams[name_prefix + stream_name] = stream
 
         return streams
