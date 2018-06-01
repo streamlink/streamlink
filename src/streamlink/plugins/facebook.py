@@ -1,26 +1,30 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.stream import HLSStream
-
-_playlist_url = "https://www.facebook.com/video/playback/playlist.m3u8?v={0}"
-
-_url_re = re.compile(r"http(s)?://(www\.)?facebook\.com/[^/]+/videos/(?P<video_id>\d+)")
+from streamlink.plugin.api import http, useragents
+from streamlink.stream import DASHStream
 
 
 class Facebook(Plugin):
+    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/videos/(?P<video_id>\d+)")
+    _mpd_re = re.compile(r'''hd_src["']?\s*:\s*(?P<quote>["'])(?P<url>.*?)(?P=quote)''')
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._url_re.match(url)
 
-    @Plugin.broken(990)
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        video = match.group("video_id")
+        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        with open("temp.html", "w") as f:
+            f.write(res.text)
 
-        playlist = _playlist_url.format(video)
+        match = self._mpd_re.search(res.text)
 
-        return HLSStream.parse_variant_playlist(self.session, playlist)
+        manifest_url = match and match.group("url")
+
+        if manifest_url:
+            return DASHStream.parse_manifest(self.session, manifest_url)
+
 
 
 __plugin__ = Facebook
