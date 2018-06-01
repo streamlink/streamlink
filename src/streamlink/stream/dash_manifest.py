@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import copy
 import logging
 import datetime
 import re
@@ -48,6 +49,13 @@ def count_dt(firstval=datetime.datetime.now(tz=utc), step=datetime.timedelta(sec
     while True:
         yield x
         x += step
+
+
+@contextmanager
+def freeze_timeline(mpd):
+    timelines = copy.copy(mpd.timelines)
+    yield
+    mpd.timelines = timelines
 
 
 @contextmanager
@@ -219,6 +227,7 @@ class MPD(MPDNode):
                                                default=datetime.datetime.fromtimestamp(0, utc),  # earliest date
                                                required=self.type == "dynamic")
         self.publishTime = self.attr(u"publishTime", parser=MPDParsers.datetime, required=self.type == "dynamic")
+        self.availabilityEndTime = self.attr(u"availabilityEndTime", parser=MPDParsers.datetime)
         self.mediaPresentationDuration = self.attr(u"mediaPresentationDuration", parser=MPDParsers.duration)
         self.suggestedPresentationDelay = self.attr(u"suggestedPresentationDelay", parser=MPDParsers.duration)
 

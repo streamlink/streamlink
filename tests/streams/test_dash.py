@@ -1,4 +1,5 @@
 from streamlink.stream.dash import DASHStreamWorker
+from streamlink.stream.dash_manifest import MPD
 
 from tests import unittest
 from tests.mock import MagicMock, patch, ANY, Mock, call
@@ -135,7 +136,7 @@ class TestDASHStream(unittest.TestCase):
 
 class TestDASHStreamWorker(unittest.TestCase):
 
-    @patch('streamlink.stream.dash_manifest.time.sleep')
+    @patch("streamlink.stream.dash_manifest.time.sleep")
     @patch('streamlink.stream.dash.MPD')
     def test_dynamic_reload(self, mpdClass, sleep):
         reader = MagicMock()
@@ -169,7 +170,8 @@ class TestDASHStreamWorker(unittest.TestCase):
         self.assertSequenceEqual([next(segment_iter), next(segment_iter)], segments[1:])
         representation.segments.assert_called_with(init=False)
 
-    def test_static(self):
+    @patch("streamlink.stream.dash_manifest.time.sleep")
+    def test_static(self, sleep):
         reader = MagicMock()
         worker = DASHStreamWorker(reader)
         reader.representation_id = 1
