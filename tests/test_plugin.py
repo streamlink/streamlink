@@ -70,14 +70,13 @@ class TestPlugin(unittest.TestCase):
             "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None)
         }
         plugin = Plugin("http://test.se")
-        #plugin.load_cookies()
+
         self.assertSequenceEqual(
             list(map(self._cookie_to_dict, session.http.cookies)),
             [self._cookie_to_dict(requests.cookies.create_cookie("test-name", "test-value", domain="test.se"))]
         )
 
     def test_cookie_store_clear(self):
-        self.maxDiff = None
         session = Mock()
         session.http.cookies = requests.cookies.RequestsCookieJar()
 
@@ -88,8 +87,7 @@ class TestPlugin(unittest.TestCase):
             "__cookie:test-name2:test.se:80:/": self._create_cookie_dict("test-name2", "test-value2", None)
         }
         plugin = Plugin("http://test.se")
-        #plugin.load_cookies()
-        print(list(session.http.cookies))
+
         # non-empty cookiejar
         self.assertTrue(len(session.http.cookies.get_dict()) > 0)
 
@@ -100,3 +98,28 @@ class TestPlugin(unittest.TestCase):
             [call("__cookie:test-name:test.se:80:/", None, 0),
              call("__cookie:test-name2:test.se:80:/", None, 0)])
         self.assertSequenceEqual(session.http.cookies, [])
+
+    def test_cookie_store_clear_filter(self):
+        session = Mock()
+        session.http.cookies = requests.cookies.RequestsCookieJar()
+
+        Plugin.bind(session, 'tests.test_plugin')
+        Plugin.cache = Mock()
+        Plugin.cache.get_all.return_value = {
+            "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None),
+            "__cookie:test-name2:test.se:80:/": self._create_cookie_dict("test-name2", "test-value2", None)
+        }
+        plugin = Plugin("http://test.se")
+
+        # non-empty cookiejar
+        self.assertTrue(len(session.http.cookies.get_dict()) > 0)
+
+
+        plugin.clear_cookies(lambda c: c.name.endswith("2"))
+        self.assertSequenceEqual(
+            Plugin.cache.set.mock_calls,
+            [call("__cookie:test-name2:test.se:80:/", None, 0)])
+        self.assertSequenceEqual(
+            list(map(self._cookie_to_dict, session.http.cookies)),
+            [self._cookie_to_dict(requests.cookies.create_cookie("test-name", "test-value", domain="test.se"))]
+        )

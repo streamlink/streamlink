@@ -455,22 +455,26 @@ class Plugin(object):
             self.logger.debug("Restored cookies: {0}".format(", ".join(restored)))
         return restored
 
-    def clear_cookies(self):
+    def clear_cookies(self, cookie_filter=None):
         """
-        Removes all of the saved cookies for this Plugin
+        Removes all of the saved cookies for this Plugin. It is possible to filter the cookies that are deleted
+        by specifying the ``cookie_filter`` argument (see ``save_cookies``)
 
         :return: list of the removed cookie names
         """
         if not self.session and not self.cache:
             return RuntimeError("Cannot loaded cached cookies in unbound plugin")
 
+        cookie_filter = cookie_filter or (lambda c: True)
         removed = []
 
-        for key, cookie in self.cache.get_all().items():
+        for key, value in sorted(self.cache.get_all().items(), key=operator.itemgetter(0), reverse=True):
             if key.startswith("__cookie"):
-                del self.session.http.cookies[cookie['name']]
-                self.cache.set(key, None, 0)
-                removed.append(key)
+                cookie = requests.cookies.create_cookie(**value)
+                if cookie_filter(cookie):
+                    del self.session.http.cookies[cookie.name]
+                    self.cache.set(key, None, 0)
+                    removed.append(key)
 
         return removed
 
