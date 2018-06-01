@@ -6,7 +6,7 @@ import os.path
 from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
 from streamlink.stream.stream import Stream
-from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc
+from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc, freeze_timeline
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 
@@ -57,16 +57,19 @@ class DASHStreamWorker(SegmentedStreamWorker):
         self.mpd = self.stream.mpd
         self.period = self.stream.period
 
+    @staticmethod
+    def get_representation(mpd, representation_id):
+        for aset in mpd.periods[0].adaptationSets:
+            for rep in aset.representations:
+                if rep.id == representation_id:
+                    return rep
+
     def iter_segments(self):
         init = True
         back_off_factor = 1
         while not self.closed:
             # find the representation by ID
-            representation = None
-            for aset in self.mpd.periods[0].adaptationSets:
-                for rep in aset.representations:
-                    if rep.id == self.reader.representation_id:
-                        representation = rep
+            representation = self.get_representation(self.mpd, self.reader.representation_id)
             refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(),
                                self.mpd.periods[0].duration.total_seconds()) or 5
             with sleeper(refresh_wait * back_off_factor):
@@ -99,7 +102,10 @@ class DASHStreamWorker(SegmentedStreamWorker):
                       url=self.mpd.url,
                       timelines=self.mpd.timelines)
 
-        changed = new_mpd.publishTime > self.mpd.publishTime
+        new_rep = self.get_representation(new_mpd, self.reader.representation_id)
+        with freeze_timeline(new_mpd):
+            changed = len(list(itertools.islice(new_rep.segments(), 1))) > 0
+
         if changed:
             self.mpd = new_mpd
 
