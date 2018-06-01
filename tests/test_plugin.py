@@ -10,6 +10,7 @@ from streamlink.plugin import Plugin
 
 
 class TestPlugin(unittest.TestCase):
+
     def _create_cookie_dict(self, name, value, expires):
         return {'version': 0, 'name': name, 'value': value,
                 'port': None, 'domain': "test.se", 'path': "/", 'secure': False,
@@ -23,6 +24,12 @@ class TestPlugin(unittest.TestCase):
             r[name] = getattr(cookie, name, None)
         r["rest"] = getattr(cookie, "rest", getattr(cookie, "_rest", None))
         return r
+
+    def tearDown(self):
+        Plugin.session = None
+        Plugin.cache = None
+        Plugin.module = None
+        Plugin.logger = None
 
     def test_cookie_store_save(self):
         session = Mock()
@@ -123,3 +130,15 @@ class TestPlugin(unittest.TestCase):
             list(map(self._cookie_to_dict, session.http.cookies)),
             [self._cookie_to_dict(requests.cookies.create_cookie("test-name", "test-value", domain="test.se"))]
         )
+
+    def test_cookie_load_unbound(self):
+        plugin = Plugin("http://test.se")
+        self.assertRaises(RuntimeError, plugin.load_cookies)
+
+    def test_cookie_save_unbound(self):
+        plugin = Plugin("http://test.se")
+        self.assertRaises(RuntimeError, plugin.save_cookies)
+
+    def test_cookie_clear_unbound(self):
+        plugin = Plugin("http://test.se")
+        self.assertRaises(RuntimeError, plugin.clear_cookies)

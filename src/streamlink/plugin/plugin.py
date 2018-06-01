@@ -178,7 +178,10 @@ class Plugin(object):
 
     def __init__(self, url):
         self.url = url
-        self.load_cookies()
+        try:
+            self.load_cookies()
+        except RuntimeError:
+            pass  # unbound cannot load
 
     @classmethod
     def can_handle_url(cls, url):
@@ -407,7 +410,7 @@ class Plugin(object):
         :type default_expires: int
         :return: list of the saved cookie names
         """
-        if not self.session and not self.cache:
+        if not self.session or not self.cache:
             raise RuntimeError("Cannot cache cookies in unbound plugin")
 
         cookie_filter = cookie_filter or (lambda c: True)
@@ -440,8 +443,8 @@ class Plugin(object):
 
         :return: list of the restored cookie names
         """
-        if not self.session and not self.cache:
-            return RuntimeError("Cannot loaded cached cookies in unbound plugin")
+        if not self.session or not self.cache:
+            raise RuntimeError("Cannot loaded cached cookies in unbound plugin")
 
         restored = []
 
@@ -464,8 +467,8 @@ class Plugin(object):
         :type cookie_filter: function
         :return: list of the removed cookie names
         """
-        if not self.session and not self.cache:
-            return RuntimeError("Cannot loaded cached cookies in unbound plugin")
+        if not self.session or not self.cache:
+            raise RuntimeError("Cannot loaded cached cookies in unbound plugin")
 
         cookie_filter = cookie_filter or (lambda c: True)
         removed = []
