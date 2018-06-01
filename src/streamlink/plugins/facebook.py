@@ -3,12 +3,13 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, useragents
 from streamlink.stream import DASHStream, HTTPStream
+from streamlink.utils import parse_json
 
 
 class Facebook(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/videos/(?P<video_id>\d+)")
-    _mpd_re = re.compile(r'''hd_src["']?\s*:\s*(?P<quote>["'])(?P<url>.*?)(?P=quote)''')
-    _playlist_re = re.compile(r'''video:\[({url:".*?}\])''')
+    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/videos")
+    _mpd_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
+    _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
     _plurl_re = re.compile(r'''url:"(.*?)"''')
 
     @classmethod
@@ -20,10 +21,11 @@ class Facebook(Plugin):
         with open("temp.html", "w") as f:
             f.write(res.text)
 
-        match = self._mpd_re.search(res.text)
-        manifest_url = match and match.group("url")
-
-        if manifest_url:
+        for match in self._mpd_re.finditer(res.text):
+            manifest_url = match.group("url")
+            if "\\/" in manifest_url:
+                # if the URL is json encoded, decode it
+                manifest_url = parse_json("\"{}\"".format(manifest_url))
             for s in DASHStream.parse_manifest(self.session, manifest_url).items():
                 yield s
         else:
