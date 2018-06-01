@@ -14,19 +14,20 @@ class TestPlugin(unittest.TestCase):
         return {'version': 0, 'name': name, 'value': value,
                 'port': None, 'domain': "test.se", 'path': "/", 'secure': False,
                 'expires': expires, 'discard': True, 'comment': None,
-                'comment_url': None, 'rest': None, 'rfc2109': False}
+                'comment_url': None, 'rest': {"HttpOnly": None}, 'rfc2109': False}
 
     def _cookie_to_dict(self, cookie):
         r = {}
         for name in ("version", "name", "value", "port", "domain", "path",
                      "secure", "expires", "discard", "comment", "comment_url"):
             r[name] = getattr(cookie, name, None)
+        r["rest"] = getattr(cookie, "rest", getattr(cookie, "_rest", None))
         return r
 
     def test_cookie_store_save(self):
         session = Mock()
         session.http.cookies = [
-            requests.cookies.create_cookie("test-name", "test-value", domain="test.se", rest=None)
+            requests.cookies.create_cookie("test-name", "test-value", domain="test.se")
         ]
 
         Plugin.bind(session, 'tests.test_plugin')

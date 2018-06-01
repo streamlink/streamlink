@@ -416,8 +416,9 @@ class Plugin(object):
         for cookie in filter(cookie_filter, self.session.http.cookies):
             cookie_dict = {}
             for attr in ("version", "name", "value", "port", "domain", "path", "secure", "expires", "discard",
-                         "comment", "comment_url", "rest", "rfc2109"):
+                         "comment", "comment_url", "rfc2109"):
                 cookie_dict[attr] = getattr(cookie, attr, None)
+            cookie_dict["rest"] = getattr(cookie, "rest", getattr(cookie, "_rest", None))
 
             expires = default_expires
             if cookie_dict['expires']:
