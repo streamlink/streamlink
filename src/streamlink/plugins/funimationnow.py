@@ -43,12 +43,15 @@ class Experience(object):
         self.cache = {}
         self.token = None
 
-    def request(self, *args, **kwargs):
+    def request(self, method, url, *args, **kwargs):
         headers = kwargs.pop("headers", {})
         if self.token:
             headers.update({"Authorization": "Token {0}".format(self.token)})
+            http.cookies.update({"src_token": self.token})
 
-        return http.request(*args, headers=headers, **kwargs)
+        log.debug("Making {0}request to {1}".format("authorized " if self.token else "", url))
+
+        return http.request(method, url, *args, headers=headers, **kwargs)
 
     def get(self, *args, **kwargs):
         return self.request("GET", *args, **kwargs)
@@ -237,7 +240,7 @@ class FunimationNow(Plugin):
             sources = exp.sources()
             if 'errors' in sources:
                 for error in sources['errors']:
-                    log.error(error['detail'])
+                    log.error("{0} : {1}".format(error['title'], error['detail']))
                 return
 
             for item in sources["items"]:
@@ -272,7 +275,9 @@ class FunimationNow(Plugin):
             if url:
                 log.debug("Found Incapsula auth URL: {0}", url)
                 res = http.get(urljoin(self.url, url))
-                return res.status_code == 200
+                success = res.status_code == 200
+                # TODO: save incap cookies
+                return success
 
 
 __plugin__ = FunimationNow
