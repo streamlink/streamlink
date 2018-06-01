@@ -401,7 +401,7 @@ class Plugin(object):
         by supplying a filter method. eg. ``lambda c: "auth" in c.name``. If no expiry date is given in the
         cookie then the ``default_expires`` value will be used.
 
-        :param cookie_filter: a function to filter the cookies by name
+        :param cookie_filter: a function to filter the cookies
         :type cookie_filter: function
         :param default_expires: time (in seconds) until cookies with no expiry will expire
         :type default_expires: int
@@ -457,9 +457,11 @@ class Plugin(object):
 
     def clear_cookies(self, cookie_filter=None):
         """
-        Removes all of the saved cookies for this Plugin. It is possible to filter the cookies that are deleted
-        by specifying the ``cookie_filter`` argument (see ``save_cookies``)
+        Removes all of the saved cookies for this Plugin. To filter the cookies that are deleted
+        specify the ``cookie_filter`` argument (see :func:`save_cookies`).
 
+        :param cookie_filter: a function to filter the cookies
+        :type cookie_filter: function
         :return: list of the removed cookie names
         """
         if not self.session and not self.cache:
