@@ -1,4 +1,7 @@
 import unittest
+import unittest
+from streamlink.stream.dash import DASHStreamWorker
+from tests.mock import MagicMock, patch, ANY, Mock, call
 
 from streamlink import PluginError
 from streamlink.stream import *
