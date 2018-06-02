@@ -1,26 +1,42 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.stream import HLSStream
-
-_playlist_url = "https://www.facebook.com/video/playback/playlist.m3u8?v={0}"
-
-_url_re = re.compile(r"http(s)?://(www\.)?facebook\.com/[^/]+/videos/(?P<video_id>\d+)")
+from streamlink.plugin.api import http, useragents
+from streamlink.stream import DASHStream, HTTPStream
+from streamlink.utils import parse_json
 
 
 class Facebook(Plugin):
+    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/videos")
+    _mpd_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
+    _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
+    _plurl_re = re.compile(r'''url:"(.*?)"''')
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._url_re.match(url)
 
-    @Plugin.broken(990)
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        video = match.group("video_id")
+        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        with open("temp.html", "w") as f:
+            f.write(res.text)
 
-        playlist = _playlist_url.format(video)
+        for match in self._mpd_re.finditer(res.text):
+            manifest_url = match.group("url")
+            if "\\/" in manifest_url:
+                # if the URL is json encoded, decode it
+                manifest_url = parse_json("\"{}\"".format(manifest_url))
+            for s in DASHStream.parse_manifest(self.session, manifest_url).items():
+                yield s
+        else:
+            match = self._playlist_re.search(res.text)
+            playlist = match and match.group(1)
+            if playlist:
+                for url in {url.group(1) for url in self._plurl_re.finditer(playlist)}:
+                    yield "live", HTTPStream(self.session, url)
 
-        return HLSStream.parse_variant_playlist(self.session, playlist)
+
+
 
 
 __plugin__ = Facebook
