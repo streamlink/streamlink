@@ -75,3 +75,32 @@ class TestCache(unittest.TestCase):
             self.assertFalse(os.path.exists(cache.filename))
         finally:
             rmtree(streamlink.cache.cache_dir, ignore_errors=True)
+
+    def test_get_all(self):
+        self.cache.set("test1", 1)
+        self.cache.set("test2", 2)
+
+        self.assertDictEqual(
+            {"test1": 1, "test2": 2},
+            self.cache.get_all())
+
+    def test_get_all_prefix(self):
+        self.cache.set("test1", 1)
+        self.cache.set("test2", 2)
+        self.cache.key_prefix = "test"
+        self.cache.set("test3", 3)
+        self.cache.set("test4", 4)
+
+
+        self.assertDictEqual(
+            {"test3": 3, "test4": 4},
+            self.cache.get_all())
+
+    def test_get_all_prune(self):
+        self.cache.set("test1", 1)
+        self.cache.set("test2", 2, -1)
+
+
+        self.assertDictEqual(
+            {"test1": 1},
+            self.cache.get_all())
