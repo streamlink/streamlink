@@ -90,5 +90,23 @@ class Cache(object):
         else:
             return default
 
+    def get_all(self):
+        ret = {}
+        self._load()
+
+        if self._prune():
+            self._save()
+
+        for key, value in self._cache.items():
+            if self.key_prefix:
+                prefix = self.key_prefix + ":"
+            else:
+                prefix = ""
+            if key.startswith(prefix):
+                okey = key[len(prefix):]
+                ret[okey] = value["value"]
+
+        return ret
+
 
 __all__ = ["Cache"]
