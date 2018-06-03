@@ -1,8 +1,8 @@
 import argparse
+import datetime
 import random
 import re
 import string
-import datetime
 
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate
@@ -159,16 +159,11 @@ class CrunchyrollAPI(object):
         Is recommended that you call this method before making any other calls
         to make sure you have a valid session against the server.
         """
-        params = {
-            "device_id": device_id,
-            "device_type": API_DEVICE_TYPE,
-            "access_token": API_ACCESS_TOKEN,
-        }
-
-        if self.auth:
-            params["auth"] = self.auth
-
-        return self._api_call("start_session", params, **kwargs)
+        if self.session_id:
+            http.cookies["sess_id"] = self.session_id
+        res = http.get("https://www.crunchyroll.com",
+                       headers={"User-Agent": API_USER_AGENT.format(self.locale)})
+        return res.cookies.get("sess_id", self.session_id)
 
     def login(self, username, password, **kwargs):
         """Authenticates the session to be able to access restricted data from
@@ -236,7 +231,12 @@ class Crunchyroll(Plugin):
             metavar="SESSION_ID",
             help="""
             Set a specific session ID for crunchyroll, can be used to bypass
-            region restrictions.
+            region restrictions. If using an authenticated session ID, it is
+            recommended that the authentication parameters be omitted as the
+            session ID is account specific.
+
+            Note: The session ID will be overwritten if authentication is used
+            and the session ID does not match the account.
             """
         ),
         # Deprecated, uses the general locale setting
@@ -331,15 +331,7 @@ class Crunchyroll(Plugin):
         )
 
         self.logger.debug("Creating session with locale: {0}", locale)
-        try:
-            api.session_id = api.start_session(device_id, schema=_session_schema)
-        except CrunchyrollAPIError as err:
-            if err.code == "bad_session":
-                self.logger.debug("Current session has expired, creating a new one")
-                api = CrunchyrollAPI(locale=locale)
-                api.session_id = api.start_session(device_id, schema=_session_schema)
-            else:
-                raise err
+        api.session_id = api.start_session(device_id, schema=_session_schema)
 
         # Save session and hope it lasts for a few hours
         self.cache.set("session_id", api.session_id, 4 * 60 * 60)
@@ -349,13 +341,18 @@ class Crunchyroll(Plugin):
             self.logger.debug("Using saved credentials")
         elif self.options.get("username"):
             try:
-                self.logger.info("Attempting to login using username and password")
+                self.logger.debug("Attempting to login using username and password")
                 login = api.login(
                     self.options.get("username"),
                     self.options.get("password"),
                     schema=_login_schema
                 )
                 api.auth = login["auth"]
+
+                user_session_id = api.start_session(device_id, schema=_session_schema)
+                if user_session_id != api.session_id:
+                    self.logger.warning("Session ID does not match account, resetting session ID")
+                    api.session_id = user_session_id
 
                 self.logger.info("Successfully logged in as '{0}'",
                                  login["user"]["username"] or login["user"]["email"])
