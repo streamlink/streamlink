@@ -18,8 +18,6 @@ class Facebook(Plugin):
 
     def _get_streams(self):
         res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
-        with open("temp.html", "w") as f:
-            f.write(res.text)
 
         for match in self._mpd_re.finditer(res.text):
             manifest_url = match.group("url")
@@ -34,9 +32,6 @@ class Facebook(Plugin):
             if playlist:
                 for url in {url.group(1) for url in self._plurl_re.finditer(playlist)}:
                     yield "live", HTTPStream(self.session, url)
-
-
-
 
 
 __plugin__ = Facebook
