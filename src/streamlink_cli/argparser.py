@@ -147,8 +147,7 @@ def hours_minutes_seconds(value):
     :return: seconds
     """
     try:
-        if int(value):
-            return value
+        return int(value)
     except ValueError:
         pass
 
