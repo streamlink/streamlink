@@ -266,6 +266,7 @@ class FunimationNow(Plugin):
 
     def bypass_incapsula(self, res):
         log.info("Attempting to by-pass Incapsula...")
+        self.clear_cookies(lambda c: "incap" in c.name)
         for m in re.finditer(r'''"([A-Z0-9]+)"''', res.text):
             d = m.group(1)
             # decode the encoded blob to text
@@ -276,7 +277,8 @@ class FunimationNow(Plugin):
                 log.debug("Found Incapsula auth URL: {0}", url)
                 res = http.get(urljoin(self.url, url))
                 success = res.status_code == 200
-                # TODO: save incap cookies
+                if success:
+                    self.save_cookies(lambda c: "incap" in c.name)
                 return success
 
 
