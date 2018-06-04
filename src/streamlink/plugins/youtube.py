@@ -3,7 +3,7 @@ import re
 from requests import codes
 
 from streamlink.compat import urlparse, parse_qsl
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HTTPStream, HLSStream
@@ -142,6 +142,14 @@ class YouTube(Plugin):
         258: 258,
     }
 
+    arguments = PluginArguments(
+        PluginArgument(
+            "api-key",
+            sensitive=True,
+            help="API key to use for YouTube API requests"
+        )
+    )
+
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
@@ -237,7 +245,7 @@ class YouTube(Plugin):
             "type": "video",
             "eventType": "live",
             "part": "id",
-            "key": API_KEY
+            "key": self.get_option("api_key") or API_KEY
         }
         res = http.get(API_SEARCH_URL, params=query, raise_for_status=False)
         if res.status_code == codes.ok:
@@ -292,6 +300,7 @@ class YouTube(Plugin):
         _params_3 = {"eurl": "https://youtube.googleapis.com/v/{0}".format(video_id)}
 
         count = 0
+        info_parsed = None
         for _params in (_params_1, _params_2, _params_3):
             count += 1
             params = {"video_id": video_id}
