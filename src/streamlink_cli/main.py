@@ -663,10 +663,6 @@ def setup_console(output):
     # All console related operations is handled via the ConsoleOutput class
     console = ConsoleOutput(output, streamlink)
 
-    # We don't want log output when we are printing JSON or a command-line.
-    if not any(getattr(args, attr) for attr in QUIET_OPTIONS):
-        console.set_level(args.loglevel)
-
     if args.quiet_player:
         log.warning("The option --quiet-player is deprecated since "
                     "version 1.4.3 as hiding player output is now "
@@ -955,7 +951,12 @@ def main():
         console_out = sys.stderr
     else:
         console_out = sys.stdout
-    setup_logging(console_out, args.loglevel)
+
+    # We don't want log output when we are printing JSON or a command-line.
+    silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
+    log_level = args.loglevel if not silent_log else "none"
+    setup_logging(console_out, log_level)
+
     setup_streamlink()
     # load additional plugins
     setup_plugins(args.plugin_dirs)
@@ -963,8 +964,11 @@ def main():
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
     setup_config_args(parser)
+
     # update the logging level if changed by a plugin specific config
-    logger.root.setLevel(args.loglevel)
+    log_level = args.loglevel if not silent_log else "none"
+    logger.root.setLevel(log_level)
+
     setup_console(console_out)
     setup_http_session()
     check_root()
