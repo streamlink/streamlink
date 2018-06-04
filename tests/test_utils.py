@@ -139,15 +139,15 @@ class TestUtil(unittest.TestCase):
             list(search_dict({"one": "test1", "two": "test2"}, "one")),
             ["test1"]
         )
-        self.assertEqual(
+        self.assertSequenceEqual(
             list(search_dict({"one": {"inner": "test1"}, "two": "test2"}, "inner")),
             ["test1"]
         )
-        self.assertEqual(
+        self.assertSequenceEqual(
             list(search_dict({"one": [{"inner": "test1"}], "two": "test2"}, "inner")),
             ["test1"]
         )
-        self.assertEqual(
-            list(search_dict({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner")),
-            ["test1", "test2"]
+        self.assertSequenceEqual(
+            list(sorted(search_dict({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner"))),
+            list(sorted(["test1", "test2"]))
         )
