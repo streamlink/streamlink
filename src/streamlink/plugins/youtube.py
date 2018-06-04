@@ -1,11 +1,14 @@
 import re
 
+from requests import codes
+
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http, validate, useragents
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
+from streamlink.utils import parse_json, search_dict
 
 API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
@@ -96,6 +99,7 @@ _search_schema = validate.Schema(
 
 _channelid_re = re.compile(r'meta itemprop="channelId" content="([^"]+)"')
 _livechannelid_re = re.compile(r'meta property="og:video:url" content="([^"]+)')
+_ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*({.*?});', re.DOTALL)
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?youtube.com
     (?:
@@ -203,14 +207,29 @@ class YouTube(Plugin):
         return streams, protected
 
     def _find_channel_video(self):
-        res = http.get(self.url)
-        match = _channelid_re.search(res.text)
-        if not match:
-            return
+        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
 
-        channel_id = match.group(1)
-        self.logger.debug("Found channel_id: {0}".format(channel_id))
-        return self._get_channel_video(channel_id)
+        datam = _ytdata_re.search(res.text)
+        if datam:
+            data = parse_json(datam.group(1))
+            # find the videoRenderer object, where there is a LVE NOW badge
+            for x in search_dict(data, 'videoRenderer'):
+                for blabel in search_dict(x.get("badges", {}), "label"):
+                    if blabel == "LIVE NOW":
+                        if x.get("videoId"):
+                            self.logger.debug("Found channel video ID via HTML: {0}", x["videoId"])
+                            return x["videoId"]
+
+        else:
+            # fall back on API
+            self.logger.debug("No channel data, falling back to API")
+            match = _channelid_re.search(res.text)
+            if not match:
+                return
+
+            channel_id = match.group(1)
+            self.logger.debug("Found channel_id: {0}".format(channel_id))
+            return self._get_channel_video(channel_id)
 
     def _get_channel_video(self, channel_id):
         query = {
@@ -220,13 +239,23 @@ class YouTube(Plugin):
             "part": "id",
             "key": API_KEY
         }
-        res = http.get(API_SEARCH_URL, params=query)
-        videos = http.json(res, schema=_search_schema)
+        res = http.get(API_SEARCH_URL, params=query, raise_for_status=False)
+        if res.status_code == codes.ok:
+            videos = http.json(res, schema=_search_schema)
 
-        for video in videos:
-            video_id = video["id"]["videoId"]
-            self.logger.debug("Found video_id: {0}".format(video_id))
-            return video_id
+            for video in videos:
+                video_id = video["id"]["videoId"]
+                self.logger.debug("Found video_id: {0}".format(video_id))
+                return video_id
+        else:
+            try:
+                errors = http.json(res, exception=ValueError)
+                self.logger.error("Cloud not resolve channel video:")
+                for error in errors['error']['errors']:
+                    self.logger.error("  {message} ({reason})".format(**error))
+
+            except ValueError:
+                self.logger.error("Cloud not resolve channel video: {0} error".format(res.status_code))
 
     def _find_canonical_stream_info(self):
         res = http.get(self.url)
@@ -307,7 +336,7 @@ class YouTube(Plugin):
 
             streams[name] = stream
 
-        if is_live is False:
+        if not is_live:
             streams, protected = self._create_adaptive_streams(info, streams, protected)
 
         hls_playlist = info.get("hlsvp")
