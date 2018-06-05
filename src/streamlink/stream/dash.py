@@ -3,8 +3,10 @@ import logging
 import datetime
 import os.path
 
+import requests
 from streamlink import StreamError, PluginError
 from streamlink.compat import urlparse, urlunparse
+from streamlink.stream.http import valid_args, normalize_key
 from streamlink.stream.stream import Stream
 from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc, freeze_timeline
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
@@ -131,15 +133,24 @@ class DASHStream(Stream):
                  mpd,
                  video_representation=None,
                  audio_representation=None,
-                 period=0):
+                 period=0,
+                 **args):
         super(DASHStream, self).__init__(session)
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
         self.period = period
+        self.args = args
+
+    def __json__(self):
+        req = requests.Request(method="GET", url=self.mpd.url, **valid_args(self.args))
+        req = req.prepare()
+
+        headers = dict(map(normalize_key, req.headers.items()))
+        return dict(type=type(self).shortname(), url=req.url, headers=headers)
 
     @classmethod
-    def parse_manifest(cls, session, url):
+    def parse_manifest(cls, session, url, **args):
         """
         Attempt to parse a DASH manifest file and return its streams
 
@@ -148,7 +159,7 @@ class DASHStream(Stream):
         :return: a dict of name -> DASHStream instances
         """
         ret = {}
-        res = session.http.get(url)
+        res = session.http.get(url, **args)
         url = res.url
 
         urlp = list(urlparse(url))
@@ -175,7 +186,7 @@ class DASHStream(Stream):
             audio = [None]
 
         for vid, aud in itertools.product(video, audio):
-            stream = DASHStream(session, mpd, vid, aud)
+            stream = DASHStream(session, mpd, vid, aud, **args)
             stream_name = []
 
             if vid:
