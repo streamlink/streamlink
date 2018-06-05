@@ -514,8 +514,8 @@ def handle_url():
             log.debug("Plugin specific arguments:")
             for parg, value in plugin_args:
                 log.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
-                                                             value if not parg.sensitive else ("*" * 8),
-                                                             parg.dest))
+                                                  value if not parg.sensitive else ("*" * 8),
+                                                  parg.dest))
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -936,7 +936,10 @@ def check_version(force=False):
 
 
 def setup_logging(stream=sys.stdout, level="info"):
-    logger.basicConfig(stream=stream, level=level, format="[{name}][{levelname}] {message}", style="{")
+    fmt = ("[{asctime},{msecs:0.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
+    logger.basicConfig(stream=stream, level=level,
+                       format=fmt, style="{",
+                       datefmt="%H:%M:%S")
 
 
 def main():

@@ -103,7 +103,12 @@ class StringFormatter(logging.Formatter):
         self.fmt = fmt
         self.remove_base = remove_base or []
 
+    def usesTime(self):
+        return (self.style == "%" and "%(asctime)" in self.fmt) or (self.style == "{" and "{asctime}" in self.fmt)
+
     def formatMessage(self, record):
+        if self.usesTime():
+            record.asctime = self.formatTime(record, self.datefmt)
         if self.style == "{":
             return self.fmt.format(**record.__dict__)
         else:
