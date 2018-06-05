@@ -4,7 +4,7 @@ import time
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream, HLSStream, HTTPStream
+from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import update_scheme
 
@@ -162,17 +162,21 @@ class Pluzz(Plugin):
                 expired = expired or True
                 continue
 
-            # TODO: add DASH streams once supported
-            if '.mpd' in video_url:
-                continue
-
             if ('.f4m' in video_url or
+                '.mpd' in video_url or
                 'france.tv' in self.url or
                 'sport.francetvinfo.fr' in self.url):
                 res = http.get(self.TOKEN_URL.format(video_url))
                 video_url = res.text
 
-            if '.f4m' in video_url and swf_url is not None:
+            if '.mpd' in video_url:
+                # Get redirect video URL
+                res = http.get(res.text)
+                video_url = res.url
+                for bitrate, stream in DASHStream.parse_manifest(self.session,
+                                                                 video_url).items():
+                    streams.append((bitrate, stream))
+            elif '.f4m' in video_url and swf_url is not None:
                 for bitrate, stream in HDSStream.parse_manifest(self.session,
                                                                 video_url,
                                                                 is_akamai=True,
