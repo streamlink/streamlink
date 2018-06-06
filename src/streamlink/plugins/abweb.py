@@ -34,7 +34,10 @@ class ABweb(Plugin):
             required=True,
             requires=["password"],
             metavar="USERNAME",
-            help="The username associated with your ABweb account, required to access any ABweb stream.",
+            help="""
+            The username associated with your ABweb account, required to access any
+            ABweb stream.
+            """,
             prompt="Enter ABweb username"
         ),
         PluginArgument(
@@ -48,10 +51,9 @@ class ABweb(Plugin):
             "purge-credentials",
             action="store_true",
             help="""
-        Purge cached ABweb credentials to initiate a new session
-        and reauthenticate.
-        """
-        )
+            Purge cached ABweb credentials to initiate a new session and
+            reauthenticate.
+            """)
     )
 
     def __init__(self, url):
