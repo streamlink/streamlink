@@ -65,7 +65,7 @@ changelog() {
   date=$(date +"%Y-%m-%d")
   shortlog=$(git shortlog --email --no-merges --pretty=%s ${1}..)
 
-  echo -e "\n# streamlink $2 ($date)\n\n!! WRITE RELEASE NOTES HERE !!\n\n\`\`\`text\n${shortlog}\n\`\`\`\n" > "${temp_changes}"
+  echo -e "\n## streamlink $2 ($date)\n\n!! WRITE RELEASE NOTES HERE !!\n\n\`\`\`text\n${shortlog}\n\`\`\`\n" > "${temp_changes}"
 
   sed -i "/# Changelog/ r ${temp_changes}" "CHANGELOG.md"
   return $?
