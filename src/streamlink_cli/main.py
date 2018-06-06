@@ -16,6 +16,7 @@ from functools import partial
 from itertools import chain
 from socks import __version__ as socks_version
 from time import sleep
+from time import time
 from websocket import __version__ as websocket_version
 
 from streamlink import __version__ as streamlink_version
@@ -384,6 +385,13 @@ def handle_stream(plugin, streams, stream_name):
         file_output = args.output or args.stdout
 
         for stream_name in [stream_name] + alt_streams:
+            # caches the current streamurl and streamname in to the session
+            cached_data = {
+                "url": args.url,
+                "stream_name": stream_name,
+                "timestamp": int(time()),
+            }
+            streamlink.cached_data.update(cached_data)
             stream = streams[stream_name]
             stream_type = type(stream).shortname()
 
@@ -759,6 +767,15 @@ def setup_options():
 
     if args.hls_segment_ignore_names:
         streamlink.set_option("hls-segment-ignore-names", args.hls_segment_ignore_names)
+
+    if args.hls_segment_ignore_number:
+        streamlink.set_option("hls-segment-ignore-number", args.hls_segment_ignore_number)
+
+    if args.hls_session_reload_segment:
+        streamlink.set_option("hls-session-reload-segment", args.hls_session_reload_segment)
+
+    if args.hls_session_reload_time:
+        streamlink.set_option("hls-session-reload-time", args.hls_session_reload_time)
 
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
