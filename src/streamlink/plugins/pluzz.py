@@ -24,7 +24,7 @@ class Pluzz(Plugin):
     _player_re = re.compile(
         r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
     _swf_re = re.compile(
-        r'//staticftv-a\.akamaihd\.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf')
+        r'"(bower_components/player_flash/dist/FranceTVNVPVFlashPlayer\.akamai-[0-9a-f]+\.swf)"')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
     _mp4_bitrate_re = re.compile(r'.*-(?P<bitrate>[0-9]+k)\.mp4')
 
@@ -122,7 +122,7 @@ class Pluzz(Plugin):
         res = http.get(player_url)
         match = self._swf_re.search(res.text)
         if match is not None:
-            swf_url = update_scheme(self.url, match.group(0))
+            swf_url = 'https://staticftv-a.akamaihd.net/player/' + match.group(1)
 
         res = http.get(self.API_URL.format(video_id))
         videos = http.json(res, schema=self._api_schema)
