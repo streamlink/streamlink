@@ -1,6 +1,6 @@
 # Changelog
 
-# streamlink 0.13.0 (2018-06-06)
+## streamlink 0.13.0 (2018-06-06)
 
 Massive release this month!
 
@@ -830,7 +830,7 @@ We've also introduced a change for Streamlink to *not* check for new updates eac
 The major features of this release are:
 
   - New plugins added
-  - Ongoing support to current plugins via bug fixes 
+  - Ongoing support to current plugins via bug fixes
   - Ensure retries to HLS streams
   - Disable update check
 
@@ -990,7 +990,7 @@ wlerin <wlerin@gmail.com> (1):
 
 0.3.2 release of Streamlink!
 
-A minor bug release of 0.3.2 to fix a few issues with stream providers. 
+A minor bug release of 0.3.2 to fix a few issues with stream providers.
 
 Thanks to all whom have contributed to this (tiny) release!
 
@@ -1078,7 +1078,7 @@ steven7851 <steven7851@msn.com> (1):
 
 Release 0.3.0 of Streamlink!
 
-A lot of updates to each plugin (thank you @beardypig !), automated Windows releases, PEP8 formatting throughout Streamlink are some of the few updates to this release as we near a stable 1.0.0 release. 
+A lot of updates to each plugin (thank you @beardypig !), automated Windows releases, PEP8 formatting throughout Streamlink are some of the few updates to this release as we near a stable 1.0.0 release.
 
 Main features are:
 
