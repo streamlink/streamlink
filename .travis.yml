@@ -54,15 +54,6 @@ deploy:
       tags: true
       condition: $BUILD_INSTALLER = yes
       repo: streamlink/streamlink
-  - provider: releases
-    api_key: "${RELEASES_API_KEY}"
-    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
-    file_glob: true
-    skip_cleanup: true
-    on:
-      tags: true
-      condition: "$BUILD_SDIST = yes"
-      repo: streamlink/streamlink
   - provider: script
     script: python script/github_releases.py
     skip_cleanup: true
@@ -81,9 +72,19 @@ deploy:
       repo: streamlink/streamlink
   - provider: script
     script: ./script/sdistsign.sh
+    skip_cleanup: true
     on:
       tags: true
       condition: $BUILD_SDIST == yes
+      repo: streamlink/streamlink
+  - provider: releases
+    api_key: "${RELEASES_API_KEY}"
+    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
+    file_glob: true
+    skip_cleanup: true
+    on:
+      tags: true
+      condition: $BUILD_SDIST = yes
       repo: streamlink/streamlink
 
 after_deploy:
