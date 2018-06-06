@@ -58,25 +58,23 @@ class Zattoo(Plugin):
             requires=["password"],
             metavar="EMAIL",
             help="""
-        The email associated with your zattoo account, required to access any zattoo stream.
-        """
-        ),
+            The email associated with your zattoo account, required to access
+            any zattoo stream.
+            """),
         PluginArgument(
             "password",
             sensitive=True,
             metavar="PASSWORD",
             help="""
-        A zattoo account password to use with --zattoo-email.
-        """
-        ),
+            A zattoo account password to use with --zattoo-email.
+            """),
         PluginArgument(
             "purge-credentials",
             action="store_true",
             help="""
-        Purge cached zattoo credentials to initiate a new session
-        and reauthenticate.
-        """
-        )
+            Purge cached zattoo credentials to initiate a new session
+            and reauthenticate.
+            """)
     )
 
     def __init__(self, url):
