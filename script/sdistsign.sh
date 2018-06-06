@@ -13,7 +13,7 @@ if [[ -n "${TRAVIS}" ]]; then
 fi
 
 echo "build: Installing twine and wheel" >&2
-pip -q install twine wheel
+pip -q install -U setuptools twine wheel
 
 echo "build: Building streamlink sdist and wheel" >&2
 python setup.py -q sdist bdist_wheel --dist-dir "${dist_dir}"
@@ -31,7 +31,8 @@ if [[ "${DEPLOY_PYPI}" == "yes" ]]; then
     echo "build: Uploading sdist and wheel to PyPI" >&2
     twine upload --username "${PYPI_USER}" --password "${PYPI_PASSWORD}" \
         "${dist_dir}/streamlink-${version}.tar.gz" \
-        "${dist_dir}/streamlink-${version}.tar.gz.asc" \
+        "${dist_dir}/streamlink-${version}.tar.gz.asc"
+    twine upload --username "${PYPI_USER}" --password "${PYPI_PASSWORD}" \
         "${dist_dir}/streamlink-${version}-py2.py3-none-any.whl" \
         "${dist_dir}/streamlink-${version}-py2.py3-none-any.whl.asc"
 fi
