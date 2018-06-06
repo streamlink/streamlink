@@ -1,5 +1,21 @@
 # Changelog
 
+## Streamlink 0.13.0 (2018-06-06)
+
+Streamlink 0.13.0
+
+Massive release this month!
+
+Here are the changes:
+ - Initial MPEG DASH support has been added! (https://github.com/streamlink/streamlink/pull/1637) Many thanks to @beardypig
+ - As always, a *ton* of plugin updates
+ - Updates to our documentation (https://github.com/streamlink/streamlink/pull/1673)
+ - Updates to our logging (https://github.com/streamlink/streamlink/pull/1752) as well as log --quiet options (https://github.com/streamlink/streamlink/pull/1744) (https://github.com/streamlink/streamlink/pull/1720)
+ - Our release script has been updated (https://github.com/streamlink/streamlink/pull/1711)
+ - Support for livestreams when using the `--hls-duration` option (https://github.com/streamlink/streamlink/pull/1710)
+ - Allow streamlink to exit faster when using Ctrl+C (https://github.com/streamlink/streamlink/pull/1658)
+ - Added an OpenCV Face Detection example (https://github.com/streamlink/streamlink/pull/1689)
+
 ## streamlink 0.12.1 (2018-05-07)
 
 Streamlink 0.12.1
