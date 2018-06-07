@@ -398,13 +398,13 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
-    def _get_title(self):
+    def get_title(self):
         raise NotImplementedError
 
-    def _get_author(self):
+    def get_author(self):
         raise NotImplementedError
 
-    def _get_category(self):
+    def get_category(self):
         raise NotImplementedError
 
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):

@@ -650,17 +650,17 @@ class Twitch(Plugin):
         self.category = info["game"]
         self.author = info["display_name"]
 
-    def _get_title(self):
+    def get_title(self):
         if self.title is None:
             self.set_title_info()
         return self.title
 
-    def _get_category(self):
+    def get_category(self):
         if self.category is None:
             self.set_title_info()
         return self.category
 
-    def _get_author(self):
+    def get_author(self):
         if self.author is None:
             self.set_title_info()
         return self.author

@@ -128,16 +128,18 @@ def create_http_server(host=None, port=0):
     return http
 
 def create_title(plugin=None):
+    if args.title and plugin:
+        title = args.title.format(title=plugin.get_title(),
+                                  author=plugin.get_author(),
+                                  category=plugin.get_category(),
+                                  game=plugin.get_category())
+    else:
+        title = args.url
+
     if is_py2:
-        if (args.title is not None) and (plugin is not None):
-            return args.encode('utf8').title.format(title=plugin._get_title(),author=plugin._get_author(),category=plugin._get_category(),game=plugin._get_category())
-        else:
-            return args.encode('utf8').url
-    elif is_py3:
-        if (args.title is not None) and (plugin is not None):
-            return args.title.format(title=plugin._get_title(),author=plugin._get_author(),category=plugin._get_category(),game=plugin._get_category())
-        else:
-            return args.url
+        return title.encode("utf8")
+    else:
+        return title
 def iter_http_requests(server, player):
     """Repeatedly accept HTTP connections on a server.
 
