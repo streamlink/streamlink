@@ -11,6 +11,9 @@ from streamlink.stream import Stream
 from streamlink.stream.stream import StreamIO
 from streamlink.utils import NamedPipe
 from streamlink.compat import devnull, which
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class MuxedStream(Stream):
@@ -29,14 +32,14 @@ class MuxedStream(Stream):
         # only update the maps values if they haven't been set
         update_maps = not maps
         for i, substream in enumerate(self.substreams):
-            self.logger.debug("Opening {0} substream".format(substream.shortname()))
+            log.debug("Opening {0} substream".format(substream.shortname()))
             if update_maps:
                 maps.append(len(fds))
             fds.append(substream and substream.open())
 
         for i, subtitle in enumerate(self.subtitles.items()):
             language, substream = subtitle
-            self.logger.debug("Opening {0} subtitle stream".format(substream.shortname()))
+            log.debug("Opening {0} subtitle stream".format(substream.shortname()))
             if update_maps:
                 maps.append(len(fds))
             fds.append(substream and substream.open())
@@ -57,7 +60,7 @@ class FFMPEGMuxer(StreamIO):
 
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
-        self.logger.debug("Starting copy to pipe: {0}".format(pipe.path))
+        log.debug("Starting copy to pipe: {0}".format(pipe.path))
         pipe.open("wb")
         while not stream.closed:
             try:
@@ -67,13 +70,13 @@ class FFMPEGMuxer(StreamIO):
                 else:
                     break
             except IOError:
-                self.logger.error("Pipe copy aborted: {0}".format(pipe.path))
+                log.error("Pipe copy aborted: {0}".format(pipe.path))
                 return
         try:
             pipe.close()
         except IOError:  # might fail closing, but that should be ok for the pipe
             pass
-        self.logger.debug("Pipe copy complete: {0}".format(pipe.path))
+        log.debug("Pipe copy complete: {0}".format(pipe.path))
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
@@ -81,7 +84,7 @@ class FFMPEGMuxer(StreamIO):
 
         self.session = session
         self.process = None
-        self.logger = session.logger.new_module("stream.mp4mux-ffmpeg")
+        log = logging.getLogger("streamlink.stream.mp4mux-ffmpeg")
         self.streams = streams
 
         self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
@@ -95,6 +98,7 @@ class FFMPEGMuxer(StreamIO):
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
+        copyts = options.pop("copyts", False)
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
@@ -106,12 +110,15 @@ class FFMPEGMuxer(StreamIO):
         for m in maps:
             self._cmd.extend(["-map", str(m)])
 
+        if copyts:
+            self._cmd.extend(["-copyts"])
+
         for stream, data in metadata.items():
             for datum in data:
                 self._cmd.extend(["-metadata:{0}".format(stream), datum])
 
         self._cmd.extend(['-f', ofmt, outpath])
-        self.logger.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))
+        log.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))
         self.close_errorlog = False
 
         if session.options.get("ffmpeg-verbose"):
@@ -148,7 +155,7 @@ class FFMPEGMuxer(StreamIO):
         return data
 
     def close(self):
-        self.logger.debug("Closing ffmpeg thread")
+        log.debug("Closing ffmpeg thread")
         if self.process:
             # kill ffmpeg
             self.process.kill()
@@ -159,7 +166,7 @@ class FFMPEGMuxer(StreamIO):
                 if hasattr(stream, "close"):
                     stream.close()
 
-            self.logger.debug("Closed all the substreams")
+            log.debug("Closed all the substreams")
         if self.close_errorlog:
             self.errorlog.close()
             self.errorlog = None

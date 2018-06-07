@@ -1,9 +1,13 @@
+import concurrent.futures.thread
+import logging
 from concurrent import futures
 from threading import Thread, Event
 
 from .stream import StreamIO
 from ..buffers import RingBuffer
 from ..compat import queue
+
+log = logging.getLogger(__name__)
 
 
 class SegmentedStreamWorker(Thread):
@@ -13,23 +17,22 @@ class SegmentedStreamWorker(Thread):
     writer thread.
     """
 
-    def __init__(self, reader):
+    def __init__(self, reader, **kwargs):
         self.closed = False
         self.reader = reader
         self.writer = reader.writer
         self.stream = reader.stream
         self.session = reader.stream.session
-        self.logger = reader.logger
 
         self._wait = None
 
-        Thread.__init__(self)
+        Thread.__init__(self, name="Thread-{0}".format(self.__class__.__name__))
         self.daemon = True
 
     def close(self):
         """Shuts down the thread."""
         if not self.closed:
-            self.logger.debug("Closing worker thread")
+            log.debug("Closing worker thread")
 
         self.closed = True
         if self._wait:
@@ -54,6 +57,8 @@ class SegmentedStreamWorker(Thread):
 
     def run(self):
         for segment in self.iter_segments():
+            if self.closed:
+                break
             self.writer.put(segment)
 
         # End of stream, tells the writer to exit
@@ -73,7 +78,6 @@ class SegmentedStreamWriter(Thread):
         self.reader = reader
         self.stream = reader.stream
         self.session = reader.stream.session
-        self.logger = reader.logger
 
         if not retries:
             retries = self.session.options.get("stream-segment-attempts")
@@ -90,17 +94,19 @@ class SegmentedStreamWriter(Thread):
         self.executor = futures.ThreadPoolExecutor(max_workers=threads)
         self.futures = queue.Queue(size)
 
-        Thread.__init__(self)
+        Thread.__init__(self, name="Thread-{0}".format(self.__class__.__name__))
         self.daemon = True
 
     def close(self):
         """Shuts down the thread."""
         if not self.closed:
-            self.logger.debug("Closing writer thread")
+            log.debug("Closing writer thread")
 
         self.closed = True
         self.reader.buffer.close()
-        self.executor.shutdown(wait=True)
+        self.executor.shutdown(wait=False)
+        if concurrent.futures.thread._threads_queues:
+            concurrent.futures.thread._threads_queues.clear()
 
     def put(self, segment):
         """Adds a segment to the download pool and write queue."""
@@ -120,7 +126,7 @@ class SegmentedStreamWriter(Thread):
         while not self.closed:
             try:
                 queue_.put(value, block=True, timeout=1)
-                break
+                return
             except queue.Full:
                 continue
 
@@ -191,11 +197,6 @@ class SegmentedStreamReader(StreamIO):
     def close(self):
         self.worker.close()
         self.writer.close()
-
-        for thread in (self.worker, self.writer):
-            if thread.is_alive():
-                thread.join()
-
         self.buffer.close()
 
     def read(self, size):

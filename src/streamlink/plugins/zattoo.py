@@ -4,7 +4,7 @@ import uuid
 
 from streamlink.cache import Cache
 from streamlink.plugin import Plugin
-from streamlink.plugin import PluginOptions
+from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -52,16 +52,38 @@ class Zattoo(Plugin):
         validate.get('channel_groups'),
     )
 
-    options = PluginOptions({
-        'email': None,
-        'password': None,
-        'purge_credentials': None
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "email",
+            requires=["password"],
+            metavar="EMAIL",
+            help="""
+        The email associated with your zattoo account, required to access any zattoo stream.
+        """
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="""
+        A zattoo account password to use with --zattoo-email.
+        """
+        ),
+        PluginArgument(
+            "purge-credentials",
+            action="store_true",
+            help="""
+        Purge cached zattoo credentials to initiate a new session
+        and reauthenticate.
+        """
+        )
+    )
 
     def __init__(self, url):
         super(Zattoo, self).__init__(url)
         self._session_attributes = Cache(filename='plugin-cache.json', key_prefix='zattoo:attributes')
-        self._authed = self._session_attributes.get('beaker.session.id') and self._session_attributes.get('pzuid') and self._session_attributes.get('power_guide_hash')
+        self._authed = self._session_attributes.get('beaker.session.id') and self._session_attributes.get(
+            'pzuid') and self._session_attributes.get('power_guide_hash')
         self._uuid = self._session_attributes.get('uuid')
         self._expires = self._session_attributes.get('expires', 946684800)
 
@@ -156,7 +178,8 @@ class Zattoo(Plugin):
             res = http.post(watch_url, headers=self.headers, data=params, cookies=cookies)
         except Exception as e:
             if '404 Client Error' in str(e):
-                self.logger.error('Unfortunately streaming is not permitted in this country or this channel does not exist.')
+                self.logger.error(
+                    'Unfortunately streaming is not permitted in this country or this channel does not exist.')
             elif '402 Client Error: Payment Required' in str(e):
                 self.logger.error('Paid subscription required for this channel.')
                 self.logger.info('If paid subscription exist, use --zattoo-purge-credentials to start a new session.')
@@ -238,7 +261,8 @@ class Zattoo(Plugin):
             self.logger.info('All credentials were successfully removed.')
 
         if not self._authed and (not email and not password):
-            self.logger.error('A login for Zattoo is required, use --zattoo-email EMAIL --zattoo-password PASSWORD to set them')
+            self.logger.error(
+                'A login for Zattoo is required, use --zattoo-email EMAIL --zattoo-password PASSWORD to set them')
             return
 
         if self._authed:

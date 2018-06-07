@@ -1,16 +1,17 @@
 import json
 import sys
-
+import logging
 from getpass import getpass
 
 from .compat import input
 from .utils import JSONEncoder
 
+log = logging.getLogger("streamlink.cli")
+
 
 class ConsoleOutput(object):
     def __init__(self, output, streamlink, json=False):
         self.streamlink = streamlink
-        self.logger = streamlink.logger.new_module("cli")
 
         self.json = json
         self.set_output(output)
@@ -20,7 +21,6 @@ class ConsoleOutput(object):
 
     def set_output(self, output):
         self.output = output
-        self.streamlink.set_logoutput(output)
 
     def ask(self, msg, *args, **kwargs):
         formatted = msg.format(*args, **kwargs)

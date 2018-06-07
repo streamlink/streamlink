@@ -26,6 +26,15 @@ Plugins
 .. autoclass:: Plugin
     :members:
 
+.. module:: streamlink.options
+.. autoclass:: Arguments
+    :members:
+
+.. autoclass:: Argument
+    :members:
+
+    .. automethod:: __init__
+
 
 Streams
 -------
@@ -58,6 +67,9 @@ different properties are available depending on stream type.
     :members:
 
 .. autoclass:: RTMPStream
+    :members:
+
+.. autoclass:: DASHStream
     :members:
 
 

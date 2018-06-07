@@ -1,13 +1,9 @@
 import unittest
 
 from streamlink import Streamlink
-
-try:
-    from unittest.mock import patch, Mock, ANY
-except ImportError:
-    from mock import patch, Mock, ANY
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
+from tests.mock import patch, Mock, ANY, MagicMock, call
 
 
 class TestPluginTVPlayer(unittest.TestCase):
@@ -54,7 +50,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         mock_http.get.return_value = page_resp
         hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
-        TVPlayer.bind(self.session, "test.plugin.tvplayer")
+        TVPlayer.bind(self.session, "test.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
         streams = plugin.get_streams()
@@ -77,7 +73,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         """
         mock_http.get.return_value = page_resp
 
-        TVPlayer.bind(self.session, "test.plugin.tvplayer")
+        TVPlayer.bind(self.session, "test.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
 
         streams = plugin.get_streams()
@@ -87,3 +83,21 @@ class TestPluginTVPlayer(unittest.TestCase):
         # test the url is used correctly
 
         mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
+
+    def test_arguments(self):
+        from streamlink_cli.main import setup_plugin_args
+        session = Streamlink()
+        parser = MagicMock()
+        plugin_parser = MagicMock()
+        parser.add_argument_group = MagicMock(return_value=plugin_parser)
+
+        session.plugins = {
+            'tvplayer': TVPlayer
+        }
+
+        setup_plugin_args(session, parser)
+
+        self.assertSequenceEqual(plugin_parser.add_argument.mock_calls,
+                                 [call('--tvplayer-email', metavar="EMAIL", help=ANY),
+                                  call('--tvplayer-password', metavar="PASSWORD", help=ANY)],
+                                 )

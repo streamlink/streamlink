@@ -14,6 +14,9 @@ from ..utils import swfdecompress
 
 from ..packages.flashmedia import FLV, FLVError
 from ..packages.flashmedia.tag import ScriptData
+import logging
+
+log = logging.getLogger(__name__)
 
 
 class TokenGenerator(object):
@@ -81,7 +84,6 @@ class AkamaiHDStreamIO(io.IOBase):
         parsed = urlparse(url)
 
         self.session = session
-        self.logger = self.session.logger.new_module("stream.akamaihd")
         self.host = ("{scheme}://{netloc}").format(scheme=parsed.scheme, netloc=parsed.netloc)
         self.streamname = parsed.path[1:]
         self.swf = swf
@@ -99,8 +101,7 @@ class AkamaiHDStreamIO(io.IOBase):
         url = self.StreamURLFormat.format(host=self.host, streamname=self.streamname)
         params = self._create_params(seek=self.seek)
 
-        self.logger.debug("Opening host={host} streamname={streamname}",
-                          host=self.host, streamname=self.streamname)
+        log.debug("Opening host={} streamname={}", self.host, self.streamname)
 
         try:
             res = self.session.http.get(url, stream=True, params=params)
@@ -119,7 +120,7 @@ class AkamaiHDStreamIO(io.IOBase):
             raise StreamError(str(err))
 
         self.buffer.write(self.flv.header.serialize())
-        self.logger.debug("Attempting to handshake")
+        log.debug("Attempting to handshake")
 
         for i, tag in enumerate(self.flv):
             if i == 10:
@@ -128,7 +129,7 @@ class AkamaiHDStreamIO(io.IOBase):
             self.process_tag(tag, exception=StreamError)
 
             if self.completed_handshake:
-                self.logger.debug("Handshake successful")
+                log.debug("Handshake successful")
                 break
 
     def process_tag(self, tag, exception=IOError):
@@ -140,7 +141,7 @@ class AkamaiHDStreamIO(io.IOBase):
     def send_token(self, token):
         headers = {"x-Akamai-Streaming-SessionToken": token}
 
-        self.logger.debug("Sending new session token")
+        log.debug("Sending new session token")
         self.send_control("sendingNewToken", headers=headers,
                           swf=self.swf)
 
@@ -195,13 +196,12 @@ class AkamaiHDStreamIO(io.IOBase):
             if key in data:
                 setattr(self, attr, data[key])
 
-        self.logger.debug("onEdge data")
+        log.debug("onEdge data")
         for key, val in data.items():
             if isinstance(val, str):
                 val = val[:50]
 
-            self.logger.debug(" {key}={val}",
-                              key=key, val=val)
+            log.debug(" {}={}", key, val)
 
         updateattr("islive", "isLive")
         updateattr("sessionid", "session")

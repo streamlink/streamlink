@@ -1,296 +1,184 @@
-#!/bin/bash
-UPSTREAM_REPO="streamlink"
-CLI="streamlink"
+#!/usr/bin/env bash
+
+script=$(basename -- "$0")
+temp_dir=$(mktemp -d) && trap "rm -rf ${temp_dir}" EXIT || exit 255
 
 usage() {
-  echo "This will prepare $CLI for release!"
-  echo ""
-  echo "Requirements:"
-  echo " git"
-  echo " gpg - with a valid GPG key already generated"
-  echo " hub"
-  echo " github-release"
-  echo " GITHUB_TOKEN in your env variable"
-  echo " "
-  echo "Not only that, but you must have permission for:"
-  echo " Tagging releases within Github"
-  echo ""
+    echo "usage: $script [OPTIONS]" >&2
 }
 
-requirements() {
-  if [ ! -f /usr/bin/git ] && [ ! -f /usr/local/bin/git ]; then
-    echo "No git. What's wrong with you?"
-    return 1
-  fi
+help() {
+    usage
+    cat <<EOF >&2
 
-  if [ ! -f /usr/bin/gpg ] && [ ! -f /usr/local/bin/gpg ]; then
-    echo "No gpg. What's wrong with you?"
-    return 1
-  fi
+Helper script for performing a release of Streamlink.
+Options can be specified on the command line, or the user will
+be prompted to enter the required options.
 
-  if [ ! -f $GOPATH/bin/github-release ]; then
-    echo "No $GOPATH/bin/github-release. Please run 'go get -v github.com/aktau/github-release'"
-    return 1
-  fi
+General options:
+  -h, --help
+    Show this help message and exit.
 
-  if [ ! -f /usr/bin/hub ]; then
-    echo "No hub. Please run install hub @ github.com/github/hub"
-    return 1
-  fi
+  -u, --upstream REPO
+    Set the upstream repo (streamlink/streamlink)
 
-  if [[ -z "$GITHUB_TOKEN" ]]; then
-    echo "export GITHUB_TOKEN=yourtoken needed for using github-release"
-  fi
+  -o, --origin REPO
+    Set the users fork of the upstream repo (gituser/streamlink)
+
+  -v, --version VERSION
+    Set the new version number.
+EOF
 }
 
-# Clone and then change to user's upstream repo for pushing to master / opening PR's :)
-clone() {
-  git clone ssh://git@github.com/$UPSTREAM_REPO/$CLI.git
-  if [ $? -eq 0 ]; then
-        echo OK
-  else
-        echo FAIL
-        exit
-  fi
-  cd $CLI
-  git remote remove origin
-  git remote add origin git@github.com:$ORIGIN_REPO/$CLI.git
-  git checkout -b release-$1
-  cd ..
+test_getopt() {
+    getopt --test > /dev/null
+    if [[ $? -ne 4 ]]; then
+        echo "An updated version of getopt is required (gnu-getopt)." >&2
+        return 1
+    fi
 }
 
-replaceversion() {
-  cd $CLI
-  OLD_VERSION=`python setup.py --version`
-  echo "OLD VERSION:" $OLD_VERSION
+test_available() {
+    which $1 > /dev/null
+    return $?
+}
 
-  echo "1. Replaced __init__.py versioning"
-  sed -i "s/$OLD_VERSION/$1/g" src/streamlink/__init__.py
+columns() {
+  cols=$(tput cols)
+  echo $((cols > 80 ? 80 : cols))
+}
 
-  echo "2. Replaced setup.py versioning"
-  sed -i "s/$OLD_VERSION/$1/g" setup.py
-  
-  cd ..
+error() {
+  cols=$(columns)
+  tput hpa $((cols - 6))
+  echo -e "\e[39m[\e[31mFAIL\e[39m]"
+}
+
+success() {
+  cols=$(columns)
+  tput hpa $((cols - 4))
+  echo -e "\e[39m[\e[32mOK\e[39m]"
 }
 
 changelog() {
-  cd $CLI
-  echo "Getting commit changes. Writing to ../changes.txt"
-  LOG=$(git shortlog --email --no-merges --pretty=%s ${1}.. | sed  's/^/    /')
-  echo -e "WRITE YOUR LOG HERE\n\nIf you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
-\n\n::\n\n$LOG" > ../changes.txt
-  echo "Changelog has been written to changes.txt"
-  echo "!!PLEASE REVIEW BEFORE CONTINUING!!"
-  echo "Open changes.txt and add the release information"
-  echo "to the beginning of the file before the git shortlog"
-  cd ..
+  temp_changes=$(mktemp) && trap "rm -rf ${temp_changes}" EXIT || exit 255
+  date=$(date +"%Y-%m-%d")
+  shortlog=$(git shortlog --email --no-merges --pretty=%s ${1}..)
+
+  echo -e "\n## streamlink $2 ($date)\n\n!! WRITE RELEASE NOTES HERE !!\n\n\`\`\`text\n${shortlog}\n\`\`\`\n" > "${temp_changes}"
+
+  sed -i "/# Changelog/ r ${temp_changes}" "CHANGELOG.md"
+  return $?
 }
 
-changelog_rst() {
-  echo "Generating CHANGELOG.rst"
-  CHANGES=$(cat changes.txt)
-  cd $CLI
-  DATE=$(date +"%Y-%m-%d")
-  CHANGELOG=$(cat CHANGELOG.rst)
-  HEADER="$CLI $1 ($DATE)"
-  UNDERLINE=$(printf %s "$HEADER" | tr -c '-' '[-*]')
-  echo -e "$HEADER\n$UNDERLINE\n$CHANGES\n\n$CHANGELOG" >CHANGELOG.rst
-  echo "Changes have been written to CHANGELOG.rst"
-  cd ..
-}
-
-git_commit() {
-  cd $CLI 
-
-  BRANCH=`git symbolic-ref --short HEAD`
-  if [ -z "$BRANCH" ]; then
-    echo "Unable to get branch name, is this even a git repo?"
+check_changelog() {
+  grep "WRITE RELEASE NOTES HERE" "CHANGELOG.md" >/dev/null
+  if [[ "$?" == "0" ]]; then
+    echo "fatal: CHANGELOG.md contains the template text" >&2
     return 1
   fi
-  echo "Branch: " $BRANCH
-
-  git add .
-  git commit -m "$1 Release"
-  git push origin $BRANCH
-  hub pull-request -b $UPSTREAM_REPO/$CLI:master -h $ORIGIN_REPO/$CLI:$BRANCH
-
-  cd ..
-  echo ""
-  echo "PR opened against master"
-  echo ""
+  return 0
 }
 
-sign() {
-  # Tarball it!
-  cd $CLI
-  python setup.py sdist
-  mv dist/$CLI-$1.tar.gz ..
-  cd ..
+action() {
+  local msg temp_log
+  msg=$1
+  temp_log=$(mktemp) && trap "rm -rf ${temp_log}" EXIT || exit 255
 
-  # Sign it!
-  echo -e "SIGN THE TARBALL!\n"
-  gpg --detach-sign --armor $CLI-$1.tar.gz
-  if [ $? -eq 0 ]; then
-        echo SIGN OK
-  else
-        echo SIGN FAIL
-        exit
-  fi
+  echo -n "$msg "
+  shift
 
-  echo ""
-  echo "The tar.gz. is now located at $CLI-$1.tar.gz"
-  echo "and the signed one at $CLI-$1.tar.gz.asc"
-  echo ""
+  "$@" 2> "${temp_log}" 1>&2 && success || (error; cat "${temp_log}"; exit 1)
+
+  return $?
 }
 
-push() {
-  CHANGES=$(cat changes.txt)
-  # Release it!
-  github-release release \
-      --user $UPSTREAM_REPO \
-      --repo $CLI \
-      --tag $1 \
-      --name "$1" \
-      --description "$CHANGES"
-  if [ $? -eq 0 ]; then
-        echo RELEASE UPLOAD OK 
-  else 
-        echo RELEASE UPLOAD FAIL
-        exit
-  fi
+test_getopt || exit 255
 
-  github-release upload \
-      --user $UPSTREAM_REPO \
-      --repo $CLI \
-      --tag $1 \
-      --name "$CLI-$1.tar.gz" \
-      --file $CLI-$1.tar.gz
-  if [ $? -eq 0 ]; then
-        echo TARBALL UPLOAD OK 
-  else 
-        echo TARBALL UPLOAD FAIL
-        exit
-  fi
+# setup getopts
+OPTIONS=hu:o:v:
+LONGOPTIONS=help,upstream:,origin:,version:
+PARSED=$(getopt --options $OPTIONS --longoptions=$LONGOPTIONS --name "$0" -- "$@")
+if [[ $? -ne 0 ]]; then
+    usage
+    exit 2
+fi
 
-  github-release upload \
-      --user $UPSTREAM_REPO \
-      --repo $CLI\
-      --tag $1 \
-      --name "$CLI-$1.tar.gz.asc" \
-      --file $CLI-$1.tar.gz.asc
-  if [ $? -eq 0 ]; then
-        echo SIGNED TARBALL UPLOAD OK 
-  else 
-        echo SIGNED TARBALL UPLOAD FAIL
-        exit
-  fi
+# read getopt’s output this way to handle the quoting right:
+eval set -- "$PARSED"
 
-  echo "DONE"
-  echo "DOUBLE CHECK IT:"
-  echo "!!!"
-  echo "https://github.com/$UPSTREAM_REPO/$CLI/releases/edit/$1"
-  echo "!!!"
-}
+# now enjoy the options in order and nicely split until we see --
+while true; do
+    case "$1" in
+        -h|--help)
+            help
+            exit 0
+            ;;
+        -u|--upstream)
+            upstream="$2"
+            shift 2
+            ;;
+        -o|--origin)
+            origin="$2"
+            shift 2
+            ;;
+        -v|--version)
+            version="$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Programming error"
+            exit 3
+            ;;
+    esac
+done
 
-upload_pypi_test() {
-  cd $CLI
-  python setup.py sdist upload -r pypitest
-  cd ..
-}
+echo -e "Streamlink Release Script\n"
+action "User has git installed" test_available git
 
-upload_pypi() {
-  cd $CLI
-  python setup.py sdist upload -r pypi
-  cd ..
-}
+if [ -z "$upstream" ]; then
+    echo -n "Upstream repo [streamlink/streamlink]: "
+    read upstream
+    if [ -z "$upstream" ]; then
+        upstream="streamlink/streamlink"
+    fi
+fi
 
-clean() {
-  rm -rf $CLI $CLI-$1 $CLI-$1.tar.gz $CLI-$1.tar.gz.asc $CLI-$1.exe changes.txt
-}
+if [ -z "$origin" ]; then
+    echo -n "Fork repo [$USER/streamlink]: "
+    read origin
+    if [ -z "$origin" ]; then
+        origin="$USER/streamlink"
+    fi
+fi
 
-main() {
-  local cmd=$1
-  usage
+while [ -z "$version" ]; do
+    echo -n "New version number: "
+    read version
+done
 
-  echo "What is your Github username? (location of your $CLI fork)"
-  read ORIGIN_REPO 
-  echo "You entered: $ORIGIN_REPO"
-  echo ""
-  
-  echo ""
-  echo "First, please enter the version of the NEW release: "
-  read VERSION
-  echo "You entered: $VERSION"
-  echo ""
+action "Cloning ${upstream}..." git clone -q "ssh://git@github.com/${upstream}.git" "${temp_dir}"
 
-  echo ""
-  echo "Second, please enter the version of the LAST release: "
-  read PREV_VERSION
-  echo "You entered: $PREV_VERSION"
-  echo ""
+pushd "${temp_dir}" >/dev/null
 
-  clear
+dirty_version=$(python setup.py --version)
+current_version="${dirty_version%%+*}"
 
-  echo "Now! It's time to go through each step of releasing $CLI!"
-  echo "If one of these steps fails / does not work, simply re-run ./release.sh"
-  echo "Re-enter the information at the beginning and continue on the failed step"
-  echo ""
+action "Adding ${origin} as origin" git remote set-url origin "git@github.com:${origin}.git" || exit 1
+action "Adding release-${version} branch" git checkout -b "release-${version}" || exit 1
 
-  PS3='Please enter your choice: '
-  options=(
-  "Git clone master"
-  "Replace version number"
-  "Generate changelog"
-  "Generate changelog for release"
-  "Create PR"
-  "Tarball and sign - requires gpg key"
-  "Upload the tarball and source code to GitHub release page"
-  "Test upload to pypi"
-  "Upload to pypi"
-  "Clean"
-  "Quit")
-  select opt in "${options[@]}"
-  do
-      echo ""
-      case $opt in
-          "Git clone master")
-              clone $VERSION
-              ;;
-          "Replace version number")
-              replaceversion $VERSION
-              ;;
-          "Generate changelog")
-              changelog $PREV_VERSION
-              ;;
-          "Generate changelog for release")
-              changelog_rst $VERSION
-              ;;
-          "Create PR")
-              git_commit $VERSION
-              ;;
-          "Tarball and sign - requires gpg key")
-              sign $VERSION
-              ;;
-          "Upload the tarball and source code to GitHub release page")
-              push $VERSION
-              ;;
-          "Test upload to pypi")
-              upload_pypi_test
-              ;;
-          "Upload to pypi")
-              upload_pypi
-              ;;
-          "Clean")
-              clean $VERSION
-              ;;
-          "Quit")
-              clear
-              break
-              ;;
-          *) echo invalid option;;
-      esac
-      echo ""
-  done
-}
+action "Updating CHANGELOG.md (${current_version}..HEAD}" changelog "${current_version}" "${version}" || exit 1
 
-main "$@"
+# launch editor to edit the file
+"${VISUAL:-"${EDITOR:-vi}"}" "CHANGELOG.md"
+
+action "Check CHANGELOG.md was updated" check_changelog || exit 1
+
+action "Commit CHANGELOG.md to release-${version} branch" git commit CHANGELOG.md -m "Release ${version}" || exit 1
+action "Push release-${version} branch to ${origin}" git push origin "release-${version}" || exit 1
+
+popd >/dev/null

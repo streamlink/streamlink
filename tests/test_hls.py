@@ -1,17 +1,18 @@
-import sys
+import logging
 import os
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-
-from Crypto.Cipher import AES
+import unittest
 from binascii import hexlify
-
-from streamlink.stream import hls
-from streamlink.session import Streamlink
 from functools import partial
+
+import pytest
 import requests_mock
+from Crypto.Cipher import AES
+from mock import patch, Mock
+
+from streamlink.session import Streamlink
+from streamlink.stream import hls
+
+log = logging.getLogger(__name__)
 
 
 def pkcs7_encode(data, keySize):
@@ -78,8 +79,9 @@ audio_only.m3u8
 
         return playlist + playlistEnd
 
-    def start_streamlink(self, masterPlaylist, kwargs={}):
-        print("Executing streamlink")
+    def start_streamlink(self, masterPlaylist, kwargs=None):
+        kwargs = kwargs or {}
+        log.info("Executing streamlink")
         streamlink = Streamlink()
 
         # Set to default value to avoid a test fail if the default change
@@ -90,11 +92,11 @@ audio_only.m3u8
         stream = masterStream["1080p (source)"].open()
         data = b"".join(iter(partial(stream.read, 8192), b""))
         stream.close()
-        print("End of streamlink execution")
+        log.info("End of streamlink execution")
         return data
 
     def test_hls_non_encrypted(self):
-        streams = [os.urandom(1024) for i in range(4)]
+        streams = [os.urandom(1024) for _ in range(4)]
         masterPlaylist = self.getMasterPlaylist()
         firstSequence = self.mediaSequence
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
@@ -105,10 +107,11 @@ audio_only.m3u8
                 mock.get("http://mocked/path/stream{0}.ts".format(i), content=stream)
 
             # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8", {'start_offset': 1, 'duration': 1})
+            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8",
+                                                     {'start_offset': 1, 'duration': 1})
 
-        # Check result
-        expectedResult = b''.join(streams[1:3])
+        # Check result, each segment is 1 second, with duration=1 only one segment should be returned
+        expectedResult = b''.join(streams[1:2])
         self.assertEqual(streamlinkResult, expectedResult)
 
     def test_hls_encryted_aes128(self):
@@ -140,6 +143,117 @@ audio_only.m3u8
         # Live streams starts the last 3 segments from the playlist
         expectedResult = b''.join(clearStreams[1:] + clearStreams)
         self.assertEqual(streamlinkResult, expectedResult)
+
+
+@patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
+class TestHlsExtAudio(unittest.TestCase):
+    playlist = """
+#EXTM3U
+#EXT-X-INDEPENDENT-SEGMENTS
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="en",NAME="English",AUTOSELECT=YES,DEFAULT=YES
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",NAME="English",LANGUAGE="en",AUTOSELECT=NO,URI="en.m3u8"
+#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",NAME="Spanish",LANGUAGE="es",AUTOSELECT=NO,URI="es.m3u8"
+#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="chunked",NAME="video",AUTOSELECT=YES,DEFAULT=YES
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3982010,RESOLUTION=1920x1080,CODECS="avc1.4D4029,mp4a.40.2",VIDEO="chunked", AUDIO="aac"
+playlist.m3u8
+    """
+
+    def run_streamlink(self, playlist, audio_select=None):
+        streamlink = Streamlink()
+
+        if audio_select:
+            streamlink.set_option("hls-audio-select", audio_select)
+        streamlink.logger.set_level("debug")
+
+        master_stream = hls.HLSStream.parse_variant_playlist(streamlink, playlist)
+
+        return master_stream
+
+    def test_hls_ext_audio_not_selected(self):
+        master_url = "http://mocked/path/master.m3u8"
+
+        with requests_mock.Mocker() as mock:
+            mock.get(master_url, text=self.playlist)
+            master_stream = self.run_streamlink(master_url)['video']
+
+        with pytest.raises(AttributeError):
+            master_stream.substreams
+
+        assert master_stream.url == 'http://mocked/path/playlist.m3u8'
+
+    def test_hls_ext_audio_en(self):
+        """
+        m3u8 with ext audio but no options should not download additional streams
+        :return:
+        """
+
+        master_url = "http://mocked/path/master.m3u8"
+        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/en.m3u8']
+
+        with requests_mock.Mocker() as mock:
+            mock.get(master_url, text=self.playlist)
+            master_stream = self.run_streamlink(master_url, 'en')
+
+        substreams = master_stream['video'].substreams
+        result = [x.url for x in substreams]
+
+        # Check result
+        self.assertEqual(result, expected)
+
+    def test_hls_ext_audio_es(self):
+        """
+        m3u8 with ext audio but no options should not download additional streams
+        :return:
+        """
+
+        master_url = "http://mocked/path/master.m3u8"
+        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/es.m3u8']
+
+        with requests_mock.Mocker() as mock:
+            mock.get(master_url, text=self.playlist)
+            master_stream = self.run_streamlink(master_url, 'es')
+
+        substreams = master_stream['video'].substreams
+
+        result = [x.url for x in substreams]
+
+        # Check result
+        self.assertEqual(result, expected)
+
+    def test_hls_ext_audio_all(self):
+        """
+        m3u8 with ext audio but no options should not download additional streams
+        :return:
+        """
+
+        master_url = "http://mocked/path/master.m3u8"
+        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/en.m3u8', 'http://mocked/path/es.m3u8']
+
+        with requests_mock.Mocker() as mock:
+            mock.get(master_url, text=self.playlist)
+            master_stream = self.run_streamlink(master_url, 'en,es')
+
+        substreams = master_stream['video'].substreams
+
+        result = [x.url for x in substreams]
+
+        # Check result
+        self.assertEqual(result, expected)
+
+    def test_hls_ext_audio_wildcard(self):
+        master_url = "http://mocked/path/master.m3u8"
+        expected = ['http://mocked/path/playlist.m3u8', 'http://mocked/path/en.m3u8', 'http://mocked/path/es.m3u8']
+
+        with requests_mock.Mocker() as mock:
+            mock.get(master_url, text=self.playlist)
+            master_stream = self.run_streamlink(master_url, '*')
+
+        substreams = master_stream['video'].substreams
+
+        result = [x.url for x in substreams]
+
+        # Check result
+        self.assertEqual(result, expected)
 
 
 if __name__ == "__main__":

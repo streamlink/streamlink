@@ -1,6 +1,6 @@
 import random
 import re
-from binascii import hexlify
+import logging
 from io import BytesIO
 
 from streamlink import PluginError
@@ -60,7 +60,7 @@ class BrightcovePlayer(object):
 
     def __init__(self, session, account_id, player_id="default_default"):
         self.session = session
-        self.logger = session.logger.new_module("plugins.brightcove")
+        self.logger = logging.getLogger("streamlink.plugins.brightcove")
         self.logger.debug("Creating player for account {0} (player_id={1})", account_id, player_id)
         self.account_id = account_id
         self.player_id = player_id
@@ -98,6 +98,7 @@ class BrightcovePlayer(object):
         policy_key = self.policy_key(video_id)
         self.logger.debug("Found policy key: {0}", policy_key)
         data = self.video_info(video_id, policy_key)
+        headers = {"Referer": self.player_url(video_id)}
 
         for source in data.get("sources"):
             # determine quality name
@@ -107,10 +108,9 @@ class BrightcovePlayer(object):
                 q = "{0}k".format(source.get("avg_bitrate") // 1000)
             else:
                 q = "live"
-
             if ((source.get("type") == "application/x-mpegURL" and source.get("src")) or
                     (source.get("src") and ".m3u8" in source.get("src"))):
-                for s in HLSStream.parse_variant_playlist(self.session, source.get("src")).items():
+                for s in HLSStream.parse_variant_playlist(self.session, source.get("src"), headers=headers).items():
                     yield s
             elif source.get("app_name"):
                 s = RTMPStream(self.session,
@@ -118,7 +118,7 @@ class BrightcovePlayer(object):
                                 "playpath": source.get("stream_name")})
                 yield q, s
             elif source.get("src") and source.get("src").endswith(".mp4"):
-                yield q, HTTPStream(self.session, source.get("src"))
+                yield q, HTTPStream(self.session, source.get("src"), headers=headers)
 
     @classmethod
     def from_url(cls, session, url):

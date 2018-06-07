@@ -6,7 +6,7 @@ import time
 
 from streamlink import PluginError
 from streamlink.cache import Cache
-from streamlink.plugin import Plugin, PluginOptions
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -43,10 +43,26 @@ class WWENetwork(Plugin):
             )
         })
     )
-    options = PluginOptions({
-        "email": None,
-        "password": None,
-    })
+    arguments = PluginArguments(
+        PluginArgument(
+            "email",
+            required=True,
+            metavar="EMAIL",
+            requires=["password"],
+            help="""
+        The email associated with your WWE Network account,
+        required to access any WWE Network stream.
+        """
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="""
+        A WWE Network account password to use with --wwenetwork-email.
+        """
+        )
+    )
 
     def __init__(self, url):
         super(WWENetwork, self).__init__(url)

@@ -1,13 +1,15 @@
 import json
 import re
 import zlib
+import collections
+import functools
 
 try:
     import xml.etree.cElementTree as ET
 except ImportError:  # pragma: no cover
     import xml.etree.ElementTree as ET
 
-from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse
+from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse, is_py3
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
 
@@ -67,7 +69,7 @@ def parse_json(data, name="JSON", exception=PluginError, schema=None):
     return json_data
 
 
-def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=None):
+def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=None, invalid_char_entities=False):
     """Wrapper around ElementTree.fromstring with some extras.
 
     Provides these extra features:
@@ -77,9 +79,14 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
     """
     if is_py2 and isinstance(data, unicode):
         data = data.encode("utf8")
+    elif is_py3 and isinstance(data, str):
+        data = bytearray(data, "utf8")
 
     if ignore_ns:
-        data = re.sub(" xmlns=\"(.+?)\"", "", data)
+        data = re.sub(br" xmlns=\"(.+?)\"", b"", data)
+
+    if invalid_char_entities:
+        data = re.sub(br'&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)', b'&amp;', data)
 
     try:
         tree = ET.fromstring(data)
@@ -151,6 +158,45 @@ def update_scheme(current, target):
                                   urlunparse(target_p))
     else:
         return target
+
+
+def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
+              ignore_query=False, ignore_fragment=False):
+    """
+    Compare two URLs and return True if they are equal, some parts of the URLs can be ignored
+    :param first: URL
+    :param second: URL
+    :param ignore_scheme: ignore the scheme
+    :param ignore_netloc: ignore the netloc
+    :param ignore_path: ignore the path
+    :param ignore_params: ignore the params
+    :param ignore_query: ignore the query string
+    :param ignore_fragment: ignore the fragment
+    :return: result of comparison
+    """
+    # <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
+
+    firstp = urlparse(first)
+    secondp = urlparse(second)
+
+    return ((firstp.scheme == secondp.scheme or ignore_scheme) and
+            (firstp.netloc == secondp.netloc or ignore_netloc) and
+            (firstp.path == secondp.path or ignore_path) and
+            (firstp.params == secondp.params or ignore_params) and
+            (firstp.query == secondp.query or ignore_query) and
+            (firstp.fragment == secondp.fragment or ignore_fragment))
+
+
+def memoize(obj):
+    cache = obj.cache = {}
+
+    @functools.wraps(obj)
+    def memoizer(*args, **kwargs):
+        key = str(args) + str(kwargs)
+        if key not in cache:
+            cache[key] = obj(*args, **kwargs)
+        return cache[key]
+    return memoizer
 
 
 #####################################
