@@ -111,26 +111,25 @@ class PlayerOutput(Output):
             filename = "-"
         args = self.args.format(filename=filename)
         cmd = self.cmd
-        
+        extra_args = []
+
         if self.title is not None:
-            #vlc
+            # vlc
             if self.cmd in SUPPORTED_PLAYERS['vlc']:
-                self.title.replace("$","$$").replace("\$$","$") #see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
-                if is_win32:
-                    return cmd + " --input-title-format=\"" + self.title + "\" " + args
-                return shlex.split(cmd) + shlex.split("--input-title-format=" + shlex_quote(self.title)) + shlex.split(args)
+                # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
+                self.title = self.title.replace("$", "$$").replace("\$$", "$")
+                extra_args.extend(["--input-title-format", self.title])
 
-            #mpv
+            # mpv
             if self.cmd in SUPPORTED_PLAYERS['mpv']:
-                self.title.replace("$","$$").replace("\$$","$") #see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$
-                if is_win32:
-                    return cmd + " --input-title-format=\"" + self.title + "\" " + args
-                return shlex.split(cmd) + shlex.split("--title=" + shlex_quote(self.title)) + shlex.split(args)
+                # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$
+                self.title = self.title.replace("$", "$$").replace("\$$", "$")
+                extra_args.extend(["--title", self.title])
 
-        #other player
+        # player command
         if is_win32:
-            return cmd + " " + args
-        return shlex.split(cmd) + shlex.split(args)
+            return cmd + " " + subprocess.list2cmdline(extra_args) + " " + args
+        return shlex.split(cmd) + extra_args + shlex.split(args)
 
     def _open(self):
         try:
