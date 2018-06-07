@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import base64
+import logging
 import re
 from collections import defaultdict
 from hashlib import sha1
@@ -15,6 +16,8 @@ from streamlink.stream import HLSStream
 from streamlink.stream.dash import DASHStream
 from streamlink.utils import parse_json
 
+log = logging.getLogger(__name__)
+
 
 class BBCiPlayer(Plugin):
     """
@@ -27,12 +30,14 @@ class BBCiPlayer(Plugin):
             live/(?P<channel_name>\w+)
         )
     """, re.VERBOSE)
-    mediator_re = re.compile(r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*({.*?})\);', re.DOTALL)
+    mediator_re = re.compile(
+        r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*({.*?})\);', re.DOTALL)
     tvip_re = re.compile(r'channel"\s*:\s*{\s*"id"\s*:\s*"(\w+?)"')
     tvip_master_re = re.compile(r'event_master_brand=(\w+?)&')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
     swf_url = "http://emp.bbci.co.uk/emp/SMPf/1.18.3/StandardMediaPlayerChromelessFlash.swf"
-    hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
+    hash = base64.b64decode(
+        b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = ("http://open.live.bbc.co.uk/mediaselector/6/select/"
                "version/2.0/mediaset/{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/")
     platforms = ("pc", "iptv-all")
@@ -45,7 +50,8 @@ class BBCiPlayer(Plugin):
                 "versions": [{"id": validate.text}]
             }
         },
-        validate.get("episode"), validate.get("versions"), validate.get(0), validate.get("id")
+        validate.get("episode"), validate.get("versions"), validate.get(0),
+        validate.get("id")
     )
     mediaselector_schema = validate.Schema(
         validate.transform(parse_json),
@@ -71,7 +77,7 @@ class BBCiPlayer(Plugin):
             sensitive=True,
             metavar="PASSWORD",
             help="A bbc.co.uk account password to use with --bbciplayer-username.",
-            prompt = "Enter bbc.co.uk account password"
+            prompt="Enter bbc.co.uk account password"
         ),
         PluginArgument(
             "hd",
@@ -123,7 +129,7 @@ class BBCiPlayer(Plugin):
         :return: Video Packet ID for a Programme in iPlayer
         :rtype: string
         """
-        self.logger.debug("Looking for vpid on {0}", url)
+        log.debug("Looking for vpid on {0}", url)
         # Use pre-fetched page if available
         res = res or http.get(url)
         m = self.mediator_re.search(res.text)
@@ -131,7 +137,7 @@ class BBCiPlayer(Plugin):
         return vpid
 
     def find_tvip(self, url, master=False):
-        self.logger.debug("Looking for {0} tvip on {1}", "master" if master else "", url)
+        log.debug("Looking for {0} tvip on {1}", "master" if master else "", url)
         res = http.get(url)
         if master:
             m = self.tvip_master_re.search(res.text)
@@ -142,26 +148,33 @@ class BBCiPlayer(Plugin):
     def mediaselector(self, vpid):
         urls = defaultdict(set)
         for platform in self.platforms:
-            url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid), platform=platform)
-            self.logger.debug("Info API request: {0}", url)
+            url = self.api_url.format(vpid=vpid, vpid_hash=self._hash_vpid(vpid),
+                                      platform=platform)
+            log.debug("Info API request: {0}", url)
             medias = http.get(url, schema=self.mediaselector_schema)
             for media in medias:
                 for connection in media["connection"]:
                     urls[connection.get("transferFormat")].add(connection["href"])
 
         for stream_type, urls in urls.items():
-            self.logger.debug("{0} {1} streams", len(urls), stream_type)
+            log.debug("{0} {1} streams", len(urls), stream_type)
             for url in list(urls):
-                self.logger.debug("  {0}", url)
-                if stream_type == "hds":
-                    for s in HDSStream.parse_manifest(self.session, url).items():
-                        yield s
-                if stream_type == "hls":
-                    for s in HLSStream.parse_variant_playlist(self.session, url).items():
-                        yield s
-                if connection.get("transferFormat") == "dash":
-                    for s in DASHStream.parse_manifest(self.session, connection["href"]).items():
-                        yield s
+                try:
+                    if stream_type == "hds":
+                        for s in HDSStream.parse_manifest(self.session,
+                                                          url).items():
+                            yield s
+                    if stream_type == "hls":
+                        for s in HLSStream.parse_variant_playlist(self.session,
+                                                                  url).items():
+                            yield s
+                    if stream_type == "dash":
+                        for s in DASHStream.parse_manifest(self.session,
+                                                           url).items():
+                            yield s
+                    log.debug("  OK:   {0}", url)
+                except:
+                    log.debug("  FAIL: {0}", url)
 
     def login(self, ptrt_url):
         """
@@ -197,13 +210,16 @@ class BBCiPlayer(Plugin):
 
     def _get_streams(self):
         if not self.get_option("username"):
-            self.logger.error("BBC iPlayer requires an account you must login using "
-                              "--bbciplayer-username and --bbciplayer-password")
+            log.error(
+                "BBC iPlayer requires an account you must login using "
+                "--bbciplayer-username and --bbciplayer-password")
             return
-        self.logger.info("A TV License is required to watch BBC iPlayer streams, see the BBC website for more "
-                         "information: https://www.bbc.co.uk/iplayer/help/tvlicence")
+        log.info(
+            "A TV License is required to watch BBC iPlayer streams, see the BBC website for more "
+            "information: https://www.bbc.co.uk/iplayer/help/tvlicence")
         if not self.login(self.url):
-            self.logger.error("Could not authenticate, check your username and password")
+            log.error(
+                "Could not authenticate, check your username and password")
             return
 
         m = self.url_re.match(self.url)
@@ -211,30 +227,32 @@ class BBCiPlayer(Plugin):
         channel_name = m.group("channel_name")
 
         if episode_id:
-            self.logger.debug("Loading streams for episode: {0}", episode_id)
+            log.debug("Loading streams for episode: {0}", episode_id)
             vpid = self.find_vpid(self.url)
             if vpid:
-                self.logger.debug("Found VPID: {0}", vpid)
+                log.debug("Found VPID: {0}", vpid)
                 for s in self.mediaselector(vpid):
                     yield s
             else:
-                self.logger.error("Could not find VPID for episode {0}", episode_id)
+                log.error("Could not find VPID for episode {0}",
+                          episode_id)
         elif channel_name:
-            self.logger.debug("Loading stream for live channel: {0}", channel_name)
+            log.debug("Loading stream for live channel: {0}", channel_name)
             if self.get_option("hd"):
                 tvip = self.find_tvip(self.url, master=True) + "_hd"
                 if tvip:
-                    self.logger.debug("Trying HD stream {0}...", tvip)
+                    log.debug("Trying HD stream {0}...", tvip)
                     try:
                         for s in self.mediaselector(tvip):
                             yield s
                     except PluginError:
-                        self.logger.error("Failed to get HD streams, falling back to SD")
+                        log.error(
+                            "Failed to get HD streams, falling back to SD")
                     else:
                         return
             tvip = self.find_tvip(self.url)
             if tvip:
-                self.logger.debug("Found TVIP: {0}", tvip)
+                log.debug("Found TVIP: {0}", tvip)
                 for s in self.mediaselector(tvip):
                     yield s
 
