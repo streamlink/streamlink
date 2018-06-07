@@ -215,15 +215,15 @@ class YouTube(Plugin):
         return streams, protected
 
     def _find_channel_video(self):
-        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        res = http.get(self.url)
 
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
             # find the videoRenderer object, where there is a LVE NOW badge
             for x in search_dict(data, 'videoRenderer'):
-                for blabel in search_dict(x.get("badges", {}), "label"):
-                    if blabel == "LIVE NOW":
+                for bstyle in search_dict(x.get("badges", {}), "style"):
+                    if bstyle == "BADGE_STYLE_TYPE_LIVE_NOW":
                         if x.get("videoId"):
                             self.logger.debug("Found channel video ID via HTML: {0}", x["videoId"])
                             return x["videoId"]
@@ -319,6 +319,7 @@ class YouTube(Plugin):
         return info_parsed
 
     def _get_streams(self):
+        http.headers.update({'User-Agent': useragents.CHROME})
         is_live = False
 
         info = self._get_stream_info(self.url)
