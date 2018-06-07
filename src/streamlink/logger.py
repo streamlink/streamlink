@@ -46,7 +46,7 @@ class _LogRecord(_CompatLogRecord):
         return msg
 
 
-class StreamlinkLogger(logging.getLoggerClass()):
+class StreamlinkLogger(logging.getLoggerClass(), object):
     def __init__(self, name, level=logging.NOTSET):
         super(StreamlinkLogger, self).__init__(name, level)
 
