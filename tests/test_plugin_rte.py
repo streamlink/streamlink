@@ -10,10 +10,12 @@ class TestPluginRTE(unittest.TestCase):
         self.assertTrue(RTE.can_handle_url("http://www.rte.ie/player/99/live/10/"))
         self.assertTrue(RTE.can_handle_url("http://www.rte.ie/player/99/live/6/"))
         self.assertTrue(RTE.can_handle_url("http://www.rte.ie/player/99/live/7/"))
+        self.assertTrue(RTE.can_handle_url("https://www.rte.ie/player/de/live/7/"))
 
         self.assertTrue(RTE.can_handle_url("http://www.rte.ie/player/99/show/rte-news-one-oclock-30003248/10714679/"))
         self.assertTrue(RTE.can_handle_url("http://www.rte.ie/player/99/show/the-ray-darcy-show-extras-30003588/10714469/"))
         self.assertTrue(RTE.can_handle_url("http://www.rte.ie/player/99/show/lotto-1251/10714463/"))
+        self.assertTrue(RTE.can_handle_url("https://www.rte.ie/player/99/show/lotto-1251/10714463/"))
 
         # shouldn't match
         self.assertFalse(RTE.can_handle_url("http://www.rte.ie/"))
