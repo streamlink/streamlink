@@ -1,7 +1,7 @@
 import sys
 
 from streamlink.plugin.api.validate import xml_element, text
-from streamlink.utils import update_scheme, url_equal
+from streamlink.utils import update_scheme, url_equal, search_dict
 
 try:
     import xml.etree.cElementTree as ET
@@ -124,3 +124,30 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(url_equal("http://test.com/test", "http://test.com/test#hello", ignore_fragment=True))
         self.assertTrue(url_equal("http://test.com/test", "http://test2.com/test", ignore_netloc=True))
         self.assertFalse(url_equal("http://test.com/test", "http://test2.com/test1", ignore_netloc=True))
+
+    def test_search_dict(self):
+
+        self.assertSequenceEqual(
+            list(search_dict(["one", "two"], "one")),
+            []
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"two": "test2"}, "one")),
+            []
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"one": "test1", "two": "test2"}, "one")),
+            ["test1"]
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"one": {"inner": "test1"}, "two": "test2"}, "inner")),
+            ["test1"]
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"one": [{"inner": "test1"}], "two": "test2"}, "inner")),
+            ["test1"]
+        )
+        self.assertSequenceEqual(
+            list(sorted(search_dict({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner"))),
+            list(sorted(["test1", "test2"]))
+        )
