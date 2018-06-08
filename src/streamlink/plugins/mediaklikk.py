@@ -32,6 +32,7 @@ class Mediaklikk(Plugin):
         if match:
             return match.group(1)
 
+    @Plugin.broken()
     def _get_streams(self):
         playlist = self._get_playlist_url()
         return HLSStream.parse_variant_playlist(self.session, playlist)

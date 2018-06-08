@@ -39,6 +39,7 @@ class ovvaTV(Plugin):
             else:
                 return url
 
+    @Plugin.broken()
     def _get_streams(self):
         http.headers = {"User-Agent": useragents.ANDROID}
         res = http.get(self.url)

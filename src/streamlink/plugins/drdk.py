@@ -85,6 +85,7 @@ class DRDK(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
+    @Plugin.broken()
     def _get_streams(self):
         match = _url_re.match(self.url)
         if not match:
