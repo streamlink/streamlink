@@ -52,7 +52,8 @@ class RTBF(Plugin):
                     validate.optional('urlHls'): validate.any(None, '', validate.url()),
                     validate.optional('urlDash'): validate.any(None, '', validate.url()),
                     validate.optional('streamUrlHls'): validate.any(None, '', validate.url()),
-                    validate.optional('streamUrlDash'): validate.any(None, '', validate.url())
+                    validate.optional('streamUrlDash'): validate.any(None, '', validate.url()),
+                    validate.optional('drm'): bool,
                 }
             )
         )
@@ -124,6 +125,11 @@ class RTBF(Plugin):
         # Check geolocation to prevent further errors when stream is parsed
         if not self.check_geolocation(stream_data['geoLocRestriction']):
             self.logger.error('Stream is geo-restricted')
+            return
+
+        # Check whether streams are DRM-protected
+        if stream_data.get('drm', False):
+            self.logger.error('Stream is DRM-protected')
             return
 
         now = datetime.datetime.now()
