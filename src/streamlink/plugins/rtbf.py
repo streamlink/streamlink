@@ -7,7 +7,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
 
 
@@ -153,6 +153,14 @@ class RTBF(Plugin):
                     # Live streams require a token
                     hls_url = self.tokenize_stream(hls_url)
                 for stream in HLSStream.parse_variant_playlist(self.session, hls_url).items():
+                    yield stream
+
+            dash_url = stream_data.get('urlDash') or stream_data.get('streamUrlDash')
+            if dash_url:
+                if stream_data.get('isLive', False):
+                    # Live streams require a token
+                    dash_url = self.tokenize_stream(dash_url)
+                for stream in DASHStream.parse_manifest(self.session, dash_url).items():
                     yield stream
 
         except IOError as err:
