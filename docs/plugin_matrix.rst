@@ -45,11 +45,6 @@ cam4                    cam4.com             Yes   No
 camsoda                 camsoda.com          Yes   No
 canalplus               - mycanal.fr         No    Yes   Streams may be geo-restricted to France.
                         - cnews.fr
-canlitv                 - canlitv.com        Yes   --
-                        - canlitv.life
-                        - canlitvlive.co
-                        - canlitvlive.live
-                        - ecanlitvizle.net
 cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                         - bgonair.bg
                         - kanal3.bg
@@ -64,7 +59,6 @@ cinergroup              - showtv.com.tr      Yes   No
                         - bloomberght.com
 crunchyroll             crunchyroll.com      --    Yes
 cybergame               cybergame.tv         Yes   Yes
-cyro                    cyro.se              --    Yes
 dailymotion             dailymotion.com      Yes   Yes
 deutschewelle           dw.com               Yes   Yes
 dingittv                dingit.tv            Yes   Yes
@@ -94,7 +88,6 @@ europaplus              europaplus.ru        Yes   --
 expressen               expressen.se         Yes   Yes
 facebook                facebook.com         Yes   No    Only 360p HLS streams.
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
-filmon_us               filmon.us            Yes   Yes
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes
                         - funimationnow.uk
@@ -120,7 +113,6 @@ liveedu                 - liveedu.tv         Yes   --    Some streams require a 
                         - livecoding.tv
 liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
-looch                   looch.tv             Yes   Yes
 media_ccc_de            - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
                         - streaming... [4]_
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
@@ -184,9 +176,7 @@ rtve                    rtve.es              Yes   No
 rtvs                    rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                     ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 schoolism               schoolism.com        --    Yes   Requires a login and a subscription.
-seemeplay               seemeplay.ru         Yes   Yes
 seetv                   seetv.tv             Yes   No    Streams that are embedded from other sites will not work.
-servustv                servustv.com         ?     ?
 showroom                showroom-live.com    Yes   No    Only RTMP streams are available.
 skai                    skai.gr              Yes   No    Only embedded youtube live streams are supported
 speedrunslive           speedrunslive.com    Yes   --    URL forwarder to Twitch channels.
@@ -202,7 +192,6 @@ streamable              streamable.com       -     Yes
 streamboat              streamboat.tv        Yes   No
 streamingvideoprovider  streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
                                                          K-S-V patches.
-streamlive              streamlive.to        Yes   --
 streamme                stream.me            Yes   --
 streann                 ott.streann.com      Yes   Yes
 svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.

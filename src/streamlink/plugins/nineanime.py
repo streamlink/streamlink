@@ -41,6 +41,7 @@ class NineAnime(Plugin):
             url = "{0}:{1}".format(urlparse(self.url).scheme, url)
         return url
 
+    @Plugin.broken(1110)
     def _get_streams(self):
         match = self._url_re.match(self.url)
         film_id, episode_id = match.groups()

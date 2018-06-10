@@ -15,6 +15,7 @@ class SSH101(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url)
 
+    @Plugin.broken(1176)
     def _get_streams(self):
         res = http.get(self.url)
 

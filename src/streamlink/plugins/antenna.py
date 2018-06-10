@@ -1,8 +1,7 @@
 import re
-import json
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http
 from streamlink.stream import HDSStream
 
 _url_re = re.compile(r"(http(s)?://(\w+\.)?antenna.gr)/webtv/watch\?cid=.+")
@@ -16,6 +15,7 @@ class Antenna(Plugin):
     def can_handle_url(self, url):
         return _url_re.match(url)
 
+    @Plugin.broken()
     def _get_streams(self):
 
         # Discover root
