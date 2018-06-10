@@ -39,6 +39,7 @@ class DingitTV(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
+    @Plugin.broken()
     def _get_streams(self):
         match = self.url_re.match(self.url)
 

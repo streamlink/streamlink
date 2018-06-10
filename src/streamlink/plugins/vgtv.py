@@ -70,6 +70,7 @@ class VGTV(Plugin):
         kwargs["scheme"] = "https" if kwargs["port"] == 443 else "http"
         return "{scheme}://{address}:{port}/{path}".format(**kwargs)
 
+    @Plugin.broken()
     def _get_streams(self):
         match = _url_id_re.search(self.url)
 
