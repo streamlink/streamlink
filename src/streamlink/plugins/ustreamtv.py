@@ -1,9 +1,8 @@
-import re
 import logging
+import re
+import time
 from random import randint
 from threading import Thread, Event
-
-import time
 
 from streamlink import PluginError
 from streamlink.compat import urljoin
@@ -11,9 +10,10 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream import HLSStream, Stream
 from streamlink.stream import HTTPStream
-from streamlink.stream.hls import HLSStreamReader
+
+log = logging.getLogger(__name__)
 
 
 class ModuleInfoNoStreams(Exception):
@@ -43,7 +43,6 @@ class UHSClient(object):
     def __init__(self, session, media_id, application, **options):
         self.session = session
         http.headers.update({"User-Agent": useragents.IPHONE_6})
-        self.logger = logging.getLogger("streamlink.plugin.ustream.apiclient")
         self.media_id = media_id
         self.application = application
         self.referrer = options.pop("referrer", None)
@@ -69,7 +68,7 @@ class UHSClient(object):
 
         self._host = "http://{0}".format(result["host"])
         self._connection_id = result["connectionId"]
-        self.logger.debug("Got new host={0}, and connectionId={1}", self._host, self._connection_id)
+        log.debug("Got new host={0}, and connectionId={1}", self._host, self._connection_id)
         return True
 
     def poll(self, schema=None, retries=5, timeout=5.0):
@@ -80,9 +79,9 @@ class UHSClient(object):
                                   retries=retries,
                                   timeout=timeout)
         except PluginError as err:
-            self.logger.debug("poll took {0:.2f}s: {1}", time.time() - stime, err)
+            log.debug("poll took {0:.2f}s: {1}", time.time() - stime, err)
         else:
-            self.logger.debug("poll took {0:.2f}s", time.time() - stime)
+            log.debug("poll took {0:.2f}s", time.time() - stime)
             return r
 
     def generate_rsid(self):
@@ -108,7 +107,9 @@ class UHSClient(object):
         return urljoin(host, "/1/ustream")
 
 
-class UStreamHLSStream(HLSStream):
+class UStreamWrapper(Stream):
+    __shortname__ = "ustream"
+
     class APIPoller(Thread):
         """
         Poll the UStream API so that stream URLs stay valid, otherwise they expire after 30 seconds.
@@ -129,22 +130,24 @@ class UStreamHLSStream(HLSStream):
                 if not res:
                     continue
                 for cmd_args in res:
-                    self.api.logger.debug("poll response: {0}", cmd_args)
+                    log.debug("poll response: {0}", cmd_args)
                     if cmd_args["cmd"] == "warning":
-                        self.api.logger.warning("{code}: {message}", **cmd_args["args"])
+                        log.warning("{code}: {message}", **cmd_args["args"])
 
-    def __init__(self, session_, url, api, force_restart=False, **args):
-        super(UStreamHLSStream, self).__init__(session_, url, force_restart, **args)
-        self.logger = logging.getLogger("streamlink.stream.ustream-hls")
+    def __init__(self, session, stream, api):
+        super(UStreamWrapper, self).__init__(session)
+        self.stream = stream
         self.poller = self.APIPoller(api)
         self.poller.setDaemon(True)
+        log.debug("Wrapping {0} stream".format(stream.shortname()))
 
     def open(self):
-        reader = HLSStreamReader(self)
-        reader.open()
         self.poller.start()
-        self.logger.debug("Starting API polling thread")
-        return reader
+        log.debug("Starting API polling thread")
+        return self.stream.open()
+
+    def __json__(self):
+        return self.stream.__json__()
 
 
 class UStreamTV(Plugin):
@@ -178,7 +181,7 @@ class UStreamTV(Plugin):
             referrer = referrer or self.url
             self.api = UHSClient(self.session, media_id, application, referrer=referrer, cluster=cluster, app_id=app_id,
                                  app_version=app_ver, password=self.get_option("password"))
-            self.logger.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}, "
+            log.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}, "
                               "app_id={4}, app_ver={5}",
                               media_id, application, referrer, cluster, app_id, app_ver)
             if self.api.connect():
@@ -187,7 +190,7 @@ class UStreamTV(Plugin):
                         for s in self._do_poll(media_id, application, cluster, referrer, retries):
                             yield s
                     except ModuleInfoNoStreams:
-                        self.logger.debug("Retrying moduleInfo request")
+                        log.debug("Retrying moduleInfo request")
                         time.sleep(1)
                     else:
                         break
@@ -204,7 +207,7 @@ class UStreamTV(Plugin):
                     for s in self.handle_reject(result["args"], media_id, application, cluster, referrer, retries):
                         yield s
                 else:
-                    self.logger.debug("Unknown command: {0}({1})", result["cmd"], result["args"])
+                    log.debug("Unknown command: {0}({1})", result["cmd"], result["args"])
 
     def handle_module_info(self, args, media_id, application, cluster="live", referrer=None, retries=3):
         has_results = False
@@ -213,14 +216,14 @@ class UStreamTV(Plugin):
             if isinstance(streams, list):
                 for stream in streams:
                     for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
-                        yield q, UStreamHLSStream(self.session, s.url, self.api)
+                        yield q, UStreamWrapper(self.session, s, self.api)  # wrap the HLS stream
             elif isinstance(streams, dict):
                 for stream in streams.get("streams", []):
                     name = "{0}k".format(stream["bitrate"])
                     for surl in stream["streamName"]:
                         yield name, HTTPStream(self.session, surl)
             elif streams == "offline":
-                self.logger.warning("This stream is currently offline")
+                log.warning("This stream is currently offline")
 
         if not has_results:
             raise ModuleInfoNoStreams
@@ -228,7 +231,7 @@ class UStreamTV(Plugin):
     def handle_reject(self, args, media_id, application, cluster="live", referrer=None, retries=3):
         for arg in args:
             if "cluster" in arg:
-                self.logger.debug("Switching cluster to {0}", arg["cluster"]["name"])
+                log.debug("Switching cluster to {0}", arg["cluster"]["name"])
                 cluster = arg["cluster"]["name"]
             if "referrerLock" in arg:
                 referrer = arg["referrerLock"]["redirectUrl"]
@@ -259,10 +262,10 @@ class UStreamTV(Plugin):
             for s in self._api_get_streams(media_id, application):
                 yield s
         else:
-            self.logger.error("Cannot find a media_id on this page")
+            log.error("Cannot find a media_id on this page")
 
     def _find_media_id(self):
-        self.logger.debug("Searching for media ID on the page")
+        log.debug("Searching for media ID on the page")
         res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
         m = self.media_id_re.search(res.text)
         return m and m.group(1)
