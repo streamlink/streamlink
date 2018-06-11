@@ -43,7 +43,7 @@ QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = streamlink = plugin = stream_fd = output = None
 
-log = logging.getLogger("streamlink.console")
+log = logging.getLogger("streamlink.cli")
 
 
 def check_file_output(filename, force):
