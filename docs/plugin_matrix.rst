@@ -254,6 +254,7 @@ viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-rest
                         - viafree.no
                         - viafree.se
 vidio                   vidio.com            Yes   Yes
+vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
 vk                      vk.com               Yes   Yes
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
