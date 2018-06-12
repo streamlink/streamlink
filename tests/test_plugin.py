@@ -49,7 +49,7 @@ class TestPlugin(unittest.TestCase):
                                             3600)
 
     def test_cookie_store_save_expires(self):
-        with freezegun.freeze_time(lambda: datetime.datetime(2018, 1, 1)):
+        with freezegun.freeze_time(datetime.datetime(2018, 1, 1)):
             session = Mock()
             session.http.cookies = [
                 requests.cookies.create_cookie("test-name", "test-value", domain="test.se", expires=time.time() + 3600,
