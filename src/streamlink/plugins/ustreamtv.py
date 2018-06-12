@@ -63,11 +63,13 @@ class UHSClient(object):
                                    referrer=self.referrer,
                                    media=str(self.media_id),
                                    application=self.application,
-                                   schema=self.connect_schama,
-                                   password=self._password)
-
-        self._host = "http://{0}".format(result["host"])
-        self._connection_id = result["connectionId"]
+                                   clusterHost="r%rnd%-1-%mediaId%-%mediaType%-%protocolPrefix%-%cluster%.ums.ustream.tv",
+                                   password=self._password
+                                   )
+        for res in result:
+            for args in res['args']:
+                self._host = "http://{0}".format(args["host"])
+                self._connection_id = args["connectionId"]
         log.debug("Got new host={0}, and connectionId={1}", self._host, self._connection_id)
         return True
 
@@ -130,7 +132,7 @@ class UStreamWrapper(Stream):
                 if not res:
                     continue
                 for cmd_args in res:
-                    log.debug("poll response: {0}", cmd_args)
+                    log.debug("poll response: {0}".format(cmd_args))
                     if cmd_args["cmd"] == "warning":
                         log.warning("{code}: {message}", **cmd_args["args"])
 
@@ -182,8 +184,8 @@ class UStreamTV(Plugin):
             self.api = UHSClient(self.session, media_id, application, referrer=referrer, cluster=cluster, app_id=app_id,
                                  app_version=app_ver, password=self.get_option("password"))
             log.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}, "
-                              "app_id={4}, app_ver={5}",
-                              media_id, application, referrer, cluster, app_id, app_ver)
+                      "app_id={4}, app_ver={5}",
+                      media_id, application, referrer, cluster, app_id, app_ver)
             if self.api.connect():
                 for i in range(5):  # make at most five requests to get the moduleInfo
                     try:
@@ -215,6 +217,7 @@ class UStreamTV(Plugin):
             has_results = True
             if isinstance(streams, list):
                 for stream in streams:
+                    log.debug("stream: {0}".format(stream))
                     for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
                         yield q, UStreamWrapper(self.session, s, self.api)  # wrap the HLS stream
             elif isinstance(streams, dict):
