@@ -40,12 +40,13 @@ class CanalPlus(Plugin):
         return CanalPlus._url_re.match(url)
 
     def _get_streams(self):
+		headers = {'User-Agent': self._user_agent}
         # Get video ID and channel from URL
         match = self._url_re.match(self.url)
         video_id = match.group('video_id')
         if video_id is None:
             # Retrieve URL page and search for video ID
-            res = http.get(self.url)
+            res = http.get(self.url, headers=headers)
             match = self._video_id_re.search(res.text)
             if match is None:
                 return
@@ -54,7 +55,6 @@ class CanalPlus(Plugin):
         res = http.get(self.API_URL.format(video_id))
         videos = http.json(res, schema=self._api_schema)
         parsed = []
-        headers = {'User-Agent': self._user_agent}
 
         # Some videos may be also available on Dailymotion (especially on CNews)
         if videos['ID_DM'] != '':
