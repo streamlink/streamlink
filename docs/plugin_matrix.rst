@@ -82,6 +82,7 @@ drdk                    dr.dk                Yes   Yes   Streams may be geo-rest
 earthcam                earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
 ellobo                  ellobo106.com        Yes   -
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
+ert                     webtv.ert.gr         Yes   No    Youtube based live streams
 eurocom                 eurocom.bg           Yes   No
 euronews                euronews.com         Yes   No
 europaplus              europaplus.ru        Yes   --
