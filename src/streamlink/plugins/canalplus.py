@@ -39,7 +39,7 @@ class CanalPlus(Plugin):
         return CanalPlus._url_re.match(url)
 
     def _get_streams(self):
-		headers = {'User-Agent': self._user_agent}
+        headers = {'User-Agent': self._user_agent}
         # Get video ID and channel from URL
         match = self._url_re.match(self.url)
         video_id = match.group('video_id')
