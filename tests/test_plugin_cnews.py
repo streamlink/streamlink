@@ -11,7 +11,6 @@ class TestPluginCNEWS(unittest.TestCase):
         self.assertTrue(CNEWS.can_handle_url("http://www.cnews.fr/emission/2018-06-12/meteo-du-12062018-784730"))
         self.assertTrue(CNEWS.can_handle_url("http://www.cnews.fr/emission/2018-06-12/le-journal-des-faits-divers-du-12062018-784704"))
         # shouldn't match
-        self.assertFalse(CNEWS.can_handle_url("http://www.cnews.fr/magazines/plus-de-recul/de-recul-du-14042017-174594"))
         self.assertFalse(CNEWS.can_handle_url("http://www.cnews.fr/"))
         self.assertFalse(CNEWS.can_handle_url("http://www.tvcatchup.com/"))
         self.assertFalse(CNEWS.can_handle_url("http://www.youtube.com/"))
