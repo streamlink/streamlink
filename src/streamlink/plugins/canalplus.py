@@ -44,7 +44,7 @@ class CanalPlus(Plugin):
         video_id = match.group('video_id')
         if video_id is None:
             # Retrieve URL page and search for video ID
-            res = http.get(self.url, headers=headers)
+            res = http.get(self.url)
             match = self._video_id_re.search(res.text)
             if match is None:
                 return
