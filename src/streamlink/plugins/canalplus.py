@@ -15,8 +15,7 @@ class CanalPlus(Plugin):
     _url_re = re.compile(r'''
         (https|http)://
         (
-            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+) |
-            www\.cnews\.fr/.+
+            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+)
         )
 ''', re.VERBOSE)
     _video_id_re = re.compile(r'(\bdata-video="|<meta property="og:video" content=".+?&videoId=)(?P<video_id>[0-9]+)"')
@@ -40,7 +39,7 @@ class CanalPlus(Plugin):
         return CanalPlus._url_re.match(url)
 
     def _get_streams(self):
-        headers = {'User-Agent': self._user_agent}
+		headers = {'User-Agent': self._user_agent}
         # Get video ID and channel from URL
         match = self._url_re.match(self.url)
         video_id = match.group('video_id')
