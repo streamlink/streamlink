@@ -29,6 +29,10 @@
 
 .. include:: _applications.rst
 
+.. |br| raw:: html
+
+  <br />
+
 
 Third Party Applications
 ========================
@@ -36,9 +40,17 @@ Third Party Applications
 
 .. content list start
 
+LiveProxy
+---------
 
-.. replace this line with the first entry
-
+:Description: Local proxy server between Streamlink and an URL
+:OS: |Windows| |MacOS| |Linux|
+:Author: `back-to <https://github.com/back-to>`_
+:Website: https://liveproxy.github.io
+:Source code: https://github.com/back-to/liveproxy
+:Info: LiveProxy allows Streamlink to be easy accessible from **m3u** playlists, |br|
+  it is also available for **Kodi Leia** and **Enigma2** devices. |br|
+  A detailed guide can be found on the website.
 
 .. content list end
 
