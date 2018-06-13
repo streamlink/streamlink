@@ -49,7 +49,7 @@ class OneTV(Plugin):
         res = http.get(update_scheme(self.url, self._session_api))
         data = http.json(res)
         # the values are already quoted, we don't want them quoted
-        return {k: unquote(v) for k, v in data.items()}
+        return dict((k, unquote(v)) for k, v in data.items())
 
     @property
     def is_live(self):
@@ -68,7 +68,6 @@ class OneTV(Plugin):
             self.logger.debug("Found VOD data url: {0}", vod_data_url)
             res = http.get(vod_data_url)
             return http.json(res)
-
 
     def _get_streams(self):
         if self.is_live:
