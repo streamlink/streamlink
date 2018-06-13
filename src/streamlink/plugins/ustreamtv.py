@@ -218,13 +218,16 @@ class UStreamTV(Plugin):
             if isinstance(streams, list):
                 for stream in streams:
                     log.debug("stream: {0}".format(stream))
-                    for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
-                        yield q, UStreamWrapper(self.session, s, self.api)  # wrap the HLS stream
-            elif isinstance(streams, dict):
-                for stream in streams.get("streams", []):
-                    name = "{0}k".format(stream["bitrate"])
-                    for surl in stream["streamName"]:
-                        yield name, HTTPStream(self.session, surl)
+                    if stream['name'] == "ustream":
+                        for substream in stream['streams']:
+                            yield "vod", HTTPStream(self.session, substream['streamName'])
+
+                    elif stream['name'] == "uhls":
+                        for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
+                            yield q, UStreamWrapper(self.session, s, self.api)  # wrap the HLS stream
+                    else:
+                        log.info("Unsupported stream type: {0}".format(stream['name']))
+
             elif streams == "offline":
                 log.warning("This stream is currently offline")
 
