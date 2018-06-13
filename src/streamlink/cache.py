@@ -7,11 +7,9 @@ from time import time
 from .compat import is_win32
 
 if is_win32:
-    xdg_cache = os.environ.get("APPDATA",
-                               os.path.expanduser("~"))
+    xdg_cache = os.environ.get("APPDATA", os.path.expanduser("~"))
 else:
-    xdg_cache = os.environ.get("XDG_CACHE_HOME",
-                               os.path.expanduser("~/.cache"))
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 
 cache_dir = os.path.join(xdg_cache, "streamlink")
 
