@@ -13,7 +13,7 @@ class CanalPlus(Plugin):
     SECRET = 'pqzerjlsmdkjfoiuerhsdlfknaes'
 
     _url_re = re.compile(r'''
-        (https|http)://
+        https?://
         (
             www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+)
         )

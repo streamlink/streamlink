@@ -44,7 +44,6 @@ btv                     btv.bg               Yes   No    Requires login, and geo
 cam4                    cam4.com             Yes   No
 camsoda                 camsoda.com          Yes   No
 canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
-cnews                   cnews.fr             Yes   Yes
 cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                         - bgonair.bg
                         - kanal3.bg
@@ -57,6 +56,7 @@ cinergroup              - showtv.com.tr      Yes   No
                         - showmax.com.tr
                         - showturk.com.tr
                         - bloomberght.com
+cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
