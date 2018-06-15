@@ -11,10 +11,10 @@ from streamlink.utils.crypto import unpad_pkcs5
 
 
 class VK(Plugin):
-    _url_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/video-[0-9]*_[0-9]*")
-    _url_catalog_re = re.compile(r"http(?:s)?://(\w+\.)?vk.com/videos-[0-9]*")
-    _livestream_sources_re = re.compile(r"<source src=\\\"(.*?)\\\" type=\\\"application\\\/vnd\.apple\.mpegurl\\\">")
-    _vod_sources_re = re.compile(r"<source src=\\\"(.*?)\\\" type=\\\"video\\\/mp4\\\">")
+    _url_re = re.compile(r"https?://(\w+\.)?vk.com/(video\?z\=)?video-?[0-9]*_[0-9]*")
+    _url_catalog_re = re.compile(r"https?://(\w+\.)?vk.com/videos-[0-9]*(?:_[0-9]*)?")
+    _livestream_sources_re = re.compile(r"src=(?:\\)?\"((?!https?:(?:\\)?/(?:\\)?/vk\.com(?:\\)?/video_hls\.php)[^\"']+?)\" type=(?:\\)?\"application(?:\\)?\/vnd\.apple\.mpegurl(?:\\)?\"")
+    _vod_sources_re = re.compile(r"<source src=(?:\\)?\"(https?:(?:\\)?/(?:\\)?/cs.*(?:\\)?)\" type=(?:\\)?\"video(?:\\)?\/mp4(?:\\)?\" (?:\\)?/>")
     _vod_quality_re = re.compile(r"\.([0-9]*?)\.mp4")
 
     @classmethod
@@ -29,7 +29,7 @@ class VK(Plugin):
     def follow_vk_redirect(cls, url):
         # If this is a 'videos' catalog URL with an video ID in the GET request, get that instead
         parsed_url = urlparse(url)
-        if parsed_url.path.startswith('/videos-'):
+        if parsed_url.path.startswith('/videos'):
             query = {v[0]: v[1] for v in [q.split('=') for q in parsed_url.query.split('&')] if v[0] == 'z'}
             try:
                 true_path = unquote(query['z']).split('/')[0]
