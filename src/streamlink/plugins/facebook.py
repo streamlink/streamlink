@@ -43,7 +43,7 @@ class Facebook(Plugin):
         match = self._playlist_re.search(res.text)
         playlist = match and match.group(1)
         if playlist:
-            for url in {url.group(1) for url in self._plurl_re.finditer(playlist)}:
+            for url in dict(url.group(1) for url in self._plurl_re.finditer(playlist)):
                 if url not in vod_urls:
                     streams["sd"] = HTTPStream(self.session, url)
 
