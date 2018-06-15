@@ -18,7 +18,11 @@ class BTSports(Plugin):
             requires=["password"],
             metavar="EMAIL",
             required=True,
-            help="The email associated with your BT Sport account, required to access any BT Sport stream."
+            help="""
+            The email associated with your BT Sport account, required to access any
+            BT Sport stream.
+            """
+
         ),
         PluginArgument(
             "password",
