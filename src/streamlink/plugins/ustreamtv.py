@@ -6,7 +6,6 @@ from threading import Thread, Event
 
 import websocket
 
-from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
@@ -27,7 +26,7 @@ class UHSClient(object):
     API Client, reverse engineered by observing the interactions
     between the web browser and the ustream servers.
     """
-    API_URL = "ws://r{0}-1-{1}-{2}-ws-{3}.ums.ustream.tv:1935"
+    API_URL = "ws://r{0}-1-{1}-{2}-ws-{3}.ums.ustream.tv:1935/1/ustream"
     APP_ID, APP_VERSION = 11, 2
     api_schama = validate.Schema({
         "args": [object],
@@ -125,8 +124,7 @@ class UHSClient(object):
 
     @property
     def host(self):
-        host = self._host or self.API_URL.format(randint(0, 0xffffff), self.media_id, self.application, self._cluster)
-        return urljoin(host, "/1/ustream")
+        return self._host or self.API_URL.format(randint(0, 0xffffff), self.media_id, self.application, self._cluster)
 
 
 class UStreamWrapper(Stream):
