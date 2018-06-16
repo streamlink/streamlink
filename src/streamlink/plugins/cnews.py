@@ -5,7 +5,7 @@ from streamlink.plugin.api import http, useragents
 
 
 class CNEWS(Plugin):
-    _url_re = re.compile(r'https?://www.cnews.fr(/\w)+')
+    _url_re = re.compile(r'https?://www.cnews.fr/[^ ]+')
     _embed_video_url_re = re.compile(r'class="dm-video-embed_video" src="(?P<dm_url>.*)"')
     _embed_live_url_re = re.compile(r'class="wrapper-live-player main-live-player"><iframe src="(?P<dm_url>.*)"')
 
