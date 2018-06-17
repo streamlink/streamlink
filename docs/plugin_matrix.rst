@@ -113,6 +113,7 @@ liveedu                 - liveedu.tv         Yes   --    Some streams require a 
                         - livecoding.tv
 liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
+lrt                     lrt.lt               Yes   No
 media_ccc_de            - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
                         - streaming... [4]_
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
