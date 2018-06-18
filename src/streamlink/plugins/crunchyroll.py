@@ -113,8 +113,11 @@ class CrunchyrollAPI(object):
         Can take saved credentials to use on it's calls to the API.
         """
         self.cache = cache
-        self.session_id = session_id or cache.get("session_id")
-        self.auth = cache.get("auth")
+        self.session_id = session_id
+        if self.session_id:  # if the session ID is setup don't use the cached auth token
+            self.auth = None
+        else:
+            self.auth = cache.get("auth")
         self.device_id = cache.get("device_id") or self.generate_device_id()
         self.locale = locale
         self.headers = {
@@ -175,6 +178,8 @@ class CrunchyrollAPI(object):
 
     def generate_device_id(self):
         device_id = str(uuid4())
+        # cache the device id
+        self.cache.set("device_id", 365 * 24 * 60 * 60)
         log.debug("Device ID: {0}".format(device_id))
         return device_id
 
@@ -188,14 +193,8 @@ class CrunchyrollAPI(object):
         params = {}
         if self.auth:
             params["auth"] = self.auth
-
-        session_id = self._api_call("start_session", params, schema=_session_schema)
-        if self.session_id and self.session_id != session_id:
-            log.warning("Updated session_id ({0} -> {1})".format(self.session_id, session_id))
-
-        self.session_id = session_id
+        self.session_id = self._api_call("start_session", params, schema=_session_schema)
         log.debug("Session created with ID: {0}".format(self.session_id))
-        self.cache.set("session_id", self.session_id, 4 * 60 * 60)
         return self.session_id
 
     def login(self, username, password):
@@ -357,30 +356,31 @@ class Crunchyroll(Plugin):
         locale = self.get_option("locale") or self.session.localization.language_code
         api = CrunchyrollAPI(self.cache, session_id=self.get_option("session_id"), locale=locale)
 
-        self.logger.debug("Creating session with locale: {0}", locale)
-        api.start_session()
+        if not self.get_option("session_id"):
+            self.logger.debug("Creating session with locale: {0}", locale)
+            api.start_session()
 
-        if api.auth:
-            self.logger.debug("Using saved credentials")
-            login = api.authenticate()
-            self.logger.info("Successfully logged in as '{0}'",
-                             login["user"]["username"] or login["user"]["email"])
-        elif self.options.get("username"):
-            try:
-                self.logger.debug("Attempting to login using username and password")
-                api.login(self.options.get("username"),
-                          self.options.get("password"))
+            if api.auth:
+                self.logger.debug("Using saved credentials")
                 login = api.authenticate()
-                self.logger.info("Logged in as '{0}'",
+                self.logger.info("Successfully logged in as '{0}'",
                                  login["user"]["username"] or login["user"]["email"])
+            elif self.options.get("username"):
+                try:
+                    self.logger.debug("Attempting to login using username and password")
+                    api.login(self.options.get("username"),
+                              self.options.get("password"))
+                    login = api.authenticate()
+                    self.logger.info("Logged in as '{0}'",
+                                     login["user"]["username"] or login["user"]["email"])
 
-            except CrunchyrollAPIError as err:
-                raise PluginError(u"Authentication error: {0}".format(err.msg))
-        else:
-            self.logger.warning(
-                "No authentication provided, you won't be able to access "
-                "premium restricted content"
-            )
+                except CrunchyrollAPIError as err:
+                    raise PluginError(u"Authentication error: {0}".format(err.msg))
+            else:
+                self.logger.warning(
+                    "No authentication provided, you won't be able to access "
+                    "premium restricted content"
+                )
 
         return api
 

@@ -2,10 +2,7 @@ import json
 import os
 import shutil
 import tempfile
-
-from time import time
-
-import datetime
+from time import time, mktime
 
 from .compat import is_win32
 
@@ -75,8 +72,7 @@ class Cache(object):
         expires += time()
 
         if expires_at:
-            current_time = datetime.datetime.utcnow()
-            expires = (expires_at - current_time).total_seconds()
+            expires = mktime(expires_at.timetuple())
 
         self._cache[key] = dict(value=value, expires=expires)
         self._save()

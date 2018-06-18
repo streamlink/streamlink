@@ -3,8 +3,11 @@ import unittest
 import tempfile
 import os.path
 
+import datetime
+
 import streamlink.cache
 from shutil import rmtree
+import time
 
 try:
     from unittest.mock import patch
@@ -52,8 +55,20 @@ class TestCache(unittest.TestCase):
         self.assertEqual({}, self.cache._cache)
 
     def test_expired(self):
-        self.cache.set("value", 10, expires=-1)
+        self.cache.set("value", 10, expires=-20)
         self.assertEqual(None, self.cache.get("value"))
+
+    def test_expired_at(self):
+        self.cache.set("value", 10, expires_at=datetime.datetime.now() - datetime.timedelta(seconds=20))
+        self.assertEqual(None, self.cache.get("value"))
+
+    def test_not_expired(self):
+        self.cache.set("value", 10, expires=20)
+        self.assertEqual(10, self.cache.get("value"))
+
+    def test_expired_at(self):
+        self.cache.set("value", 10, expires_at=datetime.datetime.now() + datetime.timedelta(seconds=20))
+        self.assertEqual(10, self.cache.get("value"))
 
     def test_create_directory(self):
         try:
