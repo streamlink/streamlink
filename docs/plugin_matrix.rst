@@ -60,6 +60,9 @@ cinergroup              - showtv.com.tr      Yes   No
 crunchyroll             crunchyroll.com      --    Yes
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
+delfi                   - delfi.lt           --    Yes
+                        - delfi.ee
+                        - delfi.lv
 deutschewelle           dw.com               Yes   Yes
 dingittv                dingit.tv            Yes   Yes
 dogan                   - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
