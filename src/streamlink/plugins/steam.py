@@ -1,7 +1,6 @@
 import base64
 import logging
 import re
-import sys
 import time
 
 from Crypto.Cipher import PKCS1_v1_5
@@ -13,7 +12,6 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
-from streamlink_cli.console import ConsoleOutput
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +74,6 @@ class SteamBroadcastPlugin(Plugin):
     def __init__(self, url):
         super(SteamBroadcastPlugin, self).__init__(url)
         http.headers["User-Agent"] = self._user_agent
-        self.console = ConsoleOutput(sys.stdout, self.session)
 
     @classmethod
     def can_handle_url(cls, url):
@@ -131,14 +128,14 @@ class SteamBroadcastPlugin(Plugin):
                 captchagid = resp[u"captcha_gid"]
                 log.error("Captcha result required, open this URL to see the captcha: {}".format(
                     self._captcha_url.format(captchagid)))
-                captcha_text = self.console.ask("Captcha text: ")
+                captcha_text = self.input_ask("Captcha text")
                 if not captcha_text:
                     return False
             else:
                 # If the user must enter the code that was emailed to them
                 if resp.get(u"emailauth_needed"):
                     if not emailauth:
-                        emailauth = self.console.ask("Email auth code required: ")
+                        emailauth = self.input_ask("Email auth code required")
                         if not emailauth:
                             return False
                     else:
@@ -146,7 +143,7 @@ class SteamBroadcastPlugin(Plugin):
 
                 # If the user must enter a two factor auth code
                 if resp.get(u"requires_twofactor"):
-                    twofactorcode = self.console.ask("Two factor auth code required: ")
+                    twofactorcode = self.input_ask("Two factor auth code required")
                     if not twofactorcode:
                         return False
 
