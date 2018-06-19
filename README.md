@@ -3,7 +3,7 @@
 [![TravisCI build status][travisci-build-status-badge]][travisci-build-status]
 [![codecov.io][codecov-coverage-badge]][codecov-coverage] [![Backers on Open Collective][opencollective-backers-badge]](#backers) [![Sponsors on Open Collective][opencollective-sponsors-badge]](#sponsors)
 
-Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC, or alternatively, a browser.
+Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC.
 
 The main purpose of streamlink is to convert CPU-heavy flash plugins to a less CPU-intensive format.
 
@@ -47,8 +47,8 @@ Supported streaming services, among many others, are:
 - [Dailymotion](https://www.dailymotion.com)
 - [Livestream](https://livestream.com)
 - [Twitch](https://www.twitch.tv)
-- [UStream](http://www.ustream.tv)
-- [YouTube Live](https://www.youtube.com)
+- [UStream](http://www.ustream.tv/explore/all)
+- [YouTube](https://www.youtube.com)
 
 A list of all supported plugins can be found on the [plugin page][streamlink-plugins].
 
