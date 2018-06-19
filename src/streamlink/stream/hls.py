@@ -193,7 +193,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if playlist.is_master:
             raise StreamError("Attempted to play a variant playlist, use "
-                              "'hlsvariant://{0}' instead".format(self.stream.url))
+                              "'hls://{0}' instead".format(self.stream.url))
 
         if playlist.iframes_only:
             raise StreamError("Streams containing I-frames only is not playable")
