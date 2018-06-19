@@ -1,4 +1,5 @@
 import base64
+import logging
 import re
 import sys
 import time
@@ -14,6 +15,8 @@ from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
 from streamlink_cli.console import ConsoleOutput
 
+log = logging.getLogger(__name__)
+
 
 class SteamLoginFailed(Exception):
     pass
@@ -24,7 +27,7 @@ class SteamBroadcastPlugin(Plugin):
     _get_broadcast_url = "https://steamcommunity.com/broadcast/getbroadcastmpd/"
     _user_agent = "streamlink/{}".format(streamlink.__version__)
     _broadcast_schema = Schema({
-        "success": validate.any("ready", "unavailable", "waiting", "waiting_to_start"),
+        "success": validate.any("ready", "unavailable", "waiting", "waiting_to_start", "waiting_for_start"),
         "retry": int,
         "broadcastid": validate.any(validate.text, int),
         validate.optional("url"): validate.url(),
@@ -56,7 +59,7 @@ class SteamBroadcastPlugin(Plugin):
         PluginArgument(
             "email",
             metavar="EMAIL",
-            required=True,
+            requires=["password"],
             help="""
             A Steam account email address to access friends/private streams
             """
@@ -64,7 +67,6 @@ class SteamBroadcastPlugin(Plugin):
         PluginArgument(
             "password",
             metavar="PASSWORD",
-            required=True,
             sensitive=True,
             help="""
             A Steam account password to use with --steam-email.
@@ -127,7 +129,7 @@ class SteamBroadcastPlugin(Plugin):
             if resp.get(u"captcha_needed"):
                 # special case for captcha
                 captchagid = resp[u"captcha_gid"]
-                self.logger.error("Captcha result required, open this URL to see the captcha: {}".format(
+                log.error("Captcha result required, open this URL to see the captcha: {}".format(
                     self._captcha_url.format(captchagid)))
                 captcha_text = self.console.ask("Captcha text: ")
                 if not captcha_text:
@@ -160,11 +162,11 @@ class SteamBroadcastPlugin(Plugin):
         elif resp.get("login_complete"):
             return True
         else:
-            self.logger.error("Something when wrong when logging in to Steam")
+            log.error("Something when wrong when logging in to Steam")
             return False
 
     def login(self, email, password):
-        self.logger.info("Attempting to login to Steam as {}".format(email))
+        log.info("Attempting to login to Steam as {}".format(email))
         return self.dologin(email, password)
 
     def _get_broadcast_stream(self, steamid, viewertoken=0):
@@ -176,22 +178,25 @@ class SteamBroadcastPlugin(Plugin):
 
     def _get_streams(self):
         streamdata = None
-        if self.login(self.options.get("email"), self.options.get("password")):
-            # extract the steam ID from the URL
-            steamid = self._url_re.match(self.url).group(1)
+        if self.get_option("email"):
+            if self.login(self.get_option("email"), self.get_option("password")):
+                log.info("Logged in as {0}".format(self.get_option("email")))
 
-            while streamdata is None or streamdata[u"success"] in ("waiting", "waiting_for_start"):
-                streamdata = self._get_broadcast_stream(steamid)
+        # extract the steam ID from the URL
+        steamid = self._url_re.match(self.url).group(1)
 
-                if streamdata[u"success"] == "ready":
-                    return DASHStream.parse_manifest(self.session, streamdata["url"])
-                elif streamdata[u"success"] == "unavailable":
-                    self.logger.error("This stream is currently unavailable")
-                    return
-                else:
-                    r = streamdata[u"retry"] / 1000.0
-                    self.logger.info("Waiting for stream, will retry again in {} seconds...".format(r))
-                    time.sleep(r)
+        while streamdata is None or streamdata[u"success"] in ("waiting", "waiting_for_start"):
+            streamdata = self._get_broadcast_stream(steamid)
+
+            if streamdata[u"success"] == "ready":
+                return DASHStream.parse_manifest(self.session, streamdata["url"])
+            elif streamdata[u"success"] == "unavailable":
+                log.error("This stream is currently unavailable")
+                return
+            else:
+                r = streamdata[u"retry"] / 1000.0
+                log.info("Waiting for stream, will retry again in {} seconds...".format(r))
+                time.sleep(r)
 
 
 __plugin__ = SteamBroadcastPlugin
