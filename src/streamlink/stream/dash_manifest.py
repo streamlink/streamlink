@@ -488,7 +488,7 @@ class SegmentTemplate(MPDNode):
             else:
                 for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
                     yield (self.make_url(self.media(Time=segment.t, Number=n, **kwargs)),
-                           datetime.timedelta(seconds=segment.d / self.timescale))
+                           datetime.datetime.now(tz=utc))
 
         else:
             for number, available_at in self.segment_numbers():
