@@ -5,72 +5,49 @@ Supports:
    Live: http://www.nos.nl/livestream/*
    Tour: http://nos.nl/tour/live
 """
-
+import logging
 import re
-import json
 
+from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
-from streamlink.plugin.api.utils import parse_json
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.plugin.api.utils import itertags
+from streamlink.stream import HLSStream
 
-_url_re = re.compile(r"http(s)?://(\w+\.)?nos.nl/")
-_js_re = re.compile(r'\((.*)\)')
-_data_stream_re = re.compile(r'data-stream="(.*?)"', re.DOTALL | re.IGNORECASE)
-_source_re = re.compile(r"<source(?P<source>[^>]+)>", re.IGNORECASE)
-_source_src_re = re.compile(r"src=\"(?P<src>[^\"]+)\"", re.IGNORECASE)
-_source_type_re = re.compile(r"type=\"(?P<type>[^\"]+)\"", re.IGNORECASE)
+log = logging.getLogger(__name__)
 
 
 class NOS(Plugin):
+    _url_re = re.compile(r"https?://(?:\w+\.)?nos.nl/")
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._url_re.match(url)
 
     def _resolve_stream(self):
         res = http.get(self.url)
-        match = _data_stream_re.search(res.text)
-        if not match:
-            return
-        data_stream = match.group(1)
-
-        resolve_data = {
-            'stream': data_stream
-        }
-        res = http.post(
-            'http://www-ipv4.nos.nl/livestream/resolve/',
-            data=json.dumps(resolve_data)
-        )
-        data = http.json(res)
-
-        res = http.get(data['url'])
-        match = _js_re.search(res.text)
-        if not match:
-            return
-
-        stream_url = parse_json(match.group(1))
-
-        return HLSStream.parse_variant_playlist(self.session, stream_url)
+        for video in itertags(res.text, 'video'):
+            stream_url = video.attributes.get("data-stream")
+            log.debug("Stream data: {0}".format(stream_url))
+            return HLSStream.parse_variant_playlist(self.session, stream_url)
 
     def _get_source_streams(self):
         res = http.get(self.url)
 
-        streams = {}
-        sources = _source_re.findall(res.text)
-        for source in sources:
-            src = _source_src_re.search(source).group("src")
-            pixels = _source_type_re.search(source).group("type")
-
-            streams[pixels] = HTTPStream(self.session, src)
-
-        return streams
+        for atag in itertags(res.text, 'a'):
+            if "video-play__link" in atag.attributes.get("class", ""):
+                href = urljoin(self.url, atag.attributes.get("href"))
+                log.debug("Loading embedded video page")
+                vpage = http.get(href, params=dict(ajax="true", npo_cc_skip_wall="true"))
+                for source in itertags(vpage.text, 'source'):
+                    return HLSStream.parse_variant_playlist(self.session, source.attributes.get("src"))
 
     def _get_streams(self):
-        urlparts = self.url.split('/')
-
-        if urlparts[-2] == 'livestream' or urlparts[-3] == 'tour':
+        if "/livestream/" in self.url or "/tour/" in self.url:
+            log.debug("Finding live streams")
             return self._resolve_stream()
         else:
+            log.debug("Finding VOD streams")
             return self._get_source_streams()
 
 
