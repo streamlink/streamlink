@@ -1,85 +1,92 @@
+import logging
 import re
 
+from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
-from streamlink.stream import HDSStream
-from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
+from streamlink.plugin.api.utils import itertags
+from streamlink.stream import HLSStream, DASHStream
 
-_url_re = re.compile(r'''https?://www\.vrt\.be/vrtnu/(?:kanalen/(?P<channel>[^/]+)|\S+)''')
-_json_re = re.compile(r'''(\173[^\173\175]+\175)''')
-
-API_LIVE = 'https://services.vrt.be/videoplayer/r/live.json'
-API_VOD = 'https://mediazone.vrt.be/api/v1/{0}/assets/{1}'
-
-_stream_schema = validate.Schema({
-    'targetUrls': [
-        {
-            'type': validate.text,
-            'url': validate.text
-        },
-    ],
-})
+log = logging.getLogger(__name__)
 
 
 class VRTbe(Plugin):
+    _url_re = re.compile(r'''https?://www\.vrt\.be/vrtnu/(?:kanalen/(?P<channel>[^/]+)|\S+)''')
+
+    _stream_schema = validate.Schema(
+        validate.any({
+            "code": validate.text,
+            "message": validate.text
+        },
+        {
+            "drm": validate.any(None, validate.text),
+            'targetUrls': [{
+                'type': validate.text,
+                'url': validate.text
+            }],
+        })
+    )
+
+    _token_schema = validate.Schema({
+        "vrtPlayerToken": validate.text
+    }, validate.get("vrtPlayerToken"))
+
+    api_url = "https://api.vuplay.co.uk/"
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._url_re.match(url)
 
-    def _get_live_stream(self, channel):
-        channel = 'vualto_{0}'.format(channel)
-        _live_json_re = re.compile(r'''"{0}":\s(\173[^\173\175]+\175)'''.format(channel))
+    def _get_api_info(self, page):
+        for div in itertags(page.text, 'div'):
+            if div.attributes.get("class") == "vrtvideo":
+                api_base = div.attributes.get("data-mediaapiurl") + "/"
 
-        res = http.get(API_LIVE)
-        match = _live_json_re.search(res.text)
-        if not match:
-            return
-        data = parse_json(match.group(1))
-
-        hls_url = data['hls']
-
-        if hls_url:
-            for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                yield s
-
-    def _get_vod_stream(self):
-        vod_url = self.url
-        if vod_url.endswith('/'):
-            vod_url = vod_url[:-1]
-
-        json_url = '{0}.securevideo.json'.format(vod_url)
-
-        res = http.get(json_url)
-        match = _json_re.search(res.text)
-        if not match:
-            return
-        data = parse_json(match.group(1))
-
-        res = http.get(API_VOD.format(data['clientid'], data['mzid']))
-        data = http.json(res, schema=_stream_schema)
-
-        for d in data['targetUrls']:
-            if d['type'] == 'HDS':
-                hds_url = d['url']
-                for s in HDSStream.parse_manifest(self.session, hds_url).items():
-                    yield s
-
-            if d['type'] == 'HLS':
-                hls_url = d['url']
-                for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                    yield s
+                data = {"token_url": urljoin(api_base, "tokens")}
+                if div.attributes.get("data-videotype") == "live":
+                    data["stream_url"] = urljoin(urljoin(api_base, "videos/"), div.attributes.get("data-livestream"))
+                else:
+                    resource = "{0}%24{1}".format(div.attributes.get("data-publicationid"), div.attributes.get("data-videoid"))
+                    data["stream_url"] = urljoin(urljoin(api_base, "videos/"), resource)
+                return data
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
+        page = self.session.http.get(self.url)
+        api_info = self._get_api_info(page)
 
-        channel = match.group('channel')
+        if not api_info:
+            log.error("Could not find API info in page")
+            return
 
-        if channel:
-            return self._get_live_stream(channel)
-        else:
-            return self._get_vod_stream()
+        token_res = self.session.http.post(api_info["token_url"])
+        token = self.session.http.json(token_res, schema=self._token_schema)
+
+        log.debug("Got token: {0}".format(token))
+        log.debug("Getting stream data: {0}".format(api_info["stream_url"]))
+        res = self.session.http.get(api_info["stream_url"],
+                                    params={
+                                        "vrtPlayerToken": token,
+                                        "client": "vrtvideo"
+                                    }, raise_for_status=False)
+        data = self.session.http.json(res, schema=self._stream_schema)
+
+        if "code" in data:
+            log.error("{0} ({1})".format(data['message'], data['code']))
+            return
+
+        log.debug("Streams have {0}DRM".format("no " if not data["drm"] else ""))
+
+        for target in data["targetUrls"]:
+            if data["drm"]:
+                if target["type"] == "hls_aes":
+                    for s in HLSStream.parse_variant_playlist(self.session, target["url"]).items():
+                        yield s
+            elif target["type"] == "hls":
+                for s in HLSStream.parse_variant_playlist(self.session, target["url"]).items():
+                    yield s
+            elif target["type"] == "mpeg_dash":
+                for s in DASHStream.parse_manifest(self.session, target["url"]).items():
+                    yield s
 
 
 __plugin__ = VRTbe
