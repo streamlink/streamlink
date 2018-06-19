@@ -3,10 +3,25 @@ import sys
 import logging
 from getpass import getpass
 
+from streamlink.plugin.plugin import UserInputRequester
 from .compat import input
 from .utils import JSONEncoder
 
 log = logging.getLogger("streamlink.cli")
+
+
+class ConsoleUserInputRequester(UserInputRequester):
+    """
+    Request input from the user on the console using the standard ask/askpass methods
+    """
+    def __init__(self, console):
+        self.console = console
+
+    def ask(self, prompt):
+        return self.console.ask(prompt.strip() + ": ")
+
+    def ask_password(self, prompt):
+        return self.console.askpass(prompt.strip() + ": ")
 
 
 class ConsoleOutput(object):
