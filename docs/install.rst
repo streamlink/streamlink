@@ -44,7 +44,11 @@ Distribution                         Installing
 
                                         $ cd /usr/pkgsrc/multimedia/streamlink
                                         # make install clean
-`NixOS`_                             `Installing NixOS packages`_
+`NixOS`_                             .. code-block:: console
+
+                                        $ nix-env -iA nixos.streamlink
+
+                                     `NixOS channel`_
 `Solus`_                             .. code-block:: console
 
                                         $ sudo eopkg install streamlink
@@ -66,12 +70,12 @@ Distribution                         Installing
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
-.. _Solus: https://git.solus-project.com/packages/streamlink/
+.. _Solus: https://dev.solus-project.com/source/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
-.. _Void: https://github.com/voidlinux/void-packages/tree/master/srcpkgs/streamlink
+.. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
-.. _Installing NixOS packages: https://nixos.org/wiki/Install/remove_software#How_to_install_software
+.. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
 
 
 Other platforms
@@ -201,6 +205,11 @@ Name                                 Notes
 `pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
+`isodate`_                           Used for MPEG-DASH streams
+`PySocks`_                           Used for SOCKS Proxies
+`websocket-client`_                  Used for some plugins
+`shutil_get_terminal_size`_          Only needed on Python versions older than **3.3**
+`shutil_which`_                      Only needed on Python versions older than **3.3**
 
 **Optional**
 --------------------------------------------------------------------------------
@@ -220,19 +229,24 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
     $ export STREAMLINK_USE_PYCRYPTO="true"
     $ export STREAMLINK_USE_PYCOUNTRY="true"
 
-.. _Python: http://python.org/
-.. _python-setuptools: http://pypi.python.org/pypi/setuptools
-.. _python-argparse: http://pypi.python.org/pypi/argparse
-.. _python-futures: http://pypi.python.org/pypi/futures
+.. _Python: https://www.python.org/
+.. _python-setuptools: https://pypi.org/project/setuptools/
+.. _python-argparse: https://pypi.org/project/argparse/
+.. _python-futures: https://pypi.org/project/futures/
 .. _python-requests: http://python-requests.org/
-.. _python-singledispatch: http://pypi.python.org/pypi/singledispatch
+.. _python-singledispatch: https://pypi.org/project/singledispatch/
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
-.. _pycountry: https://pypi.python.org/pypi/pycountry
+.. _pycountry: https://pypi.org/project/pycountry/
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _ffmpeg: https://www.ffmpeg.org/
-.. _iso-639: https://pypi.python.org/pypi/iso-639
-.. _iso3166: https://pypi.python.org/pypi/iso3166
+.. _iso-639: https://pypi.org/project/iso-639/
+.. _iso3166: https://pypi.org/project/iso3166/
+.. _isodate: https://pypi.org/project/isodate/
+.. _PySocks: https://github.com/Anorov/PySocks
+.. _websocket-client: https://pypi.org/project/websocket-client/
+.. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
+.. _shutil_which: https://pypi.org/project/backports.shutil_which/
 
 
 Installing without root permissions
@@ -265,10 +279,10 @@ instead.
 .. note::
 
     This may also be required on some OS X versions that seems to have weird
-    permission issues (see issue #401).
+    permission issues.
 
 
-.. _virtualenv: http://virtualenv.readthedocs.org/en/latest/
+.. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 
 
 Windows binaries
@@ -295,7 +309,7 @@ Release                              Notes
 .. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
 .. _Development build:
 .. _Bintray: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#files
-.. _list of recent changes: https://bintray.com/streamlink/streamlink-nightly/streamlink/latest#release
+.. _list of recent changes: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#release
 
 These installers contain:
 
