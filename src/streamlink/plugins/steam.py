@@ -181,6 +181,7 @@ class SteamBroadcastPlugin(Plugin):
         if self.get_option("email"):
             if self.login(self.get_option("email"), self.get_option("password")):
                 log.info("Logged in as {0}".format(self.get_option("email")))
+                self.save_cookies(lambda c: "steamMachineAuth" in c.name)
 
         # extract the steam ID from the URL
         steamid = self._url_re.match(self.url).group(1)
