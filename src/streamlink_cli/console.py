@@ -3,6 +3,7 @@ import sys
 import logging
 from getpass import getpass
 
+from streamlink import PluginError
 from streamlink.plugin.plugin import UserInputRequester
 from .compat import input
 from .utils import JSONEncoder
@@ -18,10 +19,16 @@ class ConsoleUserInputRequester(UserInputRequester):
         self.console = console
 
     def ask(self, prompt):
-        return self.console.ask(prompt.strip() + ": ")
+        if sys.stdin.isatty():
+            return self.console.ask(prompt.strip() + ": ")
+        else:
+            raise IOError("no TTY available")
 
     def ask_password(self, prompt):
-        return self.console.askpass(prompt.strip() + ": ")
+        if sys.stdin.isatty():
+            return self.console.askpass(prompt.strip() + ": ")
+        else:
+            raise IOError("no TTY available")
 
 
 class ConsoleOutput(object):
@@ -38,20 +45,24 @@ class ConsoleOutput(object):
         self.output = output
 
     def ask(self, msg, *args, **kwargs):
-        formatted = msg.format(*args, **kwargs)
-        sys.stderr.write(formatted)
+        if sys.stdin.isatty():
+            formatted = msg.format(*args, **kwargs)
+            sys.stderr.write(formatted)
 
-        try:
-            answer = input()
-        except Exception:
-            answer = ""
+            try:
+                answer = input()
+            except Exception:
+                answer = ""
 
-        return answer.strip()
+            return answer.strip()
+        else:
+            return ""
 
     def askpass(self, msg, *args, **kwargs):
-        formatted = msg.format(*args, **kwargs)
-
-        return getpass(formatted)
+        if sys.stdin.isatty():
+            return getpass(msg.format(*args, **kwargs))
+        else:
+            return ""
 
     def msg(self, msg, *args, **kwargs):
         formatted = msg.format(*args, **kwargs)

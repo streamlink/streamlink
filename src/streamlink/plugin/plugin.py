@@ -522,17 +522,21 @@ class Plugin(object):
         if self._user_input_requester:
             try:
                 return self._user_input_requester.ask(prompt)
+            except IOError as e:
+                raise PluginError("User input error: {0}".format(e))
             except NotImplementedError:  # ignore this and raise a PluginError
                 pass
-        raise PluginError("This plugin requires user interaction, however it is not supported on this platform")
+        raise PluginError("This plugin requires user input, however it is not supported on this platform")
 
     def input_ask_password(self, prompt):
         if self._user_input_requester:
             try:
                 return self._user_input_requester.ask_password(prompt)
+            except IOError as e:
+                raise PluginError("User input error: {0}".format(e))
             except NotImplementedError:  # ignore this and raise a PluginError
                 pass
-        raise PluginError("This plugin requires user interaction, however it is not supported on this platform")
+        raise PluginError("This plugin requires user input, however it is not supported on this platform")
 
 
 
