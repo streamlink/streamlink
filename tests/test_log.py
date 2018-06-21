@@ -11,6 +11,9 @@ if is_py2:
 else:
     from io import StringIO
 
+from tests import catch_warnings
+
+
 
 class TestLogging(unittest.TestCase):
     @classmethod
@@ -70,17 +73,20 @@ class TestDeprecatedLogger(unittest.TestCase):
         manager.set_output(output)
         return manager, output
 
-    def test_level(self):
+    @catch_warnings()
+    def test_deprecated_level(self):
         manager, output = self._new_logger()
 
-        log = manager.new_module("test_level")
-        log.debug("test")
-        self.assertEqual(output.tell(), 0)
-        manager.set_level("debug")
-        log.debug("test")
-        self.assertNotEqual(output.tell(), 0)
+        with warnings.catch_warnings(record=True):
+            log = manager.new_module("test_level")
+            log.debug("test")
+            self.assertEqual(output.tell(), 0)
+            manager.set_level("debug")
+            log.debug("test")
+            self.assertNotEqual(output.tell(), 0)
 
-    def test_output(self):
+    @catch_warnings()
+    def test_deprecated_output(self):
         manager, output = self._new_logger()
 
         log = manager.new_module("test_output")
@@ -88,6 +94,7 @@ class TestDeprecatedLogger(unittest.TestCase):
         log.debug("test")
         self.assertEqual(output.getvalue(), "[test_output][debug] test\n")
 
+    @catch_warnings()
     def test_deprecated_session_logger(self):
         session = Streamlink()
         output = StringIO()

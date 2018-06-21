@@ -1,15 +1,14 @@
 from __future__ import unicode_literals
 
 import datetime
-from freezegun import freeze_time
-
 import itertools
+import unittest
 from operator import attrgetter
 
+from freezegun import freeze_time
 from freezegun.api import FakeDatetime
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, datetime_to_seconds
-from tests import unittest
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc
 from tests.resources import xml
 
 
