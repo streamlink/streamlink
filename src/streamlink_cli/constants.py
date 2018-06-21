@@ -7,7 +7,7 @@ from .utils import find_default_player
 
 DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
 DEFAULT_STREAM_METADATA = {
-    "title"    : u"Untitled",
+    "title"    : u"Unknown Title",
     "author"   : u"Unknown Author",
     "category" : u"No Category",
     "game"     : u"No Game/Category"

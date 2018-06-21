@@ -12,8 +12,6 @@ from streamlink.cache import Cache
 from streamlink.exceptions import PluginError, NoStreamsError
 from streamlink.options import Options, Arguments
 
-from streamlink_cli.constants import DEFAULT_STREAM_METADATA
-
 # FIXME: This is a crude attempt at making a bitrate's
 # weight end up similar to the weight of a resolution.
 # Someone who knows math, please fix.
@@ -401,13 +399,13 @@ class Plugin(object):
         raise NotImplementedError
 
     def get_title(self):
-        return DEFAULT_STREAM_METADATA['title']
+        return None
 
     def get_author(self):
-        return DEFAULT_STREAM_METADATA['author']
+        return None
 
     def get_category(self):
-        return DEFAULT_STREAM_METADATA['category']
+        return None
 
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """

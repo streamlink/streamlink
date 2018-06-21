@@ -82,6 +82,7 @@ class PlayerOutput(Output):
         self.namedpipe = namedpipe
         self.http = http
         self.title = title
+        self.player = self.supported_player(self.cmd)
 
         if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
@@ -100,6 +101,20 @@ class PlayerOutput(Output):
         sleep(0.5)
         return self.player.poll() is None
 
+    @classmethod
+    def supported_player(cls, cmd):
+        """
+        Check if the current player supports adding a title
+
+        :param cmd: command to test
+        :return: name of the player|None
+        """
+        cmd = cmd.lower()
+        for player, possiblecmds in SUPPORTED_PLAYERS.items():
+            for possiblecmd in possiblecmds:
+                if possiblecmd in cmd:
+                    return player
+
     def _create_arguments(self):
         if self.namedpipe:
             filename = self.namedpipe.path
@@ -115,13 +130,13 @@ class PlayerOutput(Output):
 
         if self.title is not None:
             # vlc
-            if self.cmd in SUPPORTED_PLAYERS['vlc']:
+            if self.player == "vlc":
                 # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
                 self.title = self.title.replace("$", "$$").replace("\$$", "$")
                 extra_args.extend(["--input-title-format", self.title])
 
             # mpv
-            if self.cmd in SUPPORTED_PLAYERS['mpv']:
+            if self.player == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$
                 self.title = self.title.replace("$", "$$").replace("\$$", "$")
                 extra_args.extend(["--title", self.title])

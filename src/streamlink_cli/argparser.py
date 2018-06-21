@@ -524,22 +524,13 @@ def build_parser():
 
         {{game}}
           This is just a synonym for {{category}} which may make more sense for
-          platforms like Twitch. "Game being played" is a way to categorize
+          gaming oriented platforms. "Game being played" is a way to categorize
           the stream, so it doesn't need its own seperate handling.
 
         """.format( ', '.join(SUPPORTED_PLAYERS.keys()),
                     DEFAULT_STREAM_METADATA['title'],
                     DEFAULT_STREAM_METADATA['author'],
                     DEFAULT_STREAM_METADATA['category'])
-        #Instead of using this option, you may also use the following flags:
-        #--tca
-        #--tac
-        #--cta
-        #--cat
-        #--act
-        #--atc
-        #--ta
-        #--at #TODO implement or don't implement, project owners have not given opinion
     )
 
     output = parser.add_argument_group("File output options")

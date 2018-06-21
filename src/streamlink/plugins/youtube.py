@@ -83,6 +83,9 @@ _config_schema = validate.Schema(
         validate.optional("reason"): validate.text,
         validate.optional("livestream"): validate.text,
         validate.optional("live_playback"): validate.text,
+        validate.optional("author"): validate.text,
+        validate.optional("title"): validate.text,
+        validate.optional("ucid"): validate.text,
         "status": validate.text
     }
 )
@@ -330,6 +333,8 @@ class YouTube(Plugin):
                 query_info = dict(parse_qsl(urlparse(url).query))
                 if "channel" in query_info:
                     video_id = self._get_channel_video(query_info["channel"])
+        
+        self.video_id = video_id
 
         if not video_id:
             return
@@ -410,7 +415,7 @@ class YouTube(Plugin):
     def set_title_info(self):
         query = {
             "part": "id,snippet",
-            "id" : self._find_channel_video(),
+            "id" : self.video_id,
             "key": API_KEY
         }
         res = http.get(API_BASE+"/videos", params=query)

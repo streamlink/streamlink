@@ -30,7 +30,7 @@ import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32, is_py2, is_py3
 from .console import ConsoleOutput
-from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
+from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
@@ -129,10 +129,24 @@ def create_http_server(host=None, port=0):
 
 def create_title(plugin=None):
     if args.title and plugin:
-        title = args.title.format(title=plugin.get_title(),
-                                  author=plugin.get_author(),
-                                  category=plugin.get_category(),
-                                  game=plugin.get_category())
+        _title = plugin.get_title()
+        _author = plugin.get_author()
+        _category = plugin.get_category()
+        _game = _category
+        
+        if _title is None:
+            _title = DEFAULT_STREAM_METADATA["title"]
+        if _author is None:
+            _author = DEFAULT_STREAM_METADATA["author"]
+        if _category is None:
+            _category = DEFAULT_STREAM_METADATA["category"]
+        if _game is None:
+            _game = DEFAULT_STREAM_METADATA["game"]
+        
+        title = args.title.format(title=_title,
+                                  author=_author,
+                                  category=_category,
+                                  game=_game)
     else:
         title = args.url
 
