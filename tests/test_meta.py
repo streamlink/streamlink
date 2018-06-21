@@ -24,7 +24,7 @@ class TestMeta(unittest.TestCase):
                 warnings.warn("a warning")
 
             _inner()
-            self.assertEquals(1, len(w))
+            self.assertEqual(1, len(w))
             return True
 
-        self.assertEquals(True, _includes_warnings())
+        self.assertEqual(True, _includes_warnings())

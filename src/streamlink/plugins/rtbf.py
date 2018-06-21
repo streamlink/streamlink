@@ -1,8 +1,10 @@
 import datetime
 try:
     from HTMLParser import HTMLParser
+    html_unescape = unescape = HTMLParser().unescape
 except ImportError:
-    from html.parser import HTMLParser
+    from html import unescape as html_unescape
+
 import re
 
 from streamlink.plugin import Plugin
@@ -36,7 +38,7 @@ class RTBF(Plugin):
             None,
             validate.all(
                 validate.get(1),
-                validate.transform(HTMLParser().unescape),
+                validate.transform(html_unescape),
                 validate.transform(parse_json),
                 {
                     'geoLocRestriction': validate.text,

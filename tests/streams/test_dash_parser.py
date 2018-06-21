@@ -19,26 +19,26 @@ class TestMPDParsers(unittest.TestCase):
         self.assertEqual(utc.utcoffset(None), datetime.timedelta(0))
 
     def test_bool_str(self):
-        self.assertEquals(MPDParsers.bool_str("true"), True)
-        self.assertEquals(MPDParsers.bool_str("TRUE"), True)
-        self.assertEquals(MPDParsers.bool_str("True"), True)
+        self.assertEqual(MPDParsers.bool_str("true"), True)
+        self.assertEqual(MPDParsers.bool_str("TRUE"), True)
+        self.assertEqual(MPDParsers.bool_str("True"), True)
 
-        self.assertEquals(MPDParsers.bool_str("0"), False)
-        self.assertEquals(MPDParsers.bool_str("False"), False)
-        self.assertEquals(MPDParsers.bool_str("false"), False)
-        self.assertEquals(MPDParsers.bool_str("FALSE"), False)
+        self.assertEqual(MPDParsers.bool_str("0"), False)
+        self.assertEqual(MPDParsers.bool_str("False"), False)
+        self.assertEqual(MPDParsers.bool_str("false"), False)
+        self.assertEqual(MPDParsers.bool_str("FALSE"), False)
 
     def test_type(self):
-        self.assertEquals(MPDParsers.type("dynamic"), "dynamic")
-        self.assertEquals(MPDParsers.type("static"), "static")
+        self.assertEqual(MPDParsers.type("dynamic"), "dynamic")
+        self.assertEqual(MPDParsers.type("static"), "static")
         with self.assertRaises(MPDParsingError):
             MPDParsers.type("other")
 
     def test_duration(self):
-        self.assertEquals(MPDParsers.duration("PT1S"), datetime.timedelta(0, 1))
+        self.assertEqual(MPDParsers.duration("PT1S"), datetime.timedelta(0, 1))
 
     def test_datetime(self):
-        self.assertEquals(MPDParsers.datetime("2018-01-01T00:00:00Z"),
+        self.assertEqual(MPDParsers.datetime("2018-01-01T00:00:00Z"),
                           datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc))
 
     def test_segment_template(self):

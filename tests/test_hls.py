@@ -87,7 +87,6 @@ audio_only.m3u8
         # Set to default value to avoid a test fail if the default change
         streamlink.set_option("hls-live-edge", 3)
 
-        streamlink.logger.set_level("debug")
         masterStream = hls.HLSStream.parse_variant_playlist(streamlink, masterPlaylist, **kwargs)
         stream = masterStream["1080p (source)"].open()
         data = b"".join(iter(partial(stream.read, 8192), b""))
@@ -163,7 +162,6 @@ playlist.m3u8
 
         if audio_select:
             streamlink.set_option("hls-audio-select", audio_select)
-        streamlink.logger.set_level("debug")
 
         master_stream = hls.HLSStream.parse_variant_playlist(streamlink, playlist)
 
