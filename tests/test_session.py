@@ -1,17 +1,7 @@
 import os
-import sys
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
 
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
-
-try:
-    from unittest.mock import MagicMock
-except ImportError:
-    from mock import MagicMock
-
 from streamlink import Streamlink, NoPluginError
 from streamlink.plugins import Plugin
 from streamlink.stream import *
