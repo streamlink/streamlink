@@ -9,7 +9,7 @@ from functools import partial
 from collections import OrderedDict
 
 from streamlink.cache import Cache
-from streamlink.exceptions import PluginError, NoStreamsError
+from streamlink.exceptions import PluginError, NoStreamsError, FatalPluginError
 from streamlink.options import Options, Arguments
 
 log = logging.getLogger(__name__)
@@ -523,20 +523,20 @@ class Plugin(object):
             try:
                 return self._user_input_requester.ask(prompt)
             except IOError as e:
-                raise PluginError("User input error: {0}".format(e))
-            except NotImplementedError:  # ignore this and raise a PluginError
+                raise FatalPluginError("User input error: {0}".format(e))
+            except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
-        raise PluginError("This plugin requires user input, however it is not supported on this platform")
+        raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
     def input_ask_password(self, prompt):
         if self._user_input_requester:
             try:
                 return self._user_input_requester.ask_password(prompt)
             except IOError as e:
-                raise PluginError("User input error: {0}".format(e))
-            except NotImplementedError:  # ignore this and raise a PluginError
+                raise FatalPluginError("User input error: {0}".format(e))
+            except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
-        raise PluginError("This plugin requires user input, however it is not supported on this platform")
+        raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
 
 

@@ -22,6 +22,7 @@ from streamlink import __version__ as streamlink_version
 from streamlink import (Streamlink, StreamError, PluginError,
                         NoPluginError)
 from streamlink.cache import Cache
+from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
@@ -432,6 +433,8 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
+        except FatalPluginError as err:
+            raise
         except PluginError as err:
             log.error(u"{0}", err)
 

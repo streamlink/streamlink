@@ -1,9 +1,8 @@
 import json
-import sys
 import logging
+import sys
 from getpass import getpass
 
-from streamlink import PluginError
 from streamlink.plugin.plugin import UserInputRequester
 from .compat import input
 from .utils import JSONEncoder
