@@ -37,8 +37,8 @@ class TestPluginUserInput(unittest.TestCase):
         p = _TestPlugin("http://example.com/stream")
         with self._mock_console_input() as console_input:
             p.bind(self.session, 'test_plugin', console_input)
-            self.assertEquals("username", p.input_ask("username"))
-            self.assertEquals("password", p.input_ask_password("password"))
+            self.assertEqual("username", p.input_ask("username"))
+            self.assertEqual("password", p.input_ask_password("password"))
             console_input.console.ask.assert_called_with("username: ")
             console_input.console.askpass.assert_called_with("password: ")
 
@@ -55,5 +55,5 @@ class TestPluginUserInput(unittest.TestCase):
             session.load_plugins(os.path.join(os.path.dirname(__file__), "plugins"))
 
             p = session.resolve_url("http://test.se/channel")
-            self.assertEquals("username", p.input_ask("username"))
-            self.assertEquals("password", p.input_ask_password("password"))
+            self.assertEqual("username", p.input_ask("username"))
+            self.assertEqual("password", p.input_ask_password("password"))
