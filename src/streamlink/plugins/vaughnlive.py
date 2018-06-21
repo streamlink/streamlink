@@ -1,14 +1,9 @@
-import itertools
-import logging
-import random
 import re
-import ssl
 
-import websocket
-
+from streamlink import StreamError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
-from streamlink.stream import RTMPStream
+from streamlink.stream import HTTPStream, StreamIOIterWrapper, StreamIOThreadWrapper
 
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?
@@ -18,92 +13,62 @@ _url_re = re.compile(r"""
 """, re.VERBOSE)
 
 
-class VLWebSocket(websocket.WebSocket):
-    def __init__(self, **_):
-        self.session = _.pop("session")
-        self.logger = logging.getLogger("streamlink.plugins.vaughnlive.websocket")
-        sslopt = _.pop("sslopt", {})
-        sslopt["cert_reqs"] = ssl.CERT_NONE
-        super(VLWebSocket, self).__init__(sslopt=sslopt, **_)
+class VaughnStream(HTTPStream):
+    def open(self):
+        method = self.args.get("method", "GET")
+        timeout = self.session.options.get("http-timeout")
+        res = self.session.http.request(method=method,
+                                        stream=True,
+                                        exception=StreamError,
+                                        timeout=timeout,
+                                        **self.args)
 
-    def send(self, payload, opcode=websocket.ABNF.OPCODE_TEXT):
-        self.logger.debug("Sending message: {0}", payload)
-        return super(VLWebSocket, self).send(payload + "\n\x00", opcode)
+        def fix_stream():
+            """
+            Replace the first 3 bytes of the stream with b'FLV'
+            :return: stream iterator
+            """
+            content_iter = res.iter_content(8192)
+            data = next(content_iter)
+            yield b'FLV' + data[3:]
+            for chunk in content_iter:
+                yield chunk
 
-    def recv(self):
-        d = super(VLWebSocket, self).recv().replace("\n", "").replace("\x00", "")
-        return d.split(" ", 1)
+        fd = StreamIOIterWrapper(fix_stream())
+        if self.buffered:
+            fd = StreamIOThreadWrapper(self.session, fd, timeout=timeout)
+
+        return fd
 
 
 class VaughnLive(Plugin):
-    servers = ["wss://sapi-ws-{0}x{1:02}.vaughnlive.tv".format(x, y) for x, y in itertools.product(range(1, 3),
-                                                                                                   range(1, 6))]
-    origin = "https://vaughnlive.tv"
-    rtmp_server_map = {
-        "594140c69edad": "192.240.105.171:2935",
-        "585c4cab1bef1": "192.240.105.171:2935",
-        "5940d648b3929": "192.240.105.171:2935",
-        "5941854b39bc4": "192.240.105.171:2935"
-    }
-    name_remap = {"#vl": "live", "#btv": "btv", "#pt": "pt", "#igb": "instagib", "#vtv": "vtv"}
-    domain_map = {"vaughnlive": "#vl", "breakers": "#btv", "instagib": "#igb", "vapers": "#vtv", "pearltime": "#pt"}
+    domain_map = {"vaughnlive": "live", "breakers": "btv", "instagib": "igb", "vapers": "vtv", "pearltime": "pt"}
+    stream_url = "https://mp4.vaughnsoft.net/live"
 
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
-    def api_url(self):
-        return random.choice(self.servers)
-
-    def parse_ack(self, action, message):
-        if action.endswith("3"):
-            channel, _, viewers, token, server, choked, is_live, chls, trns, ingest = message.split(";")
-            is_live = is_live == "1"
-            viewers = int(viewers)
-            self.logger.debug("Viewers: {0}, isLive={1}", viewers, is_live)
-            domain, channel = channel.split("-", 1)
-            return is_live, server, domain, channel, token, ingest
-        else:
-            self.logger.error("Unhandled action format: {0}", action)
-
-    def _get_info(self, stream_name):
-        server = self.api_url()
-        self.logger.debug("Connecting to API: {0}", server)
-        ws = websocket.create_connection(server,
-                                         header=["User-Agent: {0}".format(useragents.CHROME)],
-                                         origin=self.origin,
-                                         class_=VLWebSocket,
-                                         session=self.session)
-        ws.send("MVN LOAD3 {0}".format(stream_name))
-        action, message = ws.recv()
-        return self.parse_ack(action, message)
-
-    def _get_rtmp_streams(self, server, domain, channel, token):
-        rtmp_server = self.rtmp_server_map.get(server, server)
-
-        url = "rtmp://{0}/live?{1}".format(rtmp_server, token)
-
-        yield "live", RTMPStream(self.session, params={
-            "rtmp": url,
-            "pageUrl": self.url,
-            "playpath": "{0}_{1}".format(self.name_remap.get(domain, "live"), channel),
-            "live": True
-        })
-
     def _get_streams(self):
+        self.session.http.headers = {
+            "Origin": "https://vaughnlive.tv",
+            "Referer": self.url,
+            "User-Agent": useragents.FIREFOX
+        }
         m = _url_re.match(self.url)
         if m:
-            stream_name = "{0}-{1}".format(self.domain_map[(m.group("domain").lower())],
+            stream_name = "{0}_{1}".format(self.domain_map[(m.group("domain").lower())],
                                            m.group("channel"))
-
-            is_live, server, domain, channel, token, ingest = self._get_info(stream_name)
-
-            if not is_live:
-                self.logger.info("Stream is currently off air")
-            else:
-                self.logger.info("Stream powered by VaughnSoft - remember to support them.")
-                for s in self._get_rtmp_streams(server, domain, channel, token):
-                    yield s
+            self.logger.info("Stream powered by VaughnSoft - remember to support them.")
+            stream = VaughnStream(self.session,
+                                  self.stream_url,
+                                  params=dict(app="live",
+                                              stream=stream_name,
+                                              port=2935))
+            stream_url = stream.to_url()
+            res = self.session.http.head(stream_url, raise_for_status=False)
+            print(res.status_code)
+            yield "live", stream
 
 
 __plugin__ = VaughnLive

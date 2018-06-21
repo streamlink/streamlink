@@ -18,7 +18,11 @@ class BTSports(Plugin):
             requires=["password"],
             metavar="EMAIL",
             required=True,
-            help="The email associated with your BT Sport account, required to access any BT Sport stream."
+            help="""
+            The email associated with your BT Sport account, required to access any
+            BT Sport stream.
+            """
+
         ),
         PluginArgument(
             "password",
@@ -35,7 +39,7 @@ class BTSports(Plugin):
     login_url = "https://signin1.bt.com/siteminderagent/forms/login.fcc"
 
     def __init__(self, url):
-        super().__init__(url)
+        super(BTSports, self).__init__(url)
         http.headers = {"User-Agent": useragents.FIREFOX}
 
     @classmethod

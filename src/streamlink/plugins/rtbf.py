@@ -7,7 +7,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
 
 
@@ -16,11 +16,12 @@ class RTBF(Plugin):
     TOKEN_URL = 'https://token.rtbf.be/'
     RADIO_STREAM_URL = 'http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json'
 
-    _url_re = re.compile(r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/(?:webradio-)?(?P<radio>.+))')
+    _url_re = re.compile(r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/.+)')
     _stream_size_re = re.compile(r'https?://.+-(?P<size>\d+p?)\..+?$')
 
     _video_player_re = re.compile(r'<iframe\s+class="embed-responsive-item\s+js-embed-iframe".*src="(?P<player_url>.+?)".*?</iframe>', re.DOTALL)
     _video_stream_data_re = re.compile(r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"')
+    _radio_id_re = re.compile(r'var currentStationKey = "(?P<radio_id>.+?)"')
 
     _geo_schema = validate.Schema(
         {
@@ -51,7 +52,8 @@ class RTBF(Plugin):
                     validate.optional('urlHls'): validate.any(None, '', validate.url()),
                     validate.optional('urlDash'): validate.any(None, '', validate.url()),
                     validate.optional('streamUrlHls'): validate.any(None, '', validate.url()),
-                    validate.optional('streamUrlDash'): validate.any(None, '', validate.url())
+                    validate.optional('streamUrlDash'): validate.any(None, '', validate.url()),
+                    validate.optional('drm'): bool,
                 }
             )
         )
@@ -93,8 +95,13 @@ class RTBF(Plugin):
     def can_handle_url(cls, url):
         return RTBF._url_re.match(url)
 
-    def _get_radio_streams(self, radio):
-        res = http.get(self.RADIO_STREAM_URL.format(radio.replace('-', '_')))
+    def _get_radio_streams(self):
+        res = http.get(self.url)
+        match = self._radio_id_re.search(res.text)
+        if match is None:
+            return
+        radio_id = match.group('radio_id')
+        res = http.get(self.RADIO_STREAM_URL.format(radio_id))
         streams = http.json(res, schema=self._radio_stream_schema)
 
         for stream in streams['audioUrls']:
@@ -120,6 +127,11 @@ class RTBF(Plugin):
             self.logger.error('Stream is geo-restricted')
             return
 
+        # Check whether streams are DRM-protected
+        if stream_data.get('drm', False):
+            self.logger.error('Stream is DRM-protected')
+            return
+
         now = datetime.datetime.now()
         try:
             if isinstance(stream_data['sources'], dict):
@@ -143,6 +155,14 @@ class RTBF(Plugin):
                 for stream in HLSStream.parse_variant_playlist(self.session, hls_url).items():
                     yield stream
 
+            dash_url = stream_data.get('urlDash') or stream_data.get('streamUrlDash')
+            if dash_url:
+                if stream_data.get('isLive', False):
+                    # Live streams require a token
+                    dash_url = self.tokenize_stream(dash_url)
+                for stream in DASHStream.parse_manifest(self.session, dash_url).items():
+                    yield stream
+
         except IOError as err:
             if '403 Client Error' in str(err):
                 # Check whether video is expired
@@ -155,9 +175,9 @@ class RTBF(Plugin):
 
     def _get_streams(self):
         match = self.can_handle_url(self.url)
-        if match.group('radio'):
-            return self._get_radio_streams(match.group('radio'))
-        return self._get_video_streams()
+        if match.group('video_id'):
+            return self._get_video_streams()
+        return self._get_radio_streams()
 
 
 __plugin__ = RTBF
