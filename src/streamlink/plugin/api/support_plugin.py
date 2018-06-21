@@ -1,6 +1,7 @@
 import os
 import inspect
 import sys
+from streamlink.utils import load_module
 
 __all__ = ["load_support_plugin"]
 
@@ -26,26 +27,4 @@ def load_support_plugin(name):
         prefix = os.path.normpath(__file__ + "../../../../../")
         path = os.path.join(prefix, path)
 
-    # importlib is the preferred way of importing a module, but it's
-    # only available on Python 3.1+.
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 3:
-        import importlib
-
-        loader = importlib.find_loader(name, [path])
-
-        if loader:
-            module = loader.load_module()
-        else:
-            raise ImportError("No module named '{0}'".format(name))
-    else:
-        import imp
-
-        fd, filename, desc = imp.find_module(name, [path])
-
-        try:
-            module = imp.load_module(name, fd, filename, desc)
-        finally:
-            if fd:
-                fd.close()
-
-    return module
+    return load_module(name, path)

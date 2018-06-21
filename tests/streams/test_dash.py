@@ -1,11 +1,9 @@
-from streamlink.stream.dash import DASHStreamWorker
-from streamlink.stream.dash_manifest import MPD
-
-from tests import unittest
-from tests.mock import MagicMock, patch, ANY, Mock, call
+import unittest
 
 from streamlink import PluginError
 from streamlink.stream import *
+from streamlink.stream.dash import DASHStreamWorker
+from tests.mock import MagicMock, patch, ANY, Mock, call
 
 
 class TestDASHStream(unittest.TestCase):
