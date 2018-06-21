@@ -1,5 +1,6 @@
 import os
 import sys
+import inspect
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)
@@ -47,7 +48,10 @@ except ImportError:
     from backports.shutil_which import which
 
 
+getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
+
+
 __all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
            "unquote", "queue", "range", "urlencode", "devnull", "which",
-           "izip", "urlsplit", "urlunsplit"]
+           "izip", "urlsplit", "urlunsplit", "getargspec"]
