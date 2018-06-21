@@ -1,16 +1,11 @@
 import datetime
-try:
-    from HTMLParser import HTMLParser
-    html_unescape = unescape = HTMLParser().unescape
-except ImportError:
-    from html import unescape as html_unescape
-
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
+from streamlink.compat import html_unescape
 
 
 class RTBF(Plugin):
