@@ -38,6 +38,10 @@ class Options(object):
         if key in self.options:
             return self.options[key]
 
+    def update(self, options):
+        for key, value in options.items():
+            self.set(key, value)
+
 
 class Argument(object):
     """

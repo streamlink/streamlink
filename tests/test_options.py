@@ -29,6 +29,13 @@ class TestOptions(unittest.TestCase):
         self.options.set("a_option", "option")
         self.assertEqual(self.options.get("a_option"), "option")
 
+    def test_options_update(self):
+        self.assertEqual(self.options.get("a_default"), "default")
+        self.assertEqual(self.options.get("non_existing"), None)
+
+        self.options.update({"a_option": "option"})
+        self.assertEqual(self.options.get("a_option"), "option")
+
     def test_options_name_normalised(self):
         self.assertEqual(self.options.get("a_default"), "default")
         self.assertEqual(self.options.get("a-default"), "default")
