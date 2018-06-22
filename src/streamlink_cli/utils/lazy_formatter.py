@@ -12,5 +12,10 @@ class LazyFormatter(object):
             return value
 
     @classmethod
-    def format(cls, fmt, **lazy_props):
+    def format(cls, *args, **lazy_props):
+        if len(args) == 1:
+            fmt = args[0]
+        else:
+            raise TypeError("format() takes exactly 1 positional argument")
+
         return string.Formatter().vformat(fmt, (), cls(**lazy_props))
