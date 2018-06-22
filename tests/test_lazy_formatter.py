@@ -1,6 +1,8 @@
 import unittest
+
 from mock import MagicMock
 from streamlink.utils import LazyFormatter
+
 
 class TestLazyFormat(unittest.TestCase):
     def _get_fake_plugin(self):

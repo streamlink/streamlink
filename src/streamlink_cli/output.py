@@ -7,9 +7,10 @@ from time import sleep
 
 import re
 
-from .compat import is_win32, is_py2, stdout, shlex_quote, maybe_encode, maybe_decode
+from .compat import is_win32, is_py2, stdout, shlex_quote
 from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
-from .utils import ignored, get_filesystem_encoding
+from .utils import ignored
+from streamlink.utils.encoding import get_filesystem_encoding, maybe_encode, maybe_decode
 
 if is_win32:
     import msvcrt
@@ -143,8 +144,11 @@ class PlayerOutput(Output):
 
         # player command
         if is_win32:
-            return  u''.join([cmd, " ", maybe_decode(subprocess.list2cmdline(extra_args)), " ", args])
-        return shlex.split(cmd) + extra_args + shlex.split(args) #TODO test linux + py2
+            eargs = maybe_decode(subprocess.list2cmdline(extra_args))
+            # do not insert and extra " " when there are no extra_args
+            return maybe_encode(u' '.join([cmd] + ([eargs] if eargs else []) + [args]),
+                                encoding=get_filesystem_encoding())
+        return shlex.split(cmd) + extra_args + shlex.split(args)  # TODO test linux + py2
 
     def _open(self):
         try:
@@ -159,14 +163,14 @@ class PlayerOutput(Output):
                 self.stderr.close()
 
     def _open_call(self):
-        subprocess.call(maybe_encode(self._create_arguments()),
+        subprocess.call(self._create_arguments(),
                         stdout=self.stdout,
                         stderr=self.stderr)
 
     def _open_subprocess(self):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
-        self.player = subprocess.Popen(maybe_encode(self._create_arguments(), encoding=get_filesystem_encoding()),
+        self.player = subprocess.Popen(self._create_arguments(),
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)

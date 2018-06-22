@@ -29,10 +29,10 @@ def shlex_quote(s):
 
     Backported from Python 3.3 standard library module shlex.
     """
-    
-    if is_py3: #use the latest version instead of backporting if it's available
+
+    if is_py3:  # use the latest version instead of backporting if it's available
         return quote(s)
-        
+
     if not s:
         return "''"
     if _find_unsafe(s) is None:
@@ -41,19 +41,7 @@ def shlex_quote(s):
     # use single quotes, and put single quotes into double quotes
     # the string $'b is then quoted as '$'"'"'b'
     return "'" + s.replace("'", "'\"'\"'") + "'"
-        
-def maybe_encode(text, encoding="utf8"):
-    if is_py2:
-        return text.encode(encoding)
-    else:
-        return text
-
-def maybe_decode(text, encoding="utf8"):
-    if is_py2 and isinstance(text, str):
-        return text.decode(encoding)
-    else:
-        return text
 
 
 __all__ = ["is_py2", "is_py3", "is_win32", "input", "stdout", "file",
-           "shlex_quote", "get_terminal_size", "maybe_encode", "maybe_decode"]
+           "shlex_quote", "get_terminal_size"]

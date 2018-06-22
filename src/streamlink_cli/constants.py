@@ -7,10 +7,10 @@ from .utils import find_default_player
 
 DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
 DEFAULT_STREAM_METADATA = {
-    "title"    : u"Unknown Title",
-    "author"   : u"Unknown Author",
-    "category" : u"No Category",
-    "game"     : u"No Game/Category"
+    "title": u"Unknown Title",
+    "author": u"Unknown Author",
+    "category": u"No Category",
+    "game": u"No Game/Category"
 }
 SUPPORTED_PLAYERS = {  #these are the players that streamlink knows how to set the window title for with `--title`. key names are used in help text
     #name      #possible binary names
