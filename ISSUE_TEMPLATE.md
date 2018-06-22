@@ -1,6 +1,7 @@
 *Thanks for reporting an issue!*
-*Please read the contribution guidelines first! (see the link above)*
+*Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!*
 *Also check the list of known issues before reporting an issue!*
+* If this is a plugin request ensure that your request meets the requirements (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests) or else it will be closed.
 
 *Feel free to use the following template. Be as detailed as possible.*
 *Please see the text preview to avoid unnecessary formatting errors.*
@@ -12,7 +13,7 @@
 
 - [x] This is a bug report.
 - [ ] This is a feature request.
-- [ ] This is a plugin (improvement) request.
+- [ ] This is a plugin (improvement) request and I have read the plugin request guidelines.
 - [ ] I have read the contribution guidelines.
 
 ### Description
