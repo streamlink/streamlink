@@ -2,15 +2,12 @@ import os
 import shlex
 import subprocess
 import sys
-
 from time import sleep
 
-import re
-
-from .compat import is_win32, is_py2, stdout, shlex_quote
-from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
-from .utils import ignored
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_encode, maybe_decode
+from .compat import is_win32, stdout
+from .constants import DEFAULT_PLAYER_ARGUMENTS, SUPPORTED_PLAYERS
+from .utils import ignored
 
 if is_win32:
     import msvcrt
@@ -110,10 +107,15 @@ class PlayerOutput(Output):
         :param cmd: command to test
         :return: name of the player|None
         """
-        cmd = cmd.lower()
+        if not is_win32:
+            # under a POSIX system use shlex to find the actual command
+            # under windows this is not an issue because executables end in .exe
+            cmd = shlex.split(cmd)[0]
+
+        cmd = os.path.basename(cmd.lower())
         for player, possiblecmds in SUPPORTED_PLAYERS.items():
             for possiblecmd in possiblecmds:
-                if possiblecmd in cmd:
+                if cmd.startswith(possiblecmd):
                     return player
 
     def _create_arguments(self):

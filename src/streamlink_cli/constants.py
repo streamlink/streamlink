@@ -1,9 +1,7 @@
 import os
 
 from streamlink import __version__ as LIVESTREAMER_VERSION
-
 from .compat import is_win32
-from .utils import find_default_player
 
 DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
 DEFAULT_STREAM_METADATA = {
@@ -12,10 +10,10 @@ DEFAULT_STREAM_METADATA = {
     "category": u"No Category",
     "game": u"No Game/Category"
 }
-SUPPORTED_PLAYERS = {  #these are the players that streamlink knows how to set the window title for with `--title`. key names are used in help text
-    #name      #possible binary names
-    "vlc"    : ["vlc",find_default_player()],
-    "mpv"    : ["mpv"]
+SUPPORTED_PLAYERS = {  # these are the players that streamlink knows how to set the window title for with `--title`. key names are used in help text
+    # name: possible binary names (linux/mac and windows)
+    "vlc": ["vlc", "vlc.exe"],
+    "mpv": ["mpv", "mpv.exe"]
 }
 
 if is_win32:
