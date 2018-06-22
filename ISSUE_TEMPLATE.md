@@ -1,6 +1,7 @@
 *Thanks for reporting an issue!*
 *Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!*
 *Also check the list of known issues before reporting an issue!*
+
 *If this is a plugin request ensure that your request meets the requirements (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests) or else it will be closed.*
 
 *Feel free to use the following template. Be as detailed as possible.*
