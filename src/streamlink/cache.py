@@ -2,16 +2,14 @@ import json
 import os
 import shutil
 import tempfile
+from time import time, mktime
 
-from time import time
 from .compat import is_win32
 
 if is_win32:
-    xdg_cache = os.environ.get("APPDATA",
-                               os.path.expanduser("~"))
+    xdg_cache = os.environ.get("APPDATA", os.path.expanduser("~"))
 else:
-    xdg_cache = os.environ.get("XDG_CACHE_HOME",
-                               os.path.expanduser("~/.cache"))
+    xdg_cache = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
 
 cache_dir = os.path.join(xdg_cache, "streamlink")
 
@@ -64,7 +62,7 @@ class Cache(object):
         except (IOError, OSError):
             os.remove(tempname)
 
-    def set(self, key, value, expires=60 * 60 * 24 * 7):
+    def set(self, key, value, expires=60 * 60 * 24 * 7, expires_at=None):
         self._load()
         self._prune()
 
@@ -72,6 +70,9 @@ class Cache(object):
             key = "{0}:{1}".format(self.key_prefix, key)
 
         expires += time()
+
+        if expires_at:
+            expires = mktime(expires_at.timetuple())
 
         self._cache[key] = dict(value=value, expires=expires)
         self._save()

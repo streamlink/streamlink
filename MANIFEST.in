@@ -8,7 +8,7 @@ include versioneer.py
 
 recursive-include docs *
 recursive-include examples *
-recursive-include tests *py
+recursive-include tests *
 
 prune docs/_build
 prune */__pycache__

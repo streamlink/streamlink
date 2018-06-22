@@ -175,7 +175,8 @@ class FunimationNow(Plugin):
             argument_name="funimation-mux-subtitles",
             action="store_true",
             help="""
-            Enable automatically including available subtitles in to the output stream.
+            Enable automatically including available subtitles in to the output
+            stream.
             """
         )
     )

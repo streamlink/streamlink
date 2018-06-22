@@ -22,6 +22,7 @@ from streamlink import __version__ as streamlink_version
 from streamlink import (Streamlink, StreamError, PluginError,
                         NoPluginError)
 from streamlink.cache import Cache
+from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
@@ -29,7 +30,7 @@ from streamlink.plugin import PluginOptions
 import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32
-from .console import ConsoleOutput
+from .console import ConsoleOutput, ConsoleUserInputRequester
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
@@ -432,6 +433,8 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
+        except FatalPluginError as err:
+            raise
         except PluginError as err:
             log.error(u"{0}", err)
 
@@ -737,7 +740,7 @@ def setup_streamlink():
     """Creates the Streamlink session."""
     global streamlink
 
-    streamlink = Streamlink()
+    streamlink = Streamlink({"user-input-requester": ConsoleUserInputRequester(console)})
 
 
 def setup_options():
@@ -959,6 +962,7 @@ def main():
     silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
     log_level = args.loglevel if not silent_log else "none"
     setup_logging(console_out, log_level)
+    setup_console(console_out)
 
     setup_streamlink()
     # load additional plugins
@@ -972,7 +976,6 @@ def main():
     log_level = args.loglevel if not silent_log else "none"
     logger.root.setLevel(log_level)
 
-    setup_console(console_out)
     setup_http_session()
     check_root()
     log_current_versions()

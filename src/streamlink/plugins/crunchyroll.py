@@ -3,23 +3,16 @@ import datetime
 import random
 import re
 import string
+import logging
+from uuid import uuid4
 
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import HLSStream
 
-API_URL = "https://api.crunchyroll.com/{0}.0.json"
-API_DEFAULT_LOCALE = "en_US"
-API_USER_AGENT = "Mozilla/5.0 (iPhone; iPhone OS 8.3.0; {0})"
-API_HEADERS = {
-    "Host": "api.crunchyroll.com",
-    "Accept-Encoding": "gzip, deflate",
-    "Accept": "*/*",
-    "Content-Type": "application/x-www-form-urlencoded"
-}
-API_VERSION = "2313.8"
-API_ACCESS_TOKEN = "QWjz212GspMHH9h"
-API_DEVICE_TYPE = "com.crunchyroll.iphone"
+log = logging.getLogger(__name__)
+
+
 STREAM_WEIGHTS = {
     "low": 240,
     "mid": 420,
@@ -106,40 +99,70 @@ class CrunchyrollAPIError(Exception):
 
 
 class CrunchyrollAPI(object):
-    def __init__(self, session_id=None, auth=None, locale=API_DEFAULT_LOCALE):
+    _api_url = "https://api.crunchyroll.com/{0}.0.json"
+    _default_locale = "en_US"
+    _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; Android SDK built for x86 Build/KK)"
+    _version_code = 444
+    _version_name = "2.1.10"
+    _access_token = "Scwg9PRRZ19iVwD"
+    _access_type = "com.crunchyroll.crunchyroid"
+
+    def __init__(self, cache, session_id=None, locale=_default_locale):
         """Abstract the API to access to Crunchyroll data.
 
         Can take saved credentials to use on it's calls to the API.
         """
+        self.cache = cache
         self.session_id = session_id
-        self.auth = auth
+        if self.session_id:  # if the session ID is setup don't use the cached auth token
+            self.auth = None
+        else:
+            self.auth = cache.get("auth")
+        self.device_id = cache.get("device_id") or self.generate_device_id()
         self.locale = locale
+        self.headers = {
+            "X-Android-Device-Is-GoogleTV": "0",
+            "X-Android-Device-Product": "google_sdk_x86",
+            "X-Android-Device-Model": "Android SDK built for x86",
+            "Using-Brightcove-Player": "1",
+            "X-Android-Release": "4.4.2",
+            "X-Android-SDK": "19",
+            "X-Android-Application-Version-Name": self._version_name,
+            "X-Android-Application-Version-Code": str(self._version_code),
+            'User-Agent': self._user_agent
+        }
 
-    def _api_call(self, entrypoint, params, schema=None):
+    def _api_call(self, entrypoint, params=None, schema=None):
         """Makes a call against the api.
 
         :param entrypoint: API method to call.
         :param params: parameters to include in the request data.
         :param schema: schema to use to validate the data
         """
-        url = API_URL.format(entrypoint)
+        url = self._api_url.format(entrypoint)
 
         # Default params
-        params = dict(params)
+        params = params or {}
+        if self.session_id:
+            params.update({
+                "session_id": self.session_id
+            })
+        else:
+            params.update({
+                "device_id": self.device_id,
+                "device_type": self._access_type,
+                "access_token": self._access_token,
+                "version": self._version_code
+            })
         params.update({
-            "version": API_VERSION,
             "locale": self.locale.replace('_', ''),
         })
 
         if self.session_id:
             params["session_id"] = self.session_id
 
-        # Headers
-        headers = dict(API_HEADERS)
-        headers['User-Agent'] = API_USER_AGENT.format(self.locale)
-
         # The certificate used by Crunchyroll cannot be verified in some environments.
-        res = http.get(url, params=params, headers=headers, verify=False)
+        res = http.post(url, data=params, headers=self.headers, verify=False)
         json_res = http.json(res, schema=_api_schema)
 
         if json_res["error"]:
@@ -153,47 +176,66 @@ class CrunchyrollAPI(object):
 
         return data
 
-    def start_session(self, device_id, **kwargs):
-        """Starts a session against Crunchyroll's server.
+    def generate_device_id(self):
+        device_id = str(uuid4())
+        # cache the device id
+        self.cache.set("device_id", 365 * 24 * 60 * 60)
+        log.debug("Device ID: {0}".format(device_id))
+        return device_id
 
-        Is recommended that you call this method before making any other calls
-        to make sure you have a valid session against the server.
+
+    def start_session(self):
         """
-        if self.session_id:
-            http.cookies["sess_id"] = self.session_id
-        res = http.get("https://www.crunchyroll.com",
-                       headers={"User-Agent": API_USER_AGENT.format(self.locale)})
-        return res.cookies.get("sess_id", self.session_id)
+            Starts a session against Crunchyroll's server.
+            Is recommended that you call this method before making any other calls
+            to make sure you have a valid session against the server.
+        """
+        params = {}
+        if self.auth:
+            params["auth"] = self.auth
+        self.session_id = self._api_call("start_session", params, schema=_session_schema)
+        log.debug("Session created with ID: {0}".format(self.session_id))
+        return self.session_id
 
-    def login(self, username, password, **kwargs):
-        """Authenticates the session to be able to access restricted data from
-        the server (e.g. premium restricted videos).
+    def login(self, username, password):
+        """
+            Authenticates the session to be able to access restricted data from
+            the server (e.g. premium restricted videos).
         """
         params = {
             "account": username,
             "password": password
         }
 
-        return self._api_call("login", params, **kwargs)
+        login = self._api_call("login", params, schema=_login_schema)
+        self.auth = login["auth"]
+        self.cache.set("auth", login["auth"], expires_at=login["expires"])
+        return login
 
-    def get_info(self, media_id, fields=None, **kwargs):
-        """Returns the data for a certain media item.
+    def authenticate(self):
+        data = self._api_call("authenticate", {"auth": self.auth}, schema=_login_schema)
+        self.auth = data["auth"]
+        self.cache.set("auth", data["auth"], expires_at=data["expires"])
+        return data
 
-        :param media_id: id that identifies the media item to be accessed.
-        :param fields: list of the media"s field to be returned. By default the
-        API returns some fields, but others are not returned unless they are
-        explicity asked for. I have no real documentation on the fields, but
-        they all seem to start with the "media." prefix (e.g. media.name,
-        media.stream_data).
+    def get_info(self, media_id, fields=None, schema=None):
         """
-        params = {
-            "media_id": media_id
-        }
+            Returns the data for a certain media item.
+
+            :param media_id: id that identifies the media item to be accessed.
+            :param fields: list of the media"s field to be returned. By default the
+            API returns some fields, but others are not returned unless they are
+            explicity asked for. I have no real documentation on the fields, but
+            they all seem to start with the "media." prefix (e.g. media.name,
+            media.stream_data).
+            :param schema: validation schema to use
+        """
+        params = {"media_id": media_id}
 
         if fields:
             params["fields"] = ",".join(fields)
 
-        return self._api_call("info", params, **kwargs)
+        return self._api_call("info", params, schema=schema)
 
 
 class Crunchyroll(Plugin):
@@ -265,8 +307,8 @@ class Crunchyroll(Plugin):
         media_id = int(match.group("media_id"))
 
         try:
-            info = api.get_info(media_id, fields=["media.stream_data"],
-                                schema=_media_schema)
+            # the media.stream_data field is required, no stream data is returned otherwise
+            info = api.get_info(media_id, fields=["media.stream_data"], schema=_media_schema)
         except CrunchyrollAPIError as err:
             raise PluginError(u"Media lookup error: {0}".format(err.msg))
 
@@ -300,18 +342,6 @@ class Crunchyroll(Plugin):
 
         return streams
 
-    def _get_device_id(self):
-        """Returns the saved device id or creates a new one and saves it."""
-        device_id = self.cache.get("device_id")
-
-        if not device_id:
-            # Create a random device id and cache it for a year
-            char_set = string.ascii_letters + string.digits
-            device_id = "".join(random.sample(char_set, 32))
-            self.cache.set("device_id", device_id, 365 * 24 * 60 * 60)
-
-        return device_id
-
     def _create_api(self):
         """Creates a new CrunchyrollAPI object, initiates it's session and
         tries to authenticate it either by using saved credentials or the
@@ -322,50 +352,35 @@ class Crunchyroll(Plugin):
             self.cache.set("auth", None, 0)
             self.cache.set("session_id", None, 0)
 
-        current_time = datetime.datetime.utcnow()
-        device_id = self._get_device_id()
         # use the crunchyroll locale as an override, for backwards compatibility
         locale = self.get_option("locale") or self.session.localization.language_code
-        api = CrunchyrollAPI(
-            self.options.get("session_id") or self.cache.get("session_id"), self.cache.get("auth"), locale
-        )
+        api = CrunchyrollAPI(self.cache, session_id=self.get_option("session_id"), locale=locale)
 
-        self.logger.debug("Creating session with locale: {0}", locale)
-        api.session_id = api.start_session(device_id, schema=_session_schema)
+        if not self.get_option("session_id"):
+            self.logger.debug("Creating session with locale: {0}", locale)
+            api.start_session()
 
-        # Save session and hope it lasts for a few hours
-        self.cache.set("session_id", api.session_id, 4 * 60 * 60)
-        self.logger.debug("Session created")
-
-        if api.auth:
-            self.logger.debug("Using saved credentials")
-        elif self.options.get("username"):
-            try:
-                self.logger.debug("Attempting to login using username and password")
-                login = api.login(
-                    self.options.get("username"),
-                    self.options.get("password"),
-                    schema=_login_schema
-                )
-                api.auth = login["auth"]
-
-                user_session_id = api.start_session(device_id, schema=_session_schema)
-                if user_session_id != api.session_id:
-                    self.logger.warning("Session ID does not match account, resetting session ID")
-                    api.session_id = user_session_id
-
+            if api.auth:
+                self.logger.debug("Using saved credentials")
+                login = api.authenticate()
                 self.logger.info("Successfully logged in as '{0}'",
                                  login["user"]["username"] or login["user"]["email"])
+            elif self.options.get("username"):
+                try:
+                    self.logger.debug("Attempting to login using username and password")
+                    api.login(self.options.get("username"),
+                              self.options.get("password"))
+                    login = api.authenticate()
+                    self.logger.info("Logged in as '{0}'",
+                                     login["user"]["username"] or login["user"]["email"])
 
-                expires = (login["expires"] - current_time).total_seconds()
-                self.cache.set("auth", login["auth"], expires)
-            except CrunchyrollAPIError as err:
-                raise PluginError(u"Authentication error: {0}".format(err.msg))
-        else:
-            self.logger.warning(
-                "No authentication provided, you won't be able to access "
-                "premium restricted content"
-            )
+                except CrunchyrollAPIError as err:
+                    raise PluginError(u"Authentication error: {0}".format(err.msg))
+            else:
+                self.logger.warning(
+                    "No authentication provided, you won't be able to access "
+                    "premium restricted content"
+                )
 
         return api
 

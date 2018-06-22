@@ -27,7 +27,7 @@ class TestStreamToURL(unittest.TestCase):
 
     def test_http_stream(self):
         expected = "http://test.se/stream"
-        stream = HTTPStream(self.session, expected)
+        stream = HTTPStream(self.session, expected, invalid_arg="invalid")
         self.assertEqual(expected, stream_to_url(stream))
         self.assertEqual(expected, stream.to_url())
 

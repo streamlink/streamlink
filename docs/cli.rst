@@ -44,8 +44,8 @@ even on Windows.
 
 .. code-block:: console
 
-    $ streamlink hlsvariant://file://C:/hls/playlist.m3u8
-    [cli][info] Found matching plugin stream for URL hlsvariant://file://C:/hls/playlist.m3u8
+    $ streamlink hls://file://C:/hls/playlist.m3u8
+    [cli][info] Found matching plugin stream for URL hls://file://C:/hls/playlist.m3u8
     Available streams: 180p (worst), 272p, 408p, 554p, 818p, 1744p (best)
 
 
@@ -100,13 +100,6 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config
                   - ~/.streamlinkrc
 Windows           %APPDATA%\\streamlink\\streamlinkrc
 ================= ====================================================
-
-.. note::
-  Currently the Windows installer does not create the streamlinkrc file. This
-  is a known issue being tracked
-  `here <https://github.com/streamlink/streamlink/issues/81>`_. An example
-  configuration file is available in the
-  `repo <https://github.com/streamlink/streamlink/blob/master/win32/streamlinkrc>`_.
 
 You can also specify the location yourself using the :option:`--config` option.
 
@@ -321,12 +314,14 @@ Name                           Prefix
 ============================== =================================================
 Adobe HTTP Dynamic Streaming   hds://
 Akamai HD Adaptive Streaming   akamaihd://
-Apple HTTP Live Streaming      hls:// hlsvariant:// [1]_
+Apple HTTP Live Streaming      hls:// [1]_
+MPEG-DASH [2]_                 dash://
 Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
 Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 ============================== =================================================
 
 .. [1] supports local files using the file:// protocol
+.. [2] Dynamic Adaptive Streaming over HTTP
 .. _cli-options:
 
 Proxy Support
@@ -362,4 +357,3 @@ Command-line usage
 .. argparse::
     :module: streamlink_cli.main
     :attr: parser_helper
-

@@ -60,6 +60,9 @@ cinergroup              - showtv.com.tr      Yes   No
 crunchyroll             crunchyroll.com      --    Yes
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
+delfi                   - delfi.lt           --    Yes
+                        - delfi.ee
+                        - delfi.lv
 deutschewelle           dw.com               Yes   Yes
 dingittv                dingit.tv            Yes   Yes
 dogan                   - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
@@ -114,6 +117,7 @@ liveedu                 - liveedu.tv         Yes   --    Some streams require a 
                         - livecoding.tv
 liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
+lrt                     lrt.lt               Yes   No
 media_ccc_de            - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
                         - streaming... [4]_
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
@@ -209,6 +213,7 @@ tga                     - star.plu.cn        Yes   No
                         - star.longzhu.com
 theplatform             player.thepl... [7]_ No    Yes
 tigerdile               tigerdile.com        Yes   --
+tlctr                   tlctv.com.tr         Yes   No
 trt                     trt.net.tr           Yes   No    Some streams may be geo-restricted to Turkey.
 trtspor                 trtspor.com          Yes   No    Some streams are geo-restricted to Turkey.
 turkuvaz                - atv.com.tr         Yes   No

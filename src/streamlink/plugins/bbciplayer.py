@@ -82,7 +82,10 @@ class BBCiPlayer(Plugin):
         PluginArgument(
             "hd",
             action="store_true",
-            help="Prefer HD streams over local SD streams, some live programmes may not be broadcast in HD."
+            help="""
+            Prefer HD streams over local SD streams, some live programmes may
+            not be broadcast in HD.
+            """
         ),
     )
 
