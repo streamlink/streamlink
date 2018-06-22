@@ -7,6 +7,7 @@ from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
 import streamlink
+from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
@@ -128,14 +129,20 @@ class SteamBroadcastPlugin(Plugin):
                 captchagid = resp[u"captcha_gid"]
                 log.error("Captcha result required, open this URL to see the captcha: {}".format(
                     self._captcha_url.format(captchagid)))
-                captcha_text = self.input_ask("Captcha text")
+                try:
+                    captcha_text = self.input_ask("Captcha text")
+                except FatalPluginError:
+                    captcha_text = None
                 if not captcha_text:
                     return False
             else:
                 # If the user must enter the code that was emailed to them
                 if resp.get(u"emailauth_needed"):
                     if not emailauth:
-                        emailauth = self.input_ask("Email auth code required")
+                        try:
+                            emailauth = self.input_ask("Email auth code required")
+                        except FatalPluginError:
+                            emailauth = None
                         if not emailauth:
                             return False
                     else:
@@ -143,7 +150,10 @@ class SteamBroadcastPlugin(Plugin):
 
                 # If the user must enter a two factor auth code
                 if resp.get(u"requires_twofactor"):
-                    twofactorcode = self.input_ask("Two factor auth code required")
+                    try:
+                        twofactorcode = self.input_ask("Two factor auth code required")
+                    except FatalPluginError:
+                        twofactorcode = None
                     if not twofactorcode:
                         return False
 
