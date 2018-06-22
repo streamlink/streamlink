@@ -10,8 +10,6 @@ import sys
 import signal
 import webbrowser
 
-from random import randint
-
 from contextlib import closing
 from distutils.version import StrictVersion
 from functools import partial

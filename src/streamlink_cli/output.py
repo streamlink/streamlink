@@ -7,7 +7,7 @@ from time import sleep
 
 import re
 
-from .compat import is_win32, is_py2, stdout, shlex_quote, maybe_decode
+from .compat import is_win32, is_py2, stdout, shlex_quote, maybe_encode, maybe_decode
 from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 from .utils import ignored, get_filesystem_encoding
 
@@ -159,19 +159,14 @@ class PlayerOutput(Output):
                 self.stderr.close()
 
     def _open_call(self):
-        subprocess.call(self._create_arguments(),
+        subprocess.call(maybe_encode(self._create_arguments()),
                         stdout=self.stdout,
                         stderr=self.stderr)
 
     def _open_subprocess(self):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
-        if is_py2:
-            encoded_arguments = self._create_arguments().encode(get_filesystem_encoding())
-        else:
-            encoded_arguments = self._create_arguments()
-
-        self.player = subprocess.Popen(encoded_arguments,
+        self.player = subprocess.Popen(maybe_encode(self._create_arguments(),encoding=get_filesystem_encoding()),
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
