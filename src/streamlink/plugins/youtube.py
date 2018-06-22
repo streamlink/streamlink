@@ -1,6 +1,7 @@
 import re
 
 from requests import codes
+from time import sleep
 
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
@@ -411,6 +412,17 @@ class YouTube(Plugin):
                               "try youtube-dl instead")
 
         return streams
+    
+    def handle_403(self, url, query):
+        res = http.get(url, params=query, raise_for_status=False)
+        if res.status_code == codes.ok:
+            return res
+        else:
+            while res.status_code == codes.forbidden:
+                self.logger.info("YouTube says \"Forbidden\". Retrying api call to {0} in 1 second", url)
+                sleep (1)
+                res = http.get(url, params=query, raise_for_status=False)
+        return res
 
     def set_title_info(self):
         query = {
@@ -418,7 +430,7 @@ class YouTube(Plugin):
             "id" : self.video_id,
             "key": API_KEY
         }
-        res = http.get(API_BASE+"/videos", params=query)
+        res = self.handle_403(API_BASE+"/videos", query)
         allInfo = http.json(res, schema=_title_info_schema)
 
         for info in allInfo:
@@ -442,7 +454,7 @@ class YouTube(Plugin):
                 "id" : self.category_id,
                 "key": API_KEY
             }
-            res = http.get(API_BASE+"/videoCategories", params=query)
+            res = self.handle_403(API_BASE+"/videoCategories", query)
             allInfo = http.json(res, schema=_category_info_schema)
             for info in allInfo:
                 self.category = info["snippet"]["title"]
@@ -458,7 +470,7 @@ class YouTube(Plugin):
                 "id" : self.channel_id,
                 "key": API_KEY
             }
-            res = http.get(API_BASE+"/channels", params=query)
+            res = self.handle_403(API_BASE+"/channels", query)
             allInfo = http.json(res, schema=_channel_info_schema)
             for info in allInfo:
                 self.author = info["brandingSettings"]["channel"]["title"]

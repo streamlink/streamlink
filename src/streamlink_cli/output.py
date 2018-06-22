@@ -7,7 +7,7 @@ from time import sleep
 
 import re
 
-from .compat import is_win32, stdout, shlex_quote
+from .compat import is_win32, is_py2, stdout, shlex_quote
 from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 from .utils import ignored
 
@@ -143,8 +143,11 @@ class PlayerOutput(Output):
 
         # player command
         if is_win32:
-            return cmd + " " + subprocess.list2cmdline(extra_args) + " " + args
-        return shlex.split(cmd) + extra_args + shlex.split(args)
+            if is_py2:
+                return unicode.join( u'', [ cmd, " ", subprocess.list2cmdline(extra_args).decode('utf-8'), " ", args ] )
+            else:
+                return cmd + " " + subprocess.list2cmdline(extra_args) + " " + args
+        return shlex.split(cmd) + extra_args + shlex.split(args) #TODO test linux + py2
 
     def _open(self):
         try:
@@ -166,7 +169,18 @@ class PlayerOutput(Output):
     def _open_subprocess(self):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
-        self.player = subprocess.Popen(self._create_arguments(),
+        if is_py2:
+            fileSystemEncoding = sys.getfilesystemencoding()
+            if fileSystemEncoding is None: #`None` not possible after python 3.2
+                if is_win32:
+                    fileSystemEncoding = 'mbcs'
+                else:
+                    fileSystemEncoding = 'utf-8'
+            encoded_arguments = self._create_arguments().encode(fileSystemEncoding)
+        else:
+            encoded_arguments = self._create_arguments()
+
+        self.player = subprocess.Popen(encoded_arguments,
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)

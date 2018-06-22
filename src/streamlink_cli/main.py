@@ -10,6 +10,8 @@ import sys
 import signal
 import webbrowser
 
+from random import randint
+
 from contextlib import closing
 from distutils.version import StrictVersion
 from functools import partial
@@ -130,11 +132,35 @@ def create_http_server(host=None, port=0):
 
 def create_title(plugin=None):
     if args.title and plugin:
-        _title = plugin.get_title()
-        _author = plugin.get_author()
-        _category = plugin.get_category()
-        _game = _category
+        _title = _author = _category = _game = None
         
+        #"did the user include a format code?" logic
+        tokens = ["t17L3_XXQZ","4uTh0r_qZ","c4Teg0ry_zQ","G4m3_z4"]
+        for i in range(4):
+            while tokens[i] in args.title:
+                #keep adding random characters A through Z until
+                #we have generated a substring that is not in
+                #the user-defined original string
+                
+                #this code should almost never run because `tokens`
+                #has already been defined with unlikely substrings
+                tokens[i] = tokens[i] + chr(randint(65,90))
+        args_title_formatted = args.title.format(title=tokens[0],
+                                                 author=tokens[1],
+                                                 category=tokens[2],
+                                                 game=tokens[3])
+    
+        #only call these functions if user requests them
+        if args.title != args_title_formatted:
+            if tokens[0] in args_title_formatted:
+                _title = plugin.get_title()
+            if tokens[1] in args_title_formatted:
+                _author = plugin.get_author()
+            if tokens[2] in args_title_formatted or tokens[3] in args_title_formatted:
+                _category = plugin.get_category()
+                _game = _category
+        
+        #handle if plugin leaves one of the above plugin.functions undefined
         if _title is None:
             _title = DEFAULT_STREAM_METADATA["title"]
         if _author is None:
@@ -144,17 +170,21 @@ def create_title(plugin=None):
         if _game is None:
             _game = DEFAULT_STREAM_METADATA["game"]
         
+        #python 2 unicode handling
+        if is_py2:
+            _title = _title.encode("utf-8")
+            _author = _author.encode("utf-8")
+            _category = _category.encode("utf-8")
+            _game = _game.encode("utf-8")
+            
         title = args.title.format(title=_title,
                                   author=_author,
                                   category=_category,
                                   game=_game)
     else:
         title = args.url
-
-    if is_py2:
-        return title.encode("utf8")
-    else:
-        return title
+    return title
+    
 def iter_http_requests(server, player):
     """Repeatedly accept HTTP connections on a server.
 
