@@ -43,7 +43,7 @@ def shlex_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
         
 def maybe_encode(text, encoding="utf8"):
-    if is_py2 and isinstance(text, str):
+    if is_py2:
         return text.encode(encoding)
     else:
         return text

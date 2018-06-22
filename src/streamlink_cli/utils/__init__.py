@@ -42,4 +42,4 @@ def get_filesystem_encoding():
             fileSystemEncoding = 'mbcs'
         else:
             fileSystemEncoding = 'utf-8'
-    return fileSystemEncoding;
+    return fileSystemEncoding

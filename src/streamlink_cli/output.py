@@ -159,14 +159,14 @@ class PlayerOutput(Output):
                 self.stderr.close()
 
     def _open_call(self):
-        subprocess.call(self._create_arguments(),
+        subprocess.call(maybe_encode(self._create_arguments()),
                         stdout=self.stdout,
                         stderr=self.stderr)
 
     def _open_subprocess(self):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
-        self.player = subprocess.Popen(maybe_encode(self._create_arguments(),encoding=get_filesystem_encoding()),
+        self.player = subprocess.Popen(maybe_encode(self._create_arguments(), encoding=get_filesystem_encoding()),
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
