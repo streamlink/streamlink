@@ -44,7 +44,7 @@ class Streamlink(object):
     """A Streamlink session is used to keep track of plugins,
        options and log settings."""
 
-    def __init__(self):
+    def __init__(self, options=None):
         self.http = api.HTTPSession()
         self.options = Options({
             "hds-live-edge": 10.0,
@@ -74,12 +74,14 @@ class Streamlink(object):
             "ffmpeg-ffmpeg": None,
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy",
-            "locale": None
+            "locale": None,
+            "user-input-requester": None
         })
+        if options:
+            self.options.update(options)
         self.plugins = {}
         self.load_builtin_plugins()
         self._logger = None
-
 
     @property
     def logger(self):
@@ -232,6 +234,11 @@ class Streamlink(object):
         locale                   (str) Locale setting, in the RFC 1766 format
                                  eg. en_US or es_ES
                                  default: ``system locale``.
+
+        user-input-requester     (UserInputRequester) instance of UserInputRequester
+                                 to collect input from the user at runtime. Must be
+                                 set before the plugins are loaded.
+                                 default: ``UserInputRequester``.
         ======================== =========================================
 
         """
@@ -458,6 +465,7 @@ class Streamlink(object):
 
     def load_plugin(self, name, file, pathname, desc):
         # Set the global http session for this plugin
+        user_input_requester = self.get_option("user-input-requester")
         api.http = self.http
 
         module = imp.load_module(name, file, pathname, desc)
@@ -467,7 +475,7 @@ class Streamlink(object):
             plugin_name = module_name.split(".")[-1]  # get the plugin part of the module name
 
             plugin = getattr(module, "__plugin__")
-            plugin.bind(self, plugin_name)
+            plugin.bind(self, plugin_name, user_input_requester)
 
             if plugin.module in self.plugins:
                 log.debug("Plugin {0} is being overridden by {1}".format(plugin.module, pathname))

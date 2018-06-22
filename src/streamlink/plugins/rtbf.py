@@ -1,14 +1,11 @@
 import datetime
-try:
-    from HTMLParser import HTMLParser
-except ImportError:
-    from html.parser import HTMLParser
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
+from streamlink.compat import html_unescape
 
 
 class RTBF(Plugin):
@@ -36,7 +33,7 @@ class RTBF(Plugin):
             None,
             validate.all(
                 validate.get(1),
-                validate.transform(HTMLParser().unescape),
+                validate.transform(html_unescape),
                 validate.transform(parse_json),
                 {
                     'geoLocRestriction': validate.text,

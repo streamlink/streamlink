@@ -1,7 +1,8 @@
 import sys
+import os.path
 
 from streamlink.plugin.api.validate import xml_element, text
-from streamlink.utils import update_scheme, url_equal, search_dict
+from streamlink.utils import update_scheme, url_equal, search_dict, load_module
 
 try:
     import xml.etree.cElementTree as ET
@@ -11,10 +12,10 @@ from streamlink import PluginError
 from streamlink.plugin.api import validate
 from streamlink.utils import *
 
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
+
+# used in the import test to verify that this module was imported
+__test_marker__ = "test_marker"
 
 
 class TestUtil(unittest.TestCase):
@@ -150,4 +151,13 @@ class TestUtil(unittest.TestCase):
         self.assertSequenceEqual(
             list(sorted(search_dict({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner"))),
             list(sorted(["test1", "test2"]))
+        )
+
+    def test_load_module_non_existent(self):
+        self.assertRaises(ImportError, load_module, "non_existent_module", os.path.dirname(__file__))
+
+    def test_load_module(self):
+        self.assertEqual(
+            sys.modules[__name__].__test_marker__,
+            load_module(__name__.split(".")[-1], os.path.dirname(__file__)).__test_marker__
         )
