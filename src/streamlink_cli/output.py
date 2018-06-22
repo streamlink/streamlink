@@ -159,7 +159,7 @@ class PlayerOutput(Output):
                 self.stderr.close()
 
     def _open_call(self):
-        subprocess.call(maybe_encode(self._create_arguments()),
+        subprocess.call(self._create_arguments(),
                         stdout=self.stdout,
                         stderr=self.stderr)
 
