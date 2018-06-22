@@ -4,6 +4,7 @@ from string import printable
 from textwrap import dedent
 
 from streamlink import logger
+from streamlink.utils.times import hours_minutes_seconds
 from .constants import (
     LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
 )
@@ -24,7 +25,6 @@ _option_re = re.compile(r"""
     \s*
     (?P<value>.*) # The value, anything goes.
 """, re.VERBOSE)
-_hours_minutes_seconds_re = re.compile(r"-?(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)")
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -138,23 +138,6 @@ def boolean(value):
         raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths + falses)))
 
     return value.lower() in truths
-
-
-def hours_minutes_seconds(value):
-    """
-    converts hours:minutes:seconds to seconds
-    :param value: hh:mm:ss
-    :return: seconds
-    """
-    match = _hours_minutes_seconds_re.match(value)
-    if not match:
-        raise ValueError
-    s = 0
-    s += int(match.group("hours")) * 60 * 60
-    s += int(match.group("minutes")) * 60
-    s += int(match.group("seconds"))
-
-    return s
 
 
 def build_parser():
