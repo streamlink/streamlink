@@ -131,10 +131,10 @@ def create_http_server(host=None, port=0):
 def create_title(plugin=None):
     if args.title and plugin:
         title = LazyFormatter.format(maybe_encode(args.title),
-                                     title=[plugin.get_title(),DEFAULT_STREAM_METADATA["title"]],
-                                     author=[plugin.get_author(),DEFAULT_STREAM_METADATA["author"]],
-                                     category=[plugin.get_category(),DEFAULT_STREAM_METADATA["category"]],
-                                     game=[plugin.get_category(),DEFAULT_STREAM_METADATA["game"]])
+                             title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
+                             author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
+                             category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
+                             game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"])
     else:
         title = args.url
     return title

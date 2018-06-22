@@ -6,10 +6,10 @@ class LazyFormatter(object):
 
     def __getitem__(self, item):
         value = self.lazy_props[item]
-        if value[0] is None:
-            return value[1]
+        if callable(value):
+            return value()
         else:
-            return value[0]
+            return value
 
     @classmethod
     def format(cls, fmt, **lazy_props):
