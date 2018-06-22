@@ -7,9 +7,9 @@ from time import sleep
 
 import re
 
-from .compat import is_win32, is_py2, stdout, shlex_quote
+from .compat import is_win32, is_py2, stdout, shlex_quote, maybe_decode
 from .constants import DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
-from .utils import ignored
+from .utils import ignored, get_filesystem_encoding
 
 if is_win32:
     import msvcrt
@@ -143,10 +143,7 @@ class PlayerOutput(Output):
 
         # player command
         if is_win32:
-            if is_py2:
-                return unicode.join( u'', [ cmd, " ", subprocess.list2cmdline(extra_args).decode('utf-8'), " ", args ] )
-            else:
-                return cmd + " " + subprocess.list2cmdline(extra_args) + " " + args
+            return  u''.join([cmd, " ", maybe_decode(subprocess.list2cmdline(extra_args)), " ", args])
         return shlex.split(cmd) + extra_args + shlex.split(args) #TODO test linux + py2
 
     def _open(self):
@@ -170,13 +167,7 @@ class PlayerOutput(Output):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
         if is_py2:
-            fileSystemEncoding = sys.getfilesystemencoding()
-            if fileSystemEncoding is None: #`None` not possible after python 3.2
-                if is_win32:
-                    fileSystemEncoding = 'mbcs'
-                else:
-                    fileSystemEncoding = 'utf-8'
-            encoded_arguments = self._create_arguments().encode(fileSystemEncoding)
+            encoded_arguments = self._create_arguments().encode(get_filesystem_encoding())
         else:
             encoded_arguments = self._create_arguments()
 
