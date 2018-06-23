@@ -1,18 +1,14 @@
 import json
-from sys import getfilesystemencoding
-
 from contextlib import contextmanager
 
-from .http_server import HTTPServer
 from streamlink.utils.named_pipe import NamedPipe
-from .progress import progress
-from .player import find_default_player
-from .stream import stream_to_url
-from .lazy_formatter import *
-
+from streamlink_cli.utils.http_server import HTTPServer
+from streamlink_cli.utils.player import find_default_player
+from streamlink_cli.utils.progress import progress
+from streamlink_cli.utils.stream import stream_to_url
 
 __all__ = [
-    "NamedPipe", "HTTPServer", "JSONEncoder", "LazyFormatter",
+    "NamedPipe", "HTTPServer", "JSONEncoder",
     "find_default_player", "ignored", "progress", "stream_to_url"
 ]
 
@@ -35,11 +31,3 @@ def ignored(*exceptions):
         pass
 
 
-def get_filesystem_encoding():
-    fileSystemEncoding = getfilesystemencoding()
-    if fileSystemEncoding is None: #`None` not possible after python 3.2
-        if is_win32:
-            fileSystemEncoding = 'mbcs'
-        else:
-            fileSystemEncoding = 'utf-8'
-    return fileSystemEncoding

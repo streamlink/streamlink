@@ -156,6 +156,7 @@ def hours_minutes_seconds(value):
 
     return s
 
+
 def build_parser():
     parser = ArgumentParser(
         prog="streamlink",
@@ -509,28 +510,30 @@ def build_parser():
         This option is only supported for the following players: {0}.
 
         {{title}}
-          If available, this is the title of the stream.
-          Otherwise, it is the string "{1}"
+            If available, this is the title of the stream.
+            Otherwise, it is the string "{1}"
 
         {{author}}
-          If available, this is the author of the stream.
-          Otherwise, it is the string "{2}"
+            If available, this is the author of the stream.
+            Otherwise, it is the string "{2}"
 
         {{category}}
-          If available, this is the category the stream has been placed into.
-              For twitch, this is the game being played
-              For youtube, it's the category e.g. Gaming, Sports, Music...
-          Otherwise, it is the string "{3}"
+            If available, this is the category the stream has been placed into.
+            
+            - For twitch, this is the game being played
+            - For youtube, it's the category e.g. Gaming, Sports, Music...
+            
+            Otherwise, it is the string "{3}"
 
         {{game}}
-          This is just a synonym for {{category}} which may make more sense for
-          gaming oriented platforms. "Game being played" is a way to categorize
-          the stream, so it doesn't need its own seperate handling.
-
-        """.format( ', '.join(SUPPORTED_PLAYERS.keys()),
-                    DEFAULT_STREAM_METADATA['title'],
-                    DEFAULT_STREAM_METADATA['author'],
-                    DEFAULT_STREAM_METADATA['category'])
+            This is just a synonym for {{category}} which may make more sense for
+            gaming oriented platforms. "Game being played" is a way to categorize
+            the stream, so it doesn't need its own separate handling.
+            
+        """.format(', '.join(SUPPORTED_PLAYERS.keys()),
+                   DEFAULT_STREAM_METADATA['title'],
+                   DEFAULT_STREAM_METADATA['author'],
+                   DEFAULT_STREAM_METADATA['category'])
     )
 
     output = parser.add_argument_group("File output options")

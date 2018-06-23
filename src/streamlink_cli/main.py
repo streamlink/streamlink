@@ -26,14 +26,16 @@ from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
+from streamlink.utils import LazyFormatter
 
 import streamlink.logger as logger
 from .argparser import build_parser
-from .compat import stdout, is_win32, is_py2, is_py3, maybe_encode
+from .compat import stdout, is_win32, is_py2, is_py3
+from streamlink.utils.encoding import maybe_encode
 from .console import ConsoleOutput, ConsoleUserInputRequester
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url, LazyFormatter
+from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -138,7 +140,7 @@ def create_title(plugin=None):
     else:
         title = args.url
     return title
-    
+
 def iter_http_requests(server, player):
     """Repeatedly accept HTTP connections on a server.
 
