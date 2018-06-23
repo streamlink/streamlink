@@ -1,7 +1,8 @@
 # coding=utf8
 import unittest
 
-from streamlink.compat import is_win32
+from streamlink.compat import is_win32, is_py3
+from streamlink.utils import get_filesystem_encoding
 from tests.test_cmdline import CommandLineTestCase
 
 
@@ -30,10 +31,15 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe", "--title", "{title}", "http://test.se", "test"],
                         "c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"Test Title\" -")
 
-    @unittest.skip("encoding unknown")
-    def test_open_player_with_unicode_author_vlc(self):
+    @unittest.skipIf(is_py3, "Encoding is different in Python 2")
+    def test_open_player_with_unicode_author_vlc_py2(self):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe", "--title", "{author}", "http://test.se", "test"],
-                        "c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"T\xd1\xa5st \xc4\x80u\xc6\xadh\xc7\xbfr\" -")
+                        "c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"" + u"Tѥst Āuƭhǿr".encode(get_filesystem_encoding()) + "\" -")
+
+    @unittest.skipIf(not is_py3, "Encoding is different in Python 2")
+    def test_open_player_with_unicode_author_vlc_py3(self):
+        self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe", "--title", "{author}", "http://test.se", "test"],
+                        u"c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"Tѥst Āuƭhǿr\" -")
 
     def test_open_player_with_default_title_vlc(self):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe", "http://test.se", "test"],

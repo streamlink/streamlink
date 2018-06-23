@@ -67,7 +67,7 @@ class FileOutput(Output):
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=False,
+    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=None,
                  namedpipe=None, title=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
