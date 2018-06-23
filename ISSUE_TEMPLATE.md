@@ -1,8 +1,8 @@
 *Thanks for reporting an issue!*
+*This template should only be used if your issue does not fall into one of the existing templates!*
+
 *Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!*
 *Also check the list of known issues before reporting an issue!*
-
-*If this is a plugin request ensure that your request meets the requirements (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests) or else it will be closed.*
 
 *Feel free to use the following template. Be as detailed as possible.*
 *Please see the text preview to avoid unnecessary formatting errors.*
@@ -12,34 +12,12 @@
 
 ### Checklist
 
-- [x] This is a bug report.
-- [ ] This is a feature request.
-- [ ] This is a plugin (improvement) request and I have read the plugin request guidelines.
+- [x] This is not a bug report, feature request, or plugin (improvement) request.
 - [ ] I have read the contribution guidelines.
 
 ### Description
 
 ...
-
-### Expected / Actual behavior
-
-...
-
-### Reproduction steps / Explicit stream URLs to test
-
-1. ...
-2. ...
-3. ...
-
-### Logs
-
-_Logs are always required for a bug report, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l)
-Make sure to **remove username and password**
-You can upload your logs to https://gist.github.com/ or_
-
-```
-REPLACE THIS TEXT WITH YOUR LOG
-```
 
 ### Comments, screenshots, etc.
 
