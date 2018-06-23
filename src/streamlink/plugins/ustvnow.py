@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-import re
+
 import logging
+import re
 from collections import OrderedDict
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
@@ -70,7 +71,7 @@ class USTVNow(Plugin):
         m = self._url_re.match(self.url)
         scode = m and m.group("scode") or self.get_option("station_code")
 
-        res = http.get(self._guide_url)
+        res = http.get(self._guide_url, params=dict(token=token))
 
         channels = OrderedDict()
         for t in itertags(res.text, "a"):
@@ -78,8 +79,8 @@ class USTVNow(Plugin):
                 channels[t.attributes.get('cs').lower()] = t.attributes.get('title').replace("Watch ", "").strip()
 
         if not scode:
-            log.error(u"Station code not provided, use --ustvnow-station-code.")
-            log.info(u"Available stations are: \n{0} ".format('\n'.join('    {0} ({1})'.format(c, n) for c, n in channels.items())))
+            log.error("Station code not provided, use --ustvnow-station-code.")
+            log.info("Available stations are: \n{0} ".format('\n'.join('    {0} ({1})'.format(c, n) for c, n in channels.items())))
             return
 
         if scode in channels:
