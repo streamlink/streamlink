@@ -1,3 +1,4 @@
+import logging
 import os
 import shlex
 import subprocess
@@ -11,6 +12,8 @@ from .utils import ignored
 
 if is_win32:
     import msvcrt
+
+log = logging.getLogger("streamlink.cli.output")
 
 
 class Output(object):
@@ -80,7 +83,8 @@ class PlayerOutput(Output):
         self.namedpipe = namedpipe
         self.http = http
         self.title = title
-        self.player = self.supported_player(self.cmd)
+        self.player = None
+        self.player_name = self.supported_player(self.cmd)
 
         if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
@@ -173,13 +177,13 @@ class PlayerOutput(Output):
 
         if self.title is not None:
             # vlc
-            if self.player == "vlc":
+            if self.player_name == "vlc":
                 # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
                 self.title = self.title.replace("$", "$$").replace("\$$", "$")
                 extra_args.extend(["--input-title-format", self.title])
 
             # mpv
-            if self.player == "mpv":
+            if self.player_name == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
                 self.title = self._mpv_title_escape(self.title)
                 extra_args.extend(["--title", self.title])
@@ -205,14 +209,18 @@ class PlayerOutput(Output):
                 self.stderr.close()
 
     def _open_call(self):
-        subprocess.call(self._create_arguments(),
+        args = self._create_arguments()
+        print("Calling: {0}".format(subprocess.list2cmdline(args)))
+        subprocess.call(args,
                         stdout=self.stdout,
                         stderr=self.stderr)
 
     def _open_subprocess(self):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
-        self.player = subprocess.Popen(self._create_arguments(),
+        args = self._create_arguments()
+        log.debug("Opening subprocess: {0}".format(subprocess.list2cmdline(args)))
+        self.player = subprocess.Popen(args,
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
