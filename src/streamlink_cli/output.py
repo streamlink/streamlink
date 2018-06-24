@@ -140,8 +140,47 @@ class PlayerOutput(Output):
 
             # mpv
             if self.player == "mpv":
-                # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$
-                self.title = self.title.replace("$", "$$").replace("\$$", "$")
+                # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
+                ##mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
+                if '\$>' in self.title:
+                    processedTitle = ""
+                    dollars = 0
+                    doubleDollars = True
+                    i=0
+                    while i < len(self.title):
+                        if doubleDollars:
+                            if self.title[i] == "\\":
+                                if self.title[i+1] == "$":
+                                    processedTitle += "$"
+                                    dollars += 1
+                                    if self.title[i+2] == ">" and dollars % 2 == 1:
+                                        doubleDollars = False
+                                        processedTitle += ">"
+                                        i += 2
+                                    else:
+                                        i += 1
+                                else:
+                                    processedTitle += "\\"
+                            elif self.title[i] == "$":
+                                dollars += 2
+                                processedTitle += "$$"                                    
+                            else:
+                                dollars = 0
+                                processedTitle += self.title[i]
+                        else:
+                            if self.title[i] == "\\":
+                                if self.title[i+1] == "$":
+                                    processedTitle += "$"
+                                    i+=1
+                                else:
+                                    processedTitle += self.title[i]
+                            else:
+                                processedTitle += self.title[i]
+                        i+=1
+                    self.title = processedTitle
+                else:
+                    #not possible for property-expansion to be disabled, happy days
+                    self.title = self.title.replace("$", "$$").replace("\$$", "$")
                 extra_args.extend(["--title", self.title])
 
         # player command
@@ -150,7 +189,7 @@ class PlayerOutput(Output):
             # do not insert and extra " " when there are no extra_args
             return maybe_encode(u' '.join([cmd] + ([eargs] if eargs else []) + [args]),
                                 encoding=get_filesystem_encoding())
-        return shlex.split(cmd) + extra_args + shlex.split(args)  # TODO test linux + py2
+        return shlex.split(cmd) + extra_args + shlex.split(args)
 
     def _open(self):
         try:
