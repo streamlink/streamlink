@@ -41,24 +41,24 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
                         ["/usr/bin/mpv", "--title", 'ends with escape code $$$$ $>', "-"])
 
     def test_open_player_with_title_mpv_escape_4(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "\$> $$ begins with escape and double \$> $$escape codes", "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title", '$> $$ begins with escape and double $> $$escape codes', "-"])
+        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "\$> $$ begins with escape and double \$> $$ escape codes", "http://test.se", "test"],
+                        ["/usr/bin/mpv", "--title", '$> $$ begins with escape and double $> $$ escape codes', "-"])
 
     def test_open_player_with_title_mpv_escape_5(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", r'\$> \\$> showing "\$>" after escaping', "http://test.se", "test"],
                         ["/usr/bin/mpv", "--title", r'$> \$> showing "$>" after escaping', "-"])
 
     def test_open_player_with_title_mpv_escape_6(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "$$$$$$> not a valid way to escape", "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title", '$$$$$$$$$$$$> not a valid way to escape', "-"])
+        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "$$$$$$> not a valid way to escape $", "http://test.se", "test"],
+                        ["/usr/bin/mpv", "--title", '$$$$$$$$$$$$> not a valid way to escape $$', "-"])
 
     def test_open_player_with_title_mpv_escape_7(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "$> also not a valid way to escape", "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title", '$$> also not a valid way to escape', "-"])
+        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "$> also not a valid way to escape $", "http://test.se", "test"],
+                        ["/usr/bin/mpv", "--title", '$$> also not a valid way to escape $$', "-"])
 
     def test_open_player_with_title_mpv_escape_8(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "not valid $$$$$$> not a valid way to escape", "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title", 'not valid $$$$$$$$$$$$> not a valid way to escape', "-"])
+        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "not valid $$$$$$> not a valid way to escape $", "http://test.se", "test"],
+                        ["/usr/bin/mpv", "--title", 'not valid $$$$$$$$$$$$> not a valid way to escape $$', "-"])
 
     def test_open_player_with_title_mpv_escape_9(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "Multiple $> \$> $> $$ \$> $$> $> \$> $> $> \$> \$> \$>\$>$$$$", "http://test.se", "test"],
@@ -89,8 +89,8 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
                         ["/usr/bin/mpv", "--title", 'even and odd $$> $$$$ $$$> $$', "-"])
 
     def test_open_player_with_title_mpv_escape_16(self):
-        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", r'\\$\$> \\$> showing "\$>" before escaping', "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title", r'\$$> \$> showing "$>" before escaping', "-"])
+        self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", r'\$\$> $$$ \\$> $ showing "\$>" before escaping', "http://test.se", "test"],
+                        ["/usr/bin/mpv", "--title", r'$$> $$$$$$ \$> $ showing "$>" before escaping', "-"])
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")
 class TestCommandLineWithTitleWindows(CommandLineTestCase):
