@@ -187,6 +187,7 @@ class YouTube(Plugin):
         self.title = None
         self.channel_id = None
         self.category_id = None
+        self.video_id = None
 
     arguments = PluginArguments(
         PluginArgument(
@@ -335,10 +336,10 @@ class YouTube(Plugin):
                 if "channel" in query_info:
                     video_id = self._get_channel_video(query_info["channel"])
         
-        self.video_id = video_id
-
         if not video_id:
             return
+
+        self.video_id = video_id
 
         # normal
         _params_1 = {"el": "detailpage"}
@@ -412,25 +413,21 @@ class YouTube(Plugin):
                               "try youtube-dl instead")
 
         return streams
-    
-    def handle_403(self, url, query):
-        res = http.get(url, params=query, raise_for_status=False)
-        if res.status_code == codes.ok:
-            return res
-        else:
-            while res.status_code == codes.forbidden:
-                self.logger.info("YouTube says \"Forbidden\". Retrying api call to {0} in 1 second", url)
-                sleep (1)
-                res = http.get(url, params=query, raise_for_status=False)
-        return res
 
     def set_title_info(self):
+        if self.video_id is None:
+            self.video_id = self._find_channel_video()
+        
         query = {
             "part": "id,snippet",
             "id" : self.video_id,
             "key": API_KEY
         }
-        res = self.handle_403(API_BASE+"/videos", query)
+        url = API_BASE+"/videos"
+        res = http.get(url, params=query, raise_for_status=False)
+        if res.status_code != codes.ok:
+            self.logger.warn("YouTube API call to {0} failed with code {1}. {2} is not available now.", url, res.status_code, "Title Name")
+            return None
         allInfo = http.json(res, schema=_title_info_schema)
 
         for info in allInfo:
@@ -454,7 +451,11 @@ class YouTube(Plugin):
                 "id" : self.category_id,
                 "key": API_KEY
             }
-            res = self.handle_403(API_BASE+"/videoCategories", query)
+            url = API_BASE+"/videoCategories"
+            res = http.get(url, params=query, raise_for_status=False)
+            if res.status_code != codes.ok:
+                self.logger.warn("YouTube API call to {0} failed with code {1}. {2} is not available now.", url, res.status_code, "Category Name")
+                return None
             allInfo = http.json(res, schema=_category_info_schema)
             for info in allInfo:
                 self.category = info["snippet"]["title"]
@@ -470,7 +471,11 @@ class YouTube(Plugin):
                 "id" : self.channel_id,
                 "key": API_KEY
             }
-            res = self.handle_403(API_BASE+"/channels", query)
+            url = API_BASE+"/channels"
+            res = http.get(url, params=query, raise_for_status=False)
+            if res.status_code != codes.ok:
+                self.logger.warn("YouTube API call to {0} failed with code {1}. {2} is not available now.", url, res.status_code, "Channel Name")
+                return None
             allInfo = http.json(res, schema=_channel_info_schema)
             for info in allInfo:
                 self.author = info["brandingSettings"]["channel"]["title"]

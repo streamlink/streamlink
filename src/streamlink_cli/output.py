@@ -168,12 +168,9 @@ class PlayerOutput(Output):
                                 dollars = 0
                                 processedTitle += self.title[i]
                         else:
-                            if self.title[i] == "\\":
-                                if self.title[i+1] == "$":
-                                    processedTitle += "$"
-                                    i+=1
-                                else:
-                                    processedTitle += self.title[i]
+                            if self.title[i] == "\\" and self.title[i+1] == "$":
+                                processedTitle += "$"
+                                i+=1
                             else:
                                 processedTitle += self.title[i]
                         i+=1

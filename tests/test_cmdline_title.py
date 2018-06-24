@@ -87,6 +87,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
     def test_open_player_with_title_mpv_escape_15(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "even and odd \$\$> $$ $\$> $$", "http://test.se", "test"],
                         ["/usr/bin/mpv", "--title", 'even and odd $$> $$$$ $$$> $$', "-"])
+
     def test_open_player_with_title_mpv_escape_16(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", r'\\$\$> \\$> showing "\$>" before escaping', "http://test.se", "test"],
                         ["/usr/bin/mpv", "--title", r'\$$> \$> showing "$>" before escaping', "-"])
