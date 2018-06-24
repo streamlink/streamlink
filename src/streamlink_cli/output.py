@@ -117,8 +117,9 @@ class PlayerOutput(Output):
             for possiblecmd in possiblecmds:
                 if cmd.startswith(possiblecmd):
                     return player
-    
-    def _mpv_title_escape(self, title_string):
+
+    @classmethod
+    def _mpv_title_escape(cls, title_string):
         # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
         if '\$>' in title_string:
             processedTitle = ""
