@@ -192,6 +192,7 @@ srgssr                  - srf.ch             Yes   No    Streams are geo-restric
                         - rtr.ch
 ssh101                  ssh101.com           Yes   No
 startv                  startv.com.tr        Yes   No
+steam                   steamcommunity.com   Yes   No    Some streams will require a Steam account.
 streamable              streamable.com       -     Yes
 streamboat              streamboat.tv        Yes   No
 streamingvideoprovider  streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
