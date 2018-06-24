@@ -117,6 +117,45 @@ class PlayerOutput(Output):
             for possiblecmd in possiblecmds:
                 if cmd.startswith(possiblecmd):
                     return player
+    
+    def _mpv_title_escape(self, title_string):
+        # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
+        if '\$>' in title_string:
+            processedTitle = ""
+            dollars = 0
+            doubleDollars = True
+            i = 0
+            while i < len(title_string):
+                if doubleDollars:
+                    if title_string[i] == "\\":
+                        if title_string[i+1] == "$":
+                            processedTitle += "$"
+                            dollars += 1
+                            if title_string[i+2] == ">" and dollars % 2 == 1:
+                                doubleDollars = False
+                                processedTitle += ">"
+                                i += 2
+                            else:
+                                i += 1
+                        else:
+                            processedTitle += "\\"
+                    elif title_string[i] == "$":
+                        dollars += 2
+                        processedTitle += "$$"
+                    else:
+                        dollars = 0
+                        processedTitle += title_string[i]
+                else:
+                    if title_string[i] == "\\" and title_string[i+1] == "$":
+                        processedTitle += "$"
+                        i += 1
+                    else:
+                        processedTitle += title_string[i]
+                i += 1
+            return processedTitle
+        else:
+            #not possible for property-expansion to be disabled, happy days
+            return title_string.replace("$", "$$").replace("\$$", "$")
 
     def _create_arguments(self):
         if self.namedpipe:
@@ -141,43 +180,7 @@ class PlayerOutput(Output):
             # mpv
             if self.player == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
-                ##mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
-                if '\$>' in self.title:
-                    processedTitle = ""
-                    dollars = 0
-                    doubleDollars = True
-                    i=0
-                    while i < len(self.title):
-                        if doubleDollars:
-                            if self.title[i] == "\\":
-                                if self.title[i+1] == "$":
-                                    processedTitle += "$"
-                                    dollars += 1
-                                    if self.title[i+2] == ">" and dollars % 2 == 1:
-                                        doubleDollars = False
-                                        processedTitle += ">"
-                                        i += 2
-                                    else:
-                                        i += 1
-                                else:
-                                    processedTitle += "\\"
-                            elif self.title[i] == "$":
-                                dollars += 2
-                                processedTitle += "$$"                                    
-                            else:
-                                dollars = 0
-                                processedTitle += self.title[i]
-                        else:
-                            if self.title[i] == "\\" and self.title[i+1] == "$":
-                                processedTitle += "$"
-                                i+=1
-                            else:
-                                processedTitle += self.title[i]
-                        i+=1
-                    self.title = processedTitle
-                else:
-                    #not possible for property-expansion to be disabled, happy days
-                    self.title = self.title.replace("$", "$$").replace("\$$", "$")
+                self.title = self._mpv_title_escape(self.title)
                 extra_args.extend(["--title", self.title])
 
         # player command
