@@ -271,6 +271,7 @@ wwenetwork              network.wwe.com      Yes   Yes   Requires an account to 
 younow                  younow.com           Yes   --
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.
                         - youtu.be
+yupptv                  yupptv.com           Yes   Yes   Some streams require an account and subscription.
 zattoo                  - zattoo.com         Yes   Yes
                         - nettv.net... [10]_
                         - tvonline.ewe.de
