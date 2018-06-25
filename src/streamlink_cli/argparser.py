@@ -392,7 +392,7 @@ def build_parser():
 
         Formatting variables available:
 
-        filename
+        {{filename}}
             This is the filename that the player will use. It's usually "-"
             (stdin), but can also be a URL or a file depending on the options
             used.
@@ -503,11 +503,38 @@ def build_parser():
         metavar="TITLE",
         help="""
         This option allows you to supply a title to be displayed in the 
-        title bar of the window that the player is launched in. If you need
-        to include a brace character, it can be escaped by doubling
-        e.g. {{{{ and }}}}.
+        title bar of the window that the video player is launched in.
+        
+        This value can contain formatting variables surrounded by curly braces,
+        {{ and }}. If you need to include a brace character, it can be escaped
+        by doubling, e.g. {{{{ and }}}}.
 
         This option is only supported for the following players: {0}.
+        
+        VLC specific information:
+            VLC has certain codes you can use inside your title.
+            These are accessible inside --title by using a backslash 
+            before the dollar sign VLC uses to denote a format character.
+            
+            e.g. to put the current date in your VLC window title,
+            the string "\$A" could be inserted inside your title string.
+            
+            A full list of the format codes VLC uses is available here:
+            https://wiki.videolan.org/Documentation:Format_String/
+            
+        mpv specific information:
+            mpv has certain codes you can use inside your title.
+            These are accessible inside --title by using a backslash 
+            before the dollar sign mpv uses to denote a format character.
+            
+            e.g. to put the current version of mpv running inside your
+            mpv window title, the string "\${{mpv-version}}" could be
+            inserted inside your --title string.
+            
+            A full list of the format codes mpv uses is available here:
+            https://mpv.io/manual/stable/#property-expansion
+
+        Formatting variables available to use in --title:
 
         {{title}}
             If available, this is the title of the stream.
@@ -529,6 +556,10 @@ def build_parser():
             This is just a synonym for {{category}} which may make more sense for
             gaming oriented platforms. "Game being played" is a way to categorize
             the stream, so it doesn't need its own separate handling.
+            
+       Examples:
+           %(prog)s -p vlc --title '{title} -!- {author} -!- {category} \$A' <url> [stream]
+           %(prog)s -p mpv --title "{title} -- {author} -- {category} -- (\${{mpv-version}})" <url> [stream]
             
         """.format(', '.join(SUPPORTED_PLAYERS.keys()),
                    DEFAULT_STREAM_METADATA['title'],

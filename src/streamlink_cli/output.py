@@ -127,31 +127,28 @@ class PlayerOutput(Output):
         # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
         if '\$>' in title_string:
             processed_title = ""
-            dollars = 0
             double_dollars = True
-            i = 0
+            i = dollars = 0
             while i < len(title_string):
                 if double_dollars:
                     if title_string[i] == "\\":
                         if title_string[i+1] == "$":
                             processed_title += "$"
                             dollars += 1
-                            if title_string[i+2] == ">" and dollars % 2 == 1:
+                            i += 1
+                            if title_string[i+1] == ">" and dollars % 2 == 1:
                                 double_dollars = False
                                 processed_title += ">"
-                                i += 2
-                            else:
                                 i += 1
                         else:
                             processed_title += "\\"
                     elif title_string[i] == "$":
-                        dollars += 2
                         processed_title += "$$"
                     else:
                         dollars = 0
                         processed_title += title_string[i]
                 else:
-                    if title_string[i] == "\\" and title_string[i+1] == "$":
+                    if title_string[i:i+2] == "\\$":
                         processed_title += "$"
                         i += 1
                     else:
