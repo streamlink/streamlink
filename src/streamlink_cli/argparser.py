@@ -517,7 +517,7 @@ def build_parser():
             before the dollar sign VLC uses to denote a format character.
             
             e.g. to put the current date in your VLC window title,
-            the string "\$A" could be inserted inside your title string.
+            the string "\$A" could be inserted inside your --title string.
             
             A full list of the format codes VLC uses is available here:
             https://wiki.videolan.org/Documentation:Format_String/
@@ -547,8 +547,8 @@ def build_parser():
         {{category}}
             If available, this is the category the stream has been placed into.
             
-            - For twitch, this is the game being played
-            - For youtube, it's the category e.g. Gaming, Sports, Music...
+            - For Twitch, this is the game being played
+            - For YouTube, it's the category e.g. Gaming, Sports, Music...
             
             Otherwise, it is the string "{3}"
 

@@ -416,7 +416,7 @@ class YouTube(Plugin):
     def set_title_info(self):
         if self.video_id is None:
             self.video_id = self._find_channel_video()
-        
+
         query = {
             "part": "id,snippet",
             "id" : self.video_id,
