@@ -21,7 +21,10 @@ before_install:
   - pip install --disable-pip-version-check --upgrade pip setuptools
   - pip install -r dev-requirements.txt
   - pip install pycountry
-  - pip install -r docs-requirements.txt
+  - if [[ $BUILD_DOCS == 'yes' ]]; then
+      pip install -r docs-requirements.txt;
+      pip install doctr;
+    fi
 
 install:
   - pip install -e .
@@ -32,8 +35,11 @@ script:
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
 
 after_success:
-  # push the docs only if the build was successful
-  - bash script/pushdocs.sh
+  - set -e
+  # latest version - push docs for master
+  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' ]]; then doctr deploy latest; fi
+  # stable version - push docs for tags
+  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" ]]; then doctr deploy .; fi
   - codecov
 
 addons:
@@ -89,3 +95,9 @@ deploy:
 
 after_deploy:
   - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' ]]; then ./script/bintrayupdate.sh; fi
+
+doctr:
+  build-tags: True
+  deploy-repo: streamlink/streamlink.github.io
+  key-path: doctr_deploy_key.enc
+  require-master: True

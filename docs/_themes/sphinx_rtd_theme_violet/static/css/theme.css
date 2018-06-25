@@ -327,7 +327,7 @@ big, small {
     page-break-after: avoid;
   }
 }
-.fa:before, .rst-content .admonition-title:before, .rst-content h1 .headerlink:before, .rst-content h2 .headerlink:before, .rst-content h3 .headerlink:before, .rst-content h4 .headerlink:before, .rst-content h5 .headerlink:before, .rst-content h6 .headerlink:before, .rst-content dl dt .headerlink:before, .icon:before, .wy-dropdown .caret:before, .wy-inline-validate.wy-inline-validate-success .wy-input-context:before, .wy-inline-validate.wy-inline-validate-danger .wy-input-context:before, .wy-inline-validate.wy-inline-validate-warning .wy-input-context:before, .wy-inline-validate.wy-inline-validate-info .wy-input-context:before, .wy-alert, .rst-content .note, .rst-content .attention, .rst-content .caution, .rst-content .danger, .rst-content .error, .rst-content .hint, .rst-content .important, .rst-content .tip, .rst-content .warning, .rst-content .seealso, .rst-content .admonition-todo, .btn, input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="date"], input[type="month"], input[type="time"], input[type="datetime"], input[type="datetime-local"], input[type="week"], input[type="number"], input[type="search"], input[type="tel"], input[type="color"], select, textarea, .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a, .wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a, .wy-nav-top a {
+.fa:before, .rst-content .admonition-title:before, .rst-content h1 .headerlink:before, .rst-content h2 .headerlink:before, .rst-content h3 .headerlink:before, .rst-content h4 .headerlink:before, .rst-content h5 .headerlink:before, .rst-content h6 .headerlink:before, .rst-content dl dt .headerlink:before, .icon:before, .wy-dropdown .caret:before, .wy-inline-validate.wy-inline-validate-success .wy-input-context:before, .wy-inline-validate.wy-inline-validate-danger .wy-input-context:before, .wy-inline-validate.wy-inline-validate-warning .wy-input-context:before, .wy-inline-validate.wy-inline-validate-info .wy-input-context:before, .wy-alert, .rst-content .note, .rst-content .attention, .rst-content .caution, .rst-content .danger, .rst-content .error, .rst-content .hint, .rst-content .important, .rst-content .tip, .rst-content .warning, .rst-content .seealso, .rst-content .admonition-todo, .btn, input[type="text"], input[type="password"], input[type="email"], input[type="url"], input[type="date"], input[type="month"], input[type="time"], input[type="datetime"], input[type="datetime-local"], input[type="week"], input[type="number"], input[type="search"], input[type="tel"], input[type="color"], select, textarea, .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a, .wy-side-nav-header > a, .wy-side-nav-header .wy-dropdown > a, .wy-nav-top a {
   -webkit-font-smoothing: antialiased;
 }
 
@@ -2425,6 +2425,22 @@ a .fa, a .rst-content .admonition-title, .rst-content a .admonition-title, a .rs
   background: #e7f2fa;
 }
 
+.rst-content .version-warning {
+  padding-left: 12px;
+  padding-right: 12px;
+  padding-top: 12px;
+  line-height: 24px;
+  margin-bottom: 24px;
+}
+
+.rst-content .version-warning .admonition-title {
+  background: #6f5499;
+}
+
+.rst-content .version-warning .admonition-title a {
+  color: #fcfcfc;
+}
+
 .wy-alert-title, .rst-content .admonition-title {
   color: white;
   font-weight: bold;
@@ -4012,7 +4028,7 @@ div[class^='highlight'] pre {
   height: 32px;
   display: inline-block;
   line-height: 32px;
-  padding: 0 1.618em;
+  padding: 0 1.25rem;
   display: block;
   font-weight: bold;
   text-transform: uppercase;
@@ -4038,7 +4054,7 @@ div[class^='highlight'] pre {
 .wy-menu-vertical li.current a {
   color: white;
   border-right: solid 1px #574278;
-  padding: 0.4045em 2.427em;
+  padding: 0.4045em 1.75rem;
 }
 .wy-menu-vertical li.current a:hover {
   background: #634b89;
@@ -4050,14 +4066,11 @@ div[class^='highlight'] pre {
 }
 .wy-menu-vertical li.on a, .wy-menu-vertical li.current > a {
   color: #404040;
-  padding: 0.4045em 1.618em;
+  padding: 0.4045em 1.25rem;
   font-weight: bold;
   position: relative;
   background: #fcfcfc;
   border: none;
-  border-bottom: solid 1px #c9c9c9;
-  border-top: solid 1px #c9c9c9;
-  padding-left: 1.618em -4px;
 }
 .wy-menu-vertical li.on a:hover, .wy-menu-vertical li.current > a:hover {
   background: #fcfcfc;
@@ -4069,7 +4082,7 @@ div[class^='highlight'] pre {
 }
 .wy-menu-vertical li.toctree-l2.current > a {
   background: #c9c9c9;
-  padding: 0.4045em 2.427em;
+  padding: 0.4045em 1.75rem;
 }
 .wy-menu-vertical li.current ul {
   display: block;
@@ -4089,7 +4102,7 @@ div[class^='highlight'] pre {
 .wy-menu-vertical a {
   display: inline-block;
   line-height: 18px;
-  padding: 0.4045em 1.618em;
+  padding: 0.4045em 1.25rem;
   display: block;
   position: relative;
   font-size: 90%;
@@ -4105,40 +4118,58 @@ div[class^='highlight'] pre {
   cursor: pointer;
 }
 
-.wy-side-nav-search {
-  z-index: 200;
+.wy-side-nav-header {
+  padding: 1.25rem;
   background-color: #fcfcfc;
-  text-align: center;
-  padding: 0.809em;
-  display: block;
   color: #404040;
+  text-align: center;
+}
+.wy-side-nav-header > a {
+  display: inline-block;
   margin-bottom: 0.1em;
-}
-.wy-side-nav-search input[type=text] {
-  width: 100%;
-  border-radius: 50px;
-  padding: 6px 12px;
-  border-color: #634b89;
-}
-.wy-side-nav-search img {
-  display: block;
-  margin: auto auto 0.809em auto;
-  height: 45px;
-  width: 45px;
-  background-color: #fcfcfc;
-  padding: 5px;
-  border-radius: 100%;
-}
-.wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a {
-  color: #6f5499;
   font-size: 150%;
   font-weight: bold;
-  display: inline-block;
-  padding: 4px 6px;
-  margin-bottom: 0.1em;
+  color: #6f5499;
 }
-.wy-side-nav-search > a:hover, .wy-side-nav-search .wy-dropdown > a:hover {
+.wy-side-nav-header > a:hover {
   background: rgba(255, 255, 255, 0.1);
+}
+.wy-side-nav-header > .small {
+  font-size: .85em;
+}
+
+.wy-side-nav-versions {
+  margin: .5rem 0 1rem;
+  font-size: .9em;
+}
+.wy-side-nav-versions-current .fa {
+  display: inline-block;
+  margin-right: .333em;
+}
+.wy-side-nav-versions-others {
+  display: flex;
+  margin: .5rem 0;
+}
+.wy-side-nav-versions-others dd {
+  width: 50%;
+}
+.wy-side-nav-versions-others dd:first-of-type {
+  padding-right: .5rem;
+  text-align: right;
+}
+.wy-side-nav-versions-others dd:last-of-type {
+  padding-left: .5rem;
+  text-align: left;
+}
+.wy-side-nav-versions-others .version-current {
+  font-weight: bold;
+}
+
+.wy-side-nav-search input[type=text] {
+  width: 100%;
+  padding: 6px 12px;
+  border-radius: 50px;
+  border-color: #634b89;
 }
 
 .wy-nav .wy-menu-vertical header {
@@ -4336,13 +4367,13 @@ footer p {
     overflow: hidden;
   }
 
-  .wy-side-nav-search {
+  .wy-side-nav-header {
     background-color: #6f5499;
   }
-  .wy-side-nav-search > a, .wy-side-nav-search .wy-dropdown > a {
+  .wy-side-nav-header a, .wy-side-nav-header .wy-dropdown > a, .wy-side-nav-versions-current {
     color: white;
   }
-  .wy-side-nav-search > a:hover, .wy-side-nav-search > a:visited:hover, .wy-side-nav-search .wy-dropdown > a:hover, .wy-side-nav-search .wy-dropdown > a:visited:hover {
+  .wy-side-nav-header a:hover, .wy-side-nav-header a:visited:hover, .wy-side-nav-header .wy-dropdown > a:hover, .wy-side-nav-header .wy-dropdown > a:visited:hover {
     color: white;
   }
 }
@@ -4366,7 +4397,6 @@ nav.stickynav {
 }
 
 .rst-versions {
-  display: none;
   position: fixed;
   bottom: 0;
   left: 0;
@@ -4386,12 +4416,11 @@ nav.stickynav {
 }
 .rst-versions .rst-current-version {
   padding: 12px;
-  background-color: #efefef;
+  background-color: #6f5499;
   display: block;
   text-align: right;
   font-size: 90%;
   cursor: pointer;
-  color: #27ae60;
   *zoom: 1;
 }
 .rst-versions .rst-current-version:before, .rst-versions .rst-current-version:after {
@@ -4442,7 +4471,7 @@ nav.stickynav {
 .rst-versions .rst-other-versions dd a {
   display: inline-block;
   padding: 6px;
-  color: #fcfcfc;
+  color: #6f5499;
 }
 .rst-versions.rst-badge {
   width: auto;
