@@ -126,40 +126,40 @@ class PlayerOutput(Output):
     def _mpv_title_escape(cls, title_string):
         # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
         if '\$>' in title_string:
-            processedTitle = ""
+            processed_title = ""
             dollars = 0
-            doubleDollars = True
+            double_dollars = True
             i = 0
             while i < len(title_string):
-                if doubleDollars:
+                if double_dollars:
                     if title_string[i] == "\\":
                         if title_string[i+1] == "$":
-                            processedTitle += "$"
+                            processed_title += "$"
                             dollars += 1
                             if title_string[i+2] == ">" and dollars % 2 == 1:
-                                doubleDollars = False
-                                processedTitle += ">"
+                                double_dollars = False
+                                processed_title += ">"
                                 i += 2
                             else:
                                 i += 1
                         else:
-                            processedTitle += "\\"
+                            processed_title += "\\"
                     elif title_string[i] == "$":
                         dollars += 2
-                        processedTitle += "$$"
+                        processed_title += "$$"
                     else:
                         dollars = 0
-                        processedTitle += title_string[i]
+                        processed_title += title_string[i]
                 else:
                     if title_string[i] == "\\" and title_string[i+1] == "$":
-                        processedTitle += "$"
+                        processed_title += "$"
                         i += 1
                     else:
-                        processedTitle += title_string[i]
+                        processed_title += title_string[i]
                 i += 1
-            return processedTitle
+            return processed_title
         else:
-            #not possible for property-expansion to be disabled, happy days
+            # not possible for property-expansion to be disabled, happy days
             return title_string.replace("$", "$$").replace("\$$", "$")
 
     def _create_arguments(self):
