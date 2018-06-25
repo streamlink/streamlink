@@ -102,10 +102,8 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
-
         title = create_title(streamlink.resolve_url(args.url))
         log.info("Starting player: {0}", args.player)
-
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,

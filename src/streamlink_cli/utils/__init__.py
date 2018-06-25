@@ -29,5 +29,3 @@ def ignored(*exceptions):
         yield
     except exceptions:
         pass
-
-

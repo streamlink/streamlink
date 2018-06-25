@@ -1,7 +1,6 @@
 import re
 
 from requests import codes
-from time import sleep
 
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
@@ -335,7 +334,7 @@ class YouTube(Plugin):
                 query_info = dict(parse_qsl(urlparse(url).query))
                 if "channel" in query_info:
                     video_id = self._get_channel_video(query_info["channel"])
-        
+
         if not video_id:
             return
 
