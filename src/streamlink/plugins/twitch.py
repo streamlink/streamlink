@@ -13,6 +13,7 @@ from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import (
     HTTPStream, HLSStream, FLVPlaylist, extract_flv_header_tags
 )
+from streamlink.utils.times import hours_minutes_seconds
 
 try:
     from itertools import izip as zip
@@ -53,17 +54,6 @@ _url_re = re.compile(r"""
     (?:
         /
         (?P<clip_name>[\w]+)
-    )?
-""", re.VERBOSE)
-_time_re = re.compile(r"""
-    (?:
-        (?P<hours>\d+)h
-    )?
-    (?:
-        (?P<minutes>\d+)m
-    )?
-    (?:
-        (?P<seconds>\d+)s
     )?
 """, re.VERBOSE)
 
@@ -136,18 +126,6 @@ _quality_options_schema = validate.Schema(
     },
     validate.get("quality_options")
 )
-
-
-def time_to_offset(t):
-    match = _time_re.match(t)
-    if match:
-        offset = int(match.group("hours") or "0") * 60 * 60
-        offset += int(match.group("minutes") or "0") * 60
-        offset += int(match.group("seconds") or "0")
-    else:
-        offset = 0
-
-    return offset
 
 
 class UsherService(object):
@@ -541,7 +519,12 @@ class Twitch(Plugin):
         # start offset if needed.
         time_offset = self.params.get("t")
         if time_offset:
-            videos["start_offset"] += time_to_offset(self.params.get("t"))
+            try:
+                time_offset = hours_minutes_seconds(time_offset)
+            except ValueError:
+                time_offset = 0
+
+            videos["start_offset"] += time_offset
 
         return self._create_playlist_streams(videos)
 
@@ -599,10 +582,18 @@ class Twitch(Plugin):
             self.logger.debug("Unknown HLS stream type: {0}".format(stream_type))
             return {}
 
+        time_offset = self.params.get("t", 0)
+        if time_offset:
+            try:
+                time_offset = hours_minutes_seconds(time_offset)
+            except ValueError:
+                time_offset = 0
+
         try:
             # If the stream is a VOD that is still being recorded the stream should start at the
             # beginning of the recording
             streams = HLSStream.parse_variant_playlist(self.session, url,
+                                                       start_offset=time_offset,
                                                        force_restart=not stream_type == "live")
         except IOError as err:
             err = str(err)
