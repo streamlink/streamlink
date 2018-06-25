@@ -528,7 +528,7 @@ def build_parser():
             before the dollar sign mpv uses to denote a format character.
             
             e.g. to put the current version of mpv running inside your
-            mpv window title, the string "\${{mpv-version}}" could be
+            mpv window title, the string "\${{{{mpv-version}}}}" could be
             inserted inside your --title string.
             
             A full list of the format codes mpv uses is available here:
@@ -558,8 +558,8 @@ def build_parser():
             the stream, so it doesn't need its own separate handling.
             
        Examples:
-           %(prog)s -p vlc --title '{title} -!- {author} -!- {category} \$A' <url> [stream]
-           %(prog)s -p mpv --title "{title} -- {author} -- {category} -- (\${{mpv-version}})" <url> [stream]
+           %(prog)s -p vlc --title '{{title}} -!- {{author}} -!- {{category}} \$A' <url> [stream]
+           %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\${{{{mpv-version}}}})" <url> [stream]
             
         """.format(', '.join(SUPPORTED_PLAYERS.keys()),
                    DEFAULT_STREAM_METADATA['title'],
