@@ -43,7 +43,7 @@ Plugins which fall under the following categories will not be implemented or con
 
 5. NSFW sites of a pornographic nature (cam sites, porn sites, etc.)
 
-6. Sites which are mostly hosting VODs (stolen or legitimate), or require changes to existing code to watch VODs
+6. Sites which are mostly hosting VODs (stolen or legitimate), or require large changes to existing code to watch VODs
 
 7. Sites where the maintainer has requested we not add their site to Streamlink
 

@@ -4,36 +4,39 @@ about: Create a bug report to help us improve Streamlink
 
 ---
 
-*Thanks for reporting an issue!*
-*Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!*
-*Also check the list of known issues before reporting an issue!*
+<!--
+Thanks for reporting an issue!
 
-*Feel free to use the following template. Be as detailed as possible.*
-*Please see the text preview to avoid unnecessary formatting errors.*
-*Don't forget to remove this text before submitting.*
+Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
+
+Also check the list of known issues before reporting an issue!
+
+Please fill out the following template. Be as detailed as possible.
+
+Please see the text preview to avoid unnecessary formatting errors.
+-->
 
 ----
 
-### Checklist
+## Bug Report
 
-- [x] This is a bug report.
-- [ ] I have read the contribution guidelines.
+- [ ] I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
 
 ### Description
 
-Explain the bug as clearly as you can, how is functionality impacted? What OS/Player/Streamlink version are you using? (please remove this line after supplying those details)
+<!-- Explain the bug as clearly as you can, how is functionality impacted? What OS/Player/Streamlink version are you using? Etc. -->
 
 ...
 
 ### Expected / Actual behavior
 
-What do you expect to happen, and what is actually happening? (please remove this line after supplying those details)
+<!-- What do you expect to happen, and what is actually happening? -->
 
 ...
 
 ### Reproduction steps / Explicit stream URLs to test
 
-How can we reproduce this? Please note the exact steps below using the list format supplied, if you need more steps please add them. (please remove this line after supplying those details)
+<!-- How can we reproduce this? Please note the exact steps below using the list format supplied, if you need more steps please add them. -->
 
 1. ...
 2. ...
@@ -41,9 +44,13 @@ How can we reproduce this? Please note the exact steps below using the list form
 
 ### Logs
 
-_Logs are always required for a bug report, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l)
+<!--
+Logs are always required for a bug report, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l).
+
 Make sure to **remove username and password**
-You can upload your logs to https://gist.github.com/ or_
+
+You can upload your logs to https://gist.github.com/ or place your logs below.
+-->
 
 ```
 REPLACE THIS TEXT WITH YOUR LOG
