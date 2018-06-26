@@ -1,5 +1,83 @@
 # Changelog
 
+## streamlink 0.14.0 (2018-06-26)
+
+Here are the changes to this months release!
+
+- Multiple plugin fixes
+- Bug fixes for DASH streams (https://github.com/streamlink/streamlink/pull/1846)
+- Updated API call for api.utils hours_minutes_seconds (https://github.com/streamlink/streamlink/pull/1804)
+- Updated documentation (https://github.com/streamlink/streamlink/pull/1826)
+- Dict structures fix (https://github.com/streamlink/streamlink/pull/1792)
+- Reformated help menu (https://github.com/streamlink/streamlink/pull/1754)
+- Logger fix (https://github.com/streamlink/streamlink/pull/1773)
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (3):
+      sdist: include tests resources (#1785)
+      tests: freezegun: use object instead of lambda (#1787)
+      rtlxl: use raw string to fix escape sequences (#1786)
+
+BZHDeveloper <39899575+BZHDeveloper@users.noreply.github.com> (1):
+      plugins.cnews : separate CNEWS data from CanalPlus plugin. (#1782)
+
+MasterofJOKers <joker@someserver.de> (1):
+      plugins.sportschau: Fix "No schema supplied" error
+
+Mohamed El Morabity <melmorabity@fedoraproject.com> (2):
+      plugins.pluzz: support for DASH streams
+      plugins.pluzz: fix HDS streams
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      [plugins.rtbf] Fix radio streams + DASH support (#1771)
+
+Sebastian Meyer <mail@bastimeyer.de> (1):
+      Move docs version selection to sidebar (#1802)
+
+Twilight0 <twilight@freemail.gr> (2):
+      Convert literal comprehensive dicts to dict contructs
+      Add arguments to __init__ - super to work on Python 2.7.X (#1796)
+
+back-to <backto@protonmail.ch> (9):
+      plugins: marked or removed broken plugins
+      plugins.earthcam: Fixed hls_url - No schema supplied.
+      plugins.rte: allow https
+      plugins.VinhLongTV: New plugin for livestreams of thvli.vn
+      docs.thirdparty: Added LiveProxy
+      plugins.tlctr: New Plugin for tlctv.com.tr/canli-izle
+      plugins.bigo: Fix for new channelnames and plugin cleanup (#1797)
+      docs: removed some notes, updated some urls
+      utils.times: hours_minutes_seconds update, twitch automate time offset
+
+beardypig <beardypig@protonmail.com> (15):
+      help: reformat all the help text so that it is <80 chars
+      plugins.bbciplayer: fix bug is DASH for VOD
+      sdist and wheel release fixes (#1758)
+      plugin.youtube: find video id in page, fall back to API (#1746)
+      logging: rename logger for main back to 'cli'
+      plugins.vaughnlive: support for the HTML flv player
+      plugins.yupptv: support for yupptv with login support
+      plugins.nos: update for new page layout for live and VOD
+      plugins.lrt: add support for Lithuanian National Television
+      plugins.delfi: support for delfi.lt web portal
+      plugins.vrtbe: update to new page layout/API
+      plugins.itvplayer: update to new HTML5 API
+      plugins.atresplayer: support new layout/API
+      stream.dash: use the ID and mime-type to identify a representation
+      plugins.mitele: sometimes ogn is null, html5 pdata endpoint works better
+
+beardypig <git@beardypig.com> (5):
+      plugins.crunchyroll: refactoring and updated API calls (#1820)
+      Suppress/fix deprecated warnings for Python 3 (#1833)
+      API for plugins to request input from the user (#1827)
+      Steam Broadcast Plugin (#1717)
+      USTV Now (#1840)
+
+fozzy <fozzy@fozzy.co> (1):
+      fix bug caused by indentation and add support for url pattern like 'xingxiu.panda.tv'
+```
+
+
 ## streamlink 0.13.0 (2018-06-06)
 
 Massive release this month!
