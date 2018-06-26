@@ -31,7 +31,7 @@ class Mitele(Plugin):
         "telecinco": livehlsdai,
     }
 
-    pdata_url = "https://indalo.mediaset.es/mmc-player/api/mmc/v1/{channel}/live/flash.json"
+    pdata_url = "https://indalo.mediaset.es/mmc-player/api/mmc/v1/{channel}/live/html5.json"
     gate_url = "https://gatekeeper.mediaset.es"
 
     pdata_schema = validate.Schema(
@@ -39,7 +39,7 @@ class Mitele(Plugin):
             {
                 "locations": [{
                     "gcp": validate.text,
-                    "ogn": validate.text,
+                    "ogn": validate.any(None, validate.text),
                 }],
             },
             validate.get("locations"),
@@ -117,7 +117,7 @@ class Mitele(Plugin):
 
         if hls_url:
             self.logger.debug("HLS URL: {0}".format(hls_url))
-            for s in HLSStream.parse_variant_playlist(self.session, hls_url, headers=self.headers).items():
+            for s in HLSStream.parse_variant_playlist(self.session, hls_url, headers=self.headers, name_fmt="{pixels}_{bitrate}").items():
                 yield s
 
 
