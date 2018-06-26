@@ -452,6 +452,8 @@ class YouTube(Plugin):
             self.logger.debug("get_category")
             if self.category_id is None:
                 self.set_title_info()
+                if self.category_id is None:
+                    return None
             # translate from category_id to category name
             query = {
                 "part": "snippet",
@@ -473,6 +475,8 @@ class YouTube(Plugin):
             self.logger.debug("get_author")
             if self.channel_id is None:
                 self.set_title_info()
+                if self.channel_id is None:
+                    return None
             # translate from channel_id to channel display name
             query = {
                 "part": "brandingSettings",
