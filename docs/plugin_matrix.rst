@@ -123,6 +123,7 @@ mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-rest
 mips                    mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mixer                   mixer.com            Yes   Yes
+mjunoon                 mjunoon.tv           Yes   Yes
 mlgtv                   mlg.tv               Yes   --
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
