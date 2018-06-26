@@ -2,17 +2,18 @@ from __future__ import print_function
 
 import logging
 import re
+from functools import partial
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.stream import HLSStream
-from streamlink.utils import parse_json, update_scheme
+from streamlink.plugin.api import http, validate, StreamMapper
+from streamlink.stream import HLSStream, DASHStream
+from streamlink.utils import parse_json, update_scheme, search_dict
 
 log = logging.getLogger(__name__)
 
 
 class AtresPlayer(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?atresplayer.com/directos/([\w-]+)/?")
+    url_re = re.compile(r"https?://(?:www.)?atresplayer.com/")
     state_re = re.compile(r"""window.__PRELOADED_STATE__\s*=\s*({.*?});""", re.DOTALL)
     channel_id_schema = validate.Schema(
         validate.transform(state_re.search),
@@ -21,19 +22,17 @@ class AtresPlayer(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(parse_json),
-                {
-                    "programming": {
-                        validate.text: validate.all({"urlVideo": validate.text},
-                                                    validate.get("urlVideo"))
-                    }
-                },
-                validate.get("programming")
-            )))
+                validate.transform(partial(search_dict, key="urlVideo"))
+            )
+        )
+    )
     stream_schema = validate.Schema(
         validate.transform(parse_json),
         {"sources": [
-            validate.all({"src": validate.url()},
-                         validate.get("src"))
+            validate.all({
+                "src": validate.url(),
+                validate.optional("type"): validate.text
+            })
         ]}, validate.get("sources"))
 
 
@@ -46,11 +45,18 @@ class AtresPlayer(Plugin):
         super(AtresPlayer, self).__init__(update_scheme("https://", url))
 
     def _get_streams(self):
-        programming = http.get(self.url, schema=self.channel_id_schema)
-        for api_url in programming.values():
-            for src in http.get(api_url, schema=self.stream_schema):
-                for s in HLSStream.parse_variant_playlist(self.session, src).items():
-                    yield s
+        api_urls = http.get(self.url, schema=self.channel_id_schema)
+        for api_url in api_urls:
+            log.debug("API URL: {0}".format(api_url))
+            for source in http.get(api_url, schema=self.stream_schema):
+                log.debug("Stream source: {0} ({1})".format(source['src'], source.get("type", "n/a")))
+
+                if "type" not in source or source["type"] == "application/vnd.apple.mpegurl":
+                    for s in HLSStream.parse_variant_playlist(self.session, source["src"]).items():
+                        yield s
+                elif source["type"] == "application/dash+xml":
+                    for s in DASHStream.parse_manifest(self.session, source["src"]).items():
+                        yield s
 
 
 __plugin__ = AtresPlayer
