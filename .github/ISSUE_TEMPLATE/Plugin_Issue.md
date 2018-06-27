@@ -16,8 +16,6 @@ Please fill out the following template. Be as detailed as possible.
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
-----
-
 ## Plugin Issue
 
 - [ ] This is a plugin issue and I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
@@ -26,7 +24,6 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 <!-- Explain the plugin issue as clearly as you can. Which plugin is causing isuses? what exactly is the issue? Etc. -->
 
-...
 
 ### Reproduction steps / Explicit stream URLs to test
 
@@ -52,7 +49,6 @@ REPLACE THIS TEXT WITH YOUR LOG
 
 ### Comments, screenshots, etc.
 
-...
 
 
 [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)

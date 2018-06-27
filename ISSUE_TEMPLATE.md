@@ -12,8 +12,6 @@ Please fill out the following template. Be as detailed as possible.
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
-----
-
 ## Issue
 
 - [x] This is not a bug report, feature request, or plugin (improvement) request.
@@ -23,13 +21,11 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 <!-- Explain the issue as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
 
-...
 
 ### Expected / Actual behavior
 
 <!-- What do you expect to happen, and what is actually happening? -->
 
-...
 
 ### Reproduction steps / Explicit stream URLs to test
 
@@ -55,7 +51,6 @@ REPLACE THIS TEXT WITH YOUR LOG
 
 ### Additional comments, screenshots, etc.
 
-...
 
 
 [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)

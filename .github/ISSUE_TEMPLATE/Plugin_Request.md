@@ -25,7 +25,6 @@ Also check the list of open and closed plugin requests before making a new reque
 
 <!-- Explain the plugin and site as clearly as you can. What is the site about? Who runs it? What content does it provide? What value does it brings to Streamlink? Etc. -->
 
-...
 
 ### Example stream URLs
 
@@ -37,7 +36,6 @@ Also check the list of open and closed plugin requests before making a new reque
 
 ### Comments, screenshots, etc.
 
-...
 
 
 [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)
