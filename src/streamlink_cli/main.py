@@ -588,7 +588,7 @@ def authenticate_twitch_oauth():
 
     client_id = TWITCH_CLIENT_ID
     redirect_uri = "https://streamlink.github.io/twitch_oauth.html"
-    url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
+    url = ("https://api.twitch.tv/kraken/oauth2/authorize"
            "?response_type=token&client_id={0}&redirect_uri="
            "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
 
