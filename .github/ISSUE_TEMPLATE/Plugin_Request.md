@@ -1,7 +1,6 @@
 ---
 name: Plugin Request
 about: Create a plugin request to discuss adding a new plugin to Streamlink
-
 ---
 
 <!--

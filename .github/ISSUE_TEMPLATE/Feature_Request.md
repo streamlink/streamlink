@@ -1,7 +1,6 @@
 ---
 name: Feature Request
 about: Create a feature request to help us add additional functionality to Streamlink
-
 ---
 
 <!-- 

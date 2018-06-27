@@ -1,13 +1,11 @@
 ---
-name: Plugin Request
-about: Create a plugin request to discuss adding a new plugin to Streamlink
-
+name: Plugin Issue
+about: Create a plugin issue report
 ---
 
 <!--
-Thanks for requesting a plugin!
+Thanks for reporting a plugin issue!
 
-Please ensure that your request meets the requirements (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests) and does not fall within the categories we will not implement. Plugin requests which do not meet these requirements will be closed.
 
 Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
 
