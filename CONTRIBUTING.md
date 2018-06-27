@@ -47,6 +47,7 @@ Plugins which fall under the following categories will not be implemented or con
 
 7. Sites where the maintainer has requested we not add their site to Streamlink
 
+8. Sites which are unmaintained.
 
 ## Pull requests
 

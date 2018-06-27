@@ -24,7 +24,7 @@ Also check the list of open and closed plugin requests before making a new reque
 
 ### Description
 
-<!-- Explain the plugin and site as clearly as you can, what the site is, who runs it, what content it provides, and what value it brings to Streamlink. -->
+<!-- Explain the plugin and site as clearly as you can. What is the site about? Who runs it? What content does it provide? What value does it brings to Streamlink? Etc. -->
 
 ...
 
@@ -40,5 +40,5 @@ Also check the list of open and closed plugin requests before making a new reque
 
 ...
 
-----
+
 [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)

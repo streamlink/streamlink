@@ -1,13 +1,14 @@
 ---
 name: Bug Report
 about: Create a bug report to help us improve Streamlink
-
 ---
 
 <!--
-Thanks for reporting an issue!
+Thanks for reporting an bug!
 
-Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
+Please read the contribution guidelines before creating a bug report:
+
+(https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)
 
 Also check the list of known issues before reporting an issue!
 
@@ -24,7 +25,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Description
 
-<!-- Explain the bug as clearly as you can, how is functionality impacted? What OS/Player/Streamlink version are you using? Etc. -->
+<!-- Explain the bug as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
 
 ...
 
@@ -36,7 +37,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Reproduction steps / Explicit stream URLs to test
 
-<!-- How can we reproduce this? Please note the exact steps below using the list format supplied, if you need more steps please add them. -->
+<!-- How can we reproduce this? Please note the exact steps below using the list format supplied. If you need more steps please add them. -->
 
 1. ...
 2. ...

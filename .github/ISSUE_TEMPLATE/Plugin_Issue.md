@@ -26,19 +26,13 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Description
 
-<!-- Explain the plugin issue as clearly as you can, which plugin is encountering isuses, what the issue is, etc. -->
-
-...
-
-### Expected / Actual behavior
-
-<!-- What do you expect to happen, and what is actually happening? -->
+<!-- Explain the plugin issue as clearly as you can. Which plugin is causing isuses? what exactly is the issue? Etc. -->
 
 ...
 
 ### Reproduction steps / Explicit stream URLs to test
 
-<!-- How can we reproduce this? Please note the exact steps below using the list format supplied, if you need more steps please add them. -->
+<!-- How can we reproduce this? Please note the exact steps below using the list format supplied. If you need more steps please add them. -->
 
 1. ...
 2. ...
@@ -57,11 +51,6 @@ You can upload your logs to https://gist.github.com/ or_
 ```
 REPLACE THIS TEXT WITH YOUR LOG
 ```
-### Example stream URLs that are not working
-
-1. ...
-2. ...
-3. ...
 
 ### Comments, screenshots, etc.
 

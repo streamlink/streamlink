@@ -22,7 +22,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Description
 
-<!-- Explain the feature as clearly as you can, what is it, how would you expect it to work, and what value does it bring to Streamlink? -->
+<!-- Explain the feature as clearly as you can. What is it, how would you expect it to work, and what value does it bring to Streamlink? -->
 
 ...
 

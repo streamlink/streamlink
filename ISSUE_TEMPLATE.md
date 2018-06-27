@@ -21,7 +21,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Description
 
-<!-- Explain the issue as clearly as you can, how is functionality impacted? What OS/Player/Streamlink version are you using? Etc. -->
+<!-- Explain the issue as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
 
 ...
 
@@ -42,7 +42,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 ### Logs
 
 <!--
-While logs are not required for an issue they are helpful, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l).
+While logs are not required for an issue they can be helpful. Use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l).
 
 Make sure to **remove username and password**
 
