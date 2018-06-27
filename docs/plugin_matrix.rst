@@ -231,7 +231,6 @@ tv5monde                - tv5monde.com       Yes   Yes   Streams may be geo-rest
                         - tv5mondeplus.com
                         - tv5mondepl... [9]_
 tv8                     tv8.com.tr           Yes   No
-tv8cat                  tv8.cat              Yes   No    Streams may be geo-restricted to Spain/Catalunya.
 tv360                   tv360.com.tr         Yes   No
 tvcatchup               tvcatchup.com        Yes   No    Streams may be geo-restricted to Great Britain.
 tvnbg                   - tvn.bg             Yes   -
