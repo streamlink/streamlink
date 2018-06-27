@@ -127,7 +127,6 @@ mlgtv                   mlg.tv               Yes   --
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
-nineanime               9anime.to            --    Yes
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 npo                     - npo.nl             Yes   Yes   Streams may be geo-restricted to Netherlands.
                         - zapp.nl
