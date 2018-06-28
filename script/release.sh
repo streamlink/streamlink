@@ -62,7 +62,7 @@ success() {
 
 changelog() {
   temp_changes=$(mktemp) && trap "rm -rf ${temp_changes}" EXIT || exit 255
-  date=$(date +"%Y-%m-%d")
+  date=$(date -u +"%Y-%m-%d")
   shortlog=$(git shortlog --email --no-merges --pretty=%s ${1}..)
 
   echo -e "\n## streamlink $2 ($date)\n\n!! WRITE RELEASE NOTES HERE !!\n\n\`\`\`text\n${shortlog}\n\`\`\`\n" > "${temp_changes}"
