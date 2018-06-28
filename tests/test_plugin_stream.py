@@ -137,30 +137,44 @@ class TestPluginStream(unittest.TestCase):
             parse_params(""""conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']""")
         )
 
+    def test_stream_weight_value(self):
+        self.assertEqual((720, "pixels"),
+                         stream_weight("720p"))
+
+        self.assertEqual((721, "pixels"),
+                         stream_weight("720p+"))
+
+        self.assertEqual((780, "pixels"),
+                         stream_weight("720p60"))
+
     def test_stream_weight(self):
-        self.assertEqual(
-            (720, "pixels"),
-            stream_weight("720p"))
-        self.assertEqual(
-            (721, "pixels"),
-            stream_weight("720p+"))
-        self.assertEqual(
-            (780, "pixels"),
-            stream_weight("720p60"))
+        self.assertGreater(stream_weight("720p+"),
+                           stream_weight("720p"))
 
-        self.assertTrue(
-            stream_weight("720p+") > stream_weight("720p"))
-        self.assertTrue(
-            stream_weight("720p") == stream_weight("720p"))
-        self.assertTrue(
-            stream_weight("720p_3000k") > stream_weight("720p_2500k"))
-        self.assertTrue(
-            stream_weight("720p60_3000k") > stream_weight("720p_3000k"))
-        self.assertTrue(
-            stream_weight("720p_3000k") < stream_weight("720p+_3000k"))
+        self.assertGreater(stream_weight("720p_3000k"),
+                           stream_weight("720p_2500k"))
 
-        self.assertTrue(
-            stream_weight("3000k") > stream_weight("2500k"))
+        self.assertGreater(stream_weight("720p60_3000k"),
+                           stream_weight("720p_3000k"))
+
+        self.assertGreater(stream_weight("3000k"),
+                           stream_weight("2500k"))
+
+        self.assertEqual(stream_weight("720p"),
+                         stream_weight("720p"))
+
+        self.assertLess(stream_weight("720p_3000k"),
+                        stream_weight("720p+_3000k"))
+
+    def test_stream_weight_and_audio(self):
+        self.assertGreater(stream_weight("720p+a256k"),
+                           stream_weight("720p+a128k"))
+
+        self.assertGreater(stream_weight("720p+a256k"),
+                           stream_weight("720p+a128k"))
+
+        self.assertGreater(stream_weight("720p+a128k"),
+                           stream_weight("360p+a256k"))
 
 
 if __name__ == "__main__":
