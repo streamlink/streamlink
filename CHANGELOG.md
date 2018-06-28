@@ -1,24 +1,32 @@
 # Changelog
 
-## streamlink 0.14.1 (2018-06-28)
+## streamlink 0.14.2 (2018-06-28)
 
-Only a few fixes in this small maintenance release.
+Just a few small fixes in this release. 
 
-- Fix the tv3cat plugin (https://github.com/streamlink/streamlink/pull/1851)
-- VOD supported added to atresplayer plugin (https://github.com/streamlink/streamlink/pull/1852, https://github.com/streamlink/streamlink/pull/1853)
 - Fixed Twitch OAuth request flow (https://github.com/streamlink/streamlink/pull/1856)
-- Removed tv8cat plugin (https://github.com/streamlink/streamlink/pull/1860)
+- Fix the tv3cat and vk plugins (https://github.com/streamlink/streamlink/pull/1851, https://github.com/streamlink/streamlink/pull/1874)
+- VOD supported added to atresplayer plugin (https://github.com/streamlink/streamlink/pull/1852, https://github.com/streamlink/streamlink/pull/1853)
+- Removed tv8cati and nineanime plugins (https://github.com/streamlink/streamlink/pull/1860, https://github.com/streamlink/streamlink/pull/1863)
+- Added mjunoon.tv plugin (https://github.com/streamlink/streamlink/pull/1857)
 
 ```text
 NyanKiyoshi <NyanKiyoshi@users.noreply.github.com> (1):
       Fix 404 error on oauth authorize url
 
-beardypig <beardypig@protonmail.com> (5):
+back-to <backto@protonmail.ch> (1):
+      plugins.vk: _url_re update, allow embedded content, plugin cleanup (#1874)
+
+beardypig <beardypig@protonmail.com> (10):
       plugins.t3cat: update validation rule, refactor plugin a little bit
       plugins.atresplayer: update to support VOD streams
       stream.dash: support for SegmentList streams with ranged segments
+      plugins.mjunoon: support for live and vod streams on mjunoon.tv
       release: fix release notes manual install url
       plugins.tv8cat: plugin removed - the live broadcast is no longer available
+      plugins.nineanime: no longer supported
+      release: set the date of the release for UTC time
+      plugin: support stream weights returned by DASHStream.parse_manifest
 ```
 
 
