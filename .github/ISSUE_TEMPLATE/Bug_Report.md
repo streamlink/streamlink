@@ -4,7 +4,7 @@ about: Create a bug report to help us improve Streamlink
 ---
 
 <!--
-Thanks for reporting an bug!
+Thanks for reporting a bug!
 
 Please read the contribution guidelines before creating a bug report:
 
