@@ -36,11 +36,12 @@ Please see the text preview to avoid unnecessary formatting errors.
 ### Logs
 
 <!--
-Logs are always required for a plugin issue, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l)
+Logs are always required for a plugin issue, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
+
 
 Make sure to **remove username and password**
 
-You can upload your logs to https://gist.github.com/ or_
+You can upload your logs to https://gist.github.com/ or place your logs below.
 -->
 
 ```

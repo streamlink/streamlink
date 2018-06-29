@@ -38,7 +38,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 ### Logs
 
 <!--
-While logs are not required for an issue they can be helpful. Use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l).
+While logs are not required for an issue they can be helpful. Use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
 
 Make sure to **remove username and password**
 
