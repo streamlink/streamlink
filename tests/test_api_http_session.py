@@ -1,12 +1,8 @@
 # coding=utf-8
-import unittest
-
 import requests
 
-try:
-    from unittest.mock import patch, PropertyMock
-except ImportError:
-    from mock import patch, PropertyMock
+import unittest
+from tests.mock import patch, PropertyMock
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api.http_session import HTTPSession

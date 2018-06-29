@@ -3,10 +3,7 @@ import unittest
 
 from streamlink import Streamlink
 
-try:
-    from unittest.mock import patch, Mock
-except ImportError:
-    from mock import patch, Mock
+from tests.mock import patch, Mock
 
 from streamlink.plugins.garena import Garena
 

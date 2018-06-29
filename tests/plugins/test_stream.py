@@ -1,12 +1,8 @@
-import unittest
-
-try:
-    from unittest.mock import patch, ANY
-except ImportError:
-    from mock import patch, ANY
 from streamlink import Streamlink
 from streamlink.plugin.plugin import stream_weight, parse_params
 from streamlink.stream import *
+import unittest
+from tests.mock import patch
 
 
 class TestPluginStream(unittest.TestCase):

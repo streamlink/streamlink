@@ -1,17 +1,8 @@
+import unittest
+from tests.mock import Mock
 import sys
 
 from streamlink_cli.main import setup_plugin_args
-
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock
-
 from streamlink.options import Options, Arguments, Argument
 
 

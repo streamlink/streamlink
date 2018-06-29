@@ -1,3 +1,4 @@
+import base64
 import sys
 import os.path
 
@@ -125,6 +126,24 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(url_equal("http://test.com/test", "http://test.com/test#hello", ignore_fragment=True))
         self.assertTrue(url_equal("http://test.com/test", "http://test2.com/test", ignore_netloc=True))
         self.assertFalse(url_equal("http://test.com/test", "http://test2.com/test1", ignore_netloc=True))
+
+    def test_rtmpparse(self):
+        self.assertEquals(
+            ("rtmp://testserver.com:1935/app", "playpath?arg=1"),
+            rtmpparse("rtmp://testserver.com/app/playpath?arg=1"))
+        self.assertEquals(
+            ("rtmp://testserver.com:1935/long/app", "playpath?arg=1"),
+            rtmpparse("rtmp://testserver.com/long/app/playpath?arg=1"))
+        self.assertEquals(
+            ("rtmp://testserver.com:1935/app", None),
+            rtmpparse("rtmp://testserver.com/app"))
+
+    def test_swf_decompress(self):
+        # FYI, not a valid SWF
+        swf = b"FWS " + b"0000" + b"test data 12345"
+        swf_compressed = b"CWS " + b"0000" + base64.b64decode(b"eJwrSS0uUUhJLElUMDQyNjEFACpTBJo=")
+        self.assertEqual(swf, swfdecompress(swf_compressed))
+        self.assertEqual(swf, swfdecompress(swf))
 
     def test_search_dict(self):
 
