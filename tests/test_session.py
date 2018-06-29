@@ -17,7 +17,7 @@ class TestSession(unittest.TestCase):
         self.session.load_plugins(self.PluginPath)
 
     def test_exceptions(self):
-        self.assertRaises(NoPluginError, self.session.resolve_url, "invalid url")
+        self.assertRaises(NoPluginError, self.session.resolve_url, "invalid url", follow_redirect=False)
 
     def test_load_plugins(self):
         plugins = self.session.get_plugins()
