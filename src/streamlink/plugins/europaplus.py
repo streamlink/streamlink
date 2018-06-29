@@ -6,6 +6,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
+from streamlink.utils import update_scheme
 
 
 class EuropaPlusTV(Plugin):
@@ -24,6 +25,7 @@ class EuropaPlusTV(Plugin):
             m = self.src_re.search(iframe_res.text)
             surl = m and m.group("url")
             if surl:
+                surl = update_scheme(self.url, surl)
                 self.logger.debug("Found stream URL: {0}".format(surl))
                 return HLSStream.parse_variant_playlist(self.session, surl)
 
