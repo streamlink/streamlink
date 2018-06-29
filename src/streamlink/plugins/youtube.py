@@ -1,22 +1,16 @@
+import argparse
+import logging
 import re
 
-from requests import codes
-
-from streamlink.compat import urlparse, parse_qsl
+from streamlink.compat import parse_qsl
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate, useragents
-from streamlink.plugin.api.utils import parse_query
+from streamlink.plugin.api.utils import parse_query, itertags
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
 
-API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
-API_BASE = "https://www.googleapis.com/youtube/v3"
-API_SEARCH_URL = API_BASE + "/search"
-API_VIDEO_INFO = "https://youtube.com/get_video_info"
-HLS_HEADERS = {
-    "User-Agent": "Mozilla/5.0"
-}
+log = logging.getLogger(__name__)
 
 
 def parse_stream_map(stream_map):
@@ -97,8 +91,6 @@ _search_schema = validate.Schema(
     validate.get("items")
 )
 
-_channelid_re = re.compile(r'meta itemprop="channelId" content="([^"]+)"')
-_livechannelid_re = re.compile(r'meta property="og:video:url" content="([^"]+)')
 _ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*({.*?});', re.DOTALL)
 _url_re = re.compile(r"""
     http(s)?://(\w+\.)?youtube.com
@@ -120,6 +112,7 @@ _url_re = re.compile(r"""
 
 
 class YouTube(Plugin):
+    _video_info_url = "https://youtube.com/get_video_info"
     adp_video = {
         137: "1080p",
         303: "1080p60",  # HFR
@@ -146,7 +139,7 @@ class YouTube(Plugin):
         PluginArgument(
             "api-key",
             sensitive=True,
-            help="API key to use for YouTube API requests"
+            help=argparse.SUPPRESS  # no longer used
         )
     )
 
@@ -203,7 +196,7 @@ class YouTube(Plugin):
             for itag, name in self.adp_video.items():
                 if itag in adaptive_streams:
                     vurl = adaptive_streams[itag]
-                    self.logger.debug("MuxedStream: v {video} a {audio} = {name}".format(
+                    log.debug("MuxedStream: v {video} a {audio} = {name}".format(
                         audio=best_audio_itag,
                         name=name,
                         video=itag,
@@ -214,84 +207,27 @@ class YouTube(Plugin):
 
         return streams, protected
 
-    def _find_channel_video(self):
-        res = http.get(self.url)
+    def _find_video_id(self, url):
+        res = http.get(url)
+
+        for link in itertags(res.text, 'link'):
+            if link.attributes.get("rel") == "canonical":
+                canon_link = link.attributes.get("href")
+                if canon_link != url:
+                    log.debug("Re-directing to canonical URL: {0}".format(canon_link))
+                    return self._find_video_id(canon_link)
 
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
             # find the videoRenderer object, where there is a LVE NOW badge
-            for x in search_dict(data, 'videoRenderer'):
-                for bstyle in search_dict(x.get("badges", {}), "style"):
-                    if bstyle == "BADGE_STYLE_TYPE_LIVE_NOW":
-                        if x.get("videoId"):
-                            self.logger.debug("Found channel video ID via HTML: {0}", x["videoId"])
-                            return x["videoId"]
+            for vid_ep in search_dict(data, 'currentVideoEndpoint'):
+                video_id = vid_ep.get("watchEndpoint", {}).get("videoId")
+                if video_id:
+                    return video_id
 
-        else:
-            # fall back on API
-            self.logger.debug("No channel data, falling back to API")
-            match = _channelid_re.search(res.text)
-            if not match:
-                return
 
-            channel_id = match.group(1)
-            self.logger.debug("Found channel_id: {0}".format(channel_id))
-            return self._get_channel_video(channel_id)
-
-    def _get_channel_video(self, channel_id):
-        query = {
-            "channelId": channel_id,
-            "type": "video",
-            "eventType": "live",
-            "part": "id",
-            "key": self.get_option("api_key") or API_KEY
-        }
-        res = http.get(API_SEARCH_URL, params=query, raise_for_status=False)
-        if res.status_code == codes.ok:
-            videos = http.json(res, schema=_search_schema)
-
-            for video in videos:
-                video_id = video["id"]["videoId"]
-                self.logger.debug("Found video_id: {0}".format(video_id))
-                return video_id
-        else:
-            try:
-                errors = http.json(res, exception=ValueError)
-                self.logger.error("Cloud not resolve channel video:")
-                for error in errors['error']['errors']:
-                    self.logger.error("  {message} ({reason})".format(**error))
-
-            except ValueError:
-                self.logger.error("Cloud not resolve channel video: {0} error".format(res.status_code))
-
-    def _find_canonical_stream_info(self):
-        res = http.get(self.url)
-        match = _livechannelid_re.search(res.text)
-        if not match:
-            return
-
-        return self._get_stream_info(match.group(1))
-
-    def _get_stream_info(self, url):
-        match = _url_re.match(url)
-        user = match.group("user")
-        live_channel = match.group("liveChannel")
-
-        if user:
-            video_id = self._find_channel_video()
-        elif live_channel:
-            return self._find_canonical_stream_info()
-        else:
-            video_id = match.group("video_id")
-            if video_id == "live_stream":
-                query_info = dict(parse_qsl(urlparse(url).query))
-                if "channel" in query_info:
-                    video_id = self._get_channel_video(query_info["channel"])
-
-        if not video_id:
-            return
-
+    def _get_stream_info(self, video_id):
         # normal
         _params_1 = {"el": "detailpage"}
         # age restricted
@@ -306,14 +242,14 @@ class YouTube(Plugin):
             params = {"video_id": video_id}
             params.update(_params)
 
-            res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
+            res = http.get(self._video_info_url, params=params)
             info_parsed = parse_query(res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
-                self.logger.debug("get_video_info - {0}: {1}".format(
+                log.debug("get_video_info - {0}: {1}".format(
                     count, info_parsed.get("reason"))
                 )
                 continue
-            self.logger.debug("get_video_info - {0}: Found data".format(count))
+            log.debug("get_video_info - {0}: Found data".format(count))
             break
 
         return info_parsed
@@ -322,12 +258,19 @@ class YouTube(Plugin):
         http.headers.update({'User-Agent': useragents.CHROME})
         is_live = False
 
-        info = self._get_stream_info(self.url)
-        if not info:
+        video_id = self._find_video_id(self.url)
+        if not video_id:
+            log.error("Cloud not find a video on this page")
             return
 
+        info = self._get_stream_info(video_id)
+        if info and info.get("status") == "fail":
+            log.error("Could not get video info: {0}".format(info.get("reason")))
+        elif not info:
+            log.error("Could not get video info")
+
         if info.get("livestream") == '1' or info.get("live_playback") == '1':
-            self.logger.debug("This video is live.")
+            log.debug("This video is live.")
             is_live = True
 
         formats = info.get("fmt_list")
@@ -353,11 +296,11 @@ class YouTube(Plugin):
         if hls_playlist:
             try:
                 hls_streams = HLSStream.parse_variant_playlist(
-                    self.session, hls_playlist, headers=HLS_HEADERS, namekey="pixels"
+                    self.session, hls_playlist, namekey="pixels"
                 )
                 streams.update(hls_streams)
             except IOError as err:
-                self.logger.warning("Failed to extract HLS streams: {0}", err)
+                log.warning("Failed to extract HLS streams: {0}", err)
 
         if not streams and protected:
             raise PluginError("This plugin does not support protected videos, "
