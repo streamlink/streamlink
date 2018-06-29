@@ -1,33 +1,81 @@
+import logging
 import re
+
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
-from streamlink.stream import HLSStream
+from streamlink.plugin.api import http, validate
+from streamlink.plugin.api.utils import itertags
+from streamlink.stream import HLSStream, HTTPStream
+
+log = logging.getLogger(__name__)
+
 
 class LiveRussia(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?live.russia.tv/index/index/channel_id/")
-    iframe_re = re.compile(r"""<iframe[^>]*src=["']([^'"]+)["'][^>]*>""")
-    stream_re = re.compile(r"""window.pl.data.*m3u8":"(.*)"}.*};""")
+    url_re = re.compile(r"https?://(?:www\.|live\.)?russia.tv")
+    _data_re = re.compile(r"""window\.pl\.data\.([\w_]+)\s*=\s*['"]?(.*?)['"]?;""")
 
     @classmethod
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
+    def _get_iframe_url(self, url):
+        res = http.get(url)
+        for iframe in itertags(res.text, 'iframe'):
+            src = iframe.attributes.get("src")
+            if src:
+                return src
+
+    def _get_stream_info_url(self, url):
+        data = {}
+        res = http.get(url)
+        for m in self._data_re.finditer(res.text):
+            data[m.group(1)] = m.group(2)
+
+        log.debug("Got pl_data={0}".format(data))
+
+        if data:
+            if data["isVod"] == '0':
+                return "https:{domain}/iframe/datalive/id/{id}/sid/{sid}".format(**data)
+            else:
+                return "https:{domain}/iframe/datavideo/id/{id}/sid/{sid}".format(**data)
+
     def _get_streams(self):
-        res = http.get(self.url)
-        iframe_result = re.search(self.iframe_re, res.text)
+        iframe_url = self._get_iframe_url(self.url)
 
-        if not iframe_result:
-            self.logger.error("The requested content is unavailable.")
-            return
+        if iframe_url:
+            log.debug("Found iframe URL={0}".format(iframe_url))
+            info_url = self._get_stream_info_url(iframe_url)
 
-        res = http.get(iframe_result.group(1))
-        stream_url_result = re.search(self.stream_re, res.text)
+            if info_url:
+                log.debug("Getting info from URL: {0}".format(info_url))
+                res = http.get(info_url, headers={"Referer": iframe_url})
+                data = http.json(res)
 
-        if not stream_url_result:
-            self.logger.error("The requested content is unavailable.")
-            return
+                if data['status'] == 200:
+                    for media in data['data']['playlist']['medialist']:
+                        if media['errors']:
+                            log.error(media['errors'].replace('\n', '').replace('\r', ''))
 
-        return HLSStream.parse_variant_playlist(self.session, stream_url_result.group(1))
+                        for media_type in media.get('sources', []):
+
+                            if media_type == "m3u8":
+                                hls_url = media['sources'][media_type]['auto']
+                                for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
+                                    yield s
+
+                            if media_type == "http":
+                                for pix, url in media['sources'][media_type].items():
+                                    yield "{0}p".format(pix), HTTPStream(self.session, url)
+                else:
+                    log.error("An error occurred: {0}".format(data['errors'].replace('\n', '').replace('\r', '')))
+            else:
+                log.error("Unable to get stream info URL")
+        else:
+            log.error("Could not find video iframe")
+
+
+
+
+
 
 
 __plugin__ = LiveRussia
