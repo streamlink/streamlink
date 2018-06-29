@@ -1,9 +1,14 @@
+---
+name: Bug Report
+about: Create a bug report to help us improve Streamlink
+---
+
 <!--
-Thanks for reporting an issue!
+Thanks for reporting an bug!
 
-This template should only be used if your issue does not fall into one of the existing templates.
+Please read the contribution guidelines before creating a bug report:
 
-Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
+(https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)
 
 Also check the list of known issues before reporting an issue!
 
@@ -12,14 +17,13 @@ Please fill out the following template. Be as detailed as possible.
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
-## Issue
+## Bug Report
 
-- [x] This is not a bug report, feature request, or plugin (improvement) request.
 - [ ] I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
 
 ### Description
 
-<!-- Explain the issue as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
+<!-- Explain the bug as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
 
 
 ### Expected / Actual behavior
@@ -29,7 +33,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Reproduction steps / Explicit stream URLs to test
 
-<!-- How can we reproduce this (if it can be)? Please note the exact steps below using the list format supplied, if you need more steps please add them. -->
+<!-- How can we reproduce this? Please note the exact steps below using the list format supplied. If you need more steps please add them. -->
 
 1. ...
 2. ...
@@ -38,7 +42,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 ### Logs
 
 <!--
-While logs are not required for an issue they can be helpful. Use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
+Logs are always required for a bug report, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
 
 Make sure to **remove username and password**
 

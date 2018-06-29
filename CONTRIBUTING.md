@@ -29,8 +29,25 @@ Feature requests are welcome, but take a moment to find out whether your idea fi
 
 ## Plugin requests
 
-Plugin submissions and requests are a great way to improve Streamlink. Requests should be as detailed as possible and dedicated to only a single streaming service. Information about the service as well as explicit URLs for live streams or recordings are encouraged so that the requested plugin can be easily implemented. Please be aware that plugins for streaming services that are using DRM protections will not be implemented.
+Plugin submissions and requests are a great way to improve Streamlink. Requests should be as detailed as possible and dedicated to only a single streaming service. Information about the service as well as explicit URLs for live streams are required, as are details regarding the website, what it is, who runs it, how it adds to Streamlink, etc. This allows for easier plugin review and implementation. We reserve the right to refuse to implement, develop, or update any plugin. In addition we may remove existing plugins at our own discretion.
 
+Plugins which fall under the following categories will not be implemented or considered and the request will be closed:
+
+1. Any kind of streaming service that uses DRM protection
+
+2. Sites which are hosting stolen content as their main source of content
+
+3. Sites which are primarily rehosting content that is available from a legitimate source (TV shows, sports, news, etc.)
+
+4. Sites which require any sort of cable login or subscription
+
+5. NSFW sites of a pornographic nature (cam sites, porn sites, etc.)
+
+6. Sites which are mostly hosting VODs (stolen or legitimate), or require large changes to existing code to watch VODs
+
+7. Sites where the maintainer has requested we not add their site to Streamlink
+
+8. Sites which are unmaintained.
 
 ## Pull requests
 
