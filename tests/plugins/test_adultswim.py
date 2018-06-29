@@ -1,10 +1,5 @@
-import sys
-
 from streamlink.plugins.adultswim import AdultSwim
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
 
 
 class TestPluginAdultSwim(unittest.TestCase):

@@ -1,15 +1,10 @@
 import sys
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
+from tests.mock import patch, ANY
 
 import os.path
 import streamlink_cli.main
-try:
-    from unittest.mock import patch, ANY
-except ImportError:
-    from mock import patch, ANY
+
 from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
 
@@ -29,9 +24,10 @@ class TestCommandLineInvocation(unittest.TestCase):
 
     @patch('streamlink_cli.main.CONFIG_FILES', ["/dev/null"])
     @patch('streamlink_cli.main.setup_streamlink', side_effect=setup_streamlink)
+    @patch('streamlink_cli.output.sleep')
     @patch('subprocess.Popen')
     @patch('sys.argv')
-    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_setup_streamlink, passthrough=False, exit_code=0):
+    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_sleep, mock_setup_streamlink, passthrough=False, exit_code=0):
         mock_argv.__getitem__.side_effect = lambda x: args[x]
 
         def side_effect(results):

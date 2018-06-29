@@ -1,17 +1,12 @@
-import tempfile
-import sys
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
 import os.path
+import os.path
+import tempfile
+
 import streamlink_cli.main
-try:
-    from unittest.mock import Mock, patch
-except ImportError:
-    from mock import Mock, patch
-from streamlink_cli.main import check_file_output
+from streamlink_cli.main import resolve_stream_name, check_file_output
 from streamlink_cli.output import FileOutput
+import unittest
+from tests.mock import Mock, patch
 
 
 class TestCLIMain(unittest.TestCase):
@@ -49,3 +44,21 @@ class TestCLIMain(unittest.TestCase):
             sys_exit.assert_called_with()
         finally:
             tmpfile.close()
+
+    def test_resolve_stream_name(self):
+        high = Mock()
+        medium = Mock()
+        low = Mock()
+        streams = {
+            "low": low,
+            "medium": medium,
+            "high": high,
+            "worst": low,
+            "best": high
+        }
+        self.assertEqual("high", resolve_stream_name(streams, "best"))
+        self.assertEqual("low", resolve_stream_name(streams, "worst"))
+        self.assertEqual("medium", resolve_stream_name(streams, "medium"))
+        self.assertEqual("high", resolve_stream_name(streams, "high"))
+        self.assertEqual("low", resolve_stream_name(streams, "low"))
+

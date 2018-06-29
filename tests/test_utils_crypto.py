@@ -1,13 +1,8 @@
-import sys
-
 import base64
 
-from streamlink.utils.crypto import evp_bytestokey, decrypt_openssl
+import unittest
 
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+from streamlink.utils.crypto import evp_bytestokey, decrypt_openssl
 
 
 class TestUtil(unittest.TestCase):

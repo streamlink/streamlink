@@ -1,10 +1,3 @@
-import unittest
-
-try:
-    from unittest.mock import MagicMock, patch, PropertyMock
-except ImportError:
-    from mock import MagicMock, patch, PropertyMock
-
 from streamlink import Streamlink
 from streamlink.plugins.filmon import FilmOnHLS
 from streamlink.stream import AkamaiHDStream
@@ -14,6 +7,8 @@ from streamlink.stream import HTTPStream
 from streamlink.stream import RTMPStream
 from streamlink.stream import Stream
 from streamlink_cli.utils import stream_to_url
+import unittest
+from tests.mock import patch, PropertyMock
 
 
 class TestStreamToURL(unittest.TestCase):

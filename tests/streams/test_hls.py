@@ -11,6 +11,7 @@ from mock import patch, Mock
 
 from streamlink.session import Streamlink
 from streamlink.stream import hls
+from tests.resources import text
 
 log = logging.getLogger(__name__)
 
@@ -33,31 +34,8 @@ class TestHLS(unittest.TestCase):
     mediaSequence = 1651
 
     def getMasterPlaylist(self):
-        masterPlaylist = """
-#EXTM3U
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="720p30",NAME="720p",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2299652,RESOLUTION=1280x720,CODECS="avc1.77.31,mp4a.40.2",VIDEO="720p30"
-720p.m3u8
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="720p30",NAME="720p",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=2299652,RESOLUTION=1280x720,CODECS="avc1.77.31,mp4a.40.2",VIDEO="720p30"
-720p_alt.m3u8
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="480p30",NAME="480p",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1354652,RESOLUTION=852x480,CODECS="avc1.77.31,mp4a.40.2",VIDEO="480p30"
-480p.m3u8
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="360p30",NAME="360p",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=630000,RESOLUTION=640x360,CODECS="avc1.77.31,mp4a.40.2",VIDEO="360p30"
-360p.m3u8
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="160p30",NAME="160p",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=230000,RESOLUTION=284x160,CODECS="avc1.77.31,mp4a.40.2",VIDEO="160p30"
-160p.m3u8
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="chunked",NAME="1080p (source)",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3982010,RESOLUTION=1920x1080,CODECS="avc1.4D4029,mp4a.40.2",VIDEO="chunked"
-playlist.m3u8
-#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio_only",NAME="audio_only",AUTOSELECT=YES,DEFAULT=NO,LANGUAGE="en"
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=90145,CODECS="mp4a.40.2",VIDEO="audio_only"
-audio_only.m3u8
-"""
-        return masterPlaylist
+        with text("hls/test_master.m3u8") as pl:
+            return pl.read()
 
     def getPlaylist(self, aesIv, streamNameTemplate):
         playlist = """
@@ -69,6 +47,7 @@ audio_only.m3u8
 #EXT-X-TWITCH-ELAPSED-SECS:3367.800
 #EXT-X-TWITCH-TOTAL-SECS:3379.943
 """.format(self.mediaSequence)
+
         playlistEnd = ""
         if aesIv is not None:
             playlistEnd = playlistEnd + "#EXT-X-KEY:METHOD=AES-128,URI=\"encryption_key.key\",IV=0x{0},KEYFORMAT=identity,KEYFORMATVERSIONS=1\n".format(hexlify(aesIv).decode("UTF-8"))
@@ -146,16 +125,10 @@ audio_only.m3u8
 
 @patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
 class TestHlsExtAudio(unittest.TestCase):
-    playlist = """
-#EXTM3U
-#EXT-X-INDEPENDENT-SEGMENTS
-#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",LANGUAGE="en",NAME="English",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",NAME="English",LANGUAGE="en",AUTOSELECT=NO,URI="en.m3u8"
-#EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="aac",NAME="Spanish",LANGUAGE="es",AUTOSELECT=NO,URI="es.m3u8"
-#EXT-X-MEDIA:TYPE=VIDEO,GROUP-ID="chunked",NAME="video",AUTOSELECT=YES,DEFAULT=YES
-#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=3982010,RESOLUTION=1920x1080,CODECS="avc1.4D4029,mp4a.40.2",VIDEO="chunked", AUDIO="aac"
-playlist.m3u8
-    """
+    @property
+    def playlist(self):
+        with text("hls/test_2.m3u8") as pl:
+            return pl.read()
 
     def run_streamlink(self, playlist, audio_select=None):
         streamlink = Streamlink()
