@@ -1,11 +1,13 @@
-import logging
-import warnings
+from __future__ import unicode_literals
 
+import logging
 import sys
+import warnings
+from logging import NOTSET, ERROR, WARN, INFO, DEBUG, CRITICAL
 from threading import Lock
 
 from streamlink.compat import is_py2
-from logging import NOTSET, ERROR, WARN, INFO, DEBUG, CRITICAL
+from streamlink.utils.encoding import maybe_encode
 
 TRACE = 5
 _levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),
@@ -40,10 +42,10 @@ class _LogRecord(_CompatLogRecord):
         Return the message for this LogRecord after merging any user-supplied
         arguments with the message.
         """
-        msg = str(self.msg)
+        msg = self.msg
         if self.args:
             msg = msg.format(*self.args)
-        return msg
+        return maybe_encode(msg)
 
 
 class StreamlinkLogger(logging.getLoggerClass(), object):
