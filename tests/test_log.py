@@ -1,3 +1,4 @@
+# encoding=utf8
 import logging
 import unittest
 import warnings
