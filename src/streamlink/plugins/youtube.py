@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import argparse
 import logging
 import re
@@ -74,7 +76,7 @@ _config_schema = validate.Schema(
         ),
         validate.optional("hlsvp"): validate.text,
         validate.optional("live_playback"): validate.transform(bool),
-        validate.optional("reason"): validate.text,
+        validate.optional("reason"): validate.all(validate.text, validate.transform(lambda x: x.decode("utf8"))),
         validate.optional("livestream"): validate.text,
         validate.optional("live_playback"): validate.text,
         "status": validate.text
@@ -243,7 +245,7 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
+            info_parsed = parse_query(res.content, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 log.debug("get_video_info - {0}: {1}".format(
                     count, info_parsed.get("reason"))
