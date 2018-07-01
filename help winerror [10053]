@@ -1,0 +1,29 @@
+Traceback (most recent call last):
+  File "C:\Users\Pc\Desktop\bot.py", line 73, in <module>
+    for contact in driver.get_unread():
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\webwhatsapi\__init__.py", line 327, in get_unread
+    raw_message_groups = self.wapi_functions.getUnreadMessages(include_me, include_notifications, use_unread_count)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\webwhatsapi\wapi_js_wrapper.py", line 28, in __getattr__
+    wapi_functions = dir(self)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\webwhatsapi\wapi_js_wrapper.py", line 46, in __dir__
+    self.driver.execute_script(script.read())
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 629, in execute_script
+    'args': converted_args})['value']
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\selenium\webdriver\remote\webdriver.py", line 312, in execute
+    response = self.command_executor.execute(driver_command, params)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 472, in execute
+    return self._request(command_info[0], url, body=data)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 495, in _request
+    self._conn.request(method, parsed_url.path, body, headers)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\http\client.py", line 1239, in request
+    self._send_request(method, url, body, headers, encode_chunked)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\http\client.py", line 1285, in _send_request
+    self.endheaders(body, encode_chunked=encode_chunked)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\http\client.py", line 1234, in endheaders
+    self._send_output(message_body, encode_chunked=encode_chunked)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\http\client.py", line 1065, in _send_output
+    self.send(chunk)
+  File "C:\Users\Pc\AppData\Local\Programs\Python\Python36-32\lib\http\client.py", line 986, in send
+    self.sock.sendall(data)
+ConnectionAbortedError: [WinError 10053] Kurulan bir bağlantı, ana makinenizdeki yazılım tarafından iptal edildi
+
