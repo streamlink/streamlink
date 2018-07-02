@@ -278,7 +278,7 @@ class YouTube(Plugin):
             log.error("Could not find a video on this page")
             return
 
-        self.logger.debug("Using video ID: {0}", video_id)
+        log.debug("Using video ID: {0}", video_id)
 
         info = self._get_stream_info(video_id)
         if info and info.get("status") == "fail":
