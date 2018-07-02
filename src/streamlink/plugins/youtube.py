@@ -14,8 +14,9 @@ API_KEY = "AIzaSyBDBi-4roGzWJN4du9TuDMLd_jVTcVkKz4"
 API_BASE = "https://www.googleapis.com/youtube/v3"
 API_SEARCH_URL = API_BASE + "/search"
 API_VIDEO_INFO = "https://youtube.com/get_video_info"
-
-ERROR_API = "YouTube API call to {0} failed with code {1}. {2} is not available now."
+HLS_HEADERS = {
+    "User-Agent": "Mozilla/5.0"
+}
 
 
 def parse_stream_map(stream_map):
@@ -82,9 +83,6 @@ _config_schema = validate.Schema(
         validate.optional("reason"): validate.text,
         validate.optional("livestream"): validate.text,
         validate.optional("live_playback"): validate.text,
-        validate.optional("author"): validate.text,
-        validate.optional("title"): validate.text,
-        validate.optional("ucid"): validate.text,
         "status": validate.text
     }
 )
@@ -93,40 +91,6 @@ _search_schema = validate.Schema(
         "items": [{
             "id": {
                 "videoId": validate.text
-            }
-        }]
-    },
-    validate.get("items")
-)
-_title_info_schema = validate.Schema(
-    {
-        "items": [{
-            "snippet": {  # description, stream start time, and tags are in here too.
-                "title": validate.text,
-                "categoryId": validate.text,
-                "channelId": validate.text
-            }
-        }]
-    },
-    validate.get("items")
-)
-_channel_info_schema = validate.Schema(
-    {
-        "items": [{
-            "brandingSettings": {
-                "channel": {  # you can also get default language and country code here
-                    "title": validate.text
-                }
-            }
-        }]
-    },
-    validate.get("items")
-)
-_category_info_schema = validate.Schema(
-    {
-        "items": [{
-            "snippet": {
-                "title": validate.text
             }
         }]
     },
@@ -177,16 +141,6 @@ class YouTube(Plugin):
         256: 256,
         258: 258,
     }
-
-    def __init__(self, url):
-        Plugin.__init__(self, url)
-        self.author = None
-        self.category = None
-        self.title = None
-        self.channel_id = None
-        self.category_id = None
-        self.video_id = None
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     arguments = PluginArguments(
         PluginArgument(
@@ -319,13 +273,10 @@ class YouTube(Plugin):
 
         return self._get_stream_info(match.group(1))
 
-    def _find_video_id(self, url):
-        self.logger.debug("Find video ID for {0}".format(url))
+    def _get_stream_info(self, url):
         match = _url_re.match(url)
         user = match.group("user")
         live_channel = match.group("liveChannel")
-
-        video_id = ""
 
         if user:
             video_id = self._find_channel_video()
@@ -337,15 +288,9 @@ class YouTube(Plugin):
                 query_info = dict(parse_qsl(urlparse(url).query))
                 if "channel" in query_info:
                     video_id = self._get_channel_video(query_info["channel"])
-        return video_id
-
-    def _get_stream_info(self, url):
-        video_id = self._find_video_id(url)
 
         if not video_id:
             return
-
-        self.video_id = video_id
 
         # normal
         _params_1 = {"el": "detailpage"}
@@ -361,7 +306,7 @@ class YouTube(Plugin):
             params = {"video_id": video_id}
             params.update(_params)
 
-            res = http.get(API_VIDEO_INFO, params=params)
+            res = http.get(API_VIDEO_INFO, params=params, headers=HLS_HEADERS)
             info_parsed = parse_query(res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 self.logger.debug("get_video_info - {0}: {1}".format(
@@ -374,6 +319,7 @@ class YouTube(Plugin):
         return info_parsed
 
     def _get_streams(self):
+        http.headers.update({'User-Agent': useragents.CHROME})
         is_live = False
 
         info = self._get_stream_info(self.url)
@@ -407,7 +353,7 @@ class YouTube(Plugin):
         if hls_playlist:
             try:
                 hls_streams = HLSStream.parse_variant_playlist(
-                    self.session, hls_playlist, namekey="pixels"
+                    self.session, hls_playlist, headers=HLS_HEADERS, namekey="pixels"
                 )
                 streams.update(hls_streams)
             except IOError as err:
@@ -418,80 +364,6 @@ class YouTube(Plugin):
                               "try youtube-dl instead")
 
         return streams
-
-    def set_title_info(self):
-        if self.video_id is None:
-            self.video_id = self._find_video_id(self.url)
-
-        query = {
-            "part": "id,snippet",
-            "id": self.video_id,
-            "key": API_KEY
-        }
-        url = API_BASE + "/videos"
-        res = http.get(url, params=query, raise_for_status=False)
-        if res.status_code != codes.ok:
-            self.logger.warn(ERROR_API.format(url, res.status_code, "Title Name"))
-            return None
-        allInfo = http.json(res, schema=_title_info_schema)
-
-        for info in allInfo:
-            self.title = info["snippet"]["title"]
-            self.channel_id = info["snippet"]["channelId"]
-            self.category_id = info["snippet"]["categoryId"]
-            return
-
-    def get_title(self):
-        if self.title is None:
-            self.logger.debug("get_title")
-            self.set_title_info()
-        return self.title
-
-    def get_category(self):
-        if self.category is None:
-            self.logger.debug("get_category")
-            if self.category_id is None:
-                self.set_title_info()
-                if self.category_id is None:
-                    return None
-            # translate from category_id to category name
-            query = {
-                "part": "snippet",
-                "id": self.category_id,
-                "key": API_KEY
-            }
-            url = API_BASE+"/videoCategories"
-            res = http.get(url, params=query, raise_for_status=False)
-            if res.status_code != codes.ok:
-                self.logger.warn(ERROR_API.format(url, res.status_code, "Category Name"))
-                return None
-            allInfo = http.json(res, schema=_category_info_schema)
-            for info in allInfo:
-                self.category = info["snippet"]["title"]
-        return self.category
-
-    def get_author(self):
-        if self.author is None:
-            self.logger.debug("get_author")
-            if self.channel_id is None:
-                self.set_title_info()
-                if self.channel_id is None:
-                    return None
-            # translate from channel_id to channel display name
-            query = {
-                "part": "brandingSettings",
-                "id": self.channel_id,
-                "key": API_KEY
-            }
-            url = API_BASE + "/channels"
-            res = http.get(url, params=query, raise_for_status=False)
-            if res.status_code != codes.ok:
-                self.logger.warn(ERROR_API.format(url, res.status_code, "Channel Name"))
-                return None
-            allInfo = http.json(res, schema=_channel_info_schema)
-            for info in allInfo:
-                self.author = info["brandingSettings"]["channel"]["title"]
-        return self.author
 
 
 __plugin__ = YouTube
