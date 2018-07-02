@@ -219,6 +219,11 @@ class YouTube(Plugin):
                 video_id = vid_ep.get("watchEndpoint", {}).get("videoId")
                 if video_id:
                     return video_id
+            for x in search_dict(data, 'videoRenderer'):
+                for bstyle in search_dict(x.get("badges", {}), "style"):
+                    if bstyle == "BADGE_STYLE_TYPE_LIVE_NOW":
+                        if x.get("videoId"):
+                            return x["videoId"]
 
         for link in itertags(res.text, 'link'):
             if link.attributes.get("rel") == "canonical":
@@ -263,6 +268,8 @@ class YouTube(Plugin):
         if not video_id:
             log.error("Could not find a video on this page")
             return
+
+        self.logger.debug("Using video ID: {0}", video_id)
 
         info = self._get_stream_info(video_id)
         if info and info.get("status") == "fail":
