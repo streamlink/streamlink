@@ -210,6 +210,12 @@ class YouTube(Plugin):
         return streams, protected
 
     def _find_video_id(self, url):
+
+        m = _url_re.match(url)
+        if m.group("video_id"):
+            log.debug("Video ID from URL")
+            return m.group("video_id")
+
         res = http.get(url)
         datam = _ytdata_re.search(res.text)
         if datam:
@@ -218,11 +224,13 @@ class YouTube(Plugin):
             for vid_ep in search_dict(data, 'currentVideoEndpoint'):
                 video_id = vid_ep.get("watchEndpoint", {}).get("videoId")
                 if video_id:
+                    log.debug("Video ID from currentVideoEndpoint")
                     return video_id
             for x in search_dict(data, 'videoRenderer'):
                 for bstyle in search_dict(x.get("badges", {}), "style"):
                     if bstyle == "BADGE_STYLE_TYPE_LIVE_NOW":
                         if x.get("videoId"):
+                            log.debug("Video ID from videoRenderer (live)")
                             return x["videoId"]
 
         for link in itertags(res.text, 'link'):
