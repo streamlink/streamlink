@@ -35,7 +35,7 @@ class ConsoleOutput(object):
         self.streamlink = streamlink
 
         self.json = json
-        self.set_output(output)
+        self.output = output
 
     def set_level(self, level):
         self.streamlink.set_loglevel(level)
@@ -43,7 +43,8 @@ class ConsoleOutput(object):
     def set_output(self, output):
         self.output = output
 
-    def ask(self, msg, *args, **kwargs):
+    @classmethod
+    def ask(cls, msg, *args, **kwargs):
         if sys.stdin.isatty():
             formatted = msg.format(*args, **kwargs)
             sys.stderr.write(formatted)
@@ -57,7 +58,8 @@ class ConsoleOutput(object):
         else:
             return ""
 
-    def askpass(self, msg, *args, **kwargs):
+    @classmethod
+    def askpass(cls, msg, *args, **kwargs):
         if sys.stdin.isatty():
             return getpass(msg.format(*args, **kwargs))
         else:

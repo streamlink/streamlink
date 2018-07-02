@@ -1,5 +1,7 @@
 import codecs
 import os.path
+
+import requests_mock
 import six
 from io import BytesIO
 
@@ -43,3 +45,11 @@ def text(path, encoding="utf8"):
 def xml(path, encoding="utf8"):
     with codecs.open(os.path.join(__here__, path), 'r', encoding=encoding) as resource_fh:
         yield _parse_xml(resource_fh.read(), strip_ns=True)
+
+
+@contextmanager
+def mock_http(path, url, encoding="utf8"):
+    with text(path, encoding) as resource:
+        with requests_mock.Mocker() as mock:
+            mock.get(url, text=resource.read())
+            yield mock

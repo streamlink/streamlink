@@ -1,16 +1,12 @@
-import pkgutil
-import sys
-
 import imp
-import six
-from streamlink import Streamlink
-
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-import streamlink.plugins
 import os.path
+import pkgutil
+import six
+
+import unittest
+
+import streamlink.plugins
+from streamlink import Streamlink
 
 
 class PluginTestMeta(type):
@@ -33,6 +29,8 @@ class PluginTestMeta(type):
                 # See also open() call here: imp._HackedGetData.get_data
                 file, pathname, desc = imp.find_module(pname, [plugin_path])
                 session.load_plugin(pname, file, pathname, desc)
+                # validate that can_handle_url does not fail
+                session.plugins[pname].can_handle_url("http://test.com")
 
             return load_plugin_test
 
@@ -45,5 +43,5 @@ class PluginTestMeta(type):
 @six.add_metaclass(PluginTestMeta)
 class TestPlugins(unittest.TestCase):
     """
-    Test that an instance of each plugin can be created.
+    Test that each plugin can be loaded and does not fail when calling can_handle_url.
     """

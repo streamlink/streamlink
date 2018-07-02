@@ -1,3 +1,4 @@
+import argparse
 import errno
 import logging
 import os
@@ -602,7 +603,7 @@ def authenticate_twitch_oauth():
 
     client_id = TWITCH_CLIENT_ID
     redirect_uri = "https://streamlink.github.io/twitch_oauth.html"
-    url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
+    url = ("https://api.twitch.tv/kraken/oauth2/authorize"
            "?response_type=token&client_id={0}&redirect_uri="
            "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
 
@@ -874,19 +875,20 @@ def setup_plugin_options(session, plugin):
     pname = plugin.module
     required = OrderedDict({})
     for parg in plugin.arguments:
-        if parg.required:
-            required[parg.name] = parg
-        value = getattr(args, parg.namespace_dest(pname))
-        session.set_plugin_option(pname, parg.dest, value)
-        # if the value is set, check to see if any of the required arguments are not set
-        if parg.required or value:
-            try:
-                for rparg in plugin.arguments.requires(parg.name):
-                    required[rparg.name] = rparg
-            except RuntimeError:
-                console.logger.error("{0} plugin has a configuration error and the arguments "
-                                     "cannot be parsed".format(pname))
-                break
+        if parg.options.get("help") != argparse.SUPPRESS:
+            if parg.required:
+                required[parg.name] = parg
+            value = getattr(args, parg.namespace_dest(pname))
+            session.set_plugin_option(pname, parg.dest, value)
+            # if the value is set, check to see if any of the required arguments are not set
+            if parg.required or value:
+                try:
+                    for rparg in plugin.arguments.requires(parg.name):
+                        required[rparg.name] = rparg
+                except RuntimeError:
+                    console.logger.error("{0} plugin has a configuration error and the arguments "
+                                         "cannot be parsed".format(pname))
+                    break
     if required:
         for req in required.values():
             if not session.get_plugin_option(pname, req.dest):

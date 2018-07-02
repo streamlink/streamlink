@@ -56,7 +56,7 @@ def stream_weight(stream):
         if stream in weights:
             return weights[stream], group
 
-    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:_(\d+)k)?(?:_(alt)(\d)?)?$", stream)
+    match = re.match(r"^(\d+)(k|p)?(\d+)?(\+)?(?:[a_](\d+)k)?(?:_(alt)(\d)?)?$", stream)
 
     if match:
         weight = 0

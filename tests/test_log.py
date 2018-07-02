@@ -1,17 +1,17 @@
+# encoding=utf8
 import logging
 import unittest
 import warnings
 
 from streamlink import logger, Streamlink
 from streamlink.compat import is_py2
-
+from streamlink.utils.encoding import maybe_decode
+from tests import catch_warnings
 
 if is_py2:
     from io import BytesIO as StringIO
 else:
     from io import StringIO
-
-from tests import catch_warnings
 
 
 
@@ -56,7 +56,11 @@ class TestLogging(unittest.TestCase):
         log.debug("test")
         self.assertEqual(output.getvalue(), "[test][debug] test\n")
 
-
+    def test_log_unicode(self):
+        log, output = self._new_logger()
+        logger.root.setLevel("info")
+        log.info(u"Special Character: Ѩ")
+        self.assertEqual(maybe_decode(output.getvalue()), u"[test][info] Special Character: Ѩ\n")
 
 
 class TestDeprecatedLogger(unittest.TestCase):

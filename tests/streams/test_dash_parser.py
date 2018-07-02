@@ -61,6 +61,11 @@ class TestMPDParsers(unittest.TestCase):
         self.assertEqual(MPDParsers.timedelta(10)(100),
                          datetime.timedelta(0, 10.0))
 
+    def test_range(self):
+        self.assertEqual(MPDParsers.range("100-"), (100, None))
+        self.assertEqual(MPDParsers.range("100-199"), (100, 100))
+        self.assertRaises(MPDParsingError, MPDParsers.range, "100")
+
 
 class TestMPDParser(unittest.TestCase):
     maxDiff = None
@@ -147,6 +152,21 @@ class TestMPDParser(unittest.TestCase):
                                      ['http://test.se/dash/150633-video_eng=194000-0.dash',
                                       'http://test.se/dash/150633-video_eng=194000-2000.dash',
                                       'http://test.se/dash/150633-video_eng=194000-4000.dash',
+                                      ])
+
+    def test_segments_list(self):
+        with xml("dash/test_7.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/chunk_ctvideo_ridp0va0br4332748_cinit_mpd.m4s")
+
+            video_segments = [x.url for x in itertools.islice(segments, 3)]
+            self.assertSequenceEqual(video_segments,
+                                     ['http://test.se/chunk_ctvideo_ridp0va0br4332748_cn1_mpd.m4s',
+                                      'http://test.se/chunk_ctvideo_ridp0va0br4332748_cn2_mpd.m4s',
+                                      'http://test.se/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s',
                                       ])
 
     def test_segments_dynamic_timeline_continue(self):

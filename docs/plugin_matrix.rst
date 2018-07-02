@@ -43,8 +43,7 @@ btsports                sport.bt.com         Yes   Yes   Requires subscription a
 btv                     btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 cam4                    cam4.com             Yes   No
 camsoda                 camsoda.com          Yes   No
-canalplus               - mycanal.fr         No    Yes   Streams may be geo-restricted to France.
-                        - cnews.fr
+canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
 cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                         - bgonair.bg
                         - kanal3.bg
@@ -57,6 +56,7 @@ cinergroup              - showtv.com.tr      Yes   No
                         - showmax.com.tr
                         - showturk.com.tr
                         - bloomberght.com
+cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
@@ -123,11 +123,11 @@ mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-rest
 mips                    mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mixer                   mixer.com            Yes   Yes
+mjunoon                 mjunoon.tv           Yes   Yes
 mlgtv                   mlg.tv               Yes   --
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
-nineanime               9anime.to            --    Yes
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 npo                     - npo.nl             Yes   Yes   Streams may be geo-restricted to Netherlands.
                         - zapp.nl
@@ -192,6 +192,7 @@ srgssr                  - srf.ch             Yes   No    Streams are geo-restric
                         - rtr.ch
 ssh101                  ssh101.com           Yes   No
 startv                  startv.com.tr        Yes   No
+steam                   steamcommunity.com   Yes   No    Some streams will require a Steam account.
 streamable              streamable.com       -     Yes
 streamboat              streamboat.tv        Yes   No
 streamingvideoprovider  streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
@@ -230,7 +231,6 @@ tv5monde                - tv5monde.com       Yes   Yes   Streams may be geo-rest
                         - tv5mondeplus.com
                         - tv5mondepl... [9]_
 tv8                     tv8.com.tr           Yes   No
-tv8cat                  tv8.cat              Yes   No    Streams may be geo-restricted to Spain/Catalunya.
 tv360                   tv360.com.tr         Yes   No
 tvcatchup               tvcatchup.com        Yes   No    Streams may be geo-restricted to Great Britain.
 tvnbg                   - tvn.bg             Yes   -
@@ -239,6 +239,7 @@ tvp                     tvpstream.vod.tvp.pl Yes   No    Streams may be geo-rest
 tvplayer                tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
+tvtoya                  tvtoya.pl            Yes   --
 twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                          subscription streams.
 ustreamtv               ustream.tv           Yes   Yes
@@ -270,6 +271,7 @@ wwenetwork              network.wwe.com      Yes   Yes   Requires an account to 
 younow                  younow.com           Yes   --
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.
                         - youtu.be
+yupptv                  yupptv.com           Yes   Yes   Some streams require an account and subscription.
 zattoo                  - zattoo.com         Yes   Yes
                         - nettv.net... [10]_
                         - tvonline.ewe.de

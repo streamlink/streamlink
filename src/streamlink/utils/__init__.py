@@ -334,7 +334,7 @@ def swfverify(url):  # pragma: no cover
     return h.hexdigest(), len(swf)
 
 
-def escape_librtmp(value):
+def escape_librtmp(value):  # pragma: no cover
     if isinstance(value, bool):
         value = "1" if value else "0"
     if isinstance(value, int):

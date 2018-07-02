@@ -1,9 +1,5 @@
 import unittest
-
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
+from tests.mock import patch
 
 import streamlink.utils.l10n as l10n
 

@@ -1,4 +1,7 @@
 import unittest
+import unittest
+from streamlink.stream.dash import DASHStreamWorker
+from tests.mock import MagicMock, patch, ANY, Mock, call
 
 from streamlink import PluginError
 from streamlink.stream import *
@@ -107,39 +110,39 @@ class TestDASHStream(unittest.TestCase):
     @patch('streamlink.stream.dash.DASHStreamReader')
     @patch('streamlink.stream.dash.FFMPEGMuxer')
     def test_stream_open_video_only(self, muxer, reader):
-        stream = DASHStream(self.session, Mock(), Mock(id=1))
+        stream = DASHStream(self.session, Mock(), Mock(id=1, mimeType="video/mp4"))
         open_reader = reader.return_value = Mock()
 
         stream.open()
 
-        reader.assert_called_with(stream, 1)
+        reader.assert_called_with(stream, 1, "video/mp4")
         open_reader.open.assert_called_with()
         muxer.assert_not_called()
 
     @patch('streamlink.stream.dash.DASHStreamReader')
     @patch('streamlink.stream.dash.FFMPEGMuxer')
     def test_stream_open_video_audio(self, muxer, reader):
-        stream = DASHStream(self.session, Mock(), Mock(id=1), Mock(id=2))
+        stream = DASHStream(self.session, Mock(), Mock(id=1, mimeType="video/mp4"), Mock(id=2, mimeType="audio/mp3"))
         open_reader = reader.return_value = Mock()
 
         stream.open()
 
-        self.assertSequenceEqual(reader.mock_calls, [call(stream, 1),
+        self.assertSequenceEqual(reader.mock_calls, [call(stream, 1, "video/mp4"),
                                                      call().open(),
-                                                     call(stream, 2),
+                                                     call(stream, 2, "audio/mp3"),
                                                      call().open()])
         self.assertSequenceEqual(muxer.mock_calls, [call(self.session, open_reader, open_reader, copyts=True),
                                                     call().open()])
 
 
 class TestDASHStreamWorker(unittest.TestCase):
-
     @patch("streamlink.stream.dash_manifest.time.sleep")
     @patch('streamlink.stream.dash.MPD')
     def test_dynamic_reload(self, mpdClass, sleep):
         reader = MagicMock()
         worker = DASHStreamWorker(reader)
         reader.representation_id = 1
+        reader.mime_type = "video/mp4"
 
         representation = Mock(id=1, mimeType="video/mp4", height=720)
         segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
@@ -173,6 +176,7 @@ class TestDASHStreamWorker(unittest.TestCase):
         reader = MagicMock()
         worker = DASHStreamWorker(reader)
         reader.representation_id = 1
+        reader.mime_type = "video/mp4"
 
         representation = Mock(id=1, mimeType="video/mp4", height=720)
         segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
@@ -194,6 +198,29 @@ class TestDASHStreamWorker(unittest.TestCase):
         representation.segments.return_value = segments
         self.assertSequenceEqual(list(worker.iter_segments()), segments)
         representation.segments.assert_called_with(init=True)
+
+    @patch("streamlink.stream.dash_manifest.time.sleep")
+    def test_duplicate_rep_id(self, sleep):
+        representation_vid = Mock(id=1, mimeType="video/mp4", height=720)
+        representation_aud = Mock(id=1, mimeType="audio/aac")
+
+        mpd = Mock(dynamic=False,
+                   publishTime=1,
+                   periods=[
+                       Mock(adaptationSets=[
+                           Mock(contentProtection=None,
+                                representations=[
+                                    representation_vid
+                                ]),
+                           Mock(contentProtection=None,
+                                representations=[
+                                    representation_aud
+                                ])
+                       ])
+                   ])
+
+        self.assertEqual(representation_vid, DASHStreamWorker.get_representation(mpd, 1, "video/mp4"))
+        self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
 
 
 if __name__ == "__main__":
