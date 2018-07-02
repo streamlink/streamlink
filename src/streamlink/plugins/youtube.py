@@ -211,14 +211,6 @@ class YouTube(Plugin):
 
     def _find_video_id(self, url):
         res = http.get(url)
-
-        for link in itertags(res.text, 'link'):
-            if link.attributes.get("rel") == "canonical":
-                canon_link = link.attributes.get("href")
-                if canon_link != url:
-                    log.debug("Re-directing to canonical URL: {0}".format(canon_link))
-                    return self._find_video_id(canon_link)
-
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
@@ -227,6 +219,13 @@ class YouTube(Plugin):
                 video_id = vid_ep.get("watchEndpoint", {}).get("videoId")
                 if video_id:
                     return video_id
+
+        for link in itertags(res.text, 'link'):
+            if link.attributes.get("rel") == "canonical":
+                canon_link = link.attributes.get("href")
+                if canon_link != url:
+                    log.debug("Re-directing to canonical URL: {0}".format(canon_link))
+                    return self._find_video_id(canon_link)
 
 
     def _get_stream_info(self, video_id):
@@ -262,14 +261,16 @@ class YouTube(Plugin):
 
         video_id = self._find_video_id(self.url)
         if not video_id:
-            log.error("Cloud not find a video on this page")
+            log.error("Could not find a video on this page")
             return
 
         info = self._get_stream_info(video_id)
         if info and info.get("status") == "fail":
             log.error("Could not get video info: {0}".format(info.get("reason")))
+            return
         elif not info:
             log.error("Could not get video info")
+            return
 
         if info.get("livestream") == '1' or info.get("live_playback") == '1':
             log.debug("This video is live.")
