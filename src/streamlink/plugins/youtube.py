@@ -234,14 +234,6 @@ class YouTube(Plugin):
                             log.debug("Video ID from videoRenderer (live)")
                             return x["videoId"]
 
-        for link in itertags(res.text, 'link'):
-            if link.attributes.get("rel") == "canonical":
-                canon_link = link.attributes.get("href")
-                if canon_link != url:
-                    log.debug("Re-directing to canonical URL: {0}".format(canon_link))
-                    return self._find_video_id(canon_link)
-
-
     def _get_stream_info(self, video_id):
         # normal
         _params_1 = {"el": "detailpage"}
