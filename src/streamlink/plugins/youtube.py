@@ -4,13 +4,14 @@ import argparse
 import logging
 import re
 
-from streamlink.compat import parse_qsl
+from streamlink.compat import parse_qsl, is_py2
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.plugin.api.utils import parse_query, itertags
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
+from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ _config_schema = validate.Schema(
         ),
         validate.optional("hlsvp"): validate.text,
         validate.optional("live_playback"): validate.transform(bool),
-        validate.optional("reason"): validate.all(validate.text, validate.transform(lambda x: x.decode("utf8"))),
+        validate.optional("reason"): validate.all(validate.text, validate.transform(maybe_decode)),
         validate.optional("livestream"): validate.text,
         validate.optional("live_playback"): validate.text,
         "status": validate.text
@@ -257,7 +258,7 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.content, name="config", schema=_config_schema)
+            info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 log.debug("get_video_info - {0}: {1}".format(
                     count, info_parsed.get("reason"))
