@@ -630,7 +630,8 @@ class SegmentTimeline(MPDNode):
     def segments(self):
         t = 0
         for tsegment in self.timeline_segments:
-            t = t or tsegment.t
+            if t == 0 and tsegment.t is not None:
+                t = tsegment.t
             # check the start time from MPD
             for repeated_i in range(tsegment.r + 1):
                 yield self.TimelineSegment(t, tsegment.d)

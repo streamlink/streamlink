@@ -200,3 +200,23 @@ class TestMPDParser(unittest.TestCase):
                                           'http://test.se/video/1013000.mp4',
                                           'http://test.se/video/1014000.mp4',
                                           'http://test.se/video/1015000.mp4'])
+
+
+    def test_tsegment_t_is_none_1895(self):
+        """
+            Verify the fix for https://github.com/streamlink/streamlink/issues/1895
+        """
+        with xml("dash/test_8.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/video-2799000-0.mp4?z32=CENSORED_SESSION")
+
+            video_segments = [x.url for x in itertools.islice(segments, 3)]
+            self.assertSequenceEqual(video_segments,
+                                     ['http://test.se/video-time=0-2799000-0.m4s?z32=CENSORED_SESSION',
+                                      'http://test.se/video-time=4000-2799000-0.m4s?z32=CENSORED_SESSION',
+                                      'http://test.se/video-time=8000-2799000-0.m4s?z32=CENSORED_SESSION',
+                                      ])
+
