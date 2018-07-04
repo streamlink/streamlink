@@ -275,6 +275,17 @@ yupptv                  yupptv.com           Yes   Yes   Some streams require an
 zattoo                  - zattoo.com         Yes   Yes
                         - nettv.net... [10]_
                         - tvonline.ewe.de
+                        - iptv.glat... [11]_
+                        - mobiltv.q... [12]_
+                        - player.waly.tv
+                        - tvplus.m-net.de
+                        - www.bbv-tv.net
+                        - www.meinewelt.cc
+                        - www.myvisiontv.ch
+                        - www.netplus.tv
+                        - www.quantum-tv.com
+                        - www.saktv.ch
+                        - www.vtxtv.ch
 zdf_mediathek           zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
 zengatv                 zengatv.com          Yes   No
 zhanqi                  zhanqi.tv            Yes   No
@@ -290,3 +301,5 @@ zhanqi                  zhanqi.tv            Yes   No
 .. [8] france3-regions.francetvinfo.fr
 .. [9] tv5mondeplusafrique.com
 .. [10] nettv.netcologne.de
+.. [11] iptv.glattvision.ch
+.. [12] mobiltv.quickline.com
