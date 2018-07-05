@@ -125,18 +125,18 @@ class PlayerOutput(Output):
     @classmethod
     def _mpv_title_escape(cls, title_string):
         # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
-        if '\$>' in title_string:
+        if r'\$>' in title_string:
             processed_title = ""
             double_dollars = True
             i = dollars = 0
             while i < len(title_string):
                 if double_dollars:
                     if title_string[i] == "\\":
-                        if title_string[i+1] == "$":
+                        if title_string[i + 1] == "$":
                             processed_title += "$"
                             dollars += 1
                             i += 1
-                            if title_string[i+1] == ">" and dollars % 2 == 1:
+                            if title_string[i + 1] == ">" and dollars % 2 == 1:
                                 double_dollars = False
                                 processed_title += ">"
                                 i += 1
@@ -148,7 +148,7 @@ class PlayerOutput(Output):
                         dollars = 0
                         processed_title += title_string[i]
                 else:
-                    if title_string[i:i+2] == "\\$":
+                    if title_string[i:i + 2] == "\\$":
                         processed_title += "$"
                         i += 1
                     else:
@@ -157,7 +157,7 @@ class PlayerOutput(Output):
             return processed_title
         else:
             # not possible for property-expansion to be disabled, happy days
-            return title_string.replace("$", "$$").replace("\$$", "$")
+            return title_string.replace("$", "$$").replace(r'\$$', "$")
 
     def _create_arguments(self):
         if self.namedpipe:
@@ -176,7 +176,7 @@ class PlayerOutput(Output):
             # vlc
             if self.player_name == "vlc":
                 # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
-                self.title = self.title.replace("$", "$$").replace("\$$", "$")
+                self.title = self.title.replace("$", "$$").replace(r'\$$', "$")
                 extra_args.extend(["--input-title-format", self.title])
 
             # mpv

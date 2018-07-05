@@ -1,16 +1,14 @@
 import sys
-import unittest
-from tests.mock import patch, ANY
-
 import os.path
 import unittest
+from tests.mock import patch, ANY
 
 import streamlink_cli.main
 
 
 from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
-from tests.mock import patch, ANY
+from tests.mock import patch
 
 PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
 
@@ -71,7 +69,7 @@ class TestCommandLinePOSIX(CommandLineTestCase):
         self._test_args(["streamlink", "-p", "\"/Applications/Video Player/player\"", "http://test.se", "test"],
                         ["/Applications/Video Player/player", "-"])
         # escaped
-        self._test_args(["streamlink", "-p", "/Applications/Video\ Player/player", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "/Applications/Video\\ Player/player", "http://test.se", "test"],
                         ["/Applications/Video Player/player", "-"])
 
     def test_open_player_extra_args_in_player(self):

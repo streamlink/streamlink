@@ -61,15 +61,15 @@ class TestPlayerOutput(unittest.TestCase):
                          'no escape $$$$ codes $$')
 
     def test_open_player_with_title_mpv_escape_2(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("\$> begins with escape code $$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'\$> begins with escape code $$'),
                          '$> begins with escape code $$')
 
     def test_open_player_with_title_mpv_escape_3(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("ends with escape code $$ \$>"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'ends with escape code $$ \$>'),
                          'ends with escape code $$$$ $>')
 
     def test_open_player_with_title_mpv_escape_4(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("\$> $$ begins with escape and double \$> $$ escape codes"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'\$> $$ begins with escape and double \$> $$ escape codes'),
                          '$> $$ begins with escape and double $> $$ escape codes')
 
     def test_open_player_with_title_mpv_escape_5(self):
@@ -89,31 +89,31 @@ class TestPlayerOutput(unittest.TestCase):
                          'not valid $$$$$$$$$$$$> not a valid way to escape $$')
 
     def test_open_player_with_title_mpv_escape_9(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("Multiple $> \$> $> $$ \$> $$> $> \$> $> $> \$> \$> \$>\$>$$$$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'Multiple $> \$> $> $$ \$> $$> $> \$> $> $> \$> \$> \$>\$>$$$$'),
                          'Multiple $$> $> $> $$ $> $$> $> $> $> $> $> $> $>$>$$$$')
 
     def test_open_player_with_title_mpv_escape_10(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("odd leading $$$\$> $$$ $>"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'odd leading $$$\$> $$$ $>'),
                          'odd leading $$$$$$$> $$$ $>')
 
     def test_open_player_with_title_mpv_escape_11(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("even leading $$\$\$> $$$$$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'even leading $$\$\$> $$$$$'),
                          'even leading $$$$$$> $$$$$$$$$$')  # will expand after \$> because eve)
 
     def test_open_player_with_title_mpv_escape_12(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape(r"$$$$$\$\$> even leading beginning $$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'$$$$$\$\$> even leading beginning $$'),
                          r'$$$$$$$$$$$$> even leading beginning $$$$')
 
     def test_open_player_with_title_mpv_escape_13(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape(r"$$$$$\$> odd leading beginning $$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'$$$$$\$> odd leading beginning $$'),
                          r'$$$$$$$$$$$> odd leading beginning $$')
 
     def test_open_player_with_title_mpv_escape_14(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("odd and even $\$> $$ \$\$> $$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'odd and even $\$> $$ \$\$> $$'),
                          'odd and even $$$> $$ $$> $$')
 
     def test_open_player_with_title_mpv_escape_15(self):
-        self.assertEqual(PlayerOutput._mpv_title_escape("even and odd \$\$> $$ $\$> $$"),
+        self.assertEqual(PlayerOutput._mpv_title_escape(r'even and odd \$\$> $$ $\$> $$'),
                          'even and odd $$> $$$$ $$$> $$')
 
     def test_open_player_with_title_mpv_escape_16(self):
