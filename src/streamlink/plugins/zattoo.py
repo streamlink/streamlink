@@ -12,20 +12,9 @@ from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream
+from streamlink.utils.args import comma_list_filter
 
 log = logging.getLogger(__name__)
-
-
-def comma_list(values):
-    return [val.strip() for val in values.split(',')]
-
-
-def comma_list_filter(acceptable):
-    def func(p):
-        values = comma_list(p)
-        return list(filter(lambda v: v in acceptable, values))
-
-    return func
 
 
 class Zattoo(Plugin):
