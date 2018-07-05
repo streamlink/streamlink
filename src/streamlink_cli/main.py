@@ -164,10 +164,13 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
+        title = create_title(streamlink.resolve_url(args.url))
+
         server = create_http_server()
         player = output = PlayerOutput(args.player, args=args.player_args,
                                        filename=server.url,
-                                       quiet=not args.verbose_player)
+                                       quiet=not args.verbose_player,
+                                       title=title)
 
         try:
             log.info("Starting player: {0}", args.player)
@@ -227,11 +230,13 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
 def output_stream_passthrough(stream):
     """Prepares a filename to be passed to the player."""
     global output
+    title = create_title(streamlink.resolve_url(args.url))
 
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
-                          quiet=not args.verbose_player)
+                          quiet=not args.verbose_player,
+                          title=title)
 
     try:
         log.info("Starting player: {0}", args.player)
