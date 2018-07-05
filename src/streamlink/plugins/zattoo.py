@@ -4,6 +4,7 @@ import uuid
 
 from requests.cookies import cookiejar_from_dict
 
+from streamlink import PluginError
 from streamlink.cache import Cache
 from streamlink.plugin import Plugin
 from streamlink.plugin import PluginArguments, PluginArgument
@@ -187,26 +188,29 @@ class Zattoo(Plugin):
         log.debug('_login ... Attempting login as {0}'.format(email))
 
         login_url = self.API_LOGIN.format(self.base_url)
-
         params = {
             'login': email,
             'password': password,
             'remember': 'true'
         }
-        res = http.post(login_url, headers=self.headers, data=params)
-        data = http.json(res)
 
+        try:
+            res = http.post(login_url, headers=self.headers, data=params)
+        except Exception as e:
+            if '400 Client Error' in str(e):
+                raise PluginError(
+                    'Failed to login, check your username/password')
+            raise e
+
+        data = http.json(res)
         self._authed = data['success']
-        if self._authed:
-            log.debug('New Session Data')
-            self.save_cookies(default_expires=self.TIME_SESSION)
-            self._session_attributes.set('power_guide_hash',
-                                         data['session']['power_guide_hash'],
-                                         expires=self.TIME_SESSION)
-            self._session_attributes.set(
-                'session_control', True, expires=self.TIME_CONTROL)
-            return self._authed
-        return False
+        log.debug('New Session Data')
+        self.save_cookies(default_expires=self.TIME_SESSION)
+        self._session_attributes.set('power_guide_hash',
+                                     data['session']['power_guide_hash'],
+                                     expires=self.TIME_SESSION)
+        self._session_attributes.set(
+            'session_control', True, expires=self.TIME_CONTROL)
 
     def _watch(self):
         log.debug('_watch ...')
@@ -341,9 +345,7 @@ class Zattoo(Plugin):
 
         if not self._authed:
             self._hello()
-            if not self._login(email, password):
-                log.error('Failed to login, check your username/password')
-                return
+            self._login(email, password)
 
         return self._watch()
 
