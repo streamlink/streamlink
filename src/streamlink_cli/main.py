@@ -66,7 +66,7 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output():
+def create_output(plugin):
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -103,7 +103,7 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
-        title = create_title(streamlink.resolve_url(args.url))
+        title = create_title(plugin)
         log.info("Starting player: {0}", args.player)
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
@@ -129,6 +129,7 @@ def create_http_server(host=None, port=0):
 
     return http
 
+
 def create_title(plugin=None):
     if args.title and plugin:
         title = LazyFormatter.format(
@@ -141,6 +142,7 @@ def create_title(plugin=None):
     else:
         title = args.url
     return title
+
 
 def iter_http_requests(server, player):
     """Repeatedly accept HTTP connections on a server.
@@ -166,8 +168,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
-        title = create_title(streamlink.resolve_url(args.url))
-
+        title = create_title(plugin)
         server = create_http_server()
         player = output = PlayerOutput(args.player, args=args.player_args,
                                        filename=server.url,
@@ -229,11 +230,11 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(stream):
+def output_stream_passthrough(plugin, stream):
     """Prepares a filename to be passed to the player."""
     global output
-    title = create_title(streamlink.resolve_url(args.url))
 
+    title = create_title(plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
@@ -281,7 +282,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(stream):
+def output_stream(plugin, stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -297,7 +298,7 @@ def output_stream(stream):
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
-    output = create_output()
+    output = create_output(plugin)
 
     try:
         output.open()
@@ -413,7 +414,7 @@ def handle_stream(plugin, streams, stream_name):
             if stream_type in args.player_passthrough and not file_output:
                 log.info("Opening stream: {0} ({1})", stream_name,
                          stream_type)
-                success = output_stream_passthrough(stream)
+                success = output_stream_passthrough(plugin, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
                                           port=args.player_external_http_port)
@@ -422,7 +423,8 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 log.info("Opening stream: {0} ({1})", stream_name,
                          stream_type)
-                success = output_stream(stream)
+
+                success = output_stream(plugin, stream)
 
             if success:
                 break
