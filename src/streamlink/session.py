@@ -18,6 +18,7 @@ from .plugin import api
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
 logging.setLoggerClass(StreamlinkLogger)
 log = logging.getLogger(__name__)
+_loaded_plugins = None
 
 
 def print_small_exception(start_after):
@@ -75,14 +76,32 @@ class Streamlink(object):
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy",
             "locale": None,
-            "user-input-requester": None
+            "user-input-requester": None,
+            "no-plugin-reload": False
         })
         if options:
             self.options.update(options)
+ 
+        global _loaded_plugins
         self.plugins = {}
-        self.load_builtin_plugins()
+        if _loaded_plugins and self.get_option("no-plugin-reload"):
+            self._update_loaded_plugins()
+        else:
+            self.load_builtin_plugins()
+            if self.get_option("no-plugin-reload"):
+                _loaded_plugins = self.plugins.copy()
+        
         self._logger = None
 
+    def _update_loaded_plugins(self):
+        # Set the global http session
+        api.http = self.http
+        # Reload plugins from saved ones
+        self.plugins = _loaded_plugins.copy()
+        # Update plugins session
+        for plugin in self.plugins.itervalues():
+            plugin.session = self
+            
     @property
     def logger(self):
         """
