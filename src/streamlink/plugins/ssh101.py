@@ -7,15 +7,14 @@ from streamlink.compat import urljoin
 
 
 class SSH101(Plugin):
-    url_re = re.compile(r"https?://(?:\w+\.)?ssh101\.com/(.+)(/vod)?")
-    src_re = re.compile(r'''source.*?src="(?P<url>.*?)"''')
-    iframe_re = re.compile(r'''iframe.*?src="(?P<url>.*?)"''')
+    url_re = re.compile(r'https?://(?:\w+\.)?ssh101\.com/(.+)(/vod)?')
+    src_re = re.compile(r'sources.*?src:\s"(?P<url>.*?)"')
+    iframe_re = re.compile(r'iframe.*?src="(?P<url>.*?)"')
 
     @classmethod
     def can_handle_url(cls, url):
         return cls.url_re.match(url)
 
-    @Plugin.broken(1176)
     def _get_streams(self):
         res = http.get(self.url)
 
