@@ -236,13 +236,13 @@ class M3U8Parser(object):
         self.state = {}
         self.m3u8 = M3U8()
 
-        lines = enumerate(filter(bool, data.splitlines()))
-        _, line = next(lines)
+        lines = iter(filter(bool, data.splitlines()))
+        line = next(lines)
         if not line.startswith("#EXTM3U"):
             raise ValueError("Missing #EXTM3U header")
 
         parse_line = self.parse_line
-        for _, line in lines:
+        for line in lines:
             parse_line(line)
             
         # Associate Media entries with each Playlist
