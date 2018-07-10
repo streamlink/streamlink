@@ -1,73 +1,95 @@
-"""Plugin for TV4 Play, swedish TV channel TV4's streaming service."""
-
+import logging
 import re
 
-from streamlink.compat import urlparse
+from streamlink.compat import urljoin
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate
-from streamlink.stream import HDSStream, RTMPStream
+from streamlink.stream import HLSStream
 
-ASSET_URL = "http://prima.tv4play.se/api/web/asset/{0}/play"
-SWF_URL = "http://www.tv4play.se/flash/tv4video.swf"
-
-_url_re = re.compile(r"""
-    http(s)?://(www\.)?
-    (?:
-        tv4play.se/program/[^\?/]+|
-        fotbollskanalen.se/video
-    )
-    .+(video_id|videoid)=(?P<video_id>\d+)
-""", re.VERBOSE)
-
-_asset_schema = validate.Schema(
-    validate.xml_findall("items/item"),
-    [
-        validate.all(
-            validate.xml_findall("*"),
-            validate.map(lambda e: (e.tag, e.text)),
-            validate.transform(dict),
-            {
-                "base": validate.text,
-                "bitrate": validate.all(
-                    validate.text, validate.transform(int)
-                ),
-                "url": validate.text
-            }
-        )
-    ]
-)
+log = logging.getLogger(__name__)
 
 
 class TV4Play(Plugin):
+    """Plugin for TV4 Play, swedish TV channel TV4's streaming service."""
+
+    title = None
+    video_id = None
+
+    api_url = "https://playback-api.b17g.net"
+    api_assets = urljoin(api_url, "/asset/{0}")
+
+    _url_re = re.compile(r"""
+        https?://(?:www\.)?
+        (?:
+            tv4play.se/program/[^\?/]+
+            |
+            fotbollskanalen.se/video
+        )
+        /(?P<video_id>\d+)
+    """, re.VERBOSE)
+
+    _meta_schema = validate.Schema(
+        {
+            "metadata": {
+                "title": validate.text
+            },
+            "mediaUri": validate.text
+        }
+    )
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._url_re.match(url) is not None
+
+    @property
+    def get_video_id(self):
+        if self.video_id is None:
+            match = self._url_re.match(self.url)
+            self.video_id = match.group("video_id")
+            log.debug("Found video ID: {0}".format(self.video_id))
+        return self.video_id
+
+    def get_metadata(self):
+        params = {
+            "device": "browser",
+            "protocol": "hls",
+            "service": "tv4",
+        }
+        try:
+            res = http.get(self.api_assets.format(self.get_video_id),
+                           params=params)
+        except Exception as e:
+            if "404 Client Error" in str(e):
+                raise PluginError("This Video is not available")
+            raise e
+        log.debug("Found metadata")
+        metadata = http.json(res, schema=self._meta_schema)
+        self.title = metadata["metadata"]["title"]
+        return metadata
+
+    def get_title(self):
+        if self.title is None:
+            self.get_metadata()
+        return self.title
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        video_id = match.group("video_id")
-        res = http.get(ASSET_URL.format(video_id))
-        assets = http.xml(res, schema=_asset_schema)
+        metadata = self.get_metadata()
 
-        streams = {}
-        for asset in assets:
-            base = asset["base"]
-            url = asset["url"]
+        try:
+            res = http.get(urljoin(self.api_url, metadata["mediaUri"]))
+        except Exception as e:
+            if "401 Client Error" in str(e):
+                raise PluginError("This Video is not available in your country")
+            raise e
 
-            if urlparse(url).path.endswith(".f4m"):
-                streams.update(
-                    HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL)
-                )
-            elif base.startswith("rtmp"):
-                name = "{0}k".format(asset["bitrate"])
-                params = {
-                    "rtmp": asset["base"],
-                    "playpath": url,
-                    "live": True
-                }
-                streams[name] = RTMPStream(self.session, params)
-
-        return streams
+        log.debug("Found stream data")
+        data = http.json(res)
+        hls_url = data["playbackItem"]["manifestUrl"]
+        log.debug("URL={0}".format(hls_url))
+        for s in HLSStream.parse_variant_playlist(self.session,
+                                                  hls_url).items():
+            yield s
 
 
 __plugin__ = TV4Play
