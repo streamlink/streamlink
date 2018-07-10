@@ -59,11 +59,9 @@ class M3U8(object):
 
 
 class M3U8Parser(object):
-    _extinf_re = re.compile("(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
-    _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|"
-                   r"\"(.+?)\"|[0-9A-z\-]+)")
-    _range_re = re.compile("(?P<range>\d+)(@(?P<offset>.+))?")
-    _line_re_ = re.compile(r'(.*)[\n|\r]')
+    _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
+    _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
+    _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")
 
     def __init__(self, base_uri=None):
         self.base_uri = base_uri
@@ -94,7 +92,7 @@ class M3U8Parser(object):
                               streaminf.get("SUBTITLES"))
 
     def split_tag(self, line):
-        match = re.match("#(?P<tag>[\w-]+)(:(?P<value>.+))?", line)
+        match = re.match(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?", line)
 
         if match:
             return match.group("tag"), (match.group("value") or "").strip()
@@ -133,7 +131,7 @@ class M3U8Parser(object):
         return unhexlify(value)
 
     def parse_resolution(self, value):
-        match = re.match("(\d+)x(\d+)", value)
+        match = re.match(r"(\d+)x(\d+)", value)
 
         if match:
             width, height = int(match.group(1)), int(match.group(2))
