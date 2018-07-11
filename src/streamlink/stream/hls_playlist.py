@@ -103,7 +103,7 @@ class M3U8Parser(object):
         def map_attribute(key, value, quoted):
             return (key, quoted or value)
 
-        attr = M3U8Parser._attr_re.findall(value)
+        attr = self._attr_re.findall(value)
 
         return dict(starmap(map_attribute, attr))
 
@@ -111,14 +111,14 @@ class M3U8Parser(object):
         return value == "YES"
 
     def parse_byterange(self, value):
-        match = M3U8Parser._range_re.match(value)
+        match = self._range_re.match(value)
 
         if match:
             return ByteRange(int(match.group("range")),
                              int(match.group("offset") or 0))
 
     def parse_extinf(self, value):
-        match = M3U8Parser._extinf_re.match(value)
+        match = self._extinf_re.match(value)
         if match:
             return float(match.group("duration")), match.group("title")
         return (0, None)
