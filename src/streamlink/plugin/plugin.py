@@ -433,6 +433,15 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
+    def get_title(self):
+        return None
+
+    def get_author(self):
+        return None
+
+    def get_category(self):
+        return None
+
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """
         Store the cookies from ``http`` in the plugin cache until they expire. The cookies can be filtered
@@ -537,7 +546,5 @@ class Plugin(object):
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
-
-
 
 __all__ = ["Plugin"]

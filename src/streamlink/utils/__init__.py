@@ -11,6 +11,8 @@ except ImportError:  # pragma: no cover
 from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse, is_py3
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
+from streamlink.utils.lazy_formatter import LazyFormatter
+from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
 
 
 def swfdecompress(data):
@@ -348,4 +350,5 @@ def escape_librtmp(value):  # pragma: no cover
 __all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
            "parse_xml", "res_xml", "rtmpparse", "prepend_www", "NamedPipe",
-           "escape_librtmp"]
+           "escape_librtmp", "LazyFormatter", "get_filesystem_encoding",
+           "maybe_decode", "maybe_encode"]

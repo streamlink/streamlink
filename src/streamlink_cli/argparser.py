@@ -9,7 +9,7 @@ from streamlink.utils.args import (
 )
 from streamlink.utils.times import hours_minutes_seconds
 from .constants import (
-    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
+    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 )
 from .utils import find_default_player
 
@@ -40,9 +40,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         name, value = option.group("name", "value")
         if name and value:
-            yield "--{0}={1}".format(name, value)
+            yield u"--{0}={1}".format(name, value)
         elif name:
-            yield "--{0}".format(name)
+            yield u"--{0}".format(name)
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -300,7 +300,7 @@ def build_parser():
 
         Formatting variables available:
 
-        filename
+        {{filename}}
             This is the filename that the player will use. It's usually "-"
             (stdin), but can also be a URL or a file depending on the options
             used.
@@ -405,6 +405,74 @@ def build_parser():
 
         This option will instead let the player decide when to exit.
         """
+    )
+    player.add_argument(
+        "-t", "--title",
+        metavar="TITLE",
+        help="""
+        This option allows you to supply a title to be displayed in the
+        title bar of the window that the video player is launched in.
+
+        This value can contain formatting variables surrounded by curly braces,
+        {{ and }}. If you need to include a brace character, it can be escaped
+        by doubling, e.g. {{{{ and }}}}.
+
+        This option is only supported for the following players: {0}.
+
+        VLC specific information:
+            VLC has certain codes you can use inside your title.
+            These are accessible inside --title by using a backslash
+            before the dollar sign VLC uses to denote a format character.
+
+            e.g. to put the current date in your VLC window title,
+            the string "\\$A" could be inserted inside your --title string.
+
+            A full list of the format codes VLC uses is available here:
+            https://wiki.videolan.org/Documentation:Format_String/
+
+        mpv specific information:
+            mpv has certain codes you can use inside your title.
+            These are accessible inside --title by using a backslash
+            before the dollar sign mpv uses to denote a format character.
+
+            e.g. to put the current version of mpv running inside your
+            mpv window title, the string "\\${{{{mpv-version}}}}" could be
+            inserted inside your --title string.
+
+            A full list of the format codes mpv uses is available here:
+            https://mpv.io/manual/stable/#property-expansion
+
+        Formatting variables available to use in --title:
+
+        {{title}}
+            If available, this is the title of the stream.
+            Otherwise, it is the string "{1}"
+
+        {{author}}
+            If available, this is the author of the stream.
+            Otherwise, it is the string "{2}"
+
+        {{category}}
+            If available, this is the category the stream has been placed into.
+
+            - For Twitch, this is the game being played
+            - For YouTube, it's the category e.g. Gaming, Sports, Music...
+
+            Otherwise, it is the string "{3}"
+
+        {{game}}
+            This is just a synonym for {{category}} which may make more sense for
+            gaming oriented platforms. "Game being played" is a way to categorize
+            the stream, so it doesn't need its own separate handling.
+
+       Examples:
+           %(prog)s -p vlc --title '{{title}} -!- {{author}} -!- {{category}} \\$A' <url> [stream]
+           %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
+
+        """.format(', '.join(SUPPORTED_PLAYERS.keys()),
+                   DEFAULT_STREAM_METADATA['title'],
+                   DEFAULT_STREAM_METADATA['author'],
+                   DEFAULT_STREAM_METADATA['category'])
     )
 
     output = parser.add_argument_group("File output options")
