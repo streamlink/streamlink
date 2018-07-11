@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from io import BytesIO
 
 from streamlink import NoStreamsError
@@ -23,6 +24,15 @@ class TestPlugin(Plugin):
     @classmethod
     def can_handle_url(self, url):
         return "test.se" in url
+
+    def get_title(self):
+        return "Test Title"
+
+    def get_author(self):
+        return u"Tѥst Āuƭhǿr"
+
+    def get_category(self):
+        return None
 
     def _get_streams(self):
         if "empty" in self.url:

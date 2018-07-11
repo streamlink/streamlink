@@ -27,12 +27,14 @@ from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
+from streamlink.utils import LazyFormatter
 
 import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32
+from streamlink.utils.encoding import maybe_encode
 from .console import ConsoleOutput, ConsoleUserInputRequester
-from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
+from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
@@ -64,7 +66,7 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output():
+def create_output(plugin):
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -101,11 +103,13 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
+        title = create_title(plugin)
         log.info("Starting player: {0}", args.player)
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
-                           namedpipe=namedpipe, http=http)
+                           namedpipe=namedpipe, http=http,
+                           title=title)
 
     return out
 
@@ -124,6 +128,20 @@ def create_http_server(host=None, port=0):
         console.exit("Failed to create HTTP server: {0}", err)
 
     return http
+
+
+def create_title(plugin=None):
+    if args.title and plugin:
+        title = LazyFormatter.format(
+            maybe_encode(args.title),
+            title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
+            author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
+            category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
+            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"]
+        )
+    else:
+        title = args.url
+    return title
 
 
 def iter_http_requests(server, player):
@@ -150,10 +168,12 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
+        title = create_title(plugin)
         server = create_http_server()
         player = output = PlayerOutput(args.player, args=args.player_args,
                                        filename=server.url,
-                                       quiet=not args.verbose_player)
+                                       quiet=not args.verbose_player,
+                                       title=title)
 
         try:
             log.info("Starting player: {0}", args.player)
@@ -210,14 +230,16 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(stream):
+def output_stream_passthrough(plugin, stream):
     """Prepares a filename to be passed to the player."""
     global output
 
+    title = create_title(plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
-                          quiet=not args.verbose_player)
+                          quiet=not args.verbose_player,
+                          title=title)
 
     try:
         log.info("Starting player: {0}", args.player)
@@ -260,7 +282,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(stream):
+def output_stream(plugin, stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -276,7 +298,7 @@ def output_stream(stream):
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
-    output = create_output()
+    output = create_output(plugin)
 
     try:
         output.open()
@@ -392,7 +414,7 @@ def handle_stream(plugin, streams, stream_name):
             if stream_type in args.player_passthrough and not file_output:
                 log.info("Opening stream: {0} ({1})", stream_name,
                          stream_type)
-                success = output_stream_passthrough(stream)
+                success = output_stream_passthrough(plugin, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
                                           port=args.player_external_http_port)
@@ -401,7 +423,8 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 log.info("Opening stream: {0} ({1})", stream_name,
                          stream_type)
-                success = output_stream(stream)
+
+                success = output_stream(plugin, stream)
 
             if success:
                 break
