@@ -198,7 +198,7 @@ class DASHStream(Stream):
 
         locale_lang = session.localization.language.alpha2
         # if the locale is explicitly set, prefer that language over others
-        available_languages = set(map(lambda a: a and a.lang, audio))
+        available_languages = set(map(lambda a: a and a.lang or "n/a", audio))
 
         if session.localization.explicit and locale_lang in available_languages:
             lang = locale_lang
