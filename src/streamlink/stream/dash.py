@@ -196,6 +196,22 @@ class DASHStream(Stream):
         if not audio:
             audio = [None]
 
+        locale_lang = session.localization.language.alpha2
+        # if the locale is explicitly set, prefer that language over others
+        available_languages = set(map(lambda a: a and a.lang, audio))
+
+        if session.localization.explicit and locale_lang in available_languages:
+            lang = locale_lang
+        else:
+            # filter by the first language that appears
+            lang = audio[0] and audio[0].lang
+
+        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(", ".join(available_languages), lang))
+
+        # if the language is given by the stream, filter out other languages that do not match
+        if len(available_languages) > 1:
+            audio = list(filter(lambda a: a.lang is None or a.lang == lang, audio))
+
         for vid, aud in itertools.product(video, audio):
             stream = DASHStream(session, mpd, vid, aud, **args)
             stream_name = []
