@@ -3,10 +3,13 @@ include CHANGELOG.md
 include README.md
 include LICENSE*
 include *requirements.txt
+include src/streamlink/_version.py
+include versioneer.py
 
 recursive-include docs *
-prune docs/_build
 recursive-include examples *
-recursive-include tests *py
-include versioneer.py
-include src/streamlink/_version.py
+recursive-include tests *
+
+prune docs/_build
+prune */__pycache__
+global-exclude *.pyc *~ *.bak *.swp *.pyo

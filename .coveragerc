@@ -1,7 +1,6 @@
 [run]
 source =
-    streamlink
-    streamlink_cli
+    src
 
 [report]
 omit =

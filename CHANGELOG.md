@@ -1,5 +1,215 @@
 # Changelog
 
+## streamlink 0.14.2 (2018-06-28)
+
+Just a few small fixes in this release. 
+
+- Fixed Twitch OAuth request flow (https://github.com/streamlink/streamlink/pull/1856)
+- Fix the tv3cat and vk plugins (https://github.com/streamlink/streamlink/pull/1851, https://github.com/streamlink/streamlink/pull/1874)
+- VOD supported added to atresplayer plugin (https://github.com/streamlink/streamlink/pull/1852, https://github.com/streamlink/streamlink/pull/1853)
+- Removed tv8cati and nineanime plugins (https://github.com/streamlink/streamlink/pull/1860, https://github.com/streamlink/streamlink/pull/1863)
+- Added mjunoon.tv plugin (https://github.com/streamlink/streamlink/pull/1857)
+
+```text
+NyanKiyoshi <NyanKiyoshi@users.noreply.github.com> (1):
+      Fix 404 error on oauth authorize url
+
+back-to <backto@protonmail.ch> (1):
+      plugins.vk: _url_re update, allow embedded content, plugin cleanup (#1874)
+
+beardypig <beardypig@protonmail.com> (10):
+      plugins.t3cat: update validation rule, refactor plugin a little bit
+      plugins.atresplayer: update to support VOD streams
+      stream.dash: support for SegmentList streams with ranged segments
+      plugins.mjunoon: support for live and vod streams on mjunoon.tv
+      release: fix release notes manual install url
+      plugins.tv8cat: plugin removed - the live broadcast is no longer available
+      plugins.nineanime: no longer supported
+      release: set the date of the release for UTC time
+      plugin: support stream weights returned by DASHStream.parse_manifest
+```
+
+
+## streamlink 0.14.0 (2018-06-26)
+
+Here are the changes to this months release!
+
+- Multiple plugin fixes
+- Bug fixes for DASH streams (https://github.com/streamlink/streamlink/pull/1846)
+- Updated API call for api.utils hours_minutes_seconds (https://github.com/streamlink/streamlink/pull/1804)
+- Updated documentation (https://github.com/streamlink/streamlink/pull/1826)
+- Dict structures fix (https://github.com/streamlink/streamlink/pull/1792)
+- Reformated help menu (https://github.com/streamlink/streamlink/pull/1754)
+- Logger fix (https://github.com/streamlink/streamlink/pull/1773)
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (3):
+      sdist: include tests resources (#1785)
+      tests: freezegun: use object instead of lambda (#1787)
+      rtlxl: use raw string to fix escape sequences (#1786)
+
+BZHDeveloper <39899575+BZHDeveloper@users.noreply.github.com> (1):
+      plugins.cnews : separate CNEWS data from CanalPlus plugin. (#1782)
+
+MasterofJOKers <joker@someserver.de> (1):
+      plugins.sportschau: Fix "No schema supplied" error
+
+Mohamed El Morabity <melmorabity@fedoraproject.com> (2):
+      plugins.pluzz: support for DASH streams
+      plugins.pluzz: fix HDS streams
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      [plugins.rtbf] Fix radio streams + DASH support (#1771)
+
+Sebastian Meyer <mail@bastimeyer.de> (1):
+      Move docs version selection to sidebar (#1802)
+
+Twilight0 <twilight@freemail.gr> (2):
+      Convert literal comprehensive dicts to dict contructs
+      Add arguments to __init__ - super to work on Python 2.7.X (#1796)
+
+back-to <backto@protonmail.ch> (9):
+      plugins: marked or removed broken plugins
+      plugins.earthcam: Fixed hls_url - No schema supplied.
+      plugins.rte: allow https
+      plugins.VinhLongTV: New plugin for livestreams of thvli.vn
+      docs.thirdparty: Added LiveProxy
+      plugins.tlctr: New Plugin for tlctv.com.tr/canli-izle
+      plugins.bigo: Fix for new channelnames and plugin cleanup (#1797)
+      docs: removed some notes, updated some urls
+      utils.times: hours_minutes_seconds update, twitch automate time offset
+
+beardypig <beardypig@protonmail.com> (15):
+      help: reformat all the help text so that it is <80 chars
+      plugins.bbciplayer: fix bug is DASH for VOD
+      sdist and wheel release fixes (#1758)
+      plugin.youtube: find video id in page, fall back to API (#1746)
+      logging: rename logger for main back to 'cli'
+      plugins.vaughnlive: support for the HTML flv player
+      plugins.yupptv: support for yupptv with login support
+      plugins.nos: update for new page layout for live and VOD
+      plugins.lrt: add support for Lithuanian National Television
+      plugins.delfi: support for delfi.lt web portal
+      plugins.vrtbe: update to new page layout/API
+      plugins.itvplayer: update to new HTML5 API
+      plugins.atresplayer: support new layout/API
+      stream.dash: use the ID and mime-type to identify a representation
+      plugins.mitele: sometimes ogn is null, html5 pdata endpoint works better
+
+beardypig <git@beardypig.com> (5):
+      plugins.crunchyroll: refactoring and updated API calls (#1820)
+      Suppress/fix deprecated warnings for Python 3 (#1833)
+      API for plugins to request input from the user (#1827)
+      Steam Broadcast Plugin (#1717)
+      USTV Now (#1840)
+
+fozzy <fozzy@fozzy.co> (1):
+      fix bug caused by indentation and add support for url pattern like 'xingxiu.panda.tv'
+```
+
+
+## streamlink 0.13.0 (2018-06-06)
+
+Massive release this month!
+
+Here are the changes:
+ - Initial MPEG DASH support has been added! (https://github.com/streamlink/streamlink/pull/1637) Many thanks to @beardypig
+ - As always, a *ton* of plugin updates
+ - Updates to our documentation (https://github.com/streamlink/streamlink/pull/1673)
+ - Updates to our logging (https://github.com/streamlink/streamlink/pull/1752) as well as log --quiet options (https://github.com/streamlink/streamlink/pull/1744) (https://github.com/streamlink/streamlink/pull/1720)
+ - Our release script has been updated (https://github.com/streamlink/streamlink/pull/1711)
+ - Support for livestreams when using the `--hls-duration` option (https://github.com/streamlink/streamlink/pull/1710)
+ - Allow streamlink to exit faster when using Ctrl+C (https://github.com/streamlink/streamlink/pull/1658)
+ - Added an OpenCV Face Detection example (https://github.com/streamlink/streamlink/pull/1689)
+
+```text
+BZHDeveloper <inizan.yannick@gmail.com> (1):
+      plugins.bfmtv : Update regular expression (#1703)
+
+Billy <kschmidt2007@googlemail.com> (1):
+      plugins.ok_live: fix <hlsurl> extraction
+
+Billy2011 <kschmidt2007@googlemail.com> (2):
+      stream.dash: fix stuttering streams & maybe high CPU load (#1718)
+      stream.akamaihd: fix some log.debug... issues (#1729)
+
+Hsiao-Ting Yu <sst.dreams@gmail.com> (1):
+      Add plugin for www.kingkong.com.tw (#1666)
+
+LoneFox78 <lonefox@kapsi.fi> (1):
+      plugins.tvcatchup: support for https URLs
+
+back-to <backto@protonmail.ch> (3):
+      plugins.chaturbate: only open a stream if the url is not empty
+      stream.hls_playlist: removed int check from PROGRAM-ID (#1707)
+      docs: PotPlayer Stdin Pipe
+
+beardypig <beardypig@protonmail.com> (30):
+      plugins.bbciplayer: enable HD for some channels and speed up start-up
+      plugins.goodgame: update for change in page layout
+      tests: test to ensure each plugin listed in the plugin matrix exists
+      plugins.goodgame: fix bug with streamkey extraction
+      plugins.onetv: add support for 1tv.ru and a few other related sites
+      plugins.rtve: fix for m3u8 stream url formatting
+      example: added an opencv face detection example
+      plugins.europaplus: support for the europaplustv stream
+      plugins.goltelevision: support for the live stream
+      plugins.tvcatchup: add URL tests
+      plugin.ustvnow: plugin to support ustvnow.com
+      hls: support for live streams when using --hls-duration
+      release: update to release script
+      win-installer: add missing isodate module
+      plugins.onetv: fix issues with ctc channels and add DASH support
+      plugins.dailymotion: fix error logging for stream errors
+      logging: set the log level once the plugin config files have been loaded
+      logging: fixed issue with logging from plugins using logging module
+      plugins.onetv: fixed tests
+      plugins.reshet: support for reshet.tv live and VOD streams
+      dash: fix for manifest reload - should be more reliable
+      tests: coverage on src instead of the modules
+      plugins.crunchyroll: switch method of obtaining session id
+      plugins.facebook: remove debugging code
+      plugins: store cookies between sessions (#1724)
+      plugins.facebook: sd_src|hd_src can contain non-dash streams
+      plugins.funimationnow: login support and bug fixes (#1721)
+      logging: do not log when using quiet options (--json, --quiet, etc)
+      dash: fix --json for dash streams and allow custom headers (#1748)
+      logging: when using the trace level, log the timestamp
+
+beardypig <beardypig@users.noreply.github.com> (21):
+      plugins.filmon: more robust channel_id extraction
+      build: use versioneer to set the build number (#1413)
+      plugins.btsports: add plugin bt sports
+      Allow streamlink to exit faster when using Ctrl-C
+      plugins.tf1: add lci url to the main tf1 domain (#1660)
+      plugins.ine: support for updated site layout
+      docs: add a note about socks4 and socks5 vs socks4a and socks5h (#1655)
+      plugins.gardenersworld: updated page layout
+      plugins.vidio: update to support new layout
+      plugins.btsports: add missing plugin matrix entry and tests
+      plugins.vidio: py2 vs. py3 unicode fix
+      tests: test to ensure that all plugins are listed in the plugin matrix
+      build: use _ instead of + in the Windows installer exe filename
+      Plugin Arguments API (#1638)
+      Change log as markdown refactor (#1667)
+      Add the README file to the Python package (#1665)
+      build: build and sign sdist in travis using an RSA sign-only key (#1701)
+      logging: refactor to use python logging module (#1690)
+      MPEG DASH Support (initial) (#1637)
+      plugins.bbciplayer: add dash support
+      plugins.facebook: support for DASH streams (#1727)
+
+hoilc <hoilc@foxmail.com> (1):
+      fix checking live status
+
+jshir <github.caqomfw25@GadgetScope.com> (1):
+      Fix bug 1730, vaughnlive port change
+
+yhel <yhel@users.noreply.github.com> (1):
+      Feature/france.tv sport (#1700)
+```
+
+
 ## streamlink 0.12.1 (2018-05-07)
 
 Streamlink 0.12.1
@@ -728,7 +938,7 @@ We've also introduced a change for Streamlink to *not* check for new updates eac
 The major features of this release are:
 
   - New plugins added
-  - Ongoing support to current plugins via bug fixes 
+  - Ongoing support to current plugins via bug fixes
   - Ensure retries to HLS streams
   - Disable update check
 
@@ -888,7 +1098,7 @@ wlerin <wlerin@gmail.com> (1):
 
 0.3.2 release of Streamlink!
 
-A minor bug release of 0.3.2 to fix a few issues with stream providers. 
+A minor bug release of 0.3.2 to fix a few issues with stream providers.
 
 Thanks to all whom have contributed to this (tiny) release!
 
@@ -976,7 +1186,7 @@ steven7851 <steven7851@msn.com> (1):
 
 Release 0.3.0 of Streamlink!
 
-A lot of updates to each plugin (thank you @beardypig !), automated Windows releases, PEP8 formatting throughout Streamlink are some of the few updates to this release as we near a stable 1.0.0 release. 
+A lot of updates to each plugin (thank you @beardypig !), automated Windows releases, PEP8 formatting throughout Streamlink are some of the few updates to this release as we near a stable 1.0.0 release.
 
 Main features are:
 

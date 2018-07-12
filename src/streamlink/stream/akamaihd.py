@@ -101,8 +101,7 @@ class AkamaiHDStreamIO(io.IOBase):
         url = self.StreamURLFormat.format(host=self.host, streamname=self.streamname)
         params = self._create_params(seek=self.seek)
 
-        log.debug("Opening host={host} streamname={streamname}",
-                          host=self.host, streamname=self.streamname)
+        log.debug("Opening host={} streamname={}", self.host, self.streamname)
 
         try:
             res = self.session.http.get(url, stream=True, params=params)
@@ -202,8 +201,7 @@ class AkamaiHDStreamIO(io.IOBase):
             if isinstance(val, str):
                 val = val[:50]
 
-            log.debug(" {key}={val}",
-                              key=key, val=val)
+            log.debug(" {}={}", key, val)
 
         updateattr("islive", "isLive")
         updateattr("sessionid", "session")

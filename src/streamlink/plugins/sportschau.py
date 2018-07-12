@@ -4,6 +4,7 @@ import json
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.stream import HDSStream
+from streamlink.utils import update_scheme
 
 _url_re = re.compile(r"http(s)?://(\w+\.)?sportschau.de/")
 _player_js = re.compile(r"https?://deviceids-medp.wdr.de/ondemand/.*\.js")
@@ -37,7 +38,10 @@ class sportschau(Plugin):
 
         stream_metadata = json.loads(json_s)
 
-        return HDSStream.parse_manifest(self.session, stream_metadata['mediaResource']['dflt']['videoURL']).items()
+        hds_url = stream_metadata['mediaResource']['dflt']['videoURL']
+        hds_url = update_scheme(self.url, hds_url)
+
+        return HDSStream.parse_manifest(self.session, hds_url).items()
 
 
 __plugin__ = sportschau

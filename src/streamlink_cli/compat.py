@@ -19,6 +19,7 @@ elif is_py3:
     stdout = sys.stdout.buffer
     from io import IOBase as file
     from shutil import get_terminal_size
+    from shlex import quote
 
     _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
@@ -28,6 +29,10 @@ def shlex_quote(s):
 
     Backported from Python 3.3 standard library module shlex.
     """
+
+    if is_py3:  # use the latest version instead of backporting if it's available
+        return quote(s)
+
     if not s:
         return "''"
     if _find_unsafe(s) is None:

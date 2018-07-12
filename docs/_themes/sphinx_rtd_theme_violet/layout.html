@@ -78,8 +78,8 @@
 
     {# SIDE NAV, TOGGLES ON MOBILE #}
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        <a href="{{ pathto(master_doc) }}" class="fa fa-home"> {{ project }}</a>
+      <div class="wy-side-nav-header">
+        <a href="{{ pathto(master_doc) }}"> {{ project }}</a>
         {% if theme_oneliner %}
         <div class="tablet-hide">
           <small>{{ theme_oneliner }}</small>
@@ -87,6 +87,7 @@
         </div>
         {% endif %}
 
+        {% include "versions.html" %}
         {% include "searchbox.html" %}
       </div>
 
@@ -132,6 +133,11 @@
         <div class="rst-content">
           {% include "breadcrumbs.html" %}
           <div role="main">
+            {% if release != version %}
+            <div class="admonition version-warning">
+              <p class="admonition-title">You are reading the documentation for the in-development version of {{ project }}.</p>
+            </div>
+            {% endif %}
             {% block body %}{% endblock %}
           </div>
           {% include "footer.html" %}
@@ -141,7 +147,6 @@
     </section>
 
   </div>
-  {% include "versions.html" %}
 
   {% if not embedded %}
 

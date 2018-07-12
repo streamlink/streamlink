@@ -91,6 +91,7 @@ class Dplay (Plugin):
                               stream['format'].upper(), err)
 
     # Assembles available streams
+    @Plugin.broken(1475)
     def _get_streams(self):
         # Get domain name
         self.domain = _url_re.match(self.url).group('domain')

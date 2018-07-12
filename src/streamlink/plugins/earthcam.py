@@ -6,7 +6,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
-from streamlink.utils import parse_json
+from streamlink.utils import parse_json, update_scheme
 
 
 class EarthCam(Plugin):
@@ -86,6 +86,7 @@ class EarthCam(Plugin):
         # HLS stream
         if hls_playpath and is_live:
             hls_url = hls_domain + hls_playpath
+            hls_url = update_scheme(self.url, hls_url)
 
             self.logger.debug("HLS URL: {0}", hls_url)
 

@@ -4,17 +4,15 @@ from string import printable
 from textwrap import dedent
 
 from streamlink import logger
+from streamlink.utils.args import (
+    boolean, comma_list, comma_list_filter, filesize, keyvalue, num
+)
+from streamlink.utils.times import hours_minutes_seconds
 from .constants import (
-    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS
+    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 )
 from .utils import find_default_player
 
-_filesize_re = re.compile(r"""
-    (?P<size>\d+(\.\d+)?)
-    (?P<modifier>[Kk]|[Mm])?
-    (?:[Bb])?
-""", re.VERBOSE)
-_keyvalue_re = re.compile(r"(?P<key>[^=]+)\s*=\s*(?P<value>.*)")
 _printable_re = re.compile(r"[{0}]".format(printable))
 _option_re = re.compile(r"""
     (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
@@ -24,7 +22,6 @@ _option_re = re.compile(r"""
     \s*
     (?P<value>.*) # The value, anything goes.
 """, re.VERBOSE)
-_hours_minutes_seconds_re = re.compile(r"-?(?P<hours>\d+):(?P<minutes>\d+):(?P<seconds>\d+)")
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -43,9 +40,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         name, value = option.group("name", "value")
         if name and value:
-            yield "--{0}={1}".format(name, value)
+            yield u"--{0}={1}".format(name, value)
         elif name:
-            yield "--{0}".format(name)
+            yield u"--{0}".format(name)
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -68,104 +65,16 @@ class HelpFormatter(argparse.RawDescriptionHelpFormatter):
         return text.splitlines()
 
 
-def comma_list(values):
-    return [val.strip() for val in values.split(",")]
-
-
-def comma_list_filter(acceptable):
-    def func(p):
-        values = comma_list(p)
-        return list(filter(lambda v: v in acceptable, values))
-
-    return func
-
-
-def num(type, min=None, max=None):
-    def func(value):
-        value = type(value)
-
-        if min is not None and not (value > min):
-            raise argparse.ArgumentTypeError(
-                "{0} value must be more than {1} but is {2}".format(
-                    type.__name__, min, value
-                )
-            )
-
-        if max is not None and not (value <= max):
-            raise argparse.ArgumentTypeError(
-                "{0} value must be at most {1} but is {2}".format(
-                    type.__name__, max, value
-                )
-            )
-
-        return value
-
-    func.__name__ = type.__name__
-
-    return func
-
-
-def filesize(value):
-    match = _filesize_re.match(value)
-    if not match:
-        raise ValueError
-
-    size = float(match.group("size"))
-    if not size:
-        raise ValueError
-
-    modifier = match.group("modifier")
-    if modifier in ("M", "m"):
-        size *= 1024 * 1024
-    elif modifier in ("K", "k"):
-        size *= 1024
-
-    return num(int, min=0)(size)
-
-
-def keyvalue(value):
-    match = _keyvalue_re.match(value)
-    if not match:
-        raise ValueError
-
-    return match.group("key", "value")
-
-
-def boolean(value):
-    truths = ["yes", "1", "true", "on"]
-    falses = ["no", "0", "false", "off"]
-    if value.lower() not in truths + falses:
-        raise argparse.ArgumentTypeError("{0} was not one of {{{1}}}".format(value, ', '.join(truths + falses)))
-
-    return value.lower() in truths
-
-
-def hours_minutes_seconds(value):
-    """
-    converts hours:minutes:seconds to seconds
-    :param value: hh:mm:ss
-    :return: seconds
-    """
-    match = _hours_minutes_seconds_re.match(value)
-    if not match:
-        raise ValueError
-    s = 0
-    s += int(match.group("hours")) * 60 * 60
-    s += int(match.group("minutes")) * 60
-    s += int(match.group("seconds"))
-
-    return s
-
-
 def build_parser():
     parser = ArgumentParser(
+        prog="streamlink",
         fromfile_prefix_chars="@",
         formatter_class=HelpFormatter,
         add_help=False,
         usage="%(prog)s [OPTIONS] <URL> [STREAM]",
         description=dedent("""
-        Streamlink is command-line utility that extracts streams from
-        various services and pipes them into a video player of choice.
+        Streamlink is command-line utility that extracts streams from various
+        services and pipes them into a video player of choice.
         """),
         epilog=dedent("""
         For more in-depth documentation see:
@@ -198,14 +107,15 @@ def build_parser():
         help="""
         Stream to play.
 
-        Use "best" or "worst" for selecting the highest or lowest available quality.
+        Use "best" or "worst" for selecting the highest or lowest available
+        quality.
 
         Fallback streams can be specified by using a comma-separated list:
 
           "720p,480p,best"
 
-        If no stream is specified and --default-stream is not used, then a
-        list of available streams will be printed.
+        If no stream is specified and --default-stream is not used, then a list
+        of available streams will be printed.
         """
     )
 
@@ -239,7 +149,7 @@ def build_parser():
         help="""
         Attempts to load plugins from these directories.
 
-        Multiple directories can be used by separating them with a semicolon.
+        Multiple directories can be used by separating them with a comma.
         """
     )
     general.add_argument(
@@ -257,8 +167,8 @@ def build_parser():
         "--can-handle-url-no-redirect",
         metavar="URL",
         help="""
-        Same as --can-handle-url but without following redirects
-        when looking up the URL.
+        Same as --can-handle-url but without following redirects when looking up
+        the URL.
         """
     )
     general.add_argument(
@@ -268,9 +178,8 @@ def build_parser():
         help="""
         Load options from this config file.
 
-        Can be repeated to load multiple files, in which case
-        the options are merged on top of each other where the
-        last config has highest priority.
+        Can be repeated to load multiple files, in which case the options are
+        merged on top of each other where the last config has highest priority.
         """
     )
     general.add_argument(
@@ -325,11 +234,11 @@ def build_parser():
         type=str,
         metavar="LOCALE",
         help="""
-        The preferred locale setting, for selecting the preferred
-        subtitle and audio language.
+        The preferred locale setting, for selecting the preferred subtitle and
+        audio language.
 
-        The locale is formatted as [language_code]_[country_code],
-        eg. en_US or es_ES.
+        The locale is formatted as [language_code]_[country_code], eg. en_US or
+        es_ES.
 
         Default is system locale.
         """
@@ -338,9 +247,8 @@ def build_parser():
         "--twitch-oauth-authenticate",
         action="store_true",
         help="""
-        Open a web browser where you can grant Streamlink access
-        to your Twitch account which creates a token for use with
-        --twitch-oauth-token.
+        Open a web browser where you can grant Streamlink access to your Twitch
+        account which creates a token for use with --twitch-oauth-token.
         """
     )
 
@@ -350,31 +258,31 @@ def build_parser():
         metavar="COMMAND",
         default=find_default_player(),
         help="""
-        Player to feed stream data to. By default, VLC will be used
-        if it can be found in its default location.
+        Player to feed stream data to. By default, VLC will be used if it can be
+        found in its default location.
 
         This is a shell-like syntax to support using a specific player:
 
-          streamlink --player=vlc <url> <quality>
+          %(prog)s --player=vlc <url> [stream]
 
-        Absolute or relative paths can also be passed via this option
-        in the event the player's executable can not be resolved:
+        Absolute or relative paths can also be passed via this option in the
+        event the player's executable can not be resolved:
 
-          streamlink --player=/path/to/vlc <url> <quality>
-          streamlink --player=./vlc-player/vlc <url> <quality>
+          %(prog)s --player=/path/to/vlc <url> [stream]
+          %(prog)s --player=./vlc-player/vlc <url> [stream]
 
-        To use a player that is located in a path with spaces you must
-        quote the parameter or its value:
+        To use a player that is located in a path with spaces you must quote the
+        parameter or its value:
 
-          streamlink "--player=/path/with spaces/vlc" <url> <quality>
-          streamlink --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> <quality>
+          %(prog)s "--player=/path/with spaces/vlc" <url> [stream]
+          %(prog)s --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> [stream]
 
         Options may also be passed to the player. For example:
 
-          streamlink --player "vlc --file-caching=5000" <url> <quality>
+          %(prog)s --player "vlc --file-caching=5000" <url> [stream]
 
-        As an alternative to this, see the --player-args parameter,
-        which does not log any custom player arguments.
+        As an alternative to this, see the --player-args parameter, which does
+        not log any custom player arguments.
         """
     )
     player.add_argument(
@@ -382,30 +290,29 @@ def build_parser():
         metavar="ARGUMENTS",
         default=DEFAULT_PLAYER_ARGUMENTS,
         help="""
-        This option allows you to customize the default arguments which
-        are put together with the value of --player to create a command
-        to execute. Unlike the --player parameter, custom player
-        arguments will not be logged.
+        This option allows you to customize the default arguments which are put
+        together with the value of --player to create a command to execute.
+        Unlike the --player parameter, custom player arguments will not be logged.
 
-        This value can contain formatting variables surrounded by curly
-        braces, {{ and }}. If you need to include a brace character, it
-        can be escaped by doubling, e.g. {{{{ and }}}}.
+        This value can contain formatting variables surrounded by curly braces,
+        {{ and }}. If you need to include a brace character, it can be escaped
+        by doubling, e.g. {{{{ and }}}}.
 
         Formatting variables available:
 
-        filename
-          This is the filename that the player will use.
-          It's usually "-" (stdin), but can also be a URL or a file
-          depending on the options used.
+        {{filename}}
+            This is the filename that the player will use. It's usually "-"
+            (stdin), but can also be a URL or a file depending on the options
+            used.
 
-        It's usually enough to use --player instead of this unless you
-        need to add arguments after the filename.
+        It's usually enough to use --player instead of this unless you need to
+        add arguments after the filename.
 
         Default is "{0}".
 
         Example:
 
-          streamlink -p vlc -a "--play-and-exit {{filename}}" <url> <quality>
+          %(prog)s -p vlc -a "--play-and-exit {{filename}}" <url> [stream]
 
         """.format(DEFAULT_PLAYER_ARGUMENTS)
     )
@@ -420,38 +327,36 @@ def build_parser():
         "-n", "--player-fifo", "--fifo",
         action="store_true",
         help="""
-        Make the player read the stream through a named pipe instead of
-        the stdin pipe.
+        Make the player read the stream through a named pipe instead of the
+        stdin pipe.
         """
     )
     player.add_argument(
         "--player-http",
         action="store_true",
         help="""
-        Make the player read the stream through HTTP instead of
-        the stdin pipe.
+        Make the player read the stream through HTTP instead of the stdin pipe.
         """
     )
     player.add_argument(
         "--player-continuous-http",
         action="store_true",
         help="""
-        Make the player read the stream through HTTP, but unlike
-        --player-http it will continuously try to open the stream if the
-        player requests it.
+        Make the player read the stream through HTTP, but unlike --player-http
+        it will continuously try to open the stream if the player requests it.
 
-        This makes it possible to handle stream disconnects if your player
-        is capable of reconnecting to a HTTP stream. This is usually
-        done by setting your player to a "repeat mode".
+        This makes it possible to handle stream disconnects if your player is
+        capable of reconnecting to a HTTP stream. This is usually done by
+        setting your player to a "repeat mode".
         """
     )
     player.add_argument(
         "--player-external-http",
         action="store_true",
         help="""
-        Serve stream data through HTTP without running any player. This is useful
-        to allow external devices like smartphones or streaming boxes to watch
-        streams they wouldn't be able to otherwise.
+        Serve stream data through HTTP without running any player. This is
+        useful to allow external devices like smartphones or streaming boxes to
+        watch streams they wouldn't be able to otherwise.
 
         Behavior will be similar to the continuous HTTP option, but no player
         program will be started, and the server will listen on all available
@@ -467,8 +372,8 @@ def build_parser():
         type=num(int, min=0, max=65535),
         default=0,
         help="""
-        A fixed port to use for the external HTTP server if that mode is enabled.
-        Omit or set to 0 to use a random high (>1024) port.
+        A fixed port to use for the external HTTP server if that mode is
+        enabled. Omit or set to 0 to use a random high ( >1024) port.
         """
     )
     player.add_argument(
@@ -477,8 +382,8 @@ def build_parser():
         type=comma_list_filter(STREAM_PASSTHROUGH),
         default=[],
         help="""
-        A comma-delimited list of stream types to pass to the player as a
-        URL to let it handle the transport of the stream instead.
+        A comma-delimited list of stream types to pass to the player as a URL to
+        let it handle the transport of the stream instead.
 
         Stream types that can be converted into a playable URL are:
 
@@ -491,14 +396,83 @@ def build_parser():
         "--player-no-close",
         action="store_true",
         help="""
-        By default Streamlink will close the player when the stream ends.
-        This is to avoid "dead" GUI players lingering after a stream ends.
+        By default Streamlink will close the player when the stream
+        ends. This is to avoid "dead" GUI players lingering after a
+        stream ends.
 
-        It does however have the side-effect of sometimes closing a player
-        before it has played back all of its cached data.
+        It does however have the side-effect of sometimes closing a
+        player before it has played back all of its cached data.
 
         This option will instead let the player decide when to exit.
         """
+    )
+    player.add_argument(
+        "-t", "--title",
+        metavar="TITLE",
+        help="""
+        This option allows you to supply a title to be displayed in the
+        title bar of the window that the video player is launched in.
+
+        This value can contain formatting variables surrounded by curly braces,
+        {{ and }}. If you need to include a brace character, it can be escaped
+        by doubling, e.g. {{{{ and }}}}.
+
+        This option is only supported for the following players: {0}.
+
+        VLC specific information:
+            VLC has certain codes you can use inside your title.
+            These are accessible inside --title by using a backslash
+            before the dollar sign VLC uses to denote a format character.
+
+            e.g. to put the current date in your VLC window title,
+            the string "\\$A" could be inserted inside your --title string.
+
+            A full list of the format codes VLC uses is available here:
+            https://wiki.videolan.org/Documentation:Format_String/
+
+        mpv specific information:
+            mpv has certain codes you can use inside your title.
+            These are accessible inside --title by using a backslash
+            before the dollar sign mpv uses to denote a format character.
+
+            e.g. to put the current version of mpv running inside your
+            mpv window title, the string "\\${{{{mpv-version}}}}" could be
+            inserted inside your --title string.
+
+            A full list of the format codes mpv uses is available here:
+            https://mpv.io/manual/stable/#property-expansion
+
+        Formatting variables available to use in --title:
+
+        {{title}}
+            If available, this is the title of the stream.
+            Otherwise, it is the string "{1}"
+
+        {{author}}
+            If available, this is the author of the stream.
+            Otherwise, it is the string "{2}"
+
+        {{category}}
+            If available, this is the category the stream has been placed into.
+
+            - For Twitch, this is the game being played
+            - For YouTube, it's the category e.g. Gaming, Sports, Music...
+
+            Otherwise, it is the string "{3}"
+
+        {{game}}
+            This is just a synonym for {{category}} which may make more sense for
+            gaming oriented platforms. "Game being played" is a way to categorize
+            the stream, so it doesn't need its own separate handling.
+
+       Examples:
+           %(prog)s -p vlc --title '{{title}} -!- {{author}} -!- {{category}} \\$A' <url> [stream]
+           %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
+
+        """.format(', '.join(SUPPORTED_PLAYERS.keys()),
+                   DEFAULT_STREAM_METADATA['title'],
+                   DEFAULT_STREAM_METADATA['author'],
+                   DEFAULT_STREAM_METADATA['category'])
     )
 
     output = parser.add_argument_group("File output options")
@@ -548,7 +522,8 @@ def build_parser():
         help="""
         Stream to play.
 
-        Use "best" or "worst" for selecting the highest or lowest available quality.
+        Use "best" or "worst" for selecting the highest or lowest available
+        quality.
 
         Fallback streams can be specified by using a comma-separated list:
 
@@ -588,8 +563,8 @@ def build_parser():
         type=num(int, min=0),
         default=1,
         help="""
-        After a successful fetch, try ATTEMPTS time(s)
-        to open the stream until giving up.
+        After a successful fetch, try ATTEMPTS time(s) to open the stream until
+        giving up.
 
         Default is 1.
         """
@@ -603,9 +578,8 @@ def build_parser():
 
         The order will be used to separate streams when there are multiple
         streams with the same name but different stream types. Any stream type
-        not listed will be omitted from the available streams list.  A ``*``
-        can be used as a wildcard to match any other type of stream,
-        eg. muxed-stream.
+        not listed will be omitted from the available streams list.  A ``*`` can
+        be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
         Default is "rtmp,hls,hds,http,akamaihd,*".
         """
@@ -621,15 +595,14 @@ def build_parser():
 
           [operator]<value>
 
-        Valid operators are >, >=, < and <=. If no operator is specified
-        then equality is tested.
+        Valid operators are >, >=, < and <=. If no operator is specified then
+        equality is tested.
 
         For example this will exclude streams ranked higher than "480p":
 
           ">480p"
 
-        Multiple filters can be used by separating each expression with
-        a comma.
+        Multiple filters can be used by separating each expression with a comma.
 
         For example this will exclude streams from two quality types:
 
@@ -654,8 +627,8 @@ def build_parser():
         type=num(int, min=0),
         metavar="ATTEMPTS",
         help="""
-        How many attempts should be done to download each HDS segment
-        before giving up.
+        How many attempts should be done to download each HDS segment before
+        giving up.
 
         Default is 3.
         """
@@ -665,8 +638,8 @@ def build_parser():
         type=num(int, max=10),
         metavar="THREADS",
         help="""
-        The size of the thread pool used to download HDS segments.
-        Minimum value is 1 and maximum is 10.
+        The size of the thread pool used to download HDS segments. Minimum value
+        is 1 and maximum is 10.
 
         Default is 1.
         """
@@ -709,8 +682,8 @@ def build_parser():
         type=num(int, min=0),
         metavar="ATTEMPTS",
         help="""
-        How many attempts should be done to download each HLS segment
-        before giving up.
+        How many attempts should be done to download each HLS segment before
+        giving up.
 
         Default is 3.
         """
@@ -720,8 +693,8 @@ def build_parser():
         type=num(int, min=0),
         metavar="ATTEMPTS",
         help="""
-        How many attempts should be done to reload the HLS playlist
-        before giving up.
+        How many attempts should be done to reload the HLS playlist before
+        giving up.
 
         Default is 3.
         """
@@ -731,8 +704,8 @@ def build_parser():
         type=num(int, max=10),
         metavar="THREADS",
         help="""
-        The size of the thread pool used to download HLS segments.
-        Minimum value is 1 and maximum is 10.
+        The size of the thread pool used to download HLS segments. Minimum value
+        is 1 and maximum is 10.
 
         Default is 1.
         """
@@ -759,7 +732,8 @@ def build_parser():
 
         Default is None.
 
-        Note: The --hls-timeout must be increased, to a time that is longer than the ignored break.
+        Note: The --hls-timeout must be increased, to a time that is longer than
+        the ignored break.
         """
     )
     transport.add_argument(
@@ -768,8 +742,8 @@ def build_parser():
         metavar="CODE",
         help="""
         Selects a specific audio source or sources, by language code or name,
-        when multiple audio sources are available. Can be * to download all audio
-        sources.
+        when multiple audio sources are available. Can be * to download all
+        audio sources.
 
         Examples:
 
@@ -777,9 +751,9 @@ def build_parser():
           --hls-audio-select "en,de"
           --hls-audio-select "*"
 
-        Note: This is only useful in special circumstances where the
-        regular locale option fails, such as when multiple sources of the
-        same language exists.
+        Note: This is only useful in special circumstances where the regular
+        locale option fails, such as when multiple sources of the same language
+        exists.
         """)
     transport.add_argument(
         "--hls-timeout",
@@ -796,8 +770,8 @@ def build_parser():
         metavar="HH:MM:SS",
         default=None,
         help="""
-        Amount of time to skip from the beginning of the stream.
-        For live streams, this is a negative offset from the end of the stream (rewind).
+        Amount of time to skip from the beginning of the stream. For live
+        streams, this is a negative offset from the end of the stream (rewind).
 
         Default is 00:00:00.
         """)
@@ -807,8 +781,9 @@ def build_parser():
         metavar="HH:MM:SS",
         default=None,
         help="""
-        Limit the playback duration, useful for watching segments of a stream. The actual duration may be slightly
-        longer, as it is rounded to the nearest HLS segment.
+        Limit the playback duration, useful for watching segments of a stream.
+        The actual duration may be slightly longer, as it is rounded to the
+        nearest HLS segment.
 
         Default is unlimited.
         """)
@@ -826,35 +801,31 @@ def build_parser():
         Timeout for reading data from HTTP streams.
 
         Default is 60.0.
-        """
-    )
+        """)
     transport.add_argument(
         "--ringbuffer-size",
         metavar="SIZE",
         type=filesize,
         help="""
-        The maximum size of ringbuffer. Add a M or K suffix to specify mega
-        or kilo bytes instead of bytes.
+        The maximum size of ringbuffer. Add a M or K suffix to specify mega or
+        kilo bytes instead of bytes.
 
-        The ringbuffer is used as a temporary storage between the stream
-        and the player. This is to allows us to download the stream faster
-        than the player wants to read it.
+        The ringbuffer is used as a temporary storage between the stream and the
+        player. This is to allows us to download the stream faster than the
+        player wants to read it.
 
-        The smaller the size, the higher chance of the player buffering
-        if there are download speed dips and the higher size the more data
-        we can use as a storage to catch up from speed dips.
+        The smaller the size, the higher chance of the player buffering if there
+        are download speed dips and the higher size the more data we can use as
+        a storage to catch up from speed dips.
 
-        It also allows you to temporary pause as long as the ringbuffer
-        doesn't get full since we continue to download the stream in the
-        background.
+        It also allows you to temporary pause as long as the ringbuffer doesn't
+        get full since we continue to download the stream in the background.
 
         Default is "16M".
 
         Note: A smaller size is recommended on lower end systems (such as
         Raspberry Pi) when playing stream types that require some extra
-        processing (such as HDS) to avoid unnecessary background
-        processing.
-
+        processing (such as HDS) to avoid unnecessary background processing.
         """)
     transport.add_argument(
         "--rtmp-proxy", "--rtmpdump-proxy",
@@ -890,7 +861,8 @@ def build_parser():
         type=num(int, min=0),
         metavar="ATTEMPTS",
         help="""
-        How many attempts should be done to download each segment before giving up.
+        How many attempts should be done to download each segment before giving
+        up.
 
         This is generic option used by streams not covered by other options,
         such as stream protocols specific to plugins, e.g. UStream.
@@ -903,8 +875,8 @@ def build_parser():
         type=num(int, max=10),
         metavar="THREADS",
         help="""
-        The size of the thread pool used to download segments.
-        Minimum value is 1 and maximum is 10.
+        The size of the thread pool used to download segments. Minimum value is
+        1 and maximum is 10.
 
         This is generic option used by streams not covered by other options,
         such as stream protocols specific to plugins, e.g. UStream.
@@ -956,8 +928,8 @@ def build_parser():
         "--subprocess-errorlog", "--errorlog", "-e",
         action="store_true",
         help="""
-        Log possible errors from internal subprocesses to a temporary file.
-        The file will be saved in your systems temporary directory.
+        Log possible errors from internal subprocesses to a temporary file. The
+        file will be saved in your systems temporary directory.
 
         Useful when debugging rtmpdump related issues.
         """
@@ -967,8 +939,8 @@ def build_parser():
         type=str,
         metavar="PATH",
         help="""
-        Log the subprocess errorlog to a specific file rather than a temporary file.
-        Takes precedence over subprocess-errorlog.
+        Log the subprocess errorlog to a specific file rather than a temporary
+        file. Takes precedence over subprocess-errorlog.
 
         Useful when debugging rtmpdump related issues.
         """
@@ -977,9 +949,9 @@ def build_parser():
         "--ffmpeg-ffmpeg",
         metavar="FILENAME",
         help="""
-        FFMPEG is used to access or mux separate video and audio streams.
-        You can specify the location of the ffmpeg executable if it is
-        not in your PATH.
+        FFMPEG is used to access or mux separate video and audio streams. You
+        can specify the location of the ffmpeg executable if it is not in your
+        PATH.
 
         Example: "/usr/local/bin/ffmpeg"
         """
@@ -1124,8 +1096,8 @@ def build_parser():
         metavar="TIMEOUT",
         type=num(float, min=0),
         help="""
-        General timeout used by all HTTP requests except the ones covered
-        by other options.
+        General timeout used by all HTTP requests except the ones covered by
+        other options.
 
         Default is 20.0.
         """

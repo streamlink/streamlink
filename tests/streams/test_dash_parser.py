@@ -1,15 +1,14 @@
 from __future__ import unicode_literals
 
 import datetime
-from freezegun import freeze_time
-
 import itertools
+import unittest
 from operator import attrgetter
 
+from freezegun import freeze_time
 from freezegun.api import FakeDatetime
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, datetime_to_seconds
-from tests import unittest
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc
 from tests.resources import xml
 
 
@@ -20,26 +19,26 @@ class TestMPDParsers(unittest.TestCase):
         self.assertEqual(utc.utcoffset(None), datetime.timedelta(0))
 
     def test_bool_str(self):
-        self.assertEquals(MPDParsers.bool_str("true"), True)
-        self.assertEquals(MPDParsers.bool_str("TRUE"), True)
-        self.assertEquals(MPDParsers.bool_str("True"), True)
+        self.assertEqual(MPDParsers.bool_str("true"), True)
+        self.assertEqual(MPDParsers.bool_str("TRUE"), True)
+        self.assertEqual(MPDParsers.bool_str("True"), True)
 
-        self.assertEquals(MPDParsers.bool_str("0"), False)
-        self.assertEquals(MPDParsers.bool_str("False"), False)
-        self.assertEquals(MPDParsers.bool_str("false"), False)
-        self.assertEquals(MPDParsers.bool_str("FALSE"), False)
+        self.assertEqual(MPDParsers.bool_str("0"), False)
+        self.assertEqual(MPDParsers.bool_str("False"), False)
+        self.assertEqual(MPDParsers.bool_str("false"), False)
+        self.assertEqual(MPDParsers.bool_str("FALSE"), False)
 
     def test_type(self):
-        self.assertEquals(MPDParsers.type("dynamic"), "dynamic")
-        self.assertEquals(MPDParsers.type("static"), "static")
+        self.assertEqual(MPDParsers.type("dynamic"), "dynamic")
+        self.assertEqual(MPDParsers.type("static"), "static")
         with self.assertRaises(MPDParsingError):
             MPDParsers.type("other")
 
     def test_duration(self):
-        self.assertEquals(MPDParsers.duration("PT1S"), datetime.timedelta(0, 1))
+        self.assertEqual(MPDParsers.duration("PT1S"), datetime.timedelta(0, 1))
 
     def test_datetime(self):
-        self.assertEquals(MPDParsers.datetime("2018-01-01T00:00:00Z"),
+        self.assertEqual(MPDParsers.datetime("2018-01-01T00:00:00Z"),
                           datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc))
 
     def test_segment_template(self):
@@ -61,6 +60,11 @@ class TestMPDParsers(unittest.TestCase):
                          datetime.timedelta(0, 100.0))
         self.assertEqual(MPDParsers.timedelta(10)(100),
                          datetime.timedelta(0, 10.0))
+
+    def test_range(self):
+        self.assertEqual(MPDParsers.range("100-"), (100, None))
+        self.assertEqual(MPDParsers.range("100-199"), (100, 100))
+        self.assertRaises(MPDParsingError, MPDParsers.range, "100")
 
 
 class TestMPDParser(unittest.TestCase):
@@ -150,6 +154,21 @@ class TestMPDParser(unittest.TestCase):
                                       'http://test.se/dash/150633-video_eng=194000-4000.dash',
                                       ])
 
+    def test_segments_list(self):
+        with xml("dash/test_7.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/chunk_ctvideo_ridp0va0br4332748_cinit_mpd.m4s")
+
+            video_segments = [x.url for x in itertools.islice(segments, 3)]
+            self.assertSequenceEqual(video_segments,
+                                     ['http://test.se/chunk_ctvideo_ridp0va0br4332748_cn1_mpd.m4s',
+                                      'http://test.se/chunk_ctvideo_ridp0va0br4332748_cn2_mpd.m4s',
+                                      'http://test.se/chunk_ctvideo_ridp0va0br4332748_cn3_mpd.m4s',
+                                      ])
+
     def test_segments_dynamic_timeline_continue(self):
         with xml("dash/test_6_p1.mpd") as mpd_xml_p1:
             with xml("dash/test_6_p2.mpd") as mpd_xml_p2:
@@ -181,3 +200,23 @@ class TestMPDParser(unittest.TestCase):
                                           'http://test.se/video/1013000.mp4',
                                           'http://test.se/video/1014000.mp4',
                                           'http://test.se/video/1015000.mp4'])
+
+
+    def test_tsegment_t_is_none_1895(self):
+        """
+            Verify the fix for https://github.com/streamlink/streamlink/issues/1895
+        """
+        with xml("dash/test_8.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            segments = mpd.periods[0].adaptationSets[0].representations[0].segments()
+            init_segment = next(segments)
+            self.assertEqual(init_segment.url, "http://test.se/video-2799000-0.mp4?z32=CENSORED_SESSION")
+
+            video_segments = [x.url for x in itertools.islice(segments, 3)]
+            self.assertSequenceEqual(video_segments,
+                                     ['http://test.se/video-time=0-2799000-0.m4s?z32=CENSORED_SESSION',
+                                      'http://test.se/video-time=4000-2799000-0.m4s?z32=CENSORED_SESSION',
+                                      'http://test.se/video-time=8000-2799000-0.m4s?z32=CENSORED_SESSION',
+                                      ])
+

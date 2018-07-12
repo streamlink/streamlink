@@ -1,14 +1,10 @@
 from __future__ import print_function
 import re
-from wsgiref import headers
 
-from streamlink import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import http
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse
 from streamlink.stream import RTMPStream
 
 
@@ -34,6 +30,7 @@ class TVRBy(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
+    @Plugin.broken()
     def _get_streams(self):
         res = http.get(self.url)
         stream_urls = self.stream_schema.validate(res.text)

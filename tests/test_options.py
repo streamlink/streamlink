@@ -1,17 +1,8 @@
+import unittest
+from tests.mock import Mock
 import sys
 
 from streamlink_cli.main import setup_plugin_args
-
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-
-try:
-    from unittest.mock import Mock
-except ImportError:
-    from mock import Mock
-
 from streamlink.options import Options, Arguments, Argument
 
 
@@ -27,6 +18,13 @@ class TestOptions(unittest.TestCase):
         self.assertEqual(self.options.get("non_existing"), None)
 
         self.options.set("a_option", "option")
+        self.assertEqual(self.options.get("a_option"), "option")
+
+    def test_options_update(self):
+        self.assertEqual(self.options.get("a_default"), "default")
+        self.assertEqual(self.options.get("non_existing"), None)
+
+        self.options.update({"a_option": "option"})
         self.assertEqual(self.options.get("a_option"), "option")
 
     def test_options_name_normalised(self):

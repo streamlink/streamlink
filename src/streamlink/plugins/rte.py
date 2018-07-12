@@ -10,8 +10,7 @@ class RTE(Plugin):
     VOD_API_URL = 'http://www.rte.ie/rteavgen/getplaylist/?type=web&format=json&id={0}'
     LIVE_API_URL = 'http://feeds.rasset.ie/livelistings/playlist'
 
-    _url_re = re.compile(r'http://www\.rte\.ie/player/[a-z0-9]+/(?:show/[a-z-]+-[0-9]+/(?P<video_id>[0-9]+)|live/(?P<channel_id>[0-9]+))')
-
+    _url_re = re.compile(r'https?://www\.rte\.ie/player/[a-z0-9]+/(?:show/[a-z-]+-[0-9]+/(?P<video_id>[0-9]+)|live/(?P<channel_id>[0-9]+))')
     _vod_api_schema = validate.Schema({
         'current_date': validate.text,
         'shows': validate.Schema(

@@ -1,3 +1,4 @@
+import argparse
 import errno
 import logging
 import os
@@ -22,15 +23,18 @@ from streamlink import __version__ as streamlink_version
 from streamlink import (Streamlink, StreamError, PluginError,
                         NoPluginError)
 from streamlink.cache import Cache
+from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
 from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
+from streamlink.utils import LazyFormatter
 
 import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32
-from .console import ConsoleOutput
-from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS
+from streamlink.utils.encoding import maybe_encode
+from .console import ConsoleOutput, ConsoleUserInputRequester
+from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
@@ -43,7 +47,7 @@ QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
 args = console = streamlink = plugin = stream_fd = output = None
 
-log = logging.getLogger("streamlink.console")
+log = logging.getLogger("streamlink.cli")
 
 
 def check_file_output(filename, force):
@@ -62,7 +66,7 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output():
+def create_output(plugin):
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -99,11 +103,13 @@ def create_output():
         elif args.player_http:
             http = create_http_server()
 
+        title = create_title(plugin)
         log.info("Starting player: {0}", args.player)
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
-                           namedpipe=namedpipe, http=http)
+                           namedpipe=namedpipe, http=http,
+                           title=title)
 
     return out
 
@@ -122,6 +128,20 @@ def create_http_server(host=None, port=0):
         console.exit("Failed to create HTTP server: {0}", err)
 
     return http
+
+
+def create_title(plugin=None):
+    if args.title and plugin:
+        title = LazyFormatter.format(
+            maybe_encode(args.title),
+            title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
+            author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
+            category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
+            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"]
+        )
+    else:
+        title = args.url
+    return title
 
 
 def iter_http_requests(server, player):
@@ -148,10 +168,12 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
+        title = create_title(plugin)
         server = create_http_server()
         player = output = PlayerOutput(args.player, args=args.player_args,
                                        filename=server.url,
-                                       quiet=not args.verbose_player)
+                                       quiet=not args.verbose_player,
+                                       title=title)
 
         try:
             log.info("Starting player: {0}", args.player)
@@ -208,14 +230,16 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(stream):
+def output_stream_passthrough(plugin, stream):
     """Prepares a filename to be passed to the player."""
     global output
 
+    title = create_title(plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
-                          quiet=not args.verbose_player)
+                          quiet=not args.verbose_player,
+                          title=title)
 
     try:
         log.info("Starting player: {0}", args.player)
@@ -258,7 +282,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(stream):
+def output_stream(plugin, stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -274,7 +298,7 @@ def output_stream(stream):
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
-    output = create_output()
+    output = create_output(plugin)
 
     try:
         output.open()
@@ -390,7 +414,7 @@ def handle_stream(plugin, streams, stream_name):
             if stream_type in args.player_passthrough and not file_output:
                 log.info("Opening stream: {0} ({1})", stream_name,
                          stream_type)
-                success = output_stream_passthrough(stream)
+                success = output_stream_passthrough(plugin, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
                                           port=args.player_external_http_port)
@@ -399,7 +423,8 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 log.info("Opening stream: {0} ({1})", stream_name,
                          stream_type)
-                success = output_stream(stream)
+
+                success = output_stream(plugin, stream)
 
             if success:
                 break
@@ -432,6 +457,8 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
+        except FatalPluginError as err:
+            raise
         except PluginError as err:
             log.error(u"{0}", err)
 
@@ -514,8 +541,8 @@ def handle_url():
             log.debug("Plugin specific arguments:")
             for parg, value in plugin_args:
                 log.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
-                                                             value if not parg.sensitive else ("*" * 8),
-                                                             parg.dest))
+                                                  value if not parg.sensitive else ("*" * 8),
+                                                  parg.dest))
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -585,7 +612,7 @@ def authenticate_twitch_oauth():
 
     client_id = TWITCH_CLIENT_ID
     redirect_uri = "https://streamlink.github.io/twitch_oauth.html"
-    url = ("https://api.twitch.tv/kraken/oauth2/authorize/"
+    url = ("https://api.twitch.tv/kraken/oauth2/authorize"
            "?response_type=token&client_id={0}&redirect_uri="
            "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
 
@@ -663,10 +690,6 @@ def setup_console(output):
     # All console related operations is handled via the ConsoleOutput class
     console = ConsoleOutput(output, streamlink)
 
-    # We don't want log output when we are printing JSON or a command-line.
-    if not any(getattr(args, attr) for attr in QUIET_OPTIONS):
-        console.set_level(args.loglevel)
-
     if args.quiet_player:
         log.warning("The option --quiet-player is deprecated since "
                     "version 1.4.3 as hiding player output is now "
@@ -728,20 +751,20 @@ def setup_http_session():
         streamlink.set_option("http-query-params", args.http_query_params)
 
 
-def setup_plugins():
+def setup_plugins(extra_plugin_dir=None):
     """Loads any additional plugins."""
     if os.path.isdir(PLUGINS_DIR):
         load_plugins([PLUGINS_DIR])
 
-    if args.plugin_dirs:
-        load_plugins(args.plugin_dirs)
+    if extra_plugin_dir:
+        load_plugins(extra_plugin_dir)
 
 
 def setup_streamlink():
     """Creates the Streamlink session."""
     global streamlink
 
-    streamlink = Streamlink()
+    streamlink = Streamlink({"user-input-requester": ConsoleUserInputRequester(console)})
 
 
 def setup_options():
@@ -861,19 +884,20 @@ def setup_plugin_options(session, plugin):
     pname = plugin.module
     required = OrderedDict({})
     for parg in plugin.arguments:
-        if parg.required:
-            required[parg.name] = parg
-        value = getattr(args, parg.namespace_dest(pname))
-        session.set_plugin_option(pname, parg.dest, value)
-        # if the value is set, check to see if any of the required arguments are not set
-        if parg.required or value:
-            try:
-                for rparg in plugin.arguments.requires(parg.name):
-                    required[rparg.name] = rparg
-            except RuntimeError:
-                console.logger.error("{0} plugin has a configuration error and the arguments "
-                                     "cannot be parsed".format(pname))
-                break
+        if parg.options.get("help") != argparse.SUPPRESS:
+            if parg.required:
+                required[parg.name] = parg
+            value = getattr(args, parg.namespace_dest(pname))
+            session.set_plugin_option(pname, parg.dest, value)
+            # if the value is set, check to see if any of the required arguments are not set
+            if parg.required or value:
+                try:
+                    for rparg in plugin.arguments.requires(parg.name):
+                        required[rparg.name] = rparg
+                except RuntimeError:
+                    console.logger.error("{0} plugin has a configuration error and the arguments "
+                                         "cannot be parsed".format(pname))
+                    break
     if required:
         for req in required.values():
             if not session.get_plugin_option(pname, req.dest):
@@ -940,7 +964,10 @@ def check_version(force=False):
 
 
 def setup_logging(stream=sys.stdout, level="info"):
-    logger.basicConfig(stream=stream, level=level, format="[{name}][{levelname}] {message}", style="{")
+    fmt = ("[{asctime},{msecs:0.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
+    logger.basicConfig(stream=stream, level=level,
+                       format=fmt, style="{",
+                       datefmt="%H:%M:%S")
 
 
 def main():
@@ -955,16 +982,25 @@ def main():
         console_out = sys.stderr
     else:
         console_out = sys.stdout
-    setup_logging(console_out, args.loglevel)
+
+    # We don't want log output when we are printing JSON or a command-line.
+    silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
+    log_level = args.loglevel if not silent_log else "none"
+    setup_logging(console_out, log_level)
+    setup_console(console_out)
+
     setup_streamlink()
-    setup_plugins()
+    # load additional plugins
+    setup_plugins(args.plugin_dirs)
     setup_plugin_args(streamlink, parser)
     # call setup args again once the plugin specific args have been added
     setup_args(parser)
     setup_config_args(parser)
+
     # update the logging level if changed by a plugin specific config
-    logger.root.setLevel(args.loglevel)
-    setup_console(console_out)
+    log_level = args.loglevel if not silent_log else "none"
+    logger.root.setLevel(log_level)
+
     setup_http_session()
     check_root()
     log_current_versions()

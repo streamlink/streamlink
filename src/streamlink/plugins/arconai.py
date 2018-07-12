@@ -14,6 +14,7 @@ class ArconaiTv(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
+    @Plugin.broken(1243)
     def _get_streams(self):
         headers = {
             'User-Agent': useragents.CHROME,

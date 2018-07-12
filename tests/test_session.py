@@ -1,20 +1,12 @@
+import unittest
 import os
-import sys
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
-
-from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
-
-try:
-    from unittest.mock import MagicMock
-except ImportError:
-    from mock import MagicMock
 
 from streamlink import Streamlink, NoPluginError
+from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
+from streamlink.session import print_small_exception
 from streamlink.stream import *
+from tests.mock import patch, call
 
 
 class TestSession(unittest.TestCase):
@@ -25,7 +17,7 @@ class TestSession(unittest.TestCase):
         self.session.load_plugins(self.PluginPath)
 
     def test_exceptions(self):
-        self.assertRaises(NoPluginError, self.session.resolve_url, "invalid url")
+        self.assertRaises(NoPluginError, self.session.resolve_url, "invalid url", follow_redirect=False)
 
     def test_load_plugins(self):
         plugins = self.session.get_plugins()
@@ -127,6 +119,23 @@ class TestSession(unittest.TestCase):
 
         self.assertTrue("support" in streams)
         self.assertTrue(isinstance(streams["support"], HTTPStream))
+
+    @patch("streamlink.session.sys.stderr")
+    def test_short_exception(self, stderr):
+        try:
+            raise RuntimeError("test exception")
+        except RuntimeError:
+            print_small_exception("test_short_exception")
+            self.assertSequenceEqual(
+                [call('RuntimeError: test exception\n'), call('\n')],
+                stderr.write.mock_calls)
+
+    def test_set_and_get_locale(self):
+        session = Streamlink()
+        session.set_option("locale", "en_US")
+        self.assertEqual(session.localization.country.alpha2, "US")
+        self.assertEqual(session.localization.language.alpha2, "en")
+        self.assertEqual(session.localization.language_code, "en_US")
 
 
 if __name__ == "__main__":

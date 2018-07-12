@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import copy
 import logging
 import datetime
 import re
@@ -31,12 +32,13 @@ epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
 
 class Segment(object):
-    def __init__(self, url, duration, init=False, content=True, available_at=epoch_start):
+    def __init__(self, url, duration, init=False, content=True, available_at=epoch_start, range=None):
         self.url = url
         self.duration = duration
         self.init = init
         self.content = content
         self.available_at = available_at
+        self.range = range
 
 
 def datetime_to_seconds(dt):
@@ -48,6 +50,13 @@ def count_dt(firstval=datetime.datetime.now(tz=utc), step=datetime.timedelta(sec
     while True:
         yield x
         x += step
+
+
+@contextmanager
+def freeze_timeline(mpd):
+    timelines = copy.copy(mpd.timelines)
+    yield
+    mpd.timelines = timelines
 
 
 @contextmanager
@@ -110,6 +119,15 @@ class MPDParsers(object):
             return datetime.timedelta(seconds=int(float(seconds) / float(timescale)))
 
         return _timedelta
+
+    @staticmethod
+    def range(range_spec):
+        r = range_spec.split("-")
+        if len(r) != 2:
+            raise MPDParsingError("invalid byte-range-spec")
+
+        start, end = int(r[0]), r[1] and int(r[1]) or None
+        return start, end and ((end-start) + 1)
 
 
 class MPDParsingError(Exception):
@@ -219,6 +237,7 @@ class MPD(MPDNode):
                                                default=datetime.datetime.fromtimestamp(0, utc),  # earliest date
                                                required=self.type == "dynamic")
         self.publishTime = self.attr(u"publishTime", parser=MPDParsers.datetime, required=self.type == "dynamic")
+        self.availabilityEndTime = self.attr(u"availabilityEndTime", parser=MPDParsers.datetime)
         self.mediaPresentationDuration = self.attr(u"mediaPresentationDuration", parser=MPDParsers.duration)
         self.suggestedPresentationDelay = self.attr(u"suggestedPresentationDelay", parser=MPDParsers.duration)
 
@@ -313,8 +332,52 @@ class EventStream(MPDNode):
     __tag__ = "EventStream"
 
 
+class Initialization(MPDNode):
+    __tag__ = "Initialization"
+
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super(Initialization, self).__init__(node, root, parent, *args, **kwargs)
+        self.source_url = self.attr("sourceURL")
+
+
+class SegmentURL(MPDNode):
+    __tag__ = "SegmentURL"
+
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super(SegmentURL, self).__init__(node, root, parent, *args, **kwargs)
+        self.media = self.attr("media")
+        self.media_range = self.attr("mediaRange", parser=MPDParsers.range)
+
+
 class SegmentList(MPDNode):
     __tag__ = "SegmentList"
+
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super(SegmentList, self).__init__(node, root, parent, *args, **kwargs)
+
+        self.presentation_time_offset = self.attr("presentationTimeOffset")
+        self.timescale = self.attr("timescale", parser=int)
+        self.duration = self.attr("duration", parser=int)
+        self.start_number = self.attr("startNumber", parser=int, default=1)
+
+        if self.duration:
+            self.duration_seconds = self.duration / float(self.timescale)
+        else:
+            self.duration_seconds = None
+
+
+        self.initialization = self.only_child(Initialization)
+        self.segment_urls = self.children(SegmentURL, minimum=1)
+
+    @property
+    def segments(self):
+        if self.initialization:
+            yield Segment(self.make_url(self.initialization.source_url), 0, init=True, content=False)
+        for n, segment_url in enumerate(self.segment_urls, self.start_number):
+            yield Segment(self.make_url(segment_url.media), self.duration_seconds, range=segment_url.media_range)
+
+    def make_url(self, url):
+        return BaseURL.join(self.base_url, url)
 
 
 class AdaptationSet(MPDNode):
@@ -479,7 +542,7 @@ class SegmentTemplate(MPDNode):
             else:
                 for segment, n in zip(self.segmentTimeline.segments, count(self.startNumber)):
                     yield (self.make_url(self.media(Time=segment.t, Number=n, **kwargs)),
-                           datetime.timedelta(seconds=segment.d / self.timescale))
+                           datetime.datetime.now(tz=utc))
 
         else:
             for number, available_at in self.segment_numbers():
@@ -514,7 +577,7 @@ class Representation(MPDNode):
         self.baseURLs = self.children(BaseURL)
         self.subRepresentation = self.children(SubRepresentation)
         self.segmentBase = self.only_child(SegmentBase)
-        self.segmentList = self.only_child(SegmentList)
+        self.segmentList = self.children(SegmentList)
         self.segmentTemplate = self.only_child(SegmentTemplate)
 
     def segments(self, **kwargs):
@@ -529,7 +592,7 @@ class Representation(MPDNode):
         """
 
         segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
-        segmentList = self.segmentList or self.walk_back_get_attr("segmentList")
+        segmentLists = self.segmentList or self.walk_back_get_attr("segmentList")
         segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
 
         if segmentTemplate:
@@ -539,6 +602,10 @@ class Representation(MPDNode):
                 if segment.init:
                     yield segment
                 else:
+                    yield segment
+        elif segmentLists:
+            for segmentList in segmentLists:
+                for segment in segmentList.segments:
                     yield segment
         else:
             yield Segment(self.base_url, 0, True, True)
@@ -563,7 +630,8 @@ class SegmentTimeline(MPDNode):
     def segments(self):
         t = 0
         for tsegment in self.timeline_segments:
-            t = t or tsegment.t
+            if t == 0 and tsegment.t is not None:
+                t = tsegment.t
             # check the start time from MPD
             for repeated_i in range(tsegment.r + 1):
                 yield self.TimelineSegment(t, tsegment.d)

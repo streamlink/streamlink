@@ -1,7 +1,9 @@
+import base64
 import sys
+import os.path
 
 from streamlink.plugin.api.validate import xml_element, text
-from streamlink.utils import update_scheme, url_equal
+from streamlink.utils import update_scheme, url_equal, search_dict, load_module
 
 try:
     import xml.etree.cElementTree as ET
@@ -11,10 +13,10 @@ from streamlink import PluginError
 from streamlink.plugin.api import validate
 from streamlink.utils import *
 
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
+
+# used in the import test to verify that this module was imported
+__test_marker__ = "test_marker"
 
 
 class TestUtil(unittest.TestCase):
@@ -124,3 +126,57 @@ class TestUtil(unittest.TestCase):
         self.assertTrue(url_equal("http://test.com/test", "http://test.com/test#hello", ignore_fragment=True))
         self.assertTrue(url_equal("http://test.com/test", "http://test2.com/test", ignore_netloc=True))
         self.assertFalse(url_equal("http://test.com/test", "http://test2.com/test1", ignore_netloc=True))
+
+    def test_rtmpparse(self):
+        self.assertEquals(
+            ("rtmp://testserver.com:1935/app", "playpath?arg=1"),
+            rtmpparse("rtmp://testserver.com/app/playpath?arg=1"))
+        self.assertEquals(
+            ("rtmp://testserver.com:1935/long/app", "playpath?arg=1"),
+            rtmpparse("rtmp://testserver.com/long/app/playpath?arg=1"))
+        self.assertEquals(
+            ("rtmp://testserver.com:1935/app", None),
+            rtmpparse("rtmp://testserver.com/app"))
+
+    def test_swf_decompress(self):
+        # FYI, not a valid SWF
+        swf = b"FWS " + b"0000" + b"test data 12345"
+        swf_compressed = b"CWS " + b"0000" + base64.b64decode(b"eJwrSS0uUUhJLElUMDQyNjEFACpTBJo=")
+        self.assertEqual(swf, swfdecompress(swf_compressed))
+        self.assertEqual(swf, swfdecompress(swf))
+
+    def test_search_dict(self):
+
+        self.assertSequenceEqual(
+            list(search_dict(["one", "two"], "one")),
+            []
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"two": "test2"}, "one")),
+            []
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"one": "test1", "two": "test2"}, "one")),
+            ["test1"]
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"one": {"inner": "test1"}, "two": "test2"}, "inner")),
+            ["test1"]
+        )
+        self.assertSequenceEqual(
+            list(search_dict({"one": [{"inner": "test1"}], "two": "test2"}, "inner")),
+            ["test1"]
+        )
+        self.assertSequenceEqual(
+            list(sorted(search_dict({"one": [{"inner": "test1"}], "two": {"inner": "test2"}}, "inner"))),
+            list(sorted(["test1", "test2"]))
+        )
+
+    def test_load_module_non_existent(self):
+        self.assertRaises(ImportError, load_module, "non_existent_module", os.path.dirname(__file__))
+
+    def test_load_module(self):
+        self.assertEqual(
+            sys.modules[__name__].__test_marker__,
+            load_module(__name__.split(".")[-1], os.path.dirname(__file__)).__test_marker__
+        )

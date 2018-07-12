@@ -13,21 +13,26 @@ if [[ -n "${TRAVIS}" ]]; then
 fi
 
 echo "build: Installing twine and wheel" >&2
-pip -q install twine wheel
+pip -q install -U setuptools twine wheel
 
 echo "build: Building streamlink sdist and wheel" >&2
 python setup.py -q sdist bdist_wheel --dist-dir "${dist_dir}"
 
-echo "build: Signing sdist and wheel files" >&2
-gpg --homedir "${temp_keyring}" --import "${KEY_FILE}" 2>&1 > /dev/null
-gpg --homedir "${temp_keyring}" --trust-model always --default-key "${KEY_ID}" --detach-sign --armor "${dist_dir}/streamlink-${version}.tar.gz"
-gpg --homedir "${temp_keyring}" --trust-model always --default-key "${KEY_ID}" --detach-sign --armor "${dist_dir}/streamlink-${version}-py2.py3-none-any.whl"
+if [ -f "${KEY_FILE}" ]; then
+    echo "build: Signing sdist and wheel files" >&2
+    gpg --homedir "${temp_keyring}" --import "${KEY_FILE}" 2>&1 > /dev/null
+    gpg --homedir "${temp_keyring}" --trust-model always --default-key "${KEY_ID}" --detach-sign --armor "${dist_dir}/streamlink-${version}.tar.gz"
+    gpg --homedir "${temp_keyring}" --trust-model always --default-key "${KEY_ID}" --detach-sign --armor "${dist_dir}/streamlink-${version}-py2.py3-none-any.whl"
+else
+    echo "warning: no signing key, files not signed" >&2
+fi
 
 if [[ "${DEPLOY_PYPI}" == "yes" ]]; then
     echo "build: Uploading sdist and wheel to PyPI" >&2
     twine upload --username "${PYPI_USER}" --password "${PYPI_PASSWORD}" \
         "${dist_dir}/streamlink-${version}.tar.gz" \
-        "${dist_dir}/streamlink-${version}.tar.gz.asc" \
+        "${dist_dir}/streamlink-${version}.tar.gz.asc"
+    twine upload --username "${PYPI_USER}" --password "${PYPI_PASSWORD}" \
         "${dist_dir}/streamlink-${version}-py2.py3-none-any.whl" \
         "${dist_dir}/streamlink-${version}-py2.py3-none-any.whl.asc"
 fi

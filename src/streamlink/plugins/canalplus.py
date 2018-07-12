@@ -13,10 +13,9 @@ class CanalPlus(Plugin):
     SECRET = 'pqzerjlsmdkjfoiuerhsdlfknaes'
 
     _url_re = re.compile(r'''
-        (https|http)://
+        https?://
         (
-            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+) |
-            www\.cnews\.fr/.+
+            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+)
         )
 ''', re.VERBOSE)
     _video_id_re = re.compile(r'(\bdata-video="|<meta property="og:video" content=".+?&videoId=)(?P<video_id>[0-9]+)"')

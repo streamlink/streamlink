@@ -1,8 +1,7 @@
+import functools
 import json
 import re
 import zlib
-import collections
-import functools
 
 try:
     import xml.etree.cElementTree as ET
@@ -12,6 +11,8 @@ except ImportError:  # pragma: no cover
 from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse, is_py3
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
+from streamlink.utils.lazy_formatter import LazyFormatter
+from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
 
 
 def swfdecompress(data):
@@ -199,6 +200,54 @@ def memoize(obj):
     return memoizer
 
 
+def search_dict(data, key):
+    """
+    Search for a key in a nested dict, or list of nested dicts, and return the values.
+
+    :param data: dict/list to search
+    :param key: key to find
+    :return: matches for key
+    """
+    if isinstance(data, dict):
+        for dkey, value in data.items():
+            if dkey == key:
+                yield value
+            for result in search_dict(value, key):
+                yield result
+    elif isinstance(data, list):
+        for value in data:
+            for result in search_dict(value, key):
+                yield result
+
+
+def load_module(name, path=None):
+    if is_py3:
+        import importlib.machinery
+        import importlib.util
+        import sys
+
+        loader_details = [(importlib.machinery.SourceFileLoader, importlib.machinery.SOURCE_SUFFIXES)]
+        finder = importlib.machinery.FileFinder(path, *loader_details)
+        spec = finder.find_spec(name)
+        if not spec or not spec.loader:
+            raise ImportError("no module named {0}".format(name))
+        if sys.version_info[1] > 4:
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            return mod
+        else:
+            return spec.loader.load_module(name)
+
+    else:
+        import imp
+        fd, filename, desc = imp.find_module(name, path and [path])
+        try:
+            return imp.load_module(name, fd, filename, desc)
+        finally:
+            if fd:
+                fd.close()
+
+
 #####################################
 # Deprecated functions, do not use. #
 #####################################
@@ -285,7 +334,7 @@ def swfverify(url):  # pragma: no cover
     return h.hexdigest(), len(swf)
 
 
-def escape_librtmp(value):
+def escape_librtmp(value):  # pragma: no cover
     if isinstance(value, bool):
         value = "1" if value else "0"
     if isinstance(value, int):
@@ -301,4 +350,5 @@ def escape_librtmp(value):
 __all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
            "parse_xml", "res_xml", "rtmpparse", "prepend_www", "NamedPipe",
-           "escape_librtmp"]
+           "escape_librtmp", "LazyFormatter", "get_filesystem_encoding",
+           "maybe_decode", "maybe_encode"]

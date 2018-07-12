@@ -26,7 +26,7 @@ sudo pip install streamlink
 ### Manual installation:
 
 ```sh
-curl -L https://github.com/streamlink/streamlink/releases/download/$2/streamlink-$2.tar.gz -O streamlink.tar.gz
+curl -L https://github.com/streamlink/streamlink/releases/download/{version}/streamlink-{version}.tar.gz -O streamlink.tar.gz
 tar xvf streamlink.tar.gz
 cd streamlink
 sudo python setup.py install
@@ -86,7 +86,7 @@ def main(tag, repo, api_key, dry_run=False):
         # Update release name and body
         payload = {
             "name": "Streamlink {0}".format(tag),
-            "body": TEMPLATE.format(changelog=changelog.strip(), gitlog=gitlog.strip())
+            "body": TEMPLATE.format(changelog=changelog.strip(), gitlog=gitlog.strip(), version=tag)
         }
         if not dry_run:
             github_api_call("PATCH", repo, data["id"], api_key, json=payload)
