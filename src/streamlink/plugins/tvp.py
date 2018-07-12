@@ -2,7 +2,6 @@ import re
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
@@ -24,7 +23,7 @@ class TVP(Plugin):
         return cls._url_re.match(url) is not None
 
     def get_embed_url(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         m = self._video_id_re.search(res.text)
         if not m:
@@ -36,10 +35,10 @@ class TVP(Plugin):
         return p_url
 
     def _get_streams(self):
-        http.headers.update({'User-Agent': useragents.FIREFOX})
+        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
 
         embed_url = self.get_embed_url()
-        res = http.get(embed_url)
+        res = self.session.http.get(embed_url)
         m = self._stream_re.findall(res.text)
         if not m:
             raise PluginError('Unable to find a stream url')

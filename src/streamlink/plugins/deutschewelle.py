@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
@@ -103,8 +102,8 @@ class DeutscheWelle(Plugin):
         yield self._create_stream(stream_url, default_quality)
 
         # Retrieve streams using API
-        res = http.get(self.smil_api_url.format(stream_api_id))
-        videos = http.xml(res, schema=self.smil_schema)
+        res = self.session.http.get(self.smil_api_url.format(stream_api_id))
+        videos = self.session.http.xml(res, schema=self.smil_schema)
 
         for video in videos['streams']:
             url = videos["base"] + video["src"]
@@ -121,7 +120,7 @@ class DeutscheWelle(Plugin):
             yield self._create_stream(url, quality)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         m = self.vod_player_type_re.search(res.text)
         if m is None:
             return

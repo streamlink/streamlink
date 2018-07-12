@@ -6,7 +6,6 @@ from pprint import pprint
 
 from streamlink import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -41,18 +40,18 @@ class ovvaTV(Plugin):
 
     @Plugin.broken()
     def _get_streams(self):
-        http.headers = {"User-Agent": useragents.ANDROID}
-        res = http.get(self.url)
+        self.session.http.headers = {"User-Agent": useragents.ANDROID}
+        res = self.session.http.get(self.url)
         iframe_url = self.find_iframe(res)
 
         if iframe_url:
             self.logger.debug("Found iframe: {0}", iframe_url)
-            res = http.get(iframe_url, headers={"Referer": self.url})
+            res = self.session.http.get(iframe_url, headers={"Referer": self.url})
             data = self.data_re.search(res.text)
             if data:
                 try:
                     ovva_url = parse_json(b64decode(data.group(1)).decode("utf8"), schema=self.ovva_data_schema)
-                    stream_url = http.get(ovva_url, schema=self.ovva_redirect_schema)
+                    stream_url = self.session.http.get(ovva_url, schema=self.ovva_redirect_schema)
                 except PluginError as e:
                     self.logger.error("Could not find stream URL: {0}", e)
                 else:

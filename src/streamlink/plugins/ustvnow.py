@@ -5,7 +5,7 @@ import re
 from collections import OrderedDict
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 
@@ -47,7 +47,7 @@ class USTVNow(Plugin):
         return cls._url_re.match(url) is not None
 
     def login(self, username, password):
-        r = http.get(self._signin_url)
+        r = self.session.http.get(self._signin_url)
         csrf = None
 
         for input in itertags(r.text, "input"):
@@ -56,7 +56,7 @@ class USTVNow(Plugin):
 
         log.debug("CSRF: {0}", csrf)
 
-        r = http.post(self._login_url, data={'csrf_ustvnow': csrf,
+        r = self.session.http.post(self._login_url, data={'csrf_ustvnow': csrf,
                                              'signin_email': username,
                                              'signin_password': password,
                                              'signin_remember': '1'})
@@ -71,7 +71,7 @@ class USTVNow(Plugin):
         m = self._url_re.match(self.url)
         scode = m and m.group("scode") or self.get_option("station_code")
 
-        res = http.get(self._guide_url, params=dict(token=token))
+        res = self.session.http.get(self._guide_url, params=dict(token=token))
 
         channels = OrderedDict()
         for t in itertags(res.text, "a"):
@@ -86,14 +86,14 @@ class USTVNow(Plugin):
         if scode in channels:
             log.debug("Finding streams for: {0}", channels.get(scode))
 
-            r = http.get(self._stream_url, params={"scode": scode,
+            r = self.session.http.get(self._stream_url, params={"scode": scode,
                                                    "token": token,
                                                    "br_n": "Firefox",
                                                    "br_v": "52",
                                                    "br_d": "desktop"},
                          headers={"User-Agent": useragents.FIREFOX})
 
-            data = http.json(r)
+            data = self.session.http.json(r)
             return HLSStream.parse_variant_playlist(self.session, data["stream"])
         else:
             log.error("Invalid station-code: {0}", scode)

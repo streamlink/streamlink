@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
@@ -16,9 +16,9 @@ class ElTreceTV(Plugin):
     def _get_streams(self):
         if "eltrecetv.com.ar/vivo" in self.url.lower():
             try:
-                http.headers = {'Referer': self.url,
+                self.session.http.headers = {'Referer': self.url,
                                 'User-Agent': useragents.ANDROID}
-                res = http.get('https://api.iamat.com/metadata/atcodes/eltrece')
+                res = self.session.http.get('https://api.iamat.com/metadata/atcodes/eltrece')
                 yt_id = parse_json(res.text)["atcodes"][0]["context"]["ahora"]["vivo"]["youtubeVideo"]
                 yt_url = "https://www.youtube.com/watch?v={0}".format(yt_id)
                 return self.session.streams(yt_url)
@@ -26,9 +26,9 @@ class ElTreceTV(Plugin):
                 self.logger.info("Live content is temporarily unavailable. Please try again later.")
         else:
             try:
-                http.headers = {'Referer': self.url,
+                self.session.http.headers = {'Referer': self.url,
                                 'User-Agent': useragents.CHROME}
-                res = http.get(self.url)
+                res = self.session.http.get(self.url)
                 _player_re = re.compile(r'''data-kaltura="([^"]+)"''')
                 match = _player_re.search(res.text)
                 if not match:

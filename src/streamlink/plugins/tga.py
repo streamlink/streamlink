@@ -3,7 +3,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
@@ -70,25 +70,25 @@ class Tga(Plugin):
             return "live"
 
     def _get_channel_id(self, domain):
-        channel_info = http.get(CHANNEL_INFO_URL % str(domain))
-        info = http.json(channel_info, schema=_channel_schema)
+        channel_info = self.session.http.get(CHANNEL_INFO_URL % str(domain))
+        info = self.session.http.json(channel_info, schema=_channel_schema)
         if info is None:
             return 0, 0
 
         return info['channel']['vid'], info['channel']['id']
 
     def _get_qq_streams(self, vid):
-        res = http.get(QQ_STREAM_INFO_URL % (vid, 1))
-        info = http.json(res, schema=_qq_schema)
+        res = self.session.http.get(QQ_STREAM_INFO_URL % (vid, 1))
+        info = self.session.http.json(res, schema=_qq_schema)
         yield "live", HTTPStream(self.session, info)
 
-        res = http.get(QQ_STREAM_INFO_URL % (vid, 2))
-        info = http.json(res, schema=_qq_schema)
+        res = self.session.http.get(QQ_STREAM_INFO_URL % (vid, 2))
+        info = self.session.http.json(res, schema=_qq_schema)
         yield "live", HLSStream(self.session, info)
 
     def _get_plu_streams(self, cid):
-        res = http.get(PLU_STREAM_INFO_URL % cid)
-        info = http.json(res, schema=_plu_schema)
+        res = self.session.http.get(PLU_STREAM_INFO_URL % cid)
+        info = self.session.http.json(res, schema=_plu_schema)
         for source in info["playLines"][0]["urls"]:
             quality = self._get_quality(source["resolution"])
             if source["ext"] == "m3u8":

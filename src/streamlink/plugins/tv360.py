@@ -3,7 +3,6 @@ import re
 from functools import partial
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -35,7 +34,7 @@ class TV360(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         data = self.data_schema.validate(res.text)
 
         if data:

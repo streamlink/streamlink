@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36"
@@ -18,8 +17,8 @@ class TVCatchup(Plugin):
         """
         Finds the streams from tvcatchup.com.
         """
-        http.headers.update({"User-Agent": USER_AGENT})
-        res = http.get(self.url)
+        self.session.http.headers.update({"User-Agent": USER_AGENT})
+        res = self.session.http.get(self.url)
 
         match = _stream_re.search(res.text, re.IGNORECASE | re.MULTILINE)
 

@@ -4,7 +4,6 @@ import re
 from functools import partial
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -83,7 +82,7 @@ class Schoolism(Plugin):
         :return: (str) users email
         """
         if self.options.get("email") and self.options.get("password"):
-            res = http.post(self.login_url, data={"email": email,
+            res = self.session.http.post(self.login_url, data={"email": email,
                                                   "password": password,
                                                   "redirect": None,
                                                   "submit": "Login"})
@@ -99,7 +98,7 @@ class Schoolism(Plugin):
         user = self.login(self.options.get("email"), self.options.get("password"))
         if user:
             self.logger.debug("Logged in to Schoolism as {0}", user)
-            res = http.get(self.url, headers={"User-Agent": useragents.SAFARI_8})
+            res = self.session.http.get(self.url, headers={"User-Agent": useragents.SAFARI_8})
             lesson_playlist = self.playlist_schema.validate(res.text)
 
             part = self.options.get("part")
@@ -108,7 +107,7 @@ class Schoolism(Plugin):
             found = False
 
             # make request to key-time api, to get key specific headers
-            res = http.get(self.key_time_url, headers={"User-Agent": useragents.SAFARI_8})
+            res = self.session.http.get(self.key_time_url, headers={"User-Agent": useragents.SAFARI_8})
 
             for i, video in enumerate(lesson_playlist, 1):
                 if video["sources"] and i == part:

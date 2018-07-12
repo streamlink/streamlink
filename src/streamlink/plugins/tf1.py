@@ -3,7 +3,7 @@ import re
 
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 
@@ -31,7 +31,7 @@ class TF1(Plugin):
     def _get_hds_streams(self, channel):
         channel = self.hds_channel_remap.get(channel, "{0}live".format(channel))
         self.logger.debug("Using HDS channel name: {0}".format(channel))
-        manifest_url = http.get(self.api_url.format(channel),
+        manifest_url = self.session.http.get(self.api_url.format(channel),
                                 params={"getURL": 1},
                                 headers={"User-Agent": useragents.FIREFOX}).text
 
@@ -46,7 +46,7 @@ class TF1(Plugin):
         embed_url = self.embed_url.format(channel)
         self.logger.debug("Found embed URL: {0}", embed_url)
         # page needs to have a mobile user agent
-        embed_page = http.get(embed_url, headers={"User-Agent": useragents.ANDROID})
+        embed_page = self.session.http.get(embed_url, headers={"User-Agent": useragents.ANDROID})
 
         m = self.embed_re.search(embed_page.text)
         if m:

@@ -3,7 +3,7 @@ import re
 from streamlink import NoStreamsError
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import StreamMapper, http, validate
+from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 from streamlink.utils import rtmpparse
 
@@ -63,7 +63,7 @@ class Viasat(Plugin):
         return cls._url_re.match(url)
 
     def _get_swf_url(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _swf_url_re.search(res.text)
         if not match:
             raise PluginError("Unable to find SWF URL in the HTML")
@@ -95,8 +95,8 @@ class Viasat(Plugin):
         return name, RTMPStream(self.session, params)
 
     def _extract_streams(self, stream_id):
-        res = http.get(STREAM_API_URL.format(stream_id), raise_for_status=False)
-        stream_info = http.json(res, schema=_stream_schema)
+        res = self.session.http.get(STREAM_API_URL.format(stream_id), raise_for_status=False)
+        stream_info = self.session.http.json(res, schema=_stream_schema)
 
         if stream_info.get("msg"):
             # error message
@@ -135,7 +135,7 @@ class Viasat(Plugin):
         stream_id = match.group("stream_id")
 
         if not stream_id:
-            text = http.get(self.url).text
+            text = self.session.http.get(self.url).text
             stream_id = self._get_stream_id(text)
 
             if not stream_id:

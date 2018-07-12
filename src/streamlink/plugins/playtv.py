@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 
 
@@ -39,8 +39,8 @@ class PlayTV(Plugin):
         match = self._url_re.match(self.url)
         channel = match.group('channel')
 
-        res = http.get(self.FORMATS_URL.format(channel))
-        streams = http.json(res, schema=self._formats_schema)['streams']
+        res = self.session.http.get(self.FORMATS_URL.format(channel))
+        streams = self.session.http.json(res, schema=self._formats_schema)['streams']
         if streams == []:
             self.logger.error('Channel may be geo-restricted, not directly provided by PlayTV or not freely available')
             return
@@ -56,8 +56,8 @@ class PlayTV(Plugin):
                     if bitrate['value'] == 0:
                         continue
                     api_url = self.API_URL.format(channel, protocol, language, bitrate['value'])
-                    res = http.get(api_url)
-                    video_url = http.json(res, schema=self._api_schema)['url']
+                    res = self.session.http.get(api_url)
+                    video_url = self.session.http.json(res, schema=self._api_schema)['url']
                     bs = '{0}k'.format(bitrate['value'])
 
                     if protocol == 'hls':

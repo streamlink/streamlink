@@ -5,7 +5,6 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
-from streamlink.plugin.api import http
 from streamlink.compat import urljoin
 
 
@@ -58,12 +57,12 @@ class LiveEdu(Plugin):
         password = self.get_option("password")
 
         if email and password:
-            res = http.get(self.login_url)
+            res = self.session.http.get(self.login_url)
             csrf_match = self.csrf_re.search(res.text)
             token = csrf_match and csrf_match.group(1)
             self.logger.debug("Attempting login as {0} (token={1})", email, token)
 
-            res = http.post(self.login_url,
+            res = self.session.http.post(self.login_url,
                             data=dict(login=email, password=password, csrfmiddlewaretoken=token),
                             allow_redirects=False,
                             raise_for_status=False,
@@ -81,7 +80,7 @@ class LiveEdu(Plugin):
         # attempt a login
         self.login()
 
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         # decode the config for the page
         matches = self.config_re.finditer(res.text)
         try:
@@ -100,8 +99,8 @@ class LiveEdu(Plugin):
         else:
             return
 
-        ares = http.get(api_url)
-        data = http.json(ares, schema=self.api_schema)
+        ares = self.session.http.get(api_url)
+        data = self.session.http.json(ares, schema=self.api_schema)
         viewing_urls = data["viewing_urls"]
 
         if "error" in viewing_urls:

@@ -23,7 +23,7 @@ from streamlink.packages.flashmedia.tag import (
 )
 from streamlink.packages.flashmedia.types import U8, U16BE, U32BE
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import Stream, StreamIOIterWrapper
 from streamlink.stream.flvconcat import FLVTagConcat
 from streamlink.stream.segmented import (
@@ -286,14 +286,14 @@ class BeatTV(Plugin):
         return Plugin.stream_weight(key)
 
     def _get_stream_info(self, url):
-        res = http.get(url, headers=HEADERS)
+        res = self.session.http.get(url, headers=HEADERS)
         match = re.search(r"embed.swf\?p=(\d+)", res.text)
         if not match:
             return
         program = match.group(1)
-        res = http.get(BEAT_PROGRAM.format(program), headers=HEADERS)
+        res = self.session.http.get(BEAT_PROGRAM.format(program), headers=HEADERS)
 
-        return http.json(res, schema=_schema)
+        return self.session.http.json(res, schema=_schema)
 
     def _get_streams(self):
         info = self._get_stream_info(self.url)

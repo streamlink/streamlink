@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugins.brightcove import BrightcovePlayer
 from streamlink.stream import RTMPStream
 
@@ -17,7 +16,7 @@ class AlJazeeraEnglish(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         # check two different styles to include the video id in the page
         video_id_m = self.render_re.search(res.text) or self.video_id_re.search(res.text)

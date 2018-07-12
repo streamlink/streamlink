@@ -3,7 +3,6 @@
 import re
 
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import http
 from streamlink.stream import RTMPStream
 
 jsonapi = "https://api.younow.com/php/api/broadcast/info/curId=0/user="
@@ -14,8 +13,8 @@ _url_re = re.compile(r"http(s)?://(\w+.)?younow.com/(?P<channel>[^/&?]+)")
 
 def getStreamURL(channel):
     url = jsonapi + channel
-    res = http.get(url)
-    streamerinfo = http.json(res)
+    res = self.session.http.get(url)
+    streamerinfo = self.session.http.json(res)
     # print(streamerinfo)
 
     if not any("media" in s for s in streamerinfo):

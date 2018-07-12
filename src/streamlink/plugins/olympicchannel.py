@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -21,10 +20,10 @@ class OlympicChannel(Plugin):
         return cls._url_re.match(url)
 
     def _get_vod_streams(self):
-        page = http.get(self.url)
+        page = self.session.http.get(self.url)
         asset = re.search(r'asse_.{32}', str(page._content)).group(0)
         post_data = '{"asset_url":"/api/assets/%s/"}' % asset
-        stream_data = http.json(http.post(self._stream_get_url, data=post_data))['objects'][0]['level3']['streaming_url']
+        stream_data = self.session.http.json(self.session.http.post(self._stream_get_url, data=post_data))['objects'][0]['level3']['streaming_url']
         return HLSStream.parse_variant_playlist(self.session, stream_data)
 
     def _get_live_streams(self, lang, path):
@@ -34,13 +33,13 @@ class OlympicChannel(Plugin):
         :param path:
         :return:
         """
-        res = http.get(self._live_api_url.format(lang, path))
-        live_res = http.json(res)['default']['uid']
+        res = self.session.http.get(self._live_api_url.format(lang, path))
+        live_res = self.session.http.json(res)['default']['uid']
         post_data = '{"channel_url":"/api/channels/%s/"}' % live_res
         try:
-            stream_data = http.json(http.post(self._stream_get_url, data=post_data))['stream_url']
+            stream_data = self.session.http.json(self.session.http.post(self._stream_get_url, data=post_data))['stream_url']
         except BaseException:
-            stream_data = http.json(http.post(self._stream_get_url, data=post_data))['channel_url']
+            stream_data = self.session.http.json(self.session.http.post(self._stream_get_url, data=post_data))['channel_url']
         return HLSStream.parse_variant_playlist(self.session, stream_data)
 
     def _get_streams(self):

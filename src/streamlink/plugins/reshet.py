@@ -3,7 +3,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugins.brightcove import BrightcovePlayer
 
 
@@ -24,7 +23,7 @@ class Reshet(Plugin):
         if base == "live":
             return bp.get_streams(self.live_channel_id)
         else:
-            res = http.get(self.url)
+            res = self.session.http.get(self.url)
             m = self.video_id_re.search(res.text)
             video_id = m and m.group(1)
             if video_id:

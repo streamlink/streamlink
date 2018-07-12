@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import StreamMapper, http, validate
+from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HLSStream, HDSStream
 
 API_URL = "http://www.svt.se/videoplayer-api/video/{0}"
@@ -66,21 +66,21 @@ class SVTPlay(Plugin):
 
     def _get_streams(self):
         # Retrieve URL page and search for new type of video ID
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _id_re.search(res.text)
 
         # Use API if match, otherwise resort to old method
         if match:
             vid = match.group("id")
-            res = http.get(API_URL.format(vid))
+            res = self.session.http.get(API_URL.format(vid))
 
-            videos = http.json(res, schema=_video_schema)
+            videos = self.session.http.json(res, schema=_video_schema)
             mapper = StreamMapper(cmp=lambda format, video: video["format"] == format)
             mapper.map("hls", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
             mapper.map("hds", self._create_streams, "HDS", HDSStream.parse_manifest)
         else:
-            res = http.get(self.url, params=dict(output="json"))
-            videos = http.json(res, schema=_old_video_schema)
+            res = self.session.http.get(self.url, params=dict(output="json"))
+            videos = self.session.http.json(res, schema=_old_video_schema)
 
             mapper = StreamMapper(cmp=lambda type, video: video["playerType"] == type)
             mapper.map("ios", self._create_streams, "HLS", HLSStream.parse_variant_playlist)

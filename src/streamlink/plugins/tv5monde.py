@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
 from streamlink.plugins.common_jwplayer import _js_to_json
@@ -50,7 +50,7 @@ class TV5Monde(Plugin):
         if '.mp4' in url:
             return [url]
 
-        res = http.get(url)
+        res = self.session.http.get(url)
         videos = self._get_non_embed_streams(res.text)
         if videos:
             return videos
@@ -58,7 +58,7 @@ class TV5Monde(Plugin):
         return []
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = self._videos_re.search(res.text)
         if match is not None:
             videos = self._videos_schema.validate(match.group('videos'))

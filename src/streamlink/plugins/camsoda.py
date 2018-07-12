@@ -2,7 +2,6 @@ import random
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
@@ -55,13 +54,13 @@ class Camsoda(Plugin):
         return True
 
     def _get_api_user(self, username):
-        res = http.get(self.API_URL_USER.format(username), headers=self.headers)
-        data_user = http.json(res, schema=_api_user_schema)
+        res = self.session.http.get(self.API_URL_USER.format(username), headers=self.headers)
+        data_user = self.session.http.json(res, schema=_api_user_schema)
         return data_user
 
     def _get_api_video(self, username):
-        res = http.get(self.API_URL_VIDEO.format(username, str(random.randint(1000, 99999))), headers=self.headers)
-        data_video = http.json(res, schema=_api_video_schema)
+        res = self.session.http.get(self.API_URL_VIDEO.format(username, str(random.randint(1000, 99999))), headers=self.headers)
+        data_video = self.session.http.json(res, schema=_api_video_schema)
         return data_video
 
     def _get_streams(self):

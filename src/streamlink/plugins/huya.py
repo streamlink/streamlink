@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.plugin.api import useragents
 from streamlink.utils import update_scheme
@@ -34,10 +34,10 @@ class Huya(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        http.headers.update({"User-Agent": useragents.IPAD})
+        self.session.http.headers.update({"User-Agent": useragents.IPAD})
         # Some problem with SSL on huya.com now, do not use https
 
-        hls_url = http.get(HUYA_URL % channel, schema=_hls_schema)
+        hls_url = self.session.http.get(HUYA_URL % channel, schema=_hls_schema)
         yield "live", HLSStream(self.session, update_scheme("http://", hls_url))
 
 

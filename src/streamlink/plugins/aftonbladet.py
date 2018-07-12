@@ -3,7 +3,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 
 PLAYLIST_URL_FORMAT = "http://{address}/{path}/{filename}"
@@ -50,10 +50,10 @@ class Aftonbladet(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _embed_re.search(res.text)
         if match:
-            res = http.get(match.group(1))
+            res = self.session.http.get(match.group(1))
 
         match = _aptoma_id_re.search(res.text)
         if not match:
@@ -61,14 +61,14 @@ class Aftonbladet(Plugin):
 
         aptoma_id = match.group(1)
         if not _live_re.search(res.text):
-            res = http.get(METADATA_URL.format(aptoma_id))
-            metadata = http.json(res)
+            res = self.session.http.get(METADATA_URL.format(aptoma_id))
+            metadata = self.session.http.json(res)
             video_id = metadata["videoId"]
         else:
             video_id = aptoma_id
 
-        res = http.get(VIDEO_INFO_URL, params=dict(id=video_id))
-        video = http.json(res, schema=_video_schema)
+        res = self.session.http.get(VIDEO_INFO_URL, params=dict(id=video_id))
+        video = self.session.http.json(res, schema=_video_schema)
         streams = {}
         for fmt, providers in video["formats"].items():
             for name, provider in providers.items():

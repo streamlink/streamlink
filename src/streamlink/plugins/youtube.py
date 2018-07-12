@@ -6,7 +6,7 @@ import re
 
 from streamlink.compat import parse_qsl, is_py2
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import validate, useragents
 from streamlink.plugin.api.utils import parse_query, itertags
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -217,7 +217,7 @@ class YouTube(Plugin):
             log.debug("Video ID from URL")
             return m.group("video_id")
 
-        res = http.get(url)
+        res = self.session.http.get(url)
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
@@ -249,7 +249,7 @@ class YouTube(Plugin):
             params = {"video_id": video_id}
             params.update(_params)
 
-            res = http.get(self._video_info_url, params=params)
+            res = self.session.http.get(self._video_info_url, params=params)
             info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 log.debug("get_video_info - {0}: {1}".format(
@@ -262,7 +262,7 @@ class YouTube(Plugin):
         return info_parsed
 
     def _get_streams(self):
-        http.headers.update({'User-Agent': useragents.CHROME})
+        self.session.http.headers.update({'User-Agent': useragents.CHROME})
         is_live = False
 
         video_id = self._find_video_id(self.url)

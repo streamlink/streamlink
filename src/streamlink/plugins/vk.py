@@ -4,7 +4,7 @@ import re
 
 from streamlink.compat import urlparse, unquote
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.utils import update_scheme
@@ -52,7 +52,7 @@ class VK(Plugin):
         Find the streams for vk.com
         :return:
         """
-        http.headers.update({'User-Agent': useragents.IPHONE_6})
+        self.session.http.headers.update({'User-Agent': useragents.IPHONE_6})
 
         # If this is a 'videos' catalog URL
         # with an video ID in the GET request, get that instead
@@ -71,7 +71,7 @@ class VK(Plugin):
             'al': '1',
             'video': video_id,
         }
-        res = http.post(self.API_URL, params=params)
+        res = self.session.http.post(self.API_URL, params=params)
 
         for _i in itertags(res.text, 'iframe'):
             if _i.attributes.get('src'):

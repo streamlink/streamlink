@@ -2,7 +2,7 @@ from functools import partial
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json, update_scheme
 
@@ -88,14 +88,14 @@ class Bloomberg(Plugin):
         channel = match.group('channel')
 
         # Retrieve live player URL
-        res = http.get(self.PLAYER_URL)
+        res = self.session.http.get(self.PLAYER_URL)
         match = self._live_player_re.search(res.text)
         if match is None:
             return []
         live_player_url = update_scheme(self.url, match.group('live_player_url'))
 
         # Extract streams from the live player page
-        res = http.get(live_player_url)
+        res = self.session.http.get(live_player_url)
         stream_datas = re.findall(r'{0}(?:_MINI)?:({{.+?}}]}}]}})'.format(self.CHANNEL_MAP[channel]), res.text)
         streams = []
         for s in stream_datas:
@@ -107,14 +107,14 @@ class Bloomberg(Plugin):
 
     def _get_vod_streams(self):
         # Retrieve URL page and search for video ID
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = self._video_id_re.search(res.text)
         if match is None:
             return []
         video_id = match.group('video_id')
 
-        res = http.get(self.VOD_API_URL.format(video_id))
-        streams = http.json(res, schema=self._vod_api_schema)
+        res = self.session.http.get(self.VOD_API_URL.format(video_id))
+        streams = self.session.http.json(res, schema=self._vod_api_schema)
         return streams
 
     def _get_streams(self):
