@@ -95,7 +95,6 @@ class TestDASHStream(unittest.TestCase):
             sorted(["720p+a128k", "1080p+a128k", "720p+a256k", "1080p+a256k"])
         )
 
-
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_multi_lang(self, mpdClass):
         mpd = mpdClass.return_value = Mock(periods=[
@@ -120,6 +119,55 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertEqual(streams["720p"].audio_representation.lang, "en")
         self.assertEqual(streams["1080p"].audio_representation.lang, "en")
+
+    @patch('streamlink.stream.dash.MPD')
+    def test_parse_manifest_audio_multi_lang_alpha3(self, mpdClass):
+        mpd = mpdClass.return_value = Mock(periods=[
+            Mock(adaptationSets=[
+                Mock(contentProtection=None,
+                     representations=[
+                         Mock(id=1, mimeType="video/mp4", height=720),
+                         Mock(id=2, mimeType="video/mp4", height=1080),
+                         Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang='eng'),
+                         Mock(id=4, mimeType="audio/aac", bandwidth=128.0, lang='spa')
+                     ])
+            ])
+        ])
+
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
+        mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+        self.assertSequenceEqual(
+            sorted(list(streams.keys())),
+            sorted(["720p", "1080p"])
+        )
+
+        self.assertEqual(streams["720p"].audio_representation.lang, "eng")
+        self.assertEqual(streams["1080p"].audio_representation.lang, "eng")
+
+    @patch('streamlink.stream.dash.MPD')
+    def test_parse_manifest_audio_invalid_lang(self, mpdClass):
+        mpd = mpdClass.return_value = Mock(periods=[
+            Mock(adaptationSets=[
+                Mock(contentProtection=None,
+                     representations=[
+                         Mock(id=1, mimeType="video/mp4", height=720),
+                         Mock(id=2, mimeType="video/mp4", height=1080),
+                         Mock(id=3, mimeType="audio/aac", bandwidth=128.0, lang='en_no_voice'),
+                     ])
+            ])
+        ])
+
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
+        mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+        self.assertSequenceEqual(
+            sorted(list(streams.keys())),
+            sorted(["720p", "1080p"])
+        )
+
+        self.assertEqual(streams["720p"].audio_representation.lang, "en_no_voice")
+        self.assertEqual(streams["1080p"].audio_representation.lang, "en_no_voice")
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_multi_lang_locale(self, mpdClass):
