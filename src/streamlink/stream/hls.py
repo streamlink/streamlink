@@ -295,15 +295,18 @@ class MuxedHLSStream(MuxedStream):
 
     def __init__(self, session, video, audio, force_restart=False, ffmpeg_options=None, **args):
         tracks = [video]
+        maps = ["0:v"]
         if audio:
             if isinstance(audio, list):
                 tracks.extend(audio)
             else:
                 tracks.append(audio)
+        for i in range(1, len(tracks)):
+            maps.append("{0}:a".format(i))
         substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), tracks)
         ffmpeg_options = ffmpeg_options or {}
 
-        super(MuxedHLSStream, self).__init__(session, *substreams, format="mpegts", **ffmpeg_options)
+        super(MuxedHLSStream, self).__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
 
 
 class HLSStream(HTTPStream):
