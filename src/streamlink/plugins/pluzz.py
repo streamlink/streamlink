@@ -169,14 +169,6 @@ class Pluzz(Plugin):
                 res = http.get(self.TOKEN_URL.format(video_url))
                 video_url = res.text
 
-            """if '.mpd' in video_url:
-                # Get redirect video URL
-                res = http.get(res.text)
-                video_url = res.url
-                for bitrate, stream in DASHStream.parse_manifest(self.session,
-                                                                 video_url).items():
-                    streams.append((bitrate, stream))
-            el"""
             if '.f4m' in video_url and swf_url is not None:
                 for bitrate, stream in HDSStream.parse_manifest(self.session,
                                                                 video_url,
