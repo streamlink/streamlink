@@ -204,7 +204,7 @@ class DASHStream(Stream):
 
         # if the locale is explicitly set, prefer that language over others
         for aud in audio:
-            if aud:
+            if aud and aud.lang:
                 available_languages.add(aud.lang)
                 try:
                     if locale.explicit and aud.lang and Language.get(aud.lang) == locale_lang:
