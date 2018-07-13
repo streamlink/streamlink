@@ -22,7 +22,7 @@ class Picarto(Plugin):
     """, re.VERBOSE)
 
     # Regex for VOD extraction
-    _vod_re = re.compile(r'''vod: "(https?://[\S]+?/index.m3u8)",''')
+    _vod_re = re.compile(r'''"vod":"(https?:[\S]+?/index.m3u8)",''')
 
     @classmethod
     def can_handle_url(cls, url):
@@ -55,7 +55,7 @@ class Picarto(Plugin):
     def _get_vod_stream(self, page):
         m = self._vod_re.search(page.text)
         if m:
-            return HLSStream.parse_variant_playlist(self.session, m.group(1))
+            return HLSStream.parse_variant_playlist(self.session, m.group(1).replace('\\/', '/'))
 
     def _get_streams(self):
         url_channel_name = self._url_re.match(self.url).group(1)
