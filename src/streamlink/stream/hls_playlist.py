@@ -62,6 +62,7 @@ class M3U8Parser(object):
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
     _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")
+    _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
 
     def __init__(self, base_uri=None):
         self.base_uri = base_uri
@@ -92,7 +93,7 @@ class M3U8Parser(object):
                               streaminf.get("SUBTITLES"))
 
     def split_tag(self, line):
-        match = re.match(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?", line)
+        match = self._tag_re.match(line)
 
         if match:
             return match.group("tag"), (match.group("value") or "").strip()
