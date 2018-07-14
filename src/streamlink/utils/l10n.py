@@ -1,4 +1,5 @@
 import locale
+import logging
 
 from streamlink.compat import is_py2
 
@@ -15,6 +16,8 @@ except ImportError:  # pragma: no cover
 DEFAULT_LANGUAGE = "en"
 DEFAULT_COUNTRY = "US"
 DEFAULT_LANGUAGE_CODE = "{0}_{1}".format(DEFAULT_LANGUAGE, DEFAULT_COUNTRY)
+
+log = logging.getLogger(__name__)
 
 
 class Country(object):
@@ -147,6 +150,7 @@ class Localization(object):
                 self._language_code = DEFAULT_LANGUAGE_CODE
             else:
                 raise
+        log.debug("Language code: {0}".format(self._language_code))
 
     def equivalent(self, language=None, country=None):
         equivalent = True
