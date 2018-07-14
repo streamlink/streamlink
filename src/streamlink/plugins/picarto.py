@@ -25,7 +25,7 @@ class Picarto(Plugin):
     """, re.VERBOSE)
 
     # Regex for VOD extraction
-    _vod_re = re.compile(r'''(?<=[#vod-player", ])(\{.*?\})''')
+    _vod_re = re.compile(r'''(?<=#vod\-player", )(\{.*?\})''')
 
     data_schema = validate.Schema(
         validate.transform(_vod_re.search),
