@@ -238,9 +238,13 @@ class M3U8Parser(object):
         self.m3u8 = M3U8()
 
         lines = iter(filter(bool, data.splitlines()))
-        line = next(lines)
-        if not line.startswith("#EXTM3U"):
-            raise ValueError("Missing #EXTM3U header")
+        try:
+            line = next(lines)
+        except StopIteration:
+            return self.m3u8
+        else:
+            if not line.startswith("#EXTM3U"):
+                raise ValueError("Missing #EXTM3U header")
 
         parse_line = self.parse_line
         for line in lines:
