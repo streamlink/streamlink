@@ -63,6 +63,7 @@ class M3U8Parser(object):
     _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
     _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
+    _res_re = re.compile(r"(\d+)x(\d+)")
 
     def __init__(self, base_uri=None):
         self.base_uri = base_uri
@@ -132,7 +133,7 @@ class M3U8Parser(object):
         return unhexlify(value)
 
     def parse_resolution(self, value):
-        match = re.match(r"(\d+)x(\d+)", value)
+        match = self._res_re.match(value)
 
         if match:
             width, height = int(match.group(1)), int(match.group(2))
