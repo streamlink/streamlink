@@ -295,7 +295,7 @@ class MuxedHLSStream(MuxedStream):
 
     def __init__(self, session, video, audio, force_restart=False, ffmpeg_options=None, **args):
         tracks = [video]
-        maps = ["0:v"]
+        maps = ["0:v?", "0:a?"]
         if audio:
             if isinstance(audio, list):
                 tracks.extend(audio)
