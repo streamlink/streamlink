@@ -3,7 +3,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 # This will have to be set to handle "secure" HDS streams. For now we
@@ -82,7 +82,7 @@ class VGTV(Plugin):
 
         # If we can't, we need to get the VGTV ID from the page content
         else:
-            res = http.get(self.url)
+            res = self.session.http.get(self.url)
             match = _content_id_re.search(res.text)
             if match:
                 video_id = match.group(1)
@@ -92,8 +92,8 @@ class VGTV(Plugin):
 
         # Now fetch video information
         self.logger.debug("Fetching video info for ID {0}", video_id)
-        res = http.get(INFO_URL, params=dict(id=video_id))
-        info = http.json(res, schema=_video_schema)
+        res = self.session.http.get(INFO_URL, params=dict(id=video_id))
+        info = self.session.http.json(res, schema=_video_schema)
 
         streams = {}
 

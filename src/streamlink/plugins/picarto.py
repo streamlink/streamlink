@@ -4,7 +4,6 @@ import re
 import json
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
 
@@ -63,7 +62,7 @@ class Picarto(Plugin):
         # Handle VODs first, since their "channel name" is different
         if url_channel_name.endswith(".flv"):
             self.logger.debug("Possible VOD stream...")
-            page = http.get(self.url)
+            page = self.session.http.get(self.url)
             vod_streams = self._get_vod_stream(page)
             if vod_streams:
                 for s in vod_streams.items():
@@ -72,7 +71,7 @@ class Picarto(Plugin):
             else:
                 self.logger.warning("Probably a VOD stream but no VOD found?")
 
-        ci = http.get(self.CHANNEL_API_URL.format(channel=url_channel_name), raise_for_status=False)
+        ci = self.session.http.get(self.CHANNEL_API_URL.format(channel=url_channel_name), raise_for_status=False)
 
         if ci.status_code == 404:
             self.logger.error("The channel {0} does not exist".format(url_channel_name))
@@ -89,7 +88,7 @@ class Picarto(Plugin):
         channel = channel_api_json["name"]
 
         # Extract preferred edge server and available techs from the undocumented channel API
-        channel_server_res = http.post(self.VIDEO_API_URL, data={"loadbalancinginfo": channel})
+        channel_server_res = self.session.http.post(self.VIDEO_API_URL, data={"loadbalancinginfo": channel})
         info_json = json.loads(channel_server_res.text)
         pref = info_json["preferedEdge"]
         for i in info_json["edges"]:

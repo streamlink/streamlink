@@ -2,7 +2,7 @@ import re
 import json
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream
 from streamlink.stream import HLSStream
 
@@ -26,7 +26,7 @@ class Tigerdile(Plugin):
         res = self.url
         streamname = _url_re.search(res).group(1)
 
-        ci = http.get(API_URL.format(channel=streamname))
+        ci = self.session.http.get(API_URL.format(channel=streamname))
         api_json = json.loads(ci.text)
 
         if not api_json or len(api_json) == 0:

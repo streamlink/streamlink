@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 
 
 class CNEWS(Plugin):
@@ -15,7 +15,7 @@ class CNEWS(Plugin):
 
     def _get_streams(self):
         # Retrieve URL page and search for Dailymotion URL
-        res = http.get(self.url, headers={'User-Agent': useragents.CHROME})
+        res = self.session.http.get(self.url, headers={'User-Agent': useragents.CHROME})
         match = self._embed_live_url_re.search(res.text) or self._embed_video_url_re.search(res.text)
         if match is not None:
             return self.session.streams(match.group('dm_url'))

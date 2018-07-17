@@ -3,7 +3,6 @@ import re
 from functools import partial
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 from streamlink.compat import urlparse
@@ -22,7 +21,7 @@ class LRT(Plugin):
         return cls._url_re.match(url)
 
     def _get_streams(self):
-        page = http.get(self.url)
+        page = self.session.http.get(self.url)
         m = self._source_re.search(page.text)
         if m:
             params = ""

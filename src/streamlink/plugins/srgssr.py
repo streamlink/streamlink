@@ -5,7 +5,6 @@ import re
 from streamlink import PluginError
 from streamlink.compat import urlparse, parse_qsl, urlencode, urlunparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -61,7 +60,7 @@ class SRGSSR(Plugin):
         elif url_m.group(2):
             site, video_id = url_m.group(1), url_m.group(2)
         else:
-            video_id_m = http.get(self.url, schema=self.video_id_schema)
+            video_id_m = self.session.http.get(self.url, schema=self.video_id_schema)
             if video_id_m:
                 site, video_id = video_id_m.groups()
 
@@ -70,8 +69,8 @@ class SRGSSR(Plugin):
     def auth_url(self, url):
         parsed = urlparse(url)
         path, _ = parsed.path.rsplit("/", 1)
-        token_res = http.get(self.token_url, params=dict(acl=path + "/*"))
-        authparams = http.json(token_res, schema=self.token_schema)
+        token_res = self.session.http.get(self.token_url, params=dict(acl=path + "/*"))
+        authparams = self.session.http.json(token_res, schema=self.token_schema)
 
         existing = dict(parse_qsl(parsed.query))
         existing.update(dict(parse_qsl(authparams)))
@@ -85,11 +84,11 @@ class SRGSSR(Plugin):
             self.logger.debug("Found {0} video ID {1}", site, video_id)
 
             try:
-                res = http.get(self.api_url.format(site=site, id=video_id))
+                res = self.session.http.get(self.api_url.format(site=site, id=video_id))
             except PluginError:
                 return
 
-            for stream_info in http.json(res, schema=self.api_schema):
+            for stream_info in self.session.http.json(res, schema=self.api_schema):
                 for url in stream_info["url"]:
                     if stream_info["@protocol"] == "HTTP-HLS":
                         for s in HLSStream.parse_variant_playlist(self.session, self.auth_url(url["text"])).items():

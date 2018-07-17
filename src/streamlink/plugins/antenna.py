@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HDSStream
 
 _url_re = re.compile(r"(http(s)?://(\w+\.)?antenna.gr)/webtv/watch\?cid=.+")
@@ -23,14 +22,14 @@ class Antenna(Plugin):
         root = match.group(1)
 
         # Download main URL
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         # Find playlist
         match = _playlist_re.search(res.text)
         playlist_url = root + match.group(1) + "d"
 
         # Download playlist
-        res = http.get(playlist_url)
+        res = self.session.http.get(playlist_url)
 
         # Find manifest
         match = _manifest_re.search(res.text)

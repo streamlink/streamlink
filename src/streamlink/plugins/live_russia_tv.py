@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -18,7 +18,7 @@ class LiveRussia(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_iframe_url(self, url):
-        res = http.get(url)
+        res = self.session.http.get(url)
         for iframe in itertags(res.text, 'iframe'):
             src = iframe.attributes.get("src")
             if src:
@@ -26,7 +26,7 @@ class LiveRussia(Plugin):
 
     def _get_stream_info_url(self, url):
         data = {}
-        res = http.get(url)
+        res = self.session.http.get(url)
         for m in self._data_re.finditer(res.text):
             data[m.group(1)] = m.group(2)
 
@@ -47,8 +47,8 @@ class LiveRussia(Plugin):
 
             if info_url:
                 log.debug("Getting info from URL: {0}".format(info_url))
-                res = http.get(info_url, headers={"Referer": iframe_url})
-                data = http.json(res)
+                res = self.session.http.get(info_url, headers={"Referer": iframe_url})
+                data = self.session.http.json(res)
 
                 if data['status'] == 200:
                     for media in data['data']['playlist']['medialist']:

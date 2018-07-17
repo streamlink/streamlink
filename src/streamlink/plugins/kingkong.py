@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream, HLSStream
 
 API_URL = "https://g-api.langlive.com/webapi/v1/room/info?room_id={0}"
@@ -70,15 +70,15 @@ class Kingkong(Plugin):
         vid = match.group("vid")
 
         if vid:
-            res = http.get(VOD_API_URL.format(vid))
-            data = http.json(res, schema=_vod_schema)
+            res = self.session.http.get(VOD_API_URL.format(vid))
+            data = self.session.http.json(res, schema=_vod_schema)
             yield "source", HLSStream(
                 self.session, data["live_info"]["video"])
             return
 
         channel = match.group("channel")
-        res = http.get(API_URL.format(channel))
-        room = http.json(res, schema=_room_schema)
+        res = self.session.http.get(API_URL.format(channel))
+        room = self.session.http.json(res, schema=_room_schema)
         if not room:
             self.logger.info("Not a valid room url.")
             return

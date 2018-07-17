@@ -7,7 +7,7 @@ from streamlink import PluginError
 from streamlink.packages.flashmedia import AMFMessage, AMFPacket
 from streamlink.packages.flashmedia.types import AMF3ObjectBase
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.compat import urlparse, parse_qsl, urlencode
 
@@ -74,17 +74,17 @@ class BrightcovePlayer(object):
         url = "{base}accounts/{account_id}/videos/{video_id}".format(base=self.api_url,
                                                                      account_id=self.account_id,
                                                                      video_id=video_id)
-        res = http.get(url,
+        res = self.session.http.get(url,
                        headers={
                            "User-Agent": useragents.CHROME,
                            "Referer": self.player_url(video_id),
                            "Accept": "application/json;pk={0}".format(policy_key)
                        })
-        return http.json(res, schema=self.schema)
+        return self.session.http.json(res, schema=self.schema)
 
     def policy_key(self, video_id):
         # Get the embedded player page
-        res = http.get(self.player_url(video_id))
+        res = self.session.http.get(self.player_url(video_id))
 
         policy_key_m = self.policy_key_re.search(res.text)
         policy_key = policy_key_m and policy_key_m.group("key")
@@ -151,7 +151,7 @@ class BrightcovePlayer(object):
         amf_packet = AMFPacket(version=3)
         amf_packet.messages.append(amf_message)
 
-        res = http.post(cls.amf_broker,
+        res = self.session.http.post(cls.amf_broker,
                         headers={"Content-Type": "application/x-amf"},
                         data=amf_packet.serialize(),
                         params=dict(playerKey=player_key),

@@ -5,7 +5,6 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 
 # URL to the RUV LIVE API
@@ -82,10 +81,10 @@ class Ruv(Plugin):
 
     def _get_live_streams(self):
         # Get JSON API
-        res = http.get(RUV_LIVE_API.format(self.stream_id))
+        res = self.session.http.get(RUV_LIVE_API.format(self.stream_id))
 
         # Parse the JSON API
-        json_res = http.json(res)
+        json_res = self.session.http.json(res)
 
         for url in json_res["result"]:
             if url.startswith("rtmp:"):
@@ -99,7 +98,7 @@ class Ruv(Plugin):
 
     def _get_sarpurinn_streams(self):
         # Get HTML page
-        res = http.get(self.url).text
+        res = self.session.http.get(self.url).text
         lines = "\n".join([l for l in res.split("\n") if "video.src" in l])
         multi_stream_match = _multi_re.search(lines)
 

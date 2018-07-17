@@ -2,7 +2,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -24,8 +23,8 @@ class PowerApp(Plugin):
     def _get_streams(self):
         channel = self.url_re.match(self.url).group(1)
 
-        res = http.get(self.api_url.format(channel))
-        data = http.json(res, schema=self.api_schema)
+        res = self.session.http.get(self.api_url.format(channel))
+        data = self.session.http.json(res, schema=self.api_schema)
 
         return HLSStream.parse_variant_playlist(self.session, data["channel_stream_url"])
 

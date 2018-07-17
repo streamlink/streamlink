@@ -3,7 +3,6 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 from streamlink.plugin.api import validate
 
@@ -33,7 +32,7 @@ class TV3Cat(Plugin):
         if match:
             ident = match.group(1)
             data_url = self._stream_info_url.format(ident=ident)
-            stream_infos = http.json(http.get(data_url), schema=self._channel_schema)
+            stream_infos = self.session.http.json(self.session.http.get(data_url), schema=self._channel_schema)
 
             for stream in stream_infos:
                 try:

@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
 
@@ -28,7 +27,7 @@ class Dogus(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         mobile_url_m = self.mobile_url_re.search(res.text)
 
         mobile_url = mobile_url_m and update_scheme(self.url, mobile_url_m.group("url"))

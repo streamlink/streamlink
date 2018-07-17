@@ -8,7 +8,6 @@ import re
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_qsd
@@ -45,13 +44,13 @@ class Streann(Plugin):
 
     @property
     def time(self):
-        res = http.get(self.get_time_url, headers=self._headers)
-        data = http.json(res)
+        res = self.session.http.get(self.get_time_url, headers=self._headers)
+        data = self.session.http.json(res)
         return str(data.get("serverTime", int(time.time() * 1000)))
 
     def passphrase(self):
         self.logger.debug("passphrase ...")
-        res = http.get(self.url, headers=self._headers)
+        res = self.session.http.get(self.url, headers=self._headers)
         passphrase_m = self.passphrase_re.search(res.text)
         return passphrase_m and passphrase_m.group("passphrase").encode("utf8")
 
@@ -67,9 +66,9 @@ class Streann(Plugin):
             "Content-Type": "application/x-www-form-urlencoded"
         }
 
-        res = http.post(self.token_url.format(deviceId=self.device_id, **config),
+        res = self.session.http.post(self.token_url.format(deviceId=self.device_id, **config),
                         data=pdata, headers=headers)
-        data = http.json(res)
+        data = self.session.http.json(res)
         return data["token"]
 
     def _get_streams(self):

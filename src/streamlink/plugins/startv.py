@@ -3,7 +3,6 @@ import re
 
 from streamlink import streams
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 
 
@@ -16,7 +15,7 @@ class StarTV(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         m = self.iframe_re.search(res.text)
 
         yt_url = m and m.group(1)

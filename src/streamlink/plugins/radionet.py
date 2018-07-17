@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
@@ -34,7 +33,7 @@ class RadioNet(Plugin):
         return cls._url_re.match(url)
 
     def _get_streams(self):
-        streams = http.get(self.url, schema=self._stream_schema)
+        streams = self.session.http.get(self.url, schema=self._stream_schema)
         if streams is None:
             return
 

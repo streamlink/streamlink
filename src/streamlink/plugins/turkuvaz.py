@@ -1,7 +1,6 @@
 import random
 import re
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -42,12 +41,12 @@ class Turkuvaz(Plugin):
                    "minikacocuk": "minikagococuk"}.get(domain, domain)
         hls_url = self._hls_url.format(channel=channel)
         # get the secure HLS URL
-        res = http.get(self._token_url,
+        res = self.session.http.get(self._token_url,
                        params="url={0}".format(hls_url),
                        headers={"Referer": self.url,
                                 "User-Agent": useragents.CHROME})
 
-        secure_hls_url = http.json(res, schema=self._token_schema)
+        secure_hls_url = self.session.http.json(res, schema=self._token_schema)
 
         self.logger.debug("Found HLS URL: {0}".format(secure_hls_url))
         return HLSStream.parse_variant_playlist(self.session, secure_hls_url)

@@ -2,7 +2,6 @@ import re
 
 from streamlink.compat import parse_qsl
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream
 
 
@@ -17,7 +16,7 @@ class GoogleDocs(Plugin):
     def _get_streams(self):
         docid = self.url_re.match(self.url).group(1)
         self.logger.debug("Google Docs ID: {0}", docid)
-        res = http.get(self.api_url, params=dict(docid=docid))
+        res = self.session.http.get(self.api_url, params=dict(docid=docid))
         data = dict(parse_qsl(res.text))
 
         if data["status"] == "ok":

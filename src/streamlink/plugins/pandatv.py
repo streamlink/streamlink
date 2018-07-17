@@ -5,7 +5,7 @@ import json
 
 from streamlink.compat import quote
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream, HLSStream
 
 ROOM_API = "https://www.panda.tv/api_room_v3?token=&hostid={0}&roomid={1}&roomkey={2}&_={3}&param={4}&time={5}&sign={6}"
@@ -67,7 +67,7 @@ class Pandatv(Plugin):
         prefix = match.group("prefix")
         channel = match.group("channel")
 
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         if prefix == 'xingyan.':
             roominfo = _roominfo_re.search(res.text).group(1)
@@ -93,7 +93,7 @@ class Pandatv(Plugin):
 
         ts = int(time.time())
         url = ROOM_API_V2.format(channel, ts)
-        res = http.get(url)
+        res = self.session.http.get(url)
 
         try:
             status = _status_re.search(res.text).group(1)
@@ -117,8 +117,8 @@ class Pandatv(Plugin):
         param = param.replace("\\", "")
         param = quote(param)
         url = ROOM_API.format(hostid, channel, room_key, ts, param, tt, sign)
-        room = http.get(url)
-        data = http.json(room, schema=_room_schema)
+        room = self.session.http.get(url)
+        data = self.session.http.json(room, schema=_room_schema)
         if not isinstance(data, dict):
             self.logger.info("Please Check PandaTV Room API")
             return

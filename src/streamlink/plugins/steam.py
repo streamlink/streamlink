@@ -9,7 +9,6 @@ from Crypto.PublicKey import RSA
 import streamlink
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
@@ -74,7 +73,7 @@ class SteamBroadcastPlugin(Plugin):
 
     def __init__(self, url):
         super(SteamBroadcastPlugin, self).__init__(url)
-        http.headers["User-Agent"] = self._user_agent
+        self.session.http.headers["User-Agent"] = self._user_agent
 
     @classmethod
     def can_handle_url(cls, url):
@@ -91,8 +90,8 @@ class SteamBroadcastPlugin(Plugin):
         :param password: password for account
         :return: encrypted password
         """
-        res = http.get(self._get_rsa_key_url, params=dict(username=email, donotcache=self.donotcache))
-        rsadata = http.json(res, schema=self._rsa_key_schema)
+        res = self.session.http.get(self._get_rsa_key_url, params=dict(username=email, donotcache=self.donotcache))
+        rsadata = self.session.http.json(res, schema=self._rsa_key_schema)
 
         rsa = RSA.construct((rsadata["publickey_mod"], rsadata["publickey_exp"]))
         cipher = PKCS1_v1_5.new(rsa)
@@ -119,9 +118,9 @@ class SteamBroadcastPlugin(Plugin):
             "twofactorcode": twofactorcode
         }
 
-        res = http.post(self._dologin_url, data=login_data)
+        res = self.session.http.post(self._dologin_url, data=login_data)
 
-        resp = http.json(res, schema=self._dologin_schema)
+        resp = self.session.http.json(res, schema=self._dologin_schema)
 
         if not resp[u"success"]:
             if resp.get(u"captcha_needed"):
@@ -177,11 +176,11 @@ class SteamBroadcastPlugin(Plugin):
         return self.dologin(email, password)
 
     def _get_broadcast_stream(self, steamid, viewertoken=0):
-        res = http.get(self._get_broadcast_url,
+        res = self.session.http.get(self._get_broadcast_url,
                        params=dict(broadcastid=0,
                                    steamid=steamid,
                                    viewertoken=viewertoken))
-        return http.json(res, schema=self._broadcast_schema)
+        return self.session.http.json(res, schema=self._broadcast_schema)
 
     def _get_streams(self):
         streamdata = None

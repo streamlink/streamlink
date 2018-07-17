@@ -1,7 +1,6 @@
 import re
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 
 
@@ -18,15 +17,15 @@ class Expressen(Plugin):
 
     @Plugin.broken()
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         match = _meta_xmlurl_id_re.search(res.text)
         if not match:
             return
 
         xml_info_url = STREAMS_INFO_URL.format(match.group(1))
-        video_info_res = http.get(xml_info_url)
-        parsed_info = http.xml(video_info_res)
+        video_info_res = self.session.http.get(xml_info_url)
+        parsed_info = self.session.http.xml(video_info_res)
 
         live_el = parsed_info.find("live")
         live = live_el is not None and live_el.text == "1"

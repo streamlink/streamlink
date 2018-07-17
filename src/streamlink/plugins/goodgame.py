@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
@@ -24,7 +23,7 @@ class GoodGame(Plugin):
         return _url_re.match(url)
 
     def _check_stream(self, url):
-        res = http.get(url, acceptable_status=(200, 404))
+        res = self.session.http.get(url, acceptable_status=(200, 404))
         if res.status_code == 200:
             return True
 
@@ -32,13 +31,13 @@ class GoodGame(Plugin):
         headers = {
             "Referer": self.url
         }
-        res = http.get(self.url, headers=headers)
+        res = self.session.http.get(self.url, headers=headers)
 
         match = _ddos_re.search(res.text)
         if match:
             self.logger.debug("Anti-DDOS bypass...")
             headers["Cookie"] = match.group(1)
-            res = http.get(self.url, headers=headers)
+            res = self.session.http.get(self.url, headers=headers)
 
         match = _apidata_re.search(res.text)
         channel_info = match and parse_json(match.group("data"))
