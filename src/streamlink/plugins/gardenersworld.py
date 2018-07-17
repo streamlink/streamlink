@@ -4,7 +4,6 @@ import re
 
 from streamlink import NoPluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.utils import update_scheme
 
 
@@ -17,7 +16,7 @@ class GardenersWorld(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        page = http.get(self.url)
+        page = self.session.http.get(self.url)
         iframe = self.iframe_re.search(page.text)
         if iframe:
             self.logger.debug("Handing off of {0}".format(iframe.group("url")))

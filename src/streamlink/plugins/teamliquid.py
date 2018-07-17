@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 
 
 _url_re = re.compile(r'''https?://(?:www\.)?teamliquid\.net/video/streams/''')
@@ -13,7 +12,7 @@ class Teamliquid(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         stream_address_re = re.compile(r'''href\s*=\s*"([^"]+)"\s*>\s*View on''')
 

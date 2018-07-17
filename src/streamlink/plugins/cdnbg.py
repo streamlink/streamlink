@@ -4,7 +4,6 @@ import re
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -50,13 +49,13 @@ class CDNBG(Plugin):
                     return url
 
     def _get_streams(self):
-        http.headers = {"User-Agent": useragents.CHROME}
-        res = http.get(self.url)
+        self.session.http.headers = {"User-Agent": useragents.CHROME}
+        res = self.session.http.get(self.url)
         iframe_url = self.find_iframe(res)
 
         if iframe_url:
             self.logger.debug("Found iframe: {0}", iframe_url)
-            res = http.get(iframe_url, headers={"Referer": self.url})
+            res = self.session.http.get(iframe_url, headers={"Referer": self.url})
             stream_url = update_scheme(self.url, self.stream_schema.validate(res.text))
             return HLSStream.parse_variant_playlist(self.session,
                                                     stream_url,

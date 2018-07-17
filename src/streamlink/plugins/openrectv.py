@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
@@ -46,13 +46,13 @@ class OPENRECtv(Plugin):
         stype = _url_re.match(self.url).group(1)
         if stype.lower() == "live":
             self.logger.debug("Searching the page for live stream URLs")
-            playlists = http.get(self.url, schema=_live_schema)
+            playlists = self.session.http.get(self.url, schema=_live_schema)
             for playlist in playlists:
                 for q, s in HLSStream.parse_variant_playlist(self.session, playlist["url"]).items():
                     yield "source" if playlist["isSource"] else q, s
         elif stype.lower() == "movie":
             self.logger.debug("Searching the page for VOD stream URLs")
-            playlist = http.get(self.url, schema=_movie_schema)
+            playlist = self.session.http.get(self.url, schema=_movie_schema)
             if playlist:
                 for s in HLSStream.parse_variant_playlist(self.session, playlist).items():
                     yield s

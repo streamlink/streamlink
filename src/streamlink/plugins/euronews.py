@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -28,7 +27,7 @@ class Euronews(Plugin):
         Find the VOD video url
         :return: video url
         """
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         video_urls = self._re_vod.findall(res.text)
         if len(video_urls):
             return dict(vod=HTTPStream(self.session, video_urls[0]))
@@ -39,10 +38,10 @@ class Euronews(Plugin):
         :param subdomain:
         :return:
         """
-        res = http.get(self._live_api_url.format(subdomain))
-        live_res = http.json(res, schema=self._live_schema)
-        api_res = http.get(live_res[u"url"])
-        stream_data = http.json(api_res, schema=self._stream_api_schema)
+        res = self.session.http.get(self._live_api_url.format(subdomain))
+        live_res = self.session.http.json(res, schema=self._live_schema)
+        api_res = self.session.http.get(live_res[u"url"])
+        stream_data = self.session.http.json(api_res, schema=self._stream_api_schema)
         return HLSStream.parse_variant_playlist(self.session, stream_data[u'primary'])
 
     def _get_streams(self):

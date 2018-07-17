@@ -3,7 +3,7 @@ import sys
 import time
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import update_scheme
@@ -97,12 +97,12 @@ class Pluzz(Plugin):
 
     def _get_streams(self):
         # Retrieve geolocation data
-        res = http.get(self.GEO_URL)
-        geo = http.json(res, schema=self._geo_schema)
+        res = self.session.http.get(self.GEO_URL)
+        geo = self.session.http.json(res, schema=self._geo_schema)
         country_code = geo['reponse']['geo_info']['country_code']
 
         # Retrieve URL page and search for video ID
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         if 'france.tv' in self.url:
             match = self._pluzz_video_id_re.search(res.text)
         elif 'ludo.fr' in self.url or 'zouzous.fr' in self.url:
@@ -117,15 +117,15 @@ class Pluzz(Plugin):
 
         # Retrieve SWF player URL
         swf_url = None
-        res = http.get(self.PLAYER_GENERATOR_URL)
-        player_url = update_scheme(self.url, http.json(res, schema=self._player_schema)['result'])
-        res = http.get(player_url)
+        res = self.session.http.get(self.PLAYER_GENERATOR_URL)
+        player_url = update_scheme(self.url, self.session.http.json(res, schema=self._player_schema)['result'])
+        res = self.session.http.get(player_url)
         match = self._swf_re.search(res.text)
         if match is not None:
             swf_url = 'https://staticftv-a.akamaihd.net/player/' + match.group(1)
 
-        res = http.get(self.API_URL.format(video_id))
-        videos = http.json(res, schema=self._api_schema)
+        res = self.session.http.get(self.API_URL.format(video_id))
+        videos = self.session.http.json(res, schema=self._api_schema)
         now = time.time()
 
         offline = False
@@ -166,12 +166,12 @@ class Pluzz(Plugin):
                 '.mpd' in video_url or
                 'france.tv' in self.url or
                 'sport.francetvinfo.fr' in self.url):
-                res = http.get(self.TOKEN_URL.format(video_url))
+                res = self.session.http.get(self.TOKEN_URL.format(video_url))
                 video_url = res.text
 
             if '.mpd' in video_url:
                 # Get redirect video URL
-                res = http.get(res.text)
+                res = self.session.http.get(res.text)
                 video_url = res.url
                 for bitrate, stream in DASHStream.parse_manifest(self.session,
                                                                  video_url).items():

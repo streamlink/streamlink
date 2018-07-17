@@ -2,7 +2,6 @@ import random
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.stream import HLSStream
@@ -49,8 +48,8 @@ class LiveMe(Plugin):
                 'vali': vali
             }
             self.logger.debug("Found Video ID: {0}".format(video_id))
-            res = http.post(self.api_url, data=data)
-            data = http.json(res, schema=self.api_schema)
+            res = self.session.http.post(self.api_url, data=data)
+            data = self.session.http.json(res, schema=self.api_schema)
             hls = self._make_stream(data["video_info"]["hlsvideosource"])
             video = self._make_stream(data["video_info"]["videosource"])
             if hls:

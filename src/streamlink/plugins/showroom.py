@@ -2,7 +2,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream, RTMPStream
 
 _url_re = re.compile(r'''^https?://
@@ -119,7 +119,7 @@ class Showroom(Plugin):
         if match_dict['room_id'] is not None:
             return match_dict['room_id']
         else:
-            res = http.get(self.url, headers=self._headers)
+            res = self.session.http.get(self.url, headers=self._headers)
             match = _room_id_re.search(res.text)
             if not match:
                 title = self.url.rsplit('/', 1)[-1]
@@ -131,8 +131,8 @@ class Showroom(Plugin):
             return match.group('room_id')
 
     def _get_stream_info(self, room_id):
-        res = http.get(_api_stream_url.format(room_id=room_id), headers=self._headers)
-        return http.json(res, schema=_api_stream_schema)
+        res = self.session.http.get(_api_stream_url.format(room_id=room_id), headers=self._headers)
+        return self.session.http.json(res, schema=_api_stream_schema)
 
     def _get_rtmp_stream(self, stream_info):
         rtmp_url = '/'.join((stream_info['url'], stream_info['stream_name']))

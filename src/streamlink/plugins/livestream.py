@@ -2,7 +2,7 @@ import re
 
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import AkamaiHDStream, HLSStream
 
@@ -69,7 +69,7 @@ class Livestream(Plugin):
         return _url_re.match(url)
 
     def _get_stream_info(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = re.search("window.config = ({.+})", res.text)
         if match:
             config = match.group(1)
@@ -77,8 +77,8 @@ class Livestream(Plugin):
                               schema=_stream_config_schema)
 
     def _parse_smil(self, url, swf_url):
-        res = http.get(url)
-        smil = http.xml(res, "SMIL config", schema=_smil_schema)
+        res = self.session.http.get(url)
+        smil = self.session.http.xml(res, "SMIL config", schema=_smil_schema)
 
         for src, bitrate in smil["videos"]:
             url = urljoin(smil["http_base"], src)

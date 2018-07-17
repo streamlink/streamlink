@@ -4,7 +4,7 @@ import re
 from streamlink.compat import urljoin
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -57,14 +57,14 @@ class TV4Play(Plugin):
             "service": "tv4",
         }
         try:
-            res = http.get(self.api_assets.format(self.get_video_id),
+            res = self.session.http.get(self.api_assets.format(self.get_video_id),
                            params=params)
         except Exception as e:
             if "404 Client Error" in str(e):
                 raise PluginError("This Video is not available")
             raise e
         log.debug("Found metadata")
-        metadata = http.json(res, schema=self._meta_schema)
+        metadata = self.session.http.json(res, schema=self._meta_schema)
         self.title = metadata["metadata"]["title"]
         return metadata
 
@@ -77,14 +77,14 @@ class TV4Play(Plugin):
         metadata = self.get_metadata()
 
         try:
-            res = http.get(urljoin(self.api_url, metadata["mediaUri"]))
+            res = self.session.http.get(urljoin(self.api_url, metadata["mediaUri"]))
         except Exception as e:
             if "401 Client Error" in str(e):
                 raise PluginError("This Video is not available in your country")
             raise e
 
         log.debug("Found stream data")
-        data = http.json(res)
+        data = self.session.http.json(res)
         hls_url = data["playbackItem"]["manifestUrl"]
         log.debug("URL={0}".format(hls_url))
         for s in HLSStream.parse_variant_playlist(self.session,

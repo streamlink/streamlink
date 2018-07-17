@@ -6,7 +6,6 @@ from itertools import chain
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
@@ -93,8 +92,8 @@ class ArteTV(Plugin):
             json_url = JSON_LIVE_URL.format(language)
         else:
             json_url = JSON_VOD_URL.format(language, video_id)
-        res = http.get(json_url)
-        video = http.json(res, schema=_video_schema)
+        res = self.session.http.get(json_url)
+        video = self.session.http.json(res, schema=_video_schema)
 
         if not video["videoJsonPlayer"]["VSR"]:
             return

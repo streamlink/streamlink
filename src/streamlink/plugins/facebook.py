@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.utils import parse_json
 
@@ -17,7 +17,7 @@ class Facebook(Plugin):
         return cls._url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        res = self.session.http.get(self.url, headers={"User-Agent": useragents.CHROME})
 
         streams = {}
         vod_urls = set([])

@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream, HLSStream
 
 API_URL = "https://www.zhanqi.tv/api/static/v2.1/room/domain/{0}.json"
@@ -37,8 +37,8 @@ class Zhanqitv(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        res = http.get(API_URL.format(channel))
-        room = http.json(res, schema=_room_schema)
+        res = self.session.http.get(API_URL.format(channel))
+        room = self.session.http.json(res, schema=_room_schema)
         if not room:
             self.logger.info("Not a valid room url.")
             return

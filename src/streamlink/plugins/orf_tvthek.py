@@ -2,7 +2,6 @@ import re
 import json
 
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
 _stream_url_re = re.compile(r'https?://tvthek\.orf\.at/(index\.php/)?live/(?P<title>[^/]+)/(?P<id>[0-9]+)')
@@ -23,7 +22,7 @@ class ORFTVThek(Plugin):
         else:
             mode = MODE_VOD
 
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _json_re.search(res.text)
         if match:
             data = json.loads(_json_re.search(res.text).group('json').replace('&quot;', '"'))
@@ -48,7 +47,7 @@ class ORFTVThek(Plugin):
                 continue
             stream = HLSStream.parse_variant_playlist(self.session, url)
             # work around broken HTTP connection persistence by acquiring a new connection
-            http.close()
+            self.session.http.close()
             streams.update(stream)
 
         return streams

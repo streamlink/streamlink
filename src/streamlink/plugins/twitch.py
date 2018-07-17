@@ -8,7 +8,7 @@ import requests
 from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError, StreamError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import (
     HTTPStream, HLSStream, FLVPlaylist, extract_flv_header_tags
@@ -144,7 +144,7 @@ class UsherService(object):
         req = requests.Request("GET", url, params=params)
         # prepare_request is only available in requests 2.0+
         if hasattr(http, "prepare_request"):
-            req = http.prepare_request(req)
+            req = self.session.http.prepare_request(req)
         else:
             req = req.prepare()
 
@@ -165,7 +165,7 @@ class TwitchAPI(object):
         self.version = version
 
     def add_cookies(self, cookies):
-        http.parse_cookies(cookies, domain="twitch.tv")
+        self.session.http.parse_cookies(cookies, domain="twitch.tv")
 
     def call(self, path, format="json", schema=None, **extra_params):
         params = dict(as3="t", **extra_params)
@@ -181,10 +181,10 @@ class TwitchAPI(object):
         headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
                    'Client-ID': TWITCH_CLIENT_ID}
 
-        res = http.get(url, params=params, headers=headers)
+        res = self.session.http.get(url, params=params, headers=headers)
 
         if format == "json":
-            return http.json(res, schema=schema)
+            return self.session.http.json(res, schema=schema)
         else:
             return res
 
@@ -224,7 +224,7 @@ class TwitchAPI(object):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
     def clip_status(self, channel, clip_name, schema):
-        return http.json(self.call_subdomain("clips", "/api/v2/clips/" + clip_name + "/status", format=""),
+        return self.session.http.json(self.call_subdomain("clips", "/api/v2/clips/" + clip_name + "/status", format=""),
                          schema=schema)
 
     # Unsupported/Removed private API calls

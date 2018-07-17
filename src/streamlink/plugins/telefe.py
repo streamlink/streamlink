@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents, validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
 
@@ -14,7 +14,7 @@ class Telefe(Plugin):
         return cls._url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url, headers={'User-Agent': useragents.CHROME})
+        res = self.session.http.get(self.url, headers={'User-Agent': useragents.CHROME})
         video_search = res.text
         video_search = video_search[video_search.index('{"top":{"view":"PlayerContainer","model":{'):]
         video_search = video_search[: video_search.index('}]}}') + 4] + "}"
@@ -33,7 +33,7 @@ class Telefe(Plugin):
                 video_url_found_http = "http://telefe.com" + current_video_source["url"]
                 self.logger.debug("HTTP content available")
 
-        http.headers = {'Referer': self.url,
+        self.session.http.headers = {'Referer': self.url,
                         'User-Agent': useragents.CHROME,
                         'X-Requested-With': 'ShockwaveFlash/25.0.0.148'}
 

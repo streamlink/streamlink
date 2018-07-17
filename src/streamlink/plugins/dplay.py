@@ -6,7 +6,7 @@ import time
 from streamlink.compat import quote
 from streamlink.exceptions import PluginError, NoStreamsError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import StreamMapper, http, validate
+from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HLSStream, HDSStream
 
 # Interface URLs for Dplay
@@ -100,7 +100,7 @@ class Dplay (Plugin):
         hdr = {'User-Agent': USER_AGENT.format('sv_SE')}
 
         # Parse video ID from data received from supplied URL
-        res = http.get(self.url, headers=hdr).text
+        res = self.session.http.get(self.url, headers=hdr).text
         match = _videoid_re.search(res)
         if not match:   # Video ID not found
             self.logger.error('Failed to parse video ID')
@@ -108,8 +108,8 @@ class Dplay (Plugin):
         videoId = match.group('id')
 
         # Get data from general API to validate that stream is playable
-        res = http.get(GENERAL_API_URL.format(self.domain, videoId), headers=hdr)
-        data = http.json(res, schema=_api_schema)
+        res = self.session.http.get(GENERAL_API_URL.format(self.domain, videoId), headers=hdr)
+        data = self.session.http.json(res, schema=_api_schema)
         if not data['data']:                # No data item found
             self.logger.error('Unable to find "data" item in general API response')
             return {}
@@ -119,8 +119,8 @@ class Dplay (Plugin):
 
         # Get geo data, validate and form cookie consisting of
         # geo data + expiry timestamp (current time + 1 hour)
-        res = http.get(GEO_DATA_URL.format(self.domain), headers=hdr)
-        geo = http.json(res, schema=_geo_schema)
+        res = self.session.http.get(GEO_DATA_URL.format(self.domain), headers=hdr)
+        geo = self.session.http.json(res, schema=_geo_schema)
         timestamp = (int(time.time()) + 3600) * 1000
         cookie = 'dsc-geo=%s' % quote('{"countryCode":"%s","expiry":%s}' % (geo, timestamp))
 
@@ -129,13 +129,13 @@ class Dplay (Plugin):
 
         # Get available streams using stream API
         try:
-            res = http.get(STREAM_API_URL.format(self.domain, videoId, 'hls'),
+            res = self.session.http.get(STREAM_API_URL.format(self.domain, videoId, 'hls'),
                            headers=hdr, verify=False)
-            data = http.json(res, schema=_media_schema)
+            data = self.session.http.json(res, schema=_media_schema)
             media = data.copy()
-            res = http.get(STREAM_API_URL.format(self.domain, videoId, 'hds'),
+            res = self.session.http.get(STREAM_API_URL.format(self.domain, videoId, 'hds'),
                            headers=hdr, verify=False)
-            data = http.json(res, schema=_media_schema)
+            data = self.session.http.json(res, schema=_media_schema)
             media.update(data)
         except PluginError as err:      # Likely geo-restricted
             if any(e in str(err) for e in ('401 Client Error',

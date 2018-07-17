@@ -3,7 +3,6 @@ import re
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
@@ -37,7 +36,7 @@ class QQ(Plugin):
             return
 
         room_id = match.group("room_id")
-        res = http.get(self.api_url.format(room_id))
+        res = self.session.http.get(self.api_url.format(room_id))
 
         data = self._data_re.search(res.text)
         if not data:

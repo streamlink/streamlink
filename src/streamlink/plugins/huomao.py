@@ -14,7 +14,6 @@ and return each option to the user.
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream
 
 # URL pattern for recognizing inputed Huomao.tv / Huomao.com URL.
@@ -90,7 +89,7 @@ class Huomao(Plugin):
 
     def _get_streams(self):
         room_id = url_re.search(self.url).group("room_id")
-        html = http.get(mobile_url.format(room_id))
+        html = self.session.http.get(mobile_url.format(room_id))
         stream_id = self.get_stream_id(html.text)
         stream_info = self.get_stream_info(html.text)
 

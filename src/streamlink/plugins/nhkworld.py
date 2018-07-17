@@ -3,7 +3,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 API_URL = "http://{}.nhk.or.jp/nhkworld/app/tv/hlslive_web.xml"
@@ -22,9 +22,9 @@ class NHKWorld(Plugin):
     def _get_streams(self):
         # get the HLS xml from the same sub domain as the main url, defaulting to www
         sdomain = _url_re.match(self.url).group(1) or "www"
-        res = http.get(API_URL.format(sdomain))
+        res = self.session.http.get(API_URL.format(sdomain))
 
-        stream_url = http.xml(res, schema=_schema)
+        stream_url = self.session.http.xml(res, schema=_schema)
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 

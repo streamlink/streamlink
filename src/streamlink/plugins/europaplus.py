@@ -3,7 +3,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
@@ -18,10 +17,10 @@ class EuropaPlusTV(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         for iframe in itertags(res.text, "iframe"):
             self.logger.debug("Found iframe: {0}".format(iframe))
-            iframe_res = http.get(iframe.attributes['src'], headers={"Referer": self.url})
+            iframe_res = self.session.http.get(iframe.attributes['src'], headers={"Referer": self.url})
             m = self.src_re.search(iframe_res.text)
             surl = m and m.group("url")
             if surl:

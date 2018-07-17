@@ -14,7 +14,7 @@ Additionally, videos from iVysilani archive should work as well.
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.exceptions import PluginError
 
@@ -91,7 +91,7 @@ class Ceskatelevize(Plugin):
 
     def _get_streams(self):
         # fetch requested url and find playlist info
-        response = http.get(self.url)
+        response = self.session.http.get(self.url)
         info = _find_playlist_info(response)
 
         if not info:
@@ -101,7 +101,7 @@ class Ceskatelevize(Plugin):
                 raise PluginError('Cannot find playlist info or player url!')
 
             # get player url and try to find playlist info in it
-            response = http.get(player_url)
+            response = self.session.http.get(player_url)
             info = _find_playlist_info(response)
             if not info:
                 raise PluginError('Cannot find playlist info in the player url!')
@@ -118,20 +118,20 @@ class Ceskatelevize(Plugin):
         }
 
         # fetch playlist url
-        response = http.post(
+        response = self.session.http.post(
             'http://www.ceskatelevize.cz/ivysilani/ajax/get-client-playlist',
             data=data,
             headers=headers
         )
-        json_data = http.json(response, schema=_playlist_url_schema)
+        json_data = self.session.http.json(response, schema=_playlist_url_schema)
 
         if json_data['url'] == "error_region":
             self.logger.error("This stream is not available in your territory")
             return
 
         # fetch playlist
-        response = http.post(json_data['url'])
-        json_data = http.json(response, schema=_playlist_schema)
+        response = self.session.http.post(json_data['url'])
+        json_data = self.session.http.json(response, schema=_playlist_schema)
         playlist = json_data['playlist'][0]['streamUrls']['main']
         return HLSStream.parse_variant_playlist(self.session, playlist)
 

@@ -3,7 +3,6 @@ import re
 from base64 import b64decode
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.compat import urlparse, parse_qsl
 from streamlink.stream import HDSStream
@@ -29,7 +28,7 @@ class TRT(Plugin):
         args = dict(parse_qsl(urlparse(self.url).query))
         if "k" in args:
             self.logger.debug("Loading channel: {k}", **args)
-            res = http.get(self.url)
+            res = self.session.http.get(self.url)
             stream_data_m = self.stream_data_re.search(res.text)
             if stream_data_m:
                 script_vars = b64decode(stream_data_m.group(1)).decode("utf8")

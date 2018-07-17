@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 MEDIA_URL = "http://www.ardmediathek.de/play/media/{0}"
@@ -69,8 +69,8 @@ class ard_mediathek(Plugin):
         return HLSStream.parse_variant_playlist(self.session, info["_stream"]).items()
 
     def _get_smil_streams(self, info):
-        res = http.get(info["_stream"])
-        smil = http.xml(res, "SMIL config", schema=_smil_schema)
+        res = self.session.http.get(info["_stream"])
+        smil = self.session.http.xml(res, "SMIL config", schema=_smil_schema)
 
         for video in smil["videos"]:
             url = "{0}/{1}{2}".format(smil["base"], video, HDCORE_PARAMETER)
@@ -80,7 +80,7 @@ class ard_mediathek(Plugin):
                 yield stream
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _media_id_re.search(res.text)
         if match:
             media_id = match.group(1)
@@ -89,8 +89,8 @@ class ard_mediathek(Plugin):
 
         self.logger.debug("Found media id: {0}", media_id)
 
-        res = http.get(MEDIA_URL.format(media_id))
-        media = http.json(res, schema=_media_schema)
+        res = self.session.http.get(MEDIA_URL.format(media_id))
+        media = self.session.http.json(res, schema=_media_schema)
 
         for media in media["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:

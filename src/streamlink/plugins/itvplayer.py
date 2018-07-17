@@ -4,7 +4,7 @@ import re
 
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents, validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 
@@ -49,7 +49,7 @@ class ITVPlayer(Plugin):
                                         "platformTag": "dotcom"}}
 
     def video_info(self):
-        page = http.get(self.url)
+        page = self.session.http.get(self.url)
         for div in itertags(page.text, 'div'):
             if div.attributes.get("id") == "video":
                 return div.attributes
@@ -59,14 +59,14 @@ class ITVPlayer(Plugin):
             Find all the streams for the ITV url
             :return: Mapping of quality to stream
         """
-        http.headers.update({"User-Agent": useragents.FIREFOX})
+        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         video_info = self.video_info()
         video_info_url = video_info.get("data-html5-playlist") or video_info.get("data-video-id")
 
-        res = http.post(video_info_url,
+        res = self.session.http.post(video_info_url,
                         data=json.dumps(self.device_info),
                         headers={"hmac": video_info.get("data-video-hmac")})
-        data = http.json(res, schema=self._video_info_schema)
+        data = self.session.http.json(res, schema=self._video_info_schema)
 
         log.debug("Video ID info response: {0}".format(data))
 

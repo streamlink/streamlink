@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
@@ -25,7 +24,7 @@ class ZengaTV(Plugin):
             "Referer": self.url,
         }
 
-        res = http.get(self.url, headers=headers)
+        res = self.session.http.get(self.url, headers=headers)
         for id_re in (self._id_re, self._id_2_re):
             m = id_re.search(res.text)
             if not m:
@@ -39,7 +38,7 @@ class ZengaTV(Plugin):
         dvr_id = m.group("id")
         self.logger.debug("Found video id: {0}".format(dvr_id))
         data = {"feed": "hd", "dvrId": dvr_id}
-        res = http.post(self.api_url, headers=headers, data=data)
+        res = self.session.http.post(self.api_url, headers=headers, data=data)
         if res.status_code == 200:
             for s in HLSStream.parse_variant_playlist(self.session, res.text, headers=headers).items():
                 yield s

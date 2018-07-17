@@ -22,7 +22,6 @@ Limitations:
 import re
 
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import http
 from streamlink.stream import HTTPStream, HLSStream
 
 API_URL_MEDIA = "https://api.media.ccc.de"
@@ -50,7 +49,7 @@ def get_event_id(url):
     :param url: talk URL
 
     """
-    match = re.search(r"{event_id:\s(?P<event_id>\d+),.*}", http.get(url).text)
+    match = re.search(r"{event_id:\s(?P<event_id>\d+),.*}", self.session.http.get(url).text)
 
     try:
         event_id = int(match.group('event_id'))
@@ -66,9 +65,9 @@ def get_json(url):
     :param url: URL to fetch
 
     """
-    res = http.get(url)
+    res = self.session.http.get(url)
 
-    return http.json(res)
+    return self.session.http.json(res)
 
 
 def parse_media_json(json_object):

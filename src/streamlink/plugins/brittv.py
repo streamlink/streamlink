@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.compat import urljoin
 from streamlink.stream import HLSStream
@@ -18,13 +17,13 @@ class BritTV(Plugin):
 
     @Plugin.broken()
     def _get_streams(self):
-        http.headers.update({"User-Agent": useragents.CHROME})
-        res = http.get(self.url)
+        self.session.http.headers.update({"User-Agent": useragents.CHROME})
+        res = self.session.http.get(self.url)
         m = self.js_re.search(res.text)
         if m:
             self.logger.debug("Found js key: {0}", m.group(1))
             js_url = m.group(0)
-            res = http.get(urljoin(self.url, js_url), headers={"Referer": self.url})
+            res = self.session.http.get(urljoin(self.url, js_url), headers={"Referer": self.url})
 
             self.logger.debug("Looking for stream URL...")
             for _, url in self.player_re.findall(res.text):

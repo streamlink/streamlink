@@ -3,7 +3,7 @@ import re
 
 from streamlink.compat import urljoin, urlparse, urlunparse
 from streamlink.exceptions import PluginError, NoStreamsError
-from streamlink.plugin.api import validate, http, useragents
+from streamlink.plugin.api import validate, useragents
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
@@ -44,12 +44,11 @@ class bongacams(Plugin):
         stream_page_path = match.group(5)
         country_code = CONST_DEFAULT_COUNTRY_CODE
 
-        # create http session and set headers
-        http_session = http
-        http_session.headers.update(CONST_HEADERS)
+        # update headers
+        self.session.http.headers.update(CONST_HEADERS)
 
         # get cookies
-        r = http_session.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
+        r = self.session.http.get(urlunparse((stream_page_scheme, stream_page_domain, stream_page_path, '', '', '')))
 
         # redirect to profile page means stream is offline
         if '/profile/' in r.url:
@@ -57,7 +56,7 @@ class bongacams(Plugin):
         if not r.ok:
             self.logger.debug("Status code for {0}: {1}", r.url, r.status_code)
             raise NoStreamsError(self.url)
-        if len(http_session.cookies) == 0:
+        if len(self.session.http.cookies) == 0:
             raise PluginError("Can't get a cookies")
 
         if urlparse(r.url).netloc != stream_page_domain:
@@ -79,11 +78,11 @@ class bongacams(Plugin):
         data = 'method=getRoomData&args%5B%5D={0}&args%5B%5D=false'.format(stream_page_path)
         self.logger.debug('DATA: {0}'.format(str(data)))
         # send request and close http-session
-        r = http_session.post(url=amf_gateway_url,
+        r = self.session.http.post(url=amf_gateway_url,
                               headers=headers,
                               params={CONST_AMF_GATEWAY_PARAM: country_code},
                               data=data)
-        http_session.close()
+        self.session.http.close()
 
         if r.status_code != 200:
             raise PluginError("unexpected status code for {0}: {1}", r.url, r.status_code)
