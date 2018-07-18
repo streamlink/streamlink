@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream, RTMPStream, HTTPStream
 
 API_URL = "https://api-dsa.17app.co/api/v1/liveStreams/getLiveStreamInfo"
@@ -20,10 +20,10 @@ class App17(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        http.headers.update({'User-Agent': useragents.CHROME})
+        self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
         payload = '{"liveStreamID": "%s"}' % (channel)
-        res = http.post(API_URL, data=payload)
+        res = self.session.http.post(API_URL, data=payload)
         status = _status_re.search(res.text)
         if not status:
             self.logger.info("Stream currently unavailable.")

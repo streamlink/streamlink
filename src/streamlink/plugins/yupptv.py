@@ -3,7 +3,7 @@ import re
 
 from streamlink import PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 
@@ -43,18 +43,18 @@ class YuppTV(Plugin):
             log.error("Failed to login to YuppTV")
             raise PluginError("cannot login")
 
-        res = http.post(self._login_url, data=dict(user=username, password=password, isMobile=0), headers={"Referer": self._signin_url})
-        data = http.json(res)
+        res = self.session.http.post(self._login_url, data=dict(user=username, password=password, isMobile=0), headers={"Referer": self._signin_url})
+        data = self.session.http.json(res)
         resp = data['Response']
         if resp["tempBoxid"]:
             # log out on other device
             log.info("Logging out on other device: {0}".format(resp["tempBoxid"]))
-            _ = http.get(self._box_logout, params=dict(boxId=resp["tempBoxid"]))
+            _ = self.session.http.get(self._box_logout, params=dict(boxId=resp["tempBoxid"]))
             return self.login(username, password, depth-1)
         return resp['errorCode'], resp['statusmsg']
 
     def _get_streams(self):
-        http.headers.update({"User-Agent": useragents.CHROME})
+        self.session.http.headers.update({"User-Agent": useragents.CHROME})
 
         if self.get_option("email") and self.get_option("password"):
             error_code, error_msg = self.login(self.get_option("email"), self.get_option("password"))
@@ -63,7 +63,7 @@ class YuppTV(Plugin):
             else:
                 log.error("Failed to login: {1} (code: {0})".format(error_code, error_msg))
 
-        page = http.get(self.url)
+        page = self.session.http.get(self.url)
         match = self._m3u8_re.search(page.text)
         if match:
             stream_url = match.group(1)

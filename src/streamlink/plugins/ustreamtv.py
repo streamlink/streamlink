@@ -8,7 +8,6 @@ import time
 from streamlink import PluginError
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -42,7 +41,7 @@ class UHSClient(object):
 
     def __init__(self, session, media_id, application, **options):
         self.session = session
-        http.headers.update({"User-Agent": useragents.IPHONE_6})
+        self.session.http.headers.update({"User-Agent": useragents.IPHONE_6})
         self.logger = logging.getLogger("streamlink.plugin.ustream.apiclient")
         self.media_id = media_id
         self.application = application
@@ -92,14 +91,14 @@ class UHSClient(object):
         return "_rpin.{0}".format(randint(0, 1e15))
 
     def send_command(self, schema=None, retries=5, timeout=5.0, **args):
-        res = http.get(self.host,
+        res = self.session.http.get(self.host,
                        params=args,
                        headers={"Referer": self.referrer,
                                 "User-Agent": useragents.IPHONE_6},
                        retries=retries,
                        timeout=timeout,
                        retry_max_backoff=0.5)
-        return http.json(res, schema=schema or self.api_schama)
+        return self.session.http.json(res, schema=schema or self.api_schama)
 
     @property
     def host(self):
@@ -263,7 +262,7 @@ class UStreamTV(Plugin):
 
     def _find_media_id(self):
         self.logger.debug("Searching for media ID on the page")
-        res = http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        res = self.session.http.get(self.url, headers={"User-Agent": useragents.CHROME})
         m = self.media_id_re.search(res.text)
         return m and m.group(1)
 

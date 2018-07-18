@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugins.theplatform import ThePlatform
 from streamlink.utils import update_scheme
 
@@ -15,7 +14,7 @@ class NBC(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         m = self.embed_url_re.search(res.text)
         platform_url = m and m.group("url")
 

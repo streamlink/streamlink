@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import RTMPStream
 
@@ -44,12 +44,12 @@ class Mips(Plugin):
 
         headers = {"Referer": self.url}
         url = PLAYER_URL.format(channel)
-        res = http.get(url, headers=headers, schema=_schema)
+        res = self.session.http.get(url, headers=headers, schema=_schema)
         if not res or "s" not in res:
             return
 
         streams = {}
-        server = http.get(BALANCER_URL, headers=headers, schema=_rtmp_schema)
+        server = self.session.http.get(BALANCER_URL, headers=headers, schema=_rtmp_schema)
         playpath = "{0}?{1}".format(res["s"], res["id"])
         streams["live"] = RTMPStream(self.session, {
             "rtmp": "rtmp://{0}/live/{1}".format(server, playpath),

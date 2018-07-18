@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
@@ -21,7 +20,7 @@ class ArconaiTv(Plugin):
             'Referer': self.url
         }
 
-        res = http.get(self.url, headers=headers)
+        res = self.session.http.get(self.url, headers=headers)
 
         match = _playlist_re.search(res.text)
         if match is None:

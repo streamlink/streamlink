@@ -5,7 +5,7 @@ import re
 from functools import partial
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate, StreamMapper
+from streamlink.plugin.api import validate, StreamMapper
 from streamlink.stream import HLSStream, DASHStream
 from streamlink.utils import parse_json, update_scheme, search_dict
 
@@ -45,10 +45,10 @@ class AtresPlayer(Plugin):
         super(AtresPlayer, self).__init__(update_scheme("https://", url))
 
     def _get_streams(self):
-        api_urls = http.get(self.url, schema=self.channel_id_schema)
+        api_urls = self.session.http.get(self.url, schema=self.channel_id_schema)
         for api_url in api_urls:
             log.debug("API URL: {0}".format(api_url))
-            for source in http.get(api_url, schema=self.stream_schema):
+            for source in self.session.http.get(api_url, schema=self.stream_schema):
                 log.debug("Stream source: {0} ({1})".format(source['src'], source.get("type", "n/a")))
 
                 if "type" not in source or source["type"] == "application/vnd.apple.mpegurl":

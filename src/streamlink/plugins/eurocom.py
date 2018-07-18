@@ -2,7 +2,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import RTMPStream
 
 
@@ -15,7 +14,7 @@ class Eurocom(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         m = self.file_re.search(res.text)
         if m:
             stream_url = m.group("url")

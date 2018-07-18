@@ -4,7 +4,7 @@ from itertools import chain
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import StreamMapper, http, validate
+from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import absolute_url
 
@@ -176,8 +176,8 @@ class Hitbox(Plugin):
         channel, media_id = match.group("channel", "media_id")
         self.logger.debug("Matched URL: channel={0}, media_id={1}".format(channel, media_id))
         if not media_id:
-            res = http.get(LIVE_API.format(channel))
-            livestream = http.json(res, schema=_live_schema)
+            res = self.session.http.get(LIVE_API.format(channel))
+            livestream = self.session.http.json(res, schema=_live_schema)
             if livestream.get("media_hosted_media"):
                 hosted = _live_schema.validate(livestream["media_hosted_media"])
                 self.logger.info("{0} is hosting {1}", livestream["media_user_name"], hosted["media_user_name"])
@@ -191,8 +191,8 @@ class Hitbox(Plugin):
         else:
             media_type = "video"
 
-        res = http.get(PLAYER_API.format(media_type, media_id))
-        player = http.json(res, schema=_player_schema)
+        res = self.session.http.get(PLAYER_API.format(media_type, media_id))
+        player = self.session.http.json(res, schema=_player_schema)
 
         if media_type == "live":
             return self._get_live_streams(player)

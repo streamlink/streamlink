@@ -1,6 +1,7 @@
 import unittest
 
 from streamlink import Streamlink
+from streamlink.plugin.api import HTTPSession
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
 from tests.mock import patch, Mock, ANY, MagicMock, call
@@ -9,6 +10,8 @@ from tests.mock import patch, Mock, ANY, MagicMock, call
 class TestPluginTVPlayer(unittest.TestCase):
     def setUp(self):
         self.session = Streamlink()
+        self.session.http = MagicMock(HTTPSession)
+        self.session.http.headers = {}
 
     def test_can_handle_url(self):
         # should match
@@ -27,9 +30,8 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.assertFalse(TVPlayer.can_handle_url("http://www.youtube.com/"))
 
     @patch('streamlink.plugins.tvplayer.TVPlayer._get_stream_data')
-    @patch('streamlink.plugins.tvplayer.http')
     @patch('streamlink.plugins.tvplayer.HLSStream')
-    def test_get_streams(self, hlsstream, mock_http, mock_get_stream_data):
+    def test_get_streams(self, hlsstream, mock_get_stream_data):
         mock_get_stream_data.return_value = {
             "stream": "http://test.se/stream1"
         }
@@ -47,7 +49,7 @@ class TestPluginTVPlayer(unittest.TestCase):
                     <div class="row visible-xs visible-sm">
         """
 
-        mock_http.get.return_value = page_resp
+        self.session.http.get.return_value = page_resp
         hlsstream.parse_variant_playlist.return_value = {"test": HLSStream(self.session, "http://test.se/stream1")}
 
         TVPlayer.bind(self.session, "test.tvplayer")
@@ -58,20 +60,19 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.assertTrue("test" in streams)
 
         # test the url is used correctly
-        mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
+        self.session.http.get.assert_called_with("http://tvplayer.com/watch/dave")
         # test that the correct API call is made
         mock_get_stream_data.assert_called_with(resource="bbcone", channel_id="89", token="1324567894561268987948596154656418448489159")
         # test that the correct URL is used for the HLSStream
         hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1")
 
-    @patch('streamlink.plugins.tvplayer.http')
-    def test_get_invalid_page(self, mock_http):
+    def test_get_invalid_page(self):
         page_resp = Mock()
         page_resp.text = u"""
         var validate = "foo";
         var resourceId = "1234";
         """
-        mock_http.get.return_value = page_resp
+        self.session.http.get.return_value = page_resp
 
         TVPlayer.bind(self.session, "test.tvplayer")
         plugin = TVPlayer("http://tvplayer.com/watch/dave")
@@ -82,7 +83,7 @@ class TestPluginTVPlayer(unittest.TestCase):
 
         # test the url is used correctly
 
-        mock_http.get.assert_called_with("http://tvplayer.com/watch/dave")
+        self.session.http.get.assert_called_with("http://tvplayer.com/watch/dave")
 
     def test_arguments(self):
         from streamlink_cli.main import setup_plugin_args

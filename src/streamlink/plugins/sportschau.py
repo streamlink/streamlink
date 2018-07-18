@@ -2,7 +2,6 @@ import re
 import json
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HDSStream
 from streamlink.utils import update_scheme
 
@@ -16,7 +15,7 @@ class sportschau(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _player_js.search(res.text)
         if match:
             player_js = match.group(0)
@@ -25,7 +24,7 @@ class sportschau(Plugin):
             self.logger.info("Didn't find player js. Probably this page doesn't contain a video")
             return
 
-        res = http.get(player_js)
+        res = self.session.http.get(player_js)
 
         jsonp_start = res.text.find('(') + 1
         jsonp_end = res.text.rfind(')')

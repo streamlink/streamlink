@@ -3,7 +3,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HDSStream
 
 LIVE_CHANNELS_API_URL = "http://www.dr.dk/tv/external/channels?mediaType=tv"
@@ -97,8 +97,8 @@ class DRDK(Plugin):
             return self._get_vod_streams(match.group("program"))
 
     def _get_vod_streams(self, program):
-        res = http.get(VOD_API_URL.format(program))
-        video = http.json(res, schema=_video_schema)
+        res = self.session.http.get(VOD_API_URL.format(program))
+        video = self.session.http.json(res, schema=_video_schema)
 
         streams = {}
         for link in video:
@@ -114,8 +114,8 @@ class DRDK(Plugin):
         return streams
 
     def _get_live_streams(self, slug):
-        res = http.get(LIVE_CHANNELS_API_URL)
-        res = http.json(res, schema=_channels_schema)
+        res = self.session.http.get(LIVE_CHANNELS_API_URL)
+        res = self.session.http.json(res, schema=_channels_schema)
 
         for channel in filter(lambda c: c["Slug"] == slug, res):
             servers = channel["StreamingServers"]

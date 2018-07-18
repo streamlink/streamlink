@@ -2,7 +2,6 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
-from streamlink.plugin.api import http
 
 
 _stream_url_re = re.compile(r"http(s)?://(www\.)?mediaklikk.hu/([A-Za-z0-9\-]+)/?")
@@ -19,14 +18,14 @@ class Mediaklikk(Plugin):
 
     def _get_playlist_url(self):
         # get the id
-        content = http.get(self.url)
+        content = self.session.http.get(self.url)
         match = _id_re.match(content.text.replace("\n", ""))
         if not match:
             return
 
         # get the m3u8 file url
         player_url = _stream_player_url.format(match.group(1))
-        content = http.get(player_url)
+        content = self.session.http.get(player_url)
 
         match = _file_re.match(content.text.replace("\n", ""))
         if match:

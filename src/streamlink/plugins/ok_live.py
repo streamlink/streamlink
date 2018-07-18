@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
@@ -33,7 +33,7 @@ class OK_live(Plugin):
             'Referer': self.url
         }
 
-        hls  = http.get(self.url, headers=headers, schema=_schema)
+        hls  = self.session.http.get(self.url, headers=headers, schema=_schema)
         if hls:
             hls = hls.replace(u'\\\\u0026', u'&')
         return HLSStream.parse_variant_playlist(self.session, hls, headers=headers)

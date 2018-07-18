@@ -2,7 +2,7 @@ import re
 
 from streamlink.compat import quote
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents, validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
@@ -72,12 +72,12 @@ class Welt(Plugin):
 
     def _get_streams(self):
         headers = {"User-Agent": useragents.CHROME}
-        hls_url = http.get(self.url, headers=headers, schema=self._schema)
+        hls_url = self.session.http.get(self.url, headers=headers, schema=self._schema)
         headers["Referer"] = self.url
 
         if self.isVod:
             url = self._url_vod.format(quote(hls_url, safe=""))
-            hls_url = http.get(url, headers=headers, schema=self._schema_vod)
+            hls_url = self.session.http.get(url, headers=headers, schema=self._schema_vod)
 
         return HLSStream.parse_variant_playlist(self.session, hls_url, headers=headers)
 

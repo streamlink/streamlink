@@ -4,7 +4,7 @@ from os.path import splitext
 
 from streamlink.compat import urlparse, unquote
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream, RTMPStream
 
 _url_re = re.compile(r"""
@@ -44,7 +44,7 @@ class Aliez(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url, schema=_schema)
+        res = self.session.http.get(self.url, schema=_schema)
         streams = {}
         for url in res["urls"]:
             parsed = urlparse(url)

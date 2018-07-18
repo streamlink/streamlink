@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
 
@@ -43,7 +43,7 @@ class Gulli(Plugin):
             live = True
             player_url = self.LIVE_PLAYER_URL
 
-        res = http.get(player_url)
+        res = self.session.http.get(player_url)
         playlist = re.findall(self._playlist_re, res.text)
         index = 0
         if not live:

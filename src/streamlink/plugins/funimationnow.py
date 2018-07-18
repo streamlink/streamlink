@@ -6,7 +6,6 @@ import re
 
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
@@ -47,11 +46,11 @@ class Experience(object):
         headers = kwargs.pop("headers", {})
         if self.token:
             headers.update({"Authorization": "Token {0}".format(self.token)})
-            http.cookies.update({"src_token": self.token})
+            self.session.http.cookies.update({"src_token": self.token})
 
         log.debug("Making {0}request to {1}".format("authorized " if self.token else "", url))
 
-        return http.request(method, url, *args, headers=headers, **kwargs)
+        return self.session.http.request(method, url, *args, headers=headers, **kwargs)
 
     def get(self, *args, **kwargs):
         return self.request("GET", *args, **kwargs)
@@ -69,7 +68,7 @@ class Experience(object):
         api_url = self.show_api_url.format(experience_id=self.experience_id)
         log.debug("Requesting experience data: {0}".format(api_url))
         res = self.get(api_url)
-        data = http.json(res)
+        data = self.session.http.json(res)
         self.cache[self.experience_id] = data
 
     @property
@@ -126,10 +125,10 @@ class Experience(object):
         """
         api_url = self.sources_api_url.format(experience_id=self.experience_id)
         res = self.get(api_url, params={"pinst_id": self.pinst_id})
-        return http.json(res)
+        return self.session.http.json(res)
 
     def login_csrf(self):
-        r = http.get(self.login_url)
+        r = self.session.http.get(self.login_url)
         for input in itertags(r.text, "input"):
             if input.attributes.get("name") == self.CSRF_NAME:
                 return input.attributes.get("value")
@@ -140,7 +139,7 @@ class Experience(object):
                       data={'username': email, 'password': password, self.CSRF_NAME: self.login_csrf()},
                       raise_for_status=False,
                       headers={"Referer": "https://www.funimation.com/log-in/"})
-        d = http.json(r, schema=self.login_schema)
+        d = self.session.http.json(r, schema=self.login_schema)
         self.token = d.get("token", None)
         return self.token is not None
 
@@ -192,15 +191,15 @@ class FunimationNow(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        http.headers = {"User-Agent": useragents.CHROME}
-        res = http.get(self.url)
+        self.session.http.headers = {"User-Agent": useragents.CHROME}
+        res = self.session.http.get(self.url)
 
         # remap en to english, and ja to japanese
         rlanguage = {"en": "english", "ja": "japanese"}.get(self.get_option("language").lower(),
                                                             self.get_option("language").lower())
         if "_Incapsula_Resource" in res.text:
             self.bypass_incapsula(res)
-            res = http.get(self.url)
+            res = self.session.http.get(self.url)
 
         id_m = self.experience_id_re.search(res.text)
         experience_id = id_m and int(id_m.group(1))
@@ -276,7 +275,7 @@ class FunimationNow(Plugin):
             url = jsm and jsm.group(1)
             if url:
                 log.debug("Found Incapsula auth URL: {0}", url)
-                res = http.get(urljoin(self.url, url))
+                res = self.session.http.get(urljoin(self.url, url))
                 success = res.status_code == 200
                 if success:
                     self.save_cookies(lambda c: "incap" in c.name)

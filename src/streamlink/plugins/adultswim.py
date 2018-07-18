@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import StreamMapper
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api import useragents
 from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
@@ -58,7 +58,7 @@ class AdultSwim(Plugin):
 
     def _get_show_streams(self, stream_data, show, episode, platform="desktop"):
         video_id = parse_json(stream_data.group(1), schema=self.vod_id_schema)
-        res = http.get(self.vod_api, params={"platform": platform, "id": video_id})
+        res = self.session.http.get(self.vod_api, params={"platform": platform, "id": video_id})
 
         # create a unique list of the stream manifest URLs
         streams = []
@@ -103,8 +103,8 @@ class AdultSwim(Plugin):
         if stream_id:
             api_url = self.API_URL.format(id=stream_id)
 
-            res = http.get(api_url, headers={"User-Agent": useragents.SAFARI_8})
-            stream_data = http.json(res, schema=self._api_schema)
+            res = self.session.http.get(api_url, headers={"User-Agent": useragents.SAFARI_8})
+            stream_data = self.session.http.json(res, schema=self._api_schema)
 
             mapper = StreamMapper(lambda fmt, surl: surl.endswith(fmt))
             mapper.map(".m3u8", HLSStream.parse_variant_playlist, self.session)
@@ -124,7 +124,7 @@ class AdultSwim(Plugin):
         if live_stream:
             show_name = show_name or "live-stream"
 
-        res = http.get(self.url, headers={"User-Agent": useragents.SAFARI_8})
+        res = self.session.http.get(self.url, headers={"User-Agent": useragents.SAFARI_8})
         # find the big blob of stream info in the page
         stream_data = self._stream_data_re.search(res.text)
 

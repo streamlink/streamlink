@@ -6,7 +6,6 @@ from streamlink.compat import urljoin
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin import PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -67,7 +66,7 @@ class Pixiv(Plugin):
 
     def find_videopage(self):
         self.logger.debug("Not a videopage")
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         m = self._videopage_re.search(res.text)
         if not m:
@@ -79,7 +78,7 @@ class Pixiv(Plugin):
         return urljoin(self.url, path)
 
     def _login(self, username, password):
-        res = http.get(self.login_url_get)
+        res = self.session.http.get(self.login_url_get)
         m = self._post_key_re.search(res.text)
         if not m:
             raise PluginError("Missing post_key, no login posible.")
@@ -93,8 +92,8 @@ class Pixiv(Plugin):
             "password": password,
         }
 
-        res = http.post(self.login_url_post, data=data)
-        res = http.json(res)
+        res = self.session.http.post(self.login_url_post, data=data)
+        res = self.session.http.json(res)
 
         if res["body"].get("success"):
             return True
@@ -102,7 +101,7 @@ class Pixiv(Plugin):
             return False
 
     def _get_streams(self):
-        http.headers = {"User-Agent": useragents.FIREFOX}
+        self.session.http.headers = {"User-Agent": useragents.FIREFOX}
 
         login_username = self.get_option("username")
         login_password = self.get_option("password")
@@ -117,7 +116,7 @@ class Pixiv(Plugin):
         if not videopage:
             self.url = self.find_videopage()
 
-        data = http.get(self.url, schema=self._data_schema)
+        data = self.session.http.get(self.url, schema=self._data_schema)
 
         if not data.get("LiveStore"):
             self.logger.debug("No video url found, stream might be offline.")

@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 
@@ -19,7 +19,7 @@ class RTPPlay(Plugin):
             "User-Agent": useragents.CHROME
         }
 
-        res = http.get(self.url, headers=headers)
+        res = self.session.http.get(self.url, headers=headers)
 
         url_match = RTPPlay._m3u8_re.search(res.text)
 

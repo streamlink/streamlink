@@ -6,7 +6,7 @@ Plugin for vidio.com
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents, validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
@@ -27,20 +27,20 @@ class Vidio(Plugin):
         return cls._url_re.match(url)
 
     def get_csrf_tokens(self):
-        return http.get(self.csrf_tokens_url,
+        return self.session.http.get(self.csrf_tokens_url,
                         schema=self.token_schema)
 
     def get_url_tokens(self, stream_id):
         self.logger.debug("Getting stream tokens")
         csrf_token = self.get_csrf_tokens()
-        return http.post(self.tokens_url.format(id=stream_id),
+        return self.session.http.post(self.tokens_url.format(id=stream_id),
                          files={"authenticity_token": (None, csrf_token)},
                          headers={"User-Agent": useragents.CHROME,
                                   "Referer": self.url},
                          schema=self.token_schema)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         plmatch = self._playlist_re.search(res.text)
         idmatch = self._data_id_re.search(res.text)

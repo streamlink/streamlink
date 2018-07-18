@@ -2,7 +2,6 @@ import re
 import uuid
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -43,8 +42,8 @@ class Chaturbate(Plugin):
 
         post_data = "room_slug={0}&bandwidth=high".format(username)
 
-        res = http.post(API_HLS, headers=headers, cookies=cookies, data=post_data)
-        data = http.json(res, schema=_post_schema)
+        res = self.session.http.post(API_HLS, headers=headers, cookies=cookies, data=post_data)
+        data = self.session.http.json(res, schema=_post_schema)
 
         self.logger.info("Stream status: {0}".format(data["room_status"]))
         if (data["success"] is True and data["room_status"] == "public" and data["url"]):

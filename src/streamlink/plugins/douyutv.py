@@ -5,7 +5,7 @@ import hashlib
 from requests.adapters import HTTPAdapter
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HTTPStream, HLSStream, RTMPStream
 
 API_URL = "https://capi.douyucdn.cn/api/v1/{0}&auth={1}"
@@ -107,8 +107,8 @@ class Douyutv(Plugin):
         match = _url_re.match(self.url)
         subdomain = match.group("subdomain")
 
-        http.verify = False
-        http.mount('https://', HTTPAdapter(max_retries=99))
+        self.session.http.verify = False
+        self.session.http.mount('https://', HTTPAdapter(max_retries=99))
 
         if subdomain == 'v':
             vid = match.group("vid")
@@ -116,8 +116,8 @@ class Douyutv(Plugin):
                 "User-Agent": useragents.ANDROID,
                 "X-Requested-With": "XMLHttpRequest"
             }
-            res = http.get(VAPI_URL.format(vid), headers=headers)
-            room = http.json(res, schema=_vapi_schema)
+            res = self.session.http.get(VAPI_URL.format(vid), headers=headers)
+            room = self.session.http.json(res, schema=_vapi_schema)
             yield "source", HLSStream(self.session, room["video_url"])
             return
 
@@ -125,18 +125,18 @@ class Douyutv(Plugin):
         try:
             channel = int(channel)
         except ValueError:
-            channel = http.get(self.url, schema=_room_id_schema)
+            channel = self.session.http.get(self.url, schema=_room_id_schema)
             if channel is None:
-                channel = http.get(self.url, schema=_room_id_alt_schema)
+                channel = self.session.http.get(self.url, schema=_room_id_alt_schema)
 
-        http.headers.update({'User-Agent': useragents.WINDOWS_PHONE_8})
+        self.session.http.headers.update({'User-Agent': useragents.WINDOWS_PHONE_8})
         cdns = ["ws", "tct", "ws2", "dl"]
         ts = int(time.time())
         suffix = "room/{0}?aid=wp&cdn={1}&client_sys=wp&time={2}".format(channel, cdns[0], ts)
         sign = hashlib.md5((suffix + API_SECRET).encode()).hexdigest()
 
-        res = http.get(API_URL.format(suffix, sign))
-        room = http.json(res, schema=_room_schema)
+        res = self.session.http.get(API_URL.format(suffix, sign))
+        room = self.session.http.json(res, schema=_room_schema)
         if not room:
             self.logger.info("Not a valid room url.")
             return

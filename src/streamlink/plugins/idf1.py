@@ -2,7 +2,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents, validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
 
@@ -45,7 +45,7 @@ class IDF1(Plugin):
         return IDF1._url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = self._video_id_re.search(res.text) or self._video_id_alt_re.search(res.text)
         if match is None:
             return
@@ -53,8 +53,8 @@ class IDF1(Plugin):
         video_type = match.group('video_type')
         video_id = match.group('video_id')
 
-        videos = http.get(self.DACAST_API_URL.format(broadcaster_id, video_type, video_id), schema=self._api_schema)
-        token = http.get(self.DACAST_TOKEN_URL.format(broadcaster_id, video_type, video_id), schema=self._token_schema)
+        videos = self.session.http.get(self.DACAST_API_URL.format(broadcaster_id, video_type, video_id), schema=self._api_schema)
+        token = self.session.http.get(self.DACAST_TOKEN_URL.format(broadcaster_id, video_type, video_id), schema=self._token_schema)
         parsed = []
 
         for video_url in videos:

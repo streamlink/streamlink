@@ -3,7 +3,6 @@ import re
 
 from streamlink import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -54,14 +53,14 @@ class BTV(Plugin):
         return cls.url_re.match(url) is not None
 
     def login(self, username, password):
-        res = http.post(self.login_url, data={"username": username, "password": password})
+        res = self.session.http.post(self.login_url, data={"username": username, "password": password})
         if "success_logged_in" in res.text:
             return True
         else:
             return False
 
     def get_hls_url(self, media_id):
-        res = http.get(self.api_url, params=dict(media_id=media_id))
+        res = self.session.http.get(self.api_url, params=dict(media_id=media_id))
         try:
             return parse_json(res.text, schema=self.api_schema)
         except PluginError:
@@ -72,7 +71,7 @@ class BTV(Plugin):
             self.logger.error("BTV requires registration, set the username and password"
                               " with --btv-username and --btv-password")
         elif self.login(self.options.get("username"), self.options.get("password")):
-            res = http.get(self.url)
+            res = self.session.http.get(self.url)
             media_match = self.media_id_re.search(res.text)
             media_id = media_match and media_match.group(1)
             if media_id:

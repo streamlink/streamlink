@@ -2,7 +2,7 @@ import re
 
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 COOKIE_PARAMS = (
@@ -49,13 +49,13 @@ class NRK(Plugin):
         }
 
         # Construct API URL for this program.
-        baseurl = http.get(self.url, cookies=cookie, schema=_schema)
+        baseurl = self.session.http.get(self.url, cookies=cookie, schema=_schema)
         program_id = _id_re.search(self.url).group(1)
 
         # Extract media URL.
         json_url = urljoin(baseurl, "mediaelement/{0}".format(program_id))
-        res = http.get(json_url, cookies=cookie)
-        media_element = http.json(res, schema=_mediaelement_schema)
+        res = self.session.http.get(json_url, cookies=cookie)
+        media_element = self.session.http.json(res, schema=_mediaelement_schema)
         media_url = media_element["mediaUrl"]
 
         return HLSStream.parse_variant_playlist(self.session, media_url)

@@ -7,7 +7,7 @@ import re
 from streamlink import NoStreamsError
 from streamlink.compat import urlparse, parse_qsl, urljoin
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 _url_re = re.compile(r"http(s)?://(\w+.)?mixer\.com/(?P<channel>[^/?]+)")
@@ -41,7 +41,7 @@ class Mixer(Plugin):
 
     def _get_api_res(self, api_type, api_id):
         try:
-            res = http.get(self.api_url.format(type=api_type, id=api_id))
+            res = self.session.http.get(self.api_url.format(type=api_type, id=api_id))
             return res
         except Exception as e:
             if "404" in str(e):
@@ -53,7 +53,7 @@ class Mixer(Plugin):
     def _get_vod_stream(self, vod_id):
         res = self._get_api_res("recordings", vod_id)
 
-        for sdata in http.json(res, schema=self._vod_schema):
+        for sdata in self.session.http.json(res, schema=self._vod_schema):
             if sdata["format"] == "hls":
                 hls_url = urljoin(sdata["url"], "manifest.m3u8")
                 yield "{0}p".format(sdata["height"]), HLSStream(self.session, hls_url)
@@ -61,7 +61,7 @@ class Mixer(Plugin):
     def _get_live_stream(self, channel):
         res = self._get_api_res("channels", channel)
 
-        channel_info = http.json(res)
+        channel_info = self.session.http.json(res)
         if not channel_info["online"]:
             return
 
