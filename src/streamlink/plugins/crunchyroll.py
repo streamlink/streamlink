@@ -1,13 +1,11 @@
 import argparse
 import datetime
-import random
 import re
-import string
 import logging
 from uuid import uuid4
 
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -107,12 +105,13 @@ class CrunchyrollAPI(object):
     _access_token = "Scwg9PRRZ19iVwD"
     _access_type = "com.crunchyroll.crunchyroid"
 
-    def __init__(self, cache, session_id=None, locale=_default_locale):
+    def __init__(self, cache, session, session_id=None, locale=_default_locale):
         """Abstract the API to access to Crunchyroll data.
 
         Can take saved credentials to use on it's calls to the API.
         """
         self.cache = cache
+        self.session = session
         self.session_id = session_id
         if self.session_id:  # if the session ID is setup don't use the cached auth token
             self.auth = None
@@ -182,7 +181,6 @@ class CrunchyrollAPI(object):
         self.cache.set("device_id", 365 * 24 * 60 * 60)
         log.debug("Device ID: {0}".format(device_id))
         return device_id
-
 
     def start_session(self):
         """
@@ -354,7 +352,10 @@ class Crunchyroll(Plugin):
 
         # use the crunchyroll locale as an override, for backwards compatibility
         locale = self.get_option("locale") or self.session.localization.language_code
-        api = CrunchyrollAPI(self.cache, session_id=self.get_option("session_id"), locale=locale)
+        api = CrunchyrollAPI(self.cache,
+                             self.session,
+                             session_id=self.get_option("session_id"),
+                             locale=locale)
 
         if not self.get_option("session_id"):
             self.logger.debug("Creating session with locale: {0}", locale)
