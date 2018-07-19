@@ -304,11 +304,10 @@ class YouTube(Plugin):
     def _get_streams(self):
         is_live = False
 
-        video_id = self._find_video_id(self.url)
-        self.video_id = video_id
-        log.debug("Using video ID: {0}", video_id)
+        self.video_id = self._find_video_id(self.url)
+        log.debug("Using video ID: {0}", self.video_id)
 
-        info = self._get_stream_info(video_id)
+        info = self._get_stream_info(self.video_id)
         if info and info.get("status") == "fail":
             log.error("Could not get video info: {0}".format(info.get("reason")))
             return
