@@ -4,8 +4,10 @@ import re
 import json
 
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
+from streamlink.utils import parse_json
 
 
 class Picarto(Plugin):
@@ -15,13 +17,29 @@ class Picarto(Plugin):
     RTMP_PLAYPATH = "golive+{channel}?token={token}"
     HLS_URL = "https://{server}/hls/{channel}/index.m3u8?token={token}"
 
+
     # Regex for all usable URLs
     _url_re = re.compile(r"""
         https?://(?:\w+\.)?picarto\.tv/(?:videopopout/)?([^&?/]+)
     """, re.VERBOSE)
 
     # Regex for VOD extraction
-    _vod_re = re.compile(r'''vod: "(https?://[\S]+?/index.m3u8)",''')
+    _vod_re = re.compile(r'''(?<=#vod-player", )(\{.*?\})''')
+
+    data_schema = validate.Schema(
+        validate.transform(_vod_re.search),
+        validate.any(
+            None,
+            validate.all(
+                validate.get(0),
+                validate.transform(parse_json),
+                {
+                    "vod": validate.url(),
+                }
+            )
+        )
+    )
+
 
     @classmethod
     def can_handle_url(cls, url):
@@ -52,9 +70,10 @@ class Picarto(Plugin):
         return RTMPStream(self.session, params=params)
 
     def _get_vod_stream(self, page):
-        m = self._vod_re.search(page.text)
-        if m:
-            return HLSStream.parse_variant_playlist(self.session, m.group(1))
+        data = self.data_schema.validate(page.text)
+
+        if data:
+            return HLSStream.parse_variant_playlist(self.session, data["vod"])
 
     def _get_streams(self):
         url_channel_name = self._url_re.match(self.url).group(1)
