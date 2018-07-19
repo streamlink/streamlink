@@ -3,7 +3,6 @@ import re
 from streamlink import NoPluginError
 from streamlink import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 
 
 class ElLobo(Plugin):
@@ -15,7 +14,7 @@ class ElLobo(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         # Search for the iframe in the page
         iframe_m = self.iframe_re.search(res.text)
 

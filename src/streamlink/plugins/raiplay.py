@@ -2,7 +2,7 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -27,7 +27,7 @@ class RaiPlay(Plugin):
     def _get_streams(self):
         channel = self.url_re.match(self.url).group(1)
         self.logger.debug("Found channel: {0}", channel)
-        stream_url = http.get(self.url, schema=self.stream_schema)
+        stream_url = self.session.http.get(self.url, schema=self.stream_schema)
         if stream_url:
             return HLSStream.parse_variant_playlist(self.session, stream_url, headers={"User-Agent": useragents.CHROME})
 

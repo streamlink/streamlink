@@ -1,6 +1,5 @@
 import re
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -43,12 +42,12 @@ class DingitTV(Plugin):
     def _get_streams(self):
         match = self.url_re.match(self.url)
 
-        res = http.post(self.flashvars_url,
+        res = self.session.http.post(self.flashvars_url,
                         data=dict(
                             broadcaster=match.group("broadcaster") or "Verm",
                             stream_id=match.group("channel_id") or match.group("highlight_id")))
 
-        flashvars = http.json(res, schema=self.flashvars_schema)
+        flashvars = self.session.http.json(res, schema=self.flashvars_schema)
 
         if flashvars.get("pereakaurl"):
             url = self.pereakaurl.format(flashvars.get("pereakaurl").strip("/"))

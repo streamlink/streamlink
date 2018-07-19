@@ -2,7 +2,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream
 from streamlink.plugins.common_jwplayer import _js_to_json
@@ -38,7 +37,7 @@ class Sportal(Plugin):
 
     @Plugin.broken(1165)
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         playlist = self._playlist_schema.validate(res.text)
         if playlist:

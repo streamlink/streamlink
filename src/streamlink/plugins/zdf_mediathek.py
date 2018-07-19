@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 from streamlink.utils import parse_json
 
@@ -123,7 +123,7 @@ class zdf_mediathek(Plugin):
         return qualities
 
     def _get_streams(self):
-        zdf_json = http.get(self.url, schema=_api_schema)
+        zdf_json = self.session.http.get(self.url, schema=_api_schema)
         if zdf_json is None:
             return
 
@@ -132,14 +132,14 @@ class zdf_mediathek(Plugin):
             "Referer": self.url
         }
 
-        res = http.get(zdf_json['content'], headers=headers)
-        document = http.json(res, schema=_documents_schema)
+        res = self.session.http.get(zdf_json['content'], headers=headers)
+        document = self.session.http.json(res, schema=_documents_schema)
 
         stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
         stream_request_url = API_URL + stream_request_url
 
-        res = http.get(stream_request_url, headers=headers)
-        res = http.json(res, schema=_schema)
+        res = self.session.http.get(stream_request_url, headers=headers)
+        res = self.session.http.json(res, schema=_schema)
 
         streams = {}
         for format_ in self._extract_streams(res):

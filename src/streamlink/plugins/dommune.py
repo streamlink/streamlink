@@ -3,7 +3,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 
 DATA_URL = "http://www.dommune.com/freedommunezero2012/live/data/data.json"
 
@@ -20,8 +20,8 @@ class Dommune(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(DATA_URL)
-        data = http.json(res, schema=_data_schema)
+        res = self.session.http.get(DATA_URL)
+        data = self.session.http.json(res, schema=_data_schema)
         video_id = data["channel"] or data["channel2"]
         if not video_id:
             return

@@ -8,7 +8,6 @@ from streamlink import PluginError
 from streamlink.cache import Cache
 from streamlink.plugin import Plugin
 from streamlink.plugin import PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream
@@ -151,8 +150,8 @@ class Zattoo(Plugin):
         log.debug('_hello ...')
 
         # a new session is required for the app_token
-        http.cookies = cookiejar_from_dict({})
-        res = http.get(self.base_url)
+        self.session.http.cookies = cookiejar_from_dict({})
+        res = self.session.http.get(self.base_url)
         match = self._app_token_re.search(res.text)
 
         app_token = match.group(1)
@@ -171,7 +170,7 @@ class Zattoo(Plugin):
             'lang': 'en',
             'format': 'json'
         }
-        res = http.post(hello_url, headers=self.headers, data=params)
+        res = self.session.http.post(hello_url, headers=self.headers, data=params)
 
     def _login(self, email, password):
         log.debug('_login ... Attempting login as {0}'.format(email))
@@ -184,14 +183,14 @@ class Zattoo(Plugin):
         }
 
         try:
-            res = http.post(login_url, headers=self.headers, data=params)
+            res = self.session.http.post(login_url, headers=self.headers, data=params)
         except Exception as e:
             if '400 Client Error' in str(e):
                 raise PluginError(
                     'Failed to login, check your username/password')
             raise e
 
-        data = http.json(res)
+        data = self.session.http.json(res)
         self._authed = data['success']
         log.debug('New Session Data')
         self.save_cookies(default_expires=self.TIME_SESSION)
@@ -234,7 +233,7 @@ class Zattoo(Plugin):
             params.update(params_stream_type)
 
             try:
-                res = http.post(watch_url, headers=self.headers, data=params)
+                res = self.session.http.post(watch_url, headers=self.headers, data=params)
             except Exception as e:
                 if '404 Client Error' in str(e):
                     log.error('Unfortunately streaming is not permitted in '
@@ -250,7 +249,7 @@ class Zattoo(Plugin):
                     log.error(str(e))
                 return
 
-            data = http.json(res)
+            data = self.session.http.json(res)
             log.debug('Found data for {0}'.format(stream_type))
             if data['success'] and stream_type in ['hls', 'hls5']:
                 for url in data['stream']['watch_urls']:
@@ -271,13 +270,13 @@ class Zattoo(Plugin):
             self._session_attributes.get('power_guide_hash'))
 
         try:
-            res = http.get(channels_url, headers=self.headers)
+            res = self.session.http.get(channels_url, headers=self.headers)
         except Exception:
             log.debug('Force session reset for _get_params_cid')
             self.reset_session()
             return False
 
-        data = http.json(res, schema=self._channels_schema)
+        data = self.session.http.json(res, schema=self._channels_schema)
 
         c_list = []
         for d in data:
@@ -317,8 +316,8 @@ class Zattoo(Plugin):
         elif (self._authed and not self._session_control):
             # check every two hours, if the session is actually valid
             log.debug('Session control for {0}'.format(self.domain))
-            res = http.get(self.API_SESSION.format(self.base_url))
-            res = http.json(res, schema=self._session_schema)
+            res = self.session.http.get(self.API_SESSION.format(self.base_url))
+            res = self.session.http.json(res, schema=self._session_schema)
             if res['loggedin']:
                 self._session_attributes.set(
                     'session_control', True, expires=self.TIME_CONTROL)

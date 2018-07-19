@@ -4,7 +4,6 @@ import re
 
 from streamlink.compat import urlparse, parse_qsl, urlunparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
 
@@ -29,7 +28,7 @@ class Swisstxt(Plugin):
         api_url = self.api_url.format(id=event_id, site=site.upper())
         self.logger.debug("Calling API: {0}", api_url)
 
-        stream_url = http.get(api_url).text.strip("\"'")
+        stream_url = self.session.http.get(api_url).text.strip("\"'")
 
         parsed = urlparse(stream_url)
         query = dict(parse_qsl(parsed.query))

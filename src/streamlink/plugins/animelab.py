@@ -3,7 +3,6 @@ import re
 from pprint import pprint
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
@@ -56,7 +55,7 @@ class AnimeLab(Plugin):
 
     def login(self, email, password):
         self.logger.debug("Attempting to log in as {0}", email)
-        res = http.post(self.login_url,
+        res = self.session.http.post(self.login_url,
                         data=dict(email=email, password=password),
                         allow_redirects=False,
                         raise_for_status=False)
@@ -79,7 +78,7 @@ class AnimeLab(Plugin):
 
         if self.login(email, password):
             self.logger.info("Successfully logged in as {0}", email)
-            video_collection = http.get(self.url, schema=self.video_collection_schema)
+            video_collection = self.session.http.get(self.url, schema=self.video_collection_schema)
             if video_collection["playlist"] is None or video_collection["position"] is None:
                 return
 

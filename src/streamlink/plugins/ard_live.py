@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HDSStream
 from streamlink.compat import urljoin
 from streamlink.stream import HTTPStream
@@ -33,10 +33,10 @@ class ard_live(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        data_url = http.get(self.url, schema=self._player_url_schema)
+        data_url = self.session.http.get(self.url, schema=self._player_url_schema)
         if data_url:
-            res = http.get(urljoin(self.url, data_url))
-            stream_info = http.xml(res, schema=self._livestream_schema)
+            res = self.session.http.get(urljoin(self.url, data_url))
+            stream_info = self.session.http.xml(res, schema=self._livestream_schema)
 
             for stream in stream_info:
                 url = stream["url"]

@@ -4,7 +4,6 @@ import json
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import update_scheme
@@ -38,15 +37,15 @@ class INE(Plugin):
         vid = self.url_re.match(self.url).group(1)
         self.logger.debug("Found video ID: {0}", vid)
 
-        page = http.get(self.play_url.format(vid=vid))
+        page = self.session.http.get(self.play_url.format(vid=vid))
         js_url_m = self.js_re.search(page.text)
         if js_url_m:
             js_url = js_url_m.group(1)
             self.logger.debug("Loading player JS: {0}", js_url)
 
-            res = http.get(js_url)
+            res = self.session.http.get(js_url)
             metadata_url = update_scheme(self.url, self.setup_schema.validate(res.text))
-            data = http.json(http.get(metadata_url))
+            data = self.session.http.json(self.session.http.get(metadata_url))
 
             for source in data["playlist"][0]["sources"]:
                 if source["type"] == "application/vnd.apple.mpegurl":

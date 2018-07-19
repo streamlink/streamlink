@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream, HLSStream
 
 RUURL = "b=chrome&p=win&v=56&f=0&d=1"
@@ -40,13 +40,13 @@ class Rtvs(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = _playlist_url_re.search(res.text)
         if match is None:
             return
 
-        res = http.get(match.group(1) + RUURL)
-        sources = http.json(res, schema=_playlist_schema)
+        res = self.session.http.get(match.group(1) + RUURL)
+        sources = self.session.http.json(res, schema=_playlist_schema)
 
         streams = {}
 

@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugins.brightcove import BrightcovePlayer
 from streamlink.stream import HLSStream
 
@@ -18,7 +17,7 @@ class BFMTV(Plugin):
 
     def _get_streams(self):
         # Retrieve URL page and search for Brightcove video data
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = self._brightcove_video_re.search(res.text) or self._brightcove_video_alt_re.search(res.text)
         if match is not None:
             account_id = match.group('account_id')

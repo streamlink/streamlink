@@ -4,7 +4,7 @@ import time
 
 from streamlink import StreamError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 
@@ -78,12 +78,12 @@ class FilmOnAPI(object):
     )
 
     def channel(self, channel):
-        res = http.get(self.channel_url.format(channel))
-        return http.json(res, schema=self.api_schema)
+        res = self.session.http.get(self.channel_url.format(channel))
+        return self.session.http.json(res, schema=self.api_schema)
 
     def vod(self, vod_id):
-        res = http.get(self.vod_url.format(vod_id))
-        return http.json(res, schema=self.api_schema)
+        res = self.session.http.get(self.vod_url.format(vod_id))
+        return self.session.http.json(res, schema=self.api_schema)
 
 
 class Filmon(Plugin):
@@ -136,7 +136,7 @@ class Filmon(Plugin):
 
         else:
             if not channel:
-                channel = http.get(self.url, schema=self._channel_id_schema)
+                channel = self.session.http.get(self.url, schema=self._channel_id_schema)
                 self.logger.debug("Found channel ID: {0}", channel)
             data = self.api.channel(channel)
             for stream in data["streams"]:

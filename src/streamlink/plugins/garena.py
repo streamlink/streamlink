@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -41,8 +40,8 @@ class Garena(Plugin):
         return _url_re.match(url)
 
     def _post_api(self, api, payload, schema):
-        res = http.post(api, json=payload)
-        data = http.json(res, schema=schema)
+        res = self.session.http.post(api, json=payload)
+        data = self.session.http.json(res, schema=schema)
 
         if data["result"] == "success":
             post_data = data["reply"]

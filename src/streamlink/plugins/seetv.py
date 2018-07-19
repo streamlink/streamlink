@@ -4,7 +4,6 @@ import time
 
 from streamlink import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -39,12 +38,12 @@ class SeeTV(Plugin):
         return self._url_re.match(self.url).group(1)
 
     def _get_tv_link(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         link_m = self._main_source_re.search(res.text)
         return link_m and link_m.group(1)
 
     def _get_streams(self):
-        http.headers.update({"User-Agent": useragents.CHROME,
+        self.session.http.headers.update({"User-Agent": useragents.CHROME,
                              "Referer": self.referer})
         fragment = dict(parse_qsl(urlparse(self.url).fragment))
         link = fragment.get("link")
@@ -57,12 +56,12 @@ class SeeTV(Plugin):
 
         player_url = self._api_url.format(link)
         self.logger.debug("Requesting player API: {0} (referer={1})", player_url, self.referer)
-        res = http.get(player_url,
+        res = self.session.http.get(player_url,
                        params={"_": int(time.time() * 1000)},
                        headers={"X-Requested-With": "XMLHttpRequest"})
 
         try:
-            data = http.json(res, schema=self.api_schema)
+            data = self.session.http.json(res, schema=self.api_schema)
         except PluginError as e:
             print(e)
             self.logger.error("Cannot play this stream type")

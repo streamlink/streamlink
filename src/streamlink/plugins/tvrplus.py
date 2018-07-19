@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
@@ -27,7 +26,7 @@ class TVRPlus(Plugin):
             "User-Agent": useragents.FIREFOX,
             "Referer": self.url
         }
-        stream_url = self.stream_schema.validate(http.get(self.url).text)
+        stream_url = self.stream_schema.validate(self.session.http.get(self.url).text)
         if stream_url:
             stream_url = list(set(stream_url))
             for url in stream_url:

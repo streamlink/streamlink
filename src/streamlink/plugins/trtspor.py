@@ -2,7 +2,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api import validate
 from streamlink.stream import AkamaiHDStream
 from streamlink.stream import HDSStream
@@ -22,7 +21,7 @@ class TRTSpor(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         url_m = self.m3u8_re.search(res.text)
         hls_url = url_m and url_m.group("url")
         if hls_url:

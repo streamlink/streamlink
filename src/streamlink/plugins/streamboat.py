@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 
 _RE_URL = re.compile(r'^https?://streamboat.tv/.+')
@@ -16,7 +15,7 @@ class StreamBoat(Plugin):
         return bool(_RE_URL.match(url))
 
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         text = res.text
         cdn = _RE_CDN.search(text).group(1)
         playlist_url = _RE_PLAYLIST.search(text).group(1)

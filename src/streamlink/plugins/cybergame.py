@@ -2,7 +2,7 @@ import re
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream
 
 LIVE_STREAM_URL = "rtmp://stream1.cybergame.tv:2936/live/"
@@ -51,8 +51,8 @@ class Cybergame(Plugin):
         return _url_re.match(url)
 
     def _get_playlist(self, **params):
-        res = http.get(PLAYLIST_URL, params=params)
-        playlist = http.xml(res, schema=_playlist_schema)
+        res = self.session.http.get(PLAYLIST_URL, params=params)
+        playlist = self.session.http.xml(res, schema=_playlist_schema)
         streams = {}
         for video in playlist["videos"]:
             name = "{0}p".format(video["height"])

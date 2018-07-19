@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream, HLSStream
 
 STREAMS_URL = "https://piczel.tv:3000/streams/{0}?&page=1&sfw=false&live_only=true"
@@ -36,8 +36,8 @@ class Piczel(Plugin):
 
         channel_name = match.group(1)
 
-        res = http.get(STREAMS_URL.format(channel_name))
-        streams = http.json(res, schema=_streams_schema)
+        res = self.session.http.get(STREAMS_URL.format(channel_name))
+        streams = self.session.http.json(res, schema=_streams_schema)
         if streams["type"] not in ("multi", "stream"):
             return
 

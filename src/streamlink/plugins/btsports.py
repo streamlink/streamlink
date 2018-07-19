@@ -4,7 +4,7 @@ from uuid import uuid4
 
 from streamlink.compat import quote
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import url_equal
 
@@ -40,7 +40,7 @@ class BTSports(Plugin):
 
     def __init__(self, url):
         super(BTSports, self).__init__(url)
-        http.headers = {"User-Agent": useragents.FIREFOX}
+        self.session.http.headers = {"User-Agent": useragents.FIREFOX}
 
     @classmethod
     def can_handle_url(cls, url):
@@ -60,22 +60,22 @@ class BTSports(Plugin):
             "USER": username,
             "PASSWORD": password}
 
-        res = http.post(self.login_url, data=data)
+        res = self.session.http.post(self.login_url, data=data)
 
         self.logger.debug("Redirected to: {0}".format(res.url))
 
 
         if url_equal(res.url, self.url, ignore_scheme=True):
             self.logger.debug("Login successful, getting SAML token")
-            res = http.get("https://samlfed.bt.com/sportgetfedwebhls?bt.cid={0}".format(self.acid()))
+            res = self.session.http.get("https://samlfed.bt.com/sportgetfedwebhls?bt.cid={0}".format(self.acid()))
             d = self.saml_re.search(res.text)
             if d:
                 saml_data = d.group(1)
                 self.logger.debug("BT Sports federated login...")
-                res = http.post(self.api_url,
+                res = self.session.http.post(self.api_url,
                                 params={"action": "LoginBT", "channel": "WEBHLS", "bt.cid": self.acid},
                                 data={"SAMLResponse": saml_data})
-                fed_json = http.json(res)
+                fed_json = self.session.http.json(res)
                 success = fed_json['resultCode'] == "OK"
                 if not success:
                     self.logger.error("Failed to login: {0} - {1}".format(fed_json['errorDescription'],
@@ -102,15 +102,15 @@ class BTSports(Plugin):
              "bt.cid": self.acid(),
              "_": int(time.time())}
 
-        res = http.get(self.api_url, params=d, headers={"Accept": "application/json"})
-        return http.json(res)
+        res = self.session.http.get(self.api_url, params=d, headers={"Accept": "application/json"})
+        return self.session.http.json(res)
 
     def _get_streams(self):
         if self.options.get("email") and self.options.get("password"):
             if self.login(self.options.get("email"), self.options.get("password")):
                 self.logger.debug("Logged in and authenticated with BT Sports.")
 
-                res = http.get(self.url)
+                res = self.session.http.get(self.url)
                 m = self.content_re.findall(res.text)
                 if m:
                     info = dict(m)

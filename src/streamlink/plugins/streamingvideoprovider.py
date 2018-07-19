@@ -3,7 +3,7 @@ import re
 from time import time
 
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream, HLSStream
 
 SWF_URL = "http://play.streamingvideoprovider.com/player2.swf"
@@ -45,7 +45,7 @@ class Streamingvideoprovider(Plugin):
             "file": channel_name,
             "rid": time()
         }
-        playlist_url = http.get(API_URL, params=params, schema=_hls_schema)
+        playlist_url = self.session.http.get(API_URL, params=params, schema=_hls_schema)
         if not playlist_url:
             return
 
@@ -58,8 +58,8 @@ class Streamingvideoprovider(Plugin):
             "clip_id": channel_name,
             "rid": time()
         }
-        res = http.get(API_URL, params=params)
-        rtmp_url = http.xml(res, schema=_rtmp_schema)
+        res = self.session.http.get(API_URL, params=params)
+        rtmp_url = self.session.http.xml(res, schema=_rtmp_schema)
 
         return RTMPStream(self.session, {
             "rtmp": rtmp_url,

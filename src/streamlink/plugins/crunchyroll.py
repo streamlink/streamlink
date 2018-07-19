@@ -7,7 +7,7 @@ import logging
 from uuid import uuid4
 
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
-from streamlink.plugin.api import http, validate, useragents
+from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -162,8 +162,8 @@ class CrunchyrollAPI(object):
             params["session_id"] = self.session_id
 
         # The certificate used by Crunchyroll cannot be verified in some environments.
-        res = http.post(url, data=params, headers=self.headers, verify=False)
-        json_res = http.json(res, schema=_api_schema)
+        res = self.session.http.post(url, data=params, headers=self.headers, verify=False)
+        json_res = self.session.http.json(res, schema=_api_schema)
 
         if json_res["error"]:
             err_msg = json_res.get("message", "Unknown error")

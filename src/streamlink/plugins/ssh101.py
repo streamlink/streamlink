@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.stream import HLSStream
 from streamlink.compat import urljoin
 
@@ -17,13 +16,13 @@ class SSH101(Plugin):
 
     @Plugin.broken(1176)
     def _get_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
 
         # some pages have embedded players
         iframe_m = self.iframe_re.search(res.text)
         if iframe_m:
             url = urljoin(self.url, iframe_m.group("url"))
-            res = http.get(url)
+            res = self.session.http.get(url)
 
         video = self.src_re.search(res.text)
         stream_src = video and video.group("url")

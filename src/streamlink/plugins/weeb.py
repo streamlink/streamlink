@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import RTMPStream
 
@@ -67,7 +67,7 @@ class Weeb(Plugin):
             "firstConnect": 1,
             "ip": "NaN"
         }
-        res = http.post(API_URL, data=form, headers=HEADERS)
+        res = self.session.http.post(API_URL, data=form, headers=HEADERS)
         params = parse_query(res.text, schema=_schema)
 
         if params["status"] <= 0:

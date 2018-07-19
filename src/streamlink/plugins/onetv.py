@@ -3,7 +3,6 @@ import re
 
 from streamlink.compat import urlencode, unquote, urljoin
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.plugin import stream_weight
 from streamlink.stream import HLSStream, HTTPStream, DASHStream
 from streamlink.utils import update_scheme
@@ -46,8 +45,8 @@ class OneTV(Plugin):
         return update_scheme(self.url, url)
 
     def hls_session(self):
-        res = http.get(update_scheme(self.url, self._session_api))
-        data = http.json(res)
+        res = self.session.http.get(update_scheme(self.url, self._session_api))
+        data = self.session.http.json(res)
         # the values are already quoted, we don't want them quoted
         return dict((k, unquote(v)) for k, v in data.items())
 
@@ -61,20 +60,20 @@ class OneTV(Plugin):
         Get the VOD data path and the default VOD ID
         :return:
         """
-        page = http.get(self.url)
+        page = self.session.http.get(self.url)
         m = self._vod_re.search(page.text)
         vod_data_url = m and urljoin(self.url, m.group(0))
         if vod_data_url:
             self.logger.debug("Found VOD data url: {0}", vod_data_url)
-            res = http.get(vod_data_url)
-            return http.json(res)
+            res = self.session.http.get(vod_data_url)
+            return self.session.http.json(res)
 
     def _get_streams(self):
         if self.is_live:
             self.logger.debug("Loading live stream for {0}...", self.channel)
 
-            res = http.get(self.live_api_url, data={"r": random.randint(1, 100000)})
-            live_data = http.json(res)
+            res = self.session.http.get(self.live_api_url, data={"r": random.randint(1, 100000)})
+            live_data = self.session.http.json(res)
 
             # all the streams are equal for each type, so pick a random one
             hls_streams = live_data.get("hls")

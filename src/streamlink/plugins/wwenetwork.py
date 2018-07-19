@@ -7,7 +7,6 @@ import time
 from streamlink import PluginError
 from streamlink.cache import Cache
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import http
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.compat import urlparse, parse_qsl
@@ -66,7 +65,7 @@ class WWENetwork(Plugin):
 
     def __init__(self, url):
         super(WWENetwork, self).__init__(url)
-        http.headers.update({"User-Agent": useragents.CHROME})
+        self.session.http.headers.update({"User-Agent": useragents.CHROME})
         self._session_attributes = Cache(filename="plugin-cache.json", key_prefix="wwenetwork:attributes")
         self._session_key = self.cache.get("session_key")
         self._authed = self._session_attributes.get("ipid") and self._session_attributes.get("fprt")
@@ -78,9 +77,9 @@ class WWENetwork(Plugin):
     def login(self, email, password):
         self.logger.debug("Attempting login as {0}", email)
         # sets some required cookies to login
-        http.get(self.login_page_url)
+        self.session.http.get(self.login_page_url)
         # login
-        res = http.post(self.login_url, data=dict(registrationAction='identify',
+        res = self.session.http.post(self.login_url, data=dict(registrationAction='identify',
                                                   emailAddress=email,
                                                   password=password,
                                                   submitButton=""),
@@ -97,7 +96,7 @@ class WWENetwork(Plugin):
     def _update_session_attribute(self, key, value):
         if value:
             self._session_attributes.set(key, value, expires=3600 * 1.5)  # 1h30m expiry
-            http.cookies.set(key, value)
+            self.session.http.cookies.set(key, value)
 
     @property
     def session_key(self):
@@ -125,12 +124,12 @@ class WWENetwork(Plugin):
         if self.session_key:
             params["sessionKey"] = self.session_key
         url = self.api_url.format(id=content_id)
-        res = http.get(url, params=params)
-        return http.xml(res, ignore_ns=True, schema=self._info_schema)
+        res = self.session.http.get(url, params=params)
+        return self.session.http.xml(res, ignore_ns=True, schema=self._info_schema)
 
     def _get_content_id(self):
         #  check the page to find the contentId
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         m = self.content_id_re.search(res.text)
         if m:
             return m.group(1)

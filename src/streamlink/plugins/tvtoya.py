@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, useragents
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
 
@@ -19,7 +19,7 @@ class TVToya(Plugin):
 
     def _get_streams(self):
         self.session.set_option('hls-live-edge', 10)
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         playlist_m = self._playlist_re.search(res.text)
 
         if playlist_m:

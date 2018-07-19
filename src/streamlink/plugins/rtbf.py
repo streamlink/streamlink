@@ -2,7 +2,7 @@ import datetime
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
 from streamlink.compat import html_unescape
@@ -72,14 +72,14 @@ class RTBF(Plugin):
         if geoloc_flag == 'open':
             return True
 
-        res = http.get(cls.GEO_URL)
-        data = http.json(res, schema=cls._geo_schema)
+        res = self.session.http.get(cls.GEO_URL)
+        data = self.session.http.json(res, schema=cls._geo_schema)
         return data['country'] == geoloc_flag or data['zone'] == geoloc_flag
 
     @classmethod
     def tokenize_stream(cls, url):
-        res = http.post(cls.TOKEN_URL, data={'streams[url]': url})
-        data = http.json(res)
+        res = self.session.http.post(cls.TOKEN_URL, data={'streams[url]': url})
+        data = self.session.http.json(res)
         return data['streams']['url']
 
     @staticmethod
@@ -93,13 +93,13 @@ class RTBF(Plugin):
         return RTBF._url_re.match(url)
 
     def _get_radio_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = self._radio_id_re.search(res.text)
         if match is None:
             return
         radio_id = match.group('radio_id')
-        res = http.get(self.RADIO_STREAM_URL.format(radio_id))
-        streams = http.json(res, schema=self._radio_stream_schema)
+        res = self.session.http.get(self.RADIO_STREAM_URL.format(radio_id))
+        streams = self.session.http.json(res, schema=self._radio_stream_schema)
 
         for stream in streams['audioUrls']:
             match = self._stream_size_re.match(stream['url'])
@@ -110,12 +110,12 @@ class RTBF(Plugin):
             yield quality, HTTPStream(self.session, stream['url'])
 
     def _get_video_streams(self):
-        res = http.get(self.url)
+        res = self.session.http.get(self.url)
         match = self._video_player_re.search(res.text)
         if match is None:
             return
         player_url = match.group('player_url')
-        stream_data = http.get(player_url, schema=self._video_stream_schema)
+        stream_data = self.session.http.get(player_url, schema=self._video_stream_schema)
         if stream_data is None:
             return
 
