@@ -129,6 +129,9 @@ _quality_options_schema = validate.Schema(
 
 
 class UsherService(object):
+    def __init__(self, session):
+        self.session = session
+
     def _create_url(self, endpoint, **extra_params):
         url = "https://usher.ttvnw.net{0}".format(endpoint)
         params = {
@@ -143,7 +146,7 @@ class UsherService(object):
 
         req = requests.Request("GET", url, params=params)
         # prepare_request is only available in requests 2.0+
-        if hasattr(http, "prepare_request"):
+        if hasattr(self.session.http, "prepare_request"):
             req = self.session.http.prepare_request(req)
         else:
             req = req.prepare()
@@ -159,8 +162,9 @@ class UsherService(object):
 
 
 class TwitchAPI(object):
-    def __init__(self, beta=False, version=3):
+    def __init__(self, session, beta=False, version=3):
         self.oauth_token = None
+        self.session = session
         self.subdomain = beta and "betaapi" or "api"
         self.version = version
 
@@ -225,7 +229,7 @@ class TwitchAPI(object):
 
     def clip_status(self, channel, clip_name, schema):
         return self.session.http.json(self.call_subdomain("clips", "/api/v2/clips/" + clip_name + "/status", format=""),
-                         schema=schema)
+                                      schema=schema)
 
     # Unsupported/Removed private API calls
 
@@ -315,8 +319,10 @@ class Twitch(Plugin):
             self.video_id = match.get("video_id") or match.get("videos_id")
             self.clip_name = match.get("clip_name")
 
-        self.api = TwitchAPI(beta=self.subdomain == "beta", version=5)
-        self.usher = UsherService()
+        self.api = TwitchAPI(beta=self.subdomain == "beta",
+                             session=self.session,
+                             version=5)
+        self.usher = UsherService(session=self.session)
 
     @property
     def channel(self):
@@ -565,9 +571,10 @@ class Twitch(Plugin):
             elif hosted_channel:
                 self.logger.info("switching to {0}", hosted_channel)
                 if hosted_channel in self._hosted_chain:
-                    self.logger.error(u"A loop of hosted channels has been detected, "
-                                      "cannot find a playable stream. ({0})".format(
-                        u" -> ".join(self._hosted_chain + [hosted_channel])))
+                    self.logger.error(
+                        u"A loop of hosted channels has been detected, "
+                        "cannot find a playable stream. ({0})".format(
+                            u" -> ".join(self._hosted_chain + [hosted_channel])))
                     return {}
                 self.channel = hosted_channel
                 return self._get_hls_streams(stream_type)
