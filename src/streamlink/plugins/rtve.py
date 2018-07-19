@@ -4,7 +4,6 @@ from functools import partial
 
 from Crypto.Cipher import Blowfish
 
-from streamlink import PluginError
 from streamlink.compat import bytes, is_py3
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
@@ -19,8 +18,9 @@ class ZTNRClient(object):
     base_url = "http://ztnr.rtve.es/ztnr/res/"
     block_size = 16
 
-    def __init__(self, key):
+    def __init__(self, key, session):
         self.cipher = Blowfish.new(key, Blowfish.MODE_ECB)
+        self.session = session
 
     @classmethod
     def pad(cls, data):
@@ -113,8 +113,8 @@ class Rtve(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-        self.zclient = ZTNRClient(self.secret_key)
         self.session.http.headers = {"User-Agent": useragents.SAFARI_8}
+        self.zclient = ZTNRClient(self.secret_key, self.session)
 
     def _get_content_id(self):
         res = self.session.http.get(self.url)
@@ -149,8 +149,8 @@ class Rtve(Plugin):
                             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
                         except (IOError, OSError):
                             self.logger.debug("Failed to load m3u8 url: {0}", url)
-                    elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi")) and
-                                  self.session.http.head(url, raise_for_status=False).status_code == 200):
+                    elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi"))
+                          and self.session.http.head(url, raise_for_status=False).status_code == 200):
                         if quality_map is None:  # only make the request when it is necessary
                             quality_map = self._get_quality_map(content_id)
                         # rename the HTTP sources to match the HLS sources
