@@ -19,7 +19,7 @@ class FilmOnHLS(HLSStream):
         if self.channel is None and self.vod_id is None:
             raise ValueError("channel or vod_id must be set")
         self.quality = quality
-        self.api = FilmOnAPI()
+        self.api = FilmOnAPI(session_)
         self._url = None
         self.watch_timeout = 0
 
@@ -57,6 +57,9 @@ class FilmOnHLS(HLSStream):
 
 
 class FilmOnAPI(object):
+    def __init__(self, session):
+        self.session = session
+
     channel_url = "http://www.filmon.com/api-v2/channel/{0}?protocol=hls"
     vod_url = "http://www.filmon.com/vod/info/{0}"
 
@@ -109,7 +112,7 @@ class Filmon(Plugin):
 
     def __init__(self, url):
         super(Filmon, self).__init__(url)
-        self.api = FilmOnAPI()
+        self.api = FilmOnAPI(self.session)
 
     @classmethod
     def can_handle_url(cls, url):
