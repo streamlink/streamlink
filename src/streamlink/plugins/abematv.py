@@ -17,7 +17,6 @@ from requests.adapters import BaseAdapter
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
-from streamlink.plugin.plugin import parse_url_params
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -43,8 +42,6 @@ class AbemaTVLicenseAdapter(BaseAdapter):
 
     def __init__(self, session):
         self._plugin_session = session
-        self._plugin_session.http.headers.update(
-            {'User-Agent': useragents.CHROME})
         super(AbemaTVLicenseAdapter, self).__init__()
 
     def _generate_applicationkeysecret(self, deviceid):
@@ -143,11 +140,11 @@ class AbemaTV(Plugin):
 
     '''
     _url_re = re.compile(r"""https://abema\.tv/(
-        now-on-air/(?P<onair>.+)
+        now-on-air/(?P<onair>[^\?]+)
         |
-        video/episode/(?P<episode>.+)
+        video/episode/(?P<episode>[^\?]+)
         |
-        channels/.+?/slots/(?P<slot>.+)
+        channels/.+?/slots/(?P<slot>[^\?]+)
         )""", re.VERBOSE)
 
     _CHANNEL = "https://api.abema.io/v1/channels"
@@ -162,10 +159,10 @@ class AbemaTV(Plugin):
 
     def __init__(self, url):
         super(AbemaTV, self).__init__(url)
+        self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def _get_streams(self):
-        url, params = parse_url_params(self.url)
-        matchresult = self._url_re.match(url)
+        matchresult = self._url_re.match(self.url)
         if matchresult.group("onair"):
             onair = matchresult.group("onair")
             channels = self.session.http.get(self._CHANNEL).json()["channels"]
