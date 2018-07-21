@@ -32,11 +32,12 @@ class LocalizationTestsMixin(object):
         self.assertRaises(LookupError, l10n.Localization, "enUS")
 
     def test_equivalent(self):
-        l = l10n.Localization("en_US")
+        l = l10n.Localization("en_CA")
         self.assertTrue(l.equivalent(language="eng"))
         self.assertTrue(l.equivalent(language="en"))
-        self.assertTrue(l.equivalent(language="en", country="US"))
-        self.assertTrue(l.equivalent(language="en", country="United States"))
+        self.assertTrue(l.equivalent(language="en", country="CA"))
+        self.assertTrue(l.equivalent(language="en", country="CAN"))
+        self.assertTrue(l.equivalent(language="en", country="Canada"))
 
     def test_equivalent_remap(self):
         l = l10n.Localization("fr_FR")
@@ -48,7 +49,7 @@ class LocalizationTestsMixin(object):
         self.assertFalse(l.equivalent(language="eng"))
         self.assertFalse(l.equivalent(language="en"))
         self.assertFalse(l.equivalent(language="en", country="US"))
-        self.assertFalse(l.equivalent(language="en", country="United States"))
+        self.assertFalse(l.equivalent(language="en", country="Canada"))
         self.assertFalse(l.equivalent(language="en", country="ES"))
         self.assertFalse(l.equivalent(language="en", country="Spain"))
 
@@ -71,8 +72,8 @@ class LocalizationTestsMixin(object):
                          l10n.Localization.get_country("USA").alpha2)
         self.assertEqual("GB",
                          l10n.Localization.get_country("GB").alpha2)
-        self.assertEqual("United States",
-                         l10n.Localization.get_country("United States").name)
+        self.assertEqual("Canada",
+                         l10n.Localization.get_country("Canada").name)
 
     def test_get_country_miss(self):
         self.assertRaises(LookupError, l10n.Localization.get_country, "XE")
