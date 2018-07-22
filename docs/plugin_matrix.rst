@@ -117,8 +117,6 @@ liveedu                 - liveedu.tv         Yes   --    Some streams require a 
 liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
 lrt                     lrt.lt               Yes   No
-media_ccc_de            - media.ccc.de       Yes   Yes   Only mp4 and HLS are supported.
-                        - streaming... [4]_
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
 mips                    mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
@@ -294,7 +292,6 @@ zhanqi                  zhanqi.tv            Yes   No
 
 .. [2] streamingvideoprovider.co.uk
 .. [3] original.livestream.com
-.. [4] streaming.media.ccc.de
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
