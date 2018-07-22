@@ -38,9 +38,6 @@ Resolution = namedtuple("Resolution", "width height")
 Segment = namedtuple("Segment", "uri duration title key discontinuity "
                                 "byterange date map")
 
-ATTRIBUTE_REGEX = (r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|"
-                   r"\"(.+?)\"|[0-9A-z\-]+)")
-
 
 class M3U8(object):
     def __init__(self):
@@ -62,6 +59,12 @@ class M3U8(object):
 
 
 class M3U8Parser(object):
+    _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
+    _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
+    _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")
+    _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
+    _res_re = re.compile(r"(\d+)x(\d+)")
+
     def __init__(self, base_uri=None):
         self.base_uri = base_uri
 
@@ -91,7 +94,7 @@ class M3U8Parser(object):
                               streaminf.get("SUBTITLES"))
 
     def split_tag(self, line):
-        match = re.match("#(?P<tag>[\w-]+)(:(?P<value>.+))?", line)
+        match = self._tag_re.match(line)
 
         if match:
             return match.group("tag"), (match.group("value") or "").strip()
@@ -102,7 +105,7 @@ class M3U8Parser(object):
         def map_attribute(key, value, quoted):
             return (key, quoted or value)
 
-        attr = re.findall(ATTRIBUTE_REGEX, value)
+        attr = self._attr_re.findall(value)
 
         return dict(starmap(map_attribute, attr))
 
@@ -110,14 +113,14 @@ class M3U8Parser(object):
         return value == "YES"
 
     def parse_byterange(self, value):
-        match = re.match("(?P<range>\d+)(@(?P<offset>.+))?", value)
+        match = self._range_re.match(value)
 
         if match:
             return ByteRange(int(match.group("range")),
                              int(match.group("offset") or 0))
 
     def parse_extinf(self, value):
-        match = re.match("(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?", value)
+        match = self._extinf_re.match(value)
         if match:
             return float(match.group("duration")), match.group("title")
         return (0, None)
@@ -130,7 +133,7 @@ class M3U8Parser(object):
         return unhexlify(value)
 
     def parse_resolution(self, value):
-        match = re.match("(\d+)x(\d+)", value)
+        match = self._res_re.match(value)
 
         if match:
             width, height = int(match.group(1)), int(match.group(2))
@@ -147,10 +150,7 @@ class M3U8Parser(object):
 
         return value
 
-    def parse_line(self, lineno, line):
-        if lineno == 0 and not line.startswith("#EXTM3U"):
-            raise ValueError("Missing #EXTM3U header")
-
+    def parse_line(self, line):
         if not line.startswith("#"):
             if self.state.pop("expect_segment", None):
                 byterange = self.state.pop("byterange", None)
@@ -238,8 +238,18 @@ class M3U8Parser(object):
         self.state = {}
         self.m3u8 = M3U8()
 
-        for lineno, line in enumerate(filter(bool, data.splitlines())):
-            self.parse_line(lineno, line)
+        lines = iter(filter(bool, data.splitlines()))
+        try:
+            line = next(lines)
+        except StopIteration:
+            return self.m3u8
+        else:
+            if not line.startswith("#EXTM3U"):
+                raise ValueError("Missing #EXTM3U header")
+
+        parse_line = self.parse_line
+        for line in lines:
+            parse_line(line)
 
         # Associate Media entries with each Playlist
         for playlist in self.m3u8.playlists:
