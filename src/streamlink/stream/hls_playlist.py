@@ -250,7 +250,7 @@ class M3U8Parser(object):
         parse_line = self.parse_line
         for line in lines:
             parse_line(line)
-            
+
         # Associate Media entries with each Playlist
         for playlist in self.m3u8.playlists:
             for media_type in ("audio", "video", "subtitles"):
