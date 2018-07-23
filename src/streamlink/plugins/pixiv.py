@@ -70,7 +70,7 @@ class Pixiv(Plugin):
 
         m = self._videopage_re.search(res.text)
         if not m:
-            self.logger.debug("No stream path, stream might be offline or invalid url.")
+            self.logger.debug("No stream path. Offline stream or invalid URL?")
             raise NoStreamsError(self.url)
 
         path = m.group("path")
@@ -108,7 +108,7 @@ class Pixiv(Plugin):
         if login_username and login_password:
             self.logger.debug("Attempting login as {0}".format(login_username))
             if self._login(login_username, login_password):
-                self.logger.info("Successfully logged in as {0}".format(login_username))
+                self.logger.info("Logged in as {0}".format(login_username))
             else:
                 self.logger.info("Failed to login as {0}".format(login_username))
 
@@ -119,7 +119,7 @@ class Pixiv(Plugin):
         data = self.session.http.get(self.url, schema=self._data_schema)
 
         if not data.get("LiveStore"):
-            self.logger.debug("No video url found, stream might be offline.")
+            self.logger.debug("No video URL found, stream might be offline.")
             return
 
         data = data["LiveStore"]["lives"]
