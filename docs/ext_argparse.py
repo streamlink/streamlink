@@ -30,6 +30,7 @@ _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
 _note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
 _option_re = re.compile(r"(?m)^((?!\s{2}).*)(--[\w-]+)")
+_prog_re = re.compile(r"%\(prog\)s")
 
 
 class ArgumentParser(object):
@@ -96,6 +97,9 @@ class ArgparseDirective(Directive):
             lambda m: ".. note::\n\n" + indent(m.group(1)) + "\n\n",
             help
         )
+
+        # workaround to replace %(prog)s with streamlink
+        help = _prog_re.sub("streamlink", help)
 
         return indent(help)
 

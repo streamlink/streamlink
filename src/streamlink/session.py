@@ -6,6 +6,8 @@ import traceback
 
 import requests
 
+from collections import OrderedDict
+
 from streamlink.logger import StreamlinkLogger, Logger
 from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
@@ -79,7 +81,7 @@ class Streamlink(object):
         })
         if options:
             self.options.update(options)
-        self.plugins = {}
+        self.plugins = OrderedDict({})
         self.load_builtin_plugins()
         self._logger = None
 
