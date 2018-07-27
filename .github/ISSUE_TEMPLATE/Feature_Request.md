@@ -5,17 +5,25 @@ about: Create a feature request to help us add additional functionality to Strea
 
 <!-- 
 Thanks for filing a feature request!
+USE THE TEMPLATE, otherwise, your feature request may be rejected.
 
-Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
+First, see the contribution guidelines:
+https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
 
-Please fill out the following template. Be as detailed as possible.
+Open a plugin request, if you're requesting a new plugin instead of a new feature.
+
+Also check the list of open and closed feature requests:
+https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22feature+request%22
 
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
+
 ## Feature Request
 
-- [ ] I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
+<!-- Replace [ ] with [x] in order to check the box -->
+- [ ] This is a feature request and I have read the contribution guidelines.
+
 
 ### Description
 

@@ -5,24 +5,27 @@ about: Create a plugin issue report
 
 <!--
 Thanks for reporting a plugin issue!
+USE THE TEMPLATE, otherwise, your plugin issue may be rejected.
 
+First, see the contribution guidelines:
+https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
 
-Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
-
-Also check the list of open and closed plugin requests before making a new request! (https://github.com/streamlink/streamlink/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22plugin+request%22+)
-
-Please fill out the following template. Be as detailed as possible.
+Also check the list of open and closed plugin issues:
+https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+issue%22
 
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
+
 ## Plugin Issue
 
-- [ ] This is a plugin issue and I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
+<!-- Replace [ ] with [x] in order to check the box -->
+- [ ] This is a plugin issue and I have read the contribution guidelines.
+
 
 ### Description
 
-<!-- Explain the plugin issue as clearly as you can. Which plugin is causing isuses? what exactly is the issue? Etc. -->
+<!-- Explain the plugin issue as detailed as you can. -->
 
 
 ### Reproduction steps / Explicit stream URLs to test
@@ -33,22 +36,24 @@ Please see the text preview to avoid unnecessary formatting errors.
 2. ...
 3. ...
 
-### Logs
+
+### Log output
 
 <!--
-Logs are always required for a plugin issue, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
+TEXT LOG OUTPUT IS REQUIRED for a plugin issue!
+Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
+https://streamlink.github.io/cli.html#cmdoption-l
 
-
-Make sure to **remove username and password**
-
-You can upload your logs to https://gist.github.com/ or place your logs below.
+Make sure to **remove usernames and passwords**
+You can copy the output to https://gist.github.com/ or paste it below.
 -->
 
 ```
-REPLACE THIS TEXT WITH YOUR LOG
+REPLACE THIS TEXT WITH THE LOG OUTPUT
 ```
 
-### Comments, screenshots, etc.
+
+### Additional comments, screenshots, etc.
 
 
 
