@@ -5,7 +5,7 @@ about: Create a plugin issue report
 
 <!--
 Thanks for reporting a plugin issue!
-USE THE TEMPLATE, otherwise, your plugin issue may be rejected.
+USE THE TEMPLATE. Otherwise your plugin issue may be rejected.
 
 First, see the contribution guidelines:
 https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
@@ -25,7 +25,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Description
 
-<!-- Explain the plugin issue as detailed as you can. -->
+<!-- Explain the plugin issue as thoroughly as you can. -->
 
 
 ### Reproduction steps / Explicit stream URLs to test

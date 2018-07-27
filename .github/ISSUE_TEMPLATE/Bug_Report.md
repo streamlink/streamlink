@@ -5,7 +5,7 @@ about: Create a bug report to help us improve Streamlink
 
 <!--
 Thanks for reporting a bug!
-USE THE TEMPLATE, otherwise, your bug report may be rejected.
+USE THE TEMPLATE. Otherwise your bug report may be rejected.
 
 First, see the contribution guidelines:
 https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
@@ -25,7 +25,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Description
 
-<!-- Explain the bug as detailed as you can. -->
+<!-- Explain the bug as thoroughly as you can. Don't leave out information which is necessary for us to reproduce and debug this issue. -->
 
 
 ### Expected / Actual behavior

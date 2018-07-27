@@ -5,7 +5,7 @@ about: Create a plugin request to discuss adding a new plugin to Streamlink
 
 <!--
 Thanks for requesting a plugin!
-USE THE TEMPLATE, otherwise, your plugin request may be rejected.
+USE THE TEMPLATE. Otherwise your plugin request may be rejected.
 
 First, see the contribution guidelines and plugin request requirements:
 https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
