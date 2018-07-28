@@ -465,11 +465,12 @@ def build_parser():
             gaming oriented platforms. "Game being played" is a way to categorize
             the stream, so it doesn't need its own separate handling.
 
-       Examples:
-           %(prog)s -p vlc --title '{{title}} -!- {{author}} -!- {{category}} \\$A' <url> [stream]
-           %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
+        Examples:
 
-        """.format(', '.join(SUPPORTED_PLAYERS.keys()),
+            %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
+            %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
+
+        """.format(', '.join(sorted(SUPPORTED_PLAYERS.keys())),
                    DEFAULT_STREAM_METADATA['title'],
                    DEFAULT_STREAM_METADATA['author'],
                    DEFAULT_STREAM_METADATA['category'])
