@@ -5,25 +5,27 @@ about: Create a bug report to help us improve Streamlink
 
 <!--
 Thanks for reporting a bug!
+USE THE TEMPLATE. Otherwise your bug report may be rejected.
 
-Please read the contribution guidelines before creating a bug report:
+First, see the contribution guidelines:
+https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
 
-(https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)
-
-Also check the list of known issues before reporting an issue!
-
-Please fill out the following template. Be as detailed as possible.
+Also check the list of open and closed bug reports:
+https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22bug%22
 
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
+
 ## Bug Report
 
-- [ ] I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
+<!-- Replace [ ] with [x] in order to check the box -->
+- [ ] This is a bug report and I have read the contribution guidelines.
+
 
 ### Description
 
-<!-- Explain the bug as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
+<!-- Explain the bug as thoroughly as you can. Don't leave out information which is necessary for us to reproduce and debug this issue. -->
 
 
 ### Expected / Actual behavior
@@ -39,19 +41,22 @@ Please see the text preview to avoid unnecessary formatting errors.
 2. ...
 3. ...
 
-### Logs
+
+### Log output
 
 <!--
-Logs are always required for a bug report, use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
+TEXT LOG OUTPUT IS REQUIRED for a bug report!
+Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
+https://streamlink.github.io/cli.html#cmdoption-l
 
-Make sure to **remove username and password**
-
-You can upload your logs to https://gist.github.com/ or place your logs below.
+Make sure to **remove usernames and passwords**
+You can copy the output to https://gist.github.com/ or paste it below.
 -->
 
 ```
-REPLACE THIS TEXT WITH YOUR LOG
+REPLACE THIS TEXT WITH THE LOG OUTPUT
 ```
+
 
 ### Additional comments, screenshots, etc.
 
