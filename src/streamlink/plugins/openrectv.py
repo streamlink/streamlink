@@ -26,7 +26,10 @@ class OPENRECtv(Plugin):
         "moviePageStore": {
             "movieStore": {
                 "id": validate.text,
-                "title": validate.text
+                "title": validate.text,
+                "media": {
+                    "url": validate.any(None, '', validate.url())
+                }
             }
         }
     }, validate.get("moviePageStore"), validate.get("movieStore"))
@@ -55,7 +58,6 @@ class OPENRECtv(Plugin):
         PluginArgument(
             "email",
             requires=["password"],
-            required=True,
             metavar="EMAIL",
             help="""
             The email associated with your openrectv account,
@@ -132,15 +134,21 @@ class OPENRECtv(Plugin):
             return mdata["title"]
 
     def _get_streams(self):
-        if self.login(self.get_option("email"), self.get_option("password")):
-            mdata = self._get_movie_data()
-            if mdata:
-                log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
-                details = self._get_details(mdata["id"])
-                if details:
-                    for item in details["items"]:
-                        for s in HLSStream.parse_variant_playlist(self.session, item["media"]["url"]).items():
-                            yield s
+        mdata = self._get_movie_data()
+        if mdata:
+            log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
+            if mdata["media"]["url"]:
+                for s in HLSStream.parse_variant_playlist(self.session, mdata["media"]["url"]).items():
+                    yield s
+            elif self.get_option("email") and self.get_option("password"):
+                if self.login(self.get_option("email"), self.get_option("password")):
+                    details = self._get_details(mdata["id"])
+                    if details:
+                        for item in details["items"]:
+                            for s in HLSStream.parse_variant_playlist(self.session, item["media"]["url"]).items():
+                                yield s
+            else:
+                log.error("You must login to access this stream")
 
 
 __plugin__ = OPENRECtv
