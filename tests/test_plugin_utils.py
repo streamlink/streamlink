@@ -11,6 +11,8 @@ else:
 
 class TestPluginUtil(unittest.TestCase):
     test_html = """
+<!doctype html>
+<html lang="en" class="no-js">
 <title>Title</title>
 <meta property="og:type" content= "website" />
 <meta property="og:url" content="http://test.se/"/>
@@ -19,8 +21,11 @@ class TestPluginUtil(unittest.TestCase):
 <link rel="stylesheet" type="text/css" href="https://test.se/test.css">
 <script>Tester.ready(function () {
 alert("Hello, world!"); });</script>
+<p>
 <a 
 href="http://test.se/foo">bar</a>
+</p>
+</html>
         """
 
     def test_itertags_single_text(self):
@@ -70,5 +75,11 @@ href="http://test.se/foo">bar</a>
                                                "type": "text/css",
                                                "href": "https://test.se/test.css"})
 
+    def test_tag_inner_tag(self):
+        links = list(itertags(self.test_html, "p"))
+        self.assertTrue(len(links), 1)
+        self.assertEqual(links[0].tag, "p")
+        self.assertEqual(links[0].text.strip(), '<a \nhref="http://test.se/foo">bar</a>')
+        self.assertEqual(links[0].attributes, {})
 
 
