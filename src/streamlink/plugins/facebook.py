@@ -7,7 +7,7 @@ from streamlink.utils import parse_json
 
 
 class Facebook(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/videos")
+    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/(posts|videos)")
     _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
     _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
     _plurl_re = re.compile(r'''url:"(.*?)"''')
