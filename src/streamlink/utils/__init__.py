@@ -13,6 +13,7 @@ from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
+from streamlink.utils.url import update_scheme, url_equal
 
 
 def swfdecompress(data):
@@ -142,52 +143,6 @@ def rtmpparse(url):
     return tcurl, playpath
 
 
-def update_scheme(current, target):
-    """
-    Take the scheme from the current URL and applies it to the
-    target URL if the target URL startswith // or is missing a scheme
-    :param current: current URL
-    :param target: target URL
-    :return: target URL with the current URLs scheme
-    """
-    target_p = urlparse(target)
-    if not target_p.scheme and target_p.netloc:
-        return "{0}:{1}".format(urlparse(current).scheme,
-                                urlunparse(target_p))
-    elif not target_p.scheme and not target_p.netloc:
-        return "{0}://{1}".format(urlparse(current).scheme,
-                                  urlunparse(target_p))
-    else:
-        return target
-
-
-def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
-              ignore_query=False, ignore_fragment=False):
-    """
-    Compare two URLs and return True if they are equal, some parts of the URLs can be ignored
-    :param first: URL
-    :param second: URL
-    :param ignore_scheme: ignore the scheme
-    :param ignore_netloc: ignore the netloc
-    :param ignore_path: ignore the path
-    :param ignore_params: ignore the params
-    :param ignore_query: ignore the query string
-    :param ignore_fragment: ignore the fragment
-    :return: result of comparison
-    """
-    # <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
-
-    firstp = urlparse(first)
-    secondp = urlparse(second)
-
-    return ((firstp.scheme == secondp.scheme or ignore_scheme) and
-            (firstp.netloc == secondp.netloc or ignore_netloc) and
-            (firstp.path == secondp.path or ignore_path) and
-            (firstp.params == secondp.params or ignore_params) and
-            (firstp.query == secondp.query or ignore_query) and
-            (firstp.fragment == secondp.fragment or ignore_fragment))
-
-
 def memoize(obj):
     cache = obj.cache = {}
 
@@ -246,7 +201,6 @@ def load_module(name, path=None):
         finally:
             if fd:
                 fd.close()
-
 
 #####################################
 # Deprecated functions, do not use. #
