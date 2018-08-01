@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from streamlink.compat import urljoin, urlparse, urlunparse, parse_qsl, urlencode
 
 
@@ -76,7 +78,7 @@ def update_qsd(url, qsd=None, remove=None):
 
     # parse current query string
     parsed = urlparse(url)
-    current_qsd = dict(parse_qsl(parsed.query))
+    current_qsd = OrderedDict(parse_qsl(parsed.query))
 
     # * removes all possible keys
     if remove == "*":
