@@ -97,18 +97,6 @@ class TestUtil(unittest.TestCase):
             {"test": "1", "foo": "bar"},
             parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": validate.text, "foo": "bar"})))
 
-    def test_url_equal(self):
-        self.assertTrue(url_equal("http://test.com/test", "http://test.com/test"))
-        self.assertFalse(url_equal("http://test.com/test", "http://test.com/test2"))
-
-        self.assertTrue(url_equal("http://test.com/test", "http://test.com/test2", ignore_path=True))
-        self.assertTrue(url_equal("http://test.com/test", "https://test.com/test", ignore_scheme=True))
-        self.assertFalse(url_equal("http://test.com/test", "https://test.com/test"))
-
-        self.assertTrue(url_equal("http://test.com/test", "http://test.com/test#hello", ignore_fragment=True))
-        self.assertTrue(url_equal("http://test.com/test", "http://test2.com/test", ignore_netloc=True))
-        self.assertFalse(url_equal("http://test.com/test", "http://test2.com/test1", ignore_netloc=True))
-
     def test_rtmpparse(self):
         self.assertEquals(
             ("rtmp://testserver.com:1935/app", "playpath?arg=1"),

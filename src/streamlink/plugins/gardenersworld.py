@@ -4,7 +4,6 @@ import re
 
 from streamlink import NoPluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http
 from streamlink.plugin.api.utils import itertags
 from streamlink.utils import update_scheme
 
