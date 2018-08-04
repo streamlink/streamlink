@@ -1105,22 +1105,6 @@ def build_parser():
     )
 
     # Deprecated options
-    stream.add_argument(
-        "--best-stream-default",
-        action="store_true",
-        help=argparse.SUPPRESS
-    )
-    player.add_argument(
-        "-q", "--quiet-player",
-        action="store_true",
-        help=argparse.SUPPRESS
-    )
-    transport.add_argument(
-        "--hds-fragment-buffer",
-        type=int,
-        metavar="fragments",
-        help=argparse.SUPPRESS
-    )
     http.add_argument(
         "--http-cookies",
         metavar="COOKIES",

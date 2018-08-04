@@ -5,7 +5,7 @@ from streamlink import Streamlink, NoPluginError
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
 from streamlink.session import print_small_exception
-from streamlink.stream import *
+from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
 from tests.mock import patch, call
 
 
@@ -76,7 +76,7 @@ class TestSession(unittest.TestCase):
 
     def test_plugin(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         self.assertTrue("best" in streams)
         self.assertTrue("worst" in streams)
@@ -89,33 +89,33 @@ class TestSession(unittest.TestCase):
 
     def test_plugin_stream_types(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams(stream_types=["http", "rtmp"])
+        streams = channel.streams(stream_types=["http", "rtmp"])
 
         self.assertTrue(isinstance(streams["480p"], HTTPStream))
         self.assertTrue(isinstance(streams["480p_rtmp"], RTMPStream))
 
-        streams = channel.get_streams(stream_types=["rtmp", "http"])
+        streams = channel.streams(stream_types=["rtmp", "http"])
 
         self.assertTrue(isinstance(streams["480p"], RTMPStream))
         self.assertTrue(isinstance(streams["480p_http"], HTTPStream))
 
     def test_plugin_stream_sorted_excludes(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams(sorting_excludes=["1080p", "3000k"])
+        streams = channel.streams(sorting_excludes=["1080p", "3000k"])
 
         self.assertTrue("best" in streams)
         self.assertTrue("worst" in streams)
         self.assertTrue(streams["best"] is streams["1500k"])
 
-        streams = channel.get_streams(sorting_excludes=[">=1080p", ">1500k"])
+        streams = channel.streams(sorting_excludes=[">=1080p", ">1500k"])
         self.assertTrue(streams["best"] is streams["1500k"])
 
-        streams = channel.get_streams(sorting_excludes=lambda q: not q.endswith("p"))
+        streams = channel.streams(sorting_excludes=lambda q: not q.endswith("p"))
         self.assertTrue(streams["best"] is streams["3000k"])
 
     def test_plugin_support(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         self.assertTrue("support" in streams)
         self.assertTrue(isinstance(streams["support"], HTTPStream))
