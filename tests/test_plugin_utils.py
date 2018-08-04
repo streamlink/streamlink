@@ -1,14 +1,10 @@
 from __future__ import unicode_literals
 import sys
+import unittest
 
 import pytest
 
 from streamlink.plugin.api.utils import itertags
-
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
 
 
 class TestPluginUtil(unittest.TestCase):
@@ -47,7 +43,6 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(script[1].tag, "script")
         self.assertEqual(script[1].text.strip(), """Tester.ready(function () {\nalert("Hello, world!"); });""")
         self.assertEqual(script[1].attributes, {})
-
 
     @pytest.mark.xfail(sys.version_info >= (3, 7),
                        reason="python3.7 issue, see bpo-34294")
@@ -88,5 +83,3 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(links[0].tag, "p")
         self.assertEqual(links[0].text.strip(), '<a \nhref="http://test.se/foo">bar</a>')
         self.assertEqual(links[0].attributes, {})
-
-

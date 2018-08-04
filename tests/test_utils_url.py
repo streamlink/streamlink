@@ -1,10 +1,8 @@
-import sys
-from streamlink.utils.url import *
+import unittest
 
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
+from streamlink.utils.url import (
+    update_scheme, url_equal, url_concat, update_qsd
+)
 
 
 class TestUtilURL(unittest.TestCase):
