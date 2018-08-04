@@ -118,12 +118,14 @@ liveedu                 - liveedu.tv         Yes   --    Some streams require a 
 liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
 lrt                     lrt.lt               Yes   No
+ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
 mips                    mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mixer                   mixer.com            Yes   Yes
 mjunoon                 mjunoon.tv           Yes   Yes
 mlgtv                   mlg.tv               Yes   --
+mycujoo_tv              mycujoo.tv           Yes   Yes   Playing short videos may need --player-no-close parameter set
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
