@@ -47,7 +47,7 @@ _url_re = re.compile(r"""
     )
     (?:
         /
-        (?P<video_type>[bcv])
+        (?P<video_type>[bcv])(?:ideo)?
         /
         (?P<video_id>\d+)
     )?
