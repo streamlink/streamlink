@@ -6,8 +6,8 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HDSStream
 
-LIVE_CHANNELS_API_URL = "http://www.dr.dk/tv/external/channels?mediaType=tv"
-VOD_API_URL = "http://www.dr.dk/mu/programcard/expanded/{0}"
+LIVE_CHANNELS_API_URL = "https://www.dr.dk/mu-online/api/1.4/channel/{0}"
+VOD_API_URL = "https://www.dr.dk/mu/programcard/expanded/{0}"
 
 STREAMING_TYPES = {
     "HDS": HDSStream.parse_manifest,
@@ -29,34 +29,31 @@ _url_re = re.compile(r"""
 
 _channels_schema = validate.Schema(
     {
-        "Data": [{
-            "Slug": validate.text,
-            "StreamingServers": validate.all(
-                [{
-                    "LinkType": validate.text,
-                    "Qualities": [
-                        validate.all(
-                            {
-                                "Streams": validate.all(
-                                    [
-                                        validate.all(
-                                            {"Stream": validate.text},
-                                            validate.get("Stream")
-                                        )
-                                    ],
-                                    validate.get(0)
-                                )
-                            },
-                            validate.get("Streams")
-                        )
-                    ],
-                    "Server": validate.text
-                }],
-                validate.filter(lambda s: s["LinkType"] in STREAMING_TYPES)
-            )
-        }]
+        "StreamingServers": validate.all(
+            [{
+                "LinkType": validate.text,
+                "Qualities": [
+                    validate.all(
+                        {
+                            "Streams": validate.all(
+                                [
+                                    validate.all(
+                                        {"Stream": validate.text},
+                                        validate.get("Stream")
+                                    )
+                                ],
+                                validate.get(0)
+                            )
+                        },
+                        validate.get("Streams")
+                    )
+                ],
+                "Server": validate.text
+            }],
+            validate.filter(lambda s: s["LinkType"] in STREAMING_TYPES)
+        )
     },
-    validate.get("Data", {})
+    validate.get("StreamingServers", {})
 )
 
 _video_schema = validate.Schema(
@@ -85,7 +82,6 @@ class DRDK(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
-    @Plugin.broken()
     def _get_streams(self):
         match = _url_re.match(self.url)
         if not match:
@@ -114,12 +110,9 @@ class DRDK(Plugin):
         return streams
 
     def _get_live_streams(self, slug):
-        res = self.session.http.get(LIVE_CHANNELS_API_URL)
-        res = self.session.http.json(res, schema=_channels_schema)
-
-        for channel in filter(lambda c: c["Slug"] == slug, res):
-            servers = channel["StreamingServers"]
-            return self._parse_streaming_servers(servers)
+        res = self.session.http.get(LIVE_CHANNELS_API_URL.format(slug))
+        servers = self.session.http.json(res, schema=_channels_schema)
+        return self._parse_streaming_servers(servers)
 
     def _parse_streaming_servers(self, servers):
         streams = {}
