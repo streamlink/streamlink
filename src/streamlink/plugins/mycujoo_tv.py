@@ -11,7 +11,7 @@ class MycujooTv(Plugin):
     """
     Support for live and archived transmission of the matches and channels on mycujoo.tv
     """
-    url_re = re.compile(r'https?://mycujoo\.tv/video/')
+    url_re = re.compile(r'https?://mycujoo\.tv/video/.')
     streams_re = re.compile(r'"filename"\:.*?"([^"]*?)"')
 
     @classmethod
