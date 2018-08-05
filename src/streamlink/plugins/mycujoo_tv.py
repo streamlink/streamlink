@@ -9,7 +9,7 @@ class MycujooTv(Plugin):
     '''
     Support for live and archived transmission of the matches and channels on mycujoo.tv
     '''
-    url_re = re.compile(r'https?://mycujoo.tv/video/[^\?].*[\?&]v?id=(\d+)')
+    url_re = re.compile(r'https?://mycujoo\.tv/video/')
     streams_re = re.compile(r'meta .*?"twitter:player:stream" .*?content="((?:http(s)?:)?//[^"]*?)"') 
 
     @classmethod
