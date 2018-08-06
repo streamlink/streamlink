@@ -8,6 +8,8 @@ import time
 
 from collections import defaultdict, namedtuple
 from itertools import repeat, count
+
+import math
 from isodate import parse_datetime, parse_duration, Duration
 from contextlib import contextmanager
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
@@ -579,6 +581,10 @@ class Representation(MPDNode):
         self.segmentBase = self.only_child(SegmentBase)
         self.segmentList = self.children(SegmentList)
         self.segmentTemplate = self.only_child(SegmentTemplate)
+
+    @property
+    def bandwidth_rounded(self):
+        return round(self.bandwidth, 1 - int(math.log10(self.bandwidth)))
 
     def segments(self, **kwargs):
         """
