@@ -7,8 +7,9 @@ from operator import attrgetter
 
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
+from tests.mock import MagicMock, Mock
 
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, Representation
 from tests.resources import xml
 
 
@@ -220,3 +221,20 @@ class TestMPDParser(unittest.TestCase):
                                       'http://test.se/video-time=8000-2799000-0.m4s?z32=CENSORED_SESSION',
                                       ])
 
+    def test_bitrate_rounded(self):
+        def mock_rep(bandwidth):
+            node = Mock(
+                tag="Representation",
+                attrib={
+                    "id": "test",
+                    "bandwidth": bandwidth,
+                    "mimeType": "video/mp4"
+                }
+            )
+            node.findall.return_value = []
+            return Representation(node)
+
+        self.assertEqual(mock_rep(1.2*1000.0).bandwidth_rounded, 1.2)
+        self.assertEqual(mock_rep(45.6*1000.0).bandwidth_rounded, 46.0)
+        self.assertEqual(mock_rep(134.0*1000.0).bandwidth_rounded, 130.0)
+        self.assertEqual(mock_rep(1324.0*1000.0).bandwidth_rounded, 1300.0)
