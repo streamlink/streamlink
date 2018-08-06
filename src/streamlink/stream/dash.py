@@ -227,7 +227,7 @@ class DASHStream(Stream):
             stream_name = []
 
             if vid:
-                stream_name.append("{:0.0f}{}".format(vid.height or vid.bandwidth, "p" if vid.height else "k"))
+                stream_name.append("{:0.0f}{}".format(vid.height or vid.bandwidth_rounded, "p" if vid.height else "k"))
             if audio and len(audio) > 1:
                 stream_name.append("a{:0.0f}k".format(aud.bandwidth))
             ret['+'.join(stream_name)] = stream
