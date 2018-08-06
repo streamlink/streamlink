@@ -1,25 +1,29 @@
 <!--
 Thanks for reporting an issue!
+USE THE TEMPLATE. Otherwise your issue may be rejected.
 
-This template should only be used if your issue does not fall into one of the existing templates.
+This template should only be used if your issue doesn't match the other more specific ones.
 
-Please read the contribution guidelines (https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink) first!
+First, see the contribution guidelines:
+https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
 
-Also check the list of known issues before reporting an issue!
-
-Please fill out the following template. Be as detailed as possible.
+Also check the list of open and closed issues:
+https://github.com/streamlink/streamlink/issues?q=is%3Aissue
 
 Please see the text preview to avoid unnecessary formatting errors.
 -->
 
+
 ## Issue
 
-- [x] This is not a bug report, feature request, or plugin (improvement) request.
-- [ ] I have read the contribution guidelines. <!-- Replace the space with an x to check the box: [x] -->
+<!-- Replace [ ] with [x] in order to check the box -->
+- [ ] This is not a bug report, feature request, or plugin issue/request.
+- [ ] I have read the contribution guidelines.
+
 
 ### Description
 
-<!-- Explain the issue as clearly as you can. How is functionality impacted? Which OS/Player/Streamlink version are you using? Etc. -->
+<!-- Explain the issue as thoroughly as you can. -->
 
 
 ### Expected / Actual behavior
@@ -29,25 +33,31 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ### Reproduction steps / Explicit stream URLs to test
 
-<!-- How can we reproduce this (if it can be)? Please note the exact steps below using the list format supplied, if you need more steps please add them. -->
+<!-- How can we reproduce this? Please note the exact steps below using the list format supplied. If you need more steps please add them. -->
 
 1. ...
 2. ...
 3. ...
 
+
 ### Logs
 
 <!--
-While logs are not required for an issue they can be helpful. Use `-l debug` [(help)](https://streamlink.github.io/cli.html#cmdoption-l) and avoid using `--stream-url` as that will suppress log output.
+TEXT LOG OUTPUT IS OPTIONAL for generic issues!
+However, depending on the issue, log output can be useful for the developers to understand the problem. It also includes information about your platform. If you don't intend to include log output, please at least provide these platform details.
+Thanks!
 
-Make sure to **remove username and password**
+Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
+https://streamlink.github.io/cli.html#cmdoption-l
 
-You can upload your logs to https://gist.github.com/ or place your logs below.
+Make sure to **remove usernames and passwords**
+You can copy the output to https://gist.github.com/ or paste it below.
 -->
 
 ```
-REPLACE THIS TEXT WITH YOUR LOG
+REPLACE THIS TEXT WITH THE LOG OUTPUT
 ```
+
 
 ### Additional comments, screenshots, etc.
 
