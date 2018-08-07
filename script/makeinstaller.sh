@@ -33,7 +33,7 @@ entry_point=streamlink_cli.main:main
 icon=../win32/doggo.ico
 
 [Python]
-version=3.5.2
+version=3.6.6
 format=bundled
 
 [Include]
@@ -66,7 +66,7 @@ packages=pkg_resources
          socks
          sockshandler
          isodate
-pypi_wheels=pycryptodome==3.4.3
+pypi_wheels=pycryptodome==3.6.4
 
 files=../win32/LICENSE.txt > \$INSTDIR
       ../build/lib/streamlink > \$INSTDIR\pkgs
