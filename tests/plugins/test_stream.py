@@ -1,7 +1,8 @@
+import unittest
+
 from streamlink import Streamlink
 from streamlink.plugin.plugin import stream_weight, parse_params
-from streamlink.stream import *
-import unittest
+from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
 from tests.mock import patch
 
 
@@ -15,7 +16,7 @@ class TestPluginStream(unittest.TestCase):
 
     def _test_akamaihd(self, surl, url):
         channel = self.session.resolve_url(surl)
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         self.assertTrue("live" in streams)
 
@@ -28,7 +29,7 @@ class TestPluginStream(unittest.TestCase):
         mock_parse.return_value = {}
 
         channel = self.session.resolve_url(surl)
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         self.assertTrue("live" in streams)
         mock_parse.assert_called_with(self.session, url)
@@ -42,7 +43,7 @@ class TestPluginStream(unittest.TestCase):
         mock_parse.return_value = {"best": HLSStream(self.session, url)}
 
         channel = self.session.resolve_url(surl)
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         mock_parse.assert_called_with(self.session, url)
 
@@ -55,7 +56,7 @@ class TestPluginStream(unittest.TestCase):
 
     def _test_rtmp(self, surl, url, params):
         channel = self.session.resolve_url(surl)
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         self.assertTrue("live" in streams)
 
@@ -66,7 +67,7 @@ class TestPluginStream(unittest.TestCase):
 
     def _test_http(self, surl, url, params):
         channel = self.session.resolve_url(surl)
-        streams = channel.get_streams()
+        streams = channel.streams()
 
         self.assertTrue("live" in streams)
 
