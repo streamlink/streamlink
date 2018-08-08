@@ -118,6 +118,7 @@ liveedu                 - liveedu.tv         Yes   --    Some streams require a 
 liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
 lrt                     lrt.lt               Yes   No
+ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
 mips                    mips.tv              Yes   --    Requires rtmpdump with K-S-V patches.
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
