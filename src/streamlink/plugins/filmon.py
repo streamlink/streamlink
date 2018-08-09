@@ -93,13 +93,14 @@ class Filmon(Plugin):
     url_re = re.compile(r"""https?://(?:\w+\.)?filmon.(?:tv|com)/
         (?:
             tv/|
-            channel/(?P<channel>\d+)|
+            channel/(?P<channel>[^/]+)|
             vod/view/(?P<vod_id>\d+)-|
             group/
         )
     """, re.VERBOSE)
 
     _channel_id_re = re.compile(r"""channel_id\s*=\s*(?P<quote>['"]?)(?P<value>\d+)(?P=quote)""")
+    _is_channel_id_re = re.compile(r"""(?P<value>\d+)$""")
     _channel_id_schema = validate.Schema(
         validate.transform(_channel_id_re.search),
         validate.any(None, validate.get("value"))
@@ -138,7 +139,7 @@ class Filmon(Plugin):
                 yield stream["quality"], FilmOnHLS(self.session, vod_id=vod_id, quality=stream["quality"])
 
         else:
-            if not channel:
+            if not _is_channel_id_re.match(channel):
                 channel = self.session.http.get(self.url, schema=self._channel_id_schema)
                 self.logger.debug("Found channel ID: {0}", channel)
             data = self.api.channel(channel)
