@@ -2,19 +2,20 @@
 Plugin for Czech TV (Ceska televize).
 
 Following channels are working:
-    * CT1 - http://www.ceskatelevize.cz/ct1/zive/
-    * CT2 - http://www.ceskatelevize.cz/ct2/zive/
-    * CT24 - http://www.ceskatelevize.cz/ct24/
-    * CT sport - http://www.ceskatelevize.cz/sport/zive-vysilani/
-    * CT Decko - http://decko.ceskatelevize.cz/zive/
-    * CT Art - http://www.ceskatelevize.cz/art/zive/
+    * CT1 - https://www.ceskatelevize.cz/porady/ct1/
+    * CT2 - https://www.ceskatelevize.cz/porady/ct2/
+    * CT24 - https://ct24.ceskatelevize.cz/#live
+    * CT sport - https://www.ceskatelevize.cz/sport/zive-vysilani/
+    * CT Decko - https://decko.ceskatelevize.cz/zive
+    * CT Art - https://www.ceskatelevize.cz/porady/art/
 
 Additionally, videos from iVysilani archive should work as well.
 """
+import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.exceptions import PluginError
 
@@ -31,18 +32,23 @@ _playlist_info_re = re.compile(
     r'{"type":"([a-z]+)","id":"([0-9]+)"'
 )
 _playlist_url_schema = validate.Schema({
+    validate.optional("streamingProtocol"): validate.text,
     "url": validate.any(
         validate.url(),
+        "Error",
         "error_region"
     )
 })
 _playlist_schema = validate.Schema({
     "playlist": [{
+        validate.optional("type"): validate.text,
         "streamUrls": {
             "main": validate.url(),
         }
     }]
 })
+
+log = logging.getLogger(__name__)
 
 
 def _find_playlist_info(response):
@@ -85,11 +91,16 @@ def _find_player_url(response):
 
 class Ceskatelevize(Plugin):
 
+    ajax_url = 'https://www.ceskatelevize.cz/ivysilani/ajax/get-client-playlist'
+
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
     def _get_streams(self):
+        self.session.http.headers.update({'User-Agent': useragents.IPAD})
+        self.session.http.verify = False
+        log.warning('SSL certificate verification is disabled.')
         # fetch requested url and find playlist info
         response = self.session.http.get(self.url)
         info = _find_playlist_info(response)
@@ -106,10 +117,12 @@ class Ceskatelevize(Plugin):
             if not info:
                 raise PluginError('Cannot find playlist info in the player url!')
 
+        log.trace('{0!r}'.format(info))
+
         data = {
             'playlist[0][type]': info['type'],
             'playlist[0][id]': info['id'],
-            'requestUrl': '/ivysilani/embed/iFramePlayerCT24.php',
+            'requestUrl': '/ivysilani/embed/iFramePlayer.php',
             'requestSource': 'iVysilani',
             'type': 'html'
         }
@@ -119,19 +132,21 @@ class Ceskatelevize(Plugin):
 
         # fetch playlist url
         response = self.session.http.post(
-            'http://www.ceskatelevize.cz/ivysilani/ajax/get-client-playlist',
+            self.ajax_url,
             data=data,
             headers=headers
         )
         json_data = self.session.http.json(response, schema=_playlist_url_schema)
+        log.trace('{0!r}'.format(json_data))
 
-        if json_data['url'] == "error_region":
-            self.logger.error("This stream is not available in your territory")
+        if json_data['url'] in ['Error', 'error_region']:
+            log.error('This stream is not available')
             return
 
         # fetch playlist
         response = self.session.http.post(json_data['url'])
         json_data = self.session.http.json(response, schema=_playlist_schema)
+        log.trace('{0!r}'.format(json_data))
         playlist = json_data['playlist'][0]['streamUrls']['main']
         return HLSStream.parse_variant_playlist(self.session, playlist)
 

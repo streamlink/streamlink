@@ -8,11 +8,12 @@ try:
 except ImportError:  # pragma: no cover
     import xml.etree.ElementTree as ET
 
-from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, urlunparse, is_py3
+from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, is_py3
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
+from streamlink.utils.url import update_scheme, url_equal
 
 
 def swfdecompress(data):
@@ -142,52 +143,6 @@ def rtmpparse(url):
     return tcurl, playpath
 
 
-def update_scheme(current, target):
-    """
-    Take the scheme from the current URL and applies it to the
-    target URL if the target URL startswith // or is missing a scheme
-    :param current: current URL
-    :param target: target URL
-    :return: target URL with the current URLs scheme
-    """
-    target_p = urlparse(target)
-    if not target_p.scheme and target_p.netloc:
-        return "{0}:{1}".format(urlparse(current).scheme,
-                                urlunparse(target_p))
-    elif not target_p.scheme and not target_p.netloc:
-        return "{0}://{1}".format(urlparse(current).scheme,
-                                  urlunparse(target_p))
-    else:
-        return target
-
-
-def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
-              ignore_query=False, ignore_fragment=False):
-    """
-    Compare two URLs and return True if they are equal, some parts of the URLs can be ignored
-    :param first: URL
-    :param second: URL
-    :param ignore_scheme: ignore the scheme
-    :param ignore_netloc: ignore the netloc
-    :param ignore_path: ignore the path
-    :param ignore_params: ignore the params
-    :param ignore_query: ignore the query string
-    :param ignore_fragment: ignore the fragment
-    :return: result of comparison
-    """
-    # <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
-
-    firstp = urlparse(first)
-    secondp = urlparse(second)
-
-    return ((firstp.scheme == secondp.scheme or ignore_scheme) and
-            (firstp.netloc == secondp.netloc or ignore_netloc) and
-            (firstp.path == secondp.path or ignore_path) and
-            (firstp.params == secondp.params or ignore_params) and
-            (firstp.query == secondp.query or ignore_query) and
-            (firstp.fragment == secondp.fragment or ignore_fragment))
-
-
 def memoize(obj):
     cache = obj.cache = {}
 
@@ -248,92 +203,6 @@ def load_module(name, path=None):
                 fd.close()
 
 
-#####################################
-# Deprecated functions, do not use. #
-#####################################
-
-import requests
-
-
-def urlget(url, *args, **kwargs):  # pragma: no cover
-    """This function is deprecated."""
-    data = kwargs.pop("data", None)
-    exception = kwargs.pop("exception", PluginError)
-    method = kwargs.pop("method", "GET")
-    session = kwargs.pop("session", None)
-    timeout = kwargs.pop("timeout", 20)
-
-    if data is not None:
-        method = "POST"
-
-    try:
-        if session:
-            res = session.request(method, url, timeout=timeout, data=data,
-                                  *args, **kwargs)
-        else:
-            res = requests.request(method, url, timeout=timeout, data=data,
-                                   *args, **kwargs)
-
-        res.raise_for_status()
-    except (requests.exceptions.RequestException, IOError) as rerr:
-        err = exception("Unable to open URL: {url} ({err})".format(url=url,
-                                                                   err=rerr))
-        err.err = rerr
-        raise err
-
-    return res
-
-
-urlopen = urlget
-
-
-def urlresolve(url):  # pragma: no cover
-    """This function is deprecated."""
-    res = urlget(url, stream=True, allow_redirects=False)
-
-    if res.status_code == 302 and "location" in res.headers:
-        return res.headers["location"]
-    else:
-        return url
-
-
-def res_xml(res, *args, **kw):  # pragma: no cover
-    """This function is deprecated."""
-    return parse_xml(res.text, *args, **kw)
-
-
-def res_json(res, jsontype="JSON", exception=PluginError):  # pragma: no cover
-    """This function is deprecated."""
-    try:
-        jsondata = res.json()
-    except ValueError as err:
-        if len(res.text) > 35:
-            snippet = res.text[:35] + "..."
-        else:
-            snippet = res.text
-
-        raise exception("Unable to parse {0}: {1} ({2})".format(jsontype, err,
-                                                                snippet))
-
-    return jsondata
-
-
-import hmac
-import hashlib
-
-SWF_KEY = b"Genuine Adobe Flash Player 001"
-
-
-def swfverify(url):  # pragma: no cover
-    """This function is deprecated."""
-    res = urlopen(url)
-    swf = swfdecompress(res.content)
-
-    h = hmac.new(SWF_KEY, swf, hashlib.sha256)
-
-    return h.hexdigest(), len(swf)
-
-
 def escape_librtmp(value):  # pragma: no cover
     if isinstance(value, bool):
         value = "1" if value else "0"
@@ -347,8 +216,8 @@ def escape_librtmp(value):  # pragma: no cover
     return value
 
 
-__all__ = ["urlopen", "urlget", "urlresolve", "swfdecompress", "swfverify",
-           "verifyjson", "absolute_url", "parse_qsd", "parse_json", "res_json",
-           "parse_xml", "res_xml", "rtmpparse", "prepend_www", "NamedPipe",
+__all__ = ["swfdecompress", "update_scheme", "url_equal",
+           "verifyjson", "absolute_url", "parse_qsd", "parse_json",
+           "parse_xml", "rtmpparse", "prepend_www", "NamedPipe",
            "escape_librtmp", "LazyFormatter", "get_filesystem_encoding",
            "maybe_decode", "maybe_encode"]

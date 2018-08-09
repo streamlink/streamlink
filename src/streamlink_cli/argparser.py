@@ -465,11 +465,12 @@ def build_parser():
             gaming oriented platforms. "Game being played" is a way to categorize
             the stream, so it doesn't need its own separate handling.
 
-       Examples:
-           %(prog)s -p vlc --title '{{title}} -!- {{author}} -!- {{category}} \\$A' <url> [stream]
-           %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
+        Examples:
 
-        """.format(', '.join(SUPPORTED_PLAYERS.keys()),
+            %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
+            %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
+
+        """.format(', '.join(sorted(SUPPORTED_PLAYERS.keys())),
                    DEFAULT_STREAM_METADATA['title'],
                    DEFAULT_STREAM_METADATA['author'],
                    DEFAULT_STREAM_METADATA['category'])
@@ -1104,22 +1105,6 @@ def build_parser():
     )
 
     # Deprecated options
-    stream.add_argument(
-        "--best-stream-default",
-        action="store_true",
-        help=argparse.SUPPRESS
-    )
-    player.add_argument(
-        "-q", "--quiet-player",
-        action="store_true",
-        help=argparse.SUPPRESS
-    )
-    transport.add_argument(
-        "--hds-fragment-buffer",
-        type=int,
-        metavar="fragments",
-        help=argparse.SUPPRESS
-    )
     http.add_argument(
         "--http-cookies",
         metavar="COOKIES",

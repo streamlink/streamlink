@@ -69,7 +69,7 @@ class SteamBroadcastPlugin(Plugin):
             help="""
             A Steam account password to use with --steam-email.
             """
-    ))
+        ))
 
     def __init__(self, url):
         super(SteamBroadcastPlugin, self).__init__(url)
@@ -175,11 +175,13 @@ class SteamBroadcastPlugin(Plugin):
         log.info("Attempting to login to Steam as {}".format(email))
         return self.dologin(email, password)
 
-    def _get_broadcast_stream(self, steamid, viewertoken=0):
+    def _get_broadcast_stream(self, steamid, viewertoken=0, sessionid=None):
+        log.debug("Getting broadcast stream: sessionid={0}".format(sessionid))
         res = self.session.http.get(self._get_broadcast_url,
-                       params=dict(broadcastid=0,
-                                   steamid=steamid,
-                                   viewertoken=viewertoken))
+                                    params=dict(broadcastid=0,
+                                                steamid=steamid,
+                                                viewertoken=viewertoken,
+                                                sessionid=sessionid))
         return self.session.http.json(res, schema=self._broadcast_schema)
 
     def _get_streams(self):
@@ -191,9 +193,12 @@ class SteamBroadcastPlugin(Plugin):
 
         # extract the steam ID from the URL
         steamid = self._url_re.match(self.url).group(1)
+        res = self.session.http.get(self.url)  # get the page to set some cookies
+        sessionid = res.cookies.get('sessionid')
 
         while streamdata is None or streamdata[u"success"] in ("waiting", "waiting_for_start"):
-            streamdata = self._get_broadcast_stream(steamid)
+            streamdata = self._get_broadcast_stream(steamid,
+                                                    sessionid=sessionid)
 
             if streamdata[u"success"] == "ready":
                 return DASHStream.parse_manifest(self.session, streamdata["url"])

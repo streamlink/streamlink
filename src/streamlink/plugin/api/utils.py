@@ -17,6 +17,7 @@ def itertags(html, tag):
     """
     Brute force regex based HTML tag parser. This is a rough-and-ready searcher to find HTML tags when
     standards compliance is not required. Will find tags that are commented out, or inside script tag etc.
+
     :param html: HTML page
     :param tag: tag name to find
     :return: generator with Tags
@@ -25,3 +26,4 @@ def itertags(html, tag):
         if match.group("tag") == tag:
             attrs = dict((a.group("key").lower(), a.group("value")) for a in attr_re.finditer(match.group("attr")))
             yield Tag(match.group("tag"), attrs, match.group("inner"))
+

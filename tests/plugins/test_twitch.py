@@ -9,6 +9,8 @@ class TestPluginTwitch(unittest.TestCase):
             'https://www.twitch.tv/twitch',
             'https://www.twitch.tv/videos/150942279',
             'https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor',
+            'https://www.twitch.tv/twitch/video/292713971',
+            'https://www.twitch.tv/twitch/v/292713971',
         ]
         for url in should_match:
             self.assertTrue(Twitch.can_handle_url(url))
