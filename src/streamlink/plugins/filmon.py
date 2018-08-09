@@ -139,7 +139,7 @@ class Filmon(Plugin):
                 yield stream["quality"], FilmOnHLS(self.session, vod_id=vod_id, quality=stream["quality"])
 
         else:
-            if not _is_channel_id_re.match(channel):
+            if not self._is_channel_id_re.match(channel):
                 channel = self.session.http.get(self.url, schema=self._channel_id_schema)
                 self.logger.debug("Found channel ID: {0}", channel)
             data = self.api.channel(channel)
