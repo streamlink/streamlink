@@ -92,8 +92,7 @@ class FilmOnAPI(object):
 class Filmon(Plugin):
     url_re = re.compile(r"""https?://(?:\w+\.)?filmon.(?:tv|com)/
         (?:
-            tv/|
-            channel/(?P<channel>[^/]+)|
+            (tv/|channel/)(?P<channel>[^/]+)|
             vod/view/(?P<vod_id>\d+)-|
             group/
         )
