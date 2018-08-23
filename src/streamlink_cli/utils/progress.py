@@ -2,6 +2,7 @@ import sys
 
 from collections import deque
 from time import time
+from unicodedata import east_asian_width
 
 from ..compat import is_win32, get_terminal_size
 
@@ -14,21 +15,34 @@ PROGRESS_FORMATS = (
 )
 
 
-def terminal_len(value):
+def terminal_width(value):
     """Returns the length of the string it would be when displayed.
 
-    Attempts to decode the string as UTF-8 first if it's a bytestring.
+    East Asian Characters take 2 cells in terminal.
+    Other Characters take 1 cell in terminal.
     """
     if isinstance(value, bytes):
         value = value.decode("utf8", "ignore")
+    # F: FullWidth W: Wide A: Ambiguous
+    return sum([2 if east_asian_width(i) in ('F', 'W', 'A')
+                else 1 for i in value])
 
-    return len(value)
+
+def get_cut_prefix(value, max_len):
+    """Drop Characters by unicode not by bytes."""
+    should_convert = isinstance(value, bytes)
+    if should_convert:
+        value = value.decode("utf8", "ignore")
+    for i in range(len(value)):
+        if terminal_width(value[i:]) <= max_len:
+            break
+    return value[i:].encode("utf8", "ignore") if should_convert else value[i:]
 
 
 def print_inplace(msg):
     """Clears out the previous line and prints a new one."""
     term_width = get_terminal_size().columns
-    spacing = term_width - terminal_len(msg)
+    spacing = term_width - terminal_width(msg)
 
     # On windows we need one less space or we overflow the line for some reason.
     if is_win32:
@@ -89,7 +103,8 @@ def progress(iterator, prefix):
      - Time elapsed
      - Average speed, based on the last few seconds.
     """
-    prefix = (".." + prefix[-23:]) if len(prefix) > 25 else prefix
+    if terminal_width(prefix) > 25:
+        prefix = (".." + get_cut_prefix(prefix, 23))
     speed_updated = start = time()
     speed_written = written = 0
     speed_history = deque(maxlen=5)
