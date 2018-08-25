@@ -10,8 +10,10 @@ import streamlink
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
+from streamlink.plugin.api.utils import itertags, parse_json
 from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
+from streamlink.compat import html_unescape
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +24,8 @@ class SteamLoginFailed(Exception):
 
 class SteamBroadcastPlugin(Plugin):
     _url_re = re.compile(r"https?://steamcommunity.com/broadcast/watch/(\d+)")
+    _steamtv_url_re = re.compile(r"https?://steam.tv/(\w+)")
+    _watch_broadcast_url = "https://steamcommunity.com/broadcast/watch/"
     _get_broadcast_url = "https://steamcommunity.com/broadcast/getbroadcastmpd/"
     _user_agent = "streamlink/{}".format(streamlink.__version__)
     _broadcast_schema = Schema({
@@ -77,7 +81,7 @@ class SteamBroadcastPlugin(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
+        return cls._url_re.match(url) is not None or cls._steamtv_url_re.match(url) is not None
 
     @property
     def donotcache(self):
@@ -190,6 +194,16 @@ class SteamBroadcastPlugin(Plugin):
             if self.login(self.get_option("email"), self.get_option("password")):
                 log.info("Logged in as {0}".format(self.get_option("email")))
                 self.save_cookies(lambda c: "steamMachineAuth" in c.name)
+
+        # Handle steam.tv URLs
+        if self._steamtv_url_re.match(self.url) is not None:
+            # extract the steam ID from the page
+            res = self.session.http.get(self.url)
+            for div in itertags(res.text, 'div'):
+                if div.attributes.get("id") == "webui_config":
+                    broadcast_data = html_unescape(div.attributes.get("data-broadcast"))
+                    steamid = parse_json(broadcast_data).get("steamid")
+                    self.url = self._watch_broadcast_url + steamid
 
         # extract the steam ID from the URL
         steamid = self._url_re.match(self.url).group(1)
