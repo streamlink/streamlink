@@ -2,7 +2,6 @@ import sys
 
 from collections import deque
 from time import time
-from unicodedata import east_asian_width
 
 from ..compat import is_win32, get_terminal_size
 
