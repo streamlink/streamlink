@@ -1,14 +1,8 @@
 from __future__ import unicode_literals
 import sys
-
-import pytest
+import unittest
 
 from streamlink.plugin.api.utils import itertags
-
-if sys.version_info[0:2] == (2, 6):
-    import unittest2 as unittest
-else:
-    import unittest
 
 
 class TestPluginUtil(unittest.TestCase):
@@ -48,9 +42,8 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(script[1].text.strip(), """Tester.ready(function () {\nalert("Hello, world!"); });""")
         self.assertEqual(script[1].attributes, {})
 
-
-    @pytest.mark.xfail(sys.version_info >= (3, 7),
-                       reason="python3.7 issue, see bpo-34294")
+    @unittest.skipIf(sys.version_info >= (3, 7),
+                     "python3.7 issue, see bpo-34294")
     def test_itertags_multi_attrs(self):
         metas = list(itertags(self.test_html, "meta"))
         self.assertTrue(len(metas), 3)
@@ -71,8 +64,8 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(anchor[0].text, "bar")
         self.assertEqual(anchor[0].attributes, {"href": "http://test.se/foo"})
 
-    @pytest.mark.xfail(sys.version_info >= (3, 7),
-                       reason="python3.7 issue, see bpo-34294")
+    @unittest.skipIf(sys.version_info >= (3, 7),
+                     "python3.7 issue, see bpo-34294")
     def test_no_end_tag(self):
         links = list(itertags(self.test_html, "link"))
         self.assertTrue(len(links), 1)
@@ -88,5 +81,3 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(links[0].tag, "p")
         self.assertEqual(links[0].text.strip(), '<a \nhref="http://test.se/foo">bar</a>')
         self.assertEqual(links[0].attributes, {})
-
-

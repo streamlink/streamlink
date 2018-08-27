@@ -3,7 +3,9 @@ import unittest
 from streamlink import PluginError
 from streamlink.stream import *
 from streamlink.stream.dash import DASHStreamWorker
+from streamlink.stream.dash_manifest import MPD
 from tests.mock import MagicMock, patch, ANY, Mock, call
+from tests.resources import xml
 
 
 class TestDASHStream(unittest.TestCase):
@@ -233,6 +235,16 @@ class TestDASHStream(unittest.TestCase):
         self.assertSequenceEqual(muxer.mock_calls, [call(self.session, open_reader, open_reader, copyts=True),
                                                     call().open()])
 
+    @patch('streamlink.stream.dash.MPD')
+    def test_segments_number_time(self, mpdClass):
+        with xml("dash/test_9.mpd") as mpd_xml:
+            mpdClass.return_value = MPD(mpd_xml, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+            streams = DASHStream.parse_manifest(self.session, self.test_url)
+            mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+            self.assertSequenceEqual(list(streams.keys()), ['2500k'])
+
 
 class TestDASHStreamWorker(unittest.TestCase):
     @patch("streamlink.stream.dash_manifest.time.sleep")
@@ -320,6 +332,8 @@ class TestDASHStreamWorker(unittest.TestCase):
 
         self.assertEqual(representation_vid, DASHStreamWorker.get_representation(mpd, 1, "video/mp4"))
         self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
+
+
 
 
 if __name__ == "__main__":

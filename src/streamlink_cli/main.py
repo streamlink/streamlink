@@ -442,8 +442,8 @@ def handle_stream(plugin, streams, stream_name):
 def fetch_streams(plugin):
     """Fetches streams using correct parameters."""
 
-    return plugin.get_streams(stream_types=args.stream_types,
-                              sorting_excludes=args.stream_sorting_excludes)
+    return plugin.streams(stream_types=args.stream_types,
+                          sorting_excludes=args.stream_sorting_excludes)
 
 
 def fetch_streams_with_retry(plugin, interval, count):
@@ -572,9 +572,6 @@ def handle_url():
     if not streams:
         console.exit("No playable streams found on this URL: {0}", args.url)
 
-    if args.best_stream_default:
-        args.default_stream = ["best"]
-
     if args.default_stream and not args.stream and not args.json:
         args.stream = args.default_stream
 
@@ -698,17 +695,6 @@ def setup_console(output):
 
     # All console related operations is handled via the ConsoleOutput class
     console = ConsoleOutput(output, streamlink)
-
-    if args.quiet_player:
-        log.warning("The option --quiet-player is deprecated since "
-                    "version 1.4.3 as hiding player output is now "
-                    "the default.")
-
-    if args.best_stream_default:
-        log.warning("The option --best-stream-default is deprecated "
-                    "since version 1.9.0, use '--default-stream best' "
-                    "instead.")
-
     console.json = args.json
 
     # Handle SIGTERM just like SIGINT
@@ -867,12 +853,6 @@ def setup_options():
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)
-
-    # Deprecated options
-    if args.hds_fragment_buffer:
-        log.warning("The option --hds-fragment-buffer is deprecated "
-                    "and will be removed in the future. Use "
-                    "--ringbuffer-size instead")
 
 
 def setup_plugin_args(session, parser):
