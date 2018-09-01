@@ -3,10 +3,11 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
+from streamlink.utils.url import update_scheme
 
 
 class Euronews(Plugin):
-    _url_re = re.compile(r"http(?:s)?://(\w+)\.?euronews.com/(live|.*)")
+    _url_re = re.compile(r'(?P<scheme>https?)://(?P<subdomain>\w+)\.?euronews.com/(?P<path>live|.*)')
     _re_vod = re.compile(r'<meta\s+property="og:video"\s+content="(http.*?)"\s*/>')
     _live_api_url = "http://{0}.euronews.com/api/watchlive.json"
     _live_schema = validate.Schema({
@@ -32,28 +33,29 @@ class Euronews(Plugin):
         if len(video_urls):
             return dict(vod=HTTPStream(self.session, video_urls[0]))
 
-    def _get_live_streams(self, subdomain):
+    def _get_live_streams(self, match):
         """
         Get the live stream in a particular language
-        :param subdomain:
+        :param match:
         :return:
         """
-        res = self.session.http.get(self._live_api_url.format(subdomain))
-        live_res = self.session.http.json(res, schema=self._live_schema)
-        api_res = self.session.http.get(live_res[u"url"])
-        stream_data = self.session.http.json(api_res, schema=self._stream_api_schema)
-        return HLSStream.parse_variant_playlist(self.session, stream_data[u'primary'])
+        live_url = self._live_api_url.format(match.get("subdomain"))
+        live_res = self.session.http.json(self.session.http.get(live_url), schema=self._live_schema)
+
+        api_url = update_scheme("{0}:///".format(match.get("scheme")), live_res["url"])
+        api_res = self.session.http.json(self.session.http.get(api_url), schema=self._stream_api_schema)
+
+        return HLSStream.parse_variant_playlist(self.session, api_res["primary"])
 
     def _get_streams(self):
         """
         Find the streams for euronews
         :return:
         """
-        match = self._url_re.match(self.url)
-        subdomain, path = match.groups()
+        match = self._url_re.match(self.url).groupdict()
 
-        if path == "live":
-            return self._get_live_streams(subdomain)
+        if match.get("path") == "live":
+            return self._get_live_streams(match)
         else:
             return self._get_vod_stream()
 
