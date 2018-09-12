@@ -46,7 +46,7 @@ class Viasat(Plugin):
             |
             tv6play\.no
             |
-            viafree\.(?:dk|no|se)
+            viafree\.(?:dk|no|se|fi)
         )
         /(?:
             (?:
