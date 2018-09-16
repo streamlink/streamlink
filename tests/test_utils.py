@@ -1,9 +1,9 @@
 import base64
-import sys
 import os.path
+import sys
+import unittest
 
 from streamlink.plugin.api.validate import xml_element, text
-from streamlink.utils import update_scheme, url_equal, search_dict, load_module
 
 try:
     import xml.etree.cElementTree as ET
@@ -11,9 +11,18 @@ except ImportError:
     import xml.etree.ElementTree as ET
 from streamlink import PluginError
 from streamlink.plugin.api import validate
-from streamlink.utils import *
-
-import unittest
+from streamlink.utils import (
+    absolute_url,
+    load_module,
+    parse_json,
+    parse_qsd,
+    parse_xml,
+    prepend_www,
+    rtmpparse,
+    search_dict,
+    swfdecompress,
+    verifyjson,
+)
 
 # used in the import test to verify that this module was imported
 __test_marker__ = "test_marker"
@@ -59,6 +68,12 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
+    def test_parse_xml_ns_ignore_tab(self):
+        expected = ET.Element("test", {"foo": "bar"})
+        actual = parse_xml(u"""<test	foo="bar"	xmlns="foo:bar"/>""", ignore_ns=True)
+        self.assertEqual(expected.tag, actual.tag)
+        self.assertEqual(expected.attrib, actual.attrib)
+
     def test_parse_xml_ns(self):
         expected = ET.Element("{foo:bar}test", {"foo": "bar"})
         actual = parse_xml(u"""<h:test foo="bar" xmlns:h="foo:bar"/>""")
@@ -82,7 +97,6 @@ class TestUtil(unittest.TestCase):
         self.assertRaises(PluginError,
                           parse_xml, u"""<test foo="bar &"/>""")
 
-
     def test_parse_xml_entities(self):
         expected = ET.Element("test", {"foo": "bar &"})
         actual = parse_xml(u"""<test foo="bar &"/>""",
@@ -91,20 +105,19 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
-
     def test_parse_qsd(self):
         self.assertEqual(
             {"test": "1", "foo": "bar"},
             parse_qsd("test=1&foo=bar", schema=validate.Schema({"test": validate.text, "foo": "bar"})))
 
     def test_rtmpparse(self):
-        self.assertEquals(
+        self.assertEqual(
             ("rtmp://testserver.com:1935/app", "playpath?arg=1"),
             rtmpparse("rtmp://testserver.com/app/playpath?arg=1"))
-        self.assertEquals(
+        self.assertEqual(
             ("rtmp://testserver.com:1935/long/app", "playpath?arg=1"),
             rtmpparse("rtmp://testserver.com/long/app/playpath?arg=1"))
-        self.assertEquals(
+        self.assertEqual(
             ("rtmp://testserver.com:1935/app", None),
             rtmpparse("rtmp://testserver.com/app"))
 
