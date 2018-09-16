@@ -140,7 +140,7 @@ class AfreecaTV(Plugin):
 
     def _get_streams(self):
         if not self.session.get_option("hls-segment-ignore-names"):
-            ignore_segment = ["_0", "_1", "_2"]
+            ignore_segment = ["preloading"]
             self.session.set_option("hls-segment-ignore-names", ignore_segment)
 
         login_username = self.get_option("username")
