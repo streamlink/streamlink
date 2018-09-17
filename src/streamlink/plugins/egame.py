@@ -3,7 +3,7 @@ import json
 from streamlink.plugin import Plugin
 from streamlink.stream import HTTPStream
 
-_url_re = re.compile(r"https://egame\.qq\.com/(?P<channel>[^/&?\.]+)")
+_url_re = re.compile(r"https://egame\.qq\.com/(?P<channel>\d+)")
 _room_json = re.compile(r'EgamePlayer\.Player\(({.*})\);')
 #some stream url has bitrate ending with t like _1500t.flv
 _stream_bitrate = re.compile(r'_(\d{3,4})\w?\.flv')
