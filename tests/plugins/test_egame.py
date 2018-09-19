@@ -14,6 +14,9 @@ class TestPluginEgame(unittest.TestCase):
     def test_can_handle_url_negative(self):
         should_not_match = [
             'https://example.com/index.html',
+            'https://egame.qq.com/',
+            'https://egame.qq.com/livelist?layoutid=lol',
+            'https://egame.qq.com/vod?videoId=123123123123123',
             'https://egame.qq.com/aaabbbb'
         ]
         for url in should_not_match:
