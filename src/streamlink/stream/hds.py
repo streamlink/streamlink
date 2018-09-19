@@ -281,7 +281,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
         table = self.segmentruntable.payload.segment_run_entry_table
 
         for segment, start, end in self.iter_segment_table(table):
-            if start - 1 <= fragment <= end:
+            if start <= fragment <= end:
                 return segment
         else:
             segment = 1
