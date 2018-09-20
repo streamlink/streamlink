@@ -9,6 +9,7 @@ from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
+
 class FilmOnHLS(HLSStream):
     __shortname__ = "hls-filmon"
 
@@ -90,13 +91,21 @@ class FilmOnAPI(object):
 
 
 class Filmon(Plugin):
-    url_re = re.compile(r"""https?://(?:\w+\.)?filmon.(?:tv|com)/
+    url_re = re.compile(r"""(?x)https?://(?:www\.)?filmon\.(?:tv|com)/(?:
         (?:
-            (tv/|channel/)(?P<channel>[^/]+)|
-            vod/view/(?P<vod_id>\d+)-|
-            group/
-        )
-    """, re.VERBOSE)
+            index/popout\?
+            |
+            (?:tv/)channel/(?:export\?)?
+            |
+            tv/(?!channel)
+            |
+            channel/
+            |
+            (?P<is_group>group/)
+        )(?:channel_id=)?(?P<channel>[-_\w]+)
+    |
+        vod/view/(?P<vod_id>\d+)-
+    )""")
 
     _channel_id_re = re.compile(r"""channel_id\s*=\s*(?P<quote>['"]?)(?P<value>\d+)(?P=quote)""")
     _channel_id_schema = validate.Schema(
@@ -132,6 +141,7 @@ class Filmon(Plugin):
 
         channel = url_m and url_m.group("channel")
         vod_id = url_m and url_m.group("vod_id")
+        is_group = url_m and url_m.group("is_group")
 
         if vod_id:
             data = self.api.vod(vod_id)
@@ -144,7 +154,8 @@ class Filmon(Plugin):
                 if _id is None:
                     _id = self.session.http.get(self.url, schema=self._channel_id_schema)
                     log.debug("Found channel ID: {0}", _id)
-                    if _id is not None:
+                    # do not cache a group url
+                    if _id and not is_group:
                         self.cache.set(channel, _id, expires=self.TIME_CHANNEL)
                 else:
                     log.debug("Found cached channel ID: {0}", _id)
@@ -155,11 +166,12 @@ class Filmon(Plugin):
                 data = self.api.channel(_id)
                 for stream in data["streams"]:
                     yield stream["quality"], FilmOnHLS(self.session, channel=_id, quality=stream["quality"])
-            except Exception as e:
+            except Exception:
                 if channel and not channel.isdigit():
                     self.cache.set(channel, None, expires=0)
                     log.debug("Reset cached channel: {0}", channel)
 
                 raise
+
 
 __plugin__ = Filmon
