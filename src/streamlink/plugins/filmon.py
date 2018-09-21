@@ -21,10 +21,10 @@ class FilmOnHLSStreamWorker(HLSStreamWorker):
         log.debug("Reloading playlist")
 
         if self.stream.channel:
+            parsed = urlparse(self.stream.url)
             if self.stream._first_netloc is None:
                 # save the first netloc
-                self.stream._first_netloc = urlparse(self.stream.url).netloc
-            parsed = urlparse(self.stream.url)
+                self.stream._first_netloc = parsed.netloc
             # always use the first saved netloc
             new_stream_url = parsed._replace(netloc=self.stream._first_netloc).geturl()
         else:
