@@ -12,6 +12,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader,
                                          SegmentedStreamWriter,
                                          SegmentedStreamWorker)
+from streamlink.compat import urlparse
 
 log = logging.getLogger(__name__)
 Sequence = namedtuple("Sequence", "num segment")
@@ -182,10 +183,19 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         self.reader.buffer.wait_free()
         log.debug("Reloading playlist")
-        res = self.session.http.get(self.stream.url,
+        try:
+            res = self.session.http.get(self.stream.url,
                                     exception=StreamError,
                                     retries=self.playlist_reload_retries,
                                     **self.reader.request_params)
+        except StreamError as err:
+            if hasattr(self.reader.stream, "watch_timeout") and any(x in str(err) for x in ("403 Client Error", "502 Server Error")):
+                self.stream.watch_timeout = 0
+                self.playlist_reload_time = 0
+                log.debug("Force reloading the channel playlist on error: {}", err)
+                return
+            raise err
+
         try:
             playlist = hls_playlist.load(res.text, res.url)
         except ValueError as err:
@@ -206,6 +216,11 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.process_sequences(playlist, sequences)
 
     def process_sequences(self, playlist, sequences):
+        if self.playlist_sequence >= 0:
+            if sequences[0].num < self.playlist_sequences[-1].num and urlparse(sequences[0].segment.uri).netloc != urlparse(self.playlist_sequences[0].segment.uri).netloc:
+                self.playlist_sequence = -1
+                log.debug("Netloc has changed and sequence num's are < last ones")
+
         first_sequence, last_sequence = sequences[0], sequences[-1]
 
         if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
