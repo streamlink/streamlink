@@ -288,7 +288,6 @@ class UHSStream(Stream):
 
                 if not cmd_args:
                     continue
-                log.debug("poll response: {0}".format(cmd_args))
                 if cmd_args["cmd"] == "warning":
                     log.warning("{code}: {message}", **cmd_args["args"])
                 if cmd_args["cmd"] == "moduleInfo":
@@ -305,7 +304,7 @@ class UHSStream(Stream):
 
         def handle_module_info(self, args):
             for arg in args:
-                if "stream" in arg and arg["stream"].get("streamFormats"):
+                if "stream" in arg and bool(arg["stream"].get("streamFormats")):
                     flv_segmented = arg["stream"]["streamFormats"]["flv/segmented"]
                     return ChunkData(flv_segmented["chunkId"],
                                      flv_segmented["chunkTime"],
@@ -382,7 +381,7 @@ class UStreamTV(Plugin):
                 # LIVE: http://uhs-akamai.ustream.tv/
                 # VOD:  http://vod-cdn.ustream.tv/
                 res["cdn_url"] = urlunparse(parts)
-            if "stream" in arg and arg["stream"].get("streamFormats"):
+            if "stream" in arg and bool(arg["stream"].get("streamFormats")):
                 data = arg["stream"]
                 if data["streamFormats"].get("flv/segmented"):
                     flv_segmented = data["streamFormats"]["flv/segmented"]
@@ -398,7 +397,7 @@ class UStreamTV(Plugin):
                             first_chunk=flv_segmented["chunkId"],
                             chunk_time=flv_segmented["chunkTime"],
                         )]
-                else:
+                elif bool(data["streamFormats"]):
                     # supported formats:
                     # - flv/segmented
                     # unsupported formats:
@@ -407,6 +406,9 @@ class UStreamTV(Plugin):
                     # - mp4/segmented
                     raise PluginError("Stream format is not supported: {0}".format(
                         ", ".join(data["streamFormats"].keys())))
+            elif "stream" in arg and arg["stream"]["contentAvailable"] is False:
+                    log.error("This stream is currently offline")
+                    raise ModuleInfoNoStreams
 
         return res
 
@@ -419,6 +421,9 @@ class UStreamTV(Plugin):
             if "nonexistent" in arg:
                 log.error("This channel does not exist")
                 raise ModuleInfoNoStreams
+            if "geoLock" in arg:
+                log.error("This content is not available in your area")
+                raise ModuleInfoNoStreams
 
     def _get_streams(self):
         media_id, application = self._get_media_app()
@@ -430,7 +435,9 @@ class UStreamTV(Plugin):
 
             streams_data = {}
             streams = {}
-            for _ in range(10):
+            for _ in range(5):
+                # do not use to many tries, it might take longer for a timeout
+                # when streamFormats is {} and contentAvailable is True
                 data = api.recv()
                 try:
                     if data["cmd"] == "moduleInfo":
