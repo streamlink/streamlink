@@ -1,19 +1,32 @@
+import datetime
+import errno
 import json
 import logging
 import re
-from random import randint
-from threading import Thread, Event
-
 import websocket
 
+from collections import deque, namedtuple
+from random import randint
+from socket import error as SocketError
+from threading import Thread, Event
+from time import sleep
+
+from streamlink.compat import range, urljoin, urlunparse
+from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, Stream
-from streamlink.stream import HTTPStream
+from streamlink.plugin.api import useragents, validate
+from streamlink.stream import Stream
+from streamlink.stream.dash_manifest import sleep_until, utc
+from streamlink.stream.flvconcat import FLVTagConcat
+from streamlink.stream.segmented import (
+    SegmentedStreamReader, SegmentedStreamWriter, SegmentedStreamWorker
+)
 from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
+
+Chunk = namedtuple("Chunk", "num url available_at")
+ChunkData = namedtuple("ChunkData", "chunk_id chunk_time hashes current_timestamp")
 
 
 class ModuleInfoNoStreams(Exception):
@@ -26,18 +39,13 @@ class UHSClient(object):
     between the web browser and the ustream servers.
     """
     API_URL = "ws://r{0}-1-{1}-{2}-ws-{3}.ums.ustream.tv:1935/1/ustream"
-    APP_ID, APP_VERSION = 11, 2
-    api_schama = validate.Schema({
+    APP_ID, APP_VERSION = 3, 2
+    api_schema = validate.Schema({
         "args": [object],
         "cmd": validate.text
     })
-    module_info_schema = validate.Schema(
-        [validate.get("stream")],
-        validate.filter(lambda r: r is not None)
-    )
 
     def __init__(self, media_id, application, **options):
-        http.headers.update({"User-Agent": useragents.IPHONE_6})
         self.media_id = media_id
         self.application = application
         self._referrer = options.pop("referrer", None)
@@ -74,7 +82,7 @@ class UHSClient(object):
     def connect(self):
         log.debug("Connecting to {0}".format(self.host))
         self._ws = websocket.create_connection(self.host,
-                                               header=["User-Agent: {0}".format(useragents.IPHONE_6)],
+                                               header=["User-Agent: {0}".format(useragents.CHROME)],
                                                origin="http://www.ustream.tv")
 
         args = dict(type="viewer",
@@ -110,7 +118,7 @@ class UHSClient(object):
         return self._ws.send(json.dumps({"cmd": command, "args": [args]}))
 
     def recv(self):
-        data = parse_json(self._ws.recv(), schema=self.api_schama)
+        data = parse_json(self._ws.recv(), schema=self.api_schema)
         log.debug("Received `{0}` command".format(data["cmd"]))
         log.trace("{0!r}".format(data))
         return data
@@ -126,12 +134,124 @@ class UHSClient(object):
         return self._host or self.API_URL.format(randint(0, 0xffffff), self.media_id, self.application, self._cluster)
 
 
-class UStreamWrapper(Stream):
-    __shortname__ = "ustream"
+class UHSStreamWriter(SegmentedStreamWriter):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWriter.__init__(self, *args, **kwargs)
+
+        self.concater = FLVTagConcat(tags=[],
+                                     flatten_timestamps=True,
+                                     sync_headers=True)
+
+    def fetch(self, chunk, retries=None):
+        if not retries or self.closed:
+            return
+
+        try:
+            now = datetime.datetime.now(tz=utc)
+            if chunk.available_at > now:
+                time_to_wait = (chunk.available_at - now).total_seconds()
+                log.debug("Waiting for chunk: {fname} ({wait:.01f}s)".format(fname=chunk.num,
+                                                                             wait=time_to_wait))
+                sleep_until(chunk.available_at)
+
+            return self.session.http.get(chunk.url,
+                                         timeout=self.timeout,
+                                         exception=StreamError)
+        except StreamError as err:
+            log.error("Failed to open chunk {0}: {1}", chunk.num, err)
+            return self.fetch(chunk, retries - 1)
+
+    def write(self, chunk, res, chunk_size=8192):
+        try:
+            for data in self.concater.iter_chunks(buf=res.content,
+                                                  skip_header=False):
+                self.reader.buffer.write(data)
+                if self.closed:
+                    return
+            else:
+                log.debug("Download of chunk {0} complete", chunk.num)
+        except IOError as err:
+            log.error("Failed to read chunk {0}: {1}", chunk.num, err)
+
+
+class UHSStreamWorker(SegmentedStreamWorker):
+    def __init__(self, *args, **kwargs):
+        SegmentedStreamWorker.__init__(self, *args, **kwargs)
+        self.chunks = []
+        self.chunks_reload_time = 5
+
+        self.chunk_id = self.stream.first_chunk_data.chunk_id
+        self.template_url = self.stream.template_url
+
+        self.process_chunks()
+        if self.chunks:
+            log.debug("First Chunk: {0}; Last Chunk: {1}",
+                      self.chunks[0].num, self.chunks[-1].num)
+
+    def process_chunks(self):
+        chunk_data = []
+        if self.chunk_id == self.stream.first_chunk_data.chunk_id:
+            chunk_data = self.stream.first_chunk_data
+        elif self.stream.poller.data_chunks:
+            chunk_data = self.stream.poller.data_chunks.popleft()
+
+        if chunk_data:
+            chunks = []
+            count = 0
+            for k, v in sorted(chunk_data.hashes.items(),
+                               key=lambda c: int(c[0])):
+                start = int(k)
+                end = int(k) + 10
+                for i in range(start, end):
+                    if i > chunk_data.chunk_id and chunk_data.chunk_id != 0:
+                        # Live: id is higher as chunk_data.chunk_id
+                        count += chunk_data.chunk_time / 1000
+                        available_at = (chunk_data.current_timestamp
+                                        + datetime.timedelta(seconds=count))
+                    else:
+                        # Live: id is the same as chunk_data.chunk_id or lower
+                        # VOD: chunk_data.chunk_id is 0
+                        available_at = chunk_data.current_timestamp
+                    chunks += [Chunk(int(i),
+                                     self.template_url % (int(i), v),
+                                     available_at)]
+            self.chunks = chunks
+
+    def valid_chunk(self, chunk):
+        return chunk.num >= self.chunk_id
+
+    def iter_segments(self):
+        while not self.closed:
+            for chunk in filter(self.valid_chunk, self.chunks):
+                log.debug("Adding chunk {0} to queue", chunk.num)
+                yield chunk
+                # End of stream
+                if self.closed:
+                    return
+
+                self.chunk_id = int(chunk.num) + 1
+
+            if self.wait(self.chunks_reload_time):
+                try:
+                    self.process_chunks()
+                except StreamError as err:
+                    log.warning("Failed to process module info: {0}", err)
+
+
+class UHSStreamReader(SegmentedStreamReader):
+    __worker__ = UHSStreamWorker
+    __writer__ = UHSStreamWriter
+
+    def __init__(self, stream, *args, **kwargs):
+        SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
+
+
+class UHSStream(Stream):
+    __shortname__ = "uhs"
 
     class APIPoller(Thread):
         """
-        Poll the UStream API so that stream URLs stay valid, otherwise they expire after 30 seconds.
+        Poll the UStream API.
         """
 
         def __init__(self, api, interval=10.0):
@@ -139,19 +259,42 @@ class UStreamWrapper(Stream):
             self.stopped = Event()
             self.api = api
             self.interval = interval
+            self.data_chunks = deque()
 
         def stop(self):
             log.debug("Stopping API polling...")
             self.stopped.set()
 
         def run(self):
-            while not self.stopped.wait(1.0):
-                cmd_args = self.api.recv()
+            while not self.stopped.wait(0):
+                try:
+                    cmd_args = self.api.recv()
+                except SocketError as err:
+                    cmd_args = None
+                    if err.errno in (errno.ECONNRESET, errno.ETIMEDOUT):
+                        while True:
+                            # --stream-timeout will handle the timeout
+                            try:
+                                # reconnect on network issues
+                                self.api.reconnect()
+                                break
+                            except websocket._exceptions.WebSocketAddressException:
+                                # no connection available
+                                reconnect_time_ws = 5
+                                log.error("Local network issue, websocket reconnecting in {0}s".format(reconnect_time_ws))
+                                sleep(reconnect_time_ws)
+                    else:
+                        raise
+
                 if not cmd_args:
                     continue
                 log.debug("poll response: {0}".format(cmd_args))
                 if cmd_args["cmd"] == "warning":
                     log.warning("{code}: {message}", **cmd_args["args"])
+                if cmd_args["cmd"] == "moduleInfo":
+                    data = self.handle_module_info(cmd_args["args"])
+                    if data:
+                        self.data_chunks.append(data)
             log.debug("Stopped API polling")
 
         def stopper(self, f):
@@ -160,27 +303,36 @@ class UStreamWrapper(Stream):
                 return f(*args, **kwargs)
             return _stopper
 
-    def __init__(self, session, stream, api):
-        super(UStreamWrapper, self).__init__(session)
-        self.stream = stream
+        def handle_module_info(self, args):
+            for arg in args:
+                if "stream" in arg and arg["stream"].get("streamFormats"):
+                    flv_segmented = arg["stream"]["streamFormats"]["flv/segmented"]
+                    return ChunkData(flv_segmented["chunkId"],
+                                     flv_segmented["chunkTime"],
+                                     flv_segmented["hashes"],
+                                     datetime.datetime.now(tz=utc))
+
+    def __init__(self, session, api, first_chunk_data, template_url):
+        super(UHSStream, self).__init__(session)
+        self.session = session
         self.poller = self.APIPoller(api)
         self.poller.setDaemon(True)
-        log.debug("Wrapping {0} stream".format(stream.shortname()))
+
+        self.first_chunk_data = first_chunk_data
+        self.template_url = template_url
 
     def open(self):
         self.poller.start()
         log.debug("Starting API polling thread")
-        fd = self.stream.open()
-        fd.close = self.poller.stopper(fd.close)
-        return fd
+        reader = UHSStreamReader(self)
+        reader.open()
+        reader.close = self.poller.stopper(reader.close)
 
-    def __json__(self):
-        return {"type": self.shortname(),
-                "wrapped": self.stream.__json__()}
+        return reader
 
 
 class UStreamTV(Plugin):
-    url_re = re.compile(r"""
+    url_re = re.compile(r"""(?x)
     https?://(www\.)?ustream\.tv
         (?:
             (/embed/|/channel/id/)(?P<channel_id>\d+)
@@ -188,7 +340,7 @@ class UStreamTV(Plugin):
         (?:
             (/embed)?/recorded/(?P<video_id>\d+)
         )?
-    """, re.VERBOSE)
+    """)
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
     arguments = PluginArguments(
         PluginArgument("password",
@@ -199,29 +351,62 @@ class UStreamTV(Plugin):
     A password to access password protected UStream.tv channels.
     """))
 
+    STREAM_WEIGHTS = {
+        "original": 65535,
+    }
+
     @classmethod
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
-    def handle_module_info(self, api, args):
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream in cls.STREAM_WEIGHTS:
+            return cls.STREAM_WEIGHTS[stream], "ustreamtv"
+        return Plugin.stream_weight(stream)
+
+    def handle_module_info(self, args):
         res = {}
-        for streams in api.module_info_schema.validate(args):
-            if isinstance(streams, list):
-                for stream in streams:
-                    if stream['name'] == "uhls":
-                        for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
-                            res[q] = UStreamWrapper(self.session, s, api)
-                    if stream['name'] == "ustream":
-                        for substream in stream['streams']:
-                            res["vod"] = HTTPStream(self.session, substream['streamName'])
-            elif isinstance(streams, dict):
-                for stream in streams.get("streams", []):
-                    name = "{0}k".format(stream["bitrate"])
-                    for surl in stream["streamName"]:
-                        res[name] = HTTPStream(self.session, surl)
-            elif streams == "offline":
-                log.error("Stream is offline")
-                raise ModuleInfoNoStreams
+        for arg in args:
+            if "cdnConfig" in arg:
+                parts = [
+                    # scheme
+                    arg["cdnConfig"]["protocol"],
+                    # netloc
+                    arg["cdnConfig"]["data"][0]["data"][0]["sites"][0]["host"],
+                    # path
+                    arg["cdnConfig"]["data"][0]["data"][0]["sites"][0]["path"],
+                    "", "", "",  # params, query, fragment
+                ]
+                # Example:
+                # LIVE: http://uhs-akamai.ustream.tv/
+                # VOD:  http://vod-cdn.ustream.tv/
+                res["cdn_url"] = urlunparse(parts)
+            if "stream" in arg and arg["stream"].get("streamFormats"):
+                data = arg["stream"]
+                if data["streamFormats"].get("flv/segmented"):
+                    flv_segmented = data["streamFormats"]["flv/segmented"]
+                    path = flv_segmented["contentAccess"]["accessList"][0]["data"]["path"]
+
+                    res["streams"] = []
+                    for stream in flv_segmented["streams"]:
+                        res["streams"] += [dict(
+                            stream_name=stream["preset"],
+                            path=urljoin(path,
+                                         stream["segmentUrl"].replace("%", "%s")),
+                            hashes=flv_segmented["hashes"],
+                            first_chunk=flv_segmented["chunkId"],
+                            chunk_time=flv_segmented["chunkTime"],
+                        )]
+                else:
+                    # supported formats:
+                    # - flv/segmented
+                    # unsupported formats:
+                    # - flv
+                    # - mp4
+                    # - mp4/segmented
+                    raise PluginError("Stream format is not supported: {0}".format(
+                        ", ".join(data["streamFormats"].keys())))
 
         return res
 
@@ -236,20 +421,22 @@ class UStreamTV(Plugin):
                 raise ModuleInfoNoStreams
 
     def _get_streams(self):
-        # establish a mobile non-websockets api connection
         media_id, application = self._get_media_app()
         if media_id:
             api = UHSClient(media_id, application, referrer=self.url, cluster="live", password=self.get_option("password"))
             log.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}",
                       media_id, application, self.url, "live")
             api.connect()
-            for _ in range(5):
+
+            streams_data = {}
+            streams = {}
+            for _ in range(10):
                 data = api.recv()
                 try:
                     if data["cmd"] == "moduleInfo":
-                        r = self.handle_module_info(api, data["args"])
+                        r = self.handle_module_info(data["args"])
                         if r:
-                            return r
+                            streams_data.update(r)
                     elif data["cmd"] == "reject":
                         self.handle_reject(api, data["args"])
                     else:
@@ -257,6 +444,21 @@ class UStreamTV(Plugin):
                         log.trace("{0!r}".format(data))
                 except ModuleInfoNoStreams:
                     return None
+
+                if streams_data.get("streams") and streams_data.get("cdn_url"):
+                    for s in streams_data["streams"]:
+                        streams[s["stream_name"]] = UHSStream(
+                            session=self.session,
+                            api=api,
+                            first_chunk_data=ChunkData(
+                                s["first_chunk"],
+                                s["chunk_time"],
+                                s["hashes"],
+                                datetime.datetime.now(tz=utc)),
+                            template_url=urljoin(streams_data["cdn_url"],
+                                                 s["path"]),
+                        )
+                    return streams
 
     def _get_media_app(self):
         umatch = self.url_re.match(self.url)
