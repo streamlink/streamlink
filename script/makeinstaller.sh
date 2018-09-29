@@ -35,7 +35,7 @@ old_files=(
   "streamupcom" "tv8cat" "ufctv" "veetle" "viagame" "viasat_embed" "wattv"
   "aftonbladet" "aliez" "antenna" "arconai" "bongacams" "brittv" "cam4"
   "camsoda" "chaturbate" "expressen" "mips" "seetv" "speedrunslive" "streamboat"
-  "vgtv" "weeb"
+  "vgtv" "weeb" "oldlivestream"
 )
 for i in "${old_files[@]}"
 do

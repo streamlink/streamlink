@@ -85,7 +85,7 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
         data = bytearray(data, "utf8")
 
     if ignore_ns:
-        data = re.sub(br" xmlns=\"(.+?)\"", b"", data)
+        data = re.sub(br"[\t ]xmlns=\"(.+?)\"", b"", data)
 
     if invalid_char_entities:
         data = re.sub(br'&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)', b'&amp;', data)

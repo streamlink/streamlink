@@ -71,6 +71,7 @@ douyutv                 - douyu.com          Yes   Yes
                         - v.douyu.com
 drdk                    dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 earthcam                earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
+egame                   egame.qq.com         Yes   No
 ellobo                  ellobo106.com        Yes   -
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
 eurocom                 eurocom.bg           Yes   No
@@ -120,8 +121,6 @@ npo                     - npo.nl             Yes   Yes   Streams may be geo-rest
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                         - radio.nrk.no
 ok_live                 ok.ru                Yes   --
-oldlivestream           - original.li.. [3]_ Yes   No    Only mobile streams are supported.
-                        - cdn.livestream.com
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
 onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
                         - ctc.ru
@@ -187,6 +186,7 @@ svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-rest
 swisstxt                - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
                         - rsi.ch
 teamliquid              teamliquid.net       Yes   Yes
+teleclubzoom            teleclubzoom.ch      Yes   No    Streams are geo-restricted to Switzerland.
 telefe                  telefe.com           No    Yes   Streams are geo-restricted to Argentina.
 tf1                     - tf1.fr             Yes   No    Streams may be geo-restricted to France.
                         - lci.fr
@@ -273,7 +273,6 @@ zhanqi                  zhanqi.tv            Yes   No
 
 
 .. [2] streamingvideoprovider.co.uk
-.. [3] original.livestream.com
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
