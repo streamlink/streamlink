@@ -768,7 +768,7 @@ def build_parser():
     transport.add_argument(
         "--hls-start-offset",
         type=hours_minutes_seconds,
-        metavar="HH:MM:SS",
+        metavar="[HH:]MM:SS",
         default=None,
         help="""
         Amount of time to skip from the beginning of the stream. For live
@@ -779,7 +779,7 @@ def build_parser():
     transport.add_argument(
         "--hls-duration",
         type=hours_minutes_seconds,
-        metavar="HH:MM:SS",
+        metavar="[HH:]MM:SS",
         default=None,
         help="""
         Limit the playback duration, useful for watching segments of a stream.
