@@ -242,9 +242,9 @@ in again using your username and password.
 Authenticating with FunimationNow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Like Crunchyroll, the Funimation plugin requires authenticating with a premium account to access some
-content: :option:`--funimation-email`, :option:`--funimation-password`. In addition, this plugin requires an ``incap_ses`` cookie to be
-sent with each HTTP request; this unique session cookie can be found in your browser
-and sent via the :option:`--http-cookie` option.  For example:
+content: :option:`--funimation-email`, :option:`--funimation-password`. In addition, this plugin requires a ``incap_ses`` cookie to be
+sent with each HTTP request; this unique session cookie can be found in your browser and sent via the :option:`--http-cookie` option.
+For example:
 
 .. sourcecode:: console
 
