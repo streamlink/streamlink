@@ -5,6 +5,9 @@ env:
   - STREAMLINK_INSTALLER_DIST_DIR=${STREAMLINK_DIST_DIR}/nsis
   - SDIST_KEY_FILE="${TRAVIS_BUILD_DIR}/signing.key"
 
+git:
+  depth: 300
+
 matrix:
   include:
   - python: '2.7'
