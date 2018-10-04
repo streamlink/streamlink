@@ -24,8 +24,10 @@ class TestUtilsTimes(unittest.TestCase):
         self.assertEqual(hours_minutes_seconds("-00:01:40"), 100)
         self.assertEqual(hours_minutes_seconds("-00h02m30s"), 150)
 
-        with self.assertRaises(ValueError):
-            hours_minutes_seconds("02:04")
+        self.assertEqual(hours_minutes_seconds("02:04"), 124)
+        self.assertEqual(hours_minutes_seconds("1:10"), 70)
+        self.assertEqual(hours_minutes_seconds("10:00"), 600)
+
 
         with self.assertRaises(ValueError):
             hours_minutes_seconds("FOO")
