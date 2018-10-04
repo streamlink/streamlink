@@ -22,7 +22,7 @@ class Egame(Plugin):
     }
 
     _url_re = re.compile(r"https://egame\.qq\.com/(?P<channel>\d+)")
-    _room_json_re = re.compile(r"EgamePlayer\.Player\(({.*})\);")
+    _room_json_re = re.compile(r"window\._playerInfo\s*=\s*({.*});")
 
     data_schema = validate.Schema({
         "vid": validate.text,
