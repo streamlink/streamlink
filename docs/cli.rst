@@ -239,16 +239,19 @@ For this, the plugin provides the :option:`--crunchyroll-purge-credentials`
 option, which removes your saved session and credentials and tries to log
 in again using your username and password.
 
+.. _cli-funimationnow:
+
 Authenticating with FunimationNow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Like Crunchyroll, the Funimation plugin requires authenticating with a premium account to access some
+Like Crunchyroll, the FunimationNow plugin requires authenticating with a premium account to access some
 content: :option:`--funimation-email`, :option:`--funimation-password`. In addition, this plugin requires a ``incap_ses`` cookie to be
-sent with each HTTP request; this unique session cookie can be found in your browser and sent via the :option:`--http-cookie` option.
+sent with each HTTP request (`see issue #2088 <https://github.com/streamlink/streamlink/issues/2088#issue-366192126>`_); this unique session cookie can be found in your browser and sent via the :option:`--http-cookie` option.
+
 For example:
 
 .. sourcecode:: console
 
-    $ streamlink --funimation-email=xxxx --funimation-password=xxx --http-cookie "incap_ses_123_98765=SGVsbG8\bZb==" https://funimation.com/shows/show/an-episode-link
+    $ streamlink --funimation-email='xxx' --funimation-password='xxx' --http-cookie 'incap_ses_xxx=xxxx=' https://funimation.com/shows/show/an-episode-link
 
 .. note::
 
