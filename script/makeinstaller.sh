@@ -17,9 +17,10 @@ STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
 build_dir="$(pwd)/build"
 build_dir_plugins="${build_dir}/lib/streamlink/plugins"
 nsis_dir="${build_dir}/nsis"
+files_dir="${build_dir}/files"
 # get the dist directory from an environment variable, but default to the build/nsis directory
 dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
-mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}"
+mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}"
 
 echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
 python setup.py build 1>&2
@@ -163,7 +164,7 @@ cat >"${build_dir}/installer_tmpl.nsi" <<EOF
 SubSection /e "Bundled tools" bundled
     Section "rtmpdump" rtmpdump
         SetOutPath "\$INSTDIR\rtmpdump"
-        File /r "rtmpdump\*.*"
+        File /r "${files_dir}\rtmpdump\*.*"
         SetShellVarContext current
         \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "rtmpdump=" "\$INSTDIR\rtmpdump\rtmpdump.exe" \$R0
         SetShellVarContext all
@@ -172,7 +173,7 @@ SubSection /e "Bundled tools" bundled
 
     Section "FFMPEG" ffmpeg
         SetOutPath "\$INSTDIR\ffmpeg"
-        File /r "ffmpeg\*.*"
+        File /r "${files_dir}\ffmpeg\*.*"
         SetShellVarContext current
         \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "ffmpeg-ffmpeg=" "\$INSTDIR\ffmpeg\ffmpeg.exe" \$R0
         SetShellVarContext all
@@ -187,7 +188,7 @@ SubSectionEnd
     SetShellVarContext current # install the config file for the current user
     SetOverwrite off # config file we don't want to overwrite
     SetOutPath \$APPDATA\streamlink
-    File /r "streamlinkrc"
+    File /r "${files_dir}\streamlinkrc"
     SetOverwrite ifnewer
     SetOutPath -
     SetShellVarContext all
@@ -248,11 +249,11 @@ echo "Building Python 3 installer" 1>&2
 
 # copy the streamlinkrc file to the build dir, we cannot use the Include.files property in the config file
 # because those files will always overwrite, and for a config file we do not want to overwrite
-cp "win32/streamlinkrc" "${nsis_dir}/streamlinkrc"
+cp "win32/streamlinkrc" "${files_dir}/streamlinkrc"
 
 # copy the ffmpeg and rtmpdump directories to the install build dir
-cp -r "win32/ffmpeg" "${nsis_dir}/"
-cp -r "win32/rtmpdump" "${nsis_dir}/"
+cp -r "win32/ffmpeg" "${files_dir}/"
+cp -r "win32/rtmpdump" "${files_dir}/"
 
 pynsist build/streamlink.cfg
 
