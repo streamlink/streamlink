@@ -509,6 +509,10 @@ class SegmentTemplate(MPDNode):
 
     def format_media(self, **kwargs):
         if self.segmentTimeline:
+            if self.parent.id is None:
+                # workaround for invalid `self.root.timelines[self.parent.id]`
+                # creates a timeline for every mimeType instead of one for both
+                self.parent.id = self.parent.mimeType
             log.debug("Generating segment timeline for {0} playlist (id={1}))".format(self.root.type, self.parent.id))
             if self.root.type == "dynamic":
                 # if there is no delay, use a delay of 3 seconds
