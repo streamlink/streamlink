@@ -50,6 +50,7 @@ cinergroup              - showtv.com.tr      Yes   No
                         - bloomberght.com
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
+cubetv                  cubetv.sg            Yes   --
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
 delfi                   - delfi.lt           --    Yes
