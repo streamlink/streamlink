@@ -251,6 +251,18 @@ def build_parser():
         account which creates a token for use with --twitch-oauth-token.
         """
     )
+    general.add_argument(
+        "--default-plugin",
+        type=str,
+        metavar="pluginname",
+        help="""
+        The preferred plugin setting, for selecting a plugin if nothing was
+        specified.
+
+        Default is none.
+        """
+    )
+
 
     player = parser.add_argument_group("Player options")
     player.add_argument(

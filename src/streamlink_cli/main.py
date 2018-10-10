@@ -844,6 +844,7 @@ def setup_options():
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)
+    streamlink.set_option("default-plugin", args.default_plugin)
 
 
 def setup_plugin_args(session, parser):

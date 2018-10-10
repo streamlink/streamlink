@@ -77,7 +77,8 @@ class Streamlink(object):
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy",
             "locale": None,
-            "user-input-requester": None
+            "user-input-requester": None,
+            "default-plugin": None
         })
         if options:
             self.options.update(options)
@@ -241,6 +242,10 @@ class Streamlink(object):
                                  to collect input from the user at runtime. Must be
                                  set before the plugins are loaded.
                                  default: ``UserInputRequester``.
+
+        default-plugin           (str) If no plugin could be found, instead of
+                                raising NoPluginError, tries to use default-plugin
+                                first.
         ======================== =========================================
 
         """
@@ -387,12 +392,21 @@ class Streamlink(object):
         :param follow_redirect: follow redirects
 
         """
+        default_plugin_url = url
+        default_plugin = self.get_option("default_plugin")
+        if default_plugin is not None:
+            default_plugin_url = default_plugin + "/" + default_plugin_url
+            default_plugin_url = update_scheme("http://", default_plugin_url)
         url = update_scheme("http://", url)
 
         available_plugins = []
         for name, plugin in self.plugins.items():
             if plugin.can_handle_url(url):
                 available_plugins.append(plugin)
+            if default_plugin is not None:
+                if plugin.can_handle_url(default_plugin_url):
+                    url = default_plugin_url
+                    available_plugins.append(plugin)
 
         available_plugins.sort(key=lambda x: x.priority(url), reverse=True)
         if available_plugins:
