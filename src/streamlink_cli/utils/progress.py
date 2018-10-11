@@ -13,22 +13,51 @@ PROGRESS_FORMATS = (
     "[download] {written}"
 )
 
+# widths generated from
+# http://www.unicode.org/Public/4.0-Update/EastAsianWidth-4.0.0.txt
 
-def terminal_len(value):
-    """Returns the length of the string it would be when displayed.
 
-    Attempts to decode the string as UTF-8 first if it's a bytestring.
-    """
+widths = [
+    (13, 1),    (15, 0),    (126, 1),   (159, 0),   (687, 1),   (710, 0),
+    (711, 1),   (727, 0),   (733, 1),   (879, 0),   (1154, 1),  (1161, 0),
+    (4347, 1),  (4447, 2),  (7467, 1),  (7521, 0),  (8369, 1),  (8426, 0),
+    (9000, 1),  (9002, 2),  (11021, 1), (12350, 2), (12351, 1), (12438, 2),
+    (12442, 0), (19893, 2), (19967, 1), (55203, 2), (63743, 1), (64106, 2),
+    (65039, 1), (65059, 0), (65131, 2), (65279, 1), (65376, 2), (65500, 1),
+    (65510, 2), (120831, 1), (262141, 2), (1114109, 1)
+]
+
+
+def get_width(o):
+    """Returns the screen column width for unicode ordinal."""
+    for num, wid in widths:
+        if o <= num:
+            return wid
+    return 1
+
+
+def terminal_width(value):
+    """Returns the width of the string it would be when displayed."""
     if isinstance(value, bytes):
         value = value.decode("utf8", "ignore")
+    return sum(map(get_width, map(ord, value)))
 
-    return len(value)
+
+def get_cut_prefix(value, max_len):
+    """Drops Characters by unicode not by bytes."""
+    should_convert = isinstance(value, bytes)
+    if should_convert:
+        value = value.decode("utf8", "ignore")
+    for i in range(len(value)):
+        if terminal_width(value[i:]) <= max_len:
+            break
+    return value[i:].encode("utf8", "ignore") if should_convert else value[i:]
 
 
 def print_inplace(msg):
     """Clears out the previous line and prints a new one."""
     term_width = get_terminal_size().columns
-    spacing = term_width - terminal_len(msg)
+    spacing = term_width - terminal_width(msg)
 
     # On windows we need one less space or we overflow the line for some reason.
     if is_win32:
@@ -89,7 +118,8 @@ def progress(iterator, prefix):
      - Time elapsed
      - Average speed, based on the last few seconds.
     """
-    prefix = (".." + prefix[-23:]) if len(prefix) > 25 else prefix
+    if terminal_width(prefix) > 25:
+        prefix = (".." + get_cut_prefix(prefix, 23))
     speed_updated = start = time()
     speed_written = written = 0
     speed_history = deque(maxlen=5)
