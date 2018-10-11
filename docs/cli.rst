@@ -245,7 +245,7 @@ Authenticating with FunimationNow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Like Crunchyroll, the FunimationNow plugin requires authenticating with a premium account to access some
 content: :option:`--funimation-email`, :option:`--funimation-password`. In addition, this plugin requires a ``incap_ses`` cookie to be
-sent with each HTTP request (`see issue #2088 <https://github.com/streamlink/streamlink/issues/2088#issue-366192126>`_); this unique session cookie can be found in your browser and sent via the :option:`--http-cookie` option.
+sent with each HTTP request (see issue #2088); this unique session cookie can be found in your browser and sent via the :option:`--http-cookie` option.
 
 For example:
 
@@ -259,7 +259,7 @@ For example:
     information on browser cookies, please consult the following:
 
     - `What are cookies? <http://www.whatarecookies.com/view.asp>`_
-      
+
 Sideloading plugins
 -------------------
 
