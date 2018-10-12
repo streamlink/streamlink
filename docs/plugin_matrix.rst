@@ -188,6 +188,7 @@ svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-rest
                         - oppetarkiv.se
 swisstxt                - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
                         - rsi.ch
+tamago                  player.tamago.live   Yes   --
 teamliquid              teamliquid.net       Yes   Yes
 teleclubzoom            teleclubzoom.ch      Yes   No    Streams are geo-restricted to Switzerland.
 telefe                  telefe.com           No    Yes   Streams are geo-restricted to Argentina.
