@@ -81,7 +81,7 @@ europaplus              europaplus.ru        Yes   --
 facebook                facebook.com         Yes   No    Only 360p HLS streams.
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
 foxtr                   fox.com.tr           Yes   No
-funimationnow           - funimation.com     --    Yes
+funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
                         - funimationnow.uk
 gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
