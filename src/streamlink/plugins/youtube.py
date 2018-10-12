@@ -7,7 +7,7 @@ import re
 from streamlink.compat import parse_qsl, is_py2
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate, useragents
-from streamlink.plugin.api.utils import parse_query
+from streamlink.plugin.api.utils import itertags, parse_query
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
@@ -89,23 +89,26 @@ _config_schema = validate.Schema(
 )
 
 _ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*({.*?});', re.DOTALL)
-_url_re = re.compile(r"""
-    http(s)?://(\w+\.)?youtube.com
+_url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
     (?:
         (?:
-            /(watch.+v=|embed/|v/)
+            /(?:watch.+v=|embed/(?!live_stream)|v/)
             (?P<video_id>[0-9A-z_-]{11})
         )
         |
         (?:
-            /(user|channel)/(?P<user>[^/?]+)
+            /(?:
+                (?:user|channel)/
+                |
+                embed/live_stream\?channel=
+            )(?P<user>[^/?&]+)
         )
         |
         (?:
-            /(c/)?(?P<liveChannel>[^/?]+)/live
+            /(?:c/)?(?P<liveChannel>[^/?]+)/live/?$
         )
     )
-""", re.VERBOSE)
+""")
 
 
 class YouTube(Plugin):
@@ -269,6 +272,14 @@ class YouTube(Plugin):
                         if x.get("videoId"):
                             log.debug("Video ID from videoRenderer (live)")
                             return x["videoId"]
+
+        if "/embed/live_stream" in url:
+            for link in itertags(res.text, "link"):
+                if link.attributes.get("rel") == "canonical":
+                    canon_link = link.attributes.get("href")
+                    if canon_link != url:
+                        log.debug("Re-directing to canonical URL: {0}".format(canon_link))
+                        return self._find_video_id(canon_link)
 
         raise PluginError("Could not find a video on this page")
 
