@@ -51,6 +51,7 @@ cinergroup              - showtv.com.tr      Yes   No
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
 cubetv                  cubetv.sg            Yes   --
+cwtv                    cwtv.com             --    Yes   Streams may be geo-restricted to USA.
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
 delfi                   - delfi.lt           --    Yes
