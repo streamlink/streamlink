@@ -10,9 +10,7 @@ below. If you would prefer to donate to the team as a whole, please use our
 donations are not tax deductible as Streamlink does not operate as a charitable
 organization. Your donation to the team or a team member may be used in any
 way and does not come with expectations of work to be provided or as payment
-for future work. If you would like a specific feature implemented consider
-creating a bounty on
-`Bountysource <https://www.bountysource.com/teams/streamlink>`_.
+for future work.
 
 ---------------
 Streamlink Team
@@ -38,5 +36,5 @@ Gravyboat
 
 - `Github <https://github.com/gravyboat>`__
 - `Bitcoin <https://blockchain.info/qr?data=1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`__ (`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`)
-- `Flattr <https://flattr.com/profile/gravyboat>`__
+- `Flattr <https://flattr.com/@gravyboat>`__
 - `Gratipay <https://gratipay.com/~gravyboat/>`__
