@@ -6,7 +6,6 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.utils import update_scheme
 
 
 class Pluzz(Plugin):
@@ -15,14 +14,16 @@ class Pluzz(Plugin):
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
     SWF_PLAYER_URL = 'https://staticftv-a.akamaihd.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer.akamai-7301b6035a43c4e29b7935c9c36771d2.swf'
 
-    _url_re = re.compile(
-        r'https?://((?:www)\.france\.tv/.+\.html|www\.(ludo|zouzous)\.fr/heros/[\w-]+|(sport|france3-regions)\.francetvinfo\.fr/.+?/(tv/direct)?)')
+    _url_re = re.compile(r'''
+        https?://(
+            (?:www\.)france\.tv/.+\.html |
+            www\.(ludo|zouzous)\.fr/heros/[\w-]+ |
+            (.+\.)?francetvinfo\.fr)
+    ''', re.VERBOSE)
     _pluzz_video_id_re = re.compile(r'data-main-video="(?P<video_id>.+?)"')
     _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
-    _f3_regions_video_id_re = re.compile(r'"http://videos\.francetv\.fr/video/(?P<video_id>.+?)@Regions"')
     _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
-    _player_re = re.compile(
-        r'src="(?P<player>//staticftv-a\.akamaihd\.net/player/jquery\.player.+?-[0-9a-f]+?\.js)"></script>')
+    _embed_video_id_re = re.compile(r'href="http://videos\.francetv\.fr/video/(?P<video_id>.+?)(?:@.+?)?"')
     _hds_pv_data_re = re.compile(r"~data=.+?!")
     _mp4_bitrate_re = re.compile(r'.*-(?P<bitrate>[0-9]+k)\.mp4')
 
@@ -105,10 +106,10 @@ class Pluzz(Plugin):
             match = self._pluzz_video_id_re.search(res.text)
         elif 'ludo.fr' in self.url or 'zouzous.fr' in self.url:
             match = self._jeunesse_video_id_re.search(res.text)
-        elif 'france3-regions.francetvinfo.fr' in self.url:
-            match = self._f3_regions_video_id_re.search(res.text)
         elif 'sport.francetvinfo.fr' in self.url:
             match = self._sport_video_id_re.search(res.text)
+        else:
+            match = self._embed_video_id_re.search(res.text)
         if match is None:
             return
         video_id = match.group('video_id')
