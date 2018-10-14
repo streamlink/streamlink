@@ -151,12 +151,8 @@ class Pluzz(Plugin):
                 expired = expired or True
                 continue
 
-            if ('.f4m' in video_url or
-                '.mpd' in video_url or
-                'france.tv' in self.url or
-                'sport.francetvinfo.fr' in self.url):
-                res = self.session.http.get(self.TOKEN_URL.format(video_url))
-                video_url = res.text
+            res = self.session.http.get(self.TOKEN_URL.format(video_url))
+            video_url = res.text
 
             if '.mpd' in video_url:
                 # Get redirect video URL
