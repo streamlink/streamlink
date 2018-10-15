@@ -173,6 +173,10 @@ class YouTube(Plugin):
         return _url_re.match(url)
 
     @classmethod
+    def get_urls(self):
+        return ["https://www.youtube.com/","https://www.youtube.com/watch?","https://www.youtube.com/watch?v="]
+
+    @classmethod
     def stream_weight(cls, stream):
         match_3d = re.match(r"(\w+)_3d", stream)
         match_hfr = re.match(r"(\d+p)(\d+)", stream)

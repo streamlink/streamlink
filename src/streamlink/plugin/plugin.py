@@ -417,6 +417,14 @@ class Plugin(object):
     def get_category(self):
         return None
 
+    def get_urls(self):
+        """
+        Enables usability for --default-plugin option.
+        e.g. ["twitch.tv", "https://www.youtube.com/", "youtube.com/watch?v="]
+        :return: list of strings
+        """
+        return None
+
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """
         Store the cookies from ``http`` in the plugin cache until they expire. The cookies can be filtered

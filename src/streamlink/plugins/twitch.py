@@ -283,6 +283,10 @@ class Twitch(Plugin):
         return Plugin.stream_weight(key)
 
     @classmethod
+    def get_urls(self):
+        return ["https://www.twitch.tv/","https://www.twitch.tv/videos/"]
+
+    @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
 

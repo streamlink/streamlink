@@ -243,9 +243,9 @@ class Streamlink(object):
                                  set before the plugins are loaded.
                                  default: ``UserInputRequester``.
 
-        default-plugin           (str) If no plugin could be found, instead of
-                                raising NoPluginError, tries to use default-plugin
-                                first.
+        default-plugin           (str) If no plugin could be found, instead
+                                 of raising NoPluginError, tries to use
+                                 default-plugin first.
         ======================== =========================================
 
         """
@@ -392,21 +392,39 @@ class Streamlink(object):
         :param follow_redirect: follow redirects
 
         """
-        default_plugin_url = url
-        default_plugin = self.get_option("default_plugin")
-        if default_plugin is not None:
-            default_plugin_url = default_plugin + "/" + default_plugin_url
-            default_plugin_url = update_scheme("http://", default_plugin_url)
+        default_plugin_url_copy = url
+        default_plugin = self.get_option("default-plugin")
         url = update_scheme("http://", url)
 
         available_plugins = []
+
         for name, plugin in self.plugins.items():
             if plugin.can_handle_url(url):
                 available_plugins.append(plugin)
-            if default_plugin is not None:
-                if plugin.can_handle_url(default_plugin_url):
-                    url = default_plugin_url
-                    available_plugins.append(plugin)
+
+        if len(available_plugins) == 0 and default_plugin is not None:
+            plugin_found = False
+
+            for name, plugin in self.plugins.items():
+                if plugin.__name__.lower() == default_plugin.lower():
+                    plugin_found = True
+                    for string in plugin.get_urls():
+                        if plugin.can_handle_url(string + default_plugin_url_copy):
+                            try:
+                                plugininstance = plugin(string + default_plugin_url_copy)
+                                streams = plugininstance.streams(None, None)
+                                available_plugins.append(plugin)
+                                url = string + default_plugin_url_copy
+                                break
+                            except (NoPluginError, PluginError) as e:
+                                pass
+
+                    if len(available_plugins) == 0:
+                        print("No streams with default plugin " + default_plugin + " found, plugin either doesnt support url shortening or url is not valid. Try without --default-plugin.")
+                    break
+
+            if plugin_found is False:
+                print("No default plugin under name " + default_plugin + " found.")
 
         available_plugins.sort(key=lambda x: x.priority(url), reverse=True)
         if available_plugins:
