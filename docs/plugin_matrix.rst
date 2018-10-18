@@ -141,7 +141,7 @@ playtv                  - playtv.fr          Yes   --    Streams may be geo-rest
 pluzz                   - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                         - ludo.fr
                         - zouzous.fr
-                        - france3-reg.. [8]_
+                        - francetvinfo.fr
 powerapp                powerapp.com.tr      Yes   No
 qq                      live.qq.com          Yes   No
 radionet                - radio.net          Yes   --
@@ -215,7 +215,7 @@ tv4play                 - tv4play.se         Yes   Yes   Streams may be geo-rest
                         - fotbollskanalen.se
 tv5monde                - tv5monde.com       Yes   Yes   Streams may be geo-restricted to France, Belgium and Switzerland.
                         - tv5mondeplus.com
-                        - tv5mondepl... [9]_
+                        - tv5mondepl... [8]_
 tv8                     tv8.com.tr           Yes   No
 tv360                   tv360.com.tr         Yes   No
 tvcatchup               tvcatchup.com        Yes   No    Streams may be geo-restricted to Great Britain.
@@ -257,10 +257,10 @@ youtube                 - youtube.com        Yes   Yes   Protected videos are no
                         - youtu.be
 yupptv                  yupptv.com           Yes   Yes   Some streams require an account and subscription.
 zattoo                  - zattoo.com         Yes   Yes
-                        - nettv.net... [10]_
+                        - nettv.net... [9]_
                         - tvonline.ewe.de
-                        - iptv.glat... [11]_
-                        - mobiltv.q... [12]_
+                        - iptv.glat... [10]_
+                        - mobiltv.q... [11]_
                         - player.waly.tv
                         - tvplus.m-net.de
                         - www.bbv-tv.net
@@ -280,8 +280,7 @@ zhanqi                  zhanqi.tv            Yes   No
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
-.. [8] france3-regions.francetvinfo.fr
-.. [9] tv5mondeplusafrique.com
-.. [10] nettv.netcologne.de
-.. [11] iptv.glattvision.ch
-.. [12] mobiltv.quickline.com
+.. [8] tv5mondeplusafrique.com
+.. [9] nettv.netcologne.de
+.. [10] iptv.glattvision.ch
+.. [11] mobiltv.quickline.com
