@@ -99,12 +99,23 @@ class TestSession(unittest.TestCase):
         self.assertTrue(isinstance(streams["480p"], RTMPStream))
         self.assertTrue(isinstance(streams["480p_http"], HTTPStream))
 
-    def test_plugin_stream_sorted_excludes(self):
+    def test_plugin_stream_sorting_excludes(self):
         channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.streams(sorting_excludes=["1080p", "3000k"])
 
+        streams = channel.streams(sorting_excludes=[])
         self.assertTrue("best" in streams)
         self.assertTrue("worst" in streams)
+        self.assertFalse("best-unfiltered" in streams)
+        self.assertFalse("worst-unfiltered" in streams)
+        self.assertTrue(streams["worst"] is streams["350k"])
+        self.assertTrue(streams["best"] is streams["1080p"])
+
+        streams = channel.streams(sorting_excludes=["1080p", "3000k"])
+        self.assertTrue("best" in streams)
+        self.assertTrue("worst" in streams)
+        self.assertFalse("best-unfiltered" in streams)
+        self.assertFalse("worst-unfiltered" in streams)
+        self.assertTrue(streams["worst"] is streams["350k"])
         self.assertTrue(streams["best"] is streams["1500k"])
 
         streams = channel.streams(sorting_excludes=[">=1080p", ">1500k"])
@@ -112,6 +123,24 @@ class TestSession(unittest.TestCase):
 
         streams = channel.streams(sorting_excludes=lambda q: not q.endswith("p"))
         self.assertTrue(streams["best"] is streams["3000k"])
+
+        streams = channel.streams(sorting_excludes=lambda q: False)
+        self.assertFalse("best" in streams)
+        self.assertFalse("worst" in streams)
+        self.assertTrue("best-unfiltered" in streams)
+        self.assertTrue("worst-unfiltered" in streams)
+        self.assertTrue(streams["worst-unfiltered"] is streams["350k"])
+        self.assertTrue(streams["best-unfiltered"] is streams["1080p"])
+
+        channel = self.session.resolve_url("http://test.se/UnsortableStreamNames")
+        streams = channel.streams()
+        self.assertFalse("best" in streams)
+        self.assertFalse("worst" in streams)
+        self.assertFalse("best-unfiltered" in streams)
+        self.assertFalse("worst-unfiltered" in streams)
+        self.assertTrue("vod" in streams)
+        self.assertTrue("vod_alt" in streams)
+        self.assertTrue("vod_alt2" in streams)
 
     def test_plugin_support(self):
         channel = self.session.resolve_url("http://test.se/channel")

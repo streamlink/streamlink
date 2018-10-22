@@ -384,6 +384,7 @@ class Plugin(object):
 
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
+        unfiltered_sorted_streams = sorted_streams
 
         if isinstance(sorting_excludes, list):
             for expr in sorting_excludes:
@@ -402,6 +403,11 @@ class Plugin(object):
             worst = sorted_streams[0]
             final_sorted_streams["worst"] = streams[worst]
             final_sorted_streams["best"] = streams[best]
+        elif len(unfiltered_sorted_streams) > 0:
+            best = unfiltered_sorted_streams[-1]
+            worst = unfiltered_sorted_streams[0]
+            final_sorted_streams["worst-unfiltered"] = streams[worst]
+            final_sorted_streams["best-unfiltered"] = streams[best]
 
         return final_sorted_streams
 
