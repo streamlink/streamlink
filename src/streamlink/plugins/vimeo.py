@@ -1,9 +1,10 @@
 import re
 
 from streamlink.compat import html_unescape
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
+from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json
 
 
@@ -33,13 +34,24 @@ class Vimeo(Plugin):
                     validate.optional("progressive"): validate.all(
                         [{"url": validate.url(), "quality": validate.text}]
                     ),
-                }
+                },
+                validate.optional("text_tracks"): validate.all(
+                    [{"url": validate.text, "lang": validate.text}]
+                ),
             }
         },
     )
     _player_schema = validate.Schema(
         validate.transform(_config_re.search),
         validate.any(None, validate.Schema(validate.get(1), _config_schema)),
+    )
+
+    arguments = PluginArguments(
+        PluginArgument(
+            "mux-subtitles",
+            action="store_true",
+            help="Automatically mux available subtitles in to the output stream.",
+        )
     )
 
     @classmethod
@@ -56,6 +68,7 @@ class Vimeo(Plugin):
             data = self.session.http.get(api_url, schema=self._config_schema)
 
         videos = data["request"]["files"]
+        streams = []
 
         for stream_type in ("hls", "dash"):
             if not stream_type in videos:
@@ -64,14 +77,25 @@ class Vimeo(Plugin):
                 url = video_data.get("url")
                 if stream_type == "hls":
                     for stream in HLSStream.parse_variant_playlist(self.session, url).items():
-                        yield stream
+                        streams.append(stream)
                 elif stream_type == "dash":
                     url = url.replace("master.json", "master.mpd")
                     for stream in DASHStream.parse_manifest(self.session, url).items():
-                        yield stream
+                        streams.append(stream)
 
         for stream in videos.get("progressive", []):
-            yield stream["quality"], HTTPStream(self.session, stream["url"])
+            streams.append((stream["quality"], HTTPStream(self.session, stream["url"])))
+
+        if self.get_option("mux_subtitles") and data["request"].get("text_tracks"):
+            substreams = {
+                s["lang"]: HTTPStream(self.session, "https://vimeo.com" + s["url"])
+                for s in data["request"]["text_tracks"]
+            }
+            for quality, stream in streams:
+                yield quality, MuxedStream(self.session, stream, subtitles=substreams)
+        else:
+            for stream in streams:
+                yield stream
 
 
 __plugin__ = Vimeo
