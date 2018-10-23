@@ -3,7 +3,6 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-from streamlink import NoStreamsError
 
 
 class MeTube(Plugin):
@@ -25,7 +24,7 @@ class MeTube(Plugin):
 
     def _get_streams(self):
         stream_type = self._url_re.match(self.url).group("type")
-        m3u8_re = re.compile(r"https?://.+\.m3u8")
+        hls_re = re.compile(r"""["'](?P<url>[^"']+\.m3u8[^"']*?)["']""")
 
         headers = {
             "Origin": "https://www.metube.id",
@@ -33,11 +32,12 @@ class MeTube(Plugin):
         }
 
         res = self.session.http.get(self.url)
+        match = hls_re.search(res.text)
 
-        try:
-            stream_url = m3u8_re.search(res.text).group(0)
-        except Exception:
-            raise NoStreamsError(self.url)
+        if not match:
+            return
+
+        stream_url = match.group("url")
 
         if stream_type == "live":
             return HLSStream.parse_variant_playlist(self.session, stream_url,
