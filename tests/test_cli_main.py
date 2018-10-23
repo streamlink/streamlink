@@ -18,9 +18,22 @@ class TestCLIMain(unittest.TestCase):
         tmpfile = tempfile.NamedTemporaryFile()
         try:
             streamlink_cli.main.console = console = Mock()
+            streamlink_cli.main.sys.stdin = stdin = Mock()
+            stdin.isatty.return_value = True
             console.ask.return_value = "y"
             self.assertTrue(os.path.exists(tmpfile.name))
             self.assertIsInstance(check_file_output(tmpfile.name, False), FileOutput)
+        finally:
+            tmpfile.close()
+
+    def test_check_file_output_exists_notty(self):
+        tmpfile = tempfile.NamedTemporaryFile()
+        try:
+            streamlink_cli.main.console = console = Mock()
+            streamlink_cli.main.sys.stdin = stdin = Mock()
+            stdin.isatty.return_value = False
+            self.assertTrue(os.path.exists(tmpfile.name))
+            self.assertRaises(SystemExit, check_file_output, tmpfile.name, False)
         finally:
             tmpfile.close()
 
