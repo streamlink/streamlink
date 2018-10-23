@@ -96,7 +96,6 @@ huajiao                 huajiao.com          Yes   No
 huomao                  huomao.com           Yes   No
 huya                    huya.com             Yes   No    Temporarily only HLS streams available.
 idf1                    idf1.fr              Yes   Yes
-idmantv                 tvibo.com/aztv       Yes   --
 ine                     ine.com              ---   Yes
 itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 kanal7                  kanal7.com           Yes   No
@@ -220,6 +219,7 @@ tv5monde                - tv5monde.com       Yes   Yes   Streams may be geo-rest
 tv8                     tv8.com.tr           Yes   No
 tv360                   tv360.com.tr         Yes   No
 tvcatchup               tvcatchup.com        Yes   No    Streams may be geo-restricted to Great Britain.
+tvibo                   player.tvibo.com     Yes   --
 tvnbg                   - tvn.bg             Yes   -
                         - live.tvn.bg
 tvp                     tvpstream.vod.tvp.pl Yes   No    Streams may be geo-restricted to Poland.

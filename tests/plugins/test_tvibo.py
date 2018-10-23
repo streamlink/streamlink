@@ -1,9 +1,9 @@
 import unittest
 
-from streamlink.plugins.idmantv import IdmanTV
+from streamlink.plugins.tvibo import Tvibo
 
 
-class TestPluginIdmanTV(unittest.TestCase):
+class TestPluginTvibo(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
             'http://player.tvibo.com/aztv/5929820',
@@ -11,7 +11,7 @@ class TestPluginIdmanTV(unittest.TestCase):
             'http://player.tvibo.com/aztv/3977238/',
         ]
         for url in should_match:
-            self.assertTrue(IdmanTV.can_handle_url(url))
+            self.assertTrue(Tvibo.can_handle_url(url))
 
     def test_can_handle_url_negative(self):
         should_not_match = [
@@ -19,4 +19,4 @@ class TestPluginIdmanTV(unittest.TestCase):
             'https://www.twitch.tv/twitch'
         ]
         for url in should_not_match:
-            self.assertFalse(IdmanTV.can_handle_url(url))
+            self.assertFalse(Tvibo.can_handle_url(url))
