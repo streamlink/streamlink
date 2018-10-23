@@ -1,15 +1,12 @@
-import hashlib
 import re
-import time
 
 from requests.adapters import HTTPAdapter
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HTTPStream
 
-API_URL = "http://live.bilibili.com/api/playurl?cid={0}&player=1&quality=0&sign={1}&otype=json"
+API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid={0}&quality=0&platform=web"
 ROOM_API = "https://api.live.bilibili.com/room/v1/Room/room_init?id={}"
-API_SECRET = "95acd7f6cc3392f3"
 SHOW_STATUS_OFFLINE = 0
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_ROUND = 2
@@ -27,6 +24,15 @@ _room_id_schema = validate.Schema(
         "data": validate.any(None, {
             "room_id": int,
             "live_status": int
+        })
+    },
+    validate.get("data")
+)
+
+_room_stream_list_schema = validate.Schema(
+    {
+        "data": validate.any(None, {
+            "durl": [{"url": validate.url()}]
         })
     },
     validate.get("data")
@@ -56,11 +62,8 @@ class Bilibili(Plugin):
         if room_id_json['live_status'] != SHOW_STATUS_ONLINE:
             return
 
-        ts = int(time.time() / 60)
-        sign = hashlib.md5(("{0}{1}".format(channel, API_SECRET, ts)).encode("utf-8")).hexdigest()
-
-        res = self.session.http.get(API_URL.format(room_id, sign))
-        room = self.session.http.json(res)
+        res = self.session.http.get(API_URL.format(room_id))
+        room = self.session.http.json(res, schema=_room_stream_list_schema)
         if not room:
             return
 
