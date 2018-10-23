@@ -4,8 +4,8 @@ simply extracts the videos stream_id, stream_url and stream_quality by
 scraping the HTML and JS of one of Huomaos mobile webpages.
 
 When viewing a stream on huomao.com, the base URL references a room_id. This
-room_id is mapped one-to-one to a stream_id which references the actual .flv
-video. Both stream_id, stream_url and stream_quality can be found in the
+room_id is mapped one-to-one to a stream_id which references the actual .m3u8
+file. Both stream_id, stream_url and stream_quality can be found in the
 HTML and JS source of the mobile_page. Since one stream can occur in many
 different qualities, we scrape all stream_url and stream_quality occurrences
 and return each option to the user.
@@ -14,7 +14,7 @@ and return each option to the user.
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.stream import HTTPStream
+from streamlink.stream import HLSStream
 
 # URL pattern for recognizing inputed Huomao.tv / Huomao.com URL.
 url_re = re.compile(r"""
@@ -35,18 +35,15 @@ mobile_url = "http://www.huomao.com/mobile/mob_live/{0}"
 #   <input id="html_stream" value="efmrCH" type="hidden">
 stream_id_pattern = re.compile(r'id=\"html_stream\" value=\"(?P<stream_id>\w+)\"')
 
-# Pattern for extracting each stream_url, stream_quality_url and a prettified
+# Pattern for extracting each stream_url and
 # stream_quality_name used for quality naming.
 #
 # Example from HTML:
-#   "2: 'http://live-ws.huomaotv.cn/live/'+stream+'_720/playlist.m3u8'"
+#   src="http://live-ws-hls.huomaotv.cn/live/<stream_id>_720/playlist.m3u8"
 stream_info_pattern = re.compile(r"""
-    [1-9]:
-    \s+
-    '(?P<stream_url>(?:\w|\.|:|-|/)+)
-    '\+stream\+'
-    (?P<stream_quality_url>_?(?P<stream_quality_name>\d*))
-    /playlist.m3u8'
+    (?P<stream_url>(?:[\w\/\.\-:]+)
+    \/[^_\"]+(?:_(?P<stream_quality_name>\d+))
+    ?/playlist.m3u8)
 """, re.VERBOSE)
 
 
@@ -65,11 +62,11 @@ class Huomao(Plugin):
         return stream_id.group("stream_id")
 
     def get_stream_info(self, html):
-        """Returns a nested list of different stream options.
+        """
+        Returns a nested list of different stream options.
 
-        Each entry in the list will contain a stream_url, stream_quality_url
-        and stream_quality_name for each stream occurrence that was found in
-        the JS.
+        Each entry in the list will contain a stream_url and stream_quality_name
+        for each stream occurrence that was found in the JS.
         """
         stream_info = stream_info_pattern.findall(html)
 
@@ -80,8 +77,8 @@ class Huomao(Plugin):
         # list and reassigning.
         stream_info_list = []
         for info in stream_info:
-            if not info[2]:
-                stream_info_list.append([info[0], info[1], "source"])
+            if not info[1]:
+                stream_info_list.append([info[0], "source"])
             else:
                 stream_info_list.append(list(info))
 
@@ -95,8 +92,8 @@ class Huomao(Plugin):
 
         streams = {}
         for info in stream_info:
-            streams[info[2]] = HTTPStream(self.session,
-                                          info[0] + stream_id + info[1] + ".flv")
+            if stream_id in info[0]:
+                streams[info[1]] = HLSStream(self.session, info[0])
 
         return streams
 
