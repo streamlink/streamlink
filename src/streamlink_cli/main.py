@@ -57,10 +57,14 @@ def check_file_output(filename, force):
     log.debug("Checking file output")
 
     if os.path.isfile(filename) and not force:
-        answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
-                             filename)
+        if sys.stdin.isatty():
+            answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
+                                 filename)
 
-        if answer.lower() != "y":
+            if answer.lower() != "y":
+                sys.exit()
+        else:
+            log.error("File {0} already exists, use --force to overwrite it.".format(filename))
             sys.exit()
 
     return FileOutput(filename)
@@ -322,7 +326,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
-    show_progress = isinstance(output, FileOutput) and output.fd is not stdout
+    show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
 
     stream_iterator = chain(
         [prebuffer],
