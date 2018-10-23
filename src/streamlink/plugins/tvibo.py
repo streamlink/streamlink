@@ -2,7 +2,6 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -12,10 +11,6 @@ class Tvibo(Plugin):
 
     _url_re = re.compile(r"https?://player\.tvibo\.com/\w+/(?P<id>\d+)")
     _api_url = "http://panel.tvibo.com/api/player/streamurl/{id}"
-
-    _api_response_schema = validate.Schema({
-        u"st": validate.url()
-    }, validate.get("st"))
 
     @classmethod
     def can_handle_url(cls, url):
