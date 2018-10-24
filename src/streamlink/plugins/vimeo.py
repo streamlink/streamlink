@@ -56,7 +56,7 @@ class Vimeo(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return Vimeo._url_re.match(url)
+        return cls._url_re.match(url)
 
     def _get_streams(self):
         if "player.vimeo.com" in self.url:
