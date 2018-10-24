@@ -106,7 +106,7 @@ You can also specify the location yourself using the :option:`--config` option.
 .. note::
 
   - `$XDG_CONFIG_HOME` is ``~/.config`` if it has not been overridden
-  - `%APPDATA%` is usually ``<your user directory>\Application Data``
+  - `%APPDATA%` is usually ``<your user directory>\AppData``
 
 .. note::
 
@@ -143,6 +143,9 @@ Example
     # Authenticate with Twitch
     twitch-oauth-token=mytoken
 
+.. note::
+    Full player paths are supported via configuration file options such as
+    ``player="C:\mpv-x86_64\mpv"``
 
 Plugin specific configuration file
 ----------------------------------
