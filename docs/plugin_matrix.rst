@@ -257,6 +257,7 @@ viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-rest
                         - viafree.no
                         - viafree.se
 vidio                   vidio.com            Yes   Yes
+vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
 vk                      vk.com               Yes   Yes
 vrtbe                   vrt.be/vrtnu         Yes   Yes
@@ -287,7 +288,6 @@ zattoo                  - zattoo.com         Yes   Yes
 zdf_mediathek           zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
 zengatv                 zengatv.com          Yes   No
 zhanqi                  zhanqi.tv            Yes   No
-vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 ======================= ==================== ===== ===== ===========================
 
 
