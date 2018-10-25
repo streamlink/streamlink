@@ -68,6 +68,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             res = self.session.http.get(key_uri, exception=StreamError,
                                         retries=self.retries,
                                         **self.reader.request_params)
+            res.encoding = "binary/octet-stream"
             self.key_data = res.content
             self.key_uri = key_uri
 
