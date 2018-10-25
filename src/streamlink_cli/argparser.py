@@ -739,9 +739,10 @@ def build_parser():
     )
     transport.add_argument(
         "--hls-segment-key-uri",
-        metavar=str,
+        metavar="URI",
+        type=str,
         help="""
-        URI to segment encryption key. If none is specified, the URI contained
+        URI to segment encryption key. If no URI is specified, the URI contained
         in the segments will be used.
 
         Example: --hls-segment-key-uri "https://example.com/hls/encryption_key"
