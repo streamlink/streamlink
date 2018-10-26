@@ -20,15 +20,15 @@ class Tvibo(Plugin):
         channel_id = self._url_re.match(self.url).group("id")
 
         api_response = self.session.http.get(
-                     self._api_url.format(id=channel_id))
+            self._api_url.format(id=channel_id),
+            acceptable_status=(200, 404))
 
         data = self.session.http.json(api_response)
+        log.trace("{0!r}".format(data))
         if data.get("st"):
             yield "source", HLSStream(self.session, data["st"])
         elif data.get("error"):
             log.error(data["error"]["message"])
-        else:
-            return
 
 
 __plugin__ = Tvibo
