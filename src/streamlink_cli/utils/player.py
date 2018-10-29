@@ -24,7 +24,7 @@ def find_default_player():
         path = check_paths((exename,), paths)
 
         if not path:
-            subpath = "mpv-x86_64\\mpv\\"
+            subpath = "mpv-x86_64\\"
             envvars = ("PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432")
             paths = filter(None, (os.environ.get(var) for var in envvars))
             paths = (os.path.join(p, subpath) for p in paths)
