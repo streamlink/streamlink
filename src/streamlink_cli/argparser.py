@@ -258,23 +258,23 @@ def build_parser():
         metavar="COMMAND",
         default=find_default_player(),
         help="""
-        Player to feed stream data to. By default, VLC will be used if it can be
+        Player to feed stream data to. By default, MPV will be used if it can be
         found in its default location.
 
         This is a shell-like syntax to support using a specific player:
 
-          %(prog)s --player=vlc <url> [stream]
+          %(prog)s --player=mpv <url> [stream]
 
         Absolute or relative paths can also be passed via this option in the
         event the player's executable can not be resolved:
 
-          %(prog)s --player=/path/to/vlc <url> [stream]
-          %(prog)s --player=./vlc-player/vlc <url> [stream]
+          %(prog)s --player=/path/to/mpv <url> [stream]
+          %(prog)s --player=./mpv <url> [stream]
 
         To use a player that is located in a path with spaces you must quote the
         parameter or its value:
 
-          %(prog)s "--player=/path/with spaces/vlc" <url> [stream]
+          %(prog)s "--player=/path/with spaces/mpv" <url> [stream]
           %(prog)s --player "C:\\path\\with spaces\\mpc-hc64.exe" <url> [stream]
 
         Options may also be passed to the player. For example:

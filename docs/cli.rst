@@ -13,7 +13,7 @@ and if you're on Linux or BSD you probably already know the drill.
 
 The way Streamlink works is that it's only a means to extract and transport
 the streams, and the playback is done by an external video player. Streamlink
-works best with `VLC`_ or `mpv`_, which are also cross-platform, but other players
+works best with `mpv`_ or `VLC`_, which are also cross-platform, but other players
 may be compatible too, see the :ref:`Players` page for a complete overview.
 
 Now to get into actually using Streamlink, let's say you want to watch the

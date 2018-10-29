@@ -1,7 +1,7 @@
 # Format is option=value. Lines starting with a # is considered comments
 # and are ignored.
 
-# By default streamlink will attempt to locate VLC on your system
+# By default streamlink will attempt to locate MPV on your system
 # and use that, but you can also specify the location of a player
 # yourself.
 
@@ -9,7 +9,12 @@
 # is because the player command is parsed like a shell command to allow
 # parameters to be passed to the player.
 
-# Here is a few examples of players:
+# Here are a few examples of players:
+
+# mpv
+
+#player="C:\Program Files (x86)\mpv-x86_64\mpv.exe"
+#player="C:\Program Files\mpv-x86_64\mpv.exe"
 
 # VLC
 #player="C:\Program Files (x86)\VideoLAN\VLC\vlc.exe"

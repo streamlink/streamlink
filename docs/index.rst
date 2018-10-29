@@ -2,7 +2,7 @@ Overview
 --------
 
 Streamlink is a :ref:`command-line utility <cli>` that pipes video streams
-from various services into a video player, such as `VLC`_.
+from various services into a video player, such as `mpv`_.
 The main purpose of Streamlink is to allow the user to avoid buggy and CPU
 heavy flash plugins but still be able to enjoy various streamed content.
 There is also an :ref:`API <api_guide>` available for developers who want access
@@ -36,7 +36,7 @@ Quickstart
 ----------
 
 The default behaviour of Streamlink is to playback a stream in the default
-player (`VLC <https://www.videolan.org/>`_).
+player (`mpv <https://mpv.io/>`_).
 
 .. sourcecode:: console
 

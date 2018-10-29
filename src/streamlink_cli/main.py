@@ -92,7 +92,7 @@ def create_output(plugin):
         http = namedpipe = None
 
         if not args.player:
-            console.exit("The default player (VLC) does not seem to be "
+            console.exit("The default player (mpv) does not seem to be "
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
