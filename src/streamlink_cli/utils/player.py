@@ -15,8 +15,8 @@ def check_paths(exes, paths):
 def find_default_player():
     if "darwin" in sys.platform:
         paths = os.environ.get("PATH", "").split(":")
-        paths += ["/Applications/MPV.app/Contents/MacOS/"]
-        paths += ["~/Applications/MPV.app/Contents/MacOS/"]
+        paths += ["/Applications/mpv.app/Contents/MacOS/"]
+        paths += ["~/Applications/mpv.app/Contents/MacOS/"]
         path = check_paths(("MPV", "mpv"), paths)
     elif "win32" in sys.platform:
         exename = "mpv.exe"
