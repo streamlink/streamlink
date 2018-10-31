@@ -213,6 +213,12 @@ class TwitchAPI(object):
     def channel_info(self, channel, **params):
         return self.call("/kraken/channels/{0}".format(channel), **params)
 
+    def streams(self, channel_id, **params):
+        return self.call("/kraken/streams/{0}".format(channel_id), **params)
+
+    def clips(self, clip_name, **params):
+        return self.call("/kraken/clips/{0}".format(clip_name), **params)
+
     # Private API calls
 
     def access_token(self, endpoint, asset, **params):
@@ -286,6 +292,38 @@ class Twitch(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
+    def _get_metadata(self):
+        if self.video_id:
+            api_res = self.api.videos(self.video_id)
+            self.title = api_res["title"]
+            self.author = api_res["channel"]["display_name"]
+            self.category = api_res["game"]
+        elif self.clip_name:
+            api_res = self.api.clips(self.clip_name)
+            self.title = api_res["title"]
+            self.author = api_res["broadcaster"]["display_name"]
+            self.category = api_res["game"]
+        elif self._channel:
+            api_res = self.api.streams(self.channel_id)["stream"]["channel"]
+            self.title = api_res["status"]
+            self.author = api_res["display_name"]
+            self.category = api_res["game"]
+
+    def get_title(self):
+        if self.title is None:
+            self._get_metadata()
+        return self.title
+
+    def get_author(self):
+        if self.author is None:
+            self._get_metadata()
+        return self.author
+
+    def get_category(self):
+        if self.category is None:
+            self._get_metadata()
+        return self.category
+
     def __init__(self, url):
         Plugin.__init__(self, url)
         self._hosted_chain = []
@@ -298,6 +336,9 @@ class Twitch(Plugin):
         self._channel_id = None
         self._channel = None
         self.clip_name = None
+        self.title = None
+        self.author = None
+        self.category = None
 
         if self.subdomain == "player":
             # pop-out player
