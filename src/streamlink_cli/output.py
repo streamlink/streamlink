@@ -47,24 +47,34 @@ class Output(object):
 
 
 class FileOutput(Output):
-    def __init__(self, filename=None, fd=None):
+    def __init__(self, filename=None, fd=None, record=None):
         super(FileOutput, self).__init__()
         self.filename = filename
         self.fd = fd
+        self.record = record
 
     def _open(self):
         if self.filename:
             self.fd = open(self.filename, "wb")
 
+        if self.record:
+            self.record.open()
+
         if is_win32:
             msvcrt.setmode(self.fd.fileno(), os.O_BINARY)
+            if self.record:
+                msvcrt.setmode(self.record.fileno(), os.O_BINARY)
 
     def _close(self):
         if self.fd is not stdout:
             self.fd.close()
+        if self.record:
+            self.record.close()
 
     def _write(self, data):
         self.fd.write(data)
+        if self.record:
+            self.record.write(data)
 
 
 class PlayerOutput(Output):

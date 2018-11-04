@@ -81,15 +81,19 @@ def create_output(plugin):
 
     """
 
-    if args.output and not args.record:
+    if (args.output or args.stdout) and (args.record or args.record_and_pipe):
+        console.exit("Cannot use record options with other file output options.")
+
+    if args.output:
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
             out = check_file_output(args.output, args.force)
-    elif args.stdout and not args.record:
+    elif args.stdout:
         out = FileOutput(fd=stdout)
-    elif args.stdout and args.record:
-        console.exit("The option --record can't be used with --stdout.")
+    elif args.record_and_pipe:
+        record = check_file_output(args.record_and_pipe, args.force)
+        out = FileOutput(fd=stdout, record=record)
     else:
         http = namedpipe = None
 
@@ -111,8 +115,8 @@ def create_output(plugin):
 
         title = create_title(plugin)
 
-        if args.output and args.record:
-            record = check_file_output(args.output, args.force)
+        if args.record:
+            record = check_file_output(args.record, args.force)
         else:
             record = None
 
@@ -336,6 +340,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
+    show_record_progress = isinstance(output.record, FileOutput)
 
     stream_iterator = chain(
         [prebuffer],
@@ -344,6 +349,9 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     if show_progress:
         stream_iterator = progress(stream_iterator,
                                    prefix=os.path.basename(args.output))
+    elif show_record_progress:
+        stream_iterator = progress(stream_iterator,
+                                   prefix=os.path.basename(args.record))
 
     try:
         for data in stream_iterator:
