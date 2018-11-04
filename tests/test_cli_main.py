@@ -159,12 +159,16 @@ class TestCLIMain(unittest.TestCase):
         self.assertIsInstance(create_output(FakePlugin), FileOutput)
 
     def test_create_output_record_and_pipe(self):
-        streamlink_cli.main.console = Mock()
-        streamlink_cli.main.args = args = Mock()
-        args.output = None
-        args.stdout = None
-        args.record_and_pipe = True
-        self.assertIsInstance(create_output(FakePlugin), FileOutput)
+        tmpfile = tempfile.NamedTemporaryFile()
+        try:
+            streamlink_cli.main.console = Mock()
+            streamlink_cli.main.args = args = Mock()
+            args.output = None
+            args.stdout = None
+            args.record_and_pipe = tmpfile.name
+            self.assertIsInstance(create_output(FakePlugin), FileOutput)
+        finally:
+            tmpfile.close()
 
     def test_create_output_record(self):
         tmpfile = tempfile.NamedTemporaryFile()
@@ -177,6 +181,7 @@ class TestCLIMain(unittest.TestCase):
             args.record_and_pipe = None
             args.title = None
             args.player = "mpv"
+            args.player_fifo = None
             self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
         finally:
             tmpfile.close()
@@ -189,4 +194,4 @@ class TestCLIMain(unittest.TestCase):
         args.stdout = True
         args.record_and_pipe = True
         create_output(FakePlugin)
-        console.exit.assert_called()
+        console.exit.assert_called_with("Cannot use record options with other file output options.")
