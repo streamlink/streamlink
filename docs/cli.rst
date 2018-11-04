@@ -106,7 +106,7 @@ You can also specify the location yourself using the :option:`--config` option.
 .. note::
 
   - `$XDG_CONFIG_HOME` is ``~/.config`` if it has not been overridden
-  - `%APPDATA%` is usually ``<your user directory>\Application Data``
+  - `%APPDATA%` is usually ``<your user directory>\AppData``
 
 .. note::
 
@@ -143,6 +143,9 @@ Example
     # Authenticate with Twitch
     twitch-oauth-token=mytoken
 
+.. note::
+    Full player paths are supported via configuration file options such as
+    ``player="C:\mpv-x86_64\mpv"``
 
 Plugin specific configuration file
 ----------------------------------
@@ -238,6 +241,27 @@ you're in that region.
 For this, the plugin provides the :option:`--crunchyroll-purge-credentials`
 option, which removes your saved session and credentials and tries to log
 in again using your username and password.
+
+.. _cli-funimationnow:
+
+Authenticating with FunimationNow
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Like Crunchyroll, the FunimationNow plugin requires authenticating with a premium account to access some
+content: :option:`--funimation-email`, :option:`--funimation-password`. In addition, this plugin requires a ``incap_ses`` cookie to be
+sent with each HTTP request (see issue #2088); this unique session cookie can be found in your browser and sent via the :option:`--http-cookie` option.
+
+For example:
+
+.. sourcecode:: console
+
+    $ streamlink --funimation-email='xxx' --funimation-password='xxx' --http-cookie 'incap_ses_xxx=xxxx=' https://funimation.com/shows/show/an-episode-link
+
+.. note::
+
+    There are multiple ways to retrieve the required cookie.  For more
+    information on browser cookies, please consult the following:
+
+    - `What are cookies? <http://www.whatarecookies.com/view.asp>`_
 
 Sideloading plugins
 -------------------

@@ -23,6 +23,7 @@ class TestPluginPluzz(unittest.TestCase):
         self.assertTrue(Pluzz.can_handle_url("http://sport.francetvinfo.fr/roland-garros/direct"))
         self.assertTrue(Pluzz.can_handle_url("http://sport.francetvinfo.fr/roland-garros/live-court-3"))
         self.assertTrue(Pluzz.can_handle_url("http://sport.francetvinfo.fr/roland-garros/andy-murray-gbr-1-andrey-kuznetsov-rus-1er-tour-court-philippe-chatrier"))
+        self.assertTrue(Pluzz.can_handle_url("https://www.francetvinfo.fr/en-direct/tv.html"))
 
         # shouldn't match
         self.assertFalse(Pluzz.can_handle_url("http://www.france.tv/"))
@@ -30,6 +31,5 @@ class TestPluginPluzz(unittest.TestCase):
         self.assertFalse(Pluzz.can_handle_url("http://www.ludo.fr/"))
         self.assertFalse(Pluzz.can_handle_url("http://www.ludo.fr/jeux"))
         self.assertFalse(Pluzz.can_handle_url("http://www.zouzous.fr/"))
-        self.assertFalse(Pluzz.can_handle_url("http://france3-regions.francetvinfo.fr/"))
         self.assertFalse(Pluzz.can_handle_url("http://www.tvcatchup.com/"))
         self.assertFalse(Pluzz.can_handle_url("http://www.youtube.com/"))

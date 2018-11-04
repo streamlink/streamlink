@@ -28,7 +28,7 @@ else:
     ]
     PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/streamlink/plugins")
 
-STREAM_SYNONYMS = ["best", "worst"]
+STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 
 __all__ = [

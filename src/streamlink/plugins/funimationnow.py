@@ -4,7 +4,6 @@ import logging
 import random
 import re
 
-from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -33,10 +32,12 @@ class Experience(object):
          "user": {"id": int}}
     ))
 
-    def __init__(self, experience_id):
+    def __init__(self, session, experience_id):
         """
+        :param session: streamlink session
         :param experience_id: starting experience_id, may be changed later
         """
+        self.session = session
         self.experience_id = experience_id
         self._language = None
         self.cache = {}
@@ -50,7 +51,11 @@ class Experience(object):
 
         log.debug("Making {0}request to {1}".format("authorized " if self.token else "", url))
 
-        return self.session.http.request(method, url, *args, headers=headers, **kwargs)
+        res = self.session.http.request(method, url, *args, headers=headers, **kwargs)
+        if "_Incapsula_Resource" in res.text:
+            log.error("This page is protected by Incapsula, please see https://github.com/streamlink/streamlink/issues/2088 for a workaround.")
+            return
+        return res
 
     def get(self, *args, **kwargs):
         return self.request("GET", *args, **kwargs)
@@ -68,8 +73,9 @@ class Experience(object):
         api_url = self.show_api_url.format(experience_id=self.experience_id)
         log.debug("Requesting experience data: {0}".format(api_url))
         res = self.get(api_url)
-        data = self.session.http.json(res)
-        self.cache[self.experience_id] = data
+        if res:
+            data = self.session.http.json(res)
+            self.cache[self.experience_id] = data
 
     @property
     def show_info(self):
@@ -83,12 +89,13 @@ class Experience(object):
         Search for the episode with the requested experience Id
         :return:
         """
-        for season in self.show_info["seasons"]:
-            for episode in season["episodes"]:
-                for lang in episode["languages"].values():
-                    for alpha in lang["alpha"].values():
-                        if alpha["experienceId"] == self.experience_id:
-                            return episode
+        if self.show_info:
+            for season in self.show_info["seasons"]:
+                for episode in season["episodes"]:
+                    for lang in episode["languages"].values():
+                        for alpha in lang["alpha"].values():
+                            if alpha["experienceId"] == self.experience_id:
+                                return episode
 
     @property
     def language(self):
@@ -198,88 +205,77 @@ class FunimationNow(Plugin):
         rlanguage = {"en": "english", "ja": "japanese"}.get(self.get_option("language").lower(),
                                                             self.get_option("language").lower())
         if "_Incapsula_Resource" in res.text:
-            self.bypass_incapsula(res)
-            res = self.session.http.get(self.url)
+            log.error("This page is protected by Incapsula, please see https://github.com/streamlink/streamlink/issues/2088 for a workaround.")
+            return
+
+        if "Out of Territory" in res.text:
+            log.error("The content requested is not available in your territory.")
+            return
 
         id_m = self.experience_id_re.search(res.text)
         experience_id = id_m and int(id_m.group(1))
         if experience_id:
             log.debug("Found experience ID: {0}", experience_id)
-            exp = Experience(experience_id)
+            exp = Experience(self.session, experience_id)
             if self.get_option("email") and self.get_option("password"):
                 if exp.login(self.get_option("email"), self.get_option("password")):
                     log.info("Logged in to Funimation as {0}", self.get_option("email"))
                 else:
                     log.warning("Failed to login")
 
-            log.debug("Found episode: {0}", exp.episode_info["episodeTitle"])
-            log.debug("  has languages: {0}", ", ".join(exp.episode_info["languages"].keys()))
-            log.debug("  requested language: {0}", rlanguage)
-            log.debug("  current language:   {0}", exp.language)
-            if rlanguage != exp.language:
-                log.debug("switching language to: {0}", rlanguage)
-                exp.set_language(rlanguage)
-                if exp.language != rlanguage:
-                    log.warning("Requested language {0} is not available, continuing with {1}",
-                                rlanguage, exp.language)
-                else:
-                    log.debug("New experience ID: {0}", exp.experience_id)
-
-            subtitles = None
-            stream_metadata = {}
-            disposition = {}
-            for subtitle in exp.subtitles():
-                log.debug("Subtitles: {0}", subtitle["src"])
-                if subtitle["src"].endswith(".vtt") or subtitle["src"].endswith(".srt"):
-                    sub_lang = {"en": "eng", "ja": "jpn"}[subtitle["language"]]
-                    # pick the first suitable subtitle stream
-                    subtitles = subtitles or HTTPStream(self.session, subtitle["src"])
-                    stream_metadata["s:s:0"] = ["language={0}".format(sub_lang)]
-                stream_metadata["s:a:0"] = ["language={0}".format(exp.language_code)]
-
-            sources = exp.sources()
-            if 'errors' in sources:
-                for error in sources['errors']:
-                    log.error("{0} : {1}".format(error['title'], error['detail']))
-                return
-
-            for item in sources["items"]:
-                url = item["src"]
-                if ".m3u8" in url:
-                    for q, s in HLSStream.parse_variant_playlist(self.session, url).items():
-                        if self.get_option("mux_subtitles") and subtitles:
-                            yield q, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
-                                                 disposition=disposition)
-                        else:
-                            yield q, s
-                elif ".mp4" in url:
-                    # TODO: fix quality
-                    s = HTTPStream(self.session, url)
-                    if self.get_option("mux_subtitles") and subtitles:
-                        yield self.mp4_quality, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
-                                                            disposition=disposition)
+            if exp.episode_info:
+                log.debug("Found episode: {0}", exp.episode_info["episodeTitle"])
+                log.debug("  has languages: {0}", ", ".join(exp.episode_info["languages"].keys()))
+                log.debug("  requested language: {0}", rlanguage)
+                log.debug("  current language:   {0}", exp.language)
+                if rlanguage != exp.language:
+                    log.debug("switching language to: {0}", rlanguage)
+                    exp.set_language(rlanguage)
+                    if exp.language != rlanguage:
+                        log.warning("Requested language {0} is not available, continuing with {1}",
+                                    rlanguage, exp.language)
                     else:
-                        yield self.mp4_quality, s
+                        log.debug("New experience ID: {0}", exp.experience_id)
+
+                subtitles = None
+                stream_metadata = {}
+                disposition = {}
+                for subtitle in exp.subtitles():
+                    log.debug("Subtitles: {0}", subtitle["src"])
+                    if subtitle["src"].endswith(".vtt") or subtitle["src"].endswith(".srt"):
+                        sub_lang = {"en": "eng", "ja": "jpn"}[subtitle["language"]]
+                        # pick the first suitable subtitle stream
+                        subtitles = subtitles or HTTPStream(self.session, subtitle["src"])
+                        stream_metadata["s:s:0"] = ["language={0}".format(sub_lang)]
+                    stream_metadata["s:a:0"] = ["language={0}".format(exp.language_code)]
+
+                sources = exp.sources()
+                if 'errors' in sources:
+                    for error in sources['errors']:
+                        log.error("{0} : {1}".format(error['title'], error['detail']))
+                    return
+
+                for item in sources["items"]:
+                    url = item["src"]
+                    if ".m3u8" in url:
+                        for q, s in HLSStream.parse_variant_playlist(self.session, url).items():
+                            if self.get_option("mux_subtitles") and subtitles:
+                                yield q, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
+                                                     disposition=disposition)
+                            else:
+                                yield q, s
+                    elif ".mp4" in url:
+                        # TODO: fix quality
+                        s = HTTPStream(self.session, url)
+                        if self.get_option("mux_subtitles") and subtitles:
+                            yield self.mp4_quality, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
+                                                                disposition=disposition)
+                        else:
+                            yield self.mp4_quality, s
 
         else:
             log.error("Could not find experience ID?!")
 
-    def bypass_incapsula(self, res):
-        log.info("Attempting to by-pass Incapsula...")
-        self.clear_cookies(lambda c: "incap" in c.name)
-        for m in re.finditer(r'''"([A-Z0-9]+)"''', res.text):
-            d = m.group(1)
-            # decode the encoded blob to text
-            js = "".join(map(lambda i: chr(int(i, 16)), [d[x:x + 2] for x in range(0, len(d), 2)]))
-            jsm = re.search(r'''"GET","([^"]+)''', js)
-            url = jsm and jsm.group(1)
-            if url:
-                log.debug("Found Incapsula auth URL: {0}", url)
-                res = self.session.http.get(urljoin(self.url, url))
-                success = res.status_code == 200
-                if success:
-                    self.save_cookies(lambda c: "incap" in c.name)
-                return success
 
 
 __plugin__ = FunimationNow
