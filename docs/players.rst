@@ -98,12 +98,14 @@ using a different player.
 Youtube Live does not work with Mplayer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Some versions of Mplayer cannot play Youtube Live streams. And errors like:
-Cannot seek backward in linear streams!
-Seek failed
+.. code-block:: console
+    Cannot seek backward in linear streams!
+    Seek failed
+
 Switching to a recent fork such as mpv resolves the issue.
 
 When using OMXPlayer the stream stops unexpectedly
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 When reading from a fifo pipe OMXPlayer will quit when there is no data, to fix
 this you can supply the timeout option to OMXPlayer using :option:`--player "omxplayer --timeout 20" <--player>`.
-For live streams it might be beneficial to also add :option:`--live`.
+For live streams it might be beneficial to also add the omxplayer parameter ``--live``.
