@@ -98,7 +98,9 @@ using a different player.
 Youtube Live does not work with Mplayer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Some versions of Mplayer cannot play Youtube Live streams. And errors like:
+
 .. code-block:: console
+
     Cannot seek backward in linear streams!
     Seek failed
 
