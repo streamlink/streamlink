@@ -7,6 +7,7 @@ class TestPluginSkai(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
             'http://www.skai.gr/player/tvlive/',
+            'http://www.skaitv.gr/live',
         ]
         for url in should_match:
             self.assertTrue(Skai.can_handle_url(url))
