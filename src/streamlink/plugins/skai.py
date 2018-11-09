@@ -3,20 +3,15 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 
-YOUTUBE_URL = "https://www.youtube.com/watch?v={0}"
-_url_re = re.compile(r'http(s)?://www\.skai.gr/.*')
-_youtube_id = re.compile(r'<span\s+itemprop="contentUrl"\s+href="(.*)"></span>', re.MULTILINE)
-_youtube_url_schema = validate.Schema(
-    validate.all(
-        validate.transform(_youtube_id.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.text
-            )
-        )
-    )
+
+_url_re = re.compile(r'http(s)?://www\.skai(?:tv)?.gr/.*')
+_api_url = "http://www.skaitv.gr/json/live.php"
+_api_res_schema = validate.Schema(validate.all(
+    validate.get("now"),
+    {
+        "livestream": validate.url()
+    },
+    validate.get("livestream"))
 )
 
 
@@ -26,9 +21,10 @@ class Skai(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        channel_id = self.session.http.get(self.url, schema=_youtube_url_schema)
-        if channel_id:
-            return self.session.streams(YOUTUBE_URL.format(channel_id))
+        api_res = self.session.http.get(_api_url)
+        yt_url = self.session.http.json(api_res, schema=_api_res_schema)
+        if yt_url:
+            return self.session.streams(yt_url)
 
 
 __plugin__ = Skai
