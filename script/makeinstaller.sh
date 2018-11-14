@@ -43,6 +43,15 @@ do
     touch "${build_dir_plugins}/$i.py"
 done
 
+echo "Creating images"
+# Create all of our various images
+for size in 16 32 48 256; do
+  inkscape --no-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
+  optipng -o7 -out "optimized-${size}.png" "icon-${size}.png"
+done
+convert optimized-{16,32,48,256}.png icon.ico
+mv icon.ico ../win32/icon.ico
+
 echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
 
 cat > "${build_dir}/streamlink.cfg" <<EOF
@@ -50,7 +59,7 @@ cat > "${build_dir}/streamlink.cfg" <<EOF
 name=Streamlink
 version=${STREAMLINK_VERSION}
 entry_point=streamlink_cli.main:main
-icon=../win32/doggo.ico
+icon=../win32/icon.ico
 
 [Python]
 version=3.6.6
