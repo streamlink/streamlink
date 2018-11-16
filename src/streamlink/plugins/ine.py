@@ -23,7 +23,7 @@ class INE(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(json.loads),
-                {"playlist": unicode},
+                {"playlist": validate.text},
                 validate.get("playlist")
             )
         )
