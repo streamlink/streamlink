@@ -340,7 +340,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
-    show_record_progress = isinstance(output.record, FileOutput)
+    show_record_progress = isinstance(output.record, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
 
     stream_iterator = chain(
         [prebuffer],
@@ -979,7 +979,7 @@ def main():
 
     # Console output should be on stderr if we are outputting
     # a stream to stdout.
-    if args.stdout or args.output == "-":
+    if args.stdout or args.output == "-" or args.record_and_pipe:
         console_out = sys.stderr
     else:
         console_out = sys.stdout

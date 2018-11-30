@@ -504,7 +504,7 @@ def build_parser():
         "-r", "--record",
         metavar="FILENAME",
         help="""
-        Write stream data to FILENAME while also playing it.
+        Open the stream in the player, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
         """
@@ -513,7 +513,7 @@ def build_parser():
         "-R", "--record-and-pipe",
         metavar="FILENAME",
         help="""
-        Write stream data to FILENAME while also playing it.
+        Write stream data to stdout, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
         """
