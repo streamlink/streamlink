@@ -184,6 +184,7 @@ streamingvideoprovider  streamingvid... [2]_ Yes   --    RTMP streams requires r
                                                          K-S-V patches.
 streamme                stream.me            Yes   --
 streann                 ott.streann.com      Yes   Yes
+stv                     player.stv.tv        Yes   No    Streams are geo-restricted to Great Britain.
 svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                         - svtflow.se
                         - oppetarkiv.se
