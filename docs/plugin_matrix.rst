@@ -39,8 +39,12 @@ btv                     btv.bg               Yes   No    Requires login, and geo
 canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
 cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                         - bgonair.bg
-                        - kanal3.bg
                         - bitelevision.com
+                        - bloombergtv.bg
+                        - inlife.bg
+                        - kanal3.bg
+                        - mmtvmusic.com
+                        - mu-vi.tv
                         - nova.bg
 ceskatelevize           ceskatelevize.cz     Yes   Yes   Streams may be geo-restricted to Czechia.
 cinergroup              - showtv.com.tr      Yes   No
