@@ -165,6 +165,7 @@ rtpplay                 rtp.pt/play          Yes   Yes   Streams may be geo-rest
 rtve                    rtve.es              Yes   No
 rtvs                    rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                     ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
+sbscokr                 play.sbs.co.kr       Yes   No    Streams may be geo-restricted to South Korea.
 schoolism               schoolism.com        --    Yes   Requires a login and a subscription.
 senategov               senate.gov           --    Yes   Supports hearing streams.
 showroom                showroom-live.com    Yes   No    Only RTMP streams are available.
