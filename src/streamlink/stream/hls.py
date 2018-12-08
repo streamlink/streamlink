@@ -45,6 +45,8 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.byterange_offsets = defaultdict(int)
         self.key_data = None
         self.key_uri = None
+        self.key_uri_override = options.get("hls-segment-key-uri")
+
         if self.ignore_names:
             # creates a regex from a list of segment names,
             # this will be used to ignore segments.
@@ -57,15 +59,18 @@ class HLSStreamWriter(SegmentedStreamWriter):
         if key.method != "AES-128":
             raise StreamError("Unable to decrypt cipher {0}", key.method)
 
-        if not key.uri:
+        if not self.key_uri_override and not key.uri:
             raise StreamError("Missing URI to decryption key")
 
-        if self.key_uri != key.uri:
-            res = self.session.http.get(key.uri, exception=StreamError,
+        key_uri = self.key_uri_override if self.key_uri_override else key.uri
+
+        if self.key_uri != key_uri:
+            res = self.session.http.get(key_uri, exception=StreamError,
                                         retries=self.retries,
                                         **self.reader.request_params)
+            res.encoding = "binary/octet-stream"
             self.key_data = res.content
-            self.key_uri = key.uri
+            self.key_uri = key_uri
 
         iv = key.iv or num_to_iv(sequence)
 
