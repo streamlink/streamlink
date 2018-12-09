@@ -7,6 +7,7 @@ import unittest
 
 import streamlink.plugins
 from streamlink import Streamlink
+from streamlink.utils import load_module
 
 
 class PluginTestMeta(type):
@@ -14,8 +15,7 @@ class PluginTestMeta(type):
         plugin_path = os.path.dirname(streamlink.plugins.__file__)
         plugins = []
         for loader, pname, ispkg in pkgutil.iter_modules([plugin_path]):
-            file, pathname, desc = imp.find_module(pname, [plugin_path])
-            module = imp.load_module(pname, file, pathname, desc)
+            module = load_module(pname, plugin_path)
             if hasattr(module, "__plugin__"):
                 plugins.append((pname))
 
