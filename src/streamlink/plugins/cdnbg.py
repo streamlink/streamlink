@@ -19,7 +19,6 @@ class CDNBG(Plugin):
             nova\.bg/live|
             kanal3\.bg/live|
             bgonair\.bg/tvonline|
-            tvevropa\.com/na-zhivo|
             inlife\.bg|
             mmtvmusic\.com/live|
             mu-vi\.tv/LiveStreams/pages/Live\.aspx|

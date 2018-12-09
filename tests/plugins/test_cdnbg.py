@@ -22,7 +22,9 @@ class TestPluginCDNBG(unittest.TestCase):
         self.assertTrue(CDNBG.can_handle_url("http://inlife.bg/"))
         self.assertTrue(CDNBG.can_handle_url("https://mmtvmusic.com/live/"))
         self.assertTrue(CDNBG.can_handle_url("http://mu-vi.tv/LiveStreams/pages/Live.aspx"))
+        self.assertTrue(CDNBG.can_handle_url("https://www.bloombergtv.bg/video"))
 
         # shouldn't match
         self.assertFalse(CDNBG.can_handle_url("http://www.tvcatchup.com/"))
         self.assertFalse(CDNBG.can_handle_url("http://www.youtube.com/"))
+        self.assertFalse(CDNBG.can_handle_url("https://www.tvevropa.com"))
