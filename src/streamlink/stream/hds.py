@@ -82,7 +82,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
                                          **request_params)
         except StreamError as err:
             log.error("Failed to open fragment {0}-{1}: {2}",
-                              fragment.segment, fragment.fragment, err)
+                      fragment.segment, fragment.fragment, err)
             return self.fetch(fragment, retries - 1)
 
     def write(self, fragment, res, chunk_size=8192):
@@ -100,12 +100,12 @@ class HDSStreamWriter(SegmentedStreamWriter):
                     break
         except F4VError as err:
             log.error("Failed to parse fragment {0}-{1}: {2}",
-                              fragment.segment, fragment.fragment, err)
+                      fragment.segment, fragment.fragment, err)
             return
 
         if not mdat:
             log.error("No MDAT box found in fragment {0}-{1}",
-                              fragment.segment, fragment.fragment)
+                      fragment.segment, fragment.fragment)
             return
 
         try:
@@ -116,16 +116,16 @@ class HDSStreamWriter(SegmentedStreamWriter):
                     break
             else:
                 log.debug("Download of fragment {0}-{1} complete",
-                                  fragment.segment, fragment.fragment)
+                          fragment.segment, fragment.fragment)
         except IOError as err:
             if "Unknown tag type" in str(err):
                 log.error("Unknown tag type found, this stream is "
-                                  "probably encrypted")
+                          "probably encrypted")
                 self.close()
                 return
 
             log.error("Error reading fragment {0}-{1}: {2}",
-                              fragment.segment, fragment.fragment, err)
+                      fragment.segment, fragment.fragment, err)
 
 
 class HDSStreamWorker(SegmentedStreamWorker):
@@ -182,7 +182,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                                        current_fragment - (fragment_buffer - 1))
 
                 log.debug("Live edge buffer {0} sec is {1} fragments",
-                                  self.live_edge, fragment_buffer)
+                          self.live_edge, fragment_buffer)
 
                 # Make sure we don't have a duration set when it's a
                 # live stream since it will just confuse players anyway.
@@ -327,7 +327,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                                     fragment_duration, fragment_url)
 
                 log.debug("Adding fragment {0}-{1} to queue",
-                                  fragment.segment, fragment.fragment)
+                          fragment.segment, fragment.fragment)
                 yield fragment
 
                 # End of stream
@@ -556,7 +556,7 @@ class HDSStream(Stream):
                     # manifest but not the child one.
                     bitrate = media.attrib.get("bitrate")
 
-                    if bitrate and not re.match("^(\d+)k$", name):
+                    if bitrate and not re.match(r"^(\d+)k$", name):
                         name = bitrate + "k"
 
                     streams[name] = stream
