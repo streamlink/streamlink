@@ -53,6 +53,9 @@ addons:
   apt:
     packages:
     - nsis
+    - imagemagick
+    - optipng
+    - inkscape
 
 before_deploy:
   - ./script/bintrayconfig.sh

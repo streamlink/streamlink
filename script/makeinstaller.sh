@@ -43,13 +43,13 @@ do
     touch "${build_dir_plugins}/$i.py"
 done
 
-echo "Creating images"
-# Create all of our various images
+echo "Creating images" 1>&2
+# Create images
 for size in 16 32 48 256; do
   inkscape --no-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
   optipng -o7 -out "optimized-${size}.png" "icon-${size}.png"
 done
-convert optimized-{16,32,48,256}.png icon.ico
+convert -density 256x256 -background transparent icon.svg -define icon:auto-resize -colors 256 icon.ico
 mv icon.ico ../win32/icon.ico
 
 echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
