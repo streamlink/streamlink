@@ -49,7 +49,8 @@ for size in 16 32 48 256; do
   inkscape --without-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
   optipng -o7 -out "optimized-${size}.png" "icon-${size}.png"
 done
-convert optimized-{16,32,48,256}.png icon.ico
+convert -background transparent icon.svg -resize 256x256 icon.svg 
+convert -density 256x256 -background transparent icon.svg -define icon:auto-resize -colors 256 icon.ico
 mv icon.ico ./win32/icon.ico
 
 echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
