@@ -50,7 +50,7 @@ for size in 16 32 48 256; do
   optipng -o7 -out "optimized-${size}.png" "icon-${size}.png"
 done
 convert optimized-{16,32,48,256}.png icon.ico
-mv icon.ico ../win32/icon.ico
+mv icon.ico ./win32/icon.ico
 
 echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
 
