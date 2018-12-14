@@ -46,7 +46,7 @@ done
 echo "Creating images" 1>&2
 # Create images
 for size in 16 32 48 256; do
-  inkscape --no-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
+  inkscape --without-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
   optipng -o7 -out "optimized-${size}.png" "icon-${size}.png"
 done
 convert -density 256x256 -background transparent icon.svg -define icon:auto-resize -colors 256 icon.ico
