@@ -47,9 +47,8 @@ echo "Creating images" 1>&2
 # Create images
 for size in 16 32 48 256; do
   inkscape --without-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
-  optipng -o7 -out "optimized-${size}.png" "icon-${size}.png"
 done
-convert optimized-{16,32,48,256}.png icon.ico
+convert icon-{16,32,48,256}.png icon.ico
 mv icon.ico ./win32/icon.ico
 
 
