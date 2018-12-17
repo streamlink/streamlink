@@ -54,7 +54,6 @@ addons:
     packages:
     - nsis
     - imagemagick
-    - optipng
     - inkscape
 
 before_deploy:
