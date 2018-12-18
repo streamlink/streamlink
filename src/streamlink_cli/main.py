@@ -95,7 +95,7 @@ def create_output(plugin):
         record = check_file_output(args.record_and_pipe, args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
-        http = namedpipe = None
+        http = namedpipe = record = None
 
         if not args.player:
             console.exit("The default player (VLC) does not seem to be "
@@ -117,8 +117,6 @@ def create_output(plugin):
 
         if args.record:
             record = check_file_output(args.record, args.force)
-        else:
-            record = None
 
         log.info("Starting player: {0}", args.player)
 

@@ -62,8 +62,6 @@ class FileOutput(Output):
 
         if is_win32:
             msvcrt.setmode(self.fd.fileno(), os.O_BINARY)
-            if self.record:
-                msvcrt.setmode(self.record.fileno(), os.O_BINARY)
 
     def _close(self):
         if self.fd is not stdout:
