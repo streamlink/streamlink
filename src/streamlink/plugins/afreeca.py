@@ -19,7 +19,7 @@ QUALITY_WEIGHTS = {
     "sd": 480
 }
 
-_url_re = re.compile(r"http(s)?://(?P<cdn>\w+\.)?afreeca(tv)?\.com/(?P<username>\w+)(/\d+)?")
+_url_re = re.compile(r"https?://play\.afreecatv\.com/(?P<username>\w+)(?:/\d+)?")
 
 _channel_schema = validate.Schema(
     {
