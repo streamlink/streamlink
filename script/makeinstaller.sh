@@ -50,7 +50,6 @@ for size in 16 32 48 256; do
   inkscape --without-gui --export-png="${icons_dir}/icon-${size}.png" -w ${size} -h ${size} icon.svg
 done
 convert "${icons_dir}"/icon-{16,32,48,256}.png "${icons_dir}/icon.ico"
-mv icon.ico ./win32/icon.ico
 
 
 echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
