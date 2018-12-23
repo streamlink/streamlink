@@ -18,9 +18,10 @@ build_dir="$(pwd)/build"
 build_dir_plugins="${build_dir}/lib/streamlink/plugins"
 nsis_dir="${build_dir}/nsis"
 files_dir="${build_dir}/files"
+icons_dir="${files_dir}/icons"
 # get the dist directory from an environment variable, but default to the build/nsis directory
 dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
-mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}"
+mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}"
 
 echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
 python setup.py build 1>&2
@@ -46,9 +47,9 @@ done
 echo "Creating images" 1>&2
 # Create images
 for size in 16 32 48 256; do
-  inkscape --without-gui --export-png="icon-${size}.png" -w ${size} -h ${size} icon.svg
+  inkscape --without-gui --export-png="${icons_dir}/icon-${size}.png" -w ${size} -h ${size} icon.svg
 done
-convert icon-{16,32,48,256}.png icon.ico
+convert "${icons_dir}"/icon-{16,32,48,256}.png "${icons_dir}/icon.ico"
 mv icon.ico ./win32/icon.ico
 
 
@@ -59,7 +60,7 @@ cat > "${build_dir}/streamlink.cfg" <<EOF
 name=Streamlink
 version=${STREAMLINK_VERSION}
 entry_point=streamlink_cli.main:main
-icon=../win32/icon.ico
+icon=${icons_dir}/icon.ico
 
 [Python]
 version=3.6.6
