@@ -5,6 +5,8 @@ set -e # stop on error
 
 command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to build the installer. Aborting."; exit 1; }
 command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
+command -v convert > /dev/null 2>&1 || { echo >&2 "imagemagick is required to build the installer. Aborting."; exit 1; }
+command -v inkscape > /dev/null 2>&1 || { echo >&2 "inkscape is required to build the installer. Aborting."; exit 1; }
 
 # For travis nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
