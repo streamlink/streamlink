@@ -128,11 +128,15 @@ class YouTube(Plugin):
         137: "1080p",
         303: "1080p60",  # HFR
         299: "1080p60",  # HFR
+        335: "1080p60",  # HFR HDR
         264: "1440p",
         308: "1440p60",  # HFR
+        336: "1440p60",  # HFR HDR
         266: "2160p",
         315: "2160p60",  # HFR
+        337: "2160p60",  # HFR HDR
         138: "2160p",
+        272: "4320p60",
         302: "720p60",  # HFR
     }
     adp_audio = {
@@ -278,7 +282,8 @@ class YouTube(Plugin):
                 if link.attributes.get("rel") == "canonical":
                     canon_link = link.attributes.get("href")
                     if canon_link != url:
-                        log.debug("Re-directing to canonical URL: {0}".format(canon_link))
+                        log.debug(
+                            "Re-directing to canonical URL: {0}".format(canon_link))
                         return self._find_video_id(canon_link)
 
         raise PluginError("Could not find a video on this page")
@@ -289,7 +294,8 @@ class YouTube(Plugin):
         # age restricted
         _params_2 = {"el": "embedded"}
         # embedded restricted
-        _params_3 = {"eurl": "https://youtube.googleapis.com/v/{0}".format(video_id)}
+        _params_3 = {
+            "eurl": "https://youtube.googleapis.com/v/{0}".format(video_id)}
 
         count = 0
         info_parsed = None
@@ -299,7 +305,8 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
+            info_parsed = parse_query(
+                res.content if is_py2 else res.text, name="config", schema=_config_schema)
             if info_parsed.get("status") == "fail":
                 log.debug("get_video_info - {0}: {1}".format(
                     count, info_parsed.get("reason"))
@@ -320,7 +327,8 @@ class YouTube(Plugin):
 
         info = self._get_stream_info(self.video_id)
         if info and info.get("status") == "fail":
-            log.error("Could not get video info: {0}".format(info.get("reason")))
+            log.error("Could not get video info: {0}".format(
+                info.get("reason")))
             return
         elif not info:
             log.error("Could not get video info")
@@ -347,7 +355,8 @@ class YouTube(Plugin):
             streams[name] = stream
 
         if not is_live:
-            streams, protected = self._create_adaptive_streams(info, streams, protected)
+            streams, protected = self._create_adaptive_streams(
+                info, streams, protected)
 
         hls_playlist = info.get("hlsvp")
         if hls_playlist:
