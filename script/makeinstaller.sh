@@ -5,6 +5,8 @@ set -e # stop on error
 
 command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to build the installer. Aborting."; exit 1; }
 command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
+command -v convert > /dev/null 2>&1 || { echo >&2 "imagemagick is required to build the installer. Aborting."; exit 1; }
+command -v inkscape > /dev/null 2>&1 || { echo >&2 "inkscape is required to build the installer. Aborting."; exit 1; }
 
 # For travis nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
@@ -18,9 +20,10 @@ build_dir="$(pwd)/build"
 build_dir_plugins="${build_dir}/lib/streamlink/plugins"
 nsis_dir="${build_dir}/nsis"
 files_dir="${build_dir}/files"
+icons_dir="${files_dir}/icons"
 # get the dist directory from an environment variable, but default to the build/nsis directory
 dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
-mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}"
+mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}"
 
 echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
 python setup.py build 1>&2
@@ -43,6 +46,14 @@ do
     touch "${build_dir_plugins}/$i.py"
 done
 
+echo "Creating images" 1>&2
+# Create images
+for size in 16 32 48 256; do
+  inkscape --without-gui --export-png="${icons_dir}/icon-${size}.png" -w ${size} -h ${size} icon.svg
+done
+convert "${icons_dir}"/icon-{16,32,48,256}.png "${icons_dir}/icon.ico"
+
+
 echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
 
 cat > "${build_dir}/streamlink.cfg" <<EOF
@@ -50,7 +61,7 @@ cat > "${build_dir}/streamlink.cfg" <<EOF
 name=Streamlink
 version=${STREAMLINK_VERSION}
 entry_point=streamlink_cli.main:main
-icon=../win32/doggo.ico
+icon=${icons_dir}/icon.ico
 
 [Python]
 version=3.6.6
