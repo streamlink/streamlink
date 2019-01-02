@@ -63,7 +63,7 @@ class TestPlayerOutput(unittest.TestCase):
         self.assertEqual(None,
                          PlayerOutput.supported_player("C:\\mplayer\\not-vlc.exe"))
         self.assertEqual(None,
-                         PlayerOutput.supported_player("C:\\PotPlayer\\NotPlayerMini64.exe"))
+                         PlayerOutput.supported_player("C:\\NotPlayer\\NotPlayerMini64.exe"))
 
     def test_open_player_with_title_mpv_escape_1(self):
         self.assertEqual(PlayerOutput._mpv_title_escape("no escape $$ codes $"),
