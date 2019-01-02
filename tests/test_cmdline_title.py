@@ -52,3 +52,9 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
     def test_open_player_with_default_arg_vlc(self):
         self._test_args(["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe --argh", "http://test.se", "test"],
                         "c:\\Program Files\\VideoLAN\\vlc.exe --argh --input-title-format http://test.se -")
+
+
+    def test_open_player_with_title_pot(self):
+        self._test_args(["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"", 
+                        "--title", "{title}", "http://test.se/stream", "hls", "--player-passthrough", "hls"],
+                        "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\" \"http://test.se/playlist.m3u8\\Test Title\"", passthrough=True)
