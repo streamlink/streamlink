@@ -164,7 +164,7 @@ class Filmon(Plugin):
             |
             (?:tv/)channel/(?:export\?)?
             |
-            tv/(?!channel)
+            tv/(?!channel/)
             |
             channel/
             |
