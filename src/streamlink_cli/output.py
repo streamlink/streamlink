@@ -188,10 +188,8 @@ class PlayerOutput(Output):
                 if filename != "-":
                     # PotPlayer - About - Command Line
                     # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs. ("http://...\title of this url")
-                    title = self.title
-                    if len(self.title) > 1 and self.title.startswith('"') and self.title.endswith('"'):
-                        title = self.title[1:-1]
-                    filename = filename[:-1] + '\\' + title + filename[-1]
+                    self.title = self.title.replace('"', '')
+                    filename = filename[:-1] + '\\' + self.title + filename[-1]
 
         args = self.args.format(filename=filename)
         cmd = self.cmd
