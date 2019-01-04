@@ -207,7 +207,11 @@ class PlayerOutput(Output):
 
     def _open_call(self):
         args = self._create_arguments()
-        log.debug(u"Calling: {0}".format(subprocess.list2cmdline(args)))
+        if is_win32:
+            fargs = args
+        else:
+            fargs = subprocess.list2cmdline(args)
+        log.debug(u"Calling: {0}".format(fargs))
         subprocess.call(args,
                         stdout=self.stdout,
                         stderr=self.stderr)
@@ -216,7 +220,11 @@ class PlayerOutput(Output):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
         args = self._create_arguments()
-        log.debug(u"Opening subprocess: {0}".format(subprocess.list2cmdline(args)))
+        if is_win32:
+            fargs = args
+        else:
+            fargs = subprocess.list2cmdline(args)
+        log.debug(u"Opening subprocess: {0}".format(fargs))
         self.player = subprocess.Popen(args,
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
