@@ -48,7 +48,7 @@ _documents_schema = validate.Schema(
     {
         "mainVideoContent": {
             "http://zdf.de/rels/target": {
-                "http://zdf.de/rels/streams/ptmd": validate.text
+                "http://zdf.de/rels/streams/ptmd-template": validate.text
             },
         },
     }
@@ -128,6 +128,7 @@ class zdf_mediathek(Plugin):
             return
 
         headers = {
+            "Accept": "application/vnd.de.zdf.v1.0+json",
             "Api-Auth": "Bearer {0}".format(zdf_json['apiToken']),
             "Referer": self.url
         }
@@ -135,8 +136,8 @@ class zdf_mediathek(Plugin):
         res = self.session.http.get(zdf_json['content'], headers=headers)
         document = self.session.http.json(res, schema=_documents_schema)
 
-        stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd"]
-        stream_request_url = API_URL + stream_request_url
+        stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd-template"]
+        stream_request_url = API_URL + stream_request_url.format(playerId="ngplayer_2_3")
 
         res = self.session.http.get(stream_request_url, headers=headers)
         res = self.session.http.json(res, schema=_schema)
