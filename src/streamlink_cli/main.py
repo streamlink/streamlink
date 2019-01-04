@@ -81,6 +81,9 @@ def create_output(plugin):
 
     """
 
+    if (args.output or args.stdout) and (args.record or args.record_and_pipe):
+        console.exit("Cannot use record options with other file output options.")
+
     if args.output:
         if args.output == "-":
             out = FileOutput(fd=stdout)
@@ -88,8 +91,11 @@ def create_output(plugin):
             out = check_file_output(args.output, args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
+    elif args.record_and_pipe:
+        record = check_file_output(args.record_and_pipe, args.force)
+        out = FileOutput(fd=stdout, record=record)
     else:
-        http = namedpipe = None
+        http = namedpipe = record = None
 
         if not args.player:
             console.exit("The default player (VLC) does not seem to be "
@@ -108,12 +114,17 @@ def create_output(plugin):
             http = create_http_server()
 
         title = create_title(plugin)
+
+        if args.record:
+            record = check_file_output(args.record, args.force)
+
         log.info("Starting player: {0}", args.player)
+
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http,
-                           title=title)
+                           record=record, title=title)
 
     return out
 
@@ -327,6 +338,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
+    show_record_progress = isinstance(output.record, FileOutput) and output.record.fd is not stdout and sys.stdout.isatty()
 
     stream_iterator = chain(
         [prebuffer],
@@ -335,6 +347,9 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     if show_progress:
         stream_iterator = progress(stream_iterator,
                                    prefix=os.path.basename(args.output))
+    elif show_record_progress:
+        stream_iterator = progress(stream_iterator,
+                                   prefix=os.path.basename(args.record))
 
     try:
         for data in stream_iterator:
@@ -965,7 +980,7 @@ def main():
 
     # Console output should be on stderr if we are outputting
     # a stream to stdout.
-    if args.stdout or args.output == "-":
+    if args.stdout or args.output == "-" or args.record_and_pipe:
         console_out = sys.stderr
     else:
         console_out = sys.stdout
