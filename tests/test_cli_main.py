@@ -1,14 +1,18 @@
 import os.path
-import os.path
 import tempfile
 
 import streamlink_cli.main
-from streamlink_cli.main import resolve_stream_name, format_valid_streams, check_file_output
-from streamlink_cli.output import FileOutput
+from streamlink_cli.main import resolve_stream_name, format_valid_streams, check_file_output, create_output
+from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink.plugin.plugin import Plugin
 import unittest
 from tests.mock import Mock, patch
 
+
+class FakePlugin:
+    @classmethod
+    def stream_weight(cls, stream):
+        return Plugin.stream_weight(stream)
 
 class TestCLIMain(unittest.TestCase):
     def test_check_file_output(self):
@@ -89,10 +93,6 @@ class TestCLIMain(unittest.TestCase):
         self.assertEqual(resolve_stream_name(streams, "best-unfiltered"), "1080p")
 
     def test_format_valid_streams(self):
-        class FakePlugin:
-            @classmethod
-            def stream_weight(cls, stream):
-                return Plugin.stream_weight(stream)
         a = Mock()
         b = Mock()
         c = Mock()
@@ -128,3 +128,70 @@ class TestCLIMain(unittest.TestCase):
                 "1080p (best-unfiltered)"
             ])
         )
+
+    def test_create_output_no_file_output_options(self):
+        streamlink_cli.main.console = Mock()
+        streamlink_cli.main.args = args = Mock()
+        args.output = None
+        args.stdout = None
+        args.record = None
+        args.record_and_pipe = None
+        args.title = None
+        args.player = "mpv"
+        self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
+
+    def test_create_output_file_output(self):
+        tmpfile = tempfile.NamedTemporaryFile()
+        try:
+            streamlink_cli.main.args = args = Mock()
+            streamlink_cli.main.console = Mock()
+            args.output = tmpfile.name
+            self.assertTrue(os.path.exists(tmpfile.name))
+            self.assertIsInstance(create_output(FakePlugin), FileOutput)
+        finally:
+            tmpfile.close()
+
+    def test_create_output_stdout(self):
+        streamlink_cli.main.console = Mock()
+        streamlink_cli.main.args = args = Mock()
+        args.output = None
+        args.stdout = True
+        self.assertIsInstance(create_output(FakePlugin), FileOutput)
+
+    def test_create_output_record_and_pipe(self):
+        tmpfile = tempfile.NamedTemporaryFile()
+        try:
+            streamlink_cli.main.console = Mock()
+            streamlink_cli.main.args = args = Mock()
+            args.output = None
+            args.stdout = None
+            args.record_and_pipe = tmpfile.name
+            self.assertIsInstance(create_output(FakePlugin), FileOutput)
+        finally:
+            tmpfile.close()
+
+    def test_create_output_record(self):
+        tmpfile = tempfile.NamedTemporaryFile()
+        try:
+            streamlink_cli.main.console = Mock()
+            streamlink_cli.main.args = args = Mock()
+            args.output = None
+            args.stdout = None
+            args.record = tmpfile.name
+            args.record_and_pipe = None
+            args.title = None
+            args.player = "mpv"
+            args.player_fifo = None
+            self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
+        finally:
+            tmpfile.close()
+
+    def test_create_output_record_and_other_file_output(self):
+        streamlink_cli.main.console = console = Mock()
+        streamlink_cli.main.args = args = Mock()
+        console.exit = Mock()
+        args.output = None
+        args.stdout = True
+        args.record_and_pipe = True
+        create_output(FakePlugin)
+        console.exit.assert_called_with("Cannot use record options with other file output options.")
