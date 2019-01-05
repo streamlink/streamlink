@@ -1,12 +1,15 @@
-import re
 import time
+
+import logging
+import re
 from uuid import uuid4
 
 from streamlink.compat import quote
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-from streamlink.utils import url_equal
+
+log = logging.getLogger(__name__)
 
 
 class BTSports(Plugin):
@@ -47,25 +50,23 @@ class BTSports(Plugin):
         return cls.url_re.match(url) is not None
 
     def login(self, username, password):
-        self.logger.debug("Logging in as {0}".format(username))
+        log.debug("Logging in as {0}".format(username))
 
-        redirect_to = "https://home.bt.com/ss/Satellite/secure/loginforward?redirectURL={0}".format(quote(self.url))
+        redirect_to = "https://home.bt.com/ss/Satellite/secure/loginforward?view=btsport&redirectURL={0}".format(quote(self.url))
         data = {
             "cookieExpp": "30",
             "Switch": "yes",
             "SMPostLoginUrl": "/appsyouraccount/secure/postlogin",
-            "loginforward": "https://home.bt.com/ss/Satellite/secure/loginforward",
+            "loginforward": "https://home.bt.com/ss/Satellite/secure/loginforward?view=btsport",
             "smauthreason": "0",
             "TARGET": redirect_to,
             "USER": username,
             "PASSWORD": password}
-
         res = self.session.http.post(self.login_url, data=data)
 
-        self.logger.debug("Redirected to: {0}".format(res.url))
+        log.debug("Redirected to: {0}".format(res.url))
 
-
-        if url_equal(res.url, self.url, ignore_scheme=True):
+        if "loginerror" not in res.text:
             self.logger.debug("Login successful, getting SAML token")
             res = self.session.http.get("https://samlfed.bt.com/sportgetfedwebhls?bt.cid={0}".format(self.acid()))
             d = self.saml_re.search(res.text)
@@ -81,7 +82,8 @@ class BTSports(Plugin):
                     self.logger.error("Failed to login: {0} - {1}".format(fed_json['errorDescription'],
                                                                           fed_json['message']))
                 return success
-        return False
+        else:
+            return False
 
     def device_id(self):
         device_id = self.cache.get("device_id") or str(uuid4())
@@ -108,19 +110,23 @@ class BTSports(Plugin):
     def _get_streams(self):
         if self.options.get("email") and self.options.get("password"):
             if self.login(self.options.get("email"), self.options.get("password")):
-                self.logger.debug("Logged in and authenticated with BT Sports.")
+                log.debug("Logged in and authenticated with BT Sports.")
 
                 res = self.session.http.get(self.url)
                 m = self.content_re.findall(res.text)
                 if m:
                     info = dict(m)
                     data = self._get_cdn(info.get("ID"), info.get("TYPE"))
+                    log.debug("CDN respsonse: {0}".format(data))
                     if data['resultCode'] == 'OK':
                         return HLSStream.parse_variant_playlist(self.session, data['resultObj']['src'])
                     else:
-                        self.logger.error("Failed to get stream with error: {0} - {1}".format(data['errorDescription'],
+                        log.error("Failed to get stream with error: {0} - {1}".format(data['errorDescription'],
                                                                                               data['message']))
+            else:
+                log.error("Login failed.")
         else:
-            self.logger.error("A username and password is required to use BT Sports")
+            log.error("A username and password is required to use BT Sports")
+
 
 __plugin__ = BTSports
