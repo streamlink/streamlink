@@ -81,7 +81,7 @@ _config_schema = validate.Schema(
             validate.transform(lambda t: json.loads(t)),
             {
                 "streamingData" : validate.any ({
-                    "hlsManifestUrl": validate.text
+                    validate.optional("hlsManifestUrl"): validate.text
                 })
             }
          ),
