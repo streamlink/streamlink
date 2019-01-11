@@ -211,9 +211,12 @@ trtspor                 trtspor.com          Yes   No    Some streams are geo-re
 turkuvaz                - atv.com.tr         Yes   No
                         - a2tv.com.tr
                         - ahaber.com.tr
+                        - anews.com.tr
                         - aspor.com.tr
-                        - minikago.com.tr
+                        - atvavrupa.tv
                         - minikacocuk.com.tr
+                        - minikago.com.tr
+                        - sabah.com.tr
 tv1channel              tv1channel.org       Yes   Yes
 tv3cat                  tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play                 - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
