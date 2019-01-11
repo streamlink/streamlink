@@ -1,21 +1,23 @@
-from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.stream import RTMPStream
 
 
 class TVRBy(Plugin):
     url_re = re.compile(r"""https?://(?:www\.)?tvr.by/televidenie/belarus""")
-    file_re = re.compile(r"""(?P<q1>["']?)file(?P=q1)\s*:\s*(?P<q2>["'])(?P<url>(?:http.+?m3u8.*?|rtmp://.*?))(?P=q2)""")
+    file_re = re.compile(r"""(?P<url>https://stream\.hoster\.by[^"',]+\.m3u8[^"',]*)""")
+    player_re = re.compile(r"""["'](?P<url>[^"']+tvr\.by/plugines/online-tv-main\.php[^"']+)["']""")
 
     stream_schema = validate.Schema(
         validate.all(
             validate.transform(file_re.finditer),
             validate.transform(list),
-            [validate.get("url")]
+            [validate.get("url")],
+            # remove duplicates
+            validate.transform(set),
+            validate.transform(list),
         ),
     )
 
@@ -29,26 +31,21 @@ class TVRBy(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
-    @Plugin.broken()
     def _get_streams(self):
         res = self.session.http.get(self.url)
+        m = self.player_re.search(res.text)
+        if not m:
+            return
+
+        player_url = m.group("url")
+        res = self.session.http.get(player_url)
         stream_urls = self.stream_schema.validate(res.text)
         self.logger.debug("Found {0} stream URL{1}", len(stream_urls),
                           "" if len(stream_urls) == 1 else "s")
 
         for stream_url in stream_urls:
-            if "m3u8" in stream_url:
-                for _, s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
-                    yield "live", s
-            if stream_url.startswith("rtmp://"):
-                a = stream_url.split("///")
-                s = RTMPStream(self.session, {
-                    "rtmp": a[0],
-                    "playpath": "live",
-                    "swfVfy": "http://www.tvr.by/plugines/uppod/uppod.swf",
-                    "pageUrl": self.url
-                })
-                yield "live", s
+            for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
+                yield s
 
 
 __plugin__ = TVRBy
