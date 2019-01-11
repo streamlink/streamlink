@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import argparse
 import logging
 import re
+import json
 
 from streamlink.compat import parse_qsl, is_py2
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
@@ -75,7 +76,15 @@ _config_schema = validate.Schema(
                 )
             }]
         ),
-        validate.optional("hlsvp"): validate.text,
+        validate.optional("player_response"): validate.all(
+            validate.text,
+            validate.transform(lambda t: json.loads(t)),
+            {
+                "streamingData" : validate.any ({
+                    "hlsManifestUrl": validate.text
+                })
+            }
+         ),
         validate.optional("live_playback"): validate.transform(bool),
         validate.optional("reason"): validate.all(validate.text, validate.transform(maybe_decode)),
         validate.optional("livestream"): validate.text,
@@ -349,7 +358,12 @@ class YouTube(Plugin):
         if not is_live:
             streams, protected = self._create_adaptive_streams(info, streams, protected)
 
-        hls_playlist = info.get("hlsvp")
+        try:
+            hls_playlist = info.get("player_response").get("streamingData").get("hlsManifestUrl")
+        except:
+            hls_playlist = None
+            log.debug("Failed to get hlsManifestUrl")
+
         if hls_playlist:
             try:
                 hls_streams = HLSStream.parse_variant_playlist(
