@@ -10,6 +10,11 @@ class TestPluginTurkuvaz(unittest.TestCase):
             'http://www.a2tv.com.tr/webtv/canli-yayin',
             'https://www.ahaber.com.tr/webtv/canli-yayin',
             'https://www.aspor.com.tr/webtv/canli-yayin',
+            'http://www.anews.com.tr/webtv/live-broadcast',
+            'http://www.atvavrupa.tv/webtv/canli-yayin',
+            'http://www.minikacocuk.com.tr/webtv/canli-yayin',
+            'http://www.minikago.com.tr/webtv/canli-yayin',
+            'https://www.sabah.com.tr/apara/canli-yayin',
         ]
         for url in should_match:
             self.assertTrue(Turkuvaz.can_handle_url(url))
