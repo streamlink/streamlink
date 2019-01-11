@@ -184,7 +184,7 @@ class PlayerOutput(Output):
                 extra_args.extend(["--title", self.title])
 
             # potplayer
-            if self.player_name == "pot":
+            if self.player_name == "potplayer":
                 if filename != "-":
                     # PotPlayer - About - Command Line
                     # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs. ("http://...\title of this url")

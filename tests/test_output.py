@@ -14,8 +14,8 @@ class TestPlayerOutput(unittest.TestCase):
         self.assertEqual("mpv",
                          PlayerOutput.supported_player("mpv"))
 
-        self.assertEqual("pot",
-                         PlayerOutput.supported_player("potplayer"))
+        self.assertEqual("potplayer",
+                         PlayerOutput.supported_player("potplayermini.exe"))
 
     @patch("streamlink_cli.output.os.path.basename", new=ntpath.basename)
     def test_supported_player_win32(self):
@@ -23,7 +23,7 @@ class TestPlayerOutput(unittest.TestCase):
                          PlayerOutput.supported_player("C:\\MPV\\mpv.exe"))
         self.assertEqual("vlc",
                          PlayerOutput.supported_player("C:\\VLC\\vlc.exe"))
-        self.assertEqual("pot",
+        self.assertEqual("potplayer",
                          PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe"))
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
@@ -39,7 +39,7 @@ class TestPlayerOutput(unittest.TestCase):
                          PlayerOutput.supported_player("C:\\MPV\\mpv.exe --argh"))
         self.assertEqual("vlc",
                          PlayerOutput.supported_player("C:\\VLC\\vlc.exe --argh"))
-        self.assertEqual("pot",
+        self.assertEqual("potplayer",
                          PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe --argh"))
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
