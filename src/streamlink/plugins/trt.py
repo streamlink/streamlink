@@ -1,19 +1,20 @@
-from __future__ import print_function
+import logging
 import re
+
 from base64 import b64decode
 
+from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
-from streamlink.compat import urlparse, parse_qsl
-from streamlink.stream import HDSStream
-from streamlink.stream import HLSStream
+from streamlink.stream import HDSStream, HLSStream
+
+log = logging.getLogger(__name__)
 
 
 class TRT(Plugin):
     """
     Support for the live TV streams on http://www.trt.net.tr/, some streams may be geo-locked
     """
-    url_re = re.compile(r"http://www.trt.net.tr/anasayfa/canli.aspx.*", re.I)
+    url_re = re.compile(r"https?://www\.trt\.net\.tr/anasayfa/canli\.aspx.*", re.I)
     stream_data_re = re.compile(r'<script>eval\(dcm1\("(.*?)"\)\);')
     f4mm_re = re.compile(r'''(?P<q>["'])(?P<url>http[^"']+?.f4m)(?P=q);''')
     m3u8_re = re.compile(r'''(?P<q>["'])(?P<url>http[^"']+?.m3u8)(?P=q);''')
@@ -27,7 +28,7 @@ class TRT(Plugin):
     def _get_streams(self):
         args = dict(parse_qsl(urlparse(self.url).query))
         if "k" in args:
-            self.logger.debug("Loading channel: {k}", **args)
+            log.debug("Loading channel: {0}".format(args["k"]))
             res = self.session.http.get(self.url)
             stream_data_m = self.stream_data_re.search(res.text)
             if stream_data_m:
