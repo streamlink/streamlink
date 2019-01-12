@@ -4,6 +4,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 from streamlink.utils import parse_json
+from streamlink.utils.url import url_concat
 
 API_URL = "https://api.zdf.de"
 
@@ -137,7 +138,7 @@ class zdf_mediathek(Plugin):
         document = self.session.http.json(res, schema=_documents_schema)
 
         stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd-template"]
-        stream_request_url = API_URL + stream_request_url.format(playerId="ngplayer_2_3")
+        stream_request_url = url_concat(API_URL, stream_request_url.format(playerId="ngplayer_2_3").replace(" ", ""))
 
         res = self.session.http.get(stream_request_url, headers=headers)
         res = self.session.http.json(res, schema=_schema)
