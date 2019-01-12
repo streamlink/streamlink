@@ -78,13 +78,13 @@ _config_schema = validate.Schema(
         validate.optional("hlsvp"): validate.text,
         validate.optional("player_response"): validate.all(
             validate.text,
-            validate.transform(lambda t: parse_json(t)),
+            validate.transform(parse_json),
             {
-                validate.optional("streamingData"): validate.any ({
-                    validate.optional("hlsManifestUrl"): validate.text
-                })
+                validate.optional("streamingData"): {
+                    validate.optional("hlsManifestUrl"): validate.text,
+                }
             }
-         ),
+        ),
         validate.optional("live_playback"): validate.transform(bool),
         validate.optional("reason"): validate.all(validate.text, validate.transform(maybe_decode)),
         validate.optional("livestream"): validate.text,
