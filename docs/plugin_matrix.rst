@@ -101,7 +101,8 @@ huya                    huya.com             Yes   No    Temporarily only HLS st
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
 itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
-kanal7                  kanal7.com           Yes   No
+kanal7                  - kanal7.com         Yes   No
+                        - tvt.tv.tr
 kingkong                kingkong.com.tw      Yes   --
 live_russia_tv          live.russia.tv       Yes   --
 liveedu                 - liveedu.tv         Yes   --    Some streams require a login.
