@@ -4,7 +4,7 @@ import argparse
 import logging
 import re
 
-from streamlink.compat import parse_qsl, is_py2
+from streamlink.compat import is_py2, parse_qsl, urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate, useragents
 from streamlink.plugin.api.utils import itertags, parse_query
@@ -165,6 +165,10 @@ class YouTube(Plugin):
 
     def __init__(self, url):
         super(YouTube, self).__init__(url)
+        parsed = urlparse(self.url)
+        if parsed.netloc == 'gaming.youtube.com':
+            self.url = urlunparse(parsed._replace(netloc='www.youtube.com'))
+
         self.author = None
         self.title = None
         self.video_id = None
