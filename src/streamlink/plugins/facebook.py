@@ -8,11 +8,17 @@ from streamlink.utils import parse_json
 
 
 class Facebook(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/(posts|videos)")
+    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/(posts|videos)(/(?P<video_id>[0-9]+))?")
     _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
     _dash_manifest_re = re.compile(r'''dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],''')
     _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
     _plurl_re = re.compile(r'''url:"(.*?)"''')
+    _pc_re = re.compile(r'''pkg_cohort["']\s*:\s*["'](.+?)["']''')
+    _rev_re = re.compile(r'''client_revision["']\s*:\s*(\d+),''')
+    _dtsg_re = re.compile(r'''DTSGInitialData["'],\s*\[\],\s*{\s*["']token["']\s*:\s*["'](.+?)["']''')
+    _DEFAULT_PC = "PHASED:DEFAULT"
+    _DEFAULT_REV = 4681796
+    _TAHOE_URL = "https://www.facebook.com/video/tahoe/async/{0}/?chain=true&isvideo=true&payloadtype=primary"
 
     @classmethod
     def can_handle_url(cls, url):
@@ -65,6 +71,31 @@ class Facebook(Plugin):
                 yield "sd", HTTPStream(self.session, url)
                 return
 
+        # fallback to tahoe player url
+        match = self._url_re.match(self.url)
+        if match.group("video_id"):
+            self.logger.debug("Falling back to tahoe player")
+            url = self._TAHOE_URL.format(match.group("video_id"))
+            data = {"__a": 1}
+            match = self._pc_re.search(res.text)
+            if match:
+                data["__pc"] = match.group(1)
+            else:
+                data["__pc"] = self._DEFAULT_PC
+            match = self._rev_re.search(res.text)
+            if match:
+                data["__rev"] = match.group(1)
+            else:
+                data["__rev"] = self._DEFAULT_REV
+            match = self._dtsg_re.search(res.text)
+            if match:
+                data["fb_dtsg"] = match.group(1)
+            else:
+                data["fb_dtsg"] = ""
+            res = self.session.http.post(url, headers={"User-Agent": useragents.CHROME, "Content-Type": "application/x-www-form-urlencoded"},
+                                         data=urlencode(data).encode("ascii"))
+            for s in self._parse_streams(res):
+                yield s
 
 
 __plugin__ = Facebook
