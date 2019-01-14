@@ -5,7 +5,7 @@ from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
-CHANNEL_API_URL = "http://live.afreecatv.com:8057/afreeca/player_live_api.php"
+CHANNEL_API_URL = "http://live.afreecatv.com/afreeca/player_live_api.php"
 STREAM_INFO_URLS = "{rmd}/broad_stream_assign.html"
 
 CHANNEL_RESULT_ERROR = 0
