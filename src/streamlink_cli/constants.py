@@ -14,7 +14,7 @@ SUPPORTED_PLAYERS = {  # these are the players that streamlink knows how to set 
     # name: possible binary names (linux/mac and windows)
     "vlc": ["vlc", "vlc.exe"],
     "mpv": ["mpv", "mpv.exe"],
-    "potplayer": ["potplayermini64.exe", "potplayermini.exe"]
+    "potplayer": ["potplayer", "potplayermini64.exe", "potplayermini.exe"]
 }
 
 if is_win32:
