@@ -153,7 +153,7 @@ def create_title(plugin=None):
             author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
             category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
             game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
-            url=args.url
+            url=plugin.url
         )
     else:
         title = args.url
