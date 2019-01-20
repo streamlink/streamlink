@@ -5,13 +5,12 @@ from streamlink.utils import LazyFormatter
 
 
 class TestLazyFormat(unittest.TestCase):
-    url = "url"
-
     def _get_fake_plugin(self):
         plugin = MagicMock()
         plugin.get_title.return_value = "title"
         plugin.get_author.return_value = "author"
         plugin.get_game.return_value = "game"
+        plugin.url = "url"
 
         return plugin
 
@@ -22,7 +21,7 @@ class TestLazyFormat(unittest.TestCase):
                                    title=plugin.get_title,
                                    author=plugin.get_author,
                                    game=plugin.get_game,
-                                   url=self.url)
+                                   url=plugin.url)
 
         self.assertEqual("title", res)
 
@@ -37,7 +36,7 @@ class TestLazyFormat(unittest.TestCase):
                                    title=plugin.get_title,
                                    author=plugin.get_author,
                                    game=plugin.get_game,
-                                   url=self.url)
+                                   url=plugin.url)
 
         self.assertEqual("title - author", res)
 
@@ -53,7 +52,7 @@ class TestLazyFormat(unittest.TestCase):
                                    title=plugin.get_title,
                                    author=plugin.get_author,
                                    game=plugin.get_game,
-                                   url=self.url)
+                                   url=plugin.url)
 
         self.assertEqual("title - author - game", res)
 
@@ -68,7 +67,7 @@ class TestLazyFormat(unittest.TestCase):
                                    title=plugin.get_title,
                                    author=plugin.get_author,
                                    game=plugin.get_game,
-                                   url=self.url)
+                                   url=plugin.url)
 
         self.assertEqual("title - author - game - url", res)
 
