@@ -390,7 +390,7 @@ class UStreamTV(Plugin):
                     res["streams"] = []
                     for stream in flv_segmented["streams"]:
                         res["streams"] += [dict(
-                            stream_name=stream["preset"],
+                            stream_name="{0}p".format(stream["videoCodec"]["height"]),
                             path=urljoin(path,
                                          stream["segmentUrl"].replace("%", "%s")),
                             hashes=flv_segmented["hashes"],
@@ -434,7 +434,6 @@ class UStreamTV(Plugin):
             api.connect()
 
             streams_data = {}
-            streams = {}
             for _ in range(5):
                 # do not use to many tries, it might take longer for a timeout
                 # when streamFormats is {} and contentAvailable is True
@@ -454,7 +453,7 @@ class UStreamTV(Plugin):
 
                 if streams_data.get("streams") and streams_data.get("cdn_url"):
                     for s in streams_data["streams"]:
-                        streams[s["stream_name"]] = UHSStream(
+                        yield s["stream_name"], UHSStream(
                             session=self.session,
                             api=api,
                             first_chunk_data=ChunkData(
@@ -465,7 +464,7 @@ class UStreamTV(Plugin):
                             template_url=urljoin(streams_data["cdn_url"],
                                                  s["path"]),
                         )
-                    return streams
+                    break
 
     def _get_media_app(self):
         umatch = self.url_re.match(self.url)
