@@ -23,7 +23,6 @@ class DASHStreamWriter(SegmentedStreamWriter):
         kwargs["retries"] = options.get("dash-segment-attempts")
         kwargs["threads"] = options.get("dash-segment-threads")
         kwargs["timeout"] = options.get("dash-segment-timeout")
-        self.stream_data = options.get("dash-segment-stream-data")
         SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
 
     def fetch(self, segment, retries=None):
@@ -48,7 +47,6 @@ class DASHStreamWriter(SegmentedStreamWriter):
                 headers["Range"] = "bytes={0}-{1}".format(start, end)
 
             return self.session.http.get(segment.url,
-                                         stream=self.stream_data,
                                          timeout=self.timeout,
                                          exception=StreamError,
                                          headers=headers)

@@ -636,21 +636,6 @@ def build_parser():
 
     transport = parser.add_argument_group("Stream transport options")
     transport.add_argument(
-        "--dash-segment-stream-data",
-        type=boolean,
-        metavar="{yes,true,1,on,no,false,0,off}",
-        default=False,
-        help="""
-        Force DASH streams with separate audio and video tracks to begin
-        playback before the stream is completely downloaded.
-
-        May be required to get immediate playback of DASH based VOD streams
-        for specific plugins (e.g. Facebook).
-
-        Default is "no".
-        """
-    )
-    transport.add_argument(
         "--hds-live-edge",
         type=num(float, min=0),
         metavar="SECONDS",

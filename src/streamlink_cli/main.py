@@ -863,9 +863,6 @@ def setup_options():
     if args.ffmpeg_audio_transcode:
         streamlink.set_option("ffmpeg-audio-transcode", args.ffmpeg_audio_transcode)
 
-    if args.dash_segment_stream_data:
-        streamlink.set_option("dash-segment-stream-data", args.dash_segment_stream_data)
-
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)
