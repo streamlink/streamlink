@@ -14,6 +14,10 @@ from isodate import parse_datetime, parse_duration, Duration
 from contextlib import contextmanager
 from streamlink.compat import urlparse, urljoin, urlunparse, izip, urlsplit, urlunsplit
 
+from pymp4.exceptions import BoxNotFound
+from pymp4.parser import MP4
+from pymp4.util import BoxUtil
+
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc
 else:
@@ -321,6 +325,75 @@ class Period(MPDNode):
 class SegmentBase(MPDNode):
     __tag__ = "SegmentBase"
 
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super(SegmentBase, self).__init__(node, root, parent, *args, **kwargs)
+        self.timescale = self.attr("timescale", parser=int)
+        self.presentation_time_offset = self.attr("presentationTimeOffset")
+        self.index_range = self.attr("indexRange", parser=MPDParsers.range)
+        self.index_range_exact = self.attr("indexRangeExact", parser=MPDParsers.bool_str, default=False)
+        self.availability_time_offset = self.attr("availabilityTimeOffset", parser=int)
+        self.availability_time_complete = self.attr("availabilityTimeComplete", parser=MPDParsers.bool_str)
+        self.initialization = self.only_child(Initialization)
+        self.representation_index = self.only_child(RepresentationIndex)
+        self.period = list(self.walk_back(Period))[0]
+        self.sidx = None
+        self.sidx_offset = 0
+
+    def init_sidx(self, http):
+        # Look for sidx existence in the initialization range, and the first
+        # box following the initialization range
+        if self.initialization:
+            offset, length = self.initialization.range
+        else:
+            offset, length = self.index_range
+        headers = {"Range": "bytes={0}-{1}".format(offset, offset + length - 1)}
+        res = http.get(self.base_url, headers=headers)
+        for box in MP4.parse(res.content):
+            try:
+                sidx = BoxUtil.first(box, b'sidx')
+            except BoxNotFound:
+                sidx = None
+            if sidx:
+                break
+
+        if not sidx:
+            data = []
+            offset += length
+            length = 1500
+            mp4 = None
+            while not mp4:
+                headers = {"Range": "bytes={0}-{1}".format(offset, offset + length - 1)}
+                res = http.get(self.base_url, headers=headers)
+                data.append(res.content)
+                mp4 = MP4.parse(b''.join(data))
+                offset += length
+            for box in mp4:
+                try:
+                    sidx = BoxUtil.first(box, b'sidx')
+                except BoxNotFound:
+                    sidx = None
+                if sidx:
+                    break
+
+        self.sidx = sidx
+
+    def segments(self, **kwargs):
+        http = kwargs.pop("http", None)
+        if http:
+            self.init_sidx(http)
+        if self.sidx:
+            # Segmented MP4
+            yield Segment(self.base_url, 0, init=True, content=False, range=(0, self.sidx.end))
+            offset = self.sidx.end + self.sidx.first_offset
+            for ref in self.sidx.references:
+                length = ref.referenced_size
+                duration = ref.segment_duration / self.sidx.timescale
+                yield Segment(self.base_url, duration, init=False, content=True, range=(offset, length))
+                offset += length
+        else:
+            # Non-segmented MP4
+            yield Segment(self.base_url, 0, init=True, content=True)
+
 
 class AssetIdentifier(MPDNode):
     __tag__ = "AssetIdentifier"
@@ -340,6 +413,7 @@ class Initialization(MPDNode):
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         super(Initialization, self).__init__(node, root, parent, *args, **kwargs)
         self.source_url = self.attr("sourceURL")
+        self.range = self.attr("range", parser=MPDParsers.range)
 
 
 class SegmentURL(MPDNode):
@@ -617,12 +691,24 @@ class Representation(MPDNode):
             for segmentList in segmentLists:
                 for segment in segmentList.segments:
                     yield segment
+        elif segmentBase:
+            for segment in segmentBase.segments(**kwargs):
+                yield segment
         else:
             yield Segment(self.base_url, 0, True, True)
 
 
 class SubRepresentation(MPDNode):
     __tag__ = "SubRepresentation"
+
+
+class RepresentationIndex(MPDNode):
+    __tag__ = "RepresentationIndex"
+
+    def __init__(self, node, root=None, parent=None, *args, **kwargs):
+        super(RepresentationIndex, self).__init__(node, root, parent, *args, **kwargs)
+        self.source_url = self.attr("sourceURL")
+        self.range = self.attr("range", parser=MPDParsers.range)
 
 
 class SegmentTimeline(MPDNode):

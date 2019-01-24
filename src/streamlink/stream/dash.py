@@ -88,7 +88,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
                                self.mpd.periods[0].duration.total_seconds()) or 5
             with sleeper(refresh_wait * back_off_factor):
                 if representation:
-                    for segment in representation.segments(init=init):
+                    for segment in representation.segments(init=init, http=self.session.http):
                         if self.closed:
                             break
                         yield segment
