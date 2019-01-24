@@ -449,7 +449,7 @@ class UStreamTV(Plugin):
                         log.debug("Unexpected `{0}` command".format(data["cmd"]))
                         log.trace("{0!r}".format(data))
                 except ModuleInfoNoStreams:
-                    return None
+                    break
 
                 if streams_data.get("streams") and streams_data.get("cdn_url"):
                     for s in streams_data["streams"]:
