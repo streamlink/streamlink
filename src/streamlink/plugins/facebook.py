@@ -76,22 +76,21 @@ class Facebook(Plugin):
         if match.group("video_id"):
             self.logger.debug("Falling back to tahoe player")
             url = self._TAHOE_URL.format(match.group("video_id"))
-            data = {"__a": 1}
+            data = {
+                "__a": 1,
+                "__pc": self._DEFAULT_PC,
+                "__rev": self._DEFAULT_REV,
+                "fb_dtsg": "",
+            }
             match = self._pc_re.search(res.text)
             if match:
                 data["__pc"] = match.group(1)
-            else:
-                data["__pc"] = self._DEFAULT_PC
             match = self._rev_re.search(res.text)
             if match:
                 data["__rev"] = match.group(1)
-            else:
-                data["__rev"] = self._DEFAULT_REV
             match = self._dtsg_re.search(res.text)
             if match:
                 data["fb_dtsg"] = match.group(1)
-            else:
-                data["fb_dtsg"] = ""
             res = self.session.http.post(url, headers={"User-Agent": useragents.CHROME, "Content-Type": "application/x-www-form-urlencoded"},
                                          data=urlencode(data).encode("ascii"))
             for s in self._parse_streams(res):
