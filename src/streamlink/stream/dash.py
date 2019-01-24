@@ -165,29 +165,26 @@ class DASHStream(Stream):
         return dict(type=type(self).shortname(), url=req.url, headers=headers)
 
     @classmethod
-    def parse_manifest(cls, session, url, manifest=None, **args):
+    def parse_manifest(cls, session, url_or_manifest, **args):
         """
         Attempt to parse a DASH manifest file and return its streams
 
         :param session: Streamlink session instance
-        :param url: URL of the manifest file
-        :param manifest: XML manifest string
+        :param url_or_manifest: URL of the manifest file or an XML manifest string
         :return: a dict of name -> DASHStream instances
         """
         ret = {}
 
-        if url:
-            res = session.http.get(url, **args)
+        if url_or_manifest.startswith('<?xml'):
+            mpd = MPD(parse_xml(url_or_manifest, ignore_ns=True))
+        else:
+            res = session.http.get(url_or_manifest, **args)
             url = res.url
 
             urlp = list(urlparse(url))
             urlp[2], _ = urlp[2].rsplit("/", 1)
 
             mpd = MPD(session.http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
-        elif manifest:
-            mpd = MPD(parse_xml(manifest, ignore_ns=True))
-        else:
-            raise StreamError("Missing DASH manifest.")
 
         video, audio = [], []
 

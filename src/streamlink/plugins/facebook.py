@@ -48,7 +48,7 @@ class Facebook(Plugin):
                 manifest = bytes(unquote_plus(manifest), "utf-8").decode("unicode_escape")
             else:
                 manifest = unquote_plus(manifest).decode("string_escape")
-            for s in DASHStream.parse_manifest(self.session, None, manifest=manifest).items():
+            for s in DASHStream.parse_manifest(self.session, manifest).items():
                 yield s
 
     def _get_streams(self):
