@@ -83,7 +83,7 @@ class UHSClient(object):
         log.debug("Connecting to {0}".format(self.host))
         self._ws = websocket.create_connection(self.host,
                                                header=["User-Agent: {0}".format(useragents.CHROME)],
-                                               origin="http://www.ustream.tv")
+                                               origin="https://www.ustream.tv")
 
         args = dict(type="viewer",
                     appId=self._app_id,
@@ -266,12 +266,16 @@ class UHSStream(Stream):
             self.stopped.set()
 
         def run(self):
-            while not self.stopped.wait(0):
+            while not self.stopped.wait(0.25):
                 try:
                     cmd_args = self.api.recv()
-                except SocketError as err:
+                    if cmd_args and cmd_args["cmd"] == "reject":
+                        sleep(2)
+                except (SocketError,
+                        websocket._exceptions.WebSocketConnectionClosedException) as err:
                     cmd_args = None
-                    if err.errno in (errno.ECONNRESET, errno.ETIMEDOUT):
+                    if (hasattr(err, "errno") and err.errno in (errno.ECONNRESET, errno.ETIMEDOUT)
+                            or "Connection is already closed." in str(err)):
                         while True:
                             # --stream-timeout will handle the timeout
                             try:
@@ -285,6 +289,8 @@ class UHSStream(Stream):
                                 sleep(reconnect_time_ws)
                     else:
                         raise
+                except PluginError:
+                    continue
 
                 if not cmd_args:
                     continue
@@ -452,7 +458,8 @@ class UStreamTV(Plugin):
                     break
 
                 if streams_data.get("streams") and streams_data.get("cdn_url"):
-                    for s in streams_data["streams"]:
+                    for s in sorted(streams_data["streams"],
+                                    key=lambda k: (k["stream_name"], k["path"])):
                         yield s["stream_name"], UHSStream(
                             session=self.session,
                             api=api,
