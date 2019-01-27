@@ -266,11 +266,9 @@ class UHSStream(Stream):
             self.stopped.set()
 
         def run(self):
-            while not self.stopped.wait(0.25):
+            while not self.stopped.wait(0):
                 try:
                     cmd_args = self.api.recv()
-                    if cmd_args and cmd_args["cmd"] == "reject":
-                        sleep(2)
                 except (SocketError,
                         websocket._exceptions.WebSocketConnectionClosedException) as err:
                     cmd_args = None
