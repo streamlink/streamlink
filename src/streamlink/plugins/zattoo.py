@@ -43,7 +43,7 @@ class Zattoo(Plugin):
                 tvonline\.ewe|nettv\.netcologne|tvplus\.m-net
             )\.de
             )|(?:(?:
-                player\.waly|www\.netplus
+                player\.waly|www\.netplus|www\.1und1
             )\.tv)
             |www\.bbv-tv\.net
             |www\.meinewelt\.cc
