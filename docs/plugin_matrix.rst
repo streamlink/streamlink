@@ -282,6 +282,7 @@ zattoo                  - zattoo.com         Yes   Yes
                         - www.quantum-tv.com
                         - www.saktv.ch
                         - www.vtxtv.ch
+                        - www.1und1.tv
 zdf_mediathek           zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
 zengatv                 zengatv.com          Yes   No
 zhanqi                  zhanqi.tv            Yes   No
