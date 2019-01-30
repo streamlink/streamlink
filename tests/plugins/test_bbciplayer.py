@@ -1,5 +1,4 @@
 import json
-import logging
 import unittest
 
 from requests import Response, Request
