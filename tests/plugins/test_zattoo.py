@@ -21,6 +21,8 @@ class TestPluginZattoo(unittest.TestCase):
         self.assertTrue(Zattoo.can_handle_url('http://tvonline.ewe.de/watch/zdf'))
         self.assertTrue(Zattoo.can_handle_url('https://nettv.netcologne.de/watch/daserste'))
         self.assertTrue(Zattoo.can_handle_url('https://nettv.netcologne.de/watch/zdf'))
+        self.assertTrue(Zattoo.can_handle_url('https://www.1und1.tv/watch/daserste'))
+        self.assertTrue(Zattoo.can_handle_url('https://www.1und1.tv/watch/zdf'))
         # zattoo live
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/watch/daserste'))
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/watch/zdf'))
