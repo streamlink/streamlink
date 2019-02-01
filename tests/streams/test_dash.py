@@ -208,6 +208,26 @@ class TestDASHStream(unittest.TestCase):
                           self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
 
+    @patch('streamlink.stream.dash.MPD')
+    def test_parse_manifest_string(self, mpdClass):
+        test_manifest = """<?xml version="1.0" encoding="UTF-8"?><MPD xmlns="urn:mpeg:DASH:schema:MPD:2011"></MPD>"""
+        mpd = mpdClass.return_value = Mock(periods=[
+            Mock(adaptationSets=[
+                Mock(contentProtection=None,
+                     representations=[
+                         Mock(id=1, mimeType="video/mp4", height=720),
+                     ])
+            ])
+        ])
+
+        streams = DASHStream.parse_manifest(self.session, test_manifest)
+        mpdClass.assert_called_with(ANY)
+
+        self.assertSequenceEqual(
+            sorted(list(streams.keys())),
+            sorted(["720p"])
+        )
+
     @patch('streamlink.stream.dash.DASHStreamReader')
     @patch('streamlink.stream.dash.FFMPEGMuxer')
     def test_stream_open_video_only(self, muxer, reader):
