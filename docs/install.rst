@@ -188,42 +188,30 @@ Using :command:`easy_install` is no longer recommended.
 ==================================== ===========================================
 Version                              Installing
 ==================================== ===========================================
-`Latest release (pip)`_              Current user
+`Latest release (pip)`_              .. code-block:: bash
 
-                                     .. code-block:: bash
-
+                                        # Current user
                                         pip install --upgrade --user streamlink
 
-                                     System wide
-
-                                     .. code-block:: bash
-
+                                        # System wide
                                         sudo pip install --upgrade streamlink
 
-`Development version (pip)`_         Current user
+`Development version (pip)`_         .. code-block:: bash
 
-                                     .. code-block:: bash
-
+                                        # Current user
                                         pip install --upgrade --user git+https://github.com/streamlink/streamlink.git
 
-                                     System wide
-
-                                     .. code-block:: bash
-
+                                        # System wide
                                         sudo pip install --upgrade git+https://github.com/streamlink/streamlink.git
 
-`Development version (git)`_         Current user
+`Development version (git)`_         .. code-block:: bash
 
-                                     .. code-block:: bash
-
+                                        # Current user
                                         git clone https://github.com/streamlink/streamlink.git
                                         cd streamlink
                                         python setup.py install --user
 
-                                     System wide
-
-                                     .. code-block:: bash
-
+                                        # System wide
                                         git clone https://github.com/streamlink/streamlink.git
                                         cd streamlink
                                         sudo python setup.py install
