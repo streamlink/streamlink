@@ -7,8 +7,54 @@
 Installation
 ============
 
-Linux and BSD packages
-----------------------
+Windows
+-------
+
+.. rst-class:: table-custom-layout
+
+==================================== ===========================================
+Method                               Installing
+==================================== ===========================================
+Installers                           See the `Windows binaries`_ section below
+
+Portable                             See the `Windows portable version`_ section below
+
+`Chocolatey`_                        .. code-block:: bat
+
+                                        choco install streamlink
+
+                                     `Installing Chocolatey packages`_
+==================================== ===========================================
+
+.. _Chocolatey: https://chocolatey.org/packages/streamlink
+.. _Installing Chocolatey packages: https://chocolatey.org
+
+
+macOS
+-----
+
+.. rst-class:: table-custom-layout
+
+==================================== ===========================================
+Method                               Installing
+==================================== ===========================================
+Easy install                         .. code-block:: bash
+
+                                        sudo easy_install -U streamlink
+
+`Homebrew`_                          .. code-block:: bash
+
+                                        brew install streamlink
+
+                                     `Installing Homebrew packages`_
+==================================== ===========================================
+
+.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
+.. _Installing Homebrew packages: https://brew.sh
+
+
+Linux and BSD
+-------------
 
 .. rst-class:: table-custom-layout
 
@@ -92,40 +138,6 @@ Distribution                         Installing
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
-
-
-Other platforms
----------------
-
-.. rst-class:: table-custom-layout
-
-==================================== ===========================================
-Platform                             Installing
-==================================== ===========================================
-macOS                                .. code-block:: bash
-
-                                        sudo easy_install -U streamlink
-
-`Homebrew`_                          .. code-block:: bash
-
-                                        brew install streamlink
-
-                                     `Installing Homebrew packages`_
-
-Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
-
-`Chocolatey`_                        .. code-block:: bat
-
-                                        choco install streamlink
-
-                                     `Installing Chocolatey packages`_
-==================================== ===========================================
-
-.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
-.. _Chocolatey: https://chocolatey.org/packages/streamlink
-
-.. _Installing Homebrew packages: https://brew.sh
-.. _Installing Chocolatey packages: https://chocolatey.org
 
 
 Package maintainers
