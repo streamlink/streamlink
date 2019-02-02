@@ -21,7 +21,9 @@ Distribution                         Installing
 
 `Arch Linux (aur, git)`_             .. code-block:: console
 
-                                        # pacaur -S streamlink-git
+                                        $ git clone https://aur.archlinux.org/streamlink-git.git
+                                        $ cd streamlink-git
+                                        $ makepkg -si
 
                                      `Installing AUR packages`_
 `Debian (sid, testing)`_             .. code-block:: console
