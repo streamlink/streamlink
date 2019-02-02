@@ -224,6 +224,39 @@ Version                              Installing
 .. _Development version (pip): https://github.com/streamlink/streamlink
 .. _Development version (git): https://github.com/streamlink/streamlink
 
+Virtual environment
+^^^^^^^^^^^^^^^^^^^
+
+Another method of installing Streamlink in a non-system-wide way is
+using `virtualenv`_, which creates a user owned Python environment instead.
+
+.. code-block:: bash
+
+    # Create a new environment
+    virtualenv ~/myenv
+
+    # Activate the environment
+    source ~/myenv/bin/activate
+
+    # Install Streamlink in the environment
+    pip install --upgrade streamlink
+
+    # Use Streamlink in the environment
+    streamlink ...
+
+    # Deactivate the environment
+    deactivate
+
+    # Use Streamlink without activating the environment
+    ~/myenv/bin/streamlink ...
+
+.. note::
+
+    This may also be required on some macOS versions that seem to have weird
+    permission issues.
+
+.. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
+
 Dependencies
 ^^^^^^^^^^^^
 
@@ -288,42 +321,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _websocket-client: https://pypi.org/project/websocket-client/
 .. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
 .. _shutil_which: https://pypi.org/project/backports.shutil_which/
-
-
-Installing without root permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you do not wish to install Streamlink globally on your system it's
-recommended to use `virtualenv`_ to create a user owned Python environment
-instead.
-
-.. code-block:: console
-
-    Creating an environment
-    $ virtualenv ~/myenv
-
-    Activating the environment
-    $ source ~/myenv/bin/activate
-
-    Installing streamlink into the environment
-    (myenv)$ pip install streamlink
-
-    Using streamlink in the environment
-    (myenv)$ streamlink ...
-
-    Deactivating the environment
-    (myenv)$ deactivate
-
-    Using streamlink without activating the environment
-    $ ~/myenv/bin/streamlink ...
-
-.. note::
-
-    This may also be required on some OS X versions that seems to have weird
-    permission issues.
-
-
-.. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 
 
 Windows binaries
