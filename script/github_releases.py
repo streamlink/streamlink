@@ -17,20 +17,7 @@ TEMPLATE = """
 
 ## Installation
 
-### Installing with Pip:
-
-```sh
-sudo pip install streamlink
-```
-
-### Manual installation:
-
-```sh
-curl -L https://github.com/streamlink/streamlink/releases/download/{version}/streamlink-{version}.tar.gz -O streamlink.tar.gz
-tar xvf streamlink.tar.gz
-cd streamlink
-sudo python setup.py install
-```
+See the detailed [installation instructions](https://streamlink.github.io/install.html) on Streamlink's website.
 
 ## Supporting Streamlink
 
