@@ -145,46 +145,80 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
 Source code
 -----------
 
-If a package is not available for your platform (or it's out of date) you
-can install Streamlink via source.
+If a package is not available on your platform (or if it's out of date), Streamlink can be installed from source.
 
-There are a few different methods to do this,
-`pip <http://pip.readthedocs.org/en/latest/installing.html>`_ the Python package
-manager, or by checking out the latest code with
-`Git <http://git-scm.com/downloads>`_. Using :command:`easy_install` is no longer recommended.
+This can be done in a couple of different ways, for example by using `pip`_, the Python package manager,
+or by checking out the source code with `git`_ and installing it via setuptools. |br|
+Using :command:`easy_install` is no longer recommended.
 
 .. note::
 
-    For some Linux distributions the Python headers package needs to be installed before installing streamlink
-    (``python-devel`` in RedHat, Fedora, etc.).
+    On some Linux distributions, the Python headers package needs to be installed before installing Streamlink
+    (``python-devel`` on RedHat, Fedora, etc.).
 
-    Ensure that you are using an up-to-date version of :command:`pip`, at least version **6** is recommended.
+    Ensure that you are using an up-to-date version of `pip`_. At least version **6** is required.
 
+.. note::
 
-The commands listed here will also upgrade any existing version of Streamlink.
+    On Linux, when not using a virtual environment, it is recommended to install custom python packages like this
+    only for the current user (see the ``--user`` parameter below), since system-wide packages can cause conflicts with
+    the system's regular package manager.
+
+    Those user-packages will be installed into ``~/.local`` instead of ``/usr`` and entry-scripts for
+    running the programs can be found in ``~/.local/bin``, eg. ``~/.local/bin/streamlink``.
+
+    In order for the command line shell to be able to find these executables, the user's ``PATH`` environment variable
+    needs to be extended. This can be done by adding ``export PATH="${HOME}/.local/bin:${PATH}"``
+    to ``~/.profile`` or ``~/.bashrc``.
 
 .. rst-class:: table-custom-layout
 
 ==================================== ===========================================
 Version                              Installing
 ==================================== ===========================================
-`Latest release (pip)`_              .. code-block:: console
+`Latest release (pip)`_              Current user
 
-                                        # pip install -U streamlink
-`Latest release (easy_install)`_     .. code-block:: console
+                                     .. code-block:: console
 
-                                        # easy_install -U streamlink
-`Development version (pip)`_         .. code-block:: console
+                                        $ pip install --upgrade --user streamlink
 
-                                        # pip install -U git+https://github.com/streamlink/streamlink.git
+                                     System wide
 
-`Development version (git)`_         .. code-block:: console
+                                     .. code-block:: console
 
-                                        $ git clone git://github.com/streamlink/streamlink.git
+                                        # pip install --upgrade streamlink
+
+`Development version (pip)`_         Current user
+
+                                     .. code-block:: console
+
+                                        $ pip install --upgrade --user git+https://github.com/streamlink/streamlink.git
+
+                                     System wide
+
+                                     .. code-block:: console
+
+                                        # pip install --upgrade git+https://github.com/streamlink/streamlink.git
+
+`Development version (git)`_         Current user
+
+                                     .. code-block:: console
+
+                                        $ git clone https://github.com/streamlink/streamlink.git
+                                        $ cd streamlink
+                                        $ python setup.py install --user
+
+                                     System wide
+
+                                     .. code-block:: console
+
+                                        $ git clone https://github.com/streamlink/streamlink.git
                                         $ cd streamlink
                                         # python setup.py install
 ==================================== ===========================================
 
+.. _pip: https://pip.readthedocs.org/en/latest/installing.html
+.. _git: https://git-scm.com/
 .. _Latest release (pip): https://pypi.python.org/pypi/streamlink
 .. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
 .. _Development version (pip): https://github.com/streamlink/streamlink
