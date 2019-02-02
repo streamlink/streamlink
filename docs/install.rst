@@ -49,6 +49,9 @@ Distribution                         Installing
                                         $ nix-env -iA nixos.streamlink
 
                                      `NixOS channel`_
+`OpenBSD`_                           .. code-block:: console
+
+                                        $ doas pkg_add streamlink
 `Solus`_                             .. code-block:: console
 
                                         $ sudo eopkg install streamlink
@@ -70,6 +73,7 @@ Distribution                         Installing
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
+.. _OpenBSD: http://openports.se/multimedia/streamlink
 .. _Solus: https://dev.solus-project.com/source/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
@@ -126,6 +130,7 @@ Fedora                               Mohamed El Morabity <melmorabity at fedorap
 Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
+OpenBSD                              Brian Callahan <bcallah at openbsd.org>
 Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 wkuipers <wietse at kuiprs.nl>
