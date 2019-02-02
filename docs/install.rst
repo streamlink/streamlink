@@ -15,56 +15,66 @@ Linux and BSD packages
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
-`Arch Linux`_                        .. code-block:: console
+`Arch Linux`_                        .. code-block:: bash
 
-                                        # pacman -S streamlink
+                                        sudo pacman -S streamlink
 
-`Arch Linux (aur, git)`_             .. code-block:: console
+`Arch Linux (aur, git)`_             .. code-block:: bash
 
-                                        $ git clone https://aur.archlinux.org/streamlink-git.git
-                                        $ cd streamlink-git
-                                        $ makepkg -si
+                                        git clone https://aur.archlinux.org/streamlink-git.git
+                                        cd streamlink-git
+                                        makepkg -si
 
                                      `Installing AUR packages`_
-`Debian (sid, testing)`_             .. code-block:: console
 
-                                        # apt update
-                                        # apt install streamlink
-`Debian (stable)`_                   .. code-block:: console
+`Debian (sid, testing)`_             .. code-block:: bash
 
-                                        # wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | apt-key add -
-                                        # echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | tee "/etc/apt/sources.list.d/streamlink.list"
-                                        # apt update
-                                        # apt install streamlink
-`Fedora`_                            .. code-block:: console
+                                        sudo apt update
+                                        sudo apt install streamlink
 
-                                        # dnf install streamlink
-`Gentoo Linux`_                      .. code-block:: console
+`Debian (stable)`_                   .. code-block:: bash
 
-                                        # emerge net-misc/streamlink
-`NetBSD (pkgsrc)`_                   .. code-block:: console
+                                        wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | sudo apt-key add -
+                                        echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+                                        sudo apt update
+                                        sudo apt install streamlink
 
-                                        $ cd /usr/pkgsrc/multimedia/streamlink
-                                        # make install clean
-`NixOS`_                             .. code-block:: console
+`Fedora`_                            .. code-block:: bash
 
-                                        $ nix-env -iA nixos.streamlink
+                                        sudo dnf install streamlink
+
+`Gentoo Linux`_                      .. code-block:: bash
+
+                                        sudo emerge net-misc/streamlink
+
+`NetBSD (pkgsrc)`_                   .. code-block:: bash
+
+                                        cd /usr/pkgsrc/multimedia/streamlink
+                                        sudo make install clean
+
+`NixOS`_                             .. code-block:: bash
+
+                                        nix-env -iA nixos.streamlink
 
                                      `NixOS channel`_
-`OpenBSD`_                           .. code-block:: console
 
-                                        $ doas pkg_add streamlink
-`Solus`_                             .. code-block:: console
+`OpenBSD`_                           .. code-block:: bash
 
-                                        $ sudo eopkg install streamlink
-`Ubuntu`_                            .. code-block:: console
+                                        doas pkg_add streamlink
 
-                                        $ sudo add-apt-repository ppa:nilarimogard/webupd8
-                                        $ sudo apt update
-                                        $ sudo apt install streamlink
-`Void`_                              .. code-block:: console
+`Solus`_                             .. code-block:: bash
 
-                                        # xbps-install streamlink
+                                        sudo eopkg install streamlink
+
+`Ubuntu`_                            .. code-block:: bash
+
+                                        sudo add-apt-repository ppa:nilarimogard/webupd8
+                                        sudo apt update
+                                        sudo apt install streamlink
+
+`Void`_                              .. code-block:: bash
+
+                                        sudo xbps-install streamlink
 ==================================== ===========================================
 
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
@@ -92,19 +102,21 @@ Other platforms
 ==================================== ===========================================
 Platform                             Installing
 ==================================== ===========================================
-Mac OS X                             .. code-block:: console
+macOS                                .. code-block:: bash
 
-                                        # easy_install -U streamlink
-`Homebrew`_                          .. code-block:: console
+                                        sudo easy_install -U streamlink
 
-                                        # brew install streamlink
+`Homebrew`_                          .. code-block:: bash
+
+                                        brew install streamlink
 
                                      `Installing Homebrew packages`_
+
 Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
 
-`Chocolatey`_                        .. code-block:: console
+`Chocolatey`_                        .. code-block:: bat
 
-                                        C:\> choco install streamlink
+                                        choco install streamlink
 
                                      `Installing Chocolatey packages`_
 ==================================== ===========================================
@@ -178,43 +190,43 @@ Version                              Installing
 ==================================== ===========================================
 `Latest release (pip)`_              Current user
 
-                                     .. code-block:: console
+                                     .. code-block:: bash
 
-                                        $ pip install --upgrade --user streamlink
+                                        pip install --upgrade --user streamlink
 
                                      System wide
 
-                                     .. code-block:: console
+                                     .. code-block:: bash
 
-                                        # pip install --upgrade streamlink
+                                        sudo pip install --upgrade streamlink
 
 `Development version (pip)`_         Current user
 
-                                     .. code-block:: console
+                                     .. code-block:: bash
 
-                                        $ pip install --upgrade --user git+https://github.com/streamlink/streamlink.git
+                                        pip install --upgrade --user git+https://github.com/streamlink/streamlink.git
 
                                      System wide
 
-                                     .. code-block:: console
+                                     .. code-block:: bash
 
-                                        # pip install --upgrade git+https://github.com/streamlink/streamlink.git
+                                        sudo pip install --upgrade git+https://github.com/streamlink/streamlink.git
 
 `Development version (git)`_         Current user
 
-                                     .. code-block:: console
+                                     .. code-block:: bash
 
-                                        $ git clone https://github.com/streamlink/streamlink.git
-                                        $ cd streamlink
-                                        $ python setup.py install --user
+                                        git clone https://github.com/streamlink/streamlink.git
+                                        cd streamlink
+                                        python setup.py install --user
 
                                      System wide
 
-                                     .. code-block:: console
+                                     .. code-block:: bash
 
-                                        $ git clone https://github.com/streamlink/streamlink.git
-                                        $ cd streamlink
-                                        # python setup.py install
+                                        git clone https://github.com/streamlink/streamlink.git
+                                        cd streamlink
+                                        sudo python setup.py install
 ==================================== ===========================================
 
 .. _pip: https://pip.readthedocs.org/en/latest/installing.html
