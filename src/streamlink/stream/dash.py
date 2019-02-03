@@ -234,6 +234,8 @@ class DASHStream(Stream):
         return ret
 
     def open(self):
+        headers = self.args.pop("headers", {})
+        self.session.http.headers.update(headers)
         if self.video_representation:
             video = DASHStreamReader(self, self.video_representation.id, self.video_representation.mimeType)
             video.open()

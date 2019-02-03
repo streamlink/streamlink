@@ -32,7 +32,7 @@ class TF1(Plugin):
                 log.error("Failed to get stream for {0}: {error} ({code})".format(channel, **data))
             else:
                 log.debug("Got {format} stream {url}".format(**data))
-                yield data['format'], data['url']
+                yield data['format'], data['url'], useragent
 
     @classmethod
     def can_handle_url(cls, url):
@@ -43,10 +43,10 @@ class TF1(Plugin):
         if m:
             channel = m.group(1) or m.group(2)
             self.logger.debug("Found channel {0}", channel)
-            for sformat, url in self.get_stream_urls(channel):
+            for sformat, url, useragent in self.get_stream_urls(channel):
                 try:
                     if sformat == "dash":
-                        for s in DASHStream.parse_manifest(self.session, url, headers={"User-Agent": useragents.CHROME}).items():
+                        for s in DASHStream.parse_manifest(self.session, url, headers={"User-Agent": useragent}).items():
                             yield s
                     if sformat == "hls":
                         for s in HLSStream.parse_variant_playlist(self.session, url).items():
