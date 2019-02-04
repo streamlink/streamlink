@@ -15,7 +15,7 @@ Name                    URL(s)               Live  VOD   Notes
 abematv                 abema.tv             Yes   Yes   Streams are geo-restricted to Japan.
 abweb                   abweb.com            Yes   No    Requires a login and a subscription.
 adultswim               adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
-afreeca                 play.afreecatv.com   Yes   No
+afreeca                 play.afreecatv.com   Yes   No    How to play VOD @ Afreeca TV: [1]_
 aljazeeraen             aljazeera.com        Yes   Yes   English version of the site.
 animelab                animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 app17                   17app.co             Yes   --
@@ -289,6 +289,7 @@ zhanqi                  zhanqi.tv            Yes   No
 ======================= ==================== ===== ===== ===========================
 
 
+.. [1] https://github.com/streamlink/streamlink/issues/1733
 .. [2] streamingvideoprovider.co.uk
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
