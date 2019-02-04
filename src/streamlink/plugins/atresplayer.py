@@ -5,7 +5,7 @@ import re
 from functools import partial
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, StreamMapper
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, DASHStream
 from streamlink.utils import parse_json, update_scheme, search_dict
 
@@ -52,8 +52,12 @@ class AtresPlayer(Plugin):
                 log.debug("Stream source: {0} ({1})".format(source['src'], source.get("type", "n/a")))
 
                 if "type" not in source or source["type"] == "application/vnd.apple.mpegurl":
-                    for s in HLSStream.parse_variant_playlist(self.session, source["src"]).items():
-                        yield s
+                    streams = HLSStream.parse_variant_playlist(self.session, source["src"])
+                    if not streams:
+                        yield "live", HLSStream(self.session, source["src"])
+                    else:
+                        for s in streams.items():
+                            yield s
                 elif source["type"] == "application/dash+xml":
                     for s in DASHStream.parse_manifest(self.session, source["src"]).items():
                         yield s
