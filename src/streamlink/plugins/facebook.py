@@ -8,7 +8,7 @@ from streamlink.utils import parse_json
 
 
 class Facebook(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/(posts|videos)(/(?P<video_id>[0-9]+))?")
+    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/(posts|videos)/(?P<video_id>[0-9]+)")
     _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
     _dash_manifest_re = re.compile(r'''dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],''')
     _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
@@ -48,8 +48,12 @@ class Facebook(Plugin):
                 manifest = bytes(unquote_plus(manifest), "utf-8").decode("unicode_escape")
             else:
                 manifest = unquote_plus(manifest).decode("string_escape")
-            for s in DASHStream.parse_manifest(self.session, manifest).items():
-                yield s
+            # Ignore unsupported manifests until DASH SegmentBase support is implemented
+            if "SegmentBase" in manifest:
+                self.logger.error("Skipped DASH manifest with SegmentBase streams")
+            else:
+                for s in DASHStream.parse_manifest(self.session, manifest).items():
+                    yield s
 
     def _get_streams(self):
         done = False
@@ -72,30 +76,28 @@ class Facebook(Plugin):
                 return
 
         # fallback to tahoe player url
-        match = self._url_re.match(self.url)
-        if match.group("video_id"):
-            self.logger.debug("Falling back to tahoe player")
-            url = self._TAHOE_URL.format(match.group("video_id"))
-            data = {"__a": 1}
-            match = self._pc_re.search(res.text)
-            if match:
-                data["__pc"] = match.group(1)
-            else:
-                data["__pc"] = self._DEFAULT_PC
-            match = self._rev_re.search(res.text)
-            if match:
-                data["__rev"] = match.group(1)
-            else:
-                data["__rev"] = self._DEFAULT_REV
-            match = self._dtsg_re.search(res.text)
-            if match:
-                data["fb_dtsg"] = match.group(1)
-            else:
-                data["fb_dtsg"] = ""
-            res = self.session.http.post(url, headers={"User-Agent": useragents.CHROME, "Content-Type": "application/x-www-form-urlencoded"},
-                                         data=urlencode(data).encode("ascii"))
-            for s in self._parse_streams(res):
-                yield s
+        self.logger.debug("Falling back to tahoe player")
+        video_id = self._url_re.match(self.url).group("video_id")
+        url = self._TAHOE_URL.format(video_id)
+        data = {
+            "__a": 1,
+            "__pc": self._DEFAULT_PC,
+            "__rev": self._DEFAULT_REV,
+            "fb_dtsg": "",
+        }
+        match = self._pc_re.search(res.text)
+        if match:
+            data["__pc"] = match.group(1)
+        match = self._rev_re.search(res.text)
+        if match:
+            data["__rev"] = match.group(1)
+        match = self._dtsg_re.search(res.text)
+        if match:
+            data["fb_dtsg"] = match.group(1)
+        res = self.session.http.post(url, headers={"User-Agent": useragents.CHROME, "Content-Type": "application/x-www-form-urlencoded"},
+                                     data=urlencode(data).encode("ascii"))
+        for s in self._parse_streams(res):
+            yield s
 
 
 __plugin__ = Facebook
