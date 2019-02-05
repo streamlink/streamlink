@@ -40,10 +40,8 @@ class Facebook(Plugin):
 
         match = self._dash_manifest_re.search(res.text)
         if match:
-            manifest = match.group("manifest")
-            if "\\/" in manifest:
-                manifest = manifest.replace("\\/", "/")
             # facebook replaces "<" characters with the substring "\\x3C"
+            manifest = match.group("manifest").replace("\\/", "/")
             if is_py3:
                 manifest = bytes(unquote_plus(manifest), "utf-8").decode("unicode_escape")
             else:
