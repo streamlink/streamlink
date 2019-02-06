@@ -7,6 +7,7 @@ class TestPluginStreamMe(unittest.TestCase):
     def test_can_handle_url(self):
         # should match
         self.assertTrue(StreamMe.can_handle_url("http://www.stream.me/nameofstream"))
+        self.assertTrue(StreamMe.can_handle_url("https://stream.me/nameofstream"))
 
         # shouldn't match
         self.assertFalse(StreamMe.can_handle_url("http://www.livestream.me/nameofstream"))
