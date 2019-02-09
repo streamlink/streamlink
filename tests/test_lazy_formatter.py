@@ -10,6 +10,7 @@ class TestLazyFormat(unittest.TestCase):
         plugin.get_title.return_value = "title"
         plugin.get_author.return_value = "author"
         plugin.get_game.return_value = "game"
+        plugin.url = "url"
 
         return plugin
 
@@ -19,7 +20,8 @@ class TestLazyFormat(unittest.TestCase):
         res = LazyFormatter.format("{title}",
                                    title=plugin.get_title,
                                    author=plugin.get_author,
-                                   game=plugin.get_game)
+                                   game=plugin.get_game,
+                                   url=plugin.url)
 
         self.assertEqual("title", res)
 
@@ -33,7 +35,8 @@ class TestLazyFormat(unittest.TestCase):
         res = LazyFormatter.format("{title} - {author}",
                                    title=plugin.get_title,
                                    author=plugin.get_author,
-                                   game=plugin.get_game)
+                                   game=plugin.get_game,
+                                   url=plugin.url)
 
         self.assertEqual("title - author", res)
 
@@ -48,9 +51,25 @@ class TestLazyFormat(unittest.TestCase):
         res = LazyFormatter.format("{title} - {author} - {game}",
                                    title=plugin.get_title,
                                    author=plugin.get_author,
-                                   game=plugin.get_game)
+                                   game=plugin.get_game,
+                                   url=plugin.url)
 
         self.assertEqual("title - author - game", res)
+
+        plugin.get_title.assert_called()
+        plugin.get_author.assert_called()
+        plugin.get_game.assert_called()
+
+    def test_format_lazy_title_author_game_url(self):
+        plugin = self._get_fake_plugin()
+
+        res = LazyFormatter.format("{title} - {author} - {game} - {url}",
+                                   title=plugin.get_title,
+                                   author=plugin.get_author,
+                                   game=plugin.get_game,
+                                   url=plugin.url)
+
+        self.assertEqual("title - author - game - url", res)
 
         plugin.get_title.assert_called()
         plugin.get_author.assert_called()
