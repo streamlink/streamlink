@@ -187,13 +187,20 @@ class BBCiPlayer(Plugin):
         :return: Whether authentication was successful
         :rtype: bool
         """
+        def auth_check(res):
+            return ptrt_url in ([h.url for h in res.history] + [res.url])
+
+        # make the session request to get the correct cookies
         session_res = self.session.http.get(
             self.session_url,
             params=dict(ptrt=ptrt_url)
         )
 
-        http_nonce = self._extract_nonce(session_res)
+        if auth_check(session_res):
+            log.debug("Already authenticated, skipping authentication")
+            return True
 
+        http_nonce = self._extract_nonce(session_res)
         res = self.session.http.post(
             self.auth_url,
             params=dict(
@@ -208,7 +215,7 @@ class BBCiPlayer(Plugin):
             ),
             headers={"Referer": self.url})
 
-        return len(res.history) != 0
+        return auth_check(res)
 
     def _get_streams(self):
         if not self.get_option("username"):
