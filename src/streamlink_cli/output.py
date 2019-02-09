@@ -177,8 +177,6 @@ class PlayerOutput(Output):
             filename = self.http.url
         else:
             filename = "-"
-        args = self.args.format(filename=filename)
-        cmd = self.cmd
         extra_args = []
 
         if self.title is not None:
@@ -194,6 +192,17 @@ class PlayerOutput(Output):
                 self.title = self._mpv_title_escape(self.title)
                 extra_args.extend(["--title", self.title])
 
+            # potplayer
+            if self.player_name == "potplayer":
+                if filename != "-":
+                    # PotPlayer - About - Command Line
+                    # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs. ("http://...\title of this url")
+                    self.title = self.title.replace('"', '')
+                    filename = filename[:-1] + '\\' + self.title + filename[-1]
+
+        args = self.args.format(filename=filename)
+        cmd = self.cmd
+        
         # player command
         if is_win32:
             eargs = maybe_decode(subprocess.list2cmdline(extra_args))
