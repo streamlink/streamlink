@@ -7,62 +7,120 @@
 Installation
 ============
 
-Linux and BSD packages
-----------------------
+Windows
+-------
+
+.. rst-class:: table-custom-layout
+
+==================================== ===========================================
+Method                               Installing
+==================================== ===========================================
+Installers                           See the `Windows binaries`_ section below
+
+Portable                             See the `Windows portable version`_ section below
+
+`Chocolatey`_                        .. code-block:: bat
+
+                                        choco install streamlink
+
+                                     `Installing Chocolatey packages`_
+==================================== ===========================================
+
+.. _Chocolatey: https://chocolatey.org/packages/streamlink
+.. _Installing Chocolatey packages: https://chocolatey.org
+
+
+macOS
+-----
+
+.. rst-class:: table-custom-layout
+
+==================================== ===========================================
+Method                               Installing
+==================================== ===========================================
+Easy install                         .. code-block:: bash
+
+                                        sudo easy_install -U streamlink
+
+`Homebrew`_                          .. code-block:: bash
+
+                                        brew install streamlink
+
+                                     `Installing Homebrew packages`_
+==================================== ===========================================
+
+.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
+.. _Installing Homebrew packages: https://brew.sh
+
+
+Linux and BSD
+-------------
 
 .. rst-class:: table-custom-layout
 
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
-`Arch Linux`_                        .. code-block:: console
+`Arch Linux`_                        .. code-block:: bash
 
-                                        # pacman -S streamlink
+                                        sudo pacman -S streamlink
 
-`Arch Linux (aur, git)`_             .. code-block:: console
+`Arch Linux (aur, git)`_             .. code-block:: bash
 
-                                        # pacaur -S streamlink-git
+                                        git clone https://aur.archlinux.org/streamlink-git.git
+                                        cd streamlink-git
+                                        makepkg -si
 
                                      `Installing AUR packages`_
-`Debian (sid, testing)`_             .. code-block:: console
 
-                                        # apt update
-                                        # apt install streamlink
-`Debian (stable)`_                   .. code-block:: console
+`Debian (sid, testing)`_             .. code-block:: bash
 
-                                        # wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | apt-key add -
-                                        # echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | tee "/etc/apt/sources.list.d/streamlink.list"
-                                        # apt update
-                                        # apt install streamlink
-`Fedora`_                            .. code-block:: console
+                                        sudo apt update
+                                        sudo apt install streamlink
 
-                                        # dnf install streamlink
-`Gentoo Linux`_                      .. code-block:: console
+`Debian (stable)`_                   .. code-block:: bash
 
-                                        # emerge net-misc/streamlink
-`NetBSD (pkgsrc)`_                   .. code-block:: console
+                                        wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | sudo apt-key add -
+                                        echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+                                        sudo apt update
+                                        sudo apt install streamlink
 
-                                        $ cd /usr/pkgsrc/multimedia/streamlink
-                                        # make install clean
-`NixOS`_                             .. code-block:: console
+`Fedora`_                            .. code-block:: bash
 
-                                        $ nix-env -iA nixos.streamlink
+                                        sudo dnf install streamlink
+
+`Gentoo Linux`_                      .. code-block:: bash
+
+                                        sudo emerge net-misc/streamlink
+
+`NetBSD (pkgsrc)`_                   .. code-block:: bash
+
+                                        cd /usr/pkgsrc/multimedia/streamlink
+                                        sudo make install clean
+
+`NixOS`_                             .. code-block:: bash
+
+                                        nix-env -iA nixos.streamlink
 
                                      `NixOS channel`_
-`OpenBSD`_                           .. code-block:: console
 
-                                        $ doas pkg_add streamlink
-`Solus`_                             .. code-block:: console
+`OpenBSD`_                           .. code-block:: bash
 
-                                        $ sudo eopkg install streamlink
-`Ubuntu`_                            .. code-block:: console
+                                        doas pkg_add streamlink
 
-                                        $ sudo add-apt-repository ppa:nilarimogard/webupd8
-                                        $ sudo apt update
-                                        $ sudo apt install streamlink
-`Void`_                              .. code-block:: console
+`Solus`_                             .. code-block:: bash
 
-                                        # xbps-install streamlink
+                                        sudo eopkg install streamlink
+
+`Ubuntu`_                            .. code-block:: bash
+
+                                        sudo add-apt-repository ppa:nilarimogard/webupd8
+                                        sudo apt update
+                                        sudo apt install streamlink
+
+`Void`_                              .. code-block:: bash
+
+                                        sudo xbps-install streamlink
 ==================================== ===========================================
 
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
@@ -80,38 +138,6 @@ Distribution                         Installing
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
-
-
-Other platforms
----------------
-
-.. rst-class:: table-custom-layout
-
-==================================== ===========================================
-Platform                             Installing
-==================================== ===========================================
-Mac OS X                             .. code-block:: console
-
-                                        # easy_install -U streamlink
-`Homebrew`_                          .. code-block:: console
-
-                                        # brew install streamlink
-
-                                     `Installing Homebrew packages`_
-Microsoft Windows                    See `Windows binaries`_ and `Windows portable version`_.
-
-`Chocolatey`_                        .. code-block:: console
-
-                                        C:\> choco install streamlink
-
-                                     `Installing Chocolatey packages`_
-==================================== ===========================================
-
-.. _Homebrew: https://github.com/Homebrew/homebrew-core/blob/master/Formula/streamlink.rb
-.. _Chocolatey: https://chocolatey.org/packages/streamlink
-
-.. _Installing Homebrew packages: https://brew.sh
-.. _Installing Chocolatey packages: https://chocolatey.org
 
 
 Package maintainers
@@ -143,50 +169,105 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
 Source code
 -----------
 
-If a package is not available for your platform (or it's out of date) you
-can install Streamlink via source.
+If a package is not available on your platform (or if it's out of date), Streamlink can be installed from source.
 
-There are a few different methods to do this,
-`pip <http://pip.readthedocs.org/en/latest/installing.html>`_ the Python package
-manager, or by checking out the latest code with
-`Git <http://git-scm.com/downloads>`_. Using :command:`easy_install` is no longer recommended.
+This can be done in a couple of different ways, for example by using `pip`_, the Python package manager,
+or by checking out the source code with `git`_ and installing it via setuptools. |br|
+Using :command:`easy_install` is no longer recommended.
 
 .. note::
 
-    For some Linux distributions the Python headers package needs to be installed before installing streamlink
-    (``python-devel`` in RedHat, Fedora, etc.).
+    On some Linux distributions, the Python headers package needs to be installed before installing Streamlink
+    (``python-devel`` on RedHat, Fedora, etc.).
 
-    Ensure that you are using an up-to-date version of :command:`pip`, at least version **6** is recommended.
+    Ensure that you are using an up-to-date version of `pip`_. At least version **6** is required.
 
+.. note::
 
-The commands listed here will also upgrade any existing version of Streamlink.
+    On Linux, when not using a virtual environment, it is recommended to install custom python packages like this
+    only for the current user (see the ``--user`` parameter below), since system-wide packages can cause conflicts with
+    the system's regular package manager.
+
+    Those user-packages will be installed into ``~/.local`` instead of ``/usr`` and entry-scripts for
+    running the programs can be found in ``~/.local/bin``, eg. ``~/.local/bin/streamlink``.
+
+    In order for the command line shell to be able to find these executables, the user's ``PATH`` environment variable
+    needs to be extended. This can be done by adding ``export PATH="${HOME}/.local/bin:${PATH}"``
+    to ``~/.profile`` or ``~/.bashrc``.
 
 .. rst-class:: table-custom-layout
 
 ==================================== ===========================================
 Version                              Installing
 ==================================== ===========================================
-`Latest release (pip)`_              .. code-block:: console
+`Latest release (pip)`_              .. code-block:: bash
 
-                                        # pip install -U streamlink
-`Latest release (easy_install)`_     .. code-block:: console
+                                        # Current user
+                                        pip install --upgrade --user streamlink
 
-                                        # easy_install -U streamlink
-`Development version (pip)`_         .. code-block:: console
+                                        # System wide
+                                        sudo pip install --upgrade streamlink
 
-                                        # pip install -U git+https://github.com/streamlink/streamlink.git
+`Development version (pip)`_         .. code-block:: bash
 
-`Development version (git)`_         .. code-block:: console
+                                        # Current user
+                                        pip install --upgrade --user git+https://github.com/streamlink/streamlink.git
 
-                                        $ git clone git://github.com/streamlink/streamlink.git
-                                        $ cd streamlink
-                                        # python setup.py install
+                                        # System wide
+                                        sudo pip install --upgrade git+https://github.com/streamlink/streamlink.git
+
+`Development version (git)`_         .. code-block:: bash
+
+                                        # Current user
+                                        git clone https://github.com/streamlink/streamlink.git
+                                        cd streamlink
+                                        python setup.py install --user
+
+                                        # System wide
+                                        git clone https://github.com/streamlink/streamlink.git
+                                        cd streamlink
+                                        sudo python setup.py install
 ==================================== ===========================================
 
+.. _pip: https://pip.readthedocs.org/en/latest/installing.html
+.. _git: https://git-scm.com/
 .. _Latest release (pip): https://pypi.python.org/pypi/streamlink
 .. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
 .. _Development version (pip): https://github.com/streamlink/streamlink
 .. _Development version (git): https://github.com/streamlink/streamlink
+
+Virtual environment
+^^^^^^^^^^^^^^^^^^^
+
+Another method of installing Streamlink in a non-system-wide way is
+using `virtualenv`_, which creates a user owned Python environment instead.
+
+.. code-block:: bash
+
+    # Create a new environment
+    virtualenv ~/myenv
+
+    # Activate the environment
+    source ~/myenv/bin/activate
+
+    # Install Streamlink in the environment
+    pip install --upgrade streamlink
+
+    # Use Streamlink in the environment
+    streamlink ...
+
+    # Deactivate the environment
+    deactivate
+
+    # Use Streamlink without activating the environment
+    ~/myenv/bin/streamlink ...
+
+.. note::
+
+    This may also be required on some macOS versions that seem to have weird
+    permission issues.
+
+.. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 
 Dependencies
 ^^^^^^^^^^^^
@@ -252,42 +333,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _websocket-client: https://pypi.org/project/websocket-client/
 .. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
 .. _shutil_which: https://pypi.org/project/backports.shutil_which/
-
-
-Installing without root permissions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If you do not wish to install Streamlink globally on your system it's
-recommended to use `virtualenv`_ to create a user owned Python environment
-instead.
-
-.. code-block:: console
-
-    Creating an environment
-    $ virtualenv ~/myenv
-
-    Activating the environment
-    $ source ~/myenv/bin/activate
-
-    Installing streamlink into the environment
-    (myenv)$ pip install streamlink
-
-    Using streamlink in the environment
-    (myenv)$ streamlink ...
-
-    Deactivating the environment
-    (myenv)$ deactivate
-
-    Using streamlink without activating the environment
-    $ ~/myenv/bin/streamlink ...
-
-.. note::
-
-    This may also be required on some OS X versions that seems to have weird
-    permission issues.
-
-
-.. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 
 
 Windows binaries
