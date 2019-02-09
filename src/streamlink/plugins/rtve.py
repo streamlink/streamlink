@@ -1,4 +1,5 @@
 import base64
+import logging
 import re
 from functools import partial
 
@@ -8,10 +9,13 @@ from streamlink.compat import bytes, is_py3
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
+from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_xml
+
+log = logging.getLogger(__name__)
 
 
 class ZTNRClient(object):
@@ -54,7 +58,6 @@ class ZTNRClient(object):
 
 class Rtve(Plugin):
     secret_key = base64.b64decode("eWVMJmRhRDM=")
-    content_id_re = re.compile(r'data-id\s*=\s*"(\d+)"')
     url_re = re.compile(r"""
         https?://(?:www\.)?rtve\.es/(?:directo|noticias|television|deportes|alacarta|drmn)/.*?/?
     """, re.VERBOSE)
@@ -118,8 +121,11 @@ class Rtve(Plugin):
 
     def _get_content_id(self):
         res = self.session.http.get(self.url)
-        m = self.content_id_re.search(res.text)
-        return m and int(m.group(1))
+        for div in itertags(res.text, "div"):
+            if div.attributes.get("data-id"):
+                return int(div.attributes.get("data-id"))
+        else:
+            log.error("Failed to get content_id")
 
     def _get_subtitles(self, content_id):
         res = self.session.http.get(self.subtitles_api.format(id=content_id))
@@ -138,7 +144,7 @@ class Rtve(Plugin):
         streams = []
         content_id = self._get_content_id()
         if content_id:
-            self.logger.debug("Found content with id: {0}", content_id)
+            log.debug("Found content with id: {0}", content_id)
             stream_data = self.zclient.get_cdn_list(content_id, schema=self.cdn_schema)
             quality_map = None
 
@@ -147,8 +153,8 @@ class Rtve(Plugin):
                     if ".m3u8" in url:
                         try:
                             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
-                        except (IOError, OSError):
-                            self.logger.debug("Failed to load m3u8 url: {0}", url)
+                        except (IOError, OSError) as err:
+                            log.error(str(err))
                     elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi"))
                           and self.session.http.head(url, raise_for_status=False).status_code == 200):
                         if quality_map is None:  # only make the request when it is necessary
