@@ -13,7 +13,8 @@ DEFAULT_STREAM_METADATA = {
 SUPPORTED_PLAYERS = {  # these are the players that streamlink knows how to set the window title for with `--title`. key names are used in help text
     # name: possible binary names (linux/mac and windows)
     "vlc": ["vlc", "vlc.exe"],
-    "mpv": ["mpv", "mpv.exe"]
+    "mpv": ["mpv", "mpv.exe"],
+    "potplayer": ["potplayer", "potplayermini64.exe", "potplayermini.exe"]
 }
 
 if is_win32:
