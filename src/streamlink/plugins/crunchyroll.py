@@ -38,6 +38,9 @@ _url_re = re.compile(r"""
     (?:
         com|de|es|fr|co.jp
     )
+    (?:
+        /(en-gb|es|es-es|pt-pt|pt-br|fr|de|ar|it|ru)
+    )?
     (?:/[^/&?]+)?
     /[^/&?]+-(?P<media_id>\d+)
 """, re.VERBOSE)
