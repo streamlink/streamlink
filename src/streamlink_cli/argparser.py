@@ -465,6 +465,9 @@ def build_parser():
             gaming oriented platforms. "Game being played" is a way to categorize
             the stream, so it doesn't need its own separate handling.
 
+        {{url}}
+            URL of the stream.
+
         Examples:
 
             %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
