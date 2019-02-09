@@ -14,12 +14,17 @@ class TestPlayerOutput(unittest.TestCase):
         self.assertEqual("mpv",
                          PlayerOutput.supported_player("mpv"))
 
+        self.assertEqual("potplayer",
+                         PlayerOutput.supported_player("potplayermini.exe"))
+
     @patch("streamlink_cli.output.os.path.basename", new=ntpath.basename)
     def test_supported_player_win32(self):
         self.assertEqual("mpv",
                          PlayerOutput.supported_player("C:\\MPV\\mpv.exe"))
         self.assertEqual("vlc",
                          PlayerOutput.supported_player("C:\\VLC\\vlc.exe"))
+        self.assertEqual("potplayer",
+                         PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe"))
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
     def test_supported_player_posix(self):
@@ -34,6 +39,8 @@ class TestPlayerOutput(unittest.TestCase):
                          PlayerOutput.supported_player("C:\\MPV\\mpv.exe --argh"))
         self.assertEqual("vlc",
                          PlayerOutput.supported_player("C:\\VLC\\vlc.exe --argh"))
+        self.assertEqual("potplayer",
+                         PlayerOutput.supported_player("C:\\PotPlayer\\PotPlayerMini64.exe --argh"))
 
     @patch("streamlink_cli.output.os.path.basename", new=posixpath.basename)
     def test_supported_player_args_posix(self):
@@ -55,6 +62,8 @@ class TestPlayerOutput(unittest.TestCase):
                          PlayerOutput.supported_player("C:\\mpc\\mpc-hd.exe"))
         self.assertEqual(None,
                          PlayerOutput.supported_player("C:\\mplayer\\not-vlc.exe"))
+        self.assertEqual(None,
+                         PlayerOutput.supported_player("C:\\NotPlayer\\NotPlayerMini64.exe"))
 
     def test_open_player_with_title_mpv_escape_1(self):
         self.assertEqual(PlayerOutput._mpv_title_escape("no escape $$ codes $"),
