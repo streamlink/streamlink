@@ -49,9 +49,9 @@ class StreamMe(Plugin):
                         'videoHeight': int,
                         'location': validate.url()
                     }],
-                    validate.optional('origin'): {
+                    validate.optional('origin'): validate.any(None, {
                         validate.optional('location'): validate.url(),
-                    }
+                    })
                 }
             }
         },
