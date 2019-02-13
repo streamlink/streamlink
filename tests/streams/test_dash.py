@@ -5,7 +5,7 @@ from streamlink.stream import *
 from streamlink.stream.dash import DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD
 from tests.mock import MagicMock, patch, ANY, Mock, call
-from tests.resources import xml
+from tests.resources import text, xml
 
 
 class TestDASHStream(unittest.TestCase):
@@ -207,6 +207,13 @@ class TestDASHStream(unittest.TestCase):
                           DASHStream.parse_manifest,
                           self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+    def test_parse_manifest_string(self):
+        with text("dash/test_9.mpd") as mpd_txt:
+            test_manifest = mpd_txt.read()
+
+        streams = DASHStream.parse_manifest(self.session, test_manifest)
+        self.assertSequenceEqual(list(streams.keys()), ['2500k'])
 
     @patch('streamlink.stream.dash.DASHStreamReader')
     @patch('streamlink.stream.dash.FFMPEGMuxer')
