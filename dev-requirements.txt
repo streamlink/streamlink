@@ -5,5 +5,5 @@ codecov
 coverage
 mock
 requests-mock
-pynsist=2.1
+pynsist==2.2
 freezegun
