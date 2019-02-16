@@ -1019,11 +1019,17 @@ def main():
             streamlink.resolve_url(args.can_handle_url)
         except NoPluginError:
             error_code = 1
+        except KeyboardInterrupt:
+            console.msg("Interrupted! Exiting...")
+            error_code = 130
     elif args.can_handle_url_no_redirect:
         try:
             streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
             error_code = 1
+        except KeyboardInterrupt:
+            console.msg("Interrupted! Exiting...")
+            error_code = 130
     elif args.url:
         try:
             setup_options()
