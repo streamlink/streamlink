@@ -22,6 +22,18 @@ class Facebook(Plugin):
         streams = {}
         vod_urls = set([])
 
+        if not "sd_src" in res.text and not "hd_src" in res.text:
+            tmp = self.url.split("/")
+            video_id = tmp[-1] if tmp[-1]!="" else tmp[-2]
+            res = self.session.http.post("https://www.facebook.com/video/tahoe/async/%s/?chain=true&isvideo=true&payloadtype=primary"%video_id, 
+                    headers={"User-Agent": useragents.CHROME}, 
+                    data={
+                        "__rev": 4791687,
+                        "fb_dtsg": "",
+                        "__a": 1,
+                        "__pc": "PHASED:DEFAULT"
+                    })
+
         for match in self._src_re.finditer(res.text):
             stream_url = match.group("url")
             if "\\/" in stream_url:
