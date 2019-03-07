@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import codecs
-from os import environ
-from os import path
-from sys import path as sys_path
+from os import environ, path
+from sys import argv, path as sys_path
 
 from setuptools import setup, find_packages
 
@@ -53,6 +52,27 @@ sys_path.insert(0, srcdir)
 with codecs.open(path.join(this_directory, "README.md"), 'r', "utf8") as f:
     long_description = f.read()
 
+
+def is_wheel_for_windows():
+    if "bdist_wheel" in argv:
+        names = ["win32", "win-amd64", "cygwin"]
+        length = len(argv)
+        for pos in range(argv.index("bdist_wheel") + 1, length):
+            if argv[pos] == "--plat-name" and pos + 1 < length:
+                return argv[pos + 1] in names
+            elif argv[pos][:12] == "--plat-name=":
+                return argv[pos][12:] in names
+    return False
+
+
+entry_points = {
+    "console_scripts": ["streamlink=streamlink_cli.main:main"]
+}
+
+if is_wheel_for_windows():
+    entry_points["gui_scripts"] = ["streamlinkw=streamlink_cli.main:main"]
+
+
 setup(name="streamlink",
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
@@ -74,9 +94,7 @@ setup(name="streamlink",
       license="Simplified BSD",
       packages=find_packages("src"),
       package_dir={"": "src"},
-      entry_points={
-          "console_scripts": ["streamlink=streamlink_cli.main:main"]
-      },
+      entry_points=entry_points,
       install_requires=deps,
       test_suite="tests",
       python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
