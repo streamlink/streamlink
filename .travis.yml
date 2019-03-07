@@ -1,34 +1,58 @@
+git:
+  depth: 999999
+
+os: linux
+dist: trusty
+sudo: true
+
 language: python
+
 env:
   global:
-  - STREAMLINK_DIST_DIR=${TRAVIS_BUILD_DIR}/dist
-  - STREAMLINK_INSTALLER_DIST_DIR=${STREAMLINK_DIST_DIR}/nsis
-  - SDIST_KEY_FILE="${TRAVIS_BUILD_DIR}/signing.key"
+    - STREAMLINK_DIST_DIR=${TRAVIS_BUILD_DIR}/dist
+    - STREAMLINK_INSTALLER_DIST_DIR=${STREAMLINK_DIST_DIR}/nsis
+    - SDIST_KEY_FILE="${TRAVIS_BUILD_DIR}/signing.key"
 
-git:
-  depth: 300
 
-matrix:
+stages:
+  - test
+  - docs
+  - deploy
+
+
+install:
+  - python --version
+  - python -m pip install --disable-pip-version-check --upgrade pip setuptools
+  - python -m pip install --upgrade -r dev-requirements.txt
+  - python -m pip install pycountry
+  - python -m pip install -e .
+
+script:
+  - pytest --cov
+  - codecov
+
+
+jobs:
+  allow_failures:
+    - stage: test
+      python: '3.8-dev'
   include:
-    # Linux
-    - python: '2.7'
+    # tests: Linux + Windows
+    - stage: test
+      python: '2.7'
     - python: '3.4'
     - python: '3.5'
-      env: BUILD_DOCS=yes BUILD_INSTALLER=yes BUILD_SDIST=yes DEPLOY_PYPI=yes
     - python: '3.6'
     - python: '3.7'
       dist: xenial
-      sudo: true
     - python: '3.8-dev'
       dist: xenial
-      sudo: true
-    # Windows
     - python: '2.7'
       os: windows
+      language: shell
       before_install:
         - choco install python2
         - export PATH="/c/Python27:/c/Python27/Scripts:$PATH"
-      language: shell
     - python: '3.4'
       os: windows
       language: shell
@@ -53,92 +77,83 @@ matrix:
       before_install:
         - choco install python
         - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
-  allow_failures:
-    - python: '3.8-dev'
 
-before_install:
-  - python -m pip install --disable-pip-version-check --upgrade pip setuptools
-  - python -m pip install --upgrade -r dev-requirements.txt
-  - python -m pip install pycountry
-  - if [[ $BUILD_DOCS == 'yes' ]]; then
-      python -m pip install -r docs-requirements.txt;
-      python -m pip install doctr;
-    fi
-  - if [[ $BUILD_INSTALLER == 'yes' ]]; then
-      python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b;
-    fi
+    # documentation
+    - stage: docs
+      if: repo = streamlink/streamlink AND branch = master AND type = push
+      python: '3.5'
+      before_script:
+        - python -m pip install -r docs-requirements.txt
+        - python -m pip install doctr
+      script: make --directory=docs html
+      deploy:
+        # latest version - push docs for master
+        - provider: script
+          script: doctr deploy latest
+        # stable version - push docs for tags
+        - provider: script
+          script: doctr deploy .
+          on:
+            tags: true
 
-install:
-  - python -m pip install -e .
+    # tagged release: PyPi + Github
+    - stage: deploy
+      if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
+      python: '3.5'
+      script: skip
+      deploy:
+        - provider: script
+          script: ./script/sdistsign.sh
+          skip_cleanup: true
+        - provider: releases
+          api_key: "${RELEASES_API_KEY}"
+          file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
+          file_glob: true
+          skip_cleanup: true
 
-script:
-  - pytest --cov
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_OS_NAME != 'windows' ]]; then make --directory=docs html; fi
-  - if [[ $BUILD_INSTALLER == 'yes' && $TRAVIS_OS_NAME != 'windows' ]]; then ./script/makeinstaller.sh; fi
+    # tagged release: Windows installer + Github
+    - stage: deploy
+      if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
+      python: '3.5'
+      addons:
+        apt:
+          packages:
+            - nsis
+            - imagemagick
+            - inkscape
+      before_script: python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b
+      script: ./script/makeinstaller.sh
+      deploy:
+        - provider: releases
+          api_key: "${RELEASES_API_KEY}"
+          file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
+          file_glob: true
+          skip_cleanup: true
+        - provider: script
+          script: python script/github_releases.py
+          skip_cleanup: true
 
-after_success:
-  - set -e
-  # latest version - push docs for master
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && $TRAVIS_OS_NAME != 'windows' ]]; then doctr deploy latest; fi
-  # stable version - push docs for tags
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" && $TRAVIS_OS_NAME != 'windows' ]]; then doctr deploy .; fi
-  - codecov
+    # cron: Windows installer + Bintray
+    - stage: deploy
+      if: repo = streamlink/streamlink AND branch = master AND type = cron
+      python: '3.5'
+      addons:
+        apt:
+          packages:
+            - nsis
+            - imagemagick
+            - inkscape
+      before_script: python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b
+      script: ./script/makeinstaller.sh
+      before_deploy: ./script/bintrayconfig.sh
+      deploy:
+        - provider: bintray
+          file: build/bintray-nightly.json
+          user: "${BINTRAY_USER}"
+          key: "${BINTRAY_KEY}"
+          skip_cleanup: true
+      after_deploy: ./script/bintrayupdate.sh
 
-addons:
-  apt:
-    packages:
-    - nsis
-    - imagemagick
-    - inkscape
-
-before_deploy:
-  - if [[ $TRAVIS_OS_NAME != 'windows' && $TRAVIS_OS_NAME != 'windows' ]]; then ./script/bintrayconfig.sh; fi
-
-deploy:
-  - provider: releases
-    api_key: "${RELEASES_API_KEY}"
-    file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
-    file_glob: true
-    skip_cleanup: true
-    on:
-      tags: true
-      condition: $BUILD_INSTALLER = yes && $TRAVIS_OS_NAME != 'windows'
-      repo: streamlink/streamlink
-  - provider: script
-    script: python script/github_releases.py
-    skip_cleanup: true
-    on:
-      tags: true
-      condition: $BUILD_INSTALLER == yes && $TRAVIS_OS_NAME != 'windows'
-      repo: streamlink/streamlink
-  - provider: bintray
-    file: build/bintray-nightly.json
-    user: "${BINTRAY_USER}"
-    key: "${BINTRAY_KEY}"
-    skip_cleanup: true
-    on:
-      branch: master
-      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron && $TRAVIS_OS_NAME != 'windows'
-      repo: streamlink/streamlink
-  - provider: script
-    script: ./script/sdistsign.sh
-    skip_cleanup: true
-    on:
-      tags: true
-      condition: $BUILD_SDIST == yes && $TRAVIS_OS_NAME != 'windows'
-      repo: streamlink/streamlink
-  - provider: releases
-    api_key: "${RELEASES_API_KEY}"
-    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
-    file_glob: true
-    skip_cleanup: true
-    on:
-      tags: true
-      condition: $BUILD_SDIST = yes && $TRAVIS_OS_NAME != 'windows'
-      repo: streamlink/streamlink
-
-after_deploy:
-  - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' && $TRAVIS_OS_NAME != 'windows' ]]; then ./script/bintrayupdate.sh; fi
 
 doctr:
   build-tags: True
