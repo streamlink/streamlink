@@ -16,7 +16,6 @@ env:
 
 stages:
   - test
-  - docs
   - deploy
 
 
@@ -83,8 +82,16 @@ jobs:
         - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
         - export TRAVIS_PYTHON_VERSION="3.7"
 
-    # documentation
-    - stage: docs
+    # test documentation
+    - name: documentation
+      python: '3.5'
+      before_script:
+        - python -m pip install -r docs-requirements.txt
+      script: make --directory=docs html
+
+    # deploy documentation
+    - stage: deploy
+      name: documentation
       if: repo = streamlink/streamlink AND branch = master AND type = push
       python: '3.5'
       before_script:
@@ -92,10 +99,8 @@ jobs:
         - python -m pip install doctr
       script: make --directory=docs html
       deploy:
-        # latest version - push docs for master
         - provider: script
           script: doctr deploy latest
-        # stable version - push docs for tags
         - provider: script
           script: doctr deploy .
           on:
