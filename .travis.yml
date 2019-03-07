@@ -10,46 +10,78 @@ git:
 
 matrix:
   include:
-  - python: '2.7'
-  - python: '3.4'
-  - python: '3.5'
-    env: BUILD_DOCS=yes BUILD_INSTALLER=yes BUILD_SDIST=yes DEPLOY_PYPI=yes
-  - python: '3.6'
-  - python: '3.7'
-    dist: xenial
-    sudo: true
-  - python: '3.8-dev'
-    dist: xenial
-    sudo: true
+    # Linux
+    - python: '2.7'
+    - python: '3.4'
+    - python: '3.5'
+      env: BUILD_DOCS=yes BUILD_INSTALLER=yes BUILD_SDIST=yes DEPLOY_PYPI=yes
+    - python: '3.6'
+    - python: '3.7'
+      dist: xenial
+      sudo: true
+    - python: '3.8-dev'
+      dist: xenial
+      sudo: true
+    # Windows
+    - python: '2.7'
+      os: windows
+      before_install:
+        - choco install python2
+        - export PATH="/c/Python27:/c/Python27/Scripts:$PATH"
+      language: shell
+    - python: '3.4'
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version 3.4.4.20180111
+        - export PATH="/c/Python34:/c/Python34/Scripts:$PATH"
+    - python: '3.5'
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version 3.5.4
+        - export PATH="/c/Python35:/c/Python35/Scripts:$PATH"
+    - python: '3.6'
+      os: windows
+      language: shell
+      before_install:
+        - choco install python --version 3.6.8
+        - export PATH="/c/Python36:/c/Python36/Scripts:$PATH"
+    - python: '3.7'
+      os: windows
+      language: shell
+      before_install:
+        - choco install python
+        - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
   allow_failures:
-  - python: '3.8-dev'
+    - python: '3.8-dev'
 
 before_install:
-  - pip install --disable-pip-version-check --upgrade pip setuptools
-  - pip install --upgrade -r dev-requirements.txt
-  - pip install pycountry
+  - python -m pip install --disable-pip-version-check --upgrade pip setuptools
+  - python -m pip install --upgrade -r dev-requirements.txt
+  - python -m pip install pycountry
   - if [[ $BUILD_DOCS == 'yes' ]]; then
-      pip install -r docs-requirements.txt;
-      pip install doctr;
+      python -m pip install -r docs-requirements.txt;
+      python -m pip install doctr;
     fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then
-      pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b;
+      python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b;
     fi
 
 install:
-  - pip install -e .
+  - python -m pip install -e .
 
 script:
   - pytest --cov
-  - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
-  - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
+  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_OS_NAME != 'windows' ]]; then make --directory=docs html; fi
+  - if [[ $BUILD_INSTALLER == 'yes' && $TRAVIS_OS_NAME != 'windows' ]]; then ./script/makeinstaller.sh; fi
 
 after_success:
   - set -e
   # latest version - push docs for master
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' ]]; then doctr deploy latest; fi
+  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && $TRAVIS_OS_NAME != 'windows' ]]; then doctr deploy latest; fi
   # stable version - push docs for tags
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" ]]; then doctr deploy .; fi
+  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" && $TRAVIS_OS_NAME != 'windows' ]]; then doctr deploy .; fi
   - codecov
 
 addons:
@@ -60,7 +92,7 @@ addons:
     - inkscape
 
 before_deploy:
-  - ./script/bintrayconfig.sh
+  - if [[ $TRAVIS_OS_NAME != 'windows' && $TRAVIS_OS_NAME != 'windows' ]]; then ./script/bintrayconfig.sh; fi
 
 deploy:
   - provider: releases
@@ -70,14 +102,14 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: $BUILD_INSTALLER = yes
+      condition: $BUILD_INSTALLER = yes && $TRAVIS_OS_NAME != 'windows'
       repo: streamlink/streamlink
   - provider: script
     script: python script/github_releases.py
     skip_cleanup: true
     on:
       tags: true
-      condition: $BUILD_INSTALLER == yes
+      condition: $BUILD_INSTALLER == yes && $TRAVIS_OS_NAME != 'windows'
       repo: streamlink/streamlink
   - provider: bintray
     file: build/bintray-nightly.json
@@ -86,14 +118,14 @@ deploy:
     skip_cleanup: true
     on:
       branch: master
-      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron
+      condition: $BUILD_INSTALLER == yes && $TRAVIS_EVENT_TYPE == cron && $TRAVIS_OS_NAME != 'windows'
       repo: streamlink/streamlink
   - provider: script
     script: ./script/sdistsign.sh
     skip_cleanup: true
     on:
       tags: true
-      condition: $BUILD_SDIST == yes
+      condition: $BUILD_SDIST == yes && $TRAVIS_OS_NAME != 'windows'
       repo: streamlink/streamlink
   - provider: releases
     api_key: "${RELEASES_API_KEY}"
@@ -102,11 +134,11 @@ deploy:
     skip_cleanup: true
     on:
       tags: true
-      condition: $BUILD_SDIST = yes
+      condition: $BUILD_SDIST = yes && $TRAVIS_OS_NAME != 'windows'
       repo: streamlink/streamlink
 
 after_deploy:
-  - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' ]]; then ./script/bintrayupdate.sh; fi
+  - if [[ "$BUILD_INSTALLER" == 'yes' && "$TRAVIS_EVENT_TYPE" == 'cron' && $TRAVIS_OS_NAME != 'windows' ]]; then ./script/bintrayupdate.sh; fi
 
 doctr:
   build-tags: True
