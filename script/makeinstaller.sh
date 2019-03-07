@@ -106,6 +106,10 @@ files=../win32/LICENSE.txt > \$INSTDIR
 [Command streamlink]
 entry_point=streamlink_cli.main:main
 
+[Command streamlinkw]
+entry_point=streamlink_cli.main:main
+console=false
+
 [Build]
 directory=nsis
 nsi_template=installer_tmpl.nsi
