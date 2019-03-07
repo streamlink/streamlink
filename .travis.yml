@@ -53,30 +53,35 @@ jobs:
       before_install:
         - choco install python2
         - export PATH="/c/Python27:/c/Python27/Scripts:$PATH"
+        - export TRAVIS_PYTHON_VERSION="2.7"
     - python: '3.4'
       os: windows
       language: shell
       before_install:
         - choco install python --version 3.4.4.20180111
         - export PATH="/c/Python34:/c/Python34/Scripts:$PATH"
+        - export TRAVIS_PYTHON_VERSION="3.4"
     - python: '3.5'
       os: windows
       language: shell
       before_install:
         - choco install python --version 3.5.4
         - export PATH="/c/Python35:/c/Python35/Scripts:$PATH"
+        - export TRAVIS_PYTHON_VERSION="3.5"
     - python: '3.6'
       os: windows
       language: shell
       before_install:
         - choco install python --version 3.6.8
         - export PATH="/c/Python36:/c/Python36/Scripts:$PATH"
+        - export TRAVIS_PYTHON_VERSION="3.6"
     - python: '3.7'
       os: windows
       language: shell
       before_install:
         - choco install python
         - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+        - export TRAVIS_PYTHON_VERSION="3.7"
 
     # documentation
     - stage: docs
