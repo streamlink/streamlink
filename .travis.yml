@@ -31,6 +31,19 @@ script:
   - codecov
 
 
+x-windows-installer: &x-windows-installer
+  python: '3.5'
+  addons:
+    apt:
+      packages:
+        - nsis
+        - imagemagick
+        - inkscape
+  before_script:
+    - python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b
+  script: ./script/makeinstaller.sh
+
+
 jobs:
   allow_failures:
     - stage: test
@@ -82,7 +95,11 @@ jobs:
         - export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
         - export TRAVIS_PYTHON_VERSION="3.7"
 
-    # test documentation
+    # build Windows installer
+    - name: installer
+      <<: *x-windows-installer
+
+    # build documentation
     - name: documentation
       python: '3.5'
       before_script:
@@ -124,15 +141,7 @@ jobs:
     # tagged release: Windows installer + Github
     - stage: deploy
       if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
-      python: '3.5'
-      addons:
-        apt:
-          packages:
-            - nsis
-            - imagemagick
-            - inkscape
-      before_script: python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b
-      script: ./script/makeinstaller.sh
+      <<: *x-windows-installer
       deploy:
         - provider: releases
           api_key: "${RELEASES_API_KEY}"
@@ -146,15 +155,7 @@ jobs:
     # cron: Windows installer + Bintray
     - stage: deploy
       if: repo = streamlink/streamlink AND branch = master AND type = cron
-      python: '3.5'
-      addons:
-        apt:
-          packages:
-            - nsis
-            - imagemagick
-            - inkscape
-      before_script: python -m pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b
-      script: ./script/makeinstaller.sh
+      <<: *x-windows-installer
       before_deploy: ./script/bintrayconfig.sh
       deploy:
         - provider: bintray
