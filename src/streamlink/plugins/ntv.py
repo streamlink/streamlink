@@ -4,7 +4,7 @@ from streamlink.stream import HLSStream
 
 
 class NTV(Plugin):
-    url_re = re.compile(r'https://www.ntv.ru/air/.*')
+    url_re = re.compile(r'https?://www.ntv.ru/air/.*')
 
     @classmethod
     def can_handle_url(cls, url):
