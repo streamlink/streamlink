@@ -12,12 +12,15 @@ class NTV(Plugin):
 
     def _get_streams(self):
         body = self.session.http.get(self.url).text
-        mrl_re = re.compile(r'var camHlsURL = \'(.*)\'')
-        if mrl_re.search(body):
-            MRL = 'http:' + mrl_re.search(body).group(1)
+        mrl = None
+        match = re.search(r'var camHlsURL = \'(.*)\'', body)
+        if match:
+            mrl = 'http:' + match.group(1)
         else:
-            mrl_re = re.compile(r'var hlsURL = \'(.*)\'')
-            MRL = mrl_re.search(body).group(1)
-        return HLSStream.parse_variant_playlist(self.session, MRL)
+            match = re.search(r'var hlsURL = \'(.*)\'', body)
+            if match:
+                mrl = match.group(1)
+        if mrl:
+            return HLSStream.parse_variant_playlist(self.session, mrl)
 
 __plugin__ = NTV
