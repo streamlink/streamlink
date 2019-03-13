@@ -11,7 +11,7 @@ env:
   global:
     - STREAMLINK_DIST_DIR=${TRAVIS_BUILD_DIR}/dist
     - STREAMLINK_INSTALLER_DIST_DIR=${STREAMLINK_DIST_DIR}/nsis
-    - SDIST_KEY_FILE="${TRAVIS_BUILD_DIR}/signing.key"
+    - SIGNING_KEY_FILE="${TRAVIS_BUILD_DIR}/signing.key"
 
 
 stages:
@@ -123,23 +123,28 @@ jobs:
           on:
             tags: true
 
-    # tagged release: PyPi + Github
+    # tagged release
     - stage: deploy
+      name: release
       if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
       python: '3.5'
-      script: skip
+      before_script: python -m pip install --upgrade wheel twine
+      script: ./script/build-and-sign.sh
       deploy:
         - provider: script
-          script: ./script/sdistsign.sh
+          script: ./script/deploy-pypi.sh
           skip_cleanup: true
         - provider: releases
           api_key: "${RELEASES_API_KEY}"
           file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
           file_glob: true
           skip_cleanup: true
+        - provider: script
+          script: python script/github_releases.py
+          skip_cleanup: true
 
-    # tagged release: Windows installer + Github
     - stage: deploy
+      name: "installer (release)"
       if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
       <<: *x-windows-installer
       deploy:
@@ -148,12 +153,10 @@ jobs:
           file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
           file_glob: true
           skip_cleanup: true
-        - provider: script
-          script: python script/github_releases.py
-          skip_cleanup: true
 
-    # cron: Windows installer + Bintray
+    # cron
     - stage: deploy
+      name: "installer (development)"
       if: repo = streamlink/streamlink AND branch = master AND type = cron
       <<: *x-windows-installer
       before_deploy: ./script/bintrayconfig.sh
