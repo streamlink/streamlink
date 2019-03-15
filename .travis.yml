@@ -109,7 +109,7 @@ jobs:
     # deploy documentation
     - stage: deploy
       name: documentation
-      if: repo = streamlink/streamlink AND branch = master AND type = push
+      if: repo = streamlink/streamlink AND ( branch = master AND type = push OR tag IS present )
       python: '3.5'
       before_script:
         - python -m pip install -r docs-requirements.txt
@@ -126,7 +126,7 @@ jobs:
     # tagged release
     - stage: deploy
       name: release
-      if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
+      if: repo = streamlink/streamlink AND tag IS present
       python: '3.5'
       before_script: python -m pip install --upgrade wheel twine
       script: ./script/build-and-sign.sh
@@ -145,7 +145,7 @@ jobs:
 
     - stage: deploy
       name: "installer (release)"
-      if: repo = streamlink/streamlink AND branch = master AND type = push AND tag IS present
+      if: repo = streamlink/streamlink AND tag IS present
       <<: *x-windows-installer
       deploy:
         - provider: releases
