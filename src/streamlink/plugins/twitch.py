@@ -222,7 +222,7 @@ class TwitchAPI(object):
     # Private API calls
 
     def access_token(self, endpoint, asset, **params):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **params)
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **dict(platform="_", **params))
 
     def token(self, **params):
         return self.call("/api/viewer/token", **params)
