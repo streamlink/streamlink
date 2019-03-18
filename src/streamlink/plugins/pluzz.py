@@ -23,7 +23,7 @@ class Pluzz(Plugin):
             www\.(ludo|zouzous)\.fr/heros/[\w-]+ |
             (.+\.)?francetvinfo\.fr)
     ''', re.VERBOSE)
-    _pluzz_video_id_re = re.compile(r'''videoId:\s*["'](?P<video_id>[^"']+)["']''')
+    _pluzz_video_id_re = re.compile(r'''(?P<q>["']*)videoId(?P=q):\s*["'](?P<video_id>[^"']+)["']''')
     _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
     _embed_video_id_re = re.compile(r'href="http://videos\.francetv\.fr/video/(?P<video_id>.+?)(?:@.+?)?"')
