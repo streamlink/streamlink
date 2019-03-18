@@ -40,6 +40,7 @@ cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-rest
                         - bgonair.bg
                         - bitelevision.com
                         - bloombergtv.bg
+                        - bstv.bg
                         - inlife.bg
                         - kanal3.bg
                         - mmtvmusic.com
