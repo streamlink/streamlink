@@ -1,4 +1,4 @@
-from __future__ import print_function
+from __future__ import unicode_literals
 
 import logging
 import re
@@ -18,7 +18,7 @@ class TF1(Plugin):
     token = "07e45841-a17a-47cf-af64-a42311bdcc3d"
 
     def api_call(self, channel, useragent=useragents.CHROME):
-        url = urljoin(self.api_url_base, "L_"+channel.upper())
+        url = urljoin(self.api_url_base, "L_" + channel.upper())
         req = self.session.http.get(url,
                                     params=dict(token=self.token),
                                     headers={"User-Agent": useragent})
@@ -29,7 +29,7 @@ class TF1(Plugin):
             data = self.api_call(channel, useragent)
 
             if data.get("error"):
-                log.error("Failed to get stream for {0}: {error} ({code})".format(channel, **data))
+                log.error("Failed to get {format} stream for {0}: {error} ({code})".format(channel, **data))
             else:
                 log.debug("Got {format} stream {url}".format(**data))
                 yield data['format'], data['url']
@@ -42,7 +42,7 @@ class TF1(Plugin):
         m = self.url_re.match(self.url)
         if m:
             channel = m.group(1) or m.group(2)
-            self.logger.debug("Found channel {0}", channel)
+            log.debug("Found channel {0}".format(channel))
             for sformat, url in self.get_stream_urls(channel):
                 try:
                     if sformat == "dash":
@@ -54,5 +54,6 @@ class TF1(Plugin):
                 except PluginError as e:
                     log.error("Could not open {0} stream".format(sformat))
                     log.debug("Failed with error: {0}".format(e))
+
 
 __plugin__ = TF1
