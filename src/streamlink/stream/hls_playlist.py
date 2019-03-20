@@ -1,10 +1,13 @@
 import re
+import logging
 
 from binascii import unhexlify
 from collections import namedtuple
 from itertools import starmap
 
 from streamlink.compat import urljoin, urlparse
+
+log = logging.getLogger(__name__)
 
 __all__ = ["load", "M3U8Parser"]
 
@@ -158,11 +161,13 @@ class M3U8Parser(object):
                 date = self.state.pop("date", None)
                 map_ = self.state.get("map")
                 key = self.state.get("key")
+                discontinuity = self.state.get("discontinuity", False)
 
                 segment = Segment(self.uri(line), extinf[0],
                                   extinf[1], key,
-                                  self.state.pop("discontinuity", False),
+                                  discontinuity,
                                   byterange, date, map_)
+
                 self.m3u8.segments.append(segment)
             elif self.state.pop("expect_playlist", None):
                 streaminf = self.state.pop("streaminf", {})
@@ -210,7 +215,7 @@ class M3U8Parser(object):
                           attr.get("CHARACTERISTICS"))
             self.m3u8.media.append(media)
         elif line.startswith("#EXT-X-DISCONTINUITY"):
-            self.state["discontinuity"] = True
+            self.state["discontinuity"] = not self.state["discontinuity"]
             self.state["map"] = None
         elif line.startswith("#EXT-X-DISCONTINUITY-SEQUENCE"):
             self.m3u8.discontinuity_sequence = self.parse_tag(line, int)
@@ -235,7 +240,7 @@ class M3U8Parser(object):
             self.m3u8.start = start
 
     def parse(self, data):
-        self.state = {}
+        self.state = {"discontinuity": False}
         self.m3u8 = M3U8()
 
         lines = iter(filter(bool, data.splitlines()))

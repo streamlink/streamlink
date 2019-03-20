@@ -22,9 +22,9 @@ def num_to_iv(n):
 
 
 def pkcs7_decode(paddedData, keySize=16):
-    '''
+    """
     Remove the PKCS#7 padding
-    '''
+    """
     # Use ord + [-1:] to support both python 2 and 3
     val = ord(paddedData[-1:])
     if val > keySize:
@@ -46,6 +46,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.key_data = None
         self.key_uri = None
         self.key_uri_override = options.get("hls-segment-key-uri")
+        self.skip_discontinuity = options.get("hls-segment-skip-discontinuity")
 
         if self.ignore_names:
             # creates a regex from a list of segment names,
@@ -105,7 +106,10 @@ class HLSStreamWriter(SegmentedStreamWriter):
             request_params = self.create_request_params(sequence)
             # skip ignored segment names
             if self.ignore_names and self.ignore_names_re.search(sequence.segment.uri):
-                log.debug("Skipping segment {0}".format(sequence.num))
+                log.debug("Skipping segment {0} due to ignore name match".format(sequence.num))
+                return
+            if self.skip_discontinuity and sequence.segment.discontinuity:
+                log.debug("Skipping discontinuous segment {0}".format(sequence.num))
                 return
 
             return self.session.http.get(sequence.segment.uri,

@@ -763,6 +763,21 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-skip-discontinuity",
+        action="store_true",
+        help="""
+        Ignore segments in the playlist that occur during a discontinuity. This
+        option can be used to skip ads that are inserted in to a stream and marked
+        as a discontinuity.
+
+        Default is False.
+
+        Note: This option should be used with care, if the stream is running an ad
+        when Streamlink connects the ad will play and the actual stream will be
+        considered as an ad, and only ads will play.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-key-uri",
         metavar="URI",
         type=str,
