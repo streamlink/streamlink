@@ -181,6 +181,9 @@ class HLSStreamWorker(SegmentedStreamWorker):
                       self.duration_offset_start, self.duration_limit,
                       self.playlist_sequence, self.playlist_end)
 
+    def _reload_playlist(self, text, url):
+        return hls_playlist.load(text, url)
+
     def reload_playlist(self):
         if self.closed:
             return
@@ -192,7 +195,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
                                     retries=self.playlist_reload_retries,
                                     **self.reader.request_params)
         try:
-            playlist = hls_playlist.load(res.text, res.url)
+            playlist = self._reload_playlist(res.text, res.url)
         except ValueError as err:
             raise StreamError(err)
 
@@ -472,8 +475,12 @@ class HLSStream(HTTPStream):
                                         duration=duration,
                                         **request_params)
             else:
-                stream = HLSStream(session_, playlist.uri, force_restart=force_restart,
-                                   start_offset=start_offset, duration=duration, **request_params)
+                stream = cls(session_,
+                             playlist.uri,
+                             force_restart=force_restart,
+                             start_offset=start_offset,
+                             duration=duration,
+                             **request_params)
             streams[name_prefix + stream_name] = stream
 
         return streams
