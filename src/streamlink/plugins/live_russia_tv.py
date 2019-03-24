@@ -5,6 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
+from urllib.parse import urlparse, parse_qs
 
 log = logging.getLogger(__name__)
 
@@ -37,6 +38,9 @@ class LiveRussia(Plugin):
                 return "https:{domain}/iframe/datalive/id/{id}/sid/{sid}".format(**data)
             else:
                 return "https:{domain}/iframe/datavideo/id/{id}/sid/{sid}".format(**data)
+        else:
+            qs = parse_qs(urlparse(url).query)
+            return 'https://player.vgtrk.com/iframe/datalive/id/' + qs['id'][0] + '/sid/' + qs['sid'][0]
 
     def _get_streams(self):
         iframe_url = self._get_iframe_url(self.url)
