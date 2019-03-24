@@ -1,3 +1,4 @@
+import logging
 import re
 
 from streamlink.compat import bytes, is_py3, unquote_plus, urlencode
@@ -6,9 +7,12 @@ from streamlink.plugin.api import useragents
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.utils import parse_json
 
+log = logging.getLogger(__name__)
+
 
 class Facebook(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?facebook\.com/[^/]+/(posts|videos)/(?P<video_id>[0-9]+)")
+    _url_re = re.compile(r'''(?x)https?://(?:www\.)?facebook(?:\.com|corewwwi.onion)
+        /[^/]+/(?:posts|videos)/(?P<video_id>[0-9]+)''')
     _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
     _dash_manifest_re = re.compile(r'''dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],''')
     _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
@@ -22,7 +26,7 @@ class Facebook(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls._url_re.match(url)
+        return cls._url_re.match(url) is not None
 
     def _parse_streams(self, res):
         for match in self._src_re.finditer(res.text):
@@ -36,7 +40,7 @@ class Facebook(Plugin):
             elif ".mp4" in stream_url:
                 yield match.group(1), HTTPStream(self.session, stream_url)
             else:
-                self.logger.debug("Non-dash/mp4 stream: {0}".format(stream_url))
+                log.debug("Non-dash/mp4 stream: {0}".format(stream_url))
 
         match = self._dash_manifest_re.search(res.text)
         if match:
@@ -48,14 +52,15 @@ class Facebook(Plugin):
                 manifest = unquote_plus(manifest).decode("string_escape")
             # Ignore unsupported manifests until DASH SegmentBase support is implemented
             if "SegmentBase" in manifest:
-                self.logger.error("Skipped DASH manifest with SegmentBase streams")
+                log.error("Skipped DASH manifest with SegmentBase streams")
             else:
                 for s in DASHStream.parse_manifest(self.session, manifest).items():
                     yield s
 
     def _get_streams(self):
+        self.session.http.headers.update({'User-Agent': useragents.CHROME})
         done = False
-        res = self.session.http.get(self.url, headers={"User-Agent": useragents.CHROME})
+        res = self.session.http.get(self.url)
         for s in self._parse_streams(res):
             done = True
             yield s
@@ -63,7 +68,7 @@ class Facebook(Plugin):
             return
 
         # fallback on to playlist
-        self.logger.debug("Falling back to playlist regex")
+        log.debug("Falling back to playlist regex")
         match = self._playlist_re.search(res.text)
         playlist = match and match.group(1)
         if playlist:
@@ -74,7 +79,7 @@ class Facebook(Plugin):
                 return
 
         # fallback to tahoe player url
-        self.logger.debug("Falling back to tahoe player")
+        log.debug("Falling back to tahoe player")
         video_id = self._url_re.match(self.url).group("video_id")
         url = self._TAHOE_URL.format(video_id)
         data = {
@@ -92,8 +97,12 @@ class Facebook(Plugin):
         match = self._dtsg_re.search(res.text)
         if match:
             data["fb_dtsg"] = match.group(1)
-        res = self.session.http.post(url, headers={"User-Agent": useragents.CHROME, "Content-Type": "application/x-www-form-urlencoded"},
-                                     data=urlencode(data).encode("ascii"))
+        res = self.session.http.post(
+            url,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            data=urlencode(data).encode("ascii")
+        )
+
         for s in self._parse_streams(res):
             yield s
 
