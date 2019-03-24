@@ -5,7 +5,10 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
-from urllib.parse import urlparse, parse_qs
+try:
+    from urllib.parse import urlparse, parse_qs
+except:
+    from urlparse import urlparse, parse_qs
 
 log = logging.getLogger(__name__)
 
