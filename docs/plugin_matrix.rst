@@ -82,7 +82,7 @@ eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-rest
 eurocom                 eurocom.bg           Yes   No
 euronews                euronews.com         Yes   No
 europaplus              europaplus.ru        Yes   --
-facebook                facebook.com         Yes   No    Only 360p HLS streams.
+facebook                facebook.com         Yes   Yes
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
