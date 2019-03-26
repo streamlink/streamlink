@@ -127,8 +127,8 @@ npo                     - npo.nl             Yes   Yes   Streams may be geo-rest
                         - zappelin.nl
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                         - radio.nrk.no
-okru                    ok.ru                Yes   Yes
 ntv                     ntv.ru               Yes   No
+okru                    ok.ru                Yes   Yes
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
 onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
                         - ctc.ru
