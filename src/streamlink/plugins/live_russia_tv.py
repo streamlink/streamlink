@@ -1,14 +1,11 @@
 import logging
 import re
 
+from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
-try:
-    from urllib.parse import urlparse, parse_qs
-except:
-    from urlparse import urlparse, parse_qs
 
 log = logging.getLogger(__name__)
 
@@ -42,10 +39,11 @@ class LiveRussia(Plugin):
             else:
                 return "https:{domain}/iframe/datavideo/id/{id}/sid/{sid}".format(**data)
         else:
-            qs = parse_qs(urlparse(url).query)
-            return 'https://player.vgtrk.com/iframe/datalive/id/' + qs['id'][0] + '/sid/' + qs['sid'][0]
+            args = dict(parse_qsl(urlparse(url).query))
+            return "https://player.vgtrk.com/iframe/datalive/id/{id}/sid/{sid}".format(**args)
 
     def _get_streams(self):
+        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         iframe_url = self._get_iframe_url(self.url)
 
         if iframe_url:
@@ -78,11 +76,6 @@ class LiveRussia(Plugin):
                 log.error("Unable to get stream info URL")
         else:
             log.error("Could not find video iframe")
-
-
-
-
-
 
 
 __plugin__ = LiveRussia
