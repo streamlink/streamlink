@@ -5,12 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HTTPStream, StreamIOIterWrapper, StreamIOThreadWrapper
 
-_url_re = re.compile(r"""
-    http(s)?://(\w+\.)?
-    (?P<domain>vaughnlive|breakers|instagib|vapers|pearltime).tv
-    (/embed/video)?
-    /(?P<channel>[^/&?]+)
-""", re.VERBOSE)
+_url_re = re.compile(r'http(s)?:\/\/(\w+\.)?(?P<domain>vaughn).live(\/embed\/video)?\/(?P<channel>[^\/&?]+)', re.VERBOSE)
 
 
 class VaughnStream(HTTPStream):
@@ -42,8 +37,6 @@ class VaughnStream(HTTPStream):
 
 
 class VaughnLive(Plugin):
-    domain_map = {"vaughnlive": "live", "breakers": "btv", "instagib": "igb", "vapers": "vtv", "pearltime": "pt"}
-    stream_url = "https://mp4.vaughnsoft.net/live"
 
     @classmethod
     def can_handle_url(cls, url):
@@ -57,17 +50,17 @@ class VaughnLive(Plugin):
         }
         m = _url_re.match(self.url)
         if m:
-            stream_name = "{0}_{1}".format(self.domain_map[(m.group("domain").lower())],
-                                           m.group("channel"))
+                        
+            res = self.session.http.get(self.url)
+            res = re.findall(r'mp4Servers\s*=\s*\[\s*"([^"]+).*?mp4StreamName\s*=\s*"([^"]+).*?mp4StreamUrl\s*=\s*"([^"]+)', res.text, re.DOTALL)[0]
+            self.stream_url = res[2].replace('{mp4Server}', res[0]).replace('{streamName}', res[1])
             self.logger.info("Stream powered by VaughnSoft - remember to support them.")
+            
             stream = VaughnStream(self.session,
-                                  self.stream_url,
-                                  params=dict(app="live",
-                                              stream=stream_name,
-                                              port=2935))
+                                  self.stream_url)
+            
             stream_url = stream.to_url()
             res = self.session.http.head(stream_url, raise_for_status=False)
-            print(res.status_code)
             yield "live", stream
 
 
