@@ -1,6 +1,8 @@
 # coding=utf-8
+import logging
 import re
 import warnings
+from collections import namedtuple
 from random import random
 
 import requests
@@ -13,12 +15,17 @@ from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import (
     HTTPStream, HLSStream, FLVPlaylist, extract_flv_header_tags
 )
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter, HLSStreamWorker
+from streamlink.stream.hls_playlist import M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
 
 try:
     from itertools import izip as zip
 except ImportError:
     pass
+
+
+log = logging.getLogger(__name__)
 
 QUALITY_WEIGHTS = {
     "source": 1080,
@@ -126,6 +133,82 @@ _quality_options_schema = validate.Schema(
     },
     validate.get("quality_options")
 )
+
+
+Segment = namedtuple("Segment", "uri duration title key discontinuity scte35 byterange date map")
+
+
+class TwitchM3U8Parser(M3U8Parser):
+    def parse_tag_ext_x_scte35_out(self, value):
+        self.state["scte35"] = True
+
+    # unsure if this gets used by Twitch
+    def parse_tag_ext_x_scte35_out_cont(self, value):
+        self.state["scte35"] = True
+
+    def parse_tag_ext_x_scte35_in(self, value):
+        self.state["scte35"] = False
+
+    def get_segment(self, uri):
+        byterange = self.state.pop("byterange", None)
+        extinf = self.state.pop("extinf", (0, None))
+        date = self.state.pop("date", None)
+        map_ = self.state.get("map")
+        key = self.state.get("key")
+        discontinuity = self.state.pop("discontinuity", False)
+        scte35 = self.state.pop("scte35", None)
+
+        return Segment(
+            uri,
+            extinf[0],
+            extinf[1],
+            key,
+            discontinuity,
+            scte35,
+            byterange,
+            date,
+            map_
+        )
+
+
+class TwitchHLSStreamWorker(HLSStreamWorker):
+    def _reload_playlist(self, text, url):
+        return load_hls_playlist(text, url, parser=TwitchM3U8Parser)
+
+
+class TwitchHLSStreamWriter(HLSStreamWriter):
+    def __init__(self, *args, **kwargs):
+        HLSStreamWriter.__init__(self, *args, **kwargs)
+        options = self.session.plugins.get("twitch").options
+        self.disable_ads = options.get("disable-ads")
+        if self.disable_ads:
+            log.info("Will skip ad segments")
+
+    def write(self, sequence, *args, **kwargs):
+        if self.disable_ads:
+            if sequence.segment.scte35 is not None:
+                self.reader.ads = sequence.segment.scte35
+                if self.reader.ads:
+                    log.info("Will skip ads beginning with segment {0}".format(sequence.num))
+                else:
+                    log.info("Will stop skipping ads beginning with segment {0}".format(sequence.num))
+            if self.reader.ads:
+                return
+        return HLSStreamWriter.write(self, sequence, *args, **kwargs)
+
+
+class TwitchHLSStreamReader(HLSStreamReader):
+    __worker__ = TwitchHLSStreamWorker
+    __writer__ = TwitchHLSStreamWriter
+    ads = None
+
+
+class TwitchHLSStream(HLSStream):
+    def open(self):
+        reader = TwitchHLSStreamReader(self)
+        reader.open()
+
+        return reader
 
 
 class UsherService(object):
@@ -277,6 +360,13 @@ class Twitch(Plugin):
                        action="store_true",
                        help="""
         Do not open the stream if the target channel is hosting another channel.
+        """
+                       ),
+        PluginArgument("disable-ads",
+                       action="store_true",
+                       help="""
+        Skip embedded advertisement segments at the beginning or during a stream.
+        Will cause these segments to be missing from the stream.
         """
                        ))
 
@@ -640,9 +730,12 @@ class Twitch(Plugin):
         try:
             # If the stream is a VOD that is still being recorded the stream should start at the
             # beginning of the recording
-            streams = HLSStream.parse_variant_playlist(self.session, url,
-                                                       start_offset=time_offset,
-                                                       force_restart=not stream_type == "live")
+            streams = TwitchHLSStream.parse_variant_playlist(
+                self.session,
+                url,
+                start_offset=time_offset,
+                force_restart=not stream_type == "live"
+            )
         except IOError as err:
             err = str(err)
             if "404 Client Error" in err or "Failed to parse playlist" in err:
