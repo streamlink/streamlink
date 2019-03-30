@@ -22,16 +22,18 @@ class TestPluginTwitch(unittest.TestCase):
             'https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor',
             'https://www.twitch.tv/twitch/video/292713971',
             'https://www.twitch.tv/twitch/v/292713971',
+            'https://player.twitch.tv/?autoplay=false&video=v403103674',
+            'https://player.twitch.tv/?channel=twitch',
         ]
         for url in should_match:
-            self.assertTrue(Twitch.can_handle_url(url))
+            self.assertTrue(Twitch.can_handle_url(url), url)
 
     def test_can_handle_url_negative(self):
         should_not_match = [
             'https://www.twitch.tv',
         ]
         for url in should_not_match:
-            self.assertFalse(Twitch.can_handle_url(url))
+            self.assertFalse(Twitch.can_handle_url(url), url)
 
 
 class TestTwitchHLSStream(unittest.TestCase):
