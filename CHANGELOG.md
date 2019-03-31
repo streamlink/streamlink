@@ -50,6 +50,7 @@ back-to <backto@protonmail.ch> (13):
       plugins.cdnbg: New domain videochanel.bstv.bg
       plugins.tf1: Fixed python2.7 ascii error
       plugins.okru: Fixed Plugin (#2374)
+      plugins.rtpplay: fix _m3u8_re and plugin cleanup
 
 bastimeyer <mail@bastimeyer.de> (13):
       docs/install: git+makepkg instead of AUR helper
