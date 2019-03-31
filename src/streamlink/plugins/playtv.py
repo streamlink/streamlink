@@ -1,5 +1,7 @@
 import re
 
+import jwt
+
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
@@ -27,9 +29,12 @@ class PlayTV(Plugin):
             }
         )
     })
-    _api_schema = validate.Schema({
-        'url': validate.url()
-    })
+    _api_schema = validate.Schema(
+        validate.transform(lambda x: jwt.decode(x, algorithms=['HS256'], verify=False)),
+        {
+            'url': validate.url()
+        }
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -57,7 +62,7 @@ class PlayTV(Plugin):
                         continue
                     api_url = self.API_URL.format(channel, protocol, language, bitrate['value'])
                     res = self.session.http.get(api_url)
-                    video_url = self.session.http.json(res, schema=self._api_schema)['url']
+                    video_url = self._api_schema.validate(res.text)['url']
                     bs = '{0}k'.format(bitrate['value'])
 
                     if protocol == 'hls':
