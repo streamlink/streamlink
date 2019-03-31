@@ -84,6 +84,7 @@ format=bundled
 ;           - socks / sockshandler
 ;       - websocket-client
 ;       - isodate
+;       - pyjwt
 packages=pkg_resources
          six
          iso639
@@ -97,6 +98,7 @@ packages=pkg_resources
          socks
          sockshandler
          isodate
+         pyjwt
 pypi_wheels=pycryptodome==3.6.4
 
 files=../win32/LICENSE.txt > \$INSTDIR
