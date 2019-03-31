@@ -292,7 +292,7 @@ Name                                 Notes
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
-`jwt`_                               Used for some plugins
+`PyJWT`_                             Used for some plugins
 `PySocks`_                           Used for SOCKS Proxies
 `websocket-client`_                  Used for some plugins
 `shutil_get_terminal_size`_          Only needed on Python versions older than **3.3**
@@ -334,7 +334,7 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _websocket-client: https://pypi.org/project/websocket-client/
 .. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
 .. _shutil_which: https://pypi.org/project/backports.shutil_which/
-.. _jwt: https://pypi.org/project/jwt/
+.. _PyJWT: https://pypi.org/project/pyjwt/
 
 
 Windows binaries
