@@ -1,5 +1,80 @@
 # Changelog
 
+## streamlink 1.1.0 (2019-03-31)
+
+These are the highlights of Streamlink's first minor release after the 1.0.0 milestone:
+
+- several plugin fixes, improvements and new plugin implementations
+- addition of the `--twitch-disable-ads` parameter for filtering out advertisement segments from Twitch.tv streams (#2372)
+- DASH stream improvements (#2285)
+- documentation enhancements (#2292, #2293)
+- addition of the `{url}` player title variable (#2232)
+- default player title config for PotPlayer (#2224)
+- new `streamlinkw` executable on Windows (wheels + installer) (#2326)
+- Github release assets simplification (#2360)
+
+
+```text
+Brian Callahan <bcallah@openbsd.org> (1):
+      Add OpenBSD to the installation docs
+
+Peter Rowlands (변기호) <peter@pmrowla.com> (2):
+      streams.dash: Support manifest strings in addition to manifest urls (#2285)
+      plugins.facebook: Support manifest strings and tahoe player urls (#2286)
+
+Roman Kornev <w.romankornev@gmail.com> (2):
+      cli.main: Add {url} argument to window --title (#2232)
+      cli.output: Add window title for PotPlayer (#2224)
+
+Sebastian Meyer <mail@bastimeyer.de> (1):
+      Build additional "streamlinkw" launcher on Windows (#2326)
+
+Steve Oswald <30654895+SteveOswald@users.noreply.github.com> (1):
+      plugins.zattoo: Added support for www.1und1.tv (#2274)
+
+Vladimir Stavrinov <vstavrinov@gmail.com> (2):
+      plugins.ntv: new Plugin for ntv.ru (#2351)
+      plugins.live_russia_tv: fix iframe format differences (#2375)
+
+back-to <backto@protonmail.ch> (13):
+      plugins.atresplayer: Fixed HLSStream
+      plugins.streamme: Fixed source quality, added title and author
+      plugins.atresplayer: update for new api schema
+      plugins.mitele: plugin update
+      plugins.ustreamtv: handle stream names better, allow '_alt' streams (#2267)
+      plugins.rtve: Fixed content_id search (#2300)
+      plugins.streamme: Fixed null error for 'origin'
+      tests: detect unsupported versions for itertags
+      plugins.pluzz: Fixed Video ID and logging update
+      plugins.pluzz: Fixed regex, they use quotes now.
+      plugins.cdnbg: New domain videochanel.bstv.bg
+      plugins.tf1: Fixed python2.7 ascii error
+      plugins.okru: Fixed Plugin (#2374)
+
+bastimeyer <mail@bastimeyer.de> (13):
+      docs/install: git+makepkg instead of AUR helper
+      docs/install: rewrite source code and pip section
+      docs/install: shell code blocks, remove prompts
+      docs/install: simplify pip user/system table
+      docs/install: rewrite virtual env section
+      docs/install: move Windows and macOS to the top
+      Add force_verify=true to Twitch OAuth URL
+      plugins.twitch: platform=_ in access_token request
+      TravisCI: don't publish wheels on Github releases
+      stream.hls: refactor M3U8Parser
+      stream.hls: refactor HLSStream{,Worker}
+      plugins.twitch: implement disable-ads parameter
+      Release 1.1.0
+
+beardypig <beardypig@protonmail.com> (2):
+      plugins.dogus: support for YouTube embedded streams
+      plugins.bbciplayer: do not try to authenticate when not required
+
+lon <rliouke@gmail.com> (1):
+      plugins.crunchyroll: Allow CR's multilingual URLs to be handled (#2304)
+```
+
+
 ## streamlink 1.0.0 (2019-01-30)
 
 The celebratory release of Streamlink 1.0.0!
