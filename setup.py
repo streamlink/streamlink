@@ -55,7 +55,7 @@ with codecs.open(path.join(this_directory, "README.md"), 'r', "utf8") as f:
 
 def is_wheel_for_windows():
     if "bdist_wheel" in argv:
-        names = ["win32", "win-amd64", "cygwin"]
+        names = ["win32", "win_amd64"]
         length = len(argv)
         for pos in range(argv.index("bdist_wheel") + 1, length):
             if argv[pos] == "--plat-name" and pos + 1 < length:

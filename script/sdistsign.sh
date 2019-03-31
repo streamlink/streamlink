@@ -9,7 +9,7 @@ version=$(python setup.py --version)
 dist_dir=${STREAMLINK_DIST_DIR:-dist}
 temp_keyring=$(mktemp -d) && trap "rm -rf ${temp_keyring}" EXIT || exit 255
 
-wheel_platforms_windows=("win32" "win-amd64" "cygwin")
+wheel_platforms_windows=("win32" "win_amd64")
 
 if [[ -n "${TRAVIS}" ]]; then
       openssl aes-256-cbc -K ${encrypted_eeb8b970d3a3_key} -iv ${encrypted_eeb8b970d3a3_iv} -in signing.key.enc -out "${SDIST_KEY_FILE}" -d
