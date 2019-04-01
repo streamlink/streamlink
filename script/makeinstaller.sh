@@ -98,7 +98,7 @@ packages=pkg_resources
          socks
          sockshandler
          isodate
-         pyjwt
+         jwt
 pypi_wheels=pycryptodome==3.6.4
 
 files=../win32/LICENSE.txt > \$INSTDIR
