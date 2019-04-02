@@ -1,5 +1,18 @@
 # Changelog
 
+## streamlink 1.1.1 (2019-04-02)
+
+This is just a small patch release which fixes a build/deploy issue with the new special wheels for Windows on PyPI. (#2392)
+
+[Please see the full changelog of the `1.1.0` release!](https://github.com/streamlink/streamlink/releases/tag/1.1.0)
+
+
+```text
+Forrest <gravyboat@users.noreply.github.com> (1):
+      build: remove cygwin from wheels for Windows (#2393)
+```
+
+
 ## streamlink 1.1.0 (2019-03-31)
 
 These are the highlights of Streamlink's first minor release after the 1.0.0 milestone:
