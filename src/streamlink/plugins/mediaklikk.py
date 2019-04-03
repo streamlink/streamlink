@@ -4,11 +4,10 @@ from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 
 
-_stream_url_re = re.compile(r"http(s)?://(www\.)?mediaklikk.hu/([A-Za-z0-9\-]+)/?")
-_id_re = re.compile(r'.*data\-streamid="([a-z0-9]+)".*')
-_file_re = re.compile(r'.*{\'file\': ?\'([a-zA-Z0-9\./\?=:]+)\'}].*')
-
-_stream_player_url = "http://player.mediaklikk.hu/player/player-inside-full3.php?userid=mtva&streamid={0}&flashmajor=21&flashminor=0"
+_stream_url_re = re.compile(r"http(s)?://(www\.)?mediaklikk.hu/[\w\-]+\-elo/?")
+_id_re = re.compile(r'.*"streamId":"(\w+)".*')
+_file_re = re.compile(r'.*"file": "([\w\./\\=:\-\?]+)".*')
+_stream_player_url = "https://player.mediaklikk.hu/playernew/player.php?video={stream_id}&noflash=yes"
 
 
 class Mediaklikk(Plugin):
@@ -17,21 +16,26 @@ class Mediaklikk(Plugin):
         return _stream_url_re.match(url)
 
     def _get_playlist_url(self):
-        # get the id
-        content = self.session.http.get(self.url)
-        match = _id_re.match(content.text.replace("\n", ""))
+        # get the stream id
+        response = self.session.http.get(self.url)
+        match = _id_re.search(response.text)
         if not match:
-            return
+            raise ValueError("Stream ID couldn't be extracted from page, probably time to update the regex.")
 
         # get the m3u8 file url
-        player_url = _stream_player_url.format(match.group(1))
-        content = self.session.http.get(player_url)
+        player_url = _stream_player_url.format(stream_id=match.group(1))
+        response = self.session.http.get(player_url)
 
-        match = _file_re.match(content.text.replace("\n", ""))
+        match = _file_re.search(response.text)
         if match:
-            return match.group(1)
+            url = match.group(1).replace("\\/", "/")
+            if url.startswith("//"):
+                url = "https:{}".format(url)
 
-    @Plugin.broken()
+            return url
+
+        raise ValueError("Couldn't extract m3u8 file URL, probably time to update the regex.")
+
     def _get_streams(self):
         playlist = self._get_playlist_url()
         return HLSStream.parse_variant_playlist(self.session, playlist)
