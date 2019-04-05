@@ -222,6 +222,10 @@ class HLSStreamWorker(SegmentedStreamWorker):
         if sequences:
             self.process_sequences(playlist, sequences)
 
+    def _set_playlist_reload_time(self, playlist, sequences):
+        self.playlist_reload_time = (playlist.target_duration
+                                     or sequences[-1].segment.duration)
+
     def process_sequences(self, playlist, sequences):
         first_sequence, last_sequence = sequences[0], sequences[-1]
 
@@ -229,7 +233,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
             log.debug("Segments in this playlist are encrypted")
 
         self.playlist_changed = ([s.num for s in self.playlist_sequences] != [s.num for s in sequences])
-        self.playlist_reload_time = (playlist.target_duration or last_sequence.segment.duration)
+        self._set_playlist_reload_time(playlist, sequences)
         self.playlist_sequences = sequences
 
         if not self.playlist_changed:
@@ -362,6 +366,10 @@ class HLSStream(HTTPStream):
         return reader
 
     @classmethod
+    def _get_variant_playlist(cls, res):
+        return hls_playlist.load(res.text, base_uri=res.url)
+
+    @classmethod
     def parse_variant_playlist(cls, session_, url, name_key="name",
                                name_prefix="", check_streams=False,
                                force_restart=False, name_fmt=None,
@@ -387,7 +395,7 @@ class HLSStream(HTTPStream):
         res = session_.http.get(url, exception=IOError, **request_params)
 
         try:
-            parser = hls_playlist.load(res.text, base_uri=res.url)
+            parser = cls._get_variant_playlist(res)
         except ValueError as err:
             raise IOError("Failed to parse playlist: {0}".format(err))
 
