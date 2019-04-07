@@ -1,6 +1,6 @@
 import unittest
 
-from streamlink.plugins.ntv import Foxnews
+from streamlink.plugins.foxnews import Foxnews
 
 
 class TestPluginFoxnews(unittest.TestCase):
