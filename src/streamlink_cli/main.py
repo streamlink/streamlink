@@ -791,6 +791,9 @@ def setup_options():
     if args.hls_live_edge:
         streamlink.set_option("hls-live-edge", args.hls_live_edge)
 
+    if args.hls_segment_stream_data:
+        streamlink.set_option("hls-segment-stream-data", args.hls_segment_stream_data)
+
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
