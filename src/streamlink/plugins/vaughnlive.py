@@ -1,122 +1,94 @@
-import random
 import re
-
+ 
+from streamlink import StreamError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import http, validate
-from streamlink.stream import RTMPStream
-from streamlink.utils import swfdecompress
-
-INFO_URL = "http://{site}{path}{domain}_{channel}?{version}_{ms}-{ms}-{random}"
-
-DOMAIN_MAP = {
-    "breakers": "btv",
-    "vapers": "vtv",
-    "vaughnlive": "live",
-}
+from streamlink.plugin.api import http, validate, useragents
+from streamlink.stream import HTTPStream, StreamIOIterWrapper, StreamIOThreadWrapper
+ 
+#_url_re = re.compile(r"""
+#   http(s)?://(\w+\.)?
+#   (?P<domain>breakers|instagib|vapers|pearltime).tv
+#   (/embed/video)?
+#   /(?P<channel>[^/&?]+)
+#""", re.VERBOSE)
 
 _url_re = re.compile(r"""
-    http(s)?://(\w+\.)?
-    (?P<domain>vaughnlive|breakers|instagib|vapers).tv
-    (/embed/video)?
-    /(?P<channel>[^/&?]+)
+   http(s)?://(\w+\.)?
+   (?P<domain>vaughn).live
+   (/embed/video)?
+   /(?P<channel>[^/&?]+)
 """, re.VERBOSE)
 
-_swf_player_re = re.compile(r'swfobject.embedSWF\("(/\d+/swf/[0-9A-Za-z]+\.swf)"')
-
 _schema = validate.Schema(
-    validate.any(
-        validate.all(u"<error></error>", validate.transform(lambda x: None)),
-        validate.all(
-            validate.transform(lambda s: s.split(";")),
-            validate.length(3),
-            validate.union({
-                "server": validate.all(
-                    validate.get(0),
-                    validate.text
-                ),
-                "token": validate.all(
-                    validate.get(1),
-                    validate.text,
-                    validate.startswith(":mvnkey-"),
-                    validate.transform(lambda s: s[len(":mvnkey-"):])
-                ),
-                "ingest": validate.all(
-                    validate.get(2),
-                    validate.text
-                )
-            })
-        )
-    )
+    validate.text
 )
 
-
+class VaughnStream(HTTPStream):
+    def open(self):
+        method = self.args.get("method", "GET")
+        timeout = self.session.options.get("http-timeout")
+        res = self.session.http.request(method=method,
+                                        stream=True,
+                                        exception=StreamError,
+                                        timeout=timeout,
+                                        **self.args)
+ 
+        def fix_stream():
+            """
+           Replace the first 3 bytes of the stream with b'FLV'
+           :return: stream iterator
+           """
+            content_iter = res.iter_content(8192)
+            data = next(content_iter)
+            yield b'FLV' + data[3:]
+            for chunk in content_iter:
+                yield chunk
+ 
+        fd = StreamIOIterWrapper(fix_stream())
+        if self.buffered:
+            fd = StreamIOThreadWrapper(self.session, fd, timeout=timeout)
+ 
+        return fd
+ 
+ 
 class VaughnLive(Plugin):
+    domain_map = {"vaughn": "live", "breakers": "btv", "instagib": "instagib", "vapers": "vtv", "pearltime": "pt"}
+    stream_url = "https://mp4v.vaughnsoft.net"
+ 
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
-
+ 
     def _get_streams(self):
-        res = http.get(self.url)
-        match = _swf_player_re.search(res.text)
-        if match is None:
-            return
-        swf_url = "http://vaughnlive.tv" + match.group(1)
-        self.logger.debug("Using swf url: {0}", swf_url)
+        self.session.http.headers = {
+            "Origin": "https://vaughn.live",
+            "Referer": self.url,
+            "User-Agent": useragents.FIREFOX,
+        }
+        m = _url_re.match(self.url)
+        if m:
+            stream_name = "{0}_{1}".format(self.domain_map[(m.group("domain").lower())],
+                                           m.group("channel"))
 
-        swfres = http.get(swf_url)
-        swfdata = swfdecompress(swfres.content).decode("latin1")
+            res = http.get(self.url, schema=_schema)
+            if not res: return
 
-        player_version_m = re.search(r"0\.\d+\.\d+\.\d+", swfdata)
-        info_url_domain_m = re.search(r"\w+\.vaughnsoft\.net", swfdata)
-        info_url_path_m = re.search(r"/video/edge/[a-zA-Z0-9_]+-", swfdata)
+            pattern = r"""var mp4StreamUrl = \"(.*?)&secure=(.*?)&expires=(.*?)&ip=(.*?)\""""
+            r = re.search(pattern, res)
+            if not r: return
 
-        player_version = player_version_m and player_version_m.group(0)
-        info_url_domain = info_url_domain_m and info_url_domain_m.group(0)
-        info_url_path = info_url_path_m and info_url_path_m.group(0)
+            stream_link = '%s/play/%s.flv?&secure=%s&expires=%s&ip=%s' % (self.stream_url, stream_name, r.group(2), r.group(3), r.group(4))
 
-        if player_version and info_url_domain and info_url_path:
-            self.logger.debug("Found player_version={0}, info_url_domain={1}, info_url_path={2}",
-                              player_version, info_url_domain, info_url_path)
-            match = _url_re.match(self.url)
-            params = {"channel": match.group("channel").lower(),
-                      "domain": DOMAIN_MAP.get(match.group("domain"), match.group("domain")),
-                      "version": player_version,
-                      "ms": random.randint(0, 999),
-                      "random": random.random(),
-                      "site": info_url_domain,
-                      "path": info_url_path}
-            info_url = INFO_URL.format(**params)
-            self.logger.debug("Loading info url: {0}", INFO_URL.format(**params))
-
-            info = http.get(info_url, schema=_schema)
-            if not info:
-                self.logger.info("This stream is currently unavailable")
-                return
-
-            app = "live"
-            self.logger.debug("Streaming server is: {0}", info["server"])
-            if info["server"].endswith(":1337"):
-                app = "live-{0}".format(info["ingest"].lower())
-
-            stream = RTMPStream(self.session, {
-                "rtmp": "rtmp://{0}/live".format(info["server"]),
-                "app": "{0}?{1}".format(app, info["token"]),
-                "swfVfy": swf_url,
-                "pageUrl": self.url,
-                "live": True,
-                "playpath": "{domain}_{channel}".format(**params),
-            })
-
-            return dict(live=stream)
-        else:
-            self.logger.info("Found player_version={0}, info_url_domain={1}, info_url_path={2}",
-                             player_version, info_url_domain, info_url_path)
-            if not player_version:
-                self.logger.error("Could not detect player_version")
-            if not info_url_domain:
-                self.logger.error("Could not detect info_url_domain")
-            if not info_url_path:
-                self.logger.error("Could not detect info_url_path")
-
-
+            self.logger.info("Stream powered by VaughnSoft - remember to support them.")
+            stream = VaughnStream(self.session,
+                                  stream_link,
+                                  params=dict(app="live",
+                                              stream=stream_name,
+                                              port=2935))
+            stream_url = stream.to_url()
+            res = self.session.http.head(stream_url, raise_for_status=False)
+            print(res.status_code)
+            yield "live", stream
+ 
+ 
 __plugin__ = VaughnLive
