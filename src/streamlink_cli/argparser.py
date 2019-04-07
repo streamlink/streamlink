@@ -744,6 +744,13 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-stream-data",
+        action="store_true",
+        help="""
+        Immediately write segment data into output buffer while downloading.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
