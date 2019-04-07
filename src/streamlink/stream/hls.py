@@ -4,6 +4,7 @@ import struct
 
 from collections import defaultdict, namedtuple
 from Crypto.Cipher import AES
+from requests.exceptions import ChunkedEncodingError
 
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
@@ -46,6 +47,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.key_data = None
         self.key_uri = None
         self.key_uri_override = options.get("hls-segment-key-uri")
+        self.stream_data = options.get("hls-segment-stream-data")
 
         if self.ignore_names:
             # creates a regex from a list of segment names,
@@ -109,6 +111,8 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 return
 
             return self.session.http.get(sequence.segment.uri,
+                                         stream=(self.stream_data
+                                                 and not sequence.segment.key),
                                          timeout=self.timeout,
                                          exception=StreamError,
                                          retries=self.retries,
@@ -139,8 +143,13 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
             self.reader.buffer.write(pkcs7_decode(decrypted_chunk))
         else:
-            for chunk in res.iter_content(chunk_size):
-                self.reader.buffer.write(chunk)
+            try:
+                for chunk in res.iter_content(chunk_size):
+                    self.reader.buffer.write(chunk)
+            except ChunkedEncodingError:
+                log.error("Download of segment {0} failed", sequence.num)
+
+                return
 
         log.debug("Download of segment {0} complete", sequence.num)
 
