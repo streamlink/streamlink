@@ -53,10 +53,11 @@ class BBCiPlayer(Plugin):
     mediaselector_schema = validate.Schema(
         validate.transform(parse_json),
         {"media": [
-            {"connection": [{
-                validate.optional("href"): validate.url(),
-                validate.optional("transferFormat"): validate.text
-            }],
+            {"connection":
+                validate.all([{
+                    validate.optional("href"): validate.url(),
+                    validate.optional("transferFormat"): validate.text
+                }], validate.filter(lambda c: c.get("href"))),
                 "kind": validate.text}
         ]},
         validate.get("media"),
