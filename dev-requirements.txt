@@ -5,5 +5,4 @@ codecov
 coverage
 mock
 requests-mock
-pynsist
 freezegun

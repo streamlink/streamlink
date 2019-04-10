@@ -32,6 +32,9 @@ before_install:
       pip install -r docs-requirements.txt;
       pip install doctr;
     fi
+  - if [[ $BUILD_INSTALLER == 'yes' ]]; then
+      pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b;
+    fi
 
 install:
   - pip install -e .
@@ -63,7 +66,6 @@ deploy:
   - provider: releases
     api_key: "${RELEASES_API_KEY}"
     file: "${STREAMLINK_INSTALLER_DIST_DIR}/streamlink-${TRAVIS_TAG}.exe"
-    file_glob: true
     skip_cleanup: true
     on:
       tags: true
@@ -94,7 +96,7 @@ deploy:
       repo: streamlink/streamlink
   - provider: releases
     api_key: "${RELEASES_API_KEY}"
-    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}*"
+    file: "${STREAMLINK_DIST_DIR}/streamlink-${TRAVIS_TAG}.tar.gz{,.asc}"
     file_glob: true
     skip_cleanup: true
     on:

@@ -40,6 +40,7 @@ cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-rest
                         - bgonair.bg
                         - bitelevision.com
                         - bloombergtv.bg
+                        - bstv.bg
                         - inlife.bg
                         - kanal3.bg
                         - mmtvmusic.com
@@ -81,7 +82,7 @@ eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-rest
 eurocom                 eurocom.bg           Yes   No
 euronews                euronews.com         Yes   No
 europaplus              europaplus.ru        Yes   --
-facebook                facebook.com         Yes   No    Only 360p HLS streams.
+facebook                facebook.com         Yes   Yes
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
@@ -126,7 +127,8 @@ npo                     - npo.nl             Yes   Yes   Streams may be geo-rest
                         - zappelin.nl
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                         - radio.nrk.no
-ok_live                 ok.ru                Yes   Yes
+ntv                     ntv.ru               Yes   No
+okru                    ok.ru                Yes   Yes
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
 onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
                         - ctc.ru

@@ -39,7 +39,7 @@ old_files=(
   "streamupcom" "tv8cat" "ufctv" "veetle" "viagame" "viasat_embed" "wattv"
   "aftonbladet" "aliez" "antenna" "arconai" "bongacams" "brittv" "cam4"
   "camsoda" "chaturbate" "expressen" "mips" "seetv" "speedrunslive" "streamboat"
-  "vgtv" "weeb" "oldlivestream"
+  "vgtv" "weeb" "oldlivestream" "ok_live"
 )
 for i in "${old_files[@]}"
 do
@@ -105,6 +105,10 @@ files=../win32/LICENSE.txt > \$INSTDIR
 
 [Command streamlink]
 entry_point=streamlink_cli.main:main
+
+[Command streamlinkw]
+entry_point=streamlink_cli.main:main
+console=false
 
 [Build]
 directory=nsis
