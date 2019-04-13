@@ -5,12 +5,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import http, validate, useragents
 from streamlink.stream import HTTPStream, StreamIOIterWrapper, StreamIOThreadWrapper
  
-#_url_re = re.compile(r"""
-#   http(s)?://(\w+\.)?
-#   (?P<domain>breakers|instagib|vapers|pearltime).tv
-#   (/embed/video)?
-#   /(?P<channel>[^/&?]+)
-#""", re.VERBOSE)
 
 _url_re = re.compile(r"""
    http(s)?://(\w+\.)?
