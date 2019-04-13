@@ -9,4 +9,4 @@ class TestPluginDLive(unittest.TestCase):
         self.assertTrue(DLive.can_handle_url("https://dlive.tv/pewdiepie"))
 
         # shouldn't match
-        self.assertTrue(DLive.can_handle_url("https://twitch.tv/lirik"))
+        self.assertFalse(DLive.can_handle_url("https://twitch.tv/lirik"))
