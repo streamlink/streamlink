@@ -30,7 +30,7 @@ class BBCiPlayer(Plugin):
         )
     """, re.VERBOSE)
     mediator_re = re.compile(
-        r'window\.mediatorDefer\s*=\s*page\([^,]*,\s*({.*?})\);', re.DOTALL)
+        r'window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});', re.DOTALL)
     tvip_re = re.compile(r'channel"\s*:\s*{\s*"id"\s*:\s*"(\w+?)"')
     tvip_master_re = re.compile(r'event_master_brand=(\w+?)&')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
@@ -45,20 +45,19 @@ class BBCiPlayer(Plugin):
 
     mediator_schema = validate.Schema(
         {
-            "appStoreState": {
-                "versions": [{"id": validate.text}]
-            }
+            "versions": [{"id": validate.text}]
         },
-        validate.get("appStoreState"), validate.get("versions"), validate.get(0),
+        validate.get("versions"), validate.get(0),
         validate.get("id")
     )
     mediaselector_schema = validate.Schema(
         validate.transform(parse_json),
         {"media": [
-            {"connection": [{
-                validate.optional("href"): validate.url(),
-                validate.optional("transferFormat"): validate.text
-            }],
+            {"connection":
+                validate.all([{
+                    validate.optional("href"): validate.url(),
+                    validate.optional("transferFormat"): validate.text
+                }], validate.filter(lambda c: c.get("href"))),
                 "kind": validate.text}
         ]},
         validate.get("media"),
