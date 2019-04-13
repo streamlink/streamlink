@@ -1,9 +1,12 @@
 import unittest
 
-from streamlink.plugins.dlive import dlive
+from streamlink.plugins.dlive import DLive
 
 
-class TestPluginDlive(unittest.TestCase):
+class TestPluginDLive(unittest.TestCase):
     def test_can_handle_url(self):
         # should match
         self.assertTrue(dlive.can_handle_url("https://dlive.tv/pewdiepie"))
+
+        # shouldn't match
+        self.assertTrue(dlive.can_handle_url("https://twitch.tv/lirik"))
