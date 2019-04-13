@@ -1,40 +1,45 @@
+import logging
 import re
 
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
+from streamlink.utils.url import update_scheme
 
-
-_stream_url_re = re.compile(r"http(s)?://(www\.)?mediaklikk.hu/([A-Za-z0-9\-]+)/?")
-_id_re = re.compile(r'.*data\-streamid="([a-z0-9]+)".*')
-_file_re = re.compile(r'.*{\'file\': ?\'([a-zA-Z0-9\./\?=:]+)\'}].*')
-
-_stream_player_url = "http://player.mediaklikk.hu/player/player-inside-full3.php?userid=mtva&streamid={0}&flashmajor=21&flashminor=0"
+log = logging.getLogger(__name__)
 
 
 class Mediaklikk(Plugin):
+    PLAYER_URL = "https://player.mediaklikk.hu/playernew/player.php"
+
+    _url_re = re.compile(r"https?://(?:www\.)?mediaklikk\.hu/[\w\-]+\-elo/?")
+    _id_re = re.compile(r'"streamId":"(\w+)"')
+    _file_re = re.compile(r'"file":\s*"([\w\./\\=:\-\?]+)"')
+
     @classmethod
     def can_handle_url(cls, url):
-        return _stream_url_re.match(url)
+        return cls._url_re.match(url) is not None
 
-    def _get_playlist_url(self):
-        # get the id
-        content = self.session.http.get(self.url)
-        match = _id_re.match(content.text.replace("\n", ""))
-        if not match:
-            return
+    def _get_streams(self):
+        # get the stream id
+        res = self.session.http.get(self.url)
+        m = self._id_re.search(res.text)
+        if not m:
+            raise PluginError("Stream ID could not be extracted.")
 
         # get the m3u8 file url
-        player_url = _stream_player_url.format(match.group(1))
-        content = self.session.http.get(player_url)
+        params = {
+            "video": m.group(1),
+            "noflash": "yes",
+        }
+        res = self.session.http.get(self.PLAYER_URL, params=params)
+        m = self._file_re.search(res.text)
+        if m:
+            url = update_scheme("https://",
+                                m.group(1).replace("\\/", "/"))
 
-        match = _file_re.match(content.text.replace("\n", ""))
-        if match:
-            return match.group(1)
-
-    @Plugin.broken()
-    def _get_streams(self):
-        playlist = self._get_playlist_url()
-        return HLSStream.parse_variant_playlist(self.session, playlist)
+            log.debug("URL={0}".format(url))
+            return HLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = Mediaklikk
