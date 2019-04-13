@@ -8,6 +8,7 @@ from streamlink.stream import HTTPStream, StreamIOIterWrapper, StreamIOThreadWra
 
 _url_re = re.compile(r"""
    http(s)?://(\w+\.)?
+
    (?P<domain>vaughn).live
    (/embed/video)?
    /(?P<channel>[^/&?]+)
