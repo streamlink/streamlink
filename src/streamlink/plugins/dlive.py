@@ -17,14 +17,6 @@ QUALITY_WEIGHTS = {
 class DLive(Plugin):
     _url_re = re.compile(r"https?://(?:www\.)?dlive\.tv/")
 
-    _INFO_SCHEMA = validate.Schema({
-                                    "data": {
-                                        "userByDisplayName": {
-                                            "username": validate.text
-                                        }
-                                    }
-                                }
-                            )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -51,6 +43,5 @@ class DLive(Plugin):
             return HLSStream.parse_variant_playlist(self.session, hls_url)
         except Exception:
             return None
-
 
 __plugin__ = DLive
