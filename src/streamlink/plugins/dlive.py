@@ -1,6 +1,3 @@
-"""
-Plugin for dlive.tv
-"""
 import re
 
 from streamlink.plugin import Plugin
@@ -16,6 +13,10 @@ QUALITY_WEIGHTS = {
 
 
 class DLive(Plugin):
+    """
+    Plugin for dlive.tv
+    """
+
     _url_re = re.compile(r"https?://(?:www\.)?dlive\.tv/")
     _playback_re = re.compile(r"""(?<=playbackUrl":")(.+?)(?=")""")
     _username_re = re.compile(r"(?<=user:)(\w|-)+")
