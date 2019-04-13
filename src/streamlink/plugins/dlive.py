@@ -1,9 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.compat import unquote_plus
 
 
