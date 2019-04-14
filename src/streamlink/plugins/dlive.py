@@ -17,8 +17,8 @@ class DLive(Plugin):
 
     _url_re = re.compile(r"https?://(?:www\.)?dlive\.tv/")
     _playback_re = re.compile(r"""(?<=playbackUrl":")(.+?)(?=")""")
+    _livestream_re = re.compile(r""""livestream":null""")
     _username_re = re.compile(r"(?<=user:)(\w|-)+")
-
 
     @classmethod
     def can_handle_url(cls, url):
@@ -39,17 +39,18 @@ class DLive(Plugin):
 
         if playback_url is not None:
             hls_url = playback_url.group(0)
-            hls_url = bytes(unquote_plus(hls_url), "utf-8").decode("unicode_escape")
-            print(hls_url)
+            hls_url = bytes(unquote_plus(hls_url), "utf-8").decode(
+                "unicode_escape")
         else:
+            if self._livestream_re.search(res.text) is not None:
+                return None
+
             username = self._username_re.search(res.text)
             if username is not None:
                 hls_url = "https://live.prd.dlive.tv/hls/live/{}.m3u8".format(
                     username.group(0))
 
-        try:
-            return HLSStream.parse_variant_playlist(self.session, hls_url)
-        except Exception:
-            return None
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
+
 
 __plugin__ = DLive
