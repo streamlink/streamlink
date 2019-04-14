@@ -1,6 +1,6 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
 from streamlink.compat import unquote_plus
 
@@ -35,20 +35,20 @@ class DLive(Plugin):
     def _get_streams(self):
         res = self.session.http.get(self.url)
 
-        playback_url = self._playback_re.search(res.text)
+        m = self._playback_re.search(res.text)
 
-        if playback_url is not None:
-            hls_url = playback_url.group(0)
-            hls_url = bytes(unquote_plus(hls_url), "utf-8").decode(
-                "unicode_escape")
+        if m:
+            hls_url = m.group(0)
         else:
             if self._livestream_re.search(res.text) is not None:
-                return None
+                raise PluginError('Stream is offline')
 
-            username = self._username_re.search(res.text)
-            if username is not None:
+            m = self._username_re.search(res.text)
+            if m:
                 hls_url = "https://live.prd.dlive.tv/hls/live/{}.m3u8".format(
-                    username.group(0))
+                    m.group(0))
+            else:
+                raise PluginError('Could not find username')
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
