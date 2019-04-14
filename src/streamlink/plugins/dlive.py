@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
-from streamlink.compat import unquote_plus
+from streamlink.compat import unquote_plus, is_py3
 
 
 QUALITY_WEIGHTS = {
@@ -39,6 +39,12 @@ class DLive(Plugin):
 
         if m:
             hls_url = m.group(0)
+
+            if is_py3:
+                hls_url = bytes(unquote_plus(hls_url), "utf-8").decode(
+                    "unicode_escape")
+            else:
+                hls_url = unquote_plus(hls_url).decode("unicode_escape")
         else:
             if self._livestream_re.search(res.text) is not None:
                 raise PluginError('Stream is offline')
