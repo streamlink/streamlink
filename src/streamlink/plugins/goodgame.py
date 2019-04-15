@@ -1,8 +1,11 @@
 import re
+import logging
 
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 HLS_URL_FORMAT = "https://hls.goodgame.ru/hls/{0}{1}.m3u8"
 QUALITIES = {
@@ -35,7 +38,7 @@ class GoodGame(Plugin):
 
         match = _ddos_re.search(res.text)
         if match:
-            self.logger.debug("Anti-DDOS bypass...")
+            log.debug("Anti-DDOS bypass...")
             headers["Cookie"] = match.group(1)
             res = self.session.http.get(self.url, headers=headers)
 
@@ -45,10 +48,9 @@ class GoodGame(Plugin):
             self.logger.error("Could not find channel info")
             return
 
-        self.logger.debug("Found channel info: channelkey={channelkey} pid={streamkey} online={status}",
-                          **channel_info)
+        log.debug("Found channel info: id={id} channelkey={channelkey} pid={streamkey} online={status}".format(**channel_info))
         if not channel_info['status']:
-            self.logger.debug("Channel appears to be offline")
+            log.debug("Channel appears to be offline")
 
         streams = {}
         for name, url_suffix in QUALITIES.items():
