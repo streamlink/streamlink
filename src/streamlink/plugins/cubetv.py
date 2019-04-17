@@ -55,5 +55,4 @@ class CubeTV(Plugin):
 
         return HLSStream.parse_variant_playlist(self.session, hls)
 
-
 __plugin__ = CubeTV
