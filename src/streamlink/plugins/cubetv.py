@@ -46,7 +46,7 @@ class CubeTV(Plugin):
         user_id = self._url_re.match(self.url).group(2)
         res = self._get_api_res(user_id)
         user_gid = self.session.http.json(res, schema=self._channel_info_schema)['data']['gid']
-        
+
         try:
             stream_data = self.session.http.get(self._stream_data_api_url_base.format(gid=user_gid))
             hls = self.session.http.json(stream_data, schema=self._stream_data_schema)['data']['video_src']
@@ -54,5 +54,6 @@ class CubeTV(Plugin):
             raise NoStreamsError(self.url)
 
         return HLSStream.parse_variant_playlist(self.session, hls)
+
 
 __plugin__ = CubeTV
