@@ -8,10 +8,10 @@ from streamlink.utils import parse_json
 
 class CubeTV(Plugin):
 
-    _url_re = re.compile(r"https?://(www\.)?cubetv\.sg/(?P<channel>[^/]{2,})")
+    _url_re = re.compile(r"https?://(www\.)?cube\.tv/(?P<channel>[^/]{2,})")
 
-    _channel_info_api_url_base = "https://www.cubetv.sg/studio/info?cube_id={channel}"
-    _stream_data_api_url_base = "https://www.cubetv.sg/studioApi/getStudioSrcBySid?sid={gid}&videoType=1&https=1"
+    _channel_info_api_url_base = "https://www.cube.tv/studio/info?cube_id={channel}"
+    _stream_data_api_url_base = "https://www.cube.tv/studioApi/getStudioSrcBySid?sid={gid}&videoType=1&https=1"
 
     _channel_info_schema = validate.Schema({
         u"code" : 1,
@@ -46,9 +46,9 @@ class CubeTV(Plugin):
         user_id = self._url_re.match(self.url).group(2)
         res = self._get_api_res(user_id)
         user_gid = self.session.http.json(res, schema=self._channel_info_schema)['data']['gid']
-
+        
         try:
-            stream_data  = self.session.http.get(self._stream_data_api_url_base.format(gid=user_gid))
+            stream_data = self.session.http.get(self._stream_data_api_url_base.format(gid=user_gid))
             hls = self.session.http.json(stream_data, schema=self._stream_data_schema)['data']['video_src']
         except Exception as e:
             raise NoStreamsError(self.url)
