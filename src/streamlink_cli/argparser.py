@@ -529,6 +529,14 @@ def build_parser():
         """
     )
     output.add_argument(
+        "--force-progress",
+        action="store_true",
+        help="""
+        When using -o or -r,
+        show the download progress bar even if there is no terminal.
+        """
+    )
+    output.add_argument(
         "-O", "--stdout",
         action="store_true",
         help="""
