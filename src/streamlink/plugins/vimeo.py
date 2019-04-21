@@ -1,11 +1,14 @@
+import logging
 import re
 
-from streamlink.compat import html_unescape
+from streamlink.compat import html_unescape, urlparse
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 
 class Vimeo(Plugin):
@@ -71,15 +74,26 @@ class Vimeo(Plugin):
         streams = []
 
         for stream_type in ("hls", "dash"):
-            if not stream_type in videos:
+            if stream_type not in videos:
                 continue
             for _, video_data in videos[stream_type]["cdns"].items():
+                log.trace("{0!r}".format(video_data))
                 url = video_data.get("url")
                 if stream_type == "hls":
                     for stream in HLSStream.parse_variant_playlist(self.session, url).items():
                         streams.append(stream)
                 elif stream_type == "dash":
-                    url = url.replace("master.json", "master.mpd")
+                    p = urlparse(url)
+                    if p.path.endswith("dash.mpd"):
+                        # LIVE
+                        url = self.session.http.get(url).json()["url"]
+                    elif p.path.endswith("master.json"):
+                        # VOD
+                        url = url.replace("master.json", "master.mpd")
+                    else:
+                        log.error("Unsupported DASH path: {0}".format(p.path))
+                        continue
+
                     for stream in DASHStream.parse_manifest(self.session, url).items():
                         streams.append(stream)
 
@@ -99,3 +113,4 @@ class Vimeo(Plugin):
 
 
 __plugin__ = Vimeo
+
