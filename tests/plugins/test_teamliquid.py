@@ -10,6 +10,7 @@ class TestPluginTeamliquid(unittest.TestCase):
         self.assertTrue(Teamliquid.can_handle_url("http://teamliquid.net/video/streams/iwl-fuNny"))
         self.assertTrue(Teamliquid.can_handle_url("http://www.teamliquid.net/video/streams/OGamingTV%20SC2"))
         self.assertTrue(Teamliquid.can_handle_url("http://www.teamliquid.net/video/streams/Check"))
+        self.assertTrue(Teamliquid.can_handle_url("https://tl.net/video/streams/GSL"))
 
         # shouldn't match
         self.assertFalse(Teamliquid.can_handle_url("http://www.teamliquid.net/Classic%20BW%20VODs"))
