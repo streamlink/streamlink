@@ -30,6 +30,7 @@ modes.
 Name                                                  Stdin Pipe Named Pipe HTTP
 ===================================================== ========== ========== ====
 `Daum Pot Player <http://potplayer.daum.net>`_        Yes        No         Yes [1]_
+`GNOME Videos (Totem) <https://wiki.gnome.org/Apps/Videos>`_  No No         Yes [1]_
 `MPC-HC <http://mpc-hc.org/>`_                        Yes [2]_   No         Yes [1]_
 `MPlayer <http://mplayerhq.hu>`_                      Yes        Yes        Yes
 `mpv <http://mpv.io>`_                                Yes        Yes        Yes
