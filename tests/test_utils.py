@@ -2,14 +2,10 @@ import base64
 import os.path
 import sys
 import unittest
+import xml.etree.ElementTree as ET
 
+from streamlink.exceptions import PluginError
 from streamlink.plugin.api.validate import xml_element, text
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-from streamlink import PluginError
 from streamlink.plugin.api import validate
 from streamlink.utils import (
     absolute_url,
