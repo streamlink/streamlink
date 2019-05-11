@@ -13,7 +13,6 @@ log = logging.getLogger(__name__)
 class LRT(Plugin):
     _url_re = re.compile(r"https?://(?:www\.)?lrt.lt/mediateka/.")
     _source_re = re.compile(r'sources\s*:\s*(\[{.*?}\]),', re.DOTALL | re.IGNORECASE)
-    js_to_json = partial(re.compile(r'(?!<")(\w+)\s*:\s*(["\']|\d?\.?\d+,|true|false|\[|{)').sub, r'"\1":\2')
 
 
     @classmethod
@@ -25,15 +24,14 @@ class LRT(Plugin):
         m = self._source_re.search(page.text)
         if m:
             params = ""
-            data = m.group(1)
-            log.debug("Source data: {0}".format(data))
-            if "location.hash.substring" in data:
-                log.debug("Removing hash substring addition")
-                data = re.sub(r"\s*\+\s*location.hash.substring\(\d+\)", "", data)
-                params = urlparse(self.url).fragment
-            data = self.js_to_json(data)
-            for stream in parse_json(data):
-                for s in HLSStream.parse_variant_playlist(self.session, stream['file'], params=params).items():
+            log.debug("AJAX call to: {0}".format(m.group(1)))
+            ajaxpage = self.session.http.get(m.group(1))
+            data = ajaxpage.text
+            log.debug("AJAX response: {0}".format(data))
+            ajaxObj = parse_json(data)
+            m3u8_url = ajaxObj["response"]["data"]["content"]
+            if m3u8_url:
+                for s in HLSStream.parse_variant_playlist(self.session, m3u8_url, params=params).items():
                     yield s
         else:
             log.debug("No match for sources regex")
