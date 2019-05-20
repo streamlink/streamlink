@@ -1,6 +1,6 @@
 import unittest
 
-from streamlink.plugins.reuters import Reuters
+from streamlink.plugins.dmax import Dmax
 
 
 class TestPluginDmax(unittest.TestCase):
@@ -11,10 +11,10 @@ class TestPluginDmax(unittest.TestCase):
             'https://www.dmax.de/programme/a2/video/episode-22/DCB472860002100',
         ]
         for url in should_match:
-            self.assertTrue(Reuters.can_handle_url(url), url)
+            self.assertTrue(Dmax.can_handle_url(url), url)
 
         should_not_match = [
             'https://example.com/index.html',
         ]
         for url in should_not_match:
-            self.assertFalse(Reuters.can_handle_url(url), url)
+            self.assertFalse(Dmax.can_handle_url(url), url)
