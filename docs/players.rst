@@ -26,18 +26,18 @@ Player compatibility
 This is a list of video players and their compatibility with the transport
 modes.
 
-===================================================== ========== ========== ====
-Name                                                  Stdin Pipe Named Pipe HTTP
-===================================================== ========== ========== ====
-`Daum Pot Player <http://potplayer.daum.net>`_        Yes        No         Yes [1]_
-`GNOME Videos (Totem) <https://wiki.gnome.org/Apps/Videos>`_  No No         Yes [1]_
-`MPC-HC <http://mpc-hc.org/>`_                        Yes [2]_   No         Yes [1]_
-`MPlayer <http://mplayerhq.hu>`_                      Yes        Yes        Yes
-`mpv <http://mpv.io>`_                                Yes        Yes        Yes
-`QuickTime <http://apple.com/quicktime>`_             No         No         No
-`VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
-OMXPlayer                                             No         Yes        Yes [4]_
-===================================================== ========== ========== ====
+============================================================= ========== ========== ====
+Name                                                          Stdin Pipe Named Pipe HTTP
+============================================================= ========== ========== ====
+`Daum Pot Player <http://potplayer.daum.net>`_                Yes        No         Yes [1]_
+`GNOME Videos (Totem) <https://wiki.gnome.org/Apps/Videos>`_  No         No         Yes [1]_
+`MPC-HC <http://mpc-hc.org/>`_                                Yes [2]_   No         Yes [1]_
+`MPlayer <http://mplayerhq.hu>`_                              Yes        Yes        Yes
+`mpv <http://mpv.io>`_                                        Yes        Yes        Yes
+`QuickTime <http://apple.com/quicktime>`_                     No         No         No
+`VLC media player <http://videolan.org>`_                     Yes [3]_   Yes        Yes
+OMXPlayer                                                     No         Yes        Yes [4]_
+============================================================= ========== ========== ====
 
 .. [1] :option:`--player-continuous-http` must be used.
        Using HTTP with players that rely on Windows' codecs to access HTTP
