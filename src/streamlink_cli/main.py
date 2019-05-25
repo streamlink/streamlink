@@ -1020,7 +1020,6 @@ def main():
         except NoPluginError:
             error_code = 1
         except KeyboardInterrupt:
-            console.msg("Interrupted! Exiting...")
             error_code = 130
     elif args.can_handle_url_no_redirect:
         try:
@@ -1028,7 +1027,6 @@ def main():
         except NoPluginError:
             error_code = 1
         except KeyboardInterrupt:
-            console.msg("Interrupted! Exiting...")
             error_code = 130
     elif args.url:
         try:
