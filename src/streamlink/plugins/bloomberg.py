@@ -1,11 +1,13 @@
 from functools import partial
 import re
+import logging
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json, update_scheme
 
+log = logging.getLogger(__name__)
 
 class Bloomberg(Plugin):
     VOD_API_URL = 'https://www.bloomberg.com/api/embed?id={0}'
@@ -93,7 +95,7 @@ class Bloomberg(Plugin):
         if match is None:
             return []
         live_player_url = update_scheme(self.url, match.group('live_player_url'))
-
+        log.debug("live_player_url is {0}", live_player_url)
         # Extract streams from the live player page
         res = self.session.http.get(live_player_url)
         stream_datas = re.findall(r'{0}(?:_MINI)?:({{.+?}}]}}]}})'.format(self.CHANNEL_MAP[channel]), res.text)
@@ -130,6 +132,7 @@ class Bloomberg(Plugin):
                 for stream in HDSStream.parse_manifest(self.session, video_url).items():
                     yield stream
             elif '.m3u8' in video_url:
+                log.debug("parsing m3u8 url at {0}", video_url)
                 for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield stream
             if '.mp4' in video_url:
