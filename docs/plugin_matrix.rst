@@ -54,7 +54,7 @@ cinergroup              - showtv.com.tr      Yes   No
                         - bloomberght.com
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
-cubetv                  cubetv.sg            Yes   --
+cubetv                  cube.tv              Yes   --
 cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
 delfi                   - delfi.lt           --    Yes
@@ -62,6 +62,7 @@ delfi                   - delfi.lt           --    Yes
                         - delfi.lv
 deutschewelle           dw.com               Yes   Yes
 dingittv                dingit.tv            Yes   Yes
+dlive                   dlive.tv             Yes   Yes
 dogan                   - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
                         - kanald.com.tr
                         - dreamtv.com.tr
@@ -163,10 +164,10 @@ radionet                - radio.net          Yes   --
                         - radio.se
 raiplay                 raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 reshet                  reshet.tv            Yes   Yes   Streams may be geo-restricted to Israel.
+reuters                 reuters.tv           Yes   Yes
 rtbf                    - rtbf.be/auvio      Yes   Yes   Streams may be geo-restricted to Belgium or Europe.
                         - rtbfradioplayer.be
 rtlxl                   rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
-rte                     rte.ie/player        Yes   Yes
 rtpplay                 rtp.pt/play          Yes   Yes   Streams may be geo-restricted to Portugal.
 rtve                    rtve.es              Yes   No
 rtvs                    rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
@@ -198,7 +199,8 @@ svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-rest
 swisstxt                - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
                         - rsi.ch
 tamago                  player.tamago.live   Yes   --
-teamliquid              teamliquid.net       Yes   Yes
+teamliquid              - teamliquid.net     Yes   --
+                        - tl.net
 teleclubzoom            teleclubzoom.ch      Yes   No    Streams are geo-restricted to Switzerland.
 telefe                  telefe.com           No    Yes   Streams are geo-restricted to Argentina.
 tf1                     - tf1.fr             Yes   No    Streams may be geo-restricted to France.
@@ -230,7 +232,6 @@ tv5monde                - tv5monde.com       Yes   Yes   Streams may be geo-rest
                         - tv5mondepl... [8]_
 tv8                     tv8.com.tr           Yes   No
 tv360                   tv360.com.tr         Yes   No
-tvcatchup               tvcatchup.com        Yes   No    Streams may be geo-restricted to Great Britain.
 tvibo                   player.tvibo.com     Yes   --
 tvnbg                   - tvn.bg             Yes   -
                         - live.tvn.bg
@@ -258,6 +259,7 @@ viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-rest
                         - viafree.no
                         - viafree.se
 vidio                   vidio.com            Yes   Yes
+vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
 vk                      vk.com               Yes   Yes
 vrtbe                   vrt.be/vrtnu         Yes   Yes
