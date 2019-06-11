@@ -1,16 +1,12 @@
 import codecs
 import os.path
+import xml.etree.ElementTree as ET
 
 import requests_mock
 import six
-from io import BytesIO
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:  # pragma: no cover
-    import xml.etree.ElementTree as ET
 
 from contextlib import contextmanager
+from io import BytesIO
 
 __here__ = os.path.abspath(os.path.dirname(__file__))
 
