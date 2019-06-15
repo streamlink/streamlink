@@ -1,3 +1,8 @@
+import sys
+if sys.version_info[0] > 2:
+    from html.parser import HTMLParser
+else:
+    from HTMLParser import HTMLParser
 import re
 from base64 import b64decode
 from streamlink import PluginError
@@ -7,9 +12,7 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.compat import urlparse
 from streamlink.utils import parse_json
-from html.parser import HTMLParser
-from slimit.parser import Parser
-from slimit.visitors import nodevisitor
+import esprima
 
 
 class Online_Parser(HTMLParser):
@@ -34,7 +37,7 @@ class Iframe_Parser(HTMLParser):
             self.data = data
 
 
-class ovvaTV(Plugin):
+class OnePlusOne(Plugin):
     url_re = re.compile(r'https://1plus1.video/tvguide/.*/online')
     ovva_data_schema = validate.Schema({
         "balancer": validate.url()
@@ -63,11 +66,9 @@ class ovvaTV(Plugin):
         parser = Iframe_Parser()
         parser.feed(res.text)
         data = parser.data
-        parser = Parser()
-        tree = parser.parse(data)
-        for node in nodevisitor.visit(tree):
-            if isinstance(node, list) and node[0].value == '"ovva-player"':
-                return node[1].value.strip('"')
+        parse = esprima.parseScript(data)
+        data = parse.body[0].expression.right.body.body[0]
+        return data.expression.arguments[1].value
 
     def _get_streams(self):
         self.session.http.headers = {"User-Agent": useragents.ANDROID}
@@ -102,4 +103,4 @@ class ovvaTV(Plugin):
                 self.logger.error("Could not find player data.")
 
 
-__plugin__ = ovvaTV
+__plugin__ = OnePlusOne

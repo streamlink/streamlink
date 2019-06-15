@@ -1,9 +1,9 @@
 import unittest
 
-from streamlink.plugins.ovvatv import ovvaTV
+from streamlink.plugins.ovvatv import OnePlusOne
 
 
-class TestPluginovvaTV(unittest.TestCase):
+class TestPluginOnePlusOne(unittest.TestCase):
 
     ''' Broken Plugin
     def test_can_handle_url(self):
@@ -14,7 +14,7 @@ class TestPluginovvaTV(unittest.TestCase):
             '',
         ]
         for url in should_match:
-            self.assertTrue(ovvaTV.can_handle_url(url))
+            self.assertTrue(OnePlusOne.can_handle_url(url))
     '''
 
     def test_can_handle_url_negative(self):
@@ -22,4 +22,4 @@ class TestPluginovvaTV(unittest.TestCase):
             'https://example.com',
         ]
         for url in should_not_match:
-            self.assertFalse(ovvaTV.can_handle_url(url))
+            self.assertFalse(OnePlusOne.can_handle_url(url))
