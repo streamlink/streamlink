@@ -85,7 +85,6 @@ euronews                euronews.com         Yes   No
 europaplus              europaplus.ru        Yes   --
 facebook                facebook.com         Yes   Yes
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
-foxnews                 foxnews.com          Yes   No
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
                         - funimationnow.uk
