@@ -85,6 +85,7 @@ euronews                euronews.com         Yes   No
 europaplus              europaplus.ru        Yes   --
 facebook                facebook.com         Yes   Yes
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
+foxnews                 foxnews.com          Yes   No
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
                         - funimationnow.uk
@@ -136,7 +137,7 @@ onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-rest
                         - domashny.ru
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
-ovvatv                  ovva.tv              Yes   No
+oneplusone              1plus1.video         Yes   No
 pandatv                 panda.tv             Yes   ?
 periscope               periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto                 picarto.tv           Yes   Yes
