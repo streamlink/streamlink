@@ -1,6 +1,6 @@
 import unittest
 
-from streamlink.plugins.ovvatv import OnePlusOne
+from streamlink.plugins.oneplustone import OnePlusOne
 
 
 class TestPluginOnePlusOne(unittest.TestCase):
