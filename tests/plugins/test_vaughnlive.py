@@ -6,7 +6,7 @@ from streamlink.plugins.vaughnlive import VaughnLive
 class TestPluginVaughnLive(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
-            'https://vaughnlive.tv/bluebirdnestboxcam',
+            'https://vaughn.live/tech_corner',
         ]
         for url in should_match:
             self.assertTrue(VaughnLive.can_handle_url(url))

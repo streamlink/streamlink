@@ -1,16 +1,38 @@
 import re
-
+import logging
 from streamlink import StreamError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HTTPStream, StreamIOIterWrapper, StreamIOThreadWrapper
+import esprima
+import sys
+from random import shuffle
+if sys.version_info[0] > 2:
+    from html.parser import HTMLParser
+else:
+    from HTMLParser import HTMLParser
 
-_url_re = re.compile(r"""
-    http(s)?://(\w+\.)?
-    (?P<domain>vaughnlive|breakers|instagib|vapers|pearltime).tv
-    (/embed/video)?
-    /(?P<channel>[^/&?]+)
-""", re.VERBOSE)
+log = logging.getLogger(__name__)
+
+_url_re = re.compile("""
+    https://(
+        (vaughn.live)|
+        ((breakers|instagib|vapers).tv)
+        )/.*
+    """
+    , re.VERBOSE)
+
+class HTML_Parser(HTMLParser):
+    js = False
+    def handle_starttag(self, tag, attrs):
+        if tag == 'script':
+            attrs = dict(attrs)
+            if 'type' in attrs and attrs['type'] == 'text/javascript':
+                self.js = True
+
+    def handle_data(self, data):
+        if self.js and data.find('function serverShuffle'):
+            self.data = data
 
 
 class VaughnStream(HTTPStream):
@@ -40,10 +62,29 @@ class VaughnStream(HTTPStream):
 
         return fd
 
+class HTML_Parser(HTMLParser):
+    js = False
+    def handle_starttag(self, tag, attrs):
+        if tag == 'script':
+            attrs = dict(attrs)
+            if 'type' in attrs and attrs['type'] == 'text/javascript':
+                self.js = True
+
+    def handle_data(self, data):
+        if self.js and data.find('serverShuffle') > 0:
+            self.data = data
+
+def get_js(html):
+    parser = HTML_Parser()
+    parser.feed(html)
+    try:
+        js = parser.data
+    except:
+        return False
+    parsed = esprima.parseScript(js, { "tolerant": True })
+    return parsed.body
 
 class VaughnLive(Plugin):
-    domain_map = {"vaughnlive": "live", "breakers": "btv", "instagib": "igb", "vapers": "vtv", "pearltime": "pt"}
-    stream_url = "https://mp4.vaughnsoft.net/live"
 
     @classmethod
     def can_handle_url(cls, url):
@@ -51,24 +92,38 @@ class VaughnLive(Plugin):
 
     def _get_streams(self):
         self.session.http.headers = {
-            "Origin": "https://vaughnlive.tv",
             "Referer": self.url,
             "User-Agent": useragents.FIREFOX
         }
-        m = _url_re.match(self.url)
-        if m:
-            stream_name = "{0}_{1}".format(self.domain_map[(m.group("domain").lower())],
-                                           m.group("channel"))
-            self.logger.info("Stream powered by VaughnSoft - remember to support them.")
-            stream = VaughnStream(self.session,
-                                  self.stream_url,
-                                  params=dict(app="live",
-                                              stream=stream_name,
-                                              port=2935))
-            stream_url = stream.to_url()
-            res = self.session.http.head(stream_url, raise_for_status=False)
-            print(res.status_code)
-            yield "live", stream
+        html = self.session.http.get(self.url).text
+        body = get_js(html)
+        if body:
+            mp4ServerNode = None
+            mp4StreamName = None
+            mp4StreamUrl = None
+            for node in body:
+                if node.declarations:
+                    if not mp4ServerNode and \
+                        node.declarations[0].id.name ==  "mp4Servers":
+                        mp4Servers = node.declarations[0].init.elements
+                        shuffle(mp4Servers)
+                        mp4ServerNode = mp4Servers[0].value
+                
+                    if not mp4StreamName and \
+                        node.declarations[0].id.name ==  "mp4StreamName":
+                        mp4StreamName = node.declarations[0].init.value
 
+                    if not mp4StreamUrl and \
+                        node.declarations[0].id.name ==  "mp4StreamUrl":
+                        mp4StreamUrl = node.declarations[0].init.value
+
+                if mp4ServerNode and mp4StreamName and mp4StreamUrl:
+                    break
+
+            stream_url = mp4StreamUrl.format(
+                mp4Server=mp4ServerNode, streamName=mp4StreamName)
+            log.debug("Stream URL: {0}".format(stream_url))
+            stream = VaughnStream(self.session, stream_url)
+            yield "live", stream
 
 __plugin__ = VaughnLive
