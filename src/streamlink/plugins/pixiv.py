@@ -53,8 +53,7 @@ class Pixiv(Plugin):
     )
 
     api_lives = "https://sketch.pixiv.net/api/lives.json"
-    login_url_get = "https://accounts.pixiv.net/login"
-    login_url_post = "https://accounts.pixiv.net/api/login"
+    login_url_post = "https://oauth.secure.pixiv.net/auth/token"
 
     arguments = PluginArguments(
         PluginArgument(
@@ -90,8 +89,13 @@ class Pixiv(Plugin):
 
     def __init__(self, url):
         super(Pixiv, self).__init__(url)
-        self._authed = (self.session.http.cookies.get("PHPSESSID")
-                        and self.session.http.cookies.get("device_token"))
+        self.access_token = self.cache.get("access_token")
+        self.refresh_token = self.cache.get("refresh_token")
+        self.default_post_data = {
+            "client_id": "MOBrBDS8blbauoSck0ZfDbtuzpyT",
+            "client_secret": "lsACyCD94FhDUtGTXi3QzcFE2uU1hqtDaKeqrdwj",
+            "get_secure_url": 1,
+        }
         self.session.http.headers.update({
             "User-Agent": useragents.FIREFOX,
             "Referer": self.url
@@ -102,26 +106,38 @@ class Pixiv(Plugin):
         return cls._url_re.match(url) is not None
 
     def _login(self, username, password):
-        res = self.session.http.get(self.login_url_get)
-        m = self._post_key_re.search(res.text)
-        if not m:
-            raise PluginError("Missing post_key, no login posible.")
+        res = None
+        need_relogin = True
+        
+        if self.refresh_token is not None:
+            log.debug("Logging in using refresh token.")
+            
+            data = self.default_post_data
+            data["grant_type"] = "refresh_token"
+            data["refresh_token"] = self.refresh_token
+            res = self.session.http.post(self.login_url_post, data=data)
 
-        post_key = m.group("data")
-        data = {
-            "lang": "en",
-            "source": "sketch",
-            "post_key": post_key,
-            "pixiv_id": username,
-            "password": password,
-        }
+            if res.status_code == 200:
+                need_relogin = False
+            else:
+                log.debug("OAuth refresh token invalid, re-login required.")
 
-        res = self.session.http.post(self.login_url_post, data=data)
-        res = self.session.http.json(res)
-        log.trace("{0!r}".format(res))
-        if res["body"].get("success"):
-            self.save_cookies()
-            log.info("Successfully logged in")
+        if need_relogin:
+            data = self.default_post_data
+            data["grant_type"] = "password"
+            data["username"] = username
+            data["password"] = password
+            res = self.session.http.post(self.login_url_post, data=data)
+
+        log.debug("{0}: {1}".format(res.status_code, res.text))
+
+        if res.status_code == 200:
+            info = self.session.http.json(res)
+            self.refresh_token = info["response"]["refresh_token"]
+            self.access_token = info["response"]["access_token"]
+            self.cache.set("refresh_token", self.refresh_token)
+            self.cache.set("access_token", self.access_token)
+            log.info("Successfully logged in.")
         else:
             log.error("Failed to log in.")
 
@@ -131,7 +147,9 @@ class Pixiv(Plugin):
             yield s
 
     def get_streamer_data(self):
-        res = self.session.http.get(self.api_lives)
+        headers = self.session.http.headers
+        headers["Authorization"] = "Bearer {0}".format(self.access_token)
+        res = self.session.http.get(self.api_lives, headers=headers)
         data = self.session.http.json(res, schema=self._data_lives_schema)
         log.debug("Found {0} streams".format(len(data)))
 
@@ -147,13 +165,13 @@ class Pixiv(Plugin):
         login_password = self.get_option("password")
 
         if self.options.get("purge_credentials"):
-            self.clear_cookies()
-            self._authed = False
+            self.cache.set("access_token", None, expires=0)
+            self.cache.set("refresh_token", None, expires=0)
+            self.access_token = None
+            self.refresh_token = None
             log.info("All credentials were successfully removed.")
 
-        if self._authed:
-            log.debug("Attempting to authenticate using cached cookies")
-        elif not self._authed and login_username and login_password:
+        if login_username and login_password:
             self._login(login_username, login_password)
 
         streamer_data = self.get_streamer_data()
