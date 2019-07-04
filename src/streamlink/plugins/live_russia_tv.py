@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 class LiveRussia(Plugin):
     url_re = re.compile(r"https?://(?:www\.|live\.)?russia.tv")
     _data_re = re.compile(r"""window\.pl\.data\.([\w_]+)\s*=\s*['"]?(.*?)['"]?;""")
+    _live_re = re.compile(r"https?://live\.russia\.tv/channel/([0-9])+")
 
     @classmethod
     def can_handle_url(cls, url):
@@ -45,37 +46,44 @@ class LiveRussia(Plugin):
     def _get_streams(self):
         self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         iframe_url = self._get_iframe_url(self.url)
+        live = self._live_re.match(self.url)
 
         if iframe_url:
             log.debug("Found iframe URL={0}".format(iframe_url))
             info_url = self._get_stream_info_url(iframe_url)
-
-            if info_url:
-                log.debug("Getting info from URL: {0}".format(info_url))
-                res = self.session.http.get(info_url, headers={"Referer": iframe_url})
-                data = self.session.http.json(res)
-
-                if data['status'] == 200:
-                    for media in data['data']['playlist']['medialist']:
-                        if media['errors']:
-                            log.error(media['errors'].replace('\n', '').replace('\r', ''))
-
-                        for media_type in media.get('sources', []):
-
-                            if media_type == "m3u8":
-                                hls_url = media['sources'][media_type]['auto']
-                                for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                                    yield s
-
-                            if media_type == "http":
-                                for pix, url in media['sources'][media_type].items():
-                                    yield "{0}p".format(pix), HTTPStream(self.session, url)
-                else:
-                    log.error("An error occurred: {0}".format(data['errors'].replace('\n', '').replace('\r', '')))
-            else:
-                log.error("Unable to get stream info URL")
+        elif live:
+            channel = live.group(1)
+            id_url = "https://live.russia.tv/api/now/channel/" + channel
+            res = self.session.http.get(id_url)
+            data = self.session.http.json(res)
+            live_id = data["live_id"]
+            info_url = "https://player.vgtrk.com/iframe/datalive/id/{0}/sid/rutv".format(live_id)
         else:
-            log.error("Could not find video iframe")
+            log.error("Could not find neither iframe nor channel number.")
+        if info_url:
+            log.debug("Getting info from URL: {0}".format(info_url))
+            res = self.session.http.get(info_url, headers={"Referer": iframe_url})
+            data = self.session.http.json(res)
+
+            if data['status'] == 200:
+                for media in data['data']['playlist']['medialist']:
+                    if media['errors']:
+                        log.error(media['errors'].replace('\n', '').replace('\r', ''))
+
+                    for media_type in media.get('sources', []):
+
+                        if media_type == "m3u8":
+                            hls_url = media['sources'][media_type]['auto']
+                            for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
+                                yield s
+
+                        if media_type == "http":
+                            for pix, url in media['sources'][media_type].items():
+                                yield "{0}p".format(pix), HTTPStream(self.session, url)
+            else:
+                log.error("An error occurred: {0}".format(data['errors'].replace('\n', '').replace('\r', '')))
+        else:
+            log.error("Unable to get stream info URL")
 
 
 __plugin__ = LiveRussia
