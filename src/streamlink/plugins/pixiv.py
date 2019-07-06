@@ -74,6 +74,25 @@ class Pixiv(Plugin):
         """
         ),
         PluginArgument(
+            "sessionid",
+            requires=["devicetoken"],
+            sensitive=True,
+            metavar="SESSIONID",
+            help="""
+        The pixiv.net sessionid thats used in pixivs PHPSESSID cookie.
+        can be used instead of the username/password login process.
+        """
+        ),
+        PluginArgument(
+            "devicetoken",
+            sensitive=True,
+            metavar="DEVICETOKEN",
+            help="""
+        The pixiv.net device token thats used in  pixivs device_token cookie.
+        can be used instead of the username/password login process.
+        """
+        ),
+        PluginArgument(
             "purge-credentials",
             action="store_true",
             help="""
@@ -125,6 +144,17 @@ class Pixiv(Plugin):
         else:
             log.error("Failed to log in.")
 
+
+    def _login_using_session_id_and_device_token(self, session_id, device_token):
+        res = self.session.http.get(self.login_url_get)
+
+        self.session.http.cookies.set('PHPSESSID', session_id, domain='.pixiv.net', path='/')
+        self.session.http.cookies.set('device_token', device_token, domain='.pixiv.net', path='/')
+
+        self.save_cookies()
+        log.info("Successfully set sessionId and deviceToken")
+
+
     def hls_stream(self, hls_url):
         log.debug("URL={0}".format(hls_url))
         for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
@@ -146,6 +176,9 @@ class Pixiv(Plugin):
         login_username = self.get_option("username")
         login_password = self.get_option("password")
 
+        login_session_id = self.get_option("sessionid")
+        login_device_token = self.get_option("devicetoken")
+
         if self.options.get("purge_credentials"):
             self.clear_cookies()
             self._authed = False
@@ -155,6 +188,8 @@ class Pixiv(Plugin):
             log.debug("Attempting to authenticate using cached cookies")
         elif not self._authed and login_username and login_password:
             self._login(login_username, login_password)
+        elif not self._authed and login_session_id and login_device_token:
+            self._login_using_session_id_and_device_token(login_session_id, login_device_token)
 
         streamer_data = self.get_streamer_data()
         performers = streamer_data.get("performers")
