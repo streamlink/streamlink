@@ -11,55 +11,55 @@ log = logging.getLogger(__name__)
 
 
 class LiveRussia(Plugin):
-    url_re = re.compile(r"https?://(?:www\.|live\.)?russia.tv")
+    url_re = re.compile(r"https?://(?:live\.)?russia\.tv/(channel/([0-9]+))?")
     _data_re = re.compile(r"""window\.pl\.data\.([\w_]+)\s*=\s*['"]?(.*?)['"]?;""")
-    _live_re = re.compile(r"https?://live\.russia\.tv/channel/([0-9])+")
 
     @classmethod
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
     def _get_iframe_url(self, url):
-        res = self.session.http.get(url)
-        for iframe in itertags(res.text, 'iframe'):
-            src = iframe.attributes.get("src")
-            if src:
-                return src
+        live = self.url_re.match(self.url)
+        channel = live.group(2)
+        if channel: 
+            log.debug("channel={0}".format(channel))
+            return "https://live.russia.tv/api/now/channel/{0}".format(channel)
+        else:
+            res = self.session.http.get(url)
+            for iframe in itertags(res.text, 'iframe'):
+                src = iframe.attributes.get("src")
+                if src:
+                    return src
 
     def _get_stream_info_url(self, url):
-        data = {}
         res = self.session.http.get(url)
+        data = {}
         for m in self._data_re.finditer(res.text):
-            data[m.group(1)] = m.group(2)
-
-        log.debug("Got pl_data={0}".format(data))
+            data[m.group(1).encode()] = m.group(2).encode()
 
         if data:
+            log.debug("Got pl_data={0}".format(data))
             if data["isVod"] == '0':
                 return "https:{domain}/iframe/datalive/id/{id}/sid/{sid}".format(**data)
             else:
                 return "https:{domain}/iframe/datavideo/id/{id}/sid/{sid}".format(**data)
         else:
             args = dict(parse_qsl(urlparse(url).query))
+            if not args:
+                data = self.session.http.json(res)
+                log.debug("Got pl_data={0}".format(data))
+                args["id"] = data["live_id"]
+                args["sid"] = "rutv"
             return "https://player.vgtrk.com/iframe/datalive/id/{id}/sid/{sid}".format(**args)
 
     def _get_streams(self):
         self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         iframe_url = self._get_iframe_url(self.url)
-        live = self._live_re.match(self.url)
 
         if iframe_url:
             log.debug("Found iframe URL={0}".format(iframe_url))
             info_url = self._get_stream_info_url(iframe_url)
-        elif live:
-            channel = live.group(1)
-            id_url = "https://live.russia.tv/api/now/channel/" + channel
-            res = self.session.http.get(id_url)
-            data = self.session.http.json(res)
-            live_id = data["live_id"]
-            info_url = "https://player.vgtrk.com/iframe/datalive/id/{0}/sid/rutv".format(live_id)
-        else:
-            log.error("Could not find neither iframe nor channel number.")
+
         if info_url:
             log.debug("Getting info from URL: {0}".format(info_url))
             res = self.session.http.get(info_url, headers={"Referer": iframe_url})
@@ -74,16 +74,17 @@ class LiveRussia(Plugin):
 
                         if media_type == "m3u8":
                             hls_url = media['sources'][media_type]['auto']
+                            log.debug("hls_url={0}".format(hls_url))
                             for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
                                 yield s
 
                         if media_type == "http":
-                            for pix, url in media['sources'][media_type].items():
-                                yield "{0}p".format(pix), HTTPStream(self.session, url)
+                            for pix, http_url in media['sources'][media_type].items():
+                                log.debug("http_url={0}".format(http_url))
+                                yield "{0}p".format(pix), HTTPStream(self.session, http_url)
             else:
                 log.error("An error occurred: {0}".format(data['errors'].replace('\n', '').replace('\r', '')))
         else:
             log.error("Unable to get stream info URL")
-
 
 __plugin__ = LiveRussia
