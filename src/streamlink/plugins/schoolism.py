@@ -17,8 +17,9 @@ class Schoolism(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?schoolism\.com/(viewAssignment|watchLesson).php")
     login_url = "https://www.schoolism.com/index.php"
     key_time_url = "https://www.schoolism.com/video-html/key-time.php"
-    playlist_re = re.compile(r"var allVideos\s*=\s*(\[\{.*\}]);", re.DOTALL)
+    playlist_re = re.compile(r"var allVideos\s*=\s*(\[.*\]);", re.DOTALL)
     js_to_json = partial(re.compile(r'(?!<")(\w+):(?!/)').sub, r'"\1":')
+    fix_brackets = partial(re.compile(r',\s*\}').sub, r'}')
     playlist_schema = validate.Schema(
         validate.transform(playlist_re.search),
         validate.any(
@@ -26,7 +27,7 @@ class Schoolism(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(js_to_json),
-                validate.transform(lambda x: x.replace(",}", "}")),  # remove invalid ,
+                validate.transform(fix_brackets),  # remove invalid ,
                 validate.transform(parse_json),
                 [{
                     "sources": validate.all([{
