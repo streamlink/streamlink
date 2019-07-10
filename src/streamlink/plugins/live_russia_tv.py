@@ -52,7 +52,7 @@ class LiveRussia(Plugin):
             stream_info_url = template.format(**args)
         else:
             for m in self._data_re.finditer(res.text):
-                data[m.group(1).encode()] = m.group(2).encode()
+                data[m.group(1)] = m.group(2)
 
             if data["isVod"] == '0':
                 tamplate = "https:{domain}/iframe/datalive/id/{id}/sid/{sid}"
