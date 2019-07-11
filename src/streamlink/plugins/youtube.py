@@ -273,7 +273,7 @@ class YouTube(Plugin):
         res = self.session.http.get(url)
         datam = _ytdata_re.search(res.text)
         if datam:
-            data = parse_json(json.loads(datam.group(1)))
+            data = parse_json(parse_json(datam.group(1)))
             # find the videoRenderer object, where there is a LVE NOW badge
             for vid_ep in search_dict(data, 'currentVideoEndpoint'):
                 video_id = vid_ep.get("watchEndpoint", {}).get("videoId")
