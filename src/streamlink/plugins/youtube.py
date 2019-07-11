@@ -97,7 +97,8 @@ _config_schema = validate.Schema(
     }
 )
 
-_ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*({.*?});', re.DOTALL)
+# _ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*({.*?});', re.DOTALL)
+_ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*JSON\.parse\("({.*?})"\);', re.DOTALL)
 _url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
     (?:
         (?:
@@ -272,7 +273,7 @@ class YouTube(Plugin):
         res = self.session.http.get(url)
         datam = _ytdata_re.search(res.text)
         if datam:
-            data = parse_json(datam.group(1))
+            data = parse_json(datam.group(1).replace("\\", ""))
             # find the videoRenderer object, where there is a LVE NOW badge
             for vid_ep in search_dict(data, 'currentVideoEndpoint'):
                 video_id = vid_ep.get("watchEndpoint", {}).get("videoId")
