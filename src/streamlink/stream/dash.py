@@ -1,3 +1,4 @@
+import copy
 import itertools
 import logging
 import datetime
@@ -30,7 +31,8 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return
 
         try:
-            headers = {}
+            request_args = copy.deepcopy(self.reader.stream.args)
+            headers = request_args.pop("headers", {})
             now = datetime.datetime.now(tz=utc)
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
@@ -49,7 +51,8 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
                                          exception=StreamError,
-                                         headers=headers)
+                                         headers=headers,
+                                         **request_args)
         except StreamError as err:
             log.error("Failed to open segment {0}: {1}", segment.url, err)
             return self.fetch(segment, retries - 1)
@@ -109,7 +112,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
 
         self.reader.buffer.wait_free()
         log.debug("Reloading manifest ({0}:{1})".format(self.reader.representation_id, self.reader.mime_type))
-        res = self.session.http.get(self.mpd.url, exception=StreamError)
+        res = self.session.http.get(self.mpd.url, exception=StreamError, **self.stream.args)
 
         new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
                       base_url=self.mpd.base_url,
