@@ -270,13 +270,14 @@ def output_stream_passthrough(plugin, stream):
     title = create_title(plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
-                          filename=filename, call=True,
+                          filename=filename, call=False,
                           quiet=not args.verbose_player,
                           title=title)
 
     try:
         log.info("Starting player: {0}", args.player)
         output.open()
+        output.player.wait()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", args.player, err)
         return False
