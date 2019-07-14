@@ -38,8 +38,14 @@ from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREA
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
+use_win32exit = False
+
 if is_win32:
-    import win32api
+    try:
+        import win32api
+        use_win32exit = True
+    except ImportError:
+        use_win32exit = False
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -995,12 +1001,13 @@ def setup_logging(stream=sys.stdout, level="info"):
 
 
 def main():
+    global use_win32exit
     error_code = 0
     parser = build_parser()
 
     setup_args(parser, ignore_unknown=True)
 
-    if is_win32:
+    if use_win32exit:
         win32api.SetConsoleCtrlHandler(win32_exit, True)
 
     # Console output should be on stderr if we are outputting
