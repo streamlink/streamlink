@@ -2,6 +2,7 @@
 import codecs
 from os import environ, path
 from sys import argv, path as sys_path
+from sysconfig import get_platform
 
 from setuptools import setup, find_packages
 
@@ -23,10 +24,12 @@ deps = [
     'win-inet-pton;python_version<"3.0" and platform_system=="Windows"',
     # shutil.get_terminal_size and which were added in Python 3.3
     'backports.shutil_which;python_version<"3.3"',
-    'backports.shutil_get_terminal_size;python_version<"3.3"',
-    # support for win32api on Windows
-    'pypiwin32<=223;platform_system=="Windows"'
+    'backports.shutil_get_terminal_size;python_version<"3.3"'
 ]
+
+# support for win32api on Windows (win32 and win-amd64)
+if get_platform().startswith("win"):
+    deps.append('pypiwin32<=223;platform_system=="Windows"')
 
 # for encrypted streams
 if environ.get("STREAMLINK_USE_PYCRYPTO"):
