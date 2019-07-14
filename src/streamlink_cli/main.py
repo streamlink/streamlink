@@ -397,6 +397,13 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                     console.exit("Error when writing to output: {0}, exiting", err)
 
                 break
+            except ValueError as err:
+                try:
+                    output.player.wait(10) # Wait a moment before we check the player
+                    if not output.opened:
+                        sys.exit(130)
+                except TimeoutError:
+                    console.exit("Error when writing to output: {0}, exiting", err)
     except IOError as err:
         console.exit("Error when reading from stream: {0}, exiting", err)
     finally:
