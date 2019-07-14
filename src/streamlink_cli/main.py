@@ -62,10 +62,8 @@ def win32_exit(sig, func=None):
     error_code = 130
     if output:
         output.close()
-        console.msg("Interrupted! Exiting...")
     if stream_fd:
         try:
-            log.info("Closing currently open stream...")
             stream_fd.close()
         except KeyboardInterrupt:
             error_code = 130
