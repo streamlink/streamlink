@@ -49,7 +49,7 @@ class CommandLineTestCase(unittest.TestCase):
         if not passthrough:
             mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
         else:
-            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY)
+            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
 
 
 @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
