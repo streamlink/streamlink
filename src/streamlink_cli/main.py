@@ -38,6 +38,9 @@ from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREA
 from .output import FileOutput, PlayerOutput
 from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
 
+if is_win32:
+    import win32api
+
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
     ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)
@@ -48,6 +51,20 @@ QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 args = console = streamlink = plugin = stream_fd = output = None
 
 log = logging.getLogger("streamlink.cli")
+
+def win32_exit(sig, func=None):
+    error_code = 130
+    if output:
+        output.close()
+        console.msg("Interrupted! Exiting...")
+    if stream_fd:
+        try:
+            log.info("Closing currently open stream...")
+            stream_fd.close()
+        except KeyboardInterrupt:
+            error_code = 130
+
+    return error_code
 
 
 def check_file_output(filename, force):
@@ -981,6 +998,9 @@ def main():
     parser = build_parser()
 
     setup_args(parser, ignore_unknown=True)
+
+    if is_win32:
+        win32api.SetConsoleCtrlHandler(win32_exit, True)
 
     # Console output should be on stderr if we are outputting
     # a stream to stdout.
