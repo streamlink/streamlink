@@ -84,7 +84,6 @@ class FFMPEGMuxer(StreamIO):
 
         self.session = session
         self.process = None
-        log = logging.getLogger("streamlink.stream.mp4mux-ffmpeg")
         self.streams = streams
 
         self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
@@ -112,6 +111,7 @@ class FFMPEGMuxer(StreamIO):
 
         if copyts:
             self._cmd.extend(["-copyts"])
+            self._cmd.extend(["-start_at_zero"])
 
         for stream, data in metadata.items():
             for datum in data:
