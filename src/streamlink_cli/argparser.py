@@ -1070,7 +1070,8 @@ def build_parser():
         "--http-proxy",
         metavar="HTTP_PROXY",
         help="""
-        A HTTP proxy to use for all HTTP requests.
+        A HTTP proxy to use for all HTTP requests, by default this proxy
+        will be used for all HTTPS requests too.
 
         Example: "http://hostname:port/"
         """
