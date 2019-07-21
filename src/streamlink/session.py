@@ -257,6 +257,9 @@ class Streamlink(object):
 
         if key == "http-proxy":
             self.http.proxies["http"] = update_scheme("http://", value)
+            if "https" not in self.http.proxies:
+                self.http.proxies["https"] = update_scheme("http://", value)
+
         elif key == "https-proxy":
             self.http.proxies["https"] = update_scheme("https://", value)
         elif key == "http-cookies":
