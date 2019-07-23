@@ -17,7 +17,8 @@ class Gulli(Plugin):
 
     _video_schema = validate.Schema(
         validate.all(
-            validate.transform(lambda x: re.sub(r'"?file"?:\s*[\'"](.+?)[\'"]', r'"file": "\1"', x, flags=re.DOTALL)),
+            validate.transform(lambda x: re.sub(r'"?file"?:\s*[\'"](.+?)[\'"],?', r'"file": "\1"', x, flags=re.DOTALL)),
+            validate.transform(lambda x: re.sub(r'"?\w+?"?:\s*function\b.*?(?<={).*(?=})', "", x, flags=re.DOTALL)),
             validate.transform(parse_json),
             [
                 validate.Schema({
