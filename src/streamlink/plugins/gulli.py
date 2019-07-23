@@ -7,10 +7,10 @@ from streamlink.utils import parse_json
 
 
 class Gulli(Plugin):
-    LIVE_PLAYER_URL = 'http://replay.gulli.fr/jwplayer/embedstreamtv'
-    VOD_PLAYER_URL = 'http://replay.gulli.fr/jwplayer/embed/{0}'
+    LIVE_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embedstreamtv'
+    VOD_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embed/{0}'
 
-    _url_re = re.compile(r'http://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD[0-9]+))')
+    _url_re = re.compile(r'https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD[0-9]+))')
     _playlist_re = re.compile(r'sources: (\[.+?\])', re.DOTALL)
     _vod_video_index_re = re.compile(r'jwplayer\(idplayer\).playlistItem\((?P<video_index>[0-9]+)\)')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
