@@ -59,7 +59,7 @@ _url_re = re.compile(r"""
         (?P<video_id>\d+)
     )?
     (?:
-        /
+        /(?:clip/)?
         (?P<clip_name>[\w]+)
     )?
 """, re.VERBOSE)

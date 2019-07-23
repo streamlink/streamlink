@@ -166,6 +166,37 @@ class TestSession(unittest.TestCase):
         self.assertEqual(session.localization.language.alpha2, "en")
         self.assertEqual(session.localization.language_code, "en_US")
 
+    def test_https_proxy_default(self):
+        session = Streamlink()
+        session.set_option("http-proxy", "http://testproxy.com")
+
+        self.assertEqual("http://testproxy.com", session.http.proxies['http'])
+        self.assertEqual("http://testproxy.com", session.http.proxies['https'])
+
+    def test_https_proxy_set_first(self):
+        session = Streamlink()
+        session.set_option("https-proxy", "https://testhttpsproxy.com")
+        session.set_option("http-proxy", "http://testproxy.com")
+
+        self.assertEqual("http://testproxy.com", session.http.proxies['http'])
+        self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
+
+    def test_https_proxy_default_override(self):
+        session = Streamlink()
+        session.set_option("http-proxy", "http://testproxy.com")
+        session.set_option("https-proxy", "https://testhttpsproxy.com")
+
+        self.assertEqual("http://testproxy.com", session.http.proxies['http'])
+        self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
+
+    def test_https_proxy_set_only(self):
+        session = Streamlink()
+        session.set_option("https-proxy", "https://testhttpsproxy.com")
+
+        self.assertFalse("http" in session.http.proxies)
+        self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
+
+
 
 if __name__ == "__main__":
     unittest.main()

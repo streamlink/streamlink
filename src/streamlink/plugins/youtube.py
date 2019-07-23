@@ -82,6 +82,9 @@ _config_schema = validate.Schema(
             {
                 validate.optional("streamingData"): {
                     validate.optional("hlsManifestUrl"): validate.text,
+                },
+                validate.optional("videoDetails"): {
+                    validate.optional("isLive"): validate.transform(bool),
                 }
             }
         ),
@@ -339,7 +342,8 @@ class YouTube(Plugin):
             log.error("Could not get video info")
             return
 
-        if info.get("livestream") == '1' or info.get("live_playback") == '1':
+        if info.get("livestream") == '1' or info.get("live_playback") == '1' \
+                or info.get("player_response", {}).get("videoDetails", {}).get("isLive") == True:
             log.debug("This video is live.")
             is_live = True
 
