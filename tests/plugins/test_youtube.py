@@ -8,6 +8,7 @@ class TestPluginYouTube(unittest.TestCase):
         should_match = [
             "https://www.youtube.com/c/EXAMPLE/live",
             "https://www.youtube.com/c/EXAMPLE/live/",
+            "https://www.youtube.com/c/EXAMPLE",
             "https://www.youtube.com/channel/EXAMPLE",
             "https://www.youtube.com/v/aqz-KE-bpKQ",
             "https://www.youtube.com/embed/aqz-KE-bpKQ",
