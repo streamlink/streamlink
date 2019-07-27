@@ -7,17 +7,18 @@ from streamlink.utils import parse_json
 
 
 class Gulli(Plugin):
-    LIVE_PLAYER_URL = 'http://replay.gulli.fr/jwplayer/embedstreamtv'
-    VOD_PLAYER_URL = 'http://replay.gulli.fr/jwplayer/embed/{0}'
+    LIVE_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embedstreamtv'
+    VOD_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embed/{0}'
 
-    _url_re = re.compile(r'http://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD[0-9]+))')
+    _url_re = re.compile(r'https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD[0-9]+))')
     _playlist_re = re.compile(r'sources: (\[.+?\])', re.DOTALL)
     _vod_video_index_re = re.compile(r'jwplayer\(idplayer\).playlistItem\((?P<video_index>[0-9]+)\)')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
 
     _video_schema = validate.Schema(
         validate.all(
-            validate.transform(lambda x: re.sub(r'"?file"?:\s*[\'"](.+?)[\'"]', r'"file": "\1"', x, flags=re.DOTALL)),
+            validate.transform(lambda x: re.sub(r'"?file"?:\s*[\'"](.+?)[\'"],?', r'"file": "\1"', x, flags=re.DOTALL)),
+            validate.transform(lambda x: re.sub(r'"?\w+?"?:\s*function\b.*?(?<={).*(?=})', "", x, flags=re.DOTALL)),
             validate.transform(parse_json),
             [
                 validate.Schema({
