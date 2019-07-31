@@ -48,6 +48,13 @@ def hours_minutes_seconds(value):
     return s
 
 
+def seconds_to_hhmmss(seconds):
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
+    return "{0:02d}:{1:02d}:{2}".format(int(hours), int(minutes), "{0:02.1f}".format(seconds) if seconds % 1 else "{0:02d}".format(int(seconds)))
+
+
 __all__ = [
     "hours_minutes_seconds",
+    "seconds_to_hhmmss"
 ]
