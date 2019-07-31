@@ -1,5 +1,6 @@
 import os
 import inspect
+
 from streamlink.utils import load_module
 
 __all__ = ["load_support_plugin"]

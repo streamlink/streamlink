@@ -1,14 +1,13 @@
-import imp
 import logging
 import pkgutil
 import sys
 import traceback
+from collections import OrderedDict
 
 import requests
 
-from collections import OrderedDict
-
 from streamlink.logger import StreamlinkLogger, Logger
+from streamlink.plugin import Plugin
 from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
@@ -457,42 +456,19 @@ class Streamlink(object):
         """Attempt to load plugins from the path specified.
 
         :param path: full path to a directory where to look for plugins
-
         """
-        for loader, name, ispkg in pkgutil.iter_modules([path]):
-            file, pathname, desc = imp.find_module(name, [path])
-            # set the full plugin module name
-            module_name = "streamlink.plugin.{0}".format(name)
-
-            try:
-                self.load_plugin(module_name, file, pathname, desc)
-            except Exception:
-                sys.stderr.write("Failed to load plugin {0}:\n".format(name))
-                print_small_exception("load_plugin")
-
-                continue
-
-    def load_plugin(self, name, file, pathname, desc):
-        # Set the global http session for this plugin
         user_input_requester = self.get_option("user-input-requester")
-        api.http = self.http
-
-        module = imp.load_module(name, file, pathname, desc)
-
-        if hasattr(module, "__plugin__"):
-            module_name = getattr(module, "__name__")
-            plugin_name = module_name.split(".")[-1]  # get the plugin part of the module name
-
-            plugin = getattr(module, "__plugin__")
-            plugin.bind(self, plugin_name, user_input_requester)
-
-            if plugin.module in self.plugins:
-                log.debug("Plugin {0} is being overridden by {1}".format(plugin.module, pathname))
-
-            self.plugins[plugin.module] = plugin
-
-        if file:
-            file.close()
+        for (loader, name, _) in pkgutil.iter_modules([path], "streamlink.plugins."):
+            try:
+                mod = loader.find_module(name).load_module(name)
+            except ImportError:
+                log.exception("Failed to load plugin {0} from {1}\n".format(name, path))
+                continue
+            if hasattr(mod, "__plugin__") and issubclass(mod.__plugin__, Plugin):
+                mod.__plugin__.bind(self, name, user_input_requester)
+                if mod.__plugin__.module in self.plugins:
+                    log.debug("Plugin {0} is being overridden by {1}".format(mod.__plugin__.module, mod.__file__))
+                self.plugins[mod.__plugin__.module] = mod.__plugin__
 
     @property
     def version(self):

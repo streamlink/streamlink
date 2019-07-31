@@ -1,5 +1,6 @@
 import functools
 import json
+import pkgutil
 import re
 import xml.etree.ElementTree as ET
 import zlib
@@ -172,31 +173,10 @@ def search_dict(data, key):
 
 
 def load_module(name, path=None):
-    if is_py3:
-        import importlib.machinery
-        import importlib.util
-        import sys
-
-        loader_details = [(importlib.machinery.SourceFileLoader, importlib.machinery.SOURCE_SUFFIXES)]
-        finder = importlib.machinery.FileFinder(path, *loader_details)
-        spec = finder.find_spec(name)
-        if not spec or not spec.loader:
-            raise ImportError("no module named {0}".format(name))
-        if sys.version_info[1] > 4:
-            mod = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(mod)
-            return mod
-        else:
-            return spec.loader.load_module(name)
-
-    else:
-        import imp
-        fd, filename, desc = imp.find_module(name, path and [path])
-        try:
-            return imp.load_module(name, fd, filename, desc)
-        finally:
-            if fd:
-                fd.close()
+    for loader, pname, ispkg in pkgutil.iter_modules([path]):
+        if name == pname:
+            return loader.find_module(name).load_module(name)
+    raise ImportError
 
 
 def escape_librtmp(value):  # pragma: no cover
