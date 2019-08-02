@@ -7,7 +7,6 @@ import unittest
 
 import streamlink.plugins
 from streamlink import Streamlink
-from streamlink.utils import load_module
 
 
 class PluginTestMeta(type):
@@ -15,9 +14,12 @@ class PluginTestMeta(type):
         plugin_path = os.path.dirname(streamlink.plugins.__file__)
         plugins = []
         for loader, pname, ispkg in pkgutil.iter_modules([plugin_path]):
-            module = load_module(pname, plugin_path)
+            try:
+                module = loader.find_module(name).load_module(name)
+            except:
+                continue
             if hasattr(module, "__plugin__"):
-                plugins.append((pname))
+                plugins.append(pname)
 
         session = Streamlink()
 
