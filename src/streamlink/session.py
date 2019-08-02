@@ -2,15 +2,7 @@ import logging
 import pkgutil
 import sys
 import traceback
-import types
 from collections import OrderedDict
-
-try:
-    from importlib.machinery import PathFinder
-    has_PathFinder = True
-except ImportError:
-    import imp
-    has_PathFinder = False
 
 import requests
 
@@ -460,42 +452,20 @@ class Streamlink(object):
         """Attempt to load plugins from the path specified.
 
         :param path: full path to a directory where to look for plugins
-
         """
         user_input_requester = self.get_option("user-input-requester")
-        for (_, name, _) in pkgutil.iter_modules([path]):
-            plugin = self.load_plugin(path, name, user_input_requester)
-            if plugin:
-                if plugin.module in self.plugins:
-                    log.debug("Plugin {0} is being overridden".format(plugin.module))
-                self.plugins[plugin.module] = plugin
-
-    if has_PathFinder:
-        def _load_module(self, path, name):
-            spec = PathFinder.find_spec(name, [path])
-            mod = types.ModuleType(spec.name)
-            mod.__loader__ = spec.loader
-            mod.__file__ = spec.origin
-            mod.__package__ = spec.parent
-            spec.loader.exec_module(mod)
-            return mod
-    else:
-        def _load_module(self, path, name):
-            modf, pathname, desc = imp.find_module(name, [path])
+        for (loader, name, _) in pkgutil.iter_modules([path]):
             try:
-                return imp.load_module(name, modf, pathname, desc)
-            finally:
-                modf.close()
-
-    def load_plugin(self, path, name, user_input_requester, package="streamlink.plugins"):
-        try:
-            mod = self._load_module(path, name)
+                mod = loader.find_module(name).load_module(name)
+            except:
+                sys.stderr.write("Failed to load plugin {0}:\n".format(name))
+                print_small_exception("load_plugin")
+                continue
             if hasattr(mod, "__plugin__") and issubclass(mod.__plugin__, Plugin):
                 mod.__plugin__.bind(self, name, user_input_requester)
-                return mod.__plugin__
-        except:
-            sys.stderr.write("Failed to load plugin {0}:\n".format(name))
-            print_small_exception("load_plugin")
+                if mod.__plugin__.module in self.plugins:
+                    log.debug("Plugin {0} is being overridden".format(mod.__plugin__.module))
+                self.plugins[mod.__plugin__.module] = mod.__plugin__
 
     @property
     def version(self):
