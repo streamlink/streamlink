@@ -106,6 +106,7 @@ itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-rest
 kanal7                  - kanal7.com         Yes   No
                         - tvt.tv.tr
 kingkong                kingkong.com.tw      Yes   --
+linelive                live.line.me         Yes   --
 live_russia_tv          live.russia.tv       Yes   --
 liveedu                 - liveedu.tv         Yes   --    Some streams require a login.
                         - livecoding.tv
