@@ -104,7 +104,7 @@ def create_output(plugin):
 
         if args.player_fifo:
             pipename = "streamlinkpipe-{0}".format(os.getpid())
-            log.info("Creating pipe {0}", pipename)
+            log.info("Creating pipe {0}".format(pipename))
 
             try:
                 namedpipe = NamedPipe(pipename)
@@ -118,7 +118,7 @@ def create_output(plugin):
         if args.record:
             record = check_file_output(args.record, args.force)
 
-        log.info("Starting player: {0}", args.player)
+        log.info("Starting player: {0}".format(args.player))
 
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
@@ -192,7 +192,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                                        title=title)
 
         try:
-            log.info("Starting player: {0}", args.player)
+            log.info("Starting player: {0}".format(args.player))
             if player:
                 player.open()
         except OSError as err:
@@ -226,15 +226,15 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                     sleep(10)
                     continue
             except PluginError as err:
-                log.error(u"Unable to fetch new streams: {0}", err)
+                log.error(u"Unable to fetch new streams: {0}".format(err))
                 continue
 
             try:
-                log.info("Opening stream: {0} ({1})", stream_name,
-                         type(stream).shortname())
+                log.info("Opening stream: {0} ({1})".format(stream_name,
+                                                            type(stream).shortname()))
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
-                log.error("{0}", err)
+                log.error("{0}".format(err))
 
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
@@ -258,7 +258,7 @@ def output_stream_passthrough(plugin, stream):
                           title=title)
 
     try:
-        log.info("Starting player: {0}", args.player)
+        log.info("Starting player: {0}".format(args.player))
         output.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", args.player, err)
@@ -309,7 +309,8 @@ def output_stream(plugin, stream):
             success_open = True
             break
         except StreamError as err:
-            log.error("Try {0}/{1}: Could not open stream {2} ({3})", i + 1, args.retry_open, stream, err)
+            log.error("Try {0}/{1}: Could not open stream {2} ({3})".format(
+                i + 1, args.retry_open, stream, err))
 
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
@@ -432,8 +433,8 @@ def handle_stream(plugin, streams, stream_name):
             stream_type = type(stream).shortname()
 
             if stream_type in args.player_passthrough and not file_output:
-                log.info("Opening stream: {0} ({1})", stream_name,
-                         stream_type)
+                log.info("Opening stream: {0} ({1})".format(stream_name,
+                                                            stream_type))
                 success = output_stream_passthrough(plugin, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
@@ -441,8 +442,8 @@ def handle_stream(plugin, streams, stream_name):
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
-                log.info("Opening stream: {0} ({1})", stream_name,
-                         stream_type)
+                log.info("Opening stream: {0} ({1})".format(stream_name,
+                                                            stream_type))
 
                 success = output_stream(plugin, stream)
 
@@ -464,12 +465,12 @@ def fetch_streams_with_retry(plugin, interval, count):
     try:
         streams = fetch_streams(plugin)
     except PluginError as err:
-        log.error(u"{0}", err)
+        log.error(u"{0}".format(err))
         streams = None
 
     if not streams:
         log.info("Waiting for streams, retrying every {0} "
-                 "second(s)", interval)
+                 "second(s)".format(interval))
     attempts = 0
 
     while not streams:
@@ -480,7 +481,7 @@ def fetch_streams_with_retry(plugin, interval, count):
         except FatalPluginError as err:
             raise
         except PluginError as err:
-            log.error(u"{0}", err)
+            log.error(u"{0}".format(err))
 
         if count > 0:
             attempts += 1
@@ -548,8 +549,8 @@ def handle_url():
     try:
         plugin = streamlink.resolve_url(args.url)
         setup_plugin_options(streamlink, plugin)
-        log.info("Found matching plugin {0} for URL {1}",
-                 plugin.module, args.url)
+        log.info("Found matching plugin {0} for URL {1}".format(
+                 plugin.module, args.url))
 
         plugin_args = []
         for parg in plugin.arguments:
@@ -590,7 +591,7 @@ def handle_url():
         validstreams = format_valid_streams(plugin, streams)
         for stream_name in args.stream:
             if stream_name in streams:
-                log.info("Available streams: {0}", validstreams)
+                log.info("Available streams: {0}".format(validstreams))
                 handle_stream(plugin, streams, stream_name)
                 return
 
@@ -657,7 +658,7 @@ def load_plugins(dirs):
             streamlink.load_plugins(directory)
         else:
             log.warning("Plugin path {0} does not exist or is not "
-                        "a directory!", directory)
+                        "a directory!".format(directory))
 
 
 def setup_args(parser, config_files=[], ignore_unknown=False):
@@ -901,7 +902,7 @@ def setup_plugin_options(session, plugin):
                     for rparg in plugin.arguments.requires(parg.name):
                         required[rparg.name] = rparg
                 except RuntimeError:
-                    console.logger.error("{0} plugin has a configuration error and the arguments "
+                    log.error("{0} plugin has a configuration error and the arguments "
                                          "cannot be parsed".format(pname))
                     break
     if required:
@@ -962,8 +963,8 @@ def check_version(force=False):
                  "available!".format(latest_version))
         cache.set("version_info_printed", True, (60 * 60 * 6))
     elif force:
-        log.info("Your Streamlink version ({0}) is up to date!",
-                 installed_version)
+        log.info("Your Streamlink version ({0}) is up to date!".format(
+                 installed_version))
 
     if force:
         sys.exit()
