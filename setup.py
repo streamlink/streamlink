@@ -30,7 +30,7 @@ deps = [
 # support for win32api on Windows (win32 and win-amd64)
 # pypiwin32 is not available for python 3.4 and below
 if get_platform().startswith("win"):
-    deps.append('pypiwin32<=219;platform_system=="Windows" and python_version>"3.4"')
+    deps.append('pypiwin32>=223;platform_system=="Windows" and python_version>"3.4"')
 
 # for encrypted streams
 if environ.get("STREAMLINK_USE_PYCRYPTO"):
