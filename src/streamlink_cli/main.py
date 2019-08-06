@@ -1006,7 +1006,6 @@ def setup_logging(stream=sys.stdout, level="info"):
 
 
 def main():
-    global use_win32exit
     error_code = 0
     parser = build_parser()
 
