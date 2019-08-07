@@ -1,7 +1,10 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.stream import HLSStream
+
+log = logging.getLogger(__name__)
 
 
 class ClubbingTV(Plugin):
@@ -31,7 +34,7 @@ class ClubbingTV(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return ClubbingTV._url_re.match(url)
+        return cls._url_re.match(url) is not None
 
     def login(self):
         username = self.get_option("username")
@@ -42,12 +45,12 @@ class ClubbingTV(Plugin):
         )
 
         if "Invalid Email/User Name" in res.text:
-            self.logger.error(
+            log.error(
                 "Failed to login to Clubbing TV, incorrect email/password combination"
             )
             return False
 
-        self.logger.info("Successfully logged in")
+        log.info("Successfully logged in")
         return True
 
     def _get_live_streams(self, content):
@@ -67,7 +70,7 @@ class ClubbingTV(Plugin):
             return
 
         stream_url = match.group("stream_url")
-        self.logger.info(
+        log.info(
             "Fetching external stream from URL {0}".format(stream_url)
         )
         return self.session.streams(stream_url)
@@ -81,10 +84,10 @@ class ClubbingTV(Plugin):
         res = self.session.http.get(self.url)
 
         if "clubbingtv.com/live" in self.url:
-            self.logger.debug("Live stream detected")
+            log.debug("Live stream detected")
             return self._get_live_streams(res.text)
 
-        self.logger.debug("VOD stream detected")
+        log.debug("VOD stream detected")
         return self._get_vod_streams(res.text)
 
 
