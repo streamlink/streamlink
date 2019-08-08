@@ -52,6 +52,7 @@ cinergroup              - showtv.com.tr      Yes   No
                         - showmax.com.tr
                         - showturk.com.tr
                         - bloomberght.com
+clubbingtv              clubbingtv.com       Yes   Yes   Requires a login.
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
 cubetv                  cube.tv              Yes   --
