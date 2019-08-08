@@ -109,15 +109,11 @@ _url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
         )
         |
         (?:
-            /(?:
-                (?:user|c(?:hannel)?)/
-                |
-                embed/live_stream\?channel=
-            )(?P<user>[^/?&]+)
+            /(?:user|c(?:hannel)?)/[^/?&]+(/live)?
         )
         |
         (?:
-            /(?:c/)?(?P<liveChannel>[^/?]+)/live/?$
+            /embed/live_stream\?channel=[^/?&]+
         )
     )
 """)
