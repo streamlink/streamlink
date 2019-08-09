@@ -46,10 +46,7 @@ class CommandLineTestCase(unittest.TestCase):
 
         self.assertEqual(exit_code, actual_exit_code)
         mock_setup_streamlink.assert_called_with()
-        if not passthrough:
-            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
-        else:
-            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
+        mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
 
 
 @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
