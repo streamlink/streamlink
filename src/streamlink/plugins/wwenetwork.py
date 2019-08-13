@@ -21,6 +21,7 @@ class WWENetwork(Plugin):
     stream_url = "https://dce-frontoffice.imggaming.com/api/v2/stream/{id}"
     live_url = "https://dce-frontoffice.imggaming.com/api/v2/event/live"
     login_url = "https://dce-frontoffice.imggaming.com/api/v2/login"
+    page_config_url = "https://cdn.watch.wwe.com/api/page"
     API_KEY = "cca51ea0-7837-40df-a055-75eb6347b2e7"
 
     customer_id = 16
@@ -55,9 +56,7 @@ class WWENetwork(Plugin):
         return cls.url_re.match(url) is not None
 
     def get_title(self):
-        if self.page_config:
-            for page in self.page_config["cache"]["page"].values():
-                return page['item']['title']
+        return self.item_config['title']
 
     def request(self, method, url, **kwargs):
         headers = kwargs.pop("headers", {})
@@ -91,11 +90,22 @@ class WWENetwork(Plugin):
 
     @property
     @memoize
-    def page_config(self):
+    def item_config(self):
         log.debug("Loading page config")
-        res = self.session.http.get(self.url)
-        m = self.site_config_re.search(res.text)
-        return m and json.loads(m.group(1))
+        p = urlparse(self.url)
+        res = self.session.http.get(self.page_config_url,
+                                    params=dict(device="web_browser",
+                                                ff="idp,ldp",
+                                                item_detail_expand="all",
+                                                lang="en-US",
+                                                list_page_size="1",
+                                                max_list_prefetch="1",
+                                                path=p.path,
+                                                segments="es",
+                                                sub="Registered",
+                                                text_entry_format="html"))
+        data = self.session.http.json(res)
+        return data["item"]
 
     def _get_media_info(self, content_id):
         """
@@ -109,16 +119,14 @@ class WWENetwork(Plugin):
     def _get_video_id(self):
         #  check the page to find the contentId
         log.debug("Searching for content ID")
-        if self.page_config:
-            for page in self.page_config["cache"]["page"].values():
-                try:
-                    if page['item']['type'] == "channel":
-                        return self._get_live_id()
-                    else:
-                        return "vod/{id}".format(id=page['item']['customFields']['DiceVideoId'])
-                except KeyError:
-                    log.error("Could not find video ID")
-                    return
+        try:
+            if self.item_config['type'] == "channel":
+                return self._get_live_id()
+            else:
+                return "vod/{id}".format(id=self.item_config['customFields']['DiceVideoId'])
+        except KeyError:
+            log.error("Could not find video ID")
+            return
 
     def _get_live_id(self):
         log.debug("Loading live event")
