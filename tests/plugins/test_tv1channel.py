@@ -8,8 +8,8 @@ class TestPluginTV1Channel(unittest.TestCase):
         # should match
         self.assertTrue(TV1Channel.can_handle_url("http://tv1channel.org/"))
         self.assertTrue(TV1Channel.can_handle_url("http://tv1channel.org/index.php/livetv"))
-        self.assertTrue(TV1Channel.can_handle_url("http://www.tv1channel.org/play/video.php?id=325"))
-        self.assertTrue(TV1Channel.can_handle_url("http://www.tv1channel.org/play/video.php?id=340"))
 
         # shouldn't match
         self.assertFalse(TV1Channel.can_handle_url("https://local.local"))
+        self.assertFalse(TV1Channel.can_handle_url("http://www.tv1channel.org/play/video.php?id=325"))
+        self.assertFalse(TV1Channel.can_handle_url("http://www.tv1channel.org/play/video.php?id=340"))

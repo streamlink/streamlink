@@ -1,31 +1,34 @@
-import sys
-if sys.version_info[0] > 2:
-    from html.parser import HTMLParser
-else:
-    from HTMLParser import HTMLParser
+import logging
 import re
+
 from base64 import b64decode
-from streamlink import PluginError
+from streamlink.compat import urlparse
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse
 from streamlink.utils import parse_json
-import esprima
+
+try:
+    from html.parser import HTMLParser
+except ImportError:
+    from HTMLParser import HTMLParser
+
+log = logging.getLogger(__name__)
 
 
 class Online_Parser(HTMLParser):
     def handle_starttag(self, tag, attrs):
         if tag == 'iframe':
             attrs = dict(attrs)
-            if 'name' in attrs and \
-            attrs['name'] == 'twttrHubFrameSecure':
+            if 'name' in attrs and attrs['name'] == 'twttrHubFrameSecure':
                 self.iframe_url = attrs['src']
 
 
 class Iframe_Parser(HTMLParser):
     js = False
+
     def handle_starttag(self, tag, attrs):
         if tag == 'script':
             attrs = dict(attrs)
@@ -38,7 +41,8 @@ class Iframe_Parser(HTMLParser):
 
 
 class OnePlusOne(Plugin):
-    url_re = re.compile(r'https://1plus1.video/tvguide/.*/online')
+    url_re = re.compile(r'https://1plus1\.video/tvguide/.*/online')
+    data_re = re.compile(r"ovva-player\",\"([^\"]*)\"\)")
     ovva_data_schema = validate.Schema({
         "balancer": validate.url()
     }, validate.get("balancer"))
@@ -65,42 +69,39 @@ class OnePlusOne(Plugin):
     def get_data(self, res):
         parser = Iframe_Parser()
         parser.feed(res.text)
-        data = parser.data
-        parse = esprima.parseScript(data)
-        data = parse.body[0].expression.right.body.body[0]
-        return data.expression.arguments[1].value
+        if hasattr(parser, "data"):
+            m = self.data_re.search(parser.data)
+            if m:
+                data = m.group(1)
+                return data
 
     def _get_streams(self):
-        self.session.http.headers = {"User-Agent": useragents.ANDROID}
+        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         res = self.session.http.get(self.url)
         iframe_url = self.find_iframe(res)
         if iframe_url:
-            self.logger.debug("Found iframe: {0}", iframe_url)
+            log.debug("Found iframe: {0}".format(iframe_url))
             res = self.session.http.get(
-                iframe_url, 
+                iframe_url,
                 headers={"Referer": self.url})
             data = self.get_data(res)
             if data:
                 try:
                     ovva_url = parse_json(
-                        b64decode(data).decode(), 
+                        b64decode(data).decode(),
                         schema=self.ovva_data_schema)
-                    self.logger.debug("Found ovva: {0}", ovva_url)
+                    log.debug("Found ovva: {0}".format(ovva_url))
 
                     stream_url = self.session.http.get(
-                        ovva_url, 
-                        schema=self.ovva_redirect_schema, 
+                        ovva_url,
+                        schema=self.ovva_redirect_schema,
                         headers={"Referer": iframe_url})
-                    self.logger.debug("Found stream: {0}", stream_url)
+                    log.debug("Found stream: {0}".format(stream_url))
 
                 except PluginError as e:
-                    self.logger.error("Could not find stream URL: {0}", e)
+                    log.error("Could not find stream URL: {0}".format(e))
                 else:
-                    return HLSStream.parse_variant_playlist(
-                        self.session, 
-                        stream_url)
-            else:
-                self.logger.error("Could not find player data.")
+                    return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
 __plugin__ = OnePlusOne
