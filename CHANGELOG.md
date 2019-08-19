@@ -1,5 +1,97 @@
 # Changelog
 
+## streamlink 1.2.0 (2019-08-18)
+
+Here are the changes for this month's release
+
+- Multiple plugin fixes
+- Fixed single hyphen params at the beginning of --player-args (#2333)
+- `--http-proxy` will set the default value of `--https-proxy` to same as `--http-proxy`. (#2536)
+- DASH Streams will handle headers correctly (#2545)
+- the timestamp for FFMPEGMuxer streams will start with zero (#2559)
+
+
+```text
+Davi Guimarães <davi.guimaraesleite@gmail.com> (1):
+      plugins.cubetv: base url changes (#2430)
+
+Forrest <gravyboat@users.noreply.github.com> (1):
+      Add a sponsor button (#2478)
+
+Jiting <jiting@jtcat.com> (1):
+      plugin.youtube: bug fix for YouTube live streams check
+
+Juan Ramirez <jramirez@encompass.tv> (2):
+      Invalid use of console.logger in CLI
+      Too many arguments for logging format string
+
+Mohamed El Morabity <melmorabity@fedoraproject.org> (9):
+      plugins.vimeo: new plugin for Vimeo streams
+      plugins.vimeo: add subtitle support for vimeo plugin
+      plugins.vimeo: fix alphabetical order in plugin matrix
+      Use class parameter instead of class name in class method
+      [plugins.bfmtv] Fix player regex
+      [plugins.idf1] Update for new website layout
+      plugins.gulli: enable HTTPS support
+      plugins.gulli: fix live stream fetching
+      plugins.tvrplus: fix for new website layout
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.clubbingtv: new plugin for Clubbing TV website (#2569)
+
+Viktor Kálmán <kviktor@users.noreply.github.com> (1):
+      plugins.mediaklikk: update broken plugin (#2401)
+
+Vladimir Stavrinov <vstavrinov@gmail.com> (2):
+      plugins.live_russia_tv: adjust to site changes (#2523)
+      plugins.oneplusone: fix site changes (#2425)
+
+YuuichiMizuoka <32476209+YuuichiMizuoka@users.noreply.github.com> (1):
+      add login posibility for pixiv using sessionid and devicetoken
+
+aqxa1 <asheldon55@gmail.com> (1):
+      Handle keyboard interrupts in can_handle_url checks (#2318)
+
+back-to <backto@protonmail.ch> (12):
+      cli.argparser: Fix single hyphen params at the beginning of --player-args
+      plugins.reuters: New Plugin
+      plugins: Removed rte and tvcatchup
+      utils.__init__: remove cElementTree, it's just an alias for ElementTree
+      plugins.teamliquid: New domain, fix stream_weight
+      plugins.vimeo: Fixed DASH Livestreams
+      plugin.api.useragents: update CHROME and FIREFOX User-Agent
+      ffmpegmux: use -start_at_zero with -copyts
+      plugins.youtube: fixed reason msg, updated _url_re
+      plugins.TV1Channel: Fixed new livestream iframe
+      plugins.npo: removed due to DRM
+      plugins.lrt: fixed livestreams
+
+bastimeyer <mail@bastimeyer.de> (1):
+      plugins.welt: fix plugin
+
+beardypig <beardypig@protonmail.com> (13):
+      plugins.bbciplayer: small change to where the VPID is extracted from (#2376)
+      plugins.goodgame: fix for debug logging error
+      plugins.cdnbg: fix for bstv url
+      plugins.ustvnow: updated to handle new auth, and site design
+      plugin.schoolism: bug fix for videos with subtitles (#2524)
+      stream.dash: use the stream args in the writer and worker
+      session: default https-proxy to the same as http-proxy, can be overridden
+      plugins.beattv: partial fix for the be-at.tv streams
+      tests: test the behaviour of setting http-proxy and https-proxy
+      plugins.twitch: support for different clips URL
+      plugins.wwenetwork: support for new site
+      plugins.ustreamtv: add support for proxying WebSocket connections
+      plugins.wwenetwork: update for small page/api change
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      plugins.DLive: New Plugin for dlive.tv (#2419)
+
+ssaqua <ssaqua@users.noreply.github.com> (1):
+      plugins.linelive: new plugin for LINE LIVE (live.line.me) (#2574)
+```
+
+
 ## streamlink 1.1.1 (2019-04-02)
 
 This is just a small patch release which fixes a build/deploy issue with the new special wheels for Windows on PyPI. (#2392)
