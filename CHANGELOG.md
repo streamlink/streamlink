@@ -2,13 +2,14 @@
 
 ## streamlink 1.2.0 (2019-08-18)
 
-Here are the changes to this months release!
+Here are the changes for this month's release
 
 - Multiple plugin fixes
 - Fixed single hyphen params at the beginning of --player-args (#2333)
 - `--http-proxy` will set the default value of `--https-proxy` to same as `--http-proxy`. (#2536)
 - DASH Streams will handle headers correctly (#2545)
 - the timestamp for FFMPEGMuxer streams will start with zero (#2559)
+
 
 ```text
 Davi Guimarães <davi.guimaraesleite@gmail.com> (1):
