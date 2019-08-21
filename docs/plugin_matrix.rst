@@ -125,6 +125,7 @@ nbc                     nbc.com              No    Yes   Streams are geo-restric
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
+nownews                 news.now.com         Yes   No
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                         - radio.nrk.no
 ntv                     ntv.ru               Yes   No
