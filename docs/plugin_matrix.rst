@@ -267,6 +267,7 @@ vtvgo                   vtvgo.vn             Yes   No
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
+willax                  willax.tv            Yes   No
 wwenetwork              network.wwe.com      Yes   Yes   Requires an account to access any content.
 younow                  younow.com           Yes   --
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.
