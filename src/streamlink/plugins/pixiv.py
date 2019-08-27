@@ -79,7 +79,7 @@ class Pixiv(Plugin):
             sensitive=True,
             metavar="SESSIONID",
             help="""
-        The pixiv.net sessionid thats used in pixivs PHPSESSID cookie.
+        The pixiv.net sessionid that's used in pixivs PHPSESSID cookie.
         can be used instead of the username/password login process.
         """
         ),
@@ -88,7 +88,7 @@ class Pixiv(Plugin):
             sensitive=True,
             metavar="DEVICETOKEN",
             help="""
-        The pixiv.net device token thats used in  pixivs device_token cookie.
+        The pixiv.net device token that's used in pixivs device_token cookie.
         can be used instead of the username/password login process.
         """
         ),
