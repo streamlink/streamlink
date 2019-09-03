@@ -96,8 +96,8 @@ class BBCiPlayer(Plugin):
     @classmethod
     def _extract_nonce(cls, http_result):
         """
-        Given an HTTP response from the sessino endpoint, extract the nonce, so we can "sign" requests with it.
-        We don't really sign the requests in the traditional sense of a nonce, we just incude them in the auth requests.
+        Given an HTTP response from the session endpoint, extract the nonce, so we can "sign" requests with it.
+        We don't really sign the requests in the traditional sense of a nonce, we just include them in the auth requests.
 
         :param http_result: HTTP response from the bbc session endpoint.
         :type http_result: requests.Response
@@ -106,15 +106,13 @@ class BBCiPlayer(Plugin):
         """
 
         # Extract the redirect URL from the last call
-        last_redirect_url = urlparse(http_result.history[-1].request.url)
-        last_redirect_query = dict(parse_qsl(last_redirect_url.query))
+        last_redirect_url = http_result.history[-1].headers['Location']
+
         # Extract the nonce from the query string in the redirect URL
-        final_url = urlparse(last_redirect_query['goto'])
-        goto_url = dict(parse_qsl(final_url.query))
-        goto_url_query = parse_json(goto_url['state'])
+        nonce = re.match(r'.*nonce=(.*?)&.*', last_redirect_url)
 
         # Return the nonce we can use for future queries
-        return goto_url_query['nonce']
+        return nonce.group(1)
 
     def find_vpid(self, url, res=None):
         """
