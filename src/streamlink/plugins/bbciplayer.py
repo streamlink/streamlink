@@ -31,8 +31,7 @@ class BBCiPlayer(Plugin):
     """, re.VERBOSE)
     mediator_re = re.compile(
         r'window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});', re.DOTALL)
-    tvip_re = re.compile(r'channel"\s*:\s*{\s*"id"\s*:\s*"(\w+?)"')
-    tvip_master_re = re.compile(r'event_master_brand=(\w+?)&')
+    state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*});')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
@@ -128,13 +127,15 @@ class BBCiPlayer(Plugin):
         return vpid
 
     def find_tvip(self, url, master=False):
-        log.debug("Looking for {0} tvip on {1}", "master" if master else "", url)
+        log.debug("Looking for {0} tvip on {1}".format("master" if master else "", url))
         res = self.session.http.get(url)
-        if master:
-            m = self.tvip_master_re.search(res.text)
-        else:
-            m = self.tvip_re.search(res.text)
-        return m and m.group(1)
+        m = self.state_re.search(res.text)
+        data = m and parse_json(m.group(1))
+        if data:
+            channel = data.get("channel")
+            if master:
+                return channel.get("masterBrand")
+            return channel.get("id")
 
     def mediaselector(self, vpid):
         urls = defaultdict(set)
