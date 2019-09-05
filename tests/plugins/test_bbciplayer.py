@@ -27,20 +27,8 @@ class TestPluginBBCiPlayer(unittest.TestCase):
 
     def test_extract_nonce(self):
         mock_nonce = "mock-nonce-nse"
-
-        last_response = Response()
-        last_response.request = Request('GET', "http://example.com/?" + urlencode(dict(
-            goto="http://example.com/?" + urlencode(dict(
-                state=json.dumps(dict(nonce=mock_nonce))
-            ))
-        )))
-
         mock_response = Response()
-        mock_response.history = [
-            Response(),  # Add some extra dummy responses in to make sure we always get the last
-            Response(),
-            last_response
-        ]
+        mock_response.url = "http://example.com/?" + urlencode(dict(nonce=mock_nonce))
 
         self.assertEqual(BBCiPlayer._extract_nonce(mock_response), mock_nonce)
 
