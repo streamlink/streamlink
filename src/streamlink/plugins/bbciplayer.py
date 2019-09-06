@@ -31,8 +31,7 @@ class BBCiPlayer(Plugin):
     """, re.VERBOSE)
     mediator_re = re.compile(
         r'window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});', re.DOTALL)
-    tvip_re = re.compile(r'channel"\s*:\s*{\s*"id"\s*:\s*"(\w+?)"')
-    tvip_master_re = re.compile(r'event_master_brand=(\w+?)&')
+    state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*});')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
@@ -96,8 +95,8 @@ class BBCiPlayer(Plugin):
     @classmethod
     def _extract_nonce(cls, http_result):
         """
-        Given an HTTP response from the sessino endpoint, extract the nonce, so we can "sign" requests with it.
-        We don't really sign the requests in the traditional sense of a nonce, we just incude them in the auth requests.
+        Given an HTTP response from the session endpoint, extract the nonce, so we can "sign" requests with it.
+        We don't really sign the requests in the traditional sense of a nonce, we just include them in the auth requests.
 
         :param http_result: HTTP response from the bbc session endpoint.
         :type http_result: requests.Response
@@ -105,16 +104,9 @@ class BBCiPlayer(Plugin):
         :rtype: string
         """
 
-        # Extract the redirect URL from the last call
-        last_redirect_url = urlparse(http_result.history[-1].request.url)
-        last_redirect_query = dict(parse_qsl(last_redirect_url.query))
-        # Extract the nonce from the query string in the redirect URL
-        final_url = urlparse(last_redirect_query['goto'])
-        goto_url = dict(parse_qsl(final_url.query))
-        goto_url_query = parse_json(goto_url['state'])
-
-        # Return the nonce we can use for future queries
-        return goto_url_query['nonce']
+        p = urlparse(http_result.url)
+        d = dict(parse_qsl(p.query))
+        return d.get("nonce")
 
     def find_vpid(self, url, res=None):
         """
@@ -135,13 +127,15 @@ class BBCiPlayer(Plugin):
         return vpid
 
     def find_tvip(self, url, master=False):
-        log.debug("Looking for {0} tvip on {1}", "master" if master else "", url)
+        log.debug("Looking for {0} tvip on {1}".format("master" if master else "", url))
         res = self.session.http.get(url)
-        if master:
-            m = self.tvip_master_re.search(res.text)
-        else:
-            m = self.tvip_re.search(res.text)
-        return m and m.group(1)
+        m = self.state_re.search(res.text)
+        data = m and parse_json(m.group(1))
+        if data:
+            channel = data.get("channel")
+            if master:
+                return channel.get("masterBrand")
+            return channel.get("id")
 
     def mediaselector(self, vpid):
         urls = defaultdict(set)
@@ -183,6 +177,7 @@ class BBCiPlayer(Plugin):
         :return: Whether authentication was successful
         :rtype: bool
         """
+
         def auth_check(res):
             return ptrt_url in ([h.url for h in res.history] + [res.url])
 
