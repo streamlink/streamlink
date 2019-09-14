@@ -10,7 +10,13 @@ class FoxTR(Plugin):
     """
     Support for Turkish Fox live stream: http://www.fox.com.tr/canli-yayin
     """
-    url_re = re.compile(r"https?://www.fox.com.tr/canli-yayin")
+
+    url_re = re.compile(r"""
+        https?://(?:www.)?
+        (?:fox.com.tr/.*|
+           foxplay.com.tr/.*)
+    """, re.VERBOSE)
+
     playervars_re = re.compile(r"source\s*:\s*\[\s*\{\s*videoSrc\s*:\s*'(.*?)'", re.DOTALL)
 
     @classmethod
