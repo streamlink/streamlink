@@ -5,7 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HTTPStream
 
-API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid={0}&quality=0&platform=web"
+API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl?cid={0}&quality=4&platform=web"
 ROOM_API = "https://api.live.bilibili.com/room/v1/Room/room_init?id={}"
 SHOW_STATUS_OFFLINE = 0
 SHOW_STATUS_ONLINE = 1
