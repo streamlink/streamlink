@@ -264,6 +264,7 @@ vinhlongtv              thvli.vn             Yes   No    Streams are geo-restric
 vk                      vk.com               Yes   Yes
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
+wasd                    wasd.tv              Yes   Yes   Requires session cookies for AUTH API token
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
