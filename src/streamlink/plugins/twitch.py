@@ -244,8 +244,17 @@ class TwitchHLSStreamReader(HLSStreamReader):
 class TwitchHLSStream(HLSStream):
     def __init__(self, *args, **kwargs):
         HLSStream.__init__(self, *args, **kwargs)
-        self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
-        self.low_latency = self.session.get_plugin_option("twitch", "low-latency")
+
+        disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
+        low_latency = self.session.get_plugin_option("twitch", "low-latency")
+
+        if low_latency and disable_ads:
+            log.info("Low latency streaming with ad filtering is currently not supported")
+            self.session.set_plugin_option("twitch", "low-latency", False)
+            low_latency = False
+
+        self.disable_ads = disable_ads
+        self.low_latency = low_latency
 
     def open(self):
         if self.disable_ads:
