@@ -168,6 +168,13 @@ class TwitchM3U8Parser(M3U8Parser):
     def __init__(self, base_uri=None, stream=None, **kwargs):
         M3U8Parser.__init__(self, base_uri, **kwargs)
         self.stream = stream
+        self.has_prefetch_segments = False
+
+    def parse(self, *args):
+        m3u8 = super(TwitchM3U8Parser, self).parse(*args)
+        m3u8.has_prefetch_segments = self.has_prefetch_segments
+
+        return m3u8
 
     @parse_condition("disable_ads")
     def parse_tag_ext_x_scte35_out(self, value):
@@ -184,6 +191,7 @@ class TwitchM3U8Parser(M3U8Parser):
 
     @parse_condition("low_latency")
     def parse_tag_ext_x_twitch_prefetch(self, value):
+        self.has_prefetch_segments = True
         segments = self.m3u8.segments
         if segments:
             segments.append(segments[-1]._replace(uri=self.uri(value)))
@@ -219,6 +227,12 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
             super(TwitchHLSStreamWorker, self)._set_playlist_reload_time(playlist, sequences)
         else:
             self.playlist_reload_time = sequences[-1].segment.duration
+
+    def process_sequences(self, playlist, sequences):
+        if self.playlist_sequence < 0 and self.stream.low_latency and not playlist.has_prefetch_segments:
+            log.info("This is not a low latency stream")
+
+        return super(TwitchHLSStreamWorker, self).process_sequences(playlist, sequences)
 
 
 class TwitchHLSStreamWriter(HLSStreamWriter):

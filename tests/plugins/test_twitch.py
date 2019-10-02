@@ -269,6 +269,23 @@ class TestTwitchHLSStream(unittest.TestCase):
             call("Low latency streaming with ad filtering is currently not supported")
         ])
 
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_no_low_latency_no_prefetch(self, mock_logging):
+        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
+        playlists = [
+            self.getPlaylist(0, [0, 1, 2, 3], []),
+            self.getPlaylist(4, [4, 5, 6, 7], []) + "#EXT-X-ENDLIST\n"
+        ]
+        streamlink, result, mocked = self.get_result(streams, playlists, low_latency=True)
+
+        self.assertTrue(streamlink.get_plugin_option("twitch", "low-latency"))
+        self.assertFalse(streamlink.get_plugin_option("twitch", "disable-ads"))
+
+        mock_logging.info.assert_has_calls([
+            call("Low latency streaming (HLS live edge: 2)"),
+            call("This is not a low latency stream")
+        ])
+
 
 @patch("streamlink.plugins.twitch.log")
 class TestTwitchReruns(unittest.TestCase):
