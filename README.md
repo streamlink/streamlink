@@ -16,27 +16,12 @@ services when they are available for the content you consume and enjoy.
 
 # [Installation][streamlink-installation]
 
-#### Installation via Python pip
-
-```bash
-sudo pip install streamlink
-```
-
-#### Manual installation via Python
-
-```bash
-git clone https://github.com/streamlink/streamlink
-cd streamlink
-sudo python setup.py install
-```
-
-#### Windows, MacOS, Linux and BSD specific installation methods
+Please refer to our documentation for different ways to install Streamlink:
 
 - [Windows][streamlink-installation-windows]
-- [Windows portable version][streamlink-installation-windows-portable]
-- [MacOS][streamlink-installation-others]
-- [Linux and BSD][streamlink-installation-linux]
-
+- [macOS][streamlink-installation-macos]
+- [Linux and BSD][streamlink-installation-linux-and-bsd]
+- [Source code][streamlink-installation-source]
 
 # Features
 
@@ -101,10 +86,10 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
   [streamlink-plugins]: https://streamlink.github.io/plugin_matrix.html
   [streamlink-documentation]: https://streamlink.github.io/cli.html
   [streamlink-installation]: https://streamlink.github.io/install.html
-  [streamlink-installation-windows]: https://streamlink.github.io/install.html#windows-binaries
-  [streamlink-installation-windows-portable]: https://streamlink.github.io/install.html#windows-portable-version
-  [streamlink-installation-linux]: https://streamlink.github.io/install.html#linux-and-bsd-packages
-  [streamlink-installation-others]: https://streamlink.github.io/install.html#other-platforms
+  [streamlink-installation-windows]: https://streamlink.github.io/install.html#windows
+  [streamlink-installation-macos]: https://streamlink.github.io/install.html#macos
+  [streamlink-installation-linux-and-bsd]: https://streamlink.github.io/install.html#linux-and-bsd
+  [streamlink-installation-source]: https://streamlink.github.io/install.html#source-code
   [livestreamer]: https://github.com/chrippa/livestreamer
   [contributing]: https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md
   [changelog]: https://github.com/streamlink/streamlink/blob/master/CHANGELOG.rst
