@@ -30,7 +30,7 @@ class Zattoo(Plugin):
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
 
-    _url_re = re.compile(r'''
+    _url_re = re.compile(r'''(?x)
         https?://
         (?P<base_url>
             (?:(?:
@@ -49,13 +49,19 @@ class Zattoo(Plugin):
             |www\.meinewelt\.cc
         )/
         (?:
-            (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/(?P<recording_id>\d+)))
+            (?:
+                recordings\?recording=
+                |
+                (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/))
+            )(?P<recording_id>\d+)
             |
-            watch/(?P<channel>[^/\s]+)
+            (?:
+                (?:live/|watch/)|(?:channels(?:/\w+)?|guide)\?channel=
+            )(?P<channel>[^/\s]+)
             |
-            ondemand/watch/(?P<vod_id>[^-]+)-
+            ondemand(?:\?video=|/watch/)(?P<vod_id>[^-]+)
         )
-        ''', re.VERBOSE)
+        ''')
 
     _app_token_re = re.compile(r"""window\.appToken\s+=\s+'([^']+)'""")
 
@@ -127,10 +133,8 @@ class Zattoo(Plugin):
         self._uuid = self._session_attributes.get('uuid')
         self._authed = (self._session_attributes.get('power_guide_hash')
                         and self._uuid
-                        and self.session.http.cookies.get(
-                                'pzuid', domain=self.domain)
-                        and self.session.http.cookies.get(
-                                'beaker.session.id', domain=self.domain)
+                        and self.session.http.cookies.get('pzuid', domain=self.domain)
+                        and self.session.http.cookies.get('beaker.session.id', domain=self.domain)
                         )
         self._session_control = self._session_attributes.get('session_control',
                                                              False)
