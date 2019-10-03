@@ -26,12 +26,18 @@ class TestPluginZattoo(unittest.TestCase):
         # zattoo live
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/watch/daserste'))
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/watch/zdf'))
+        self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/live/zdf'))
+        self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/channels?channel=daserste'))
+        self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/channels/favorites?channel=zdf'))
+        self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/channels/zattoo?channel=zdf'))
         # zattoo vod
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/ondemand/watch/ibR2fpisWFZGvmPBRaKnFnuT-alarm-am-airport'))
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/ondemand/watch/G8S7JxcewY2jEwAgMzvFWK8c-berliner-schnauzen'))
+        self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/ondemand?video=x4hUTiCv4FLAA72qLvahiSFp'))
         # zattoo recording
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/ondemand/watch/srf_zwei/110223896-die-schweizermacher/52845783/1455130800000/1455137700000/6900000'))
         self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/watch/tve/130920738-viaje-al-centro-de-la-tele/96847859/1508777100000/1508779800000/0'))
+        self.assertTrue(Zattoo.can_handle_url('https://zattoo.com/recordings?recording=186466965'))
 
     def test_can_handle_url_negative(self):
         # shouldn't match
