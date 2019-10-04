@@ -36,7 +36,7 @@ brightcove              players.brig... [6]_ Yes   Yes
 btsports                sport.bt.com         Yes   Yes   Requires subscription account
 btv                     btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
 canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
-canvas                  instructure.com      No    Yes
+canvas                  instructure.com      --    Yes
 cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                         - bgonair.bg
                         - bitelevision.com
