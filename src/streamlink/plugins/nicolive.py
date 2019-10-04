@@ -9,7 +9,6 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.compat import urlparse
-from html.parser import HTMLParser
 
 
 _log = logging.getLogger(__name__)
@@ -59,30 +58,22 @@ class NicoLive(Plugin):
 
     def _get_streams(self):
         self.url = self.url.split("?")[0]
-        self.niconico_web_login()
-
         self.session.http.headers.update({
             "User-Agent": useragents.CHROME,
         })
 
-        _log.debug("Getting video page: {0}".format(self.url))
-        resp = self.session.http.get(self.url)
-        wss_api_url = extract_text(
-            resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
+        if not self.get_wss_api_url():
+            _log.debug("Coundn't extract wss_api_url. Attempting login...")
+            if not self.niconico_web_login():
+                return None
+            if not self.get_wss_api_url():
+                _log.error("Failed to get wss_api_url.")
+                _log.error(
+                    "Please check the following URL is correct, "
+                    "and make sure your account has access to the video.")
+                return None
 
-        _log.debug("Video page response code: {0}".format(resp.status_code))
-        _log.trace("Video page response body: {0}".format(resp.text))
-
-        if not wss_api_url.startswith("wss://"):
-            _log.error("Failed to get wss_api_url.")
-            _log.error("Please check the following URL is correct, "
-                       "and make sure your account has access to the video.")
-            return None
-
-        self.broadcast_id = extract_text(
-            resp.text, "&quot;broadcastId&quot;:&quot;", "&quot;")
-
-        self.api_connect(wss_api_url)
+        self.api_connect(self.wss_api_url)
 
         i = 0
         while not self.is_stream_ready:
@@ -105,6 +96,21 @@ class NicoLive(Plugin):
             nico_streams[s] = nico_stream
 
         return nico_streams
+
+    def get_wss_api_url(self):
+        _log.debug("Getting video page: {0}".format(self.url))
+        resp = self.session.http.get(self.url)
+        self.wss_api_url = extract_text(
+            resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
+        self.broadcast_id = extract_text(
+            resp.text, "&quot;broadcastId&quot;:&quot;", "&quot;")
+
+        _log.debug("Video page response code: {0}".format(resp.status_code))
+        _log.trace(u"Video page response body: {0}".format(resp.text))
+        _log.debug("Got wss_api_url: {0}".format(self.wss_api_url))
+        _log.debug("Got broadcast_id: {0}".format(self.broadcast_id))
+
+        return self.wss_api_url.startswith("wss://")
 
     def api_on_open(self):
         self.send_playerversion()
@@ -137,7 +143,7 @@ class NicoLive(Plugin):
     def send_message(self, type_, body):
         msg = {"type": type_, "body": body}
         msg_json = json.dumps(msg)
-        _log.debug("Sending: {0}".format(msg_json))
+        _log.debug(u"Sending: {0}".format(msg_json))
         self._ws.send(msg_json)
 
     def send_playerversion(self):
@@ -179,7 +185,7 @@ class NicoLive(Plugin):
         self.send_message("pong", {})
 
     def handle_api_message(self, message):
-        _log.debug("Received: {0}".format(message))
+        _log.debug(u"Received: {0}".format(message))
         message_parsed = json.loads(message)
 
         if message_parsed["type"] == "watch":
@@ -213,7 +219,7 @@ class NicoLive(Plugin):
 
                 if self.stream_reader is not None:
                     self.stream_reader.close()
-                    print("Stream reader closed.")
+                    _log.info("Stream reader closed.")
 
         elif message_parsed["type"] == "ping":
             self.send_pong()
@@ -239,6 +245,8 @@ class NicoLive(Plugin):
                 user_session,
                 path="/",
                 domain="nicovideo.jp")
+            self.save_cookies()
+            return True
 
         elif email is not None and password is not None:
             _log.info("Email and password are provided. Attemping login.")
@@ -247,7 +255,7 @@ class NicoLive(Plugin):
             resp = self.session.http.post(_login_url, data=payload)
 
             _log.debug("Login response code: {0}".format(resp.status_code))
-            _log.trace("Login response body: {0}".format(resp.text))
+            _log.trace(u"Login response body: {0}".format(resp.text))
             _log.debug("Cookies: {0}".format(
                 self.session.http.cookies.get_dict()))
 
@@ -255,19 +263,22 @@ class NicoLive(Plugin):
                 msg = extract_text(
                     resp.text, '<p class="notice__text">', "</p>")
                 _log.warn("Login failed. {0}".format(msg))
-                _log.warn("Continuing as guest.")
+                return False
             else:
                 _log.info("Logged in.")
+                self.save_cookies()
+                return True
         else:
             _log.warn(
                 "Neither a email and password combination nor a user session "
-                "token is provided. Continuing as guest.")
+                "token is provided. Cannot attempt login.")
+            return False
 
 
 class NicoHLSStream(HLSStream):
 
     def __init__(self, hls_stream, nicolive_plugin):
-        super().__init__(
+        super(NicoHLSStream, self).__init__(
             hls_stream.session,
             force_restart=hls_stream.force_restart,
             start_offset=hls_stream.start_offset,
@@ -278,7 +289,7 @@ class NicoHLSStream(HLSStream):
         self.nicolive_plugin = nicolive_plugin
 
     def open(self):
-        reader = super().open()
+        reader = super(NicoHLSStream, self).open()
         self.nicolive_plugin.stream_reader = reader
         return reader
 
