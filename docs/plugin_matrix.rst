@@ -261,6 +261,7 @@ viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-rest
 vidio                   vidio.com            Yes   Yes
 vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
+viutv                   viu.tv               Yes   No    Streams are geo-restricted to Hong Kong
 vk                      vk.com               Yes   Yes
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
