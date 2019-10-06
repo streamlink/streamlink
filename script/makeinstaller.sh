@@ -8,13 +8,14 @@ command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build 
 command -v convert > /dev/null 2>&1 || { echo >&2 "imagemagick is required to build the installer. Aborting."; exit 1; }
 command -v inkscape > /dev/null 2>&1 || { echo >&2 "inkscape is required to build the installer. Aborting."; exit 1; }
 
-# For travis nightly builds generate a version number with commit hash
+# For CI nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
 STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION/\+/_}"
 
 # include the build number
-STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${TRAVIS_BUILD_NUMBER:-0}"
+CI_BUILD_NUMBER=${GITHUB_RUN_ID:-${TRAVIS_BUILD_NUMBER:-0}}
+STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${CI_BUILD_NUMBER}"
 
 build_dir="$(pwd)/build"
 build_dir_plugins="${build_dir}/lib/streamlink/plugins"
@@ -22,7 +23,7 @@ nsis_dir="${build_dir}/nsis"
 files_dir="${build_dir}/files"
 icons_dir="${files_dir}/icons"
 # get the dist directory from an environment variable, but default to the build/nsis directory
-dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
+dist_dir="${STREAMLINK_DIST_DIR:-${nsis_dir}}"
 mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}"
 
 echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
