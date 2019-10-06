@@ -1,0 +1,81 @@
+name: Test, build and deploy
+
+on:
+  - push
+  - pull_request
+
+env:
+  STREAMLINK_DIST_DIR: ${{ github.workspace }}/dist
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+        python: [2.7, 3.5, 3.6, 3.7, 3.8]
+#       include:
+#         - python: X.Y-dev
+#           continue: true
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        continue-on-error: ${{ matrix.continue }}
+        run: bash ./script/install-dependencies.sh
+      - name: Test
+        continue-on-error: ${{ matrix.continue }}
+        run: pytest --cov
+      - name: Lint
+        continue-on-error: ${{ matrix.continue }}
+        run: flake8
+      - name: Upload coverage data
+        continue-on-error: ${{ matrix.continue }}
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: codecov
+
+  documentation:
+    name: Test docs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install -r docs-requirements.txt
+      - name: Build
+        run: make --directory=docs html
+
+  windows-installer:
+    name: Windows installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install pynsist==2.4
+          sudo apt update
+          sudo apt install -y nsis imagemagick inkscape
+      - name: Build
+        run: ./script/makeinstaller.sh
