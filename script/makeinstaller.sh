@@ -26,6 +26,8 @@ dist_dir="${STREAMLINK_INSTALLER_DIST_DIR:-$nsis_dir}"
 mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}"
 
 echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
+# Install extras_require
+pip install -e .[playtv] 1>&2
 python setup.py build 1>&2
 
 # https://github.com/streamlink/streamlink/issues/1223

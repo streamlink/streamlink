@@ -143,7 +143,7 @@ periscope               periscope.tv         Yes   Yes   Replay/VOD is supported
 picarto                 picarto.tv           Yes   Yes
 piczel                  piczel.tv            Yes   No
 pixiv                   sketch.pixiv.net     Yes   --
-playtv                  - playtv.fr          Yes   --    Streams may be geo-restricted to France.
+playtv                  - playtv.fr          Yes   --    Streams may be geo-restricted to France. The pyjwt library is also required.
                         - play.tv
 pluzz                   - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                         - ludo.fr

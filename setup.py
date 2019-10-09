@@ -23,8 +23,7 @@ deps = [
     'win-inet-pton;python_version<"3.0" and platform_system=="Windows"',
     # shutil.get_terminal_size and which were added in Python 3.3
     'backports.shutil_which;python_version<"3.3"',
-    'backports.shutil_get_terminal_size;python_version<"3.3"',
-    'pyjwt'
+    'backports.shutil_get_terminal_size;python_version<"3.3"'
 ]
 
 # for encrypted streams
@@ -97,6 +96,9 @@ setup(name="streamlink",
       package_dir={"": "src"},
       entry_points=entry_points,
       install_requires=deps,
+      extras_require={
+          "playtv": "pyjwt"
+      },
       test_suite="tests",
       python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
       classifiers=["Development Status :: 5 - Production/Stable",

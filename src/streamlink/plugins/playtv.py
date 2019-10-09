@@ -1,10 +1,15 @@
 import re
 
-import jwt
-
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
+
+HAS_JWT = True
+try:
+    import jwt
+except ImportError:
+    HAS_JWT = False
 
 
 class PlayTV(Plugin):
@@ -29,18 +34,23 @@ class PlayTV(Plugin):
             }
         )
     })
-    _api_schema = validate.Schema(
-        validate.transform(lambda x: jwt.decode(x, algorithms=['HS256'], verify=False)),
-        {
-            'url': validate.url()
-        }
-    )
+
+    if HAS_JWT:
+        _api_schema = validate.Schema(
+            validate.transform(lambda x: jwt.decode(x, algorithms=['HS256'], verify=False)),
+            {
+                'url': validate.url()
+            }
+        )
 
     @classmethod
     def can_handle_url(cls, url):
         return PlayTV._url_re.match(url)
 
     def _get_streams(self):
+        if not HAS_JWT:
+            raise PluginError('The pyjwt module is required to run the playtv plugin.')
+
         match = self._url_re.match(self.url)
         channel = match.group('channel')
 
