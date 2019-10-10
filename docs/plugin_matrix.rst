@@ -126,6 +126,7 @@ nbc                     nbc.com              No    Yes   Streams are geo-restric
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
+nownews                 news.now.com         Yes   No
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                         - radio.nrk.no
 ntv                     ntv.ru               Yes   No
@@ -261,12 +262,14 @@ viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-rest
 vidio                   vidio.com            Yes   Yes
 vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
+viutv                   viu.tv               Yes   No    Streams are geo-restricted to Hong Kong
 vk                      vk.com               Yes   Yes
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
+willax                  willax.tv            Yes   No
 wwenetwork              network.wwe.com      Yes   Yes   Requires an account to access any content.
 younow                  younow.com           Yes   --
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.

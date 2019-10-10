@@ -33,7 +33,7 @@ before_install:
       pip install doctr;
     fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then
-      pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b;
+      pip install pynsist==2.4;
     fi
 
 install:

@@ -12,11 +12,7 @@ class TV8(Plugin):
     """
     url_re = re.compile(r"https?://www.tv8.com.tr/canli-yayin")
 
-    player_config_re = re.compile(r"""
-        configPlayer.source.media.push[ ]*\(
-        [ ]*\{[ ]*'src':[ ]*"(.*?)",
-        [ ]*type:[ ]*"application/x-mpegURL"[ ]*}[ ]*\);
-    """, re.VERBOSE)
+    player_config_re = re.compile(r'''file:\s*"(.*?)"''')
     player_config_schema = validate.Schema(
         validate.transform(player_config_re.search),
         validate.any(

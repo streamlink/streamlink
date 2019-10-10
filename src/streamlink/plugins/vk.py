@@ -2,7 +2,7 @@
 import logging
 import re
 
-from streamlink.compat import urlparse, unquote
+from streamlink.compat import html_unescape, urlparse, unquote
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
@@ -82,10 +82,7 @@ class VK(Plugin):
 
         for _i in itertags(res.text, 'source'):
             if _i.attributes.get('type') == 'application/vnd.apple.mpegurl':
-                video_url = _i.attributes['src']
-                # Remove invalid URL
-                if video_url.startswith('https://vk.com/'):
-                    continue
+                video_url = html_unescape(_i.attributes['src'])
                 streams = HLSStream.parse_variant_playlist(self.session,
                                                            video_url)
                 if not streams:
