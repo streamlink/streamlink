@@ -316,6 +316,15 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
     $ export STREAMLINK_USE_PYCRYPTO="true"
     $ export STREAMLINK_USE_PYCOUNTRY="true"
 
+Skipping pywin32
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This environment variable can be used to skip `pywin32`_ during installation.
+
+.. code-block:: console
+
+    $ export STREAMLINK_NO_PYWIN32="true"
+
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
 .. _python-argparse: https://pypi.org/project/argparse/
