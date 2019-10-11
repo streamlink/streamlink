@@ -292,6 +292,7 @@ Name                                 Notes
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
+`pywin32`_                           Required to detect console close events on Windows
 `PySocks`_                           Used for SOCKS Proxies
 `websocket-client`_                  Used for some plugins
 `shutil_get_terminal_size`_          Only needed on Python versions older than **3.3**
@@ -329,6 +330,7 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _iso-639: https://pypi.org/project/iso-639/
 .. _iso3166: https://pypi.org/project/iso3166/
 .. _isodate: https://pypi.org/project/isodate/
+.. _pywin32: https://pypi.org/project/pywin32
 .. _PySocks: https://github.com/Anorov/PySocks
 .. _websocket-client: https://pypi.org/project/websocket-client/
 .. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
