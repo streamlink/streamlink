@@ -11,7 +11,7 @@ command -v inkscape > /dev/null 2>&1 || { echo >&2 "inkscape is required to buil
 # For CI nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
-STREAMLINK_INSTALLER="streamlink-${STREAMLINK_VERSION/\+/_}"
+STREAMLINK_INSTALLER="${1:-"streamlink-${STREAMLINK_VERSION/\+/_}"}"
 
 # include the build number
 CI_BUILD_NUMBER=${GITHUB_RUN_ID:-${TRAVIS_BUILD_NUMBER:-0}}
