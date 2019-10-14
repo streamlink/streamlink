@@ -98,8 +98,8 @@ packages=pkg_resources
          socks
          sockshandler
          isodate
-         pywin32
 pypi_wheels=pycryptodome==3.6.4
+            pywin32
 
 files=../win32/LICENSE.txt > \$INSTDIR
       ../build/lib/streamlink > \$INSTDIR\pkgs
