@@ -243,6 +243,7 @@ tvplayer                tvplayer.com         Yes   No    Streams may be geo-rest
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --
+twitcasting             twitcasting.tv       Yes   No
 twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                          subscription streams.
 ustreamtv               ustream.tv           Yes   Yes
