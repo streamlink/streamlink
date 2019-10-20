@@ -16,6 +16,9 @@ abematv                 abema.tv             Yes   Yes   Streams are geo-restric
 abweb                   abweb.com            Yes   No    Requires a login and a subscription.
 adultswim               adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
 afreeca                 play.afreecatv.com   Yes   No
+albavision              - tvc.com.ec         Yes   No    Some streams are geo-restricted.
+                        - rts.com.ec
+                        - elnueve.com.ar
 aljazeeraen             aljazeera.com        Yes   Yes   English version of the site.
 animelab                animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 app17                   17app.co             Yes   --
@@ -241,6 +244,7 @@ tvplayer                tvplayer.com         Yes   No    Streams may be geo-rest
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --
+twitcasting             twitcasting.tv       Yes   No
 twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                          subscription streams.
 ustreamtv               ustream.tv           Yes   Yes
