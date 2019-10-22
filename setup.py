@@ -96,9 +96,6 @@ setup(name="streamlink",
       package_dir={"": "src"},
       entry_points=entry_points,
       install_requires=deps,
-      extras_require={
-          "playtv": "pyjwt"
-      },
       test_suite="tests",
       python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
       classifiers=["Development Status :: 5 - Production/Stable",

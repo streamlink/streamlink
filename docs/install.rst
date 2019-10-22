@@ -302,7 +302,6 @@ Name                                 Notes
 `RTMPDump`_                          Required to play RTMP streams.
 `ffmpeg`_                            Required to play streams that are made up of separate
                                      audio and video streams, eg. YouTube 1080p+
-`PyJWT`_                             Required by the playtv plugin
 ==================================== ===========================================
 
 Using pycrypto and pycountry
@@ -334,7 +333,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _websocket-client: https://pypi.org/project/websocket-client/
 .. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
 .. _shutil_which: https://pypi.org/project/backports.shutil_which/
-.. _PyJWT: https://pypi.org/project/pyjwt/
 
 
 Windows binaries
