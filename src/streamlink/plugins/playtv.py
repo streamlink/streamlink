@@ -9,15 +9,9 @@ from streamlink.stream import HDSStream, HLSStream
 
 
 def jwt_decode(token):
-    payload = token.split(".")[1]
-    l = len(payload) % 4
-    if l == 2:
-        payload += "=="
-    elif l == 3:
-        payload += "="
-    payload = payload.replace("_", "/").replace("-", "+")
-
-    return json.loads(base64.b64decode(payload))
+     info, payload, sig = token.split(".")
+     data = base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4))
+     return json.loads(data)
 
 
 class PlayTV(Plugin):
