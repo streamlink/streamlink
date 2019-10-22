@@ -2,7 +2,6 @@ import base64
 import json
 import re
 
-from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
