@@ -1,3 +1,5 @@
+import base64
+import json
 import re
 
 from streamlink.plugin import Plugin
@@ -5,11 +7,17 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 
 
-class PlayTV(Plugin):
-    FORMATS_URL = 'http://playtv.fr/player/initialize/{0}/'
-    API_URL = 'http://playtv.fr/player/play/{0}/?format={1}&language={2}&bitrate={3}'
+def jwt_decode(token):
+     info, payload, sig = token.split(".")
+     data = base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4))
+     return json.loads(data)
 
-    _url_re = re.compile(r'http://(?:playtv\.fr/television|play\.tv/live-tv/\d+)/(?P<channel>[^/]+)/?')
+
+class PlayTV(Plugin):
+    FORMATS_URL = 'https://playtv.fr/player/initialize/{0}/'
+    API_URL = 'https://playtv.fr/player/play/{0}/?format={1}&language={2}&bitrate={3}'
+
+    _url_re = re.compile(r'https?://(?:playtv\.fr/television|(:?\w+\.)?play\.tv/live-tv/\d+)/(?P<channel>[^/]+)/?')
 
     _formats_schema = validate.Schema({
         'streams': validate.any(
@@ -27,9 +35,13 @@ class PlayTV(Plugin):
             }
         )
     })
-    _api_schema = validate.Schema({
-        'url': validate.url()
-    })
+
+    _api_schema = validate.Schema(
+        validate.transform(lambda x: jwt_decode(x)),
+        {
+            'url': validate.url()
+        }
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -57,7 +69,7 @@ class PlayTV(Plugin):
                         continue
                     api_url = self.API_URL.format(channel, protocol, language, bitrate['value'])
                     res = self.session.http.get(api_url)
-                    video_url = self.session.http.json(res, schema=self._api_schema)['url']
+                    video_url = self._api_schema.validate(res.text)['url']
                     bs = '{0}k'.format(bitrate['value'])
 
                     if protocol == 'hls':
