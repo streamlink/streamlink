@@ -293,6 +293,9 @@ class TwitchAPI(object):
     def videos(self, video_id, **params):
         return self.call("/kraken/videos/{0}".format(video_id), **params)
 
+    def all_videos(self, channel_id, **params):
+        return self.call("/kraken/channels/{0}/videos".format(channel_id), **params)
+
     def channel_info(self, channel, **params):
         return self.call("/kraken/channels/{0}".format(channel), **params)
 
@@ -454,6 +457,9 @@ class Twitch(Plugin):
                              session=self.session,
                              version=5)
         self.usher = UsherService(session=self.session)
+
+    def get_videos(self, **kwargs):
+        return self.api.all_videos(self.channel_id, **kwargs)
 
     @property
     def channel(self):

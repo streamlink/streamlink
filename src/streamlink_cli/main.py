@@ -25,7 +25,7 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
-from streamlink.plugins.twitch import TWITCH_CLIENT_ID
+from streamlink.plugins.twitch import TWITCH_CLIENT_ID, Twitch
 from streamlink.plugin import PluginOptions
 from streamlink.utils import LazyFormatter
 
@@ -582,6 +582,22 @@ def handle_url():
         console.exit(u"{0}", err)
 
     if not streams:
+        #needs a type check but isinstance(plugin, Twitch) aslways returns 
+        #false????
+        if plugin:
+            print(plugin.channel, "is not streaming...")
+            print("here are the 10 most recent vods")
+
+            vods = plugin.get_videos(broadcast_type="archive")
+            for video in vods.get("videos"):
+                vid = video.get("_id")
+                vid = vid.replace("v", "")
+                title = video.get("title")
+
+                print(vid, title)
+            choice = input("pick one: ")
+            args.url = "https://www.twitch.tv/videos/%s" % choice
+            handle_url()
         console.exit("No playable streams found on this URL: {0}", args.url)
 
     if args.default_stream and not args.stream and not args.json:
