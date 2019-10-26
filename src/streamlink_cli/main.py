@@ -593,6 +593,7 @@ def handle_url():
                     "Could not get VODs for {channel}: {error}"\
                         .format(channel=channel, error=error)
                 )
+                return
 
             num_videos = len(res.get("videos", []))
             console.msg(
