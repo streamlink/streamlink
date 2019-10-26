@@ -13,6 +13,8 @@ nbproject
 *.sublime-workspace
 .idea
 
+.vscode
+
 *.mo
 *.egg-info
 *.egg
