@@ -582,21 +582,40 @@ def handle_url():
         console.exit(u"{0}", err)
 
     if not streams:
-        #needs a type check but isinstance(plugin, Twitch) aslways returns 
-        #false????
+        #ToDo -> Needs type check but...
+        #isinstance(plugin, Twitch) always
+        #Returns false. Not sure why this is
         if plugin:
-            print(plugin.channel, "is not streaming...")
-            print("here are the 10 most recent vods")
+            try:
+                res = plugin.get_videos(broadcast_type="archive")
+            except (requests.HTTPError) as error:
+                log.error(
+                    "Could not get VODs for {channel}: {error}"\
+                        .format(channel=channel, error=error)
+                )
 
-            vods = plugin.get_videos(broadcast_type="archive")
-            for video in vods.get("videos"):
-                vid = video.get("_id")
-                vid = vid.replace("v", "")
-                title = video.get("title")
+            num_videos = len(res.get("videos", []))
+            console.msg(
+                "{channel} is not currently streaming!\n"
+                "Here are {channel}'s {number} most recent VODs"\
+                    .format(channel=plugin.channel, number=num_videos)
+            )
 
-                print(vid, title)
-            choice = input("pick one: ")
-            args.url = "https://www.twitch.tv/videos/%s" % choice
+            videos = res.get("videos", [])
+            for data in videos:
+                _id = data.get("_id", "")
+                _id = _id.replace("v", "")
+                title = data.get("title", "No Title")
+
+                console.msg("[{id}] {title}".format(id=_id, title=title))
+            try:
+                choice = input("Pick a VOD: ")
+            except (KeyboardInterrupt):
+                sys.exit(0)
+
+            if choice is not None:
+                args.url = "https://www.twitch.tv/videos/{choice}"\
+                    .format(choice=choice)
             handle_url()
         console.exit("No playable streams found on this URL: {0}", args.url)
 
