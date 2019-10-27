@@ -586,38 +586,58 @@ def handle_url():
         #isinstance(plugin, Twitch) always
         #Returns false. Not sure why this is
         if plugin:
+            console.msg("{channel} is not currently streaming"\
+                .format(channel=plugin.channel)
+            )
+
             try:
                 res = plugin.get_videos(broadcast_type="archive")
             except (requests.HTTPError) as error:
                 log.error(
                     "Could not get VODs for {channel}: {error}"\
-                        .format(channel=channel, error=error)
+                        .format(channel=plugin.channel, error=error)
                 )
                 return
 
-            num_videos = len(res.get("videos", []))
+            videos = res.get("videos", [])
+            num_videos = len(videos)
+
+            if num_videos == 0:
+                console.msg("No VOD(s) found for {channel}"\
+                    .format(channel=plugin.channel)
+                )
+                sys.exit(0)
+
             console.msg(
-                "{channel} is not currently streaming!\n"
-                "Here are {channel}'s {number} most recent VODs"\
+                "Here are their {number} most recent VOD(s)"\
                     .format(channel=plugin.channel, number=num_videos)
             )
 
-            videos = res.get("videos", [])
-            for data in videos:
+            for num, data in enumerate(videos):
                 _id = data.get("_id", "")
                 _id = _id.replace("v", "")
                 title = data.get("title", "No Title")
 
-                console.msg("[{id}] {title}".format(id=_id, title=title))
+                console.msg("[{num}] ({id}) {title}"\
+                    .format(num=num + 1, id=_id, title=title)
+                )
             try:
                 choice = input("Pick a VOD: ")
             except (KeyboardInterrupt):
                 sys.exit(0)
 
-            if choice is not None:
+            if choice is not None and choice is not "" and choice.isnumeric():
+                if 1 <= int(choice) <= num_videos:
+                    choice = int(choice)
+                    vod = videos[choice - 1]
+                    _id = vod.get("_id", "").replace("v", "")
+                    choice = _id
+
                 args.url = "https://www.twitch.tv/videos/{choice}"\
                     .format(choice=choice)
-            handle_url()
+
+                handle_url()
+
         console.exit("No playable streams found on this URL: {0}", args.url)
 
     if args.default_stream and not args.stream and not args.json:
