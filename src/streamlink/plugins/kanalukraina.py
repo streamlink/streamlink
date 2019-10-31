@@ -14,7 +14,7 @@ else:
     from urlparse import urljoin, urlsplit
 
 log = logging.getLogger(__name__)
-_url_re = re.compile('https://kanalukraina.tv/.*', re.VERBOSE)
+_url_re = re.compile('https://(.*\.)?kanalukraina.tv/.*', re.VERBOSE)
 
 
 class HTML_Parser(HTMLParser):

@@ -110,6 +110,7 @@ ine                     ine.com              ---   Yes
 itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 kanal7                  - kanal7.com         Yes   No
                         - tvt.tv.tr
+kanalukraina            kanalukraina.tv      Yes   Yes
 kingkong                kingkong.com.tw      Yes   --
 linelive                live.line.me         Yes   --
 live_russia_tv          live.russia.tv       Yes   --
