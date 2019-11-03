@@ -284,6 +284,14 @@ def build_parser():
         """
     )
 
+    general.add_argument(
+        "--twitch-check-vods",
+        action="store_true",
+        help="""
+        When using the Tiwtch plguin, do an interactive check for VODs
+        """
+    )
+
     player = parser.add_argument_group("Player options")
     player.add_argument(
         "-p", "--player",
