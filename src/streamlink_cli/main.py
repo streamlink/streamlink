@@ -25,7 +25,7 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
-from streamlink.plugins.twitch import TWITCH_CLIENT_ID, Twitch
+from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
 from streamlink.utils import LazyFormatter
 
@@ -582,10 +582,7 @@ def handle_url():
         console.exit(u"{0}", err)
 
     if not streams:
-        #ToDo -> Needs type check but...
-        #isinstance(plugin, Twitch) always
-        #Returns false. Not sure why this is
-        if plugin:
+        if type(plugin).module == "twitch" and args.twitch_check_vods:
             console.msg("{channel} is not currently streaming"\
                 .format(channel=plugin.channel)
             )
