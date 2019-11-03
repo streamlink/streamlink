@@ -359,6 +359,12 @@ class Twitch(Plugin):
         simpler way of doing it now.
         """
                        ),
+        PluginArgument("check-vods",
+                       action="store_true",
+                       help="""
+        Interactive VOD check for the channel.
+        """
+        ),
         PluginArgument("disable-hosting",
                        action="store_true",
                        help="""
