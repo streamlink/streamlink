@@ -184,8 +184,6 @@ class PlayerOutput(Output):
             if self.player_name == "vlc":
                 # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
                 self.title = self.title.replace("$", "$$").replace(r'\$$', "$")
-                if self.cmd == "/usr/bin/flatpak":
-                    extra_args.extend(["run", "org.videolan.VLC"])
                 extra_args.extend(["--input-title-format", self.title])
 
             # mpv
