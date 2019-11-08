@@ -72,7 +72,7 @@ class OneTV(Plugin):
         if self.is_live:
             self.logger.debug("Loading live stream for {0}...", self.channel)
 
-            self.session.http.headers = {"origin": "http://1tv.ru"}
+            self.session.http.headers.update({"origin": "http://1tv.ru"})
             res = self.session.http.get(self.live_api_url, data={"r": random.randint(1, 100000)})
             live_data = self.session.http.json(res)
 
