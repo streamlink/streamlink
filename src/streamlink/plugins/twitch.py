@@ -247,6 +247,7 @@ class UsherService(object):
 class TwitchAPI(object):
     def __init__(self, session, beta=False, version=3):
         self.oauth_token = None
+        self.client_id = TWITCH_CLIENT_ID
         self.session = session
         self.subdomain = beta and "betaapi" or "api"
         self.version = version
@@ -266,7 +267,7 @@ class TwitchAPI(object):
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
         headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
-                   'Client-ID': TWITCH_CLIENT_ID}
+                   'Client-ID': self.client_id}
 
         res = self.session.http.get(url, params=params, headers=headers)
 
@@ -334,6 +335,12 @@ class TwitchAPI(object):
 
 class Twitch(Plugin):
     arguments = PluginArguments(
+        PluginArgument("client-id",
+                       sensitive=True,
+                       metavar="CLIENTID",
+                       help="""
+        Twitch API client ID
+        """),
         PluginArgument("oauth-token",
                        sensitive=True,
                        metavar="TOKEN",
@@ -500,6 +507,10 @@ class Twitch(Plugin):
             raise PluginError("Unable to find channel: {0}".format(channel))
 
     def _authenticate(self):
+        client_id = self.options.get("client_id")
+        if client_id:
+            self.api.client_id = client_id
+
         if self.api.oauth_token:
             return
 
