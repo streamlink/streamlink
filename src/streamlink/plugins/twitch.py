@@ -39,7 +39,7 @@ QUALITY_WEIGHTS = {
     "mobile": 120,
 }
 
-TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
+TWITCH_CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
 _url_re = re.compile(r"""
     http(s)?://
