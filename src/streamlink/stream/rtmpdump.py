@@ -27,7 +27,6 @@ class RTMPStream(StreamProcess):
     def __init__(self, session, params, redirect=False, **kwargs):
         StreamProcess.__init__(self, session, params=params, **kwargs)
 
-        self.cmd = self.session.options.get("rtmp-rtmpdump")
         self.timeout = self.session.options.get("rtmp-timeout")
         self.redirect = redirect
 
@@ -42,6 +41,10 @@ class RTMPStream(StreamProcess):
                 self.parameters["debug"] = True
             else:
                 self.parameters["verbose"] = True
+
+    @property
+    def cmd(self):
+        return self.session.options.get("rtmp-rtmpdump")
 
     def __repr__(self):
         return "<RTMPStream({0!r}, redirect={1!r}>".format(self.parameters,
