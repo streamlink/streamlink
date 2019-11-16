@@ -23,13 +23,31 @@ class LineLive(Plugin):
                 "360": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
                 "240": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
                 "144": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
-            })
-        }
-     )
+            }),
+            "archivedHLSURLs": validate.any(None, {
+                "720": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
+                "480": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
+                "360": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
+                "240": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
+                "144": validate.any(None, validate.url(scheme="http", path=validate.endswith(".m3u8"))),
+            }),
+        })
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
+
+    def _get_live_streams(self, json):
+        for stream in json["liveHLSURLs"]:
+            url = json["liveHLSURLs"][stream]
+            if url is not None:
+                yield "{0}p.".format(stream), HLSStream(self.session, url)
+
+    def _get_vod_streams(self, json):
+        for stream in json["archivedHLSURLs"]:
+            url = json["archivedHLSURLs"][stream]
+            if url is not None:
+                yield "{0}p.".format(stream), HLSStream(self.session, url)
 
     def _get_streams(self):
         match = self._url_re.match(self.url)
@@ -37,12 +55,11 @@ class LineLive(Plugin):
         broadcast = match.group("broadcast")
         res = self.session.http.get(self._api_url.format(channel, broadcast))
         json = self.session.http.json(res, schema=self._player_status_schema)
-        if json["liveStatus"] != "LIVE":
-            return
-        for stream in json["liveHLSURLs"]:
-            url = json["liveHLSURLs"][stream]
-            if url != None:
-                yield "{0}p".format(stream), HLSStream(self.session, url)
+        if json["liveStatus"] == "LIVE":
+            return self._get_live_streams(json)
+        elif json["liveStatus"] == "FINISHED":
+            return self._get_vod_streams(json)
+        return
 
 
 __plugin__ = LineLive
