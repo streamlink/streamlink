@@ -267,6 +267,7 @@ vimeo                   vimeo.com            Yes   Yes   Password-protected vide
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
 viutv                   viu.tv               Yes   No    Streams are geo-restricted to Hong Kong
 vk                      vk.com               Yes   Yes
+vlive                   vlive.tv             Yes   No    Embedded Naver VODs are not supported.
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
