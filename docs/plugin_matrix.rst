@@ -124,6 +124,7 @@ nbc                     nbc.com              No    Yes   Streams are geo-restric
 nbcnews                 nbcnews.com          Yes   No
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
+nhltv                   nhl.com/tv           Yes   Yes   Requires login. Some streams require a subscription. Streams may be geo-restricted.
 nicolive                live.nicovideo.jp    Yes   Yes   Timeshift is supported. Some content may require login.
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nownews                 news.now.com         Yes   No
