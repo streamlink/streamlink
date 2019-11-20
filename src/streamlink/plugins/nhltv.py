@@ -313,14 +313,13 @@ class NHLTV(Plugin):
                         raise PluginError(msg)
                     url = media.get('url')
                     if url:
-                        prefix = '{}'.format(feed_type.lower())
+                        prefix = '{}_'.format(feed_type.lower())
                         if audio_only:
                             name_fmt = 'audio'
                         else:
                             name_fmt = None
-                        parsed = HLSStream.parse_variant_playlist(self.session, url, name_fmt=name_fmt)
+                        parsed = HLSStream.parse_variant_playlist(self.session, url, name_fmt=name_fmt, name_prefix=prefix)
                         for name, stream in parsed.items():
-                            name = '_'.join([prefix, name])
                             if name.endswith('_alt'):
                                 # 720p_alt is actually 720p60, not an alternate url
                                 name = '{}60'.format(name[:-4])
