@@ -39,7 +39,10 @@ QUALITY_WEIGHTS = {
     "mobile": 120,
 }
 
+# Streamlink's client-id used for public API calls (don't steal this and register your own application on Twitch)
 TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
+# Twitch's client-id used for private API calls (see issue #2680 for why we are doing this)
+TWITCH_CLIENT_ID_PRIVATE = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
 _url_re = re.compile(r"""
     http(s)?://
@@ -254,11 +257,8 @@ class TwitchAPI(object):
     def add_cookies(self, cookies):
         self.session.http.parse_cookies(cookies, domain="twitch.tv")
 
-    def call(self, path, format="json", schema=None, **extra_params):
+    def call(self, path, format="json", schema=None, private=False, **extra_params):
         params = dict(as3="t", **extra_params)
-
-        if self.oauth_token:
-            params["oauth_token"] = self.oauth_token
 
         if len(format) > 0:
             url = "https://{0}.twitch.tv{1}.{2}".format(self.subdomain, path, format)
@@ -266,7 +266,12 @@ class TwitchAPI(object):
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
         headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
-                   'Client-ID': TWITCH_CLIENT_ID}
+                   'Client-ID': TWITCH_CLIENT_ID if not private else TWITCH_CLIENT_ID_PRIVATE}
+
+        # OAuth tokens created from Streamlink's own client-id can't be used anymore on the private API (#2680)
+        # Since we don't know the origin of the provided OAuth token, we unfortunately need to disable all
+        if self.oauth_token and not private:
+            headers["Authorization"] = "OAuth {}".format(self.oauth_token)
 
         res = self.session.http.get(url, params=params, headers=headers)
 
@@ -305,31 +310,33 @@ class TwitchAPI(object):
     # Private API calls
 
     def access_token(self, endpoint, asset, **params):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **dict(platform="_", **params))
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **params)
 
     def token(self, **params):
-        return self.call("/api/viewer/token", **params)
+        return self.call("/api/viewer/token", private=True, **params)
 
     def viewer_info(self, **params):
-        return self.call("/api/viewer/info", **params)
+        return self.call("/api/viewer/info", private=True, **params)
 
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
     def clip_status(self, channel, clip_name, schema):
-        return self.session.http.json(self.call_subdomain("clips", "/api/v2/clips/" + clip_name + "/status", format=""),
-                                      schema=schema)
+        return self.session.http.json(
+            self.call_subdomain("clips", "/api/v2/clips/{}/status".format(clip_name), private=True, format=""),
+            schema=schema
+        )
 
     # Unsupported/Removed private API calls
 
     def channel_viewer_info(self, channel, **params):
         warnings.warn("The channel_viewer_info API call is unsupported and may stop working at any time")
-        return self.call("/api/channels/{0}/viewer".format(channel), **params)
+        return self.call("/api/channels/{0}/viewer".format(channel), private=True, **params)
 
     def channel_subscription(self, channel, **params):
         warnings.warn("The channel_subscription API call has been removed and no longer works",
                       category=DeprecationWarning)
-        return self.call("/api/channels/{0}/subscription".format(channel), **params)
+        return self.call("/api/channels/{0}/subscription".format(channel), private=True, **params)
 
 
 class Twitch(Plugin):
