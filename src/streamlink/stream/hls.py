@@ -439,6 +439,9 @@ class HLSStream(HTTPStream):
 
             if not stream_name:
                 continue
+            if name_prefix:
+                stream_name = "{0}{1}".format(name_prefix, stream_name)
+
             if stream_name in streams:  # rename duplicate streams
                 stream_name = "{0}_alt".format(stream_name)
                 num_alts = len(list(filter(lambda n: n.startswith(stream_name), streams.keys())))
@@ -460,12 +463,12 @@ class HLSStream(HTTPStream):
             external_audio = preferred_audio or default_audio or fallback_audio
 
             if external_audio and FFMPEGMuxer.is_usable(session_):
-                external_audio_msg = ", ".join([
-                    "(language={0}, name={1})".format(x.language, (x.name or "N/A"))
+                external_audio_msg = u", ".join([
+                    u"(language={0}, name={1})".format(x.language, (x.name or "N/A"))
                     for x in external_audio
                 ])
-                log.debug("Using external audio tracks for stream {0} {1}", name_prefix + stream_name,
-                          external_audio_msg)
+                log.debug(u"Using external audio tracks for stream {0} {1}".format(
+                          stream_name, external_audio_msg))
 
                 stream = MuxedHLSStream(session_,
                                         video=playlist.uri,
@@ -481,6 +484,6 @@ class HLSStream(HTTPStream):
                              start_offset=start_offset,
                              duration=duration,
                              **request_params)
-            streams[name_prefix + stream_name] = stream
+            streams[stream_name] = stream
 
         return streams
