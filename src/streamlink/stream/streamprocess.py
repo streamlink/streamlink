@@ -1,7 +1,8 @@
 import logging
 import subprocess
-from operator import itemgetter
+import os.path
 
+from operator import itemgetter
 from streamlink.stream import Stream
 from streamlink.stream.wrappers import StreamIOThreadWrapper
 from streamlink.compat import devnull, which
@@ -39,7 +40,6 @@ class StreamProcess(Stream):
         """
         super(StreamProcess, self).__init__(session)
 
-        self.cmd = None
         self.parameters = params or {}
         self.arguments = args or []
         self.timeout = timeout
@@ -54,6 +54,10 @@ class StreamProcess(Stream):
             self.stderr = devnull()
 
     @property
+    def cmd(self):
+        raise NotImplementedError
+
+    @property
     def params(self):
         return self.parameters
 
@@ -62,19 +66,22 @@ class StreamProcess(Stream):
         raise NotImplementedError
 
     def open(self):
-        process = self.spawn(self.parameters, self.arguments)
+        if self.is_usable(self.session):
+            process = self.spawn(self.parameters, self.arguments)
 
-        # Wait 0.5 seconds to see if program exited prematurely
-        time.sleep(0.5)
+            # Wait 0.5 seconds to see if program exited prematurely
+            time.sleep(0.5)
 
-        if not process.poll() is None:
-            if hasattr(self.stderr, "name"):
-                raise StreamError(("Error while executing subprocess, "
-                                   "error output logged to: {0}").format(self.stderr.name))
-            else:
-                raise StreamError("Error while executing subprocess")
+            if not process.poll() is None:
+                if hasattr(self.stderr, "name"):
+                    raise StreamError(("Error while executing subprocess, "
+                                       "error output logged to: {0}").format(self.stderr.name))
+                else:
+                    raise StreamError("Error while executing subprocess")
 
-        return StreamProcessIO(self.session, process, process.stdout, timeout=self.timeout)
+            return StreamProcessIO(self.session, process, process.stdout, timeout=self.timeout)
+        else:
+            raise StreamError("{0} is not installed or not supported on your system".format(os.path.basename(self.cmd)))
 
     @classmethod
     def bake(cls, cmd, parameters=None, arguments=None, short_option_prefix="-", long_option_prefix="--"):

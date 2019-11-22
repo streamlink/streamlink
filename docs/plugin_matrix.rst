@@ -112,7 +112,7 @@ kanal7                  - kanal7.com         Yes   No
                         - tvt.tv.tr
 kanalukraina            kanalukraina.tv      Yes   Yes
 kingkong                kingkong.com.tw      Yes   --
-linelive                live.line.me         Yes   --
+linelive                live.line.me         Yes   Yes
 live_russia_tv          live.russia.tv       Yes   --
 liveedu                 - liveedu.tv         Yes   --    Some streams require a login.
                         - livecoding.tv
@@ -269,6 +269,7 @@ vimeo                   vimeo.com            Yes   Yes   Password-protected vide
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
 viutv                   viu.tv               Yes   No    Streams are geo-restricted to Hong Kong
 vk                      vk.com               Yes   Yes
+vlive                   vlive.tv             Yes   No    Embedded Naver VODs are not supported.
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
