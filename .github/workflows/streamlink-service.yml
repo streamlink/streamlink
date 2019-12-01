@@ -1,0 +1,23 @@
+name: streamlink-service
+
+on: [push]
+
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: streamlink-service deployment
+      env:
+        TRAVIS_TOKEN: ${{ secrets.TRAVIS_TOKEN }}
+        TRIGGER_REPO: ${{ secrets.TRIGGER_REPO }}
+        BODY: '{ "request": { "branch":"master" } }'
+      run: |
+        curl -s -X POST                             \
+            -H "Content-Type: application/json"     \
+            -H "Accept: application/json"           \
+            -H "Travis-API-Version: 3"              \
+            -H "Authorization: token $TRAVIS_TOKEN" \
+            -d "$BODY"                              \
+        https://api.travis-ci.org/repo/$TRIGGER_REPO/requests
