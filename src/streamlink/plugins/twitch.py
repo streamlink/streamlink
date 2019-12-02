@@ -703,21 +703,18 @@ class Twitch(Plugin):
             self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
 
-    def _get_stream_type(self):
-        return self.api.streams(self.channel_id)["stream"]["stream_type"]
+    def _check_for_rerun(self):
+        return self.api.streams(self.channel_id)["stream"]["stream_type"] == "rerun"
 
     def _get_hls_streams(self, stream_type="live"):
         self.logger.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
         self._authenticate()
         self._hosted_chain.append(self.channel)
 
-        if stream_type == "live" or stream_type == "rerun":
-            if stream_type == "rerun" and self.options.get("disable_reruns"):
+        if stream_type == "live":
+            if self._check_for_rerun() and self.options.get("disable_reruns"):
                 self.logger.info("Reruns were disabled by command line option")
                 return {}
-            elif stream_type == "rerun":
-                self.logger.info("Starting rerun")
-                stream_type = "live"
 
             hosted_channel = self._check_for_host()
             if hosted_channel and self.options.get("disable_hosting"):
@@ -794,8 +791,7 @@ class Twitch(Plugin):
         elif self.clip_name:
             return self._get_clips()
         elif self._channel:
-            stream_type = self._get_stream_type()
-            return self._get_hls_streams(stream_type)
+            return self._get_hls_streams("live")
 
 
 __plugin__ = Twitch
