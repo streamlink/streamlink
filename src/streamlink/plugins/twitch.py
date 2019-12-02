@@ -375,6 +375,12 @@ class Twitch(Plugin):
         Skip embedded advertisement segments at the beginning or during a stream.
         Will cause these segments to be missing from the stream.
         """
+                       ),
+        PluginArgument("disable-reruns",
+                       action="store_true",
+                       help="""
+        Do not open the stream if the target channel is currently broadcasting a rerun.
+        """
                        ))
 
     @classmethod
@@ -697,12 +703,19 @@ class Twitch(Plugin):
             self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
 
+    def _check_for_rerun(self):
+        return self.api.streams(self.channel_id)["stream"]["stream_type"] == "rerun"
+
     def _get_hls_streams(self, stream_type="live"):
         self.logger.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
         self._authenticate()
         self._hosted_chain.append(self.channel)
 
         if stream_type == "live":
+            if self._check_for_rerun() and self.options.get("disable_reruns"):
+                self.logger.info("Reruns were disabled by command line option")
+                return {}
+
             hosted_channel = self._check_for_host()
             if hosted_channel and self.options.get("disable_hosting"):
                 self.logger.info("hosting was disabled by command line option")
