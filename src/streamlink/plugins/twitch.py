@@ -96,6 +96,15 @@ _user_schema = validate.Schema(
     },
     validate.get("display_name")
 )
+_stream_schema = validate.Schema(
+    {
+        "stream": validate.any(None, {
+            "stream_type": validate.any("live", "rerun"),
+            "broadcast_platform": validate.any("live", "rerun")
+        })
+    },
+    validate.get("stream")
+)
 _video_schema = validate.Schema(
     {
         "chunks": {
@@ -698,7 +707,9 @@ class Twitch(Plugin):
             return host_info["target_login"]
 
     def _check_for_rerun(self):
-        return self.api.streams(self.channel_id)["stream"]["stream_type"] == "rerun"
+        stream = self.api.streams(self.channel_id, schema=_stream_schema)
+
+        return stream and (stream["stream_type"] == "rerun" or stream["broadcast_platform"] == "rerun")
 
     def _get_hls_streams(self, stream_type="live"):
         log.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
@@ -706,7 +717,7 @@ class Twitch(Plugin):
         self._hosted_chain.append(self.channel)
 
         if stream_type == "live":
-            if self._check_for_rerun() and self.options.get("disable_reruns"):
+            if self.options.get("disable_reruns") and self._check_for_rerun():
                 log.info("Reruns were disabled by command line option")
                 return {}
 
