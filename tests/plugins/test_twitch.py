@@ -187,3 +187,88 @@ class TestTwitchHLSStream(unittest.TestCase):
             call("Will skip ads beginning with segment 6"),
             call("Will stop skipping ads beginning with segment 14")
         ])
+
+
+@patch("streamlink.plugins.twitch.log")
+class TestTwitchReruns(unittest.TestCase):
+    log_call = call("Reruns were disabled by command line option")
+
+    class StopError(Exception):
+        """Stop when trying to get an access token in _get_hls_streams..."""
+
+    @patch("streamlink.plugins.twitch.Twitch._authenticate", return_value=None)
+    @patch("streamlink.plugins.twitch.Twitch._check_for_host", return_value=None)
+    @patch("streamlink.plugins.twitch.Twitch._access_token", side_effect=StopError())
+    def start(self, *mocked, **params):
+        with requests_mock.Mocker() as mock:
+            mocked_users = mock.get(
+                "https://api.twitch.tv/kraken/users.json?login=foo",
+                json={"users": [{"_id": 1234}]}
+            )
+            mocked_stream = mock.get(
+                "https://api.twitch.tv/kraken/streams/1234.json",
+                json={"stream": None} if params.pop("offline", False) else {"stream": {
+                    "stream_type": params.pop("stream_type", "rerun"),
+                    "broadcast_platform": params.pop("broadcast_platform", "rerun")
+                }}
+            )
+
+            session = Streamlink()
+            Twitch.bind(session, "tests.plugins.test_twitch")
+            plugin = Twitch("https://www.twitch.tv/foo")
+            plugin.options.set("disable-reruns", params.pop("disable", True))
+            try:
+                streams = plugin.streams()
+            except TestTwitchReruns.StopError:
+                streams = None
+                pass
+
+            return streams, mocked_users, mocked_stream, mocked[0]
+
+    def test_disable_reruns(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(stream_type="rerun", broadcast_platform="rerun")
+        self.assertTrue(api_users.called_once)
+        self.assertTrue(api_stream.called_once)
+        self.assertFalse(access_token.called)
+        self.assertDictEqual(streams, {})
+        self.assertIn(self.log_call, mock_log.info.call_args_list)
+
+    def test_disable_reruns_mixed(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(stream_type="rerun", broadcast_platform="live")
+        self.assertTrue(api_users.called_once)
+        self.assertTrue(api_stream.called_once)
+        self.assertFalse(access_token.called)
+        self.assertDictEqual(streams, {})
+        self.assertIn(self.log_call, mock_log.info.call_args_list)
+
+    def test_disable_reruns_mixed2(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(stream_type="live", broadcast_platform="rerun")
+        self.assertTrue(api_users.called_once)
+        self.assertTrue(api_stream.called_once)
+        self.assertFalse(access_token.called)
+        self.assertDictEqual(streams, {})
+        self.assertIn(self.log_call, mock_log.info.call_args_list)
+
+    def test_disable_reruns_live(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(stream_type="live", broadcast_platform="live")
+        self.assertTrue(api_users.called_once)
+        self.assertTrue(api_stream.called_once)
+        self.assertTrue(access_token.called_once)
+        self.assertIsNone(streams)
+        self.assertNotIn(self.log_call, mock_log.info.call_args_list)
+
+    def test_disable_reruns_offline(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(offline=True)
+        self.assertTrue(api_users.called_once)
+        self.assertTrue(api_stream.called_once)
+        self.assertTrue(access_token.called_once)
+        self.assertIsNone(streams)
+        self.assertNotIn(self.log_call, mock_log.info.call_args_list)
+
+    def test_enable_reruns(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(disable=False)
+        self.assertFalse(api_users.called)
+        self.assertFalse(api_stream.called)
+        self.assertTrue(access_token.called_once)
+        self.assertIsNone(streams)
+        self.assertNotIn(self.log_call, mock_log.info.call_args_list)
