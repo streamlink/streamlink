@@ -79,7 +79,8 @@ _info_pages = set((
 ))
 
 
-# force shorter reload_time than TARGETDURATION
+# base reload time on segment duration rather than TARGETDURATION,
+# as the latter is consistently wrong
 class ShowroomHLSStreamWorker(hls.HLSStreamWorker):
     def process_sequences(self, playlist, sequences):
         first_sequence, last_sequence = sequences[0], sequences[-1]
@@ -89,8 +90,10 @@ class ShowroomHLSStreamWorker(hls.HLSStreamWorker):
 
         self.playlist_changed = ([s.num for s in self.playlist_sequences] !=
                                  [s.num for s in sequences])
-        self.playlist_reload_time = min(playlist.target_duration or 5,
-                                     last_sequence.segment.duration)
+        self.playlist_reload_time = max(
+            first_sequence.segment.duration,
+            last_sequence.segment.duration
+        )
         self.playlist_sequences = sequences
 
         if not self.playlist_changed:
