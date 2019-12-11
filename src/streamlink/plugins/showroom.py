@@ -3,7 +3,8 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
-from streamlink.stream import HLSStream, RTMPStream
+from streamlink.stream import RTMPStream
+from streamlink.stream import hls
 
 _url_re = re.compile(r'''^https?://
     (?:\w*.)?
@@ -76,6 +77,43 @@ _info_pages = set((
     "organizer_registration",
     "lottery"
 ))
+
+
+# force shorter reload_time than TARGETDURATION
+class ShowroomHLSStreamWorker(hls.HLSStreamWorker):
+    def process_sequences(self, playlist, sequences):
+        first_sequence, last_sequence = sequences[0], sequences[-1]
+
+        if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
+            hls.log.debug("Segments in this playlist are encrypted")
+
+        self.playlist_changed = ([s.num for s in self.playlist_sequences] !=
+                                 [s.num for s in sequences])
+        self.playlist_reload_time = min(playlist.target_duration or 5,
+                                     last_sequence.segment.duration)
+        self.playlist_sequences = sequences
+
+        if not self.playlist_changed:
+            self.playlist_reload_time = max(self.playlist_reload_time / 2, 1)
+
+        if playlist.is_endlist:
+            self.playlist_end = last_sequence.num
+
+        if self.playlist_sequence < 0:
+            if self.playlist_end is None and not self.hls_live_restart:
+                edge_index = -(min(len(sequences), max(int(self.live_edge), 1)))
+                edge_sequence = sequences[edge_index]
+                self.playlist_sequence = edge_sequence.num
+            else:
+                self.playlist_sequence = first_sequence.num
+
+
+class ShowroomHLSStreamReader(hls.HLSStreamReader):
+    __worker__ = ShowroomHLSStreamWorker
+
+
+hls.HLSStreamReader = ShowroomHLSStreamReader
+HLSStream = hls.HLSStream
 
 
 class Showroom(Plugin):
