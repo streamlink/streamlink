@@ -52,6 +52,19 @@ LiveProxy
   it is also available for **Kodi Leia** and **Enigma2** devices. |br|
   A detailed guide can be found on the website.
 
+Wtwitch
+---------
+
+:Description: Browse Twitch streams; subscribe to streamers locally without an account
+:Type: TUI (terminal user interface)
+:OS: |Linux|
+:Author: `krathalan <https://git.sr.ht/~krathalan/>`_
+:Website and source code: https://git.sr.ht/~krathalan/wtwitch
+:Info: wtwitch is a Bash program that lets you browse the top games on Twitch, the |br|
+  top streamers for a given game, and lets you check the status of streamers you |br|
+  subscribe to. Open streams easily with settings that save your preferred quality |br|
+  and player. A man page comes with the AUR package or can be compiled manually.
+
 .. content list end
 
 
