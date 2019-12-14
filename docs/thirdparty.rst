@@ -53,7 +53,7 @@ LiveProxy
   A detailed guide can be found on the website.
 
 Wtwitch
----------
+-------
 
 .. image:: https://i.imgur.com/oaxH3ss.jpg
   :align: center
@@ -63,7 +63,7 @@ Wtwitch
 :Type: TUI (terminal user interface)
 :OS: |Linux|
 :Author: `krathalan <https://git.sr.ht/~krathalan/>`_
-:Website and source code: https://git.sr.ht/~krathalan/wtwitch
+:Website: https://git.sr.ht/~krathalan/wtwitch
 :Info: wtwitch is a Bash program that lets you browse the top games on Twitch, the |br|
   top streamers for a given game, and lets you check the status of streamers you |br|
   subscribe to. Open streams easily with settings that save your preferred quality |br|
