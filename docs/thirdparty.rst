@@ -55,6 +55,10 @@ LiveProxy
 Wtwitch
 ---------
 
+.. image:: https://i.imgur.com/oaxH3ss.jpg
+  :align: center
+  :alt: Wtwitch screenshot of checking subscriptions
+
 :Description: Browse Twitch streams; subscribe to streamers locally without an account
 :Type: TUI (terminal user interface)
 :OS: |Linux|
@@ -64,12 +68,6 @@ Wtwitch
   top streamers for a given game, and lets you check the status of streamers you |br|
   subscribe to. Open streams easily with settings that save your preferred quality |br|
   and player. A man page comes with the AUR package or can be compiled manually.
-
-.. image:: https://i.imgur.com/oaxH3ss.jpg
-  :width: 200px
-  :align: center
-  :height: 100px
-  :alt: Wtwitch screenshot of checking subscriptions
 
 .. content list end
 
