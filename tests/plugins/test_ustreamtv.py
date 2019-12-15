@@ -3,9 +3,9 @@ import unittest
 from streamlink import Streamlink
 
 try:
-    from unittest.mock import ANY, MagicMock, call
+    from unittest.mock import ANY, MagicMock
 except ImportError:
-    from mock import ANY, MagicMock, call
+    from mock import ANY, MagicMock
 from streamlink.plugins.ustreamtv import UStreamTV
 
 
@@ -17,10 +17,13 @@ class TestPluginUStreamTV(unittest.TestCase):
             "http://www.ustream.tv/embed/1234",
             "http://www.ustream.tv/recorded/6543",
             "http://www.ustream.tv/embed/recorded/6543",
+            "https://video.ibm.com/channel/H5rQLwmTGrW",
+            "https://video.ibm.com/recorded/124680279",
         ]
         for url in should_match:
             self.assertTrue(UStreamTV.can_handle_url(url))
 
+    def test_can_handle_url_negative(self):
         should_not_match = [
             "https://www.youtube.com/v/aqz-KE-bpKQ",
         ]

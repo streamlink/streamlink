@@ -246,7 +246,8 @@ tvtoya                  tvtoya.pl            Yes   --
 twitcasting             twitcasting.tv       Yes   No
 twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                          subscription streams.
-ustreamtv               ustream.tv           Yes   Yes
+ustreamtv               - ustream.tv         Yes   Yes
+                        - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
 vaughnlive              - vaughnlive.tv      Yes   --
                         - breakers.tv
