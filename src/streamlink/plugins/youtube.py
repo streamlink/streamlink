@@ -148,7 +148,6 @@ class YouTube(Plugin):
 
     adp_video = {
         137: "1080p",
-        303: "1080p60",  # HFR
         299: "1080p60",  # HFR
         264: "1440p",
         308: "1440p60",  # HFR
