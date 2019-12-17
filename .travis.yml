@@ -11,18 +11,14 @@ git:
 matrix:
   include:
   - python: '2.7'
-  - python: '3.4'
   - python: '3.5'
     env: BUILD_DOCS=yes BUILD_INSTALLER=yes BUILD_SDIST=yes DEPLOY_PYPI=yes
   - python: '3.6'
   - python: '3.7'
-    dist: xenial
-    sudo: true
-  - python: '3.8-dev'
-    dist: xenial
-    sudo: true
+  - python: '3.8'
+  - python: 'nightly'
   allow_failures:
-  - python: '3.8-dev'
+  - python: 'nightly'
 
 before_install:
   - pip install --disable-pip-version-check --upgrade pip setuptools
