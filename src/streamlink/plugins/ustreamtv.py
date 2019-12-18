@@ -359,7 +359,7 @@ class UHSStream(Stream):
 
 class UStreamTV(Plugin):
     url_re = re.compile(r"""(?x)
-    https?://(www\.)?ustream\.tv
+    https?://(?:(www\.)?ustream\.tv|video\.ibm\.com)
         (?:
             (/embed/|/channel/id/)(?P<channel_id>\d+)
         )?
