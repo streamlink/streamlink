@@ -5,6 +5,9 @@ from uuid import uuid4
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 
+import logging
+log = logging.getLogger(__name__)
+
 
 class Pluto(Plugin):
     url_re = re.compile(r'https?://(?:www\.)?pluto\.tv/live-tv/(?P<slug>[a-zA-Z0-9-]+)')
@@ -16,14 +19,14 @@ class Pluto(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        slug = self.url_re.match(self.url)['slug'].lower()
+        slug = self.url_re.match(self.url).groups('slug').lower()
 
         channels_res = self.session.http.get(self.api_url)
         channels_data = channels_res.json()
         channel_match = next(filter(lambda x: x['slug'] == slug, channels_data), None)
 
         if not channel_match:
-            self.logger.error('Channel %s not found. It may have been removed.' % slug)
+            log.error('Channel %s not found. It may have been removed.' % slug)
             return
 
         stream_link_no_sid = channel_match['stitched']['urls'][0]['url']
