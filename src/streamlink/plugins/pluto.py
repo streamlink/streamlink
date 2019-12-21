@@ -93,9 +93,6 @@ class Pluto(Plugin):
                     if movie['slug'] == slug:
                         match = movie
 
-        return self.handle_media_match(match)
-
-    def handle_media_match(self, match):
         if not match:
             return
 
@@ -108,6 +105,7 @@ class Pluto(Plugin):
         stream_link = stream_link_no_sid.replace('&sid=', '&sid=' + sid)
 
         return HLSStream.parse_variant_playlist(self.session, stream_link)
+
 
 
 __plugin__ = Pluto
