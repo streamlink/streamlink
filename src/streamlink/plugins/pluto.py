@@ -50,17 +50,17 @@ class Pluto(Plugin):
     @classmethod
     def can_handle_url(cls, url):
         return (
-            re.match(cls.url_re_live, url)
-            or re.match(cls.url_re_tv, url)
-            or re.match(cls.url_re_movie, url)
+            cls.url_re_live.match(url)
+            or cls.url_re_tv.match(url)
+            or cls.url_re_movie.match(url)
         )
 
     def _get_streams(self):
         match = None
 
         # live TV
-        if re.match(self.url_re_live, self.url):
-            slug = re.match(self.url_re_live, self.url).group('slug').lower()
+        if self.url_re_live.match(self.url):
+            slug = self.url_re_live.match(self.url).group('slug').lower()
 
             channels_res = self.session.http.get(self.api_url_live_channels)
             channels_data = self.session.http.json(channels_res, schema=self.live_channels_schema)
@@ -68,8 +68,8 @@ class Pluto(Plugin):
             match = next(filter(lambda channel: channel['slug'] == slug, channels_data), None)
 
         # On-demand TV
-        elif re.match(self.url_re_tv, self.url):
-            re_match = re.match(self.url_re_tv, self.url)
+        elif self.url_re_tv.match(self.url):
+            re_match = self.url_re_tv.match(self.url)
             series_slug = re_match.group('series_slug')
             episode_slug = re_match.group('episode_slug')
 
@@ -82,8 +82,8 @@ class Pluto(Plugin):
                         match = episode
 
         # On-demand movie
-        elif re.match(self.url_re_movie, self.url):
-            slug = re.match(self.url_re_movie, self.url).group('slug').lower()
+        elif self.url_re_movie.match(self.url):
+            slug = self.url_re_movie.match(self.url).group('slug').lower()
 
             movies_res = self.session.http.get(self.api_url_movies)
             movies_data = self.session.http.json(movies_res, schema=self.movies_schema)
