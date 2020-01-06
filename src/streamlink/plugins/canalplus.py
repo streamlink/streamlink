@@ -55,9 +55,9 @@ class CanalPlus(Plugin):
         parsed = []
         headers = {'User-Agent': self._user_agent}
 
-        # Some videos may be also available on Dailymotion (especially on CNews)
+        # Some videos may be also available on  (especially on CNews)
         if videos['ID_DM'] != '':
-            for stream in self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items():
+            for stream in self.session.streams('https://www..com/video/' + videos['ID_DM']).items():
                 yield stream
 
         for quality, video_url in list(videos['MEDIA']['VIDEOS'].items()):
