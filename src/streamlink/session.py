@@ -397,8 +397,10 @@ class Streamlink(object):
             if plugin.can_handle_url(url):
                 available_plugins.append(plugin)
 
+        print("available_plugins",available_plugins)
         available_plugins.sort(key=lambda x: x.priority(url), reverse=True)
         if available_plugins:
+            print("available_plugins[0](url)",available_plugins[0](url))
             return available_plugins[0](url)
 
         if follow_redirect:
