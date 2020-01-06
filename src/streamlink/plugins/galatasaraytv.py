@@ -20,7 +20,6 @@ class GalatasarayTV(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        print("url",url)
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
