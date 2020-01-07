@@ -863,6 +863,8 @@ def setup_options():
         streamlink.set_option("ffmpeg-verbose", args.ffmpeg_verbose)
     if args.ffmpeg_verbose_path:
         streamlink.set_option("ffmpeg-verbose-path", args.ffmpeg_verbose_path)
+    if args.ffmpeg_fout:
+        streamlink.set_option("ffmpeg-fout", args.ffmpeg_fout)
     if args.ffmpeg_video_transcode:
         streamlink.set_option("ffmpeg-video-transcode", args.ffmpeg_video_transcode)
     if args.ffmpeg_audio_transcode:

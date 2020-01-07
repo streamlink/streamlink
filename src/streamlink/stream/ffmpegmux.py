@@ -29,6 +29,7 @@ class MuxedStream(Stream):
         fds = []
         metadata = self.options.get("metadata", {})
         maps = self.options.get("maps", [])
+        fout = self.options.get("ffmpeg-fout", [])
         # only update the maps values if they haven't been set
         update_maps = not maps
         for i, substream in enumerate(self.substreams):
@@ -47,6 +48,7 @@ class MuxedStream(Stream):
 
         self.options["metadata"] = metadata
         self.options["maps"] = maps
+        self.options["format"] = fout
 
         return FFMPEGMuxer(self.session, *fds, **self.options).open()
 
@@ -91,7 +93,7 @@ class FFMPEGMuxer(StreamIO):
                              for stream, np in
                              zip(self.streams, self.pipes)]
 
-        ofmt = options.pop("format", "matroska")
+        ofmt = session.options.get("ffmpeg-fout")
         outpath = options.pop("outpath", "pipe:1")
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")

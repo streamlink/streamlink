@@ -74,6 +74,7 @@ class Streamlink(object):
             "subprocess-errorlog": False,
             "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
+            "ffmpeg-fout": "matroska",
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy",
             "locale": None,
@@ -204,6 +205,10 @@ class Streamlink(object):
 
         ffmpeg-verbose-path      (str) Specify the location of the
                                  ffmpeg stderr log file
+
+        ffmpeg-fout              (str) The output file formatr
+                                 when muxing with ffmpeg
+                                 e.g. ``matroska``
 
         ffmpeg-video-transcode   (str) The codec to use if transcoding
                                  video when muxing with ffmpeg

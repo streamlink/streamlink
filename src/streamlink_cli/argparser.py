@@ -1043,6 +1043,17 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--ffmpeg-fout",
+        metavar="OUTFORMAT",
+        help="""
+        Set output file format.
+
+        Default is "matroska".
+
+        Example: "mpegts"
+        """
+    )
+    transport.add_argument(
         "--ffmpeg-video-transcode",
         metavar="CODEC",
         help="""
