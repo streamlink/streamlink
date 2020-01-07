@@ -3,7 +3,7 @@ import unittest
 from streamlink.plugins.galatasaraytv import GalatasarayTV
 
 
-class TestPluginFoxTR(unittest.TestCase):
+class TestPluginGalatasarayTV(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
             'https://galatasaray.com/',
