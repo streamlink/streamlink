@@ -26,7 +26,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
 
     def test_open_player_with_title_mpv(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "{title}", "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title", 'Test Title', "-"])
+                        ["/usr/bin/mpv", "--title=Test Title", "-"])
 
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")

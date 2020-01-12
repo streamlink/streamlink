@@ -190,7 +190,7 @@ class PlayerOutput(Output):
             if self.player_name == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
                 self.title = self._mpv_title_escape(self.title)
-                extra_args.extend(["--title", self.title])
+                extra_args.append("--title={}".format(self.title))
 
             # potplayer
             if self.player_name == "potplayer":
@@ -202,7 +202,7 @@ class PlayerOutput(Output):
 
         args = self.args.format(filename=filename)
         cmd = self.cmd
-        
+
         # player command
         if is_win32:
             eargs = maybe_decode(subprocess.list2cmdline(extra_args))
