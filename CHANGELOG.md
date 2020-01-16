@@ -1,5 +1,40 @@
 # Changelog
 
+## streamlink 1.3.1 (2020-01-27)
+
+A small patch release that addresses the removal of [MPV's legacy option syntax](https://mpv.io/manual/master/#legacy-option-syntax), also with fixes of several plugins, the addition of the `--twitch-disable-reruns` parameter and dropped support for Python 3.4.
+
+
+```text
+Hunter Peavey <krathalan@disroot.org> (4):
+      Add wtwitch to list of thirdparty programs
+      Try adding an image
+      Move image position
+      Make requested changes
+
+Vladimir Stavrinov <9163352+vstavrinov@users.noreply.github.com> (1):
+      plugins.nhkworld: the site migrates from xml to json stream data
+
+back-to <backto@protonmail.ch> (6):
+      docs/tests: remove python 3.4, use 3.8 and nightly for travis-ci
+      plugins.bilibili: fix Livestreams with status 1 (set Referer)
+      plugins.youtube: Remove itag 303
+      plugins.ustream: Added support for video.ibm.com
+      plugins.bbciplayer: Fixed login params
+      plugins.bbciplayer: remove test_extract_nonce
+
+bastimeyer <mail@bastimeyer.de> (5):
+      plugins.twitch: use python logging module
+      plugins.twitch: fix rerun detection
+      cli.output: fix mpv player parameter format
+      2020
+      docs: fix MPV parameters on common issues page
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      Allow to disable twitch reruns (#2722)
+```
+
+
 ## streamlink 1.3.0 (2019-11-22)
 
 A new release with plugin updates and fixes, including Twitch.tv (see [#2680](https://github.com/streamlink/streamlink/issues/2680)), which had to be delayed due to back and forth API changes.
