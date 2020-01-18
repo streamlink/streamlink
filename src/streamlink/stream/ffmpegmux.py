@@ -91,13 +91,14 @@ class FFMPEGMuxer(StreamIO):
                              for stream, np in
                              zip(self.streams, self.pipes)]
 
-        ofmt = options.pop("format", "matroska")
+        ofmt = session.options.get("ffmpeg-fout") or options.pop("format", "matroska")
         outpath = options.pop("outpath", "pipe:1")
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
         audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
         copyts = options.pop("copyts", False)
+        start_at_zero = session.options.get("ffmpeg-start-at-zero", True)
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
@@ -111,7 +112,8 @@ class FFMPEGMuxer(StreamIO):
 
         if copyts:
             self._cmd.extend(["-copyts"])
-            self._cmd.extend(["-start_at_zero"])
+            if start_at_zero:
+                self._cmd.extend(["-start_at_zero"])
 
         for stream, data in metadata.items():
             for datum in data:
