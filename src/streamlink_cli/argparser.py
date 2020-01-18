@@ -1043,6 +1043,18 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--ffmpeg-fout",
+        type=str,
+        metavar="OUTFORMAT",
+        help="""
+        Set output file format.
+
+        Default is "matroska".
+
+        Example: "mpegts"
+        """
+    )
+    transport.add_argument(
         "--ffmpeg-video-transcode",
         metavar="CODEC",
         help="""
@@ -1062,6 +1074,17 @@ def build_parser():
         Default is "copy".
 
         Example: "aac"
+        """
+    )
+    transport.add_argument(
+        "--ffmpeg-start-at-zero",
+        type=boolean,
+        metavar="STARTATZERO",
+        help="""
+        When used with ffmpeg and copyts,
+        shift input timestamps so they start at zero.
+
+        Default is "True".
         """
     )
 
