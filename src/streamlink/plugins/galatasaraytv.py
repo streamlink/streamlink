@@ -1,10 +1,6 @@
-from __future__ import print_function
 import re
-
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-
 
 class GalatasarayTV(Plugin):
     """
@@ -28,6 +24,5 @@ class GalatasarayTV(Plugin):
         if match:
             stream_url = match.group(2)
             return HLSStream.parse_variant_playlist(self.session, stream_url)
-
 
 __plugin__ = GalatasarayTV
