@@ -99,8 +99,11 @@ _user_schema = validate.Schema(
 _stream_schema = validate.Schema(
     {
         "stream": validate.any(None, {
-            "stream_type": validate.any("live", "rerun"),
-            "broadcast_platform": validate.any("live", "rerun")
+            "stream_type": validate.text,
+            "broadcast_platform": validate.text,
+            "channel": validate.any(None, {
+                "broadcaster_software": validate.text
+            })
         })
     },
     validate.get("stream")
@@ -709,7 +712,11 @@ class Twitch(Plugin):
     def _check_for_rerun(self):
         stream = self.api.streams(self.channel_id, schema=_stream_schema)
 
-        return stream and (stream["stream_type"] == "rerun" or stream["broadcast_platform"] == "rerun")
+        return stream and (
+            stream["stream_type"] != "live"
+            or stream["broadcast_platform"] == "rerun"
+            or stream["channel"] and stream["channel"]["broadcaster_software"] == "watch_party_rerun"
+        )
 
     def _get_hls_streams(self, stream_type="live"):
         log.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
