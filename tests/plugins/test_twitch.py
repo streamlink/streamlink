@@ -208,8 +208,11 @@ class TestTwitchReruns(unittest.TestCase):
             mocked_stream = mock.get(
                 "https://api.twitch.tv/kraken/streams/1234.json",
                 json={"stream": None} if params.pop("offline", False) else {"stream": {
-                    "stream_type": params.pop("stream_type", "rerun"),
-                    "broadcast_platform": params.pop("broadcast_platform", "rerun")
+                    "stream_type": params.pop("stream_type", "live"),
+                    "broadcast_platform": params.pop("broadcast_platform", "live"),
+                    "channel": {
+                        "broadcaster_software": params.pop("broadcaster_software", "")
+                    }
                 }}
             )
 
@@ -220,13 +223,21 @@ class TestTwitchReruns(unittest.TestCase):
             try:
                 streams = plugin.streams()
             except TestTwitchReruns.StopError:
-                streams = None
+                streams = True
                 pass
 
             return streams, mocked_users, mocked_stream, mocked[0]
 
-    def test_disable_reruns(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="rerun", broadcast_platform="rerun")
+    def test_disable_reruns_live(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start()
+        self.assertTrue(api_users.called_once)
+        self.assertTrue(api_stream.called_once)
+        self.assertTrue(access_token.called_once)
+        self.assertTrue(streams)
+        self.assertNotIn(self.log_call, mock_log.info.call_args_list)
+
+    def test_disable_reruns_not_live(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(stream_type="rerun")
         self.assertTrue(api_users.called_once)
         self.assertTrue(api_stream.called_once)
         self.assertFalse(access_token.called)
@@ -249,20 +260,20 @@ class TestTwitchReruns(unittest.TestCase):
         self.assertDictEqual(streams, {})
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
-    def test_disable_reruns_live(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="live", broadcast_platform="live")
+    def test_disable_reruns_broadcaster_software(self, mock_log):
+        streams, api_users, api_stream, access_token = self.start(broadcaster_software="watch_party_rerun")
         self.assertTrue(api_users.called_once)
         self.assertTrue(api_stream.called_once)
         self.assertTrue(access_token.called_once)
-        self.assertIsNone(streams)
-        self.assertNotIn(self.log_call, mock_log.info.call_args_list)
+        self.assertDictEqual(streams, {})
+        self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_offline(self, mock_log):
         streams, api_users, api_stream, access_token = self.start(offline=True)
         self.assertTrue(api_users.called_once)
         self.assertTrue(api_stream.called_once)
         self.assertTrue(access_token.called_once)
-        self.assertIsNone(streams)
+        self.assertTrue(streams)
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
 
     def test_enable_reruns(self, mock_log):
@@ -270,5 +281,5 @@ class TestTwitchReruns(unittest.TestCase):
         self.assertFalse(api_users.called)
         self.assertFalse(api_stream.called)
         self.assertTrue(access_token.called_once)
-        self.assertIsNone(streams)
+        self.assertTrue(streams)
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
