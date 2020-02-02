@@ -105,7 +105,7 @@ class CrunchyrollAPI(object):
     _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; Android SDK built for x86 Build/KK)"
     _version_code = 444
     _version_name = "2.1.10"
-    _access_token = "Scwg9PRRZ19iVwD"
+    _access_token = "WveH9VkPLrXvuNm"
     _access_type = "com.crunchyroll.crunchyroid"
 
     def __init__(self, cache, session, session_id=None, locale=_default_locale):
