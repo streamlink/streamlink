@@ -1,9 +1,9 @@
 import time
 from requests import Session, __build__ as requests_version
 from requests.adapters import HTTPAdapter
-from requests.exceptions import RequestException
 
 from streamlink.packages.requests_file import FileAdapter
+from streamlink.plugin.api import useragents
 
 try:
     from requests.packages.urllib3.util import Timeout
@@ -63,6 +63,9 @@ class HTTPAdapterWithReadTimeout(HTTPAdapter):
 class HTTPSession(Session):
     def __init__(self, *args, **kwargs):
         Session.__init__(self, *args, **kwargs)
+
+        if self.headers['User-Agent'].startswith('python-requests'):
+            self.headers['User-Agent'] = useragents.FIREFOX
 
         self.timeout = 20.0
 
