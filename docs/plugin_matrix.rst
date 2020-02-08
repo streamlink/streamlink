@@ -92,6 +92,7 @@ filmon                  filmon.com           Yes   Yes   Only SD quality streams
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
                         - funimationnow.uk
+galatasaraytv           galatasaray.com      Yes   No
 gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
 goltelevision           goltelevision.com    Yes   No    Streams may be geo-restricted to Spain.
