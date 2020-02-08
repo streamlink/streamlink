@@ -3,8 +3,7 @@ from __future__ import unicode_literals
 import logging
 import re
 
-from streamlink import PluginError
-from streamlink.compat import urljoin
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import DASHStream, HLSStream
