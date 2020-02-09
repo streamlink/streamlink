@@ -149,7 +149,15 @@ class FilmOnAPI(object):
     )
 
     def channel(self, channel):
-        res = self.session.http.get(self.channel_url.format(channel))
+        for _ in range(5):
+            # retry for 50X errors
+            try:
+                res = self.session.http.get(self.channel_url.format(channel))
+                if res:
+                    break
+            except Exception:
+                log.debug("channel sleep {0}".format(_))
+                time.sleep(0.75)
         return self.session.http.json(res, schema=self.api_schema)
 
     def vod(self, vod_id):
