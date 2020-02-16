@@ -15,7 +15,7 @@ class TVPlayer(Plugin):
     dummy_postcode = "SE1 9LT"  # location of ITV HQ in London
 
     url_re = re.compile(r"https?://(?:www.)?tvplayer.com/(:?watch/?|watch/(.+)?)")
-    stream_attrs_re = re.compile(r'data-player-(expiry|id|key|token|uvid)\s*=\s*"(.*?)"', re.S)
+    stream_attrs_re = re.compile(r'data-player-(expiry|key|token|uvid)\s*=\s*"(.*?)"', re.S)
     login_token_re = re.compile(r'input.*?name="_token".*?value="(\w+)"')
     stream_schema = validate.Schema({
         "response": validate.Schema({
@@ -52,7 +52,7 @@ class TVPlayer(Plugin):
         # there is a 302 redirect on a successful login
         return res2.status_code == 302
 
-    def _get_stream_data(self, expiry, id, key, token, uvid):
+    def _get_stream_data(self, expiry, key, token, uvid):
         res = self.session.http.get(self.api_url + uvid,
             params=dict(key=key, platform="chrome"),
             headers={"Token": token,
@@ -76,7 +76,7 @@ class TVPlayer(Plugin):
 
         self.logger.debug("Got stream attributes: {0}", str(stream_attrs))
         valid = True
-        for a in ("expiry", "id", "key", "token", "uvid"):
+        for a in ("expiry", "key", "token", "uvid"):
             if a not in stream_attrs:
                 self.logger.debug("Missing '{0}' from stream attributes", a)
                 valid = False
@@ -103,6 +103,7 @@ class TVPlayer(Plugin):
         stream_attrs = self._get_stream_attrs(res)
         if stream_attrs:
             stream_data = self._get_stream_data(**stream_attrs)
+
             if stream_data:
                 if stream_data.get("drm"):
                     self.logger.error("This stream is protected by DRM can cannot be played")
