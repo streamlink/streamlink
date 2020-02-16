@@ -105,7 +105,7 @@ class TVPlayer(Plugin):
             stream_data = self._get_stream_data(**stream_attrs)
 
             if stream_data:
-                if stream_data.get("drm"):
+                if stream_data["response"]["drm"] != None:
                     self.logger.error("This stream is protected by DRM can cannot be played")
                     return
                 else:
