@@ -10,6 +10,8 @@ class TestPluginAlbavision:
         ("https://www.elnueve.com.ar/en-vivo",),
         ("http://www.rts.com.ec/envivo",),
         ("https://www.tvc.com.ec/envivo",),
+        ("http://www.atv.pe/envivo/ATV",),
+        ("http://www.atv.pe/envivo/ATVMas",),
     ]
     invalid_urls = [
         ("https://news.now.com/home/local",),
