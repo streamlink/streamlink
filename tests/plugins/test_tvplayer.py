@@ -33,20 +33,18 @@ class TestPluginTVPlayer(unittest.TestCase):
     @patch('streamlink.plugins.tvplayer.HLSStream')
     def test_get_streams(self, hlsstream, mock_get_stream_data):
         mock_get_stream_data.return_value = {
-            "stream": "http://test.se/stream1"
+            "response": {"stream": "http://test.se/stream1", "drm": None }
         }
 
         page_resp = Mock()
         page_resp.text = u"""
-                    <div class="video-js theoplayer-skin theo-seekbar-above-controls content-box vjs-fluid"
-                 data-resource= "bbcone"
-                 data-token = "1324567894561268987948596154656418448489159"
-                                    data-content-type="live"
-                    data-environment="live"
-                    data-subscription="free"
-                    data-channel-id="89">
-                <div id="channel-info" class="channel-info">
-                    <div class="row visible-xs visible-sm">
+                    data-player-library="videojs"
+                                            data-player-id="ILWmaLKV41Ql8kF"
+                                        data-player-key="2Pw1Eg0Px3Dy9Jm3Ly8Dr5Bi5Vc5Nk"
+                    data-player-uvid="139"
+                    data-player-token="294c808a378a09d6e36d0253ab3765af"
+                    data-player-expiry="1581958189"
+                    data-player-poster=""
         """
 
         self.session.http.get.return_value = page_resp
@@ -62,7 +60,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         # test the url is used correctly
         self.session.http.get.assert_called_with("http://tvplayer.com/watch/dave")
         # test that the correct API call is made
-        mock_get_stream_data.assert_called_with(resource="bbcone", channel_id="89", token="1324567894561268987948596154656418448489159")
+        mock_get_stream_data.assert_called_with(expiry="1581958189", key="2Pw1Eg0Px3Dy9Jm3Ly8Dr5Bi5Vc5Nk", token="294c808a378a09d6e36d0253ab3765af", uvid="139")
         # test that the correct URL is used for the HLSStream
         hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1")
 
