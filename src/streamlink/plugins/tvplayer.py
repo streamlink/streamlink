@@ -1,10 +1,14 @@
 #!/usr/bin/env python
+import logging
 import re
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class TVPlayer(Plugin):
@@ -24,14 +28,18 @@ class TVPlayer(Plugin):
         })
     })
     arguments = PluginArguments(
-        PluginArgument("email",
-                       help="The email address used to register with tvplayer.com.",
-                       metavar="EMAIL",
-                       requires=["password"]),
-        PluginArgument("password",
-                       sensitive=True,
-                       help="The password for your tvplayer.com account.",
-                       metavar="PASSWORD")
+        PluginArgument(
+            "email",
+            help="The email address used to register with tvplayer.com.",
+            metavar="EMAIL",
+            requires=["password"]
+        ),
+        PluginArgument(
+            "password",
+            sensitive=True,
+            help="The password for your tvplayer.com account.",
+            metavar="PASSWORD"
+        )
     )
 
     @classmethod
@@ -47,26 +55,37 @@ class TVPlayer(Plugin):
         res = self.session.http.get(self.login_url)
         match = self.login_token_re.search(res.text)
         token = match and match.group(1)
-        res2 = self.session.http.post(self.login_url, data=dict(email=username, password=password, _token=token),
-                         allow_redirects=False)
+        res2 = self.session.http.post(
+            self.login_url,
+            data=dict(email=username, password=password, _token=token),
+            allow_redirects=False
+        )
         # there is a 302 redirect on a successful login
         return res2.status_code == 302
 
     def _get_stream_data(self, expiry, key, token, uvid):
-        res = self.session.http.get(self.api_url + uvid,
+        res = self.session.http.get(
+            self.api_url + uvid,
             params=dict(key=key, platform="chrome"),
-            headers={"Token": token,
-                     "Token-Expiry": expiry,
-                     "Uvid": uvid})
+            headers={
+                "Token": token,
+                "Token-Expiry": expiry,
+                "Uvid": uvid
+            }
+        )
 
         res_schema = self.session.http.json(res, schema=self.stream_schema)
 
-        if res_schema["response"]["stream"] == None:
-            res = self.session.http.get(self.stream_url,
+        if res_schema["response"]["stream"] is None:
+            res = self.session.http.get(
+                self.stream_url,
                 params=dict(key=key),
-                headers={"Token": token,
-                         "Token-Expiry": expiry,
-                         "Uvid": uvid}).json()
+                headers={
+                    "Token": token,
+                    "Token-Expiry": expiry,
+                    "Uvid": uvid
+                }
+            ).json()
             res_schema["response"]["stream"] = res["Streams"]["Adaptive"]
 
         return res_schema
@@ -74,45 +93,52 @@ class TVPlayer(Plugin):
     def _get_stream_attrs(self, page):
         stream_attrs = dict((k.replace("-", "_"), v.strip('"')) for k, v in self.stream_attrs_re.findall(page.text))
 
-        self.logger.debug("Got stream attributes: {0}", str(stream_attrs))
+        log.debug("Got stream attributes: {0}", str(stream_attrs))
         valid = True
         for a in ("expiry", "key", "token", "uvid"):
             if a not in stream_attrs:
-                self.logger.debug("Missing '{0}' from stream attributes", a)
+                log.debug("Missing '{0}' from stream attributes", a)
                 valid = False
 
         return stream_attrs if valid else {}
 
     def _get_streams(self):
         if self.get_option("email") and self.get_option("password"):
-            self.logger.debug("Logging in as {0}".format(self.get_option("email")))
+            log.debug("Logging in as {0}".format(self.get_option("email")))
             if not self.authenticate(self.get_option("email"), self.get_option("password")):
-                self.logger.warning("Failed to login as {0}".format(self.get_option("email")))
+                log.warning("Failed to login as {0}".format(self.get_option("email")))
 
         # find the list of channels from the html in the page
         self.url = self.url.replace("https", "http")  # https redirects to http
         res = self.session.http.get(self.url)
 
         if "enter your postcode" in res.text:
-            self.logger.info("Setting your postcode to: {0}. "
-                             "This can be changed in the settings on tvplayer.com", self.dummy_postcode)
-            res = self.session.http.post(self.update_url,
-                            data=dict(postcode=self.dummy_postcode),
-                            params=dict(return_url=self.url))
+            log.info(
+                "Setting your postcode to: {0}. "
+                "This can be changed in the settings on tvplayer.com",
+                self.dummy_postcode
+            )
+            res = self.session.http.post(
+                self.update_url,
+                data=dict(postcode=self.dummy_postcode),
+                params=dict(return_url=self.url)
+            )
 
         stream_attrs = self._get_stream_attrs(res)
         if stream_attrs:
             stream_data = self._get_stream_data(**stream_attrs)
 
             if stream_data:
-                if stream_data["response"]["drm"] != None:
-                    self.logger.error("This stream is protected by DRM can cannot be played")
+                if stream_data["response"]["drm"] is not None:
+                    log.error("This stream is protected by DRM can cannot be played")
                     return
                 else:
-                    return HLSStream.parse_variant_playlist(self.session, stream_data["response"]["stream"])
+                    return HLSStream.parse_variant_playlist(
+                        self.session, stream_data["response"]["stream"]
+                    )
         else:
             if "need to login" in res.text:
-                self.logger.error(
+                log.error(
                     "You need to login using --tvplayer-email/--tvplayer-password to view this stream")
 
 
