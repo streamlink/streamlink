@@ -19,7 +19,7 @@ class TestPluginBFMTV(unittest.TestCase):
         self.assertTrue(BFMTV.can_handle_url("https://www.01net.com/mediaplayer/replay/jtech/"))
         self.assertTrue(BFMTV.can_handle_url("https://www.bfmtv.com/politique/macron-et-le-pen-talonnes-par-fillon-et-melenchon-a-l-approche-du-premier-tour-1142070.html"))
         self.assertTrue(BFMTV.can_handle_url("https://rmcdecouverte.bfmtv.com/mediaplayer-replay/?id=6714&title=TOP%20GEAR%20:PASSION%20VINTAGE"))
-        
+
         # shouldn't match
         self.assertFalse(BFMTV.can_handle_url("http://www.tvcatchup.com/"))
         self.assertFalse(BFMTV.can_handle_url("http://www.youtube.com/"))

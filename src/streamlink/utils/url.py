@@ -95,4 +95,3 @@ def update_qsd(url, qsd=None, remove=None):
             current_qsd[key] = value
 
     return parsed._replace(query=urlencode(current_qsd)).geturl()
-
