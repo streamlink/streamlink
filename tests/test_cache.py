@@ -7,7 +7,6 @@ import datetime
 import streamlink.cache
 
 from shutil import rmtree
-import time
 import unittest
 from tests.mock import patch
 

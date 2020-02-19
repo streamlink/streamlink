@@ -1,9 +1,5 @@
-# Unit tests accompanying the Huomao Streamlink plugin.
-
 import unittest
-import re
 
-from streamlink.plugin.api import http
 from streamlink.plugins.huomao import Huomao
 
 
