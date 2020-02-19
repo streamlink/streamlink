@@ -16,8 +16,10 @@ class ElTreceTV(Plugin):
     def _get_streams(self):
         if "eltrecetv.com.ar/vivo" in self.url.lower():
             try:
-                self.session.http.headers = {'Referer': self.url,
-                                'User-Agent': useragents.ANDROID}
+                self.session.http.headers = {
+                    'Referer': self.url,
+                    'User-Agent': useragents.ANDROID
+                }
                 res = self.session.http.get('https://api.iamat.com/metadata/atcodes/eltrece')
                 yt_id = parse_json(res.text)["atcodes"][0]["context"]["ahora"]["vivo"]["youtubeVideo"]
                 yt_url = "https://www.youtube.com/watch?v={0}".format(yt_id)
@@ -26,8 +28,10 @@ class ElTreceTV(Plugin):
                 self.logger.info("Live content is temporarily unavailable. Please try again later.")
         else:
             try:
-                self.session.http.headers = {'Referer': self.url,
-                                'User-Agent': useragents.CHROME}
+                self.session.http.headers = {
+                    'Referer': self.url,
+                    'User-Agent': useragents.CHROME
+                }
                 res = self.session.http.get(self.url)
                 _player_re = re.compile(r'''data-kaltura="([^"]+)"''')
                 match = _player_re.search(res.text)

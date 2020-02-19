@@ -80,8 +80,10 @@ class DailyMotion(Plugin):
         }
         api_user_videos = USER_INFO_URL.format(username) + "/videos"
         try:
-            res = self.session.http.get(api_user_videos.format(username),
-                           params=params)
+            res = self.session.http.get(
+                api_user_videos.format(username),
+                params=params
+            )
         except Exception as e:
             self.logger.error("invalid username")
             raise NoStreamsError(self.url)

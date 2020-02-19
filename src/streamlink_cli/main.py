@@ -903,7 +903,7 @@ def setup_plugin_options(session, plugin):
                         required[rparg.name] = rparg
                 except RuntimeError:
                     log.error("{0} plugin has a configuration error and the arguments "
-                                         "cannot be parsed".format(pname))
+                              "cannot be parsed".format(pname))
                     break
     if required:
         for req in required.values():

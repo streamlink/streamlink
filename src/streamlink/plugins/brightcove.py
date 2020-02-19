@@ -74,12 +74,14 @@ class BrightcovePlayer(object):
         url = "{base}accounts/{account_id}/videos/{video_id}".format(base=self.api_url,
                                                                      account_id=self.account_id,
                                                                      video_id=video_id)
-        res = self.session.http.get(url,
-                       headers={
-                           "User-Agent": useragents.CHROME,
-                           "Referer": self.player_url(video_id),
-                           "Accept": "application/json;pk={0}".format(policy_key)
-                       })
+        res = self.session.http.get(
+            url,
+            headers={
+                "User-Agent": useragents.CHROME,
+                "Referer": self.player_url(video_id),
+                "Accept": "application/json;pk={0}".format(policy_key)
+            }
+        )
         return self.session.http.json(res, schema=self.schema)
 
     def policy_key(self, video_id):
@@ -151,11 +153,13 @@ class BrightcovePlayer(object):
         amf_packet = AMFPacket(version=3)
         amf_packet.messages.append(amf_message)
 
-        res = self.session.http.post(cls.amf_broker,
-                        headers={"Content-Type": "application/x-amf"},
-                        data=amf_packet.serialize(),
-                        params=dict(playerKey=player_key),
-                        raise_for_status=False)
+        res = self.session.http.post(
+            cls.amf_broker,
+            headers={"Content-Type": "application/x-amf"},
+            data=amf_packet.serialize(),
+            params=dict(playerKey=player_key),
+            raise_for_status=False
+        )
         data = AMFPacket.deserialize(BytesIO(res.content))
         result = data.messages[0].value
         bp = cls(session=session, account_id=int(result.publisherId))

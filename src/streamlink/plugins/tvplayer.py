@@ -60,27 +60,39 @@ class TVPlayer(Plugin):
         res = self.session.http.get(self.login_url)
         match = self.login_token_re.search(res.text)
         token = match and match.group(1)
-        res2 = self.session.http.post(self.login_url, data=dict(email=username, password=password, token=token),
-                         allow_redirects=False)
+        res2 = self.session.http.post(
+            self.login_url,
+            data=dict(email=username, password=password, token=token),
+            allow_redirects=False
+        )
         # there is a 302 redirect on a successful login
         return res2.status_code == 302
 
     def _get_stream_data(self, resource, channel_id, token, service=1):
         # Get the context info (validation token and platform)
         self.logger.debug("Getting stream information for resource={0}".format(resource))
-        context_res = self.session.http.get(self.context_url, params={"resource": resource,
-                                                         "gen": token})
+        context_res = self.session.http.get(
+            self.context_url,
+            params={
+                "resource": resource,
+                "gen": token
+            }
+        )
         context_data = self.session.http.json(context_res, schema=self.context_schema)
         self.logger.debug("Context data: {0}", str(context_data))
 
         # get the stream urls
-        res = self.session.http.post(self.api_url, data=dict(
-            service=service,
-            id=channel_id,
-            validate=context_data["validate"],
-            token=context_data.get("token"),
-            platform=context_data["platform"]["key"]),
-            raise_for_status=False)
+        res = self.session.http.post(
+            self.api_url,
+            data=dict(
+                service=service,
+                id=channel_id,
+                validate=context_data["validate"],
+                token=context_data.get("token"),
+                platform=context_data["platform"]["key"]
+            ),
+            raise_for_status=False
+        )
 
         return self.session.http.json(res, schema=self.stream_schema)
 
@@ -113,9 +125,11 @@ class TVPlayer(Plugin):
         if "enter your postcode" in res.text:
             self.logger.info("Setting your postcode to: {0}. "
                              "This can be changed in the settings on tvplayer.com", self.dummy_postcode)
-            res = self.session.http.post(self.update_url,
-                            data=dict(postcode=self.dummy_postcode),
-                            params=dict(return_url=self.url))
+            res = self.session.http.post(
+                self.update_url,
+                data=dict(postcode=self.dummy_postcode),
+                params=dict(return_url=self.url)
+            )
 
         stream_attrs = self._get_stream_attrs(res)
         if stream_attrs:
