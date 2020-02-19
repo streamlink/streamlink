@@ -14,6 +14,7 @@ class FakePlugin:
     def stream_weight(cls, stream):
         return Plugin.stream_weight(stream)
 
+
 class TestCLIMain(unittest.TestCase):
     def test_check_file_output(self):
         streamlink_cli.main.console = Mock()

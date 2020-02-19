@@ -51,6 +51,7 @@ _room_schema = validate.Schema(
     },
     validate.get("data"))
 
+
 class Pandatv(Plugin):
     @classmethod
     def can_handle_url(cls, url):

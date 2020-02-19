@@ -58,4 +58,5 @@ class MPEGDASH(Plugin):
 
         return DASHStream.parse_manifest(self.session, mpdurl)
 
+
 __plugin__ = MPEGDASH
