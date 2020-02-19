@@ -30,7 +30,7 @@ _roominfo_re = re.compile(r'window\.HOSTINFO=({.*});')
 STREAM_WEIGHTS = {
     "source": 1080,
     "medium": 720,
-    "low":    480
+    "low": 480
 }
 
 _room_schema = validate.Schema(
