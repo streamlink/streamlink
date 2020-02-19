@@ -49,7 +49,7 @@ class YuppTV(Plugin):
             # log out on other device
             log.info("Logging out on other device: {0}".format(resp["tempBoxid"]))
             _ = self.session.http.get(self._box_logout, params=dict(boxId=resp["tempBoxid"]))
-            return self.login(username, password, depth-1)
+            return self.login(username, password, depth - 1)
         return resp['errorCode'], resp['statusmsg']
 
     def _get_streams(self):

@@ -233,7 +233,7 @@ class TestMPDParser(unittest.TestCase):
             node.findall.return_value = []
             return Representation(node)
 
-        self.assertEqual(mock_rep(1.2*1000.0).bandwidth_rounded, 1.2)
-        self.assertEqual(mock_rep(45.6*1000.0).bandwidth_rounded, 46.0)
-        self.assertEqual(mock_rep(134.0*1000.0).bandwidth_rounded, 130.0)
-        self.assertEqual(mock_rep(1324.0*1000.0).bandwidth_rounded, 1300.0)
+        self.assertEqual(mock_rep(1.2 * 1000.0).bandwidth_rounded, 1.2)
+        self.assertEqual(mock_rep(45.6 * 1000.0).bandwidth_rounded, 46.0)
+        self.assertEqual(mock_rep(134.0 * 1000.0).bandwidth_rounded, 130.0)
+        self.assertEqual(mock_rep(1324.0 * 1000.0).bandwidth_rounded, 1300.0)

@@ -59,11 +59,11 @@ class TwitCasting(Plugin):
         movie_id = stream_info["movie"]["id"]
 
         if stream_info["fmp4"]["source"]:
-            mode = "main" # High quality
+            mode = "main"  # High quality
         elif stream_info["fmp4"]["mobilesource"]:
-            mode = "mobilesource" # Medium quality
+            mode = "mobilesource"  # Medium quality
         else:
-            mode = "base" # Low quality
+            mode = "base"  # Low quality
 
         if (proto == '') or (host == '') or (not movie_id):
             raise PluginError("No stream available for user {}".format(self.channel))
@@ -71,7 +71,7 @@ class TwitCasting(Plugin):
         real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)
         log.debug("Real stream url: {}".format(real_stream_url))
 
-        return {mode:TwitCastingStream(session=self.session, url=real_stream_url)}
+        return {mode: TwitCastingStream(session=self.session, url=real_stream_url)}
 
     def _get_stream_info(self):
         url = self._STREAM_INFO_URL.format(channel=self.channel)
