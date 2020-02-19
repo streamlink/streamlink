@@ -72,24 +72,24 @@ class Language(object):
     def get(cls, language):
         try:
             if PYCOUNTRY:
-                c = languages.lookup(language)
-                return Language(c.alpha_2, c.alpha_3, c.name, getattr(c, "bibliographic", None))
+                lang = languages.lookup(language)
+                return Language(lang.alpha_2, lang.alpha_3, lang.name, getattr(lang, "bibliographic", None))
             else:
-                l = None
+                lang = None
                 if len(language) == 2:
-                    l = languages.get(alpha2=language)
+                    lang = languages.get(alpha2=language)
                 elif len(language) == 3:
                     for code_type in ['part2b', 'part2t', 'part3']:
                         try:
-                            l = languages.get(**{code_type: language})
+                            lang = languages.get(**{code_type: language})
                             break
                         except KeyError:
                             pass
-                    if not l:
+                    if not lang:
                         raise KeyError(language)
                 else:
                     raise KeyError(language)
-                return Language(l.alpha2, l.part3, l.name, l.part2b or l.part2t)
+                return Language(lang.alpha2, lang.part3, lang.name, lang.part2b or lang.part2t)
         except (LookupError, KeyError):
             raise LookupError("Invalid language code: {0}".format(language))
 
