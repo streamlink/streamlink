@@ -1,6 +1,5 @@
 import unittest
 from tests.mock import Mock
-import sys
 
 from streamlink_cli.main import setup_plugin_args
 from streamlink.options import Options, Arguments, Argument

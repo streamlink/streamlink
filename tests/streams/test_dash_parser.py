@@ -7,7 +7,7 @@ from operator import attrgetter
 
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
-from tests.mock import MagicMock, Mock
+from tests.mock import Mock
 
 from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, Representation
 from tests.resources import xml

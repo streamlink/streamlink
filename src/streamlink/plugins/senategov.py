@@ -5,9 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.compat import urlparse, parse_qsl
-from streamlink.utils.times import hours_minutes_seconds
 
 log = logging.getLogger(__name__)
 

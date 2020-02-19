@@ -1,6 +1,5 @@
 from __future__ import print_function
 import re
-from pprint import pprint
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate

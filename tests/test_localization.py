@@ -4,15 +4,15 @@ from tests.mock import patch
 import streamlink.utils.l10n as l10n
 
 try:
-    import iso639
-    import iso3166
+    import iso639  # noqa: F401
+    import iso3166  # noqa: F401
 
     ISO639 = True
 except ImportError:
     ISO639 = False
 
 try:
-    import pycountry
+    import pycountry  # noqa: F401
 
     PYCOUNTRY = True
 except ImportError:

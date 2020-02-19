@@ -4,7 +4,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink import NoStreamsError
-from streamlink.utils import parse_json
 
 
 class CubeTV(Plugin):

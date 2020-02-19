@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream import HLSStream
 
 
 class OlympicChannel(Plugin):

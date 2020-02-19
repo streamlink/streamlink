@@ -5,8 +5,6 @@ import uuid
 import random
 import json
 
-from requests.adapters import HTTPAdapter
-
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import (HTTPStream, HLSStream)
