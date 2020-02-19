@@ -84,7 +84,7 @@ class DailyMotion(Plugin):
                 api_user_videos.format(username),
                 params=params
             )
-        except Exception as e:
+        except Exception:
             self.logger.error("invalid username")
             raise NoStreamsError(self.url)
 

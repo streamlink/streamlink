@@ -38,7 +38,7 @@ class CubeTV(Plugin):
         try:
             res = self.session.http.get(self._channel_info_api_url_base.format(channel=user_id))
             return res
-        except Exception as e:
+        except Exception:
             raise NoStreamsError(self.url)
 
     def _get_streams(self):
@@ -49,7 +49,7 @@ class CubeTV(Plugin):
         try:
             stream_data = self.session.http.get(self._stream_data_api_url_base.format(gid=user_gid))
             hls = self.session.http.json(stream_data, schema=self._stream_data_schema)['data']['video_src']
-        except Exception as e:
+        except Exception:
             raise NoStreamsError(self.url)
 
         return HLSStream.parse_variant_playlist(self.session, hls)

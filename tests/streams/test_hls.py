@@ -76,7 +76,6 @@ class TestHLS(unittest.TestCase):
     def test_hls_non_encrypted(self):
         streams = [os.urandom(1024) for _ in range(4)]
         masterPlaylist = self.getMasterPlaylist()
-        firstSequence = self.mediaSequence
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
         with requests_mock.Mocker() as mock:
             mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)

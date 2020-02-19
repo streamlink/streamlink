@@ -478,7 +478,7 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
-        except FatalPluginError as err:
+        except FatalPluginError:
             raise
         except PluginError as err:
             log.error(u"{0}".format(err))

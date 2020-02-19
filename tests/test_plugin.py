@@ -75,7 +75,7 @@ class TestPlugin(unittest.TestCase):
         Plugin.cache.get_all.return_value = {
             "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None)
         }
-        plugin = Plugin("http://test.se")
+        Plugin("http://test.se")
 
         self.assertSequenceEqual(
             list(map(self._cookie_to_dict, session.http.cookies)),
