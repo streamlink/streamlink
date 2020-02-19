@@ -26,4 +26,5 @@ def maybe_decode(text, encoding="utf8"):
     else:
         return text
 
+
 __all__ = ["get_filesystem_encoding", "maybe_decode", "maybe_encode"]

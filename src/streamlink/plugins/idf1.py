@@ -74,4 +74,5 @@ class IDF1(Plugin):
                 for s in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield s
 
+
 __plugin__ = IDF1

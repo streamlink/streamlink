@@ -528,4 +528,5 @@ class Plugin(object):
                 pass
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
+
 __all__ = ["Plugin"]

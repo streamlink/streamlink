@@ -17,8 +17,8 @@ from threading import Thread, Event
 
 log = logging.getLogger(__name__)
 
-class TwitCasting(Plugin):
 
+class TwitCasting(Plugin):
     _url_re = re.compile(r"http(s)?://twitcasting.tv/(?P<channel>[^/]+)", re.VERBOSE)
     _STREAM_INFO_URL = "https://twitcasting.tv/streamserver.php?target={channel}&mode=client"
     _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
@@ -155,7 +155,6 @@ class TwitCastingWsClient(Thread):
 
 
 class TwitCastingReader(StreamIO):
-
     def __init__(self, stream, timeout=None, **kwargs):
         StreamIO.__init__(self)
         self.stream = stream
