@@ -76,7 +76,7 @@ class Pandatv(Plugin):
             if videoinfo['hlsurl']:
                 yield 'source', HLSStream(self.session, videoinfo['hlsurl'])
 
-            #wangsu cdn prior to others, wangsu = 0, alicloud = 1, qcloud = videoinfo['streamurl']
+            # wangsu cdn prior to others, wangsu = 0, alicloud = 1, qcloud = videoinfo['streamurl']
             _cdn = 0
             if videoinfo['zl'][_cdn]['streamurl']:
                 yield 'source', HTTPStream(self.session, videoinfo['zl'][_cdn]['streamurl'])
