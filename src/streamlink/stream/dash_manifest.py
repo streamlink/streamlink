@@ -600,7 +600,7 @@ class Representation(MPDNode):
         :return: yields Segments
         """
 
-        segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
+        # segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
         segmentLists = self.segmentList or self.walk_back_get_attr("segmentList")
         segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
 

@@ -117,7 +117,7 @@ class TestMPDParser(unittest.TestCase):
                                      ['http://test.se/video-time=1525450872000-2800000-0.m4s?z32='])
 
     def test_segments_dynamic_number(self):
-        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)) as frozen_datetime:
+        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)):
             with xml("dash/test_4.mpd") as mpd_xml:
                 mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
 
