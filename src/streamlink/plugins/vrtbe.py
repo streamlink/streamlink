@@ -17,8 +17,7 @@ class VRTbe(Plugin):
         validate.any({
             "code": validate.text,
             "message": validate.text
-        },
-        {
+        }, {
             "drm": validate.any(None, validate.text),
             'targetUrls': [{
                 'type': validate.text,
