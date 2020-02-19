@@ -148,14 +148,16 @@ class USTVNow(Plugin):
 
     def login(self, username, password):
         log.debug("Trying to login...")
-        resp = self.api_request("send",
-                         {
-                             "login_id": username,
-                             "login_key": password,
-                             "login_mode": "1",
-                             "manufacturer": "123"
-                         },
-                         {"request": "signin"})
+        resp = self.api_request(
+            "send",
+            {
+                "login_id": username,
+                "login_key": password,
+                "login_mode": "1",
+                "manufacturer": "123"
+            },
+            {"request": "signin"}
+        )
 
         return resp['data']['status']
 

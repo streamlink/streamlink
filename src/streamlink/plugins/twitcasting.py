@@ -134,19 +134,23 @@ class TwitCastingWsClient(Thread):
         # Parse proxy string for websocket-client
         proxy_options = self.parse_proxy_url(self.proxy)
         if proxy_options.get('http_proxy_host'):
-            log.debug("Connecting to {0} via proxy ({1}://{2}:{3})".format(self.url,
-                                                                        proxy_options.get('proxy_type') or "http",
-                                                                        proxy_options.get('http_proxy_host'),
-                                                                        proxy_options.get('http_proxy_port') or 80))
+            log.debug("Connecting to {0} via proxy ({1}://{2}:{3})".format(
+                self.url,
+                proxy_options.get('proxy_type') or "http",
+                proxy_options.get('http_proxy_host'),
+                proxy_options.get('http_proxy_port') or 80
+            ))
         else:
             log.debug("Connecting to {0} without proxy".format(self.url))
 
         # Connect to WebSocket server
-        self.ws = websocket.WebSocketApp(self.url,
-                                        header=["User-Agent: {0}".format(useragents.CHROME)],
-                                        on_message=on_message,
-                                        on_error=on_error,
-                                        on_close=on_close)
+        self.ws = websocket.WebSocketApp(
+            self.url,
+            header=["User-Agent: {0}".format(useragents.CHROME)],
+            on_message=on_message,
+            on_error=on_error,
+            on_close=on_close
+        )
         self.ws.run_forever(origin="https://twitcasting.tv/", **proxy_options)
 
 
@@ -168,8 +172,11 @@ class TwitCastingReader(StreamIO):
         self.buffer = RingBuffer(buffer_size)
 
         log.debug("Starting WebSocket client")
-        self.client = TwitCastingWsClient(self.stream.url, buffer=self.buffer,
-                                            proxy=self.session.get_option("http-proxy"))
+        self.client = TwitCastingWsClient(
+            self.stream.url,
+            buffer=self.buffer,
+            proxy=self.session.get_option("http-proxy")
+        )
         self.client.setDaemon(True)
         self.client.start()
 

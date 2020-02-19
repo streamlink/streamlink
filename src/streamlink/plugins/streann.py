@@ -66,8 +66,11 @@ class Streann(Plugin):
             "Content-Type": "application/x-www-form-urlencoded"
         }
 
-        res = self.session.http.post(self.token_url.format(deviceId=self.device_id, **config),
-                        data=pdata, headers=headers)
+        res = self.session.http.post(
+            self.token_url.format(deviceId=self.device_id, **config),
+            data=pdata,
+            headers=headers
+        )
         data = self.session.http.json(res)
         return data["token"]
 
