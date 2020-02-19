@@ -140,7 +140,6 @@ class DASHStreamReader(SegmentedStreamReader):
         log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))
 
 
-
 class DASHStream(Stream):
     __shortname__ = "dash"
 

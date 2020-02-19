@@ -7,7 +7,6 @@ from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 
-
 log = logging.getLogger(__name__)
 
 
