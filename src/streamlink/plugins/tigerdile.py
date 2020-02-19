@@ -2,7 +2,6 @@ import re
 import json
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream
 from streamlink.stream import HLSStream
 

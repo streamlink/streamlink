@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
 

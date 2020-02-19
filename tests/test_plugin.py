@@ -5,7 +5,7 @@ import freezegun
 import requests.cookies
 
 
-from tests.mock import Mock, ANY, call
+from tests.mock import Mock, call
 from streamlink.plugin import Plugin
 
 

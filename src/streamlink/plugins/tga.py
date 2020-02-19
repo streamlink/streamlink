@@ -4,7 +4,6 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import parse_query
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
 CHANNEL_INFO_URL = "http://api.plu.cn/tga/streams/%s"

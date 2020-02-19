@@ -8,11 +8,8 @@ from streamlink.compat import urlparse, unquote_plus
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import parse_json, parse_query
-from streamlink.plugin.plugin import parse_url_params
 from streamlink.stream import Stream
 from streamlink.stream.stream import StreamIO
-from streamlink.utils import update_scheme
 from threading import Thread, Event
 
 log = logging.getLogger(__name__)

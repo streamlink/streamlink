@@ -1,4 +1,4 @@
-import unittest
+import unittest  # noqa: F401
 
 import pytest
 
