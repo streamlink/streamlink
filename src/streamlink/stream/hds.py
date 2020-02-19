@@ -237,12 +237,10 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 first_fragment = fragmentrun.first_fragment
 
             end_fragment = fragmentrun.first_fragment
-            fragment_duration = (fragmentrun.first_fragment_timestamp +
-                                 fragmentrun.fragment_duration)
+            fragment_duration = fragmentrun.first_fragment_timestamp + fragmentrun.fragment_duration
 
             if self.timestamp > fragment_duration:
-                offset = ((self.timestamp - fragment_duration) /
-                          fragmentrun.fragment_duration)
+                offset = (self.timestamp - fragment_duration) / fragmentrun.fragment_duration
                 end_fragment += int(offset)
 
         if first_fragment is None:

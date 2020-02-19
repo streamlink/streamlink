@@ -495,9 +495,13 @@ class SegmentTemplate(MPDNode):
                                                           else 3))
 
             # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
-            number_iter = count(self.startNumber +
-                                int((since_start - suggested_delay - self.root.minBufferTime).total_seconds() /
-                                    self.duration_seconds))
+            number_iter = count(
+                self.startNumber
+                + int(
+                    (since_start - suggested_delay - self.root.minBufferTime).total_seconds()
+                    / self.duration_seconds
+                )
+            )
 
             # the time the segment number is available at NOW
             available_iter = count_dt(available_start,
