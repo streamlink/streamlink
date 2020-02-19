@@ -40,7 +40,7 @@ class TestMPDParsers(unittest.TestCase):
 
     def test_datetime(self):
         self.assertEqual(MPDParsers.datetime("2018-01-01T00:00:00Z"),
-                          datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc))
+                         datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc))
 
     def test_segment_template(self):
         self.assertEqual(MPDParsers.segment_template("$Time$-$Number$-$Other$")(Time=1, Number=2, Other=3),

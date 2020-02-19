@@ -103,9 +103,9 @@ class SenateGov(Plugin):
     def parse_stt(cls, param):
         m = cls.stt_re.match(param)
         if m:
-            return int(m.group('hours') or 0) * 3600 + \
-                   int(m.group('minutes')) * 60 + \
-                   int(m.group('seconds'))
+            return (int(m.group('hours') or 0) * 3600 +
+                    int(m.group('minutes')) * 60 +
+                    int(m.group('seconds')))
         else:
             return 0
 
