@@ -1,7 +1,7 @@
 import unittest
 
 from streamlink import PluginError
-from streamlink.stream import *  # noqa: F403
+from streamlink.stream import DASHStream
 from streamlink.stream.dash import DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD
 from tests.mock import MagicMock, patch, ANY, Mock, call

@@ -4,7 +4,7 @@ from io import BytesIO
 from streamlink import NoStreamsError
 from streamlink.plugins import Plugin
 from streamlink.options import Options
-from streamlink.stream import *  # noqa: F403
+from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
 
 from streamlink.plugin.api.support_plugin import testplugin_support
 
