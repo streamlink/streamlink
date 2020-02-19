@@ -87,7 +87,6 @@ class TestArguments(unittest.TestCase):
 
         self.assertRaises(KeyError, lambda: list(args.requires("test1")))
 
-
     def test_requires_cycle(self):
         test1 = Argument("test1", requires="test2")
         test2 = Argument("test2", requires="test1")

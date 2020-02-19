@@ -202,7 +202,6 @@ class TestMPDParser(unittest.TestCase):
                                           'http://test.se/video/1014000.mp4',
                                           'http://test.se/video/1015000.mp4'])
 
-
     def test_tsegment_t_is_none_1895(self):
         """
             Verify the fix for https://github.com/streamlink/streamlink/issues/1895

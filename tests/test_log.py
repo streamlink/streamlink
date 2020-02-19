@@ -14,7 +14,6 @@ else:
     from io import StringIO
 
 
-
 class TestLogging(unittest.TestCase):
     @classmethod
     def _new_logger(cls):

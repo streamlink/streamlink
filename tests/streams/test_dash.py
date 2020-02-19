@@ -341,7 +341,5 @@ class TestDASHStreamWorker(unittest.TestCase):
         self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
 
 
-
-
 if __name__ == "__main__":
     unittest.main()

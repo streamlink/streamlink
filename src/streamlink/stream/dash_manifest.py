@@ -367,7 +367,6 @@ class SegmentList(MPDNode):
         else:
             self.duration_seconds = None
 
-
         self.initialization = self.only_child(Initialization)
         self.segment_urls = self.children(SegmentURL, minimum=1)
 

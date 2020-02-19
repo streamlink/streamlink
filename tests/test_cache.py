@@ -104,7 +104,6 @@ class TestCache(unittest.TestCase):
         self.cache.set("test3", 3)
         self.cache.set("test4", 4)
 
-
         self.assertDictEqual(
             {"test3": 3, "test4": 4},
             self.cache.get_all())
@@ -112,7 +111,6 @@ class TestCache(unittest.TestCase):
     def test_get_all_prune(self):
         self.cache.set("test1", 1)
         self.cache.set("test2", 2, -1)
-
 
         self.assertDictEqual(
             {"test1": 1},

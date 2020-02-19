@@ -144,7 +144,6 @@ class Pixiv(Plugin):
         else:
             log.error("Failed to log in.")
 
-
     def _login_using_session_id_and_device_token(self, session_id, device_token):
         res = self.session.http.get(self.login_url_get)
 
@@ -153,7 +152,6 @@ class Pixiv(Plugin):
 
         self.save_cookies()
         log.info("Successfully set sessionId and deviceToken")
-
 
     def hls_stream(self, hls_url):
         log.debug("URL={0}".format(hls_url))

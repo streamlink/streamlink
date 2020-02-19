@@ -39,7 +39,6 @@ class TestPluginSchoolism(unittest.TestCase):
         self.assertIsNotNone(data)
         self.assertEqual(2, len(data))
 
-
     def test_playlist_parse(self):
         without_subs = """var allVideos=[
             {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/14/1/part1.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Gesture Drawing - Lesson 1 - Part 1",playlistTitle:"Part 1",}],},

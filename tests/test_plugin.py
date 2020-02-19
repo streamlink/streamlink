@@ -10,7 +10,6 @@ from streamlink.plugin import Plugin
 
 
 class TestPlugin(unittest.TestCase):
-
     def _create_cookie_dict(self, name, value, expires):
         return {'version': 0, 'name': name, 'value': value,
                 'port': None, 'domain': "test.se", 'path': "/", 'secure': False,
@@ -98,7 +97,6 @@ class TestPlugin(unittest.TestCase):
         # non-empty cookiejar
         self.assertTrue(len(session.http.cookies.get_dict()) > 0)
 
-
         plugin.clear_cookies()
         self.assertSequenceEqual(
             Plugin.cache.set.mock_calls,
@@ -120,7 +118,6 @@ class TestPlugin(unittest.TestCase):
 
         # non-empty cookiejar
         self.assertTrue(len(session.http.cookies.get_dict()) > 0)
-
 
         plugin.clear_cookies(lambda c: c.name.endswith("2"))
         self.assertSequenceEqual(
