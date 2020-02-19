@@ -55,16 +55,16 @@ class TestCache(unittest.TestCase):
         self.cache.set("value", 10, expires=-20)
         self.assertEqual(None, self.cache.get("value"))
 
-    def test_expired_at(self):
+    def test_expired_at_before(self):
         self.cache.set("value", 10, expires_at=datetime.datetime.now() - datetime.timedelta(seconds=20))
         self.assertEqual(None, self.cache.get("value"))
 
-    def test_not_expired(self):
-        self.cache.set("value", 10, expires=20)
+    def test_expired_at_after(self):
+        self.cache.set("value", 10, expires_at=datetime.datetime.now() + datetime.timedelta(seconds=20))
         self.assertEqual(10, self.cache.get("value"))
 
-    def test_expired_at(self):
-        self.cache.set("value", 10, expires_at=datetime.datetime.now() + datetime.timedelta(seconds=20))
+    def test_not_expired(self):
+        self.cache.set("value", 10, expires=20)
         self.assertEqual(10, self.cache.get("value"))
 
     def test_create_directory(self):
