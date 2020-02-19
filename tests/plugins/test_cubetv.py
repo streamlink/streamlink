@@ -1,6 +1,7 @@
 from streamlink.plugins.cubetv import CubeTV
 import unittest
 
+
 class TestPluginCubeTV(unittest.TestCase):
     def test_can_handle_url(self):
         # should match

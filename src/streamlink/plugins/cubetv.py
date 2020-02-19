@@ -6,8 +6,8 @@ from streamlink.stream import HLSStream
 from streamlink import NoStreamsError
 from streamlink.utils import parse_json
 
-class CubeTV(Plugin):
 
+class CubeTV(Plugin):
     _url_re = re.compile(r"https?://(www\.)?cube\.tv/(?P<channel>[^/]{2,})")
 
     _channel_info_api_url_base = "https://www.cube.tv/studio/info?cube_id={channel}"
