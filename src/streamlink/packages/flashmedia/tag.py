@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from ctypes import BigEndianStructure, Union, c_uint8
 from io import BytesIO
 
