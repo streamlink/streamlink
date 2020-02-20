@@ -129,7 +129,3 @@ class TestSetupOptions(unittest.TestCase):
         self.assertEqual(plugin.options.get("test1"), "default1")
         self.assertEqual(plugin.options.get("test2"), "default2")
         self.assertEqual(plugin.options.get("test3"), None)
-
-
-if __name__ == "__main__":
-    unittest.main()
