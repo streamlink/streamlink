@@ -340,7 +340,12 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
     show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
-    show_record_progress = hasattr(output, "record") and isinstance(output.record, FileOutput) and output.record.fd is not stdout and sys.stdout.isatty()
+    show_record_progress = (
+        hasattr(output, "record")
+        and isinstance(output.record, FileOutput)
+        and output.record.fd is not stdout
+        and sys.stdout.isatty()
+    )
 
     stream_iterator = chain(
         [prebuffer],

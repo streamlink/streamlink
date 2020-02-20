@@ -42,7 +42,11 @@ class YuppTV(Plugin):
             log.error("Failed to login to YuppTV")
             raise PluginError("cannot login")
 
-        res = self.session.http.post(self._login_url, data=dict(user=username, password=password, isMobile=0), headers={"Referer": self._signin_url})
+        res = self.session.http.post(
+            self._login_url,
+            data=dict(user=username, password=password, isMobile=0),
+            headers={"Referer": self._signin_url}
+        )
         data = self.session.http.json(res)
         resp = data['Response']
         if resp["tempBoxid"]:

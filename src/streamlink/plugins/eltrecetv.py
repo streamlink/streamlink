@@ -38,7 +38,8 @@ class ElTreceTV(Plugin):
                 if not match:
                     return
                 entry_id = parse_json(match.group(1).replace("&quot;", '"'))["entryId"]
-                hls_url = "https://vodgc.com/p/111/sp/11100/playManifest/entryId/{0}/format/applehttp/protocol/https/a.m3u8".format(entry_id)
+                hls_url = "https://vodgc.com/p/111/sp/11100/playManifest/entryId/" \
+                          "{0}/format/applehttp/protocol/https/a.m3u8".format(entry_id)
                 return HLSStream.parse_variant_playlist(self.session, hls_url)
             except BaseException:
                 self.logger.error("The requested VOD content is unavailable.")

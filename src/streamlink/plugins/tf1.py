@@ -43,10 +43,17 @@ class TF1(Plugin):
             for sformat, url in self.get_stream_urls(channel):
                 try:
                     if sformat == "dash":
-                        for s in DASHStream.parse_manifest(self.session, url, headers={"User-Agent": useragents.CHROME}).items():
+                        for s in DASHStream.parse_manifest(
+                            self.session,
+                            url,
+                            headers={"User-Agent": useragents.CHROME}
+                        ).items():
                             yield s
                     if sformat == "hls":
-                        for s in HLSStream.parse_variant_playlist(self.session, url).items():
+                        for s in HLSStream.parse_variant_playlist(
+                            self.session,
+                            url
+                        ).items():
                             yield s
                 except PluginError as e:
                     log.error("Could not open {0} stream".format(sformat))

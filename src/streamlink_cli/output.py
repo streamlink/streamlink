@@ -78,8 +78,8 @@ class FileOutput(Output):
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=None,
-                 namedpipe=None, record=None, title=None):
+    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True,
+                 call=False, http=None, namedpipe=None, record=None, title=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
@@ -133,7 +133,8 @@ class PlayerOutput(Output):
 
     @classmethod
     def _mpv_title_escape(cls, title_string):
-        # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
+        # mpv has a "disable property-expansion" token which must be handled
+        # in order to accurately represent $$ in title
         if r'\$>' in title_string:
             processed_title = ""
             double_dollars = True
@@ -196,7 +197,8 @@ class PlayerOutput(Output):
             if self.player_name == "potplayer":
                 if filename != "-":
                     # PotPlayer - About - Command Line
-                    # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs. ("http://...\title of this url")
+                    # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs.
+                    # eg. "http://...\title of this url"
                     self.title = self.title.replace('"', '')
                     filename = filename[:-1] + '\\' + self.title + filename[-1]
 

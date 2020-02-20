@@ -52,7 +52,9 @@ class BTSports(Plugin):
     def login(self, username, password):
         log.debug("Logging in as {0}".format(username))
 
-        redirect_to = "https://home.bt.com/ss/Satellite/secure/loginforward?view=btsport&redirectURL={0}".format(quote(self.url))
+        redirect_to = "https://home.bt.com/ss/Satellite/secure/loginforward?view=btsport&redirectURL={0}".format(
+            quote(self.url)
+        )
         data = {
             "cookieExpp": "30",
             "Switch": "yes",

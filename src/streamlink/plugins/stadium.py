@@ -25,7 +25,7 @@ class Stadium(Plugin):
             if data['LivestreamEnabled'] == '1':
                 account_id = data['LivestreamArgs']['account_id']
                 event_id = data['LivestreamArgs']['event_id']
-                log.debug("Found account_id={account_id} and event_id={event_id}".format(account_id=account_id, event_id=event_id))
+                log.debug("Found account_id={0} and event_id={1}".format(account_id, event_id))
 
                 url = self.API_URL.format(account_id=account_id, event_id=event_id)
                 api_res = self.session.http.get(url)
