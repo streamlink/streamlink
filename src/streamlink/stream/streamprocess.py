@@ -81,7 +81,9 @@ class StreamProcess(Stream):
 
             return StreamProcessIO(self.session, process, process.stdout, timeout=self.timeout)
         else:
-            raise StreamError("{0} is not installed or not supported on your system".format(os.path.basename(self.cmd)))
+            raise StreamError(
+                "{0} is not installed or not supported on your system".format(os.path.basename(self.cmd))
+            )
 
     @classmethod
     def bake(cls, cmd, parameters=None, arguments=None, short_option_prefix="-", long_option_prefix="--"):
@@ -111,7 +113,8 @@ class StreamProcess(Stream):
 
         return cmdline
 
-    def spawn(self, parameters=None, arguments=None, stderr=None, timeout=None, short_option_prefix="-", long_option_prefix="--"):
+    def spawn(self, parameters=None, arguments=None, stderr=None, timeout=None,
+              short_option_prefix="-", long_option_prefix="--"):
         """
         Spawn the process defined in `cmd`
 

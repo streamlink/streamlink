@@ -15,7 +15,9 @@ class rtlxl(Plugin):
     def _get_streams(self):
         match = _url_re.match(self.url)
         uuid = match.group("uuid")
-        videourlfeed = self.session.http.get('https://tm-videourlfeed.rtl.nl/api/url/{}?device=pc&drm&format=hls'.format(uuid)).text
+        videourlfeed = self.session.http.get(
+            'https://tm-videourlfeed.rtl.nl/api/url/{}?device=pc&drm&format=hls'.format(uuid)
+        ).text
 
         videourlfeedjson = json.loads(videourlfeed)
         playlist_url = videourlfeedjson["url"]

@@ -107,7 +107,12 @@ class Bloomberg(Plugin):
             "authority": "www.bloomberg.com",
             "upgrade-insecure-requests": "1",
             "dnt": "1",
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3"
+            "accept": ";".join([
+                "text/html,application/xhtml+xml,application/xml",
+                "q=0.9,image/webp,image/apng,*/*",
+                "q=0.8,application/signed-exchange",
+                "v=b3"
+            ])
         })
         if "Are you a robot?" in res.text:
             log.error("Are you a robot?")

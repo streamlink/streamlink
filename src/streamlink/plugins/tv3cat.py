@@ -11,7 +11,8 @@ log = logging.getLogger(__name__)
 
 class TV3Cat(Plugin):
     _url_re = re.compile(r"http://(?:www.)?ccma.cat/tv3/directe/(.+?)/")
-    _stream_info_url = "http://dinamics.ccma.cat/pvideo/media.jsp?media=video&version=0s&idint={ident}&profile=pc&desplacament=0"
+    _stream_info_url = "http://dinamics.ccma.cat/pvideo/media.jsp" \
+                       "?media=video&version=0s&idint={ident}&profile=pc&desplacament=0"
     _media_schema = validate.Schema({
         "geo": validate.text,
         "url": validate.url(scheme=validate.any("http", "https"))

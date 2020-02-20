@@ -24,7 +24,7 @@ class TestPluginMixer(unittest.TestCase):
         Mjunoon.bind(session, "test")
         script_text = """
         <script id="playerScript"  src="playerAssets/js/player.js?v=2.2&streamUrl=https://vod.mjunoon.tv:8181/live/41/41.m3u8&streamUrl=https://vod.mjunoon.tv:8181/live/17/17.m3u8"></script>
-        """
+        """  # noqa: E501
         parse_variant_playlist.items.return_value = [("test", Mock())]
         with requests_mock.Mocker() as rmock:
             rmock.get("https://mjunoon.tv/news-live", text=script_text)
