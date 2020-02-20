@@ -158,7 +158,3 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_endswith(self):
         assert validate(endswith(u"åäö"), u"xyzåäö")
-
-
-if __name__ == "__main__":
-    unittest.main()

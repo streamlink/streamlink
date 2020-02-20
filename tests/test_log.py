@@ -111,7 +111,3 @@ class TestDeprecatedLogger(unittest.TestCase):
         # regular python loggers shouldn't log here
         logging.getLogger("streamlink.test").critical("should not log")
         self.assertEqual(output.getvalue(), "[test][info] test1\n")
-
-
-if __name__ == "__main__":
-    unittest.main()

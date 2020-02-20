@@ -28,7 +28,3 @@ class TestPluginBigo(unittest.TestCase):
         self.assertFalse(Bigo.can_handle_url("http://www.bigo.tv/show/00000000"))
         self.assertFalse(Bigo.can_handle_url("http://bigo.tv/show/00000000"))
         self.assertFalse(Bigo.can_handle_url("https://bigo.tv/show/00000000"))
-
-
-if __name__ == "__main__":
-    unittest.main()
