@@ -18,7 +18,3 @@ class TestPluginStream(unittest.TestCase):
         self.assertEqual(fd.read(4095), b"2" * 4095)
         self.assertEqual(fd.read(1536), b"3" * 1536)
         self.assertEqual(fd.read(), b"3" * 512)
-
-
-if __name__ == "__main__":
-    unittest.main()

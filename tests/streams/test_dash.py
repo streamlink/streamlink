@@ -339,7 +339,3 @@ class TestDASHStreamWorker(unittest.TestCase):
 
         self.assertEqual(representation_vid, DASHStreamWorker.get_representation(mpd, 1, "video/mp4"))
         self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
-
-
-if __name__ == "__main__":
-    unittest.main()
