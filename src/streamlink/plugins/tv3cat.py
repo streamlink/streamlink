@@ -2,7 +2,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
 from streamlink.plugin.api import validate
 
@@ -38,7 +38,7 @@ class TV3Cat(Plugin):
             for stream in stream_infos:
                 try:
                     return HLSStream.parse_variant_playlist(self.session, stream['url'], name_fmt="{pixels}_{bitrate}")
-                except:
+                except PluginError:
                     log.debug("Failed to get streams for: {0}".format(stream['geo']))
                     pass
 
