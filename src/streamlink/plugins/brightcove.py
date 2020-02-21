@@ -153,7 +153,7 @@ class BrightcovePlayer(object):
         amf_packet = AMFPacket(version=3)
         amf_packet.messages.append(amf_message)
 
-        res = self.session.http.post(
+        res = session.http.post(
             cls.amf_broker,
             headers={"Content-Type": "application/x-amf"},
             data=amf_packet.serialize(),

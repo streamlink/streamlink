@@ -78,18 +78,16 @@ class RTBF(Plugin):
         }
     )
 
-    @classmethod
-    def check_geolocation(cls, geoloc_flag):
+    def check_geolocation(self, geoloc_flag):
         if geoloc_flag == 'open':
             return True
 
-        res = self.session.http.get(cls.GEO_URL)
-        data = self.session.http.json(res, schema=cls._geo_schema)
+        res = self.session.http.get(self.GEO_URL)
+        data = self.session.http.json(res, schema=self._geo_schema)
         return data['country'] == geoloc_flag or data['zone'] == geoloc_flag
 
-    @classmethod
-    def tokenize_stream(cls, url):
-        res = self.session.http.post(cls.TOKEN_URL, data={'streams[url]': url})
+    def tokenize_stream(self, url):
+        res = self.session.http.post(self.TOKEN_URL, data={'streams[url]': url})
         data = self.session.http.json(res)
         return data['streams']['url']
 
