@@ -77,7 +77,7 @@ class DeutscheWelle(Plugin):
 
         # extract the streams from the page, mapping between channel-id and stream url
         media_items = self.live_stream_div.finditer(page.text)
-        stream_map = dict([m.groups((1, 2)) for m in media_items])
+        stream_map = dict([mi.groups((1, 2)) for mi in media_items])
 
         stream_url = stream_map.get(str(channel) or self.default_channel)
         if stream_url:
