@@ -1,4 +1,4 @@
-import unittest
+import unittest  # noqa: F401
 
 import pytest
 
@@ -26,4 +26,5 @@ class TestPluginAlbavision:
         assert not Albavision.can_handle_url(url), "url should not be handled"
 
     def test_transform(self):
-        assert Albavision.transform_token(u'6b425761cc8a86569b1a05a9bf1870c95fca717dOK', 436171) == "6b425761cc8a86569b1a05a9bf1870c95fca717d"
+        token = Albavision.transform_token(u'6b425761cc8a86569b1a05a9bf1870c95fca717dOK', 436171)
+        assert token == "6b425761cc8a86569b1a05a9bf1870c95fca717d"

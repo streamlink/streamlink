@@ -1,5 +1,4 @@
 import re
-import types
 import time
 import json
 
@@ -30,7 +29,7 @@ _roominfo_re = re.compile(r'window\.HOSTINFO=({.*});')
 STREAM_WEIGHTS = {
     "source": 1080,
     "medium": 720,
-    "low":    480
+    "low": 480
 }
 
 _room_schema = validate.Schema(
@@ -50,6 +49,7 @@ _room_schema = validate.Schema(
         )
     },
     validate.get("data"))
+
 
 class Pandatv(Plugin):
     @classmethod
@@ -76,7 +76,7 @@ class Pandatv(Plugin):
             if videoinfo['hlsurl']:
                 yield 'source', HLSStream(self.session, videoinfo['hlsurl'])
 
-            #wangsu cdn prior to others, wangsu = 0, alicloud = 1, qcloud = videoinfo['streamurl']
+            # wangsu cdn prior to others, wangsu = 0, alicloud = 1, qcloud = videoinfo['streamurl']
             _cdn = 0
             if videoinfo['zl'][_cdn]['streamurl']:
                 yield 'source', HTTPStream(self.session, videoinfo['zl'][_cdn]['streamurl'])

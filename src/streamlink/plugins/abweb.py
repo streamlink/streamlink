@@ -135,8 +135,10 @@ class ABweb(Plugin):
             return False
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.CHROME,
-                             'Referer': 'http://www.abweb.com/BIS-TV-Online/bistvo-tele-universal.aspx'})
+        self.session.http.headers.update({
+            'User-Agent': useragents.CHROME,
+            'Referer': 'http://www.abweb.com/BIS-TV-Online/bistvo-tele-universal.aspx'
+        })
 
         login_username = self.get_option('username')
         login_password = self.get_option('password')

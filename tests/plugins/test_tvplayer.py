@@ -62,7 +62,11 @@ class TestPluginTVPlayer(unittest.TestCase):
         # test the url is used correctly
         self.session.http.get.assert_called_with("http://tvplayer.com/watch/dave")
         # test that the correct API call is made
-        mock_get_stream_data.assert_called_with(resource="bbcone", channel_id="89", token="1324567894561268987948596154656418448489159")
+        mock_get_stream_data.assert_called_with(
+            resource="bbcone",
+            channel_id="89",
+            token="1324567894561268987948596154656418448489159"
+        )
         # test that the correct URL is used for the HLSStream
         hlsstream.parse_variant_playlist.assert_called_with(ANY, "http://test.se/stream1")
 
