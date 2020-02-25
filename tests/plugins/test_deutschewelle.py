@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import unittest
 
 from streamlink.plugins.deutschewelle import DeutscheWelle
