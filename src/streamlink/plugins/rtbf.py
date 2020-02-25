@@ -13,12 +13,23 @@ class RTBF(Plugin):
     TOKEN_URL = 'https://token.rtbf.be/'
     RADIO_STREAM_URL = 'http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json'
 
-    _url_re = re.compile(r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/.+)')
-    _stream_size_re = re.compile(r'https?://.+-(?P<size>\d+p?)\..+?$')
+    _url_re = re.compile(
+        r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/.+)'
+    )
+    _stream_size_re = re.compile(
+        r'https?://.+-(?P<size>\d+p?)\..+?$'
+    )
 
-    _video_player_re = re.compile(r'<iframe\s+class="embed-responsive-item\s+js-embed-iframe".*src="(?P<player_url>.+?)".*?</iframe>', re.DOTALL)
-    _video_stream_data_re = re.compile(r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"')
-    _radio_id_re = re.compile(r'var currentStationKey = "(?P<radio_id>.+?)"')
+    _video_player_re = re.compile(
+        r'<iframe\s+class="embed-responsive-item\s+js-embed-iframe".*src="(?P<player_url>.+?)".*?</iframe>',
+        re.DOTALL
+    )
+    _video_stream_data_re = re.compile(
+        r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"'
+    )
+    _radio_id_re = re.compile(
+        r'var currentStationKey = "(?P<radio_id>.+?)"'
+    )
 
     _geo_schema = validate.Schema(
         {
@@ -67,18 +78,16 @@ class RTBF(Plugin):
         }
     )
 
-    @classmethod
-    def check_geolocation(cls, geoloc_flag):
+    def check_geolocation(self, geoloc_flag):
         if geoloc_flag == 'open':
             return True
 
-        res = self.session.http.get(cls.GEO_URL)
-        data = self.session.http.json(res, schema=cls._geo_schema)
+        res = self.session.http.get(self.GEO_URL)
+        data = self.session.http.json(res, schema=self._geo_schema)
         return data['country'] == geoloc_flag or data['zone'] == geoloc_flag
 
-    @classmethod
-    def tokenize_stream(cls, url):
-        res = self.session.http.post(cls.TOKEN_URL, data={'streams[url]': url})
+    def tokenize_stream(self, url):
+        res = self.session.http.post(self.TOKEN_URL, data={'streams[url]': url})
         data = self.session.http.json(res)
         return data['streams']['url']
 

@@ -17,7 +17,8 @@ class TestPluginViasat(unittest.TestCase):
             "https://tv3play.tv3.ee/sisu/inglite-aeg/902432?autostart=true",
             "https://tvplay.skaties.lv/parraides/darma-un-gregs/902597?autostart=true&collection=719",
             "https://tvplay.skaties.lv/parraides/kungfu-panda/900510?autostart=true",
-            "https://www.tv3.lt/naujiena/938699/ispudingiausi-kobe-bryanto-karjeros-epizodai-monstriski-dejimai-ir-pergalingi-metimai",
+            "https://www.tv3.lt/naujiena/938699/ispudingiausi-kobe-bryanto-karjeros-epizodai-monstriski-dejimai-ir"
+            + "-pergalingi-metimai",
             "https://www.tv6play.no/programmer/underholdning/paradise-hotel-sverige/sesong-8/episode-19",
             "https://www.tv6play.no/programmer/underholdning/paradise-hotel/sesong-9/822763",
             "https://www.viafree.dk/",

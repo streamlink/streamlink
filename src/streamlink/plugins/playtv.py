@@ -8,9 +8,9 @@ from streamlink.stream import HDSStream, HLSStream
 
 
 def jwt_decode(token):
-     info, payload, sig = token.split(".")
-     data = base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4))
-     return json.loads(data)
+    info, payload, sig = token.split(".")
+    data = base64.urlsafe_b64decode(payload + '=' * (-len(payload) % 4))
+    return json.loads(data)
 
 
 class PlayTV(Plugin):

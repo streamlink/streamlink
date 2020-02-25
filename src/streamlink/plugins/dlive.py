@@ -6,7 +6,7 @@ from streamlink.compat import unquote_plus, is_py3
 
 
 QUALITY_WEIGHTS = {
-   "src": 1080,
+    "src": 1080,
 }
 
 

@@ -73,7 +73,7 @@ class Albavision(Plugin):
     def _get_live_url_token(self):
         m = self._token_input_re.search(self.page.text)
         if m:
-            date = int(time.time()//3600)
+            date = int(time.time() // 3600)
             return self.transform_token(m.group(1), date) or self.transform_token(m.group(1), date - 1)
 
     def _get_token(self):
@@ -100,7 +100,7 @@ class Albavision(Plugin):
 
             if live_channel:
                 log.debug("Live channel: {0}".format(live_channel))
-                player_url = self._channel_urls[live_channel]+quote(token)
+                player_url = self._channel_urls[live_channel] + quote(token)
                 page = self.session.http.get(player_url, raise_for_status=False)
                 if "block access from your country." in page.text:
                     raise PluginError("Content is geo-locked")

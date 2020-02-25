@@ -1,6 +1,5 @@
 import unittest
 from tests.mock import Mock
-import sys
 
 from streamlink_cli.main import setup_plugin_args
 from streamlink.options import Options, Arguments, Argument
@@ -86,7 +85,6 @@ class TestArguments(unittest.TestCase):
         args = Arguments(test1)
 
         self.assertRaises(KeyError, lambda: list(args.requires("test1")))
-
 
     def test_requires_cycle(self):
         test1 = Argument("test1", requires="test2")

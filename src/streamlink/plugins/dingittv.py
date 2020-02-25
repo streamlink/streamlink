@@ -42,10 +42,13 @@ class DingitTV(Plugin):
     def _get_streams(self):
         match = self.url_re.match(self.url)
 
-        res = self.session.http.post(self.flashvars_url,
-                        data=dict(
-                            broadcaster=match.group("broadcaster") or "Verm",
-                            stream_id=match.group("channel_id") or match.group("highlight_id")))
+        res = self.session.http.post(
+            self.flashvars_url,
+            data=dict(
+                broadcaster=match.group("broadcaster") or "Verm",
+                stream_id=match.group("channel_id") or match.group("highlight_id")
+            )
+        )
 
         flashvars = self.session.http.json(res, schema=self.flashvars_schema)
 

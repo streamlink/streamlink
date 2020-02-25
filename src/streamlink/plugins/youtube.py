@@ -355,7 +355,7 @@ class YouTube(Plugin):
             return
 
         if info.get("livestream") == '1' or info.get("live_playback") == '1' \
-                or info.get("player_response", {}).get("videoDetails", {}).get("isLive") == True:
+                or info.get("player_response", {}).get("videoDetails", {}).get("isLive"):
             log.debug("This video is live.")
             is_live = True
 

@@ -3,7 +3,6 @@ import re
 
 from streamlink import streams
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 
 
 class StarTV(Plugin):

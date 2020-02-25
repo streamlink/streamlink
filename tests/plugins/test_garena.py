@@ -4,7 +4,7 @@ import unittest
 from streamlink import Streamlink
 from streamlink.plugin.api import HTTPSession
 
-from tests.mock import patch, Mock, MagicMock
+from tests.mock import Mock, MagicMock
 
 from streamlink.plugins.garena import Garena
 

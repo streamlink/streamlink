@@ -37,6 +37,7 @@ install:
 
 script:
   - pytest --cov
+  - flake8 --statistics --count
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
 
