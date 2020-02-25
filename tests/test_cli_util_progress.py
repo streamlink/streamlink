@@ -1,4 +1,4 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 from streamlink_cli.utils.progress import terminal_width, get_cut_prefix
 import unittest
 
