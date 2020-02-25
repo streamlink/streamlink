@@ -52,7 +52,9 @@ class BTSports(Plugin):
     def login(self, username, password):
         log.debug("Logging in as {0}".format(username))
 
-        redirect_to = "https://home.bt.com/ss/Satellite/secure/loginforward?view=btsport&redirectURL={0}".format(quote(self.url))
+        redirect_to = "https://home.bt.com/ss/Satellite/secure/loginforward?view=btsport&redirectURL={0}".format(
+            quote(self.url)
+        )
         data = {
             "cookieExpp": "30",
             "Switch": "yes",
@@ -73,9 +75,11 @@ class BTSports(Plugin):
             if d:
                 saml_data = d.group(1)
                 self.logger.debug("BT Sports federated login...")
-                res = self.session.http.post(self.api_url,
-                                params={"action": "LoginBT", "channel": "WEBHLS", "bt.cid": self.acid},
-                                data={"SAMLResponse": saml_data})
+                res = self.session.http.post(
+                    self.api_url,
+                    params={"action": "LoginBT", "channel": "WEBHLS", "bt.cid": self.acid},
+                    data={"SAMLResponse": saml_data}
+                )
                 fed_json = self.session.http.json(res)
                 success = fed_json['resultCode'] == "OK"
                 if not success:
@@ -122,7 +126,7 @@ class BTSports(Plugin):
                         return HLSStream.parse_variant_playlist(self.session, data['resultObj']['src'])
                     else:
                         log.error("Failed to get stream with error: {0} - {1}".format(data['errorDescription'],
-                                                                                              data['message']))
+                                                                                      data['message']))
             else:
                 log.error("Login failed.")
         else:

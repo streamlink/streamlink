@@ -7,7 +7,6 @@ from tests.mock import MagicMock, patch
 
 from streamlink import Streamlink, PluginError
 from streamlink_cli.console import ConsoleUserInputRequester
-import streamlink_cli.console
 from tests.plugins.testplugin import TestPlugin as _TestPlugin
 
 

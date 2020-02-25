@@ -5,15 +5,14 @@ import uuid
 import random
 import json
 
-from requests.adapters import HTTPAdapter
-
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
+from streamlink.plugin.api.useragents import CHROME as USER_AGENT
 from streamlink.stream import (HTTPStream, HLSStream)
 
-USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36"
 HUAJIAO_URL = "http://www.huajiao.com/l/{}"
-LAPI_URL = "http://g2.live.360.cn/liveplay?stype=flv&channel={}&bid=huajiao&sn={}&sid={}&_rate=xd&ts={}&r={}&_ostype=flash&_delay=0&_sign=null&_ver=13"
+LAPI_URL = "http://g2.live.360.cn/liveplay?stype=flv&channel={}&bid=huajiao&sn={}&sid={}&_rate=xd&ts={}&r={}" \
+           "&_ostype=flash&_delay=0&_sign=null&_ver=13"
 
 _url_re = re.compile(r"""
         http(s)?://(www\.)?huajiao.com

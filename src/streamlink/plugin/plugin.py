@@ -379,8 +379,7 @@ class Plugin(object):
 
         # Create the best/worst synonmys
         def stream_weight_only(s):
-            return (self.stream_weight(s)[0] or
-                    (len(streams) == 1 and 1))
+            return (self.stream_weight(s)[0] or (len(streams) == 1 and 1))
 
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
@@ -527,5 +526,6 @@ class Plugin(object):
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
+
 
 __all__ = ["Plugin"]

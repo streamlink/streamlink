@@ -137,8 +137,10 @@ class zdf_mediathek(Plugin):
         res = self.session.http.get(zdf_json['content'], headers=headers)
         document = self.session.http.json(res, schema=_documents_schema)
 
-        stream_request_url = document["mainVideoContent"]["http://zdf.de/rels/target"]["http://zdf.de/rels/streams/ptmd-template"]
-        stream_request_url = url_concat(API_URL, stream_request_url.format(playerId="ngplayer_2_3").replace(" ", ""))
+        content = document["mainVideoContent"]
+        target = content["http://zdf.de/rels/target"]
+        template = target["http://zdf.de/rels/streams/ptmd-template"]
+        stream_request_url = url_concat(API_URL, template.format(playerId="ngplayer_2_3").replace(" ", ""))
 
         res = self.session.http.get(stream_request_url, headers=headers)
         res = self.session.http.json(res, schema=_schema)

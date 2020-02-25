@@ -195,8 +195,3 @@ class TestSession(unittest.TestCase):
 
         self.assertFalse("http" in session.http.proxies)
         self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
-
-
-
-if __name__ == "__main__":
-    unittest.main()

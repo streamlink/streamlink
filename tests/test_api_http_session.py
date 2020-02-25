@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 import requests
 
 import unittest
@@ -41,7 +41,3 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
             res.encoding = "cp949"
 
             self.assertEqual(HTTPSession.json(res), {u"test": u"\u0391 and \u03a9"})
-
-
-if __name__ == "__main__":
-    unittest.main()

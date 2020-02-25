@@ -1,0 +1,25 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+max_line_length = 128
+trim_trailing_whitespace = true
+
+[*.{cfg,svg,yml}]
+indent_size = 2
+
+[*.{md,markdown}]
+trim_trailing_whitespace = false
+
+[docs/Makefile]
+indent_size = 8
+indent_style = tab
+
+[docs/_themes/**]
+indent_size = ignore
+indent_style = ignore
+trim_trailing_whitespace = ignore

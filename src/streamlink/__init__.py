@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 """Streamlink extracts streams from various services.
 
 The main compontent of Streamlink is a command-line utility that

@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
 from streamlink.plugin.api import validate
 
@@ -11,7 +10,8 @@ log = logging.getLogger(__name__)
 
 class TV3Cat(Plugin):
     _url_re = re.compile(r"http://(?:www.)?ccma.cat/tv3/directe/(.+?)/")
-    _stream_info_url = "http://dinamics.ccma.cat/pvideo/media.jsp?media=video&version=0s&idint={ident}&profile=pc&desplacament=0"
+    _stream_info_url = "http://dinamics.ccma.cat/pvideo/media.jsp" \
+                       "?media=video&version=0s&idint={ident}&profile=pc&desplacament=0"
     _media_schema = validate.Schema({
         "geo": validate.text,
         "url": validate.url(scheme=validate.any("http", "https"))
@@ -37,7 +37,7 @@ class TV3Cat(Plugin):
             for stream in stream_infos:
                 try:
                     return HLSStream.parse_variant_playlist(self.session, stream['url'], name_fmt="{pixels}_{bitrate}")
-                except:
+                except PluginError:
                     log.debug("Failed to get streams for: {0}".format(stream['geo']))
                     pass
 
