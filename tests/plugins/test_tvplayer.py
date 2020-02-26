@@ -38,35 +38,27 @@ class TestPluginTVPlayer(unittest.TestCase):
 
         page_resp = Mock()
         page_resp.text = u"""
-            <div class="full-bleed-container">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-xs-12">
-                            <div id="live-player-root"
-                                data-player-library="videojs"
-                                data-player-id="ILWxqLKV91Ql8kF"
-                                data-player-key="2Pw1Eg0Px3Gy9Jm3Ry8Ar5Bi5Vc5Nk"
-                                data-player-uvid="139"
-                                data-player-token="275c808a685a09d6e36d0253ab3765af"
-                                data-player-expiry="1531958189"
-                                data-player-poster=""
-                                data-player-npaw='{"enableAnalytics":true,"username":"","extraparam.1":"TVPlayer","extraparam.2":"","extraparam.3":"free","extraparam.4":"","extraparam.5":"","extraparam.16":null,"content.isLive":true,"content.title":"BBC London News; Weather","content.title2":"","content.duration":"","content.metadata":{"uvid":"e3e45caf-79fe-3827-82b4-ecdfee52acfb","producer":"","status":"","genre":"","thumbnail":"https:\/\/d537y3nbkeq75.cloudfront.net\/tvp\/epg\/e3e45caf-79fe-3827-82b4-ecdfee52acfb.jpg?width=700&lang=en","asset-type":""},"title":"BBC London News; Weather","extraparam.7":"","extraparam.9":"e3e45caf-79fe-3827-82b4-ecdfee52acfb","extraparam.13":null,"extraparam.14":true,"extraparam.6":"","extraparam.8":""}'
-                                data-requested-channel-id="739"
-                                data-npaw-base-settings="%7B%22accountName%22%3A%22alchimie%22%2C%22data%22%3A%7B%22enableAnalytics%22%3Atrue%2C%22username%22%3A%22%22%2C%22extraparam.1%22%3A%22TVPlayer%22%2C%22extraparam.2%22%3A%22%22%2C%22extraparam.3%22%3A%22free%22%2C%22extraparam.4%22%3A%22%22%2C%22extraparam.5%22%3A%22%22%2C%22extraparam.16%22%3Anull%7D%7D"
-                                data-play-button="/assets/tvplayer/images/dist/play-button-epg.svg"
-                                data-update-url="/now-ajax"
-                                data-timezone-name="Europe/London"
-                                data-thumb-link-classes=""
-                                data-theme-name="tvplayer"
-                                data-base-entitlements="%5B%22free%22%5D"
-                                data-has-identity="0"
-                                data-require-identity-to-watch-free="1"
-                                data-stream-type="live"
-                                data-live-route="/watch/%25live_channel_id%25"
-                            >
-                            </div>
-                        </div>
-                    </div>
+            <div class="col-xs-12">
+                <div id="live-player-root"
+                    data-player-library="videojs"
+                    data-player-id="ILWxqLKV91Ql8kF"
+                    data-player-key="2Pw1Eg0Px3Gy9Jm3Ry8Ar5Bi5Vc5Nk"
+                    data-player-uvid="139"
+                    data-player-token="275c808a685a09d6e36d0253ab3765af"
+                    data-player-expiry="1531958189"
+                    data-player-poster=""
+                    data-requested-channel-id="139"
+                    data-play-button="/assets/tvplayer/images/dist/play-button-epg.svg"
+                    data-update-url="/now-ajax"
+                    data-timezone-name="Europe/London"
+                    data-thumb-link-classes=""
+                    data-theme-name="tvplayer"
+                    data-base-entitlements="%5B%22free%22%5D"
+                    data-has-identity="0"
+                    data-require-identity-to-watch-free="1"
+                    data-stream-type="live"
+                    data-live-route="/watch/%25live_channel_id%25"
+                >
                 </div>
             </div>
         """
