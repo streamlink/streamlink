@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class Reuters(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?reuters\.tv')
+    _url_re = re.compile(r'https?://(.*?\.)?reuters\.(com|tv)')
     _hls_re = re.compile(r'''(?<!')https://[^"';!<>]+\.m3u8''')
     _json_re = re.compile(r'''(?P<data>{.*});''')
     _data_schema = validate.Schema(
