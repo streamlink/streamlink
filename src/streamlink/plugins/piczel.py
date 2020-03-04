@@ -2,6 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -11,6 +12,14 @@ STREAMS_URL = "https://piczel.tv/api/streams?followedStreams=false&live_only=fal
 HLS_URL = "https://piczel.tv/hls/{0}/index.m3u8"
 
 _url_re = re.compile(r"https://piczel.tv/watch/(\w+)")
+
+_streams_schema = validate.Schema([
+    {
+        "id": int,
+        "live": bool,
+        "slug": validate.text
+    }
+])
 
 
 class Piczel(Plugin):
@@ -26,7 +35,7 @@ class Piczel(Plugin):
         channel_name = match.group(1)
 
         res = self.session.http.get(STREAMS_URL)
-        streams = self.session.http.json(res)
+        streams = self.session.http.json(res, schema=_streams_schema)
 
         for stream in streams:
             if stream["slug"] != channel_name:
