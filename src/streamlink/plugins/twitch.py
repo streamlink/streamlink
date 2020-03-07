@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 import logging
 import re
 import warnings
@@ -39,7 +39,10 @@ QUALITY_WEIGHTS = {
     "mobile": 120,
 }
 
+# Streamlink's client-id used for public API calls (don't steal this and register your own application on Twitch)
 TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
+# Twitch's client-id used for private API calls (see issue #2680 for why we are doing this)
+TWITCH_CLIENT_ID_PRIVATE = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
 _url_re = re.compile(r"""
     http(s)?://
@@ -59,7 +62,7 @@ _url_re = re.compile(r"""
         (?P<video_id>\d+)
     )?
     (?:
-        /
+        /(?:clip/)?
         (?P<clip_name>[\w]+)
     )?
 """, re.VERBOSE)
@@ -92,6 +95,18 @@ _user_schema = validate.Schema(
         validate.optional("display_name"): validate.text
     },
     validate.get("display_name")
+)
+_stream_schema = validate.Schema(
+    {
+        "stream": validate.any(None, {
+            "stream_type": validate.text,
+            "broadcast_platform": validate.text,
+            "channel": validate.any(None, {
+                "broadcaster_software": validate.text
+            })
+        })
+    },
+    validate.get("stream")
 )
 _video_schema = validate.Schema(
     {
@@ -254,11 +269,8 @@ class TwitchAPI(object):
     def add_cookies(self, cookies):
         self.session.http.parse_cookies(cookies, domain="twitch.tv")
 
-    def call(self, path, format="json", schema=None, **extra_params):
+    def call(self, path, format="json", schema=None, private=False, **extra_params):
         params = dict(as3="t", **extra_params)
-
-        if self.oauth_token:
-            params["oauth_token"] = self.oauth_token
 
         if len(format) > 0:
             url = "https://{0}.twitch.tv{1}.{2}".format(self.subdomain, path, format)
@@ -266,7 +278,12 @@ class TwitchAPI(object):
             url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
 
         headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
-                   'Client-ID': TWITCH_CLIENT_ID}
+                   'Client-ID': TWITCH_CLIENT_ID if not private else TWITCH_CLIENT_ID_PRIVATE}
+
+        # OAuth tokens created from Streamlink's own client-id can't be used anymore on the private API (#2680)
+        # Since we don't know the origin of the provided OAuth token, we unfortunately need to disable all
+        if self.oauth_token and not private:
+            headers["Authorization"] = "OAuth {}".format(self.oauth_token)
 
         res = self.session.http.get(url, params=params, headers=headers)
 
@@ -305,31 +322,33 @@ class TwitchAPI(object):
     # Private API calls
 
     def access_token(self, endpoint, asset, **params):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), **dict(platform="_", **params))
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **params)
 
     def token(self, **params):
-        return self.call("/api/viewer/token", **params)
+        return self.call("/api/viewer/token", private=True, **params)
 
     def viewer_info(self, **params):
-        return self.call("/api/viewer/info", **params)
+        return self.call("/api/viewer/info", private=True, **params)
 
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
     def clip_status(self, channel, clip_name, schema):
-        return self.session.http.json(self.call_subdomain("clips", "/api/v2/clips/" + clip_name + "/status", format=""),
-                                      schema=schema)
+        return self.session.http.json(
+            self.call_subdomain("clips", "/api/v2/clips/{}/status".format(clip_name), private=True, format=""),
+            schema=schema
+        )
 
     # Unsupported/Removed private API calls
 
     def channel_viewer_info(self, channel, **params):
         warnings.warn("The channel_viewer_info API call is unsupported and may stop working at any time")
-        return self.call("/api/channels/{0}/viewer".format(channel), **params)
+        return self.call("/api/channels/{0}/viewer".format(channel), private=True, **params)
 
     def channel_subscription(self, channel, **params):
         warnings.warn("The channel_subscription API call has been removed and no longer works",
                       category=DeprecationWarning)
-        return self.call("/api/channels/{0}/subscription".format(channel), **params)
+        return self.call("/api/channels/{0}/subscription".format(channel), private=True, **params)
 
 
 class Twitch(Plugin):
@@ -367,6 +386,12 @@ class Twitch(Plugin):
                        help="""
         Skip embedded advertisement segments at the beginning or during a stream.
         Will cause these segments to be missing from the stream.
+        """
+                       ),
+        PluginArgument("disable-reruns",
+                       action="store_true",
+                       help="""
+        Do not open the stream if the target channel is currently broadcasting a rerun.
         """
                        ))
 
@@ -437,7 +462,7 @@ class Twitch(Plugin):
                     self.video_type = self.params["video"][0]
                     self.video_id = self.params["video"][1:]
                 except IndexError:
-                    self.logger.debug("Invalid video param: {0}", self.params["video"])
+                    log.debug("Invalid video param: {0}".format(self.params["video"]))
             self._channel = self.params.get("channel")
         elif self.subdomain == "clips":
             # clip share URL
@@ -507,27 +532,25 @@ class Twitch(Plugin):
         cookies = self.options.get("cookie")
 
         if oauth_token:
-            self.logger.info("Attempting to authenticate using OAuth token")
+            log.info("Attempting to authenticate using OAuth token")
             self.api.oauth_token = oauth_token
             user = self.api.user(schema=_user_schema)
 
             if user:
-                self.logger.info("Successfully logged in as {0}", user)
+                log.info("Successfully logged in as {0}".format(user))
             else:
-                self.logger.error("Failed to authenticate, the access token "
-                                  "is invalid or missing required scope")
+                log.error("Failed to authenticate, the access token is invalid or missing required scope")
         elif cookies:
-            self.logger.info("Attempting to authenticate using cookies")
+            log.info("Attempting to authenticate using cookies")
 
             self.api.add_cookies(cookies)
             self.api.oauth_token = self.api.token(schema=_viewer_token_schema)
             login = self.api.viewer_info(schema=_viewer_info_schema)
 
             if login:
-                self.logger.info("Successfully logged in as {0}", login)
+                log.info("Successfully logged in as {0}".format(login))
             else:
-                self.logger.error("Failed to authenticate, your cookies "
-                                  "may have expired")
+                log.error("Failed to authenticate, your cookies may have expired")
 
     def _create_playlist_streams(self, videos):
         start_offset = int(videos.get("start_offset", 0))
@@ -537,9 +560,7 @@ class Twitch(Plugin):
         for quality, chunks in videos.get("chunks").items():
             if not chunks:
                 if videos.get("restrictions", {}).get(quality) == "chansub":
-                    self.logger.warning("The quality '{0}' is not available "
-                                        "since it requires a subscription.",
-                                        quality)
+                    log.warning("The quality '{0}' is not available since it requires a subscription.".format(quality))
                 continue
 
             # Rename 'live' to 'source'
@@ -548,8 +569,7 @@ class Twitch(Plugin):
 
             chunks_filtered = list(filter(lambda c: c["url"], chunks))
             if len(chunks) != len(chunks_filtered):
-                self.logger.warning("The video '{0}' contains invalid chunks. "
-                                    "There will be missing data.", quality)
+                log.warning("The video '{0}' contains invalid chunks. There will be missing data.".format(quality))
                 chunks = chunks_filtered
 
             chunks_duration = sum(c.get("length") for c in chunks)
@@ -570,8 +590,7 @@ class Twitch(Plugin):
                                                      start_offset,
                                                      stop_offset)
                 except StreamError as err:
-                    self.logger.error("Error while creating video '{0}': {1}",
-                                      quality, err)
+                    log.error("Error while creating video '{0}': {1}".format(quality, err))
                     continue
 
             streams[quality] = stream
@@ -637,7 +656,7 @@ class Twitch(Plugin):
                            tags=playlist_tags, duration=playlist_duration)
 
     def _get_video_streams(self):
-        self.logger.debug("Getting video steams for {0} (type={1})".format(self.video_id, self.video_type))
+        log.debug("Getting video steams for {0} (type={1})".format(self.video_id, self.video_type))
         self._authenticate()
 
         if self.video_type == "b":
@@ -687,22 +706,35 @@ class Twitch(Plugin):
     def _check_for_host(self):
         host_info = self.api.hosted_channel(include_logins=1, host=self.channel_id).json()["hosts"][0]
         if "target_login" in host_info and host_info["target_login"].lower() != self.channel.lower():
-            self.logger.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
+            log.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
 
+    def _check_for_rerun(self):
+        stream = self.api.streams(self.channel_id, schema=_stream_schema)
+
+        return stream and (
+            stream["stream_type"] != "live"
+            or stream["broadcast_platform"] == "rerun"
+            or stream["channel"] and stream["channel"]["broadcaster_software"] == "watch_party_rerun"
+        )
+
     def _get_hls_streams(self, stream_type="live"):
-        self.logger.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
+        log.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
         self._authenticate()
         self._hosted_chain.append(self.channel)
 
         if stream_type == "live":
+            if self.options.get("disable_reruns") and self._check_for_rerun():
+                log.info("Reruns were disabled by command line option")
+                return {}
+
             hosted_channel = self._check_for_host()
             if hosted_channel and self.options.get("disable_hosting"):
-                self.logger.info("hosting was disabled by command line option")
+                log.info("hosting was disabled by command line option")
             elif hosted_channel:
-                self.logger.info("switching to {0}", hosted_channel)
+                log.info("switching to {0}".format(hosted_channel))
                 if hosted_channel in self._hosted_chain:
-                    self.logger.error(
+                    log.error(
                         u"A loop of hosted channels has been detected, "
                         "cannot find a playable stream. ({0})".format(
                             u" -> ".join(self._hosted_chain + [hosted_channel])))
@@ -717,7 +749,7 @@ class Twitch(Plugin):
             sig, token = self._access_token(stream_type)
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
         else:
-            self.logger.debug("Unknown HLS stream type: {0}".format(stream_type))
+            log.debug("Unknown HLS stream type: {0}".format(stream_type))
             return {}
 
         time_offset = self.params.get("t", 0)
@@ -747,9 +779,7 @@ class Twitch(Plugin):
             token = parse_json(token, schema=_token_schema)
             for name in token["restricted_bitrates"]:
                 if name not in streams:
-                    self.logger.warning("The quality '{0}' is not available "
-                                        "since it requires a subscription.",
-                                        name)
+                    log.warning("The quality '{0}' is not available since it requires a subscription.".format(name))
         except PluginError:
             pass
 

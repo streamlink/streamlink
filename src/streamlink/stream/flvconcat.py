@@ -56,12 +56,10 @@ def extract_flv_header_tags(stream):
     for tag_index, tag in enumerate(iter_flv_tags(fd)):
         if isinstance(tag.data, ScriptData) and tag.data.name == "onMetaData":
             metadata = tag
-        elif (isinstance(tag.data, VideoData) and
-              isinstance(tag.data.data, AVCVideoData)):
+        elif (isinstance(tag.data, VideoData) and isinstance(tag.data.data, AVCVideoData)):
             if tag.data.data.type == AVC_PACKET_TYPE_SEQUENCE_HEADER:
                 avc_header = tag
-        elif (isinstance(tag.data, AudioData) and
-              isinstance(tag.data.data, AACAudioData)):
+        elif (isinstance(tag.data, AudioData) and isinstance(tag.data.data, AACAudioData)):
             if tag.data.data.type == AAC_PACKET_TYPE_SEQUENCE_HEADER:
                 aac_header = tag
 

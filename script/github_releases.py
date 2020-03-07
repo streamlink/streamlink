@@ -105,4 +105,3 @@ if __name__ == "__main__":
         exit(main(args.tag, args.repo, args.api_key, args.dry_run))
     else:
         parser.error("--tag, --repo, and --api-key are all required options")
-

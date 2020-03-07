@@ -5,12 +5,11 @@ import freezegun
 import requests.cookies
 
 
-from tests.mock import Mock, ANY, call
+from tests.mock import Mock, call
 from streamlink.plugin import Plugin
 
 
 class TestPlugin(unittest.TestCase):
-
     def _create_cookie_dict(self, name, value, expires):
         return {'version': 0, 'name': name, 'value': value,
                 'port': None, 'domain': "test.se", 'path': "/", 'secure': False,
@@ -76,7 +75,7 @@ class TestPlugin(unittest.TestCase):
         Plugin.cache.get_all.return_value = {
             "__cookie:test-name:test.se:80:/": self._create_cookie_dict("test-name", "test-value", None)
         }
-        plugin = Plugin("http://test.se")
+        Plugin("http://test.se")
 
         self.assertSequenceEqual(
             list(map(self._cookie_to_dict, session.http.cookies)),
@@ -97,7 +96,6 @@ class TestPlugin(unittest.TestCase):
 
         # non-empty cookiejar
         self.assertTrue(len(session.http.cookies.get_dict()) > 0)
-
 
         plugin.clear_cookies()
         self.assertSequenceEqual(
@@ -120,7 +118,6 @@ class TestPlugin(unittest.TestCase):
 
         # non-empty cookiejar
         self.assertTrue(len(session.http.cookies.get_dict()) > 0)
-
 
         plugin.clear_cookies(lambda c: c.name.endswith("2"))
         self.assertSequenceEqual(

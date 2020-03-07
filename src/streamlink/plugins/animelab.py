@@ -1,6 +1,5 @@
 from __future__ import print_function
 import re
-from pprint import pprint
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
@@ -55,10 +54,12 @@ class AnimeLab(Plugin):
 
     def login(self, email, password):
         self.logger.debug("Attempting to log in as {0}", email)
-        res = self.session.http.post(self.login_url,
-                        data=dict(email=email, password=password),
-                        allow_redirects=False,
-                        raise_for_status=False)
+        res = self.session.http.post(
+            self.login_url,
+            data=dict(email=email, password=password),
+            allow_redirects=False,
+            raise_for_status=False
+        )
         loc = res.headers.get("Location", "")
         if "geoblocked" in loc.lower():
             self.logger.error("AnimeLab is not available in your territory")

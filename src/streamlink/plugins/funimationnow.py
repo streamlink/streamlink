@@ -53,7 +53,11 @@ class Experience(object):
 
         res = self.session.http.request(method, url, *args, headers=headers, **kwargs)
         if "_Incapsula_Resource" in res.text:
-            log.error("This page is protected by Incapsula, please see https://github.com/streamlink/streamlink/issues/2088 for a workaround.")
+            log.error(
+                "This page is protected by Incapsula, please see "
+                "https://github.com/streamlink/streamlink/issues/2088"
+                " for a workaround."
+            )
             return
         return res
 
@@ -205,7 +209,11 @@ class FunimationNow(Plugin):
         rlanguage = {"en": "english", "ja": "japanese"}.get(self.get_option("language").lower(),
                                                             self.get_option("language").lower())
         if "_Incapsula_Resource" in res.text:
-            log.error("This page is protected by Incapsula, please see https://github.com/streamlink/streamlink/issues/2088 for a workaround.")
+            log.error(
+                "This page is protected by Incapsula, please see "
+                "https://github.com/streamlink/streamlink/issues/2088"
+                " for a workaround."
+            )
             return
 
         if "Out of Territory" in res.text:
@@ -275,7 +283,6 @@ class FunimationNow(Plugin):
 
         else:
             log.error("Could not find experience ID?!")
-
 
 
 __plugin__ = FunimationNow

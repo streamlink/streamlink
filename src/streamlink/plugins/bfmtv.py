@@ -7,9 +7,17 @@ from streamlink.stream import HLSStream
 
 class BFMTV(Plugin):
     _url_re = re.compile(r'https://.+\.(?:bfmtv|01net)\.com')
-    _brightcove_video_re = re.compile(r'data-holder="video(?P<video_id>[0-9]+)" data-account="(?P<account_id>[0-9]+)"')
-    _brightcove_video_alt_re = re.compile(r'data-account="(?P<account_id>[0-9]+).*?data-video-id="(?P<video_id>[0-9]+)"', re.DOTALL)
-    _embed_video_url_re = re.compile(r"\$YOPLAYER\('liveStitching', {.+?file: '(?P<video_url>[^\"]+?)'.+?}\);", re.DOTALL)
+    _brightcove_video_re = re.compile(
+        r'data-holder="video(?P<video_id>[0-9]+)" data-account="(?P<account_id>[0-9]+)"'
+    )
+    _brightcove_video_alt_re = re.compile(
+        r'data-account="(?P<account_id>[0-9]+).*?data-video-id="(?P<video_id>[0-9]+)"',
+        re.DOTALL
+    )
+    _embed_video_url_re = re.compile(
+        r"\$YOPLAYER\('liveStitching', {.+?file: '(?P<video_url>[^\"]+?)'.+?}\);",
+        re.DOTALL
+    )
 
     @classmethod
     def can_handle_url(cls, url):

@@ -2,7 +2,6 @@ import re
 import json
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream
 from streamlink.stream import HLSStream
 
@@ -33,7 +32,7 @@ class Tigerdile(Plugin):
             self.logger.error("The channel {0} does not exist or is marked private".format(streamname))
             return
 
-        if api_json[0]["online"] == False:
+        if not api_json[0]["online"]:
             self.logger.error("The channel {0} is not online".format(streamname))
             return
 

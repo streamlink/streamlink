@@ -1,10 +1,9 @@
 import unittest
 
-from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.times import hours_minutes_seconds, seconds_to_hhmmss
 
 
 class TestUtilsTimes(unittest.TestCase):
-
     def test_hours_minutes_seconds(self):
         self.assertEqual(hours_minutes_seconds("00:01:30"), 90)
         self.assertEqual(hours_minutes_seconds("01:20:15"), 4815)
@@ -28,7 +27,6 @@ class TestUtilsTimes(unittest.TestCase):
         self.assertEqual(hours_minutes_seconds("1:10"), 70)
         self.assertEqual(hours_minutes_seconds("10:00"), 600)
 
-
         with self.assertRaises(ValueError):
             hours_minutes_seconds("FOO")
 
@@ -37,3 +35,12 @@ class TestUtilsTimes(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             hours_minutes_seconds("11:ERR:00")
+
+    def test_seconds_to_hhmmss(self):
+        self.assertEqual(seconds_to_hhmmss(0), "00:00:00")
+        self.assertEqual(seconds_to_hhmmss(1), "00:00:01")
+        self.assertEqual(seconds_to_hhmmss(60), "00:01:00")
+        self.assertEqual(seconds_to_hhmmss(3600), "01:00:00")
+
+        self.assertEqual(seconds_to_hhmmss(13997), "03:53:17")
+        self.assertEqual(seconds_to_hhmmss(13997.4), "03:53:17.4")

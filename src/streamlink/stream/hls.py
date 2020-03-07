@@ -219,10 +219,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
         if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
             log.debug("Segments in this playlist are encrypted")
 
-        self.playlist_changed = ([s.num for s in self.playlist_sequences] !=
-                                 [s.num for s in sequences])
-        self.playlist_reload_time = (playlist.target_duration or
-                                     last_sequence.segment.duration)
+        self.playlist_changed = ([s.num for s in self.playlist_sequences] != [s.num for s in sequences])
+        self.playlist_reload_time = (playlist.target_duration or last_sequence.segment.duration)
         self.playlist_sequences = sequences
 
         if not self.playlist_changed:
@@ -410,14 +408,13 @@ class HLSStream(HTTPStream):
                     default_audio = [media]
 
                 # select the first audio stream that matches the users explict language selection
-                if (('*' in audio_select or media.language in audio_select or media.name in audio_select) or
-                        ((not preferred_audio or media.default) and locale.explicit and locale.equivalent(
+                if (('*' in audio_select or media.language in audio_select or media.name in audio_select)
+                        or ((not preferred_audio or media.default) and locale.explicit and locale.equivalent(
                             language=media.language))):
                     preferred_audio.append(media)
 
             # final fallback on the first audio stream listed
-            fallback_audio = fallback_audio or (len(audio_streams) and
-                                                audio_streams[0].uri and [audio_streams[0]])
+            fallback_audio = fallback_audio or (len(audio_streams) and audio_streams[0].uri and [audio_streams[0]])
 
             if playlist.stream_info.resolution:
                 width, height = playlist.stream_info.resolution
@@ -434,11 +431,18 @@ class HLSStream(HTTPStream):
             if name_fmt:
                 stream_name = name_fmt.format(**names)
             else:
-                stream_name = (names.get(name_key) or names.get("name") or
-                               names.get("pixels") or names.get("bitrate"))
+                stream_name = (
+                    names.get(name_key)
+                    or names.get("name")
+                    or names.get("pixels")
+                    or names.get("bitrate")
+                )
 
             if not stream_name:
                 continue
+            if name_prefix:
+                stream_name = "{0}{1}".format(name_prefix, stream_name)
+
             if stream_name in streams:  # rename duplicate streams
                 stream_name = "{0}_alt".format(stream_name)
                 num_alts = len(list(filter(lambda n: n.startswith(stream_name), streams.keys())))
@@ -460,12 +464,12 @@ class HLSStream(HTTPStream):
             external_audio = preferred_audio or default_audio or fallback_audio
 
             if external_audio and FFMPEGMuxer.is_usable(session_):
-                external_audio_msg = ", ".join([
-                    "(language={0}, name={1})".format(x.language, (x.name or "N/A"))
+                external_audio_msg = u", ".join([
+                    u"(language={0}, name={1})".format(x.language, (x.name or "N/A"))
                     for x in external_audio
                 ])
-                log.debug("Using external audio tracks for stream {0} {1}", name_prefix + stream_name,
-                          external_audio_msg)
+                log.debug(u"Using external audio tracks for stream {0} {1}".format(
+                          stream_name, external_audio_msg))
 
                 stream = MuxedHLSStream(session_,
                                         video=playlist.uri,
@@ -481,6 +485,6 @@ class HLSStream(HTTPStream):
                              start_offset=start_offset,
                              duration=duration,
                              **request_params)
-            streams[name_prefix + stream_name] = stream
+            streams[stream_name] = stream
 
         return streams

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 from .box import Box, RawPayload
 from .compat import is_py2
 

@@ -7,7 +7,7 @@ from streamlink.stream import HLSStream
 
 
 class TVRPlus(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?tvrplus\.ro/live-")
+    url_re = re.compile(r"https?://(?:www\.)?tvrplus\.ro/live/")
     hls_file_re = re.compile(r"""["'](?P<url>[^"']+\.m3u8(?:[^"']+)?)["']""")
 
     stream_schema = validate.Schema(

@@ -279,23 +279,22 @@ To install Streamlink from source you will need these dependencies.
 ==================================== ===========================================
 Name                                 Notes
 ==================================== ===========================================
-`Python`_                            At least version **2.7** or **3.4**.
+`Python`_                            At least version **2.7** or **3.5**.
 `python-setuptools`_
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-argparse`_                   Only needed on Python versions older than **2.7**.
-`python-futures`_                    Only needed on Python **2.x**.
-`python-requests`_                   At least version **1.0**.
-`python-singledispatch`_             Only needed on Python versions older than **3.4**.
+`python-futures`_                    Only needed on Python **2.7**.
+`python-requests`_                   At least version **2.21.0**.
+`python-singledispatch`_             Only needed on Python **2.7**.
 `pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
 `PySocks`_                           Used for SOCKS Proxies
 `websocket-client`_                  Used for some plugins
-`shutil_get_terminal_size`_          Only needed on Python versions older than **3.3**
-`shutil_which`_                      Only needed on Python versions older than **3.3**
+`shutil_get_terminal_size`_          Only needed on Python **2.7**.
+`shutil_which`_                      Only needed on Python **2.7**.
 
 **Optional**
 --------------------------------------------------------------------------------
@@ -317,7 +316,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
-.. _python-argparse: https://pypi.org/project/argparse/
 .. _python-futures: https://pypi.org/project/futures/
 .. _python-requests: http://python-requests.org/
 .. _python-singledispatch: https://pypi.org/project/singledispatch/

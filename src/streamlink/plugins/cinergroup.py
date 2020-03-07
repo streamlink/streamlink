@@ -17,6 +17,7 @@ class CinerGroup(Plugin):
         (?:
             showtv.com.tr/canli-yayin(/showtv)?|
             haberturk.com/canliyayin|
+            haberturk.com/tv/canliyayin|
             showmax.com.tr/canliyayin|
             showturk.com.tr/canli-yayin/showturk|
             bloomberght.com/tv|

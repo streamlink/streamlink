@@ -17,8 +17,7 @@ class VRTbe(Plugin):
         validate.any({
             "code": validate.text,
             "message": validate.text
-        },
-        {
+        }, {
             "drm": validate.any(None, validate.text),
             'targetUrls': [{
                 'type': validate.text,
@@ -63,11 +62,14 @@ class VRTbe(Plugin):
 
         log.debug("Got token: {0}".format(token))
         log.debug("Getting stream data: {0}".format(api_info["stream_url"]))
-        res = self.session.http.get(api_info["stream_url"],
-                                    params={
-                                        "vrtPlayerToken": token,
-                                        "client": "vrtvideo"
-                                    }, raise_for_status=False)
+        res = self.session.http.get(
+            api_info["stream_url"],
+            params={
+                "vrtPlayerToken": token,
+                "client": "vrtvideo"
+            },
+            raise_for_status=False
+        )
         data = self.session.http.json(res, schema=self._stream_schema)
 
         if "code" in data:
