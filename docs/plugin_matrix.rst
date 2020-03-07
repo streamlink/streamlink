@@ -93,6 +93,7 @@ filmon                  filmon.com           Yes   Yes   Only SD quality streams
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
                         - funimationnow.uk
+galatasaraytv           galatasaray.com      Yes   No
 gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
 goltelevision           goltelevision.com    Yes   No    Streams may be geo-restricted to Spain.
@@ -111,6 +112,7 @@ itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-rest
 kanal7                  - kanal7.com         Yes   No
                         - tvt.tv.tr
 kingkong                kingkong.com.tw      Yes   --
+latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
 linelive                live.line.me         Yes   Yes
 live_russia_tv          live.russia.tv       Yes   --
 liveedu                 - liveedu.tv         Yes   --    Some streams require a login.

@@ -5,9 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.compat import urlparse, parse_qsl
-from streamlink.utils.times import hours_minutes_seconds
 
 log = logging.getLogger(__name__)
 
@@ -102,12 +100,13 @@ class SenateGov(Plugin):
     @classmethod
     def parse_stt(cls, param):
         m = cls.stt_re.match(param)
-        if m:
-            return int(m.group('hours') or 0) * 3600 + \
-                   int(m.group('minutes')) * 60 + \
-                   int(m.group('seconds'))
-        else:
+        if not m:
             return 0
+        return (
+            int(m.group('hours') or 0) * 3600
+            + int(m.group('minutes')) * 60
+            + int(m.group('seconds'))
+        )
 
 
 __plugin__ = SenateGov

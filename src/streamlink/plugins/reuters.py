@@ -11,7 +11,9 @@ log = logging.getLogger(__name__)
 
 
 class Reuters(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?reuters\.tv')
+    _url_re = re.compile(r'https?://(.*?\.)?reuters\.(com|tv)')
+    _id_re = re.compile(r'(/l/|id=)(?P<id>.*?)(/|\?|$)')
+    _iframe_url = 'https://www.reuters.tv/l/{0}/?nonav=true'
     _hls_re = re.compile(r'''(?<!')https://[^"';!<>]+\.m3u8''')
     _json_re = re.compile(r'''(?P<data>{.*});''')
     _data_schema = validate.Schema(
@@ -58,6 +60,13 @@ class Reuters(Plugin):
 
     def _get_data(self):
         res = self.session.http.get(self.url)
+        for script in itertags(res.text, 'script'):
+            if script.attributes.get('type') == 'text/javascript' and '#rtvIframe' in script.text:
+                m = self._id_re.search(self.url)
+                if m and m.group('id'):
+                    log.debug('ID: {0}'.format(m.group('id')))
+                    res = self.session.http.get(self._iframe_url.format(m.group('id')))
+
         for script in itertags(res.text, 'script'):
             if script.attributes.get('type') == 'text/javascript' and 'RTVJson' in script.text:
                 data = self._data_schema.validate(script.text)

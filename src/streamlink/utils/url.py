@@ -41,12 +41,14 @@ def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_pa
     firstp = urlparse(first)
     secondp = urlparse(second)
 
-    return ((firstp.scheme == secondp.scheme or ignore_scheme) and
-            (firstp.netloc == secondp.netloc or ignore_netloc) and
-            (firstp.path == secondp.path or ignore_path) and
-            (firstp.params == secondp.params or ignore_params) and
-            (firstp.query == secondp.query or ignore_query) and
-            (firstp.fragment == secondp.fragment or ignore_fragment))
+    return (
+        (firstp.scheme == secondp.scheme or ignore_scheme)
+        and (firstp.netloc == secondp.netloc or ignore_netloc)
+        and (firstp.path == secondp.path or ignore_path)
+        and (firstp.params == secondp.params or ignore_params)
+        and (firstp.query == secondp.query or ignore_query)
+        and (firstp.fragment == secondp.fragment or ignore_fragment)
+    )
 
 
 def url_concat(base, *parts, **kwargs):
@@ -95,4 +97,3 @@ def update_qsd(url, qsd=None, remove=None):
             current_qsd[key] = value
 
     return parsed._replace(query=urlencode(current_qsd)).geturl()
-

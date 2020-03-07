@@ -5,7 +5,12 @@ from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
 
 _stream_url_re = re.compile(r'https?://tvthek\.orf\.at/(index\.php/)?live/(?P<title>[^/]+)/(?P<id>[0-9]+)')
-_vod_url_re = re.compile(r'https?://tvthek\.orf\.at/pro(gram|file)/(?P<showtitle>[^/]+)/(?P<showid>[0-9]+)/(?P<episodetitle>[^/]+)/(?P<epsiodeid>[0-9]+)(/(?P<segmenttitle>[^/]+)/(?P<segmentid>[0-9]+))?')
+_vod_url_re = re.compile(r'''
+    https?://tvthek\.orf\.at/pro(gram|file)
+    /(?P<showtitle>[^/]+)/(?P<showid>[0-9]+)
+    /(?P<episodetitle>[^/]+)/(?P<epsiodeid>[0-9]+)
+    (/(?P<segmenttitle>[^/]+)/(?P<segmentid>[0-9]+))?
+''', re.VERBOSE)
 _json_re = re.compile(r'<div class="jsb_ jsb_VideoPlaylist" data-jsb="(?P<json>[^"]+)">')
 
 MODE_STREAM, MODE_VOD = 0, 1

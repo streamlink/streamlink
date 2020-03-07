@@ -50,7 +50,8 @@ class TestHLS(unittest.TestCase):
 
         playlistEnd = ""
         if aesIv is not None:
-            playlistEnd = playlistEnd + "#EXT-X-KEY:METHOD=AES-128,URI=\"encryption_key.key\",IV=0x{0},KEYFORMAT=identity,KEYFORMATVERSIONS=1\n".format(hexlify(aesIv).decode("UTF-8"))
+            ext_x_key = "#EXT-X-KEY:METHOD=AES-128,URI=\"{uri}\",IV=0x{iv},KEYFORMAT=identity,KEYFORMATVERSIONS=1\n"
+            playlistEnd = playlistEnd + ext_x_key.format(uri="encryption_key.key", iv=hexlify(aesIv).decode("UTF-8"))
 
         for i in range(4):
             playlistEnd = playlistEnd + "#EXTINF:1.000,\n{0}\n".format(streamNameTemplate.format(i))
@@ -76,7 +77,6 @@ class TestHLS(unittest.TestCase):
     def test_hls_non_encrypted(self):
         streams = [os.urandom(1024) for _ in range(4)]
         masterPlaylist = self.getMasterPlaylist()
-        firstSequence = self.mediaSequence
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
         with requests_mock.Mocker() as mock:
             mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
@@ -225,7 +225,3 @@ class TestHlsExtAudio(unittest.TestCase):
 
         # Check result
         self.assertEqual(result, expected)
-
-
-if __name__ == "__main__":
-    unittest.main()

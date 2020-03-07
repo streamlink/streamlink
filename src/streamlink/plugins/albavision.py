@@ -32,7 +32,7 @@ class Albavision(Plugin):
         'Canal5': 'http://dxejh4fchgs18.cloudfront.net/player_televicentro.html?iut=',
         'Guayaquil': 'http://d2a6tcnofawcbm.cloudfront.net/player_rts.html?iut=',
         'Quito': 'http://d3aacg6baj4jn0.cloudfront.net/reproductor_rts_o_quito.html?iut=',
-        }
+    }
 
     def __init__(self, url):
         super(Albavision, self).__init__(url)
@@ -76,7 +76,7 @@ class Albavision(Plugin):
         m = self._token_input_re.findall(self.page.text)
         log.debug("Token input: {0}".format(m[channelnumber]))
         if m:
-            date = int(time.time()//3600)
+            date = int(time.time() // 3600)
             return self.transform_token(m[channelnumber], date) or self.transform_token(m[channelnumber], date - 1)
 
     def _get_token(self, channelnumber):
@@ -111,7 +111,7 @@ class Albavision(Plugin):
         else:
             if live_channel:
                 log.debug("Live channel: {0}".format(live_channel))
-                player_url = self._channel_urls[live_channel]+quote(token)
+                player_url = self._channel_urls[live_channel] + quote(token)
                 page = self.session.http.get(player_url, raise_for_status=False)
                 if "block access from your country." in page.text:
                     raise PluginError("Content is geo-locked")
