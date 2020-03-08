@@ -152,17 +152,49 @@ _quality_options_schema = validate.Schema(
 
 Segment = namedtuple("Segment", "uri duration title key discontinuity scte35 byterange date map")
 
+LOW_LATENCY_MAX_LIVE_EDGE = 2
+
+
+def parse_condition(attr):
+    def wrapper(func):
+        def method(self, *args, **kwargs):
+            if hasattr(self.stream, attr) and getattr(self.stream, attr, False):
+                func(self, *args, **kwargs)
+        return method
+    return wrapper
+
 
 class TwitchM3U8Parser(M3U8Parser):
+    def __init__(self, base_uri=None, stream=None, **kwargs):
+        M3U8Parser.__init__(self, base_uri, **kwargs)
+        self.stream = stream
+        self.has_prefetch_segments = False
+
+    def parse(self, *args):
+        m3u8 = super(TwitchM3U8Parser, self).parse(*args)
+        m3u8.has_prefetch_segments = self.has_prefetch_segments
+
+        return m3u8
+
+    @parse_condition("disable_ads")
     def parse_tag_ext_x_scte35_out(self, value):
         self.state["scte35"] = True
 
     # unsure if this gets used by Twitch
+    @parse_condition("disable_ads")
     def parse_tag_ext_x_scte35_out_cont(self, value):
         self.state["scte35"] = True
 
+    @parse_condition("disable_ads")
     def parse_tag_ext_x_scte35_in(self, value):
         self.state["scte35"] = False
+
+    @parse_condition("low_latency")
+    def parse_tag_ext_x_twitch_prefetch(self, value):
+        self.has_prefetch_segments = True
+        segments = self.m3u8.segments
+        if segments:
+            segments.append(segments[-1]._replace(uri=self.uri(value)))
 
     def get_segment(self, uri):
         byterange = self.state.pop("byterange", None)
@@ -188,19 +220,24 @@ class TwitchM3U8Parser(M3U8Parser):
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
     def _reload_playlist(self, text, url):
-        return load_hls_playlist(text, url, parser=TwitchM3U8Parser)
+        return load_hls_playlist(text, url, parser=TwitchM3U8Parser, stream=self.stream)
+
+    def _set_playlist_reload_time(self, playlist, sequences):
+        if not self.stream.low_latency:
+            super(TwitchHLSStreamWorker, self)._set_playlist_reload_time(playlist, sequences)
+        else:
+            self.playlist_reload_time = sequences[-1].segment.duration
+
+    def process_sequences(self, playlist, sequences):
+        if self.playlist_sequence < 0 and self.stream.low_latency and not playlist.has_prefetch_segments:
+            log.info("This is not a low latency stream")
+
+        return super(TwitchHLSStreamWorker, self).process_sequences(playlist, sequences)
 
 
 class TwitchHLSStreamWriter(HLSStreamWriter):
-    def __init__(self, *args, **kwargs):
-        HLSStreamWriter.__init__(self, *args, **kwargs)
-        options = self.session.plugins.get("twitch").options
-        self.disable_ads = options.get("disable-ads")
-        if self.disable_ads:
-            log.info("Will skip ad segments")
-
     def write(self, sequence, *args, **kwargs):
-        if self.disable_ads:
+        if self.stream.disable_ads:
             if sequence.segment.scte35 is not None:
                 self.reader.ads = sequence.segment.scte35
                 if self.reader.ads:
@@ -219,11 +256,37 @@ class TwitchHLSStreamReader(HLSStreamReader):
 
 
 class TwitchHLSStream(HLSStream):
+    def __init__(self, *args, **kwargs):
+        HLSStream.__init__(self, *args, **kwargs)
+
+        disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
+        low_latency = self.session.get_plugin_option("twitch", "low-latency")
+
+        if low_latency and disable_ads:
+            log.info("Low latency streaming with ad filtering is currently not supported")
+            self.session.set_plugin_option("twitch", "low-latency", False)
+            low_latency = False
+
+        self.disable_ads = disable_ads
+        self.low_latency = low_latency
+
     def open(self):
+        if self.disable_ads:
+            log.info("Will skip ad segments")
+        if self.low_latency:
+            live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, self.session.options.get("hls-live-edge")))
+            self.session.options.set("hls-live-edge", live_edge)
+            self.session.options.set("hls-segment-stream-data", True)
+            log.info("Low latency streaming (HLS live edge: {0})".format(live_edge))
+
         reader = TwitchHLSStreamReader(self)
         reader.open()
 
         return reader
+
+    @classmethod
+    def _get_variant_playlist(cls, res):
+        return load_hls_playlist(res.text, base_uri=res.url)
 
 
 class UsherService(object):
@@ -353,47 +416,70 @@ class TwitchAPI(object):
 
 class Twitch(Plugin):
     arguments = PluginArguments(
-        PluginArgument("oauth-token",
-                       sensitive=True,
-                       metavar="TOKEN",
-                       help="""
-        An OAuth token to use for Twitch authentication.
-        Use --twitch-oauth-authenticate to create a token.
-        """),
-        PluginArgument("cookie",
-                       sensitive=True,
-                       metavar="COOKIES",
-                       help="""
-        Twitch cookies to authenticate to allow access to subscription channels.
+        PluginArgument(
+            "oauth-token",
+            sensitive=True,
+            metavar="TOKEN",
+            help="""
+            An OAuth token to use for Twitch authentication.
+            Use --twitch-oauth-authenticate to create a token.
+            """
+        ),
+        PluginArgument(
+            "cookie",
+            sensitive=True,
+            metavar="COOKIES",
+            help="""
+            Twitch cookies to authenticate to allow access to subscription channels.
 
-        Example:
+            Example:
 
-          "_twitch_session_id=xxxxxx; persistent=xxxxx"
+              "_twitch_session_id=xxxxxx; persistent=xxxxx"
 
-        Note: This method is the old and clunky way of authenticating with
-        Twitch, using --twitch-oauth-authenticate is the recommended and
-        simpler way of doing it now.
-        """
-                       ),
-        PluginArgument("disable-hosting",
-                       action="store_true",
-                       help="""
-        Do not open the stream if the target channel is hosting another channel.
-        """
-                       ),
-        PluginArgument("disable-ads",
-                       action="store_true",
-                       help="""
-        Skip embedded advertisement segments at the beginning or during a stream.
-        Will cause these segments to be missing from the stream.
-        """
-                       ),
-        PluginArgument("disable-reruns",
-                       action="store_true",
-                       help="""
-        Do not open the stream if the target channel is currently broadcasting a rerun.
-        """
-                       ))
+            Note: This method is the old and clunky way of authenticating with
+            Twitch, using --twitch-oauth-authenticate is the recommended and
+            simpler way of doing it now.
+            """
+        ),
+        PluginArgument(
+            "disable-hosting",
+            action="store_true",
+            help="""
+            Do not open the stream if the target channel is hosting another channel.
+            """
+        ),
+        PluginArgument(
+            "disable-ads",
+            action="store_true",
+            help="""
+            Skip embedded advertisement segments at the beginning or during a stream.
+            Will cause these segments to be missing from the stream.
+            """
+        ),
+        PluginArgument(
+            "disable-reruns",
+            action="store_true",
+            help="""
+            Do not open the stream if the target channel is currently broadcasting a rerun.
+            """
+        ),
+        PluginArgument(
+            "low-latency",
+            action="store_true",
+            help="""
+            Enables low latency streaming by prefetching HLS segments.
+            Sets --hls-segment-stream-data to true and --hls-live-edge to {live_edge}, if it is higher.
+            Reducing --hls-live-edge to 1 will result in the lowest latency possible.
+
+            Low latency streams have to be enabled by the broadcasters on Twitch themselves.
+            Regular streams can cause buffering issues with this option enabled.
+
+            Note: The caching/buffering settings of the chosen player may need to be adjusted as well.
+            Please refer to the player's own documentation for the required parameters and its configuration.
+            Player parameters can be set via Streamlink's --player or --player-args parameters.
+            """.format(live_edge=LOW_LATENCY_MAX_LIVE_EDGE)
+        )
+    )
 
     @classmethod
     def stream_weight(cls, key):
