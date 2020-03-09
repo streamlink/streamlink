@@ -44,9 +44,9 @@ script:
 after_success:
   - set -e
   # latest version - push docs for master
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' ]]; then doctr deploy latest; fi
+  - if [[ $TRAVIS_PULL_REQUEST == 'false' && $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' ]]; then doctr deploy latest; fi
   # stable version - push docs for tags
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" ]]; then doctr deploy .; fi
+  - if [[ $TRAVIS_PULL_REQUEST == 'false' && $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" ]]; then doctr deploy .; fi
   - codecov
 
 addons:
