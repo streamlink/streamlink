@@ -817,7 +817,16 @@ def build_parser():
         URI to segment encryption key. If no URI is specified, the URI contained
         in the segments will be used.
 
-        Example: --hls-segment-key-uri "https://example.com/hls/encryption_key"
+        URI can be templated using the following variables, which will be
+        replaced with its respective part from the source segment URI:
+
+          {url} {scheme} {netloc} {path} {query}
+
+        Examples:
+
+          --hls-segment-key-uri "https://example.com/hls/encryption_key"
+          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
+          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
 
         Default is None.
         """
