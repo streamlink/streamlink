@@ -82,6 +82,18 @@ _config_schema = validate.Schema(
             {
                 validate.optional("streamingData"): {
                     validate.optional("hlsManifestUrl"): validate.text,
+                    validate.optional("formats"): [{
+                        "itag": int,
+                        "url": validate.text,
+                        "qualityLabel": validate.text
+                    }],
+                    validate.optional("adaptiveFormats"): [{
+                        "itag": int,
+                        "mimeType": validate.text,
+                        "url": validate.text,
+                        validate.optional("qualityLabel"): validate.text,
+                        validate.optional("bitrate"): int
+                    }]
                 },
                 validate.optional("videoDetails"): {
                     validate.optional("isLive"): validate.transform(bool),
@@ -232,8 +244,9 @@ class YouTube(Plugin):
         self.title = data["title"]
 
     def _create_adaptive_streams(self, info, streams, protected):
-        adaptive_streams = {}
-        best_audio_itag = None
+        video_streams = {}
+        best_audio = None
+        best_bitrate = 0
 
         # Extract audio streams from the DASH format list
         for stream_info in info.get("adaptive_fmts", []):
@@ -241,36 +254,55 @@ class YouTube(Plugin):
                 protected = True
                 continue
 
-            stream_params = dict(parse_qsl(stream_info["url"]))
+            url = stream_info["url"]
+            stream_params = dict(parse_qsl(url))
             if "itag" not in stream_params:
                 continue
             itag = int(stream_params["itag"])
-            # extract any high quality streams only available in adaptive formats
-            adaptive_streams[itag] = stream_info["url"]
 
             stream_type, stream_format = stream_info["type"]
+            if stream_type == "video":
+                quality = self.adp_video[itag]
+                video_streams[quality] = (itag, url)
+
             if stream_type == "audio":
                 stream = HTTPStream(self.session, stream_info["url"])
                 name = "audio_{0}".format(stream_format)
                 streams[name] = stream
 
                 # find the best quality audio stream m4a, opus or vorbis
-                if best_audio_itag is None or self.adp_audio[itag] > self.adp_audio[best_audio_itag]:
-                    best_audio_itag = itag
+                bitrate = self.adp_audio[itag]
+                if best_audio is None or bitrate > best_bitrate:
+                    best_audio = (itag, url)
+                    best_bitrate = bitrate
 
-        if best_audio_itag and adaptive_streams and MuxedStream.is_usable(self.session):
-            aurl = adaptive_streams[best_audio_itag]
-            for itag, name in self.adp_video.items():
-                if itag in adaptive_streams:
-                    vurl = adaptive_streams[itag]
+        # add streams from streamingData to list
+        for stream_info in info.get("player_response", []).get("streamingData", []).get("adaptiveFormats", []):
+            itag = stream_info["itag"]
+            url = stream_info["url"]
+
+            if "video" in stream_info["mimeType"]:
+                quality = stream_info.get("qualityLabel", "")
+                video_streams[quality] = (itag, url)
+
+            if "audio" in stream_info["mimeType"]:
+                bitrate = stream_info.get("bitrate", 0)
+                if best_audio is None or bitrate > best_bitrate:
+                    best_audio = (itag, url)
+                    best_bitrate = bitrate
+
+        if MuxedStream.is_usable(self.session):
+            if best_audio and video_streams:
+                a_itag, a_url = best_audio
+                for quality, (v_itag, v_url) in video_streams.items():
                     log.debug("MuxedStream: v {video} a {audio} = {name}".format(
-                        audio=best_audio_itag,
-                        name=name,
-                        video=itag,
+                        audio=a_itag,
+                        name=quality,
+                        video=v_itag
                     ))
-                    streams[name] = MuxedStream(self.session,
-                                                HTTPStream(self.session, vurl),
-                                                HTTPStream(self.session, aurl))
+                    streams[quality] = MuxedStream(self.session,
+                                                HTTPStream(self.session, v_url),
+                                                HTTPStream(self.session, a_url))
 
         return streams, protected
 
@@ -372,6 +404,12 @@ class YouTube(Plugin):
 
             if stream_info.get("stereo3d"):
                 name += "_3d"
+
+            streams[name] = stream
+
+        for stream_info in info.get("player_response", []).get("streamingData", []).get("formats", []):
+            stream = HTTPStream(self.session, stream_info["url"])
+            name = stream_info["qualityLabel"]
 
             streams[name] = stream
 
