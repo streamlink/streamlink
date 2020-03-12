@@ -77,7 +77,8 @@ class Radiko(Plugin):
             'x-radiko-device': 'pc',
             'x-radiko-user': 'dummy_user'
         }
-        r = self.session.http.get(self._api_auth_1, headers=headers)
+        self.session.http.headers.update(headers)
+        r = self.session.http.get(self._api_auth_1)
         token = r.headers.get("x-radiko-authtoken")
         offset = int(r.headers.get("x-radiko-keyoffset"))
         length = int(r.headers.get("x-radiko-keylength"))
