@@ -40,6 +40,7 @@ old_files=(
   "aftonbladet" "aliez" "antenna" "arconai" "bongacams" "brittv" "cam4"
   "camsoda" "chaturbate" "expressen" "mips" "seetv" "speedrunslive" "streamboat"
   "vgtv" "weeb" "oldlivestream" "ok_live" "rte" "tvcatchup" "npo" "ovvatv"
+  "mlgtv"
 )
 for i in "${old_files[@]}"
 do
