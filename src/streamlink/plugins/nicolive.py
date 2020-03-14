@@ -9,18 +9,20 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.compat import urlparse
+from urllib.parse import unquote_plus
 
 
 _log = logging.getLogger(__name__)
 
 _url_re = re.compile(
-    r"^http(|s)://(?P<domain>live[0-9]*\.nicovideo\.jp)/watch/lv[0-9]*")
+    r"^https?://(?P<domain>live[0-9]*\.nicovideo\.jp)/watch/lv[0-9]*")
 
-_login_url = "https://account.nicovideo.jp/login/redirector?" \
-             "show_button_twitter=1&" \
-             "site=nicolive&" \
-             "show_button_facebook=1&" \
-             "next_url=%2F"
+_login_url = "https://account.nicovideo.jp/login/redirector"
+
+_login_url_params = {
+    "show_button_twitter": 1,
+    "show_button_facebook": 1,
+    "next_url": "/"}
 
 
 class NicoLive(Plugin):
@@ -69,7 +71,7 @@ class NicoLive(Plugin):
             if not self.get_wss_api_url():
                 _log.error("Failed to get wss_api_url.")
                 _log.error(
-                    "Please check the following URL is correct, "
+                    "Please check if the URL is correct, "
                     "and make sure your account has access to the video.")
                 return None
 
@@ -100,10 +102,21 @@ class NicoLive(Plugin):
     def get_wss_api_url(self):
         _log.debug("Getting video page: {0}".format(self.url))
         resp = self.session.http.get(self.url)
-        self.wss_api_url = extract_text(
-            resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
-        self.broadcast_id = extract_text(
-            resp.text, "&quot;broadcastId&quot;:&quot;", "&quot;")
+
+        try:
+            self.wss_api_url = extract_text(
+                resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
+        except Exception as e:
+            _log.debug(e)
+            _log.debug("Failed to extract wss api url")
+            return False
+
+        try:
+            self.broadcast_id = extract_text(
+                resp.text, "&quot;broadcastId&quot;:&quot;", "&quot;")
+        except Exception as e:
+            _log.debug(e)
+            _log.warning("Failed to extract broadcast id")
 
         _log.debug("Video page response code: {0}".format(resp.status_code))
         _log.trace(u"Video page response body: {0}".format(resp.text))
@@ -252,7 +265,8 @@ class NicoLive(Plugin):
             _log.info("Email and password are provided. Attemping login.")
 
             payload = {"mail_tel": email, "password": password}
-            resp = self.session.http.post(_login_url, data=payload)
+            resp = self.session.http.post(_login_url, data=payload,
+                                          params=_login_url_params)
 
             _log.debug("Login response code: {0}".format(resp.status_code))
             _log.trace(u"Login response body: {0}".format(resp.text))
@@ -260,8 +274,12 @@ class NicoLive(Plugin):
                 self.session.http.cookies.get_dict()))
 
             if self.session.http.cookies.get("user_session") is None:
-                msg = extract_text(
-                    resp.text, '<p class="notice__text">', "</p>")
+                try:
+                    msg = extract_text(
+                        resp.text, '<p class="notice__text">', "</p>")
+                except Exception as e:
+                    _log.debug(e)
+                    msg = "unknown reason"
                 _log.warn("Login failed. {0}".format(msg))
                 return False
             else:
@@ -295,25 +313,17 @@ class NicoHLSStream(HLSStream):
 
 
 def extract_text(text, left, right):
-    """
-    A quick, dirty function for extract strings from HTML.
-    """
-    left_pos = text.find(left)
-    if left_pos == -1:
-        return ""
-    left_pos += len(left)
-    text = text[left_pos:]
-    right_pos = text.find(right)
-    if right_pos == -1:
-        return ""
-    text = text[:right_pos]
-    return text
+    """Extract text from HTML"""
+    result = re.findall(f'{left}(.*?){right}', text)
+    if len(result) != 1:
+        raise Exception("Failed to extract string. "
+                        f"Expected 1, found {len(result)}")
+    return result[0]
 
 
 def parse_proxy_url(purl):
-    """
-    Adapted from UStreamTV plugin (ustreamtv.py)
-    """
+    """Adapted from UStreamTV plugin (ustreamtv.py)"""
+
     proxy_options = {}
     if purl:
         p = urlparse(purl)
@@ -322,8 +332,8 @@ def parse_proxy_url(purl):
         if p.port:
             proxy_options['http_proxy_port'] = p.port
         if p.username:
-            proxy_options['http_proxy_auth'] = (unquote_plus(
-                p.username), unquote_plus(p.password or ""))
+            proxy_options['http_proxy_auth'] = \
+                (unquote_plus(p.username), unquote_plus(p.password or ""))
     return proxy_options
 
 
