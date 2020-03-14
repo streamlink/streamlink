@@ -254,7 +254,7 @@ class M3U8Parser(object):
             return self.m3u8
         else:
             if not line.startswith("#EXTM3U"):
-                log.debug("First line of playlist was {0}", line)
+                log.warning("Malformed HLS Playlist. Expected #EXTM3U, but got {0}".format(line[:250]))
                 raise ValueError("Missing #EXTM3U header")
 
         parse_line = self.parse_line
