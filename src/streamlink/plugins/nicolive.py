@@ -8,8 +8,7 @@ import time
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse
-from urllib.parse import unquote_plus
+from streamlink.compat import urlparse, unquote_plus
 
 
 _log = logging.getLogger(__name__)
@@ -314,10 +313,10 @@ class NicoHLSStream(HLSStream):
 
 def extract_text(text, left, right):
     """Extract text from HTML"""
-    result = re.findall(f'{left}(.*?){right}', text)
+    result = re.findall("{0}(.*?){1}".format(left, right), text)
     if len(result) != 1:
         raise Exception("Failed to extract string. "
-                        f"Expected 1, found {len(result)}")
+                        "Expected 1, found {0}".format(len(result)))
     return result[0]
 
 
