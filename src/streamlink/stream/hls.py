@@ -6,6 +6,7 @@ from collections import defaultdict, namedtuple
 from Crypto.Cipher import AES
 from requests.exceptions import ChunkedEncodingError
 
+from streamlink.compat import urlparse
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
@@ -13,6 +14,7 @@ from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader,
                                          SegmentedStreamWriter,
                                          SegmentedStreamWorker)
+from streamlink.utils import LazyFormatter
 
 log = logging.getLogger(__name__)
 Sequence = namedtuple("Sequence", "num segment")
@@ -64,7 +66,18 @@ class HLSStreamWriter(SegmentedStreamWriter):
         if not self.key_uri_override and not key.uri:
             raise StreamError("Missing URI to decryption key")
 
-        key_uri = self.key_uri_override if self.key_uri_override else key.uri
+        if self.key_uri_override:
+            p = urlparse(key.uri)
+            key_uri = LazyFormatter.format(
+                self.key_uri_override,
+                url=key.uri,
+                scheme=p.scheme,
+                netloc=p.netloc,
+                path=p.path,
+                query=p.query,
+            )
+        else:
+            key_uri = key.uri
 
         if self.key_uri != key_uri:
             res = self.session.http.get(key_uri, exception=StreamError,
