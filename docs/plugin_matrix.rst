@@ -274,7 +274,7 @@ vk                      vk.com               Yes   Yes
 vlive                   vlive.tv             Yes   No    Embedded Naver VODs are not supported.
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
-wasd                    wasd.tv              Yes   Yes   Requires session cookies for AUTH API token
+wasd                    wasd.tv              Yes   Yes
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
