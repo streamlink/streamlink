@@ -59,13 +59,14 @@ class TestHLS(unittest.TestCase):
 
         return playlist + playlistEnd
 
-    def start_streamlink(self, masterPlaylist, kwargs=None):
+    def start_streamlink(self, masterPlaylist, hls_segment_key_uri=None, kwargs=None):
         kwargs = kwargs or {}
         log.info("Executing streamlink")
         streamlink = Streamlink()
 
         # Set to default value to avoid a test fail if the default change
         streamlink.set_option("hls-live-edge", 3)
+        streamlink.set_option("hls-segment-key-uri", hls_segment_key_uri)
 
         masterStream = hls.HLSStream.parse_variant_playlist(streamlink, masterPlaylist, **kwargs)
         stream = masterStream["1080p (source)"].open()
@@ -86,13 +87,13 @@ class TestHLS(unittest.TestCase):
 
             # Start streamlink on the generated stream
             streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8",
-                                                     {'start_offset': 1, 'duration': 1})
+                                                     kwargs={'start_offset': 1, 'duration': 1})
 
         # Check result, each segment is 1 second, with duration=1 only one segment should be returned
         expectedResult = b''.join(streams[1:2])
         self.assertEqual(streamlinkResult, expectedResult)
 
-    def test_hls_encryted_aes128(self):
+    def test_hls_encrypted_aes128(self):
         # Encryption parameters
         aesKey = os.urandom(16)
         aesIv = os.urandom(16)
@@ -119,6 +120,40 @@ class TestHLS(unittest.TestCase):
 
         # Check result
         # Live streams starts the last 3 segments from the playlist
+        expectedResult = b''.join(clearStreams[1:] + clearStreams)
+        self.assertEqual(streamlinkResult, expectedResult)
+
+    def test_hls_encrypted_aes128_key_uri_override(self):
+        aesKey = os.urandom(16)
+        aesIv = os.urandom(16)
+        aesKeyInvalid = bytes([ord(aesKey[i:i + 1]) ^ 0xFF for i in range(16)])
+        clearStreams = [os.urandom(1024) for i in range(4)]
+        encryptedStreams = [encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams]
+
+        masterPlaylist = self.getMasterPlaylist()
+        playlist1 = self.getPlaylist(aesIv, "stream{0}.ts.enc")
+        playlist2 = self.getPlaylist(aesIv, "stream2_{0}.ts.enc") + "#EXT-X-ENDLIST\n"
+
+        mocked_key_uri_default = None
+        mocked_key_uri_override = None
+        streamlinkResult = None
+        with requests_mock.Mocker() as mock:
+            mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
+            mock.get("http://mocked/path/playlist.m3u8", [{'text': playlist1}, {'text': playlist2}])
+            mocked_key_uri_default = mock.get("http://mocked/path/encryption_key.key", content=aesKeyInvalid)
+            mocked_key_uri_override = mock.get("http://real-mocked/path/encryption_key.key", content=aesKey)
+            for i, encryptedStream in enumerate(encryptedStreams):
+                mock.get("http://mocked/path/stream{0}.ts.enc".format(i), content=encryptedStream)
+            for i, encryptedStream in enumerate(encryptedStreams):
+                mock.get("http://mocked/path/stream2_{0}.ts.enc".format(i), content=encryptedStream)
+
+            streamlinkResult = self.start_streamlink(
+                "http://mocked/path/master.m3u8",
+                hls_segment_key_uri="{scheme}://real-{netloc}{path}{query}"
+            )
+
+        self.assertFalse(mocked_key_uri_default.called)
+        self.assertTrue(mocked_key_uri_override.called)
         expectedResult = b''.join(clearStreams[1:] + clearStreams)
         self.assertEqual(streamlinkResult, expectedResult)
 
