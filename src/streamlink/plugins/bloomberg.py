@@ -150,6 +150,7 @@ class Bloomberg(Plugin):
         if match is None:
             return
         live_player_url = update_scheme(self.url, match.group('live_player_url'))
+
         # Extract streams from the live player page
         log.debug("Player URL: {0}".format(live_player_url))
         res = self.session.http.get(live_player_url)
