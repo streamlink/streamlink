@@ -16,6 +16,10 @@ abematv                 abema.tv             Yes   Yes   Streams are geo-restric
 abweb                   abweb.com            Yes   No    Requires a login and a subscription.
 adultswim               adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
 afreeca                 play.afreecatv.com   Yes   No
+albavision              - tvc.com.ec         Yes   No    Some streams are geo-restricted.
+                        - rts.com.ec
+                        - elnueve.com.ar
+                        - atv.pe
 aljazeeraen             aljazeera.com        Yes   Yes   English version of the site.
 animelab                animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 app17                   17app.co             Yes   --
@@ -52,6 +56,7 @@ cinergroup              - showtv.com.tr      Yes   No
                         - showmax.com.tr
                         - showturk.com.tr
                         - bloomberght.com
+clubbingtv              clubbingtv.com       Yes   Yes   Requires a login.
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
 cubetv                  cube.tv              Yes   --
@@ -88,6 +93,7 @@ filmon                  filmon.com           Yes   Yes   Only SD quality streams
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
                         - funimationnow.uk
+galatasaraytv           galatasaray.com      Yes   No
 gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
 goltelevision           goltelevision.com    Yes   No    Streams may be geo-restricted to Spain.
@@ -106,6 +112,8 @@ itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-rest
 kanal7                  - kanal7.com         Yes   No
                         - tvt.tv.tr
 kingkong                kingkong.com.tw      Yes   --
+latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
+linelive                live.line.me         Yes   Yes
 live_russia_tv          live.russia.tv       Yes   --
 liveedu                 - liveedu.tv         Yes   --    Some streams require a login.
                         - livecoding.tv
@@ -123,14 +131,13 @@ nbc                     nbc.com              No    Yes   Streams are geo-restric
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
-npo                     - npo.nl             Yes   Yes   Streams may be geo-restricted to Netherlands.
-                        - zapp.nl
-                        - zappelin.nl
+nownews                 news.now.com         Yes   No
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
                         - radio.nrk.no
 ntv                     ntv.ru               Yes   No
 okru                    ok.ru                Yes   Yes
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
+oneplusone              1plus1.video         Yes   No
 onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
                         - ctc.ru
                         - chetv.ru
@@ -138,7 +145,6 @@ onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-rest
                         - domashny.ru
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
-ovvatv                  ovva.tv              Yes   No
 pandatv                 panda.tv             Yes   ?
 periscope               periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto                 picarto.tv           Yes   Yes
@@ -222,7 +228,7 @@ turkuvaz                - atv.com.tr         Yes   No
                         - minikacocuk.com.tr
                         - minikago.com.tr
                         - sabah.com.tr
-tv1channel              tv1channel.org       Yes   Yes
+tv1channel              tv1channel.org       Yes   No
 tv3cat                  tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play                 - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                          Only non-premium streams currently supported.
@@ -240,9 +246,11 @@ tvplayer                tvplayer.com         Yes   No    Streams may be geo-rest
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --
+twitcasting             twitcasting.tv       Yes   No
 twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
                                                          subscription streams.
-ustreamtv               ustream.tv           Yes   Yes
+ustreamtv               - ustream.tv         Yes   Yes
+                        - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
 vaughnlive              - vaughnlive.tv      Yes   --
                         - breakers.tv
@@ -261,12 +269,15 @@ viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-rest
 vidio                   vidio.com            Yes   Yes
 vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
+viutv                   viu.tv               Yes   No    Streams are geo-restricted to Hong Kong
 vk                      vk.com               Yes   Yes
+vlive                   vlive.tv             Yes   No    Embedded Naver VODs are not supported.
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
+willax                  willax.tv            Yes   No
 wwenetwork              network.wwe.com      Yes   Yes   Requires an account to access any content.
 younow                  younow.com           Yes   --
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.

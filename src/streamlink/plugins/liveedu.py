@@ -62,11 +62,13 @@ class LiveEdu(Plugin):
             token = csrf_match and csrf_match.group(1)
             self.logger.debug("Attempting login as {0} (token={1})", email, token)
 
-            res = self.session.http.post(self.login_url,
-                            data=dict(login=email, password=password, csrfmiddlewaretoken=token),
-                            allow_redirects=False,
-                            raise_for_status=False,
-                            headers={"Referer": self.login_url})
+            res = self.session.http.post(
+                self.login_url,
+                data=dict(login=email, password=password, csrfmiddlewaretoken=token),
+                allow_redirects=False,
+                raise_for_status=False,
+                headers={"Referer": self.login_url}
+            )
 
             if res.status_code != 302:
                 self.logger.error("Failed to login to LiveEdu account: {0}", email)

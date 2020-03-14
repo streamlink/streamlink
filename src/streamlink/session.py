@@ -58,6 +58,7 @@ class Streamlink(object):
             "hls-segment-attempts": 3,
             "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
+            "hls-segment-stream-data": False,
             "hls-timeout": 60.0,
             "hls-playlist-reload-attempts": 3,
             "hls-start-offset": 0,
@@ -130,6 +131,9 @@ class Streamlink(object):
 
         hls-segment-threads      (int) The size of the thread pool used
                                  to download segments, default: ``1``
+
+        hls-segment-stream-data  (bool) Stream HLS segment downloads,
+                                 default: ``False``
 
         hls-segment-timeout      (float) HLS segment connect and read
                                  timeout, default: ``10.0``
@@ -257,6 +261,9 @@ class Streamlink(object):
 
         if key == "http-proxy":
             self.http.proxies["http"] = update_scheme("http://", value)
+            if "https" not in self.http.proxies:
+                self.http.proxies["https"] = update_scheme("http://", value)
+
         elif key == "https-proxy":
             self.http.proxies["https"] = update_scheme("https://", value)
         elif key == "http-cookies":

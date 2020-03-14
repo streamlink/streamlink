@@ -1,4 +1,4 @@
-# encoding=utf8
+# -*- coding: utf-8 -*-
 import logging
 import unittest
 import warnings
@@ -12,7 +12,6 @@ if is_py2:
     from io import BytesIO as StringIO
 else:
     from io import StringIO
-
 
 
 class TestLogging(unittest.TestCase):
@@ -112,7 +111,3 @@ class TestDeprecatedLogger(unittest.TestCase):
         # regular python loggers shouldn't log here
         logging.getLogger("streamlink.test").critical("should not log")
         self.assertEqual(output.getvalue(), "[test][info] test1\n")
-
-
-if __name__ == "__main__":
-    unittest.main()

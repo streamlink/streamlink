@@ -22,8 +22,8 @@ class LtvLsmLv(Plugin):
 
     def _get_streams(self):
         self.session.http.headers.update({
-           "Referer": self.url,
-           "User-Agent": useragents.FIREFOX
+            "Referer": self.url,
+            "User-Agent": useragents.FIREFOX
         })
 
         iframe_url = None

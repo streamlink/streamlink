@@ -6,7 +6,7 @@ from streamlink.plugins.wwenetwork import WWENetwork
 class TestPluginWWENetwork(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
-            'http://network.wwe.com/shows/collections/267406022',
+            'https://watch.wwe.com/in-ring/3622',
         ]
         for url in should_match:
             self.assertTrue(WWENetwork.can_handle_url(url))

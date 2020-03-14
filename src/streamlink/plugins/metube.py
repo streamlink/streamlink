@@ -46,11 +46,12 @@ class MeTube(Plugin):
             streams = {}
 
             for quality, stream in HLSStream.parse_variant_playlist(
-                                   self.session,
-                                   stream_url,
-                                   headers=headers).items():
-                    name = self._VOD_STREAM_NAMES.get(quality, quality)
-                    streams[name] = stream
+                self.session,
+                stream_url,
+                headers=headers
+            ).items():
+                name = self._VOD_STREAM_NAMES.get(quality, quality)
+                streams[name] = stream
 
             return streams
 

@@ -17,7 +17,6 @@ class Picarto(Plugin):
     RTMP_PLAYPATH = "golive+{channel}?token={token}"
     HLS_URL = "https://{server}/hls/{channel}/index.m3u8?token={token}"
 
-
     # Regex for all usable URLs
     _url_re = re.compile(r"""
         https?://(?:\w+\.)?picarto\.tv/(?:videopopout/)?([^&?/]+)
@@ -39,7 +38,6 @@ class Picarto(Plugin):
             )
         )
     )
-
 
     @classmethod
     def can_handle_url(cls, url):
@@ -98,7 +96,7 @@ class Picarto(Plugin):
 
         channel_api_json = json.loads(ci.text)
 
-        if channel_api_json["online"] != True:
+        if not channel_api_json["online"]:
             self.logger.error("The channel {0} is currently offline".format(url_channel_name))
             return
 

@@ -10,7 +10,9 @@ DEFAULT_STREAM_METADATA = {
     "category": u"No Category",
     "game": u"No Game/Category"
 }
-SUPPORTED_PLAYERS = {  # these are the players that streamlink knows how to set the window title for with `--title`. key names are used in help text
+# these are the players that streamlink knows how to set the window title for with `--title`.
+# key names are used in help text
+SUPPORTED_PLAYERS = {
     # name: possible binary names (linux/mac and windows)
     "vlc": ["vlc", "vlc.exe"],
     "mpv": ["mpv", "mpv.exe"],

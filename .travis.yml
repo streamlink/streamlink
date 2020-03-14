@@ -11,18 +11,14 @@ git:
 matrix:
   include:
   - python: '2.7'
-  - python: '3.4'
   - python: '3.5'
     env: BUILD_DOCS=yes BUILD_INSTALLER=yes BUILD_SDIST=yes DEPLOY_PYPI=yes
   - python: '3.6'
   - python: '3.7'
-    dist: xenial
-    sudo: true
-  - python: '3.8-dev'
-    dist: xenial
-    sudo: true
+  - python: '3.8'
+  - python: 'nightly'
   allow_failures:
-  - python: '3.8-dev'
+  - python: 'nightly'
 
 before_install:
   - pip install --disable-pip-version-check --upgrade pip setuptools
@@ -33,7 +29,7 @@ before_install:
       pip install doctr;
     fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then
-      pip install git+https://github.com/takluyver/pynsist.git@88f56f9e86af9c55522147a67f8b7806ac2ca55b;
+      pip install pynsist==2.4;
     fi
 
 install:
@@ -41,15 +37,16 @@ install:
 
 script:
   - pytest --cov
+  - flake8 --statistics --count
   - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs html; fi
   - if [[ $BUILD_INSTALLER == 'yes' ]]; then ./script/makeinstaller.sh; fi
 
 after_success:
   - set -e
   # latest version - push docs for master
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' ]]; then doctr deploy latest; fi
+  - if [[ $TRAVIS_PULL_REQUEST == 'false' && $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' ]]; then doctr deploy latest; fi
   # stable version - push docs for tags
-  - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" ]]; then doctr deploy .; fi
+  - if [[ $TRAVIS_PULL_REQUEST == 'false' && $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'streamlink/streamlink' && -n "$TRAVIS_TAG" ]]; then doctr deploy .; fi
   - codecov
 
 addons:
