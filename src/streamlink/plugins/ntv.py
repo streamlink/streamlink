@@ -23,4 +23,5 @@ class NTV(Plugin):
         if mrl:
             return HLSStream.parse_variant_playlist(self.session, mrl)
 
+
 __plugin__ = NTV

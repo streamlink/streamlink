@@ -1,5 +1,113 @@
 # Changelog
 
+## streamlink 1.3.1 (2020-01-27)
+
+A small patch release that addresses the removal of [MPV's legacy option syntax](https://mpv.io/manual/master/#legacy-option-syntax), also with fixes of several plugins, the addition of the `--twitch-disable-reruns` parameter and dropped support for Python 3.4.
+
+
+```text
+Hunter Peavey <krathalan@disroot.org> (4):
+      Add wtwitch to list of thirdparty programs
+      Try adding an image
+      Move image position
+      Make requested changes
+
+Vladimir Stavrinov <9163352+vstavrinov@users.noreply.github.com> (1):
+      plugins.nhkworld: the site migrates from xml to json stream data
+
+back-to <backto@protonmail.ch> (6):
+      docs/tests: remove python 3.4, use 3.8 and nightly for travis-ci
+      plugins.bilibili: fix Livestreams with status 1 (set Referer)
+      plugins.youtube: Remove itag 303
+      plugins.ustream: Added support for video.ibm.com
+      plugins.bbciplayer: Fixed login params
+      plugins.bbciplayer: remove test_extract_nonce
+
+bastimeyer <mail@bastimeyer.de> (5):
+      plugins.twitch: use python logging module
+      plugins.twitch: fix rerun detection
+      cli.output: fix mpv player parameter format
+      2020
+      docs: fix MPV parameters on common issues page
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      Allow to disable twitch reruns (#2722)
+```
+
+
+## streamlink 1.3.0 (2019-11-22)
+
+A new release with plugin updates and fixes, including Twitch.tv (see [#2680](https://github.com/streamlink/streamlink/issues/2680)), which had to be delayed due to back and forth API changes.
+
+The Twitch.tv workarounds mentioned in [#2680](https://github.com/streamlink/streamlink/issues/2680) don't have to be applied anymore, but authenticating via `--twitch-oauth-token` has been disabled, regardless of the origin of the OAuth token (via `--twitch-oauth-authenticate` or the Twitch website). In order to not introduce breaking changes, both parameters have been kept in this release and the user name will still be logged when using an OAuth token, but receiving item drops or accessing restricted streams is not possible anymore.
+
+Plugins for the following sites have also been added:
+  - albavision
+  - news.now.com
+  - twitcasting.tv
+  - viu.tv
+  - vlive.tv
+  - willax.tv
+
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      plugins.pixiv: fix doc typo thats -> that's
+
+Mohamed El Morabity <melmorabity@fedoraproject.org> (1):
+      plugins.idf1: HTTPS support
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.playtv: Fix for new stream data API (#2388)
+
+Ozan Karaali <ozan.karaali@gmail.com> (1):
+      plugins.foxtr: Extended support
+
+Ozan Karaali <ozankaraali@users.noreply.github.com> (1):
+      plugins.cinergroup: #2390 fix (#2629)
+
+Troogle <Troogle@users.noreply.github.com> (1):
+      plugins.bilibili: fix resolution issue
+
+Werner Robitza <werner.robitza@gmail.com> (1):
+      remove direct installation instructions, link to docs
+
+back-to <backto@protonmail.ch> (6):
+      setup.cfg: added flake8 settings
+      plugins.vk: use html_unescape for HLS streams
+      plugins.willax: new plugin for http://willax.tv/en-vivo/
+      plugins.zattoo: _url_re update for some new urls
+      plugin.api.useragents: update CHROME and FIREFOX User-Agent
+      stream.hls: Fix UnicodeDecodeError for log msg and name_prefix for stream_name
+
+bastimeyer <mail@bastimeyer.de> (3):
+      ci/travis: install pynsist 2.4
+      plugins.twitch: fix API issue - 410 gone error
+      docs.cli: fix and reword the tutorial section
+
+beardypig <beardypig@protonmail.com> (10):
+      plugins.bbciplayer: update API URL to use https
+      plugins.nownews: added support for the HK news site news.now.com
+      plugins.tv8: update regex for the stream url
+      plugins.bbciplayer: fix issue with nonce extraction
+      plugins.bbciplayer: extract master brand/channel id from the state json
+      plugins.itvplayer: Use flash streams for ITV1/ITV4
+      plugins.viutv: support for the viu.tv live stream
+      plugins.albavision: support for some albavision live streams
+      plugins.bloomberg: fix issue where the incorrect playlist could be used
+      stream.streamprocess: check that a process is usable before using it
+
+derrod <xlnedder@gmail.com> (1):
+      plugins.vlive: Add support for V LIVE live streams
+
+printempw <printempw@gmail.com> (1):
+      plugins.twitcasting: new plugin for TwitCasting.tv
+
+ssaqua <ssaqua@users.noreply.github.com> (1):
+      plugins.linelive: update to support VOD/archived streams
+```
+
+
 ## streamlink 1.2.0 (2019-08-18)
 
 Here are the changes for this month's release

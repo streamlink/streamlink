@@ -15,7 +15,9 @@ class MLGTV(Plugin):
     CHANNEL_API = "https://www.majorleaguegaming.com/api/channel/{0}"
 
     _player_config_re = re.compile(r"var playerConfig = (.+);")
-    _player_embed_re = re.compile(r"""https?://player2\.majorleaguegaming\.com/api/v2/player/embed/live/\?ch=(?P<channel_id>[^"']+)""")
+    _player_embed_re = re.compile(
+        r"""https?://player2\.majorleaguegaming\.com/api/v2/player/embed/live/\?ch=(?P<channel_id>[^"']+)"""
+    )
     _site_data_re = re.compile(r"window\.siteData = (?P<data>.+);")
     _stream_id_re = re.compile(r"<meta content='.+/([\w_-]+).+' property='og:video'>")
 
@@ -83,7 +85,7 @@ class MLGTV(Plugin):
         else:
             try:
                 res = self.session.http.get(self.url)
-            except Exception as e:
+            except Exception:
                 raise NoStreamsError(self.url)
             channel_id = self._find_channel_id(res.text)
 

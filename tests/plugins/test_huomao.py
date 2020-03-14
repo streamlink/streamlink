@@ -1,9 +1,5 @@
-# Unit tests accompanying the Huomao Streamlink plugin.
-
 import unittest
-import re
 
-from streamlink.plugin.api import http
 from streamlink.plugins.huomao import Huomao
 
 
@@ -90,9 +86,3 @@ class TestPluginHuomao(unittest.TestCase):
         self.assertFalse(Huomao.can_handle_url("https://www.youtube.tv/123456"))
         self.assertFalse(Huomao.can_handle_url("https://youtube.com/123456"))
         self.assertFalse(Huomao.can_handle_url("https://youtube.tv/123456"))
-
-
-# Possibility to run unittest separately as a normal python script.
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPluginHuomao)
-    unittest.TextTestRunner(verbosity=2).run(suite)

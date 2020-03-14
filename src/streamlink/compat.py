@@ -54,7 +54,6 @@ except ImportError:
     html_unescape = unescape = HTMLParser().unescape
 
 
-
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 

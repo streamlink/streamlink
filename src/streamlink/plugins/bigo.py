@@ -19,9 +19,11 @@ class Bigo(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        page = self.session.http.get(self.url,
-                        allow_redirects=True,
-                        headers={"User-Agent": useragents.IPHONE_6})
+        page = self.session.http.get(
+            self.url,
+            allow_redirects=True,
+            headers={"User-Agent": useragents.IPHONE_6}
+        )
         videomatch = self._video_re.search(page.text)
         if not videomatch:
             log.error("No playlist found.")

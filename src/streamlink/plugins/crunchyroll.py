@@ -27,9 +27,9 @@ STREAM_NAMES = {
 def parse_timestamp(ts):
     """Takes ISO 8601 format(string) and converts into a utc datetime(naive)"""
     return (
-        datetime.datetime.strptime(ts[:-7], "%Y-%m-%dT%H:%M:%S") +
-        datetime.timedelta(hours=int(ts[-5:-3]), minutes=int(ts[-2:])) *
-        int(ts[-6:-5] + "1")
+        datetime.datetime.strptime(ts[:-7], "%Y-%m-%dT%H:%M:%S")
+        + datetime.timedelta(hours=int(ts[-5:-3]), minutes=int(ts[-2:]))
+        * int(ts[-6:-5] + "1")
     )
 
 
@@ -105,7 +105,7 @@ class CrunchyrollAPI(object):
     _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; Android SDK built for x86 Build/KK)"
     _version_code = 444
     _version_name = "2.1.10"
-    _access_token = "Scwg9PRRZ19iVwD"
+    _access_token = "WveH9VkPLrXvuNm"
     _access_type = "com.crunchyroll.crunchyroid"
 
     def __init__(self, cache, session, session_id=None, locale=_default_locale):

@@ -54,7 +54,6 @@ class Delfi(Plugin):
                 data['message'], data['code']
             ))
 
-
     def _get_streams(self):
         res = self.session.http.get(self.url)
         for div in itertags(res.text, 'div'):

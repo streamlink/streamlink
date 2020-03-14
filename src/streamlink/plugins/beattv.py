@@ -41,7 +41,11 @@ class BeatTV(Plugin):
 
                 if video_assets.get("mpeg"):
                     for mpeg_stream in video_assets.get("mpeg"):
-                        q = mpeg_stream.get("renditionValue").strip("_") or "{}k".format(mpeg_stream.get("bitrate") // 1000) or "vod"
+                        q = (
+                            mpeg_stream.get("renditionValue").strip("_")
+                            or "{}k".format(mpeg_stream.get("bitrate") // 1000)
+                            or "vod"
+                        )
                         yield q, HTTPStream(self.session, mpeg_stream["url"])
 
 

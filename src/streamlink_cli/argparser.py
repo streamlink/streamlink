@@ -529,6 +529,14 @@ def build_parser():
         """
     )
     output.add_argument(
+        "--force-progress",
+        action="store_true",
+        help="""
+        When using -o or -r,
+        show the download progress bar even if there is no terminal.
+        """
+    )
+    output.add_argument(
         "-O", "--stdout",
         action="store_true",
         help="""
@@ -736,6 +744,13 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-stream-data",
+        action="store_true",
+        help="""
+        Immediately write segment data into output buffer while downloading.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
@@ -802,7 +817,16 @@ def build_parser():
         URI to segment encryption key. If no URI is specified, the URI contained
         in the segments will be used.
 
-        Example: --hls-segment-key-uri "https://example.com/hls/encryption_key"
+        URI can be templated using the following variables, which will be
+        replaced with its respective part from the source segment URI:
+
+          {url} {scheme} {netloc} {path} {query}
+
+        Examples:
+
+          --hls-segment-key-uri "https://example.com/hls/encryption_key"
+          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
+          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
 
         Default is None.
         """
@@ -1070,7 +1094,7 @@ def build_parser():
         "--http-proxy",
         metavar="HTTP_PROXY",
         help="""
-        A HTTP proxy to use for all HTTP requests, including WebSocket connections. 
+        A HTTP proxy to use for all HTTP requests, including WebSocket connections.
         By default this proxy will be used for all HTTPS requests too.
 
         Example: "http://hostname:port/"

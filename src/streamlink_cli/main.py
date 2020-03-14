@@ -339,8 +339,17 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
-    show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
-    show_record_progress = hasattr(output, "record") and isinstance(output.record, FileOutput) and output.record.fd is not stdout and sys.stdout.isatty()
+    show_progress = (
+        isinstance(output, FileOutput)
+        and output.fd is not stdout
+        and (sys.stdout.isatty() or args.force_progress)
+    )
+    show_record_progress = (
+        hasattr(output, "record")
+        and isinstance(output.record, FileOutput)
+        and output.record.fd is not stdout
+        and (sys.stdout.isatty() or args.force_progress)
+    )
 
     stream_iterator = chain(
         [prebuffer],
@@ -478,7 +487,7 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
-        except FatalPluginError as err:
+        except FatalPluginError:
             raise
         except PluginError as err:
             log.error(u"{0}".format(err))
@@ -782,6 +791,9 @@ def setup_options():
     if args.hls_live_edge:
         streamlink.set_option("hls-live-edge", args.hls_live_edge)
 
+    if args.hls_segment_stream_data:
+        streamlink.set_option("hls-segment-stream-data", args.hls_segment_stream_data)
+
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
@@ -903,7 +915,7 @@ def setup_plugin_options(session, plugin):
                         required[rparg.name] = rparg
                 except RuntimeError:
                     log.error("{0} plugin has a configuration error and the arguments "
-                                         "cannot be parsed".format(pname))
+                              "cannot be parsed".format(pname))
                     break
     if required:
         for req in required.values():

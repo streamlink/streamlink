@@ -1,7 +1,7 @@
 import unittest
 
 import pytest
-from mock import patch
+from tests.mock import patch, PropertyMock
 from streamlink import StreamError
 from streamlink import Streamlink
 from streamlink.stream import StreamProcess
@@ -31,31 +31,39 @@ class TestStreamProcess(unittest.TestCase):
                          StreamProcess.bake("test", {"?": True},
                                             long_option_prefix="/", short_option_prefix="/"))
 
-    def test_check_cmd_none(self):
+    @patch('streamlink.stream.streamprocess.StreamProcess.cmd', new_callable=PropertyMock)
+    def test_check_cmd_none(self, mock_cmd):
         s = StreamProcess(Streamlink())
+        mock_cmd.return_value = None
         self.assertRaises(StreamError, s._check_cmd)
 
     @patch('streamlink.stream.streamprocess.which')
-    def test_check_cmd_cat(self, which):
+    @patch('streamlink.stream.streamprocess.StreamProcess.cmd', new_callable=PropertyMock)
+    def test_check_cmd_cat(self, which, mock_cmd):
         s = StreamProcess(Streamlink())
-        which.return_value = s.cmd = "test"
+        mock_cmd.return_value = "test"
         self.assertEqual("test", s._check_cmd())
 
     @patch('streamlink.stream.streamprocess.which')
-    def test_check_cmd_nofound(self, which):
+    @patch('streamlink.stream.streamprocess.StreamProcess.cmd', new_callable=PropertyMock)
+    def test_check_cmd_nofound(self, which, mock_cmd):
         s = StreamProcess(Streamlink())
-        s.cmd = "test"
+        mock_cmd.return_value = "test"
         which.return_value = None
         self.assertRaises(StreamError, s._check_cmd)
 
     @patch('streamlink.stream.streamprocess.which')
-    def test_check_cmdline(self, which):
+    @patch('streamlink.stream.streamprocess.StreamProcess.cmd', new_callable=PropertyMock)
+    def test_check_cmdline(self, which, mock_cmd):
         s = StreamProcess(Streamlink(), params=dict(help=True))
-        which.return_value = s.cmd = "test"
+        mock_cmd.return_value = "test"
+        which.return_value = "test"
         self.assertEqual("test --help", s.cmdline())
 
     @patch('streamlink.stream.streamprocess.which')
-    def test_check_cmdline_long(self, which):
+    @patch('streamlink.stream.streamprocess.StreamProcess.cmd', new_callable=PropertyMock)
+    def test_check_cmdline_long(self, which, mock_cmd):
         s = StreamProcess(Streamlink(), params=dict(out_file="test file.txt"))
-        which.return_value = s.cmd = "test"
+        mock_cmd.return_value = "test"
+        which.return_value = "test"
         self.assertEqual("test --out-file \"test file.txt\"", s.cmdline())

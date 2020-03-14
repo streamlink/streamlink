@@ -6,13 +6,14 @@ from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HLSStream
+from streamlink.stream import HLSStream, RTMPStream
 
 log = logging.getLogger(__name__)
 
 
 class ITVPlayer(Plugin):
     _url_re = re.compile(r"https?://(?:www.)?itv.com/hub/(?P<stream>.+)")
+    swf_url = "https://mediaplayer.itv.com/2.19.5%2Bbuild.a23aa62b1e/ITVMediaPlayer.swf"
     _video_info_schema = validate.Schema({
         "StatusCode": 200,
         "AdditionalInfo": {
@@ -35,8 +36,7 @@ class ITVPlayer(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        match = cls._url_re.match(url)
-        return match is not None
+        return cls._url_re.match(url) is not None
 
     @property
     def device_info(self):
@@ -54,18 +54,11 @@ class ITVPlayer(Plugin):
             if div.attributes.get("id") == "video":
                 return div.attributes
 
-    def _get_streams(self):
-        """
-            Find all the streams for the ITV url
-            :return: Mapping of quality to stream
-        """
-        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
+    def _get_html5_streams(self, video_info_url):
         video_info = self.video_info()
-        video_info_url = video_info.get("data-html5-playlist") or video_info.get("data-video-id")
-
         res = self.session.http.post(video_info_url,
-                        data=json.dumps(self.device_info),
-                        headers={"hmac": video_info.get("data-video-hmac")})
+                                     data=json.dumps(self.device_info),
+                                     headers={"hmac": video_info.get("data-video-hmac")})
         data = self.session.http.json(res, schema=self._video_info_schema)
 
         log.debug("Video ID info response: {0}".format(data))
@@ -78,6 +71,31 @@ class ITVPlayer(Plugin):
             for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt=name_fmt).items():
                 yield s
 
+    def _get_rtmp_streams(self, video_info_url):
+        log.debug("XML data path: {0}".format(video_info_url))
+        res = self.session.http.get(video_info_url)
+        playlist = self.session.http.xml(res, ignore_ns=True)
+        mediafiles = playlist.find(".//Playlist/VideoEntries/Video/MediaFiles")
+        playpath = mediafiles.find("./MediaFile/URL")
+        return {"live": RTMPStream(self.session, {"rtmp": mediafiles.attrib.get("base"),
+                                                  "playpath": playpath.text,
+                                                  "live": True,
+                                                  "swfVfy": self.swf_url
+                                                  })}
+
+    def _get_streams(self):
+        """
+            Find all the streams for the ITV url
+            :return: Mapping of quality to stream
+        """
+        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
+        stream = self._url_re.match(self.url).group("stream")
+        video_info = self.video_info()
+        video_info_url = video_info.get("data-video-id" if stream.lower() in ("itv", "itv4") else "data-html5-playlist")
+        if video_info_url.endswith(".xml"):
+            return self._get_rtmp_streams(video_info_url)
+        else:
+            return self._get_html5_streams(video_info_url)
 
 
 __plugin__ = ITVPlayer

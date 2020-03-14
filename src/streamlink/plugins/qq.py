@@ -44,7 +44,7 @@ class QQ(Plugin):
 
         try:
             hls_url = parse_json(data.group("data"), schema=self._data_schema)
-        except Exception as e:
+        except Exception:
             raise NoStreamsError(self.url)
 
         self.logger.debug("URL={0}".format(hls_url))
