@@ -52,6 +52,7 @@ class NicoLive(Plugin):
     watching_interval = 30
     watching_interval_worker_thread = None
     stream_reader = None
+    _ws = None
 
     @classmethod
     def can_handle_url(cls, url):
@@ -126,7 +127,16 @@ class NicoLive(Plugin):
 
     def api_on_open(self):
         self.send_playerversion()
-        self.send_getpermit()
+        require_new_stream = not self.is_stream_ready
+        self.send_getpermit(require_new_stream=require_new_stream)
+
+    def api_on_error(self, ws, error=None):
+        if error:
+            _log.warning(error)
+        _log.warning("wss api disconnected.")
+        _log.warning("Attempting to reconnect in 5 secs...")
+        time.sleep(5)
+        self.api_connect(self.wss_api_url)
 
     def api_connect(self, url):
         # Proxy support adapted from the UStreamTV plugin (ustreamtv.py)
@@ -144,8 +154,9 @@ class NicoLive(Plugin):
         self._ws = websocket.WebSocketApp(
             url,
             header=["User-Agent: {0}".format(useragents.CHROME)],
+            on_open=self.api_on_open,
             on_message=self.handle_api_message,
-            on_open=self.api_on_open)
+            on_error=self.api_on_error)
         self.ws_worker_thread = threading.Thread(
             target=self._ws.run_forever,
             args=proxy_options)
@@ -156,7 +167,10 @@ class NicoLive(Plugin):
         msg = {"type": type_, "body": body}
         msg_json = json.dumps(msg)
         _log.debug(u"Sending: {0}".format(msg_json))
-        self._ws.send(msg_json)
+        if self._ws and self._ws.sock.connected:
+            self._ws.send(msg_json)
+        else:
+            _log.warning("wss api is not connected.")
 
     def send_playerversion(self):
         body = {
@@ -165,7 +179,7 @@ class NicoLive(Plugin):
         }
         self.send_message("watch", body)
 
-    def send_getpermit(self):
+    def send_getpermit(self, require_new_stream=True):
         body = {
             "command": "getpermit",
             "requirement": {
@@ -173,7 +187,7 @@ class NicoLive(Plugin):
                 "route": "",
                 "stream": {
                     "protocol": "hls",
-                    "requireNewStream": True,
+                    "requireNewStream": require_new_stream,
                     "priorStreamQuality": "abr",
                     "isLowLatency": True,
                     "isChasePlay": False
