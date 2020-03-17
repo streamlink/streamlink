@@ -1,8 +1,10 @@
 name: Test, build and deploy
 
 on:
-  - push
-  - pull_request
+  push: {}
+  pull_request: {}
+  schedule:
+    - cron: '0 0 * * *'
 
 env:
   STREAMLINK_DIST_DIR: ${{ github.workspace }}/dist
@@ -85,7 +87,7 @@ jobs:
       - name: Build
         run: ./script/makeinstaller.sh "${{ steps.installer.outputs.filename }}"
       - name: Upload artifact
-        if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        if: github.repository == 'streamlink/streamlink' && (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'schedule')
         uses: actions/upload-artifact@v2-preview
         with:
           name: ${{ steps.installer.outputs.filename }}-win32
