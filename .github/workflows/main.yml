@@ -93,13 +93,40 @@ jobs:
           name: ${{ steps.installer.outputs.filename }}-win32
           path: ${{ env.STREAMLINK_DIST_DIR }}/${{ steps.installer.outputs.filename }}.exe
 
-  release:
-    name: New release
-    if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+  deploy-documentation:
+    name: Deploy docs
+    if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
     needs:
       - test
       - documentation
       - windows-installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install -r docs-requirements.txt
+      - name: Build
+        run: make --directory=docs html
+      - name: Deploy
+        env:
+          DOCS_DEPLOY_KEY: ${{ secrets.DOCS_DEPLOY_KEY }}
+          DOCS_DEPLOY_IV: ${{ secrets.DOCS_DEPLOY_IV }}
+        run: ./script/deploy-docs.sh
+
+  release:
+    name: New release
+    if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs:
+      - deploy-documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
