@@ -181,7 +181,7 @@ ruv                     ruv.is               Yes   Yes   Streams may be geo-rest
 sbscokr                 play.sbs.co.kr       Yes   No    Streams may be geo-restricted to South Korea.
 schoolism               schoolism.com        --    Yes   Requires a login and a subscription.
 senategov               senate.gov           --    Yes   Supports hearing streams.
-showroom                showroom-live.com    Yes   No    Only RTMP streams are available.
+showroom                showroom-live.com    Yes   No
 skai                    skai.gr              Yes   No    Only embedded youtube live streams are supported
 sportal                 sportal.bg           Yes   No
 sportschau              sportschau.de        Yes   No
