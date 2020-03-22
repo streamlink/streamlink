@@ -37,7 +37,8 @@ class App17(Plugin):
             rtmp_url = http_url.replace("http:", "rtmp:").replace(".flv", "")
             stream = RTMPStream(self.session, {
                 "rtmp": rtmp_url,
-                "live": True
+                "live": True,
+                "pageUrl": self.url,
             })
             yield "live", stream
 
