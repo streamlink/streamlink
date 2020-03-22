@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import logging
 import re
 import warnings
@@ -133,20 +134,6 @@ _viewer_token_schema = validate.Schema(
         validate.optional("token"): validate.text
     },
     validate.get("token")
-)
-_quality_options_schema = validate.Schema(
-    {
-        "quality_options": validate.all(
-            [{
-                "quality": validate.any(validate.text, None),
-                "source": validate.url(
-                    scheme="https",
-                    path=validate.endswith(".mp4")
-                )
-            }]
-        )
-    },
-    validate.get("quality_options")
 )
 
 
@@ -379,9 +366,6 @@ class TwitchAPI(object):
     def streams(self, channel_id, **params):
         return self.call("/kraken/streams/{0}".format(channel_id), **params)
 
-    def clips(self, clip_name, **params):
-        return self.call("/kraken/clips/{0}".format(clip_name), **params)
-
     # Private API calls
 
     def access_token(self, endpoint, asset, **params):
@@ -395,12 +379,6 @@ class TwitchAPI(object):
 
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
-
-    def clip_status(self, channel, clip_name, schema):
-        return self.session.http.json(
-            self.call_subdomain("clips", "/api/v2/clips/{}/status".format(clip_name), private=True, format=""),
-            schema=schema
-        )
 
     # Unsupported/Removed private API calls
 
@@ -500,10 +478,7 @@ class Twitch(Plugin):
             self.author = api_res["channel"]["display_name"]
             self.category = api_res["game"]
         elif self.clip_name:
-            api_res = self.api.clips(self.clip_name)
-            self.title = api_res["title"]
-            self.author = api_res["broadcaster"]["display_name"]
-            self.category = api_res["game"]
+            self._get_clips()
         elif self._channel:
             api_res = self.api.streams(self.channel_id)["stream"]["channel"]
             self.title = api_res["status"]
@@ -872,10 +847,32 @@ class Twitch(Plugin):
         return streams
 
     def _get_clips(self):
-        quality_options = self.api.clip_status(self.channel, self.clip_name, schema=_quality_options_schema)
+        data = json.dumps({'query': '''{{
+            clip(slug: "{0}") {{
+                broadcaster {{
+                    displayName
+                }}
+                title
+                videoQualities {{
+                    quality
+                    sourceURL
+                }}
+            }}
+        }}'''.format(self.clip_name)})
+        clip_data = self.session.http.post('https://gql.twitch.tv/gql',
+                                           data=data,
+                                           headers={'Client-ID': TWITCH_CLIENT_ID_PRIVATE},
+                                           ).json()['data']['clip']
+        log.trace('{0!r}'.format(clip_data))
+        if not clip_data:
+            return
+
+        self.author = clip_data['broadcaster']['displayName']
+        self.title = clip_data['title']
+
         streams = {}
-        for quality_option in quality_options:
-            streams[quality_option["quality"]] = HTTPStream(self.session, quality_option["source"])
+        for quality_option in clip_data['videoQualities']:
+            streams['{0}p'.format(quality_option['quality'])] = HTTPStream(self.session, quality_option['sourceURL'])
         return streams
 
     def _get_streams(self):
