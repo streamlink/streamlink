@@ -40,6 +40,8 @@ class InvintusMedia(Plugin):
             return
         if "streamingURIs" not in api_response["data"]:
             return
+        if not isinstance(api_response["data"]["streamingURIs"], dict):
+            return
         if "main" not in api_response["data"]["streamingURIs"]:
             return
         return HLSStream.parse_variant_playlist(self.session, "https:{}".format(api_response["data"]["streamingURIs"]["main"]))
