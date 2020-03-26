@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import json
 import logging
 import re
@@ -91,12 +92,6 @@ _token_schema = validate.Schema(
     },
     validate.get("chansub")
 )
-_user_schema = validate.Schema(
-    {
-        validate.optional("display_name"): validate.text
-    },
-    validate.get("display_name")
-)
 _stream_schema = validate.Schema(
     {
         "stream": validate.any(None, {
@@ -122,18 +117,6 @@ _video_schema = validate.Schema(
         "start_offset": int,
         "end_offset": int,
     }
-)
-_viewer_info_schema = validate.Schema(
-    {
-        validate.optional("login"): validate.text
-    },
-    validate.get("login")
-)
-_viewer_token_schema = validate.Schema(
-    {
-        validate.optional("token"): validate.text
-    },
-    validate.get("token")
 )
 
 
@@ -311,13 +294,9 @@ class UsherService(object):
 
 class TwitchAPI(object):
     def __init__(self, session, beta=False, version=3):
-        self.oauth_token = None
         self.session = session
         self.subdomain = beta and "betaapi" or "api"
         self.version = version
-
-    def add_cookies(self, cookies):
-        self.session.http.parse_cookies(cookies, domain="twitch.tv")
 
     def call(self, path, format="json", schema=None, private=False, **extra_params):
         params = dict(as3="t", **extra_params)
@@ -329,11 +308,6 @@ class TwitchAPI(object):
 
         headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
                    'Client-ID': TWITCH_CLIENT_ID if not private else TWITCH_CLIENT_ID_PRIVATE}
-
-        # OAuth tokens created from Streamlink's own client-id can't be used anymore on the private API (#2680)
-        # Since we don't know the origin of the provided OAuth token, we unfortunately need to disable all
-        if self.oauth_token and not private:
-            headers["Authorization"] = "OAuth {}".format(self.oauth_token)
 
         res = self.session.http.get(url, params=params, headers=headers)
 
@@ -351,9 +325,6 @@ class TwitchAPI(object):
 
     # Public API calls
 
-    def user(self, **params):
-        return self.call("/kraken/user", **params)
-
     def users(self, **params):
         return self.call("/kraken/users", **params)
 
@@ -370,12 +341,6 @@ class TwitchAPI(object):
 
     def access_token(self, endpoint, asset, **params):
         return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **params)
-
-    def token(self, **params):
-        return self.call("/api/viewer/token", private=True, **params)
-
-    def viewer_info(self, **params):
-        return self.call("/api/viewer/info", private=True, **params)
 
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
@@ -397,27 +362,12 @@ class Twitch(Plugin):
         PluginArgument(
             "oauth-token",
             sensitive=True,
-            metavar="TOKEN",
-            help="""
-            An OAuth token to use for Twitch authentication.
-            Use --twitch-oauth-authenticate to create a token.
-            """
+            help=argparse.SUPPRESS
         ),
         PluginArgument(
             "cookie",
             sensitive=True,
-            metavar="COOKIES",
-            help="""
-            Twitch cookies to authenticate to allow access to subscription channels.
-
-            Example:
-
-              "_twitch_session_id=xxxxxx; persistent=xxxxx"
-
-            Note: This method is the old and clunky way of authenticating with
-            Twitch, using --twitch-oauth-authenticate is the recommended and
-            simpler way of doing it now.
-            """
+            help=argparse.SUPPRESS
         ),
         PluginArgument(
             "disable-hosting",
@@ -585,34 +535,6 @@ class Twitch(Plugin):
         else:
             raise PluginError("Unable to find channel: {0}".format(channel))
 
-    def _authenticate(self):
-        if self.api.oauth_token:
-            return
-
-        oauth_token = self.options.get("oauth_token")
-        cookies = self.options.get("cookie")
-
-        if oauth_token:
-            log.info("Attempting to authenticate using OAuth token")
-            self.api.oauth_token = oauth_token
-            user = self.api.user(schema=_user_schema)
-
-            if user:
-                log.info("Successfully logged in as {0}".format(user))
-            else:
-                log.error("Failed to authenticate, the access token is invalid or missing required scope")
-        elif cookies:
-            log.info("Attempting to authenticate using cookies")
-
-            self.api.add_cookies(cookies)
-            self.api.oauth_token = self.api.token(schema=_viewer_token_schema)
-            login = self.api.viewer_info(schema=_viewer_info_schema)
-
-            if login:
-                log.info("Successfully logged in as {0}".format(login))
-            else:
-                log.error("Failed to authenticate, your cookies may have expired")
-
     def _create_playlist_streams(self, videos):
         start_offset = int(videos.get("start_offset", 0))
         stop_offset = int(videos.get("end_offset", 0))
@@ -718,7 +640,6 @@ class Twitch(Plugin):
 
     def _get_video_streams(self):
         log.debug("Getting video steams for {0} (type={1})".format(self.video_id, self.video_type))
-        self._authenticate()
 
         if self.video_type == "b":
             self.video_type = "a"
@@ -781,7 +702,6 @@ class Twitch(Plugin):
 
     def _get_hls_streams(self, stream_type="live"):
         log.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
-        self._authenticate()
         self._hosted_chain.append(self.channel)
 
         if stream_type == "live":
