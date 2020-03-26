@@ -294,7 +294,6 @@ class TestTwitchReruns(unittest.TestCase):
     class StopError(Exception):
         """Stop when trying to get an access token in _get_hls_streams..."""
 
-    @patch("streamlink.plugins.twitch.Twitch._authenticate", return_value=None)
     @patch("streamlink.plugins.twitch.Twitch._check_for_host", return_value=None)
     @patch("streamlink.plugins.twitch.Twitch._access_token", side_effect=StopError())
     def start(self, *mocked, **params):

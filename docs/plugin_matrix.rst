@@ -247,8 +247,7 @@ tvrby                   tvr.by               Yes   No    Streams may be geo-rest
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --
 twitcasting             twitcasting.tv       Yes   No
-twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
-                                                         subscription streams.
+twitch                  twitch.tv            Yes   Yes
 ustreamtv               - ustream.tv         Yes   Yes
                         - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
