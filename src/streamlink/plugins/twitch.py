@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import argparse
 import json
 import logging
 import re
@@ -122,18 +123,6 @@ _video_schema = validate.Schema(
         "start_offset": int,
         "end_offset": int,
     }
-)
-_viewer_info_schema = validate.Schema(
-    {
-        validate.optional("login"): validate.text
-    },
-    validate.get("login")
-)
-_viewer_token_schema = validate.Schema(
-    {
-        validate.optional("token"): validate.text
-    },
-    validate.get("token")
 )
 
 
@@ -316,9 +305,6 @@ class TwitchAPI(object):
         self.subdomain = beta and "betaapi" or "api"
         self.version = version
 
-    def add_cookies(self, cookies):
-        self.session.http.parse_cookies(cookies, domain="twitch.tv")
-
     def call(self, path, format="json", schema=None, private=False, **extra_params):
         params = dict(as3="t", **extra_params)
 
@@ -371,12 +357,6 @@ class TwitchAPI(object):
     def access_token(self, endpoint, asset, **params):
         return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **params)
 
-    def token(self, **params):
-        return self.call("/api/viewer/token", private=True, **params)
-
-    def viewer_info(self, **params):
-        return self.call("/api/viewer/info", private=True, **params)
-
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
 
@@ -406,18 +386,7 @@ class Twitch(Plugin):
         PluginArgument(
             "cookie",
             sensitive=True,
-            metavar="COOKIES",
-            help="""
-            Twitch cookies to authenticate to allow access to subscription channels.
-
-            Example:
-
-              "_twitch_session_id=xxxxxx; persistent=xxxxx"
-
-            Note: This method is the old and clunky way of authenticating with
-            Twitch, using --twitch-oauth-authenticate is the recommended and
-            simpler way of doing it now.
-            """
+            help=argparse.SUPPRESS
         ),
         PluginArgument(
             "disable-hosting",
@@ -590,7 +559,6 @@ class Twitch(Plugin):
             return
 
         oauth_token = self.options.get("oauth_token")
-        cookies = self.options.get("cookie")
 
         if oauth_token:
             log.info("Attempting to authenticate using OAuth token")
@@ -601,17 +569,6 @@ class Twitch(Plugin):
                 log.info("Successfully logged in as {0}".format(user))
             else:
                 log.error("Failed to authenticate, the access token is invalid or missing required scope")
-        elif cookies:
-            log.info("Attempting to authenticate using cookies")
-
-            self.api.add_cookies(cookies)
-            self.api.oauth_token = self.api.token(schema=_viewer_token_schema)
-            login = self.api.viewer_info(schema=_viewer_info_schema)
-
-            if login:
-                log.info("Successfully logged in as {0}".format(login))
-            else:
-                log.error("Failed to authenticate, your cookies may have expired")
 
     def _create_playlist_streams(self, videos):
         start_offset = int(videos.get("start_offset", 0))
