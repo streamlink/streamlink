@@ -14,3 +14,5 @@ class TestPluginInvintusMedia(unittest.TestCase):
         ]
         for url in should_match:
             self.assertTrue(InvintusMedia.can_handle_url(url))
+
+        self.assertFalse(InvintusMedia.can_handle_url("https://example.com"))
