@@ -29,7 +29,8 @@ _Argument = namedtuple("Argument", ["args", "options"])
 _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
 _note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
-_option_re = re.compile(r"(?m)^((?!\s{2}).*)(--[\w-]+)")
+_option_line_re = re.compile(r"^(?!\s{2}|Example: )(.+)$", re.MULTILINE)
+_option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
 _prog_re = re.compile(r"%\(prog\)s")
 
 
@@ -77,11 +78,16 @@ class ArgparseDirective(Directive):
 
         # Replace option references with links.
         # Do this before indenting blocks and notes.
-        help = _option_re.sub(
+        help = _option_line_re.sub(
             lambda m: (
-                "{0}:option:`{1}`".format(m.group(1), m.group(2))
-                if m.group(2) in self._available_options
-                else m.group(0)
+                _option_re.sub(
+                    lambda m2: (
+                        ":option:`{0}`".format(m2.group(1))
+                        if m2.group(1) in self._available_options
+                        else m2.group(0)
+                    ),
+                    m.group(1)
+                )
             ),
             help
         )
