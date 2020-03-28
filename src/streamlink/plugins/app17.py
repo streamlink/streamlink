@@ -20,7 +20,7 @@ class App17(Plugin):
         match = _url_re.match(self.url)
         channel = match.group("channel")
 
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
+        self.session.http.headers.update({'User-Agent': useragents.CHROME, 'Referer': self.url})
 
         payload = '{"liveStreamID": "%s"}' % (channel)
         res = self.session.http.post(API_URL, data=payload)
@@ -30,24 +30,28 @@ class App17(Plugin):
             return
 
         http_url = _rtmp_re.search(res.text).group(1)
-        http_url = http_url.replace("http:", "https:")
-        yield "live", HTTPStream(self.session, http_url)
+        https_url = http_url.replace("http:", "https:")
+        yield "live", HTTPStream(self.session, https_url)
 
         if 'pull-rtmp' in http_url:
-            url = http_url.replace("https:", "rtmp:").replace(".flv", "")
+            rtmp_url = http_url.replace("http:", "rtmp:").replace(".flv", "")
             stream = RTMPStream(self.session, {
-                "rtmp": url,
-                "live": True
+                "rtmp": rtmp_url,
+                "live": True,
+                "pageUrl": self.url,
             })
             yield "live", stream
 
         if 'wansu-' in http_url:
-            url = http_url.replace(".flv", "/playlist.m3u8")
-            for stream in HLSStream.parse_variant_playlist(self.session, url).items():
-                yield stream
+            hls_url = http_url.replace(".flv", "/playlist.m3u8")
         else:
-            url = http_url.replace("live-hdl", "live-hls").replace(".flv", ".m3u8")
-            yield "live", HLSStream(self.session, url)
+            hls_url = http_url.replace("live-hdl", "live-hls").replace(".flv", ".m3u8")
+
+        s = []
+        for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
+            yield s
+        if not s:
+            yield "live", HLSStream(self.session, hls_url)
 
 
 __plugin__ = App17
