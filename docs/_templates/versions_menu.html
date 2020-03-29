@@ -1,0 +1,7 @@
+<div class="wy-side-nav-versions" role="note" aria-label="versions">
+  <span class="wy-side-nav-versions-current"><i class="fa fa-book"></i>{{ release }}</span>
+  <dl class="wy-side-nav-versions-others">
+    <dd><a href="/" class="{% if release == version %}version-current{% endif %}">Stable</a></dd>
+    <dd><a href="/latest/" class="{% if release != version %}version-current{% endif %}">Latest</a></dd>
+  </dl>
+</div>

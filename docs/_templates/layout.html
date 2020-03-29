@@ -1,0 +1,16 @@
+{% extends '!layout.html' %}
+{% block sidebartitle %}
+    <h1 class="logotext"><a href="{{ pathto(master_doc) }}">Streamlink</a></h1>
+    <p class="oneliner">Command-line utility that extracts streams from various services and pipes them into a video player of choice.</p>
+    {% include "versions_menu.html" %}
+    {% include "searchbox.html" %}
+    {% include "github-buttons.html" %}
+{% endblock %}
+{% block document %}
+    {% if release != version %}
+        <div class="admonition version-warning">
+            <p class="admonition-title">You are reading the documentation for the in-development version of Streamlink.</p>
+        </div>
+    {% endif %}
+    {{ super() }}
+{% endblock %}

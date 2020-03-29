@@ -1,0 +1,61 @@
+.logotext a {
+  color: inherit !important;
+}
+.oneliner {
+  margin: 0 1rem 1rem;
+  font-size: .8em;
+  line-height: 1.4;
+}
+
+.wy-side-nav-versions {
+  margin: .5rem 0 1rem;
+  font-size: .9em;
+}
+.wy-side-nav-versions a {
+  color: inherit !important;
+}
+.wy-side-nav-versions-current .fa {
+  display: inline-block;
+  margin-right: .333em;
+}
+.wy-side-nav-versions-others {
+  display: flex;
+  margin: .5rem 0;
+}
+.wy-side-nav-versions-others dd {
+  width: 50%;
+}
+.wy-side-nav-versions-others dd:first-of-type {
+  padding-right: .5rem;
+  text-align: right;
+}
+.wy-side-nav-versions-others dd:last-of-type {
+  padding-left: .5rem;
+  text-align: left;
+}
+.wy-side-nav-versions-others .version-current {
+  font-weight: bold;
+}
+
+.github-buttons {
+  margin: 1rem 0 0;
+}
+
+/* fix table layout on the install page */
+table.table-custom-layout {
+  width: 100%;
+  table-layout: fixed;
+}
+table.table-custom-layout colgroup {
+  display: none;
+}
+table.table-custom-layout colgroup col {
+  width: auto;
+}
+table.table-custom-layout th:first-of-type {
+  width: 12rem;
+}
+table.table-custom-layout tbody tr td {
+  overflow: unset;
+  white-space: unset;
+}
