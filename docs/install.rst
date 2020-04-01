@@ -166,13 +166,15 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
 ==================================== ===========================================
 
 
-Source code
------------
+PyPI package and source code
+----------------------------
 
-If a package is not available on your platform (or if it's out of date), Streamlink can be installed from source.
+If a package is not available on your platform, or if it's out of date,
+Streamlink can be installed via `pip`_, the Python package manager.
 
-This can be done in a couple of different ways, for example by using `pip`_, the Python package manager,
-or by checking out the source code with `git`_ and installing it via setuptools. |br|
+In addition to using `pip`_, Streamlink can also be installed from source
+via `setuptools`_ after cloning the `git`_ repository.
+
 Using :command:`easy_install` is no longer recommended.
 
 .. note::
@@ -230,6 +232,7 @@ Version                              Installing
 ==================================== ===========================================
 
 .. _pip: https://pip.readthedocs.org/en/latest/installing.html
+.. _setuptools: https://setuptools.readthedocs.io/en/latest/
 .. _git: https://git-scm.com/
 .. _Latest release (pip): https://pypi.python.org/pypi/streamlink
 .. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
