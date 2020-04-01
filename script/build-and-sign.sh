@@ -13,7 +13,7 @@ done
 
 KEY_ID=${SIGNING_KEY_ID:-2E390FA0}
 KEY_FILE=${SIGNING_KEY_FILE:-signing.key}
-KEY_FILE_ENC=${KEY_FILE}.enc
+KEY_FILE_ENC=${KEY_FILE}.gpg
 
 version=$(python setup.py --version)
 dist_dir=${STREAMLINK_DIST_DIR:-dist}
@@ -36,12 +36,10 @@ done
 
 if [[ "${CI}" = true ]] || [[ -n "${GITHUB_ACTIONS}" ]]; then
     echo "build: Decrypting signing key" >&2
-    openssl aes-256-cbc \
-        -K "${RELEASE_SIGN_KEY}" \
-        -iv "${RELEASE_SIGN_IV}" \
-        -in "${KEY_FILE_ENC}" \
-        -out "${KEY_FILE}" \
-        -d
+    gpg --quiet --batch --yes --decrypt \
+        --passphrase="${RELEASE_KEY_PASSPHRASE}" \
+        --output "${KEY_FILE}" \
+        "${KEY_FILE_ENC}"
 fi
 
 if ! [[ -f "${KEY_FILE}" ]]; then
