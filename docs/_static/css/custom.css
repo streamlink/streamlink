@@ -81,3 +81,6 @@ table.table-custom-layout tbody tr td {
 .rst-content > footer:last-of-type {
   margin-top: 5rem;
 }
+.rst-content li > p:only-child {
+  margin-bottom: 0 !important;
+}
