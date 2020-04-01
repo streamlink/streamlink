@@ -11,7 +11,7 @@ DOCS_BRANCH=${DOCS_BRANCH:-master}
 DOCS_USER=${DOCS_USER:-streamlink-bot}
 DOCS_EMAIL=${DOCS_EMAIL:-streamlink-bot@users.noreply.github.com}
 KEY_FILE=${DOCS_KEY_FILE:-"${ROOT}/docs.key"}
-KEY_FILE_ENC=${KEY_FILE}.enc
+KEY_FILE_ENC=${KEY_FILE}.gpg
 
 SOURCE=${DOCS_DIR:-"${ROOT}/docs/_build/html"}
 FILELIST=".doctr-files"
@@ -34,12 +34,10 @@ fi
 
 if ! [[ -f "${KEY_FILE}" ]]; then
     echo Decrypting documentation deploy key
-    openssl aes-256-cbc \
-        -K "${DOCS_DEPLOY_KEY}" \
-        -iv "${DOCS_DEPLOY_IV}" \
-        -in "${KEY_FILE_ENC}" \
-        -out "${KEY_FILE}" \
-        -d
+    gpg --quiet --batch --yes --decrypt \
+        --passphrase="${DOCS_KEY_PASSPHRASE}" \
+        --output "${KEY_FILE}" \
+        "${KEY_FILE_ENC}"
     chmod 600 "${KEY_FILE}"
 fi
 # make sure that no SSH config file and that the docs deploy key is used by git
