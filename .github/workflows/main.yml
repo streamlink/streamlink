@@ -151,8 +151,7 @@ jobs:
           path: ${{ env.STREAMLINK_DIST_DIR }}
       - name: sdist and wheels
         env:
-          RELEASE_SIGN_KEY: ${{ secrets.RELEASE_SIGN_KEY }}
-          RELEASE_SIGN_IV: ${{ secrets.RELEASE_SIGN_IV }}
+          RELEASE_KEY_PASSPHRASE: ${{ secrets.RELEASE_KEY_PASSPHRASE }}
         run: ./script/build-and-sign.sh
       - name: Github release
         env:
