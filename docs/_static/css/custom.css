@@ -1,3 +1,9 @@
+html .wy-grid-for-nav {
+  position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
 .logotext a {
   color: inherit !important;
 }
