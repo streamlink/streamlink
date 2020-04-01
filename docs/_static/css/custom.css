@@ -74,3 +74,10 @@ table.table-custom-layout tbody tr td {
   overflow: unset;
   white-space: unset;
 }
+
+.rst-content div.section {
+  margin-bottom: 2rem;
+}
+.rst-content > footer:last-of-type {
+  margin-top: 5rem;
+}
