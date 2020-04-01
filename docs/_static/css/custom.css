@@ -46,6 +46,15 @@ html .wy-grid-for-nav {
 .github-buttons {
   margin: 1rem 0 0;
 }
+.github-avatar {
+  float: left;
+  width: 150px;
+  height: 150px;
+  margin: 0 1rem 1rem 0;
+}
+.github-avatar + .container > ul > li {
+  list-style: none;
+}
 
 /* fix table layout on the install page */
 table.table-custom-layout {
