@@ -38,53 +38,31 @@ def parse_fmt_list(formatsmap):
 
 _config_schema = validate.Schema(
     {
-        validate.optional("fmt_list"): validate.all(
-            validate.text,
-            validate.transform(parse_fmt_list)
-        ),
-        validate.optional("url_encoded_fmt_stream_map"): validate.all(
-            validate.text,
-            validate.transform(parse_stream_map),
-            [{
-                "itag": validate.all(
-                    validate.text,
-                    validate.transform(int)
-                ),
-                "quality": validate.text,
-                "url": validate.url(scheme="http"),
-                validate.optional("s"): validate.text,
-                validate.optional("stereo3d"): validate.all(
-                    validate.text,
-                    validate.transform(int),
-                    validate.transform(bool)
-                ),
-            }]
-        ),
-        validate.optional("adaptive_fmts"): validate.all(
-            validate.text,
-            validate.transform(parse_stream_map),
-            [{
-                validate.optional("s"): validate.text,
-                "type": validate.all(
-                    validate.text,
-                    validate.transform(lambda t: t.split(";")[0].split("/")),
-                    [validate.text, validate.text]
-                ),
-                "url": validate.all(
-                    validate.url(scheme="http")
-                )
-            }]
-        ),
-        validate.optional("hlsvp"): validate.text,
         validate.optional("player_response"): validate.all(
             validate.text,
             validate.transform(parse_json),
             {
                 validate.optional("streamingData"): {
                     validate.optional("hlsManifestUrl"): validate.text,
+                    validate.optional("formats"): [{
+                        "itag": int,
+                        "url": validate.text,
+                        "qualityLabel": validate.text
+                    }],
+                    validate.optional("adaptiveFormats"): [{
+                        "itag": int,
+                        "mimeType": validate.text,
+                        "url": validate.text,
+                        validate.optional("qualityLabel"): validate.text,
+                        validate.optional("bitrate"): int
+                    }]
                 },
                 validate.optional("videoDetails"): {
-                    validate.optional("isLive"): validate.transform(bool),
+                    validate.optional("isLiveContent"): validate.transform(bool),
+                    validate.optional("isPrivate"): validate.transform(bool),
+                    validate.optional("author"): validate.text,
+                    validate.optional("title"): validate.all(validate.text,
+                                                             validate.transform(maybe_decode))
                 },
                 validate.optional("playabilityStatus"): {
                     validate.optional("status"): validate.text,
@@ -93,14 +71,6 @@ _config_schema = validate.Schema(
                 },
             },
         ),
-        validate.optional("live_playback"): validate.transform(bool),
-        validate.optional("reason"): validate.all(validate.text, validate.transform(maybe_decode)),
-        validate.optional("livestream"): validate.text,
-        validate.optional("live_playback"): validate.text,
-        validate.optional("author"): validate.all(validate.text,
-                                                  validate.transform(maybe_decode)),
-        validate.optional("title"): validate.all(validate.text,
-                                                 validate.transform(maybe_decode)),
         "status": validate.text
     }
 )
@@ -146,6 +116,7 @@ class YouTube(Plugin):
         }
     )
 
+    # There are missing itags
     adp_video = {
         137: "1080p",
         299: "1080p60",  # HFR
@@ -155,6 +126,9 @@ class YouTube(Plugin):
         315: "2160p60",  # HFR
         138: "2160p",
         302: "720p60",  # HFR
+        135: "480p",
+        133: "240p",
+        160: "144p",
     }
     adp_audio = {
         140: 128,
@@ -235,12 +209,9 @@ class YouTube(Plugin):
         adaptive_streams = {}
         best_audio_itag = None
 
-        # Extract audio streams from the DASH format list
-        for stream_info in info.get("adaptive_fmts", []):
-            if stream_info.get("s"):
-                protected = True
-                continue
-
+        # Extract audio streams from the adaptive format list
+        streaming_data = info.get("player_response").get("streamingData")
+        for stream_info in streaming_data.get("adaptiveFormats", []):
             stream_params = dict(parse_qsl(stream_info["url"]))
             if "itag" not in stream_params:
                 continue
@@ -248,7 +219,11 @@ class YouTube(Plugin):
             # extract any high quality streams only available in adaptive formats
             adaptive_streams[itag] = stream_info["url"]
 
-            stream_type, stream_format = stream_info["type"]
+            stream_type, stream_format = stream_info["mimeType"].split(";")
+
+            stream_type = stream_type.split("/")[0]
+            stream_format = stream_format.split("=")[1].strip("\"")
+
             if stream_type == "audio":
                 stream = HTTPStream(self.session, stream_info["url"])
                 name = "audio_{0}".format(stream_format)
@@ -325,16 +300,17 @@ class YouTube(Plugin):
 
             res = self.session.http.get(self._video_info_url, params=params)
             info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
-            if (info_parsed.get("player_response", {}).get("playabilityStatus", {}).get("status") != "OK"
-                    or info_parsed.get("status") == "fail"):
-                reason = (info_parsed.get("player_response", {}).get("playabilityStatus", {}).get("reason")
-                          or info_parsed.get("reason"))
+            player_response = info_parsed.get("player_response")
+            playability_status = player_response.get("playabilityStatus")
+            if (playability_status.get("status") != "OK"):
+                reason = playability_status.get("reason")
                 log.debug("get_video_info - {0}: {1}".format(
                     count, reason)
                 )
                 continue
-            self.author = info_parsed.get("author")
-            self.title = info_parsed.get("title")
+            video_details = player_response.get("videoDetails")
+            self.author = video_details.get("author")
+            self.title = video_details.get("title")
             log.debug("get_video_info - {0}: Found data".format(count))
             break
 
@@ -354,35 +330,30 @@ class YouTube(Plugin):
             log.error("Could not get video info")
             return
 
-        if info.get("livestream") == '1' or info.get("live_playback") == '1' \
-                or info.get("player_response", {}).get("videoDetails", {}).get("isLive"):
+        if info.get("player_response", {}).get("videoDetails", {}).get("isLiveContent"):
             log.debug("This video is live.")
             is_live = True
 
-        formats = info.get("fmt_list")
         streams = {}
         protected = False
-        for stream_info in info.get("url_encoded_fmt_stream_map", []):
-            if stream_info.get("s"):
-                protected = True
-                continue
+        if info.get("player_response", {}).get("videoDetails", {}).get("isPrivate"):
+            log.debug("This video is private.")
+            protected = True
 
+        for stream_info in info.get("player_response", {}).get("streamingData", {}).get("formats", []):
             stream = HTTPStream(self.session, stream_info["url"])
-            name = formats.get(stream_info["itag"]) or stream_info["quality"]
-
-            if stream_info.get("stereo3d"):
-                name += "_3d"
+            name = stream_info["qualityLabel"]
 
             streams[name] = stream
 
         if not is_live:
             streams, protected = self._create_adaptive_streams(info, streams, protected)
 
-        hls_playlist = info.get("hlsvp") or info.get("player_response", {}).get("streamingData", {}).get("hlsManifestUrl")
-        if hls_playlist:
+        hls_manifest = info.get("player_response", {}).get("streamingData", {}).get("hlsManifestUrl")
+        if hls_manifest:
             try:
                 hls_streams = HLSStream.parse_variant_playlist(
-                    self.session, hls_playlist, namekey="pixels"
+                    self.session, hls_manifest, namekey="pixels"
                 )
                 streams.update(hls_streams)
             except IOError as err:
