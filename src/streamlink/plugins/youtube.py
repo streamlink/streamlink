@@ -52,14 +52,22 @@ _config_schema = validate.Schema(
                     }],
                     validate.optional("adaptiveFormats"): [{
                         "itag": int,
-                        "mimeType": validate.text,
-                        validate.optional("url"): validate.text,
+                        "mimeType": validate.all(
+                            validate.text,
+                            validate.transform(
+                                lambda t:
+                                    [t.split(';')[0].split('/')[0], t.split(';')[1].split('=')[1].strip('"')]
+                            ),
+                            [validate.text, validate.text],
+                        ),
+                        validate.optional("url"): validate.url(scheme="http"),
                         validate.optional("cipher"): validate.text,
                         validate.optional("qualityLabel"): validate.text,
                         validate.optional("bitrate"): int
                     }]
                 },
                 validate.optional("videoDetails"): {
+                    validate.optional("isLive"): validate.transform(bool),
                     validate.optional("isLiveContent"): validate.transform(bool),
                     validate.optional("author"): validate.text,
                     validate.optional("title"): validate.all(validate.text,
@@ -211,7 +219,7 @@ class YouTube(Plugin):
         best_audio_itag = None
 
         # Extract audio streams from the adaptive format list
-        streaming_data = info.get("player_response").get("streamingData")
+        streaming_data = info.get("player_response").get("streamingData", dict())
         for stream_info in streaming_data.get("adaptiveFormats", []):
             stream_params = dict(parse_qsl(stream_info["url"]))
             if "itag" not in stream_params:
@@ -220,10 +228,7 @@ class YouTube(Plugin):
             # extract any high quality streams only available in adaptive formats
             adaptive_streams[itag] = stream_info["url"]
 
-            stream_type, stream_format = stream_info["mimeType"].split(";")
-
-            stream_type = stream_type.split("/")[0]
-            stream_format = stream_format.split("=")[1].strip("\"")
+            stream_type, stream_format = stream_info["mimeType"]
 
             if stream_type == "audio":
                 stream = HTTPStream(self.session, stream_info["url"])
@@ -331,14 +336,14 @@ class YouTube(Plugin):
             log.error("Could not get video info")
             return
 
-        if info.get("player_response", {}).get("videoDetails", {}).get("isLiveContent"):
+        if (info.get("player_response", {}).get("videoDetails", {}).get("isLiveContent")
+           or info.get("player_response", {}).get("videoDetails", {}).get("isLive")):
             log.debug("This video is live.")
             is_live = True
 
         streams = {}
-        log.debug("{0}".format(info))
-        if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [])[0].get("cipher")
-           or info.get("player_response", {}).get("streamingData", {}).get("formats", [])[0].get("cipher")):
+        if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [dict()])[0].get("cipher")
+           or info.get("player_response", {}).get("streamingData", {}).get("formats", [dict()])[0].get("cipher")):
             log.debug("This video is protected.")
             raise PluginError("This plugin does not support protected videos, "
                               "try youtube-dl instead")
