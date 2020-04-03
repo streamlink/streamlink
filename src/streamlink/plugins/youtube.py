@@ -46,20 +46,21 @@ _config_schema = validate.Schema(
                     validate.optional("hlsManifestUrl"): validate.text,
                     validate.optional("formats"): [{
                         "itag": int,
-                        "url": validate.text,
+                        validate.optional("url"): validate.text,
+                        validate.optional("cipher"): validate.text,
                         "qualityLabel": validate.text
                     }],
                     validate.optional("adaptiveFormats"): [{
                         "itag": int,
                         "mimeType": validate.text,
-                        "url": validate.text,
+                        validate.optional("url"): validate.text,
+                        validate.optional("cipher"): validate.text,
                         validate.optional("qualityLabel"): validate.text,
                         validate.optional("bitrate"): int
                     }]
                 },
                 validate.optional("videoDetails"): {
                     validate.optional("isLiveContent"): validate.transform(bool),
-                    validate.optional("isPrivate"): validate.transform(bool),
                     validate.optional("author"): validate.text,
                     validate.optional("title"): validate.all(validate.text,
                                                              validate.transform(maybe_decode))
@@ -205,7 +206,7 @@ class YouTube(Plugin):
         self.author = data["author_name"]
         self.title = data["title"]
 
-    def _create_adaptive_streams(self, info, streams, protected):
+    def _create_adaptive_streams(self, info, streams):
         adaptive_streams = {}
         best_audio_itag = None
 
@@ -247,7 +248,7 @@ class YouTube(Plugin):
                                                 HTTPStream(self.session, vurl),
                                                 HTTPStream(self.session, aurl))
 
-        return streams, protected
+        return streams
 
     def _find_video_id(self, url):
 
@@ -335,10 +336,12 @@ class YouTube(Plugin):
             is_live = True
 
         streams = {}
-        protected = False
-        if info.get("player_response", {}).get("videoDetails", {}).get("isPrivate"):
-            log.debug("This video is private.")
-            protected = True
+        log.debug("{0}".format(info))
+        if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [])[0].get("cipher")
+           or info.get("player_response", {}).get("streamingData", {}).get("formats", [])[0].get("cipher")):
+            log.debug("This video is protected.")
+            raise PluginError("This plugin does not support protected videos, "
+                              "try youtube-dl instead")
 
         for stream_info in info.get("player_response", {}).get("streamingData", {}).get("formats", []):
             stream = HTTPStream(self.session, stream_info["url"])
@@ -347,7 +350,7 @@ class YouTube(Plugin):
             streams[name] = stream
 
         if not is_live:
-            streams, protected = self._create_adaptive_streams(info, streams, protected)
+            streams = self._create_adaptive_streams(info, streams)
 
         hls_manifest = info.get("player_response", {}).get("streamingData", {}).get("hlsManifestUrl")
         if hls_manifest:
@@ -358,10 +361,6 @@ class YouTube(Plugin):
                 streams.update(hls_streams)
             except IOError as err:
                 log.warning("Failed to extract HLS streams: {0}", err)
-
-        if not streams and protected:
-            raise PluginError("This plugin does not support protected videos, "
-                              "try youtube-dl instead")
 
         return streams
 
