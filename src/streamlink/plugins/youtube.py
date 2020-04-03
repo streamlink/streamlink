@@ -342,11 +342,11 @@ class YouTube(Plugin):
             is_live = True
 
         streams = {}
+        protected = False
         if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [dict()])[0].get("cipher")
            or info.get("player_response", {}).get("streamingData", {}).get("formats", [dict()])[0].get("cipher")):
-            log.debug("This video is protected.")
-            raise PluginError("This plugin does not support protected videos, "
-                              "try youtube-dl instead")
+            protected = True
+            log.debug("This video may be protected.")
 
         for stream_info in info.get("player_response", {}).get("streamingData", {}).get("formats", []):
             stream = HTTPStream(self.session, stream_info["url"])
@@ -366,6 +366,10 @@ class YouTube(Plugin):
                 streams.update(hls_streams)
             except IOError as err:
                 log.warning("Failed to extract HLS streams: {0}", err)
+
+        if not streams and protected:
+            raise PluginError("This plugin does not support protected videos, "
+                              "try youtube-dl instead")
 
         return streams
 
