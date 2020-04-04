@@ -199,7 +199,7 @@ class YouTube(Plugin):
         best_audio_itag = None
 
         # Extract audio streams from the adaptive format list
-        streaming_data = info.get("player_response").get("streamingData", dict())
+        streaming_data = info.get("player_response", {}).get("streamingData", {})
         for stream_info in streaming_data.get("adaptiveFormats", []):
             if "url" not in stream_info:
                 continue
@@ -288,16 +288,16 @@ class YouTube(Plugin):
 
             res = self.session.http.get(self._video_info_url, params=params)
             info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
-            player_response = info_parsed.get("player_response")
-            playability_status = player_response.get("playabilityStatus")
+            player_response = info_parsed.get("player_response", {})
+            playability_status = player_response.get("playabilityStatus", {})
             if (playability_status.get("status") != "OK"):
                 reason = playability_status.get("reason")
                 log.debug("get_video_info - {0}: {1}".format(
                     count, reason)
                 )
                 continue
-            self.author = player_response.get("videoDetails").get("author")
-            self.title = player_response.get("videoDetails").get("title")
+            self.author = player_response.get("videoDetails", {}).get("author")
+            self.title = player_response.get("videoDetails", {}).get("title")
             log.debug("get_video_info - {0}: Found data".format(count))
             break
 
@@ -324,8 +324,8 @@ class YouTube(Plugin):
 
         streams = {}
         protected = False
-        if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [dict()])[0].get("cipher")
-           or info.get("player_response", {}).get("streamingData", {}).get("formats", [dict()])[0].get("cipher")):
+        if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [{}])[0].get("cipher")
+           or info.get("player_response", {}).get("streamingData", {}).get("formats", [{}])[0].get("cipher")):
             protected = True
             log.debug("This video may be protected.")
 
