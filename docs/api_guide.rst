@@ -3,8 +3,6 @@
 API Guide
 =========
 
-.. module:: streamlink
-
 This API is what powers the :ref:`cli` but is also available to developers that wish
 to make use of the data Streamlink can retrieve in their own application.
 
