@@ -16,26 +16,6 @@ from streamlink.utils.encoding import maybe_decode
 log = logging.getLogger(__name__)
 
 
-def parse_stream_map(stream_map):
-    if not stream_map:
-        return []
-
-    return [parse_query(s) for s in stream_map.split(",")]
-
-
-def parse_fmt_list(formatsmap):
-    formats = {}
-    if not formatsmap:
-        return formats
-
-    for format in formatsmap.split(","):
-        s = format.split("/")
-        (w, h) = s[1].split("x")
-        formats[int(s[0])] = "{0}p".format(h)
-
-    return formats
-
-
 _config_schema = validate.Schema(
     {
         validate.optional("player_response"): validate.all(
@@ -221,6 +201,8 @@ class YouTube(Plugin):
         # Extract audio streams from the adaptive format list
         streaming_data = info.get("player_response").get("streamingData", dict())
         for stream_info in streaming_data.get("adaptiveFormats", []):
+            if "url" not in stream_info:
+                continue
             stream_params = dict(parse_qsl(stream_info["url"]))
             if "itag" not in stream_params:
                 continue
@@ -314,9 +296,8 @@ class YouTube(Plugin):
                     count, reason)
                 )
                 continue
-            video_details = player_response.get("videoDetails")
-            self.author = video_details.get("author")
-            self.title = video_details.get("title")
+            self.author = player_response.get("videoDetails").get("author")
+            self.title = player_response.get("videoDetails").get("title")
             log.debug("get_video_info - {0}: Found data".format(count))
             break
 
@@ -349,6 +330,8 @@ class YouTube(Plugin):
             log.debug("This video may be protected.")
 
         for stream_info in info.get("player_response", {}).get("streamingData", {}).get("formats", []):
+            if "url" not in stream_info:
+                continue
             stream = HTTPStream(self.session, stream_info["url"])
             name = stream_info["qualityLabel"]
 
