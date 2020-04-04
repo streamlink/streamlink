@@ -1,6 +1,8 @@
 codecov:
   notify:
     require_ci_to_pass: true
+    # wait until at least one linux and one windows build has succeeded (see the test job's build matrix)
+    after_n_builds: 6
 comment:
   behavior: default
   layout: header, diff
