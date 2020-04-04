@@ -1,6 +1,6 @@
 # [Streamlink][streamlink-website]
 
-[![TravisCI build status][travisci-build-status-badge]][travisci-build-status]
+[![Github build status][workflow-status-badge]][workflow-status]
 [![codecov.io][codecov-coverage-badge]][codecov-coverage] [![Backers on Open Collective][opencollective-backers-badge]](#backers) [![Sponsors on Open Collective][opencollective-sponsors-badge]](#sponsors)
 
 Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC.
@@ -94,8 +94,8 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
   [contributing]: https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md
   [changelog]: https://github.com/streamlink/streamlink/blob/master/CHANGELOG.rst
   [contributors]: https://github.com/streamlink/streamlink/graphs/contributors
-  [travisci-build-status]: https://travis-ci.org/streamlink/streamlink
-  [travisci-build-status-badge]: https://travis-ci.org/streamlink/streamlink.svg?branch=master
+  [workflow-status]: https://github.com/streamlink/streamlink/actions?query=event%3Apush
+  [workflow-status-badge]: https://github.com/streamlink/streamlink/workflows/Test,%20build%20and%20deploy/badge.svg?branch=master&event=push
   [codecov-coverage]: https://codecov.io/github/streamlink/streamlink?branch=master
   [codecov-coverage-badge]: https://codecov.io/github/streamlink/streamlink/coverage.svg?branch=master
   [opencollective-contributors]: https://opencollective.com/streamlink/contributors.svg?width=890
