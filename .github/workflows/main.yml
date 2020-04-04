@@ -17,8 +17,9 @@ jobs:
     name: Test
     strategy:
       fail-fast: false
+      # when changing the build matrix, the `after_n_builds` value in codecov.yml may need to be updated
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         python: [2.7, 3.5, 3.6, 3.7, 3.8]
 #       include:
 #         - python: X.Y-dev

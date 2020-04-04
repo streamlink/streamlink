@@ -21,13 +21,11 @@ RE_GIT_REF_TAG = re.compile(r"^refs/tags/(.+)$")
 
 
 def get_default_repo_from_env():
-    return getenv("TRAVIS_REPO_SLUG") \
-        or getenv("GITHUB_REPOSITORY")
+    return getenv("GITHUB_REPOSITORY")
 
 
 def get_default_tag_from_env():
-    return getenv("TRAVIS_TAG") \
-        or (lambda match: match.group(1) if match else None)(re.search(RE_GIT_REF_TAG, getenv("GITHUB_REF", "")))
+    return (lambda match: match.group(1) if match else None)(re.search(RE_GIT_REF_TAG, getenv("GITHUB_REF", "")))
 
 
 def get_default_dist_dir_from_env():
