@@ -6,7 +6,7 @@ from streamlink.plugins.tv360 import TV360
 class TestPluginTV360(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
-            'http://tv360.com.tr/CanliYayin',
+            'http://tv360.com.tr/canli-yayin',
         ]
         for url in should_match:
             self.assertTrue(TV360.can_handle_url(url))
