@@ -233,7 +233,7 @@ class PlayerOutput(Output):
             fargs = args
         else:
             fargs = subprocess.list2cmdline(args)
-        log.debug(u"Calling: {0}".format(fargs))
+        log.debug(u"Calling: {0}".format(maybe_decode(fargs)))
         subprocess.call(args,
                         stdout=self.stdout,
                         stderr=self.stderr)
@@ -246,7 +246,8 @@ class PlayerOutput(Output):
             fargs = args
         else:
             fargs = subprocess.list2cmdline(args)
-        log.debug(u"Opening subprocess: {0}".format(fargs))
+
+        log.debug(u"Opening subprocess: {0}".format(maybe_decode(fargs)))
         self.player = subprocess.Popen(args,
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
