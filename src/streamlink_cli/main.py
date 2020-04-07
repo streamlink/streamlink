@@ -869,8 +869,8 @@ def setup_options():
         streamlink.set_option("ffmpeg-video-transcode", args.ffmpeg_video_transcode)
     if args.ffmpeg_audio_transcode:
         streamlink.set_option("ffmpeg-audio-transcode", args.ffmpeg_audio_transcode)
-    if args.ffmpeg-start-at-zero:
-        streamlink.set_option("ffmpeg-start-at-zero", args.ffmpeg-start-at-zero)
+    if args.ffmpeg_no_start_at_zero:
+        streamlink.set_option("ffmpeg-start-at-zero", False)
 
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
