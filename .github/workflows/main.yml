@@ -32,16 +32,16 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install dependencies
-        continue-on-error: ${{ matrix.continue }}
+        continue-on-error: ${{ matrix.continue || false }}
         run: bash ./script/install-dependencies.sh
       - name: Test
-        continue-on-error: ${{ matrix.continue }}
+        continue-on-error: ${{ matrix.continue || false }}
         run: pytest -r a --cov --cov-report=xml
       - name: Lint
-        continue-on-error: ${{ matrix.continue }}
+        continue-on-error: ${{ matrix.continue || false }}
         run: flake8
       - name: Upload coverage data
-        continue-on-error: ${{ matrix.continue }}
+        continue-on-error: ${{ matrix.continue || false }}
         uses: codecov/codecov-action@v1
 
   documentation:
