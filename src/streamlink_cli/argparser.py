@@ -1049,8 +1049,6 @@ def build_parser():
         help="""
         Set output file format.
 
-        Default is "matroska".
-
         Example: "mpegts"
         """
     )
