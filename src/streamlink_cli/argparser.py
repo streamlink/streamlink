@@ -1077,14 +1077,11 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--ffmpeg-start-at-zero",
-        type=boolean,
-        metavar="STARTATZERO",
+        "--ffmpeg-no-start-at-zero",
+        action="store_true",
         help="""
-        When used with ffmpeg and copyts,
-        shift input timestamps so they start at zero.
-
-        Default is "True".
+        Disables the -start_at_zero ffmpeg option
+        when using copyts. 
         """
     )
 
