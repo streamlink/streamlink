@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from streamlink.compat import is_win32, is_py3
+from streamlink.compat import is_win32, is_py3, is_py2
 from streamlink.utils import get_filesystem_encoding
 from tests.test_cmdline import CommandLineTestCase
 
@@ -27,6 +27,10 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
     def test_open_player_with_title_mpv(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "{title}", "http://test.se", "test"],
                         ["/usr/bin/mpv", "--title=Test Title", "-"])
+
+    def test_unicode_title_2444(self):
+        self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
+                        ["mpv", "--title=★", "-"])
 
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")
@@ -77,7 +81,7 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             passthrough=True
         )
 
-    @unittest.skipIf(is_py3, "Encoding is different in Python 2")
+    @unittest.skipUnless(is_py2, "Encoding is different in Python 2")
     def test_open_player_with_unicode_author_pot_py2(self):
         self._test_args(
             ["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"",
@@ -88,7 +92,7 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             passthrough=True
         )
 
-    @unittest.skipIf(not is_py3, "Encoding is different in Python 2")
+    @unittest.skipUnless(is_py3, "Encoding is different in Python 3")
     def test_open_player_with_unicode_author_pot_py3(self):
         self._test_args(
             ["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"",
@@ -106,3 +110,13 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             + "\"http://test.se/playlist.m3u8\\http://test.se/stream\"",
             passthrough=True
         )
+
+    @unittest.skipUnless(is_py2, "test only valid for Python 2")
+    def test_unicode_title_2444_py2(self):
+        self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
+                        "mpv --title=" + u"★".encode(get_filesystem_encoding()) + " -")
+
+    @unittest.skipUnless(is_py3, "test only valid for Python 3")
+    def test_unicode_title_2444_py3(self):
+        self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
+                        "mpv --title=★ -")
