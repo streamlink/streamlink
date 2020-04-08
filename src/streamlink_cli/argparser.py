@@ -1079,7 +1079,7 @@ def build_parser():
         action="store_true",
         help="""
         Disables the -start_at_zero ffmpeg option
-        when using copyts. 
+        when using copyts.
         """
     )
 
