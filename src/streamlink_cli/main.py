@@ -30,7 +30,7 @@ from streamlink.utils import LazyFormatter
 import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32
-from streamlink.utils.encoding import maybe_encode
+from streamlink.utils.encoding import maybe_decode, get_filesystem_encoding
 from .console import ConsoleOutput, ConsoleUserInputRequester
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
@@ -146,7 +146,7 @@ def create_http_server(host=None, port=0):
 def create_title(plugin=None):
     if args.title and plugin:
         title = LazyFormatter.format(
-            maybe_encode(args.title),
+            maybe_decode(args.title, get_filesystem_encoding()),
             title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
             author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
             category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],

@@ -30,7 +30,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
 
     def test_unicode_title_2444(self):
         self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
-                        ["mpv", "--title=★", "-"])
+                        ["mpv", u'--title=\u2605', "-"])
 
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")
@@ -113,7 +113,7 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
 
     @unittest.skipUnless(is_py2, "test only valid for Python 2")
     def test_unicode_title_2444_py2(self):
-        self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
+        self._test_args(["streamlink", "-p", "mpv", "-t", u"★".encode(get_filesystem_encoding()), "http://test.se", "test"],
                         "mpv --title=" + u"★".encode(get_filesystem_encoding()) + " -")
 
     @unittest.skipUnless(is_py3, "test only valid for Python 3")
