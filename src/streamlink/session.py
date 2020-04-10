@@ -74,7 +74,7 @@ class Streamlink(object):
             "subprocess-errorlog": False,
             "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
-            "ffmpeg-fout": "matroska",
+            "ffmpeg-fout": None,
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy",
             "ffmpeg-start-at-zero": True,
