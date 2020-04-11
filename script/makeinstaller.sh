@@ -1,62 +1,74 @@
 #!/usr/bin/env bash
-# Execute this at the base of the streamlink repo.
+set -e
 
-set -e # stop on error
+MAKEINSTALLER=$(basename "$(readlink -f "${0}")")
+log() {
+    echo "[${MAKEINSTALLER}] $@"
+}
+err() {
+    log >&2 "$@"
+    exit 1
+}
 
-command -v makensis > /dev/null 2>&1 || { echo >&2 "makensis is required to build the installer. Aborting."; exit 1; }
-command -v pynsist > /dev/null 2>&1 || { echo >&2 "pynsist is required to build the installer. Aborting."; exit 1; }
-command -v convert > /dev/null 2>&1 || { echo >&2 "imagemagick is required to build the installer. Aborting."; exit 1; }
-command -v inkscape > /dev/null 2>&1 || { echo >&2 "inkscape is required to build the installer. Aborting."; exit 1; }
+
+declare -A DEPS=(
+    [makensis]=NSIS
+    [pynsist]=pynsist
+    [convert]=Imagemagick
+    [inkscape]=inkscape
+)
+
+for dep in "${!DEPS[@]}"; do
+    command -v "${dep}" 2>&1 >/dev/null || err "${DEPS["${dep}"]} is required to build the installer. Aborting."
+done
+
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$(readlink -f "${0}")")/..")
+cd "${ROOT}"
+
 
 # For CI nightly builds generate a version number with commit hash
 STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
 STREAMLINK_INSTALLER="${1:-"streamlink-${STREAMLINK_VERSION/\+/_}"}"
+STREAMLINK_PYTHON_VERSION=3.6.6
 
-# include the build number
 CI_BUILD_NUMBER=${GITHUB_RUN_ID:-0}
 STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${CI_BUILD_NUMBER}"
 
-build_dir="$(pwd)/build"
+DIST_DIR="${STREAMLINK_DIST_DIR:-"${ROOT}/dist"}"
+INSTALLER_PATH="${DIST_DIR}/${STREAMLINK_INSTALLER}.exe"
+
+build_dir="${ROOT}/build"
 build_dir_plugins="${build_dir}/lib/streamlink/plugins"
 nsis_dir="${build_dir}/nsis"
 files_dir="${build_dir}/files"
 icons_dir="${files_dir}/icons"
-# get the dist directory from an environment variable, but default to the build/nsis directory
-dist_dir="${STREAMLINK_DIST_DIR:-${nsis_dir}}"
-mkdir -p "${build_dir}" "${dist_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}"
 
-echo "Building streamlink-${STREAMLINK_VERSION} package..." 1>&2
+removed_plugins_file="${ROOT}/src/streamlink/plugins/.removed"
+
+log "Setting up clean build directories"
+[[ -d "${build_dir}" ]] && rm -rf "${nsis_dir}" "${files_dir}" "${icons_dir}"
+mkdir -p "${build_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}" "${DIST_DIR}"
+
+
+log "Building streamlink-${STREAMLINK_VERSION} package"
 python setup.py build 1>&2
 
+
+log "Creating empty plugin files"
 # https://github.com/streamlink/streamlink/issues/1223
-echo "Create empty files."
-old_files=(
-  "afreecatv" "alieztv" "apac" "azubutv" "bambuser" "beam" "bliptv" "canlitv"
-  "connectcast" "cyro" "daisuki" "disney_de" "dmcloud" "dmcloud_embed"
-  "douyutv_blackbox" "filmon_us" "furstream" "gaminglive" "gomexp" "letontv"
-  "livecodingtv" "livestation" "looch" "media_ccc_de" "meerkat" "neulion"
-  "nineanime" "pcyourfreetv" "seemeplay" "servustv" "stream" "streamlive"
-  "streamupcom" "tv8cat" "ufctv" "veetle" "viagame" "viasat_embed" "wattv"
-  "aftonbladet" "aliez" "antenna" "arconai" "bongacams" "brittv" "cam4"
-  "camsoda" "chaturbate" "expressen" "mips" "seetv" "speedrunslive" "streamboat"
-  "vgtv" "weeb" "oldlivestream" "ok_live" "rte" "tvcatchup" "npo" "ovvatv"
-  "mlgtv" "kanal7" "younow" "eurocom" "tv1channel"
-)
-for i in "${old_files[@]}"
-do
-    touch "${build_dir_plugins}/$i.py"
-done
+while read -r pluginname; do
+    touch "${build_dir_plugins}/${pluginname}.py"
+done < <(sed -e 's/[[:space:]]*[#;].*//; /^[[:space:]]*$/d' "${removed_plugins_file}")
 
-echo "Creating images" 1>&2
-# Create images
+log "Creating icons"
 for size in 16 32 48 256; do
-  inkscape --without-gui --export-png="${icons_dir}/icon-${size}.png" -w ${size} -h ${size} icon.svg
+    inkscape --without-gui --export-png="${icons_dir}/icon-${size}.png" -w ${size} -h ${size} icon.svg 2>/dev/null
 done
-convert "${icons_dir}"/icon-{16,32,48,256}.png "${icons_dir}/icon.ico"
+convert "${icons_dir}"/icon-{16,32,48,256}.png "${icons_dir}/icon.ico" 2>/dev/null
 
 
-echo "Building ${STREAMLINK_INSTALLER} installer..." 1>&2
+log "Building ${STREAMLINK_INSTALLER} installer"
 
 cat > "${build_dir}/streamlink.cfg" <<EOF
 [Application]
@@ -64,9 +76,10 @@ name=Streamlink
 version=${STREAMLINK_VERSION}
 entry_point=streamlink_cli.main:main
 icon=${icons_dir}/icon.ico
+license_file=${files_dir}/LICENSE.txt
 
 [Python]
-version=3.6.6
+version=${STREAMLINK_PYTHON_VERSION}
 format=bundled
 
 [Include]
@@ -101,9 +114,9 @@ packages=pkg_resources
          isodate
 pypi_wheels=pycryptodome==3.6.4
 
-files=../win32/LICENSE.txt > \$INSTDIR
-      ../build/lib/streamlink > \$INSTDIR\pkgs
-      ../build/lib/streamlink_cli > \$INSTDIR\pkgs
+files=${ROOT}/win32/THIRD-PARTY.txt > \$INSTDIR
+      ${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs
+      ${ROOT}/build/lib/streamlink_cli > \$INSTDIR\pkgs
 
 [Command streamlink]
 entry_point=streamlink_cli.main:main
@@ -115,10 +128,10 @@ console=false
 [Build]
 directory=nsis
 nsi_template=installer_tmpl.nsi
-installer_name=${dist_dir}/${STREAMLINK_INSTALLER}.exe
+installer_name=${INSTALLER_PATH}
 EOF
 
-cat >"${build_dir}/installer_tmpl.nsi" <<EOF
+cat > "${build_dir}/installer_tmpl.nsi" <<EOF
 !include "FileFunc.nsh"
 !include "TextFunc.nsh"
 [% extends "pyapp_msvcrt.nsi" %]
@@ -262,17 +275,17 @@ StrCmp \$0 \${ffmpeg} "" +2
 [% endblock %]
 EOF
 
-echo "Building Python 3 installer" 1>&2
-
 # copy the streamlinkrc file to the build dir, we cannot use the Include.files property in the config file
 # because those files will always overwrite, and for a config file we do not want to overwrite
-cp "win32/streamlinkrc" "${files_dir}/streamlinkrc"
+cp "${ROOT}/win32/streamlinkrc" "${files_dir}/streamlinkrc"
+
+# make sure the license has a file extension
+cp "${ROOT}/LICENSE" "${files_dir}/LICENSE.txt"
 
 # copy the ffmpeg and rtmpdump directories to the install build dir
-cp -r "win32/ffmpeg" "${files_dir}/"
-cp -r "win32/rtmpdump" "${files_dir}/"
+cp -r "${ROOT}/win32/ffmpeg" "${files_dir}/"
+cp -r "${ROOT}/win32/rtmpdump" "${files_dir}/"
 
-pynsist build/streamlink.cfg
+pynsist "${build_dir}/streamlink.cfg"
 
-echo "Success!" 1>&2
-echo "The installer should be in ${dist_dir}." 1>&2
+log "Success!"
