@@ -8,6 +8,7 @@ from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
+
 class KardelenTV(Plugin):
     url_re = re.compile(r'http?://(?:www\.)?kardelentv\.com\.tr/kardelen-tv-canli-izle')
 
