@@ -15,10 +15,8 @@ class KardelenTV(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
-
     def get_title(self):
         return "Kardelen TV"
-
 
     def _get_streams(self):
         res = self.session.http.get(self.url)
