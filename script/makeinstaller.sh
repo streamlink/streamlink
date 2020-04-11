@@ -16,6 +16,9 @@ declare -A DEPS=(
     [pynsist]=pynsist
     [convert]=Imagemagick
     [inkscape]=inkscape
+    [curl]=curl
+    [jq]=jq
+    [unzip]=unzip
 )
 
 for dep in "${!DEPS[@]}"; do
@@ -31,6 +34,8 @@ STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
 STREAMLINK_INSTALLER="${1:-"streamlink-${STREAMLINK_VERSION/\+/_}"}"
 STREAMLINK_PYTHON_VERSION=3.6.6
+STREAMLINK_ASSETS_REPO="${STREAMLINK_ASSETS_REPO:-streamlink/streamlink-assets}"
+STREAMLINK_ASSETS_RELEASE="${STREAMLINK_ASSETS_RELEASE:-latest}"
 
 CI_BUILD_NUMBER=${GITHUB_RUN_ID:-0}
 STREAMLINK_VI_VERSION="${STREAMLINK_VERSION_PLAIN}.${CI_BUILD_NUMBER}"
@@ -40,6 +45,7 @@ INSTALLER_PATH="${DIST_DIR}/${STREAMLINK_INSTALLER}.exe"
 
 build_dir="${ROOT}/build"
 build_dir_plugins="${build_dir}/lib/streamlink/plugins"
+cache_dir="${build_dir}/cache"
 nsis_dir="${build_dir}/nsis"
 files_dir="${build_dir}/files"
 icons_dir="${files_dir}/icons"
@@ -48,7 +54,7 @@ removed_plugins_file="${ROOT}/src/streamlink/plugins/.removed"
 
 log "Setting up clean build directories"
 [[ -d "${build_dir}" ]] && rm -rf "${nsis_dir}" "${files_dir}" "${icons_dir}"
-mkdir -p "${build_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}" "${DIST_DIR}"
+mkdir -p "${build_dir}" "${cache_dir}" "${nsis_dir}" "${files_dir}" "${icons_dir}" "${DIST_DIR}"
 
 
 log "Building streamlink-${STREAMLINK_VERSION} package"
@@ -68,7 +74,7 @@ done
 convert "${icons_dir}"/icon-{16,32,48,256}.png "${icons_dir}/icon.ico" 2>/dev/null
 
 
-log "Building ${STREAMLINK_INSTALLER} installer"
+log "Configuring installer"
 
 cat > "${build_dir}/streamlink.cfg" <<EOF
 [Application]
@@ -282,10 +288,54 @@ cp "${ROOT}/win32/streamlinkrc" "${files_dir}/streamlinkrc"
 # make sure the license has a file extension
 cp "${ROOT}/LICENSE" "${files_dir}/LICENSE.txt"
 
-# copy the ffmpeg and rtmpdump directories to the install build dir
-cp -r "${ROOT}/win32/ffmpeg" "${files_dir}/"
-cp -r "${ROOT}/win32/rtmpdump" "${files_dir}/"
 
+# download binary assets like ffmpeg and rtmpdump from the streamlink assets repo
+# parse the data.json manifest, validate archives and copy specific files to their destination
+log "Fetching assets data from \"${STREAMLINK_ASSETS_REPO}\" (${STREAMLINK_ASSETS_RELEASE})"
+assets_release_data=$(curl -s --fail \
+    -H 'Accept: application/vnd.github.v3+json' \
+    -H "User-Agent: ${GITHUB_REPOSITORY:-"streamlink/streamlink"}" \
+    "https://api.github.com/repos/${STREAMLINK_ASSETS_REPO}/releases/${STREAMLINK_ASSETS_RELEASE}" \
+    || err "Could not fetch release data"
+)
+assets_release_tag=$(echo "${assets_release_data}" | jq -r ".tag_name")
+assets_data=$(curl -s --fail \
+    -H "User-Agent: ${GITHUB_REPOSITORY:-"streamlink/streamlink"}" \
+    "https://raw.githubusercontent.com/${STREAMLINK_ASSETS_REPO}/${assets_release_tag}/data.json" \
+    || err "Could not fetch manifest data"
+)
+
+log "Retrieving assets"
+while read -r filename size url; do
+    if ! [[ -f "${cache_dir}/${filename}" ]]; then
+        log "Downloading asset: ${filename} (${size} Bytes)"
+        curl -s -L --output "${cache_dir}/${filename}" "${url}"
+    fi
+    checksum=$(jq -r "[.[] | select(.filename == \"${filename}\")] | first | .checksum" <<< "${assets_data}")
+    echo "${checksum} ${cache_dir}/${filename}" | sha256sum --check -
+done < <(jq -r '.assets[] | "\(.name) \(.size) \(.browser_download_url)"' <<< "${assets_release_data}")
+
+log "Assembling files directory"
+TEMP=$(mktemp -d) && trap "rm -rf ${TEMP}" EXIT || exit 255
+for ((i=$(jq length <<< "${assets_data}") - 1; i >= 0; --i)); do
+    read -r filename sourcedir targetdir \
+        < <(jq -r ".[$i] | \"\(.filename) \(.sourcedir) \(.targetdir)\"" <<< "${assets_data}")
+    sourcedir="${TEMP}/${sourcedir}"
+    case "${filename}" in
+        *.zip)
+            unzip "${cache_dir}/${filename}" -d "${TEMP}"
+            ;;
+        *)
+            sourcedir="${cache_dir}"
+            ;;
+    esac
+    while read -r from to; do
+        install -v -D -T "${sourcedir}/${from}" "${files_dir}/${targetdir}/${to}"
+    done < <(jq -r ".[$i].files[] | \"\(.from) \(.to)\"" <<< "${assets_data}")
+done
+
+
+log "Building ${STREAMLINK_INSTALLER} installer"
 pynsist "${build_dir}/streamlink.cfg"
 
 log "Success!"
