@@ -21,15 +21,14 @@ class KardelenTV(Plugin):
     def _get_streams(self):
         res = self.session.http.get(self.url)
         for iframe in itertags(res.text, "iframe"):
-            self.logger.debug("Found iframe: {0}".format(iframe))
+            log.debug("Found iframe: {0}".format(iframe))
             iframe_res = self.session.http.get(iframe.attributes['src'], headers={"Referer": self.url})
             for source in itertags(iframe_res.text, "source"):
                 if source.attributes.get("src"):
                     stream_url = source.attributes.get("src")
                     url_path = urlparse(stream_url).path
                     if url_path.endswith(".m3u8"):
-                        for s in HLSStream.parse_variant_playlist(self.session,
-                                                                stream_url).items():
+                        for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
                             yield s
                     else:
                         log.debug("Not used URL path: {0}".format(url_path))
