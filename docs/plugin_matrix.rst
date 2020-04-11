@@ -110,7 +110,7 @@ idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
 itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 invintus                player.invintus.com  Yes   Yes
-kardelentv              kardelentv.com.tr    Yes   No   Streams may be geo-restricted to Erzurum,Turkey.
+kardelentv              kardelentv.com.tr    Yes   No    Streams may be geo-restricted to Erzurum,Turkey.
 kingkong                kingkong.com.tw      Yes   --
 latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
 linelive                live.line.me         Yes   Yes

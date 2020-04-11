@@ -1,6 +1,6 @@
 import unittest
 
-from streamlink.plugins.galatasaraytv import KardelenTV
+from streamlink.plugins.kardelentv import KardelenTV
 
 
 class TestPluginKardelenTV(unittest.TestCase):
