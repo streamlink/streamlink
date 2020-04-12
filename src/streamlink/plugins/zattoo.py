@@ -50,7 +50,7 @@ class Zattoo(Plugin):
         )/
         (?:
             (?:
-                recordings\?recording=
+                recording(?:s\?recording=|/)
                 |
                 (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/))
             )(?P<recording_id>\d+)
@@ -155,7 +155,11 @@ class Zattoo(Plugin):
 
         # a new session is required for the app_token
         self.session.http.cookies = cookiejar_from_dict({})
-        res = self.session.http.get(self.base_url)
+        if self.base_url == 'https://zattoo.com':
+            app_token_url = 'https://zattoo.com/int/'
+        else:
+            app_token_url = self.base_url
+        res = self.session.http.get(app_token_url)
         match = self._app_token_re.search(res.text)
 
         app_token = match.group(1)
