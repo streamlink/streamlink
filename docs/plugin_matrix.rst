@@ -111,6 +111,7 @@ ine                     ine.com              ---   Yes
 itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 invintus                player.invintus.com  Yes   Yes
 kingkong                kingkong.com.tw      Yes   --
+kugou                   fanxing.kugou.com    Yes   --
 latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
 linelive                live.line.me         Yes   Yes
 live_russia_tv          live.russia.tv       Yes   --
