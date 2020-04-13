@@ -19,6 +19,7 @@ afreeca                 play.afreecatv.com   Yes   No
 albavision              - tvc.com.ec         Yes   No    Some streams are geo-restricted.
                         - rts.com.ec
                         - elnueve.com.ar
+                        - atv.pe
 aljazeeraen             aljazeera.com        Yes   Yes   English version of the site.
 animelab                animelab.com         --    Yes   Requires a login. Streams may be geo-restricted to Australia and New Zealand.
 app17                   17app.co             Yes   --
@@ -108,8 +109,7 @@ huya                    huya.com             Yes   No    Temporarily only HLS st
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
 itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
-kanal7                  - kanal7.com         Yes   No
-                        - tvt.tv.tr
+invintus                player.invintus.com  Yes   Yes
 kingkong                kingkong.com.tw      Yes   --
 kugou                   fanxing.kugou.com    Yes   -- 
 latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
@@ -126,10 +126,10 @@ metube                  metube.id            Yes   Yes
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mixer                   mixer.com            Yes   Yes
 mjunoon                 mjunoon.tv           Yes   Yes
-mlgtv                   mlg.tv               Yes   --
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
 nhkworld                nhk.or.jp/nhkworld   Yes   No
+nicolive                live.nicovideo.jp    Yes   Yes   Timeshift is supported. Some content may require login.
 nos                     nos.nl               Yes   Yes   Streams may be geo-restricted to Netherlands.
 nownews                 news.now.com         Yes   No
 nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-restricted to Norway.
@@ -158,6 +158,7 @@ pluzz                   - france.tv          Yes   Yes   Streams may be geo-rest
                         - francetvinfo.fr
 powerapp                powerapp.com.tr      Yes   No
 qq                      live.qq.com          Yes   No
+radiko                  radiko.jp            Yes   Yes   Streams are geo-restricted to Japan.
 radionet                - radio.net          Yes   --
                         - radio.at
                         - radio.de
@@ -171,17 +172,18 @@ radionet                - radio.net          Yes   --
 raiplay                 raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
 reshet                  reshet.tv            Yes   Yes   Streams may be geo-restricted to Israel.
 reuters                 reuters.tv           Yes   Yes
+rotana                  rotana.net           Yes   --    Streams are geo-restricted to Saudi Arabia.
 rtbf                    - rtbf.be/auvio      Yes   Yes   Streams may be geo-restricted to Belgium or Europe.
                         - rtbfradioplayer.be
 rtlxl                   rtlxl.nl             No    Yes   Streams may be geo-restricted to The Netherlands. Livestreams not supported.
 rtpplay                 rtp.pt/play          Yes   Yes   Streams may be geo-restricted to Portugal.
-rtve                    rtve.es              Yes   No
+rtve                    rtve.es              Yes   No    Streams may be geo-restricted to Spain.
 rtvs                    rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                     ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 sbscokr                 play.sbs.co.kr       Yes   No    Streams may be geo-restricted to South Korea.
 schoolism               schoolism.com        --    Yes   Requires a login and a subscription.
 senategov               senate.gov           --    Yes   Supports hearing streams.
-showroom                showroom-live.com    Yes   No    Only RTMP streams are available.
+showroom                showroom-live.com    Yes   No
 skai                    skai.gr              Yes   No    Only embedded youtube live streams are supported
 sportal                 sportal.bg           Yes   No
 sportschau              sportschau.de        Yes   No
@@ -247,8 +249,7 @@ tvrby                   tvr.by               Yes   No    Streams may be geo-rest
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --
 twitcasting             twitcasting.tv       Yes   No
-twitch                  twitch.tv            Yes   Yes   Possible to authenticate for access to
-                                                         subscription streams.
+twitch                  twitch.tv            Yes   Yes
 ustreamtv               - ustream.tv         Yes   Yes
                         - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
@@ -274,12 +275,12 @@ vk                      vk.com               Yes   Yes
 vlive                   vlive.tv             Yes   No    Embedded Naver VODs are not supported.
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
+wasd                    wasd.tv              Yes   Yes
 webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
 willax                  willax.tv            Yes   No
 wwenetwork              network.wwe.com      Yes   Yes   Requires an account to access any content.
-younow                  younow.com           Yes   --
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.
                         - youtu.be
 yupptv                  yupptv.com           Yes   Yes   Some streams require an account and subscription.
@@ -299,6 +300,7 @@ zattoo                  - zattoo.com         Yes   Yes
                         - www.vtxtv.ch
                         - www.1und1.tv
 zdf_mediathek           zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
+zeenews                 zeenews.india.com    Yes   No
 zengatv                 zengatv.com          Yes   No
 zhanqi                  zhanqi.tv            Yes   No
 ======================= ==================== ===== ===== ===========================

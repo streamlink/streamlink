@@ -40,11 +40,14 @@ class BTV(Plugin):
         validate.all(
             {"status": "ok", "config": validate.text},
             validate.get("config"),
-            validate.all(validate.transform(src_re.search),
-                         validate.any(
-                             None,
-                             validate.get(1), validate.url()
-                         ))
+            validate.all(
+                validate.transform(src_re.search),
+                validate.any(
+                    None,
+                    validate.get(1),
+                    validate.url()
+                )
+            )
         )
     )
 

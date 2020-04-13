@@ -57,7 +57,6 @@ class Cybergame(Plugin):
         for video in playlist["videos"]:
             name = "{0}p".format(video["height"])
             stream = RTMPStream(self.session, {
-                "rtmp": "{0}/{1}".format(playlist["base"], video["src"]),
                 "app": urlparse(playlist["base"]).path[1:],
                 "pageUrl": self.url,
                 "rtmp": playlist["base"],

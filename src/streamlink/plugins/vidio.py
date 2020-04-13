@@ -27,17 +27,23 @@ class Vidio(Plugin):
         return cls._url_re.match(url)
 
     def get_csrf_tokens(self):
-        return self.session.http.get(self.csrf_tokens_url,
-                        schema=self.token_schema)
+        return self.session.http.get(
+            self.csrf_tokens_url,
+            schema=self.token_schema
+        )
 
     def get_url_tokens(self, stream_id):
         self.logger.debug("Getting stream tokens")
         csrf_token = self.get_csrf_tokens()
-        return self.session.http.post(self.tokens_url.format(id=stream_id),
-                         files={"authenticity_token": (None, csrf_token)},
-                         headers={"User-Agent": useragents.CHROME,
-                                  "Referer": self.url},
-                         schema=self.token_schema)
+        return self.session.http.post(
+            self.tokens_url.format(id=stream_id),
+            files={"authenticity_token": (None, csrf_token)},
+            headers={
+                "User-Agent": useragents.CHROME,
+                "Referer": self.url
+            },
+            schema=self.token_schema
+        )
 
     def _get_streams(self):
         res = self.session.http.get(self.url)
@@ -53,7 +59,8 @@ class Vidio(Plugin):
         if hls_url:
             self.logger.debug("HLS URL: {0}".format(hls_url))
             self.logger.debug("Tokens: {0}".format(tokens))
-            return HLSStream.parse_variant_playlist(self.session, hls_url+"?"+tokens,
+            return HLSStream.parse_variant_playlist(self.session,
+                                                    hls_url + "?" + tokens,
                                                     headers={"User-Agent": useragents.CHROME,
                                                              "Referer": self.url})
 

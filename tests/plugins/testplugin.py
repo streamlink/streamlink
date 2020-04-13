@@ -1,10 +1,10 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from io import BytesIO
 
 from streamlink import NoStreamsError
 from streamlink.plugins import Plugin
 from streamlink.options import Options
-from streamlink.stream import *
+from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
 
 from streamlink.plugin.api.support_plugin import testplugin_support
 

@@ -4,15 +4,15 @@ from tests.mock import patch
 import streamlink.utils.l10n as l10n
 
 try:
-    import iso639
-    import iso3166
+    import iso639  # noqa: F401
+    import iso3166  # noqa: F401
 
     ISO639 = True
 except ImportError:
     ISO639 = False
 
 try:
-    import pycountry
+    import pycountry  # noqa: F401
 
     PYCOUNTRY = True
 except ImportError:
@@ -21,51 +21,51 @@ except ImportError:
 
 class LocalizationTestsMixin(object):
     def test_language_code_us(self):
-        l = l10n.Localization("en_US")
-        self.assertEqual("en_US", l.language_code)
+        locale = l10n.Localization("en_US")
+        self.assertEqual("en_US", locale.language_code)
 
     def test_language_code_kr(self):
-        l = l10n.Localization("ko_KR")
-        self.assertEqual("ko_KR", l.language_code)
+        locale = l10n.Localization("ko_KR")
+        self.assertEqual("ko_KR", locale.language_code)
 
     def test_bad_language_code(self):
         self.assertRaises(LookupError, l10n.Localization, "enUS")
 
     def test_equivalent(self):
-        l = l10n.Localization("en_CA")
-        self.assertTrue(l.equivalent(language="eng"))
-        self.assertTrue(l.equivalent(language="en"))
-        self.assertTrue(l.equivalent(language="en", country="CA"))
-        self.assertTrue(l.equivalent(language="en", country="CAN"))
-        self.assertTrue(l.equivalent(language="en", country="Canada"))
+        locale = l10n.Localization("en_CA")
+        self.assertTrue(locale.equivalent(language="eng"))
+        self.assertTrue(locale.equivalent(language="en"))
+        self.assertTrue(locale.equivalent(language="en", country="CA"))
+        self.assertTrue(locale.equivalent(language="en", country="CAN"))
+        self.assertTrue(locale.equivalent(language="en", country="Canada"))
 
     def test_equivalent_remap(self):
-        l = l10n.Localization("fr_FR")
-        self.assertTrue(l.equivalent(language="fra"))
-        self.assertTrue(l.equivalent(language="fre"))
+        locale = l10n.Localization("fr_FR")
+        self.assertTrue(locale.equivalent(language="fra"))
+        self.assertTrue(locale.equivalent(language="fre"))
 
     def test_not_equivalent(self):
-        l = l10n.Localization("es_ES")
-        self.assertFalse(l.equivalent(language="eng"))
-        self.assertFalse(l.equivalent(language="en"))
-        self.assertFalse(l.equivalent(language="en", country="US"))
-        self.assertFalse(l.equivalent(language="en", country="Canada"))
-        self.assertFalse(l.equivalent(language="en", country="ES"))
-        self.assertFalse(l.equivalent(language="en", country="Spain"))
+        locale = l10n.Localization("es_ES")
+        self.assertFalse(locale.equivalent(language="eng"))
+        self.assertFalse(locale.equivalent(language="en"))
+        self.assertFalse(locale.equivalent(language="en", country="US"))
+        self.assertFalse(locale.equivalent(language="en", country="Canada"))
+        self.assertFalse(locale.equivalent(language="en", country="ES"))
+        self.assertFalse(locale.equivalent(language="en", country="Spain"))
 
     @patch("locale.getdefaultlocale")
     def test_default(self, getdefaultlocale):
         getdefaultlocale.return_value = (None, None)
-        l = l10n.Localization()
-        self.assertEqual("en_US", l.language_code)
-        self.assertTrue(l.equivalent(language="en", country="US"))
+        locale = l10n.Localization()
+        self.assertEqual("en_US", locale.language_code)
+        self.assertTrue(locale.equivalent(language="en", country="US"))
 
     @patch("locale.getdefaultlocale")
     def test_default_invalid(self, getdefaultlocale):
         getdefaultlocale.return_value = ("en_150", None)
-        l = l10n.Localization()
-        self.assertEqual("en_US", l.language_code)
-        self.assertTrue(l.equivalent(language="en", country="US"))
+        locale = l10n.Localization()
+        self.assertEqual("en_US", locale.language_code)
+        self.assertTrue(locale.equivalent(language="en", country="US"))
 
     def test_get_country(self):
         self.assertEqual("US",

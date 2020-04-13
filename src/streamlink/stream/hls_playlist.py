@@ -1,10 +1,13 @@
 import re
+import logging
 
 from binascii import unhexlify
 from collections import namedtuple
 from itertools import starmap
 
 from streamlink.compat import urljoin, urlparse
+
+log = logging.getLogger(__name__)
 
 __all__ = ["load", "M3U8Parser"]
 
@@ -251,6 +254,7 @@ class M3U8Parser(object):
             return self.m3u8
         else:
             if not line.startswith("#EXTM3U"):
+                log.warning("Malformed HLS Playlist. Expected #EXTM3U, but got {0}".format(line[:250]))
                 raise ValueError("Missing #EXTM3U header")
 
         parse_line = self.parse_line

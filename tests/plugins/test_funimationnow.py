@@ -45,4 +45,3 @@ class TestPluginFunimationNow(unittest.TestCase):
                                        choices=["en", "ja", "english", "japanese"],
                                        default="english", help=ANY),
                                   call('--funimation-mux-subtitles', action="store_true", help=ANY)])
-

@@ -19,6 +19,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
 
@@ -216,6 +217,8 @@ class AbemaTV(Plugin):
         matchresult = self._url_re.match(self.url)
         if matchresult.group("onair"):
             onair = matchresult.group("onair")
+            if onair == "news-global":
+                self._CHANNEL = update_qsd(self._CHANNEL, {"division": "1"})
             res = self.session.http.get(self._CHANNEL)
             jsonres = self.session.http.json(res, schema=self._CHANNEL_SCHEMA)
             channels = jsonres["channels"]

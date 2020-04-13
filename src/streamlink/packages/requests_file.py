@@ -93,8 +93,7 @@ class FileAdapter(BaseAdapter):
                 # so that a directory separator can correctly be added to the real
                 # path, and remove any empty path parts between the drive and the path.
                 # Assume that a part ending with : or | (legacy) is a drive.
-                if path_parts and (path_parts[0].endswith('|') or
-                                   path_parts[0].endswith(':')):
+                if path_parts and (path_parts[0].endswith('|') or path_parts[0].endswith(':')):
                     path_drive = path_parts.pop(0)
                     if path_drive.endswith('|'):
                         path_drive = path_drive[:-1] + ':'

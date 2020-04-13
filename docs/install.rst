@@ -166,13 +166,15 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
 ==================================== ===========================================
 
 
-Source code
------------
+PyPI package and source code
+----------------------------
 
-If a package is not available on your platform (or if it's out of date), Streamlink can be installed from source.
+If a package is not available on your platform, or if it's out of date,
+Streamlink can be installed via `pip`_, the Python package manager.
 
-This can be done in a couple of different ways, for example by using `pip`_, the Python package manager,
-or by checking out the source code with `git`_ and installing it via setuptools. |br|
+In addition to using `pip`_, Streamlink can also be installed from source
+via `setuptools`_ after cloning the `git`_ repository.
+
 Using :command:`easy_install` is no longer recommended.
 
 .. note::
@@ -230,6 +232,7 @@ Version                              Installing
 ==================================== ===========================================
 
 .. _pip: https://pip.readthedocs.org/en/latest/installing.html
+.. _setuptools: https://setuptools.readthedocs.io/en/latest/
 .. _git: https://git-scm.com/
 .. _Latest release (pip): https://pypi.python.org/pypi/streamlink
 .. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
@@ -348,16 +351,17 @@ Release                              Notes
 ==================================== ====================================
 `Stable release`_                    Download the installer from the `GitHub releases page`_.
 
-`Development build`_                 For testing purposes only! Updated once per day. |br|
-                                     Download the installer from `Bintray`_. |br|
-                                     See the `list of recent changes`_ since the last stable release.
+`Development build`_                 For testing purposes only! Built each day at midnight (UTC). |br|
+                                     Download the zipped installer from the `build artifacts`_ section of one of
+                                     the recent scheduled builds. Build artifacts are stored by Github for 90 days. |br|
+                                     See the `commit log`_ for a list of changes since the last stable release.
 ==================================== ====================================
 
 .. _Stable release:
 .. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
 .. _Development build:
-.. _Bintray: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#files
-.. _list of recent changes: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#release
+.. _build artifacts: https://github.com/streamlink/streamlink/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
+.. _commit log: https://github.com/streamlink/streamlink/commits/master
 
 These installers contain:
 

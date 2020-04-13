@@ -12,8 +12,14 @@ class IDF1(Plugin):
     DACAST_TOKEN_URL = 'https://services.dacast.com/token/i/b/{}/{}/{}'
 
     _url_re = re.compile(r'https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)')
-    _video_id_re = re.compile(r"dacast\('(?P<broadcaster_id>\d+)_(?P<video_type>[a-z]+)_(?P<video_id>\d+)', 'replay_content', data\);")
-    _video_id_alt_re = re.compile(r'<script src="https://player.dacast.com/js/player.js" id="(?P<broadcaster_id>\d+)_(?P<video_type>[cf])_(?P<video_id>\d+)"')
+    _video_id_re = re.compile(r"""
+            dacast\('(?P<broadcaster_id>\d+)_(?P<video_type>[a-z]+)_(?P<video_id>\d+)',\s*'replay_content',\s*data\);
+        """, re.VERBOSE)
+    _video_id_alt_re = re.compile(r'''
+            <script\s+
+                src="https://player.dacast.com/js/player.js"\s+
+                id="(?P<broadcaster_id>\d+)_(?P<video_type>[cf])_(?P<video_id>\d+)"
+        ''', re.VERBOSE)
     _player_url = 'http://ssl.p.jwpcdn.com/player/v/7.12.6/jwplayer.flash.swf'
 
     _api_schema = validate.Schema(
@@ -29,7 +35,9 @@ class IDF1(Plugin):
             'hls': validate.url(),
             'hds': validate.url()
         },
-        validate.transform(lambda x: [update_scheme(IDF1.DACAST_API_URL, x['hls']), x['hds']] + [y['src'] for y in x.get('html5', [])])
+        validate.transform(
+            lambda x: [update_scheme(IDF1.DACAST_API_URL, x['hls']), x['hds']] + [y['src'] for y in x.get('html5', [])]
+        )
     )
 
     _token_schema = validate.Schema(
@@ -53,7 +61,10 @@ class IDF1(Plugin):
         video_type = match.group('video_type')
         video_id = match.group('video_id')
 
-        videos = self.session.http.get(self.DACAST_API_URL.format(broadcaster_id, video_type, video_id), schema=self._api_schema)
+        videos = self.session.http.get(
+            self.DACAST_API_URL.format(broadcaster_id, video_type, video_id),
+            schema=self._api_schema
+        )
         token = self.session.http.get(
             self.DACAST_TOKEN_URL.format(broadcaster_id, video_type, video_id),
             schema=self._token_schema,
@@ -73,5 +84,6 @@ class IDF1(Plugin):
             if '.m3u8' in video_url:
                 for s in HLSStream.parse_variant_playlist(self.session, video_url).items():
                     yield s
+
 
 __plugin__ = IDF1
