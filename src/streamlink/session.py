@@ -75,9 +75,9 @@ class Streamlink(object):
             "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-fout": None,
-            "ffmpeg-video-transcode": "copy",
-            "ffmpeg-audio-transcode": "copy",
-            "ffmpeg-start-at-zero": True,
+            "ffmpeg-video-transcode": None,
+            "ffmpeg-audio-transcode": None,
+            "ffmpeg-start-at-zero": None,
             "locale": None,
             "user-input-requester": None
         })
