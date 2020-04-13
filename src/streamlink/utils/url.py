@@ -65,7 +65,7 @@ def url_concat(base, *parts, **kwargs):
     return base
 
 
-def update_qsd(url, qsd=None, remove=None):
+def update_qsd(url, qsd=None, remove=None, keep_blank_values=True):
     """
     Update or remove keys from a query string in a URL
 
@@ -73,6 +73,7 @@ def update_qsd(url, qsd=None, remove=None):
     :param qsd: dict of keys to update, a None value leaves it unchanged
     :param remove: list of keys to remove, or "*" to remove all
                    note: updated keys are never removed, even if unchanged
+    :param keep_blank_values: if params with blank values should be kept or not
     :return: updated URL
     """
     qsd = qsd or {}
@@ -80,7 +81,7 @@ def update_qsd(url, qsd=None, remove=None):
 
     # parse current query string
     parsed = urlparse(url)
-    current_qsd = OrderedDict(parse_qsl(parsed.query))
+    current_qsd = OrderedDict(parse_qsl(parsed.query, keep_blank_values=True))
 
     # * removes all possible keys
     if remove == "*":
@@ -93,7 +94,11 @@ def update_qsd(url, qsd=None, remove=None):
 
     # and update the query string
     for key, value in qsd.items():
-        if value:
+        if value is not None:
             current_qsd[key] = value
+
+    for key, value in list(current_qsd.items()):  # use list() to create a view of the current_qsd
+        if not value and not keep_blank_values and key not in qsd:
+            del current_qsd[key]
 
     return parsed._replace(query=urlencode(current_qsd)).geturl()
