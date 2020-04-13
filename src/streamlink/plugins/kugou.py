@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
+import logging
 import re
+import time
 
-from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HTTPStream
+from streamlink.stream import HLSStream, HTTPStream
+
+log = logging.getLogger(__name__)
 
 
 class Kugou(Plugin):
-    """ Streamlink plugin for fanxing.kugou.com """
-
     _url_re = re.compile(r"""https?://fanxing.kugou.com/(?P<room_id>\d+)""")
-
+    _roomid_re = re.compile(r"roomId:\s*'(\d+)'")
     _room_stream_list_schema = validate.Schema(
         {
             "data": validate.any(None, {
@@ -21,40 +22,70 @@ class Kugou(Plugin):
         validate.get("httpflv_room_stream_list_schema")
     )
 
-    _api_url = 'https://fx2.service.kugou.com/video/pc/live/pull/v3/streamaddr?ch=fx&version=1.0&streamType=2&ua=fx-flash&kugouId=0&roomId={}'
+    _stream_hv_schema = validate.Schema(validate.any(
+        None,
+        [{
+            "httpshls": [validate.url()],
+            "httpsflv": [validate.url()],
+        }],
+    ))
+    _stream_data_schema = validate.Schema({
+        "msg": validate.text,
+        "code": int,
+        "data": {
+            "status": int,
+            "vertical": _stream_hv_schema,
+            "horizontal": _stream_hv_schema,
+            "roomId": int,
+        }
+    })
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls._url_re.match(url)
+        return cls._url_re.match(url) is not None
 
-    
     def _get_streams(self):
-        match = self._url_re.match(self.url)
-        if not match:
-            return
-        
-        room_id = match.group('room_id')
+        res = self.session.http.get(self.url)
+        m = self._roomid_re.search(res.text)
+        if m:
+            room_id = m.group(1)
+        else:
+            room_id = self._url_re.match(self.url).group("room_id")
 
-        res = self.session.http.get(self._api_url.format(room_id))
-
-        stream_data_json = self.session.http.json(res)
-
+        res = self.session.http.get(
+            "https://fx2.service.kugou.com/video/pc/live/pull/v3/streamaddr",
+            params={
+                "ch": "fx",
+                "version": "1.0",
+                # 1=rtmp, 2=httpflv, 3=hls, 5=httpsflv, 6=httpshls
+                "streamType": "1-2-5-6",
+                "ua": "fx-flash",
+                "kugouId": "0",
+                "roomId": room_id,
+                "_": int(time.time()),
+            }
+        )
+        stream_data_json = self.session.http.json(res, schema=self._stream_data_schema)
+        log.trace("{0!r}".format(stream_data_json))
         if stream_data_json["code"] != 0 or stream_data_json["data"]["status"] != 1:
-            return 
+            return
 
-        horizontal = stream_data_json["data"]["horizontal"]
-        vertical = stream_data_json["data"]["vertical"]
+        h = stream_data_json["data"]["horizontal"]
+        v = stream_data_json["data"]["vertical"]
+        stream_data = h[0] if h else v[0]
 
-        try:
-            if len(horizontal) == 0:
-                flv_url = vertical[0]["httpflv"][0]
-            else:
-                flv_url = horizontal[0]["httpflv"][0]
-        except Exception as e:
-            raise NoStreamsError(self.url)
+        if stream_data.get("httpshls"):
+            for hls_url in stream_data["httpshls"]:
+                s = HLSStream.parse_variant_playlist(self.session, hls_url)
+                if not s:
+                    yield "live", HLSStream(self.session, hls_url)
+                else:
+                    for _s in s.items():
+                        yield _s
 
-        self.logger.debug("URL = {}".format(flv_url))
-        return {"live": HTTPStream(self.session, flv_url)}
+        if stream_data.get("httpsflv"):
+            for http_url in stream_data["httpsflv"]:
+                yield "live", HTTPStream(self.session, http_url)
 
 
 __plugin__ = Kugou
