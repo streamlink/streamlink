@@ -232,21 +232,24 @@ class HLSStreamWorker(SegmentedStreamWorker):
         sequences = [Sequence(media_sequence + i, s)
                      for i, s in enumerate(playlist.segments)]
 
-        if sequences:
-            self.process_sequences(playlist, sequences)
+        self.process_sequences(playlist, sequences)
 
     def _set_playlist_reload_time(self, playlist, sequences):
         self.playlist_reload_time = (playlist.target_duration
-                                     or sequences[-1].segment.duration)
+                                     or len(sequences) > 0 and sequences[-1].segment.duration)
 
     def process_sequences(self, playlist, sequences):
+        self._set_playlist_reload_time(playlist, sequences)
+
+        if not sequences:
+            return
+
         first_sequence, last_sequence = sequences[0], sequences[-1]
 
         if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
             log.debug("Segments in this playlist are encrypted")
 
         self.playlist_changed = ([s.num for s in self.playlist_sequences] != [s.num for s in sequences])
-        self._set_playlist_reload_time(playlist, sequences)
         self.playlist_sequences = sequences
 
         if not self.playlist_changed:
