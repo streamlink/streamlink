@@ -119,25 +119,16 @@ _video_schema = validate.Schema(
     }
 )
 
-
-Segment = namedtuple("Segment", "uri duration title key discontinuity scte35 byterange date map")
+Segment = namedtuple("Segment", "uri duration title key discontinuity ad byterange date map")
 
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
-def parse_condition(attr):
-    def wrapper(func):
-        def method(self, *args, **kwargs):
-            if hasattr(self.stream, attr) and getattr(self.stream, attr, False):
-                func(self, *args, **kwargs)
-        return method
-    return wrapper
-
-
 class TwitchM3U8Parser(M3U8Parser):
-    def __init__(self, base_uri=None, stream=None, **kwargs):
-        M3U8Parser.__init__(self, base_uri, **kwargs)
-        self.stream = stream
+    def __init__(self, base_uri=None, disable_ads=False, low_latency=False, **kwargs):
+        super(TwitchM3U8Parser, self).__init__(base_uri, **kwargs)
+        self.disable_ads = disable_ads
+        self.low_latency = low_latency
         self.has_prefetch_segments = False
 
     def parse(self, *args):
@@ -146,21 +137,16 @@ class TwitchM3U8Parser(M3U8Parser):
 
         return m3u8
 
-    @parse_condition("disable_ads")
-    def parse_tag_ext_x_scte35_out(self, value):
-        self.state["scte35"] = True
+    def parse_extinf(self, value):
+        duration, title = super(TwitchM3U8Parser, self).parse_extinf(value)
+        if title and str(title).startswith("Amazon") and self.disable_ads:
+            self.state["ad"] = True
 
-    # unsure if this gets used by Twitch
-    @parse_condition("disable_ads")
-    def parse_tag_ext_x_scte35_out_cont(self, value):
-        self.state["scte35"] = True
+        return duration, title
 
-    @parse_condition("disable_ads")
-    def parse_tag_ext_x_scte35_in(self, value):
-        self.state["scte35"] = False
-
-    @parse_condition("low_latency")
     def parse_tag_ext_x_twitch_prefetch(self, value):
+        if not self.low_latency:
+            return
         self.has_prefetch_segments = True
         segments = self.m3u8.segments
         if segments:
@@ -173,7 +159,7 @@ class TwitchM3U8Parser(M3U8Parser):
         map_ = self.state.get("map")
         key = self.state.get("key")
         discontinuity = self.state.pop("discontinuity", False)
-        scte35 = self.state.pop("scte35", None)
+        ad = self.state.pop("ad", False)
 
         return Segment(
             uri,
@@ -181,7 +167,7 @@ class TwitchM3U8Parser(M3U8Parser):
             extinf[1],
             key,
             discontinuity,
-            scte35,
+            ad,
             byterange,
             date,
             map_
@@ -189,17 +175,36 @@ class TwitchM3U8Parser(M3U8Parser):
 
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
+    def __init__(self, *args, **kwargs):
+        self.playlist_reloads = 0
+        super(TwitchHLSStreamWorker, self).__init__(*args, **kwargs)
+
     def _reload_playlist(self, text, url):
-        return load_hls_playlist(text, url, parser=TwitchM3U8Parser, stream=self.stream)
+        self.playlist_reloads += 1
+        playlist = load_hls_playlist(
+            text,
+            url,
+            parser=TwitchM3U8Parser,
+            disable_ads=self.stream.disable_ads,
+            low_latency=self.stream.low_latency
+        )
+        if (
+            self.stream.disable_ads
+            and self.playlist_reloads == 1
+            and not next((s for s in playlist.segments if not s.ad), False)
+        ):
+            log.info("Waiting for pre-roll ads to finish, be patient")
+
+        return playlist
 
     def _set_playlist_reload_time(self, playlist, sequences):
-        if not self.stream.low_latency:
-            super(TwitchHLSStreamWorker, self)._set_playlist_reload_time(playlist, sequences)
-        else:
+        if self.stream.low_latency and len(sequences) > 0:
             self.playlist_reload_time = sequences[-1].segment.duration
+        else:
+            super(TwitchHLSStreamWorker, self)._set_playlist_reload_time(playlist, sequences)
 
     def process_sequences(self, playlist, sequences):
-        if self.playlist_sequence < 0 and self.stream.low_latency and not playlist.has_prefetch_segments:
+        if self.stream.low_latency and self.playlist_reloads == 1 and not playlist.has_prefetch_segments:
             log.info("This is not a low latency stream")
 
         return super(TwitchHLSStreamWorker, self).process_sequences(playlist, sequences)
@@ -207,38 +212,20 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
 
 class TwitchHLSStreamWriter(HLSStreamWriter):
     def write(self, sequence, *args, **kwargs):
-        if self.stream.disable_ads:
-            if sequence.segment.scte35 is not None:
-                self.reader.ads = sequence.segment.scte35
-                if self.reader.ads:
-                    log.info("Will skip ads beginning with segment {0}".format(sequence.num))
-                else:
-                    log.info("Will stop skipping ads beginning with segment {0}".format(sequence.num))
-            if self.reader.ads:
-                return
-        return HLSStreamWriter.write(self, sequence, *args, **kwargs)
+        if not (self.stream.disable_ads and sequence.segment.ad):
+            return super(TwitchHLSStreamWriter, self).write(sequence, *args, **kwargs)
 
 
 class TwitchHLSStreamReader(HLSStreamReader):
     __worker__ = TwitchHLSStreamWorker
     __writer__ = TwitchHLSStreamWriter
-    ads = None
 
 
 class TwitchHLSStream(HLSStream):
     def __init__(self, *args, **kwargs):
-        HLSStream.__init__(self, *args, **kwargs)
-
-        disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
-        low_latency = self.session.get_plugin_option("twitch", "low-latency")
-
-        if low_latency and disable_ads:
-            log.info("Low latency streaming with ad filtering is currently not supported")
-            self.session.set_plugin_option("twitch", "low-latency", False)
-            low_latency = False
-
-        self.disable_ads = disable_ads
-        self.low_latency = low_latency
+        super(TwitchHLSStream, self).__init__(*args, **kwargs)
+        self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
+        self.low_latency = self.session.get_plugin_option("twitch", "low-latency")
 
     def open(self):
         if self.disable_ads:
