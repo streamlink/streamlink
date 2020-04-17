@@ -85,7 +85,6 @@ earthcam                earthcam.com         Yes   Yes   Only works for the cams
 egame                   egame.qq.com         Yes   No
 ellobo                  ellobo106.com        Yes   -
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
-eurocom                 eurocom.bg           Yes   No
 euronews                euronews.com         Yes   No
 europaplus              europaplus.ru        Yes   --
 facebook                facebook.com         Yes   Yes
