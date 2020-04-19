@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 import codecs
+import sys
 from os import environ, path
 from sys import argv, path as sys_path
 
 from setuptools import setup, find_packages
 
 import versioneer
+
+if sys.version_info < (3, 5):
+    sys.exit('streamlink is only supported on Python 3.5 and later')
 
 deps = [
     # Require backport of concurrent.futures on Python 2
