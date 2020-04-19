@@ -58,7 +58,7 @@ class Streann(Plugin):
 
     def get_token(self, **config):
         self.logger.debug("get_token ...")
-        pdata = dict(arg1=base64.b64encode("www.ellobo106.com".encode("utf8")),
+        pdata = dict(arg1=base64.b64encode(b"www.ellobo106.com"),
                      arg2=base64.b64encode(self.time.encode("utf8")))
 
         headers = {

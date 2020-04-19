@@ -50,7 +50,7 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_list_tuple_set_frozenset(self):
         assert validate([int], [1, 2])
-        assert validate(set([int]), set([1, 2])) == set([1, 2])
+        assert validate({int}, {1, 2}) == {1, 2}
         assert validate(tuple([int]), tuple([1, 2])) == tuple([1, 2])
 
     def test_dict(self):

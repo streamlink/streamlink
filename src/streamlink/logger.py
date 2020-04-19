@@ -10,7 +10,7 @@ from streamlink.utils.encoding import maybe_encode
 TRACE = 5
 _levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),
                      (TRACE, "trace"), (NOTSET, "none")])
-_nameToLevel = dict([(name, level) for level, name in _levelToName.items()])
+_nameToLevel = {name: level for level, name in _levelToName.items()}
 
 for level, name in _levelToName.items():
     logging.addLevelName(level, name)

@@ -131,7 +131,7 @@ class Arguments(object):
 
         :return: list of dependant arguments
         """
-        results = set([name])
+        results = {name}
         argument = self.get(name)
         for reqname in argument.requires:
             required = self.get(reqname)

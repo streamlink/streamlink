@@ -1,4 +1,3 @@
-
 import re
 
 from streamlink.plugin import Plugin

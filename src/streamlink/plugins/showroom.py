@@ -59,7 +59,7 @@ _quality_weights = {
     "low": 160
 }
 # pages that definitely aren't rooms
-_info_pages = set((
+_info_pages = {
     "onlive",
     "campaign",
     "timetable",
@@ -76,7 +76,7 @@ _info_pages = set((
     "s",
     "organizer_registration",
     "lottery"
-))
+}
 
 
 class ShowroomHLSStreamWorker(HLSStreamWorker):

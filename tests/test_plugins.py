@@ -17,7 +17,7 @@ class PluginTestMeta(type):
         for loader, pname, ispkg in pkgutil.iter_modules([plugin_path]):
             module = load_module(pname, plugin_path)
             if hasattr(module, "__plugin__"):
-                plugins.append((pname))
+                plugins.append(pname)
 
         session = Streamlink()
 

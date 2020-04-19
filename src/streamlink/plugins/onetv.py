@@ -48,7 +48,7 @@ class OneTV(Plugin):
         res = self.session.http.get(update_scheme(self.url, self._session_api))
         data = self.session.http.json(res)
         # the values are already quoted, we don't want them quoted
-        return dict((k, unquote(v)) for k, v in data.items())
+        return {k: unquote(v) for k, v in data.items()}
 
     @property
     def is_live(self):

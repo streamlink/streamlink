@@ -90,7 +90,7 @@ class TVPlayer(Plugin):
         return res_schema
 
     def _get_stream_attrs(self, page):
-        stream_attrs = dict((k.replace("-", "_"), v.strip('"')) for k, v in self.stream_attrs_re.findall(page.text))
+        stream_attrs = {k.replace("-", "_"): v.strip('"') for k, v in self.stream_attrs_re.findall(page.text)}
 
         log.debug("Got stream attributes: {0}", str(stream_attrs))
         valid = True
