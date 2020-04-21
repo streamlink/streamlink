@@ -1,5 +1,171 @@
 # Changelog
 
+## streamlink 1.4.0 (2020-04-22)
+
+This will be the last release with support for Python 2, as it has finally reached its EOL at the beginning of this year.
+
+Streamlink 1.4.0 comes with lots of plugin fixes/improvements, as well as some new features and plugins, and also a few plugin removals.
+
+Notable changes:
+
+- New: low latency streaming on Twitch via `--twitch-low-latency` ([#2513](https://github.com/streamlink/streamlink/pull/2513))
+- New: output HLS segment data immediately via `--hls-segment-stream-data` ([#2513](https://github.com/streamlink/streamlink/pull/2513))
+- New: always show download progress via `--force-progress` ([#2438](https://github.com/streamlink/streamlink/pull/2438))
+- New: URL template support for `--hls-segment-key-uri` ([#2821](https://github.com/streamlink/streamlink/pull/2821))
+- Removed: Twitch auth logic, `--twitch-oauth-token`, `--twitch-oauth-authenticate`, `--twitch-cookie` ([#2846](https://github.com/streamlink/streamlink/pull/2846))
+- Fixed: Youtube plugin ([#2858](https://github.com/streamlink/streamlink/pull/2858))
+- Fixed: Crunchyroll plugin ([#2788](https://github.com/streamlink/streamlink/pull/2788))
+- Fixed: Pixiv plugin ([#2840](https://github.com/streamlink/streamlink/pull/2840))
+- Fixed: TVplayer plugin ([#2802](https://github.com/streamlink/streamlink/pull/2802))
+- Fixed: Zattoo plugin ([#2887](https://github.com/streamlink/streamlink/pull/2887))
+- Changed: set Firefox User-Agent HTTP header by default ([#2795](https://github.com/streamlink/streamlink/pull/2795))
+- Changed: upgraded bundled FFmpeg to `4.2.2` in Windows installer ([#2916](https://github.com/streamlink/streamlink/pull/2916))
+
+
+```text
+Adam Baxter <github@voltagex.org> (1):
+      stream.hls_playlist: Add extra logging for invalid #EXTM3U line (#2479)
+
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      docs: fix duplicate object description of streamlink in api docs
+
+Colas Broux <colas.broux@free.fr> (2):
+      plugins.youtube: Fix for new Youtube VOD API (#2858)
+      Updating README Applying changes from 1402fb0 to the README Closes #2880
+
+Finn <finn@finn.io> (1):
+      plugins.invintus: Add support for Invintus Media live streams and VOD (#2845)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (3):
+      Fix tvplayer plugin and tests (#2802)
+      plugins.piczel: Added HLS, Removed RTMP (#2815)
+      plugins.reuters: fix (#2811)
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.tf1: use new API to retrieve DASH streams (#2759)
+
+Riolu <16816842+iucario@users.noreply.github.com> (1):
+      plugins.radiko: Add support for radiko.jp (#2826)
+
+Uinden <25625733+Uinden@users.noreply.github.com> (1):
+      plugins.wasd: new plugin for WASD.TV (#2641)
+
+YYY <yyy3752@gmail.com> (1):
+      plugins.nicolive: new plugin for Niconico Live (#2651)
+
+Yavuz Kömeçoğlu <komecoglu.yavuz@gmail.com> (1):
+      plugins.galatasaraytv: Add support for GALATASARAY SK TV (#2760)
+
+Zhenyu Hu <andyhuzhill@users.noreply.github.com> (1):
+      plugins.kugou:  Add Kugou Fanxing live plugin (#2794)
+
+back-to <backto@protonmail.ch> (17):
+      plugin.api: use Firefox as default User-Agent instead of python-requests
+      plugins.filmon: retry for 50X errors
+      cli: New command --force-progress (#2438)
+      travis-ci: don't run doctr on pull requests
+      plugins.bilibili: ignore unavailable URLs (#2818)
+      plugins.mlgtv: remove plugin they use DRM for Livestreams (#2829)
+      plugins.twitch: Fixed clips (#2843)
+      plugins.showroom: Fix HLS missing segments
+      plugins.kanal7: Removed Plugin they use static URLs
+      plugins.rotana: new plugin for rotana.net (#2838)
+      plugins.pixiv: removed not working login process via username (#2840)
+      plugins.abema: support for Abema overseas version
+      plugins.younow: remove plugin
+      plugin.api.useragents: update User-Agent
+      plugins.zattoo: fix app token and new recording URL
+      plugins.zeenews: new plugin for https://zeenews.india.com/live-tv
+      AUTHORS: removed unused script and removed outdated list (#2889)
+
+bastimeyer <mail@bastimeyer.de> (58):
+      plugins.twitch: fix rerun validation schema
+      flake8: E303
+      flake8: E111
+      flake8: E117
+      flake8: E121
+      flake8: E122
+      flake8: E126, E127, E128
+      flake8: E203, E226, E231, E241, E261
+      flake8: E265
+      flake8: E302, E305
+      flake8: E402
+      flake8: E712
+      flake8: W291, W292, W293, W391
+      flake8: F401, F403
+      flake8: F405
+      flake8: F811
+      flake8: F841
+      flake8: W504
+      flake8: E741
+      flake8: E501
+      flake8: F601
+      flake8: E722
+      flake8: F821
+      flake8: F812
+      flake8: add flake8 to TravisCI
+      cleanup: remove unnecessary unittest.main() calls
+      cleanup: remove unnecessary python shebangs
+      PEP263: use consistent utf-8 coding header comment
+      tools: add .editorconfig
+      stream.hls: add hls-segment-stream-data parameter
+      plugins.twitch: low latency
+      plugins.twitch: disable LL when filtering ads
+      plugins.twitch: print info msg if stream is not LL
+      plugins.bloomberg: fix vods and live streams
+      plugins.twitch: remove cookie auth
+      plugins.twitch: remove oauth token login
+      docs: fix multiple options on the same line
+      ci.github: implement main workflow
+      ci.github: add release config and rewrite scripts
+      ci.github: add scheduled nightly builds
+      ci.github: deploy documentation
+      ci: show extra test summary info
+      ci: remove old CI configs
+      ci.github: fix codecov uploads
+      cleanup: change build badge and link in README.md
+      cleanup: remove TravisCI from deploy scripts
+      ci: remove macOS test runners
+      codecov: wait before notifying
+      docs: rewrite windows nightly builds section
+      docs: rewrite pip/source install section
+      docs: fix and rewrite index page
+      docs: reformat donation page
+      ci.github: fix continue on error
+      installer: rewrite / clean up makeinstaller script
+      installer: download ffmpeg+rtmpdump assets
+      installer: delete locally included binary files
+      plugins.twitch: rewrite disable ads logic
+      Release 1.4.0
+
+beardypig <beardypig@protonmail.com> (10):
+      update release signing key
+      update docs deployment key
+      plugins.tv360: updated URL and HLS stream extraction method
+      util: fix some encoding issue when setting unicode/utf8 titles in py2
+      cli.output: make sure the player arguments are properly encoded
+      utils: update_qsd to leave blank values unchanged (#2869)
+      plugins.eurocom: remove eurocom plugin
+      plugins.tv1channel: remove tv1channel plugin
+      actions: no need to use a secret for the PyPI username
+      add python 2.7 deprecation warning
+
+danieljpiazza <daniel.joseph.piazza@gmail.com> (1):
+      Update Crunchyroll access token. Fixes streamlink/streamlink issue #2785.
+
+malvinas2 <malvinas2@gmx.de> (3):
+      plugins.latina: new plugin for https://www.latina.pe/tvenvivo (#2793)
+      plugins.albavision: Added support for ATV and ATVMas (#2801)
+      plugins.rtve: Added support for clan tve, children's channel of RTVE (#2875)
+
+steven7851 <steven7851@msn.com> (1):
+      plugins.app17: fix for new layout (#2833)
+
+tarkah <cforsstrom18@gmail.com> (1):
+      stream.hls: add templating for hls-segment-key-uri option (#2821)
+```
+
+
 ## streamlink 1.3.1 (2020-01-27)
 
 A small patch release that addresses the removal of [MPV's legacy option syntax](https://mpv.io/manual/master/#legacy-option-syntax), also with fixes of several plugins, the addition of the `--twitch-disable-reruns` parameter and dropped support for Python 3.4.
