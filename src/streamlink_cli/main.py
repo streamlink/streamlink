@@ -774,6 +774,9 @@ def setup_options():
     if args.hls_playlist_reload_attempts:
         streamlink.set_option("hls-playlist-reload-attempts", args.hls_playlist_reload_attempts)
 
+    if args.hls_playlist_reload_time:
+        streamlink.set_option("hls-playlist-reload-time", args.hls_playlist_reload_time)
+
     if args.hls_segment_threads:
         streamlink.set_option("hls-segment-threads", args.hls_segment_threads)
 

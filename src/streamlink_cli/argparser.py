@@ -769,6 +769,20 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-playlist-reload-time",
+        metavar="TIME",
+        help="""
+        Set a custom HLS playlist reload time value, either in seconds
+        or by using one of the following keywords:
+
+            segment: The duration of the last segment in the current playlist
+            live-edge: The sum of segment durations of the live edge value minus one
+            default: The playlist's target duration metadata
+
+        Default is default.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-threads",
         type=num(int, max=10),
         metavar="THREADS",

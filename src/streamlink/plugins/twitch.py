@@ -197,11 +197,11 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
 
         return playlist
 
-    def _set_playlist_reload_time(self, playlist, sequences):
-        if self.stream.low_latency and len(sequences) > 0:
-            self.playlist_reload_time = sequences[-1].segment.duration
-        else:
-            super(TwitchHLSStreamWorker, self)._set_playlist_reload_time(playlist, sequences)
+    def _playlist_reload_time(self, playlist, sequences):
+        if self.stream.low_latency and sequences:
+            return sequences[-1].segment.duration
+
+        return super(TwitchHLSStreamWorker, self)._playlist_reload_time(playlist, sequences)
 
     def process_sequences(self, playlist, sequences):
         if self.stream.low_latency and self.playlist_reloads == 1 and not playlist.has_prefetch_segments:

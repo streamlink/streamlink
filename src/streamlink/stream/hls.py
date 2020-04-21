@@ -6,7 +6,7 @@ from collections import defaultdict, namedtuple
 from Crypto.Cipher import AES
 from requests.exceptions import ChunkedEncodingError
 
-from streamlink.compat import urlparse
+from streamlink.compat import urlparse, str
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
@@ -177,12 +177,18 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_sequence = -1
         self.playlist_sequences = []
         self.playlist_reload_time = 15
-        self.live_edge = self.session.options.get("hls-live-edge")
+        self.playlist_reload_time_override = self.session.options.get("hls-playlist-reload-time")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
+        self.live_edge = self.session.options.get("hls-live-edge")
         self.duration_offset_start = int(self.stream.start_offset + (self.session.options.get("hls-start-offset") or 0))
         self.duration_limit = self.stream.duration or (
             int(self.session.options.get("hls-duration")) if self.session.options.get("hls-duration") else None)
         self.hls_live_restart = self.stream.force_restart or self.session.options.get("hls-live-restart")
+
+        if str(self.playlist_reload_time_override).isnumeric() and float(self.playlist_reload_time_override) >= 2:
+            self.playlist_reload_time_override = float(self.playlist_reload_time_override)
+        elif self.playlist_reload_time_override not in ["segment", "live-edge"]:
+            self.playlist_reload_time_override = 0
 
         self.reload_playlist()
 
@@ -232,18 +238,26 @@ class HLSStreamWorker(SegmentedStreamWorker):
         sequences = [Sequence(media_sequence + i, s)
                      for i, s in enumerate(playlist.segments)]
 
-        self.process_sequences(playlist, sequences)
+        self.playlist_reload_time = self._playlist_reload_time(playlist, sequences)
 
-    def _set_playlist_reload_time(self, playlist, sequences):
-        self.playlist_reload_time = (playlist.target_duration
-                                     or len(sequences) > 0 and sequences[-1].segment.duration)
+        if sequences:
+            self.process_sequences(playlist, sequences)
+
+    def _playlist_reload_time(self, playlist, sequences):
+        if self.playlist_reload_time_override == "segment" and sequences:
+            return sequences[-1].segment.duration
+        if self.playlist_reload_time_override == "live-edge" and sequences:
+            return sum([s.segment.duration for s in sequences[-max(1, self.live_edge - 1):]])
+        if self.playlist_reload_time_override > 0:
+            return self.playlist_reload_time_override
+        if playlist.target_duration:
+            return playlist.target_duration
+        if sequences:
+            return sum([s.segment.duration for s in sequences[-max(1, self.live_edge - 1):]])
+
+        return self.playlist_reload_time
 
     def process_sequences(self, playlist, sequences):
-        self._set_playlist_reload_time(playlist, sequences)
-
-        if not sequences:
-            return
-
         first_sequence, last_sequence = sequences[0], sequences[-1]
 
         if first_sequence.segment.key and first_sequence.segment.key.method != "NONE":
