@@ -80,8 +80,8 @@ _info_pages = set((
 
 
 class ShowroomHLSStreamWorker(HLSStreamWorker):
-    def _set_playlist_reload_time(self, playlist, sequences):
-        self.playlist_reload_time = 1.5
+    def _playlist_reload_time(self, playlist, sequences):
+        return 1.5
 
 
 class ShowroomHLSStreamReader(HLSStreamReader):
