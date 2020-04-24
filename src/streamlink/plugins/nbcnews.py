@@ -1,9 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 
 class NBCNews(Plugin):
@@ -24,9 +27,10 @@ class NBCNews(Plugin):
     def _get_streams(self):
         html = self.session.http.get(self.url).text
         match = self.js_re.search(html)
-        js = self.session.http.get(match[0]).text
+        js = self.session.http.get(match.group(0)).text
         match = self.api_re.search(js)
-        api_url = self.api_url.format(match[1])
+        log.debug("API ID: {0}".format(match.group(1)))
+        api_url = self.api_url.format(match.group(1))
         stream_url = self.session.http.get(api_url, schema=self.api_schema)
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
