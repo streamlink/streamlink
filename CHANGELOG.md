@@ -1,5 +1,16 @@
 # Changelog
 
+## streamlink 1.4.1 (2020-04-24)
+
+No code changes. [See the full `1.4.0` changelog here.](https://github.com/streamlink/streamlink/releases/tag/1.4.0)
+
+
+```text
+beardypig <beardypig@protonmail.com> (1):
+      build: include correct signing key: 0xE3DB9E282E390FA0
+```
+
+
 ## streamlink 1.4.0 (2020-04-22)
 
 This will be the last release with support for Python 2, as it has finally reached its EOL at the beginning of this year.
