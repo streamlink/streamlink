@@ -102,7 +102,6 @@ huomao                  - huomao.com         Yes   Yes
 huya                    huya.com             Yes   No    Temporarily only HLS streams available.
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
-itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 invintus                player.invintus.com  Yes   Yes
 kingkong                kingkong.com.tw      Yes   --
 kugou                   fanxing.kugou.com    Yes   --
