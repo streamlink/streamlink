@@ -36,8 +36,6 @@ class Viasat(Plugin):
         (?:
             juicyplay\.dk
             |
-            play\.nova\.bg
-            |
             (?:tvplay\.)?
                 skaties\.lv
             |

@@ -256,7 +256,6 @@ vaughnlive              - vaughnlive.tv      Yes   --
                         - instagib.tv
                         - vapers.tv
 viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-restricted.
-                        - play.nova.bg
                         - skaties.lv
                         - tv3.dk
                         - tv3.ee
