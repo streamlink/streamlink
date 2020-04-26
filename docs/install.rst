@@ -339,11 +339,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 Windows binaries
 ----------------
 
-.. important::
-
-    Windows XP is not supported. |br|
-    Windows Vista requires at least SP2 to be installed.
-
 .. rst-class:: table-custom-layout
 
 ==================================== ====================================
