@@ -168,8 +168,13 @@ class Showroom(Plugin):
             if stream_info["type"] == "rtmp":
                 yield self._get_rtmp_stream(stream_info)
             elif stream_info["type"] == "hls":
-                for s in ShowroomHLSStream.parse_variant_playlist(self.session, stream_info["url"]).items():
-                    yield s
+                streams = ShowroomHLSStream.parse_variant_playlist(self.session, stream_info["url"])
+                if not streams:
+                    quality = _rtmp_quality_lookup.get(stream_info["label"], "other")
+                    yield quality, ShowroomHLSStream(self.session, stream_info["url"])
+                else:
+                    for s in streams.items():
+                        yield s
 
 
 __plugin__ = Showroom
