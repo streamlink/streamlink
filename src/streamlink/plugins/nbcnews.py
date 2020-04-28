@@ -16,9 +16,10 @@ class NBCNews(Plugin):
     api_url = 'https://stream.nbcnews.com/data/live_sources_{0}.json'
     api_schema = validate.Schema(validate.transform(parse_json), {
         "videoSources": [{
-            "sourceUrl": validate.url()
+            "sourceUrl": validate.url(),
+            "type": validate.text
         }]
-    }, validate.get("videoSources"), validate.get(0), validate.get("sourceUrl"))
+    }, validate.get("videoSources"), validate.get(0))
 
     @classmethod
     def can_handle_url(cls, url):
@@ -31,7 +32,11 @@ class NBCNews(Plugin):
         match = self.api_re.search(js)
         log.debug("API ID: {0}".format(match.group(1)))
         api_url = self.api_url.format(match.group(1))
-        stream_url = self.session.http.get(api_url, schema=self.api_schema)
+        stream = self.session.http.get(api_url, schema=self.api_schema)
+        if stream['type'].lower() != 'live':
+            log.error("Stream type is {0}, but we need the live only".format(stream['type']))
+            return
+        stream_url = stream['sourceUrl']
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
