@@ -43,6 +43,8 @@ jobs:
       - name: Upload coverage data
         continue-on-error: ${{ matrix.continue || false }}
         uses: codecov/codecov-action@v1
+        with:
+          name: os:${{ matrix.os }} py:${{ matrix.python }}
 
   documentation:
     name: Test docs
@@ -52,7 +54,7 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
           python-version: 3.8
@@ -71,7 +73,7 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
           python-version: 3.8
@@ -106,7 +108,7 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
           python-version: 3.8
@@ -132,7 +134,7 @@ jobs:
         with:
           fetch-depth: 300
       - name: Fetch tags
-        run: git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
           python-version: 3.8
