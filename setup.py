@@ -16,6 +16,13 @@ deps = [
     "websocket-client>=0.58.0",
     # Support for SOCKS proxies
     "PySocks!=1.5.7,>=1.5.6",
+    # win-inet-pton is missing a dependency in PySocks, this has been fixed but not released yet
+    # Required due to missing socket.inet_ntop & socket.inet_pton method in Windows Python 2.x
+    'win-inet-pton;python_version<"3.0" and platform_system=="Windows"',
+    # shutil.get_terminal_size and which were added in Python 3.3
+    'backports.shutil_which;python_version<"3.3"',
+    'backports.shutil_get_terminal_size;python_version<"3.3"',
+    "js2py"
 ]
 
 # for encrypted streams
