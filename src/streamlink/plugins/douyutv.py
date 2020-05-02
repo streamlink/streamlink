@@ -1,25 +1,26 @@
+import hashlib
 import re
 import time
-import hashlib
 
-from requests.adapters import HTTPAdapter
+import js2py
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, useragents
-from streamlink.stream import HTTPStream, HLSStream, RTMPStream
+from streamlink.plugin.api import validate
+from streamlink.stream import HLSStream, HTTPStream
 
-API_URL = "https://capi.douyucdn.cn/api/v1/{0}&auth={1}"
-VAPI_URL = "https://vmobile.douyu.com/video/getInfo?vid={0}"
-API_SECRET = "zNzMV1y4EMxOHS6I5WKm"
-SHOW_STATUS_ONLINE = 1
-SHOW_STATUS_OFFLINE = 2
-STREAM_WEIGHTS = {
-    "low": 540,
-    "medium": 720,
-    "source": 1080
+API_URL = "https://www.douyu.com/lapi/live/getH5Play/{room_id}"
+VAPI_URL = "https://v.douyu.com/api/stream/getStreamUrl"
+
+ROUTES = {
+    "ws-h5": "main",
+    "tct-h5": "backup5",
+    "ali-h5": "backup6",
+    "other": "other"
 }
+RATES = {0: "BD10M", 4: "BD4M", 1: "SD", 2: "HD", 3: "TD", 5: "BD"}
 
-_url_re = re.compile(r"""
+_url_re = re.compile(
+    r"""
     http(s)?://
     (?:
         (?P<subdomain>.+)
@@ -28,151 +29,241 @@ _url_re = re.compile(r"""
     douyu.com/
     (?:
         show/(?P<vid>[^/&?]+)|
-        (?P<channel>[^/&?]+)
+        (?P<roomid>\d+)
     )
 """, re.VERBOSE)
 
-_room_id_re = re.compile(r'"room_id\\*"\s*:\s*(\d+),')
-_room_id_alt_re = re.compile(r'data-onlineid=(\d+)')
-
-_room_id_schema = validate.Schema(
-    validate.all(
-        validate.transform(_room_id_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(int)
-            )
-        )
-    )
-)
-
-_room_id_alt_schema = validate.Schema(
-    validate.all(
-        validate.transform(_room_id_alt_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(int)
-            )
-        )
-    )
-)
+_room_online_re = re.compile(r"/member/report/\?rid=(?P<roomid>\d+)")
 
 _room_schema = validate.Schema(
     {
-        "data": validate.any(None, {
-            "show_status": validate.all(
+        "data":
+        validate.any(
+            None, {
+                "rtmp_url":
                 validate.text,
-                validate.transform(int)
-            ),
-            "rtmp_url": validate.text,
-            "rtmp_live": validate.text,
-            "hls_url": validate.text,
-            "rtmp_multi_bitrate": validate.all(
-                validate.any([], {
-                    validate.text: validate.text
-                }),
-                validate.transform(dict)
-            )
-        })
-    },
-    validate.get("data")
-)
+                "rtmp_live":
+                validate.text,
+                "cdnsWithName":
+                validate.all(
+                    validate.any([],
+                                 validate.all([
+                                     {
+                                         "name": validate.text,
+                                         "cdn": validate.text
+                                     },
+                                 ])),
+                    validate.transform(lambda cdns: dict([(e['name'], e['cdn'])
+                                                          for e in cdns]))),
+                "multirates":
+                validate.all(
+                    validate.any([],
+                                 validate.all([
+                                     {
+                                         "name": validate.text,
+                                         "rate": int
+                                     },
+                                 ])),
+                    validate.transform(lambda cdns: dict(
+                        [(e['name'], e['rate']) for e in cdns]))),
+                "rate":
+                int,
+                "rtmp_cdn":
+                validate.text
+            }),
+        "error":
+        validate.all(validate.transform(int),
+                     validate.transform(lambda x: x == 0))
+    }, validate.get("data"))
 
-_vapi_schema = validate.Schema(
+_video_schema = validate.Schema(
     {
-        "data": validate.any(None, {
-            "video_url": validate.text
-        })
-    },
-    validate.get("data")
-)
+        "data":
+        validate.any(
+            None,
+            validate.all(
+                {
+                    "thumb_video":
+                    validate.all(
+                        dict,
+                        validate.transform(lambda x: dict(
+                            [(ek, ev.get("url")) for ek, ev in x.items()])))
+                },
+                validate.transform(
+                    lambda x: {k: v
+                               for k, v in x.get('thumb_video').items()}))),
+        "error":
+        validate.all(validate.transform(int),
+                     validate.transform(lambda x: x == 0))
+    }, validate.get("data"))
+
+
+def urldecode(qs):
+    return dict([x.split("=") for x in qs.split("&")])
+
+
+def md5_compat(content):
+    m = hashlib.md5()
+    m.update(str(content).encode("utf-8"))
+    return m.hexdigest()
+
+
+class CryptoJS:
+    __slots__ = ("MD5", )
+
+    def __init__(self):
+        self.MD5 = md5_compat
+
+
+JS_CTX = js2py.EvalJs({'CryptoJS': CryptoJS()})
 
 
 class Douyutv(Plugin):
+    '''
+    斗鱼直播: https://www.douyu.com/9999
+    斗鱼视频: https://v.douyu.com/show/aRbBv3o63ZDv6PYV
+    '''
+    js_ctx_initd = False
+
     @classmethod
     def can_handle_url(cls, url):
+        '''
+        override method to validate url input
+        '''
         return _url_re.match(url)
 
-    @classmethod
-    def stream_weight(cls, stream):
-        if stream in STREAM_WEIGHTS:
-            return STREAM_WEIGHTS[stream], "douyutv"
-        return Plugin.stream_weight(stream)
+    # @classmethod
+    # def stream_weight(cls, stream):
+    #     # if stream in STREAM_WEIGHTS:
+    #     #     return STREAM_WEIGHTS[stream], "douyutv"
+    #     return Plugin.stream_weight(stream)
+
+    @staticmethod
+    def simple_re_validate(content, name, pattern, pos, _type):
+        _re = re.compile(pattern)
+        _schema = validate.Schema(
+            validate.all(validate.transform(_re.search), validate.get(pos),
+                         validate.transform(_type)))
+        return _schema.validate(content, name=name)
+
+    @staticmethod
+    def generateDeviceId():
+        return md5_compat(time.time())
+
+    def __js_ctx_init(self, html):
+        # TODO: need thread-safe ?
+        if not self.js_ctx_initd:
+            param = Douyutv.simple_re_validate(html, "sign_param",
+                                               r"function ub98484234\(([^,]*)",
+                                               1, str)
+            const = Douyutv.simple_re_validate(
+                html, "sign_const",
+                r"var %s=\[[^]]*\]" % param[:len(param) - 1], 0, str)
+            function = Douyutv.simple_re_validate(
+                html, "sign_function",
+                r"function ub98484234.*return eval\(strc\)\(%s[^}]*;\}" % param,
+                0, str)
+
+            # print("%s;%s"%(const, function))
+
+            JS_CTX.execute(";".join([const, function]))
+            self.js_ctx_initd = True
+
+    def __generate_sign(self, html, room_id):
+
+        self.__js_ctx_init(html)
+
+        did = Douyutv.generateDeviceId()
+        tt = int(time.time())
+
+        return urldecode(JS_CTX.ub98484234(room_id, did, tt))
+
+    @staticmethod
+    def __valid_address(html, pattern, _type=str):
+        maybe = re.findall(pattern, html)
+        if not maybe:
+            return None
+        return _type(maybe[0])
+
+    def __parse_video_stream(self, url):
+        html = self.session.http.get(url)
+        vid = Douyutv.__valid_address(html.text, '"vid":"([^"]*)"', str)
+        if not vid:
+            self.logger.warn(
+                "{target} is recognized by Douyutv, but  not valid.".format(
+                    target=url))
+            return
+
+        pid = Douyutv.simple_re_validate(html.text, "point_id",
+                                         r'"point_id":(\d+)', 1, int)
+        # self.logger.debug("vid: %s pid: %s"%(vid, pid))
+        sign = self.__generate_sign(html.text, pid)
+        sign['vid'] = vid
+
+        res = self.session.http.post(VAPI_URL,
+                                     data=sign,
+                                     cookies={"dy_did": sign['did']})
+        # self.logger.debug(res.json())
+        video = self.session.http.json(res, schema=_video_schema)
+        for source, addr in video.items():
+            self.logger.debug("m3u8: name:{name}, addres:{address}".format(
+                name=source, address=addr))
+            yield source, HLSStream(self.session, addr)
+
+    def __parse_live_stream(self, url):
+        html = self.session.http.get(url)
+
+        # 以https://www.douyu.com/90016为例, url后缀数字为90016, 但对应roomid为532152
+        # https://www.douyu.com/99999999 符合正则匹配, 但是却无效
+        room_id = Douyutv.__valid_address(html.text, r'room_id ?=(\d*);', int)
+        if not room_id:
+            self.logger.warn(
+                "{target} is recognized by Douyutv, but is not valid.".format(
+                    target=url))
+            return
+        online = True if _room_online_re.search(html.text) else False
+        if not online:
+            self.logger.warn("Stream currently unavailable: 未开播")
+            return
+
+        def fetch_stream_info(room_id, data, rate=None, cdn=None):
+            if rate is not None and type(rate) == int:
+                data['rate'] = rate
+            if cdn is not None and type(cdn) == str:
+                data['cdn'] = cdn
+            res = self.session.http.post(API_URL.format(room_id=room_id),
+                                         data=data)
+            return self.session.http.json(res, schema=_room_schema)
+
+        sign = self.__generate_sign(html.text, room_id)
+        pre_room = fetch_stream_info(room_id, sign)
+        for cdnName, cdn in pre_room["cdnsWithName"].items():
+            for rateName, rate in pre_room["multirates"].items():
+                real_room = fetch_stream_info(room_id, sign, rate, cdn)
+                rtmp_address = "{rtmp_url}/{rtmp_live}".format(
+                    rtmp_url=real_room["rtmp_url"],
+                    rtmp_live=real_room["rtmp_live"])
+                name = "{cdn}_{rate}".format(cdn=ROUTES.get(cdn, "main"),
+                                             rate=RATES.get(rate, "BD"))
+                self.logger.debug(
+                    "rtmp: name: {cdn}({rate}), address: {addr}".format(
+                        cdn=cdnName, rate=rateName, addr=rtmp_address))
+                yield name, HTTPStream(self.session, url=rtmp_address)
 
     def _get_streams(self):
+        '''
+        override method to get stream links
+        seesion : Streamlink
+
+        {name: stream} or (name, stream)
+        '''
         match = _url_re.match(self.url)
         subdomain = match.group("subdomain")
 
-        self.session.http.verify = False
-        self.session.http.mount('https://', HTTPAdapter(max_retries=99))
-
         if subdomain == 'v':
-            vid = match.group("vid")
-            headers = {
-                "User-Agent": useragents.ANDROID,
-                "X-Requested-With": "XMLHttpRequest"
-            }
-            res = self.session.http.get(VAPI_URL.format(vid), headers=headers)
-            room = self.session.http.json(res, schema=_vapi_schema)
-            yield "source", HLSStream(self.session, room["video_url"])
+            yield from self.__parse_video_stream(self.url)
             return
-
-        channel = match.group("channel")
-        try:
-            channel = int(channel)
-        except ValueError:
-            channel = self.session.http.get(self.url, schema=_room_id_schema)
-            if channel is None:
-                channel = self.session.http.get(self.url, schema=_room_id_alt_schema)
-
-        self.session.http.headers.update({'User-Agent': useragents.WINDOWS_PHONE_8})
-        cdns = ["ws", "tct", "ws2", "dl"]
-        ts = int(time.time())
-        suffix = "room/{0}?aid=wp&cdn={1}&client_sys=wp&time={2}".format(channel, cdns[0], ts)
-        sign = hashlib.md5((suffix + API_SECRET).encode()).hexdigest()
-
-        res = self.session.http.get(API_URL.format(suffix, sign))
-        room = self.session.http.json(res, schema=_room_schema)
-        if not room:
-            self.logger.info("Not a valid room url.")
-            return
-
-        if room["show_status"] != SHOW_STATUS_ONLINE:
-            self.logger.info("Stream currently unavailable.")
-            return
-
-        url = room["hls_url"]
-        yield "source", HLSStream(self.session, url)
-
-        url = "{room[rtmp_url]}/{room[rtmp_live]}".format(room=room)
-        if 'rtmp:' in url:
-            stream = RTMPStream(self.session, {
-                "rtmp": url,
-                "live": True
-            })
-            yield "source", stream
-        else:
-            yield "source", HTTPStream(self.session, url)
-
-        multi_streams = {
-            "middle": "low",
-            "middle2": "medium"
-        }
-        for name, url in room["rtmp_multi_bitrate"].items():
-            url = "{room[rtmp_url]}/{url}".format(room=room, url=url)
-            name = multi_streams[name]
-            if 'rtmp:' in url:
-                stream = RTMPStream(self.session, {
-                    "rtmp": url,
-                    "live": True
-                })
-                yield name, stream
-            else:
-                yield name, HTTPStream(self.session, url)
+        yield from self.__parse_live_stream(self.url)
 
 
 __plugin__ = Douyutv

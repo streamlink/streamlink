@@ -23,7 +23,8 @@ deps = [
     'win-inet-pton;python_version<"3.0" and platform_system=="Windows"',
     # shutil.get_terminal_size and which were added in Python 3.3
     'backports.shutil_which;python_version<"3.3"',
-    'backports.shutil_get_terminal_size;python_version<"3.3"'
+    'backports.shutil_get_terminal_size;python_version<"3.3"',
+    "js2py"
 ]
 
 # for encrypted streams
