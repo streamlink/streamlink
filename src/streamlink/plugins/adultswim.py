@@ -44,7 +44,7 @@ class AdultSwim(Plugin):
         'media': {
             'desktop': {
                 'unprotected': {
-                    'url': validate.text
+                    'url': validate.url()
                 }
             }
         }
