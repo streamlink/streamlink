@@ -2,8 +2,8 @@ import re
 import logging
 import time
 
-from streamlink import StreamError
-from streamlink.compat import urlparse
+from streamlink.exceptions import PluginError, StreamError
+from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, hls_playlist
@@ -158,6 +158,8 @@ class FilmOnAPI(object):
             except Exception:
                 log.debug("channel sleep {0}".format(_))
                 time.sleep(0.75)
+        else:
+            raise PluginError("Unable to find 'self.api.channel' for {0}".format(channel))
         return self.session.http.json(res, schema=self.api_schema)
 
     def vod(self, vod_id):
@@ -197,6 +199,9 @@ class Filmon(Plugin):
 
     def __init__(self, url):
         super(Filmon, self).__init__(url)
+        parsed = urlparse(self.url)
+        if parsed.path.startswith("/channel/"):
+            self.url = urlunparse(parsed._replace(path=parsed.path.replace("/channel/", "/tv/")))
         self.api = FilmOnAPI(self.session)
 
     @classmethod
@@ -240,6 +245,9 @@ class Filmon(Plugin):
                     log.debug("Found cached channel ID: {0}", _id)
             else:
                 _id = channel
+
+            if _id is None:
+                raise PluginError("Unable to find channel ID: {0}".format(channel))
 
             try:
                 data = self.api.channel(_id)
