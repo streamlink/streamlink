@@ -307,11 +307,9 @@ class TwitchAPI(object):
         subdomain_buffer = self.subdomain
         self.subdomain = subdomain
         try:
-            response = self.call(path, format=format, schema=schema, **extra_params)
+            return self.call(path, format=format, schema=schema, **extra_params)
         finally:
             self.subdomain = subdomain_buffer
-        self.subdomain = subdomain_buffer
-        return response
 
     # Public API calls
 
