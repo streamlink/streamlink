@@ -80,10 +80,13 @@ Distribution                         Installing
 
 `Debian (stable)`_                   .. code-block:: bash
 
-                                        wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | sudo apt-key add -
-                                        echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+                                        # If you don't have Debian backports already (see link below):
+                                        echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+
                                         sudo apt update
                                         sudo apt install streamlink
+
+                                     `Installing Debian backported packages`_
 
 `Fedora`_                            .. code-block:: bash
 
@@ -126,7 +129,7 @@ Distribution                         Installing
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/unstable/streamlink
-.. _Debian (stable): https://bintray.com/amurzeau/streamlink-debian/streamlink
+.. _Debian (stable): https://packages.debian.org/unstable/streamlink
 .. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
 .. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
@@ -137,6 +140,7 @@ Distribution                         Installing
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
+.. _Installing Debian backported packages: https://wiki.debian.org/Backports#Using_the_command_line
 .. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
 
 
