@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
-from streamlink.stream import HLSStream, RTMPStream, HTTPStream
+from streamlink.stream import HTTPStream
 
 API_URL = "https://api-dsa.17app.co/api/v1/lives/{0}/viewers/alive"
 
@@ -25,7 +25,7 @@ class App17(Plugin):
         try:
             res = self.session.http.post(API_URL.format(channel), data=data).json()
             http_url = res.get("rtmpUrls")[0].get("url")
-        except:
+        except Exception as e:
             self.logger.info("Stream currently unavailable.")
             return
 
