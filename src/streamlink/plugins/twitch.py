@@ -308,9 +308,8 @@ class TwitchAPI(object):
         self.subdomain = subdomain
         try:
             response = self.call(path, format=format, schema=schema, **extra_params)
-        except PluginError:
+        finally:
             self.subdomain = subdomain_buffer
-            raise
         self.subdomain = subdomain_buffer
         return response
 
