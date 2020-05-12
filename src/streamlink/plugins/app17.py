@@ -25,7 +25,7 @@ class App17(Plugin):
         try:
             res = self.session.http.post(API_URL.format(channel), data=data).json()
             http_url = res.get("rtmpUrls")[0].get("url")
-        except Exception as e:
+        except Exception:
             self.logger.info("Stream currently unavailable.")
             return
 
