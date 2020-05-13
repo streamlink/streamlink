@@ -73,8 +73,9 @@ class FilmOnHLSStreamReader(HLSStreamReader):
 class FilmOnHLS(HLSStream):
     __shortname__ = "hls-filmon"
 
-    def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
+    def __init__(self, session_, channel=None, vod_id=None, quality="high", api_ena=None, **args):
         super(FilmOnHLS, self).__init__(session_, None, **args)
+        self.api_ena = api_ena
         self.channel = channel
         self.vod_id = vod_id
         if self.channel is None and self.vod_id is None:
@@ -88,7 +89,7 @@ class FilmOnHLS(HLSStream):
     def _get_stream_data(self):
         if self.channel:
             log.debug("Reloading FilmOn channel playlist: {0}", self.channel)
-            data = self.api.channel(self.channel)
+            data = self.api.channel(self.channel, self.api_ena)
             for stream in data["streams"]:
                 yield stream
         elif self.vod_id:
@@ -128,7 +129,8 @@ class FilmOnAPI(object):
     def __init__(self, session):
         self.session = session
 
-    channel_url = "http://www.filmon.com/api-v2/channel/{0}?protocol=hls"
+    channel_url = "http://www.filmon.com/api-v2/channel/{0}"
+    channel_url2 = "http://www.filmon.com/ajax/getChannelInfo"
     vod_url = "http://www.filmon.com/vod/info/{0}"
 
     stream_schema = {
@@ -136,6 +138,14 @@ class FilmOnAPI(object):
         "url": validate.url(),
         "watch-timeout": int
     }
+    api_schema2 = validate.Schema(
+        {
+            "streams": validate.any(
+                {validate.text: stream_schema},
+                [stream_schema]
+            )
+        },
+    )
     api_schema = validate.Schema(
         {
             "data": {
@@ -148,19 +158,36 @@ class FilmOnAPI(object):
         validate.get("data")
     )
 
-    def channel(self, channel):
+    def channel(self, channel, api_ena):
+        p_header = {"Accept": "application/json, text/javascript, */*; q=0.01",
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "X-Requested-With": "XMLHttpRequest"}
+        p_body = {"channel_id": channel,
+                  "quality": "low"}
+
         for _ in range(5):
             # retry for 50X errors
             try:
-                res = self.session.http.get(self.channel_url.format(channel))
+                if api_ena:
+                    res = self.session.http.get(self.channel_url.format(channel))
+                else:
+                    res = self.session.http.post(self.channel_url2, data=p_body, headers=p_header)
                 if res:
                     break
-            except Exception:
-                log.debug("channel sleep {0}".format(_))
+            except Exception as err:
+                if "404 Client Error" in str(err):
+                    raise PluginError("404 Client Error, channel not found: {0}".format(channel))
+
+                log.debug("Channel sleep {0}".format(_))
                 time.sleep(0.75)
+                log.debug("Retry API-Call on error: {0}", err)
         else:
             raise PluginError("Unable to find 'self.api.channel' for {0}".format(channel))
-        return self.session.http.json(res, schema=self.api_schema)
+
+        if api_ena:
+            return self.session.http.json(res, schema=self.api_schema)
+        else:
+            return self.session.http.json(res, schema=self.api_schema2)
 
     def vod(self, vod_id):
         res = self.session.http.get(self.vod_url.format(vod_id))
@@ -185,8 +212,13 @@ class Filmon(Plugin):
     )""")
 
     _channel_id_re = re.compile(r"""channel_id\s*=\s*(?P<quote>['"]?)(?P<value>\d+)(?P=quote)""")
+    _api_ena_re = re.compile(r"""\.channelApiV2Enabled\s*=\s*(?P<value>[^;]+)""")
     _channel_id_schema = validate.Schema(
         validate.transform(_channel_id_re.search),
+        validate.any(None, validate.get("value"))
+    )
+    _api_ena_schema = validate.Schema(
+        validate.transform(_api_ena_re.search),
         validate.any(None, validate.get("value"))
     )
 
@@ -221,7 +253,6 @@ class Filmon(Plugin):
 
         channel = url_m and url_m.group("channel")
         vod_id = url_m and url_m.group("vod_id")
-        is_group = url_m and url_m.group("is_group")
 
         if vod_id:
             data = self.api.vod(vod_id)
@@ -232,33 +263,20 @@ class Filmon(Plugin):
                 else:
                     for s in streams.items():
                         yield s
-        else:
-            if channel and not channel.isdigit():
-                _id = self.cache.get(channel)
-                if _id is None:
-                    _id = self.session.http.get(self.url, schema=self._channel_id_schema)
-                    log.debug("Found channel ID: {0}", _id)
-                    # do not cache a group url
-                    if _id and not is_group:
-                        self.cache.set(channel, _id, expires=self.TIME_CHANNEL)
-                else:
-                    log.debug("Found cached channel ID: {0}", _id)
-            else:
+        elif channel:
+            _html = self.session.http.get(self.url).text
+            if channel.isdigit():
                 _id = channel
+            else:
+                _id = self._channel_id_schema.validate(_html, name="response text", exception=PluginError)
+            log.debug("Found channel ID: {0}", _id)
 
-            if _id is None:
-                raise PluginError("Unable to find channel ID: {0}".format(channel))
+            api_ena = self._api_ena_schema.validate(_html, name="response text", exception=PluginError) == "true"
+            log.debug("Found channelApiV2Enabled: {0}", api_ena)
 
-            try:
-                data = self.api.channel(_id)
-                for stream in data["streams"]:
-                    yield stream["quality"], FilmOnHLS(self.session, channel=_id, quality=stream["quality"])
-            except Exception:
-                if channel and not channel.isdigit():
-                    self.cache.set(channel, None, expires=0)
-                    log.debug("Reset cached channel: {0}", channel)
-
-                raise
+            data = self.api.channel(_id, api_ena)
+            for stream in data["streams"]:
+                yield stream["quality"], FilmOnHLS(self.session, channel=_id, quality=stream["quality"], api_ena=api_ena)
 
 
 __plugin__ = Filmon
