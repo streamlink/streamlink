@@ -3,6 +3,7 @@ import logging
 import pkgutil
 import sys
 import traceback
+import warnings
 
 import requests
 
@@ -42,11 +43,21 @@ def print_small_exception(start_after):
     sys.stderr.write("\n")
 
 
+class PythonDeprecatedWarning(UserWarning):
+    pass
+
+
 class Streamlink(object):
     """A Streamlink session is used to keep track of plugins,
        options and log settings."""
 
     def __init__(self, options=None):
+        if sys.version_info[0] == 2:
+            warnings.warn("Python 2.7 has reached the end of its life.  A future version of streamlink will drop "
+                          "support for Python 2.7. Please upgrade your Python to at least 3.5.",
+                          category=PythonDeprecatedWarning,
+                          stacklevel=2)
+
         self.http = api.HTTPSession()
         self.options = Options({
             "hds-live-edge": 10.0,
@@ -58,6 +69,7 @@ class Streamlink(object):
             "hls-segment-attempts": 3,
             "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
+            "hls-segment-stream-data": False,
             "hls-timeout": 60.0,
             "hls-playlist-reload-attempts": 3,
             "hls-start-offset": 0,
@@ -130,6 +142,9 @@ class Streamlink(object):
 
         hls-segment-threads      (int) The size of the thread pool used
                                  to download segments, default: ``1``
+
+        hls-segment-stream-data  (bool) Stream HLS segment downloads,
+                                 default: ``False``
 
         hls-segment-timeout      (float) HLS segment connect and read
                                  timeout, default: ``10.0``
@@ -257,6 +272,9 @@ class Streamlink(object):
 
         if key == "http-proxy":
             self.http.proxies["http"] = update_scheme("http://", value)
+            if "https" not in self.http.proxies:
+                self.http.proxies["https"] = update_scheme("http://", value)
+
         elif key == "https-proxy":
             self.http.proxies["https"] = update_scheme("https://", value)
         elif key == "http-cookies":

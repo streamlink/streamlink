@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 import logging
 
 import re
@@ -36,11 +35,11 @@ class MPEGDASH(Plugin):
     def stream_weight(cls, stream):
         match = re.match(r"^(?:(.*)\+)?(?:a(\d+)k)$", stream)
         if match and match.group(1) and match.group(2):
-                weight, group = stream_weight(match.group(1))
-                weight += int(match.group(2))
-                return weight, group
+            weight, group = stream_weight(match.group(1))
+            weight += int(match.group(2))
+            return weight, group
         elif match and match.group(2):
-                return stream_weight(match.group(2) + 'k')
+            return stream_weight(match.group(2) + 'k')
         else:
             return stream_weight(stream)
 
@@ -57,5 +56,6 @@ class MPEGDASH(Plugin):
         self.logger.debug("Parsing MPD URL: {0}".format(mpdurl))
 
         return DASHStream.parse_manifest(self.session, mpdurl)
+
 
 __plugin__ = MPEGDASH

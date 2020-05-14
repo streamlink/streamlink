@@ -9,7 +9,6 @@ from gettext import gettext
 import requests
 import sys
 import signal
-import webbrowser
 
 from contextlib import closing
 from distutils.version import StrictVersion
@@ -25,14 +24,13 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
-from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
 from streamlink.utils import LazyFormatter
 
 import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32
-from streamlink.utils.encoding import maybe_encode
+from streamlink.utils.encoding import maybe_decode, get_filesystem_encoding
 from .console import ConsoleOutput, ConsoleUserInputRequester
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
@@ -57,10 +55,14 @@ def check_file_output(filename, force):
     log.debug("Checking file output")
 
     if os.path.isfile(filename) and not force:
-        answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
-                             filename)
+        if sys.stdin.isatty():
+            answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
+                                 filename)
 
-        if answer.lower() != "y":
+            if answer.lower() != "y":
+                sys.exit()
+        else:
+            log.error("File {0} already exists, use --force to overwrite it.".format(filename))
             sys.exit()
 
     return FileOutput(filename)
@@ -77,6 +79,9 @@ def create_output(plugin):
 
     """
 
+    if (args.output or args.stdout) and (args.record or args.record_and_pipe):
+        console.exit("Cannot use record options with other file output options.")
+
     if args.output:
         if args.output == "-":
             out = FileOutput(fd=stdout)
@@ -84,8 +89,11 @@ def create_output(plugin):
             out = check_file_output(args.output, args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
+    elif args.record_and_pipe:
+        record = check_file_output(args.record_and_pipe, args.force)
+        out = FileOutput(fd=stdout, record=record)
     else:
-        http = namedpipe = None
+        http = namedpipe = record = None
 
         if not args.player:
             console.exit("The default player (VLC) does not seem to be "
@@ -94,7 +102,7 @@ def create_output(plugin):
 
         if args.player_fifo:
             pipename = "streamlinkpipe-{0}".format(os.getpid())
-            log.info("Creating pipe {0}", pipename)
+            log.info("Creating pipe {0}".format(pipename))
 
             try:
                 namedpipe = NamedPipe(pipename)
@@ -104,12 +112,17 @@ def create_output(plugin):
             http = create_http_server()
 
         title = create_title(plugin)
-        log.info("Starting player: {0}", args.player)
+
+        if args.record:
+            record = check_file_output(args.record, args.force)
+
+        log.info("Starting player: {0}".format(args.player))
+
         out = PlayerOutput(args.player, args=args.player_args,
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http,
-                           title=title)
+                           record=record, title=title)
 
     return out
 
@@ -133,11 +146,12 @@ def create_http_server(host=None, port=0):
 def create_title(plugin=None):
     if args.title and plugin:
         title = LazyFormatter.format(
-            maybe_encode(args.title),
+            maybe_decode(args.title, get_filesystem_encoding()),
             title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
             author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
             category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
-            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"]
+            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
+            url=plugin.url
         )
     else:
         title = args.url
@@ -176,7 +190,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                                        title=title)
 
         try:
-            log.info("Starting player: {0}", args.player)
+            log.info("Starting player: {0}".format(args.player))
             if player:
                 player.open()
         except OSError as err:
@@ -210,15 +224,15 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                     sleep(10)
                     continue
             except PluginError as err:
-                log.error(u"Unable to fetch new streams: {0}", err)
+                log.error(u"Unable to fetch new streams: {0}".format(err))
                 continue
 
             try:
-                log.info("Opening stream: {0} ({1})", stream_name,
-                         type(stream).shortname())
+                log.info("Opening stream: {0} ({1})".format(stream_name,
+                                                            type(stream).shortname()))
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
-                log.error("{0}", err)
+                log.error("{0}".format(err))
 
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
@@ -242,7 +256,7 @@ def output_stream_passthrough(plugin, stream):
                           title=title)
 
     try:
-        log.info("Starting player: {0}", args.player)
+        log.info("Starting player: {0}".format(args.player))
         output.open()
     except OSError as err:
         console.exit("Failed to start player: {0} ({1})", args.player, err)
@@ -293,7 +307,8 @@ def output_stream(plugin, stream):
             success_open = True
             break
         except StreamError as err:
-            log.error("Try {0}/{1}: Could not open stream {2} ({3})", i + 1, args.retry_open, stream, err)
+            log.error("Try {0}/{1}: Could not open stream {2} ({3})".format(
+                i + 1, args.retry_open, stream, err))
 
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
@@ -322,7 +337,17 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
-    show_progress = isinstance(output, FileOutput) and output.fd is not stdout
+    show_progress = (
+        isinstance(output, FileOutput)
+        and output.fd is not stdout
+        and (sys.stdout.isatty() or args.force_progress)
+    )
+    show_record_progress = (
+        hasattr(output, "record")
+        and isinstance(output.record, FileOutput)
+        and output.record.fd is not stdout
+        and (sys.stdout.isatty() or args.force_progress)
+    )
 
     stream_iterator = chain(
         [prebuffer],
@@ -331,6 +356,9 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     if show_progress:
         stream_iterator = progress(stream_iterator,
                                    prefix=os.path.basename(args.output))
+    elif show_record_progress:
+        stream_iterator = progress(stream_iterator,
+                                   prefix=os.path.basename(args.record))
 
     try:
         for data in stream_iterator:
@@ -412,8 +440,8 @@ def handle_stream(plugin, streams, stream_name):
             stream_type = type(stream).shortname()
 
             if stream_type in args.player_passthrough and not file_output:
-                log.info("Opening stream: {0} ({1})", stream_name,
-                         stream_type)
+                log.info("Opening stream: {0} ({1})".format(stream_name,
+                                                            stream_type))
                 success = output_stream_passthrough(plugin, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
@@ -421,8 +449,8 @@ def handle_stream(plugin, streams, stream_name):
             elif args.player_continuous_http and not file_output:
                 return output_stream_http(plugin, streams)
             else:
-                log.info("Opening stream: {0} ({1})", stream_name,
-                         stream_type)
+                log.info("Opening stream: {0} ({1})".format(stream_name,
+                                                            stream_type))
 
                 success = output_stream(plugin, stream)
 
@@ -444,12 +472,12 @@ def fetch_streams_with_retry(plugin, interval, count):
     try:
         streams = fetch_streams(plugin)
     except PluginError as err:
-        log.error(u"{0}", err)
+        log.error(u"{0}".format(err))
         streams = None
 
     if not streams:
         log.info("Waiting for streams, retrying every {0} "
-                 "second(s)", interval)
+                 "second(s)".format(interval))
     attempts = 0
 
     while not streams:
@@ -457,10 +485,10 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
-        except FatalPluginError as err:
+        except FatalPluginError:
             raise
         except PluginError as err:
-            log.error(u"{0}", err)
+            log.error(u"{0}".format(err))
 
         if count > 0:
             attempts += 1
@@ -528,8 +556,8 @@ def handle_url():
     try:
         plugin = streamlink.resolve_url(args.url)
         setup_plugin_options(streamlink, plugin)
-        log.info("Found matching plugin {0} for URL {1}",
-                 plugin.module, args.url)
+        log.info("Found matching plugin {0} for URL {1}".format(
+                 plugin.module, args.url))
 
         plugin_args = []
         for parg in plugin.arguments:
@@ -570,7 +598,7 @@ def handle_url():
         validstreams = format_valid_streams(plugin, streams)
         for stream_name in args.stream:
             if stream_name in streams:
-                log.info("Available streams: {0}", validstreams)
+                log.info("Available streams: {0}".format(validstreams))
                 handle_stream(plugin, streams, stream_name)
                 return
 
@@ -603,27 +631,6 @@ def print_plugins():
         console.msg("Loaded plugins: {0}", pluginlist_formatted)
 
 
-def authenticate_twitch_oauth():
-    """Opens a web browser to allow the user to grant Streamlink
-       access to their Twitch account."""
-
-    client_id = TWITCH_CLIENT_ID
-    redirect_uri = "https://streamlink.github.io/twitch_oauth.html"
-    url = ("https://api.twitch.tv/kraken/oauth2/authorize"
-           "?response_type=token&client_id={0}&redirect_uri="
-           "{1}&scope=user_read+user_subscriptions").format(client_id, redirect_uri)
-
-    console.msg("Attempting to open a browser to let you authenticate "
-                "Streamlink with Twitch")
-
-    try:
-        if not webbrowser.open_new_tab(url):
-            raise webbrowser.Error
-    except webbrowser.Error:
-        console.exit("Unable to open a web browser, try accessing this URL "
-                     "manually instead:\n{0}".format(url))
-
-
 def load_plugins(dirs):
     """Attempts to load plugins from a list of directories."""
 
@@ -634,7 +641,7 @@ def load_plugins(dirs):
             streamlink.load_plugins(directory)
         else:
             log.warning("Plugin path {0} does not exist or is not "
-                        "a directory!", directory)
+                        "a directory!".format(directory))
 
 
 def setup_args(parser, config_files=[], ignore_unknown=False):
@@ -758,6 +765,9 @@ def setup_options():
     if args.hls_live_edge:
         streamlink.set_option("hls-live-edge", args.hls_live_edge)
 
+    if args.hls_segment_stream_data:
+        streamlink.set_option("hls-segment-stream-data", args.hls_segment_stream_data)
+
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
@@ -772,6 +782,9 @@ def setup_options():
 
     if args.hls_segment_ignore_names:
         streamlink.set_option("hls-segment-ignore-names", args.hls_segment_ignore_names)
+
+    if args.hls_segment_key_uri:
+        streamlink.set_option("hls-segment-key-uri", args.hls_segment_key_uri)
 
     if args.hls_timeout:
         streamlink.set_option("hls-timeout", args.hls_timeout)
@@ -875,8 +888,8 @@ def setup_plugin_options(session, plugin):
                     for rparg in plugin.arguments.requires(parg.name):
                         required[rparg.name] = rparg
                 except RuntimeError:
-                    console.logger.error("{0} plugin has a configuration error and the arguments "
-                                         "cannot be parsed".format(pname))
+                    log.error("{0} plugin has a configuration error and the arguments "
+                              "cannot be parsed".format(pname))
                     break
     if required:
         for req in required.values():
@@ -936,8 +949,8 @@ def check_version(force=False):
                  "available!".format(latest_version))
         cache.set("version_info_printed", True, (60 * 60 * 6))
     elif force:
-        log.info("Your Streamlink version ({0}) is up to date!",
-                 installed_version)
+        log.info("Your Streamlink version ({0}) is up to date!".format(
+                 installed_version))
 
     if force:
         sys.exit()
@@ -958,7 +971,7 @@ def main():
 
     # Console output should be on stderr if we are outputting
     # a stream to stdout.
-    if args.stdout or args.output == "-":
+    if args.stdout or args.output == "-" or args.record_and_pipe:
         console_out = sys.stderr
     else:
         console_out = sys.stdout
@@ -996,11 +1009,15 @@ def main():
             streamlink.resolve_url(args.can_handle_url)
         except NoPluginError:
             error_code = 1
+        except KeyboardInterrupt:
+            error_code = 130
     elif args.can_handle_url_no_redirect:
         try:
             streamlink.resolve_url_no_redirect(args.can_handle_url_no_redirect)
         except NoPluginError:
             error_code = 1
+        except KeyboardInterrupt:
+            error_code = 130
     elif args.url:
         try:
             setup_options()
@@ -1018,8 +1035,6 @@ def main():
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
-    elif args.twitch_oauth_authenticate:
-        authenticate_twitch_oauth()
     elif args.help:
         parser.print_help()
     else:

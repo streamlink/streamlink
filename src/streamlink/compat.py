@@ -34,12 +34,12 @@ elif is_py3:
 
 try:
     from urllib.parse import (
-        urlparse, urlunparse, urljoin, quote, unquote, parse_qsl, urlencode, urlsplit, urlunsplit
+        urlparse, urlunparse, urljoin, quote, unquote, unquote_plus, parse_qsl, urlencode, urlsplit, urlunsplit
     )
     import queue
 except ImportError:
     from urlparse import urlparse, urlunparse, urljoin, parse_qsl, urlsplit, urlunsplit
-    from urllib import quote, unquote, urlencode
+    from urllib import quote, unquote, unquote_plus, urlencode
     import Queue as queue
 
 try:
@@ -54,11 +54,10 @@ except ImportError:
     html_unescape = unescape = HTMLParser().unescape
 
 
-
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
 __all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
-           "unquote", "queue", "range", "urlencode", "devnull", "which",
+           "unquote", "unquote_plus", "queue", "range", "urlencode", "devnull", "which",
            "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape"]

@@ -1,4 +1,3 @@
-import sys
 import os.path
 import unittest
 
@@ -27,7 +26,8 @@ class CommandLineTestCase(unittest.TestCase):
     @patch('streamlink_cli.output.sleep')
     @patch('subprocess.Popen')
     @patch('sys.argv')
-    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_sleep, mock_setup_streamlink, passthrough=False, exit_code=0):
+    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_sleep, mock_setup_streamlink,
+                   passthrough=False, exit_code=0):
         mock_argv.__getitem__.side_effect = lambda x: args[x]
 
         def side_effect(results):
@@ -83,6 +83,13 @@ class TestCommandLinePOSIX(CommandLineTestCase):
                         ["/usr/bin/player", "--input-title-format", 'Poker "Stars"', "rtmp://test.se"],
                         passthrough=True)
 
+    def test_single_hyphen_extra_player_args_971(self):
+        """single hyphen params at the beginning of --player-args
+           - https://github.com/streamlink/streamlink/issues/971 """
+        self._test_args(["streamlink", "-p", "/usr/bin/player", "-a", "-v {filename}",
+                         "http://test.se", "test"],
+                        ["/usr/bin/player", "-v", "-"])
+
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")
 class TestCommandLineWindows(CommandLineTestCase):
@@ -117,6 +124,9 @@ class TestCommandLineWindows(CommandLineTestCase):
                         '''c:\\Program Files\\Player\\player.exe --input-title-format "Poker \\"Stars\\"" \"rtmp://test.se\"''',
                         passthrough=True)
 
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_single_hyphen_extra_player_args_971(self):
+        """single hyphen params at the beginning of --player-args
+           - https://github.com/streamlink/streamlink/issues/971 """
+        self._test_args(["streamlink", "-p", "c:\\Program Files\\Player\\player.exe",
+                         "-a", "-v {filename}", "http://test.se", "test"],
+                        "c:\\Program Files\\Player\\player.exe -v -")

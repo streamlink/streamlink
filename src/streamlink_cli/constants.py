@@ -10,10 +10,13 @@ DEFAULT_STREAM_METADATA = {
     "category": u"No Category",
     "game": u"No Game/Category"
 }
-SUPPORTED_PLAYERS = {  # these are the players that streamlink knows how to set the window title for with `--title`. key names are used in help text
+# these are the players that streamlink knows how to set the window title for with `--title`.
+# key names are used in help text
+SUPPORTED_PLAYERS = {
     # name: possible binary names (linux/mac and windows)
     "vlc": ["vlc", "vlc.exe"],
-    "mpv": ["mpv", "mpv.exe"]
+    "mpv": ["mpv", "mpv.exe"],
+    "potplayer": ["potplayer", "potplayermini64.exe", "potplayermini.exe"]
 }
 
 if is_win32:
@@ -28,7 +31,7 @@ else:
     ]
     PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/streamlink/plugins")
 
-STREAM_SYNONYMS = ["best", "worst"]
+STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 
 __all__ = [

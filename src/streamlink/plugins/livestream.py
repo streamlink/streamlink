@@ -96,7 +96,12 @@ class Livestream(Plugin):
 
         play_url = stream_info.get("play_url")
         if play_url:
-            swf_url = info.get("playerUri") or info.get("hdPlayerSwfUrl") or info.get("lsPlayerSwfUrl") or info.get("viewerPlusSwfUrl")
+            swf_url = (
+                info.get("playerUri")
+                or info.get("hdPlayerSwfUrl")
+                or info.get("lsPlayerSwfUrl")
+                or info.get("viewerPlusSwfUrl")
+            )
             if swf_url:
                 if not swf_url.startswith("http"):
                     if swf_url.startswith("//"):

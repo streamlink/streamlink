@@ -1,11 +1,11 @@
 # [Streamlink][streamlink-website]
 
-[![TravisCI build status][travisci-build-status-badge]][travisci-build-status]
+[![Github build status][workflow-status-badge]][workflow-status]
 [![codecov.io][codecov-coverage-badge]][codecov-coverage] [![Backers on Open Collective][opencollective-backers-badge]](#backers) [![Sponsors on Open Collective][opencollective-sponsors-badge]](#sponsors)
 
-Streamlink is a CLI utility that pipes flash videos from online streaming services to a variety of video players such as VLC.
+Streamlink is a CLI utility which pipes video streams from various services into a video player, such as VLC.
 
-The main purpose of streamlink is to convert CPU-heavy flash plugins to a less CPU-intensive format.
+The main purpose of streamlink is to avoid resource-heavy and unoptimized websites, while still allowing the user to enjoy various streamed content.
 
 Streamlink is a fork of the [Livestreamer][livestreamer] project.
 
@@ -16,41 +16,24 @@ services when they are available for the content you consume and enjoy.
 
 # [Installation][streamlink-installation]
 
-#### Installation via Python pip
-
-```bash
-sudo pip install streamlink
-```
-
-#### Manual installation via Python
-
-```bash
-git clone https://github.com/streamlink/streamlink
-cd streamlink
-sudo python setup.py install
-```
-
-#### Windows, MacOS, Linux and BSD specific installation methods
+Please refer to our documentation for different ways to install Streamlink:
 
 - [Windows][streamlink-installation-windows]
-- [Windows portable version][streamlink-installation-windows-portable]
-- [MacOS][streamlink-installation-others]
-- [Linux and BSD][streamlink-installation-linux]
-
+- [macOS][streamlink-installation-macos]
+- [Linux and BSD][streamlink-installation-linux-and-bsd]
+- [Source code][streamlink-installation-source]
 
 # Features
 
-Streamlink is built via a plugin system which allows new services to be easily added.
+Streamlink is built upon a plugin system which allows support for new services to be easily added.
+Most of the big streaming services are supported, such as:
 
-Supported streaming services, among many others, are:
-
-- [Dailymotion](https://www.dailymotion.com)
-- [Livestream](https://livestream.com)
 - [Twitch](https://www.twitch.tv)
-- [UStream](http://www.ustream.tv/explore/all)
 - [YouTube](https://www.youtube.com)
+- [Livestream](https://livestream.com)
+- [Dailymotion](https://www.dailymotion.com)
 
-A list of all supported plugins can be found on the [plugin page][streamlink-plugins].
+... and many more. A full list of plugins currently included can be found on the [plugin page][streamlink-plugins].
 
 
 # Quickstart
@@ -61,8 +44,9 @@ After installing, simply use:
 streamlink STREAMURL best
 ```
 
-Streamlink will automatically open the stream in its default video player!
-See [Streamlink's detailed documentation][streamlink-documentation] for all available configuration options, CLI parameters and usage examples.
+The default behavior of Streamlink is to play back streams in the VLC player.
+
+For more in-depth usage and install instructions, please refer to the [detailed documentation][streamlink-documentation].
 
 
 # Contributing
@@ -101,16 +85,16 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
   [streamlink-plugins]: https://streamlink.github.io/plugin_matrix.html
   [streamlink-documentation]: https://streamlink.github.io/cli.html
   [streamlink-installation]: https://streamlink.github.io/install.html
-  [streamlink-installation-windows]: https://streamlink.github.io/install.html#windows-binaries
-  [streamlink-installation-windows-portable]: https://streamlink.github.io/install.html#windows-portable-version
-  [streamlink-installation-linux]: https://streamlink.github.io/install.html#linux-and-bsd-packages
-  [streamlink-installation-others]: https://streamlink.github.io/install.html#other-platforms
+  [streamlink-installation-windows]: https://streamlink.github.io/install.html#windows
+  [streamlink-installation-macos]: https://streamlink.github.io/install.html#macos
+  [streamlink-installation-linux-and-bsd]: https://streamlink.github.io/install.html#linux-and-bsd
+  [streamlink-installation-source]: https://streamlink.github.io/install.html#source-code
   [livestreamer]: https://github.com/chrippa/livestreamer
   [contributing]: https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md
   [changelog]: https://github.com/streamlink/streamlink/blob/master/CHANGELOG.rst
   [contributors]: https://github.com/streamlink/streamlink/graphs/contributors
-  [travisci-build-status]: https://travis-ci.org/streamlink/streamlink
-  [travisci-build-status-badge]: https://travis-ci.org/streamlink/streamlink.svg?branch=master
+  [workflow-status]: https://github.com/streamlink/streamlink/actions?query=event%3Apush
+  [workflow-status-badge]: https://github.com/streamlink/streamlink/workflows/Test,%20build%20and%20deploy/badge.svg?branch=master&event=push
   [codecov-coverage]: https://codecov.io/github/streamlink/streamlink?branch=master
   [codecov-coverage-badge]: https://codecov.io/github/streamlink/streamlink/coverage.svg?branch=master
   [opencollective-contributors]: https://opencollective.com/streamlink/contributors.svg?width=890

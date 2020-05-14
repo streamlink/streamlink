@@ -33,8 +33,7 @@ class Buffer(object):
 
         while bytes_left:
             try:
-                current_chunk = (self.current_chunk or
-                                 Chunk(self.chunks.popleft()))
+                current_chunk = self.current_chunk or Chunk(self.chunks.popleft())
             except IndexError:
                 break
 

@@ -1,11 +1,11 @@
 import unittest
 
 from streamlink import PluginError
-from streamlink.stream import *
+from streamlink.stream import DASHStream
 from streamlink.stream.dash import DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD
 from tests.mock import MagicMock, patch, ANY, Mock, call
-from tests.resources import xml
+from tests.resources import text, xml
 
 
 class TestDASHStream(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_video_only(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -36,7 +36,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_only(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -56,7 +56,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_single(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -77,7 +77,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_multi(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -99,7 +99,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_multi_lang(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -124,7 +124,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_multi_lang_alpha3(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -149,7 +149,7 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_audio_invalid_lang(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -176,7 +176,7 @@ class TestDASHStream(unittest.TestCase):
         self.session.localization.language.alpha2 = "es"
         self.session.localization.explicit = True
 
-        mpd = mpdClass.return_value = Mock(periods=[
+        mpdClass.return_value = Mock(periods=[
             Mock(adaptationSets=[
                 Mock(contentProtection=None,
                      representations=[
@@ -201,12 +201,19 @@ class TestDASHStream(unittest.TestCase):
 
     @patch('streamlink.stream.dash.MPD')
     def test_parse_manifest_drm(self, mpdClass):
-        mpd = mpdClass.return_value = Mock(periods=[Mock(adaptationSets=[Mock(contentProtection="DRM")])])
+        mpdClass.return_value = Mock(periods=[Mock(adaptationSets=[Mock(contentProtection="DRM")])])
 
         self.assertRaises(PluginError,
                           DASHStream.parse_manifest,
                           self.session, self.test_url)
         mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+    def test_parse_manifest_string(self):
+        with text("dash/test_9.mpd") as mpd_txt:
+            test_manifest = mpd_txt.read()
+
+        streams = DASHStream.parse_manifest(self.session, test_manifest)
+        self.assertSequenceEqual(list(streams.keys()), ['2500k'])
 
     @patch('streamlink.stream.dash.DASHStreamReader')
     @patch('streamlink.stream.dash.FFMPEGMuxer')
@@ -332,9 +339,3 @@ class TestDASHStreamWorker(unittest.TestCase):
 
         self.assertEqual(representation_vid, DASHStreamWorker.get_representation(mpd, 1, "video/mp4"))
         self.assertEqual(representation_aud, DASHStreamWorker.get_representation(mpd, 1, "audio/aac"))
-
-
-
-
-if __name__ == "__main__":
-    unittest.main()

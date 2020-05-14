@@ -1,10 +1,10 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 from io import BytesIO
 
 from streamlink import NoStreamsError
 from streamlink.plugins import Plugin
 from streamlink.options import Options
-from streamlink.stream import *
+from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
 
 from streamlink.plugin.api.support_plugin import testplugin_support
 
@@ -37,6 +37,14 @@ class TestPlugin(Plugin):
     def _get_streams(self):
         if "empty" in self.url:
             return
+
+        if "UnsortableStreamNames" in self.url:
+            def gen():
+                for i in range(3):
+                    yield "vod", HTTPStream(self.session, "http://test.se/stream")
+
+            return gen()
+
         if "NoStreamsError" in self.url:
             raise NoStreamsError(self.url)
 

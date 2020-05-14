@@ -1,9 +1,5 @@
-# Unit tests accompanying the Huomao Streamlink plugin.
-
 import unittest
-import re
 
-from streamlink.plugin.api import http
 from streamlink.plugins.huomao import Huomao
 
 
@@ -15,15 +11,12 @@ class TestPluginHuomao(unittest.TestCase):
         #   room_id             = 123456
         #   stream_id           = 9qsvyF24659
         #   stream_url          = http://live-ws.huomaotv.cn/live/
-        #   stream_quality      = source, _720 and _480
         #   stream_quality_name = source, 720 and 480
         self.mock_html = """
             <input id="html_stream" value="9qsvyF24659" type="hidden">
-            <!--            urls:{-->
-            <!--                1: 'http://live-ws.huomaotv.cn/live/'+stream+'/playlist.m3u8',-->
-            <!--                2: 'http://live-ws.huomaotv.cn/live/'+stream+'_720/playlist.m3u8',-->
-            <!--                3: 'http://live-ws.huomaotv.cn/live/'+stream+'_480/playlist.m3u8'-->
-            <!--            },-->
+            <source  src="http://live-ws-hls.huomaotv.cn/live/9qsvyF24659/playlist.m3u8">
+            <source  src="http://live-ws-hls.huomaotv.cn/live/9qsvyF24659_720/playlist.m3u8">
+            <source  src="http://live-ws-hls.huomaotv.cn/live/9qsvyF24659_480/playlist.m3u8">
         """
 
         # Create a mock Huomao object.
@@ -43,9 +36,9 @@ class TestPluginHuomao(unittest.TestCase):
         # Assert that the stream_url, stream_quality and stream_quality_name
         # is correctly extracted from the mock HTML.
         self.assertEqual(self.mock_huomao.get_stream_info(self.mock_html), [
-            ["http://live-ws.huomaotv.cn/live/", "", "source"],
-            ["http://live-ws.huomaotv.cn/live/", "_720", "720"],
-            ["http://live-ws.huomaotv.cn/live/", "_480", "480"]
+            ["http://live-ws-hls.huomaotv.cn/live/9qsvyF24659/playlist.m3u8", "source"],
+            ["http://live-ws-hls.huomaotv.cn/live/9qsvyF24659_720/playlist.m3u8", "720"],
+            ["http://live-ws-hls.huomaotv.cn/live/9qsvyF24659_480/playlist.m3u8", "480"]
         ])
 
     def test_can_handle_url(self):
@@ -93,9 +86,3 @@ class TestPluginHuomao(unittest.TestCase):
         self.assertFalse(Huomao.can_handle_url("https://www.youtube.tv/123456"))
         self.assertFalse(Huomao.can_handle_url("https://youtube.com/123456"))
         self.assertFalse(Huomao.can_handle_url("https://youtube.tv/123456"))
-
-
-# Possibility to run unittest separately as a normal python script.
-if __name__ == "__main__":
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestPluginHuomao)
-    unittest.TextTestRunner(verbosity=2).run(suite)

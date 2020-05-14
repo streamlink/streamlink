@@ -19,7 +19,7 @@ QUALITY_WEIGHTS = {
     "sd": 480
 }
 
-_url_re = re.compile(r"http(s)?://(?P<cdn>\w+\.)?afreeca(tv)?\.com/(?P<username>\w+)(/\d+)?")
+_url_re = re.compile(r"https?://play\.afreecatv\.com/(?P<username>\w+)(?:/\d+)?")
 
 _channel_schema = validate.Schema(
     {
@@ -86,10 +86,6 @@ class AfreecaTV(Plugin):
         return self.session.http.json(res, schema=_channel_schema)
 
     def _get_hls_key(self, broadcast, username, quality):
-        headers = {
-            "Referer": self.url
-        }
-
         data = {
             "bid": username,
             "bno": broadcast,
@@ -97,7 +93,7 @@ class AfreecaTV(Plugin):
             "quality": quality,
             "type": "pwd"
         }
-        res = self.session.http.post(CHANNEL_API_URL, data=data, headers=headers)
+        res = self.session.http.post(CHANNEL_API_URL, data=data)
         return self.session.http.json(res, schema=_channel_schema)
 
     def _get_stream_info(self, broadcast, quality, cdn, rmd):
@@ -139,6 +135,7 @@ class AfreecaTV(Plugin):
             return False
 
     def _get_streams(self):
+        self.session.http.headers.update({"Referer": self.url})
         if not self.session.get_option("hls-segment-ignore-names"):
             ignore_segment = ["preloading"]
             self.session.set_option("hls-segment-ignore-names", ignore_segment)

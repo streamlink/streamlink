@@ -7,7 +7,7 @@ from operator import attrgetter
 
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
-from tests.mock import MagicMock, Mock
+from tests.mock import Mock
 
 from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, Representation
 from tests.resources import xml
@@ -40,7 +40,7 @@ class TestMPDParsers(unittest.TestCase):
 
     def test_datetime(self):
         self.assertEqual(MPDParsers.datetime("2018-01-01T00:00:00Z"),
-                          datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc))
+                         datetime.datetime(2018, 1, 1, 0, 0, 0, tzinfo=utc))
 
     def test_segment_template(self):
         self.assertEqual(MPDParsers.segment_template("$Time$-$Number$-$Other$")(Time=1, Number=2, Other=3),
@@ -117,7 +117,7 @@ class TestMPDParser(unittest.TestCase):
                                      ['http://test.se/video-time=1525450872000-2800000-0.m4s?z32='])
 
     def test_segments_dynamic_number(self):
-        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)) as frozen_datetime:
+        with freeze_time(FakeDatetime(2018, 5, 22, 13, 37, 0, tzinfo=utc)):
             with xml("dash/test_4.mpd") as mpd_xml:
                 mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
 
@@ -202,7 +202,6 @@ class TestMPDParser(unittest.TestCase):
                                           'http://test.se/video/1014000.mp4',
                                           'http://test.se/video/1015000.mp4'])
 
-
     def test_tsegment_t_is_none_1895(self):
         """
             Verify the fix for https://github.com/streamlink/streamlink/issues/1895
@@ -234,7 +233,7 @@ class TestMPDParser(unittest.TestCase):
             node.findall.return_value = []
             return Representation(node)
 
-        self.assertEqual(mock_rep(1.2*1000.0).bandwidth_rounded, 1.2)
-        self.assertEqual(mock_rep(45.6*1000.0).bandwidth_rounded, 46.0)
-        self.assertEqual(mock_rep(134.0*1000.0).bandwidth_rounded, 130.0)
-        self.assertEqual(mock_rep(1324.0*1000.0).bandwidth_rounded, 1300.0)
+        self.assertEqual(mock_rep(1.2 * 1000.0).bandwidth_rounded, 1.2)
+        self.assertEqual(mock_rep(45.6 * 1000.0).bandwidth_rounded, 46.0)
+        self.assertEqual(mock_rep(134.0 * 1000.0).bandwidth_rounded, 130.0)
+        self.assertEqual(mock_rep(1324.0 * 1000.0).bandwidth_rounded, 1300.0)

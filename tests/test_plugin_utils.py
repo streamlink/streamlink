@@ -5,6 +5,24 @@ import unittest
 from streamlink.plugin.api.utils import itertags
 
 
+def unsupported_versions_1979():
+    """Unsupported python versions for itertags
+       3.7.0 - 3.7.2 and 3.8.0a1
+       - https://github.com/streamlink/streamlink/issues/1979
+       - https://bugs.python.org/issue34294
+    """
+    v = sys.version_info
+    if (v.major == 3) and (
+        # 3.7.0 - 3.7.2
+        (v.minor == 7 and v.micro <= 2)
+        # 3.8.0a1
+        or (v.minor == 8 and v.micro == 0 and v.releaselevel == 'alpha' and v.serial <= 1)
+    ):
+        return True
+    else:
+        return False
+
+
 class TestPluginUtil(unittest.TestCase):
     test_html = """
 <!doctype html>
@@ -22,7 +40,7 @@ alert("Hello, world!"); });</script>
 href="http://test.se/foo">bar</a>
 </p>
 </html>
-        """
+        """  # noqa: W291
 
     def test_itertags_single_text(self):
         title = list(itertags(self.test_html, "title"))
@@ -42,7 +60,7 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(script[1].text.strip(), """Tester.ready(function () {\nalert("Hello, world!"); });""")
         self.assertEqual(script[1].attributes, {})
 
-    @unittest.skipIf(sys.version_info >= (3, 7),
+    @unittest.skipIf(unsupported_versions_1979(),
                      "python3.7 issue, see bpo-34294")
     def test_itertags_multi_attrs(self):
         metas = list(itertags(self.test_html, "meta"))
@@ -64,7 +82,7 @@ href="http://test.se/foo">bar</a>
         self.assertEqual(anchor[0].text, "bar")
         self.assertEqual(anchor[0].attributes, {"href": "http://test.se/foo"})
 
-    @unittest.skipIf(sys.version_info >= (3, 7),
+    @unittest.skipIf(unsupported_versions_1979(),
                      "python3.7 issue, see bpo-34294")
     def test_no_end_tag(self):
         links = list(itertags(self.test_html, "link"))

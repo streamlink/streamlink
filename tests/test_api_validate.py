@@ -1,4 +1,4 @@
-# coding: utf8
+# -*- coding: utf-8 -*-
 import re
 import unittest
 
@@ -89,7 +89,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
 
     def test_get_re(self):
-        m = re.match("(\d+)p", "720p")
+        m = re.match(r"(\d+)p", "720p")
         assert validate(get(1), m) == "720"
 
     def test_getattr(self):
@@ -158,7 +158,3 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_endswith(self):
         assert validate(endswith(u"åäö"), u"xyzåäö")
-
-
-if __name__ == "__main__":
-    unittest.main()

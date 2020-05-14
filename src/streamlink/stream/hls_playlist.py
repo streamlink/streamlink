@@ -1,10 +1,13 @@
 import re
+import logging
 
 from binascii import unhexlify
 from collections import namedtuple
 from itertools import starmap
 
 from streamlink.compat import urljoin, urlparse
+
+log = logging.getLogger(__name__)
 
 __all__ = ["load", "M3U8Parser"]
 
@@ -19,24 +22,20 @@ Key = namedtuple("Key", "method uri iv key_format key_format_versions")
 Map = namedtuple("Map", "uri byterange")
 
 # EXT-X-MEDIA
-Media = namedtuple("Media", "uri type group_id language name default "
-                            "autoselect forced characteristics")
+Media = namedtuple("Media", "uri type group_id language name default autoselect forced characteristics")
 
 # EXT-X-START
 Start = namedtuple("Start", "time_offset precise")
 
 # EXT-X-STREAM-INF
-StreamInfo = namedtuple("StreamInfo", "bandwidth program_id codecs resolution "
-                                      "audio video subtitles")
+StreamInfo = namedtuple("StreamInfo", "bandwidth program_id codecs resolution audio video subtitles")
 
 # EXT-X-I-FRAME-STREAM-INF
-IFrameStreamInfo = namedtuple("IFrameStreamInfo", "bandwidth program_id "
-                                                  "codecs resolution video")
+IFrameStreamInfo = namedtuple("IFrameStreamInfo", "bandwidth program_id codecs resolution video")
 
 Playlist = namedtuple("Playlist", "uri stream_info media is_iframe")
 Resolution = namedtuple("Resolution", "width height")
-Segment = namedtuple("Segment", "uri duration title key discontinuity "
-                                "byterange date map")
+Segment = namedtuple("Segment", "uri duration title key discontinuity byterange date map")
 
 
 class M3U8(object):
@@ -65,7 +64,7 @@ class M3U8Parser(object):
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
 
-    def __init__(self, base_uri=None):
+    def __init__(self, base_uri=None, **kwargs):
         self.base_uri = base_uri
 
     def create_stream_info(self, streaminf, cls=None):
@@ -142,97 +141,107 @@ class M3U8Parser(object):
 
         return Resolution(width, height)
 
-    def parse_tag(self, line, transform=None):
-        tag, value = self.split_tag(line)
+    def parse_tag_extinf(self, value):
+        self.state["expect_segment"] = True
+        self.state["extinf"] = self.parse_extinf(value)
 
-        if transform:
-            value = transform(value)
+    def parse_tag_ext_x_byterange(self, value):
+        self.state["expect_segment"] = True
+        self.state["byterange"] = self.parse_byterange(value)
 
-        return value
+    def parse_tag_ext_x_targetduration(self, value):
+        self.m3u8.target_duration = int(value)
+
+    def parse_tag_ext_x_media_sequence(self, value):
+        self.m3u8.media_sequence = int(value)
+
+    def parse_tag_ext_x_key(self, value):
+        attr = self.parse_attributes(value)
+        iv = attr.get("IV")
+        if iv:
+            iv = self.parse_hex(iv)
+        self.state["key"] = Key(attr.get("METHOD"),
+                                self.uri(attr.get("URI")),
+                                iv, attr.get("KEYFORMAT"),
+                                attr.get("KEYFORMATVERSIONS"))
+
+    def parse_tag_ext_x_program_date_time(self, value):
+        self.state["date"] = value
+
+    def parse_tag_ext_x_allow_cache(self, value):
+        self.m3u8.allow_cache = self.parse_bool(value)
+
+    def parse_tag_ext_x_stream_inf(self, value):
+        self.state["streaminf"] = self.parse_attributes(value)
+        self.state["expect_playlist"] = True
+
+    def parse_tag_ext_x_playlist_type(self, value):
+        self.m3u8.playlist_type = value
+
+    def parse_tag_ext_x_endlist(self, value):
+        self.m3u8.is_endlist = True
+
+    def parse_tag_ext_x_media(self, value):
+        attr = self.parse_attributes(value)
+        media = Media(
+            self.uri(attr.get("URI")),
+            attr.get("TYPE"),
+            attr.get("GROUP-ID"),
+            attr.get("LANGUAGE"),
+            attr.get("NAME"),
+            self.parse_bool(attr.get("DEFAULT")),
+            self.parse_bool(attr.get("AUTOSELECT")),
+            self.parse_bool(attr.get("FORCED")),
+            attr.get("CHARACTERISTICS")
+        )
+        self.m3u8.media.append(media)
+
+    def parse_tag_ext_x_discontinuity(self, value):
+        self.state["discontinuity"] = True
+        self.state["map"] = None
+
+    def parse_tag_ext_x_discontinuity_sequence(self, value):
+        self.m3u8.discontinuity_sequence = int(value)
+
+    def parse_tag_ext_x_i_frames_only(self, value):
+        self.m3u8.iframes_only = True
+
+    def parse_tag_ext_x_map(self, value):
+        attr = self.parse_attributes(value)
+        byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
+        self.state["map"] = Map(attr.get("URI"), byterange)
+
+    def parse_tag_ext_x_i_frame_stream_inf(self, value):
+        attr = self.parse_attributes(value)
+        streaminf = self.state.pop("streaminf", attr)
+        stream_info = self.create_stream_info(streaminf, IFrameStreamInfo)
+        playlist = Playlist(self.uri(attr.get("URI")), stream_info, [], True)
+        self.m3u8.playlists.append(playlist)
+
+    def parse_tag_ext_x_version(self, value):
+        self.m3u8.version = int(value)
+
+    def parse_tag_ext_x_start(self, value):
+        attr = self.parse_attributes(value)
+        start = Start(attr.get("TIME-OFFSET"),
+                      self.parse_bool(attr.get("PRECISE", "NO")))
+        self.m3u8.start = start
 
     def parse_line(self, line):
-        if not line.startswith("#"):
-            if self.state.pop("expect_segment", None):
-                byterange = self.state.pop("byterange", None)
-                extinf = self.state.pop("extinf", (0, None))
-                date = self.state.pop("date", None)
-                map_ = self.state.get("map")
-                key = self.state.get("key")
-
-                segment = Segment(self.uri(line), extinf[0],
-                                  extinf[1], key,
-                                  self.state.pop("discontinuity", False),
-                                  byterange, date, map_)
-                self.m3u8.segments.append(segment)
-            elif self.state.pop("expect_playlist", None):
-                streaminf = self.state.pop("streaminf", {})
-                stream_info = self.create_stream_info(streaminf)
-                playlist = Playlist(self.uri(line), stream_info, [], False)
-                self.m3u8.playlists.append(playlist)
-        elif line.startswith("#EXTINF"):
-            self.state["expect_segment"] = True
-            self.state["extinf"] = self.parse_tag(line, self.parse_extinf)
-        elif line.startswith("#EXT-X-BYTERANGE"):
-            self.state["expect_segment"] = True
-            self.state["byterange"] = self.parse_tag(line, self.parse_byterange)
-        elif line.startswith("#EXT-X-TARGETDURATION"):
-            self.m3u8.target_duration = self.parse_tag(line, int)
-        elif line.startswith("#EXT-X-MEDIA-SEQUENCE"):
-            self.m3u8.media_sequence = self.parse_tag(line, int)
-        elif line.startswith("#EXT-X-KEY"):
-            attr = self.parse_tag(line, self.parse_attributes)
-            iv = attr.get("IV")
-            if iv:
-                iv = self.parse_hex(iv)
-            self.state["key"] = Key(attr.get("METHOD"),
-                                    self.uri(attr.get("URI")),
-                                    iv, attr.get("KEYFORMAT"),
-                                    attr.get("KEYFORMATVERSIONS"))
-        elif line.startswith("#EXT-X-PROGRAM-DATE-TIME"):
-            self.state["date"] = self.parse_tag(line)
-        elif line.startswith("#EXT-X-ALLOW-CACHE"):
-            self.m3u8.allow_cache = self.parse_tag(line, self.parse_bool)
-        elif line.startswith("#EXT-X-STREAM-INF"):
-            self.state["streaminf"] = self.parse_tag(line, self.parse_attributes)
-            self.state["expect_playlist"] = True
-        elif line.startswith("#EXT-X-PLAYLIST-TYPE"):
-            self.m3u8.playlist_type = self.parse_tag(line)
-        elif line.startswith("#EXT-X-ENDLIST"):
-            self.m3u8.is_endlist = True
-        elif line.startswith("#EXT-X-MEDIA"):
-            attr = self.parse_tag(line, self.parse_attributes)
-            media = Media(self.uri(attr.get("URI")), attr.get("TYPE"),
-                          attr.get("GROUP-ID"), attr.get("LANGUAGE"),
-                          attr.get("NAME"),
-                          self.parse_bool(attr.get("DEFAULT")),
-                          self.parse_bool(attr.get("AUTOSELECT")),
-                          self.parse_bool(attr.get("FORCED")),
-                          attr.get("CHARACTERISTICS"))
-            self.m3u8.media.append(media)
-        elif line.startswith("#EXT-X-DISCONTINUITY"):
-            self.state["discontinuity"] = True
-            self.state["map"] = None
-        elif line.startswith("#EXT-X-DISCONTINUITY-SEQUENCE"):
-            self.m3u8.discontinuity_sequence = self.parse_tag(line, int)
-        elif line.startswith("#EXT-X-I-FRAMES-ONLY"):
-            self.m3u8.iframes_only = True
-        elif line.startswith("#EXT-X-MAP"):
-            attr = self.parse_tag(line, self.parse_attributes)
-            byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
-            self.state["map"] = Map(attr.get("URI"), byterange)
-        elif line.startswith("#EXT-X-I-FRAME-STREAM-INF"):
-            attr = self.parse_tag(line, self.parse_attributes)
-            streaminf = self.state.pop("streaminf", attr)
-            stream_info = self.create_stream_info(streaminf, IFrameStreamInfo)
-            playlist = Playlist(self.uri(attr.get("URI")), stream_info, [], True)
+        if line.startswith("#"):
+            tag, value = self.split_tag(line)
+            if not tag:
+                return
+            method = "parse_tag_" + tag.lower().replace("-", "_")
+            if not hasattr(self, method):
+                return
+            getattr(self, method)(value)
+        elif self.state.pop("expect_segment", None):
+            segment = self.get_segment(self.uri(line))
+            self.m3u8.segments.append(segment)
+        elif self.state.pop("expect_playlist", None):
+            playlist = self.get_playlist(self.uri(line))
             self.m3u8.playlists.append(playlist)
-        elif line.startswith("#EXT-X-VERSION"):
-            self.m3u8.version = self.parse_tag(line, int)
-        elif line.startswith("#EXT-X-START"):
-            attr = self.parse_tag(line, self.parse_attributes)
-            start = Start(attr.get("TIME-OFFSET"),
-                          self.parse_bool(attr.get("PRECISE", "NO")))
-            self.m3u8.start = start
 
     def parse(self, data):
         self.state = {}
@@ -245,6 +254,7 @@ class M3U8Parser(object):
             return self.m3u8
         else:
             if not line.startswith("#EXTM3U"):
+                log.warning("Malformed HLS Playlist. Expected #EXTM3U, but got {0}".format(line[:250]))
                 raise ValueError("Missing #EXTM3U header")
 
         parse_line = self.parse_line
@@ -272,8 +282,32 @@ class M3U8Parser(object):
         else:
             return uri
 
+    def get_segment(self, uri):
+        byterange = self.state.pop("byterange", None)
+        extinf = self.state.pop("extinf", (0, None))
+        date = self.state.pop("date", None)
+        map_ = self.state.get("map")
+        key = self.state.get("key")
+        discontinuity = self.state.pop("discontinuity", False)
 
-def load(data, base_uri=None, parser=M3U8Parser):
+        return Segment(
+            uri,
+            extinf[0],
+            extinf[1],
+            key,
+            discontinuity,
+            byterange,
+            date,
+            map_
+        )
+
+    def get_playlist(self, uri):
+        streaminf = self.state.pop("streaminf", {})
+        stream_info = self.create_stream_info(streaminf)
+        return Playlist(uri, stream_info, [], False)
+
+
+def load(data, base_uri=None, parser=M3U8Parser, **kwargs):
     """Attempts to parse a M3U8 playlist from a string of data.
 
     If specified, *base_uri* is the base URI that relative URIs will
@@ -283,4 +317,4 @@ def load(data, base_uri=None, parser=M3U8Parser):
     to parse the data.
 
     """
-    return parser(base_uri).parse(data)
+    return parser(base_uri, **kwargs).parse(data)

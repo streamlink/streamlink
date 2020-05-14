@@ -1,4 +1,5 @@
 import argparse
+import numbers
 import re
 from string import printable
 from textwrap import dedent
@@ -43,6 +44,37 @@ class ArgumentParser(argparse.ArgumentParser):
             yield u"--{0}={1}".format(name, value)
         elif name:
             yield u"--{0}".format(name)
+
+    def _match_argument(self, action, arg_strings_pattern):
+        # - https://github.com/streamlink/streamlink/issues/971
+        # - https://bugs.python.org/issue9334
+
+        # match the pattern for this action to the arg strings
+        nargs_pattern = self._get_nargs_pattern(action)
+        match = argparse._re.match(nargs_pattern, arg_strings_pattern)
+
+        # if no match, see if we can emulate optparse and return the
+        # required number of arguments regardless of their values
+        if match is None:
+            nargs = action.nargs if action.nargs is not None else 1
+            if isinstance(nargs, numbers.Number) and len(arg_strings_pattern) >= nargs:
+                return nargs
+
+        # raise an exception if we weren't able to find a match
+        if match is None:
+            nargs_errors = {
+                None: argparse._('expected one argument'),
+                argparse.OPTIONAL: argparse._('expected at most one argument'),
+                argparse.ONE_OR_MORE: argparse._('expected at least one argument'),
+            }
+            default = argparse.ngettext('expected %s argument',
+                                        'expected %s arguments',
+                                        action.nargs) % action.nargs
+            msg = nargs_errors.get(action.nargs, default)
+            raise argparse.ArgumentError(action, msg)
+
+        # return the number of arguments matched
+        return len(match.group(1))
 
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
@@ -107,7 +139,7 @@ def build_parser():
         help="""
         Stream to play.
 
-        Use "best" or "worst" for selecting the highest or lowest available
+        Use ``best`` or ``worst`` for selecting the highest or lowest available
         quality.
 
         Fallback streams can be specified by using a comma-separated list:
@@ -245,11 +277,7 @@ def build_parser():
     )
     general.add_argument(
         "--twitch-oauth-authenticate",
-        action="store_true",
-        help="""
-        Open a web browser where you can grant Streamlink access to your Twitch
-        account which creates a token for use with --twitch-oauth-token.
-        """
+        help=argparse.SUPPRESS
     )
 
     player = parser.add_argument_group("Player options")
@@ -465,6 +493,9 @@ def build_parser():
             gaming oriented platforms. "Game being played" is a way to categorize
             the stream, so it doesn't need its own separate handling.
 
+        {{url}}
+            URL of the stream.
+
         Examples:
 
             %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
@@ -490,7 +521,15 @@ def build_parser():
         "-f", "--force",
         action="store_true",
         help="""
-        When using -o, always write to file even if it already exists.
+        When using -o or -r, always write to file even if it already exists.
+        """
+    )
+    output.add_argument(
+        "--force-progress",
+        action="store_true",
+        help="""
+        When using -o or -r,
+        show the download progress bar even if there is no terminal.
         """
     )
     output.add_argument(
@@ -498,6 +537,24 @@ def build_parser():
         action="store_true",
         help="""
         Write stream data to stdout instead of playing it.
+        """
+    )
+    output.add_argument(
+        "-r", "--record",
+        metavar="FILENAME",
+        help="""
+        Open the stream in the player, while at the same time writing it to FILENAME.
+
+        You will be prompted if the file already exists.
+        """
+    )
+    output.add_argument(
+        "-R", "--record-and-pipe",
+        metavar="FILENAME",
+        help="""
+        Write stream data to stdout, while at the same time writing it to FILENAME.
+
+        You will be prompted if the file already exists.
         """
     )
 
@@ -523,7 +580,7 @@ def build_parser():
         help="""
         Stream to play.
 
-        Use "best" or "worst" for selecting the highest or lowest available
+        Use ``best`` or ``worst`` for selecting the highest or lowest available
         quality.
 
         Fallback streams can be specified by using a comma-separated list:
@@ -590,13 +647,17 @@ def build_parser():
         metavar="STREAMS",
         type=comma_list,
         help="""
-        Fine tune best/worst synonyms by excluding unwanted streams.
+        Fine tune the ``best`` and ``worst`` stream name synonyms by excluding unwanted streams.
+
+        If all of the available streams get excluded, ``best`` and ``worst`` will become
+        inaccessible and new special stream synonyms ``best-unfiltered`` and ``worst-unfiltered``
+        can be used as a fallback selection method.
 
         Uses a filter expression in the format:
 
           [operator]<value>
 
-        Valid operators are >, >=, < and <=. If no operator is specified then
+        Valid operators are ``>``, ``>=``, ``<`` and ``<=``. If no operator is specified then
         equality is tested.
 
         For example this will exclude streams ranked higher than "480p":
@@ -679,6 +740,13 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-stream-data",
+        action="store_true",
+        help="""
+        Immediately write segment data into output buffer while downloading.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
@@ -738,6 +806,28 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-key-uri",
+        metavar="URI",
+        type=str,
+        help="""
+        URI to segment encryption key. If no URI is specified, the URI contained
+        in the segments will be used.
+
+        URI can be templated using the following variables, which will be
+        replaced with its respective part from the source segment URI:
+
+          {url} {scheme} {netloc} {path} {query}
+
+        Examples:
+
+          --hls-segment-key-uri "https://example.com/hls/encryption_key"
+          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
+          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
+
+        Default is None.
+        """
+    )
+    transport.add_argument(
         "--hls-audio-select",
         type=comma_list,
         metavar="CODE",
@@ -768,7 +858,7 @@ def build_parser():
     transport.add_argument(
         "--hls-start-offset",
         type=hours_minutes_seconds,
-        metavar="HH:MM:SS",
+        metavar="[HH:]MM:SS",
         default=None,
         help="""
         Amount of time to skip from the beginning of the stream. For live
@@ -779,7 +869,7 @@ def build_parser():
     transport.add_argument(
         "--hls-duration",
         type=hours_minutes_seconds,
-        metavar="HH:MM:SS",
+        metavar="[HH:]MM:SS",
         default=None,
         help="""
         Limit the playback duration, useful for watching segments of a stream.
@@ -838,7 +928,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--rtmp-rtmpdump", "--rtmpdump", "-r",
+        "--rtmp-rtmpdump", "--rtmpdump",
         metavar="FILENAME",
         help="""
         RTMPDump is used to access RTMP streams. You can specify the
@@ -1000,7 +1090,8 @@ def build_parser():
         "--http-proxy",
         metavar="HTTP_PROXY",
         help="""
-        A HTTP proxy to use for all HTTP requests.
+        A HTTP proxy to use for all HTTP requests, including WebSocket connections.
+        By default this proxy will be used for all HTTPS requests too.
 
         Example: "http://hostname:port/"
         """

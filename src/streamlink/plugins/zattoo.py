@@ -30,7 +30,7 @@ class Zattoo(Plugin):
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
 
-    _url_re = re.compile(r'''
+    _url_re = re.compile(r'''(?x)
         https?://
         (?P<base_url>
             (?:(?:
@@ -43,19 +43,25 @@ class Zattoo(Plugin):
                 tvonline\.ewe|nettv\.netcologne|tvplus\.m-net
             )\.de
             )|(?:(?:
-                player\.waly|www\.netplus
+                player\.waly|www\.(?:1und1|netplus)
             )\.tv)
             |www\.bbv-tv\.net
             |www\.meinewelt\.cc
         )/
         (?:
-            (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/(?P<recording_id>\d+)))
+            (?:
+                recording(?:s\?recording=|/)
+                |
+                (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/))
+            )(?P<recording_id>\d+)
             |
-            watch/(?P<channel>[^/\s]+)
+            (?:
+                (?:live/|watch/)|(?:channels(?:/\w+)?|guide)\?channel=
+            )(?P<channel>[^/\s]+)
             |
-            ondemand/watch/(?P<vod_id>[^-]+)-
+            ondemand(?:\?video=|/watch/)(?P<vod_id>[^-]+)
         )
-        ''', re.VERBOSE)
+        ''')
 
     _app_token_re = re.compile(r"""window\.appToken\s+=\s+'([^']+)'""")
 
@@ -127,10 +133,8 @@ class Zattoo(Plugin):
         self._uuid = self._session_attributes.get('uuid')
         self._authed = (self._session_attributes.get('power_guide_hash')
                         and self._uuid
-                        and self.session.http.cookies.get(
-                                'pzuid', domain=self.domain)
-                        and self.session.http.cookies.get(
-                                'beaker.session.id', domain=self.domain)
+                        and self.session.http.cookies.get('pzuid', domain=self.domain)
+                        and self.session.http.cookies.get('beaker.session.id', domain=self.domain)
                         )
         self._session_control = self._session_attributes.get('session_control',
                                                              False)
@@ -151,7 +155,11 @@ class Zattoo(Plugin):
 
         # a new session is required for the app_token
         self.session.http.cookies = cookiejar_from_dict({})
-        res = self.session.http.get(self.base_url)
+        if self.base_url == 'https://zattoo.com':
+            app_token_url = 'https://zattoo.com/int/'
+        else:
+            app_token_url = self.base_url
+        res = self.session.http.get(app_token_url)
         match = self._app_token_re.search(res.text)
 
         app_token = match.group(1)

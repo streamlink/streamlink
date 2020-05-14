@@ -1,19 +1,26 @@
-from streamlink.plugins.adultswim import AdultSwim
 import unittest
+
+from streamlink.plugins.adultswim import AdultSwim
 
 
 class TestPluginAdultSwim(unittest.TestCase):
     def test_can_handle_url(self):
-        # should match
-        self.assertTrue(AdultSwim.can_handle_url("http://www.adultswim.com/videos/streams/toonami"))
-        self.assertTrue(AdultSwim.can_handle_url("http://www.adultswim.com/videos/streams/"))
-        self.assertTrue(AdultSwim.can_handle_url("http://www.adultswim.com/videos/streams/last-stream-on-the-left"))
-        self.assertTrue(AdultSwim.can_handle_url("http://www.adultswim.com/videos/specials/the-adult-swim-golf-classic-extended/"))
-        self.assertTrue(AdultSwim.can_handle_url("http://www.adultswim.com/videos/streams/toonami-pre-flight/friday-december-30th-2016"))
+        should_match = [
+            "http://www.adultswim.com/videos/streams/toonami",
+            "http://www.adultswim.com/videos/streams/",
+            "http://www.adultswim.com/videos/streams/last-stream-on-the-left",
+            "http://www.adultswim.com/videos/specials/the-adult-swim-golf-classic-extended/",
+            "http://www.adultswim.com/videos/streams/toonami-pre-flight/friday-december-30th-2016"
+        ]
+        for url in should_match:
+            self.assertTrue(AdultSwim.can_handle_url(url))
 
-        # shouldn't match
-        self.assertFalse(AdultSwim.can_handle_url("http://www.tvcatchup.com/"))
-        self.assertFalse(AdultSwim.can_handle_url("http://www.youtube.com/"))
+        should_not_match = [
+            "http://www.tvcatchup.com/",
+            "http://www.youtube.com/"
+        ]
+        for url in should_not_match:
+            self.assertFalse(AdultSwim.can_handle_url(url))
 
     def _test_regex(self, url, expected):
         m = AdultSwim.url_re.match(url)

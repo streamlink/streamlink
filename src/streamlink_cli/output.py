@@ -47,14 +47,18 @@ class Output(object):
 
 
 class FileOutput(Output):
-    def __init__(self, filename=None, fd=None):
+    def __init__(self, filename=None, fd=None, record=None):
         super(FileOutput, self).__init__()
         self.filename = filename
         self.fd = fd
+        self.record = record
 
     def _open(self):
         if self.filename:
             self.fd = open(self.filename, "wb")
+
+        if self.record:
+            self.record.open()
 
         if is_win32:
             msvcrt.setmode(self.fd.fileno(), os.O_BINARY)
@@ -62,16 +66,20 @@ class FileOutput(Output):
     def _close(self):
         if self.fd is not stdout:
             self.fd.close()
+        if self.record:
+            self.record.close()
 
     def _write(self, data):
         self.fd.write(data)
+        if self.record:
+            self.record.write(data)
 
 
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True, call=False, http=None,
-                 namedpipe=None, title=None):
+    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True,
+                 call=False, http=None, namedpipe=None, record=None, title=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
         self.args = args
@@ -85,6 +93,7 @@ class PlayerOutput(Output):
         self.title = title
         self.player = None
         self.player_name = self.supported_player(self.cmd)
+        self.record = record
 
         if self.namedpipe or self.filename or self.http:
             self.stdin = sys.stdin
@@ -124,7 +133,8 @@ class PlayerOutput(Output):
 
     @classmethod
     def _mpv_title_escape(cls, title_string):
-        # mpv has a "disable property-expansion" token which must be handled in order to accurately represent $$ in title
+        # mpv has a "disable property-expansion" token which must be handled
+        # in order to accurately represent $$ in title
         if r'\$>' in title_string:
             processed_title = ""
             double_dollars = True
@@ -168,8 +178,6 @@ class PlayerOutput(Output):
             filename = self.http.url
         else:
             filename = "-"
-        args = self.args.format(filename=filename)
-        cmd = self.cmd
         extra_args = []
 
         if self.title is not None:
@@ -177,24 +185,37 @@ class PlayerOutput(Output):
             if self.player_name == "vlc":
                 # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
                 self.title = self.title.replace("$", "$$").replace(r'\$$', "$")
-                extra_args.extend(["--input-title-format", self.title])
+                extra_args.extend([u"--input-title-format", self.title])
 
             # mpv
             if self.player_name == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
                 self.title = self._mpv_title_escape(self.title)
-                extra_args.extend(["--title", self.title])
+                extra_args.append(u"--title={}".format(self.title))
+
+            # potplayer
+            if self.player_name == "potplayer":
+                if filename != "-":
+                    # PotPlayer - About - Command Line
+                    # You can specify titles for URLs by separating them with a backslash (\) at the end of URLs.
+                    # eg. "http://...\title of this url"
+                    self.title = self.title.replace('"', '')
+                    filename = filename[:-1] + '\\' + self.title + filename[-1]
+
+        args = self.args.format(filename=filename)
+        cmd = self.cmd
 
         # player command
         if is_win32:
             eargs = maybe_decode(subprocess.list2cmdline(extra_args))
             # do not insert and extra " " when there are no extra_args
-            return maybe_encode(u' '.join([cmd] + ([eargs] if eargs else []) + [args]),
-                                encoding=get_filesystem_encoding())
+            return u' '.join([cmd] + ([eargs] if eargs else []) + [args])
         return shlex.split(cmd) + extra_args + shlex.split(args)
 
     def _open(self):
         try:
+            if self.record:
+                self.record.open()
             if self.call and self.filename:
                 self._open_call()
             else:
@@ -207,8 +228,13 @@ class PlayerOutput(Output):
 
     def _open_call(self):
         args = self._create_arguments()
-        log.debug(u"Calling: {0}".format(subprocess.list2cmdline(args)))
-        subprocess.call(args,
+        if is_win32:
+            fargs = args
+        else:
+            fargs = subprocess.list2cmdline(args)
+        log.debug(u"Calling: {0}".format(fargs))
+
+        subprocess.call(maybe_encode(args, get_filesystem_encoding()),
                         stdout=self.stdout,
                         stderr=self.stderr)
 
@@ -216,8 +242,13 @@ class PlayerOutput(Output):
         # Force bufsize=0 on all Python versions to avoid writing the
         # unflushed buffer when closing a broken input pipe
         args = self._create_arguments()
-        log.debug(u"Opening subprocess: {0}".format(subprocess.list2cmdline(args)))
-        self.player = subprocess.Popen(args,
+        if is_win32:
+            fargs = args
+        else:
+            fargs = subprocess.list2cmdline(args)
+        log.debug(u"Opening subprocess: {0}".format(fargs))
+
+        self.player = subprocess.Popen(maybe_encode(args, get_filesystem_encoding()),
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)
@@ -240,6 +271,9 @@ class PlayerOutput(Output):
         elif not self.filename:
             self.player.stdin.close()
 
+        if self.record:
+            self.record.close()
+
         if self.kill:
             with ignored(Exception):
                 self.player.terminate()
@@ -254,6 +288,9 @@ class PlayerOutput(Output):
         self.player.wait()
 
     def _write(self, data):
+        if self.record:
+            self.record.write(data)
+
         if self.namedpipe:
             self.namedpipe.write(data)
         elif self.http:

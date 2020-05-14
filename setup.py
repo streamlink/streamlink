@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 import codecs
-from os import environ
-from os import path
-from sys import path as sys_path
+from os import environ, path
+from sys import argv, path as sys_path
 
 from setuptools import setup, find_packages
 
@@ -13,8 +12,8 @@ deps = [
     'futures;python_version<"3.0"',
     # Require singledispatch on Python <3.4
     'singledispatch;python_version<"3.4"',
-    "requests>=2.2,!=2.12.0,!=2.12.1,!=2.16.0,!=2.16.1,!=2.16.2,!=2.16.3,!=2.16.4,!=2.16.5,!=2.17.1,<3.0",
-    'urllib3[secure]<1.23,>=1.21.1;python_version<"3.0"',
+    "requests>=2.21.0,<3.0",
+    'urllib3[secure]>=1.23;python_version<"3.0"',
     "isodate",
     "websocket-client",
     # Support for SOCKS proxies
@@ -53,6 +52,27 @@ sys_path.insert(0, srcdir)
 with codecs.open(path.join(this_directory, "README.md"), 'r', "utf8") as f:
     long_description = f.read()
 
+
+def is_wheel_for_windows():
+    if "bdist_wheel" in argv:
+        names = ["win32", "win-amd64", "cygwin"]
+        length = len(argv)
+        for pos in range(argv.index("bdist_wheel") + 1, length):
+            if argv[pos] == "--plat-name" and pos + 1 < length:
+                return argv[pos + 1] in names
+            elif argv[pos][:12] == "--plat-name=":
+                return argv[pos][12:] in names
+    return False
+
+
+entry_points = {
+    "console_scripts": ["streamlink=streamlink_cli.main:main"]
+}
+
+if is_wheel_for_windows():
+    entry_points["gui_scripts"] = ["streamlinkw=streamlink_cli.main:main"]
+
+
 setup(name="streamlink",
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
@@ -74,12 +94,10 @@ setup(name="streamlink",
       license="Simplified BSD",
       packages=find_packages("src"),
       package_dir={"": "src"},
-      entry_points={
-          "console_scripts": ["streamlink=streamlink_cli.main:main"]
-      },
+      entry_points=entry_points,
       install_requires=deps,
       test_suite="tests",
-      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4",
+      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4",
       classifiers=["Development Status :: 5 - Production/Stable",
                    "License :: OSI Approved :: BSD License",
                    "Environment :: Console",
@@ -88,10 +106,10 @@ setup(name="streamlink",
                    "Operating System :: Microsoft :: Windows",
                    "Operating System :: MacOS",
                    "Programming Language :: Python :: 2.7",
-                   "Programming Language :: Python :: 3.4",
                    "Programming Language :: Python :: 3.5",
                    "Programming Language :: Python :: 3.6",
                    "Programming Language :: Python :: 3.7",
+                   "Programming Language :: Python :: 3.8",
                    "Topic :: Internet :: WWW/HTTP",
                    "Topic :: Multimedia :: Sound/Audio",
                    "Topic :: Multimedia :: Video",

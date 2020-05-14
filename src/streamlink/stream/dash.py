@@ -1,3 +1,4 @@
+import copy
 import itertools
 import logging
 import datetime
@@ -11,6 +12,7 @@ from streamlink.stream.stream import Stream
 from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc, freeze_timeline
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+from streamlink.utils import parse_xml
 from streamlink.utils.l10n import Language
 
 log = logging.getLogger(__name__)
@@ -29,7 +31,8 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return
 
         try:
-            headers = {}
+            request_args = copy.deepcopy(self.reader.stream.args)
+            headers = request_args.pop("headers", {})
             now = datetime.datetime.now(tz=utc)
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
@@ -48,7 +51,8 @@ class DASHStreamWriter(SegmentedStreamWriter):
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
                                          exception=StreamError,
-                                         headers=headers)
+                                         headers=headers,
+                                         **request_args)
         except StreamError as err:
             log.error("Failed to open segment {0}: {1}", segment.url, err)
             return self.fetch(segment, retries - 1)
@@ -108,7 +112,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
 
         self.reader.buffer.wait_free()
         log.debug("Reloading manifest ({0}:{1})".format(self.reader.representation_id, self.reader.mime_type))
-        res = self.session.http.get(self.mpd.url, exception=StreamError)
+        res = self.session.http.get(self.mpd.url, exception=StreamError, **self.stream.args)
 
         new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
                       base_url=self.mpd.base_url,
@@ -136,7 +140,6 @@ class DASHStreamReader(SegmentedStreamReader):
         log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))
 
 
-
 class DASHStream(Stream):
     __shortname__ = "dash"
 
@@ -162,22 +165,26 @@ class DASHStream(Stream):
         return dict(type=type(self).shortname(), url=req.url, headers=headers)
 
     @classmethod
-    def parse_manifest(cls, session, url, **args):
+    def parse_manifest(cls, session, url_or_manifest, **args):
         """
         Attempt to parse a DASH manifest file and return its streams
 
         :param session: Streamlink session instance
-        :param url: URL of the manifest file
+        :param url_or_manifest: URL of the manifest file or an XML manifest string
         :return: a dict of name -> DASHStream instances
         """
         ret = {}
-        res = session.http.get(url, **args)
-        url = res.url
 
-        urlp = list(urlparse(url))
-        urlp[2], _ = urlp[2].rsplit("/", 1)
+        if url_or_manifest.startswith('<?xml'):
+            mpd = MPD(parse_xml(url_or_manifest, ignore_ns=True))
+        else:
+            res = session.http.get(url_or_manifest, **args)
+            url = res.url
 
-        mpd = MPD(session.http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
+            urlp = list(urlparse(url))
+            urlp[2], _ = urlp[2].rsplit("/", 1)
+
+            mpd = MPD(session.http.xml(res, ignore_ns=True), base_url=urlunparse(urlp), url=url)
 
         video, audio = [], []
 
@@ -216,7 +223,10 @@ class DASHStream(Stream):
             # filter by the first language that appears
             lang = audio[0] and audio[0].lang
 
-        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(", ".join(available_languages) or "NONE", lang or "n/a"))
+        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(
+            ", ".join(available_languages) or "NONE",
+            lang or "n/a"
+        ))
 
         # if the language is given by the stream, filter out other languages that do not match
         if len(available_languages) > 1:

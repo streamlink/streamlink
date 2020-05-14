@@ -13,13 +13,14 @@ class TestPluginMitele(unittest.TestCase):
             "http://www.mitele.es/directo/energy",
             "http://www.mitele.es/directo/fdf",
             "http://www.mitele.es/directo/telecinco",
+            "https://www.mitele.es/directo/gh-duo-24h-senal-1",
+            "https://www.mitele.es/directo/gh-duo-24h-senal-2",
         ]
         for url in should_match:
             self.assertTrue(Mitele.can_handle_url(url))
 
         should_not_match = [
             "http://www.mitele.es",
-            "http://www.mitele.es/directo/random_channel",
         ]
         for url in should_not_match:
             self.assertFalse(Mitele.can_handle_url(url))

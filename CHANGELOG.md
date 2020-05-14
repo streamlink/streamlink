@@ -1,5 +1,712 @@
 # Changelog
 
+## streamlink 1.4.1 (2020-04-24)
+
+No code changes. [See the full `1.4.0` changelog here.](https://github.com/streamlink/streamlink/releases/tag/1.4.0)
+
+
+```text
+beardypig <beardypig@protonmail.com> (1):
+      build: include correct signing key: 0xE3DB9E282E390FA0
+```
+
+
+## streamlink 1.4.0 (2020-04-22)
+
+This will be the last release with support for Python 2, as it has finally reached its EOL at the beginning of this year.
+
+Streamlink 1.4.0 comes with lots of plugin fixes/improvements, as well as some new features and plugins, and also a few plugin removals.
+
+Notable changes:
+
+- New: low latency streaming on Twitch via `--twitch-low-latency` ([#2513](https://github.com/streamlink/streamlink/pull/2513))
+- New: output HLS segment data immediately via `--hls-segment-stream-data` ([#2513](https://github.com/streamlink/streamlink/pull/2513))
+- New: always show download progress via `--force-progress` ([#2438](https://github.com/streamlink/streamlink/pull/2438))
+- New: URL template support for `--hls-segment-key-uri` ([#2821](https://github.com/streamlink/streamlink/pull/2821))
+- Removed: Twitch auth logic, `--twitch-oauth-token`, `--twitch-oauth-authenticate`, `--twitch-cookie` ([#2846](https://github.com/streamlink/streamlink/pull/2846))
+- Fixed: Youtube plugin ([#2858](https://github.com/streamlink/streamlink/pull/2858))
+- Fixed: Crunchyroll plugin ([#2788](https://github.com/streamlink/streamlink/pull/2788))
+- Fixed: Pixiv plugin ([#2840](https://github.com/streamlink/streamlink/pull/2840))
+- Fixed: TVplayer plugin ([#2802](https://github.com/streamlink/streamlink/pull/2802))
+- Fixed: Zattoo plugin ([#2887](https://github.com/streamlink/streamlink/pull/2887))
+- Changed: set Firefox User-Agent HTTP header by default ([#2795](https://github.com/streamlink/streamlink/pull/2795))
+- Changed: upgraded bundled FFmpeg to `4.2.2` in Windows installer ([#2916](https://github.com/streamlink/streamlink/pull/2916))
+
+
+```text
+Adam Baxter <github@voltagex.org> (1):
+      stream.hls_playlist: Add extra logging for invalid #EXTM3U line (#2479)
+
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      docs: fix duplicate object description of streamlink in api docs
+
+Colas Broux <colas.broux@free.fr> (2):
+      plugins.youtube: Fix for new Youtube VOD API (#2858)
+      Updating README Applying changes from 1402fb0 to the README Closes #2880
+
+Finn <finn@finn.io> (1):
+      plugins.invintus: Add support for Invintus Media live streams and VOD (#2845)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (3):
+      Fix tvplayer plugin and tests (#2802)
+      plugins.piczel: Added HLS, Removed RTMP (#2815)
+      plugins.reuters: fix (#2811)
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.tf1: use new API to retrieve DASH streams (#2759)
+
+Riolu <16816842+iucario@users.noreply.github.com> (1):
+      plugins.radiko: Add support for radiko.jp (#2826)
+
+Uinden <25625733+Uinden@users.noreply.github.com> (1):
+      plugins.wasd: new plugin for WASD.TV (#2641)
+
+YYY <yyy3752@gmail.com> (1):
+      plugins.nicolive: new plugin for Niconico Live (#2651)
+
+Yavuz Kömeçoğlu <komecoglu.yavuz@gmail.com> (1):
+      plugins.galatasaraytv: Add support for GALATASARAY SK TV (#2760)
+
+Zhenyu Hu <andyhuzhill@users.noreply.github.com> (1):
+      plugins.kugou:  Add Kugou Fanxing live plugin (#2794)
+
+back-to <backto@protonmail.ch> (17):
+      plugin.api: use Firefox as default User-Agent instead of python-requests
+      plugins.filmon: retry for 50X errors
+      cli: New command --force-progress (#2438)
+      travis-ci: don't run doctr on pull requests
+      plugins.bilibili: ignore unavailable URLs (#2818)
+      plugins.mlgtv: remove plugin they use DRM for Livestreams (#2829)
+      plugins.twitch: Fixed clips (#2843)
+      plugins.showroom: Fix HLS missing segments
+      plugins.kanal7: Removed Plugin they use static URLs
+      plugins.rotana: new plugin for rotana.net (#2838)
+      plugins.pixiv: removed not working login process via username (#2840)
+      plugins.abema: support for Abema overseas version
+      plugins.younow: remove plugin
+      plugin.api.useragents: update User-Agent
+      plugins.zattoo: fix app token and new recording URL
+      plugins.zeenews: new plugin for https://zeenews.india.com/live-tv
+      AUTHORS: removed unused script and removed outdated list (#2889)
+
+bastimeyer <mail@bastimeyer.de> (58):
+      plugins.twitch: fix rerun validation schema
+      flake8: E303
+      flake8: E111
+      flake8: E117
+      flake8: E121
+      flake8: E122
+      flake8: E126, E127, E128
+      flake8: E203, E226, E231, E241, E261
+      flake8: E265
+      flake8: E302, E305
+      flake8: E402
+      flake8: E712
+      flake8: W291, W292, W293, W391
+      flake8: F401, F403
+      flake8: F405
+      flake8: F811
+      flake8: F841
+      flake8: W504
+      flake8: E741
+      flake8: E501
+      flake8: F601
+      flake8: E722
+      flake8: F821
+      flake8: F812
+      flake8: add flake8 to TravisCI
+      cleanup: remove unnecessary unittest.main() calls
+      cleanup: remove unnecessary python shebangs
+      PEP263: use consistent utf-8 coding header comment
+      tools: add .editorconfig
+      stream.hls: add hls-segment-stream-data parameter
+      plugins.twitch: low latency
+      plugins.twitch: disable LL when filtering ads
+      plugins.twitch: print info msg if stream is not LL
+      plugins.bloomberg: fix vods and live streams
+      plugins.twitch: remove cookie auth
+      plugins.twitch: remove oauth token login
+      docs: fix multiple options on the same line
+      ci.github: implement main workflow
+      ci.github: add release config and rewrite scripts
+      ci.github: add scheduled nightly builds
+      ci.github: deploy documentation
+      ci: show extra test summary info
+      ci: remove old CI configs
+      ci.github: fix codecov uploads
+      cleanup: change build badge and link in README.md
+      cleanup: remove TravisCI from deploy scripts
+      ci: remove macOS test runners
+      codecov: wait before notifying
+      docs: rewrite windows nightly builds section
+      docs: rewrite pip/source install section
+      docs: fix and rewrite index page
+      docs: reformat donation page
+      ci.github: fix continue on error
+      installer: rewrite / clean up makeinstaller script
+      installer: download ffmpeg+rtmpdump assets
+      installer: delete locally included binary files
+      plugins.twitch: rewrite disable ads logic
+      Release 1.4.0
+
+beardypig <beardypig@protonmail.com> (10):
+      update release signing key
+      update docs deployment key
+      plugins.tv360: updated URL and HLS stream extraction method
+      util: fix some encoding issue when setting unicode/utf8 titles in py2
+      cli.output: make sure the player arguments are properly encoded
+      utils: update_qsd to leave blank values unchanged (#2869)
+      plugins.eurocom: remove eurocom plugin
+      plugins.tv1channel: remove tv1channel plugin
+      actions: no need to use a secret for the PyPI username
+      add python 2.7 deprecation warning
+
+danieljpiazza <daniel.joseph.piazza@gmail.com> (1):
+      Update Crunchyroll access token. Fixes streamlink/streamlink issue #2785.
+
+malvinas2 <malvinas2@gmx.de> (3):
+      plugins.latina: new plugin for https://www.latina.pe/tvenvivo (#2793)
+      plugins.albavision: Added support for ATV and ATVMas (#2801)
+      plugins.rtve: Added support for clan tve, children's channel of RTVE (#2875)
+
+steven7851 <steven7851@msn.com> (1):
+      plugins.app17: fix for new layout (#2833)
+
+tarkah <cforsstrom18@gmail.com> (1):
+      stream.hls: add templating for hls-segment-key-uri option (#2821)
+```
+
+
+## streamlink 1.3.1 (2020-01-27)
+
+A small patch release that addresses the removal of [MPV's legacy option syntax](https://mpv.io/manual/master/#legacy-option-syntax), also with fixes of several plugins, the addition of the `--twitch-disable-reruns` parameter and dropped support for Python 3.4.
+
+
+```text
+Hunter Peavey <krathalan@disroot.org> (4):
+      Add wtwitch to list of thirdparty programs
+      Try adding an image
+      Move image position
+      Make requested changes
+
+Vladimir Stavrinov <9163352+vstavrinov@users.noreply.github.com> (1):
+      plugins.nhkworld: the site migrates from xml to json stream data
+
+back-to <backto@protonmail.ch> (6):
+      docs/tests: remove python 3.4, use 3.8 and nightly for travis-ci
+      plugins.bilibili: fix Livestreams with status 1 (set Referer)
+      plugins.youtube: Remove itag 303
+      plugins.ustream: Added support for video.ibm.com
+      plugins.bbciplayer: Fixed login params
+      plugins.bbciplayer: remove test_extract_nonce
+
+bastimeyer <mail@bastimeyer.de> (5):
+      plugins.twitch: use python logging module
+      plugins.twitch: fix rerun detection
+      cli.output: fix mpv player parameter format
+      2020
+      docs: fix MPV parameters on common issues page
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      Allow to disable twitch reruns (#2722)
+```
+
+
+## streamlink 1.3.0 (2019-11-22)
+
+A new release with plugin updates and fixes, including Twitch.tv (see [#2680](https://github.com/streamlink/streamlink/issues/2680)), which had to be delayed due to back and forth API changes.
+
+The Twitch.tv workarounds mentioned in [#2680](https://github.com/streamlink/streamlink/issues/2680) don't have to be applied anymore, but authenticating via `--twitch-oauth-token` has been disabled, regardless of the origin of the OAuth token (via `--twitch-oauth-authenticate` or the Twitch website). In order to not introduce breaking changes, both parameters have been kept in this release and the user name will still be logged when using an OAuth token, but receiving item drops or accessing restricted streams is not possible anymore.
+
+Plugins for the following sites have also been added:
+  - albavision
+  - news.now.com
+  - twitcasting.tv
+  - viu.tv
+  - vlive.tv
+  - willax.tv
+
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      plugins.pixiv: fix doc typo thats -> that's
+
+Mohamed El Morabity <melmorabity@fedoraproject.org> (1):
+      plugins.idf1: HTTPS support
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.playtv: Fix for new stream data API (#2388)
+
+Ozan Karaali <ozan.karaali@gmail.com> (1):
+      plugins.foxtr: Extended support
+
+Ozan Karaali <ozankaraali@users.noreply.github.com> (1):
+      plugins.cinergroup: #2390 fix (#2629)
+
+Troogle <Troogle@users.noreply.github.com> (1):
+      plugins.bilibili: fix resolution issue
+
+Werner Robitza <werner.robitza@gmail.com> (1):
+      remove direct installation instructions, link to docs
+
+back-to <backto@protonmail.ch> (6):
+      setup.cfg: added flake8 settings
+      plugins.vk: use html_unescape for HLS streams
+      plugins.willax: new plugin for http://willax.tv/en-vivo/
+      plugins.zattoo: _url_re update for some new urls
+      plugin.api.useragents: update CHROME and FIREFOX User-Agent
+      stream.hls: Fix UnicodeDecodeError for log msg and name_prefix for stream_name
+
+bastimeyer <mail@bastimeyer.de> (3):
+      ci/travis: install pynsist 2.4
+      plugins.twitch: fix API issue - 410 gone error
+      docs.cli: fix and reword the tutorial section
+
+beardypig <beardypig@protonmail.com> (10):
+      plugins.bbciplayer: update API URL to use https
+      plugins.nownews: added support for the HK news site news.now.com
+      plugins.tv8: update regex for the stream url
+      plugins.bbciplayer: fix issue with nonce extraction
+      plugins.bbciplayer: extract master brand/channel id from the state json
+      plugins.itvplayer: Use flash streams for ITV1/ITV4
+      plugins.viutv: support for the viu.tv live stream
+      plugins.albavision: support for some albavision live streams
+      plugins.bloomberg: fix issue where the incorrect playlist could be used
+      stream.streamprocess: check that a process is usable before using it
+
+derrod <xlnedder@gmail.com> (1):
+      plugins.vlive: Add support for V LIVE live streams
+
+printempw <printempw@gmail.com> (1):
+      plugins.twitcasting: new plugin for TwitCasting.tv
+
+ssaqua <ssaqua@users.noreply.github.com> (1):
+      plugins.linelive: update to support VOD/archived streams
+```
+
+
+## streamlink 1.2.0 (2019-08-18)
+
+Here are the changes for this month's release
+
+- Multiple plugin fixes
+- Fixed single hyphen params at the beginning of --player-args (#2333)
+- `--http-proxy` will set the default value of `--https-proxy` to same as `--http-proxy`. (#2536)
+- DASH Streams will handle headers correctly (#2545)
+- the timestamp for FFMPEGMuxer streams will start with zero (#2559)
+
+
+```text
+Davi Guimarães <davi.guimaraesleite@gmail.com> (1):
+      plugins.cubetv: base url changes (#2430)
+
+Forrest <gravyboat@users.noreply.github.com> (1):
+      Add a sponsor button (#2478)
+
+Jiting <jiting@jtcat.com> (1):
+      plugin.youtube: bug fix for YouTube live streams check
+
+Juan Ramirez <jramirez@encompass.tv> (2):
+      Invalid use of console.logger in CLI
+      Too many arguments for logging format string
+
+Mohamed El Morabity <melmorabity@fedoraproject.org> (9):
+      plugins.vimeo: new plugin for Vimeo streams
+      plugins.vimeo: add subtitle support for vimeo plugin
+      plugins.vimeo: fix alphabetical order in plugin matrix
+      Use class parameter instead of class name in class method
+      [plugins.bfmtv] Fix player regex
+      [plugins.idf1] Update for new website layout
+      plugins.gulli: enable HTTPS support
+      plugins.gulli: fix live stream fetching
+      plugins.tvrplus: fix for new website layout
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.clubbingtv: new plugin for Clubbing TV website (#2569)
+
+Viktor Kálmán <kviktor@users.noreply.github.com> (1):
+      plugins.mediaklikk: update broken plugin (#2401)
+
+Vladimir Stavrinov <vstavrinov@gmail.com> (2):
+      plugins.live_russia_tv: adjust to site changes (#2523)
+      plugins.oneplusone: fix site changes (#2425)
+
+YuuichiMizuoka <32476209+YuuichiMizuoka@users.noreply.github.com> (1):
+      add login posibility for pixiv using sessionid and devicetoken
+
+aqxa1 <asheldon55@gmail.com> (1):
+      Handle keyboard interrupts in can_handle_url checks (#2318)
+
+back-to <backto@protonmail.ch> (12):
+      cli.argparser: Fix single hyphen params at the beginning of --player-args
+      plugins.reuters: New Plugin
+      plugins: Removed rte and tvcatchup
+      utils.__init__: remove cElementTree, it's just an alias for ElementTree
+      plugins.teamliquid: New domain, fix stream_weight
+      plugins.vimeo: Fixed DASH Livestreams
+      plugin.api.useragents: update CHROME and FIREFOX User-Agent
+      ffmpegmux: use -start_at_zero with -copyts
+      plugins.youtube: fixed reason msg, updated _url_re
+      plugins.TV1Channel: Fixed new livestream iframe
+      plugins.npo: removed due to DRM
+      plugins.lrt: fixed livestreams
+
+bastimeyer <mail@bastimeyer.de> (1):
+      plugins.welt: fix plugin
+
+beardypig <beardypig@protonmail.com> (13):
+      plugins.bbciplayer: small change to where the VPID is extracted from (#2376)
+      plugins.goodgame: fix for debug logging error
+      plugins.cdnbg: fix for bstv url
+      plugins.ustvnow: updated to handle new auth, and site design
+      plugin.schoolism: bug fix for videos with subtitles (#2524)
+      stream.dash: use the stream args in the writer and worker
+      session: default https-proxy to the same as http-proxy, can be overridden
+      plugins.beattv: partial fix for the be-at.tv streams
+      tests: test the behaviour of setting http-proxy and https-proxy
+      plugins.twitch: support for different clips URL
+      plugins.wwenetwork: support for new site
+      plugins.ustreamtv: add support for proxying WebSocket connections
+      plugins.wwenetwork: update for small page/api change
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      plugins.DLive: New Plugin for dlive.tv (#2419)
+
+ssaqua <ssaqua@users.noreply.github.com> (1):
+      plugins.linelive: new plugin for LINE LIVE (live.line.me) (#2574)
+```
+
+
+## streamlink 1.1.1 (2019-04-02)
+
+This is just a small patch release which fixes a build/deploy issue with the new special wheels for Windows on PyPI. (#2392)
+
+[Please see the full changelog of the `1.1.0` release!](https://github.com/streamlink/streamlink/releases/tag/1.1.0)
+
+
+```text
+Forrest <gravyboat@users.noreply.github.com> (1):
+      build: remove cygwin from wheels for Windows (#2393)
+```
+
+
+## streamlink 1.1.0 (2019-03-31)
+
+These are the highlights of Streamlink's first minor release after the 1.0.0 milestone:
+
+- several plugin fixes, improvements and new plugin implementations
+- addition of the `--twitch-disable-ads` parameter for filtering out advertisement segments from Twitch.tv streams (#2372)
+- DASH stream improvements (#2285)
+- documentation enhancements (#2292, #2293)
+- addition of the `{url}` player title variable (#2232)
+- default player title config for PotPlayer (#2224)
+- new `streamlinkw` executable on Windows (wheels + installer) (#2326)
+- Github release assets simplification (#2360)
+
+
+```text
+Brian Callahan <bcallah@openbsd.org> (1):
+      Add OpenBSD to the installation docs
+
+Peter Rowlands (변기호) <peter@pmrowla.com> (2):
+      streams.dash: Support manifest strings in addition to manifest urls (#2285)
+      plugins.facebook: Support manifest strings and tahoe player urls (#2286)
+
+Roman Kornev <w.romankornev@gmail.com> (2):
+      cli.main: Add {url} argument to window --title (#2232)
+      cli.output: Add window title for PotPlayer (#2224)
+
+Sebastian Meyer <mail@bastimeyer.de> (1):
+      Build additional "streamlinkw" launcher on Windows (#2326)
+
+Steve Oswald <30654895+SteveOswald@users.noreply.github.com> (1):
+      plugins.zattoo: Added support for www.1und1.tv (#2274)
+
+Vladimir Stavrinov <vstavrinov@gmail.com> (2):
+      plugins.ntv: new Plugin for ntv.ru (#2351)
+      plugins.live_russia_tv: fix iframe format differences (#2375)
+
+back-to <backto@protonmail.ch> (13):
+      plugins.atresplayer: Fixed HLSStream
+      plugins.streamme: Fixed source quality, added title and author
+      plugins.atresplayer: update for new api schema
+      plugins.mitele: plugin update
+      plugins.ustreamtv: handle stream names better, allow '_alt' streams (#2267)
+      plugins.rtve: Fixed content_id search (#2300)
+      plugins.streamme: Fixed null error for 'origin'
+      tests: detect unsupported versions for itertags
+      plugins.pluzz: Fixed Video ID and logging update
+      plugins.pluzz: Fixed regex, they use quotes now.
+      plugins.cdnbg: New domain videochanel.bstv.bg
+      plugins.tf1: Fixed python2.7 ascii error
+      plugins.okru: Fixed Plugin (#2374)
+      plugins.rtpplay: fix _m3u8_re and plugin cleanup
+
+bastimeyer <mail@bastimeyer.de> (13):
+      docs/install: git+makepkg instead of AUR helper
+      docs/install: rewrite source code and pip section
+      docs/install: shell code blocks, remove prompts
+      docs/install: simplify pip user/system table
+      docs/install: rewrite virtual env section
+      docs/install: move Windows and macOS to the top
+      Add force_verify=true to Twitch OAuth URL
+      plugins.twitch: platform=_ in access_token request
+      TravisCI: don't publish wheels on Github releases
+      stream.hls: refactor M3U8Parser
+      stream.hls: refactor HLSStream{,Worker}
+      plugins.twitch: implement disable-ads parameter
+      Release 1.1.0
+
+beardypig <beardypig@protonmail.com> (2):
+      plugins.dogus: support for YouTube embedded streams
+      plugins.bbciplayer: do not try to authenticate when not required
+
+lon <rliouke@gmail.com> (1):
+      plugins.crunchyroll: Allow CR's multilingual URLs to be handled (#2304)
+```
+
+
+## streamlink 1.0.0 (2019-01-30)
+
+The celebratory release of Streamlink 1.0.0!
+
+*A lot* of hard work has gone into getting Streamlink to where it is. Not only is Streamlink used across multiple applications and platforms, but companies as well. 
+
+Streamlink started from the inaugural [fork of Livestreamer](https://github.com/chrippa/livestreamer/issues/1427) on September 17th, 2016. 
+
+Since then, We've hit multiple milestones:
+
+ - Over 886 PRs
+ - Hit 3,000 commits in Streamlink
+ - Obtaining our first sponsors as well as backers of the project
+ - The creation of our own logo (https://github.com/streamlink/streamlink/issues/1123)
+
+Thanks to everyone who has contributed to Streamlink (and our backers)! Without you, we wouldn't be where we are today.
+
+**Without further ado, here are the changes in release 1.0.0:**
+
+  - We have a new icon / logo for Streamlink! (https://github.com/streamlink/streamlink/pull/2165)
+  - Updated dependencies (https://github.com/streamlink/streamlink/pull/2230)
+  - A *ton* of plugin updates. Have a look at [this search query](https://github.com/streamlink/streamlink/pulls?utf8=%E2%9C%93&q=is%3Apr+is%3Aclosed+plugins.+) for all the recent updates.
+  - You can now provide a custom key URI to override HLS streams (https://github.com/streamlink/streamlink/pull/2139). For example: `--hls-segment-key-uri <URI>`
+  - User agents for API communication have been updated (https://github.com/streamlink/streamlink/pull/2194)
+  - Special synonyms have been added to sort "best" and "worst" streams (https://github.com/streamlink/streamlink/pull/2127). For example: `streamlink --stream-sorting-excludes '>=480p' URL best,best-unfiltered`
+  - Process output will no longer show if tty is unavailable (https://github.com/streamlink/streamlink/pull/2090)
+  - We've removed BountySource in favour of our OpenCollective page. If you have any features you'd like to request, please open up an issue with the request and possibly consider backing us!
+  - Improved terminal progress display for wide characters (https://github.com/streamlink/streamlink/pull/2032)
+  - Fixed a bug with dynamic playlists on playback (https://github.com/streamlink/streamlink/pull/2096)
+  - Fixed makeinstaller.sh (https://github.com/streamlink/streamlink/pull/2098)
+  - Old Livestreamer deprecations and API references were removed (https://github.com/streamlink/streamlink/pull/1987)
+  - Dependencies have been updated for Python (https://github.com/streamlink/streamlink/pull/1975)
+  - Newer and more common User-Agents are now used (https://github.com/streamlink/streamlink/pull/1974)
+  - DASH stream bitrates now round-up to the nearest 10, 100, 1000, etc. (https://github.com/streamlink/streamlink/pull/1995)
+  - Updated documentation on issue templates (https://github.com/streamlink/streamlink/pull/1996)
+  - URL have been added for better processing of HTML tags (https://github.com/streamlink/streamlink/pull/1675)
+  - Fixed sort and prog issue (https://github.com/streamlink/streamlink/pull/1964)
+  - Reformatted issue templates (https://github.com/streamlink/streamlink/pull/1966)
+  - Fixed crashing bug with player-continuous-http option (https://github.com/streamlink/streamlink/pull/2234)
+  - Make sure all dev dependencies (https://github.com/streamlink/streamlink/pull/2235)
+  - -r parameter has been replaced for --rtmp-rtmpdump (https://github.com/streamlink/streamlink/pull/2152)
+
+**Breaking changes:**
+
+  - A large number of unmaintained or NSFW plugins have been removed. You can find the PR that implemented that change here: https://github.com/streamlink/streamlink/pull/2003 . See our [CONTRIBUTING.md](https://github.com/streamlink/streamlink/blob/130489c6f5ad15488cd4ff7a25c74bf070f163ec/CONTRIBUTING.md) documentation for plugin policy.
+
+
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (3):
+      streamlink.plugins: replace global http session by self.session.http (#1925)
+      stream.hls_playlist: fix some regex pattern & code optimization (#1918)
+      plugins.filmon: fix NoPluginError, if channel is not an ID (#2005)
+
+David Bell <me@geordish.org> (1):
+      Update ine.py (#2171)
+
+Forrest <forrest.alvarez@protonmail.com> (2):
+      Remove bountysource from donation page, update flattr
+      Add a note about specifying the full player path
+
+Forrest <gravyboat@users.noreply.github.com> (2):
+      Feature/plugin request policy update (#1838)
+      Add icon, modify installer, update docs (#2165)
+
+Hubcapp <walnut.alligator@gmail.com> (1):
+      Window Titles = Stream Titles + Other Attributes (#1576)
+
+Jani Ollikainen <bestis@cd.purkki.org> (1):
+      Added support for viafree.fi
+
+Lukas <keydon@gmail.com> (1):
+      plugins.zdf_mediathek: use ptmd-template api path (#2233)
+
+Maxwell Cody <maxwellcody@riseup.net> (1):
+      Add ability to specify custom key URI override for HLS streams (#2139)
+
+Mohamed El Morabity <melmorabity@users.noreply.github.com> (1):
+      plugins.pluzz: fixes and francetvinfo.fr support (#2119)
+
+Nick Gal <nickgal@me.com> (1):
+      Update steam plugin to work with steam.tv urls
+
+Petar Kukolj <petarkukolj3@yahoo.com> (5):
+      plugins.cubetv: support for live streams on cubetv.sg
+      plugins.ok_live: Changed URL regex to support VoDs
+      plugins.bilibili: Fix plugin after API change
+      plugins.twitch: Add support for {title}, {author} and {category}
+      plugins.skai: Fix plugin after site update
+
+Roman <w.romankornev@gmail.com> (2):
+      [FIX] Debug log arguments string
+      [FIX] Debug log arguments cross-platform
+
+Roman Kornev <w.romankornev@gmail.com> (1):
+      [FIX] Message duplicate
+
+Sebastian Meyer <mail@bastimeyer.de> (1):
+      Reword+reformat issue templates for consistency (#1966)
+
+Stefan de Konink <stefan@konink.de> (1):
+      Update the documentation with comments for playing YouTube Live Streams (#2156)
+
+Søren Fuglede Jørgensen <s@fuglede.dk> (1):
+      Update and reactivate plugin for dr.dk
+
+Twilight0 <twilight@freemail.gr> (1):
+      plugins.ssh101: Fixed plugin (#1916)
+
+Vincent Rozenberg <vincentrozenberg@gmail.com> (1):
+      Update npo.py
+
+Vinny <vincent.aceto@gmail.com> (1):
+      docs: Added documentation for the Funimation plugin (#2091)
+
+Visatouch Deeying <xerodotc@gmail.com> (1):
+      Fix crash on missing output.record when using player-continous-http
+
+back-to <backto@protonmail.ch> (48):
+      plugins.EuropaPlusTV: Fix for "No connection adapters were found"
+      utils.args: Moved streamlink_cli utils.args into streamlink package
+      tests.plugins: Test that each plugin has a test file (#1885)
+      plugins.zattoo: session update and allow muxed hls / dash streams (#1902)
+      plugins.tv4play: Fix for updated website
+      debug: Added Session Language code as a debug message
+      tests: run Python 3.7 tests on AppVeyor and Travis-CI (#1928)
+      plugins.rtve: Fixed AttributeError 'ZTNRClient' has no 'session'
+      plugins.twitch: Fixed AttributeError and Flake8
+      plugins.filmon: Fixed AttributeError
+      plugins.crunchyroll: Fixed AttributeError and Flake8
+      tests.localization: use en_CA instead of en_US for test_equivalent
+      plugins.younow: Fix for session error and plugin cleanup
+      plugins.media_ccc_de: removed plugin
+      plugins.pixiv: use API for the stream URL and cache login cookies
+      plugins.youtube: Added support for {author} and {title} (#1944)
+      docs-CLI: Fix for sort and prog issue
+      plugins.ceskatelevize: Fix for https issues
+      plugins.mjunoon: use a User-Agent
+      api.useragents: use newer and more common User-Agent's
+      script.makeinstaller: use a more recent version of Python and Pycryptodome
+      Removed old Livestreamer deprecations and API references
+      plugins.sportal: Removed old RTMP streams, use HLS
+      plugins.twitch: new video URL regex
+      Removed old or unwanted Streamlink Plugins
+      tests: use unittest instead of pytest for itertags error (#1999)
+      utils.parse_xml: allow a tab for ignore_ns
+      plugins.afreeca: ignore new preloading urls
+      plugins.filmon: use the same cdn for a playlist url (#2074)
+      plugins.teleclubzoom: New plugin for teleclubzoom.ch
+      plugins.oldlivestream: remove plugin, service not available anymore (#2081)
+      travis: increase git clone depth
+      stream.dash_manifest: Fixed bug for dynamic playlists when parent.id is None
+      plugins.ustreamtv: use Desktop instead of Mobile streams (#2082)
+      plugins.youtube: Added support for embedded livestream urls
+      versioneer: always use 7 characters
+      plugins.stv: New Plugin for https://player.stv.tv/live
+      plugins.sbscokr: New Plugin for http://play.sbs.co.kr/onair/pc/index.html
+      plugins.vtvgo: New plugin for https://vtvgo.vn/
+      travis-ci: Fixed Python 3.8 error's
+      plugins.cdnbg: Update for extra channels (#2186)
+      api.useragents: update User-Agent list
+      plugins.afreeca: use Referer for every connection (#2204)
+      plugins.trt: Added support for https url, fixed logger error
+      plugins.turkuvaz: Added support for channel 'apara'
+      plugins.tvrby: Fixed broken plugin.
+      plugins.youtube: replace "gaming" with "www" subdomain
+      plugins.kanal7: Fixed iframe_re/stream_re, added new domain
+
+bastimeyer <mail@bastimeyer.de> (6):
+      Fix bug report template
+      Move/rename issue templates
+      Update generic issue template
+      plugins.euronews: fix live stream API URL scheme
+      Fix installer by moving additional files
+      feature: {best,worst}-unfiltered stream synonyms
+
+beardypig <beardypig@protonmail.com> (23):
+      plugins.live_russia_tv: fix for live streams, and support for VOD
+      plugin args: if args are suppressed, ignore them
+      plugin.tvtoya: refactor, add tests, plugin docs, etc.
+      stream.dash: fix bug where timeline_segments.t can be None
+      stream.hls: only include audio/video streams in MuxedHLSStreams
+      stream.hls: if the primary video stream has audio then include it
+      plugins.facebook: support for videos in posts
+      plugins.steam: api requests now require a session id
+      test for rounding dash stream bitrate
+      stream.dash: make the bitrate name for videos more human friendly
+      plugins.schoolism: add support for assignment feedback videos
+      plugins.senategov: support for hearing streams on senate.gov
+      plugins.stadium: support for live stream on watchstadium.com
+      plugins.funimationnow: workaround for #1899, see #2088
+      cli: make the HH part of HH:MM:SS options optional
+      plugins.bbciplayer: change in the mediator info in the page layout
+      plugins.btsports: fix for change in login flow
+      plugins.filmon: fix for live tv URLs that start with channel
+      plugin.powerapp: support for "tvs" URLs
+      setup: update requests to latest version and set urllib3 to match
+      CI: make sure all the dev dependencies are up to date
+      plugins.tf1: update to support new DASH streams
+      plugins.tf1: re-add support for HLS with the new API
+
+beardypig <git@beardypig.com> (7):
+      Test coverage increase (#1646)
+      Handle unicode log message in Python 2 (#1886)
+      Update method for finding YouTube videoIds (#1888)
+      stream.dash: prefer audio streams based on the user's locale (#1927)
+      plugins.openrectv: update to match site changes and title support (#1968)
+      URL builder utils (#1675)
+      cli: disable progress output for -o when no tty is available (#2090)
+
+fozzy <fozzy@fozzy.co> (1):
+      update regex to support new pattern
+
+fozzy <fozzysec@gmail.com> (1):
+      plugins.egame: new plugin for egame.qq.com (#2070)
+
+jackyzy823 <jackyzy823@gmail.com> (2):
+      Plugin Request: new plugin for Abema.tv (#1949)
+      Improve terminal progress display for  wide characters (#2032)
+
+mp107 <mp107@users.noreply.github.com> (1):
+      plugins.ltvlmslv: new Plugin for Latvian live TV channels on ltv.lsm.lv (#1986)
+
+qkolj <qkolj@users.noreply.github.com> (5):
+      plugins.tamago: support for live streams on player.tamago.live (#2108)
+      plugins.huomao: Fix plugin after website changes (#2134)
+      plugins.metube: Add support for live streams and  VoDs on www.metube.id (#2112)
+      plugins.tvibo: Add support for livestreams on player.tvibo.com (#2130)
+      Fix recording added in #920 (#2152)
+
+remek30 <remek30@users.noreply.github.com> (1):
+      plugins.toya: support for tvtoya.pl
+
+skulblakka <pascal.romahn@mailbox.org> (1):
+      [picarto.tv] Fix regarding changed URL (#1935)
+
+yoya3312 <40212627+yoya3312@users.noreply.github.com> (1):
+      plugins.youtube: use new "hlsManifestUrl" for Livestreams (#2238)
+```
+
+
 ## streamlink 0.14.2 (2018-06-28)
 
 Just a few small fixes in this release. 
