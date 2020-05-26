@@ -7,7 +7,7 @@ from streamlink.utils import update_scheme
 
 class NBCSports(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?nbcsports\.com")
-    embed_url_re = re.compile(r'''id\s*=\s*"vod-player"\s+src\s*=\s*"(?P<url>.*?)"''')
+    embed_url_re = re.compile(r'''id\s*=\s*"vod-player".*?\ssrc\s*=\s*"(?P<url>.*?)"''')
 
     @classmethod
     def can_handle_url(cls, url):
