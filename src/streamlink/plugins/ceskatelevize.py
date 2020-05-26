@@ -20,7 +20,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, DASHStream
 from streamlink.exceptions import PluginError
-from streamlink.compat import html_unescape
+from streamlink.compat import html_unescape, quote
 
 log = logging.getLogger(__name__)
 
@@ -107,7 +107,7 @@ class Ceskatelevize(Plugin):
             data=data,
             headers=headers
         )
-        json_data = self.session.http.json(response, schema=_self._playlist_url_schema)
+        json_data = self.session.http.json(response, schema=self._playlist_url_schema)
         log.trace('{0!r}'.format(json_data))
 
         if json_data['url'] in ['Error', 'error_region']:
@@ -210,7 +210,7 @@ class CeskatelevizeAPI2(object):
         vod_prio = len(infos) == 2
         for info in infos:
             try:
-                pl = info['ctcomp-data']['source']['playlis'][0]
+                pl = info['ctcomp-data']['source']['playlist'][0]
             except KeyError:
                 raise PluginError('Cannot find playlist info!')
 
@@ -220,31 +220,33 @@ class CeskatelevizeAPI2(object):
 
             log.trace('{0!r}'.format(info))
             if pl['type'] == 'LIVE':
-                data = {"contentType": "live",
-                        "items": [{
-                            "id": pl["id"],
-                            "assetId": pl["assetId"],
-                            "key": pl["key"],
-                            "playerType": "dash",
-                            "date": pl["date"],
-                            "requestSource": pl["requestSource"],
-                            "drm": pl["drm"],
-                            "quality": pl["quality"],
-                        }]
+                data = {
+                    "contentType": "live",
+                    "items": [{
+                        "id": pl["id"],
+                        "assetId": pl["assetId"],
+                        "key": pl["key"],
+                        "playerType": "dash",
+                        "date": pl["date"],
+                        "requestSource": pl["requestSource"],
+                        "drm": pl["drm"],
+                        "quality": pl["quality"],
+                    }]
                 }
             elif pl['type'] == 'VOD':
-                data = {"contentType": "vod",
-                        "items": [{
-                            "id": pl["id"],
-                            "key": pl["key"],
-                            "playerType": "dash",
-                            "date": pl["date"],
-                            "requestSource": pl["requestSource"],
-                            "drm": pl["drm"],
-                            "canBePlay": pl["canBePlay"],
-                            "quality": pl["quality"],
-                            "region": pl["region"]
-                        }]
+                data = {
+                    "contentType": "vod",
+                    "items": [{
+                        "id": pl["id"],
+                        "key": pl["key"],
+                        "playerType": "dash",
+                        "date": pl["date"],
+                        "requestSource": pl["requestSource"],
+                        "drm": pl["drm"],
+                        "canBePlay": pl["canBePlay"],
+                        "quality": pl["quality"],
+                        "region": pl["region"]
+                    }]
                 }
 
         headers = {
@@ -258,7 +260,7 @@ class CeskatelevizeAPI2(object):
         data = json.dumps(data)
         response = self.session.http.post(
             self._player_api,
-            data="data={}".format(urllib.quote_plus(data)),
+            data="data={}".format(quote(data)),
             headers=headers
         )
         json_data = self.session.http.json(response, schema=self._playlist_schema)
