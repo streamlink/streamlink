@@ -14,7 +14,6 @@ Additionally, videos from iVysilani archive should work as well.
 import logging
 import re
 import json
-import urllib
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
