@@ -20,7 +20,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, DASHStream
 from streamlink.exceptions import PluginError
-from ..compat import html_unescape
+from streamlink.compat import html_unescape
 
 log = logging.getLogger(__name__)
 
