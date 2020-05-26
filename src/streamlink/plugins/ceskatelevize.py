@@ -161,6 +161,9 @@ class Ceskatelevize(Plugin):
         return 'http://ceskatelevize.cz/' + url
 
 
+__plugin__ = Ceskatelevize
+
+
 class CeskatelevizeAPI2(object):
     _player_api = 'https://playlist.ceskatelevize.cz/'
     _url_re = re.compile(r'http(s)?://([^.]*.)?ceskatelevize.cz')
@@ -267,6 +270,3 @@ class CeskatelevizeAPI2(object):
         playlist = json_data['RESULT']['playlist'][0]['streamUrls']['main']
         for s in DASHStream.parse_manifest(self.session, playlist).items():
             yield s
-
-
-__plugin__ = Ceskatelevize
