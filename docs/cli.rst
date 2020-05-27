@@ -320,6 +320,7 @@ Apple HTTP Live Streaming      hls:// [1]_
 MPEG-DASH [2]_                 dash://
 Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
 Progressive HTTP, HTTPS, etc   httpstream:// [1]_
+Real-Time Streaming Protocol   rtsp://
 ============================== =================================================
 
 .. [1] supports local files using the file:// protocol

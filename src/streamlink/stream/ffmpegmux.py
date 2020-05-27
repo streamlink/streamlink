@@ -58,6 +58,12 @@ class MuxedStream(Stream):
 class FFMPEGMuxer(StreamIO):
     __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
 
+    __shortname__ = "ffmpeg"
+
+    @classmethod
+    def shortname(cls):
+        return cls.__shortname__
+
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
         log.debug("Starting copy to pipe: {0}".format(pipe.path))
@@ -86,11 +92,7 @@ class FFMPEGMuxer(StreamIO):
         self.process = None
         self.streams = streams
 
-        self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
-        self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
-                             for stream, np in
-                             zip(self.streams, self.pipes)]
-
+        self.is_muxed = options.pop("is_muxed", True)
         ofmt = options.pop("format", "matroska")
         outpath = options.pop("outpath", "pipe:1")
         videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
@@ -100,8 +102,15 @@ class FFMPEGMuxer(StreamIO):
         copyts = options.pop("copyts", False)
 
         self._cmd = [self.command(session), '-nostats', '-y']
-        for np in self.pipes:
-            self._cmd.extend(["-i", np.path])
+        if self.is_muxed:
+            self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
+            self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
+                                 for stream, np in zip(self.streams, self.pipes)]
+
+            for np in self.pipes:
+                self._cmd.extend(["-i", np.path])
+        else:
+            self._cmd.extend(["-i", self.streams[0]])
 
         self._cmd.extend(['-c:v', videocodec])
         self._cmd.extend(['-c:a', audiocodec])
@@ -130,10 +139,13 @@ class FFMPEGMuxer(StreamIO):
             self.errorlog = devnull()
 
     def open(self):
-        for t in self.pipe_threads:
-            t.daemon = True
-            t.start()
-        self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=self.errorlog)
+        if self.is_muxed:
+            for t in self.pipe_threads:
+                t.daemon = True
+                t.start()
+
+        self.process = subprocess.Popen(self._cmd, stdout=subprocess.PIPE,
+                                        stdin=subprocess.PIPE, stderr=self.errorlog)
 
         return self
 
@@ -162,11 +174,12 @@ class FFMPEGMuxer(StreamIO):
             self.process.stdout.close()
 
             # close the streams
-            for stream in self.streams:
-                if hasattr(stream, "close"):
-                    stream.close()
+            if self.is_muxed:
+                for stream in self.streams:
+                    if hasattr(stream, "close"):
+                        stream.close()
 
-            log.debug("Closed all the substreams")
+                log.debug("Closed all the substreams")
         if self.close_errorlog:
             self.errorlog.close()
             self.errorlog = None
