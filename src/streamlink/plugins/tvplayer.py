@@ -78,7 +78,7 @@ class TVPlayer(Plugin):
         if res_schema["response"]["stream"] is None:
             res = self.session.http.get(
                 self.stream_url,
-                params=dict(key=key),
+                params=dict(key=key, platform="chrome"),
                 headers={
                     "Token": token,
                     "Token-Expiry": expiry,
