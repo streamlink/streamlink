@@ -24,11 +24,11 @@ Portable                             See the `Windows portable version`_ section
                                         choco install streamlink
 
                                      `Installing Chocolatey packages`_
-                                     
+
 `Windows Package Manager`_           .. code-block:: bat
 
-                                       winget install streamlink
-                                        
+                                        winget install streamlink
+
                                      `Installing Winget packages`_
 ==================================== ===========================================
 
@@ -38,7 +38,7 @@ Portable                             See the `Windows portable version`_ section
 
 .. _Installing Chocolatey packages: https://chocolatey.org
 
-.. _Installing Winget packages: https://devblogs.microsoft.com/commandline/windows-package-manager-preview/
+.. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
 macOS
 -----
