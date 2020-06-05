@@ -1,5 +1,6 @@
 import logging
 import re
+import random
 
 from streamlink.compat import bytes, is_py3, unquote_plus, urlencode
 from streamlink.plugin import Plugin
@@ -58,7 +59,8 @@ class Facebook(Plugin):
                     yield s
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
+        i = random.randint(1000, 10000)
+        self.session.http.headers.update({'User-Agent': f'streamlink/{i}'})
         done = False
         res = self.session.http.get(self.url)
         for s in self._parse_streams(res):
