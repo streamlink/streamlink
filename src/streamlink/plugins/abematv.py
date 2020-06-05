@@ -42,10 +42,11 @@ class AbemaTVLicenseAdapter(BaseAdapter):
     _LICENSE_SCHEMA = validate.Schema({u"k": validate.text,
                                        u"cid": validate.text})
 
-    def __init__(self, session, deviceid, usertoken):
+    def __init__(self, session, deviceid, usertoken, url):
         self._session = session
         self.deviceid = deviceid
         self.usertoken = usertoken
+        self.url = url
         super(AbemaTVLicenseAdapter, self).__init__()
 
     def _get_videokey_from_ticket(self, ticket):
@@ -246,7 +247,7 @@ class AbemaTV(Plugin):
         # hook abematv private protocol
         self.session.http.mount("abematv-license://",
                                 AbemaTVLicenseAdapter(self.session, deviceid,
-                                                      self.usertoken))
+                                                      self.usertoken, self.url))
 
         streams = HLSStream.parse_variant_playlist(self.session, playlisturl)
         if not streams:
