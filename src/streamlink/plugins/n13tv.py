@@ -1,9 +1,9 @@
 import logging
 import re
 
+from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.compat import urlparse
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -39,8 +39,15 @@ class N13TV(Plugin):
     def _get_streams(self):
         m = self.url_re.match(self.url)
         base_path = m and m.group(1)
+        log.debug("Base path = {0}", base_path)
 
         res = self.session.http.get(self.url)
+
+        if base_path != "live":
+            m = self.video_name_re.search(res.text)
+            video_name = m and m.group(1)
+            log.debug("Video name = {0}", video_name)
+
         m = self.main_js_url_re.search(res.text)
         main_js_path = m and m.group(1)
         log.debug("Main JS path = {0}", main_js_path)
@@ -71,11 +78,6 @@ class N13TV(Plugin):
 
             return HLSStream.parse_variant_playlist(self.session, live[0]['Link'])
         else:
-            res = self.session.http.get(self.url)
-            m = self.video_name_re.search(res.text)
-            video_name = m and m.group(1)
-            log.debug("Video name = {0}", video_name)
-
             res = self.session.http.get(
                 self.api_url + self.api_vod_path,
                 params=dict(
@@ -88,16 +90,16 @@ class N13TV(Plugin):
 
             vod = self.session.http.json(res, schema=self.vod_schema)
 
-            media_file_parts = vod[0]['MediaFile'].split('.')
-            media_file = (
-                media_file_parts[0]
-                + vod[0]['Bitrates']
-                + '.'
-                + media_file_parts[1]
-            )
-            log.debug("Media file = {0}", media_file)
-
             if video_name == vod[0]['ShowTitle']:
+                media_file_parts = vod[0]['MediaFile'].split('.')
+                media_file = (
+                    media_file_parts[0]
+                    + vod[0]['Bitrates']
+                    + '.'
+                    + media_file_parts[1]
+                )
+                log.debug("Media file = {0}", media_file)
+
                 vod_url = (
                     vod[0]['ProtocolType']
                     + vod[0]['ServerAddress']
