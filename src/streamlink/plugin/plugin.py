@@ -377,7 +377,7 @@ class Plugin(object):
             # Force lowercase name and replace space with underscore.
             streams[name.lower()] = stream
 
-        # Create the best/worst synonmys
+        # Create the best/worst synonyms
         def stream_weight_only(s):
             return (self.stream_weight(s)[0] or (len(streams) == 1 and 1))
 
