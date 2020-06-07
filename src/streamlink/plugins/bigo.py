@@ -13,23 +13,25 @@ class Bigo(Plugin):
     _video_re = re.compile(
         r"""videoSrc:\s?["'](?P<url>[^"']+)["']""",
         re.M)
+    api_url = "http://www.bigo.tv/OInterface/getVideoParam?bigoId="
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
+        extract_id = self.url.split('/')[-1]
         page = self.session.http.get(
-            self.url,
+            self.api_url + extract_id,
             allow_redirects=True,
             headers={"User-Agent": useragents.IPHONE_6}
         )
-        videomatch = self._video_re.search(page.text)
+        videomatch = page.json()['data']['videoSrc']
         if not videomatch:
             log.error("No playlist found.")
             return
 
-        videourl = videomatch.group(1)
+        videourl = videomatch
         log.debug("URL={0}".format(videourl))
         yield "live", HLSStream(self.session, videourl)
 
