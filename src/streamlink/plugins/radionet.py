@@ -18,10 +18,9 @@ class RadioNet(Plugin):
                 validate.get(1),
                 validate.transform(parse_json),
                 {
-                    'stationType': validate.text,
-                    'streamUrls': validate.all([{
-                        'bitRate': int,
-                        'streamUrl': validate.url()
+                    'type': validate.text,
+                    'streams': validate.all([{
+                        'url': validate.url()
                     }])
                 },
             )
@@ -38,20 +37,20 @@ class RadioNet(Plugin):
             return
 
         # Ignore non-radio streams (podcasts...)
-        if streams['stationType'] != 'radio_station':
+        if streams['type'] != 'STATION':
             return
 
         stream_urls = []
-        for stream in streams['streamUrls']:
-            if stream['streamUrl'] in stream_urls:
+        for stream in streams['streams']:
+            url = stream['url']
+            if url in stream_urls:
                 continue
 
-            if stream['bitRate'] > 0:
-                bitrate = '{}k'.format(stream['bitRate'])
-            else:
-                bitrate = 'live'
-            yield bitrate, HTTPStream(self.session, stream['streamUrl'])
-            stream_urls.append(stream['streamUrl'])
+            # NOTE there doesn't appear to be any bit rate information any
+            # more so I hard code it to 'live':
+            bitrate = 'live'
+            yield bitrate, HTTPStream(self.session, url)
+            stream_urls.append(url)
 
 
 __plugin__ = RadioNet
