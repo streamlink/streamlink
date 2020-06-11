@@ -30,7 +30,7 @@ class Bigo(Plugin):
 
     def _get_streams(self):
         extract_id = self._id_re.search(self.url)
-        url = "%s%s" %(self.api_url, extract_id.group(0))
+        url = "%s%s" % (self.api_url, extract_id.group(0))
         res = self.session.http.get(
             url,
             allow_redirects=True,
