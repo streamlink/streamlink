@@ -13,7 +13,7 @@ class Bigo(Plugin):
         "code": 0,
         "msg": "success",
         "data": {
-            "videoSrc": validate.any(None, validate.url())
+            "videoSrc": validate.any(None, "", validate.url())
         }
     })
 
