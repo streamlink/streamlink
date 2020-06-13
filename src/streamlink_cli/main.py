@@ -957,7 +957,7 @@ def check_version(force=False):
 
 
 def setup_logging(stream=sys.stdout, level="info"):
-    fmt = ("[{asctime},{msecs:0.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
+    fmt = ("[{asctime},{msecs:03.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
     logger.basicConfig(stream=stream, level=level,
                        format=fmt, style="{",
                        datefmt="%H:%M:%S")
