@@ -15,6 +15,7 @@ env:
 jobs:
   test:
     name: Test
+    if: github.event_name != 'schedule'
     strategy:
       fail-fast: false
       # when changing the build matrix, the `after_n_builds` value in codecov.yml may need to be updated
@@ -48,6 +49,7 @@ jobs:
 
   documentation:
     name: Test docs
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
