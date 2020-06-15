@@ -40,17 +40,12 @@ class RadioNet(Plugin):
         if streams['type'] != 'STATION':
             return
 
-        stream_urls = []
+        stream_urls = set()
         for stream in streams['streams']:
-            url = stream['url']
-            if url in stream_urls:
-                continue
+            stream_urls.add(stream['url'])
 
-            # NOTE there doesn't appear to be any bit rate information any
-            # more so I hard code it to 'live':
-            bitrate = 'live'
-            yield bitrate, HTTPStream(self.session, url)
-            stream_urls.append(url)
+        for url in stream_urls:
+            yield 'live', HTTPStream(self.session, url)
 
 
 __plugin__ = RadioNet
