@@ -38,7 +38,7 @@ bilibili                live.bilibili.com    Yes   ?
 bloomberg               bloomberg.com        Yes   Yes
 brightcove              players.brig... [6]_ Yes   Yes
 btsports                sport.bt.com         Yes   Yes   Requires subscription account
-btv                     btv.bg               Yes   No    Requires login, and geo-restricted to Bulgaria.
+btv                     btvplus.bg           Yes   No    Streams are geo-restricted to Bulgaria.
 canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
 cdnbg                   - tv.bnt.bg          Yes   No    Streams may be geo-restricted to Bulgaria.
                         - bgonair.bg
