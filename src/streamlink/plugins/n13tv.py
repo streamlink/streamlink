@@ -99,12 +99,12 @@ class N13TV(Plugin):
             log.debug("Media path={0}".format(media_path))
 
             vod_url = urlunparse((
-                    vod_data['ProtocolType'],
-                    host,
-                    media_path,
-                    '',
-                    vod_data['Token'],
-                    ''
+                vod_data['ProtocolType'],
+                host,
+                media_path,
+                '',
+                vod_data['Token'],
+                ''
             ))
             log.debug("URL={0}".format(vod_url))
 
