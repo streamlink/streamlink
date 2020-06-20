@@ -204,28 +204,30 @@ class NicoLive(Plugin):
 
     def send_playerversion(self):
         body = {
-                "type":"startWatching",
-                "data":{
-                    "stream":{
-                        "quality":"high",
-                        "protocol":"hls",
-                        "latency":"high",
-                        "chasePlay":False},
-                    "room":{
-                        "protocol":"webSocket",
-                        "commentable":True},
-                    "reconnect":False
-                    }
+            "type": "startWatching",
+            "data": {
+                "stream": {
+                    "quality": "high",
+                    "protocol": "hls",
+                    "latency": "high",
+                    "chasePlay": False
+                },
+                "room": {
+                    "protocol": "webSocket",
+                    "commentable": True
+                },
+                "reconnect": False
                 }
+            }
         self.send_message_msg(body)
 
     def send_getpermit(self, require_new_stream=True):
         body = {
-                "type":"getAkashic",
-                "data":{
-                    "chasePlay":False
-                    }
+            "type": "getAkashic",
+            "data": {
+                "chasePlay": False
                 }
+            }
         self.send_message_msg(body)
 
     def send_watching(self):
