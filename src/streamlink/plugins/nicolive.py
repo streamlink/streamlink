@@ -217,8 +217,8 @@ class NicoLive(Plugin):
                     "commentable": True
                 },
                 "reconnect": False
-                }
             }
+        }
         self.send_message_msg(body)
 
     def send_getpermit(self, require_new_stream=True):
@@ -226,8 +226,8 @@ class NicoLive(Plugin):
             "type": "getAkashic",
             "data": {
                 "chasePlay": False
-                }
             }
+        }
         self.send_message_msg(body)
 
     def send_watching(self):
