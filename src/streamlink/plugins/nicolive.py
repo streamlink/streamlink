@@ -126,9 +126,8 @@ class NicoLive(Plugin):
         except Exception as e:
             _log.debug(e)
             _log.warning("Failed to extract frontend id")
-        print(">>>>>>> get frontend id %s" % self.frontend_id)
 
-        self.wss_api_url += "&frontend_id=" + self.frontend_id
+        self.wss_api_url = "{0}&frontend_id={1}".format(self.wss_api_url, self.frontend_id)
 
         _log.debug("Video page response code: {0}".format(resp.status_code))
         _log.trace(u"Video page response body: {0}".format(resp.text))
