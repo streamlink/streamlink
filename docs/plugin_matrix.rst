@@ -171,7 +171,6 @@ radionet                - radio.net          Yes   --
                         - radio.pt
                         - radio.se
 raiplay                 raiplay.it           Yes   No    Most streams are geo-restricted to Italy.
-reshet                  reshet.tv            Yes   Yes   Streams may be geo-restricted to Israel.
 reuters                 reuters.tv           Yes   Yes
 rotana                  rotana.net           Yes   --    Streams are geo-restricted to Saudi Arabia.
 rtbf                    - rtbf.be/auvio      Yes   Yes   Streams may be geo-restricted to Belgium or Europe.
