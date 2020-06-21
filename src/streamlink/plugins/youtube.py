@@ -42,13 +42,13 @@ _config_schema = validate.Schema(
                         ),
                         validate.optional("url"): validate.url(scheme="http"),
                         validate.optional("cipher"): validate.text,
+                        validate.optional("signatureCipher"): validate.text,
                         validate.optional("qualityLabel"): validate.text,
                         validate.optional("bitrate"): int
                     }]
                 },
                 validate.optional("videoDetails"): {
                     validate.optional("isLive"): validate.transform(bool),
-                    validate.optional("isLiveContent"): validate.transform(bool),
                     validate.optional("author"): validate.text,
                     validate.optional("title"): validate.all(validate.text,
                                                              validate.transform(maybe_decode))
@@ -317,14 +317,14 @@ class YouTube(Plugin):
             log.error("Could not get video info")
             return
 
-        if (info.get("player_response", {}).get("videoDetails", {}).get("isLiveContent")
-           or info.get("player_response", {}).get("videoDetails", {}).get("isLive")):
+        if info.get("player_response", {}).get("videoDetails", {}).get("isLive"):
             log.debug("This video is live.")
             is_live = True
 
         streams = {}
         protected = False
         if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [{}])[0].get("cipher")
+           or info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [{}])[0].get("signatureCipher")
            or info.get("player_response", {}).get("streamingData", {}).get("formats", [{}])[0].get("cipher")):
             protected = True
             log.debug("This video may be protected.")
