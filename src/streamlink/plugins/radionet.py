@@ -1,9 +1,13 @@
+import logging
 import re
 
+from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HTTPStream
+from streamlink.stream import HTTPStream, HLSStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 
 class RadioNet(Plugin):
@@ -18,10 +22,10 @@ class RadioNet(Plugin):
                 validate.get(1),
                 validate.transform(parse_json),
                 {
-                    'stationType': validate.text,
-                    'streamUrls': validate.all([{
-                        'bitRate': int,
-                        'streamUrl': validate.url()
+                    'type': validate.text,
+                    'streams': validate.all([{
+                        'url': validate.url(),
+                        'contentFormat': validate.text,
                     }])
                 },
             )
@@ -30,28 +34,35 @@ class RadioNet(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls._url_re.match(url)
+        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         streams = self.session.http.get(self.url, schema=self._stream_schema)
         if streams is None:
             return
 
-        # Ignore non-radio streams (podcasts...)
-        if streams['stationType'] != 'radio_station':
+        if streams['type'] != 'STATION':
             return
 
-        stream_urls = []
-        for stream in streams['streamUrls']:
-            if stream['streamUrl'] in stream_urls:
-                continue
+        stream_urls = set()
+        for stream in streams['streams']:
+            log.trace('{0!r}'.format(stream))
+            url = stream['url']
 
-            if stream['bitRate'] > 0:
-                bitrate = '{}k'.format(stream['bitRate'])
-            else:
-                bitrate = 'live'
-            yield bitrate, HTTPStream(self.session, stream['streamUrl'])
-            stream_urls.append(stream['streamUrl'])
+            url_no_scheme = urlunparse(urlparse(url)._replace(scheme=''))
+            if url_no_scheme in stream_urls:
+                continue
+            stream_urls.add(url_no_scheme)
+
+            if stream['contentFormat'] in ('audio/mpeg', 'audio/aac'):
+                yield 'live', HTTPStream(self.session, url, allow_redirects=True)
+            elif stream['contentFormat'] == 'video/MP2T':
+                streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
+                if not streams:
+                    yield stream["quality"], HLSStream(self.session, stream["url"])
+                else:
+                    for s in streams.items():
+                        yield s
 
 
 __plugin__ = RadioNet
