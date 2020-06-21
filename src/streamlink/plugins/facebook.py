@@ -37,17 +37,23 @@ class Facebook(Plugin):
             return html_unescape(m.group(1))
 
     def _parse_streams(self, res):
+        _found_stream_url = False
         for meta in itertags(res.text, "meta"):
             if meta.attributes.get("property") == "og:video:url":
                 stream_url = html_unescape(meta.attributes.get("content"))
                 if ".mpd" in stream_url:
                     for s in DASHStream.parse_manifest(self.session, stream_url).items():
                         yield s
+                        _found_stream_url = True
                 elif ".mp4" in stream_url:
                     yield "vod", HTTPStream(self.session, stream_url)
+                    _found_stream_url = True
                 break
         else:
             log.debug("No meta og:video:url")
+
+        if _found_stream_url:
+            return
 
         for match in self._src_re.finditer(res.text):
             stream_url = match.group("url")
