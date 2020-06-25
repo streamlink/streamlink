@@ -12,6 +12,7 @@ nbproject
 *.sublime-project
 *.sublime-workspace
 .idea
+.vscode
 
 *.mo
 *.egg-info
