@@ -37,7 +37,7 @@ class CLLive(Plugin):
 
         vid = self._url_re.match(self.url)
 
-        _ = self.session.http.get(
+        res = self.session.http.get(
             self._cookie_url.format(vid.group(1)),
             allow_redirects=True,
             headers={
@@ -45,6 +45,7 @@ class CLLive(Plugin):
                 "X-API-Key": key.group(1)
             }
         )
+        log.debug("Cookie: {0}".format(res.cookies))
 
         playlisturl = self._hls_url.format(vid.group(1), token.group(1))
         log.debug("Video Url: {0}".format(playlisturl))
