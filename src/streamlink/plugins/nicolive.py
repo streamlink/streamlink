@@ -126,9 +126,8 @@ class NicoLive(Plugin):
         except Exception as e:
             _log.debug(e)
             _log.warning("Failed to extract frontend id")
-        print(">>>>>>> get frontend id %s" % self.frontend_id)
 
-        self.wss_api_url += "&frontend_id=" + self.frontend_id
+        self.wss_api_url = "{0}&frontend_id={1}".format(self.wss_api_url, self.frontend_id)
 
         _log.debug("Video page response code: {0}".format(resp.status_code))
         _log.trace(u"Video page response body: {0}".format(resp.text))
@@ -185,7 +184,7 @@ class NicoLive(Plugin):
         else:
             _log.warning("wss api is not connected.")
 
-    def send_message_no_body(self, type_):
+    def send_no_body_message(self, type_):
         msg = {"type": type_}
         msg_json = json.dumps(msg)
         _log.debug(u"Sending: {0}".format(msg_json))
@@ -194,7 +193,7 @@ class NicoLive(Plugin):
         else:
             _log.warning("wss api is not connected.")
 
-    def send_message_msg(self, msg):
+    def send_custom_message(self, msg):
         msg_json = json.dumps(msg)
         _log.debug(u"Sending: {0}".format(msg_json))
         if self._ws and self._ws.sock.connected:
@@ -219,7 +218,7 @@ class NicoLive(Plugin):
                 "reconnect": False
             }
         }
-        self.send_message_msg(body)
+        self.send_custom_message(body)
 
     def send_getpermit(self, require_new_stream=True):
         body = {
@@ -228,7 +227,7 @@ class NicoLive(Plugin):
                 "chasePlay": False
             }
         }
-        self.send_message_msg(body)
+        self.send_custom_message(body)
 
     def send_watching(self):
         body = {
@@ -238,8 +237,8 @@ class NicoLive(Plugin):
         self.send_message("watch", body)
 
     def send_pong(self):
-        self.send_message_no_body("pong")
-        self.send_message_no_body("keepSeat")
+        self.send_no_body_message("pong")
+        self.send_no_body_message("keepSeat")
 
     def handle_api_message(self, message):
         _log.debug(u"Received: {0}".format(message))
