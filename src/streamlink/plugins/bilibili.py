@@ -52,7 +52,7 @@ class Bilibili(Plugin):
             help="Use custom api host url to bypass bilibili's cloud blocking"
         )
     )
-    
+
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
