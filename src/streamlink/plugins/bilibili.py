@@ -8,8 +8,9 @@ from streamlink.stream import HTTPStream
 
 log = logging.getLogger(__name__)
 
-API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl"
-ROOM_API = "https://api.live.bilibili.com/room/v1/Room/room_init?id={}"
+API_HOST = "https://api.live.bilibili.com"
+API_URL = "/room/v1/Room/playUrl"
+ROOM_API = "/room/v1/Room/room_init?id={}"
 SHOW_STATUS_OFFLINE = 0
 SHOW_STATUS_ONLINE = 1
 SHOW_STATUS_ROUND = 2
@@ -43,6 +44,15 @@ _room_stream_list_schema = validate.Schema(
 
 
 class Bilibili(Plugin):
+    arguments = PluginArguments(
+        PluginArgument(
+            "apihost",
+            metavar="APIHOST",
+            default=API_HOST,
+            help="Use custom api host url to bypass bilibili's cloud blocking"
+        )
+    )
+    
     @classmethod
     def can_handle_url(self, url):
         return _url_re.match(url)
@@ -60,7 +70,7 @@ class Bilibili(Plugin):
             'Referer': self.url})
         match = _url_re.match(self.url)
         channel = match.group("channel")
-        res_room_id = self.session.http.get(ROOM_API.format(channel))
+        res_room_id = self.session.http.get(self.options.get("apihost") + ROOM_API.format(channel))
         room_id_json = self.session.http.json(res_room_id, schema=_room_id_schema)
         room_id = room_id_json['room_id']
         if room_id_json['live_status'] != SHOW_STATUS_ONLINE:
@@ -71,7 +81,7 @@ class Bilibili(Plugin):
             'quality': '4',
             'platform': 'web',
         }
-        res = self.session.http.get(API_URL, params=params)
+        res = self.session.http.get(self.options.get("apihost") + API_URL, params=params)
         room = self.session.http.json(res, schema=_room_stream_list_schema)
         if not room:
             return
