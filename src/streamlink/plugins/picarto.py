@@ -77,7 +77,7 @@ class Picarto(Plugin):
         url_channel_name = self._url_re.match(self.url).group(1)
 
         # Handle VODs first, since their "channel name" is different
-        if url_channel_name.endswith(".flv"):
+        if url_channel_name.endswith((".flv", ".mkv")):
             self.logger.debug("Possible VOD stream...")
             page = self.session.http.get(self.url)
             vod_streams = self._get_vod_stream(page)
