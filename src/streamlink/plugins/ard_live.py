@@ -10,7 +10,7 @@ from streamlink.utils import update_scheme
 log = logging.getLogger(__name__)
 
 
-class ARD_Live(Plugin):
+class ard_live(Plugin):
     _url_re = re.compile(r"https?://(www\.)?ardmediathek\.de/", re.I)
     _context_data_re = re.compile(r"window\.__FETCHED_CONTEXT__\s*=\s*(\{.+\});")
     _stream_infos_schema = validate.Schema(
@@ -47,4 +47,4 @@ class ARD_Live(Plugin):
                 yield s
 
 
-__plugin__ = ARD_Live
+__plugin__ = ard_live
