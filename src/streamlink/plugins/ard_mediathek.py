@@ -1,8 +1,11 @@
 import re
+import logging
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
+from streamlink.utils import update_scheme
+from streamlink.exceptions import PluginError
 
 MEDIA_URL = "http://www.ardmediathek.de/play/media/{0}"
 SWF_URL = "http://www.ardmediathek.de/ard/static/player/base/flash/PluginFlash.swf"
@@ -15,8 +18,8 @@ QUALITY_MAP = {
     0: "144p"
 }
 
-_url_re = re.compile(r"http(s)?://(?:(\w+\.)?ardmediathek.de/tv|mediathek.daserste.de/)")
-_media_id_re = re.compile(r"/play/(?:media|config)/(\d+)")
+_url_re = re.compile(r"http(s)?://(?:(\w+\.)?ardmediathek.de/|mediathek.daserste.de/)")
+_media_id_re = re.compile(r"/play/(?:media|config|sola)/(\d+)")
 _media_schema = validate.Schema({
     "_mediaArray": [{
         "_mediaStreamArray": [{
@@ -44,6 +47,8 @@ _smil_schema = validate.Schema(
     })
 )
 
+log = logging.getLogger(__name__)
+
 
 class ard_mediathek(Plugin):
     @classmethod
@@ -57,19 +62,19 @@ class ard_mediathek(Plugin):
             urls = [urls]
 
         for url in urls:
-            stream = HTTPStream(self.session, url)
+            stream = HTTPStream(self.session, update_scheme("https://", url))
             yield name, stream
 
     def _get_hds_streams(self, info):
         # Needs the hdcore parameter added
         url = info["_stream"] + HDCORE_PARAMETER
-        return HDSStream.parse_manifest(self.session, url, pvswf=SWF_URL).items()
+        return HDSStream.parse_manifest(self.session, update_scheme("https://", url), pvswf=SWF_URL).items()
 
     def _get_hls_streams(self, info):
-        return HLSStream.parse_variant_playlist(self.session, info["_stream"]).items()
+        return HLSStream.parse_variant_playlist(self.session, update_scheme("https://", info["_stream"])).items()
 
     def _get_smil_streams(self, info):
-        res = self.session.http.get(info["_stream"])
+        res = self.session.http.get(update_scheme("https://", info["_stream"]))
         smil = self.session.http.xml(res, "SMIL config", schema=_smil_schema)
 
         for video in smil["videos"]:
@@ -87,7 +92,7 @@ class ard_mediathek(Plugin):
         else:
             return
 
-        self.logger.debug("Found media id: {0}", media_id)
+        log.debug("Found media id: {0}", media_id)
 
         res = self.session.http.get(MEDIA_URL.format(media_id))
         media = self.session.http.json(res, schema=_media_schema)
@@ -100,24 +105,27 @@ class ard_mediathek(Plugin):
                         continue
                     stream_ = stream_[0]
 
+                stream_ = update_scheme("https://", stream_)
                 if stream_.endswith(".f4m"):
                     parser = self._get_hds_streams
                     parser_name = "HDS"
                 elif stream_.endswith(".smil"):
                     parser = self._get_smil_streams
                     parser_name = "SMIL"
-                elif stream_.endswith(".m3u8"):
+                elif ".m3u8" in stream_:
                     parser = self._get_hls_streams
                     parser_name = "HLS"
                 elif stream_.startswith("http"):
                     parser = self._get_http_streams
                     parser_name = "HTTP"
+                else:
+                    raise PluginError("Unexpected stream type: '{0}'".format(stream_))
 
                 try:
                     for s in parser(stream):
                         yield s
                 except IOError as err:
-                    self.logger.error("Failed to extract {0} streams: {1}",
+                    raise PluginError("Failed to extract {0} streams: {1}",
                                       parser_name, err)
 
 
