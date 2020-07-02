@@ -12,7 +12,6 @@ log = logging.getLogger(__name__)
 
 
 class AdultSwim(Plugin):
-    api_url = 'https://api.adultswim.com/v1'
     token_url = 'https://token.ngtv.io/token/token_spe'
     video_data_url = 'https://www.adultswim.com/api/shows/v1/media/{0}/desktop'
 
@@ -61,7 +60,7 @@ class AdultSwim(Plugin):
         validate.get('streams'),
     )
 
-    _token_auth_schema = validate.Schema(
+    _token_schema = validate.Schema(
         validate.any(
             {'auth': {'token': validate.text}},
             {'auth': {'error': {'message': validate.text}}},
@@ -79,7 +78,7 @@ class AdultSwim(Plugin):
         validate.get('props'),
         validate.get('pageProps'),
         validate.get('__APOLLO_STATE__'),
-        validate.filter(lambda k, v: k.startswith('Video')),
+        validate.filter(lambda k, v: k.startswith('Video:')),
     )
 
     @classmethod
@@ -140,7 +139,7 @@ class AdultSwim(Plugin):
             path=path,
         ))
 
-        token_data = self.session.http.json(res, schema=self._token_auth_schema)
+        token_data = self.session.http.json(res, schema=self._token_schema)
         if 'error' in token_data:
             raise PluginError(token_data['error']['message'])
 
