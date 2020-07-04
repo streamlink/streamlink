@@ -15,7 +15,6 @@ env:
 jobs:
   test:
     name: Test
-    if: github.event_name != 'schedule'
     strategy:
       fail-fast: false
       # when changing the build matrix, the `after_n_builds` value in codecov.yml may need to be updated
@@ -42,6 +41,7 @@ jobs:
         continue-on-error: ${{ matrix.continue || false }}
         run: flake8
       - name: Upload coverage data
+        if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
         uses: codecov/codecov-action@v1
         with:
