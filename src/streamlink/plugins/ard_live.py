@@ -1,27 +1,25 @@
 import re
-import json
 import logging
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.compat import urljoin
 from streamlink.exceptions import PluginError
+from streamlink.utils import parse_json, verifyjson
 
 log = logging.getLogger(__name__)
 
 
 class ard_live(Plugin):
-    _url_re = re.compile(r"https?://(www.)?daserste.de/", re.I)
+    _swf_url = "http://live.daserste.de/lib/br-player/swf/main.swf"
+    _url_re = re.compile(r"https?://((www|live)\.)?daserste\.de/")
     _player_re = re.compile(r'''data-ctrl-player\s*=\s*"(?P<jsondata>.*?)"''')
     _player_url_schema = validate.Schema(
         validate.transform(_player_re.search),
-        validate.any(
-            None,
-            validate.all(validate.get("jsondata"), validate.text)
-        ),
-        validate.transform(lambda v: json.loads(v.replace("'", '"'))),
-        validate.all(validate.transform(lambda v: v["url"]), validate.text),
+        validate.all(validate.get("jsondata"), validate.text),
+        validate.transform(lambda v: parse_json(v.replace("'", '"'))),
+        validate.transform(lambda v: verifyjson(v, "url"))
     )
     _mediainfo_schema = validate.Schema({
         "mc": {
@@ -36,6 +34,14 @@ class ard_live(Plugin):
             }],
         }
     })
+    _QUALITY_MAP = {
+        "auto": "auto",
+        4: "1080p",
+        3: "720p",
+        2: "544p",
+        1: "288p",
+        0: "144p"
+    }
 
     @classmethod
     def can_handle_url(cls, url):
@@ -47,8 +53,8 @@ class ard_live(Plugin):
         data_url = urljoin(res.url, data_url)
         log.debug("Player URL: '{0}'", data_url)
         res = self.session.http.get(data_url)
-        mediainfo = self._mediainfo_schema.validate(json.loads(res.content))
-        log.debug("Mediainfo: {0}", json.dumps(mediainfo))
+        mediainfo = self._mediainfo_schema.validate(parse_json(res.content))
+        log.trace("Mediainfo: {0!r}".format(mediainfo))
 
         for media in mediainfo["mc"]["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:
@@ -61,6 +67,11 @@ class ard_live(Plugin):
                 if ".m3u8" in stream_:
                     for s in HLSStream.parse_variant_playlist(self.session, stream_).items():
                         yield s
+                elif ".f4m" in stream_:
+                    for s in HDSStream.parse_manifest(self.session, stream_, pvswf=self._swf_url, is_akamai=True).items():
+                        yield s
+                elif ".mp4" in stream_:
+                    yield "{0}".format(self._QUALITY_MAP[stream["_quality"]]), HTTPStream(self.session, stream_)
                 else:
                     raise PluginError("Unexpected stream type: '{0}'".format(stream_))
 
