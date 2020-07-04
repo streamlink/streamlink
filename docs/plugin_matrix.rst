@@ -238,8 +238,6 @@ tv5monde                - tv5monde.com       Yes   Yes   Streams may be geo-rest
 tv8                     tv8.com.tr           Yes   No
 tv360                   tv360.com.tr         Yes   No
 tvibo                   player.tvibo.com     Yes   --
-tvnbg                   - tvn.bg             Yes   -
-                        - live.tvn.bg
 tvp                     tvpstream.vod.tvp.pl Yes   No    Streams may be geo-restricted to Poland.
 tvplayer                tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
