@@ -1,5 +1,6 @@
 import locale
 import logging
+import re
 
 from streamlink.compat import is_py2
 
@@ -72,7 +73,8 @@ class Language(object):
     def get(cls, language):
         try:
             if PYCOUNTRY:
-                lang = languages.lookup(language)
+                # lookup workaround for alpha_2 language codes
+                lang = languages.get(alpha_2=language) if re.match(r"^[a-z]{2}$", language) else languages.lookup(language)
                 return Language(lang.alpha_2, lang.alpha_3, lang.name, getattr(lang, "bibliographic", None))
             else:
                 lang = None
