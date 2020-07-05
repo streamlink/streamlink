@@ -1,32 +1,40 @@
-import unittest
+import pytest
 
 from streamlink.plugins.cdnbg import CDNBG
 
+valid_urls = [
+    ("http://bgonair.bg/tvonline",),
+    ("http://bgonair.bg/tvonline/",),
+    ("http://www.nova.bg/live",),
+    ("http://nova.bg/live",),
+    ("http://tv.bnt.bg/bnt1",),
+    ("http://tv.bnt.bg/bnt2",),
+    ("http://tv.bnt.bg/bnt3",),
+    ("http://tv.bnt.bg/bnt4",),
+    ("https://mmtvmusic.com/live/",),
+    ("http://mu-vi.tv/LiveStreams/pages/Live.aspx",),
+    ("http://live.bstv.bg/",),
+    ("https://www.bloombergtv.bg/video",),
+    ("https://i.cdn.bg/live/xfr3453g0d",)
 
-class TestPluginCDNBG(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(CDNBG.can_handle_url("http://bgonair.bg/tvonline"))
-        self.assertTrue(CDNBG.can_handle_url("http://bgonair.bg/tvonline/"))
-        self.assertTrue(CDNBG.can_handle_url("http://bitelevision.com/live"))
-        self.assertTrue(CDNBG.can_handle_url("http://www.kanal3.bg/live"))
-        self.assertTrue(CDNBG.can_handle_url("http://www.nova.bg/live"))
-        self.assertTrue(CDNBG.can_handle_url("http://nova.bg/live"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bntworld/"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bnt1/hd/"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bnt1/hd"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bnt1/16x9/"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bnt1/16x9"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bnt2/16x9/"))
-        self.assertTrue(CDNBG.can_handle_url("http://tv.bnt.bg/bnt2/16x9"))
-        self.assertTrue(CDNBG.can_handle_url("http://inlife.bg/"))
-        self.assertTrue(CDNBG.can_handle_url("https://mmtvmusic.com/live/"))
-        self.assertTrue(CDNBG.can_handle_url("http://mu-vi.tv/LiveStreams/pages/Live.aspx"))
-        self.assertTrue(CDNBG.can_handle_url("http://videochanel.bstv.bg/"))
-        self.assertTrue(CDNBG.can_handle_url("http://live.bstv.bg/"))
-        self.assertTrue(CDNBG.can_handle_url("https://www.bloombergtv.bg/video"))
+]
+invalid_urls = [
+    ("http://www.tvcatchup.com/",),
+    ("http://www.youtube.com/",),
+    ("https://www.tvevropa.com",),
+    ("http://www.kanal3.bg/live",),
+    ("http://inlife.bg/",),
+    ("http://videochanel.bstv.bg",),
+    ("http://video.bstv.bg/",),
+    ("http://bitelevision.com/live",)
+]
 
-        # shouldn't match
-        self.assertFalse(CDNBG.can_handle_url("http://www.tvcatchup.com/"))
-        self.assertFalse(CDNBG.can_handle_url("http://www.youtube.com/"))
-        self.assertFalse(CDNBG.can_handle_url("https://www.tvevropa.com"))
+
+@pytest.mark.parametrize(["url"], valid_urls)
+def test_can_handle_url(url):
+    assert CDNBG.can_handle_url(url), "url should be handled"
+
+
+@pytest.mark.parametrize(["url"], invalid_urls)
+def test_can_handle_url_negative(url):
+    assert not CDNBG.can_handle_url(url), "url should not be handled"
