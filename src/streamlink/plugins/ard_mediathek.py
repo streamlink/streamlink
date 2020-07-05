@@ -19,7 +19,7 @@ QUALITY_MAP = {
     0: "144p"
 }
 
-_url_re = re.compile(r"https?://(?:(\w+\.)?ardmediathek.de/)")
+_url_re = re.compile(r"https?://(?:(\w+\.)?ardmediathek\.de/|mediathek\.daserste\.de/)")
 _media_id_re = re.compile(r"/play/(?:media|config|sola)/(\d+)")
 _media_schema = validate.Schema({
     "_mediaArray": [{
