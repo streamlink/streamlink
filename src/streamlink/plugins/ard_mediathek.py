@@ -12,13 +12,14 @@ SWF_URL = "http://www.ardmediathek.de/ard/static/player/base/flash/PluginFlash.s
 HDCORE_PARAMETER = "?hdcore=3.3.0"
 QUALITY_MAP = {
     "auto": "auto",
-    3: "544p",
-    2: "360p",
-    1: "288p",
+    4: "1080p",
+    3: "720p",
+    2: "544p",
+    1: "360p",
     0: "144p"
 }
 
-_url_re = re.compile(r"http(s)?://(?:(\w+\.)?ardmediathek.de/|mediathek.daserste.de/)")
+_url_re = re.compile(r"https?://(?:(\w+\.)?ardmediathek.de/)")
 _media_id_re = re.compile(r"/play/(?:media|config|sola)/(\d+)")
 _media_schema = validate.Schema({
     "_mediaArray": [{
@@ -125,8 +126,7 @@ class ard_mediathek(Plugin):
                     for s in parser(stream):
                         yield s
                 except IOError as err:
-                    raise PluginError("Failed to extract {0} streams: {1}",
-                                      parser_name, err)
+                    log.debug("Failed to extract {0} streams: {1}".format(parser_name, err))
 
 
 __plugin__ = ard_mediathek
