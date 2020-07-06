@@ -1,5 +1,89 @@
 # Changelog
 
+## streamlink 1.5.0 (2020-07-07)
+
+A minor release with fixes for `pycountry==20.7.3` ([#3057](https://github.com/streamlink/streamlink/pull/3057)) and a few plugin additions and removals.
+
+And of course the usual plugin fixes and upgrades, which you can see in the git shortlog down below. Thank you to everyone involved!
+
+Support for Python2 has not been dropped yet (contrary to the comment in the last changelog), but will be in the near future.
+
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      docs: update debian install instructions
+
+Billy2011 <kschmidt2007@googlemail.com> (8):
+      plugins.nbcsports: fix embed_url_re (#2980)
+      plugins.olympicchannel: fix/rewrite (#2981)
+      plugins.foxtr: fix playervars_re (#3013)
+      plugins.huya: fix _hls_re (#3007)
+      plugins.ceskatelevize: add new api for some links (#2991)
+      plugins.beattv: remove plugin (#3053)
+      plugins.ard_live: fix / rewrite (#3052)
+      plugins.ard_mediathek: fix / update (#3049)
+
+Code <60588434+superusercode@users.noreply.github.com> (1):
+      Streamlink was added to Windows Package Manager
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (6):
+      plugins.tvplayer: Add missing platform key in the GET for stream_url (#2989)
+      plugins.btv: remove login and fix API URL (#3019)
+      plugins.n13tv: new plugin - replaces plugins.reshet (#3034)
+      plugins.reshet: plugin removal (#3000)
+      plugins.tvnbg: plugin removal (#3056)
+      plugins.adultswim: fix/rewrite (#2952)
+
+Sebastian Meyer <mail@bastimeyer.de> (3):
+      ci: no test/documentation jobs on scheduled run (#3012)
+      cli.main: fix msecs format in logging output (#3025)
+      utils.l10n: fix pycountry language lookup (#3057)
+
+Vladimir Stavrinov <9163352+vstavrinov@users.noreply.github.com> (1):
+      plugins.nbcnews: new plugin for http://nbcnews.com/now (#2927)
+
+back-to <backto@protonmail.ch> (11):
+      plugins.showroom: use normal HLSStreams
+      docs: remove unimportant note / file
+      plugins.viasat: remove play.nova.bg domain
+      actions: fixed incorrect versions and use names for codecov (#2932)
+      plugins.filmon: use /tv/ url and raise PluginError for invalid channels
+      flake8: E741 ambiguous variable name
+      plugins.youtube: Fix isLive and signatureCipher (#3026)
+      plugins.facebook: use meta og:video:url and added basic title support (#3024)
+      plugins.picarto: fixed vod url detection
+      ci: fix pycountry issue temporarily with a fixed version
+      plugin.api.useragents: update User-Agent
+
+bastimeyer <mail@bastimeyer.de> (3):
+      docs/install: fix Windows package manager
+      plugins.mixer: remove plugin
+      ci: run scheduled tests, ignore coverage report
+
+beardypig <beardypig@protonmail.com> (1):
+      plugins.cdnbg: update plugin to support new sites, and remove old sites (#2912)
+
+lanroth <github.com@lanroth.com> (1):
+      plugins.radionet: fix plugin so it works with new page format (#3018)
+
+resloved <bfriesen95@gmail.com> (1):
+      fixed typo
+
+steven7851 <steven7851@msn.com> (1):
+      plugins.app17: update API (#2969)
+
+tnira <tnira@users.noreply.github.com> (1):
+      Plugin.nicolive:resolve API format change (#3061)
+
+unavailable <51099894+EnterGin@users.noreply.github.com> (1):
+      plugins.twitch: fix call_subdomain (#2958)
+
+wiresp33d <66558220+wiresp33d@users.noreply.github.com> (2):
+      plugins.bigo: use API for video URL (#3016)
+      plugins.nicolive: resolve new api format (#3039)
+```
+
+
 ## streamlink 1.4.1 (2020-04-24)
 
 No code changes. [See the full `1.4.0` changelog here.](https://github.com/streamlink/streamlink/releases/tag/1.4.0)
