@@ -108,6 +108,8 @@ class NicoLive(Plugin):
         try:
             self.wss_api_url = extract_text(
                 resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
+            if not self.wss_api_url:
+                return False
         except Exception as e:
             _log.debug(e)
             _log.debug("Failed to extract wss api url")
