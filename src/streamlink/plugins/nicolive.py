@@ -108,17 +108,12 @@ class NicoLive(Plugin):
         try:
             self.wss_api_url = extract_text(
                 resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
+            if not self.wss_api_url:
+                return False
         except Exception as e:
             _log.debug(e)
             _log.debug("Failed to extract wss api url")
             return False
-
-        try:
-            self.broadcast_id = extract_text(
-                resp.text, "&quot;broadcastId&quot;:&quot;", "&quot;")
-        except Exception as e:
-            _log.debug(e)
-            _log.warning("Failed to extract broadcast id")
 
         try:
             self.frontend_id = extract_text(
@@ -132,7 +127,6 @@ class NicoLive(Plugin):
         _log.debug("Video page response code: {0}".format(resp.status_code))
         _log.trace(u"Video page response body: {0}".format(resp.text))
         _log.debug("Got wss_api_url: {0}".format(self.wss_api_url))
-        _log.debug("Got broadcast_id: {0}".format(self.broadcast_id))
         _log.debug("Got frontend_id: {0}".format(self.frontend_id))
 
         return self.wss_api_url.startswith("wss://")
