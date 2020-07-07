@@ -76,8 +76,6 @@ dogus                   - ntvspor.net        Yes   No
                         - ntv.com.tr
                         - eurostartv.com.tr
 dommune                 dommune.com          Yes   --
-douyutv                 - douyu.com          Yes   Yes
-                        - v.douyu.com
 drdk                    dr.dk                Yes   Yes   Streams may be geo-restricted to Denmark.
 earthcam                earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
 egame                   egame.qq.com         Yes   No
