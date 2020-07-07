@@ -247,10 +247,6 @@ twitch                  twitch.tv            Yes   Yes
 ustreamtv               - ustream.tv         Yes   Yes
                         - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
-vaughnlive              - vaughnlive.tv      Yes   --
-                        - breakers.tv
-                        - instagib.tv
-                        - vapers.tv
 viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-restricted.
                         - skaties.lv
                         - tv3.dk
