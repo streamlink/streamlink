@@ -286,7 +286,7 @@ class TwitchAPI(object):
         self.version = version
 
     def call(self, path, format="json", schema=None, private=False, **extra_params):
-        params = dict(as3="t", **extra_params)
+        params = dict(as3="t", oauth_token=TWITCH_CLIENT_ID, **extra_params)
 
         if len(format) > 0:
             url = "https://{0}.twitch.tv{1}.{2}".format(self.subdomain, path, format)
