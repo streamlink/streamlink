@@ -58,7 +58,6 @@ clubbingtv              clubbingtv.com       Yes   Yes   Requires a login.
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
 cubetv                  cube.tv              Yes   --
-cybergame               cybergame.tv         Yes   Yes
 dailymotion             dailymotion.com      Yes   Yes
 delfi                   - delfi.lt           --    Yes
                         - delfi.ee
