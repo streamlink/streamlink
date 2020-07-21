@@ -69,6 +69,18 @@ Wtwitch
   subscribe to. Open streams easily with settings that save your preferred quality |br|
   and player. A man page comes with the AUR package or can be compiled manually.
 
+OBS-Streamlink
+--------------
+
+:Description: OBS source plugin to receive stream using streamlink.
+:Type: OBS Plugin
+:OS: |Windows|
+:Author: `DD Center <https://github.com/dd-center>`_
+:Website: https://github.com/dd-center/obs-streamlink
+:Info: OBS-Streamlink is an OBS plugin which allows streaming live streams into OBS |br|
+  as an OBS source. This is useful for broadcast workers of multi-platform live |br|
+  broadcasts and live commentators.
+
 .. content list end
 
 
