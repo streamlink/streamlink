@@ -72,14 +72,14 @@ Wtwitch
 OBS-Streamlink
 --------------
 
-:Description: OBS source plugin to receive stream using streamlink.
+:Description: OBS source plugin for embedding streams using Streamlink
 :Type: OBS Plugin
 :OS: |Windows|
 :Author: `DD Center <https://github.com/dd-center>`_
 :Website: https://github.com/dd-center/obs-streamlink
-:Info: OBS-Streamlink is an OBS plugin which allows streaming live streams into OBS |br|
-  as an OBS source. This is useful for broadcast workers of multi-platform live |br|
-  broadcasts and live commentators.
+:Info: OBS-Streamlink is a plugin for OBS (Open Broadcaster Software) which allows
+  embedding streams directly as a scene source. This is useful for broadcasters of
+  multi-platform live streams and for live commentators.
 
 .. content list end
 
