@@ -1,135 +1,75 @@
-"""Plugin for Denmark's public service channel DR (Danmarks Radio)."""
-
+import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HDSStream
+from streamlink.stream import HLSStream
 
-LIVE_CHANNELS_API_URL = "https://www.dr.dk/mu-online/api/1.4/channel/{0}"
-VOD_API_URL = "https://www.dr.dk/mu/programcard/expanded/{0}"
-
-STREAMING_TYPES = {
-    "HDS": HDSStream.parse_manifest,
-    "HLS": HLSStream.parse_variant_playlist
-}
-
-_url_re = re.compile(r"""
-    http(s)?://(www\.)?dr.dk
-    (?:
-        /[TtVv]+/
-        (?:
-            live/(?P<channel>[^/]+)
-        )?
-        (?:
-            se/(.+/)?(?P<program>[^/&?]+)
-        )?
-    )
-""", re.VERBOSE)
-
-_channels_schema = validate.Schema(
-    {
-        "StreamingServers": validate.all(
-            [{
-                "LinkType": validate.text,
-                "Qualities": [
-                    validate.all(
-                        {
-                            "Streams": validate.all(
-                                [
-                                    validate.all(
-                                        {"Stream": validate.text},
-                                        validate.get("Stream")
-                                    )
-                                ],
-                                validate.get(0)
-                            )
-                        },
-                        validate.get("Streams")
-                    )
-                ],
-                "Server": validate.text
-            }],
-            validate.filter(lambda s: s["LinkType"] in STREAMING_TYPES)
-        )
-    },
-    validate.get("StreamingServers", {})
-)
-
-_video_schema = validate.Schema(
-    {"Data": [{
-        "Assets": validate.all(
-            [{validate.optional("Links"): validate.all(
-                [{
-                    "Target": validate.text,
-                    "Uri": validate.text
-                }],
-                validate.filter(lambda l: l["Target"] in STREAMING_TYPES)
-            )}],
-            validate.filter(lambda a: "Links" in a)
-        )
-    }]},
-    validate.get("Data", {}),
-    validate.get(0, {}),
-    validate.get("Assets", {}),
-    validate.get(0, {}),
-    validate.get("Links", []),
-)
+log = logging.getLogger(__name__)
 
 
 class DRDK(Plugin):
+    live_api_url = (
+        'https://www.dr-massive.com/api/page?device=web_browser'
+        '&ff=idp,ldp&geoLocation=dk&isDeviceAbroad=false&lang=da'
+        '&list_page_size=24&max_list_prefetch=3'
+        '&path={0}'
+        '&segments=drtv&sub=Anonymous&text_entry_format=html'
+    )
+
+    url_re = re.compile(r'''
+        https?://(?:www\.)?dr\.dk/drtv
+        (/(kanal)/[\w-]+)
+    ''', re.VERBOSE)
+
+    _live_data_schema = validate.Schema(
+        {'item': {'customFields': {
+            'hlsURL': validate.url(),
+            'hlsWithSubtitlesURL': validate.url(),
+        }}},
+        validate.get('item'),
+        validate.get('customFields'),
+    )
+
+    arguments = PluginArguments(
+        PluginArgument(
+            'live-subtitles',
+            action='store_true',
+            help="""
+            Enable Danish subtitles for live channels if they are available.
+            """,
+        ),
+    )
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls.url_re.match(url) is not None
+
+    def _get_live(self, path):
+        res = self.session.http.get(self.live_api_url.format(path))
+        playlists = self.session.http.json(res, schema=self._live_data_schema)
+
+        if self.get_option('live_subtitles'):
+            selected_playlist = 'hlsWithSubtitlesURL'
+        else:
+            selected_playlist = 'hlsURL'
+
+        for playlist_name, playlist_url in playlists.items():
+            if selected_playlist == playlist_name:
+                log.debug("{0}={1}".format(playlist_name, playlist_url))
+                return HLSStream.parse_variant_playlist(
+                    self.session,
+                    playlist_url,
+                )
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        if not match:
-            return
+        m = self.url_re.match(self.url)
+        path, url_type = m and m.groups()
+        log.debug("Path={0}".format(path))
+        log.debug("URL type={0}".format(url_type))
 
-        if match.group("channel"):
-            return self._get_live_streams(match.group("channel"))
-        else:
-            return self._get_vod_streams(match.group("program"))
-
-    def _get_vod_streams(self, program):
-        res = self.session.http.get(VOD_API_URL.format(program))
-        video = self.session.http.json(res, schema=_video_schema)
-
-        streams = {}
-        for link in video:
-            type = link["Target"]
-            url = link["Uri"]
-            parser = STREAMING_TYPES[type]
-
-            try:
-                streams.update(parser(self.session, url))
-            except IOError as err:
-                self.logger.error("Failed to load {0} streams: {1}", type, err)
-
-        return streams
-
-    def _get_live_streams(self, slug):
-        res = self.session.http.get(LIVE_CHANNELS_API_URL.format(slug))
-        servers = self.session.http.json(res, schema=_channels_schema)
-        return self._parse_streaming_servers(servers)
-
-    def _parse_streaming_servers(self, servers):
-        streams = {}
-        for server in servers:
-            type = server["LinkType"]
-            base_url = server["Server"]
-            qualities = server["Qualities"]
-            parser = STREAMING_TYPES[type]
-
-            for quality in qualities:
-                try:
-                    url = "{0}/{1}".format(base_url, quality)
-                    streams.update(parser(self.session, url))
-                except IOError as err:
-                    self.logger.error("Failed to load {0} streams: {1}", type, err)
-
-        return streams
+        if url_type == 'kanal':
+            return self._get_live(path)
 
 
 __plugin__ = DRDK
