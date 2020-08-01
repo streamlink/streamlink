@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -19,26 +19,16 @@ class DRDK(Plugin):
 
     url_re = re.compile(r'''
         https?://(?:www\.)?dr\.dk/drtv
-        (/(kanal)/[\w-]+)
+        (/kanal/[\w-]+)
     ''', re.VERBOSE)
 
     _live_data_schema = validate.Schema(
         {'item': {'customFields': {
-            'hlsURL': validate.url(),
-            'hlsWithSubtitlesURL': validate.url(),
+            validate.optional('hlsURL'): validate.url(),
+            validate.optional('hlsWithSubtitlesURL'): validate.url(),
         }}},
         validate.get('item'),
         validate.get('customFields'),
-    )
-
-    arguments = PluginArguments(
-        PluginArgument(
-            'live-subtitles',
-            action='store_true',
-            help="""
-            Enable Danish subtitles for live channels if they are available.
-            """,
-        ),
     )
 
     @classmethod
@@ -47,29 +37,28 @@ class DRDK(Plugin):
 
     def _get_live(self, path):
         res = self.session.http.get(self.live_api_url.format(path))
-        playlists = self.session.http.json(res, schema=self._live_data_schema)
+        play_lists = self.session.http.json(res, schema=self._live_data_schema)
 
-        if self.get_option('live_subtitles'):
-            selected_playlist = 'hlsWithSubtitlesURL'
-        else:
-            selected_playlist = 'hlsURL'
+        streams = {}
+        for name, url in play_lists.items():
+            name_prefix = ''
+            if name == 'hlsWithSubtitlesURL':
+                name_prefix = 'subtitled_'
 
-        for playlist_name, playlist_url in playlists.items():
-            if selected_playlist == playlist_name:
-                log.debug("{0}={1}".format(playlist_name, playlist_url))
-                return HLSStream.parse_variant_playlist(
-                    self.session,
-                    playlist_url,
-                )
+            streams.update(HLSStream.parse_variant_playlist(
+                self.session,
+                url,
+                name_prefix=name_prefix,
+            ))
+
+        return streams
 
     def _get_streams(self):
         m = self.url_re.match(self.url)
-        path, url_type = m and m.groups()
+        path = m and m.group(1)
         log.debug("Path={0}".format(path))
-        log.debug("URL type={0}".format(url_type))
 
-        if url_type == 'kanal':
-            return self._get_live(path)
+        return self._get_live(path)
 
 
 __plugin__ = DRDK
