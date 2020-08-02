@@ -9,13 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class DRDK(Plugin):
-    live_api_url = (
-        'https://www.dr-massive.com/api/page?device=web_browser'
-        '&ff=idp,ldp&geoLocation=dk&isDeviceAbroad=false&lang=da'
-        '&list_page_size=24&max_list_prefetch=3'
-        '&path={0}'
-        '&segments=drtv&sub=Anonymous&text_entry_format=html'
-    )
+    live_api_url = 'https://www.dr-massive.com/api/page'
 
     url_re = re.compile(r'''
         https?://(?:www\.)?dr\.dk/drtv
@@ -36,11 +30,15 @@ class DRDK(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_live(self, path):
-        res = self.session.http.get(self.live_api_url.format(path))
-        play_lists = self.session.http.json(res, schema=self._live_data_schema)
+        params = dict(
+            ff='idp',
+            path=path,
+        )
+        res = self.session.http.get(self.live_api_url, params=params)
+        playlists = self.session.http.json(res, schema=self._live_data_schema)
 
         streams = {}
-        for name, url in play_lists.items():
+        for name, url in playlists.items():
             name_prefix = ''
             if name == 'hlsWithSubtitlesURL':
                 name_prefix = 'subtitled_'
