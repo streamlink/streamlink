@@ -10,7 +10,7 @@ class TestPluginBigo(unittest.TestCase):
     self.assertTrue(MRTmk.can_handle_url("http://play.mrt.com.mk/play/1581"))
 
     #shouldn't match
-    self.assertFalse(IDF1.can_handle_url("http://play.mrt.com.mk/"))
-    self.assertFalse(IDF1.can_handle_url("http://play.mrt.com.mk/c/2"))
-    self.assertFalse(IDF1.can_handle_url("http://www.tvcatchup.com/"))
-    self.assertFalse(IDF1.can_handle_url("http://www.youtube.com/"))
+    self.assertFalse(MRTmk.can_handle_url("http://play.mrt.com.mk/"))
+    self.assertFalse(MRTmk.can_handle_url("http://play.mrt.com.mk/c/2"))
+    self.assertFalse(MRTmk.can_handle_url("http://www.tvcatchup.com/"))
+    self.assertFalse(MRTmk.can_handle_url("http://www.youtube.com/"))
