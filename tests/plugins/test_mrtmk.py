@@ -3,7 +3,7 @@ import unittest
 from streamlink.plugins.mrtmk import MRTmk
 
 class TestPluginBigo(unittest.TestCase):
-  def test_can_handle_url(self)
+  def test_can_handle_url(self):
     # should match
     self.assertTrue(MRTmk.can_handle_url("http://play.mrt.com.mk/live/658323455489957"))
     self.assertTrue(MRTmk.can_handle_url("http://play.mrt.com.mk/live/47"))
