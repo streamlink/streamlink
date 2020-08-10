@@ -1,6 +1,7 @@
 import logging
 import re
 import uuid
+import random
 
 from requests.cookies import cookiejar_from_dict
 
@@ -162,7 +163,10 @@ class Zattoo(Plugin):
         res = self.session.http.get(app_token_url)
         match = self._app_token_re.search(res.text)
 
-        app_token = match.group(1)
+        if self.base_url == 'https://www.quantum-tv.com':
+            app_token = '%032x' % random.getrandbits(128)
+        else:
+            app_token = match.group(1)
         hello_url = self.API_HELLO.format(self.base_url)
 
         if self._uuid:
