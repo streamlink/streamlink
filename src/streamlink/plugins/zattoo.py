@@ -1,7 +1,6 @@
 import logging
 import re
 import uuid
-import json
 
 from requests.cookies import cookiejar_from_dict
 
@@ -168,7 +167,7 @@ class Zattoo(Plugin):
         match = self._app_token_re.search(res.text)
 
         if self.base_url == 'https://www.quantum-tv.com':
-            app_token = json.loads(res.text)["session_token"]
+            app_token = self.session.http.json(res)["session_token"]
             hello_url = self.API_HELLO_V3.format(self.base_url)
         else:
             app_token = match.group(1)
@@ -192,7 +191,7 @@ class Zattoo(Plugin):
             params['lang'] = 'en'
             params['format'] = 'json'
 
-        res = self.session.http.post(hello_url, headers=self.headers, data=params, cookies=self.session.http.cookies)
+        res = self.session.http.post(hello_url, headers=self.headers, data=params)
 
     def _login(self, email, password):
         log.debug('_login ... Attempting login as {0}'.format(email))
@@ -205,7 +204,6 @@ class Zattoo(Plugin):
 
         if self.base_url == 'https://quantum-tv.com':
             login_url = self.API_LOGIN_V3.format(self.base_url)
-            params['remember'] = 'True'
         else:
             login_url = self.API_LOGIN.format(self.base_url)
 
@@ -218,9 +216,12 @@ class Zattoo(Plugin):
             raise e
 
         data = self.session.http.json(res)
+
         self._authed = data['success']
         log.debug('New Session Data')
         self.save_cookies(default_expires=self.TIME_SESSION)
+
+
         self._session_attributes.set('power_guide_hash',
                                      data['session']['power_guide_hash'],
                                      expires=self.TIME_SESSION)
