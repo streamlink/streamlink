@@ -216,12 +216,9 @@ class Zattoo(Plugin):
             raise e
 
         data = self.session.http.json(res)
-
         self._authed = data['success']
         log.debug('New Session Data')
         self.save_cookies(default_expires=self.TIME_SESSION)
-
-
         self._session_attributes.set('power_guide_hash',
                                      data['session']['power_guide_hash'],
                                      expires=self.TIME_SESSION)
