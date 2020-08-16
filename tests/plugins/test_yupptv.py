@@ -12,7 +12,7 @@ class TestPluginYuppTV(unittest.TestCase):
         for url in should_match:
             self.assertTrue(YuppTV.can_handle_url(url))
 
-    def test_can_handle_negative(self):
+    def test_can_handle_url_negative(self):
         should_not_match = [
             'https://ewe.de',
             'https://netcologne.de',
