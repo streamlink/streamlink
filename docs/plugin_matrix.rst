@@ -214,7 +214,7 @@ tigerdile               tigerdile.com        Yes   --
 tlctr                   tlctv.com.tr         Yes   No
 trt                     trt.net.tr           Yes   No    Some streams may be geo-restricted to Turkey.
 trtspor                 trtspor.com          Yes   No    Some streams are geo-restricted to Turkey.
-turkuvaz                - atv.com.tr         Yes   No
+turkuvaz                - atv.com.tr         Yes   No    Streams may be geo-restricted.
                         - a2tv.com.tr
                         - ahaber.com.tr
                         - anews.com.tr
