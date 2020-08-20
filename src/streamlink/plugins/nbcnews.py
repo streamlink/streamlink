@@ -1,46 +1,51 @@
-import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
+from streamlink.plugin.api.utils import itertags
+from streamlink.plugin.api import useragents, validate
+from streamlink.stream import HLSStream, HTTPStream
+from streamlink.utils.url import update_scheme
+from streamlink.exceptions import  NoStreamsError
 
-log = logging.getLogger(__name__)
 
-
-class NBCNews(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?nbcnews\.com/now')
-    js_re = re.compile(r'https://ndassets\.s-nbcnews\.com/main-[0-9a-f]{20}\.js')
-    api_re = re.compile(r'NEWS_NOW_PID="([0-9]+)"')
-    api_url = 'https://stream.nbcnews.com/data/live_sources_{0}.json'
-    api_schema = validate.Schema(validate.transform(parse_json), {
-        'videoSources': [{
-            'sourceUrl': validate.url(),
-            'type': validate.text
-        }]
-    }, validate.get('videoSources'), validate.get(0))
+class Nbcnews(Plugin):
+    _url_re = re.compile(r'(?P<scheme>https?)://(?P<subdomain>\w+)\.?nbcnews.com/now(?P<path>.*)')
+    _url_m3u8 = "https://api.leap.nbcsports.com/pid/NBCNews/220018/v4/desktop"
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
+        return cls._url_re.match(url)
 
-    def get_title(self):
-        return 'NBC News Now'
+    def _get_playlist(self, data):
+        """
+        Get the playlist for live stream for nbcnews.com
+        :return: string
+        """
+        try:
+            url = data.get('videoSources', [{'cdnSources': {'primary': [{'sourceUrl': None}]}}])[0].get('cdnSources').get('primary')[0].get('sourceUrl')
+        except:
+            url = None
+
+        return url
 
     def _get_streams(self):
-        html = self.session.http.get(self.url).text
-        match = self.js_re.search(html)
-        js = self.session.http.get(match.group(0)).text
-        match = self.api_re.search(js)
-        log.debug('API ID: {0}'.format(match.group(1)))
-        api_url = self.api_url.format(match.group(1))
-        stream = self.session.http.get(api_url, schema=self.api_schema)
-        log.trace('{0!r}'.format(stream))
-        if stream['type'].lower() != 'live':
-            log.error('invalid stream type "{0}"'.format(stream['type']))
-            return
-        return HLSStream.parse_variant_playlist(self.session, stream['sourceUrl'])
+        """
+        Get the live stream for nbcnews.com
+        :return:
+        """
+        match = self._url_re.match(self.url).groupdict()
+        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
+
+        if match.get("path") == "":
+            res = self.session.http.get(self._url_m3u8)
+            data = self.session.http.json(res)
+            url = self._get_playlist(data)
+            if url is None:
+                raise NoStreamsError("Error get live stream url")
+
+            for stream in HLSStream.parse_variant_playlist(self.session, url).items():
+                yield stream
+
+__plugin__ = Nbcnews
 
 
-__plugin__ = NBCNews
