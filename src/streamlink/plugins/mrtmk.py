@@ -1,8 +1,11 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+
+log = logging.getLogger(__name__)
 
 
 class MRTmk(Plugin):
@@ -20,9 +23,6 @@ class MRTmk(Plugin):
         ),
     )
 
-    def __init__(self, url):
-        super(MRTmk, self).__init__(url)
-
     @classmethod
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
@@ -30,12 +30,19 @@ class MRTmk(Plugin):
     def _get_streams(self):
         res = self.session.http.get(self.url)
         stream_urls = self.stream_schema.validate(res.text)
-        self.logger.debug("Found {0} stream URL{1}", len(stream_urls),
-                          "" if len(stream_urls) == 1 else "s")
+        log.debug("Found streams: {0}".format(len(stream_urls)))
+        if not stream_urls:
+            return
 
         for stream_url in stream_urls:
-            for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
-                yield s
+            try:
+                for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
+                    yield s
+            except IOError as err:
+                if "403 Client Error" in str(err):
+                    log.error("Failed to access stream, may be due to geo-restriction")
+                else:
+                    raise err
 
 
 __plugin__ = MRTmk
