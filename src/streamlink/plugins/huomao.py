@@ -144,7 +144,7 @@ class Huomao(Plugin):
 
         m = self.title_re.search(res.text)
         if m:
-             self.title = m.group(1)
+            self.title = m.group(1)
 
         m = self.video_id_re.search(res.text)
         video_id = m and m.group(1)
