@@ -9,7 +9,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
@@ -52,14 +51,8 @@ class Huomao(Plugin):
     })
 
     _vod_data_schema = validate.Schema({
-        'title': validate.all(
-            validate.text,
-            validate.transform(maybe_decode),
-        ),
-        'username': validate.all(
-            validate.text,
-            validate.transform(maybe_decode),
-        ),
+        'title': validate.text,
+        'username': validate.text,
         'vaddress': validate.all(
             validate.text,
             validate.transform(parse_json),
