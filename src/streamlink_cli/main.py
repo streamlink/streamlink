@@ -296,7 +296,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(plugin, stream):
+def output_stream(plugin, stream, last_stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -311,7 +311,10 @@ def output_stream(plugin, stream):
                 i + 1, args.retry_open, stream, err))
 
     if not success_open:
-        console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
+        if last_stream:
+            console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
+        else:
+            return False
 
     output = create_output(plugin)
 
@@ -431,11 +434,16 @@ def handle_stream(plugin, streams, stream_name):
     else:
         # Find any streams with a '_alt' suffix and attempt
         # to use these in case the main stream is not usable.
-        alt_streams = list(filter(lambda k: stream_name + "_alt" in k,
+        def _name_endswith(ext, k):
+            return k.startswith(stream_name) and k.endswith(ext)
+
+        alt_streams = list(filter(lambda k: _name_endswith("_alt", k),
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
-
-        for stream_name in [stream_name] + alt_streams:
+        stream_names = [stream_name] + alt_streams
+        count = 0
+        for stream_name in stream_names:
+            count += 1
             stream = streams[stream_name]
             stream_type = type(stream).shortname()
 
@@ -451,8 +459,7 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 log.info("Opening stream: {0} ({1})".format(stream_name,
                                                             stream_type))
-
-                success = output_stream(plugin, stream)
+                success = output_stream(plugin, stream, count == len(stream_names))
 
             if success:
                 break
