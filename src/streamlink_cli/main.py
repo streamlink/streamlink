@@ -434,10 +434,10 @@ def handle_stream(plugin, streams, stream_name):
     else:
         # Find any streams with a '_alt' suffix and attempt
         # to use these in case the main stream is not usable.
-        def _name_endswith(ext, k):
-            return k.startswith(stream_name) and k.endswith(ext)
+        def _name_contains_alt(k):
+            return k.startswith(stream_name) and "_alt" in k
 
-        alt_streams = list(filter(lambda k: _name_endswith("_alt", k),
+        alt_streams = list(filter(lambda k: _name_contains_alt(k),
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
         stream_names = [stream_name] + alt_streams
