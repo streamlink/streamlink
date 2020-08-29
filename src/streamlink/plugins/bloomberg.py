@@ -37,7 +37,7 @@ class Bloomberg(Plugin):
     _live_stream_info_module_id_re = re.compile(
         r'{(?:(?:"[^"]+"|\w+):(?:\d+|"[^"]+"),)*"(?:[^"]*/)?config/livestreams":(\d+)(?:,(?:"[^"]+"|\w+):(?:\d+|"[^"]+"))*}'
     )
-    _live_stream_info_re = r'],{id}:\[function\(.+var n=({{.+}});r.default=n}},{{"[^"]+":\d+}}],{next}:\['
+    _live_stream_info_re = r'],{id}:\[function\(.+var n=({{.+}});r.default=n}},{{}}],{next}:\['
 
     _live_streams_schema = validate.Schema(
         validate.transform(_js_to_json_re),
