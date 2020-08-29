@@ -98,7 +98,8 @@ gulli                   replay.gulli.fr      Yes   Yes   Streams may be geo-rest
 hitbox                  - hitbox.tv          Yes   Yes
                         - smashcast.tv
 huajiao                 huajiao.com          Yes   No
-huomao                  huomao.com           Yes   No
+huomao                  - huomao.com         Yes   Yes
+                        - huomao.tv
 huya                    huya.com             Yes   No    Temporarily only HLS streams available.
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
