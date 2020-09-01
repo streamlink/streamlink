@@ -17,6 +17,7 @@ class TestPluginDRDK(unittest.TestCase):
         should_not_match = [
             'https://www.dr.dk/tv/live/dr1',
             'https://www.dr.dk/tv/live/dr2',
+            'https://www.dr.dk/tv/se/matador/matador-saeson-3/matador-15-24',
             'https://example.com/index.html',
         ]
         for url in should_not_match:
