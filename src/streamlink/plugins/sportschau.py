@@ -1,46 +1,52 @@
+import logging
 import re
-import json
 
 from streamlink.plugin import Plugin
-from streamlink.stream import HDSStream
-from streamlink.utils import update_scheme
+from streamlink.plugin.api import validate
+from streamlink.stream import HLSStream
+from streamlink.utils import parse_json, update_scheme
 
-_url_re = re.compile(r"http(s)?://(\w+\.)?sportschau.de/")
-_player_js = re.compile(r"https?://deviceids-medp.wdr.de/ondemand/.*\.js")
+log = logging.getLogger(__name__)
 
 
-class sportschau(Plugin):
+class Sportschau(Plugin):
+    _re_url = re.compile(r"https?://(?:\w+\.)*sportschau.de/")
+
+    _re_player = re.compile(r"https?:(//deviceids-medp.wdr.de/ondemand/\S+\.js)")
+    _re_json = re.compile(r"\$mediaObject.jsonpHelper.storeAndPlay\(({.+})\);?")
+
+    _schema_player = validate.Schema(
+        validate.transform(_re_player.search),
+        validate.any(None, validate.Schema(
+            validate.get(1),
+            validate.transform(lambda url: update_scheme("https:", url))
+        ))
+    )
+    _schema_json = validate.Schema(
+        validate.transform(_re_json.match),
+        validate.get(1),
+        validate.transform(parse_json),
+        validate.get("mediaResource"),
+        validate.get("dflt"),
+        validate.get("videoURL"),
+        validate.transform(lambda url: update_scheme("https:", url))
+    )
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._re_url.match(url) is not None
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        match = _player_js.search(res.text)
-        if match:
-            player_js = match.group(0)
-            self.logger.info("Found player js {0}", player_js)
-        else:
-            self.logger.info("Didn't find player js. Probably this page doesn't contain a video")
+        player_js = self.session.http.get(self.url, schema=self._schema_player)
+        if not player_js:
             return
 
-        res = self.session.http.get(player_js)
+        log.debug("Found player js {0}".format(player_js))
 
-        jsonp_start = res.text.find('(') + 1
-        jsonp_end = res.text.rfind(')')
+        hls_url = self.session.http.get(player_js, schema=self._schema_json)
 
-        if jsonp_start <= 0 or jsonp_end <= 0:
-            self.logger.info("Couldn't extract json metadata from player.js: {0}", player_js)
-            return
-
-        json_s = res.text[jsonp_start:jsonp_end]
-
-        stream_metadata = json.loads(json_s)
-
-        hds_url = stream_metadata['mediaResource']['dflt']['videoURL']
-        hds_url = update_scheme(self.url, hds_url)
-
-        return HDSStream.parse_manifest(self.session, hds_url).items()
+        for stream in HLSStream.parse_variant_playlist(self.session, hls_url).items():
+            yield stream
 
 
-__plugin__ = sportschau
+__plugin__ = Sportschau
