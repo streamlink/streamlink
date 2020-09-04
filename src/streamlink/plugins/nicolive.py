@@ -200,7 +200,7 @@ class NicoLive(Plugin):
             "type": "startWatching",
             "data": {
                 "stream": {
-                    "quality": "high",
+                    "quality": "abr",
                     "protocol": "hls",
                     "latency": "high",
                     "chasePlay": False
