@@ -10,7 +10,6 @@ from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
-
 STREAM_WEIGHTS = {
     "low": 240,
     "mid": 420,
@@ -72,7 +71,7 @@ _media_schema = validate.Schema(
     validate.get("stream_data")
 )
 _login_schema = validate.Schema({
-    "auth": validate.text,
+    "auth": validate.any(validate.text, None),
     "expires": validate.all(
         validate.text,
         validate.transform(parse_timestamp)
@@ -214,9 +213,16 @@ class CrunchyrollAPI(object):
         return login
 
     def authenticate(self):
-        data = self._api_call("authenticate", {"auth": self.auth}, schema=_login_schema)
-        self.auth = data["auth"]
-        self.cache.set("auth", data["auth"], expires_at=data["expires"])
+        try:
+            data = self._api_call("authenticate", {"auth": self.auth}, schema=_login_schema)
+        except CrunchyrollAPIError:
+            self.auth = None
+            self.cache.set("auth", None, expires_at=0)
+            log.warning("Saved credentials have expired")
+            return
+
+        log.debug("Credentials expire at: {}".format(data["expires"]))
+        self.cache.set("auth", self.auth, expires_at=data["expires"])
         return data
 
     def get_info(self, media_id, fields=None, schema=None):
@@ -321,7 +327,7 @@ class Crunchyroll(Plugin):
         # The adaptive quality stream sometimes a subset of all the other streams listed, ultra is no included
         has_adaptive = any([s[u"quality"] == u"adaptive" for s in info[u"streams"]])
         if has_adaptive:
-            self.logger.debug(u"Loading streams from adaptive playlist")
+            log.debug(u"Loading streams from adaptive playlist")
             for stream in filter(lambda x: x[u"quality"] == u"adaptive", info[u"streams"]):
                 for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
                     # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
@@ -361,27 +367,28 @@ class Crunchyroll(Plugin):
                              locale=locale)
 
         if not self.get_option("session_id"):
-            self.logger.debug("Creating session with locale: {0}", locale)
+            log.debug("Creating session with locale: {0}", locale)
             api.start_session()
 
             if api.auth:
-                self.logger.debug("Using saved credentials")
+                log.debug("Using saved credentials")
                 login = api.authenticate()
-                self.logger.info("Successfully logged in as '{0}'",
-                                 login["user"]["username"] or login["user"]["email"])
-            elif self.options.get("username"):
+                if login:
+                    log.info("Successfully logged in as '{0}'",
+                             login["user"]["username"] or login["user"]["email"])
+            if not api.auth and self.options.get("username"):
                 try:
-                    self.logger.debug("Attempting to login using username and password")
+                    log.debug("Attempting to login using username and password")
                     api.login(self.options.get("username"),
                               self.options.get("password"))
                     login = api.authenticate()
-                    self.logger.info("Logged in as '{0}'",
-                                     login["user"]["username"] or login["user"]["email"])
+                    log.info("Logged in as '{0}'",
+                             login["user"]["username"] or login["user"]["email"])
 
                 except CrunchyrollAPIError as err:
                     raise PluginError(u"Authentication error: {0}".format(err.msg))
-            else:
-                self.logger.warning(
+            if not api.auth:
+                log.warning(
                     "No authentication provided, you won't be able to access "
                     "premium restricted content"
                 )
