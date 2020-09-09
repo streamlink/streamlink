@@ -15,7 +15,10 @@ def get_filesystem_encoding():
 
 def maybe_encode(text, encoding="utf8"):
     if is_py2:
-        return text.encode(encoding)
+        if isinstance(text, unicode):
+            return text.encode(encoding)
+        else:
+            return text
     else:
         return text
 
@@ -25,5 +28,6 @@ def maybe_decode(text, encoding="utf8"):
         return text.decode(encoding)
     else:
         return text
+
 
 __all__ = ["get_filesystem_encoding", "maybe_decode", "maybe_encode"]

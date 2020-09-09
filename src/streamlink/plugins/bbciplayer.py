@@ -1,13 +1,13 @@
-from __future__ import print_function
 
 import base64
 import logging
 import re
+
 from collections import defaultdict
 from hashlib import sha1
 
-from streamlink import PluginError
-from streamlink.compat import parse_qsl, urlparse
+from streamlink.compat import urlparse
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream
@@ -34,7 +34,8 @@ class BBCiPlayer(Plugin):
     state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*});')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
-    api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
+    api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/" \
+              "{platform}/vpid/{vpid}/format/json/atk/{vpid_hash}/asn/1/"
     platforms = ("pc", "iptv-all")
     session_url = "https://session.bbc.com/session"
     auth_url = "https://account.bbc.com/signin"
@@ -85,28 +86,11 @@ class BBCiPlayer(Plugin):
 
     @classmethod
     def can_handle_url(cls, url):
-        """ Confirm plugin can handle URL """
         return cls.url_re.match(url) is not None
 
     @classmethod
     def _hash_vpid(cls, vpid):
         return sha1(cls.hash + str(vpid).encode("utf8")).hexdigest()
-
-    @classmethod
-    def _extract_nonce(cls, http_result):
-        """
-        Given an HTTP response from the session endpoint, extract the nonce, so we can "sign" requests with it.
-        We don't really sign the requests in the traditional sense of a nonce, we just include them in the auth requests.
-
-        :param http_result: HTTP response from the bbc session endpoint.
-        :type http_result: requests.Response
-        :return: nonce to "sign" url requests with
-        :rtype: string
-        """
-
-        p = urlparse(http_result.url)
-        d = dict(parse_qsl(p.query))
-        return d.get("nonce")
 
     def find_vpid(self, url, res=None):
         """
@@ -165,7 +149,7 @@ class BBCiPlayer(Plugin):
                                                            url).items():
                             yield s
                     log.debug("  OK:   {0}", url)
-                except:
+                except Exception:
                     log.debug("  FAIL: {0}", url)
 
     def login(self, ptrt_url):
@@ -191,13 +175,9 @@ class BBCiPlayer(Plugin):
             log.debug("Already authenticated, skipping authentication")
             return True
 
-        http_nonce = self._extract_nonce(session_res)
         res = self.session.http.post(
             self.auth_url,
-            params=dict(
-                ptrt=ptrt_url,
-                nonce=http_nonce
-            ),
+            params=urlparse(session_res.url).query,
             data=dict(
                 jsEnabled=True,
                 username=self.get_option("username"),

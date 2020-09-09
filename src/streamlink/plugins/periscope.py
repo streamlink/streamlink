@@ -37,9 +37,11 @@ class Periscope(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        res = self.session.http.get(STREAM_INFO_URL,
-                       params=match.groupdict(),
-                       acceptable_status=STATUS_UNAVAILABLE)
+        res = self.session.http.get(
+            STREAM_INFO_URL,
+            params=match.groupdict(),
+            acceptable_status=STATUS_UNAVAILABLE
+        )
 
         if res.status_code in STATUS_UNAVAILABLE:
             return

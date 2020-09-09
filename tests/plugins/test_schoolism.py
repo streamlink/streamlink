@@ -32,20 +32,19 @@ class TestPluginSchoolism(unittest.TestCase):
                     src:  "https://s3.amazonaws.com/schoolism-encoded/44/subtitles/2/2-2.vtt",
                 }]
             }];
-            """
+            """  # noqa: E501
 
         data = Schoolism.playlist_schema.validate(with_subs)
 
         self.assertIsNotNone(data)
         self.assertEqual(2, len(data))
 
-
     def test_playlist_parse(self):
         without_subs = """var allVideos=[
             {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/14/1/part1.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Gesture Drawing - Lesson 1 - Part 1",playlistTitle:"Part 1",}],},
             {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/14/1/part2.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Gesture Drawing - Lesson 1 - Part 2",playlistTitle:"Part 2",}]}
             ];
-        """
+        """  # noqa: E501
 
         data = Schoolism.playlist_schema.validate(without_subs)
 

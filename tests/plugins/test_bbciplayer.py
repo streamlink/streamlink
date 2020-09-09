@@ -1,9 +1,5 @@
-import json
 import unittest
 
-from requests import Response, Request
-
-from streamlink.compat import urlencode
 from streamlink.plugins.bbciplayer import BBCiPlayer
 
 
@@ -24,12 +20,3 @@ class TestPluginBBCiPlayer(unittest.TestCase):
             "71c345435589c6ddeea70d6f252e2a52281ecbf3",
             BBCiPlayer._hash_vpid("1234567890")
         )
-
-    def test_extract_nonce(self):
-        mock_nonce = "mock-nonce-nse"
-        mock_response = Response()
-        mock_response.url = "http://example.com/?" + urlencode(dict(nonce=mock_nonce))
-
-        self.assertEqual(BBCiPlayer._extract_nonce(mock_response), mock_nonce)
-
-

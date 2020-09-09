@@ -4826,3 +4826,14 @@ table.table-custom-layout tbody tr td {
   overflow: unset;
   white-space: unset;
 }
+
+/* github avatar pictures on the donate page */
+.github-avatar {
+  float: left;
+  width: 150px;
+  height: 150px;
+  margin: 0 1rem 1rem 0;
+}
+.github-avatar + .container > ul > li {
+  list-style: none;
+}

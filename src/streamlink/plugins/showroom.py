@@ -4,6 +4,7 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream, RTMPStream
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker
 
 _url_re = re.compile(r'''^https?://
     (?:\w*.)?
@@ -78,6 +79,23 @@ _info_pages = set((
 ))
 
 
+class ShowroomHLSStreamWorker(HLSStreamWorker):
+    def _playlist_reload_time(self, playlist, sequences):
+        return 1.5
+
+
+class ShowroomHLSStreamReader(HLSStreamReader):
+    __worker__ = ShowroomHLSStreamWorker
+
+
+class ShowroomHLSStream(HLSStream):
+    def open(self):
+        reader = ShowroomHLSStreamReader(self)
+        reader.open()
+
+        return reader
+
+
 class Showroom(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -150,8 +168,13 @@ class Showroom(Plugin):
             if stream_info["type"] == "rtmp":
                 yield self._get_rtmp_stream(stream_info)
             elif stream_info["type"] == "hls":
-                for s in HLSStream.parse_variant_playlist(self.session, stream_info["url"]).items():
-                    yield s
+                streams = ShowroomHLSStream.parse_variant_playlist(self.session, stream_info["url"])
+                if not streams:
+                    quality = _rtmp_quality_lookup.get(stream_info["label"], "other")
+                    yield quality, ShowroomHLSStream(self.session, stream_info["url"])
+                else:
+                    for s in streams.items():
+                        yield s
 
 
 __plugin__ = Showroom

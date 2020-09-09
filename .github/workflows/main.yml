@@ -1,0 +1,167 @@
+name: Test, build and deploy
+
+on:
+  push: {}
+  pull_request: {}
+  schedule:
+    - cron: '0 0 * * *'
+
+env:
+  STREAMLINK_DIST_DIR: ${{ github.workspace }}/dist
+  SIGNING_KEY_ID: 2E390FA0
+  SIGNING_KEY_FILE: ${{ github.workspace }}/signing.key
+  DOCS_KEY_FILE: ${{ github.workspace }}/id_rsa_docs
+
+jobs:
+  test:
+    name: Test
+    strategy:
+      fail-fast: false
+      # when changing the build matrix, the `after_n_builds` value in codecov.yml may need to be updated
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: [2.7, 3.5, 3.6, 3.7, 3.8]
+#       include:
+#         - python: X.Y-dev
+#           continue: true
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install dependencies
+        continue-on-error: ${{ matrix.continue || false }}
+        run: bash ./script/install-dependencies.sh
+      - name: Test
+        continue-on-error: ${{ matrix.continue || false }}
+        run: pytest -r a --cov --cov-report=xml
+      - name: Lint
+        continue-on-error: ${{ matrix.continue || false }}
+        run: flake8
+      - name: Upload coverage data
+        if: github.event_name != 'schedule'
+        continue-on-error: ${{ matrix.continue || false }}
+        uses: codecov/codecov-action@v1
+        with:
+          name: os:${{ matrix.os }} py:${{ matrix.python }}
+
+  documentation:
+    name: Test docs
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install -r docs-requirements.txt
+      - name: Build
+        run: make --directory=docs html
+
+  windows-installer:
+    name: Windows installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install pynsist==2.4
+          sudo apt update
+          sudo apt install -y nsis imagemagick inkscape
+      - name: Installer file name
+        id: installer
+        run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
+      - name: Build
+        run: ./script/makeinstaller.sh "${{ steps.installer.outputs.filename }}"
+      - name: Upload artifact
+        if: github.repository == 'streamlink/streamlink' && (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'schedule')
+        uses: actions/upload-artifact@v2-preview
+        with:
+          name: ${{ steps.installer.outputs.filename }}-win32
+          path: ${{ env.STREAMLINK_DIST_DIR }}/${{ steps.installer.outputs.filename }}.exe
+
+  deploy-documentation:
+    name: Deploy docs
+    if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
+    needs:
+      - test
+      - documentation
+      - windows-installer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install -r docs-requirements.txt
+      - name: Build
+        run: make --directory=docs html
+      - name: Deploy
+        env:
+          DOCS_KEY_PASSPHRASE: ${{ secrets.DOCS_KEY_PASSPHRASE }}
+        run: ./script/deploy-docs.sh
+
+  release:
+    name: New release
+    if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    needs:
+      - deploy-documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 300
+      - name: Fetch tags
+        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
+      - uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          ./script/install-dependencies.sh
+          python -m pip install --upgrade wheel twine
+      - name: Installer file name
+        id: installer
+        run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
+      - name: Download installer artifact
+        uses: actions/download-artifact@v2-preview
+        with:
+          name: ${{ steps.installer.outputs.filename }}-win32
+          path: ${{ env.STREAMLINK_DIST_DIR }}
+      - name: sdist and wheels
+        env:
+          RELEASE_KEY_PASSPHRASE: ${{ secrets.RELEASE_KEY_PASSPHRASE }}
+        run: ./script/build-and-sign.sh
+      - name: Github release
+        env:
+          RELEASES_API_KEY: ${{ secrets.RELEASES_API_KEY }}
+        run: ./script/github_releases.py "${STREAMLINK_DIST_DIR}/"*{.exe,.tar.gz{,.asc}}
+      - name: PyPI release
+        env:
+          PYPI_USER: streamlink
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: ./script/deploy-pypi.sh

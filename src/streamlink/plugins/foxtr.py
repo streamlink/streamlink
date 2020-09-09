@@ -2,7 +2,6 @@ from __future__ import print_function
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 
@@ -17,7 +16,7 @@ class FoxTR(Plugin):
            foxplay.com.tr/.*)
     """, re.VERBOSE)
 
-    playervars_re = re.compile(r"source\s*:\s*\[\s*\{\s*videoSrc\s*:\s*'(.*?)'", re.DOTALL)
+    playervars_re = re.compile(r"source\s*:\s*\[\s*\{\s*videoSrc\s*:\s*(?:mobilecheck\(\)\s*\?\s*)?'([^']+)'")
 
     @classmethod
     def can_handle_url(cls, url):

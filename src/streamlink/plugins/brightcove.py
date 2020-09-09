@@ -9,7 +9,7 @@ from streamlink.packages.flashmedia.types import AMF3ObjectBase
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
-from streamlink.compat import urlparse, parse_qsl, urlencode
+from streamlink.compat import urlparse, parse_qsl
 
 
 @AMF3ObjectBase.register("com.brightcove.experience.ViewerExperienceRequest")
@@ -74,12 +74,14 @@ class BrightcovePlayer(object):
         url = "{base}accounts/{account_id}/videos/{video_id}".format(base=self.api_url,
                                                                      account_id=self.account_id,
                                                                      video_id=video_id)
-        res = self.session.http.get(url,
-                       headers={
-                           "User-Agent": useragents.CHROME,
-                           "Referer": self.player_url(video_id),
-                           "Accept": "application/json;pk={0}".format(policy_key)
-                       })
+        res = self.session.http.get(
+            url,
+            headers={
+                "User-Agent": useragents.CHROME,
+                "Referer": self.player_url(video_id),
+                "Accept": "application/json;pk={0}".format(policy_key)
+            }
+        )
         return self.session.http.json(res, schema=self.schema)
 
     def policy_key(self, video_id):
@@ -108,8 +110,8 @@ class BrightcovePlayer(object):
                 q = "{0}k".format(source.get("avg_bitrate") // 1000)
             else:
                 q = "live"
-            if ((source.get("type") == "application/x-mpegURL" and source.get("src")) or
-                    (source.get("src") and ".m3u8" in source.get("src"))):
+            if ((source.get("type") == "application/x-mpegURL" and source.get("src"))
+                    or (source.get("src") and ".m3u8" in source.get("src"))):
                 for s in HLSStream.parse_variant_playlist(self.session, source.get("src"), headers=headers).items():
                     yield s
             elif source.get("app_name"):
@@ -151,11 +153,13 @@ class BrightcovePlayer(object):
         amf_packet = AMFPacket(version=3)
         amf_packet.messages.append(amf_message)
 
-        res = self.session.http.post(cls.amf_broker,
-                        headers={"Content-Type": "application/x-amf"},
-                        data=amf_packet.serialize(),
-                        params=dict(playerKey=player_key),
-                        raise_for_status=False)
+        res = session.http.post(
+            cls.amf_broker,
+            headers={"Content-Type": "application/x-amf"},
+            data=amf_packet.serialize(),
+            params=dict(playerKey=player_key),
+            raise_for_status=False
+        )
         data = AMFPacket.deserialize(BytesIO(res.content))
         result = data.messages[0].value
         bp = cls(session=session, account_id=int(result.publisherId))

@@ -140,7 +140,6 @@ class DASHStreamReader(SegmentedStreamReader):
         log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))
 
 
-
 class DASHStream(Stream):
     __shortname__ = "dash"
 
@@ -224,7 +223,10 @@ class DASHStream(Stream):
             # filter by the first language that appears
             lang = audio[0] and audio[0].lang
 
-        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(", ".join(available_languages) or "NONE", lang or "n/a"))
+        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(
+            ", ".join(available_languages) or "NONE",
+            lang or "n/a"
+        ))
 
         # if the language is given by the stream, filter out other languages that do not match
         if len(available_languages) > 1:

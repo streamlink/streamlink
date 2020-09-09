@@ -1,4 +1,4 @@
-# encoding=utf8
+# -*- coding: utf-8 -*-
 import unittest
 
 from streamlink.compat import is_py3, is_py2

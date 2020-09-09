@@ -80,7 +80,7 @@ class VK(Plugin):
                 for s in self.session.streams(iframe_url).items():
                     yield s
 
-        for _i in itertags(res.text, 'source'):
+        for _i in itertags(res.text.replace('\\', ''), 'source'):
             if _i.attributes.get('type') == 'application/vnd.apple.mpegurl':
                 video_url = html_unescape(_i.attributes['src'])
                 streams = HLSStream.parse_variant_playlist(self.session,

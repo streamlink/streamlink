@@ -129,7 +129,7 @@ class MPDParsers(object):
             raise MPDParsingError("invalid byte-range-spec")
 
         start, end = int(r[0]), r[1] and int(r[1]) or None
-        return start, end and ((end-start) + 1)
+        return start, end and ((end - start) + 1)
 
 
 class MPDParsingError(Exception):
@@ -367,7 +367,6 @@ class SegmentList(MPDNode):
         else:
             self.duration_seconds = None
 
-
         self.initialization = self.only_child(Initialization)
         self.segment_urls = self.children(SegmentURL, minimum=1)
 
@@ -496,9 +495,13 @@ class SegmentTemplate(MPDNode):
                                                           else 3))
 
             # the number of the segment that is available at NOW - SUGGESTED_DELAY - BUFFER_TIME
-            number_iter = count(self.startNumber +
-                                int((since_start - suggested_delay - self.root.minBufferTime).total_seconds() /
-                                    self.duration_seconds))
+            number_iter = count(
+                self.startNumber
+                + int(
+                    (since_start - suggested_delay - self.root.minBufferTime).total_seconds()
+                    / self.duration_seconds
+                )
+            )
 
             # the time the segment number is available at NOW
             available_iter = count_dt(available_start,
@@ -601,7 +604,7 @@ class Representation(MPDNode):
         :return: yields Segments
         """
 
-        segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
+        # segmentBase = self.segmentBase or self.walk_back_get_attr("segmentBase")
         segmentLists = self.segmentList or self.walk_back_get_attr("segmentList")
         segmentTemplate = self.segmentTemplate or self.walk_back_get_attr("segmentTemplate")
 

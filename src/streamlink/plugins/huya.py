@@ -8,20 +8,14 @@ from streamlink.utils import update_scheme
 
 HUYA_URL = "http://m.huya.com/%s"
 
-_url_re = re.compile(r'http(s)?://(www\.)?huya.com/(?P<channel>[^/]+)', re.VERBOSE)
-_hls_re = re.compile(r'^\s*<video\s+id="html5player-video"\s+src="(?P<url>[^"]+)"', re.MULTILINE)
+_url_re = re.compile(r'https?://(www\.)?huya.com/(?P<channel>[^/]+)')
+_hls_re = re.compile(r'liveLineUrl\s*=\s*"(?P<url>[^"]+)"')
 
 _hls_schema = validate.Schema(
-    validate.all(
-        validate.transform(_hls_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get('url'),
-                validate.transform(str)
-            )
-        )
-    )
+    validate.transform(_hls_re.search),
+    validate.any(None, validate.get("url")),
+    validate.transform(lambda v: update_scheme("http://", v)),
+    validate.url()
 )
 
 
@@ -38,7 +32,7 @@ class Huya(Plugin):
         # Some problem with SSL on huya.com now, do not use https
 
         hls_url = self.session.http.get(HUYA_URL % channel, schema=_hls_schema)
-        yield "live", HLSStream(self.session, update_scheme("http://", hls_url))
+        yield "live", HLSStream(self.session, hls_url)
 
 
 __plugin__ = Huya

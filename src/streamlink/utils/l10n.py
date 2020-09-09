@@ -1,5 +1,6 @@
 import locale
 import logging
+import re
 
 from streamlink.compat import is_py2
 
@@ -41,9 +42,11 @@ class Country(object):
             raise LookupError("Invalid country code: {0}".format(country))
 
     def __eq__(self, other):
-        return ((self.alpha2 and self.alpha2 == other.alpha2) or
-                (self.alpha3 and self.alpha3 == other.alpha3) or
-                (self.numeric and self.numeric == other.numeric))
+        return (
+            (self.alpha2 and self.alpha2 == other.alpha2)
+            or (self.alpha3 and self.alpha3 == other.alpha3)
+            or (self.numeric and self.numeric == other.numeric)
+        )
 
     def __str__(self):
         if is_py2:
@@ -70,31 +73,34 @@ class Language(object):
     def get(cls, language):
         try:
             if PYCOUNTRY:
-                c = languages.lookup(language)
-                return Language(c.alpha_2, c.alpha_3, c.name, getattr(c, "bibliographic", None))
+                # lookup workaround for alpha_2 language codes
+                lang = languages.get(alpha_2=language) if re.match(r"^[a-z]{2}$", language) else languages.lookup(language)
+                return Language(lang.alpha_2, lang.alpha_3, lang.name, getattr(lang, "bibliographic", None))
             else:
-                l = None
+                lang = None
                 if len(language) == 2:
-                    l = languages.get(alpha2=language)
+                    lang = languages.get(alpha2=language)
                 elif len(language) == 3:
                     for code_type in ['part2b', 'part2t', 'part3']:
                         try:
-                            l = languages.get(**{code_type: language})
+                            lang = languages.get(**{code_type: language})
                             break
                         except KeyError:
                             pass
-                    if not l:
+                    if not lang:
                         raise KeyError(language)
                 else:
                     raise KeyError(language)
-                return Language(l.alpha2, l.part3, l.name, l.part2b or l.part2t)
+                return Language(lang.alpha2, lang.part3, lang.name, lang.part2b or lang.part2t)
         except (LookupError, KeyError):
             raise LookupError("Invalid language code: {0}".format(language))
 
     def __eq__(self, other):
-        return ((self.alpha2 and self.alpha2 == other.alpha2) or
-                (self.alpha3 and self.alpha3 == other.alpha3) or
-                (self.bibliographic and self.bibliographic == other.bibliographic))
+        return (
+            (self.alpha2 and self.alpha2 == other.alpha2)
+            or (self.alpha3 and self.alpha3 == other.alpha3)
+            or (self.bibliographic and self.bibliographic == other.bibliographic)
+        )
 
     def __str__(self):
         if is_py2:

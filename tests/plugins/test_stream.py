@@ -172,7 +172,3 @@ class TestPluginStream(unittest.TestCase):
 
         self.assertGreater(stream_weight("720p+a128k"),
                            stream_weight("360p+a256k"))
-
-
-if __name__ == "__main__":
-    unittest.main()

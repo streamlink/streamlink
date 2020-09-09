@@ -277,11 +277,7 @@ def build_parser():
     )
     general.add_argument(
         "--twitch-oauth-authenticate",
-        action="store_true",
-        help="""
-        Open a web browser where you can grant Streamlink access to your Twitch
-        account which creates a token for use with --twitch-oauth-token.
-        """
+        help=argparse.SUPPRESS
     )
 
     player = parser.add_argument_group("Player options")
@@ -529,6 +525,14 @@ def build_parser():
         """
     )
     output.add_argument(
+        "--force-progress",
+        action="store_true",
+        help="""
+        When using -o or -r,
+        show the download progress bar even if there is no terminal.
+        """
+    )
+    output.add_argument(
         "-O", "--stdout",
         action="store_true",
         help="""
@@ -736,6 +740,13 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-stream-data",
+        action="store_true",
+        help="""
+        Immediately write segment data into output buffer while downloading.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
@@ -755,6 +766,20 @@ def build_parser():
         giving up.
 
         Default is 3.
+        """
+    )
+    transport.add_argument(
+        "--hls-playlist-reload-time",
+        metavar="TIME",
+        help="""
+        Set a custom HLS playlist reload time value, either in seconds
+        or by using one of the following keywords:
+
+            segment: The duration of the last segment in the current playlist
+            live-edge: The sum of segment durations of the live edge value minus one
+            default: The playlist's target duration metadata
+
+        Default is default.
         """
     )
     transport.add_argument(
@@ -802,7 +827,16 @@ def build_parser():
         URI to segment encryption key. If no URI is specified, the URI contained
         in the segments will be used.
 
-        Example: --hls-segment-key-uri "https://example.com/hls/encryption_key"
+        URI can be templated using the following variables, which will be
+        replaced with its respective part from the source segment URI:
+
+          {url} {scheme} {netloc} {path} {query}
+
+        Examples:
+
+          --hls-segment-key-uri "https://example.com/hls/encryption_key"
+          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
+          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
 
         Default is None.
         """
@@ -1070,7 +1104,7 @@ def build_parser():
         "--http-proxy",
         metavar="HTTP_PROXY",
         help="""
-        A HTTP proxy to use for all HTTP requests, including WebSocket connections. 
+        A HTTP proxy to use for all HTTP requests, including WebSocket connections.
         By default this proxy will be used for all HTTPS requests too.
 
         Example: "http://hostname:port/"

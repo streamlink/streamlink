@@ -9,7 +9,6 @@ from gettext import gettext
 import requests
 import sys
 import signal
-import webbrowser
 
 from contextlib import closing
 from distutils.version import StrictVersion
@@ -25,14 +24,13 @@ from streamlink import (Streamlink, StreamError, PluginError,
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.stream import StreamProcess
-from streamlink.plugins.twitch import TWITCH_CLIENT_ID
 from streamlink.plugin import PluginOptions
 from streamlink.utils import LazyFormatter
 
 import streamlink.logger as logger
 from .argparser import build_parser
 from .compat import stdout, is_win32
-from streamlink.utils.encoding import maybe_encode
+from streamlink.utils.encoding import maybe_decode, get_filesystem_encoding
 from .console import ConsoleOutput, ConsoleUserInputRequester
 from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
 from .output import FileOutput, PlayerOutput
@@ -148,7 +146,7 @@ def create_http_server(host=None, port=0):
 def create_title(plugin=None):
     if args.title and plugin:
         title = LazyFormatter.format(
-            maybe_encode(args.title),
+            maybe_decode(args.title, get_filesystem_encoding()),
             title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
             author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
             category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
@@ -339,8 +337,17 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
     is_fifo = is_player and output.namedpipe
-    show_progress = isinstance(output, FileOutput) and output.fd is not stdout and sys.stdout.isatty()
-    show_record_progress = hasattr(output, "record") and isinstance(output.record, FileOutput) and output.record.fd is not stdout and sys.stdout.isatty()
+    show_progress = (
+        isinstance(output, FileOutput)
+        and output.fd is not stdout
+        and (sys.stdout.isatty() or args.force_progress)
+    )
+    show_record_progress = (
+        hasattr(output, "record")
+        and isinstance(output.record, FileOutput)
+        and output.record.fd is not stdout
+        and (sys.stdout.isatty() or args.force_progress)
+    )
 
     stream_iterator = chain(
         [prebuffer],
@@ -478,7 +485,7 @@ def fetch_streams_with_retry(plugin, interval, count):
 
         try:
             streams = fetch_streams(plugin)
-        except FatalPluginError as err:
+        except FatalPluginError:
             raise
         except PluginError as err:
             log.error(u"{0}".format(err))
@@ -624,30 +631,6 @@ def print_plugins():
         console.msg("Loaded plugins: {0}", pluginlist_formatted)
 
 
-def authenticate_twitch_oauth():
-    """Opens a web browser to allow the user to grant Streamlink
-       access to their Twitch account."""
-
-    client_id = TWITCH_CLIENT_ID
-    redirect_uri = "https://streamlink.github.io/twitch_oauth.html"
-    url = ("https://api.twitch.tv/kraken/oauth2/authorize"
-           "?response_type=token"
-           "&client_id={0}"
-           "&redirect_uri={1}"
-           "&scope=user_read+user_subscriptions"
-           "&force_verify=true").format(client_id, redirect_uri)
-
-    console.msg("Attempting to open a browser to let you authenticate "
-                "Streamlink with Twitch")
-
-    try:
-        if not webbrowser.open_new_tab(url):
-            raise webbrowser.Error
-    except webbrowser.Error:
-        console.exit("Unable to open a web browser, try accessing this URL "
-                     "manually instead:\n{0}".format(url))
-
-
 def load_plugins(dirs):
     """Attempts to load plugins from a list of directories."""
 
@@ -782,11 +765,17 @@ def setup_options():
     if args.hls_live_edge:
         streamlink.set_option("hls-live-edge", args.hls_live_edge)
 
+    if args.hls_segment_stream_data:
+        streamlink.set_option("hls-segment-stream-data", args.hls_segment_stream_data)
+
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
 
     if args.hls_playlist_reload_attempts:
         streamlink.set_option("hls-playlist-reload-attempts", args.hls_playlist_reload_attempts)
+
+    if args.hls_playlist_reload_time:
+        streamlink.set_option("hls-playlist-reload-time", args.hls_playlist_reload_time)
 
     if args.hls_segment_threads:
         streamlink.set_option("hls-segment-threads", args.hls_segment_threads)
@@ -903,7 +892,7 @@ def setup_plugin_options(session, plugin):
                         required[rparg.name] = rparg
                 except RuntimeError:
                     log.error("{0} plugin has a configuration error and the arguments "
-                                         "cannot be parsed".format(pname))
+                              "cannot be parsed".format(pname))
                     break
     if required:
         for req in required.values():
@@ -971,7 +960,7 @@ def check_version(force=False):
 
 
 def setup_logging(stream=sys.stdout, level="info"):
-    fmt = ("[{asctime},{msecs:0.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
+    fmt = ("[{asctime},{msecs:03.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
     logger.basicConfig(stream=stream, level=level,
                        format=fmt, style="{",
                        datefmt="%H:%M:%S")
@@ -1049,8 +1038,6 @@ def main():
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
-    elif args.twitch_oauth_authenticate:
-        authenticate_twitch_oauth()
     elif args.help:
         parser.print_help()
     else:

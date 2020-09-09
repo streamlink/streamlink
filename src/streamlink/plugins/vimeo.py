@@ -113,4 +113,3 @@ class Vimeo(Plugin):
 
 
 __plugin__ = Vimeo
-
