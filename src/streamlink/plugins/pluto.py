@@ -13,7 +13,8 @@ log = logging.getLogger(__name__)
 
 class Pluto(Plugin):
     url_re_live = re.compile(r'https?://(?:www\.)?pluto\.tv/live-tv/(?P<slug>[^/?]+)/?$')
-    url_re_tv = re.compile(r'^https?://(?:www\.)?pluto\.tv/on-demand/series/(?P<series_slug>[^/]+)/season/\d+/episode/(?P<episode_slug>[^/]+)$')
+    url_re_tv = re.compile(
+        r'^https?://(?:www\.)?pluto\.tv/on-demand/series/(?P<series_slug>[^/]+)/season/\d+/episode/(?P<episode_slug>[^/]+)$')
     url_re_movie = re.compile(r'^https?://(?:www\.)?pluto\.tv/on-demand/movies/(?P<slug>[^/]+)$')
 
     api_url_live_channels = 'https://api.pluto.tv/v2/channels'
