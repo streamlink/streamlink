@@ -19,10 +19,15 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/watch/"))
         self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/watch"))
         self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/watch"))
+        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/uk/watch"))
         self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/watch/dave"))
+        self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/uk/watch/dave"))
         self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/watch/itv"))
+        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/uk/watch/itv"))
         self.assertTrue(TVPlayer.can_handle_url("https://www.tvplayer.com/watch/itv"))
+        self.assertTrue(TVPlayer.can_handle_url("https://www.tvplayer.com/uk/watch/itv"))
         self.assertTrue(TVPlayer.can_handle_url("https://tvplayer.com/watch/itv"))
+        self.assertTrue(TVPlayer.can_handle_url("https://tvplayer.com/uk/watch/itv"))
 
         # shouldn't match
         self.assertFalse(TVPlayer.can_handle_url("http://www.tvplayer.com/"))
