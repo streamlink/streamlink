@@ -663,8 +663,10 @@ class Twitch(Plugin):
                 endpoint = "vods"
                 value = self.video_id
 
+            disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
             sig, token = self.api.access_token(endpoint, value,
-                                               schema=_access_token_schema)
+                                               schema=_access_token_schema,
+                                               platform="_" if disable_ads else None)
         except PluginError as err:
             if "404 Client Error" in str(err):
                 raise NoStreamsError(self.url)
