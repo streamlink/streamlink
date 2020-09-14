@@ -121,6 +121,7 @@ mitele                  mitele.es            Yes   No    Streams may be geo-rest
 mjunoon                 mjunoon.tv           Yes   Yes
 mrtmk                   play.mrt.com.mk      Yes   Yes   Streams may be geo-restricted to North Macedonia.
 n13tv                   13tv.co.il           Yes   Yes   Streams may be geo-restricted to Israel.
+navernow                now.naver.com        Yes   --
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
 nbcnews                 nbcnews.com          Yes   No
 nbcsports               nbcsports.com        No    Yes   Streams maybe be geo-restricted to USA. Authentication is not supported.
