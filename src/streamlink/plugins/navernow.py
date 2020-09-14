@@ -45,5 +45,5 @@ class NaverNow(Plugin):
 
         return streams
 
-__plugin__ = NaverNow
 
+__plugin__ = NaverNow
