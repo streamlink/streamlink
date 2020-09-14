@@ -1,7 +1,9 @@
-import re, json
+import re
+import json
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
+
 
 class NaverNow(Plugin):
     _url_re = re.compile(r"https?://now\.naver\.com/(\d+)")
@@ -21,22 +23,22 @@ class NaverNow(Plugin):
 
         if stream_info.status_code != 200:
             raise PluginError("Could not get stream info. HTTP Status Code %s" % stream_info.status_code)
-        
+
         stream_json = json.loads(stream_info.text)
 
         if stream_json["status"]["status"] != "ONAIR":
             raise PluginError("Stream is offline.")
-        
+
         streams = dict()
         stream_audio = stream_json["status"]["liveStreamUrl"]
         stream_video = stream_json["status"]["videoStreamUrl"]
 
         if not stream_audio:
             raise PluginError("Could not find stream url!")
-        
+
         streams["audio"] = HLSStream.parse_variant_playlist(self.session, stream_audio).popitem()[1]
 
-        if stream_video:            
+        if stream_video:
             resolutions = HLSStream.parse_variant_playlist(self.session, stream_video)
             for k, v in resolutions.items():
                 streams[k] = v
@@ -44,3 +46,4 @@ class NaverNow(Plugin):
         return streams
 
 __plugin__ = NaverNow
+

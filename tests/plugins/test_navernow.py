@@ -9,7 +9,7 @@ class TestPluginNaverNow(unittest.TestCase):
         should_match = [
             "https://now.naver.com/705",
             "https://now.naver.com/680",
-            "https://now.naver.com/719?airbridge_referrer=airbridge" # url with parameter
+            "https://now.naver.com/719?airbridge_referrer=airbridge"  # url with parameter
         ]
         for url in should_match:
             self.assertTrue(NaverNow.can_handle_url(url))
