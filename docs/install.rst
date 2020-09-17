@@ -151,7 +151,7 @@ Distribution                         Installing
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _Installing Debian backported packages: https://wiki.debian.org/Backports#Using_the_command_line
-.. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
+.. _NixOS channel: https://search.nixos.org/packages?show=streamlink&query=streamlink
 
 
 Package maintainers
