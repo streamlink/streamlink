@@ -11,7 +11,7 @@ class TV360(Plugin):
 
     hls_schema = validate.Schema(
         validate.transform(hls_re.search),
-        validate.any(None, validate.all(validate.get(1)))
+        validate.any(None, validate.all(validate.get(1), validate.url()))
     )
 
     @classmethod
