@@ -187,6 +187,9 @@ Streamlink can be installed via `pip`_, the Python package manager.
 In addition to using `pip`_, Streamlink can also be installed from source
 via `setuptools`_ after cloning the `git`_ repository.
 
+Before running :command:`pip`, make sure that it's the Python 3 version of `pip`_ (to check, run :command:`pip --version`).
+On some systems, this isn't the case by default and an alternative, like :command:`pip3` for example, needs to be run instead.
+
 .. note::
 
     On some Linux distributions, the Python headers package needs to be installed before installing Streamlink
