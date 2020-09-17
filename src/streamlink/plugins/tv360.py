@@ -19,11 +19,10 @@ class TV360(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        hls_url = self.hls_re.search(res.text)
+        hls_url = self.session.http.get(self.url, schema=self.hls_schema)
 
         if hls_url:
-            return HLSStream.parse_variant_playlist(self.session, hls_url.group(1))
+            return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = TV360
