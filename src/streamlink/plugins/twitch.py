@@ -119,38 +119,23 @@ _video_schema = validate.Schema(
     }
 )
 
-Segment = namedtuple("Segment", "uri duration title key discontinuity ad byterange date map")
+Segment = namedtuple("Segment", "uri duration title key discontinuity ad byterange date map prefetch")
 
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
 class TwitchM3U8Parser(M3U8Parser):
-    def __init__(self, base_uri=None, disable_ads=False, low_latency=False, **kwargs):
-        super(TwitchM3U8Parser, self).__init__(base_uri, **kwargs)
-        self.disable_ads = disable_ads
-        self.low_latency = low_latency
-        self.has_prefetch_segments = False
-
-    def parse(self, *args):
-        m3u8 = super(TwitchM3U8Parser, self).parse(*args)
-        m3u8.has_prefetch_segments = self.has_prefetch_segments
-
-        return m3u8
-
     def parse_extinf(self, value):
         duration, title = super(TwitchM3U8Parser, self).parse_extinf(value)
-        if title and str(title).startswith("Amazon") and self.disable_ads:
+        if title and str(title).startswith("Amazon"):
             self.state["ad"] = True
 
         return duration, title
 
     def parse_tag_ext_x_twitch_prefetch(self, value):
-        if not self.low_latency:
-            return
-        self.has_prefetch_segments = True
         segments = self.m3u8.segments
         if segments:
-            segments.append(segments[-1]._replace(uri=self.uri(value)))
+            segments.append(segments[-1]._replace(uri=self.uri(value), prefetch=True))
 
     def get_segment(self, uri):
         byterange = self.state.pop("byterange", None)
@@ -170,32 +155,18 @@ class TwitchM3U8Parser(M3U8Parser):
             ad,
             byterange,
             date,
-            map_
+            map_,
+            prefetch=False
         )
 
 
 class TwitchHLSStreamWorker(HLSStreamWorker):
-    def __init__(self, *args, **kwargs):
-        self.playlist_reloads = 0
-        super(TwitchHLSStreamWorker, self).__init__(*args, **kwargs)
+    def __init__(self, reader, *args, **kwargs):
+        self.had_content = False
+        super(TwitchHLSStreamWorker, self).__init__(reader, *args, **kwargs)
 
-    def _reload_playlist(self, text, url):
-        self.playlist_reloads += 1
-        playlist = load_hls_playlist(
-            text,
-            url,
-            parser=TwitchM3U8Parser,
-            disable_ads=self.stream.disable_ads,
-            low_latency=self.stream.low_latency
-        )
-        if (
-            self.stream.disable_ads
-            and self.playlist_reloads == 1
-            and not next((s for s in playlist.segments if not s.ad), False)
-        ):
-            log.info("Waiting for pre-roll ads to finish, be patient")
-
-        return playlist
+    def _reload_playlist(self, *args):
+        return load_hls_playlist(*args, parser=TwitchM3U8Parser)
 
     def _playlist_reload_time(self, playlist, sequences):
         if self.stream.low_latency and sequences:
@@ -204,8 +175,26 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         return super(TwitchHLSStreamWorker, self)._playlist_reload_time(playlist, sequences)
 
     def process_sequences(self, playlist, sequences):
-        if self.stream.low_latency and self.playlist_reloads == 1 and not playlist.has_prefetch_segments:
-            log.info("This is not a low latency stream")
+        # ignore prefetch segments if not LL streaming
+        if not self.stream.low_latency:
+            sequences = [seq for seq in sequences if not seq.segment.prefetch]
+
+        # check for sequences with real content
+        if not self.had_content:
+            self.had_content = next((True for seq in sequences if not seq.segment.ad), False)
+
+            # When filtering ads, to check whether it's a LL stream, we need to wait for the real content to show up,
+            # since playlists with only ad segments don't contain prefetch segments
+            if (
+                self.stream.low_latency
+                and self.had_content
+                and not next((True for seq in sequences if seq.segment.prefetch), False)
+            ):
+                log.info("This is not a low latency stream")
+
+        # show pre-roll ads message only on the first playlist containing ads
+        if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
+            log.info("Waiting for pre-roll ads to finish, be patient")
 
         return super(TwitchHLSStreamWorker, self).process_sequences(playlist, sequences)
 

@@ -1,4 +1,3 @@
-import logging
 import unittest
 from functools import partial
 
@@ -9,9 +8,6 @@ from tests.mock import MagicMock, call, patch
 
 from streamlink.session import Streamlink
 from tests.resources import text
-
-
-log = logging.getLogger(__name__)
 
 
 class TestPluginTwitch(unittest.TestCase):
@@ -48,7 +44,7 @@ class TestTwitchHLSStream(unittest.TestCase):
         with text("hls/test_master.m3u8") as pl:
             return pl.read()
 
-    def getPlaylist(self, media_sequence, items, ads=False, prefetch=None):
+    def getPlaylist(self, media_sequence, items, ads=False, prefetch=None, end=False):
         playlist = """
 #EXTM3U
 #EXT-X-VERSION:5
@@ -62,11 +58,16 @@ class TestTwitchHLSStream(unittest.TestCase):
         for item in prefetch or []:
             playlist += self.prefetch.format(self.url_segment.format(item))
 
+        if end:
+            playlist += "#EXT-X-ENDLIST\n"
+
         return playlist
+
+    def getSegments(self, num):
+        return ["[{0}]".format(i).encode("ascii") for i in range(num)]
 
     def start_streamlink(self, disable_ads=False, low_latency=False, kwargs=None):
         kwargs = kwargs or {}
-        log.info("Executing streamlink")
         streamlink = Streamlink()
 
         streamlink.set_option("hls-live-edge", 4)
@@ -77,33 +78,32 @@ class TestTwitchHLSStream(unittest.TestCase):
         stream = masterStream["1080p (source)"].open()
         data = b"".join(iter(partial(stream.read, 8192), b""))
         stream.close()
-        log.info("End of streamlink execution")
         return streamlink, data
 
     def mock(self, mocked, method, url, *args, **kwargs):
         mocked[url] = method(url, *args, **kwargs)
 
-    def get_result(self, streams, playlists, **kwargs):
+    def get_result(self, segments, playlists, **kwargs):
         mocked = {}
         with requests_mock.Mocker() as mock:
             self.mock(mocked, mock.get, self.url_master, text=self.getMasterPlaylist())
             self.mock(mocked, mock.get, self.url_playlist, [{"text": p} for p in playlists])
-            for i, stream in enumerate(streams):
-                self.mock(mocked, mock.get, self.url_segment.format(i), content=stream)
+            for i, segment in enumerate(segments):
+                self.mock(mocked, mock.get, self.url_segment.format(i), content=segment)
             streamlink, data = self.start_streamlink(**kwargs)
             return streamlink, data, mocked
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_disable_ads_preroll(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(6)]
+    def test_hls_disable_ads_has_preroll(self, mock_logging):
+        segments = self.getSegments(6)
         playlists = [
             self.getPlaylist(0, [0, 1], ads=True),
             self.getPlaylist(2, [2, 3], ads=True),
-            self.getPlaylist(4, [4, 5]) + "#EXT-X-ENDLIST\n"
+            self.getPlaylist(4, [4, 5], ads=False, end=True)
         ]
-        streamlink, result, mocked = self.get_result(streams, playlists, disable_ads=True)
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=True, low_latency=False)
 
-        self.assertEqual(result, b''.join(streams[4:6]))
+        self.assertEqual(result, b"".join(segments[4:6]))
         for i in range(0, 6):
             self.assertTrue(mocked[self.url_segment.format(i)].called, i)
         mock_logging.info.assert_has_calls([
@@ -113,16 +113,16 @@ class TestTwitchHLSStream(unittest.TestCase):
         self.assertEqual(mock_logging.info.call_count, 2)
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_disable_ads_no_preroll(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(6)]
+    def test_hls_disable_ads_has_midstream(self, mock_logging):
+        segments = self.getSegments(6)
         playlists = [
-            self.getPlaylist(0, [0, 1]),
+            self.getPlaylist(0, [0, 1], ads=False),
             self.getPlaylist(2, [2, 3], ads=True),
-            self.getPlaylist(4, [4, 5]) + "#EXT-X-ENDLIST\n"
+            self.getPlaylist(4, [4, 5], ads=False, end=True)
         ]
-        streamlink, result, mocked = self.get_result(streams, playlists, disable_ads=True)
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=True, low_latency=False)
 
-        self.assertEqual(result, b''.join(streams[0:2]) + b''.join(streams[4:6]))
+        self.assertEqual(result, b"".join(segments[0:2]) + b"".join(segments[4:6]))
         for i in range(0, 6):
             self.assertTrue(mocked[self.url_segment.format(i)].called, i)
         mock_logging.info.assert_has_calls([
@@ -130,33 +130,32 @@ class TestTwitchHLSStream(unittest.TestCase):
         ])
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_no_disable_ads(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(4)]
+    def test_hls_no_disable_ads_has_preroll(self, mock_logging):
+        segments = self.getSegments(4)
         playlists = [
             self.getPlaylist(0, [0, 1], ads=True),
-            self.getPlaylist(2, [2, 3]) + "#EXT-X-ENDLIST\n"
+            self.getPlaylist(2, [2, 3], ads=False, end=True)
         ]
-        streamlink, result, mocked = self.get_result(streams, playlists, disable_ads=False)
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=False, low_latency=False)
 
-        self.assertEqual(result, b''.join(streams[0:4]))
+        self.assertEqual(result, b"".join(segments[0:4]))
         for i in range(0, 4):
             self.assertTrue(mocked[self.url_segment.format(i)].called, i)
         mock_logging.info.assert_has_calls([])
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_prefetch(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
+    def test_hls_low_latency_has_prefetch(self, mock_logging):
+        segments = self.getSegments(10)
         playlists = [
             self.getPlaylist(0, [0, 1, 2, 3], prefetch=[4, 5]),
-            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9]) + "#EXT-X-ENDLIST\n"
+            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9], end=True)
         ]
-        streamlink, result, mocked = self.get_result(streams, playlists, low_latency=True)
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=False, low_latency=True)
 
         self.assertEqual(2, streamlink.options.get("hls-live-edge"))
         self.assertEqual(True, streamlink.options.get("hls-segment-stream-data"))
 
-        expected = b''.join(streams[4:10])
-        self.assertEqual(expected, result)
+        self.assertEqual(result, b"".join(segments[4:10]))
         for i in range(0, 3):
             self.assertFalse(mocked[self.url_segment.format(i)].called, i)
         for i in range(4, 9):
@@ -166,19 +165,18 @@ class TestTwitchHLSStream(unittest.TestCase):
         ])
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_prefetch_no_low_latency(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
+    def test_hls_no_low_latency_has_prefetch(self, mock_logging):
+        segments = self.getSegments(10)
         playlists = [
             self.getPlaylist(0, [0, 1, 2, 3], prefetch=[4, 5]),
-            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9]) + "#EXT-X-ENDLIST\n"
+            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9], end=True)
         ]
-        streamlink, result, mocked = self.get_result(streams, playlists)
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=False, low_latency=False)
 
         self.assertEqual(4, streamlink.options.get("hls-live-edge"))
         self.assertEqual(False, streamlink.options.get("hls-segment-stream-data"))
 
-        expected = b''.join(streams[0:8])
-        self.assertEqual(expected, result)
+        self.assertEqual(result, b"".join(segments[0:8]))
         for i in range(0, 7):
             self.assertTrue(mocked[self.url_segment.format(i)].called, i)
         for i in range(8, 9):
@@ -186,19 +184,68 @@ class TestTwitchHLSStream(unittest.TestCase):
         mock_logging.info.assert_has_calls([])
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_no_low_latency_no_prefetch(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
+    def test_hls_low_latency_no_prefetch(self, mock_logging):
+        segments = self.getSegments(10)
         playlists = [
             self.getPlaylist(0, [0, 1, 2, 3], prefetch=[]),
-            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[]) + "#EXT-X-ENDLIST\n"
+            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[], end=True)
         ]
-        streamlink, result, mocked = self.get_result(streams, playlists, low_latency=True)
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=False, low_latency=True)
 
         self.assertTrue(streamlink.get_plugin_option("twitch", "low-latency"))
         self.assertFalse(streamlink.get_plugin_option("twitch", "disable-ads"))
 
         mock_logging.info.assert_has_calls([
             call("Low latency streaming (HLS live edge: 2)"),
+            call("This is not a low latency stream")
+        ])
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_low_latency_has_prefetch_has_preroll(self, mock_logging):
+        segments = self.getSegments(10)
+        playlists = [
+            self.getPlaylist(0, [0, 1, 2, 3], prefetch=[], ads=True),
+            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9], ads=False, end=True)
+        ]
+        streamlink, result, mocked = self.get_result(segments, playlists, disable_ads=False, low_latency=True)
+
+        self.assertEqual(result, b"".join(segments[2:10]))
+        for i in range(0, 2):
+            self.assertFalse(mocked[self.url_segment.format(i)].called, i)
+        for i in range(2, 10):
+            self.assertTrue(mocked[self.url_segment.format(i)].called, i)
+        mock_logging.info.assert_has_calls([
+            call("Low latency streaming (HLS live edge: 2)")
+        ])
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_low_latency_has_prefetch_disable_ads_has_preroll(self, mock_logging):
+        segments = self.getSegments(10)
+        playlists = [
+            self.getPlaylist(0, [0, 1, 2, 3], prefetch=[], ads=True),
+            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9], ads=False, end=True)
+        ]
+        self.get_result(segments, playlists, disable_ads=True, low_latency=True)
+
+        mock_logging.info.assert_has_calls([
+            call("Will skip ad segments"),
+            call("Low latency streaming (HLS live edge: 2)"),
+            call("Waiting for pre-roll ads to finish, be patient")
+        ])
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_low_latency_no_prefetch_disable_ads_has_preroll(self, mock_logging):
+        segments = self.getSegments(10)
+        playlists = [
+            self.getPlaylist(0, [0, 1, 2, 3], prefetch=[], ads=True),
+            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[], ads=False, end=True)
+        ]
+        self.get_result(segments, playlists, disable_ads=True, low_latency=True)
+
+        mock_logging.info.assert_has_calls([
+            call("Will skip ad segments"),
+            call("Low latency streaming (HLS live edge: 2)"),
+            call("Waiting for pre-roll ads to finish, be patient"),
             call("This is not a low latency stream")
         ])
 
