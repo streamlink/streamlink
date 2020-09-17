@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import re
 
 from streamlink.plugin import Plugin
@@ -9,7 +7,7 @@ from streamlink.stream import HLSStream
 
 class TV360(Plugin):
     url_re = re.compile(r"https?://(?:www.)?tv360.com.tr/canli-yayin")
-    hls_re = re.compile(r'''hls.loadSource\(["'](http.*m3u8)["']\)''', re.DOTALL)
+    hls_re = re.compile(r'''src="(http.*m3u8)"''')
 
     hls_schema = validate.Schema(
         validate.transform(hls_re.search),
