@@ -48,9 +48,7 @@ macOS
 ==================================== ===========================================
 Method                               Installing
 ==================================== ===========================================
-Easy install                         .. code-block:: bash
-
-                                        sudo easy_install -U streamlink
+Python pip                           See the `PyPI package and source code`_ section below
 
 `Homebrew`_                          .. code-block:: bash
 
@@ -188,8 +186,6 @@ Streamlink can be installed via `pip`_, the Python package manager.
 
 In addition to using `pip`_, Streamlink can also be installed from source
 via `setuptools`_ after cloning the `git`_ repository.
-
-Using :command:`easy_install` is no longer recommended.
 
 .. note::
 
