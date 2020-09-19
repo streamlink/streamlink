@@ -17,7 +17,8 @@ from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import (
     HTTPStream, HLSStream, FLVPlaylist, extract_flv_header_tags
 )
-from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter, HLSStreamWorker
+from streamlink.stream.hls import HLSStreamWorker
+from streamlink.stream.hls_filtered import FilteredHLSStreamWriter, FilteredHLSStreamReader
 from streamlink.stream.hls_playlist import M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
 
@@ -199,13 +200,12 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         return super(TwitchHLSStreamWorker, self).process_sequences(playlist, sequences)
 
 
-class TwitchHLSStreamWriter(HLSStreamWriter):
-    def write(self, sequence, *args, **kwargs):
-        if not (self.stream.disable_ads and sequence.segment.ad):
-            return super(TwitchHLSStreamWriter, self).write(sequence, *args, **kwargs)
+class TwitchHLSStreamWriter(FilteredHLSStreamWriter):
+    def should_filter_sequence(self, sequence):
+        return self.stream.disable_ads and sequence.segment.ad
 
 
-class TwitchHLSStreamReader(HLSStreamReader):
+class TwitchHLSStreamReader(FilteredHLSStreamReader):
     __worker__ = TwitchHLSStreamWorker
     __writer__ = TwitchHLSStreamWriter
 
