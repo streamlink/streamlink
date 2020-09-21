@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 class BTSports(Plugin):
-    url_re = re.compile(r"https?://sport.bt.com")
+    url_re = re.compile(r"https?://sport\.bt\.com")
 
     arguments = PluginArguments(
         PluginArgument(

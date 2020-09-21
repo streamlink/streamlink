@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class WWENetwork(Plugin):
-    url_re = re.compile(r"https?://watch.wwe.com/(channel)?")
+    url_re = re.compile(r"https?://watch\.wwe\.com/(channel)?")
     site_config_re = re.compile(r'''">window.__data = (\{.*?\})</script>''')
     stream_url = "https://dce-frontoffice.imggaming.com/api/v2/stream/{id}"
     live_url = "https://dce-frontoffice.imggaming.com/api/v2/event/live"

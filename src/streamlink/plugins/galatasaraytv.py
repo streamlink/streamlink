@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 
 class GalatasarayTV(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?galatasaray\.com")
+    url_re = re.compile(r"https?://(?:www\.)?galatasaray\.com")
     playervars_re = re.compile(r"sources\s*:\s*\[\s*\{\s*type\s*:\s*\"(.*?)\",\s*src\s*:\s*\"(.*?)\"", re.DOTALL)
 
     @classmethod

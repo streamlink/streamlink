@@ -7,7 +7,7 @@ from streamlink.stream import HLSStream
 
 
 class PowerApp(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?powerapp.com.tr/tvs?/(\w+)")
+    url_re = re.compile(r"https?://(?:www\.)?powerapp\.com\.tr/tvs?/(\w+)")
     api_url = "http://api.powergroup.com.tr/Channels/{0}/?appRef=iPowerWeb&apiVersion=11"
     api_schema = validate.Schema(validate.all({
         "errorCode": 0,

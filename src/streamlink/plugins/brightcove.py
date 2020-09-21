@@ -167,7 +167,7 @@ class BrightcovePlayer(object):
 
 
 class Brightcove(Plugin):
-    url_re = re.compile(r"https?://players.brightcove.net/.*?/index.html")
+    url_re = re.compile(r"https?://players\.brightcove\.net/.*?/index.html")
 
     @classmethod
     def can_handle_url(cls, url):
