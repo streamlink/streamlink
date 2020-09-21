@@ -8,7 +8,7 @@ class ThePlatform(Plugin):
     """
     Plugin to support streaming videos hosted by thePlatform
     """
-    url_re = re.compile(r"https?://player.theplatform.com/p/")
+    url_re = re.compile(r"https?://player\.theplatform\.com/p/")
     release_re = re.compile(r'''tp:releaseUrl\s*=\s*"(.*?)"''')
     video_src_re = re.compile(r'''video.*?src="(.*?)"''')
 

@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class NowNews(Plugin):
-    _url_re = re.compile(r"https?://news.now.com/home/live")
+    _url_re = re.compile(r"https?://news\.now\.com/home/live")
     epg_re = re.compile(r'''epg.getEPG\("(\d+)"\);''')
     api_url = "https://hkt-mobile-api.nowtv.now.com/09/1/getLiveURL"
     backup_332_api = "https://d7lz7jwg8uwgn.cloudfront.net/apps_resource/news/live.json"

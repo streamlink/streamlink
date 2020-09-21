@@ -6,7 +6,7 @@ from streamlink.stream import HLSStream
 
 
 class TV360(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?tv360.com.tr/canli-yayin")
+    url_re = re.compile(r"https?://(?:www\.)?tv360\.com\.tr/canli-yayin")
     hls_re = re.compile(r'''src="(http.*m3u8)"''')
 
     hls_schema = validate.Schema(

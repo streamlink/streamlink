@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class ITVPlayer(Plugin):
-    _url_re = re.compile(r"https?://(?:www.)?itv.com/hub/(?P<stream>.+)")
+    _url_re = re.compile(r"https?://(?:www\.)?itv\.com/hub/(?P<stream>.+)")
     swf_url = "https://mediaplayer.itv.com/2.19.5%2Bbuild.a23aa62b1e/ITVMediaPlayer.swf"
     _video_info_schema = validate.Schema({
         "StatusCode": 200,

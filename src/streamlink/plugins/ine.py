@@ -10,7 +10,7 @@ from streamlink.utils import update_scheme
 
 
 class INE(Plugin):
-    url_re = re.compile(r"""https://streaming.ine.com/play\#?/
+    url_re = re.compile(r"""https://streaming\.ine\.com/play\#?/
             ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/?
             (.*?)""", re.VERBOSE)
     play_url = "https://streaming.ine.com/play/{vid}/watch"

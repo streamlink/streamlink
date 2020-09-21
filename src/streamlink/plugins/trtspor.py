@@ -10,7 +10,7 @@ class TRTSpor(Plugin):
     """
     Support for trtsport.com a Turkish Sports Broadcaster
     """
-    url_re = re.compile(r"https?://(?:www.)?trtspor.com/canli-yayin-izle/.+/?")
+    url_re = re.compile(r"https?://(?:www\.)?trtspor\.com/canli-yayin-izle/.+/?")
     f4mm_re = re.compile(r'''(?P<q>["'])(?P<url>http[^"']+?.f4m)(?P=q),''')
     m3u8_re = re.compile(r'''(?P<q>["'])(?P<url>http[^"']+?.m3u8)(?P=q),''')
 

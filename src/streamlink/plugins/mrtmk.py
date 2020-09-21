@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class MRTmk(Plugin):
-    url_re = re.compile(r"""https?://play.mrt.com.mk/(live|play)/""")
+    url_re = re.compile(r"""https?://play\.mrt\.com\.mk/(live|play)/""")
     file_re = re.compile(r"""(?P<url>https?://vod-[\d\w]+\.interspace\.com[^"',]+\.m3u8[^"',]*)""")
 
     stream_schema = validate.Schema(
