@@ -36,7 +36,7 @@ jobs:
         run: bash ./script/install-dependencies.sh
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
-        run: pytest -r a --cov --cov-report=xml
+        run: pytest -r a --cov --cov-branch --cov-report=xml
       - name: Lint
         continue-on-error: ${{ matrix.continue || false }}
         run: flake8
