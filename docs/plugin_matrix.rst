@@ -197,7 +197,6 @@ streamme                stream.me            Yes   --
 streann                 ott.streann.com      Yes   Yes
 stv                     player.stv.tv        Yes   No    Streams are geo-restricted to Great Britain.
 svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
-                        - svtflow.se
                         - oppetarkiv.se
 swisstxt                - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
                         - rsi.ch
