@@ -14,7 +14,7 @@ class INE(Plugin):
             ([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/?
             (.*?)""", re.VERBOSE)
     play_url = "https://streaming.ine.com/play/{vid}/watch"
-    js_re = re.compile(r'''script type="text/javascript" src="(https://content.jwplatform.com/players/.*?)"''')
+    js_re = re.compile(r'''script type="text/javascript" src="(https://content\.jwplatform\.com/players/.*?)"''')
     jwplayer_re = re.compile(r'''jwConfig\s*=\s*(\{.*\});''', re.DOTALL)
     setup_schema = validate.Schema(
         validate.transform(jwplayer_re.search),
