@@ -185,9 +185,9 @@ class Zattoo(Plugin):
 
         if self.base_url == 'https://zattoo.com':
             params = {
-            'uuid': __uuid,
-            'app_tid': app_token,
-            'app_version': '1.0.0'
+                'uuid': __uuid,
+                'app_tid': app_token,
+                'app_version': '1.0.0'
             }
         else:
             params = {
