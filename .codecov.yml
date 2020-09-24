@@ -1,8 +1,9 @@
 codecov:
   notify:
     require_ci_to_pass: true
-    # wait until at least one linux and one windows build has succeeded (see the test job's build matrix)
-    after_n_builds: 6
+    # wait until at all test runners have uploaded a report (see the test job's build matrix)
+    # otherwise, coverage failures may be shown while some reports are still missing
+    after_n_builds: 10
 comment:
   # this also configures the layout of PR check summaries / comments
   layout: "reach, diff, flags, files"
