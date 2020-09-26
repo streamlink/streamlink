@@ -14,16 +14,14 @@ log = logging.getLogger(__name__)
 class CDNBG(Plugin):
     url_re = re.compile(r"""
         https?://(?:www\.)?(?:
-            tv\.bnt\.bg/\w+(?:/\w+)?|
-            nova\.bg/live|
+            armymedia\.bg|
             bgonair\.bg/tvonline|
-            mmtvmusic\.com/live|
-            mu-vi\.tv/LiveStreams/pages/Live\.aspx|
+            bloombergtv\.bg/video|
+            (?:tv\.)?bnt\.bg/\w+(?:/\w+)?|
             live\.bstv\.bg|
-            bloombergtv.bg/video|
-            armymedia.bg|
-            chernomore.bg|
-            i.cdn.bg/live/
+            i\.cdn\.bg/live/|
+            nova\.bg/live|
+            mu-vi\.tv/LiveStreams/pages/Live\.aspx
         )/?
     """, re.VERBOSE)
     iframe_re = re.compile(r"iframe .*?src=\"((?:https?(?::|&#58;))?//(?:\w+\.)?cdn.bg/live[^\"]+)\"", re.DOTALL)
@@ -52,7 +50,7 @@ class CDNBG(Plugin):
                 log.debug("Found iframe: {0}", iframe_url)
                 iframe_url = iframe_url.replace("&#58;", ":")
                 if iframe_url.startswith("//"):
-                    return "{0}:{1}".format(p.scheme, iframe_url)
+                    return update_scheme(p.scheme, iframe_url)
                 else:
                     return iframe_url
 
