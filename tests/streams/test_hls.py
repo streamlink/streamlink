@@ -1,18 +1,20 @@
-import itertools
+from binascii import hexlify
+from functools import partial
 import logging
 import os
 import unittest
-from binascii import hexlify
-from functools import partial
 
+from Crypto.Cipher import AES
 import pytest
 import requests_mock
-from Crypto.Cipher import AES
-from mock import patch, Mock
+
+from tests.mixins.stream_hls import Playlist, Segment, TestMixinStreamHLS
+from tests.mock import patch, Mock
+from tests.resources import text
 
 from streamlink.session import Streamlink
 from streamlink.stream import hls
-from tests.resources import text
+
 
 log = logging.getLogger(__name__)
 
@@ -161,70 +163,48 @@ class TestHLS(unittest.TestCase):
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
-class TestHlsPlaylistReloadTime(unittest.TestCase):
-    url_playlist = "http://mocked/path/playlist.m3u8"
-    url_segment = "http://mocked/path/stream{0}.ts"
-    segment = "#EXTINF:{duration},\nstream{num}.ts\n"
+@patch("streamlink.stream.hls.HLSStreamWriter.run", Mock(return_value=True))
+class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
+    segments = [Segment(0, "", 11), Segment(1, "", 7), Segment(2, "", 5), Segment(3, "", 3)]
 
-    def getPlaylist(self, media_sequence, target_duration, offset, items):
-        return (
-            "#EXTM3U\n"
-            "#EXT-X-VERSION:5{target_duration}\n"
-            "#EXT-X-MEDIA-SEQUENCE:{media_sequence}\n"
-            "{items}\n"
-            "#EXT-X-ENDLIST\n"
-        ).format(
-            media_sequence=media_sequence,
-            target_duration="\n#EXT-X-TARGETDURATION:" + str(target_duration) if target_duration else "",
-            items="\n".join([self.segment.format(num=offset + i, duration=d) for i, d in enumerate(items)])
-        )
+    def get_session(self, options=None, reload_time=None, *args, **kwargs):
+        return super(TestHlsPlaylistReloadTime, self).get_session(dict(options or {}, **{
+            "hls-live-edge": 3,
+            "hls-playlist-reload-time": reload_time
+        }))
 
-    def start_streamlink(self, data, reload_time):
-        streamlink = Streamlink()
-        streamlink.set_option("hls-playlist-reload-time", reload_time)
-        streamlink.set_option("hls-live-edge", 3)
+    def subject(self, *args, **kwargs):
+        thread, _ = super(TestHlsPlaylistReloadTime, self).subject(*args, **kwargs)
 
-        streams = [b"" for i in itertools.chain.from_iterable([elem[3] for elem in data])]
-        playlists = [self.getPlaylist(*args) for args in data]
-
-        with requests_mock.Mocker() as mock:
-            mock.get(self.url_playlist, [{"text": p} for p in playlists])
-            for i, stream in enumerate(streams):
-                mock.get(self.url_segment.format(i), content=stream)
-
-            hlsstream = hls.HLSStream(streamlink, self.url_playlist)
-            reader = hlsstream.open()
-            reader.close()
-
-            return reader
+        return thread.reader.worker.playlist_reload_time
 
     def test_hls_playlist_reload_time_default(self):
-        reader = self.start_streamlink([(0, 6, 1, [11, 7, 5, 3])], "default")
-        self.assertEqual(reader.worker.playlist_reload_time, 6)
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="default")
+        self.assertEqual(time, 6, "default sets the reload time to the playlist's target duration")
 
     def test_hls_playlist_reload_time_segment(self):
-        reader = self.start_streamlink([(0, 6, 1, [11, 7, 5, 3])], "segment")
-        self.assertEqual(reader.worker.playlist_reload_time, 3)
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="segment")
+        self.assertEqual(time, 3, "segment sets the reload time to the playlist's last segment")
 
     def test_hls_playlist_reload_time_live_edge(self):
-        reader = self.start_streamlink([(0, 6, 1, [11, 7, 5, 3])], "live-edge")
-        self.assertEqual(reader.worker.playlist_reload_time, 8)
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="live-edge")
+        self.assertEqual(time, 8, "live-edge sets the reload time to the sum of the number of segments of the live-edge")
 
     def test_hls_playlist_reload_time_number(self):
-        reader = self.start_streamlink([(0, 6, 1, [11, 7, 5, 3])], "4")
-        self.assertEqual(reader.worker.playlist_reload_time, 4)
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="4")
+        self.assertEqual(time, 4, "number values override the reload time")
 
     def test_hls_playlist_reload_time_number_invalid(self):
-        reader = self.start_streamlink([(0, 6, 1, [11, 7, 5, 3])], "0")
-        self.assertEqual(reader.worker.playlist_reload_time, 6)
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="0")
+        self.assertEqual(time, 6, "invalid number values set the reload time to the playlist's targetduration")
 
     def test_hls_playlist_reload_time_no_target_duration(self):
-        reader = self.start_streamlink([(0, None, 1, [11, 7, 5, 3])], "default")
-        self.assertEqual(reader.worker.playlist_reload_time, 8)
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=0)], reload_time="default")
+        self.assertEqual(time, 8, "uses the live-edge sum if the playlist is missing the targetduration data")
 
     def test_hls_playlist_reload_time_no_data(self):
-        reader = self.start_streamlink([(0, None, 1, [])], "default")
-        self.assertEqual(reader.worker.playlist_reload_time, 15)
+        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
+        self.assertEqual(time, 15, "sets reload time to 15 seconds when no data is available")
 
 
 @patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
