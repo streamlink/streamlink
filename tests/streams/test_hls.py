@@ -1,6 +1,5 @@
 from binascii import hexlify
 from functools import partial
-import logging
 import os
 import unittest
 
@@ -12,11 +11,9 @@ from tests.mixins.stream_hls import Playlist, Segment, TestMixinStreamHLS
 from tests.mock import patch, Mock
 from tests.resources import text
 
+from streamlink.compat import str
 from streamlink.session import Streamlink
 from streamlink.stream import hls
-
-
-log = logging.getLogger(__name__)
 
 
 def pkcs7_encode(data, keySize):
@@ -30,16 +27,41 @@ def encrypt(data, key, iv):
     return encrypted_data
 
 
+class TestHLSVariantPlaylist(unittest.TestCase):
+    @classmethod
+    def get_master_playlist(cls, playlist):
+        with text(playlist) as pl:
+            return pl.read()
+
+    def subject(self, playlist, options=None):
+        with requests_mock.Mocker() as mock:
+            url = "http://mocked/{0}/master.m3u8".format(self.id())
+            content = self.get_master_playlist(playlist)
+            mock.get(url, text=content)
+
+            session = Streamlink(options)
+
+            return hls.HLSStream.parse_variant_playlist(session, url)
+
+    def test_variant_playlist(self):
+        streams = self.subject("hls/test_master.m3u8")
+        self.assertEqual(
+            [str(key) for key in streams.keys()],
+            [u"720p", u"720p_alt", u"480p", u"360p", u"160p", u"1080p (source)", u"90k"],
+            "Finds all streams in master playlist"
+        )
+        self.assertTrue(
+            all([isinstance(stream, hls.HLSStream) for stream in streams.values()]),
+            "Returns HLSStream instances"
+        )
+
+
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHLS(unittest.TestCase):
     """
     Test that when invoked for the command line arguments are parsed as expected
     """
     mediaSequence = 1651
-
-    def getMasterPlaylist(self):
-        with text("hls/test_master.m3u8") as pl:
-            return pl.read()
 
     def getPlaylist(self, aesIv, streamNameTemplate):
         playlist = """
@@ -63,34 +85,29 @@ class TestHLS(unittest.TestCase):
 
         return playlist + playlistEnd
 
-    def start_streamlink(self, masterPlaylist, hls_segment_key_uri=None, kwargs=None):
+    def start_streamlink(self, playlist, hls_segment_key_uri=None, kwargs=None):
         kwargs = kwargs or {}
-        log.info("Executing streamlink")
         streamlink = Streamlink()
 
         # Set to default value to avoid a test fail if the default change
         streamlink.set_option("hls-live-edge", 3)
         streamlink.set_option("hls-segment-key-uri", hls_segment_key_uri)
 
-        masterStream = hls.HLSStream.parse_variant_playlist(streamlink, masterPlaylist, **kwargs)
-        stream = masterStream["1080p (source)"].open()
+        stream = hls.HLSStream(streamlink, playlist, **kwargs).open()
         data = b"".join(iter(partial(stream.read, 8192), b""))
         stream.close()
-        log.info("End of streamlink execution")
         return data
 
     def test_hls_non_encrypted(self):
         streams = [os.urandom(1024) for _ in range(4)]
-        masterPlaylist = self.getMasterPlaylist()
         playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
         with requests_mock.Mocker() as mock:
-            mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
             mock.get("http://mocked/path/playlist.m3u8", text=playlist)
             for i, stream in enumerate(streams):
                 mock.get("http://mocked/path/stream{0}.ts".format(i), content=stream)
 
             # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8",
+            streamlinkResult = self.start_streamlink("http://mocked/path/playlist.m3u8",
                                                      kwargs={'start_offset': 1, 'duration': 1})
 
         # Check result, each segment is 1 second, with duration=1 only one segment should be returned
@@ -105,13 +122,11 @@ class TestHLS(unittest.TestCase):
         clearStreams = [os.urandom(1024) for i in range(4)]
         encryptedStreams = [encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams]
 
-        masterPlaylist = self.getMasterPlaylist()
         playlist1 = self.getPlaylist(aesIv, "stream{0}.ts.enc")
         playlist2 = self.getPlaylist(aesIv, "stream2_{0}.ts.enc") + "#EXT-X-ENDLIST\n"
 
         streamlinkResult = None
         with requests_mock.Mocker() as mock:
-            mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
             mock.get("http://mocked/path/playlist.m3u8", [{'text': playlist1}, {'text': playlist2}])
             mock.get("http://mocked/path/encryption_key.key", content=aesKey)
             for i, encryptedStream in enumerate(encryptedStreams):
@@ -120,7 +135,7 @@ class TestHLS(unittest.TestCase):
                 mock.get("http://mocked/path/stream2_{0}.ts.enc".format(i), content=encryptedStream)
 
             # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8")
+            streamlinkResult = self.start_streamlink("http://mocked/path/playlist.m3u8")
 
         # Check result
         # Live streams starts the last 3 segments from the playlist
@@ -134,7 +149,6 @@ class TestHLS(unittest.TestCase):
         clearStreams = [os.urandom(1024) for i in range(4)]
         encryptedStreams = [encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams]
 
-        masterPlaylist = self.getMasterPlaylist()
         playlist1 = self.getPlaylist(aesIv, "stream{0}.ts.enc")
         playlist2 = self.getPlaylist(aesIv, "stream2_{0}.ts.enc") + "#EXT-X-ENDLIST\n"
 
@@ -142,7 +156,6 @@ class TestHLS(unittest.TestCase):
         mocked_key_uri_override = None
         streamlinkResult = None
         with requests_mock.Mocker() as mock:
-            mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
             mock.get("http://mocked/path/playlist.m3u8", [{'text': playlist1}, {'text': playlist2}])
             mocked_key_uri_default = mock.get("http://mocked/path/encryption_key.key", content=aesKeyInvalid)
             mocked_key_uri_override = mock.get("http://real-mocked/path/encryption_key.key", content=aesKey)
@@ -152,7 +165,7 @@ class TestHLS(unittest.TestCase):
                 mock.get("http://mocked/path/stream2_{0}.ts.enc".format(i), content=encryptedStream)
 
             streamlinkResult = self.start_streamlink(
-                "http://mocked/path/master.m3u8",
+                "http://mocked/path/playlist.m3u8",
                 hls_segment_key_uri="{scheme}://real-{netloc}{path}{query}"
             )
 

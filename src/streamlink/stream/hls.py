@@ -2,7 +2,7 @@ import logging
 import re
 import struct
 
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, OrderedDict
 from Crypto.Cipher import AES
 from requests.exceptions import ChunkedEncodingError
 
@@ -429,7 +429,7 @@ class HLSStream(HTTPStream):
         except ValueError as err:
             raise IOError("Failed to parse playlist: {0}".format(err))
 
-        streams = {}
+        streams = OrderedDict()
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []
