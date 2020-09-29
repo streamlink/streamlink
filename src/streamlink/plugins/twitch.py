@@ -19,7 +19,7 @@ from streamlink.stream import (
 )
 from streamlink.stream.hls import HLSStreamWorker
 from streamlink.stream.hls_filtered import FilteredHLSStreamWriter, FilteredHLSStreamReader
-from streamlink.stream.hls_playlist import M3U8Parser, load as load_hls_playlist
+from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
 
 try:
@@ -125,18 +125,28 @@ Segment = namedtuple("Segment", "uri duration title key discontinuity ad byteran
 LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 
+class TwitchM3U8(M3U8):
+    def __init__(self):
+        super(TwitchM3U8, self).__init__()
+        self.dateranges_ads = []
+
+
 class TwitchM3U8Parser(M3U8Parser):
-    def parse_extinf(self, value):
-        duration, title = super(TwitchM3U8Parser, self).parse_extinf(value)
-        if title and str(title).startswith("Amazon"):
-            self.state["ad"] = True
-
-        return duration, title
-
     def parse_tag_ext_x_twitch_prefetch(self, value):
         segments = self.m3u8.segments
         if segments:
             segments.append(segments[-1]._replace(uri=self.uri(value), prefetch=True))
+
+    def parse_tag_ext_x_daterange(self, value):
+        super(TwitchM3U8Parser, self).parse_tag_ext_x_daterange(value)
+        daterange = self.m3u8.dateranges[-1]
+        is_ad = (
+            daterange.classname == "twitch-stitched-ad"
+            or str(daterange.id or "").startswith("stitched-ad-")
+            or any(attr_key.startswith("X-TV-TWITCH-AD-") for attr_key in daterange.x.keys())
+        )
+        if is_ad:
+            self.m3u8.dateranges_ads.append(daterange)
 
     def get_segment(self, uri):
         byterange = self.state.pop("byterange", None)
@@ -145,7 +155,7 @@ class TwitchM3U8Parser(M3U8Parser):
         map_ = self.state.get("map")
         key = self.state.get("key")
         discontinuity = self.state.pop("discontinuity", False)
-        ad = self.state.pop("ad", False)
+        ad = any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
 
         return Segment(
             uri,
@@ -167,7 +177,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         super(TwitchHLSStreamWorker, self).__init__(reader, *args, **kwargs)
 
     def _reload_playlist(self, *args):
-        return load_hls_playlist(*args, parser=TwitchM3U8Parser)
+        return load_hls_playlist(*args, parser=TwitchM3U8Parser, m3u8=TwitchM3U8)
 
     def _playlist_reload_time(self, playlist, sequences):
         if self.stream.low_latency and sequences:
