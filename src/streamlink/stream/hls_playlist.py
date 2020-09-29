@@ -3,9 +3,13 @@ import logging
 
 from binascii import unhexlify
 from collections import namedtuple
+from datetime import timedelta
 from itertools import starmap
 
+from isodate import parse_datetime
+
 from streamlink.compat import urljoin, urlparse
+
 
 log = logging.getLogger(__name__)
 
@@ -14,6 +18,9 @@ __all__ = ["load", "M3U8Parser"]
 
 # EXT-X-BYTERANGE
 ByteRange = namedtuple("ByteRange", "range offset")
+
+# EXT-X-DATERANGE
+DateRange = namedtuple("DateRange", "id classname start_date end_date duration planned_duration end_on_next x")
 
 # EXT-X-KEY
 Key = namedtuple("Key", "method uri iv key_format key_format_versions")
@@ -54,7 +61,23 @@ class M3U8(object):
 
         self.media = []
         self.playlists = []
+        self.dateranges = []
         self.segments = []
+
+    @classmethod
+    def is_date_in_daterange(cls, date, daterange):
+        if date is None or daterange.start_date is None:
+            return None
+
+        if daterange.end_date is not None:
+            return daterange.start_date <= date < daterange.end_date
+
+        duration = daterange.duration or daterange.planned_duration
+        if duration is not None:
+            end = daterange.start_date + duration
+            return daterange.start_date <= date < end
+
+        return daterange.start_date <= date
 
 
 class M3U8Parser(object):
@@ -64,8 +87,10 @@ class M3U8Parser(object):
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
 
-    def __init__(self, base_uri=None, **kwargs):
+    def __init__(self, base_uri=None, m3u8=M3U8, **kwargs):
         self.base_uri = base_uri
+        self.m3u8 = m3u8()
+        self.state = {}
 
     def create_stream_info(self, streaminf, cls=None):
         program_id = streaminf.get("PROGRAM-ID")
@@ -131,6 +156,17 @@ class M3U8Parser(object):
 
         return unhexlify(value)
 
+    def parse_iso8601(self, value):
+        if value is None:
+            return None
+        try:
+            return parse_datetime(value)
+        except ValueError:
+            return None
+
+    def parse_timedelta(self, value):
+        return timedelta(seconds=float(value)) if value is not None else None
+
     def parse_resolution(self, value):
         match = self._res_re.match(value)
 
@@ -166,7 +202,21 @@ class M3U8Parser(object):
                                 attr.get("KEYFORMATVERSIONS"))
 
     def parse_tag_ext_x_program_date_time(self, value):
-        self.state["date"] = value
+        self.state["date"] = self.parse_iso8601(value)
+
+    def parse_tag_ext_x_daterange(self, value):
+        attr = self.parse_attributes(value)
+        daterange = DateRange(
+            attr.pop("ID", None),
+            attr.pop("CLASS", None),
+            self.parse_iso8601(attr.pop("START-DATE", None)),
+            self.parse_iso8601(attr.pop("END-DATE", None)),
+            self.parse_timedelta(attr.pop("DURATION", None)),
+            self.parse_timedelta(attr.pop("PLANNED-DURATION", None)),
+            self.parse_bool(attr.pop("END-ON-NEXT", None)),
+            attr
+        )
+        self.m3u8.dateranges.append(daterange)
 
     def parse_tag_ext_x_allow_cache(self, value):
         self.m3u8.allow_cache = self.parse_bool(value)
@@ -244,9 +294,6 @@ class M3U8Parser(object):
             self.m3u8.playlists.append(playlist)
 
     def parse(self, data):
-        self.state = {}
-        self.m3u8 = M3U8()
-
         lines = iter(filter(bool, data.splitlines()))
         try:
             line = next(lines)
