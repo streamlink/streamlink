@@ -1,0 +1,10 @@
+paths:
+  - src/streamlink/
+  - src/streamlink_cli/
+  - tests/
+  - docs/
+paths-ignore:
+  - src/streamlink/_version.py
+  - src/streamlink/packages/
+  - src/streamlink_cli/packages/
+  - 'docs/_themes/**/static/'
