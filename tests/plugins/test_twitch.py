@@ -1,17 +1,42 @@
-import requests_mock
+from datetime import datetime, timedelta
 import unittest
 
-from tests.mixins.stream_hls import Playlist, Segment as Segment, TestMixinStreamHLS
+import requests_mock
+
+from tests.mixins.stream_hls import Playlist, Tag, Segment as _Segment, TestMixinStreamHLS
 from tests.mock import MagicMock, call, patch
 
 from streamlink import Streamlink
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream
 
 
-class SegmentAd(Segment):
-    def __init__(self, *args, **kwargs):
-        super(SegmentAd, self).__init__(*args, **kwargs)
-        self.title = "Amazon|123456789"
+DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0)
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+
+class TagDateRangeAd(Tag):
+    def __init__(self, start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="twitch-stitched-ad", custom=None):
+        attrs = {
+            "ID": self.val_quoted_string(id),
+            "CLASS": self.val_quoted_string(classname),
+            "START-DATE": self.val_quoted_string(start.strftime(DATETIME_FORMAT)),
+            "DURATION": duration
+        }
+        if custom is not None:
+            attrs.update(**{key: self.val_quoted_string(value) for (key, value) in custom.items()})
+        super(TagDateRangeAd, self).__init__("EXT-X-DATERANGE", attrs)
+
+
+class Segment(_Segment):
+    def __init__(self, num, title="live", *args, **kwargs):
+        super(Segment, self).__init__(num, title, *args, **kwargs)
+        self.date = DATETIME_BASE + timedelta(seconds=num)
+
+    def build(self, namespace):
+        return "#EXT-X-PROGRAM-DATE-TIME:{0}\n{1}".format(
+            self.date.strftime(DATETIME_FORMAT),
+            super(Segment, self).build(namespace)
+        )
 
 
 class SegmentPrefetch(Segment):
@@ -51,11 +76,48 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         return session
 
+    def test_hls_disable_ads_daterange_unknown(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="bar", custom=None)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
+
+        self.assertEqual(self.await_read(read_all=True), self.content(segments), "Doesn't filter out segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
+    def test_hls_disable_ads_daterange_by_class(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="twitch-stitched-ad", custom=None)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
+
+        self.assertEqual(self.await_read(read_all=True), segments[1].content, "Filters out ad segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
+    def test_hls_disable_ads_daterange_by_id(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="/", custom=None)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
+
+        self.assertEqual(self.await_read(read_all=True), segments[1].content, "Filters out ad segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
+    def test_hls_disable_ads_daterange_by_attr(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="/", custom={"X-TV-TWITCH-AD-URL": "/"})
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
+
+        self.assertEqual(self.await_read(read_all=True), segments[1].content, "Filters out ad segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
+
     @patch("streamlink.plugins.twitch.log")
     def test_hls_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
         thread, segments = self.subject([
-            Playlist(0, [SegmentAd(0), SegmentAd(1)]),
-            Playlist(2, [SegmentAd(2), SegmentAd(3)]),
+            Playlist(0, [daterange, Segment(0), Segment(1)]),
+            Playlist(2, [daterange, Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5)], end=True)
         ], disable_ads=True, low_latency=False)
 
@@ -72,9 +134,10 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_disable_ads_has_midstream(self, mock_log):
+        daterange = TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=2), duration=2)
         thread, segments = self.subject([
             Playlist(0, [Segment(0), Segment(1)]),
-            Playlist(2, [SegmentAd(2), SegmentAd(3)]),
+            Playlist(2, [daterange, Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5)], end=True)
         ], disable_ads=True, low_latency=False)
 
@@ -90,8 +153,9 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_no_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=2)
         thread, segments = self.subject([
-            Playlist(0, [SegmentAd(0), SegmentAd(1)]),
+            Playlist(0, [daterange, Segment(0), Segment(1)]),
             Playlist(2, [Segment(2), Segment(3)], end=True)
         ], disable_ads=False, low_latency=False)
 
@@ -161,8 +225,9 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_has_prefetch_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
         thread, segments = self.subject([
-            Playlist(0, [SegmentAd(0), SegmentAd(1), SegmentAd(2), SegmentAd(3)]),
+            Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
         ], disable_ads=False, low_latency=True)
 
@@ -179,8 +244,9 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_has_prefetch_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
         self.subject([
-            Playlist(0, [SegmentAd(0), SegmentAd(1), SegmentAd(2), SegmentAd(3)]),
+            Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
         ], disable_ads=True, low_latency=True)
 
@@ -193,8 +259,9 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.plugins.twitch.log")
     def test_hls_low_latency_no_prefetch_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
         self.subject([
-            Playlist(0, [SegmentAd(0), SegmentAd(1), SegmentAd(2), SegmentAd(3)]),
+            Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
             Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True)
         ], disable_ads=True, low_latency=True)
 
