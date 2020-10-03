@@ -327,7 +327,7 @@ class TwitchAPI(object):
     # Private API calls
 
     def access_token(self, endpoint, asset, **params):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **dict(platform="_", **params))
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **params)
 
     def hosted_channel(self, **params):
         return self.call_subdomain("tmi", "/hosts", format="", **params)
