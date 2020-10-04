@@ -396,6 +396,39 @@ class Twitch(Plugin):
         )
     )
 
+    _schema_metadata_empty = validate.transform(lambda _: (None,) * 3)
+    _schema_metadata_channel = validate.Schema(
+        {
+            "stream": validate.any(
+                validate.all(
+                    {"channel": {
+                        "display_name": validate.text,
+                        "game": validate.text,
+                        "status": validate.text
+                    }},
+                    validate.get("channel"),
+                    validate.transform(lambda ch: (ch["display_name"], ch["status"], ch["game"]))
+                ),
+                validate.all(None, _schema_metadata_empty)
+            )
+        },
+        validate.get("stream")
+    )
+    _schema_metadata_video = validate.Schema(validate.any(
+        validate.all(
+            {
+                "title": validate.text,
+                "game": validate.text,
+                "channel": validate.all(
+                    {"display_name": validate.text},
+                    validate.get("display_name")
+                )
+            },
+            validate.transform(lambda data: (data["channel"], data["title"], data["game"]))
+        ),
+        validate.all({}, _schema_metadata_empty)
+    ))
+
     @classmethod
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
@@ -410,17 +443,11 @@ class Twitch(Plugin):
 
     def _get_metadata(self):
         if self.video_id:
-            api_res = self.api.videos(self.video_id)
-            self.title = api_res["title"]
-            self.author = api_res["channel"]["display_name"]
-            self.category = api_res["game"]
+            (self.author, self.title, self.category) = self.api.videos(self.video_id, schema=self._schema_metadata_video)
         elif self.clip_name:
             self._get_clips()
         elif self._channel:
-            api_res = self.api.streams(self.channel_id)["stream"]["channel"]
-            self.title = api_res["status"]
-            self.author = api_res["display_name"]
-            self.category = api_res["game"]
+            (self.author, self.title, self.category) = self.api.streams(self.channel_id, schema=self._schema_metadata_channel)
 
     def get_title(self):
         if self.title is None:

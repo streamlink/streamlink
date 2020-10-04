@@ -7,6 +7,7 @@ from tests.mixins.stream_hls import Playlist, Tag, Segment as _Segment, TestMixi
 from tests.mock import MagicMock, call, patch
 
 from streamlink import Streamlink
+from streamlink.plugin import PluginError
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream
 
 
@@ -272,6 +273,81 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
             call("Waiting for pre-roll ads to finish, be patient"),
             call("This is not a low latency stream")
         ])
+
+
+class TestTwitchMetadata(unittest.TestCase):
+    def setUp(self):
+        self.mock = requests_mock.Mocker()
+        self.mock.start()
+
+    def tearDown(self):
+        self.mock.stop()
+
+    def subject(self, url):
+        session = Streamlink()
+        Twitch.bind(session, "tests.plugins.test_twitch")
+        plugin = Twitch(url)
+        return plugin.get_author(), plugin.get_title(), plugin.get_category()
+
+    def subject_channel(self, data=True, failure=False):
+        self.mock.get(
+            "https://api.twitch.tv/kraken/users.json?login=foo",
+            json={"users": [{"_id": 1234}]}
+        )
+        self.mock.get(
+            "https://api.twitch.tv/kraken/streams/1234.json",
+            status_code=200 if not failure else 404,
+            json={"stream": None} if not data else {"stream": {
+                "channel": {
+                    "display_name": "channel name",
+                    "status": "channel status",
+                    "game": "channel game"
+                }
+            }}
+        )
+        return self.subject("https://twitch.tv/foo")
+
+    def subject_video(self, data=True, failure=False):
+        self.mock.get(
+            "https://api.twitch.tv/kraken/videos/1337.json",
+            status_code=200 if not failure else 404,
+            json={} if not data else {
+                "title": "video title",
+                "game": "video game",
+                "channel": {
+                    "display_name": "channel name"
+                }
+            }
+        )
+        return self.subject("https://twitch.tv/videos/1337")
+
+    def test_metadata_channel_exists(self):
+        author, title, category = self.subject_channel()
+        self.assertEqual(author, "channel name")
+        self.assertEqual(title, "channel status")
+        self.assertEqual(category, "channel game")
+
+    def test_metadata_channel_missing(self):
+        metadata = self.subject_channel(data=False)
+        self.assertEqual(metadata, (None, None, None))
+
+    def test_metadata_channel_invalid(self):
+        with self.assertRaises(PluginError):
+            self.subject_channel(failure=True)
+
+    def test_metadata_video_exists(self):
+        author, title, category = self.subject_video()
+        self.assertEqual(author, "channel name")
+        self.assertEqual(title, "video title")
+        self.assertEqual(category, "video game")
+
+    def test_metadata_video_missing(self):
+        metadata = self.subject_video(data=False)
+        self.assertEqual(metadata, (None, None, None))
+
+    def test_metadata_video_invalid(self):
+        with self.assertRaises(PluginError):
+            self.subject_video(failure=True)
 
 
 @patch("streamlink.plugins.twitch.log")
