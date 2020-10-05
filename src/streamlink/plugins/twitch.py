@@ -264,13 +264,17 @@ class TwitchAPI(object):
     def stream_rerun(self, channel_id):
         return self.call("/kraken/streams/{0}".format(channel_id), schema=validate.Schema(
             {
-                "stream": validate.any(None, {
+                "stream": validate.any(None, validate.all({
                     "stream_type": validate.text,
                     "broadcast_platform": validate.text,
-                    "channel": validate.any(None, {
+                    "channel": validate.all({
                         "broadcaster_software": validate.text
-                    })
-                })
+                    }, validate.get("broadcaster_software"))
+                }, validate.union((
+                    validate.get("stream_type"),
+                    validate.get("broadcast_platform"),
+                    validate.get("channel")
+                ))))
             },
             validate.get("stream")
         ))
@@ -340,8 +344,25 @@ class TwitchAPI(object):
             validate.get("restricted_bitrates")
         ))
 
-    def hosted_channel(self, channel, **params):
-        return self.call("/hosts", subdomain="tmi", include_logins=1, host=channel, **params)
+    def hosted_channel(self, channel_id):
+        return self.call("/hosts", subdomain="tmi", include_logins=1, host=channel_id, schema=validate.Schema(
+            {
+                "hosts": [{
+                    "host_id": int,
+                    "target_id": int,
+                    "target_login": validate.text,
+                    "target_display_name": validate.text
+                }]
+            },
+            validate.get("hosts"),
+            validate.get(0),
+            validate.union((
+                validate.get("host_id"),
+                validate.get("target_id"),
+                validate.get("target_login"),
+                validate.get("target_display_name")
+            ))
+        ))
 
     # GraphQL API calls
 
@@ -479,7 +500,6 @@ class Twitch(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-        self._hosted_chain = []
         match = _url_re.match(url).groupdict()
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)
@@ -515,12 +535,6 @@ class Twitch(Plugin):
                 self._channel_from_video_id(self.video_id)
         return self._channel
 
-    @channel.setter
-    def channel(self, channel):
-        self._channel = channel
-        # channel id becomes unknown
-        self._channel_id = None
-
     @property
     def channel_id(self):
         if not self._channel_id:
@@ -542,16 +556,9 @@ class Twitch(Plugin):
         except PluginError:
             raise PluginError("Unable to find channel: {0}".format(channel))
 
-    def _access_token(self, type="live"):
+    def _access_token(self, endpoint, asset):
         try:
-            if type == "live":
-                endpoint = "channels"
-                value = self.channel
-            elif type == "video":
-                endpoint = "vods"
-                value = self.video_id
-
-            sig, token = self.api.access_token(endpoint, value)
+            sig, token = self.api.access_token(endpoint, asset)
         except PluginError as err:
             if "404 Client Error" in str(err):
                 raise NoStreamsError(self.url)
@@ -565,54 +572,67 @@ class Twitch(Plugin):
 
         return sig, token, restricted_bitrates
 
-    def _check_for_host(self):
-        host_info = self.api.hosted_channel(self.channel_id)["hosts"][0]
-        if "target_login" in host_info and host_info["target_login"].lower() != self.channel.lower():
-            log.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
-            return host_info["target_login"]
+    def _switch_to_hosted_channel(self):
+        disabled = self.options.get("disable_hosting")
+        hosted_chain = [self.channel]
+        while True:
+            try:
+                host_id, target_id, login, display_name = self.api.hosted_channel(self.channel_id)
+            except PluginError:
+                return False
+
+            log.info("{0} is hosting {1}".format(self.channel, login))
+            if disabled:
+                log.info("hosting was disabled by command line option")
+                return True
+
+            if login in hosted_chain:
+                loop = " -> ".join(hosted_chain + [login])
+                log.error("A loop of hosted channels has been detected, cannot find a playable stream. ({0})".format(loop))
+                return True
+
+            hosted_chain.append(login)
+            log.info("switching to {0}".format(login))
+            self._channel_id = target_id
+            self._channel = login
+            self.author = display_name
 
     def _check_for_rerun(self):
-        stream = self.api.stream_rerun(self.channel_id)
+        if not self.options.get("disable_reruns"):
+            return False
 
-        return stream and (
-            stream["stream_type"] != "live"
-            or stream["broadcast_platform"] == "rerun"
-            or stream["channel"] and stream["channel"]["broadcaster_software"] == "watch_party_rerun"
-        )
-
-    def _get_hls_streams(self, stream_type="live"):
-        log.debug("Getting {0} HLS streams for {1}".format(stream_type, self.channel))
-        self._hosted_chain.append(self.channel)
-
-        if stream_type == "live":
-            if self.options.get("disable_reruns") and self._check_for_rerun():
+        try:
+            stream_type, broadcast_platform, broadcaster_software = self.api.stream_rerun(self.channel_id)
+            if stream_type != "live" or broadcast_platform == "rerun" or broadcaster_software == "watch_party_rerun":
                 log.info("Reruns were disabled by command line option")
-                return {}
+                return True
+        except (PluginError, TypeError):
+            pass
 
-            hosted_channel = self._check_for_host()
-            if hosted_channel and self.options.get("disable_hosting"):
-                log.info("hosting was disabled by command line option")
-            elif hosted_channel:
-                log.info("switching to {0}".format(hosted_channel))
-                if hosted_channel in self._hosted_chain:
-                    log.error(
-                        u"A loop of hosted channels has been detected, "
-                        "cannot find a playable stream. ({0})".format(
-                            u" -> ".join(self._hosted_chain + [hosted_channel])))
-                    return {}
-                self.channel = hosted_channel
-                return self._get_hls_streams(stream_type)
+        return False
 
-            # only get the token once the channel has been resolved
-            sig, token, restricted_bitrates = self._access_token(stream_type)
-            url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
-        elif stream_type == "video":
-            sig, token, restricted_bitrates = self._access_token(stream_type)
-            url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
-        else:
-            log.debug("Unknown HLS stream type: {0}".format(stream_type))
-            return {}
+    def _get_hls_streams_live(self):
+        if self._switch_to_hosted_channel():
+            return
+        if self._check_for_rerun():
+            return
 
+        # only get the token once the channel has been resolved
+        log.debug("Getting live HLS streams for {0}".format(self.channel))
+        sig, token, restricted_bitrates = self._access_token("channels", self.channel)
+        url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
+
+        return self._get_hls_streams(url, restricted_bitrates)
+
+    def _get_hls_streams_video(self):
+        log.debug("Getting video HLS streams for {0}".format(self.channel))
+        sig, token, restricted_bitrates = self._access_token("vods", self.video_id)
+        url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
+
+        # If the stream is a VOD that is still being recorded, the stream should start at the beginning of the recording
+        return self._get_hls_streams(url, restricted_bitrates, force_restart=True)
+
+    def _get_hls_streams(self, url, restricted_bitrates, **extra_params):
         time_offset = self.params.get("t", 0)
         if time_offset:
             try:
@@ -621,14 +641,7 @@ class Twitch(Plugin):
                 time_offset = 0
 
         try:
-            # If the stream is a VOD that is still being recorded the stream should start at the
-            # beginning of the recording
-            streams = TwitchHLSStream.parse_variant_playlist(
-                self.session,
-                url,
-                start_offset=time_offset,
-                force_restart=not stream_type == "live"
-            )
+            streams = TwitchHLSStream.parse_variant_playlist(self.session, url, start_offset=time_offset, **extra_params)
         except IOError as err:
             err = str(err)
             if "404 Client Error" in err or "Failed to parse playlist" in err:
@@ -653,11 +666,11 @@ class Twitch(Plugin):
 
     def _get_streams(self):
         if self.video_id:
-            return self._get_hls_streams("video")
+            return self._get_hls_streams_video()
         elif self.clip_name:
             return self._get_clips()
         elif self._channel:
-            return self._get_hls_streams("live")
+            return self._get_hls_streams_live()
 
 
 __plugin__ = Twitch
