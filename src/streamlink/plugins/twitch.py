@@ -22,32 +22,6 @@ from streamlink.utils.times import hours_minutes_seconds
 
 log = logging.getLogger(__name__)
 
-QUALITY_WEIGHTS = {
-    "source": 1080,
-    "1080": 1080,
-    "high": 720,
-    "720": 720,
-    "medium": 480,
-    "480": 480,
-    "360": 360,
-    "low": 240,
-    "mobile": 120,
-}
-
-_url_re = re.compile(r"""
-    https?://(?:(?P<subdomain>[\w\-]+)\.)?twitch\.tv/
-    (?:
-        videos/(?P<videos_id>\d+)
-        |
-        (?P<channel>[^/]+)
-        (?:
-            /video/(?P<video_id>\d+)
-            |
-            /clip/(?P<clip_name>[\w]+)
-        )?
-    )
-""", re.VERBOSE)
-
 Segment = namedtuple("Segment", "uri duration title key discontinuity ad byterange date map prefetch")
 
 LOW_LATENCY_MAX_LIVE_EDGE = 2
@@ -463,44 +437,27 @@ class Twitch(Plugin):
         )
     )
 
-    @classmethod
-    def stream_weight(cls, key):
-        weight = QUALITY_WEIGHTS.get(key)
-        if weight:
-            return weight, "twitch"
-
-        return Plugin.stream_weight(key)
+    _re_url = re.compile(r"""
+        https?://(?:(?P<subdomain>[\w\-]+)\.)?twitch\.tv/
+        (?:
+            videos/(?P<videos_id>\d+)
+            |
+            (?P<channel>[^/]+)
+            (?:
+                /video/(?P<video_id>\d+)
+                |
+                /clip/(?P<clip_name>[\w]+)
+            )?
+        )
+    """, re.VERBOSE)
 
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
-
-    def _get_metadata(self):
-        if self.video_id:
-            (self.author, self.title, self.category) = self.api.metadata_video(self.video_id)
-        elif self.clip_name:
-            self._get_clips()
-        elif self._channel:
-            (self.author, self.title, self.category) = self.api.metadata_channel(self.channel_id)
-
-    def get_title(self):
-        if self.title is None:
-            self._get_metadata()
-        return self.title
-
-    def get_author(self):
-        if self.author is None:
-            self._get_metadata()
-        return self.author
-
-    def get_category(self):
-        if self.category is None:
-            self._get_metadata()
-        return self.category
+        return cls._re_url.match(url)
 
     def __init__(self, url):
-        Plugin.__init__(self, url)
-        match = _url_re.match(url).groupdict()
+        super(Twitch, self).__init__(url)
+        match = self._re_url.match(url).groupdict()
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)
         self.subdomain = match.get("subdomain")
@@ -527,6 +484,29 @@ class Twitch(Plugin):
 
         self.api = TwitchAPI(session=self.session)
         self.usher = UsherService(session=self.session)
+
+    def get_title(self):
+        if self.title is None:
+            self._get_metadata()
+        return self.title
+
+    def get_author(self):
+        if self.author is None:
+            self._get_metadata()
+        return self.author
+
+    def get_category(self):
+        if self.category is None:
+            self._get_metadata()
+        return self.category
+
+    def _get_metadata(self):
+        if self.video_id:
+            (self.author, self.title, self.category) = self.api.metadata_video(self.video_id)
+        elif self.clip_name:
+            self._get_clips()
+        elif self._channel:
+            (self.author, self.title, self.category) = self.api.metadata_channel(self.channel_id)
 
     @property
     def channel(self):
