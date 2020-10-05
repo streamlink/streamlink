@@ -291,11 +291,11 @@ class TestTwitchMetadata(unittest.TestCase):
 
     def subject_channel(self, data=True, failure=False):
         self.mock.get(
-            "https://api.twitch.tv/kraken/users.json?login=foo",
+            "https://api.twitch.tv/kraken/users?login=foo",
             json={"users": [{"_id": 1234}]}
         )
         self.mock.get(
-            "https://api.twitch.tv/kraken/streams/1234.json",
+            "https://api.twitch.tv/kraken/streams/1234",
             status_code=200 if not failure else 404,
             json={"stream": None} if not data else {"stream": {
                 "channel": {
@@ -309,7 +309,7 @@ class TestTwitchMetadata(unittest.TestCase):
 
     def subject_video(self, data=True, failure=False):
         self.mock.get(
-            "https://api.twitch.tv/kraken/videos/1337.json",
+            "https://api.twitch.tv/kraken/videos/1337",
             status_code=200 if not failure else 404,
             json={} if not data else {
                 "title": "video title",
@@ -362,11 +362,11 @@ class TestTwitchReruns(unittest.TestCase):
     def start(self, *mocked, **params):
         with requests_mock.Mocker() as mock:
             mocked_users = mock.get(
-                "https://api.twitch.tv/kraken/users.json?login=foo",
+                "https://api.twitch.tv/kraken/users?login=foo",
                 json={"users": [{"_id": 1234}]}
             )
             mocked_stream = mock.get(
-                "https://api.twitch.tv/kraken/streams/1234.json",
+                "https://api.twitch.tv/kraken/streams/1234",
                 json={"stream": None} if params.pop("offline", False) else {"stream": {
                     "stream_type": params.pop("stream_type", "live"),
                     "broadcast_platform": params.pop("broadcast_platform", "live"),

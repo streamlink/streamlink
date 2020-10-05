@@ -3,7 +3,6 @@ import argparse
 import json
 import logging
 import re
-import warnings
 from collections import namedtuple
 from random import random
 
@@ -35,11 +34,6 @@ QUALITY_WEIGHTS = {
     "mobile": 120,
 }
 
-# Streamlink's client-id used for public API calls (don't steal this and register your own application on Twitch)
-TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
-# Twitch's client-id used for private API calls (see issue #2680 for why we are doing this)
-TWITCH_CLIENT_ID_PRIVATE = "kimne78kx3ncx6brgo4mv6wki5h1ko"
-
 _url_re = re.compile(r"""
     https?://(?:(?P<subdomain>[\w\-]+)\.)?twitch\.tv/
     (?:
@@ -53,42 +47,6 @@ _url_re = re.compile(r"""
         )?
     )
 """, re.VERBOSE)
-
-_access_token_schema = validate.Schema(
-    {
-        "token": validate.text,
-        "sig": validate.text
-    },
-    validate.union((
-        validate.get("sig"),
-        validate.get("token")
-    ))
-)
-_token_schema = validate.Schema(
-    {
-        "chansub": {
-            "restricted_bitrates": validate.all(
-                [validate.text],
-                validate.filter(
-                    lambda n: not re.match(r"(.+_)?archives|live|chunked", n)
-                )
-            )
-        }
-    },
-    validate.get("chansub")
-)
-_stream_schema = validate.Schema(
-    {
-        "stream": validate.any(None, {
-            "stream_type": validate.text,
-            "broadcast_platform": validate.text,
-            "channel": validate.any(None, {
-                "broadcaster_software": validate.text
-            })
-        })
-    },
-    validate.get("stream")
-)
 
 Segment = namedtuple("Segment", "uri duration title key discontinuity ad byterange date map prefetch")
 
@@ -232,11 +190,7 @@ class UsherService(object):
         params.update(extra_params)
 
         req = requests.Request("GET", url, params=params)
-        # prepare_request is only available in requests 2.0+
-        if hasattr(self.session.http, "prepare_request"):
-            req = self.session.http.prepare_request(req)
-        else:
-            req = req.prepare()
+        req = self.session.http.prepare_request(req)
 
         return req.url
 
@@ -249,69 +203,191 @@ class UsherService(object):
 
 
 class TwitchAPI(object):
-    def __init__(self, session, beta=False, version=3):
+    # Streamlink's client-id used for public API calls (don't steal this and register your own application on Twitch)
+    TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
+    # Twitch's client-id used for private API calls (see issue #2680 for why we are doing this)
+    TWITCH_CLIENT_ID_PRIVATE = "kimne78kx3ncx6brgo4mv6wki5h1ko"
+
+    def __init__(self, session):
         self.session = session
-        self.subdomain = beta and "betaapi" or "api"
-        self.version = version
 
-    def call(self, path, format="json", schema=None, private=False, **extra_params):
-        params = dict(as3="t", **extra_params)
+    def _call(self, method="GET", subdomain="api", path="/", headers=None, private=False, data=None, **params):
+        url = "https://{0}.twitch.tv{1}".format(subdomain, path)
+        headers = headers or dict()
+        headers.update({
+            "Client-ID": self.TWITCH_CLIENT_ID if not private else self.TWITCH_CLIENT_ID_PRIVATE
+        })
 
-        if len(format) > 0:
-            url = "https://{0}.twitch.tv{1}.{2}".format(self.subdomain, path, format)
-        else:
-            url = "https://{0}.twitch.tv{1}".format(self.subdomain, path)
+        return self.session.http.request(method, url, data=data, params=params, headers=headers)
 
-        headers = {'Accept': 'application/vnd.twitchtv.v{0}+json'.format(self.version),
-                   'Client-ID': TWITCH_CLIENT_ID if not private else TWITCH_CLIENT_ID_PRIVATE}
+    def call(self, path, schema=None, **params):
+        headers = {"Accept": "application/vnd.twitchtv.v5+json"}
+        res = self._call(path=path, headers=headers, **params)
 
-        res = self.session.http.get(url, params=params, headers=headers)
+        return self.session.http.json(res, schema=schema)
 
-        if format == "json":
-            return self.session.http.json(res, schema=schema)
-        else:
-            return res
+    def call_gql(self, data, schema=None, **params):
+        res = self._call(method="POST", subdomain="gql", path="/gql", data=json.dumps(data), private=True, **params)
 
-    def call_subdomain(self, subdomain, path, format="json", schema=None, **extra_params):
-        subdomain_buffer = self.subdomain
-        self.subdomain = subdomain
-        try:
-            return self.call(path, format=format, schema=schema, **extra_params)
-        finally:
-            self.subdomain = subdomain_buffer
+        return self.session.http.json(res, schema=schema)
 
     # Public API calls
 
-    def users(self, **params):
-        return self.call("/kraken/users", **params)
+    def channel_from_video_id(self, video_id):
+        return self.call("/kraken/videos/{0}".format(video_id), schema=validate.Schema(
+            {
+                "channel": {
+                    "_id": validate.any(int, validate.text),
+                    "name": validate.text
+                }
+            },
+            validate.get("channel"),
+            validate.union((
+                validate.all(validate.get("_id"), validate.transform(int)),
+                validate.all(validate.get("name"), validate.transform(lambda n: n.lower()))
+            ))
+        ))
 
-    def videos(self, video_id, **params):
-        return self.call("/kraken/videos/{0}".format(video_id), **params)
+    def channel_from_login(self, channel):
+        return self.call("/kraken/users", login=channel, schema=validate.Schema(
+            {
+                "users": [{
+                    "_id": validate.any(int, validate.text)
+                }]
+            },
+            validate.get("users"),
+            validate.get(0),
+            validate.get("_id"),
+            validate.transform(int)
+        ))
 
-    def channel_info(self, channel, **params):
-        return self.call("/kraken/channels/{0}".format(channel), **params)
+    def stream_rerun(self, channel_id):
+        return self.call("/kraken/streams/{0}".format(channel_id), schema=validate.Schema(
+            {
+                "stream": validate.any(None, {
+                    "stream_type": validate.text,
+                    "broadcast_platform": validate.text,
+                    "channel": validate.any(None, {
+                        "broadcaster_software": validate.text
+                    })
+                })
+            },
+            validate.get("stream")
+        ))
 
-    def streams(self, channel_id, **params):
-        return self.call("/kraken/streams/{0}".format(channel_id), **params)
+    def metadata_video(self, video_id):
+        return self.call("/kraken/videos/{0}".format(video_id), schema=validate.Schema(validate.any(
+            validate.all(
+                {
+                    "title": validate.text,
+                    "game": validate.text,
+                    "channel": validate.all(
+                        {"display_name": validate.text},
+                        validate.get("display_name")
+                    )
+                },
+                validate.transform(lambda data: (data["channel"], data["title"], data["game"]))
+            ),
+            validate.all({}, validate.transform(lambda _: (None,) * 3))
+        )))
+
+    def metadata_channel(self, channel_id):
+        return self.call("/kraken/streams/{0}".format(channel_id), schema=validate.Schema(
+            {
+                "stream": validate.any(
+                    validate.all(
+                        {"channel": {
+                            "display_name": validate.text,
+                            "game": validate.text,
+                            "status": validate.text
+                        }},
+                        validate.get("channel"),
+                        validate.transform(lambda ch: (ch["display_name"], ch["status"], ch["game"]))
+                    ),
+                    validate.all(None, validate.transform(lambda _: (None,) * 3))
+                )
+            },
+            validate.get("stream")
+        ))
 
     # Private API calls
 
-    def access_token(self, endpoint, asset, **params):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, **params)
+    def access_token(self, endpoint, asset):
+        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, schema=validate.Schema(
+            {
+                "token": validate.text,
+                "sig": validate.text
+            },
+            validate.union((
+                validate.get("sig"),
+                validate.get("token")
+            ))
+        ))
 
-    def hosted_channel(self, **params):
-        return self.call_subdomain("tmi", "/hosts", format="", **params)
+    def token(self, tokenstr):
+        return parse_json(tokenstr, schema=validate.Schema(
+            {
+                "chansub": {
+                    "restricted_bitrates": validate.all(
+                        [validate.text],
+                        validate.filter(
+                            lambda n: not re.match(r"(.+_)?archives|live|chunked", n)
+                        )
+                    )
+                }
+            },
+            validate.get("chansub"),
+            validate.get("restricted_bitrates")
+        ))
 
-    # Unsupported/Removed private API calls
+    def hosted_channel(self, channel, **params):
+        return self.call("/hosts", subdomain="tmi", include_logins=1, host=channel, **params)
 
-    def channel_viewer_info(self, channel, **params):
-        warnings.warn("The channel_viewer_info API call is unsupported and may stop working at any time")
-        return self.call("/api/channels/{0}/viewer".format(channel), private=True, **params)
+    # GraphQL API calls
 
-    def channel_subscription(self, channel, **params):
-        warnings.warn("The channel_subscription API call has been removed and no longer works",
-                      category=DeprecationWarning)
-        return self.call("/api/channels/{0}/subscription".format(channel), private=True, **params)
+    def clips(self, clipname):
+        query = """{{
+            clip(slug: "{clipname}") {{
+                broadcaster {{
+                    displayName
+                }}
+                title
+                game {{
+                    name
+                }}
+                videoQualities {{
+                    quality
+                    sourceURL
+                }}
+            }}
+        }}""".format(clipname=clipname)
+
+        return self.call_gql({"query": query}, schema=validate.Schema(
+            {"data": {
+                "clip": validate.any(None, validate.all({
+                    "broadcaster": validate.all({"displayName": validate.text}, validate.get("displayName")),
+                    "title": validate.text,
+                    "game": validate.all({"name": validate.text}, validate.get("name")),
+                    "videoQualities": [validate.all({
+                        "quality": validate.all(
+                            validate.text,
+                            validate.transform(lambda q: "{0}p".format(q))
+                        ),
+                        "sourceURL": validate.url()
+                    }, validate.union((
+                        validate.get("quality"),
+                        validate.get("sourceURL")
+                    )))]
+                }, validate.union((
+                    validate.get("broadcaster"),
+                    validate.get("title"),
+                    validate.get("game"),
+                    validate.get("videoQualities")
+                ))))
+            }},
+            validate.get("data"),
+            validate.get("clip")
+        ))
 
 
 class Twitch(Plugin):
@@ -366,39 +442,6 @@ class Twitch(Plugin):
         )
     )
 
-    _schema_metadata_empty = validate.transform(lambda _: (None,) * 3)
-    _schema_metadata_channel = validate.Schema(
-        {
-            "stream": validate.any(
-                validate.all(
-                    {"channel": {
-                        "display_name": validate.text,
-                        "game": validate.text,
-                        "status": validate.text
-                    }},
-                    validate.get("channel"),
-                    validate.transform(lambda ch: (ch["display_name"], ch["status"], ch["game"]))
-                ),
-                validate.all(None, _schema_metadata_empty)
-            )
-        },
-        validate.get("stream")
-    )
-    _schema_metadata_video = validate.Schema(validate.any(
-        validate.all(
-            {
-                "title": validate.text,
-                "game": validate.text,
-                "channel": validate.all(
-                    {"display_name": validate.text},
-                    validate.get("display_name")
-                )
-            },
-            validate.transform(lambda data: (data["channel"], data["title"], data["game"]))
-        ),
-        validate.all({}, _schema_metadata_empty)
-    ))
-
     @classmethod
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
@@ -413,11 +456,11 @@ class Twitch(Plugin):
 
     def _get_metadata(self):
         if self.video_id:
-            (self.author, self.title, self.category) = self.api.videos(self.video_id, schema=self._schema_metadata_video)
+            (self.author, self.title, self.category) = self.api.metadata_video(self.video_id)
         elif self.clip_name:
             self._get_clips()
         elif self._channel:
-            (self.author, self.title, self.category) = self.api.streams(self.channel_id, schema=self._schema_metadata_channel)
+            (self.author, self.title, self.category) = self.api.metadata_channel(self.channel_id)
 
     def get_title(self):
         if self.title is None:
@@ -462,18 +505,14 @@ class Twitch(Plugin):
             self.video_id = match.get("video_id") or match.get("videos_id")
             self.clip_name = match.get("clip_name")
 
-        self.api = TwitchAPI(beta=self.subdomain == "beta",
-                             session=self.session,
-                             version=5)
+        self.api = TwitchAPI(session=self.session)
         self.usher = UsherService(session=self.session)
 
     @property
     def channel(self):
         if not self._channel:
             if self.video_id:
-                cdata = self._channel_from_video_id(self.video_id)
-                self._channel = cdata["name"].lower()
-                self._channel_id = cdata["_id"]
+                self._channel_from_video_id(self.video_id)
         return self._channel
 
     @channel.setter
@@ -485,30 +524,22 @@ class Twitch(Plugin):
     @property
     def channel_id(self):
         if not self._channel_id:
-            # If the channel name is set, use that to look up the ID
             if self._channel:
-                cdata = self._channel_from_login(self._channel)
-                self._channel_id = cdata["_id"]
-
-            # If the channel name is not set but the video ID is,
-            # use that to look up both ID and name
+                self._channel_from_login(self._channel)
             elif self.video_id:
-                cdata = self._channel_from_video_id(self.video_id)
-                self._channel = cdata["name"].lower()
-                self._channel_id = cdata["_id"]
+                self._channel_from_video_id(self.video_id)
         return self._channel_id
 
     def _channel_from_video_id(self, video_id):
-        vdata = self.api.videos(video_id)
-        if "channel" not in vdata:
+        try:
+            self._channel_id, self._channel = self.api.channel_from_video_id(video_id)
+        except PluginError:
             raise PluginError("Unable to find video: {0}".format(video_id))
-        return vdata["channel"]
 
     def _channel_from_login(self, channel):
-        cdata = self.api.users(login=channel)
-        if len(cdata["users"]):
-            return cdata["users"][0]
-        else:
+        try:
+            self._channel_id = self.api.channel_from_login(channel)
+        except PluginError:
             raise PluginError("Unable to find channel: {0}".format(channel))
 
     def _access_token(self, type="live"):
@@ -520,24 +551,28 @@ class Twitch(Plugin):
                 endpoint = "vods"
                 value = self.video_id
 
-            sig, token = self.api.access_token(endpoint, value,
-                                               schema=_access_token_schema)
+            sig, token = self.api.access_token(endpoint, value)
         except PluginError as err:
             if "404 Client Error" in str(err):
                 raise NoStreamsError(self.url)
             else:
                 raise
 
-        return sig, token
+        try:
+            restricted_bitrates = self.api.token(token)
+        except PluginError:
+            restricted_bitrates = []
+
+        return sig, token, restricted_bitrates
 
     def _check_for_host(self):
-        host_info = self.api.hosted_channel(include_logins=1, host=self.channel_id).json()["hosts"][0]
+        host_info = self.api.hosted_channel(self.channel_id)["hosts"][0]
         if "target_login" in host_info and host_info["target_login"].lower() != self.channel.lower():
             log.info("{0} is hosting {1}".format(self.channel, host_info["target_login"]))
             return host_info["target_login"]
 
     def _check_for_rerun(self):
-        stream = self.api.streams(self.channel_id, schema=_stream_schema)
+        stream = self.api.stream_rerun(self.channel_id)
 
         return stream and (
             stream["stream_type"] != "live"
@@ -569,10 +604,10 @@ class Twitch(Plugin):
                 return self._get_hls_streams(stream_type)
 
             # only get the token once the channel has been resolved
-            sig, token = self._access_token(stream_type)
+            sig, token, restricted_bitrates = self._access_token(stream_type)
             url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
         elif stream_type == "video":
-            sig, token = self._access_token(stream_type)
+            sig, token, restricted_bitrates = self._access_token(stream_type)
             url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
         else:
             log.debug("Unknown HLS stream type: {0}".format(stream_type))
@@ -601,44 +636,20 @@ class Twitch(Plugin):
             else:
                 raise PluginError(err)
 
-        try:
-            token = parse_json(token, schema=_token_schema)
-            for name in token["restricted_bitrates"]:
-                if name not in streams:
-                    log.warning("The quality '{0}' is not available since it requires a subscription.".format(name))
-        except PluginError:
-            pass
+        for name in restricted_bitrates:
+            if name not in streams:
+                log.warning("The quality '{0}' is not available since it requires a subscription.".format(name))
 
         return streams
 
     def _get_clips(self):
-        data = json.dumps({'query': '''{{
-            clip(slug: "{0}") {{
-                broadcaster {{
-                    displayName
-                }}
-                title
-                videoQualities {{
-                    quality
-                    sourceURL
-                }}
-            }}
-        }}'''.format(self.clip_name)})
-        clip_data = self.session.http.post('https://gql.twitch.tv/gql',
-                                           data=data,
-                                           headers={'Client-ID': TWITCH_CLIENT_ID_PRIVATE},
-                                           ).json()['data']['clip']
-        log.trace('{0!r}'.format(clip_data))
-        if not clip_data:
+        try:
+            (self.author, self.title, self.category, streams) = self.api.clips(self.clip_name)
+        except (PluginError, TypeError):
             return
 
-        self.author = clip_data['broadcaster']['displayName']
-        self.title = clip_data['title']
-
-        streams = {}
-        for quality_option in clip_data['videoQualities']:
-            streams['{0}p'.format(quality_option['quality'])] = HTTPStream(self.session, quality_option['sourceURL'])
-        return streams
+        for quality, stream in streams:
+            yield quality, HTTPStream(self.session, stream)
 
     def _get_streams(self):
         if self.video_id:
