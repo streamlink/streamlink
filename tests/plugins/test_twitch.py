@@ -351,21 +351,132 @@ class TestTwitchMetadata(unittest.TestCase):
 
 
 @patch("streamlink.plugins.twitch.log")
+class TestTwitchHosting(unittest.TestCase):
+    def subject(self, channel, hosts=None, disable=False):
+        with requests_mock.Mocker() as mock:
+            mock.get(
+                "https://api.twitch.tv/kraken/users?login=foo",
+                json={"users": [{"_id": 1}]}
+            )
+            if hosts is None:
+                mock.get("https://tmi.twitch.tv/hosts", json={})
+            else:
+                mock.get(
+                    "https://tmi.twitch.tv/hosts",
+                    [{"json": {
+                        "hosts": [dict(
+                            host_id=host_id,
+                            target_id=target_id,
+                            target_login=target_login,
+                            target_display_name=target_display_name
+                        )]}
+                      } for host_id, target_id, target_login, target_display_name in hosts]
+                )
+
+            session = Streamlink()
+            Twitch.bind(session, "tests.plugins.test_twitch")
+            plugin = Twitch("https://twitch.tv/{0}".format(channel))
+            plugin.options.set("disable-hosting", disable)
+
+            res = plugin._switch_to_hosted_channel()
+            return res, plugin.channel, plugin._channel_id, plugin.author
+
+    def test_hosting_invalid_host_data(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo")
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "foo", "Doesn't switch channel")
+        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(author, None, "Doesn't override author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_no_host_data(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [(1, None, None, None)])
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "foo", "Doesn't switch channel")
+        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(author, None, "Doesn't override author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_single(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar"), (2, None, None, None)])
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "bar", "Switches channel")
+        self.assertEqual(channel_id, 2, "Switches channel id")
+        self.assertEqual(author, "Bar", "Overrides author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("switching to bar")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_single_disable(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar")], disable=True)
+        self.assertTrue(res, "Stops HLS resolve procedure")
+        self.assertEqual(channel, "foo", "Doesn't switch channel")
+        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(author, None, "Doesn't override author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("hosting was disabled by command line option")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_multiple(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [
+            (1, 2, "bar", "Bar"),
+            (2, 3, "baz", "Baz"),
+            (3, 4, "qux", "Qux"),
+            (4, None, None, None)
+        ])
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "qux", "Switches channel")
+        self.assertEqual(channel_id, 4, "Switches channel id")
+        self.assertEqual(author, "Qux", "Overrides author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("switching to bar"),
+            call("bar is hosting baz"),
+            call("switching to baz"),
+            call("baz is hosting qux"),
+            call("switching to qux")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_multiple_loop(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [
+            (1, 2, "bar", "Bar"),
+            (2, 3, "baz", "Baz"),
+            (3, 1, "foo", "Foo")
+        ])
+        self.assertTrue(res, "Stops HLS resolve procedure")
+        self.assertEqual(channel, "baz", "Has switched channel")
+        self.assertEqual(channel_id, 3, "Has switched channel id")
+        self.assertEqual(author, "Baz", "Has overridden author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("switching to bar"),
+            call("bar is hosting baz"),
+            call("switching to baz"),
+            call("baz is hosting foo")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [
+            call("A loop of hosted channels has been detected, cannot find a playable stream. (foo -> bar -> baz -> foo)")
+        ])
+
+
+@patch("streamlink.plugins.twitch.log")
 class TestTwitchReruns(unittest.TestCase):
     log_call = call("Reruns were disabled by command line option")
 
-    class StopError(Exception):
-        """Stop when trying to get an access token in _get_hls_streams..."""
-
-    @patch("streamlink.plugins.twitch.Twitch._check_for_host", return_value=None)
-    @patch("streamlink.plugins.twitch.Twitch._access_token", side_effect=StopError())
-    def start(self, *mocked, **params):
+    def subject(self, **params):
         with requests_mock.Mocker() as mock:
-            mocked_users = mock.get(
+            mock.get(
                 "https://api.twitch.tv/kraken/users?login=foo",
                 json={"users": [{"_id": 1234}]}
             )
-            mocked_stream = mock.get(
+            mock.get(
                 "https://api.twitch.tv/kraken/streams/1234",
                 json={"stream": None} if params.pop("offline", False) else {"stream": {
                     "stream_type": params.pop("stream_type", "live"),
@@ -380,66 +491,33 @@ class TestTwitchReruns(unittest.TestCase):
             Twitch.bind(session, "tests.plugins.test_twitch")
             plugin = Twitch("https://www.twitch.tv/foo")
             plugin.options.set("disable-reruns", params.pop("disable", True))
-            try:
-                streams = plugin.streams()
-            except TestTwitchReruns.StopError:
-                streams = True
-                pass
 
-            return streams, mocked_users, mocked_stream, mocked[0]
+            return plugin._check_for_rerun()
 
     def test_disable_reruns_live(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start()
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertTrue(access_token.called_once)
-        self.assertTrue(streams)
+        self.assertFalse(self.subject())
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_not_live(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="rerun")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertFalse(access_token.called)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(stream_type="rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_mixed(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="rerun", broadcast_platform="live")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertFalse(access_token.called)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(stream_type="rerun", broadcast_platform="live"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_mixed2(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="live", broadcast_platform="rerun")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertFalse(access_token.called)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(stream_type="live", broadcast_platform="rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_broadcaster_software(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(broadcaster_software="watch_party_rerun")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertTrue(access_token.called_once)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(broadcaster_software="watch_party_rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_offline(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(offline=True)
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertTrue(access_token.called_once)
-        self.assertTrue(streams)
+        self.assertFalse(self.subject(offline=True))
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
 
     def test_enable_reruns(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(disable=False)
-        self.assertFalse(api_users.called)
-        self.assertFalse(api_stream.called)
-        self.assertTrue(access_token.called_once)
-        self.assertTrue(streams)
+        self.assertFalse(self.subject(stream_type="rerun", disable=False))
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
