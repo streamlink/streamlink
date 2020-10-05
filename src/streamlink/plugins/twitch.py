@@ -10,22 +10,15 @@ from random import random
 import requests
 
 from streamlink.compat import urlparse
-from streamlink.exceptions import NoStreamsError, PluginError, StreamError
+from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json, parse_query
-from streamlink.stream import (
-    HTTPStream, HLSStream, FLVPlaylist, extract_flv_header_tags
-)
+from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.hls import HLSStreamWorker
 from streamlink.stream.hls_filtered import FilteredHLSStreamWriter, FilteredHLSStreamReader
 from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
-
-try:
-    from itertools import izip as zip
-except ImportError:
-    pass
 
 
 log = logging.getLogger(__name__)
@@ -48,26 +41,17 @@ TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
 TWITCH_CLIENT_ID_PRIVATE = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
 _url_re = re.compile(r"""
-    http(s)?://
+    https?://(?:(?P<subdomain>[\w\-]+)\.)?twitch\.tv/
     (?:
-        (?P<subdomain>[\w\-]+)
-        \.
-    )?
-    twitch.tv/
-    (?:
-        videos/(?P<videos_id>\d+)|
+        videos/(?P<videos_id>\d+)
+        |
         (?P<channel>[^/]+)
+        (?:
+            /video/(?P<video_id>\d+)
+            |
+            /clip/(?P<clip_name>[\w]+)
+        )?
     )
-    (?:
-        /
-        (?P<video_type>[bcv])(?:ideo)?
-        /
-        (?P<video_id>\d+)
-    )?
-    (?:
-        /(?:clip/)?
-        (?P<clip_name>[\w]+)
-    )?
 """, re.VERBOSE)
 
 _access_token_schema = validate.Schema(
@@ -104,20 +88,6 @@ _stream_schema = validate.Schema(
         })
     },
     validate.get("stream")
-)
-_video_schema = validate.Schema(
-    {
-        "chunks": {
-            validate.text: [{
-                "length": int,
-                "url": validate.any(None, validate.url(scheme="http")),
-                "upkeep": validate.any("pass", "fail", None)
-            }]
-        },
-        "restrictions": {validate.text: validate.text},
-        "start_offset": int,
-        "end_offset": int,
-    }
 )
 
 Segment = namedtuple("Segment", "uri duration title key discontinuity ad byterange date map prefetch")
@@ -472,7 +442,6 @@ class Twitch(Plugin):
         self.params = parse_query(parsed.query)
         self.subdomain = match.get("subdomain")
         self.video_id = None
-        self.video_type = None
         self._channel_id = None
         self._channel = None
         self.clip_name = None
@@ -483,20 +452,13 @@ class Twitch(Plugin):
         if self.subdomain == "player":
             # pop-out player
             if self.params.get("video"):
-                try:
-                    self.video_type = self.params["video"][0]
-                    self.video_id = self.params["video"][1:]
-                except IndexError:
-                    log.debug("Invalid video param: {0}".format(self.params["video"]))
+                self.video_id = self.params["video"]
             self._channel = self.params.get("channel")
         elif self.subdomain == "clips":
             # clip share URL
             self.clip_name = match.get("channel")
         else:
             self._channel = match.get("channel") and match.get("channel").lower()
-            self.video_type = match.get("video_type")
-            if match.get("videos_id"):
-                self.video_type = "v"
             self.video_id = match.get("video_id") or match.get("videos_id")
             self.clip_name = match.get("clip_name")
 
@@ -548,137 +510,6 @@ class Twitch(Plugin):
             return cdata["users"][0]
         else:
             raise PluginError("Unable to find channel: {0}".format(channel))
-
-    def _create_playlist_streams(self, videos):
-        start_offset = int(videos.get("start_offset", 0))
-        stop_offset = int(videos.get("end_offset", 0))
-        streams = {}
-
-        for quality, chunks in videos.get("chunks").items():
-            if not chunks:
-                if videos.get("restrictions", {}).get(quality) == "chansub":
-                    log.warning("The quality '{0}' is not available since it requires a subscription.".format(quality))
-                continue
-
-            # Rename 'live' to 'source'
-            if quality == "live":
-                quality = "source"
-
-            chunks_filtered = list(filter(lambda c: c["url"], chunks))
-            if len(chunks) != len(chunks_filtered):
-                log.warning("The video '{0}' contains invalid chunks. There will be missing data.".format(quality))
-                chunks = chunks_filtered
-
-            chunks_duration = sum(c.get("length") for c in chunks)
-
-            # If it's a full broadcast we just use all the chunks
-            if start_offset == 0 and chunks_duration == stop_offset:
-                # No need to use the FLV concat if it's just one chunk
-                if len(chunks) == 1:
-                    url = chunks[0].get("url")
-                    stream = HTTPStream(self.session, url)
-                else:
-                    chunks = [HTTPStream(self.session, c.get("url")) for c in chunks]
-                    stream = FLVPlaylist(self.session, chunks,
-                                         duration=chunks_duration)
-            else:
-                try:
-                    stream = self._create_video_clip(chunks,
-                                                     start_offset,
-                                                     stop_offset)
-                except StreamError as err:
-                    log.error("Error while creating video '{0}': {1}".format(quality, err))
-                    continue
-
-            streams[quality] = stream
-
-        return streams
-
-    def _create_video_clip(self, chunks, start_offset, stop_offset):
-        playlist_duration = stop_offset - start_offset
-        playlist_offset = 0
-        playlist_streams = []
-        playlist_tags = []
-
-        for chunk in chunks:
-            chunk_url = chunk["url"]
-            chunk_length = chunk["length"]
-            chunk_start = playlist_offset
-            chunk_stop = chunk_start + chunk_length
-            chunk_stream = HTTPStream(self.session, chunk_url)
-
-            if chunk_start <= start_offset <= chunk_stop:
-                try:
-                    headers = extract_flv_header_tags(chunk_stream)
-                except IOError as err:
-                    raise StreamError("Error while parsing FLV: {0}", err)
-
-                if not headers.metadata:
-                    raise StreamError("Missing metadata tag in the first chunk")
-
-                metadata = headers.metadata.data.value
-                keyframes = metadata.get("keyframes")
-
-                if not keyframes:
-                    if chunk["upkeep"] == "fail":
-                        raise StreamError("Unable to seek into muted chunk, try another timestamp")
-                    else:
-                        raise StreamError("Missing keyframes info in the first chunk")
-
-                keyframe_offset = None
-                keyframe_offsets = keyframes.get("filepositions")
-                keyframe_times = [playlist_offset + t for t in keyframes.get("times")]
-                for time, offset in zip(keyframe_times, keyframe_offsets):
-                    if time > start_offset:
-                        break
-
-                    keyframe_offset = offset
-
-                if keyframe_offset is None:
-                    raise StreamError("Unable to find a keyframe to seek to "
-                                      "in the first chunk")
-
-                chunk_headers = dict(Range="bytes={0}-".format(int(keyframe_offset)))
-                chunk_stream = HTTPStream(self.session, chunk_url,
-                                          headers=chunk_headers)
-                playlist_streams.append(chunk_stream)
-                for tag in headers:
-                    playlist_tags.append(tag)
-            elif start_offset <= chunk_start < stop_offset:
-                playlist_streams.append(chunk_stream)
-
-            playlist_offset += chunk_length
-
-        return FLVPlaylist(self.session, playlist_streams,
-                           tags=playlist_tags, duration=playlist_duration)
-
-    def _get_video_streams(self):
-        log.debug("Getting video steams for {0} (type={1})".format(self.video_id, self.video_type))
-
-        if self.video_type == "b":
-            self.video_type = "a"
-
-        try:
-            videos = self.api.videos(self.video_type + self.video_id,
-                                     schema=_video_schema)
-        except PluginError as err:
-            if "HTTP/1.1 0 ERROR" in str(err):
-                raise NoStreamsError(self.url)
-            else:
-                raise
-
-        # Parse the "t" query parameter on broadcasts and adjust
-        # start offset if needed.
-        time_offset = self.params.get("t")
-        if time_offset:
-            try:
-                time_offset = hours_minutes_seconds(time_offset)
-            except ValueError:
-                time_offset = 0
-
-            videos["start_offset"] += time_offset
-
-        return self._create_playlist_streams(videos)
 
     def _access_token(self, type="live"):
         try:
@@ -811,10 +642,7 @@ class Twitch(Plugin):
 
     def _get_streams(self):
         if self.video_id:
-            if self.video_type == "v":
-                return self._get_hls_streams("video")
-            else:
-                return self._get_video_streams()
+            return self._get_hls_streams("video")
         elif self.clip_name:
             return self._get_clips()
         elif self._channel:
