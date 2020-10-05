@@ -114,6 +114,7 @@ liveme                  liveme.com           Yes   --
 livestream              new.livestream.com   Yes   --
 lrt                     lrt.lt               Yes   No
 ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
+mbcmini                 mini.imbc.com        Yes   No    Streams may be geo-restricted to South Korea.
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
 metube                  metube.id            Yes   Yes
 mico                    micous.com           Yes   --
