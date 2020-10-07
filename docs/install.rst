@@ -295,22 +295,18 @@ To install Streamlink from source you will need these dependencies.
 ==================================== ===========================================
 Name                                 Notes
 ==================================== ===========================================
-`Python`_                            At least version **2.7** or **3.5**.
+`Python`_                            At least version **3.5**.
 `python-setuptools`_
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-futures`_                    Only needed on Python **2.7**.
 `python-requests`_                   At least version **2.21.0**.
-`python-singledispatch`_             Only needed on Python **2.7**.
 `pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
 `PySocks`_                           Used for SOCKS Proxies
 `websocket-client`_                  Used for some plugins
-`shutil_get_terminal_size`_          Only needed on Python **2.7**.
-`shutil_which`_                      Only needed on Python **2.7**.
 
 **Optional**
 --------------------------------------------------------------------------------
@@ -332,9 +328,7 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
-.. _python-futures: https://pypi.org/project/futures/
 .. _python-requests: http://python-requests.org/
-.. _python-singledispatch: https://pypi.org/project/singledispatch/
 .. _RTMPDump: http://rtmpdump.mplayerhq.hu/
 .. _pycountry: https://pypi.org/project/pycountry/
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
@@ -345,8 +339,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _isodate: https://pypi.org/project/isodate/
 .. _PySocks: https://github.com/Anorov/PySocks
 .. _websocket-client: https://pypi.org/project/websocket-client/
-.. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
-.. _shutil_which: https://pypi.org/project/backports.shutil_which/
 
 
 Windows binaries

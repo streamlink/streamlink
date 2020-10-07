@@ -3,7 +3,6 @@ import logging
 import pkgutil
 import sys
 import traceback
-import warnings
 
 import requests
 
@@ -52,12 +51,6 @@ class Streamlink(object):
        options and log settings."""
 
     def __init__(self, options=None):
-        if sys.version_info[0] == 2:
-            warnings.warn("Python 2.7 has reached the end of its life.  A future version of streamlink will drop "
-                          "support for Python 2.7. Please upgrade your Python to at least 3.5.",
-                          category=PythonDeprecatedWarning,
-                          stacklevel=2)
-
         self.http = api.HTTPSession()
         self.options = Options({
             "hds-live-edge": 10.0,
