@@ -11,7 +11,6 @@ from streamlink.plugin.api.utils import itertags, parse_query
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
@@ -50,13 +49,11 @@ _config_schema = validate.Schema(
                 validate.optional("videoDetails"): {
                     validate.optional("isLive"): validate.transform(bool),
                     validate.optional("author"): validate.text,
-                    validate.optional("title"): validate.all(validate.text,
-                                                             validate.transform(maybe_decode))
+                    validate.optional("title"): validate.text
                 },
                 validate.optional("playabilityStatus"): {
                     validate.optional("status"): validate.text,
-                    validate.optional("reason"): validate.all(validate.text,
-                                                              validate.transform(maybe_decode)),
+                    validate.optional("reason"): validate.text
                 },
             },
         ),
@@ -98,10 +95,8 @@ class YouTube(Plugin):
 
     _oembed_schema = validate.Schema(
         {
-            "author_name": validate.all(validate.text,
-                                        validate.transform(maybe_decode)),
-            "title": validate.all(validate.text,
-                                  validate.transform(maybe_decode))
+            "author_name": validate.text,
+            "title": validate.text
         }
     )
 

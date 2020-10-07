@@ -4,7 +4,6 @@ import warnings
 from logging import NOTSET, ERROR, WARN, INFO, DEBUG, CRITICAL
 from threading import Lock
 
-from streamlink.utils.encoding import maybe_encode
 
 TRACE = 5
 _levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),
@@ -39,7 +38,7 @@ class _LogRecord(_CompatLogRecord):
         msg = self.msg
         if self.args:
             msg = msg.format(*self.args)
-        return maybe_encode(msg)
+        return msg
 
 
 class StreamlinkLogger(logging.getLoggerClass(), object):

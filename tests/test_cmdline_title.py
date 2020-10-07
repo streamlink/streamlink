@@ -2,7 +2,6 @@
 import unittest
 
 from streamlink.compat import is_win32
-from streamlink.utils import get_filesystem_encoding
 from tests.test_cmdline import CommandLineTestCase
 
 

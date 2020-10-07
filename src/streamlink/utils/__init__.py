@@ -8,7 +8,6 @@ from streamlink.compat import urljoin, urlparse, parse_qsl
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.lazy_formatter import LazyFormatter
-from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
 from streamlink.utils.url import update_scheme, url_equal
 
 
@@ -199,5 +198,4 @@ def escape_librtmp(value):  # pragma: no cover
 __all__ = ["swfdecompress", "update_scheme", "url_equal",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json",
            "parse_xml", "rtmpparse", "prepend_www", "NamedPipe",
-           "escape_librtmp", "LazyFormatter", "get_filesystem_encoding",
-           "maybe_decode", "maybe_encode"]
+           "escape_librtmp", "LazyFormatter"]
