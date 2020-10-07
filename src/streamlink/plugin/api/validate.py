@@ -18,11 +18,7 @@
 
 from xml.etree import ElementTree as ET
 from copy import copy as copy_obj
-
-try:
-    from functools import singledispatch
-except ImportError:
-    from singledispatch import singledispatch
+from functools import singledispatch
 
 from ...compat import urlparse
 from ...exceptions import PluginError
