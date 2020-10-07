@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-from ..compat import is_win32, is_py3
+from ..compat import is_win32
 
 
 if is_win32:
@@ -33,10 +33,7 @@ class NamedPipe(object):
     def _create_named_pipe(self, path):
         bufsize = 8192
 
-        if is_py3:
-            create_named_pipe = windll.kernel32.CreateNamedPipeW
-        else:
-            create_named_pipe = windll.kernel32.CreateNamedPipeA
+        create_named_pipe = windll.kernel32.CreateNamedPipeW
 
         pipe = create_named_pipe(path, PIPE_ACCESS_OUTBOUND,
                                  PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,

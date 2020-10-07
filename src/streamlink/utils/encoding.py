@@ -1,6 +1,6 @@
 from sys import getfilesystemencoding
 
-from streamlink.compat import is_win32, is_py2
+from streamlink.compat import is_win32
 
 
 def get_filesystem_encoding():
@@ -14,20 +14,11 @@ def get_filesystem_encoding():
 
 
 def maybe_encode(text, encoding="utf8"):
-    if is_py2:
-        if isinstance(text, unicode):
-            return text.encode(encoding)
-        else:
-            return text
-    else:
-        return text
+    return text
 
 
 def maybe_decode(text, encoding="utf8"):
-    if is_py2 and isinstance(text, str):
-        return text.decode(encoding)
-    else:
-        return text
+    return text
 
 
 __all__ = ["get_filesystem_encoding", "maybe_decode", "maybe_encode"]

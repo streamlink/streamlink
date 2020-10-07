@@ -4,7 +4,7 @@ import argparse
 import logging
 import re
 
-from streamlink.compat import is_py2, parse_qsl, urlparse, urlunparse
+from streamlink.compat import parse_qsl, urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate, useragents
 from streamlink.plugin.api.utils import itertags, parse_query
@@ -287,7 +287,7 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
+            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
             player_response = info_parsed.get("player_response", {})
             playability_status = player_response.get("playabilityStatus", {})
             if (playability_status.get("status") != "OK"):
