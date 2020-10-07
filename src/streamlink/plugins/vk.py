@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from html import unescape as html_unescape
 import logging
 import re
