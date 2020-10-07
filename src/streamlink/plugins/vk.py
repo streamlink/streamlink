@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from html import unescape as html_unescape
 import logging
 import re
 
-from streamlink.compat import html_unescape, urlparse, unquote
+from streamlink.compat import urlparse, unquote
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags

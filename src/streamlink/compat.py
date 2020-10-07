@@ -23,12 +23,6 @@ except ImportError:
     from urllib import quote, unquote, unquote_plus, urlencode
     import Queue as queue
 
-try:
-    from html import unescape as html_unescape
-except ImportError:
-    from HTMLParser import HTMLParser
-    html_unescape = unescape = HTMLParser().unescape
-
 
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
@@ -36,4 +30,4 @@ getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 __all__ = ["is_win32",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
            "unquote", "unquote_plus", "queue", "urlencode", "devnull",
-           "urlsplit", "urlunsplit", "getargspec", "html_unescape"]
+           "urlsplit", "urlunsplit", "getargspec"]

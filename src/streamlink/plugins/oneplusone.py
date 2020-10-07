@@ -1,3 +1,4 @@
+from html.parser import HTMLParser
 import logging
 import re
 
@@ -9,11 +10,6 @@ from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
-
-try:
-    from html.parser import HTMLParser
-except ImportError:
-    from HTMLParser import HTMLParser
 
 log = logging.getLogger(__name__)
 
