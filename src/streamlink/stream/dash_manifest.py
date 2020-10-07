@@ -1,18 +1,18 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict, namedtuple
+from contextlib import contextmanager
 import copy
-import logging
 import datetime
+from itertools import repeat, count
+import logging
+import math
 import re
 import time
+from urllib.parse import urlparse, urljoin, urlunparse, urlsplit, urlunsplit
 
-from collections import defaultdict, namedtuple
-from itertools import repeat, count
-
-import math
 from isodate import parse_datetime, parse_duration, Duration
-from contextlib import contextmanager
-from streamlink.compat import urlparse, urljoin, urlunparse, urlsplit, urlunsplit
+
 
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc

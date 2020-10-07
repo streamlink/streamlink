@@ -1,12 +1,11 @@
 from __future__ import print_function
 
-import time
-
 import base64
 import random
 import re
+import time
+from urllib.parse import urlparse
 
-from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream

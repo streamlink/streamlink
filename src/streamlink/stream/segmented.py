@@ -1,12 +1,12 @@
 from concurrent import futures
 from concurrent.futures.thread import ThreadPoolExecutor
 import logging
+import queue
 from threading import Thread, Event
 from sys import version_info
 
 from .stream import StreamIO
 from ..buffers import RingBuffer
-from ..compat import queue
 
 log = logging.getLogger(__name__)
 

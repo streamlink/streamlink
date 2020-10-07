@@ -1,9 +1,9 @@
 import re
 import logging
 import time
+from urllib.parse import urlparse, urlunparse
 
 from streamlink.exceptions import PluginError, StreamError
-from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, hls_playlist

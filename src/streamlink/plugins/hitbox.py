@@ -1,8 +1,7 @@
-import re
-
 from itertools import chain
+import re
+from urllib.parse import urlparse
 
-from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream

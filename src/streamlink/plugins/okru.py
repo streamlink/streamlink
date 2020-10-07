@@ -2,8 +2,8 @@
 from html import unescape as html_unescape
 import logging
 import re
+from urllib.parse import unquote
 
-from streamlink.compat import unquote
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate

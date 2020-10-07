@@ -3,8 +3,8 @@ from __future__ import unicode_literals
 import argparse
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse, urlunparse
 
-from streamlink.compat import parse_qsl, urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate, useragents
 from streamlink.plugin.api.utils import itertags, parse_query

@@ -1,10 +1,10 @@
 import functools
 import json
 import re
+from urllib.parse import urljoin, urlparse, parse_qsl
 import xml.etree.ElementTree as ET
 import zlib
 
-from streamlink.compat import urljoin, urlparse, parse_qsl
 from streamlink.exceptions import PluginError
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.lazy_formatter import LazyFormatter

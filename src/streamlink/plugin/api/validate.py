@@ -16,11 +16,11 @@
 """
 
 
-from xml.etree import ElementTree as ET
 from copy import copy as copy_obj
 from functools import singledispatch
+from urllib.parse import urlparse
+from xml.etree import ElementTree as ET
 
-from ...compat import urlparse
 from ...exceptions import PluginError
 
 __all__ = [

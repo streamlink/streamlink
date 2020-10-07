@@ -1,8 +1,8 @@
 import json
 import logging
 import re
+from urllib.parse import unquote_plus
 
-from streamlink.compat import unquote_plus
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream

@@ -5,6 +5,7 @@ import base64
 import json
 import logging
 import re
+from urllib.parse import urljoin, urlparse
 from uuid import uuid4
 
 from Crypto.Cipher import AES
@@ -12,7 +13,6 @@ from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad
 
 from streamlink import PluginError
-from streamlink.compat import urljoin, urlparse
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.stream import HLSStream
 

@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import argparse
+from collections import namedtuple
 import json
 import logging
-import re
-from collections import namedtuple
 from random import random
+import re
+from urllib.parse import urlparse
 
 import requests
 
-from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate

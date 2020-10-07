@@ -1,8 +1,8 @@
 from html import unescape as html_unescape
 import logging
 import re
+from urllib.parse import unquote_plus, urlencode
 
-from streamlink.compat import unquote_plus, urlencode
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags

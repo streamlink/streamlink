@@ -1,10 +1,9 @@
-import time
-
 import logging
 import re
+import time
+from urllib.parse import quote
 from uuid import uuid4
 
-from streamlink.compat import quote
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
