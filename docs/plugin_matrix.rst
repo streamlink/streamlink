@@ -182,10 +182,6 @@ showroom                showroom-live.com    Yes   No
 skai                    skai.gr              Yes   No    Only embedded youtube live streams are supported
 sportal                 sportal.bg           Yes   No
 sportschau              sportschau.de        Yes   No
-srgssr                  - srf.ch             Yes   No    Streams are geo-restricted to Switzerland.
-                        - rts.ch
-                        - rsi.ch
-                        - rtr.ch
 ssh101                  ssh101.com           Yes   No
 stadium                 watchstadium.com     Yes   No
 steam                   steamcommunity.com   Yes   No    Some streams will require a Steam account.
