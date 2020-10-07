@@ -3,7 +3,6 @@ import logging
 import re
 import time
 
-from streamlink.compat import bytes
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate

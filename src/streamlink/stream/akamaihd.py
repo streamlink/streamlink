@@ -8,7 +8,7 @@ from .stream import Stream
 from .wrappers import StreamIOThreadWrapper, StreamIOIterWrapper
 
 from ..buffers import Buffer
-from ..compat import str, bytes, urlparse
+from ..compat import urlparse
 from ..exceptions import StreamError
 from ..utils import swfdecompress
 

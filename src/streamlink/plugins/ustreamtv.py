@@ -11,7 +11,7 @@ from socket import error as SocketError
 from threading import Thread, Event
 from time import sleep
 
-from streamlink.compat import range, urljoin, urlunparse, urlparse, unquote_plus
+from streamlink.compat import urljoin, urlunparse, urlparse, unquote_plus
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents, validate

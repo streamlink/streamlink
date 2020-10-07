@@ -5,7 +5,6 @@ from functools import partial
 
 from Crypto.Cipher import Blowfish
 
-from streamlink.compat import bytes
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate

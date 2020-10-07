@@ -13,11 +13,6 @@ except ImportError:
     def devnull():
         return open(os.path.devnull, 'w')
 
-bytes = bytes
-str = str
-range = range
-izip = zip
-
 try:
     from urllib.parse import (
         urlparse, urlunparse, urljoin, quote, unquote, unquote_plus, parse_qsl, urlencode, urlsplit, urlunsplit
@@ -43,7 +38,7 @@ except ImportError:
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
-__all__ = ["is_win32", "str", "bytes",
+__all__ = ["is_win32",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
-           "unquote", "unquote_plus", "queue", "range", "urlencode", "devnull", "which",
-           "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape"]
+           "unquote", "unquote_plus", "queue", "urlencode", "devnull", "which",
+           "urlsplit", "urlunsplit", "getargspec", "html_unescape"]
