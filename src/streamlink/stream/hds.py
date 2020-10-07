@@ -1,4 +1,3 @@
-from __future__ import division
 import logging
 import base64
 import hmac

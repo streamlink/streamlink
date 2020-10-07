@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from collections import defaultdict, namedtuple
 from contextlib import contextmanager
 import copy

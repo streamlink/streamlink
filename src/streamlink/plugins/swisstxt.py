@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import re
 from urllib.parse import urlparse, parse_qsl, urlunparse
 
