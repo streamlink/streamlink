@@ -4,7 +4,7 @@ set -eo pipefail
 
 [[ -n "${GITHUB_ACTIONS}" ]] || exit 1
 
-ROOT=$(realpath "$(dirname "$(readlink -f "${0}")")/..")
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$(readlink -f "${0}")")/..")
 
 DOCS_REPO=${DOCS_REPO:-streamlink/streamlink.github.io}
 DOCS_BRANCH=${DOCS_BRANCH:-master}
@@ -69,7 +69,7 @@ cp --archive "${SOURCE}/." "${DEST}/"
 echo Building a new file list in \'${DEST}\'
 ( cd "${SOURCE}"; find . -type f | sort | sed "s/^\\.\//${DEST}\//" > "${TEMP}/${DEST}/${FILELIST}" )
 
-if git diff-index --quiet HEAD --; then
+if [[ -z "$(git status --porcelain)" ]]; then
     echo No changes to be committed. Exiting...
     exit 0
 fi
