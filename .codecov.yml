@@ -16,28 +16,9 @@ coverage:
   status:
     changes: false
     patch: false
-    # split up coverage reports by path
-    # don't set coverage targets and instead set coverage thresholds
     project:
-      # we can't disable the overall default project, because only this will have PR check summaries / comments
-      # this replaces the PR comment
+      # the "default project" PR status check replaces the PR comment with the coverage change message
+      # set threshold to 100% and informational to true, so that the check always passes
       default:
-        target: 50
-      streamlink:
-        threshold: 1
-        paths:
-          - "src/streamlink/"
-          - "!src/streamlink/plugins/"
-      streamlink_cli:
-        threshold: 1
-        paths:
-          - "src/streamlink_cli/"
-      plugins:
-        # don't set a threshold on plugins
-        target: 30
-        paths:
-          - "src/streamlink/plugins/"
-      tests:
-        threshold: 1
-        paths:
-          - "tests/"
+        threshold: 100
+        informational: true
