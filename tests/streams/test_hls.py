@@ -164,6 +164,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
 
     def subject(self, *args, **kwargs):
         thread, _ = super(TestHlsPlaylistReloadTime, self).subject(*args, **kwargs)
+        self.await_read(read_all=True)
 
         return thread.reader.worker.playlist_reload_time
 

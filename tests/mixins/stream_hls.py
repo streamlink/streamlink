@@ -95,6 +95,7 @@ class HLSStreamReadThread(Thread):
         self.daemon = True
 
         self.read_wait = Event()
+        self.read_once = Event()
         self.read_done = Event()
         self.read_all = False
         self.data = []
@@ -104,11 +105,21 @@ class HLSStreamReadThread(Thread):
         self.stream = stream
         self.reader = stream.open()
 
+        # ensure that at least one read was attempted before closing the writer thread early
+        # otherwise, the writer will close the reader's buffer, making it not block on read and yielding empty results
+        def _await_read_then_close():
+            self.read_once.wait(timeout=5)
+            return self.writer_close()
+
+        self.writer_close = self.reader.writer.close
+        self.reader.writer.close = _await_read_then_close
+
     def run(self):
         while not self.reader.buffer.closed:
             # only read once per step
             self.read_wait.wait()
             self.read_wait.clear()
+            self.read_once.set()
 
             try:
                 # don't read again during teardown
