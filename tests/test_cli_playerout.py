@@ -1,6 +1,6 @@
 from streamlink_cli.output import PlayerOutput
 from tests import posix_only, windows_only
-from tests.mock import patch, ANY
+from unittest.mock import patch, ANY
 
 UNICODE_TITLE = u"기타치는소율 with UL섬 "
 

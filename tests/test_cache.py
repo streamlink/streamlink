@@ -1,14 +1,11 @@
-import sys
-import tempfile
-import os.path
-
 import datetime
+import os.path
+from shutil import rmtree
+import tempfile
+import unittest
+from unittest.mock import patch
 
 import streamlink.cache
-
-from shutil import rmtree
-import unittest
-from tests.mock import patch
 
 
 class TestCache(unittest.TestCase):

@@ -1,12 +1,12 @@
 import os
 import unittest
+from unittest.mock import patch, Mock
 
 from Crypto.Cipher import AES
 import pytest
 import requests_mock
 
 from tests.mixins.stream_hls import Playlist, Tag, Segment, TestMixinStreamHLS
-from tests.mock import patch, Mock
 from tests.resources import text
 
 from streamlink.session import Streamlink

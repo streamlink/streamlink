@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta
 import unittest
+from unittest.mock import MagicMock, call, patch
 
 import requests_mock
 
 from tests.mixins.stream_hls import Playlist, Tag, Segment as _Segment, TestMixinStreamHLS
-from tests.mock import MagicMock, call, patch
 
 from streamlink import Streamlink
 from streamlink.plugin import PluginError

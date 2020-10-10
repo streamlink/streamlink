@@ -1,7 +1,7 @@
-import requests
-
 import unittest
-from tests.mock import patch, PropertyMock
+from unittest.mock import patch, PropertyMock
+
+import requests
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api.http_session import HTTPSession

@@ -1,5 +1,5 @@
 import unittest
-from tests.mock import patch
+from unittest.mock import patch
 
 import streamlink.utils.l10n as l10n
 

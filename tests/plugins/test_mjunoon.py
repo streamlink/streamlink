@@ -1,8 +1,9 @@
 import unittest
+from unittest.mock import patch, Mock, ANY, call
+
 import requests_mock
 
 from streamlink import Streamlink
-from tests.mock import patch, Mock, ANY, call
 from streamlink.plugins.mjunoon import Mjunoon
 
 
