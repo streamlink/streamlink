@@ -6,8 +6,14 @@ from streamlink.plugins.tv3cat import TV3Cat
 class TestPluginTV3Cat(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
+            'http://ccma.cat/tv3/directe/tv3/',
+            'http://ccma.cat/tv3/directe/324/',
+            'https://ccma.cat/tv3/directe/tv3/',
+            'https://ccma.cat/tv3/directe/324/',
             'http://www.ccma.cat/tv3/directe/tv3/',
             'http://www.ccma.cat/tv3/directe/324/',
+            'https://www.ccma.cat/tv3/directe/tv3/',
+            'https://www.ccma.cat/tv3/directe/324/',
         ]
         for url in should_match:
             self.assertTrue(TV3Cat.can_handle_url(url))
