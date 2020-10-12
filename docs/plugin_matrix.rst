@@ -219,7 +219,7 @@ turkuvaz                - atv.com.tr         Yes   No    Streams may be geo-rest
                         - minikacocuk.com.tr
                         - minikago.com.tr
                         - sabah.com.tr
-tv3cat                  tv3.cat              Yes   Yes   Streams may be geo-restricted to Spain.
+tv3cat                  ccma.cat             Yes   Yes   Streams may be geo-restricted to Spain.
 tv4play                 - tv4play.se         Yes   Yes   Streams may be geo-restricted to Sweden.
                                                          Only non-premium streams currently supported.
                         - fotbollskanalen.se
