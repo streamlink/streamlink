@@ -691,8 +691,7 @@ def setup_console(output):
     global console
 
     # All console related operations is handled via the ConsoleOutput class
-    console = ConsoleOutput(output, streamlink)
-    console.json = args.json
+    console = ConsoleOutput(output, args.json)
 
     # Handle SIGTERM just like SIGINT
     signal.signal(signal.SIGTERM, signal.default_int_handler)
