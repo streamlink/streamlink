@@ -1,3 +1,4 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
@@ -5,6 +6,9 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 from streamlink.utils import parse_json
 from streamlink.utils.url import url_concat
+
+
+log = logging.getLogger(__name__)
 
 API_URL = "https://api.zdf.de"
 
@@ -96,7 +100,7 @@ class zdf_mediathek(Plugin):
 
     def _extract_streams(self, response):
         if "priorityList" not in response:
-            self.logger.error("Invalid response! Contains no priorityList!")
+            log.error("Invalid response! Contains no priorityList!")
 
         for priority in response["priorityList"]:
             for format_ in priority["formitaeten"]:
@@ -106,7 +110,7 @@ class zdf_mediathek(Plugin):
         try:
             return parser(self.session, track["uri"])
         except IOError as err:
-            self.logger.error("Failed to extract {0} streams: {1}", name, err)
+            log.error("Failed to extract {0} streams: {1}".format(name, err))
 
     def _extract_from_format(self, format_):
         qualities = {}

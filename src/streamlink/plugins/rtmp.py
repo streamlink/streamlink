@@ -1,8 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import parse_url_params
 from streamlink.stream import RTMPStream
+
+
+log = logging.getLogger(__name__)
 
 
 class RTMPPlugin(Plugin):
@@ -20,7 +24,7 @@ class RTMPPlugin(Plugin):
             if boolkey in params:
                 params[boolkey] = bool(params[boolkey])
 
-        self.logger.debug("params={0}", params)
+        log.debug("params={0}".format(params))
         return {"live": RTMPStream(self.session, params)}
 
 

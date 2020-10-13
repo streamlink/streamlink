@@ -1,8 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream, HLSStream
+
+
+log = logging.getLogger(__name__)
 
 API_URL = "https://www.zhanqi.tv/api/static/v2.1/room/domain/{0}.json"
 
@@ -40,11 +44,11 @@ class Zhanqitv(Plugin):
         res = self.session.http.get(API_URL.format(channel))
         room = self.session.http.json(res, schema=_room_schema)
         if not room:
-            self.logger.info("Not a valid room url.")
+            log.info("Not a valid room url.")
             return
 
         if room["status"] != STATUS_ONLINE:
-            self.logger.info("Stream currently unavailable.")
+            log.info("Stream currently unavailable.")
             return
 
         url = "http://wshdl.load.cdn.zhanqi.tv/zqlive/{room[videoId]}.flv?get_url=".format(room=room)

@@ -1,7 +1,7 @@
-import re
 import base64
-
 import binascii
+import logging
+import re
 
 from Crypto.Cipher import AES
 
@@ -10,6 +10,9 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
 from streamlink.utils.crypto import unpad_pkcs5
+
+
+log = logging.getLogger(__name__)
 
 
 class WebTV(Plugin):
@@ -58,7 +61,7 @@ class WebTV(Plugin):
         if len(sources):
             sdata = parse_json(sources[0], schema=self._sources_schema)
             for source in sdata:
-                self.logger.debug("Found stream of type: {}", source[u'type'])
+                log.debug("Found stream of type: {}".format(source[u'type']))
                 if source[u'type'] == u"application/vnd.apple.mpegurl":
                     url = update_scheme(self.url, source[u"src"])
 
@@ -72,7 +75,7 @@ class WebTV(Plugin):
                             # and if that fails, try it as a plain HLS stream
                             yield 'live', HLSStream(self.session, url, headers=headers)
                     except IOError:
-                        self.logger.warning("Could not open the stream, perhaps the channel is offline")
+                        log.warning("Could not open the stream, perhaps the channel is offline")
 
 
 __plugin__ = WebTV

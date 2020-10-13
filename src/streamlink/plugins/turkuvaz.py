@@ -1,9 +1,13 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class Turkuvaz(Plugin):
@@ -54,7 +58,7 @@ class Turkuvaz(Plugin):
 
         secure_hls_url = self.session.http.json(res, schema=self._token_schema)
 
-        self.logger.debug("Found HLS URL: {0}".format(secure_hls_url))
+        log.debug("Found HLS URL: {0}".format(secure_hls_url))
         return HLSStream.parse_variant_playlist(self.session, secure_hls_url)
 
 

@@ -1,3 +1,4 @@
+import logging
 import re
 import time
 
@@ -8,6 +9,9 @@ from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
+
+
+log = logging.getLogger(__name__)
 
 
 class ABweb(Plugin):
@@ -70,7 +74,7 @@ class ABweb(Plugin):
         self._session_attributes.set('expires', expires, expires=self.expires_time)
 
     def get_iframe_url(self):
-        self.logger.debug('search for an iframe')
+        log.debug('search for an iframe')
         res = self.session.http.get(self.url)
         m = self._iframe_re.search(res.text)
         if not m:
@@ -78,11 +82,11 @@ class ABweb(Plugin):
 
         iframe_url = m.group('url')
         iframe_url = update_scheme('http://', iframe_url)
-        self.logger.debug('IFRAME URL={0}'.format(iframe_url))
+        log.debug('IFRAME URL={0}'.format(iframe_url))
         return iframe_url
 
     def get_hls_url(self, iframe_url):
-        self.logger.debug('search for hls url')
+        log.debug('search for hls url')
         res = self.session.http.get(iframe_url)
         m = self._hls_re.search(res.text)
         if not m:
@@ -92,7 +96,7 @@ class ABweb(Plugin):
 
     def _login(self, username, password):
         '''login and update cached cookies'''
-        self.logger.debug('login ...')
+        log.debug('login ...')
 
         res = self.session.http.get(self.login_url)
         input_list = self._input_re.findall(res.text)
@@ -127,11 +131,11 @@ class ABweb(Plugin):
             self._session_attributes.set(cookie.name, cookie.value, expires=3600 * 24)
 
         if self._session_attributes.get('ASP.NET_SessionId') and self._session_attributes.get('.abportail1'):
-            self.logger.debug('New session data')
+            log.debug('New session data')
             self.set_expires_time_cache()
             return True
         else:
-            self.logger.error('Failed to login, check your username/password')
+            log.error('Failed to login, check your username/password')
             return False
 
     def _get_streams(self):
@@ -147,20 +151,20 @@ class ABweb(Plugin):
             self._session_attributes.set('ASP.NET_SessionId', None, expires=0)
             self._session_attributes.set('.abportail1', None, expires=0)
             self._authed = False
-            self.logger.info('All credentials were successfully removed.')
+            log.info('All credentials were successfully removed.')
 
         if not self._authed and not (login_username and login_password):
-            self.logger.error('A login for ABweb is required, use --abweb-username USERNAME --abweb-password PASSWORD')
+            log.error('A login for ABweb is required, use --abweb-username USERNAME --abweb-password PASSWORD')
             return
 
         if self._authed:
             if self._expires < time.time():
-                self.logger.debug('get new cached cookies')
+                log.debug('get new cached cookies')
                 # login after 24h
                 self.set_expires_time_cache()
                 self._authed = False
             else:
-                self.logger.info('Attempting to authenticate using cached cookies')
+                log.info('Attempting to authenticate using cached cookies')
                 self.session.http.cookies.set('ASP.NET_SessionId', self._session_attributes.get('ASP.NET_SessionId'))
                 self.session.http.cookies.set('.abportail1', self._session_attributes.get('.abportail1'))
 
@@ -173,7 +177,7 @@ class ABweb(Plugin):
         hls_url = self.get_hls_url(iframe_url)
         hls_url = update_scheme(self.url, hls_url)
 
-        self.logger.debug('URL={0}'.format(hls_url))
+        log.debug('URL={0}'.format(hls_url))
         variant = HLSStream.parse_variant_playlist(self.session, hls_url)
         if variant:
             for q, s in variant.items():

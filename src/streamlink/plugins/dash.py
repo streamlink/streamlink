@@ -53,7 +53,7 @@ class MPEGDASH(Plugin):
     def _get_streams(self):
         mpdurl = self._url_re.match(self.url).group(2)
 
-        self.logger.debug("Parsing MPD URL: {0}".format(mpdurl))
+        log.debug("Parsing MPD URL: {0}".format(mpdurl))
 
         return DASHStream.parse_manifest(self.session, mpdurl)
 

@@ -45,7 +45,7 @@ class GoodGame(Plugin):
         match = _apidata_re.search(res.text)
         channel_info = match and parse_json(match.group("data"))
         if not channel_info:
-            self.logger.error("Could not find channel info")
+            log.error("Could not find channel info")
             return
 
         log.debug("Found channel info: id={id} channelkey={channelkey} pid={streamkey} online={status}".format(**channel_info))

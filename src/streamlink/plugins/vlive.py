@@ -1,8 +1,12 @@
-import re
 import json
+import logging
+import re
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class Vlive(Plugin):
@@ -45,7 +49,7 @@ class Vlive(Plugin):
         for i in stream_info['resolutions']:
             res_streams = HLSStream.parse_variant_playlist(self.session, i['cdnUrl'])
             if len(res_streams.values()) > 1:
-                self.logger.warning('More than one stream in variant playlist, using first entry!')
+                log.warning('More than one stream in variant playlist, using first entry!')
 
             streams[i['name']] = res_streams.popitem()[1]
 
