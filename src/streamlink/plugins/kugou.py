@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 class Kugou(Plugin):
-    _url_re = re.compile(r"""https?://fanxing.kugou.com/(?P<room_id>\d+)""")
+    _url_re = re.compile(r"""https?://fanxing\.kugou\.com/(?P<room_id>\d+)""")
     _roomid_re = re.compile(r"roomId:\s*'(\d+)'")
     _room_stream_list_schema = validate.Schema(
         {

@@ -41,9 +41,8 @@ Option                              Used by these plugins
 =================================== ============================================
 :option:`--hls-segment-threads`     `twitch`, `youtube` and many more.
 :option:`--hds-segment-threads`     `dailymotion` and many more.
-:option:`--stream-segment-threads`  `ustreamtv`, `beattv` and any other plugins
-                                    implementing their own segmented streaming
-                                    protocol.
+:option:`--stream-segment-threads`  `ustreamtv` and any other plugins implementing
+                                    their own segmented streaming protocol.
 =================================== ============================================
 
 .. note::

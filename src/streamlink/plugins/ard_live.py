@@ -1,56 +1,82 @@
+import logging
 import re
 
+from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HDSStream
-from streamlink.compat import urljoin
-from streamlink.stream import HTTPStream
+from streamlink.stream import HLSStream, HTTPStream
+from streamlink.utils import parse_json, verifyjson
+
+log = logging.getLogger(__name__)
 
 
 class ard_live(Plugin):
-    swf_url = "http://live.daserste.de/lib/br-player/swf/main.swf"
-    _url_re = re.compile(r"https?://(www.)?daserste.de/", re.I)
-    _player_re = re.compile(r'''dataURL\s*:\s*(?P<q>['"])(?P<url>.*?)(?P=q)''')
+    _url_re = re.compile(r"https?://((www|live)\.)?daserste\.de/")
+    _player_re = re.compile(r'''data-ctrl-player\s*=\s*"(?P<jsondata>.*?)"''')
     _player_url_schema = validate.Schema(
         validate.transform(_player_re.search),
-        validate.any(
-            None,
-            validate.all(validate.get("url"), validate.text)
-        )
+        validate.any(None, validate.all(
+            validate.get("jsondata"),
+            validate.text,
+            validate.transform(lambda v: parse_json(v.replace("'", '"'))),
+            validate.transform(lambda v: verifyjson(v, "url")),
+        ))
     )
-    _livestream_schema = validate.Schema(
-        validate.xml_findall(".//assets"),
-        validate.filter(lambda x: x.attrib.get("type") != "subtitles"),
-        validate.get(0),
-        validate.xml_findall(".//asset"),
-        [validate.union({
-            "url": validate.xml_findtext("./fileName"),
-            "bitrate": validate.xml_findtext("./bitrateVideo")
-        })])
+    _mediainfo_schema = validate.Schema({
+        "mc": {
+            validate.optional("_title"): validate.text,
+            validate.optional("_isLive"): bool,
+            validate.optional("_geoblocked"): bool,
+            "_mediaArray": [{
+                "_mediaStreamArray": [{
+                    "_quality": validate.any(validate.text, int),
+                    "_stream": validate.any(validate.text, [validate.text]),
+                }]
+            }],
+        },
+    }, validate.get("mc"))
+    _QUALITY_MAP = {
+        "auto": "auto",
+        4: "1080p",
+        3: "720p",
+        2: "544p",
+        1: "288p",
+        0: "144p"
+    }
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        data_url = self.session.http.get(self.url, schema=self._player_url_schema)
-        if data_url:
-            res = self.session.http.get(urljoin(self.url, data_url))
-            stream_info = self.session.http.xml(res, schema=self._livestream_schema)
+        res = self.session.http.get(self.url)
+        data_url = self._player_url_schema.validate(res.text)
+        if not data_url:
+            log.error("Could not find video at this url.")
+            return
 
-            for stream in stream_info:
-                url = stream["url"]
-                try:
-                    if ".m3u8" in url:
-                        for s in HLSStream.parse_variant_playlist(self.session, url, name_key="bitrate").items():
-                            yield s
-                    elif ".f4m" in url:
-                        for s in HDSStream.parse_manifest(self.session, url, pvswf=self.swf_url, is_akamai=True).items():
-                            yield s
-                    elif ".mp4" in url:
-                        yield "{0}k".format(stream["bitrate"]), HTTPStream(self.session, url)
-                except IOError as err:
-                    self.logger.warning("Error parsing stream: {0}", err)
+        data_url = urljoin(res.url, data_url)
+        log.debug("Player URL: '{0}'", data_url)
+        res = self.session.http.get(data_url)
+        mediainfo = parse_json(res.text, name="MEDIAINFO", schema=self._mediainfo_schema)
+        log.trace("Mediainfo: {0!r}".format(mediainfo))
+
+        for media in mediainfo["_mediaArray"]:
+            for stream in media["_mediaStreamArray"]:
+                stream_ = stream["_stream"]
+                if isinstance(stream_, list):
+                    if not stream_:
+                        continue
+                    stream_ = stream_[0]
+
+                if ".m3u8" in stream_:
+                    for s in HLSStream.parse_variant_playlist(self.session, stream_).items():
+                        yield s
+                elif (".mp4" in stream_ and ".f4m" not in stream_):
+                    yield "{0}".format(self._QUALITY_MAP[stream["_quality"]]), HTTPStream(self.session, stream_)
+                else:
+                    if ".f4m" not in stream_:
+                        log.error("Unexpected stream type: '{0}'".format(stream_))
 
 
 __plugin__ = ard_live

@@ -1,92 +1,148 @@
+import logging
 import re
 
-from streamlink.plugin import Plugin
-from streamlink.plugin.api import StreamMapper, validate
-from streamlink.stream import HLSStream, HDSStream
+from streamlink.compat import urljoin
+from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin.api import validate
+from streamlink.stream import DASHStream, HTTPStream
+from streamlink.stream.ffmpegmux import MuxedStream
 
-API_URL = "http://www.svt.se/videoplayer-api/video/{0}"
-
-_url_re = re.compile(r"""
-    http(s)?://
-    (www\.)?
-    (?:
-        svtplay |
-        svtflow |
-        oppetarkiv
-    )
-    .se
-""", re.VERBOSE)
-
-# Regex to match video ID
-_id_re = re.compile(r"""data-video-id=['"](?P<id>[^'"]+)['"]""")
-_old_id_re = re.compile(r"/(?:video|klipp)/(?P<id>[0-9]+)/")
-
-# New video schema used with API call
-_video_schema = validate.Schema(
-    {
-        "videoReferences": validate.all(
-            [{
-                "url": validate.text,
-                "format": validate.text
-            }],
-        ),
-    },
-    validate.get("videoReferences")
-)
-
-# Old video schema
-_old_video_schema = validate.Schema(
-    {
-        "video": {
-            "videoReferences": validate.all(
-                [{
-                    "url": validate.text,
-                    "playerType": validate.text
-                }],
-            ),
-        }
-    },
-    validate.get("video"),
-    validate.get("videoReferences")
-)
+log = logging.getLogger(__name__)
 
 
 class SVTPlay(Plugin):
-    @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
+    api_url = 'https://api.svt.se/videoplayer-api/video/{0}'
 
-    def _create_streams(self, stream_type, parser, video):
-        try:
-            streams = parser(self.session, video["url"])
-            return streams.items()
-        except IOError as err:
-            self.logger.error("Failed to extract {0} streams: {1}",
-                              stream_type, err)
+    author = None
+    category = None
+    title = None
+
+    url_re = re.compile(r'''
+        https?://(?:www\.)?(?:svtplay|oppetarkiv)\.se
+        (/(kanaler/)?.*)
+    ''', re.VERBOSE)
+
+    latest_episode_url_re = re.compile(r'''
+        class="play_titlepage__latest-video"\s+href="(?P<url>[^"]+)"
+    ''', re.VERBOSE)
+
+    live_id_re = re.compile(r'.*/(?P<live_id>[^?]+)')
+
+    vod_id_re = re.compile(r'''
+        (?:DATA_LAKE\s+=\s+{"content":{"id":|"svtId":|data-video-id=)
+        "(?P<vod_id>[^"]+)"
+    ''', re.VERBOSE)
+
+    _video_schema = validate.Schema({
+        validate.optional('programTitle'): validate.text,
+        validate.optional('episodeTitle'): validate.text,
+        'videoReferences': [{
+            'url': validate.url(),
+            'format': validate.text,
+        }],
+        validate.optional('subtitleReferences'): [{
+            'url': validate.url(),
+            'format': validate.text,
+        }],
+    })
+
+    arguments = PluginArguments(
+        PluginArgument(
+            'mux-subtitles',
+            action='store_true',
+            help="Automatically mux available subtitles in to the output stream.",
+        ),
+    )
+
+    @classmethod
+    def can_handle_url(cls, url):
+        return cls.url_re.match(url) is not None
+
+    def get_author(self):
+        if self.author is not None:
+            return self.author
+
+    def get_category(self):
+        if self.category is not None:
+            return self.category
+
+    def get_title(self):
+        if self.title is not None:
+            return self.title
+
+    def _set_metadata(self, data, category):
+        if 'programTitle' in data:
+            self.author = data['programTitle']
+
+        self.category = category
+
+        if 'episodeTitle' in data:
+            self.title = data['episodeTitle']
+
+    def _get_live(self, path):
+        match = self.live_id_re.search(path)
+        if match is None:
+            return
+
+        live_id = "ch-{0}".format(match.group('live_id'))
+        log.debug("Live ID={0}".format(live_id))
+
+        res = self.session.http.get(self.api_url.format(live_id))
+        api_data = self.session.http.json(res, schema=self._video_schema)
+
+        self._set_metadata(api_data, 'Live')
+
+        for playlist in api_data['videoReferences']:
+            if playlist['format'] == 'dashhbbtv':
+                for s in DASHStream.parse_manifest(self.session, playlist['url']).items():
+                    yield s
+
+    def _get_vod(self):
+        res = self.session.http.get(self.url)
+        match = self.latest_episode_url_re.search(res.text)
+        if match:
+            res = self.session.http.get(
+                urljoin(self.url, match.group('url')),
+            )
+
+        match = self.vod_id_re.search(res.text)
+        if match is None:
+            return
+
+        vod_id = match.group('vod_id')
+        log.debug("VOD ID={0}".format(vod_id))
+
+        res = self.session.http.get(self.api_url.format(vod_id))
+        api_data = self.session.http.json(res, schema=self._video_schema)
+
+        self._set_metadata(api_data, 'VOD')
+
+        substreams = {}
+        if 'subtitleReferences' in api_data:
+            for subtitle in api_data['subtitleReferences']:
+                if subtitle['format'] == 'webvtt':
+                    log.debug("Subtitle={0}".format(subtitle['url']))
+                    substreams[subtitle['format']] = HTTPStream(
+                        self.session,
+                        subtitle['url'],
+                    )
+
+        for manifest in api_data['videoReferences']:
+            if manifest['format'] == 'dashhbbtv':
+                for q, s in DASHStream.parse_manifest(self.session, manifest['url']).items():
+                    if self.get_option('mux_subtitles') and substreams:
+                        yield q, MuxedStream(self.session, s, subtitles=substreams)
+                    else:
+                        yield q, s
 
     def _get_streams(self):
-        # Retrieve URL page and search for new type of video ID
-        res = self.session.http.get(self.url)
-        match = _id_re.search(res.text)
+        path, live = self.url_re.match(self.url).groups()
+        log.debug("Path={0}".format(path))
 
-        # Use API if match, otherwise resort to old method
-        if match:
-            vid = match.group("id")
-            res = self.session.http.get(API_URL.format(vid))
-
-            videos = self.session.http.json(res, schema=_video_schema)
-            mapper = StreamMapper(cmp=lambda format, video: video["format"] == format)
-            mapper.map("hls", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
-            mapper.map("hds", self._create_streams, "HDS", HDSStream.parse_manifest)
+        if live:
+            return self._get_live(path)
         else:
-            res = self.session.http.get(self.url, params=dict(output="json"))
-            videos = self.session.http.json(res, schema=_old_video_schema)
-
-            mapper = StreamMapper(cmp=lambda type, video: video["playerType"] == type)
-            mapper.map("ios", self._create_streams, "HLS", HLSStream.parse_variant_playlist)
-            mapper.map("flash", self._create_streams, "HDS", HDSStream.parse_manifest)
-
-        return mapper(videos)
+            return self._get_vod()
 
 
 __plugin__ = SVTPlay

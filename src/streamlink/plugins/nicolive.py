@@ -54,6 +54,8 @@ class NicoLive(Plugin):
     stream_reader = None
     _ws = None
 
+    frontend_id = None
+
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url) is not None
@@ -106,22 +108,26 @@ class NicoLive(Plugin):
         try:
             self.wss_api_url = extract_text(
                 resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
+            if not self.wss_api_url:
+                return False
         except Exception as e:
             _log.debug(e)
             _log.debug("Failed to extract wss api url")
             return False
 
         try:
-            self.broadcast_id = extract_text(
-                resp.text, "&quot;broadcastId&quot;:&quot;", "&quot;")
+            self.frontend_id = extract_text(
+                resp.text, "&quot;frontendId&quot;:", ",&quot;")
         except Exception as e:
             _log.debug(e)
-            _log.warning("Failed to extract broadcast id")
+            _log.warning("Failed to extract frontend id")
+
+        self.wss_api_url = "{0}&frontend_id={1}".format(self.wss_api_url, self.frontend_id)
 
         _log.debug("Video page response code: {0}".format(resp.status_code))
         _log.trace(u"Video page response body: {0}".format(resp.text))
         _log.debug("Got wss_api_url: {0}".format(self.wss_api_url))
-        _log.debug("Got broadcast_id: {0}".format(self.broadcast_id))
+        _log.debug("Got frontend_id: {0}".format(self.frontend_id))
 
         return self.wss_api_url.startswith("wss://")
 
@@ -172,33 +178,50 @@ class NicoLive(Plugin):
         else:
             _log.warning("wss api is not connected.")
 
+    def send_no_body_message(self, type_):
+        msg = {"type": type_}
+        msg_json = json.dumps(msg)
+        _log.debug(u"Sending: {0}".format(msg_json))
+        if self._ws and self._ws.sock.connected:
+            self._ws.send(msg_json)
+        else:
+            _log.warning("wss api is not connected.")
+
+    def send_custom_message(self, msg):
+        msg_json = json.dumps(msg)
+        _log.debug(u"Sending: {0}".format(msg_json))
+        if self._ws and self._ws.sock.connected:
+            self._ws.send(msg_json)
+        else:
+            _log.warning("wss api is not connected.")
+
     def send_playerversion(self):
         body = {
-            "command": "playerversion",
-            "params": ["leo"]
+            "type": "startWatching",
+            "data": {
+                "stream": {
+                    "quality": "abr",
+                    "protocol": "hls",
+                    "latency": "high",
+                    "chasePlay": False
+                },
+                "room": {
+                    "protocol": "webSocket",
+                    "commentable": True
+                },
+                "reconnect": False
+            }
         }
-        self.send_message("watch", body)
+        self.send_custom_message(body)
 
     def send_getpermit(self, require_new_stream=True):
         body = {
-            "command": "getpermit",
-            "requirement": {
-                "broadcastId": self.broadcast_id,
-                "route": "",
-                "stream": {
-                    "protocol": "hls",
-                    "requireNewStream": require_new_stream,
-                    "priorStreamQuality": "abr",
-                    "isLowLatency": True,
-                    "isChasePlay": False
-                },
-                "room": {
-                    "isCommentable": True,
-                    "protocol": "webSocket"
-                }
+            "type": "getAkashic",
+            "data": {
+                "chasePlay": False
             }
         }
-        self.send_message("watch", body)
+        self.send_custom_message(body)
 
     def send_watching(self):
         body = {
@@ -208,11 +231,17 @@ class NicoLive(Plugin):
         self.send_message("watch", body)
 
     def send_pong(self):
-        self.send_message("pong", {})
+        self.send_no_body_message("pong")
+        self.send_no_body_message("keepSeat")
 
     def handle_api_message(self, message):
         _log.debug(u"Received: {0}".format(message))
         message_parsed = json.loads(message)
+
+        if message_parsed["type"] == "stream":
+            data = message_parsed["data"]
+            self.hls_stream_url = data["uri"]
+            self.is_stream_ready = True
 
         if message_parsed["type"] == "watch":
             body = message_parsed["body"]

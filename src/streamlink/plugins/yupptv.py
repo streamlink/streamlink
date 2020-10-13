@@ -1,7 +1,8 @@
+import argparse
 import logging
 import re
+import time
 
-from streamlink import PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
@@ -11,62 +12,94 @@ log = logging.getLogger(__name__)
 
 
 class YuppTV(Plugin):
-    _url_re = re.compile(r"""https?://(?:www\.)?yupptv\.com""", re.VERBOSE)
+    _url_re = re.compile(r'https?://(?:www\.)?yupptv\.com')
     _m3u8_re = re.compile(r'''['"](http.+\.m3u8.*?)['"]''')
-    _login_url = "https://www.yupptv.com/auth/validateSignin"
-    _box_logout = "https://www.yupptv.com/auth/confirmLogout"
-    _signin_url = "https://www.yupptv.com/signin/"
-    _account_url = "https://www.yupptv.com/account/myaccount.aspx"
+    _cookie_expiry = 3600 * 24 * 365
 
     arguments = PluginArguments(
+        PluginArgument("email", help=argparse.SUPPRESS),
+        PluginArgument("password", help=argparse.SUPPRESS),
         PluginArgument(
-            "email",
-            requires=["password"],
-            metavar="EMAIL",
-            help="Your YuppTV account email"
-        ),
-        PluginArgument(
-            "password",
+            "boxid",
+            requires=["yuppflixtoken"],
             sensitive=True,
-            metavar="PASSWORD",
-            help="Your YuppTV account password."
-        )
+            metavar="BOXID",
+            help="""
+        The yupptv.com boxid that's used in the BoxId cookie.
+        Can be used instead of the username/password login process.
+        """),
+        PluginArgument(
+            "yuppflixtoken",
+            sensitive=True,
+            metavar="YUPPFLIXTOKEN",
+            help="""
+        The yupptv.com yuppflixtoken that's used in the YuppflixToken cookie.
+        Can be used instead of the username/password login process.
+        """),
+        PluginArgument(
+            "purge-credentials",
+            action="store_true",
+            help="""
+        Purge cached YuppTV credentials to initiate a new session
+        and reauthenticate.
+        """),
     )
+
+    def __init__(self, url):
+        super(YuppTV, self).__init__(url)
+        self._authed = (self.session.http.cookies.get("BoxId")
+                        and self.session.http.cookies.get("YuppflixToken"))
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
 
-    def login(self, username, password, depth=3):
-        if depth == 0:
-            log.error("Failed to login to YuppTV")
-            raise PluginError("cannot login")
+    def _login_using_box_id_and_yuppflix_token(self, box_id, yuppflix_token):
+        time_now = time.time()
 
-        res = self.session.http.post(
-            self._login_url,
-            data=dict(user=username, password=password, isMobile=0),
-            headers={"Referer": self._signin_url}
+        self.session.http.cookies.set(
+            'BoxId',
+            box_id,
+            domain='www.yupptv.com',
+            path='/',
+            expires=time_now + self._cookie_expiry,
         )
-        data = self.session.http.json(res)
-        resp = data['Response']
-        if resp["tempBoxid"]:
-            # log out on other device
-            log.info("Logging out on other device: {0}".format(resp["tempBoxid"]))
-            _ = self.session.http.get(self._box_logout, params=dict(boxId=resp["tempBoxid"]))
-            return self.login(username, password, depth - 1)
-        return resp['errorCode'], resp['statusmsg']
+        self.session.http.cookies.set(
+            'YuppflixToken',
+            yuppflix_token,
+            domain='www.yupptv.com',
+            path='/',
+            expires=time_now + self._cookie_expiry,
+        )
+
+        self.save_cookies()
+        log.info("Successfully set BoxId and YuppflixToken")
 
     def _get_streams(self):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
 
-        if self.get_option("email") and self.get_option("password"):
-            error_code, error_msg = self.login(self.get_option("email"), self.get_option("password"))
-            if error_code is None:
-                log.info("Logged in as {0}".format(self.get_option("email")))
-            else:
-                log.error("Failed to login: {1} (code: {0})".format(error_code, error_msg))
+        login_box_id = self.get_option("boxid")
+        login_yuppflix_token = self.get_option("yuppflixtoken")
+
+        if self.options.get("purge_credentials"):
+            self.clear_cookies()
+            self._authed = False
+            log.info("All credentials were successfully removed")
+
+        if self._authed:
+            log.debug("Attempting to authenticate using cached cookies")
+        elif not self._authed and login_box_id and login_yuppflix_token:
+            self._login_using_box_id_and_yuppflix_token(
+                login_box_id,
+                login_yuppflix_token,
+            )
+            self._authed = True
 
         page = self.session.http.get(self.url)
+        if self._authed and "btnsignup" in page.text:
+            log.error("This device requires renewed credentials to log in")
+            return
+
         match = self._m3u8_re.search(page.text)
         if match:
             stream_url = match.group(1)

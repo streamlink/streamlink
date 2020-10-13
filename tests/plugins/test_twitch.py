@@ -1,17 +1,48 @@
-import logging
+from datetime import datetime, timedelta
 import unittest
-from functools import partial
-
-from streamlink.plugins.twitch import Twitch, TwitchHLSStream
 
 import requests_mock
+
+from tests.mixins.stream_hls import Playlist, Tag, Segment as _Segment, TestMixinStreamHLS
 from tests.mock import MagicMock, call, patch
 
-from streamlink.session import Streamlink
-from tests.resources import text
+from streamlink import Streamlink
+from streamlink.plugin import PluginError
+from streamlink.plugins.twitch import Twitch, TwitchHLSStream
 
 
-log = logging.getLogger(__name__)
+DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0)
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
+
+
+class TagDateRangeAd(Tag):
+    def __init__(self, start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="twitch-stitched-ad", custom=None):
+        attrs = {
+            "ID": self.val_quoted_string(id),
+            "CLASS": self.val_quoted_string(classname),
+            "START-DATE": self.val_quoted_string(start.strftime(DATETIME_FORMAT)),
+            "DURATION": duration
+        }
+        if custom is not None:
+            attrs.update(**{key: self.val_quoted_string(value) for (key, value) in custom.items()})
+        super(TagDateRangeAd, self).__init__("EXT-X-DATERANGE", attrs)
+
+
+class Segment(_Segment):
+    def __init__(self, num, title="live", *args, **kwargs):
+        super(Segment, self).__init__(num, title, *args, **kwargs)
+        self.date = DATETIME_BASE + timedelta(seconds=num)
+
+    def build(self, namespace):
+        return "#EXT-X-PROGRAM-DATE-TIME:{0}\n{1}".format(
+            self.date.strftime(DATETIME_FORMAT),
+            super(Segment, self).build(namespace)
+        )
+
+
+class SegmentPrefetch(Segment):
+    def build(self, namespace):
+        return "#EXT-X-TWITCH-PREFETCH:{0}".format(self.url(namespace))
 
 
 class TestPluginTwitch(unittest.TestCase):
@@ -35,171 +66,403 @@ class TestPluginTwitch(unittest.TestCase):
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
-class TestTwitchHLSStream(unittest.TestCase):
-    url_master = "http://mocked/path/master.m3u8"
-    url_playlist = "http://mocked/path/playlist.m3u8"
-    url_segment = "http://mocked/path/stream{0}.ts"
+class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
+    __stream__ = TwitchHLSStream
 
-    segment = "#EXTINF:1.000,\nstream{0}.ts\n"
-    segment_ad = "#EXTINF:1.000,Amazon|123456789\nstream{0}.ts\n"
-    prefetch = "#EXT-X-TWITCH-PREFETCH:{0}\n"
+    def get_session(self, options=None, disable_ads=False, low_latency=False):
+        session = super(TestTwitchHLSStream, self).get_session(options)
+        session.set_option("hls-live-edge", 4)
+        session.set_plugin_option("twitch", "disable-ads", disable_ads)
+        session.set_plugin_option("twitch", "low-latency", low_latency)
 
-    def getMasterPlaylist(self):
-        with text("hls/test_master.m3u8") as pl:
-            return pl.read()
+        return session
 
-    def getPlaylist(self, media_sequence, items, ads=False, prefetch=None):
-        playlist = """
-#EXTM3U
-#EXT-X-VERSION:5
-#EXT-X-TARGETDURATION:1
-#EXT-X-MEDIA-SEQUENCE:{0}
-""".format(media_sequence)
+    def test_hls_disable_ads_daterange_unknown(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="bar", custom=None)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
 
-        segment = self.segment if not ads else self.segment_ad
-        for item in items:
-            playlist += segment.format(item)
-        for item in prefetch or []:
-            playlist += self.prefetch.format(self.url_segment.format(item))
+        self.assertEqual(self.await_read(read_all=True), self.content(segments), "Doesn't filter out segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
-        return playlist
+    def test_hls_disable_ads_daterange_by_class(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="twitch-stitched-ad", custom=None)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
 
-    def start_streamlink(self, disable_ads=False, low_latency=False, kwargs=None):
-        kwargs = kwargs or {}
-        log.info("Executing streamlink")
-        streamlink = Streamlink()
+        self.assertEqual(self.await_read(read_all=True), segments[1].content, "Filters out ad segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
-        streamlink.set_option("hls-live-edge", 4)
-        streamlink.set_plugin_option("twitch", "disable-ads", disable_ads)
-        streamlink.set_plugin_option("twitch", "low-latency", low_latency)
+    def test_hls_disable_ads_daterange_by_id(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="stitched-ad-1234", classname="/", custom=None)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
 
-        masterStream = TwitchHLSStream.parse_variant_playlist(streamlink, self.url_master, **kwargs)
-        stream = masterStream["1080p (source)"].open()
-        data = b"".join(iter(partial(stream.read, 8192), b""))
-        stream.close()
-        log.info("End of streamlink execution")
-        return streamlink, data
+        self.assertEqual(self.await_read(read_all=True), segments[1].content, "Filters out ad segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
-    def mock(self, mocked, method, url, *args, **kwargs):
-        mocked[url] = method(url, *args, **kwargs)
+    def test_hls_disable_ads_daterange_by_attr(self):
+        daterange = TagDateRangeAd(start=DATETIME_BASE, duration=1, id="foo", classname="/", custom={"X-TV-TWITCH-AD-URL": "/"})
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)], end=True)
+        ], disable_ads=True, low_latency=False)
 
-    def get_result(self, streams, playlists, **kwargs):
-        mocked = {}
-        with requests_mock.Mocker() as mock:
-            self.mock(mocked, mock.get, self.url_master, text=self.getMasterPlaylist())
-            self.mock(mocked, mock.get, self.url_playlist, [{"text": p} for p in playlists])
-            for i, stream in enumerate(streams):
-                self.mock(mocked, mock.get, self.url_segment.format(i), content=stream)
-            streamlink, data = self.start_streamlink(**kwargs)
-            return streamlink, data, mocked
+        self.assertEqual(self.await_read(read_all=True), segments[1].content, "Filters out ad segments")
+        self.assertTrue(all(self.called(s) for s in segments.values()), "Downloads all segments")
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_disable_ads_preroll(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(6)]
-        playlists = [
-            self.getPlaylist(0, [0, 1], ads=True),
-            self.getPlaylist(2, [2, 3], ads=True),
-            self.getPlaylist(4, [4, 5]) + "#EXT-X-ENDLIST\n"
-        ]
-        streamlink, result, mocked = self.get_result(streams, playlists, disable_ads=True)
+    def test_hls_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)]),
+            Playlist(2, [daterange, Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5)], end=True)
+        ], disable_ads=True, low_latency=False)
 
-        self.assertEqual(result, b''.join(streams[4:6]))
-        for i in range(0, 6):
-            self.assertTrue(mocked[self.url_segment.format(i)].called, i)
-        mock_logging.info.assert_has_calls([
+        self.assertEqual(
+            self.await_read(read_all=True),
+            self.content(segments, cond=lambda s: s.num >= 4),
+            "Filters out preroll ad segments"
+        )
+        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertEqual(mock_log.info.mock_calls, [
             call("Will skip ad segments"),
             call("Waiting for pre-roll ads to finish, be patient")
         ])
-        self.assertEqual(mock_logging.info.call_count, 2)
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_disable_ads_no_preroll(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(6)]
-        playlists = [
-            self.getPlaylist(0, [0, 1]),
-            self.getPlaylist(2, [2, 3], ads=True),
-            self.getPlaylist(4, [4, 5]) + "#EXT-X-ENDLIST\n"
-        ]
-        streamlink, result, mocked = self.get_result(streams, playlists, disable_ads=True)
+    def test_hls_disable_ads_has_midstream(self, mock_log):
+        daterange = TagDateRangeAd(start=DATETIME_BASE + timedelta(seconds=2), duration=2)
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1)]),
+            Playlist(2, [daterange, Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5)], end=True)
+        ], disable_ads=True, low_latency=False)
 
-        self.assertEqual(result, b''.join(streams[0:2]) + b''.join(streams[4:6]))
-        for i in range(0, 6):
-            self.assertTrue(mocked[self.url_segment.format(i)].called, i)
-        mock_logging.info.assert_has_calls([
+        self.assertEqual(
+            self.await_read(read_all=True),
+            self.content(segments, cond=lambda s: s.num != 2 and s.num != 3),
+            "Filters out mid-stream ad segments"
+        )
+        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertEqual(mock_log.info.mock_calls, [
             call("Will skip ad segments")
         ])
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_no_disable_ads(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(4)]
-        playlists = [
-            self.getPlaylist(0, [0, 1], ads=True),
-            self.getPlaylist(2, [2, 3]) + "#EXT-X-ENDLIST\n"
-        ]
-        streamlink, result, mocked = self.get_result(streams, playlists, disable_ads=False)
+    def test_hls_no_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=2)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1)]),
+            Playlist(2, [Segment(2), Segment(3)], end=True)
+        ], disable_ads=False, low_latency=False)
 
-        self.assertEqual(result, b''.join(streams[0:4]))
-        for i in range(0, 4):
-            self.assertTrue(mocked[self.url_segment.format(i)].called, i)
-        mock_logging.info.assert_has_calls([])
+        self.assertEqual(
+            self.await_read(read_all=True),
+            self.content(segments),
+            "Doesn't filter out segments"
+        )
+        self.assertTrue(all([self.called(s) for s in segments.values()]), "Downloads all segments")
+        self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything")
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_prefetch(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
-        playlists = [
-            self.getPlaylist(0, [0, 1, 2, 3], prefetch=[4, 5]),
-            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9]) + "#EXT-X-ENDLIST\n"
-        ]
-        streamlink, result, mocked = self.get_result(streams, playlists, low_latency=True)
+    def test_hls_low_latency_has_prefetch(self, mock_log):
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3), SegmentPrefetch(4), SegmentPrefetch(5)]),
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+        ], disable_ads=False, low_latency=True)
 
-        self.assertEqual(2, streamlink.options.get("hls-live-edge"))
-        self.assertEqual(True, streamlink.options.get("hls-segment-stream-data"))
+        self.assertEqual(2, self.session.options.get("hls-live-edge"))
+        self.assertEqual(True, self.session.options.get("hls-segment-stream-data"))
 
-        expected = b''.join(streams[4:10])
-        self.assertEqual(expected, result)
-        for i in range(0, 3):
-            self.assertFalse(mocked[self.url_segment.format(i)].called, i)
-        for i in range(4, 9):
-            self.assertTrue(mocked[self.url_segment.format(i)].called, i)
-        mock_logging.info.assert_has_calls([
+        self.assertEqual(
+            self.await_read(read_all=True),
+            self.content(segments, cond=lambda s: s.num >= 4),
+            "Skips first four segments due to reduced live-edge"
+        )
+        self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 4]), "Doesn't download old segments")
+        self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 4]), "Downloads all remaining segments")
+        self.assertEqual(mock_log.info.mock_calls, [
             call("Low latency streaming (HLS live edge: 2)")
         ])
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_prefetch_no_low_latency(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
-        playlists = [
-            self.getPlaylist(0, [0, 1, 2, 3], prefetch=[4, 5]),
-            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[8, 9]) + "#EXT-X-ENDLIST\n"
-        ]
-        streamlink, result, mocked = self.get_result(streams, playlists)
+    def test_hls_no_low_latency_has_prefetch(self, mock_log):
+        thread, segments = self.subject([
+            Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3), SegmentPrefetch(4), SegmentPrefetch(5)]),
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+        ], disable_ads=False, low_latency=False)
 
-        self.assertEqual(4, streamlink.options.get("hls-live-edge"))
-        self.assertEqual(False, streamlink.options.get("hls-segment-stream-data"))
+        self.assertEqual(4, self.session.options.get("hls-live-edge"))
+        self.assertEqual(False, self.session.options.get("hls-segment-stream-data"))
 
-        expected = b''.join(streams[0:8])
-        self.assertEqual(expected, result)
-        for i in range(0, 7):
-            self.assertTrue(mocked[self.url_segment.format(i)].called, i)
-        for i in range(8, 9):
-            self.assertFalse(mocked[self.url_segment.format(i)].called, i)
-        mock_logging.info.assert_has_calls([])
+        self.assertEqual(
+            self.await_read(read_all=True),
+            self.content(segments, cond=lambda s: s.num < 8),
+            "Ignores prefetch segments"
+        )
+        self.assertTrue(all([self.called(s) for s in segments.values() if s.num <= 7]), "Ignores prefetch segments")
+        self.assertFalse(any([self.called(s) for s in segments.values() if s.num > 7]), "Ignores prefetch segments")
+        self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything")
 
     @patch("streamlink.plugins.twitch.log")
-    def test_hls_no_low_latency_no_prefetch(self, mock_logging):
-        streams = ["[{0}]".format(i).encode("ascii") for i in range(10)]
-        playlists = [
-            self.getPlaylist(0, [0, 1, 2, 3], prefetch=[]),
-            self.getPlaylist(4, [4, 5, 6, 7], prefetch=[]) + "#EXT-X-ENDLIST\n"
-        ]
-        streamlink, result, mocked = self.get_result(streams, playlists, low_latency=True)
+    def test_hls_low_latency_no_prefetch(self, mock_log):
+        self.subject([
+            Playlist(0, [Segment(0), Segment(1), Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True)
+        ], disable_ads=False, low_latency=True)
 
-        self.assertTrue(streamlink.get_plugin_option("twitch", "low-latency"))
-        self.assertFalse(streamlink.get_plugin_option("twitch", "disable-ads"))
+        self.assertTrue(self.session.get_plugin_option("twitch", "low-latency"))
+        self.assertFalse(self.session.get_plugin_option("twitch", "disable-ads"))
 
-        mock_logging.info.assert_has_calls([
+        self.await_read(read_all=True)
+        self.assertEqual(mock_log.info.mock_calls, [
             call("Low latency streaming (HLS live edge: 2)"),
             call("This is not a low latency stream")
+        ])
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_low_latency_has_prefetch_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
+        thread, segments = self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+        ], disable_ads=False, low_latency=True)
+
+        self.assertEqual(
+            self.await_read(read_all=True),
+            self.content(segments, cond=lambda s: s.num > 1),
+            "Skips first two segments due to reduced live-edge"
+        )
+        self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 2]), "Skips first two preroll segments")
+        self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 2]), "Downloads all remaining segments")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("Low latency streaming (HLS live edge: 2)")
+        ])
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_low_latency_has_prefetch_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
+        self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7), SegmentPrefetch(8), SegmentPrefetch(9)], end=True)
+        ], disable_ads=True, low_latency=True)
+
+        self.await_read(read_all=True)
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("Will skip ad segments"),
+            call("Low latency streaming (HLS live edge: 2)"),
+            call("Waiting for pre-roll ads to finish, be patient")
+        ])
+
+    @patch("streamlink.plugins.twitch.log")
+    def test_hls_low_latency_no_prefetch_disable_ads_has_preroll(self, mock_log):
+        daterange = TagDateRangeAd(duration=4)
+        self.subject([
+            Playlist(0, [daterange, Segment(0), Segment(1), Segment(2), Segment(3)]),
+            Playlist(4, [Segment(4), Segment(5), Segment(6), Segment(7)], end=True)
+        ], disable_ads=True, low_latency=True)
+
+        self.await_read(read_all=True)
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("Will skip ad segments"),
+            call("Low latency streaming (HLS live edge: 2)"),
+            call("Waiting for pre-roll ads to finish, be patient"),
+            call("This is not a low latency stream")
+        ])
+
+
+class TestTwitchMetadata(unittest.TestCase):
+    def setUp(self):
+        self.mock = requests_mock.Mocker()
+        self.mock.start()
+
+    def tearDown(self):
+        self.mock.stop()
+
+    def subject(self, url):
+        session = Streamlink()
+        Twitch.bind(session, "tests.plugins.test_twitch")
+        plugin = Twitch(url)
+        return plugin.get_author(), plugin.get_title(), plugin.get_category()
+
+    def subject_channel(self, data=True, failure=False):
+        self.mock.get(
+            "https://api.twitch.tv/kraken/users?login=foo",
+            json={"users": [{"_id": 1234}]}
+        )
+        self.mock.get(
+            "https://api.twitch.tv/kraken/streams/1234",
+            status_code=200 if not failure else 404,
+            json={"stream": None} if not data else {"stream": {
+                "channel": {
+                    "display_name": "channel name",
+                    "status": "channel status",
+                    "game": "channel game"
+                }
+            }}
+        )
+        return self.subject("https://twitch.tv/foo")
+
+    def subject_video(self, data=True, failure=False):
+        self.mock.get(
+            "https://api.twitch.tv/kraken/videos/1337",
+            status_code=200 if not failure else 404,
+            json={} if not data else {
+                "title": "video title",
+                "game": "video game",
+                "channel": {
+                    "display_name": "channel name"
+                }
+            }
+        )
+        return self.subject("https://twitch.tv/videos/1337")
+
+    def test_metadata_channel_exists(self):
+        author, title, category = self.subject_channel()
+        self.assertEqual(author, "channel name")
+        self.assertEqual(title, "channel status")
+        self.assertEqual(category, "channel game")
+
+    def test_metadata_channel_missing(self):
+        metadata = self.subject_channel(data=False)
+        self.assertEqual(metadata, (None, None, None))
+
+    def test_metadata_channel_invalid(self):
+        with self.assertRaises(PluginError):
+            self.subject_channel(failure=True)
+
+    def test_metadata_video_exists(self):
+        author, title, category = self.subject_video()
+        self.assertEqual(author, "channel name")
+        self.assertEqual(title, "video title")
+        self.assertEqual(category, "video game")
+
+    def test_metadata_video_missing(self):
+        metadata = self.subject_video(data=False)
+        self.assertEqual(metadata, (None, None, None))
+
+    def test_metadata_video_invalid(self):
+        with self.assertRaises(PluginError):
+            self.subject_video(failure=True)
+
+
+@patch("streamlink.plugins.twitch.log")
+class TestTwitchHosting(unittest.TestCase):
+    def subject(self, channel, hosts=None, disable=False):
+        with requests_mock.Mocker() as mock:
+            mock.get(
+                "https://api.twitch.tv/kraken/users?login=foo",
+                json={"users": [{"_id": 1}]}
+            )
+            if hosts is None:
+                mock.get("https://tmi.twitch.tv/hosts", json={})
+            else:
+                mock.get(
+                    "https://tmi.twitch.tv/hosts",
+                    [{"json": {
+                        "hosts": [dict(
+                            host_id=host_id,
+                            target_id=target_id,
+                            target_login=target_login,
+                            target_display_name=target_display_name
+                        )]}
+                      } for host_id, target_id, target_login, target_display_name in hosts]
+                )
+
+            session = Streamlink()
+            Twitch.bind(session, "tests.plugins.test_twitch")
+            plugin = Twitch("https://twitch.tv/{0}".format(channel))
+            plugin.options.set("disable-hosting", disable)
+
+            res = plugin._switch_to_hosted_channel()
+            return res, plugin.channel, plugin._channel_id, plugin.author
+
+    def test_hosting_invalid_host_data(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo")
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "foo", "Doesn't switch channel")
+        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(author, None, "Doesn't override author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_no_host_data(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [(1, None, None, None)])
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "foo", "Doesn't switch channel")
+        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(author, None, "Doesn't override author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_single(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar"), (2, None, None, None)])
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "bar", "Switches channel")
+        self.assertEqual(channel_id, 2, "Switches channel id")
+        self.assertEqual(author, "Bar", "Overrides author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("switching to bar")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_single_disable(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar")], disable=True)
+        self.assertTrue(res, "Stops HLS resolve procedure")
+        self.assertEqual(channel, "foo", "Doesn't switch channel")
+        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(author, None, "Doesn't override author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("hosting was disabled by command line option")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_multiple(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [
+            (1, 2, "bar", "Bar"),
+            (2, 3, "baz", "Baz"),
+            (3, 4, "qux", "Qux"),
+            (4, None, None, None)
+        ])
+        self.assertFalse(res, "Doesn't stop HLS resolve procedure")
+        self.assertEqual(channel, "qux", "Switches channel")
+        self.assertEqual(channel_id, 4, "Switches channel id")
+        self.assertEqual(author, "Qux", "Overrides author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("switching to bar"),
+            call("bar is hosting baz"),
+            call("switching to baz"),
+            call("baz is hosting qux"),
+            call("switching to qux")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
+
+    def test_hosting_host_multiple_loop(self, mock_log):
+        res, channel, channel_id, author = self.subject("foo", [
+            (1, 2, "bar", "Bar"),
+            (2, 3, "baz", "Baz"),
+            (3, 1, "foo", "Foo")
+        ])
+        self.assertTrue(res, "Stops HLS resolve procedure")
+        self.assertEqual(channel, "baz", "Has switched channel")
+        self.assertEqual(channel_id, 3, "Has switched channel id")
+        self.assertEqual(author, "Baz", "Has overridden author metadata")
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("foo is hosting bar"),
+            call("switching to bar"),
+            call("bar is hosting baz"),
+            call("switching to baz"),
+            call("baz is hosting foo")
+        ])
+        self.assertEqual(mock_log.error.mock_calls, [
+            call("A loop of hosted channels has been detected, cannot find a playable stream. (foo -> bar -> baz -> foo)")
         ])
 
 
@@ -207,19 +470,14 @@ class TestTwitchHLSStream(unittest.TestCase):
 class TestTwitchReruns(unittest.TestCase):
     log_call = call("Reruns were disabled by command line option")
 
-    class StopError(Exception):
-        """Stop when trying to get an access token in _get_hls_streams..."""
-
-    @patch("streamlink.plugins.twitch.Twitch._check_for_host", return_value=None)
-    @patch("streamlink.plugins.twitch.Twitch._access_token", side_effect=StopError())
-    def start(self, *mocked, **params):
+    def subject(self, **params):
         with requests_mock.Mocker() as mock:
-            mocked_users = mock.get(
-                "https://api.twitch.tv/kraken/users.json?login=foo",
+            mock.get(
+                "https://api.twitch.tv/kraken/users?login=foo",
                 json={"users": [{"_id": 1234}]}
             )
-            mocked_stream = mock.get(
-                "https://api.twitch.tv/kraken/streams/1234.json",
+            mock.get(
+                "https://api.twitch.tv/kraken/streams/1234",
                 json={"stream": None} if params.pop("offline", False) else {"stream": {
                     "stream_type": params.pop("stream_type", "live"),
                     "broadcast_platform": params.pop("broadcast_platform", "live"),
@@ -233,66 +491,33 @@ class TestTwitchReruns(unittest.TestCase):
             Twitch.bind(session, "tests.plugins.test_twitch")
             plugin = Twitch("https://www.twitch.tv/foo")
             plugin.options.set("disable-reruns", params.pop("disable", True))
-            try:
-                streams = plugin.streams()
-            except TestTwitchReruns.StopError:
-                streams = True
-                pass
 
-            return streams, mocked_users, mocked_stream, mocked[0]
+            return plugin._check_for_rerun()
 
     def test_disable_reruns_live(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start()
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertTrue(access_token.called_once)
-        self.assertTrue(streams)
+        self.assertFalse(self.subject())
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_not_live(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="rerun")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertFalse(access_token.called)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(stream_type="rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_mixed(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="rerun", broadcast_platform="live")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertFalse(access_token.called)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(stream_type="rerun", broadcast_platform="live"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_mixed2(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(stream_type="live", broadcast_platform="rerun")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertFalse(access_token.called)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(stream_type="live", broadcast_platform="rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_broadcaster_software(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(broadcaster_software="watch_party_rerun")
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertTrue(access_token.called_once)
-        self.assertDictEqual(streams, {})
+        self.assertTrue(self.subject(broadcaster_software="watch_party_rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_offline(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(offline=True)
-        self.assertTrue(api_users.called_once)
-        self.assertTrue(api_stream.called_once)
-        self.assertTrue(access_token.called_once)
-        self.assertTrue(streams)
+        self.assertFalse(self.subject(offline=True))
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)
 
     def test_enable_reruns(self, mock_log):
-        streams, api_users, api_stream, access_token = self.start(disable=False)
-        self.assertFalse(api_users.called)
-        self.assertFalse(api_stream.called)
-        self.assertTrue(access_token.called_once)
-        self.assertTrue(streams)
+        self.assertFalse(self.subject(stream_type="rerun", disable=False))
         self.assertNotIn(self.log_call, mock_log.info.call_args_list)

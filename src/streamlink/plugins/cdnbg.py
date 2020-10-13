@@ -14,17 +14,14 @@ log = logging.getLogger(__name__)
 class CDNBG(Plugin):
     url_re = re.compile(r"""
         https?://(?:www\.)?(?:
-            tv\.bnt\.bg/\w+(?:/\w+)?|
-            bitelevision\.com/live|
-            nova\.bg/live|
-            kanal3\.bg/live|
+            armymedia\.bg|
             bgonair\.bg/tvonline|
-            inlife\.bg|
-            mmtvmusic\.com/live|
-            mu-vi\.tv/LiveStreams/pages/Live\.aspx|
-            videochanel\.bstv\.bg|
+            bloombergtv\.bg/video|
+            (?:tv\.)?bnt\.bg/\w+(?:/\w+)?|
             live\.bstv\.bg|
-            bloombergtv.bg/video
+            i\.cdn\.bg/live/|
+            nova\.bg/live|
+            mu-vi\.tv/LiveStreams/pages/Live\.aspx
         )/?
     """, re.VERBOSE)
     iframe_re = re.compile(r"iframe .*?src=\"((?:https?(?::|&#58;))?//(?:\w+\.)?cdn.bg/live[^\"]+)\"", re.DOTALL)
@@ -44,23 +41,26 @@ class CDNBG(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
-    def find_iframe(self, res):
-        p = urlparse(self.url)
-        for url in self.iframe_re.findall(res.text):
-            if "googletagmanager" not in url:
-                url = url.replace("&#58;", ":")
-                if url.startswith("//"):
-                    return "{0}:{1}".format(p.scheme, url)
-                else:
-                    return url
-
-    def _get_streams(self):
+    def find_iframe(self, url):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
         res = self.session.http.get(self.url)
-        iframe_url = self.find_iframe(res)
+        p = urlparse(url)
+        for iframe_url in self.iframe_re.findall(res.text):
+            if "googletagmanager" not in iframe_url:
+                log.debug("Found iframe: {0}", iframe_url)
+                iframe_url = iframe_url.replace("&#58;", ":")
+                if iframe_url.startswith("//"):
+                    return update_scheme(p.scheme, iframe_url)
+                else:
+                    return iframe_url
+
+    def _get_streams(self):
+        if "i.cdn.bg/live/" in self.url:
+            iframe_url = self.url
+        else:
+            iframe_url = self.find_iframe(self.url)
 
         if iframe_url:
-            log.debug("Found iframe: {0}", iframe_url)
             res = self.session.http.get(iframe_url, headers={"Referer": self.url})
             stream_url = update_scheme(self.url, self.stream_schema.validate(res.text))
             log.warning("SSL Verification disabled.")

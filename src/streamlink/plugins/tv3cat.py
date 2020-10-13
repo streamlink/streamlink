@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class TV3Cat(Plugin):
-    _url_re = re.compile(r"http://(?:www.)?ccma.cat/tv3/directe/(.+?)/")
+    _url_re = re.compile(r"https?://(?:www\.)?ccma\.cat/tv3/directe/(.+?)/")
     _stream_info_url = "http://dinamics.ccma.cat/pvideo/media.jsp" \
                        "?media=video&version=0s&idint={ident}&profile=pc&desplacament=0"
     _media_schema = validate.Schema({
@@ -39,7 +39,6 @@ class TV3Cat(Plugin):
                     return HLSStream.parse_variant_playlist(self.session, stream['url'], name_fmt="{pixels}_{bitrate}")
                 except PluginError:
                     log.debug("Failed to get streams for: {0}".format(stream['geo']))
-                    pass
 
 
 __plugin__ = TV3Cat

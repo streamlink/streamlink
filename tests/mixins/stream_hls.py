@@ -1,0 +1,226 @@
+from binascii import hexlify
+from collections import OrderedDict
+from functools import partial
+from threading import Event, Thread
+
+import requests_mock
+import unittest
+
+from streamlink import Streamlink
+from streamlink.stream.hls import HLSStream
+
+
+class HLSItemBase(object):
+    path = ""
+
+    def url(self, namespace):
+        return "http://mocked/{namespace}/{path}".format(namespace=namespace, path=self.path)
+
+
+class Playlist(HLSItemBase):
+    path = "playlist.m3u8"
+
+    def __init__(self, mediasequence=None, segments=None, end=False, targetduration=0, version=7):
+        self.items = [
+            Tag("EXTM3U"),
+            Tag("EXT-X-VERSION", int(version)),
+            Tag("EXT-X-TARGETDURATION", int(targetduration))
+        ]
+        if mediasequence is not None:  # pragma: no branch
+            self.items.append(Tag("EXT-X-MEDIA-SEQUENCE", int(mediasequence)))
+        self.items += segments or []
+        if end:
+            self.items.append(Tag("EXT-X-ENDLIST"))
+
+    def build(self, *args, **kwargs):
+        return "\n".join([item.build(*args, **kwargs) for item in self.items])
+
+
+class Tag(HLSItemBase):
+    def __init__(self, name, attrs=None):
+        self.name = name
+        self.attrs = attrs
+
+    @classmethod
+    def val_quoted_string(cls, value):
+        return "\"{0}\"".format(value)
+
+    @classmethod
+    def val_hex(cls, value):
+        return "0x{0}".format(hexlify(value).decode("ascii"))
+
+    def build(self, *args, **kwargs):
+        attrs = None
+        if type(self.attrs) == dict:
+            attrs = ",".join([
+                "{0}={1}".format(key, value(self, *args, **kwargs) if callable(value) else value)
+                for (key, value) in self.attrs.items()
+            ])
+        elif self.attrs is not None:
+            attrs = str(self.attrs)
+
+        return "#{name}{attrs}".format(name=self.name, attrs=":{0}".format(attrs) if attrs else "")
+
+
+class Segment(HLSItemBase):
+    def __init__(self, num, title=None, duration=None, path_relative=True):
+        self.num = int(num or 0)
+        self.title = str(title or "")
+        self.duration = float(duration or 1)
+        self.path_relative = bool(path_relative)
+        self.content = "[{0}]".format(self.num).encode("ascii")
+
+    @property
+    def path(self):
+        return "segment{0}.ts".format(self.num)
+
+    def build(self, namespace):
+        return "#EXTINF:{duration:.3f},{title}\n{path}".format(
+            duration=self.duration,
+            title=self.title,
+            path=self.path if self.path_relative else self.url(namespace)
+        )
+
+
+class HLSStreamReadThread(Thread):
+    """
+    Run the reader on a separate thread, so that each read can be controlled from within the main thread
+    """
+    def __init__(self, session, stream, *args, **kwargs):
+        """
+        :param Streamlink session:
+        :param HLSStream stream:
+        """
+        Thread.__init__(self, *args, **kwargs)
+        self.daemon = True
+
+        self.read_wait = Event()
+        self.read_once = Event()
+        self.read_done = Event()
+        self.read_all = False
+        self.data = []
+        self.error = None
+
+        self.session = session
+        self.stream = stream
+        self.reader = stream.open()
+
+        # ensure that at least one read was attempted before closing the writer thread early
+        # otherwise, the writer will close the reader's buffer, making it not block on read and yielding empty results
+        def _await_read_then_close():
+            self.read_once.wait(timeout=5)
+            return self.writer_close()
+
+        self.writer_close = self.reader.writer.close
+        self.reader.writer.close = _await_read_then_close
+
+    def run(self):
+        while not self.reader.buffer.closed:
+            # only read once per step
+            self.read_wait.wait()
+            self.read_wait.clear()
+            self.read_once.set()
+
+            try:
+                # don't read again during teardown
+                # if there is data left, close() was called manually, and it needs to be read
+                if self.reader.buffer.closed and self.reader.buffer.length == 0:
+                    return
+
+                if self.read_all:
+                    self.data += list(iter(partial(self.reader.read, -1), b""))
+                    return
+
+                self.data.append(self.reader.read(-1))
+            except IOError as err:
+                self.error = err
+                return
+            finally:
+                # notify main thread that reading has finished
+                self.read_done.set()
+
+    def reset(self):
+        self.data[:] = []
+        self.error = None
+
+
+class TestMixinStreamHLS(unittest.TestCase):
+    __stream__ = HLSStream
+    __readthread__ = HLSStreamReadThread
+
+    def __init__(self, *args, **kwargs):
+        super(TestMixinStreamHLS, self).__init__(*args, **kwargs)
+        self.mocker = requests_mock.Mocker()
+        self.mocks = {}
+        self.session = None
+        self.stream = None
+        self.thread = None
+
+    def setUp(self):
+        super(TestMixinStreamHLS, self).setUp()
+        self.mocker.start()
+
+    def tearDown(self):
+        super(TestMixinStreamHLS, self).tearDown()
+        self.close_thread()
+        self.mocker.stop()
+        self.mocks.clear()
+        self.session = None
+        self.stream = None
+        self.thread = None
+
+    def mock(self, method, url, *args, **kwargs):
+        self.mocks[url] = self.mocker.request(method, url, *args, **kwargs)
+
+    def called(self, item):
+        return self.mocks[self.url(item)].called
+
+    def url(self, item):
+        return item.url(self.id())
+
+    def content(self, segments, prop="content", cond=None):
+        return b"".join([getattr(segment, prop) for segment in segments.values() if cond is None or cond(segment)])
+
+    # close read thread and make sure that all threads have terminated before moving on
+    def close_thread(self):
+        thread = self.thread
+        thread.reader.close()
+        thread.read_wait.set()
+        thread.reader.writer.join()
+        thread.reader.worker.join()
+        thread.join()
+
+    # make one read call on the read thread and wait until it has finished
+    def await_read(self, read_all=False, timeout=5):
+        thread = self.thread
+        thread.read_all = read_all
+        thread.read_wait.set()
+        thread.read_done.wait(timeout)
+        thread.read_done.clear()
+
+        try:
+            if thread.error:
+                raise thread.error
+            return b"".join(thread.data)
+        finally:
+            thread.reset()
+
+    def get_session(self, options=None, *args, **kwargs):
+        return Streamlink(options)
+
+    # set up HLS responses, create the session and read thread and start it
+    def subject(self, playlists, options=None, streamoptions=None, threadoptions=None, *args, **kwargs):
+        # filter out tags and duplicate segments between playlist responses while keeping index order
+        segments_all = [item for playlist in playlists for item in playlist.items if isinstance(item, Segment)]
+        segments = OrderedDict([(segment.num, segment) for segment in segments_all])
+
+        self.mock("GET", self.url(playlists[0]), [{"text": pl.build(self.id())} for pl in playlists])
+        for segment in segments.values():
+            self.mock("GET", self.url(segment), content=segment.content)
+
+        self.session = self.get_session(options, *args, **kwargs)
+        self.stream = self.__stream__(self.session, self.url(playlists[0]), **(streamoptions or {}))
+        self.thread = self.__readthread__(self.session, self.stream, **(threadoptions or {}))
+        self.thread.start()
+
+        return self.thread, segments

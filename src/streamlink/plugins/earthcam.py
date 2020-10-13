@@ -9,7 +9,7 @@ from streamlink.utils import parse_json, update_scheme
 
 
 class EarthCam(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?earthcam.com/.*")
+    url_re = re.compile(r"https?://(?:www\.)?earthcam\.com/.*")
     playpath_re = re.compile(r"(?P<folder>/.*/)(?P<file>.*?\.flv)")
     swf_url = "http://static.earthcam.com/swf/streaming/stream_viewer_v3.swf"
     json_base_re = re.compile(r"""var[ ]+json_base[^=]+=.*?(\{.*?});""", re.DOTALL)

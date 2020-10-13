@@ -17,10 +17,11 @@ jobs:
     name: Test
     strategy:
       fail-fast: false
-      # when changing the build matrix, the `after_n_builds` value in codecov.yml may need to be updated
+      # please remember to change the `codecov.notify.after_n_builds` value in .codecov.yml
+      # when changing the build matrix and changing the number of test runners
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: [2.7, 3.5, 3.6, 3.7, 3.8]
+        python: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
 #       include:
 #         - python: X.Y-dev
 #           continue: true
@@ -28,7 +29,7 @@ jobs:
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
       - name: Install dependencies
@@ -36,11 +37,12 @@ jobs:
         run: bash ./script/install-dependencies.sh
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
-        run: pytest -r a --cov --cov-report=xml
+        run: pytest -r a --cov --cov-branch --cov-report=xml
       - name: Lint
         continue-on-error: ${{ matrix.continue || false }}
         run: flake8
       - name: Upload coverage data
+        if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
         uses: codecov/codecov-action@v1
         with:
@@ -48,6 +50,7 @@ jobs:
 
   documentation:
     name: Test docs
+    if: github.event_name != 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

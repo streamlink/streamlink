@@ -24,11 +24,21 @@ Portable                             See the `Windows portable version`_ section
                                         choco install streamlink
 
                                      `Installing Chocolatey packages`_
+
+`Windows Package Manager`_           .. code-block:: bat
+
+                                        winget install streamlink
+
+                                     `Installing Winget packages`_
 ==================================== ===========================================
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+
+.. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/Streamlink/Streamlink
+
 .. _Installing Chocolatey packages: https://chocolatey.org
 
+.. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
 macOS
 -----
@@ -38,9 +48,7 @@ macOS
 ==================================== ===========================================
 Method                               Installing
 ==================================== ===========================================
-Easy install                         .. code-block:: bash
-
-                                        sudo easy_install -U streamlink
+Python pip                           See the `PyPI package and source code`_ section below
 
 `Homebrew`_                          .. code-block:: bash
 
@@ -141,7 +149,7 @@ Distribution                         Installing
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
 .. _Installing Debian backported packages: https://wiki.debian.org/Backports#Using_the_command_line
-.. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
+.. _NixOS channel: https://search.nixos.org/packages?show=streamlink&query=streamlink
 
 
 Package maintainers
@@ -179,7 +187,8 @@ Streamlink can be installed via `pip`_, the Python package manager.
 In addition to using `pip`_, Streamlink can also be installed from source
 via `setuptools`_ after cloning the `git`_ repository.
 
-Using :command:`easy_install` is no longer recommended.
+Before running :command:`pip`, make sure that it's the Python 3 version of `pip`_ (to check, run :command:`pip --version`).
+On some systems, this isn't the case by default and an alternative, like :command:`pip3` for example, needs to be run instead.
 
 .. note::
 

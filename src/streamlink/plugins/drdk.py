@@ -1,135 +1,62 @@
-"""Plugin for Denmark's public service channel DR (Danmarks Radio)."""
-
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HDSStream
+from streamlink.stream import HLSStream
 
-LIVE_CHANNELS_API_URL = "https://www.dr.dk/mu-online/api/1.4/channel/{0}"
-VOD_API_URL = "https://www.dr.dk/mu/programcard/expanded/{0}"
-
-STREAMING_TYPES = {
-    "HDS": HDSStream.parse_manifest,
-    "HLS": HLSStream.parse_variant_playlist
-}
-
-_url_re = re.compile(r"""
-    http(s)?://(www\.)?dr.dk
-    (?:
-        /[TtVv]+/
-        (?:
-            live/(?P<channel>[^/]+)
-        )?
-        (?:
-            se/(.+/)?(?P<program>[^/&?]+)
-        )?
-    )
-""", re.VERBOSE)
-
-_channels_schema = validate.Schema(
-    {
-        "StreamingServers": validate.all(
-            [{
-                "LinkType": validate.text,
-                "Qualities": [
-                    validate.all(
-                        {
-                            "Streams": validate.all(
-                                [
-                                    validate.all(
-                                        {"Stream": validate.text},
-                                        validate.get("Stream")
-                                    )
-                                ],
-                                validate.get(0)
-                            )
-                        },
-                        validate.get("Streams")
-                    )
-                ],
-                "Server": validate.text
-            }],
-            validate.filter(lambda s: s["LinkType"] in STREAMING_TYPES)
-        )
-    },
-    validate.get("StreamingServers", {})
-)
-
-_video_schema = validate.Schema(
-    {"Data": [{
-        "Assets": validate.all(
-            [{validate.optional("Links"): validate.all(
-                [{
-                    "Target": validate.text,
-                    "Uri": validate.text
-                }],
-                validate.filter(lambda l: l["Target"] in STREAMING_TYPES)
-            )}],
-            validate.filter(lambda a: "Links" in a)
-        )
-    }]},
-    validate.get("Data", {}),
-    validate.get(0, {}),
-    validate.get("Assets", {}),
-    validate.get(0, {}),
-    validate.get("Links", []),
-)
+log = logging.getLogger(__name__)
 
 
 class DRDK(Plugin):
+    live_api_url = 'https://www.dr-massive.com/api/page'
+
+    url_re = re.compile(r'''
+        https?://(?:www\.)?dr\.dk/drtv
+        (/kanal/[\w-]+)
+    ''', re.VERBOSE)
+
+    _live_data_schema = validate.Schema(
+        {'item': {'customFields': {
+            validate.optional('hlsURL'): validate.url(),
+            validate.optional('hlsWithSubtitlesURL'): validate.url(),
+        }}},
+        validate.get('item'),
+        validate.get('customFields'),
+    )
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls.url_re.match(url) is not None
+
+    def _get_live(self, path):
+        params = dict(
+            ff='idp',
+            path=path,
+        )
+        res = self.session.http.get(self.live_api_url, params=params)
+        playlists = self.session.http.json(res, schema=self._live_data_schema)
+
+        streams = {}
+        for name, url in playlists.items():
+            name_prefix = ''
+            if name == 'hlsWithSubtitlesURL':
+                name_prefix = 'subtitled_'
+
+            streams.update(HLSStream.parse_variant_playlist(
+                self.session,
+                url,
+                name_prefix=name_prefix,
+            ))
+
+        return streams
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        if not match:
-            return
+        m = self.url_re.match(self.url)
+        path = m and m.group(1)
+        log.debug("Path={0}".format(path))
 
-        if match.group("channel"):
-            return self._get_live_streams(match.group("channel"))
-        else:
-            return self._get_vod_streams(match.group("program"))
-
-    def _get_vod_streams(self, program):
-        res = self.session.http.get(VOD_API_URL.format(program))
-        video = self.session.http.json(res, schema=_video_schema)
-
-        streams = {}
-        for link in video:
-            type = link["Target"]
-            url = link["Uri"]
-            parser = STREAMING_TYPES[type]
-
-            try:
-                streams.update(parser(self.session, url))
-            except IOError as err:
-                self.logger.error("Failed to load {0} streams: {1}", type, err)
-
-        return streams
-
-    def _get_live_streams(self, slug):
-        res = self.session.http.get(LIVE_CHANNELS_API_URL.format(slug))
-        servers = self.session.http.json(res, schema=_channels_schema)
-        return self._parse_streaming_servers(servers)
-
-    def _parse_streaming_servers(self, servers):
-        streams = {}
-        for server in servers:
-            type = server["LinkType"]
-            base_url = server["Server"]
-            qualities = server["Qualities"]
-            parser = STREAMING_TYPES[type]
-
-            for quality in qualities:
-                try:
-                    url = "{0}/{1}".format(base_url, quality)
-                    streams.update(parser(self.session, url))
-                except IOError as err:
-                    self.logger.error("Failed to load {0} streams: {1}", type, err)
-
-        return streams
+        return self._get_live(path)
 
 
 __plugin__ = DRDK

@@ -72,6 +72,7 @@ class Streamlink(object):
             "hls-segment-stream-data": False,
             "hls-timeout": 60.0,
             "hls-playlist-reload-attempts": 3,
+            "hls-playlist-reload-time": "default",
             "hls-start-offset": 0,
             "hls-duration": None,
             "http-stream-timeout": 60.0,

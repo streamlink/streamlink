@@ -17,7 +17,7 @@ class TVPlayer(Plugin):
     update_url = "https://tvplayer.com/account/update-detail"
     dummy_postcode = "SE1 9LT"  # location of ITV HQ in London
 
-    url_re = re.compile(r"https?://(?:www.)?tvplayer.com/(:?watch/?|watch/(.+)?)")
+    url_re = re.compile(r"https?://(?:www\.)?tvplayer\.com/(:?uk/)?(:?watch/?|watch/(.+)?)")
     stream_attrs_re = re.compile(r'data-player-(expiry|key|token|uvid)\s*=\s*"(.*?)"', re.S)
     login_token_re = re.compile(r'input.*?name="_token".*?value="(\w+)"')
     stream_schema = validate.Schema({
@@ -78,7 +78,7 @@ class TVPlayer(Plugin):
         if res_schema["response"]["stream"] is None:
             res = self.session.http.get(
                 self.stream_url,
-                params=dict(key=key),
+                params=dict(key=key, platform="chrome"),
                 headers={
                     "Token": token,
                     "Token-Expiry": expiry,

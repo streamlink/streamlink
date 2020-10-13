@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 
 class AtresPlayer(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?atresplayer.com/")
+    url_re = re.compile(r"https?://(?:www\.)?atresplayer\.com/")
     state_re = re.compile(r"""window.__PRELOADED_STATE__\s*=\s*({.*?});""", re.DOTALL)
     channel_id_schema = validate.Schema(
         validate.transform(state_re.search),

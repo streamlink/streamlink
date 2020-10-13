@@ -1,9 +1,10 @@
 import logging
 import re
 
-from streamlink.compat import bytes, is_py3, unquote_plus, urlencode
+from streamlink.compat import bytes, is_py3, html_unescape, unquote_plus, urlencode
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
+from streamlink.plugin.api.utils import itertags
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.utils import parse_json
 
@@ -20,6 +21,7 @@ class Facebook(Plugin):
     _pc_re = re.compile(r'''pkg_cohort["']\s*:\s*["'](.+?)["']''')
     _rev_re = re.compile(r'''client_revision["']\s*:\s*(\d+),''')
     _dtsg_re = re.compile(r'''DTSGInitialData["'],\s*\[\],\s*{\s*["']token["']\s*:\s*["'](.+?)["']''')
+    _title_re = re.compile(r'<meta property="og:title" content="([^\"]+)"')
     _DEFAULT_PC = "PHASED:DEFAULT"
     _DEFAULT_REV = 4681796
     _TAHOE_URL = "https://www.facebook.com/video/tahoe/async/{0}/?chain=true&isvideo=true&payloadtype=primary"
@@ -28,7 +30,31 @@ class Facebook(Plugin):
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
 
+    def get_title(self):
+        res = self.session.http.get(self.url)
+        m = self._title_re.search(res.text)
+        if m:
+            return html_unescape(m.group(1))
+
     def _parse_streams(self, res):
+        _found_stream_url = False
+        for meta in itertags(res.text, "meta"):
+            if meta.attributes.get("property") == "og:video:url":
+                stream_url = html_unescape(meta.attributes.get("content"))
+                if ".mpd" in stream_url:
+                    for s in DASHStream.parse_manifest(self.session, stream_url).items():
+                        yield s
+                        _found_stream_url = True
+                elif ".mp4" in stream_url:
+                    yield "vod", HTTPStream(self.session, stream_url)
+                    _found_stream_url = True
+                break
+        else:
+            log.debug("No meta og:video:url")
+
+        if _found_stream_url:
+            return
+
         for match in self._src_re.finditer(res.text):
             stream_url = match.group("url")
             if "\\/" in stream_url:
