@@ -35,7 +35,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 <!-- What do you expect to happen with this new feature, and what is happening currently that does not satisfy this need? -->
 
 
-### Additional comments, screenshots, etc.
+### Additional comments, etc.
 
 
 
