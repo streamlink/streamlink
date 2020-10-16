@@ -13,6 +13,7 @@ class ElLobo(Plugin):
     def can_handle_url(cls, url):
         return cls.url_re.match(url) is not None
 
+    @Plugin.broken()
     def _get_streams(self):
         res = self.session.http.get(self.url)
         # Search for the iframe in the page

@@ -13,6 +13,7 @@ class CNEWS(Plugin):
     def can_handle_url(cls, url):
         return cls._url_re.match(url)
 
+    @Plugin.broken()
     def _get_streams(self):
         # Retrieve URL page and search for Dailymotion URL
         res = self.session.http.get(self.url, headers={'User-Agent': useragents.CHROME})
