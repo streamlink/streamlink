@@ -237,6 +237,7 @@ tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-rest
 tvtoya                  tvtoya.pl            Yes   --
 twitcasting             twitcasting.tv       Yes   No
 twitch                  twitch.tv            Yes   Yes
+urplay                  urplay.se            No    Yes   Streams may be geo-restricted to Sweden.
 ustreamtv               - ustream.tv         Yes   Yes
                         - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
