@@ -1,133 +1,49 @@
+import logging
 import re
 
-from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
-from streamlink.stream import AkamaiHDStream, HLSStream
+from streamlink.stream import HLSStream
 
-_url_re = re.compile(r"http(s)?://(www\.)?livestream.com/")
-_stream_config_schema = validate.Schema({
-    "event": {
-        "stream_info": validate.any({
-            "is_live": bool,
-            "qualities": [{
-                "bitrate": int,
-                "height": int
-            }],
-            validate.optional("play_url"): validate.url(scheme="http"),
-            validate.optional("m3u8_url"): validate.url(
-                scheme="http",
-                path=validate.endswith(".m3u8")
-            ),
-        }, None)
-    },
-    validate.optional("playerUri"): validate.text,
-    validate.optional("viewerPlusSwfUrl"): validate.url(scheme="http"),
-    validate.optional("lsPlayerSwfUrl"): validate.text,
-    validate.optional("hdPlayerSwfUrl"): validate.text
-})
-_smil_schema = validate.Schema(validate.union({
-    "http_base": validate.all(
-        validate.xml_find("{http://www.w3.org/2001/SMIL20/Language}head/"
-                          "{http://www.w3.org/2001/SMIL20/Language}meta"
-                          "[@name='httpBase']"),
-        validate.xml_element(attrib={
-            "content": validate.text
-        }),
-        validate.get("content")
-    ),
-    "videos": validate.all(
-        validate.xml_findall("{http://www.w3.org/2001/SMIL20/Language}body/"
-                             "{http://www.w3.org/2001/SMIL20/Language}switch/"
-                             "{http://www.w3.org/2001/SMIL20/Language}video"),
-        [
-            validate.all(
-                validate.xml_element(attrib={
-                    "src": validate.text,
-                    "system-bitrate": validate.all(
-                        validate.text,
-                        validate.transform(int)
-                    )
-                }),
-                validate.transform(
-                    lambda e: (e.attrib["src"], e.attrib["system-bitrate"])
-                )
-            )
-        ],
-    )
-}))
+log = logging.getLogger(__name__)
 
 
 class Livestream(Plugin):
-    @classmethod
-    def default_stream_types(cls, streams):
-        return ["akamaihd", "hls"]
+    _url_re = re.compile(r"https?://(?:www\.)?livestream\.com/")
+    _config_re = re.compile(r"window.config = ({.+})")
+    _stream_config_schema = validate.Schema(validate.any({
+        "event": {
+            "stream_info": validate.any({
+                "is_live": bool,
+                "secure_m3u8_url": validate.url(scheme="https"),
+            }, None),
+        }
+    }, {}), validate.get("event", {}), validate.get("stream_info", {}))
 
     @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
-    def _get_stream_info(self):
-        res = self.session.http.get(self.url)
-        match = re.search("window.config = ({.+})", res.text)
-        if match:
-            config = match.group(1)
-            return parse_json(config, "config JSON",
-                              schema=_stream_config_schema)
-
-    def _parse_smil(self, url, swf_url):
-        res = self.session.http.get(url)
-        smil = self.session.http.xml(res, "SMIL config", schema=_smil_schema)
-
-        for src, bitrate in smil["videos"]:
-            url = urljoin(smil["http_base"], src)
-            yield bitrate, AkamaiHDStream(self.session, url, swf=swf_url)
+    def can_handle_url(cls, url):
+        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        info = self._get_stream_info()
-        if not info:
+        res = self.session.http.get(self.url)
+        m = self._config_re.search(res.text)
+        if not m:
+            log.debug("Unable to find _config_re")
             return
 
-        stream_info = info["event"]["stream_info"]
+        stream_info = parse_json(m.group(1), "config JSON",
+                                 schema=self._stream_config_schema)
+
+        log.trace("stream_info: {0!r}".format(stream_info))
         if not (stream_info and stream_info["is_live"]):
-            # Stream is not live
+            log.debug("Stream might be Off Air")
             return
 
-        play_url = stream_info.get("play_url")
-        if play_url:
-            swf_url = (
-                info.get("playerUri")
-                or info.get("hdPlayerSwfUrl")
-                or info.get("lsPlayerSwfUrl")
-                or info.get("viewerPlusSwfUrl")
-            )
-            if swf_url:
-                if not swf_url.startswith("http"):
-                    if swf_url.startswith("//"):
-                        swf_url = "http:" + swf_url
-                    else:
-                        swf_url = "http://" + swf_url
-
-                # Work around broken SSL.
-                swf_url = swf_url.replace("https://", "http://")
-
-            qualities = stream_info["qualities"]
-            for bitrate, stream in self._parse_smil(play_url, swf_url):
-                name = "{0:d}k".format(int(bitrate / 1000))
-                for quality in qualities:
-                    if quality["bitrate"] == bitrate:
-                        name = "{0}p".format(quality["height"])
-
-                yield name, stream
-
-        m3u8_url = stream_info.get("m3u8_url")
+        m3u8_url = stream_info.get("secure_m3u8_url")
         if m3u8_url:
-            streams = HLSStream.parse_variant_playlist(self.session, m3u8_url,
-                                                       namekey="pixels")
-            # TODO: Replace with "yield from" when dropping Python 2.
-            for stream in streams.items():
-                yield stream
+            for s in HLSStream.parse_variant_playlist(self.session, m3u8_url).items():
+                yield s
 
 
 __plugin__ = Livestream
