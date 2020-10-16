@@ -62,7 +62,6 @@ delfi                   - delfi.lt           --    Yes
                         - delfi.ee
                         - delfi.lv
 deutschewelle           dw.com               Yes   Yes
-dingittv                dingit.tv            Yes   Yes
 dlive                   dlive.tv             Yes   Yes
 dogan                   - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
                         - kanald.com.tr
