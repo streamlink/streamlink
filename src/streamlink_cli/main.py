@@ -666,10 +666,10 @@ def setup_args(parser, config_files=[], ignore_unknown=False):
         args.url = args.url_param
 
 
-def setup_config_args(parser):
+def setup_config_args(parser, ignore_unknown=False):
     config_files = []
 
-    if args.url:
+    if streamlink and args.url:
         with ignored(NoPluginError):
             plugin = streamlink.resolve_url(args.url)
             config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
@@ -684,7 +684,7 @@ def setup_config_args(parser):
             break
 
     if config_files:
-        setup_args(parser, config_files)
+        setup_args(parser, config_files, ignore_unknown=ignore_unknown)
 
 
 def setup_console(output):
@@ -971,6 +971,8 @@ def main():
     parser = build_parser()
 
     setup_args(parser, ignore_unknown=True)
+    # call argument set up as early as possible to load args from config files
+    setup_config_args(parser, ignore_unknown=True)
 
     # Console output should be on stderr if we are outputting
     # a stream to stdout.
