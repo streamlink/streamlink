@@ -1,5 +1,84 @@
 # Changelog
 
+## streamlink 1.7.0 (2020-10-18)
+
+Release highlights:
+
+- Added: new plugins for micous.com, tv999.bg and cbsnews.com
+- Added: new embedded ad detection for Twitch streams ([#3213](https://github.com/streamlink/streamlink/pull/3213))
+- Fixed: a few broken plugins and minor plugin issues (see changelog down below)
+- Fixed: arguments in config files were read too late before taking effect ([#3255](https://github.com/streamlink/streamlink/pull/3255))
+- Fixed: Arte plugin returning too many streams and overriding primary ones ([#3228](https://github.com/streamlink/streamlink/pull/3228))
+- Fixed: Twitch plugin error when stream metadata API response is empty ([#3223](https://github.com/streamlink/streamlink/pull/3223))
+- Fixed: Zattoo login issues ([#3202](https://github.com/streamlink/streamlink/pull/3202))
+- Changed: plugin request and submission guidelines ([#3244](https://github.com/streamlink/streamlink/pull/3244))
+- Changed: refactored and cleaned up Twitch plugin ([#3227](https://github.com/streamlink/streamlink/pull/3227))
+- Removed: `platform=_` stream token request parameter from Twitch plugin (again) ([#3220](https://github.com/streamlink/streamlink/pull/3220))
+- Removed: plugins for itvplayer, aljazeeraen, srgssr and dingittv
+
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      docs: use recommonmark as an extension
+
+Billy2011 <kschmidt2007@googlemail.com> (3):
+      plugins.zattoo: use hello api v2 for zattoo.com (#3202)
+      plugins.dlive: rewrite plugin (#3239)
+      utils.l10n: use DEFAULT_LANGUAGE_CODE if locale lookup fails (#3055)
+
+Forrest <gravyboat@users.noreply.github.com> (1):
+      plugins.itvplayer: remove due to DRM (#2934)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (8):
+      plugins.mico: new plugin for http://www.micous.com/ (#3188)
+      plugins.cdnbg: update url_re, plugin test, plugin matrix (#3205)
+      plugins.tv999: new plugin for http://tv999.bg/live.html (#3199)
+      plugins.aljazeeraen: plugin removal (#3207)
+      plugins.srgssr: plugin removal
+      plugins.tv3cat: update URL match, test and plugin matrix
+      chore: update issue templates (#3250)
+      docs: add plugin addition/removal infos (#3249)
+
+Sebastian Meyer <mail@bastimeyer.de> (2):
+      Improve coverage reports on codecov (#3200)
+      plugins.twitch: remove platform access token param (#3220)
+
+back-to <backto@protonmail.ch> (4):
+      plugin.api.useragents: update User-Agent
+      plugins.livestream: remove AkamaiHDStream, use only secure HLSStream (#3243)
+      plugins.dingittv: removed, website is unmaintained
+      plugins: mark some plugins as broken (#3262)
+
+bastimeyer <mail@bastimeyer.de> (21):
+      ci.coverage: increase threshold of tests status
+      tests: add stream_hls mixin for testing HLSStreams
+      stream.hls_filtered: refactor tests, use mixin
+      plugins.twitch: refactor tests, use mixin
+      stream.hls: refactor reload time tests, use mixin
+      stream.hls: separate variant playlist tests
+      stream.hls: separate default and encrypted tests
+      stream.hls_playlist: implement EXT-X-DATERANGE tag
+      plugins.twitch: filter ads by EXT-X-DATERANGE tag
+      plugins.twitch: fix metadata API response handling
+      ci: add python 3.9 test runners
+      tests: fix early writer close in stream_hls mixin
+      stream.segmented: gracefully shut down thread pool
+      plugins.twitch: remove video-type distinction
+      plugins.twitch: refactor Twitch API related code
+      plugins.twitch: refactor _get_hls_streams
+      plugins.twitch: remove stream weights and clean up
+      docs: fix working tree check in deploy script
+      docs: update plugin guidelines
+      docs: add developing menu with basic setup steps
+      docs: add generic pull request template
+
+beardypig <beardypig@protonmail.com> (3):
+      plugins.cbsnews: support for live streams from CBS News (#3251)
+      plugins.artetv: only pick the first variant of the stream (#3228)
+      cli: make config based args available during early setup (#3255)
+```
+
+
 ## streamlink 1.6.0 (2020-09-22)
 
 Release highlights:
