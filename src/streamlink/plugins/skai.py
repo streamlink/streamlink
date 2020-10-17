@@ -20,6 +20,7 @@ class Skai(Plugin):
     def can_handle_url(cls, url):
         return _url_re.match(url)
 
+    @Plugin.broken()
     def _get_streams(self):
         api_res = self.session.http.get(_api_url)
         yt_url = self.session.http.json(api_res, schema=_api_res_schema)

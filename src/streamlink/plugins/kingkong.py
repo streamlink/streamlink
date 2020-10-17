@@ -65,6 +65,7 @@ class Kingkong(Plugin):
             return STREAM_WEIGHTS[stream], "kingkong"
         return Plugin.stream_weight(stream)
 
+    @Plugin.broken()
     def _get_streams(self):
         match = _url_re.match(self.url)
         vid = match.group("vid")
