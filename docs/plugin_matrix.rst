@@ -38,6 +38,7 @@ brightcove              players.brig... [6]_ Yes   Yes
 btsports                sport.bt.com         Yes   Yes   Requires subscription account
 btv                     btvplus.bg           Yes   No    Streams are geo-restricted to Bulgaria.
 canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
+cbsnews                 cbsnews.com          Yes   No
 cdnbg                   - armymedia.bg       Yes   No    Streams may be geo-restricted to Bulgaria
                         - bgonair.bg
                         - bloombergtv.bg
@@ -61,7 +62,6 @@ delfi                   - delfi.lt           --    Yes
                         - delfi.ee
                         - delfi.lv
 deutschewelle           dw.com               Yes   Yes
-dingittv                dingit.tv            Yes   Yes
 dlive                   dlive.tv             Yes   Yes
 dogan                   - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
                         - kanald.com.tr
@@ -101,7 +101,6 @@ huomao                  - huomao.com         Yes   Yes
 huya                    huya.com             Yes   No    Temporarily only HLS streams available.
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
-itvplayer               itv.com/itvplayer    Yes   Yes   Streams may be geo-restricted to Great Britain.
 invintus                player.invintus.com  Yes   Yes
 kingkong                kingkong.com.tw      Yes   --
 kugou                   fanxing.kugou.com    Yes   --
@@ -111,7 +110,7 @@ live_russia_tv          live.russia.tv       Yes   --
 liveedu                 - liveedu.tv         Yes   --    Some streams require a login.
                         - livecoding.tv
 liveme                  liveme.com           Yes   --
-livestream              new.livestream.com   Yes   --
+livestream              livestream.com       Yes   --
 lrt                     lrt.lt               Yes   No
 ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.

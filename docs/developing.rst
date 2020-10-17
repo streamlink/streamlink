@@ -114,3 +114,22 @@ performing these checks locally avoids unnecessary build failures.
     # build the documentation
     make --directory=docs clean html
     $BROWSER ./docs/_build/html/index.html
+
+
+Plugins
+-------
+
+Adding plugins
+^^^^^^^^^^^^^^
+
+1. Implement the plugin in ``src/streamlink/plugins/``, similar to already existing plugins. Check the git log for recently
+   added or modified plugins to help you get an overview of what's needed to properly implement a plugin. A complete guide
+   is currently not available.
+2. Add at least tests for the URL regex matching in ``tests/plugins/``. Once again, check other plugin tests from the git log.
+
+Removing plugins
+^^^^^^^^^^^^^^^^
+
+1. Remove the plugin file in ``src/streamlink/plugins/`` and the test file in ``tests/plugins/``
+2. Remove the plugin entry from the documentation in ``docs/plugin_matrix.rst``
+3. Add an entry to ``src/streamlink/plugins/.removed``

@@ -39,7 +39,7 @@ Please see the text preview to avoid unnecessary formatting errors.
 3. ...
 
 
-### Additional comments, screenshots, etc.
+### Additional comments, etc.
 
 
 

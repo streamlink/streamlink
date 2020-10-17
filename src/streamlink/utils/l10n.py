@@ -143,7 +143,7 @@ class Localization(object):
                 language_code = None
             if language_code is None or language_code == "C":
                 # cannot be determined
-                language_code = DEFAULT_LANGUAGE
+                language_code = DEFAULT_LANGUAGE_CODE
 
         try:
             self.language, self.country = self._parse_locale_code(language_code)
