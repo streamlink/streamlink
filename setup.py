@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import codecs
+import os
 from os import environ, path
+import re
 from sys import argv, path as sys_path
 
 from setuptools import setup, find_packages
 
-import versioneer
+here = os.path.abspath(os.path.dirname(__file__))
 
 deps = [
     # Require backport of concurrent.futures on Python 2
@@ -72,22 +74,28 @@ entry_points = {
 if is_wheel_for_windows():
     entry_points["gui_scripts"] = ["streamlinkw=streamlink_cli.main:main"]
 
+def read(*parts):
+    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+        return fp.read()
+
+def find_version(*file_paths):
+    version_file = read(*file_paths)
+    version_match = re.search(
+        r'''^__version__ = ['"]([^'"]*)['"]''',
+        version_file,
+        re.M,
+    )
+    if version_match:
+        return version_match.group(1)
+
+    raise RuntimeError('Unable to find version string.')
+
 
 setup(name="streamlink",
-      version=versioneer.get_version(),
-      cmdclass=versioneer.get_cmdclass(),
+      version=find_version('src', 'streamlink', '__init__.py'),
       description="Streamlink is command-line utility that extracts streams "
                   "from various services and pipes them into a video player of "
                   "choice.",
-      long_description=long_description,
-      long_description_content_type="text/markdown",
-      url="https://github.com/streamlink/streamlink",
-      project_urls={
-          "Documentation": "https://streamlink.github.io/",
-          "Tracker": "https://github.com/streamlink/streamlink/issues",
-          "Source": "https://github.com/streamlink/streamlink",
-          "Funding": "https://opencollective.com/streamlink"
-      },
       author="Streamlink",
       # temp until we have a mailing list / global email
       author_email="charlie@charliedrage.com",

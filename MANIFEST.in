@@ -3,8 +3,6 @@ include CHANGELOG.md
 include README.md
 include LICENSE*
 include *requirements.txt
-include src/streamlink/_version.py
-include versioneer.py
 
 recursive-include docs *
 recursive-include examples *
