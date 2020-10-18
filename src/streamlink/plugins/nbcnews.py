@@ -28,6 +28,7 @@ class NBCNews(Plugin):
     def get_title(self):
         return 'NBC News Now'
 
+    @Plugin.broken(3123)
     def _get_streams(self):
         html = self.session.http.get(self.url).text
         match = self.js_re.search(html)
