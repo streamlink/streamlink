@@ -1,7 +1,10 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
+
+log = logging.getLogger(__name__)
 
 
 class ThePlatform(Plugin):
@@ -30,9 +33,11 @@ class ThePlatform(Plugin):
                 })
             else:
                 error = self.session.http.json(res)
-                self.logger.error("{0}: {1}",
-                                  error.get("title", "Error"),
-                                  error.get("description", "An unknown error occurred"))
+                log.error(
+                    "{0}: {1}",
+                    error.get("title", "Error"),
+                    error.get("description", "An unknown error occurred")
+                )
 
 
 __plugin__ = ThePlatform
