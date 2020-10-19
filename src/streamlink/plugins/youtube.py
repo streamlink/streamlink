@@ -270,8 +270,12 @@ class YouTube(Plugin):
                 if link.attributes.get("rel") == "canonical":
                     canon_link = link.attributes.get("href")
                     if canon_link != url:
-                        log.debug("Re-directing to canonical URL: {0}".format(canon_link))
-                        return self._find_video_id(canon_link)
+                        if canon_link.endswith("v=live_stream"):
+                            log.debug("The video is not available")
+                            break
+                        else:
+                            log.debug("Re-directing to canonical URL: {0}".format(canon_link))
+                            return self._find_video_id(canon_link)
 
         raise PluginError("Could not find a video on this page")
 
