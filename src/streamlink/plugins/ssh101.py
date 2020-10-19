@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
-from streamlink.compat import urljoin
+from urllib.parse import urljoin
 
 log = logging.getLogger(__name__)
 

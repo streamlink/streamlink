@@ -14,10 +14,10 @@ Copyright 2015 Red Hat, Inc.
    limitations under the License.
 """
 from io import BytesIO
+from urllib.parse import urlparse, unquote, urljoin
 
 import sys
 from requests.adapters import BaseAdapter
-from requests.compat import urlparse, unquote, urljoin
 from requests import Response, codes
 import errno
 import os
@@ -26,7 +26,7 @@ import stat
 import locale
 import io
 
-from streamlink.compat import is_win32, is_py3
+from streamlink.compat import is_win32
 
 
 class FileAdapter(BaseAdapter):
@@ -69,10 +69,7 @@ class FileAdapter(BaseAdapter):
         try:
             # If the netloc is - then read from stdin
             if url_parts.netloc == "-":
-                if is_py3:
-                    resp.raw = sys.stdin.buffer
-                else:
-                    resp.raw = sys.stdin
+                resp.raw = sys.stdin.buffer
                 # make a fake response URL, the current directory
                 resp.url = "file://" + os.path.abspath(".").replace(os.sep, "/") + "/"
             else:

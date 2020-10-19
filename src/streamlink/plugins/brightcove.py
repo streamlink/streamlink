@@ -2,6 +2,7 @@ import random
 import re
 import logging
 from io import BytesIO
+from urllib.parse import urlparse, parse_qsl
 
 from streamlink import PluginError
 from streamlink.packages.flashmedia import AMFMessage, AMFPacket
@@ -9,7 +10,6 @@ from streamlink.packages.flashmedia.types import AMF3ObjectBase
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
-from streamlink.compat import urlparse, parse_qsl
 
 
 @AMF3ObjectBase.register("com.brightcove.experience.ViewerExperienceRequest")

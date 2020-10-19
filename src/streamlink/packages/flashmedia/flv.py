@@ -1,5 +1,4 @@
 from .error import FLVError
-from .compat import is_py2
 from .tag import Header, Tag
 
 
@@ -19,9 +18,6 @@ class FLV(object):
             raise StopIteration
 
         return tag
-
-    if is_py2:
-        next = __next__
 
 
 __all__ = ["FLV"]

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 import re
+from html import unescape as html_unescape
+from urllib.parse import unquote
 
-from streamlink.compat import html_unescape, unquote
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate

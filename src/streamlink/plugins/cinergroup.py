@@ -6,7 +6,7 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import unquote
+from urllib.parse import unquote
 
 
 class CinerGroup(Plugin):

@@ -1,7 +1,7 @@
 import random
 import re
 
-from streamlink.compat import urlencode, unquote, urljoin
+from urllib.parse import urlencode, unquote, urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import stream_weight
 from streamlink.stream import HLSStream, HTTPStream, DASHStream

@@ -18,24 +18,17 @@
 
 from xml.etree import ElementTree as ET
 from copy import copy as copy_obj
+from urllib.parse import urlparse
+from functools import singledispatch
 
-try:
-    from functools import singledispatch
-except ImportError:
-    from singledispatch import singledispatch
-
-from ...compat import is_py2, urlparse
 from ...exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "url", "startswith", "endswith", "contains",
+    "transform", "union", "url", "startswith", "endswith", "contains",
     "xml_element", "xml_find", "xml_findall", "xml_findtext",
     "validate", "Schema", "SchemaContainer"
 ]
-
-#: Alias for text type on each Python version
-text = is_py2 and basestring or str
 
 # References to original functions that we override in this module
 _all = all
@@ -73,12 +66,6 @@ class transform(object):
     """Applies function to value to transform it."""
 
     def __init__(self, func):
-        # text is an alias for basestring on Python 2, which cannot be
-        # instantiated and therefore can't be used to transform the value,
-        # so we force to unicode instead.
-        if is_py2 and func == text:
-            func = unicode
-
         self.func = func
 
 
@@ -121,7 +108,7 @@ def length(length):
 def startswith(string):
     """Checks if the string value starts with another string."""
     def starts_with(value):
-        validate(text, value)
+        validate(str, value)
         if not value.startswith(string):
             raise ValueError("'{0}' does not start with '{1}'".format(value, string))
         return True
@@ -132,7 +119,7 @@ def startswith(string):
 def endswith(string):
     """Checks if the string value ends with another string."""
     def ends_with(value):
-        validate(text, value)
+        validate(str, value)
         if not value.endswith(string):
             raise ValueError("'{0}' does not end with '{1}'".format(value, string))
         return True
@@ -143,7 +130,7 @@ def endswith(string):
 def contains(string):
     """Checks if the string value contains another string."""
     def contains_str(value):
-        validate(text, value)
+        validate(str, value)
         if string not in value:
             raise ValueError("'{0}' does not contain '{1}'".format(value, string))
         return True
@@ -222,12 +209,6 @@ def map(func):
     Supports both dicts and sequences, key/value pairs are
     expanded when applied to a dict.
     """
-    # text is an alias for basestring on Python 2, which cannot be
-    # instantiated and therefore can't be used to transform the value,
-    # so we force to unicode instead.
-    if is_py2 and text == func:
-        func = unicode
-
     def expand_kv(kv):
         return func(*kv)
 
@@ -244,7 +225,7 @@ def map(func):
 def url(**attributes):
     """Parses an URL and validates its attributes."""
     def check_url(value):
-        validate(text, value)
+        validate(str, value)
         parsed = urlparse(value)
         if not parsed.netloc:
             raise ValueError("'{0}' is not a valid URL".format(value))

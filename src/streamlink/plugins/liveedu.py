@@ -5,7 +5,7 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
-from streamlink.compat import urljoin
+from urllib.parse import urljoin
 
 
 class LiveEdu(Plugin):

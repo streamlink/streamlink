@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.compat import urlparse
+from urllib.parse import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags

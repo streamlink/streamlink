@@ -9,7 +9,7 @@ from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import memoize
-from streamlink.compat import urlparse, parse_qsl
+from urllib.parse import urlparse, parse_qsl
 from streamlink.utils.times import seconds_to_hhmmss
 
 log = logging.getLogger(__name__)

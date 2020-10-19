@@ -9,7 +9,6 @@ from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
@@ -25,8 +24,7 @@ class Pixiv(Plugin):
         {
             "user": {
                 "unique_name": validate.text,
-                "name": validate.all(validate.text,
-                                     validate.transform(maybe_decode))
+                "name": validate.text,
             },
             validate.optional("hls_movie"): {
                 "url": validate.text

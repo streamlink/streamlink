@@ -5,7 +5,6 @@ import subprocess
 import sys
 from time import sleep
 
-from streamlink.utils.encoding import get_filesystem_encoding, maybe_encode, maybe_decode
 from .compat import is_win32, stdout
 from .constants import DEFAULT_PLAYER_ARGUMENTS, SUPPORTED_PLAYERS
 from .utils import ignored
@@ -207,7 +206,7 @@ class PlayerOutput(Output):
 
         # player command
         if is_win32:
-            eargs = maybe_decode(subprocess.list2cmdline(extra_args))
+            eargs = subprocess.list2cmdline(extra_args)
             # do not insert and extra " " when there are no extra_args
             return u' '.join([cmd] + ([eargs] if eargs else []) + [args])
         return shlex.split(cmd) + extra_args + shlex.split(args)
@@ -234,7 +233,7 @@ class PlayerOutput(Output):
             fargs = subprocess.list2cmdline(args)
         log.debug(u"Calling: {0}".format(fargs))
 
-        subprocess.call(maybe_encode(args, get_filesystem_encoding()),
+        subprocess.call(args, sys.getfilesystemencoding(),
                         stdout=self.stdout,
                         stderr=self.stderr)
 
@@ -248,7 +247,7 @@ class PlayerOutput(Output):
             fargs = subprocess.list2cmdline(args)
         log.debug(u"Opening subprocess: {0}".format(fargs))
 
-        self.player = subprocess.Popen(maybe_encode(args, get_filesystem_encoding()),
+        self.player = subprocess.Popen(args, sys.getfilesystemencoding(),
                                        stdin=self.stdin, bufsize=0,
                                        stdout=self.stdout,
                                        stderr=self.stderr)

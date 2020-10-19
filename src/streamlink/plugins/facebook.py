@@ -1,7 +1,8 @@
 import logging
 import re
+from html import unescape as html_unescape
 
-from streamlink.compat import bytes, is_py3, html_unescape, unquote_plus, urlencode
+from urllib.parse import unquote_plus, urlencode
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
@@ -72,10 +73,7 @@ class Facebook(Plugin):
         if match:
             # facebook replaces "<" characters with the substring "\\x3C"
             manifest = match.group("manifest").replace("\\/", "/")
-            if is_py3:
-                manifest = bytes(unquote_plus(manifest), "utf-8").decode("unicode_escape")
-            else:
-                manifest = unquote_plus(manifest).decode("string_escape")
+            manifest = bytes(unquote_plus(manifest), "utf-8").decode("unicode_escape")
             # Ignore unsupported manifests until DASH SegmentBase support is implemented
             if "SegmentBase" in manifest:
                 log.error("Skipped DASH manifest with SegmentBase streams")

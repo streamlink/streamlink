@@ -5,8 +5,8 @@ import re
 
 from collections import defaultdict
 from hashlib import sha1
+from urllib.parse import urlparse
 
-from streamlink.compat import urlparse
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate

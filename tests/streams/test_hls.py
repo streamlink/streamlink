@@ -9,7 +9,6 @@ from tests.mixins.stream_hls import Playlist, Tag, Segment, TestMixinStreamHLS
 from tests.mock import patch, Mock
 from tests.resources import text
 
-from streamlink.compat import str
 from streamlink.session import Streamlink
 from streamlink.stream import hls
 

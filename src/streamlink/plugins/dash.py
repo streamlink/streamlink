@@ -5,7 +5,7 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import stream_weight
 from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY
 from streamlink.stream.dash import DASHStream
-from streamlink.compat import urlparse
+from urllib.parse import urlparse
 
 log = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ import websocket
 
 from streamlink import logger
 from streamlink.buffers import RingBuffer
-from streamlink.compat import urlparse, unquote_plus
+from urllib.parse import urlparse, unquote_plus
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate

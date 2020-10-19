@@ -1,7 +1,7 @@
 import logging
 import re
+from html import unescape as html_unescape
 
-from streamlink.compat import html_unescape
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags

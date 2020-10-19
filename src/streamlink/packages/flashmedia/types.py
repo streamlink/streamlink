@@ -1,4 +1,4 @@
-from .compat import OrderedDict, is_py2, str, bytes, integer_types, string_types
+from collections import OrderedDict
 from .util import pack_bytes_into
 
 from collections import namedtuple
@@ -712,7 +712,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
         elif isinstance(val, list):
             size += ScriptDataStrictArray.size(val)
 
-        elif isinstance(val, string_types):
+        elif isinstance(val, str):
             if len(val) > 0xFFFF:
                 size += ScriptDataLongString.size(val)
             else:
@@ -749,7 +749,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             rval += U8(SCRIPT_DATA_TYPE_STRICTARRAY)
             rval += ScriptDataStrictArray(val)
 
-        elif isinstance(val, string_types):
+        elif isinstance(val, str):
             if len(val) > 0xFFFF:
                 rval += U8(SCRIPT_DATA_TYPE_LONGSTRING)
                 rval += ScriptDataLongString(val)
@@ -802,7 +802,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             offset += U8.size
             offset = ScriptDataStrictArray.pack_into(buf, offset, val)
 
-        elif isinstance(val, string_types):
+        elif isinstance(val, str):
             if len(val) > 0xFFFF:
                 U8.pack_into(buf, offset, SCRIPT_DATA_TYPE_LONGSTRING)
                 offset += U8.size
@@ -1065,9 +1065,6 @@ class AMF3ObjectBase(object):
 
     @classmethod
     def create(cls, name, externalizable, dynamic, members):
-        if is_py2:
-            name = name.encode("utf8")
-
         amfcls = type(name, (cls,), {})
         amfcls.__externalizable__ = externalizable
         amfcls.__members__ = members
@@ -1485,7 +1482,7 @@ class AMF3Value(DynamicType):
         elif val is None:
             pass
 
-        elif isinstance(val, integer_types):
+        elif isinstance(val, int):
             if val < AMF3_MIN_INTEGER or val > AMF3_MAX_INTEGER:
                 size += AMF3Double.size
             else:
@@ -1499,7 +1496,7 @@ class AMF3Value(DynamicType):
                                          object_cache=object_cache,
                                          traits_cache=traits_cache)
 
-        elif isinstance(val, string_types):
+        elif isinstance(val, str):
             size += AMF3String.size(val, cache=str_cache)
 
         elif isinstance(val, AMF3ObjectBase):
@@ -1537,7 +1534,7 @@ class AMF3Value(DynamicType):
         elif val is None:
             chunks.append(U8(AMF3_TYPE_NULL))
 
-        elif isinstance(val, integer_types):
+        elif isinstance(val, int):
             if val < AMF3_MIN_INTEGER or val > AMF3_MAX_INTEGER:
                 chunks.append(U8(AMF3_TYPE_DOUBLE))
                 chunks.append(AMF3Double(val))
@@ -1555,7 +1552,7 @@ class AMF3Value(DynamicType):
                                                object_cache=object_cache,
                                                traits_cache=traits_cache))
 
-        elif isinstance(val, string_types):
+        elif isinstance(val, str):
             chunks.append(U8(AMF3_TYPE_STRING))
             chunks.append(AMF3String.pack(val, cache=str_cache))
 

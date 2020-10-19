@@ -4,9 +4,6 @@ import warnings
 from logging import NOTSET, ERROR, WARN, INFO, DEBUG, CRITICAL
 from threading import Lock
 
-from streamlink.compat import is_py2
-from streamlink.utils.encoding import maybe_encode
-
 TRACE = 5
 _levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),
                      (TRACE, "trace"), (NOTSET, "none")])
@@ -25,11 +22,8 @@ class _CompatLogRecord(logging.LogRecord):
     """
 
     def __init__(self, name, level, pathname, lineno, msg, args, exc_info, func=None, sinfo=None, **kwargs):
-        if is_py2:
-            super(_CompatLogRecord, self).__init__(name, level, pathname, lineno, msg, args, exc_info, func=func)
-        else:
-            super(_CompatLogRecord, self).__init__(name, level, pathname, lineno, msg, args, exc_info, func=func,
-                                                   sinfo=sinfo, **kwargs)
+        super(_CompatLogRecord, self).__init__(name, level, pathname, lineno, msg, args, exc_info, func=func,
+                                               sinfo=sinfo, **kwargs)
 
 
 class _LogRecord(_CompatLogRecord):
@@ -43,7 +37,7 @@ class _LogRecord(_CompatLogRecord):
         msg = self.msg
         if self.args:
             msg = msg.format(*self.args)
-        return maybe_encode(msg)
+        return msg
 
 
 class StreamlinkLogger(logging.getLoggerClass(), object):
@@ -96,10 +90,7 @@ root.setLevel(logging.WARNING)
 
 class StringFormatter(logging.Formatter):
     def __init__(self, fmt, datefmt=None, style='%', remove_base=None):
-        if is_py2:
-            super(StringFormatter, self).__init__(fmt, datefmt=datefmt)
-        else:
-            super(StringFormatter, self).__init__(fmt, datefmt=datefmt, style=style)
+        super(StringFormatter, self).__init__(fmt, datefmt=datefmt, style=style)
         if style not in ("{", "%"):
             raise ValueError("Only {} and % formatting styles are supported")
         self.style = style

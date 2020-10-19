@@ -7,8 +7,8 @@ Supports:
 """
 import logging
 import re
+from urllib.parse import urljoin
 
-from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream

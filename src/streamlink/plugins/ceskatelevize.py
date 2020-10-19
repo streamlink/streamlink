@@ -14,12 +14,13 @@ Additionally, videos from iVysilani archive should work as well.
 import logging
 import re
 import json
+from html import unescape as html_unescape
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, DASHStream
 from streamlink.exceptions import PluginError
-from streamlink.compat import html_unescape, quote
+from urllib.parse import quote
 
 log = logging.getLogger(__name__)
 

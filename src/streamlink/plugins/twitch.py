@@ -7,8 +7,8 @@ from collections import namedtuple
 from random import random
 
 import requests
+from urllib.parse import urlparse
 
-from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate

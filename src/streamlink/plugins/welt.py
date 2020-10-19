@@ -1,6 +1,6 @@
 import re
+from urllib.parse import quote
 
-from streamlink.compat import quote
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags

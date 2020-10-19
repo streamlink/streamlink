@@ -1,11 +1,12 @@
 import logging
 import subprocess
 import os.path
+from shutil import which
 
 from operator import itemgetter
 from streamlink.stream import Stream
 from streamlink.stream.wrappers import StreamIOThreadWrapper
-from streamlink.compat import devnull, which
+from streamlink.compat import devnull
 from streamlink.exceptions import StreamError
 
 import time

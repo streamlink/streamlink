@@ -2,8 +2,6 @@ import locale
 import logging
 import re
 
-from streamlink.compat import is_py2
-
 try:
     from iso639 import languages
     from iso3166 import countries
@@ -49,10 +47,7 @@ class Country(object):
         )
 
     def __str__(self):
-        if is_py2:
-            return self.__unicode__().encode("utf8")
-        else:
-            return self.__unicode__()
+        return self.__unicode__()
 
     def __unicode__(self):
         return u"Country({0!r}, {1!r}, {2!r}, {3!r}, official_name={4!r})".format(self.alpha2,
@@ -103,10 +98,7 @@ class Language(object):
         )
 
     def __str__(self):
-        if is_py2:
-            return self.__unicode__().encode("utf8")
-        else:
-            return self.__unicode__()
+        return self.__unicode__()
 
     def __unicode__(self):
         return u"Language({0!r}, {1!r}, {2!r}, bibliographic={3!r})".format(self.alpha2,

@@ -1,10 +1,8 @@
-from .compat import bytes, is_py2, string_types
-
 import struct
 
 
 def byte(ordinal):
-    if isinstance(ordinal, string_types):
+    if isinstance(ordinal, str):
         ordinal = ord(ordinal)
 
     return bytes((ordinal,))

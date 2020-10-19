@@ -2,6 +2,7 @@ import base64
 import logging
 import re
 import time
+from html import unescape as html_unescape
 
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
@@ -13,7 +14,6 @@ from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags, parse_json
 from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
-from streamlink.compat import html_unescape
 
 log = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ import json
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse, urljoin
+from urllib.parse import urlparse, urljoin
 
 log = logging.getLogger(__name__)
 

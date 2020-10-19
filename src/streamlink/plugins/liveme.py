@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.compat import urlparse, parse_qsl
+from urllib.parse import urlparse, parse_qsl
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
 

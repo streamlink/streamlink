@@ -5,10 +5,9 @@ from binascii import unhexlify
 from collections import namedtuple
 from datetime import timedelta
 from itertools import starmap
+from urllib.parse import urljoin, urlparse
 
 from isodate import parse_datetime
-
-from streamlink.compat import urljoin, urlparse
 
 
 log = logging.getLogger(__name__)

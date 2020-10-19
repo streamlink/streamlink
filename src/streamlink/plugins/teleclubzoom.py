@@ -1,7 +1,7 @@
 import logging
 import re
+from urllib.parse import urlparse
 
-from streamlink.compat import urlparse
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate

@@ -3,10 +3,10 @@ import re
 
 import subprocess
 from operator import itemgetter
+from shutil import which
 
 from streamlink import logger
 from streamlink.stream.streamprocess import StreamProcess
-from streamlink.compat import str, which
 from streamlink.exceptions import StreamError
 from streamlink.utils import rtmpparse, escape_librtmp
 

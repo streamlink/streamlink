@@ -2,7 +2,7 @@ import logging
 import re
 
 from base64 import b64decode
-from streamlink.compat import urlparse
+from urllib.parse import urlparse
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
@@ -10,10 +10,7 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
-try:
-    from html.parser import HTMLParser
-except ImportError:
-    from HTMLParser import HTMLParser
+from html.parser import HTMLParser
 
 log = logging.getLogger(__name__)
 

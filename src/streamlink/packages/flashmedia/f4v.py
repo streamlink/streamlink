@@ -1,5 +1,4 @@
-from .box import Box, RawPayload
-from .compat import is_py2
+from .box import Box
 
 
 class F4V(object):
@@ -20,9 +19,6 @@ class F4V(object):
             raise StopIteration
 
         return box
-
-    if is_py2:
-        next = __next__
 
 
 __all__ = ["F4V"]

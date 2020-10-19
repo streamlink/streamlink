@@ -3,15 +3,14 @@ from __future__ import unicode_literals
 import argparse
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse, urlunparse
 
-from streamlink.compat import is_py2, parse_qsl, urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate, useragents
 from streamlink.plugin.api.utils import itertags, parse_query
 from streamlink.stream import HTTPStream, HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
@@ -50,13 +49,11 @@ _config_schema = validate.Schema(
                 validate.optional("videoDetails"): {
                     validate.optional("isLive"): validate.transform(bool),
                     validate.optional("author"): validate.text,
-                    validate.optional("title"): validate.all(validate.text,
-                                                             validate.transform(maybe_decode))
+                    validate.optional("title"): validate.text,
                 },
                 validate.optional("playabilityStatus"): {
                     validate.optional("status"): validate.text,
-                    validate.optional("reason"): validate.all(validate.text,
-                                                              validate.transform(maybe_decode)),
+                    validate.optional("reason"): validate.text,
                 },
             },
         ),
@@ -98,10 +95,8 @@ class YouTube(Plugin):
 
     _oembed_schema = validate.Schema(
         {
-            "author_name": validate.all(validate.text,
-                                        validate.transform(maybe_decode)),
-            "title": validate.all(validate.text,
-                                  validate.transform(maybe_decode))
+            "author_name": validate.text,
+            "title": validate.text,
         }
     )
 
@@ -287,7 +282,7 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
+            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
             player_response = info_parsed.get("player_response", {})
             playability_status = player_response.get("playabilityStatus", {})
             if (playability_status.get("status") != "OK"):

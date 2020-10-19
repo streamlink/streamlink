@@ -5,7 +5,7 @@ import random
 import re
 import xml.etree.ElementTree as ET
 
-from streamlink.compat import urlencode
+from urllib.parse import urlencode
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
