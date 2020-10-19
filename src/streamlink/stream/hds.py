@@ -22,7 +22,7 @@ from .stream import Stream
 from .wrappers import StreamIOIterWrapper
 
 from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
+from urllib.parse import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
 from ..exceptions import StreamError, PluginError
 from ..utils import absolute_url, swfdecompress
 
