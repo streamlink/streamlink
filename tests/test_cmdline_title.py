@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
 import unittest
 
 from streamlink.compat import is_win32
