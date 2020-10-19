@@ -180,7 +180,7 @@ class UHSStreamWriter(SegmentedStreamWriter):
                                          timeout=self.timeout,
                                          exception=StreamError)
         except StreamError as err:
-            log.error("Failed to open chunk {0}: {1}", chunk.num, err)
+            log.error(f"Failed to open chunk {chunk.num}: {err}")
             return self.fetch(chunk, retries - 1)
 
     def write(self, chunk, res, chunk_size=8192):
@@ -191,9 +191,9 @@ class UHSStreamWriter(SegmentedStreamWriter):
                 if self.closed:
                     return
             else:
-                log.debug("Download of chunk {0} complete", chunk.num)
+                log.debug(f"Download of chunk {chunk.num} complete")
         except IOError as err:
-            log.error("Failed to read chunk {0}: {1}", chunk.num, err)
+            log.error(f"Failed to read chunk {chunk.num}: {err}")
 
 
 class UHSStreamWorker(SegmentedStreamWorker):
@@ -207,8 +207,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
 
         self.process_chunks()
         if self.chunks:
-            log.debug("First Chunk: {0}; Last Chunk: {1}",
-                      self.chunks[0].num, self.chunks[-1].num)
+            log.debug(f"First Chunk: {self.chunks[0].num}; Last Chunk: {self.chunks[-1].num}")
 
     def process_chunks(self):
         chunk_data = []
@@ -245,7 +244,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
     def iter_segments(self):
         while not self.closed:
             for chunk in filter(self.valid_chunk, self.chunks):
-                log.debug("Adding chunk {0} to queue", chunk.num)
+                log.debug(f"Adding chunk {chunk.num} to queue")
                 yield chunk
                 # End of stream
                 if self.closed:
@@ -257,7 +256,7 @@ class UHSStreamWorker(SegmentedStreamWorker):
                 try:
                     self.process_chunks()
                 except StreamError as err:
-                    log.warning("Failed to process module info: {0}", err)
+                    log.warning(f"Failed to process module info: {err}")
 
 
 class UHSStreamReader(SegmentedStreamReader):
@@ -315,7 +314,7 @@ class UHSStream(Stream):
                 if not cmd_args:
                     continue
                 if cmd_args["cmd"] == "warning":
-                    log.warning("{code}: {message}", **cmd_args["args"])
+                    log.warning(f"{cmd_args['args']['code']}: {cmd_args['args']['message']}")
                 if cmd_args["cmd"] == "moduleInfo":
                     data = self.handle_module_info(cmd_args["args"])
                     if data:
@@ -460,8 +459,8 @@ class UStreamTV(Plugin):
                             cluster="live",
                             password=self.get_option("password"),
                             proxy=self.session.get_option("http-proxy"))
-            log.debug("Connecting to UStream API: media_id={0}, application={1}, referrer={2}, cluster={3}",
-                      media_id, application, self.url, "live")
+            log.debug(f"Connecting to UStream API: "
+                      f"media_id={media_id}, application={application}, referrer={self.url}, cluster=live")
             api.connect()
 
             streams_data = {}

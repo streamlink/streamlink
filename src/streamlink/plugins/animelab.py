@@ -81,7 +81,7 @@ class AnimeLab(Plugin):
             return
 
         if self.login(email, password):
-            log.info("Successfully logged in as {0}", email)
+            log.info(f"Successfully logged in as {email}")
             video_collection = self.session.http.get(self.url, schema=self.video_collection_schema)
             if video_collection["playlist"] is None or video_collection["position"] is None:
                 return

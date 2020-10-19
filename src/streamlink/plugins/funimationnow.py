@@ -221,33 +221,32 @@ class FunimationNow(Plugin):
         id_m = self.experience_id_re.search(res.text)
         experience_id = id_m and int(id_m.group(1))
         if experience_id:
-            log.debug("Found experience ID: {0}", experience_id)
+            log.debug(f"Found experience ID: {experience_id}")
             exp = Experience(self.session, experience_id)
             if self.get_option("email") and self.get_option("password"):
                 if exp.login(self.get_option("email"), self.get_option("password")):
-                    log.info("Logged in to Funimation as {0}", self.get_option("email"))
+                    log.info(f"Logged in to Funimation as {self.get_option('email')}")
                 else:
                     log.warning("Failed to login")
 
             if exp.episode_info:
-                log.debug("Found episode: {0}", exp.episode_info["episodeTitle"])
-                log.debug("  has languages: {0}", ", ".join(exp.episode_info["languages"].keys()))
-                log.debug("  requested language: {0}", rlanguage)
-                log.debug("  current language:   {0}", exp.language)
+                log.debug(f"Found episode: {exp.episode_info['episodeTitle']}")
+                log.debug(f"  has languages: {', '.join(exp.episode_info['languages'].keys())}")
+                log.debug(f"  requested language: {rlanguage}")
+                log.debug(f"  current language:   {exp.language}")
                 if rlanguage != exp.language:
-                    log.debug("switching language to: {0}", rlanguage)
+                    log.debug(f"switching language to: {rlanguage}")
                     exp.set_language(rlanguage)
                     if exp.language != rlanguage:
-                        log.warning("Requested language {0} is not available, continuing with {1}",
-                                    rlanguage, exp.language)
+                        log.warning(f"Requested language {rlanguage} is not available, continuing with {exp.language}")
                     else:
-                        log.debug("New experience ID: {0}", exp.experience_id)
+                        log.debug(f"New experience ID: {exp.experience_id}")
 
                 subtitles = None
                 stream_metadata = {}
                 disposition = {}
                 for subtitle in exp.subtitles():
-                    log.debug("Subtitles: {0}", subtitle["src"])
+                    log.debug(f"Subtitles: {subtitle['src']}")
                     if subtitle["src"].endswith(".vtt") or subtitle["src"].endswith(".srt"):
                         sub_lang = {"en": "eng", "ja": "jpn"}[subtitle["language"]]
                         # pick the first suitable subtitle stream

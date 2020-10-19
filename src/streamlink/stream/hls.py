@@ -131,7 +131,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                                          retries=self.retries,
                                          **request_params)
         except StreamError as err:
-            log.error("Failed to open segment {0}: {1}", sequence.num, err)
+            log.error(f"Failed to open segment {sequence.num}: {err}")
             return
 
     def write(self, sequence, res, chunk_size=8192):
@@ -140,7 +140,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 decryptor = self.create_decryptor(sequence.segment.key,
                                                   sequence.num)
             except StreamError as err:
-                log.error("Failed to create decryptor: {0}", err)
+                log.error(f"Failed to create decryptor: {err}")
                 self.close()
                 return
 
@@ -148,8 +148,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             # If the input data is not a multiple of 16, cut off any garbage
             garbage_len = len(data) % 16
             if garbage_len:
-                log.debug("Cutting off {0} bytes of garbage "
-                          "before decrypting", garbage_len)
+                log.debug(f"Cutting off {garbage_len} bytes of garbage before decrypting")
                 decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
             else:
                 decrypted_chunk = decryptor.decrypt(data)
@@ -160,11 +159,11 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 for chunk in res.iter_content(chunk_size):
                     self.reader.buffer.write(chunk)
             except ChunkedEncodingError:
-                log.error("Download of segment {0} failed", sequence.num)
+                log.error(f"Download of segment {sequence.num} failed")
 
                 return
 
-        log.debug("Download of segment {0} complete", sequence.num)
+        log.debug(f"Download of segment {sequence.num} complete")
 
 
 class HLSStreamWorker(SegmentedStreamWorker):
@@ -194,8 +193,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if self.playlist_end is None:
             if self.duration_offset_start > 0:
-                log.debug("Time offsets negative for live streams, skipping back {0} seconds",
-                          self.duration_offset_start)
+                log.debug(f"Time offsets negative for live streams, skipping back {self.duration_offset_start} seconds")
             # live playlist, force offset durations back to None
             self.duration_offset_start = -self.duration_offset_start
 
@@ -203,11 +201,12 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
 
         if self.playlist_sequences:
-            log.debug("First Sequence: {0}; Last Sequence: {1}",
-                      self.playlist_sequences[0].num, self.playlist_sequences[-1].num)
-            log.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
-                      self.duration_offset_start, self.duration_limit,
-                      self.playlist_sequence, self.playlist_end)
+            log.debug(f"First Sequence: {self.playlist_sequences[0].num}; "
+                      f"Last Sequence: {self.playlist_sequences[-1].num}")
+            log.debug(f"Start offset: {self.duration_offset_start}; "
+                      f"Duration: {self.duration_limit}; "
+                      f"Start Sequence: {self.playlist_sequence}; "
+                      f"End Sequence: {self.playlist_end}")
 
     def _reload_playlist(self, text, url):
         return hls_playlist.load(text, url)
@@ -302,11 +301,11 @@ class HLSStreamWorker(SegmentedStreamWorker):
         total_duration = 0
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
-                log.debug("Adding segment {0} to queue", sequence.num)
+                log.debug(f"Adding segment {sequence.num} to queue")
                 yield sequence
                 total_duration += sequence.segment.duration
                 if self.duration_limit and total_duration >= self.duration_limit:
-                    log.info("Stopping stream early after {0}".format(self.duration_limit))
+                    log.info(f"Stopping stream early after {self.duration_limit}")
                     return
 
                 # End of stream
@@ -320,7 +319,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
                 try:
                     self.reload_playlist()
                 except StreamError as err:
-                    log.warning("Failed to reload playlist: {0}", err)
+                    log.warning(f"Failed to reload playlist: {err}")
 
 
 class HLSStreamReader(SegmentedStreamReader):

@@ -370,8 +370,7 @@ class Plugin(object):
             if match:
                 name = match.group(1)
             else:
-                self.logger.debug("The stream '{0}' has been ignored "
-                                  "since it is badly named.", name)
+                self.logger.debug(f"The stream '{name}' has been ignored since it is badly named.")
                 continue
 
             # Force lowercase name and replace space with underscore.

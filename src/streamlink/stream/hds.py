@@ -80,8 +80,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
                                          params=params,
                                          **request_params)
         except StreamError as err:
-            log.error("Failed to open fragment {0}-{1}: {2}",
-                      fragment.segment, fragment.fragment, err)
+            log.error(f"Failed to open fragment {fragment.segment}-{fragment.fragment}: {err}")
             return self.fetch(fragment, retries - 1)
 
     def write(self, fragment, res, chunk_size=8192):
@@ -98,13 +97,11 @@ class HDSStreamWriter(SegmentedStreamWriter):
                     mdat = box.payload.data
                     break
         except F4VError as err:
-            log.error("Failed to parse fragment {0}-{1}: {2}",
-                      fragment.segment, fragment.fragment, err)
+            log.error(f"Failed to parse fragment {fragment.segment}-{fragment.fragment}: {err}")
             return
 
         if not mdat:
-            log.error("No MDAT box found in fragment {0}-{1}",
-                      fragment.segment, fragment.fragment)
+            log.error(f"No MDAT box found in fragment {fragment.segment}-{fragment.fragment}")
             return
 
         try:
@@ -114,17 +111,14 @@ class HDSStreamWriter(SegmentedStreamWriter):
                 if self.closed:
                     break
             else:
-                log.debug("Download of fragment {0}-{1} complete",
-                          fragment.segment, fragment.fragment)
+                log.debug(f"Download of fragment {fragment.segment}-{fragment.fragment} complete")
         except IOError as err:
             if "Unknown tag type" in str(err):
-                log.error("Unknown tag type found, this stream is "
-                          "probably encrypted")
+                log.error("Unknown tag type found, this stream is probably encrypted")
                 self.close()
                 return
 
-            log.error("Error reading fragment {0}-{1}: {2}",
-                      fragment.segment, fragment.fragment, err)
+            log.error(f"Error reading fragment {fragment.segment}-{fragment.fragment}: {err}")
 
 
 class HDSStreamWorker(SegmentedStreamWorker):
@@ -180,8 +174,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 current_fragment = max(self.first_fragment,
                                        current_fragment - (fragment_buffer - 1))
 
-                log.debug("Live edge buffer {0} sec is {1} fragments",
-                          self.live_edge, fragment_buffer)
+                log.debug(f"Live edge buffer {self.live_edge} sec is {fragment_buffer} fragments")
 
                 # Make sure we don't have a duration set when it's a
                 # live stream since it will just confuse players anyway.
@@ -191,12 +184,12 @@ class HDSStreamWorker(SegmentedStreamWorker):
 
             self.current_fragment = current_fragment
 
-        log.debug("Current timestamp: {0}", self.timestamp / self.time_scale)
-        log.debug("Current segment: {0}", self.current_segment)
-        log.debug("Current fragment: {0}", self.current_fragment)
-        log.debug("First fragment: {0}", self.first_fragment)
-        log.debug("Last fragment: {0}", self.last_fragment)
-        log.debug("End fragment: {0}", self.end_fragment)
+        log.debug(f"Current timestamp: {self.timestamp / self.time_scale}")
+        log.debug(f"Current segment: {self.current_segment}")
+        log.debug(f"Current fragment: {self.current_fragment}")
+        log.debug(f"First fragment: {self.first_fragment}")
+        log.debug(f"Last fragment: {self.last_fragment}")
+        log.debug(f"End fragment: {self.end_fragment}")
 
         self.bootstrap_reload_time = fragment_duration
 
@@ -323,8 +316,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 fragment = Fragment(self.current_segment, fragment,
                                     fragment_duration, fragment_url)
 
-                log.debug("Adding fragment {0}-{1} to queue",
-                          fragment.segment, fragment.fragment)
+                log.debug(f"Adding fragment {fragment.segment}-{fragment.fragment} to queue")
                 yield fragment
 
                 # End of stream
@@ -336,7 +328,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 try:
                     self.update_bootstrap()
                 except StreamError as err:
-                    log.warning("Failed to update bootstrap: {0}", err)
+                    log.warning(f"Failed to update bootstrap: {err}")
 
 
 class HDSStreamReader(SegmentedStreamReader):
@@ -456,7 +448,7 @@ class HDSStream(Stream):
                                     exception=IOError)
 
         if manifest.findtext("drmAdditionalHeader"):
-            log.debug("Omitting HDS stream protected by DRM: {}", url)
+            log.debug(f"Omitting HDS stream protected by DRM: {url}")
             if raise_for_drm:
                 raise PluginError("{} is protected by DRM".format(url))
             log.warning("Some or all streams are unavailable as they are protected by DRM")
