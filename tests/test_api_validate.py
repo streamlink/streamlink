@@ -5,7 +5,7 @@ import unittest
 from xml.etree.ElementTree import Element
 
 from streamlink.plugin.api.validate import (
-    validate, all, any, optional, transform, text, filter, map, hasattr,
+    validate, all, any, optional, transform, filter, map, hasattr,
     get, getattr, length, xml_element, xml_find, xml_findtext, xml_findall,
     union, attr, url, startswith, endswith
 )
@@ -19,9 +19,9 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(transform(int), "1") == 1
 
-        assert validate(text, "abc") == "abc"
-        assert validate(text, u"日本語") == u"日本語"
-        assert validate(transform(text), 1) == "1"
+        assert validate(str, "abc") == "abc"
+        assert validate(str, u"日本語") == u"日本語"
+        assert validate(transform(str), 1) == "1"
 
         assert validate(list, ["a", 1]) == ["a", 1]
         assert validate(dict, {"a": 1}) == {"a": 1}
@@ -60,13 +60,13 @@ class TestPluginAPIValidate(unittest.TestCase):
                         {"n": 5, "f": 3.14}) == {"n": 5, "f": 3.14}
 
     def test_dict_keys(self):
-        assert validate({text: int},
+        assert validate({str: int},
                         {"a": 1, "b": 2}) == {"a": 1, "b": 2}
-        assert validate({transform(text): transform(int)},
+        assert validate({transform(str): transform(int)},
                         {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
 
     def test_nested_dict_keys(self):
-        assert validate({text: {text: int}},
+        assert validate({str: {str: int}},
                         {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
 
     def test_dict_optional_keys(self):
@@ -117,7 +117,7 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(xml_element("tag"), el).tag == "tag"
         assert validate(xml_element(text="test"), el).text == "test"
-        assert validate(xml_element(attrib={"key": text}), el).attrib == {"key": "value"}
+        assert validate(xml_element(attrib={"key": str}), el).attrib == {"key": "value"}
 
     def test_xml_find(self):
         el = Element("parent")
@@ -144,7 +144,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         el = Element("foo")
         el.text = "bar"
 
-        assert validate(attr({"text": text}), el).text == "bar"
+        assert validate(attr({"text": str}), el).text == "bar"
 
     def test_url(self):
         url_ = "https://google.se/path"
