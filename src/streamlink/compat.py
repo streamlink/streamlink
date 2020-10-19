@@ -13,7 +13,4 @@ except ImportError:
         return open(os.path.devnull, 'w')
 
 
-
-
-
 __all__ = ["is_win32", "devnull"]

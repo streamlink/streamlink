@@ -12,5 +12,4 @@ stdout = sys.stdout.buffer
 _find_unsafe = re.compile(r"[^\w@%+=:,./-]", re.ASCII).search
 
 
-__all__ = ["is_win32", "input", "stdout", "file",
-          "get_terminal_size"]
+__all__ = ["is_win32", "input", "stdout", "file", "get_terminal_size"]
