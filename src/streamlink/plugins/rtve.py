@@ -5,7 +5,6 @@ from functools import partial
 
 from Crypto.Cipher import Blowfish
 
-from streamlink.compat import bytes, is_py3
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
@@ -33,10 +32,7 @@ class ZTNRClient(object):
 
     @staticmethod
     def unpad(data):
-        if is_py3:
-            return data[0:-data[-1]]
-        else:
-            return data[0:-ord(data[-1])]
+        return data[0:-data[-1]]
 
     def encrypt(self, data):
         return base64.b64encode(self.cipher.encrypt(self.pad(bytes(data, "utf-8"))), altchars=b"-_").decode("ascii")

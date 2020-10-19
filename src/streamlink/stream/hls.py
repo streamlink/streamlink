@@ -1,12 +1,12 @@
+from collections import defaultdict, namedtuple, OrderedDict
 import logging
 import re
 import struct
+from urllib.parse import urlparse
 
-from collections import defaultdict, namedtuple, OrderedDict
 from Crypto.Cipher import AES
 from requests.exceptions import ChunkedEncodingError
 
-from streamlink.compat import urlparse, str
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream

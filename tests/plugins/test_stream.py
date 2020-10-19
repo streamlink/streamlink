@@ -1,9 +1,9 @@
 import unittest
+from unittest.mock import patch
 
 from streamlink import Streamlink
 from streamlink.plugin.plugin import stream_weight, parse_params
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
-from tests.mock import patch
 
 
 class TestPluginStream(unittest.TestCase):

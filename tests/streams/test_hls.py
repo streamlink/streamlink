@@ -1,15 +1,14 @@
 import os
 import unittest
+from unittest.mock import patch, Mock
 
 from Crypto.Cipher import AES
 import pytest
 import requests_mock
 
 from tests.mixins.stream_hls import Playlist, Tag, Segment, TestMixinStreamHLS
-from tests.mock import patch, Mock
 from tests.resources import text
 
-from streamlink.compat import str
 from streamlink.session import Streamlink
 from streamlink.stream import hls
 
@@ -71,8 +70,8 @@ class TestHLSVariantPlaylist(unittest.TestCase):
     def test_variant_playlist(self):
         streams = self.subject("hls/test_master.m3u8")
         self.assertEqual(
-            [str(key) for key in streams.keys()],
-            [u"720p", u"720p_alt", u"480p", u"360p", u"160p", u"1080p (source)", u"90k"],
+            list(streams.keys()),
+            ["720p", "720p_alt", "480p", "360p", "160p", "1080p (source)", "90k"],
             "Finds all streams in master playlist"
         )
         self.assertTrue(

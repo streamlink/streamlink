@@ -1,12 +1,12 @@
-import unittest
 import os
+import unittest
+from unittest.mock import patch, call
 
 from streamlink import Streamlink, NoPluginError
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
 from streamlink.session import print_small_exception
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
-from tests.mock import patch, call
 
 
 class TestSession(unittest.TestCase):

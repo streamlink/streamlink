@@ -1,12 +1,13 @@
 import copy
+import datetime
 import itertools
 import logging
-import datetime
 import os.path
+from urllib.parse import urlparse, urlunparse
 
 import requests
+
 from streamlink import StreamError, PluginError
-from streamlink.compat import urlparse, urlunparse
 from streamlink.stream.http import valid_args, normalize_key
 from streamlink.stream.stream import Stream
 from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc, freeze_timeline

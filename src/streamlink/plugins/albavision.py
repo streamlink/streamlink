@@ -9,9 +9,9 @@ Support for the live streams on Albavision sites
 import logging
 import re
 import time
+from urllib.parse import quote, urlencode, urlparse
 
 from streamlink import PluginError
-from streamlink.compat import quote, urlencode, urlparse
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme

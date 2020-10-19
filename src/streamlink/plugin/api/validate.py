@@ -16,15 +16,11 @@
 """
 
 
-from xml.etree import ElementTree as ET
 from copy import copy as copy_obj
+from functools import singledispatch
+from urllib.parse import urlparse
+from xml.etree import ElementTree as ET
 
-try:
-    from functools import singledispatch
-except ImportError:
-    from singledispatch import singledispatch
-
-from ...compat import is_py2, urlparse
 from ...exceptions import PluginError
 
 __all__ = [
@@ -34,8 +30,7 @@ __all__ = [
     "validate", "Schema", "SchemaContainer"
 ]
 
-#: Alias for text type on each Python version
-text = is_py2 and basestring or str
+text = str
 
 # References to original functions that we override in this module
 _all = all
@@ -73,12 +68,6 @@ class transform(object):
     """Applies function to value to transform it."""
 
     def __init__(self, func):
-        # text is an alias for basestring on Python 2, which cannot be
-        # instantiated and therefore can't be used to transform the value,
-        # so we force to unicode instead.
-        if is_py2 and func == text:
-            func = unicode
-
         self.func = func
 
 
@@ -222,12 +211,6 @@ def map(func):
     Supports both dicts and sequences, key/value pairs are
     expanded when applied to a dict.
     """
-    # text is an alias for basestring on Python 2, which cannot be
-    # instantiated and therefore can't be used to transform the value,
-    # so we force to unicode instead.
-    if is_py2 and text == func:
-        func = unicode
-
     def expand_kv(kv):
         return func(*kv)
 

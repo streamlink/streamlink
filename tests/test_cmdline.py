@@ -1,11 +1,11 @@
 import os.path
 import unittest
+from unittest.mock import patch, ANY
 
 from streamlink import Streamlink
 import streamlink_cli.main
 from streamlink_cli.compat import is_win32
 
-from tests.mock import patch, ANY
 
 PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
 

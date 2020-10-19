@@ -1,7 +1,7 @@
 import logging
 import re
+from urllib.parse import urlparse
 
-from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugins.afreeca import AfreecaTV
 from streamlink.plugins.twitch import Twitch

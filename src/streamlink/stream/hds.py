@@ -1,4 +1,3 @@
-from __future__ import division
 import logging
 import base64
 import hmac
@@ -13,6 +12,7 @@ from copy import deepcopy
 from hashlib import sha256
 from io import BytesIO
 from math import ceil
+from urllib.parse import parse_qsl, urljoin, urlparse, urlunparse
 
 from .flvconcat import FLVTagConcat
 from .segmented import (SegmentedStreamReader,
@@ -22,7 +22,6 @@ from .stream import Stream
 from .wrappers import StreamIOIterWrapper
 
 from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
 from ..exceptions import StreamError, PluginError
 from ..utils import absolute_url, swfdecompress
 

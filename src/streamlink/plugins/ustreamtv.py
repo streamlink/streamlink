@@ -3,6 +3,7 @@ import errno
 import json
 import logging
 import re
+from urllib.parse import urljoin, urlunparse, urlparse, unquote_plus
 import websocket
 
 from collections import deque, namedtuple
@@ -11,7 +12,6 @@ from socket import error as SocketError
 from threading import Thread, Event
 from time import sleep
 
-from streamlink.compat import range, urljoin, urlunparse, urlparse, unquote_plus
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents, validate

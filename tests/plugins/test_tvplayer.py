@@ -1,10 +1,10 @@
 import unittest
+from unittest.mock import patch, Mock, ANY, MagicMock, call
 
 from streamlink import Streamlink
 from streamlink.plugin.api import HTTPSession
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
-from tests.mock import patch, Mock, ANY, MagicMock, call
 
 
 class TestPluginTVPlayer(unittest.TestCase):

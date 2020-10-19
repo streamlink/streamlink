@@ -1,9 +1,8 @@
+from base64 import b64decode
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse
 
-from base64 import b64decode
-
-from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin
 from streamlink.stream import HDSStream, HLSStream
 

@@ -1,11 +1,11 @@
-import re
 import logging
+import re
+from urllib.parse import urlparse, parse_qsl
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse, parse_qsl
 
 log = logging.getLogger(__name__)
 

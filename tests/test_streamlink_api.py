@@ -1,7 +1,6 @@
 import os.path
-
 import unittest
-from tests.mock import patch
+from unittest.mock import patch
 
 from streamlink import Streamlink
 from streamlink.api import streams

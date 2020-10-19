@@ -1,5 +1,3 @@
-from __future__ import division
-
 import logging
 from collections import namedtuple
 from io import IOBase

@@ -1,11 +1,7 @@
+from io import StringIO
 import unittest
+from unittest.mock import Mock, patch
 
-try:
-    from io import StringIO
-except ImportError:
-    from StringIO import StringIO
-
-from tests.mock import Mock, patch
 from streamlink_cli.console import ConsoleOutput
 
 

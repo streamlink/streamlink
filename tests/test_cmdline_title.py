@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 import unittest
 
-from streamlink.compat import is_win32, is_py3, is_py2
-from streamlink.utils import get_filesystem_encoding
+from streamlink.compat import is_win32
 from tests.test_cmdline import CommandLineTestCase
 
 
@@ -42,17 +40,6 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             "c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"Test Title\" -"
         )
 
-    @unittest.skipIf(is_py3, "Encoding is different in Python 2")
-    def test_open_player_with_unicode_author_vlc_py2(self):
-        self._test_args(
-            ["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe",
-             "--title", "{author}", "http://test.se", "test"],
-            "c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \""
-            + u"Tѥst Āuƭhǿr".encode(get_filesystem_encoding())
-            + "\" -"
-        )
-
-    @unittest.skipIf(not is_py3, "Encoding is different in Python 2")
     def test_open_player_with_unicode_author_vlc_py3(self):
         self._test_args(
             ["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe",
@@ -81,18 +68,6 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             passthrough=True
         )
 
-    @unittest.skipUnless(is_py2, "Encoding is different in Python 2")
-    def test_open_player_with_unicode_author_pot_py2(self):
-        self._test_args(
-            ["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"",
-             "--title", "{author}", "http://test.se/stream", "hls", "--player-passthrough", "hls"],
-            "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\" \"http://test.se/playlist.m3u8\\"
-            + u"Tѥst Āuƭhǿr".encode(get_filesystem_encoding())
-            + "\"",
-            passthrough=True
-        )
-
-    @unittest.skipUnless(is_py3, "Encoding is different in Python 3")
     def test_open_player_with_unicode_author_pot_py3(self):
         self._test_args(
             ["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"",
@@ -111,12 +86,6 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             passthrough=True
         )
 
-    @unittest.skipUnless(is_py2, "test only valid for Python 2")
-    def test_unicode_title_2444_py2(self):
-        self._test_args(["streamlink", "-p", "mpv", "-t", u"★".encode(get_filesystem_encoding()), "http://test.se", "test"],
-                        "mpv --title=" + u"★".encode(get_filesystem_encoding()) + " -")
-
-    @unittest.skipUnless(is_py3, "test only valid for Python 3")
     def test_unicode_title_2444_py3(self):
         self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
                         "mpv --title=★ -")

@@ -1,7 +1,8 @@
+from html import unescape as html_unescape
 import logging
 import re
+from urllib.parse import urlparse
 
-from streamlink.compat import html_unescape, urlparse
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream

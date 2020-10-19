@@ -4,11 +4,11 @@ import re
 import websocket
 import threading
 import time
+from urllib.parse import urlparse, unquote_plus
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse, unquote_plus
 
 
 _log = logging.getLogger(__name__)
