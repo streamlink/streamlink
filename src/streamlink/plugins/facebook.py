@@ -3,7 +3,6 @@ import re
 
 from streamlink.compat import bytes, is_py3, html_unescape, unquote_plus, urlencode
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.utils import parse_json
@@ -84,7 +83,6 @@ class Facebook(Plugin):
                     yield s
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
         done = False
         res = self.session.http.get(self.url)
         for s in self._parse_streams(res):
