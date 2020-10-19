@@ -255,6 +255,10 @@ class YouTube(Plugin):
                     log.debug("Video ID from currentVideoEndpoint")
                     return video_id
             for x in search_dict(data, 'videoRenderer'):
+                if x.get("viewCountText", {}).get("runs"):
+                    if x.get("videoId"):
+                        log.debug("Video ID from videoRenderer (live)")
+                        return x["videoId"]
                 for bstyle in search_dict(x.get("badges", {}), "style"):
                     if bstyle == "BADGE_STYLE_TYPE_LIVE_NOW":
                         if x.get("videoId"):
