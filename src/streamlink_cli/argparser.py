@@ -4,13 +4,13 @@ import re
 from string import printable
 from textwrap import dedent
 
-from streamlink import logger
+from streamlink import logger, __version__ as streamlink_version
 from streamlink.utils.args import (
     boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 )
 from streamlink.utils.times import hours_minutes_seconds
 from .constants import (
-    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
+    STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
 )
 from .utils import find_default_player
 
@@ -162,7 +162,7 @@ def build_parser():
     general.add_argument(
         "-V", "--version",
         action="version",
-        version="%(prog)s {0}".format(LIVESTREAMER_VERSION),
+        version="%(prog)s {0}".format(streamlink_version),
         help="""
         Show version number and exit.
         """
