@@ -1,6 +1,5 @@
 import os
 
-from streamlink import __version__ as LIVESTREAMER_VERSION
 from .compat import is_win32
 
 DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
@@ -35,6 +34,6 @@ STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 
 __all__ = [
-    "CONFIG_FILES", "DEFAULT_PLAYER_ARGUMENTS", "LIVESTREAMER_VERSION",
+    "CONFIG_FILES", "DEFAULT_PLAYER_ARGUMENTS",
     "PLUGINS_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
 ]
