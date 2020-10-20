@@ -56,7 +56,7 @@ class ard_live(Plugin):
             return
 
         data_url = urljoin(res.url, data_url)
-        log.debug("Player URL: '{0}'", data_url)
+        log.debug(f"Player URL: '{data_url}'")
         res = self.session.http.get(data_url)
         mediainfo = parse_json(res.text, name="MEDIAINFO", schema=self._mediainfo_schema)
         log.trace("Mediainfo: {0!r}".format(mediainfo))

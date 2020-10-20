@@ -136,7 +136,7 @@ class StreamProcess(Stream):
         """
         stderr = stderr or self.stderr
         cmd = self.bake(self._check_cmd(), parameters, arguments, short_option_prefix, long_option_prefix)
-        log.debug("Spawning command: {0}", subprocess.list2cmdline(cmd))
+        log.debug(f"Spawning command: {subprocess.list2cmdline(cmd)}")
 
         try:
             process = subprocess.Popen(cmd, stderr=stderr, stdout=subprocess.PIPE)

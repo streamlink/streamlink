@@ -367,23 +367,23 @@ class Crunchyroll(Plugin):
                              locale=locale)
 
         if not self.get_option("session_id"):
-            log.debug("Creating session with locale: {0}", locale)
+            log.debug(f"Creating session with locale: {locale}")
             api.start_session()
 
             if api.auth:
                 log.debug("Using saved credentials")
                 login = api.authenticate()
                 if login:
-                    log.info("Successfully logged in as '{0}'",
-                             login["user"]["username"] or login["user"]["email"])
+                    login_name = login["user"]["username"] or login["user"]["email"]
+                    log.info(f"Successfully logged in as '{login_name}'")
             if not api.auth and self.options.get("username"):
                 try:
                     log.debug("Attempting to login using username and password")
                     api.login(self.options.get("username"),
                               self.options.get("password"))
                     login = api.authenticate()
-                    log.info("Logged in as '{0}'",
-                             login["user"]["username"] or login["user"]["email"])
+                    login_name = login["user"]["username"] or login["user"]["email"]
+                    log.info(f"Logged in as '{login_name}'")
 
                 except CrunchyrollAPIError as err:
                     raise PluginError(u"Authentication error: {0}".format(err.msg))

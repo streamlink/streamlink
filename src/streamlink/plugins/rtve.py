@@ -140,7 +140,7 @@ class Rtve(Plugin):
         streams = []
         content_id = self._get_content_id()
         if content_id:
-            log.debug("Found content with id: {0}", content_id)
+            log.debug(f"Found content with id: {content_id}")
             stream_data = self.zclient.get_cdn_list(content_id, schema=self.cdn_schema)
             quality_map = None
 

@@ -1,8 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
+
+
+log = logging.getLogger(__name__)
 
 
 class CanalPlus(Plugin):
@@ -96,7 +100,7 @@ class CanalPlus(Plugin):
                                               headers=headers)
             except IOError as err:
                 if '403 Client Error' in str(err):
-                    self.logger.error('Failed to access stream, may be due to geo-restriction')
+                    log.error('Failed to access stream, may be due to geo-restriction')
 
 
 __plugin__ = CanalPlus

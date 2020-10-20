@@ -1,9 +1,13 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
+
+
+log = logging.getLogger(__name__)
 
 
 class ElTreceTV(Plugin):
@@ -25,7 +29,7 @@ class ElTreceTV(Plugin):
                 yt_url = "https://www.youtube.com/watch?v={0}".format(yt_id)
                 return self.session.streams(yt_url)
             except BaseException:
-                self.logger.info("Live content is temporarily unavailable. Please try again later.")
+                log.info("Live content is temporarily unavailable. Please try again later.")
         else:
             try:
                 self.session.http.headers = {
@@ -42,7 +46,7 @@ class ElTreceTV(Plugin):
                           "{0}/format/applehttp/protocol/https/a.m3u8".format(entry_id)
                 return HLSStream.parse_variant_playlist(self.session, hls_url)
             except BaseException:
-                self.logger.error("The requested VOD content is unavailable.")
+                log.error("The requested VOD content is unavailable.")
 
 
 __plugin__ = ElTreceTV

@@ -1,3 +1,4 @@
+import logging
 import re
 
 from streamlink.exceptions import PluginError
@@ -5,6 +6,9 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
+
+
+log = logging.getLogger(__name__)
 
 
 class TVP(Plugin):
@@ -30,7 +34,7 @@ class TVP(Plugin):
             raise PluginError('Unable to find a video id')
 
         video_id = m.group('video_id')
-        self.logger.debug('Found video id: {0}'.format(video_id))
+        log.debug('Found video id: {0}'.format(video_id))
         p_url = self.player_url.format(video_id)
         return p_url
 
@@ -45,7 +49,7 @@ class TVP(Plugin):
 
         streams = []
         for url in m:
-            self.logger.debug('URL={0}'.format(url))
+            log.debug('URL={0}'.format(url))
             if url.endswith('.m3u8'):
                 for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt='{pixels}_{bitrate}').items():
                     streams.append(s)

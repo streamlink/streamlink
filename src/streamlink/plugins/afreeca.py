@@ -1,9 +1,13 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin import PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 CHANNEL_API_URL = "http://live.afreecatv.com:8057/afreeca/player_live_api.php"
 STREAM_INFO_URLS = "{rmd}/broad_stream_assign.html"
@@ -143,21 +147,21 @@ class AfreecaTV(Plugin):
         login_username = self.get_option("username")
         login_password = self.get_option("password")
         if login_username and login_password:
-            self.logger.debug("Attempting login as {0}".format(login_username))
+            log.debug("Attempting login as {0}".format(login_username))
             if self._login(login_username, login_password):
-                self.logger.info("Successfully logged in as {0}".format(login_username))
+                log.info("Successfully logged in as {0}".format(login_username))
             else:
-                self.logger.info("Failed to login as {0}".format(login_username))
+                log.info("Failed to login as {0}".format(login_username))
 
         match = _url_re.match(self.url)
         username = match.group("username")
 
         channel = self._get_channel_info(username)
         if channel.get("BPWD") == "Y":
-            self.logger.error("Stream is Password-Protected")
+            log.error("Stream is Password-Protected")
             return
         elif channel.get("RESULT") == -6:
-            self.logger.error("Login required")
+            log.error("Login required")
             return
         elif channel.get("RESULT") != CHANNEL_RESULT_OK:
             return

@@ -55,7 +55,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                                          headers=headers,
                                          **request_args)
         except StreamError as err:
-            log.error("Failed to open segment {0}: {1}", segment.url, err)
+            log.error(f"Failed to open segment {segment.url}: {err}")
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
@@ -96,7 +96,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
                         if self.closed:
                             break
                         yield segment
-                        # log.debug("Adding segment {0} to queue", segment.url)
+                        # log.debug(f"Adding segment {segment.url} to queue")
 
                     if self.mpd.type == "dynamic":
                         if not self.reload():

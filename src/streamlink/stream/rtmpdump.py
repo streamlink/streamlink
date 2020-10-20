@@ -97,7 +97,7 @@ class RTMPStream(StreamProcess):
             redirect = m.group(1)
 
         if redirect:
-            log.debug("Found redirect tcUrl: {0}", redirect)
+            log.debug(f"Found redirect tcUrl: {redirect}")
 
             if "rtmp" in self.parameters:
                 tcurl, playpath = rtmpparse(self.parameters["rtmp"])

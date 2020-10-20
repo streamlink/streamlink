@@ -1,3 +1,4 @@
+import logging
 import re
 
 from streamlink.exceptions import NoStreamsError
@@ -5,6 +6,9 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class QQ(Plugin):
@@ -46,7 +50,7 @@ class QQ(Plugin):
         except Exception:
             raise NoStreamsError(self.url)
 
-        self.logger.debug("URL={0}".format(hls_url))
+        log.debug("URL={0}".format(hls_url))
         return {"live": HLSStream(self.session, hls_url)}
 
 

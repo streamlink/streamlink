@@ -1,8 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class WebcastIndiaGov(Plugin):
@@ -25,7 +29,7 @@ class WebcastIndiaGov(Plugin):
             hls_url = hls_url[hls_url.rindex('"') + 1:]
             return HLSStream.parse_variant_playlist(self.session, hls_url)
         except BaseException:
-            self.logger.error("The requested channel is unavailable.")
+            log.error("The requested channel is unavailable.")
 
 
 __plugin__ = WebcastIndiaGov

@@ -1,9 +1,13 @@
-import re
 import json
+import logging
+import re
 
 from streamlink.plugin import Plugin
 from streamlink.stream import RTMPStream
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 PAGE_URL = "https://www.tigerdile.com/stream/"
 ROOT_URL = "rtmp://stream.tigerdile.com/live/{0}"
@@ -29,11 +33,11 @@ class Tigerdile(Plugin):
         api_json = json.loads(ci.text)
 
         if not api_json or len(api_json) == 0:
-            self.logger.error("The channel {0} does not exist or is marked private".format(streamname))
+            log.error("The channel {0} does not exist or is marked private".format(streamname))
             return
 
         if not api_json[0]["online"]:
-            self.logger.error("The channel {0} is not online".format(streamname))
+            log.error("The channel {0} is not online".format(streamname))
             return
 
         streams = {}

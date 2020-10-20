@@ -1,9 +1,13 @@
+import logging
 import re
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
+
+
+log = logging.getLogger(__name__)
 
 COOKIES = {
     "family_filter": "off",
@@ -55,7 +59,7 @@ class DailyMotion(Plugin):
         media = self.session.http.json(res, schema=_media_schema)
 
         if media.get("error"):
-            self.logger.error("Failed to get stream: {0}".format(media["error"]["title"]))
+            log.error("Failed to get stream: {0}".format(media["error"]["title"]))
             return
 
         for quality, streams in media['qualities'].items():
@@ -85,7 +89,7 @@ class DailyMotion(Plugin):
                 params=params
             )
         except Exception:
-            self.logger.error("invalid username")
+            log.error("invalid username")
             raise NoStreamsError(self.url)
 
         data = self.session.http.json(res, schema=_live_id_schema)
@@ -103,7 +107,7 @@ class DailyMotion(Plugin):
             media_id = self.get_live_id(username)
 
         if media_id:
-            self.logger.debug("Found media ID: {0}", media_id)
+            log.debug("Found media ID: {0}".format(media_id))
             return self._get_streams_from_media(media_id)
 
 

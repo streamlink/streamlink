@@ -308,7 +308,7 @@ class YouTube(Plugin):
         is_live = False
 
         self.video_id = self._find_video_id(self.url)
-        log.debug("Using video ID: {0}", self.video_id)
+        log.debug(f"Using video ID: {self.video_id}")
 
         info = self._get_stream_info(self.video_id)
         if info and info.get("status") == "fail":
@@ -349,7 +349,7 @@ class YouTube(Plugin):
                 )
                 streams.update(hls_streams)
             except IOError as err:
-                log.warning("Failed to extract HLS streams: {0}", err)
+                log.warning(f"Failed to extract HLS streams: {err}")
 
         if not streams and protected:
             raise PluginError("This plugin does not support protected videos, "

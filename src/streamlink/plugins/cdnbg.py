@@ -47,7 +47,7 @@ class CDNBG(Plugin):
         p = urlparse(url)
         for iframe_url in self.iframe_re.findall(res.text):
             if "googletagmanager" not in iframe_url:
-                log.debug("Found iframe: {0}", iframe_url)
+                log.debug(f"Found iframe: {iframe_url}")
                 iframe_url = iframe_url.replace("&#58;", ":")
                 if iframe_url.startswith("//"):
                     return update_scheme(p.scheme, iframe_url)

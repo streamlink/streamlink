@@ -56,7 +56,7 @@ class BTV(Plugin):
         media_match = self.media_id_re.search(res.text)
         media_id = media_match and media_match.group(1)
         if media_id:
-            log.debug("Found media id: {0}", media_id)
+            log.debug(f"Found media id: {media_id}")
             stream_url = self.get_hls_url(media_id)
             if stream_url:
                 return HLSStream.parse_variant_playlist(self.session, stream_url)

@@ -44,7 +44,7 @@ class Piczel(Plugin):
             if not stream["live"]:
                 return
 
-            log.debug("HLS stream URL: {}", HLS_URL.format(stream["id"]))
+            log.debug(f"HLS stream URL: {HLS_URL.format(stream['id'])}")
 
             return {"live": HLSStream(self.session, HLS_URL.format(stream["id"]))}
 

@@ -1,10 +1,13 @@
+import logging
 import re
-
 from time import time
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import validate
 from streamlink.stream import RTMPStream, HLSStream
+
+
+log = logging.getLogger(__name__)
 
 SWF_URL = "http://play.streamingvideoprovider.com/player2.swf"
 API_URL = "http://player.webvideocore.net/index.php"
@@ -75,14 +78,14 @@ class Streamingvideoprovider(Plugin):
             stream = self._get_rtmp_stream(channel_name)
             yield "live", stream
         except PluginError as err:
-            self.logger.error("Unable to extract RTMP stream: {0}", err)
+            log.error("Unable to extract RTMP stream: {0}".format(err))
 
         try:
             stream = self._get_hls_stream(channel_name)
             if stream:
                 yield "live", stream
         except PluginError as err:
-            self.logger.error("Unable to extract HLS stream: {0}", err)
+            log.error("Unable to extract HLS stream: {0}".format(err))
 
 
 __plugin__ = Streamingvideoprovider
