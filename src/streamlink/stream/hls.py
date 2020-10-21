@@ -1,4 +1,4 @@
-from collections import defaultdict, namedtuple, OrderedDict
+from collections import defaultdict, namedtuple
 import logging
 import re
 import struct
@@ -428,7 +428,7 @@ class HLSStream(HTTPStream):
         except ValueError as err:
             raise IOError("Failed to parse playlist: {0}".format(err))
 
-        streams = OrderedDict()
+        streams = {}
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []

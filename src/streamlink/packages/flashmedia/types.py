@@ -1,4 +1,4 @@
-from .compat import OrderedDict, is_py2, str, bytes, integer_types, string_types
+from .compat import is_py2, str, bytes, integer_types, string_types
 from .util import pack_bytes_into
 
 from collections import namedtuple
@@ -500,7 +500,7 @@ class ScriptDataObjectEnd(Exception):
     pass
 
 
-class ScriptDataObject(OrderedDict, ScriptDataType):
+class ScriptDataObject(dict, ScriptDataType):
     __identifier__ = SCRIPT_DATA_TYPE_OBJECT
 
     @classmethod
@@ -1075,7 +1075,7 @@ class AMF3ObjectBase(object):
         return amfcls
 
 
-class AMF3Object(OrderedDict, AMF3ObjectBase):
+class AMF3Object(dict, AMF3ObjectBase):
     __dynamic__ = True
 
 
@@ -1244,7 +1244,7 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
                                                    dynamic, members)
                     traits_cache.append(traits)
 
-            values = OrderedDict()
+            values = {}
 
             for member in traits.__members__:
                 value = AMF3Value.read(fd, str_cache=str_cache,
@@ -1270,15 +1270,15 @@ class AMF3ObjectPacker(DynamicType, AMF3Type):
         return obj
 
 
-class AMF3Array(OrderedDict):
+class AMF3Array(dict):
     def __init__(self, *args, **kwargs):
         if args and isinstance(args[0], list):
-            OrderedDict.__init__(self, **kwargs)
+            dict.__init__(self, **kwargs)
 
             for i, value in enumerate(args[0]):
                 self[i] = value
         else:
-            OrderedDict.__init__(self, *args, **kwargs)
+            dict.__init__(self, *args, **kwargs)
 
     def dense_keys(self):
         dense_keys = []

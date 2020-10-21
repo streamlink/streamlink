@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from urllib.parse import urljoin, urlparse, urlunparse, parse_qsl, urlencode
 
 
@@ -80,7 +79,7 @@ def update_qsd(url, qsd=None, remove=None, keep_blank_values=True):
 
     # parse current query string
     parsed = urlparse(url)
-    current_qsd = OrderedDict(parse_qsl(parsed.query, keep_blank_values=True))
+    current_qsd = dict(parse_qsl(parsed.query, keep_blank_values=True))
 
     # * removes all possible keys
     if remove == "*":

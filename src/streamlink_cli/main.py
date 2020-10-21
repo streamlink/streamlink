@@ -3,7 +3,7 @@ import errno
 import logging
 import os
 import platform
-from collections import OrderedDict
+
 from gettext import gettext
 
 import requests
@@ -876,7 +876,7 @@ def setup_plugin_args(session, parser):
 def setup_plugin_options(session, plugin):
     """Sets Streamlink plugin options."""
     pname = plugin.module
-    required = OrderedDict({})
+    required = {}
     for parg in plugin.arguments:
         if parg.options.get("help") != argparse.SUPPRESS:
             if parg.required:

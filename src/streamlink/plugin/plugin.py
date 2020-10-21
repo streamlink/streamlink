@@ -6,7 +6,6 @@ import time
 import requests.cookies
 
 from functools import partial
-from collections import OrderedDict
 
 from streamlink.cache import Cache
 from streamlink.exceptions import PluginError, NoStreamsError, FatalPluginError
@@ -391,7 +390,7 @@ class Plugin(object):
         elif callable(sorting_excludes):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
-        final_sorted_streams = OrderedDict()
+        final_sorted_streams = {}
 
         for stream_name in sorted(streams, key=stream_weight_only):
             final_sorted_streams[stream_name] = streams[stream_name]

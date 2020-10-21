@@ -1,6 +1,3 @@
-from collections import OrderedDict
-
-
 def _normalise_option_name(name):
     return name.replace('-', '_')
 
@@ -115,7 +112,7 @@ class Arguments(object):
 
     """
     def __init__(self, *args):
-        self.arguments = OrderedDict((arg.name, arg) for arg in args)
+        self.arguments = {arg.name: arg for arg in args}
 
     def __iter__(self):
         return iter(self.arguments.values())
