@@ -1,6 +1,6 @@
 from io import StringIO
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from streamlink_cli.console import ConsoleOutput
 
@@ -13,41 +13,41 @@ class _TestObj(object):
 class TestConsole(unittest.TestCase):
     def test_msg_format(self):
         output = StringIO()
-        console = ConsoleOutput(output, Mock())
+        console = ConsoleOutput(output)
         console.msg("{0} - {1}", 1, 2)
 
         self.assertEqual("1 - 2\n", output.getvalue())
 
     def test_msg_format_kw(self):
         output = StringIO()
-        console = ConsoleOutput(output, Mock())
+        console = ConsoleOutput(output)
         console.msg("{test} - {what}", test=1, what=2)
 
         self.assertEqual("1 - 2\n", output.getvalue())
 
     def test_msg_json_not_set(self):
         output = StringIO()
-        console = ConsoleOutput(output, Mock())
+        console = ConsoleOutput(output)
         self.assertEqual(None, console.msg_json({"test": 1}))
         self.assertEqual("", output.getvalue())
 
     def test_msg_json(self):
         output = StringIO()
-        console = ConsoleOutput(output, Mock(), json=True)
+        console = ConsoleOutput(output, json=True)
         console.msg_json({"test": 1})
         self.assertEqual('''{\n  "test": 1\n}\n''', output.getvalue())
 
     def test_msg_json_object(self):
         output = StringIO()
         test_obj = _TestObj()
-        console = ConsoleOutput(output, Mock(), json=True)
+        console = ConsoleOutput(output, json=True)
         console.msg_json(test_obj)
         self.assertEqual('''{\n  "test": 1\n}\n''', output.getvalue())
 
     @patch('streamlink_cli.console.sys.exit')
     def test_msg_json_error(self, mock_exit):
         output = StringIO()
-        console = ConsoleOutput(output, Mock(), json=True)
+        console = ConsoleOutput(output, json=True)
         console.msg_json({"error": "bad"})
         self.assertEqual('''{\n  "error": "bad"\n}\n''', output.getvalue())
         mock_exit.assert_called_with(1)
@@ -55,7 +55,7 @@ class TestConsole(unittest.TestCase):
     @patch('streamlink_cli.console.sys.exit')
     def test_exit(self, mock_exit):
         output = StringIO()
-        console = ConsoleOutput(output, Mock())
+        console = ConsoleOutput(output)
         console.exit("error")
         self.assertEqual("error: error\n", output.getvalue())
         mock_exit.assert_called_with(1)
@@ -63,16 +63,10 @@ class TestConsole(unittest.TestCase):
     @patch('streamlink_cli.console.sys.exit')
     def test_exit_json(self, mock_exit):
         output = StringIO()
-        console = ConsoleOutput(output, Mock(), json=True)
+        console = ConsoleOutput(output, json=True)
         console.exit("error")
         self.assertEqual('''{\n  "error": "error"\n}\n''', output.getvalue())
         mock_exit.assert_called_with(1)
-
-    def test_set_level(self):
-        session = Mock()
-        console = ConsoleOutput(Mock(), session)
-        console.set_level("debug")
-        session.set_loglevel.assert_called_with("debug")
 
     @patch('streamlink_cli.console.sys.stderr')
     @patch('streamlink_cli.console.input')

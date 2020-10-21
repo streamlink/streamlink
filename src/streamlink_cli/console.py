@@ -30,14 +30,9 @@ class ConsoleUserInputRequester(UserInputRequester):
 
 
 class ConsoleOutput(object):
-    def __init__(self, output, streamlink, json=False):
-        self.streamlink = streamlink
-
+    def __init__(self, output, json=False):
         self.json = json
         self.output = output
-
-    def set_level(self, level):
-        self.streamlink.set_loglevel(level)
 
     def set_output(self, output):
         self.output = output

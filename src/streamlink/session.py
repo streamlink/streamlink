@@ -8,7 +8,7 @@ import requests
 
 from collections import OrderedDict
 
-from streamlink.logger import StreamlinkLogger, Logger
+from streamlink.logger import StreamlinkLogger
 from streamlink.utils import update_scheme, memoize
 from streamlink.utils.l10n import Localization
 from . import plugins, __version__
@@ -89,17 +89,6 @@ class Streamlink(object):
             self.options.update(options)
         self.plugins = OrderedDict({})
         self.load_builtin_plugins()
-        self._logger = None
-
-    @property
-    def logger(self):
-        """
-        Backwards compatible logger property
-        :return: Logger instance
-        """
-        if not self._logger:
-            self._logger = Logger()
-        return self._logger
 
     def set_option(self, key, value):
         """Sets general options used by plugins and streams originating
@@ -366,25 +355,6 @@ class Streamlink(object):
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             return plugin.get_option(key)
-
-    def set_loglevel(self, level):
-        """Sets the log level used by this session.
-
-        Valid levels are: "none", "error", "warning", "info"
-        and "debug".
-
-        :param level: level of logging to output
-
-        """
-        self.logger.set_level(level)
-
-    def set_logoutput(self, output):
-        """Sets the log output used by this session.
-
-        :param output: a file-like object with a write method
-
-        """
-        self.logger.set_output(output)
 
     @memoize
     def resolve_url(self, url, follow_redirect=True):
