@@ -1,8 +1,7 @@
-import argparse
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -11,18 +10,6 @@ log = logging.getLogger(__name__)
 
 
 class BTV(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "username",
-            help=argparse.SUPPRESS
-        ),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            help=argparse.SUPPRESS
-        )
-    )
-
     url_re = re.compile(r"https?://(?:www\.)?btvplus\.bg/live/?")
     api_url = "https://btvplus.bg/lbin/v3/btvplus/player_config.php"
 

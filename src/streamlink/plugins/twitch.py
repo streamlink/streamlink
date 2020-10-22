@@ -1,4 +1,3 @@
-import argparse
 from collections import namedtuple
 import json
 import logging
@@ -386,16 +385,6 @@ class TwitchAPI(object):
 
 class Twitch(Plugin):
     arguments = PluginArguments(
-        PluginArgument(
-            "oauth-token",
-            sensitive=True,
-            help=argparse.SUPPRESS
-        ),
-        PluginArgument(
-            "cookie",
-            sensitive=True,
-            help=argparse.SUPPRESS
-        ),
         PluginArgument(
             "disable-hosting",
             action="store_true",

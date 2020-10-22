@@ -1,9 +1,8 @@
-import argparse
 import logging
 import re
 from urllib.parse import parse_qsl, urlparse, urlunparse
 
-from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import validate, useragents
 from streamlink.plugin.api.utils import itertags, parse_query
 from streamlink.stream import HTTPStream, HLSStream
@@ -122,14 +121,6 @@ class YouTube(Plugin):
         256: 256,
         258: 258,
     }
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "api-key",
-            sensitive=True,
-            help=argparse.SUPPRESS  # no longer used
-        )
-    )
 
     def __init__(self, url):
         super(YouTube, self).__init__(url)

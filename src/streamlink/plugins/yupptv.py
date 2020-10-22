@@ -1,4 +1,3 @@
-import argparse
 import logging
 import re
 import time
@@ -17,8 +16,6 @@ class YuppTV(Plugin):
     _cookie_expiry = 3600 * 24 * 365
 
     arguments = PluginArguments(
-        PluginArgument("email", help=argparse.SUPPRESS),
-        PluginArgument("password", help=argparse.SUPPRESS),
         PluginArgument(
             "boxid",
             requires=["yuppflixtoken"],
