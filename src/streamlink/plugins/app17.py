@@ -69,8 +69,7 @@ class App17(Plugin):
                 for _n, _s in s.items():
                     yield "live", _s
             else:
-                for _s in s.items():
-                    yield _s
+                yield from s.items()
 
 
 __plugin__ = App17

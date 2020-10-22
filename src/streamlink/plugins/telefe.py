@@ -45,8 +45,7 @@ class Telefe(Plugin):
 
         if video_url_found_hls:
             hls_streams = HLSStream.parse_variant_playlist(self.session, video_url_found_hls)
-            for s in hls_streams.items():
-                yield s
+            yield from hls_streams.items()
 
         if video_url_found_http:
             yield "http", HTTPStream(self.session, video_url_found_http)

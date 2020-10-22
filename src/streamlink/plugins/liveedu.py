@@ -127,8 +127,7 @@ class LiveEdu(Plugin):
                     yield label, RTMPStream(self.session, params)
 
                 elif url["type"] == "application/x-mpegURL":
-                    for s in HLSStream.parse_variant_playlist(self.session, url["src"]).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, url["src"]).items()
 
 
 __plugin__ = LiveEdu

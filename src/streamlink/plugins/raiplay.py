@@ -47,8 +47,7 @@ class RaiPlay(Plugin):
             log.error("Geo-restricted content")
             return
 
-        for stream in HLSStream.parse_variant_playlist(self.session, stream_url).items():
-            yield stream
+        yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()
 
 
 __plugin__ = RaiPlay

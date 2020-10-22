@@ -44,8 +44,7 @@ class ZengaTV(Plugin):
         data = {"feed": "hd", "dvrId": dvr_id}
         res = self.session.http.post(self.api_url, headers=headers, data=data)
         if res.status_code == 200:
-            for s in HLSStream.parse_variant_playlist(self.session, res.text, headers=headers).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, res.text, headers=headers).items()
 
 
 __plugin__ = ZengaTV

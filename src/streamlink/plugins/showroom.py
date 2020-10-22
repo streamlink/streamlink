@@ -176,8 +176,7 @@ class Showroom(Plugin):
                     quality = _rtmp_quality_lookup.get(stream_info["label"], "other")
                     yield quality, ShowroomHLSStream(self.session, stream_info["url"])
                 else:
-                    for s in streams.items():
-                        yield s
+                    yield from streams.items()
 
 
 __plugin__ = Showroom

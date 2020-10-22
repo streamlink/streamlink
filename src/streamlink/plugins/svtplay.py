@@ -94,8 +94,7 @@ class SVTPlay(Plugin):
 
         for playlist in api_data['videoReferences']:
             if playlist['format'] == 'dashhbbtv':
-                for s in DASHStream.parse_manifest(self.session, playlist['url']).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, playlist['url']).items()
 
     def _get_vod(self):
         res = self.session.http.get(self.url)

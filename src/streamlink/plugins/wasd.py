@@ -77,8 +77,7 @@ class WASD(Plugin):
                 elif stream['media_status'] == 'RUNNING':
                     hls_url = stream['media_meta']['media_url']
 
-                for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
 
 __plugin__ = WASD

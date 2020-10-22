@@ -110,8 +110,7 @@ class Pixiv(Plugin):
 
     def hls_stream(self, hls_url):
         log.debug("URL={0}".format(hls_url))
-        for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-            yield s
+        yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
     def get_streamer_data(self):
         res = self.session.http.get(self.api_lives)

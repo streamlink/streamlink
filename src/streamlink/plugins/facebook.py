@@ -61,8 +61,7 @@ class Facebook(Plugin):
                 # if the URL is json encoded, decode it
                 stream_url = parse_json("\"{}\"".format(stream_url))
             if ".mpd" in stream_url:
-                for s in DASHStream.parse_manifest(self.session, stream_url).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, stream_url).items()
             elif ".mp4" in stream_url:
                 yield match.group(1), HTTPStream(self.session, stream_url)
             else:
@@ -77,8 +76,7 @@ class Facebook(Plugin):
             if "SegmentBase" in manifest:
                 log.error("Skipped DASH manifest with SegmentBase streams")
             else:
-                for s in DASHStream.parse_manifest(self.session, manifest).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, manifest).items()
 
     def _get_streams(self):
         done = False

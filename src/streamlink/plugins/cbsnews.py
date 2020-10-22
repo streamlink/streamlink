@@ -31,8 +31,7 @@ class CBSNews(Plugin):
         items = self.session.http.get(self.url, schema=self._schema_items)
         if items:
             for hls_url in items:
-                for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
 
 __plugin__ = CBSNews

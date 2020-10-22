@@ -89,8 +89,7 @@ class FilmOnHLS(HLSStream):
         if self.channel:
             log.debug(f"Reloading FilmOn channel playlist: {self.channel}")
             data = self.api.channel(self.channel)
-            for stream in data["streams"]:
-                yield stream
+            yield from data["streams"]
         elif self.vod_id:
             log.debug(f"Reloading FilmOn VOD playlist: {self.vod_id}")
             data = self.api.vod(self.vod_id)
@@ -230,8 +229,7 @@ class Filmon(Plugin):
                 if not streams:
                     yield stream["quality"], HLSStream(self.session, stream["url"])
                 else:
-                    for s in streams.items():
-                        yield s
+                    yield from streams.items()
         else:
             if channel and not channel.isdigit():
                 _id = self.cache.get(channel)

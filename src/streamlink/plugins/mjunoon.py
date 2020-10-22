@@ -29,8 +29,7 @@ class Mjunoon(Plugin):
                 for key, url in parse_qsl(urlparts.query):
                     if key == "streamUrl":
                         i += 1
-                        for s in HLSStream.parse_variant_playlist(self.session, url, params=dict(id=i), verify=False).items():
-                            yield s
+                        yield from HLSStream.parse_variant_playlist(self.session, url, params=dict(id=i), verify=False).items()
 
 
 __plugin__ = Mjunoon

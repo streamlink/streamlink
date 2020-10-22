@@ -68,8 +68,7 @@ class DailyMotion(Plugin):
                     if quality != 'auto':
                         # Avoid duplicate HLS streams with bitrate selector in the URL query
                         continue
-                    for s in HLSStream.parse_variant_playlist(self.session, stream['url']).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, stream['url']).items()
                 elif stream['type'] == 'video/mp4':
                     # Drop FPS in quality
                     resolution = re.sub('@[0-9]+', '', quality) + 'p'

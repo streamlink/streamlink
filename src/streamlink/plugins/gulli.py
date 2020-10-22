@@ -71,8 +71,7 @@ class Gulli(Plugin):
 
             try:
                 if '.m3u8' in video_url:
-                    for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                        yield stream
+                    yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
                 elif '.mp4' in video_url:
                     match = self._mp4_bitrate_re.match(video_url)
                     if match is not None:

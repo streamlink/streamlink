@@ -84,8 +84,7 @@ class Picarto(Plugin):
             page = self.session.http.get(self.url)
             vod_streams = self._get_vod_stream(page)
             if vod_streams:
-                for s in vod_streams.items():
-                    yield s
+                yield from vod_streams.items()
                 return
             else:
                 log.warning("Probably a VOD stream but no VOD found?")
@@ -118,8 +117,7 @@ class Picarto(Plugin):
 
         for i in info_json["techs"]:
             if i["label"] == "HLS":
-                for s in self._create_hls_stream(server, channel, token).items():
-                    yield s
+                yield from self._create_hls_stream(server, channel, token).items()
             elif i["label"] == "RTMP Flash":
                 stream = self._create_flash_stream(server, channel, token)
                 yield "live", stream

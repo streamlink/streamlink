@@ -47,8 +47,7 @@ class TVRBy(Plugin):
         log.debug("Found {0} stream URL{1}".format(len(stream_urls), "" if len(stream_urls) == 1 else "s"))
 
         for stream_url in stream_urls:
-            for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()
 
 
 __plugin__ = TVRBy

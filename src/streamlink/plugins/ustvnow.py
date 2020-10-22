@@ -164,8 +164,7 @@ class USTVNow(Plugin):
                 for stream in resp['data']['response']['streams']:
                     if stream['keys']['licenseKey']:
                         log.warning("Stream possibly protected by DRM")
-                    for q, s in HLSStream.parse_variant_playlist(self.session, stream['url']).items():
-                        yield (q, s)
+                    yield from HLSStream.parse_variant_playlist(self.session, stream['url']).items()
             else:
                 log.error("Could not find any streams: {code}: {message}".format(**resp['data']['error']))
         else:

@@ -70,9 +70,8 @@ class ard_live(Plugin):
                     stream_ = stream_[0]
 
                 if ".m3u8" in stream_:
-                    for s in HLSStream.parse_variant_playlist(self.session, stream_).items():
-                        yield s
-                elif (".mp4" in stream_ and ".f4m" not in stream_):
+                    yield from HLSStream.parse_variant_playlist(self.session, stream_).items()
+                elif ".mp4" in stream_ and ".f4m" not in stream_:
                     yield "{0}".format(self._QUALITY_MAP[stream["_quality"]]), HTTPStream(self.session, stream_)
                 else:
                     if ".f4m" not in stream_:

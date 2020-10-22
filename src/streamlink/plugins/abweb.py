@@ -180,8 +180,7 @@ class ABweb(Plugin):
         log.debug('URL={0}'.format(hls_url))
         variant = HLSStream.parse_variant_playlist(self.session, hls_url)
         if variant:
-            for q, s in variant.items():
-                yield q, s
+            yield from variant.items()
         else:
             yield 'live', HLSStream(self.session, hls_url)
 

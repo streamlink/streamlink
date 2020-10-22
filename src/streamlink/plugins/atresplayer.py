@@ -65,11 +65,9 @@ class AtresPlayer(Plugin):
                     if not streams:
                         yield "live", HLSStream(self.session, source["src"])
                     else:
-                        for s in streams.items():
-                            yield s
+                        yield from streams.items()
                 elif source["type"] == "application/dash+xml":
-                    for s in DASHStream.parse_manifest(self.session, source["src"]).items():
-                        yield s
+                    yield from DASHStream.parse_manifest(self.session, source["src"]).items()
 
 
 __plugin__ = AtresPlayer

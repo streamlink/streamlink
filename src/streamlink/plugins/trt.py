@@ -36,14 +36,12 @@ class TRT(Plugin):
 
                 hls_url = url_m and url_m.group("url")
                 if hls_url:
-                    for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
                 f4m_m = self.f4mm_re.search(script_vars)
                 f4m_url = f4m_m and f4m_m.group("url")
                 if f4m_url:
-                    for n, s in HDSStream.parse_manifest(self.session, f4m_url).items():
-                        yield n, s
+                    yield from HDSStream.parse_manifest(self.session, f4m_url).items()
 
 
 __plugin__ = TRT

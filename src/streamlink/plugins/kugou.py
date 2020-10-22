@@ -79,8 +79,7 @@ class Kugou(Plugin):
                 if not s:
                     yield "live", HLSStream(self.session, hls_url)
                 else:
-                    for _s in s.items():
-                        yield _s
+                    yield from s.items()
 
         if stream_data.get("httpsflv"):
             for http_url in stream_data["httpsflv"]:

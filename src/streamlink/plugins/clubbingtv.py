@@ -59,10 +59,7 @@ class ClubbingTV(Plugin):
             return
         stream_url = match.group("stream_url")
 
-        for stream in HLSStream.parse_variant_playlist(
-            self.session, stream_url
-        ).items():
-            yield stream
+        yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()
 
     def _get_vod_streams(self, content):
         match = self._vod_re.search(content)

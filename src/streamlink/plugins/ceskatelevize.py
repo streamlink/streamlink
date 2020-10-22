@@ -262,8 +262,7 @@ class CeskatelevizeAPI2(object):
         json_data = self.session.http.json(response, schema=self._playlist_schema)
         log.trace('{0!r}'.format(json_data))
         playlist = json_data['RESULT']['playlist'][0]['streamUrls']['main']
-        for s in DASHStream.parse_manifest(self.session, playlist).items():
-            yield s
+        yield from DASHStream.parse_manifest(self.session, playlist).items()
 
 
 __plugin__ = Ceskatelevize
