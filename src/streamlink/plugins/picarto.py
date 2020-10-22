@@ -104,6 +104,10 @@ class Picarto(Plugin):
             log.error("The channel {0} is currently offline".format(url_channel_name))
             return
 
+        if channel_api_json["private"]:
+            log.error("The channel {0} is private, such streams are not yet supported".format(url_channel_name))
+            return
+
         server = None
         token = "public"
         channel = channel_api_json["name"]
