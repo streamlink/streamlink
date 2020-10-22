@@ -5,7 +5,7 @@ from functools import partial
 
 from Crypto.Cipher import Blowfish
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
@@ -96,15 +96,6 @@ class Rtve(Plugin):
         validate.get("page"),
         validate.get("items"),
         validate.get(0))
-    arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="""
-        Automatically mux available subtitles in to the output stream.
-        """
-        )
-    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -160,7 +151,7 @@ class Rtve(Plugin):
                         streams.append((quality, HTTPStream(self.session, url)))
 
             subtitles = None
-            if self.get_option("mux_subtitles"):
+            if self.session.get_option("mux_subtitles"):
                 subtitles = self._get_subtitles(content_id)
             if subtitles:
                 substreams = {}

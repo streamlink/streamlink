@@ -553,6 +553,15 @@ def build_parser():
         You will be prompted if the file already exists.
         """
     )
+    output.add_argument(
+        "--mux-subtitles",
+        action="store_true",
+        help="""
+        Automatically mux available subtitles in to the output stream.
+
+        If supported by the plugin.
+        """,
+    )
 
     stream = parser.add_argument_group("Stream options")
     stream.add_argument(

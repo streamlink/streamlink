@@ -39,5 +39,4 @@ class TestPluginFunimationNow(unittest.TestCase):
                                   call('--funimation-password', help=ANY),
                                   call('--funimation-language',
                                        choices=["en", "ja", "english", "japanese"],
-                                       default="english", help=ANY),
-                                  call('--funimation-mux-subtitles', action="store_true", help=ANY)])
+                                       default="english", help=ANY)])

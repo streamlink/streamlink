@@ -3,7 +3,7 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -50,14 +50,6 @@ class Vimeo(Plugin):
         validate.any(None, validate.Schema(validate.get(1), _config_schema)),
     )
 
-    arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="Automatically mux available subtitles in to the output stream.",
-        )
-    )
-
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url)
@@ -101,7 +93,7 @@ class Vimeo(Plugin):
         for stream in videos.get("progressive", []):
             streams.append((stream["quality"], HTTPStream(self.session, stream["url"])))
 
-        if self.get_option("mux_subtitles") and data["request"].get("text_tracks"):
+        if self.session.get_option("mux_subtitles") and data["request"].get("text_tracks"):
             substreams = {
                 s["lang"]: HTTPStream(self.session, "https://vimeo.com" + s["url"])
                 for s in data["request"]["text_tracks"]

@@ -177,15 +177,6 @@ class FunimationNow(Plugin):
 
             Default is "english".
             """
-        ),
-        PluginArgument(
-            "mux-subtitles",
-            argument_name="funimation-mux-subtitles",
-            action="store_true",
-            help="""
-            Enable automatically including available subtitles in to the output
-            stream.
-            """
         )
     )
 
@@ -264,7 +255,7 @@ class FunimationNow(Plugin):
                     url = item["src"]
                     if ".m3u8" in url:
                         for q, s in HLSStream.parse_variant_playlist(self.session, url).items():
-                            if self.get_option("mux_subtitles") and subtitles:
+                            if self.session.get_option("mux_subtitles") and subtitles:
                                 yield q, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
                                                      disposition=disposition)
                             else:
@@ -272,7 +263,7 @@ class FunimationNow(Plugin):
                     elif ".mp4" in url:
                         # TODO: fix quality
                         s = HTTPStream(self.session, url)
-                        if self.get_option("mux_subtitles") and subtitles:
+                        if self.session.get_option("mux_subtitles") and subtitles:
                             yield self.mp4_quality, MuxedStream(self.session, s, subtitles, metadata=stream_metadata,
                                                                 disposition=disposition)
                         else:

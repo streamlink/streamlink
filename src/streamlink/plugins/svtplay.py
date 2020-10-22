@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -45,14 +45,6 @@ class SVTPlay(Plugin):
             'format': validate.text,
         }],
     })
-
-    arguments = PluginArguments(
-        PluginArgument(
-            'mux-subtitles',
-            action='store_true',
-            help="Automatically mux available subtitles in to the output stream.",
-        ),
-    )
 
     @classmethod
     def can_handle_url(cls, url):

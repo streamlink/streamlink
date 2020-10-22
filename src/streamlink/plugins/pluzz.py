@@ -3,7 +3,7 @@ import re
 import sys
 import time
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -83,16 +83,6 @@ class Pluzz(Plugin):
     })
 
     _player_schema = validate.Schema({'result': validate.url()})
-
-    arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="""
-        Automatically mux available subtitles in to the output stream.
-        """
-        )
-    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -196,7 +186,7 @@ class Pluzz(Plugin):
                     bitrate = '1500k'
                 streams.append((bitrate, HTTPStream(self.session, video_url)))
 
-        if self.get_option("mux_subtitles") and videos['subtitles'] != []:
+        if self.session.get_option("mux_subtitles") and videos['subtitles'] != []:
             substreams = {}
             for subtitle in videos['subtitles']:
                 # TTML subtitles are available but not supported by FFmpeg
