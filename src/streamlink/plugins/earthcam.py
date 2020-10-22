@@ -91,8 +91,7 @@ class EarthCam(Plugin):
 
             log.debug("HLS URL: {0}".format(hls_url))
 
-            for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
         if not (rtmp_playpath or hls_playpath):
             log.error("This cam stream appears to be in offline or "

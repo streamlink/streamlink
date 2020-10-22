@@ -35,8 +35,7 @@ class Radiko(Plugin):
             'X-Radiko-AuthToken': token
         }
         self.session.http.headers = headers
-        for s in HLSStream.parse_variant_playlist(self.session, url).items():
-            yield s
+        yield from HLSStream.parse_variant_playlist(self.session, url).items()
 
     def _live(self, station_id):
         live_url = 'http://f-radiko.smartstream.ne.jp/{}/_definst_/simul-stream.stream/playlist.m3u8'.format(station_id)

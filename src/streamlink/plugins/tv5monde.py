@@ -67,8 +67,7 @@ class TV5Monde(Plugin):
 
         for url in videos:
             if '.m3u8' in url:
-                for stream in HLSStream.parse_variant_playlist(self.session, url).items():
-                    yield stream
+                yield from HLSStream.parse_variant_playlist(self.session, url).items()
             elif 'rtmp' in url:
                 yield 'vod', RTMPStream(self.session, {'rtmp': url})
             elif '.mp4' in url:

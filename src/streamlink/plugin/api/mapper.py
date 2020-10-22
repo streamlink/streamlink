@@ -43,11 +43,9 @@ class StreamMapper(object):
             else:
                 try:
                     if isinstance(value, dict):
-                        for __ in value.items():
-                            yield __
+                        yield from value.items()
                     else:
-                        for __ in value:
-                            yield __
+                        yield from value
                 except TypeError:
                     # Non-iterable returned
                     continue

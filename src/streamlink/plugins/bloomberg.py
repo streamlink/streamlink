@@ -203,11 +203,9 @@ class Bloomberg(Plugin):
         for video_url in streams:
             log.debug("Found stream: {0}".format(video_url))
             if '.f4m' in video_url:
-                for stream in HDSStream.parse_manifest(self.session, video_url).items():
-                    yield stream
+                yield from HDSStream.parse_manifest(self.session, video_url).items()
             elif '.m3u8' in video_url:
-                for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                    yield stream
+                yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
             if '.mp4' in video_url:
                 match = self._mp4_bitrate_re.match(video_url)
                 if match is not None:

@@ -61,8 +61,7 @@ class RadioNet(Plugin):
                 if not streams:
                     yield stream["quality"], HLSStream(self.session, stream["url"])
                 else:
-                    for s in streams.items():
-                        yield s
+                    yield from streams.items()
 
 
 __plugin__ = RadioNet

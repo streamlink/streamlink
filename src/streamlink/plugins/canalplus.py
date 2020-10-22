@@ -61,8 +61,7 @@ class CanalPlus(Plugin):
 
         # Some videos may be also available on Dailymotion (especially on CNews)
         if videos['ID_DM'] != '':
-            for stream in self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items():
-                yield stream
+            yield from self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items()
 
         for quality, video_url in list(videos['MEDIA']['VIDEOS'].items()):
             # Ignore empty URLs

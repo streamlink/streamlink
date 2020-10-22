@@ -42,8 +42,7 @@ class Livestream(Plugin):
 
         m3u8_url = stream_info.get("secure_m3u8_url")
         if m3u8_url:
-            for s in HLSStream.parse_variant_playlist(self.session, m3u8_url).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, m3u8_url).items()
 
 
 __plugin__ = Livestream

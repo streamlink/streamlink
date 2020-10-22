@@ -77,8 +77,7 @@ class VK(Plugin):
             if _i.attributes.get('src'):
                 iframe_url = update_scheme(self.url, _i.attributes['src'])
                 log.debug('Found iframe: {0}'.format(iframe_url))
-                for s in self.session.streams(iframe_url).items():
-                    yield s
+                yield from self.session.streams(iframe_url).items()
 
         for _i in itertags(res.text.replace('\\', ''), 'source'):
             if _i.attributes.get('type') == 'application/vnd.apple.mpegurl':
@@ -88,8 +87,7 @@ class VK(Plugin):
                 if not streams:
                     yield 'live', HLSStream(self.session, video_url)
                 else:
-                    for s in streams.items():
-                        yield s
+                    yield from streams.items()
             elif _i.attributes.get('type') == 'video/mp4':
                 q = 'vod'
                 video_url = _i.attributes['src']

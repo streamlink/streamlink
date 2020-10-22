@@ -81,14 +81,11 @@ class VRTbe(Plugin):
         for target in data["targetUrls"]:
             if data["drm"]:
                 if target["type"] == "hls_aes":
-                    for s in HLSStream.parse_variant_playlist(self.session, target["url"]).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, target["url"]).items()
             elif target["type"] == "hls":
-                for s in HLSStream.parse_variant_playlist(self.session, target["url"]).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, target["url"]).items()
             elif target["type"] == "mpeg_dash":
-                for s in DASHStream.parse_manifest(self.session, target["url"]).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, target["url"]).items()
 
 
 __plugin__ = VRTbe

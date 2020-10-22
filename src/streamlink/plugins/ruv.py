@@ -91,8 +91,7 @@ class Ruv(Plugin):
             # Get available streams
             streams = HLSStream.parse_variant_playlist(self.session, url)
 
-            for quality, hls in streams.items():
-                yield quality, hls
+            yield from streams.items()
 
     def _get_sarpurinn_streams(self):
         # Get HTML page

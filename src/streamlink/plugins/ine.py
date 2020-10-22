@@ -51,8 +51,7 @@ class INE(Plugin):
 
             for source in data["playlist"][0]["sources"]:
                 if source["type"] == "application/vnd.apple.mpegurl":
-                    for s in HLSStream.parse_variant_playlist(self.session, source["file"]).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, source["file"]).items()
                 elif source["type"] == "video/mp4":
                     yield "{0}p".format(source["height"]), HTTPStream(self.session, source["file"])
 

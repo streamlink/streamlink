@@ -162,16 +162,14 @@ class RTBF(Plugin):
                 if stream_data.get('isLive', False):
                     # Live streams require a token
                     hls_url = self.tokenize_stream(hls_url)
-                for stream in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                    yield stream
+                yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
             dash_url = stream_data.get('urlDash') or stream_data.get('streamUrlDash')
             if dash_url:
                 if stream_data.get('isLive', False):
                     # Live streams require a token
                     dash_url = self.tokenize_stream(dash_url)
-                for stream in DASHStream.parse_manifest(self.session, dash_url).items():
-                    yield stream
+                yield from DASHStream.parse_manifest(self.session, dash_url).items()
 
         except IOError as err:
             if '403 Client Error' in str(err):

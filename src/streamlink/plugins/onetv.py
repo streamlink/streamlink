@@ -84,14 +84,12 @@ class OneTV(Plugin):
             if hls_streams:
                 url = random.choice(hls_streams)
                 url = url + '&' + urlencode(self.hls_session())  # TODO: use update_qsd
-                for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items()
 
             mpd_streams = live_data.get("mpd")
             if mpd_streams:
                 url = random.choice(mpd_streams)
-                for s in DASHStream.parse_manifest(self.session, url).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, url).items()
 
         elif self.channel == "1tv":
             log.debug("Attempting to find VOD stream for {0}...".format(self.channel))

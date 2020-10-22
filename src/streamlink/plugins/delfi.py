@@ -42,11 +42,9 @@ class Delfi(Plugin):
             for x in itertools.chain(*data['data']['versions'].values()):
                 src = update_scheme(self.url, x['src'])
                 if x['type'] == "application/x-mpegurl":
-                    for s in HLSStream.parse_variant_playlist(self.session, src).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, src).items()
                 elif x['type'] == "application/dash+xml":
-                    for s in DASHStream.parse_manifest(self.session, src).items():
-                        yield s
+                    yield from DASHStream.parse_manifest(self.session, src).items()
                 elif x['type'] == "video/mp4":
                     yield "{0}p".format(x['res']), HTTPStream(self.session, src)
         else:

@@ -39,8 +39,7 @@ class BFMTV(Plugin):
             if match is not None:
                 video_url = match.group('video_url')
                 if '.m3u8' in video_url:
-                    for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                        yield stream
+                    yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
 
 
 __plugin__ = BFMTV

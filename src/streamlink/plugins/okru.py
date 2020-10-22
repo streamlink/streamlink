@@ -98,8 +98,7 @@ class OKru(Plugin):
             for hls_url in [metadata.get('hlsManifestUrl'),
                             metadata.get('hlsMasterPlaylistUrl')]:
                 if hls_url is not None:
-                    for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
             if metadata.get('videos'):
                 for http_stream in metadata['videos']:

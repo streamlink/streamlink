@@ -24,8 +24,7 @@ class ZeeNews(Plugin):
         res = self.session.http.get(self.TOKEN_URL)
         token = self.session.http.json(res)['video_token']
         log.debug('video_token: {0}'.format(token))
-        for s in HLSStream.parse_variant_playlist(self.session, self.HLS_URL.format(token)).items():
-            yield s
+        yield from HLSStream.parse_variant_playlist(self.session, self.HLS_URL.format(token)).items()
 
 
 __plugin__ = ZeeNews

@@ -45,8 +45,7 @@ class Sportschau(Plugin):
 
         hls_url = self.session.http.get(player_js, schema=self._schema_json)
 
-        for stream in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-            yield stream
+        yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
 
 __plugin__ = Sportschau

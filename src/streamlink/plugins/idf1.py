@@ -82,8 +82,7 @@ class IDF1(Plugin):
 
             # Ignore HDS streams (broken)
             if '.m3u8' in video_url:
-                for s in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
 
 
 __plugin__ = IDF1
