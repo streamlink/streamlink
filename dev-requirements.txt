@@ -4,5 +4,5 @@ pytest-cov
 coverage
 mock
 requests-mock
-freezegun
+freezegun>=1.0.0
 flake8

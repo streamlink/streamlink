@@ -61,14 +61,14 @@ class TestLogging(unittest.TestCase):
         self.assertEqual(str(cm.exception), "Only {} and % formatting styles are supported")
 
     def test_datefmt_default(self):
-        with freezegun.freeze_time(datetime(2000, 1, 2, 3, 4, 5, 123456)):
+        with freezegun.freeze_time(datetime(2000, 1, 2, 3, 4, 5, 123456), tz_offset=0):
             log, output = self._new_logger(format="[{asctime}][{name}][{levelname}] {message}")
             logger.root.setLevel("info")
             log.info("test")
             self.assertEqual(output.getvalue(), "[03:04:05][test][info] test\n")
 
     def test_datefmt_custom(self):
-        with freezegun.freeze_time(datetime(2000, 1, 2, 3, 4, 5, 123456)):
+        with freezegun.freeze_time(datetime(2000, 1, 2, 3, 4, 5, 123456), tz_offset=0):
             log, output = self._new_logger(format="[{asctime}][{name}][{levelname}] {message}", datefmt="%H:%M:%S.%f")
             logger.root.setLevel("info")
             log.info("test")
