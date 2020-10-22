@@ -741,15 +741,6 @@ def setup_http_session():
     if args.http_timeout:
         streamlink.set_option("http-timeout", args.http_timeout)
 
-    if args.http_cookies:
-        streamlink.set_option("http-cookies", args.http_cookies)
-
-    if args.http_headers:
-        streamlink.set_option("http-headers", args.http_headers)
-
-    if args.http_query_params:
-        streamlink.set_option("http-query-params", args.http_query_params)
-
 
 def setup_plugins(extra_plugin_dir=None):
     """Loads any additional plugins."""
@@ -1010,7 +1001,7 @@ def main():
     check_root()
     log_current_versions()
 
-    if args.version_check or (not args.no_version_check and args.auto_version_check):
+    if args.version_check or args.auto_version_check:
         with ignored(Exception):
             check_version(force=args.version_check)
 

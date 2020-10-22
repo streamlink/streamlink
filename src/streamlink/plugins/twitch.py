@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
-import argparse
+from collections import namedtuple
 import json
 import logging
 import re
-from collections import namedtuple
 from random import random
 
 import requests
@@ -387,16 +386,6 @@ class TwitchAPI(object):
 
 class Twitch(Plugin):
     arguments = PluginArguments(
-        PluginArgument(
-            "oauth-token",
-            sensitive=True,
-            help=argparse.SUPPRESS
-        ),
-        PluginArgument(
-            "cookie",
-            sensitive=True,
-            help=argparse.SUPPRESS
-        ),
         PluginArgument(
             "disable-hosting",
             action="store_true",

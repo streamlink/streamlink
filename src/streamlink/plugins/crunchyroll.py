@@ -1,4 +1,3 @@
-import argparse
 import datetime
 import re
 import logging
@@ -287,12 +286,6 @@ class Crunchyroll(Plugin):
             Note: The session ID will be overwritten if authentication is used
             and the session ID does not match the account.
             """
-        ),
-        # Deprecated, uses the general locale setting
-        PluginArgument(
-            "locale",
-            metavar="LOCALE",
-            help=argparse.SUPPRESS
         )
     )
 

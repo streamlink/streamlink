@@ -275,10 +275,6 @@ def build_parser():
         Default is system locale.
         """
     )
-    general.add_argument(
-        "--twitch-oauth-authenticate",
-        help=argparse.SUPPRESS
-    )
 
     player = parser.add_argument_group("Player options")
     player.add_argument(
@@ -1209,27 +1205,6 @@ def build_parser():
         """
     )
 
-    # Deprecated options
-    http.add_argument(
-        "--http-cookies",
-        metavar="COOKIES",
-        help=argparse.SUPPRESS
-    )
-    http.add_argument(
-        "--http-headers",
-        metavar="HEADERS",
-        help=argparse.SUPPRESS
-    )
-    http.add_argument(
-        "--http-query-params",
-        metavar="PARAMS",
-        help=argparse.SUPPRESS
-    )
-    general.add_argument(
-        "--no-version-check",
-        action="store_true",
-        help=argparse.SUPPRESS
-    )
     return parser
 
 

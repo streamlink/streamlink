@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import argparse
 import base64
 import json
 import logging
@@ -43,12 +42,7 @@ class USTVNow(Plugin):
             required=True,
             help="Your USTV Now account password",
             prompt="Enter USTV Now account password"
-        ),
-        PluginArgument(
-            "station-code",
-            metavar="CODE",
-            help=argparse.SUPPRESS
-        ),
+        )
     )
 
     def __init__(self, url):
