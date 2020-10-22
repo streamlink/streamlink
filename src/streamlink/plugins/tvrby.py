@@ -1,8 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class TVRBy(Plugin):
@@ -40,8 +44,7 @@ class TVRBy(Plugin):
         player_url = m.group("url")
         res = self.session.http.get(player_url)
         stream_urls = self.stream_schema.validate(res.text)
-        self.logger.debug("Found {0} stream URL{1}", len(stream_urls),
-                          "" if len(stream_urls) == 1 else "s")
+        log.debug("Found {0} stream URL{1}".format(len(stream_urls), "" if len(stream_urls) == 1 else "s"))
 
         for stream_url in stream_urls:
             for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():

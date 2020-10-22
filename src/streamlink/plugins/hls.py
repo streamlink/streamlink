@@ -1,3 +1,4 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
@@ -5,6 +6,9 @@ from streamlink.plugin.plugin import parse_url_params, LOW_PRIORITY, NORMAL_PRIO
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
 from streamlink.compat import urlparse
+
+
+log = logging.getLogger(__name__)
 
 
 class HLSPlugin(Plugin):
@@ -40,7 +44,7 @@ class HLSPlugin(Plugin):
         urlnoproto = self._url_re.match(url).group(2)
         urlnoproto = update_scheme("http://", urlnoproto)
 
-        self.logger.debug("URL={0}; params={1}", urlnoproto, params)
+        log.debug("URL={0}; params={1}".format(urlnoproto, params))
         streams = HLSStream.parse_variant_playlist(self.session, urlnoproto, **params)
         if not streams:
             return {"live": HLSStream(self.session, urlnoproto, **params)}

@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate, useragents
 from streamlink.stream import HLSStream, RTMPStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker
+
+
+log = logging.getLogger(__name__)
 
 _url_re = re.compile(r'''^https?://
     (?:\w*.)?
@@ -141,10 +145,10 @@ class Showroom(Plugin):
             match = _room_id_re.search(res.text)
             if not match:
                 title = self.url.rsplit('/', 1)[-1]
-                self.logger.debug(_room_id_lookup_failure_log.format(title, 'primary'))
+                log.debug(_room_id_lookup_failure_log.format(title, 'primary'))
                 match = _room_id_alt_re.search(res.text)
                 if not match:
-                    self.logger.debug(_room_id_lookup_failure_log.format(title, 'secondary'))
+                    log.debug(_room_id_lookup_failure_log.format(title, 'secondary'))
                     return  # Raise exception?
             return match.group('room_id')
 

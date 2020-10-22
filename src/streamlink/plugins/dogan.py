@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+import logging
 import re
 
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class Dogan(Plugin):
@@ -47,7 +51,7 @@ class Dogan(Plugin):
         # find the contentId
         content_id_m = self.content_id_re.search(res.text)
         if content_id_m:
-            self.logger.debug("Found contentId by contentId regex")
+            log.debug("Found contentId by contentId regex")
             return content_id_m.group(1)
 
         # find the PlayerCtrl div
@@ -57,19 +61,19 @@ class Dogan(Plugin):
             player_ctrl_div = player_ctrl_m.group(0)
             content_id_m = self.data_id_re.search(player_ctrl_div)
             if content_id_m:
-                self.logger.debug("Found contentId by player data-id regex")
+                log.debug("Found contentId by player data-id regex")
                 return content_id_m.group("id")
 
         # find the itemId var
         item_id_m = self.item_id_re.search(res.text)
         if item_id_m:
-            self.logger.debug("Found contentId by itemId regex")
+            log.debug("Found contentId by itemId regex")
             return item_id_m.group(1)
 
     def _get_hls_url(self, content_id):
         # make the api url relative to the current domain
         if "cnnturk" in self.url or "teve2.com.tr" in self.url:
-            self.logger.debug("Using new content API url")
+            log.debug("Using new content API url")
             api_url = urljoin(self.url, self.new_content_api.format(id=content_id))
         else:
             api_url = urljoin(self.url, self.content_api.format(id=content_id))
@@ -83,11 +87,11 @@ class Dogan(Plugin):
     def _get_streams(self):
         content_id = self._get_content_id()
         if content_id:
-            self.logger.debug(u"Loading content: {}", content_id)
+            log.debug(u"Loading content: {0}".format(content_id))
             hls_url = self._get_hls_url(content_id)
             return HLSStream.parse_variant_playlist(self.session, hls_url)
         else:
-            self.logger.error(u"Could not find the contentId for this stream")
+            log.error(u"Could not find the contentId for this stream")
 
 
 __plugin__ = Dogan

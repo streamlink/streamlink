@@ -1,10 +1,14 @@
 from __future__ import print_function
 
+import logging
 import re
 
 from streamlink.compat import urlparse, parse_qsl, urlunparse
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 class Swisstxt(Plugin):
@@ -26,7 +30,7 @@ class Swisstxt(Plugin):
         url_m = self.url_re.match(self.url)
         site = url_m.group(1) or url_m.group(2)
         api_url = self.api_url.format(id=event_id, site=site.upper())
-        self.logger.debug("Calling API: {0}", api_url)
+        log.debug("Calling API: {0}".format(api_url))
 
         stream_url = self.session.http.get(api_url).text.strip("\"'")
 

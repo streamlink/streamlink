@@ -1,13 +1,17 @@
 from __future__ import print_function
 
-import re
 import json
+import logging
+import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream import RTMPStream
 from streamlink.utils import parse_json
+
+
+log = logging.getLogger(__name__)
 
 
 class Picarto(Plugin):
@@ -51,10 +55,10 @@ class Picarto(Plugin):
                                                        token=token),
                                                    verify=False)
         if len(streams) > 1:
-            self.logger.debug("Multiple HLS streams found")
+            log.debug("Multiple HLS streams found")
             return streams
         elif len(streams) == 0:
-            self.logger.warning("No HLS streams found when expected")
+            log.warning("No HLS streams found when expected")
             return {}
         else:
             # one HLS streams, rename it to live
@@ -78,7 +82,7 @@ class Picarto(Plugin):
 
         # Handle VODs first, since their "channel name" is different
         if url_channel_name.endswith((".flv", ".mkv")):
-            self.logger.debug("Possible VOD stream...")
+            log.debug("Possible VOD stream...")
             page = self.session.http.get(self.url)
             vod_streams = self._get_vod_stream(page)
             if vod_streams:
@@ -86,18 +90,18 @@ class Picarto(Plugin):
                     yield s
                 return
             else:
-                self.logger.warning("Probably a VOD stream but no VOD found?")
+                log.warning("Probably a VOD stream but no VOD found?")
 
         ci = self.session.http.get(self.CHANNEL_API_URL.format(channel=url_channel_name), raise_for_status=False)
 
         if ci.status_code == 404:
-            self.logger.error("The channel {0} does not exist".format(url_channel_name))
+            log.error("The channel {0} does not exist".format(url_channel_name))
             return
 
         channel_api_json = json.loads(ci.text)
 
         if not channel_api_json["online"]:
-            self.logger.error("The channel {0} is currently offline".format(url_channel_name))
+            log.error("The channel {0} is currently offline".format(url_channel_name))
             return
 
         server = None
@@ -112,10 +116,7 @@ class Picarto(Plugin):
             if i["id"] == pref:
                 server = i["ep"]
                 break
-        self.logger.debug("Using load balancing server {0} : {1} for channel {2}",
-                          pref,
-                          server,
-                          channel)
+        log.debug("Using load balancing server {0} : {1} for channel {2}".format(pref, server, channel))
 
         for i in info_json["techs"]:
             if i["label"] == "HLS":

@@ -3,6 +3,7 @@ from __future__ import print_function
 import time
 
 import base64
+import logging
 import random
 import re
 
@@ -12,6 +13,9 @@ from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_qsd
 from streamlink.utils.crypto import decrypt_openssl
+
+
+log = logging.getLogger(__name__)
 
 
 class Streann(Plugin):
@@ -51,13 +55,13 @@ class Streann(Plugin):
         return str(data.get("serverTime", int(time.time() * 1000)))
 
     def passphrase(self):
-        self.logger.debug("passphrase ...")
+        log.debug("passphrase ...")
         res = self.session.http.get(self.url, headers=self._headers)
         passphrase_m = self.passphrase_re.search(res.text)
         return passphrase_m and passphrase_m.group("passphrase").encode("utf8")
 
     def get_token(self, **config):
-        self.logger.debug("get_token ...")
+        log.debug("get_token ...")
         pdata = dict(arg1=base64.b64encode("www.ellobo106.com".encode("utf8")),
                      arg2=base64.b64encode(self.time.encode("utf8")))
 
@@ -83,14 +87,14 @@ class Streann(Plugin):
         # and decrypt it
         passphrase = self.passphrase()
         if passphrase:
-            self.logger.debug("Found passphrase")
+            log.debug("Found passphrase")
             params = decrypt_openssl(data, passphrase)
             config = parse_qsd(params.decode("utf8"))
             hls_url = self.stream_url.format(time=self.time,
                                              deviceId=self.device_id,
                                              token=self.get_token(**config),
                                              **config)
-            self.logger.debug("URL={0}".format(hls_url))
+            log.debug("URL={0}".format(hls_url))
             return HLSStream.parse_variant_playlist(self.session, hls_url, headers=self._headers)
 
 

@@ -69,12 +69,12 @@ class BTSports(Plugin):
         log.debug("Redirected to: {0}".format(res.url))
 
         if "loginerror" not in res.text:
-            self.logger.debug("Login successful, getting SAML token")
+            log.debug("Login successful, getting SAML token")
             res = self.session.http.get("https://samlfed.bt.com/sportgetfedwebhls?bt.cid={0}".format(self.acid()))
             d = self.saml_re.search(res.text)
             if d:
                 saml_data = d.group(1)
-                self.logger.debug("BT Sports federated login...")
+                log.debug("BT Sports federated login...")
                 res = self.session.http.post(
                     self.api_url,
                     params={"action": "LoginBT", "channel": "WEBHLS", "bt.cid": self.acid},
@@ -83,8 +83,7 @@ class BTSports(Plugin):
                 fed_json = self.session.http.json(res)
                 success = fed_json['resultCode'] == "OK"
                 if not success:
-                    self.logger.error("Failed to login: {0} - {1}".format(fed_json['errorDescription'],
-                                                                          fed_json['message']))
+                    log.error("Failed to login: {0} - {1}".format(fed_json['errorDescription'], fed_json['message']))
                 return success
         else:
             return False

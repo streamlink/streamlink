@@ -1,8 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream, HLSStream
+
+
+log = logging.getLogger(__name__)
 
 API_URL = "https://g-api.langlive.com/webapi/v1/room/info?room_id={0}"
 VOD_API_URL = (
@@ -81,12 +85,12 @@ class Kingkong(Plugin):
         res = self.session.http.get(API_URL.format(channel))
         room = self.session.http.json(res, schema=_room_schema)
         if not room:
-            self.logger.info("Not a valid room url.")
+            log.info("Not a valid room url.")
             return
 
         live_info = room["live_info"]
         if live_info["live_status"] != STATUS_ONLINE:
-            self.logger.info("Stream currently unavailable.")
+            log.info("Stream currently unavailable.")
             return
 
         for item in live_info["stream_items"]:

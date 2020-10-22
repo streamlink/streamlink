@@ -1,9 +1,13 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import parse_url_params
 from streamlink.stream import HTTPStream
 from streamlink.utils import update_scheme
+
+
+log = logging.getLogger(__name__)
 
 
 class HTTPStreamPlugin(Plugin):
@@ -18,7 +22,7 @@ class HTTPStreamPlugin(Plugin):
         urlnoproto = self._url_re.match(url).group(1)
         urlnoproto = update_scheme("http://", urlnoproto)
 
-        self.logger.debug("URL={0}; params={1}", urlnoproto, params)
+        log.debug("URL={0}; params={1}".format(urlnoproto, params))
         return {"live": HTTPStream(self.session, urlnoproto, **params)}
 
 

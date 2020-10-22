@@ -1,3 +1,4 @@
+import logging
 import re
 
 from itertools import chain
@@ -7,6 +8,9 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import absolute_url
+
+
+log = logging.getLogger(__name__)
 
 HLS_PLAYLIST_BASE = "http://www.smashcast.tv{0}"
 LIVE_API = "http://www.smashcast.tv/api/media/live/{0}?showHidden=true&liveonly=false"
@@ -100,7 +104,7 @@ class Hitbox(Plugin):
                 streams = HLSStream.parse_variant_playlist(self.session, url)
                 return streams.items()
             except IOError as err:
-                self.logger.warning("Failed to extract HLS streams: {0}", err)
+                log.warning("Failed to extract HLS streams: {0}".format(err))
         else:
             return quality, HLSStream(self.session, url)
 
@@ -151,7 +155,7 @@ class Hitbox(Plugin):
             try:
                 return cls.parse_variant_playlist(self.session, url).items()
             except IOError as err:
-                self.logger.warning("Failed to extract HLS streams: {0}", err)
+                log.warning("Failed to extract HLS streams: {0}".format(err))
                 return
 
         quality = self._get_quality(bitrate["label"])
@@ -174,13 +178,13 @@ class Hitbox(Plugin):
             return
 
         channel, media_id = match.group("channel", "media_id")
-        self.logger.debug("Matched URL: channel={0}, media_id={1}".format(channel, media_id))
+        log.debug("Matched URL: channel={0}, media_id={1}".format(channel, media_id))
         if not media_id:
             res = self.session.http.get(LIVE_API.format(channel))
             livestream = self.session.http.json(res, schema=_live_schema)
             if livestream.get("media_hosted_media"):
                 hosted = _live_schema.validate(livestream["media_hosted_media"])
-                self.logger.info("{0} is hosting {1}", livestream["media_user_name"], hosted["media_user_name"])
+                log.info("{0} is hosting {1}".format(livestream["media_user_name"], hosted["media_user_name"]))
                 livestream = hosted
 
             if not livestream["media_is_live"]:

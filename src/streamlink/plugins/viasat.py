@@ -1,3 +1,4 @@
+import logging
 import re
 
 from streamlink import NoStreamsError
@@ -6,6 +7,9 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 from streamlink.utils import rtmpparse
+
+
+log = logging.getLogger(__name__)
 
 STREAM_API_URL = "https://playapi.mtgx.tv/v3/videos/stream/{0}"
 
@@ -73,7 +77,7 @@ class Viasat(Plugin):
             streams = parser(self.session, video[1])
             return streams.items()
         except IOError as err:
-            self.logger.error("Failed to extract {0} streams: {1}", stream_type, err)
+            log.error("Failed to extract {0} streams: {1}".format(stream_type, err))
 
     def _create_rtmp_stream(self, video):
         name, stream_url = video
@@ -98,7 +102,7 @@ class Viasat(Plugin):
 
         if stream_info.get("msg"):
             # error message
-            self.logger.error(stream_info.get("msg"))
+            log.error(stream_info.get("msg"))
             raise NoStreamsError(self.url)
 
         mapper = StreamMapper(lambda pattern, video: re.search(pattern, video[1]))

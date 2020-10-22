@@ -6,7 +6,7 @@ from streamlink.plugins.ozolio import Ozolio
 class TestPluginOzolio(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
-            "http:ozolio.com/explore/",
+            "http://ozolio.com/explore/",
             "https://www.ozolio.com/explore/WLWJ00000021",
         ]
         for url in should_match:

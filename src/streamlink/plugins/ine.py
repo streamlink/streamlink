@@ -1,12 +1,16 @@
 from __future__ import print_function
 
 import json
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import update_scheme
+
+
+log = logging.getLogger(__name__)
 
 
 class INE(Plugin):
@@ -35,13 +39,13 @@ class INE(Plugin):
 
     def _get_streams(self):
         vid = self.url_re.match(self.url).group(1)
-        self.logger.debug("Found video ID: {0}", vid)
+        log.debug("Found video ID: {0}".format(vid))
 
         page = self.session.http.get(self.play_url.format(vid=vid))
         js_url_m = self.js_re.search(page.text)
         if js_url_m:
             js_url = js_url_m.group(1)
-            self.logger.debug("Loading player JS: {0}", js_url)
+            log.debug("Loading player JS: {0}".format(js_url))
 
             res = self.session.http.get(js_url)
             metadata_url = update_scheme(self.url, self.setup_schema.validate(res.text))

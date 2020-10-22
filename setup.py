@@ -25,7 +25,7 @@ deps = [
     'win-inet-pton;python_version<"3.0" and platform_system=="Windows"',
     # shutil.get_terminal_size and which were added in Python 3.3
     'backports.shutil_which;python_version<"3.3"',
-    'backports.shutil_get_terminal_size;python_version<"3.3"'
+    'backports.shutil_get_terminal_size;python_version<"3.3"',
 ]
 
 # for encrypted streams
@@ -51,7 +51,7 @@ this_directory = path.abspath(path.dirname(__file__))
 srcdir = path.join(this_directory, "src/")
 sys_path.insert(0, srcdir)
 
-with codecs.open(path.join(this_directory, "README.md"), 'r', "utf8") as f:
+with codecs.open(path.join(this_directory, "README.md"), "r", "utf8") as f:
     long_description = f.read()
 
 
@@ -67,58 +67,62 @@ def is_wheel_for_windows():
     return False
 
 
-entry_points = {
-    "console_scripts": ["streamlink=streamlink_cli.main:main"]
-}
+entry_points = {"console_scripts": ["streamlink=streamlink_cli.main:main"]}
 
 if is_wheel_for_windows():
     entry_points["gui_scripts"] = ["streamlinkw=streamlink_cli.main:main"]
 
+
 def read(*parts):
-    with codecs.open(os.path.join(here, *parts), 'r') as fp:
+    with codecs.open(os.path.join(here, *parts), "r") as fp:
         return fp.read()
+
 
 def find_version(*file_paths):
     version_file = read(*file_paths)
     version_match = re.search(
-        r'''^__version__ = ['"]([^'"]*)['"]''',
+        r"""^__version__ = ['"]([^'"]*)['"]""",
         version_file,
         re.M,
     )
     if version_match:
         return version_match.group(1)
 
-    raise RuntimeError('Unable to find version string.')
+    raise RuntimeError("Unable to find version string.")
 
 
-setup(name="streamlink",
-      version=find_version('src', 'streamlink', '__init__.py'),
-      description="Streamlink is command-line utility that extracts streams "
-                  "from various services and pipes them into a video player of "
-                  "choice.",
-      author="Streamlink",
-      # temp until we have a mailing list / global email
-      author_email="charlie@charliedrage.com",
-      license="Simplified BSD",
-      packages=find_packages("src"),
-      package_dir={"": "src"},
-      entry_points=entry_points,
-      install_requires=deps,
-      test_suite="tests",
-      python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4",
-      classifiers=["Development Status :: 5 - Production/Stable",
-                   "License :: OSI Approved :: BSD License",
-                   "Environment :: Console",
-                   "Intended Audience :: End Users/Desktop",
-                   "Operating System :: POSIX",
-                   "Operating System :: Microsoft :: Windows",
-                   "Operating System :: MacOS",
-                   "Programming Language :: Python :: 2.7",
-                   "Programming Language :: Python :: 3.5",
-                   "Programming Language :: Python :: 3.6",
-                   "Programming Language :: Python :: 3.7",
-                   "Programming Language :: Python :: 3.8",
-                   "Topic :: Internet :: WWW/HTTP",
-                   "Topic :: Multimedia :: Sound/Audio",
-                   "Topic :: Multimedia :: Video",
-                   "Topic :: Utilities"])
+setup(
+    name="streamlink",
+    version=find_version("src", "streamlink", "__init__.py"),
+    description="Streamlink is command-line utility that extracts streams "
+    "from various services and pipes them into a video player of "
+    "choice.",
+    author="Streamlink",
+    # temp until we have a mailing list / global email
+    author_email="charlie@charliedrage.com",
+    license="Simplified BSD",
+    packages=find_packages("src"),
+    package_dir={"": "src"},
+    entry_points=entry_points,
+    install_requires=deps,
+    test_suite="tests",
+    python_requires=">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, <4",
+    classifiers=[
+        "Development Status :: 5 - Production/Stable",
+        "License :: OSI Approved :: BSD License",
+        "Environment :: Console",
+        "Intended Audience :: End Users/Desktop",
+        "Operating System :: POSIX",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: MacOS",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Topic :: Internet :: WWW/HTTP",
+        "Topic :: Multimedia :: Sound/Audio",
+        "Topic :: Multimedia :: Video",
+        "Topic :: Utilities",
+    ],
+)

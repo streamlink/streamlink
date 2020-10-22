@@ -1,10 +1,14 @@
 from __future__ import print_function
+import logging
 import re
 
 from streamlink.plugin import Plugin, PluginArguments, PluginArgument
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
+
+
+log = logging.getLogger(__name__)
 
 
 class AnimeLab(Plugin):
@@ -53,7 +57,7 @@ class AnimeLab(Plugin):
         return cls.url_re.match(url) is not None
 
     def login(self, email, password):
-        self.logger.debug("Attempting to log in as {0}", email)
+        log.debug("Attempting to log in as {0}".format(email))
         res = self.session.http.post(
             self.login_url,
             data=dict(email=email, password=password),
@@ -62,9 +66,9 @@ class AnimeLab(Plugin):
         )
         loc = res.headers.get("Location", "")
         if "geoblocked" in loc.lower():
-            self.logger.error("AnimeLab is not available in your territory")
+            log.error("AnimeLab is not available in your territory")
         elif res.status_code >= 400:
-            self.logger.error("Failed to login to AnimeLab, check your email/password combination")
+            log.error("Failed to login to AnimeLab, check your email/password combination")
         else:
             return True
 
@@ -73,21 +77,22 @@ class AnimeLab(Plugin):
     def _get_streams(self):
         email, password = self.get_option("email"), self.get_option("password")
         if not email or not password:
-            self.logger.error("AnimeLab requires authentication, use --animelab-email "
-                              "and --animelab-password to set your email/password combination")
+            log.error("AnimeLab requires authentication, use --animelab-email "
+                      "and --animelab-password to set your email/password combination")
             return
 
         if self.login(email, password):
-            self.logger.info("Successfully logged in as {0}", email)
+            log.info("Successfully logged in as {0}", email)
             video_collection = self.session.http.get(self.url, schema=self.video_collection_schema)
             if video_collection["playlist"] is None or video_collection["position"] is None:
                 return
 
             data = video_collection["playlist"][video_collection["position"]]
 
-            self.logger.debug("Found {0} version {1} hard-subs",
-                              data["language"]["name"],
-                              "with" if data["hardSubbed"] else "without")
+            log.debug("Found {0} version {1} hard-subs".format(
+                data["language"]["name"],
+                "with" if data["hardSubbed"] else "without"
+            ))
 
             for video in data["videoInstances"]:
                 if video["httpUrl"]:

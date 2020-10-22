@@ -1,10 +1,14 @@
 import base64
 import json
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
+
+
+log = logging.getLogger(__name__)
 
 
 def jwt_decode(token):
@@ -54,7 +58,7 @@ class PlayTV(Plugin):
         res = self.session.http.get(self.FORMATS_URL.format(channel))
         streams = self.session.http.json(res, schema=self._formats_schema)['streams']
         if streams == []:
-            self.logger.error('Channel may be geo-restricted, not directly provided by PlayTV or not freely available')
+            log.error('Channel may be geo-restricted, not directly provided by PlayTV or not freely available')
             return
 
         for language in streams:

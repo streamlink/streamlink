@@ -1,11 +1,15 @@
 from __future__ import print_function
 
+import logging
 import re
 
 from streamlink import NoPluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api.utils import itertags
 from streamlink.utils import update_scheme
+
+
+log = logging.getLogger(__name__)
 
 
 class GardenersWorld(Plugin):
@@ -19,11 +23,11 @@ class GardenersWorld(Plugin):
         page = self.session.http.get(self.url)
         for iframe in itertags(page.text, u"iframe"):
             url = iframe.attributes["src"]
-            self.logger.debug("Handing off of {0}".format(url))
+            log.debug("Handing off of {0}".format(url))
             try:
                 return self.session.streams(update_scheme(self.url, url))
             except NoPluginError:
-                self.logger.error("Handing off of {0} failed".format(url))
+                log.error("Handing off of {0} failed".format(url))
                 return None
 
 
