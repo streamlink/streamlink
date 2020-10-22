@@ -1,4 +1,3 @@
-import argparse
 import logging
 import re
 
@@ -53,8 +52,6 @@ class Pixiv(Plugin):
     login_url_post = "https://accounts.pixiv.net/api/login"
 
     arguments = PluginArguments(
-        PluginArgument("username", help=argparse.SUPPRESS),
-        PluginArgument("password", help=argparse.SUPPRESS),
         PluginArgument(
             "sessionid",
             requires=["devicetoken"],
