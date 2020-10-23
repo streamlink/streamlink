@@ -14,8 +14,8 @@ repository on Github onto your account if you want to submit changes in a pull r
 
     mkdir streamlink
     cd streamlink
-    git clone --origin=upstream 'https://github.com/streamlink/streamlink.git' .
-    git remote add fork 'git@github.com:<YOUR-USERNAME>/streamlink.git'
+    git clone --origin=upstream 'https://github.com/Billy2011/streamlink-27.git' .
+    git remote add fork 'git@github.com:<YOUR-USERNAME>/streamlink-27.git'
     git remote -v
     git fetch --all
 

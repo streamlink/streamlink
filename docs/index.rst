@@ -8,16 +8,14 @@ while still allowing the user to enjoy various streamed content.
 There is also an :ref:`API <api_guide>` available for developers who want access
 to the stream data.
 
-This project was forked from Livestreamer, which is no longer maintained.
+This project was forked from Streamlink, which has no python 2.7 support in versions > 1.7.0.
 
-Latest release (|version|)
-    https://github.com/streamlink/streamlink/releases/latest
+Releases (|version|)
+    https://github.com/Billy2011/streamlink-27/releases
 GitHub
-    https://github.com/streamlink/streamlink
+    https://github.com/Billy2011/streamlink-27
 Issue tracker
     https://github.com/streamlink/streamlink/issues
-PyPI
-    https://pypi.org/project/streamlink/
 Free software
     Simplified BSD license
 
