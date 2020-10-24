@@ -6,3 +6,4 @@ mock
 requests-mock
 freezegun
 flake8
+flake8-import-order
