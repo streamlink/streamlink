@@ -2,7 +2,7 @@
 
 ## Installation
 
-See the detailed [installation instructions](https://streamlink.github.io/install.html) on Streamlink's website.
+See the detailed [installation instructions](https://Billy2011.github.io/streamlink-27/install.html) on Streamlink's website.
 
 ## Supporting Streamlink
 

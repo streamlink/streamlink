@@ -932,11 +932,11 @@ def check_version(force=False):
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
 
-    if force or not latest_version:
-        res = requests.get("https://pypi.python.org/pypi/streamlink/json")
-        data = res.json()
-        latest_version = data.get("info").get("version")
-        cache.set("latest_version", latest_version, (60 * 60 * 24))
+    #if force or not latest_version:
+    #    res = requests.get("https://pypi.python.org/pypi/streamlink/json")
+    #    data = res.json()
+    #    latest_version = data.get("info").get("version")
+    #    cache.set("latest_version", latest_version, (60 * 60 * 24))
 
     version_info_printed = cache.get("version_info_printed")
     if not force and version_info_printed:
@@ -1044,7 +1044,7 @@ def main():
         usage = parser.format_usage()
         msg = (
             "{usage}\nUse -h/--help to see the available options or "
-            "read the manual at https://streamlink.github.io"
+            "read the manual at https://Billy2011.github.io/streamlink-27"
         ).format(usage=usage)
         console.msg(msg)
 
