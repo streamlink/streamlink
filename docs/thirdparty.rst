@@ -55,7 +55,7 @@ LiveProxy
 Wtwitch
 -------
 
-.. image:: https://git.sr.ht/~krathalan/wtwitch/blob/refs/heads/master/screenshot.jpg
+.. image:: https://user-images.githubusercontent.com/25400030/97094748-31449780-1647-11eb-858b-2665272a9ae9.jpg
   :align: center
   :alt: Wtwitch screenshot of checking subscriptions
 
