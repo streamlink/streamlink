@@ -7,7 +7,7 @@ set -eo pipefail
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$(readlink -f "${0}")")/..")
 
 DOCS_REPO=${DOCS_REPO:-Billy2011/streamlink-27.github.io}
-DOCS_BRANCH=${DOCS_BRANCH:-master}
+DOCS_BRANCH=${DOCS_BRANCH:-gh-pages}
 DOCS_USER=${DOCS_USER:-streamlink-bot}
 DOCS_EMAIL=${DOCS_EMAIL:-streamlink-bot@users.noreply.github.com}
 KEY_FILE=${DOCS_KEY_FILE:-"${ROOT}/docs.key"}
