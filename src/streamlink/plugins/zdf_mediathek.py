@@ -1,6 +1,7 @@
 import logging
 import re
 
+from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
@@ -9,8 +10,6 @@ from streamlink.utils.url import url_concat
 
 
 log = logging.getLogger(__name__)
-
-API_URL = "https://api.zdf.de"
 
 QUALITY_WEIGHTS = {
     "hd": 720,
@@ -30,7 +29,7 @@ STREAMING_TYPES = {
 }
 
 _url_re = re.compile(r"""
-    http(s)?://(\w+\.)?zdf.de/
+    http(s)?://(\w+\.)?(zdf\.de|3sat\.de)/
 """, re.VERBOSE | re.IGNORECASE)
 _api_json_re = re.compile(r'''data-zdfplayer-jsb=["'](?P<json>{.+?})["']''', re.S)
 
@@ -141,10 +140,13 @@ class zdf_mediathek(Plugin):
         res = self.session.http.get(zdf_json['content'], headers=headers)
         document = self.session.http.json(res, schema=_documents_schema)
 
+        document_url_p = urlparse(zdf_json['content'])
+        api_url = urlunparse((document_url_p.scheme, document_url_p.netloc, "", "", "", ""))
+
         content = document["mainVideoContent"]
         target = content["http://zdf.de/rels/target"]
         template = target["http://zdf.de/rels/streams/ptmd-template"]
-        stream_request_url = url_concat(API_URL, template.format(playerId="ngplayer_2_3").replace(" ", ""))
+        stream_request_url = url_concat(api_url, template.format(playerId="ngplayer_2_3").replace(" ", ""))
 
         res = self.session.http.get(stream_request_url, headers=headers)
         res = self.session.http.json(res, schema=_schema)
