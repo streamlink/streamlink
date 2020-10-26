@@ -4,12 +4,10 @@ import time
 
 from streamlink.cache import Cache
 from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
-from streamlink.plugin import PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
-
 
 log = logging.getLogger(__name__)
 

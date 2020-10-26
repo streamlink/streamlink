@@ -1,5 +1,5 @@
-import re
 import logging
+import re
 import time
 from urllib.parse import urlparse, urlunparse
 
@@ -7,7 +7,7 @@ from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, hls_playlist
-from streamlink.stream.hls import HLSStreamWorker, HLSStreamReader, Sequence
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker, Sequence
 
 log = logging.getLogger(__name__)
 

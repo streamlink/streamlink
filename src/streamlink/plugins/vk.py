@@ -1,12 +1,12 @@
-from html import unescape as html_unescape
 import logging
 import re
-from urllib.parse import urlparse, unquote
+from html import unescape as html_unescape
+from urllib.parse import unquote, urlparse
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import update_scheme
 
 log = logging.getLogger(__name__)

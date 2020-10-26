@@ -5,7 +5,6 @@ import re
 from streamlink.plugin import Plugin, PluginError
 from streamlink.stream import HLSStream
 
-
 log = logging.getLogger(__name__)
 
 

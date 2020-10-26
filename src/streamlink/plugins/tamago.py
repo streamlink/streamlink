@@ -1,9 +1,9 @@
 import re
 
+from streamlink import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
-from streamlink import NoStreamsError
 
 
 class Tamago(Plugin):

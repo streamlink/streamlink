@@ -1,6 +1,6 @@
-from html import unescape as html_unescape
 import logging
 import re
+from html import unescape as html_unescape
 from urllib.parse import unquote
 
 from streamlink.exceptions import PluginError

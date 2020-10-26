@@ -1,14 +1,13 @@
 import logging
-from operator import itemgetter
 import re
-from shutil import which
 import subprocess
+from operator import itemgetter
+from shutil import which
 
 from streamlink import logger
-from streamlink.stream.streamprocess import StreamProcess
 from streamlink.exceptions import StreamError
-from streamlink.utils import rtmpparse, escape_librtmp
-
+from streamlink.stream.streamprocess import StreamProcess
+from streamlink.utils import escape_librtmp, rtmpparse
 
 log = logging.getLogger(__name__)
 

@@ -1,6 +1,6 @@
 import logging
 import re
-from urllib.parse import urlparse, parse_qsl
+from urllib.parse import parse_qsl, urlparse
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents

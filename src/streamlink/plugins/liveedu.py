@@ -3,11 +3,9 @@ import re
 from urllib.parse import urljoin
 
 from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
-from streamlink.stream import RTMPStream
-
+from streamlink.stream import HLSStream, RTMPStream
 
 log = logging.getLogger(__name__)
 

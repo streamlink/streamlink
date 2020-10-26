@@ -1,4 +1,5 @@
 import unittest
+
 from streamlink.plugins.kingkong import Kingkong
 
 

@@ -1,8 +1,6 @@
 from collections import OrderedDict
 
-from streamlink.utils.url import (
-    update_scheme, url_equal, url_concat, update_qsd
-)
+from streamlink.utils.url import update_qsd, update_scheme, url_concat, url_equal
 
 
 def test_update_scheme():

@@ -1,7 +1,7 @@
 """
 Stream wrapper around a file
 """
-from streamlink.stream import Stream
+from streamlink.stream.stream import Stream
 
 
 class FileStream(Stream):

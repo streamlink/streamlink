@@ -3,19 +3,18 @@ import logging
 import pkgutil
 import sys
 import traceback
+from collections import OrderedDict
 
 import requests
 
-from collections import OrderedDict
-
+from streamlink import __version__, plugins
+from streamlink.compat import is_win32
+from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
-from streamlink.utils import update_scheme, memoize
+from streamlink.options import Options
+from streamlink.plugin import api
+from streamlink.utils import memoize, update_scheme
 from streamlink.utils.l10n import Localization
-from . import plugins, __version__
-from .compat import is_win32
-from .exceptions import NoPluginError, PluginError
-from .options import Options
-from .plugin import api
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
 logging.setLoggerClass(StreamlinkLogger)

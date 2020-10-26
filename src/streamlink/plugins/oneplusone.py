@@ -1,13 +1,12 @@
-from base64 import b64decode
-from html.parser import HTMLParser
 import logging
 import re
+from base64 import b64decode
+from html.parser import HTMLParser
 from urllib.parse import urlparse
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 

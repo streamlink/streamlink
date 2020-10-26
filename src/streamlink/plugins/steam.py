@@ -1,15 +1,15 @@
 import base64
-from html import unescape as html_unescape
 import logging
 import re
 import time
+from html import unescape as html_unescape
 
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
 import streamlink
 from streamlink.exceptions import FatalPluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags, parse_json
 from streamlink.plugin.api.validate import Schema

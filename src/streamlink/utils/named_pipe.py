@@ -1,8 +1,7 @@
 import os
 import tempfile
 
-from ..compat import is_win32
-
+from streamlink.compat import is_win32
 
 if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref

@@ -2,7 +2,7 @@ import json
 import logging
 import re
 from time import time
-from urllib.parse import urlparse, urljoin
+from urllib.parse import urljoin, urlparse
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate

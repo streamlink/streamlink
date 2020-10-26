@@ -3,9 +3,9 @@ import re
 from urllib.parse import parse_qsl, urlparse, urlunparse
 
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags, parse_query
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
 

@@ -1,7 +1,6 @@
 import os
-import sys
-
 import subprocess
+import sys
 
 
 def check_paths(exes, paths):

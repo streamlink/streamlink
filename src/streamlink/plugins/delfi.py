@@ -3,14 +3,13 @@ Plugin to support the videos from Delfi.lt
 
 https://en.wikipedia.org/wiki/Delfi_(web_portal)
 """
-import re
-import logging
-
 import itertools
+import logging
+import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HTTPStream, HLSStream, DASHStream
+from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import update_scheme
 
 log = logging.getLogger(__name__)

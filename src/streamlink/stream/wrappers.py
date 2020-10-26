@@ -1,8 +1,7 @@
-from ..buffers import Buffer, RingBuffer
-
+import io
 from threading import Thread
 
-import io
+from streamlink.buffers import Buffer, RingBuffer
 
 
 class StreamIOWrapper(io.IOBase):

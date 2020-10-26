@@ -3,7 +3,6 @@ import re
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 
-
 _url_re = re.compile(r'http(s)?://www\.skai(?:tv)?.gr/.*')
 _api_url = "http://www.skaitv.gr/json/live.php"
 _api_res_schema = validate.Schema(validate.all(

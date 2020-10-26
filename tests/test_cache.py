@@ -1,8 +1,8 @@
 import datetime
 import os.path
-from shutil import rmtree
 import tempfile
 import unittest
+from shutil import rmtree
 from unittest.mock import patch
 
 import streamlink.cache

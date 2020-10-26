@@ -1,8 +1,8 @@
-import re
 import json
+import re
 
-from streamlink.plugin.api import validate
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils.url import update_scheme
 

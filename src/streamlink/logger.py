@@ -1,8 +1,7 @@
-from datetime import datetime
 import logging
-from logging import NOTSET, ERROR, WARN, INFO, DEBUG, CRITICAL
+from datetime import datetime
+from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARN
 from threading import Lock
-
 
 TRACE = 5
 _levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),

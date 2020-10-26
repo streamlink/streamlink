@@ -1,13 +1,12 @@
+import logging
+import re
 from binascii import unhexlify
 from collections import namedtuple
 from datetime import timedelta
 from itertools import starmap
-import logging
-import re
 from urllib.parse import urljoin, urlparse
 
 from isodate import parse_datetime
-
 
 log = logging.getLogger(__name__)
 

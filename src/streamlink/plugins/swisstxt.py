@@ -1,10 +1,9 @@
 import logging
 import re
-from urllib.parse import urlparse, parse_qsl, urlunparse
+from urllib.parse import parse_qsl, urlparse, urlunparse
 
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
-
 
 log = logging.getLogger(__name__)
 

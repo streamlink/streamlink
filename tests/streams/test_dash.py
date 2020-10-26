@@ -1,12 +1,11 @@
 import unittest
-from unittest.mock import MagicMock, patch, ANY, Mock, call
-
-from tests.resources import text, xml
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 from streamlink import PluginError
 from streamlink.stream import DASHStream
 from streamlink.stream.dash import DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD
+from tests.resources import text, xml
 
 
 class TestDASHStream(unittest.TestCase):

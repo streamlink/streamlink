@@ -1,5 +1,6 @@
-from streamlink.plugins.cubetv import CubeTV
 import unittest
+
+from streamlink.plugins.cubetv import CubeTV
 
 
 class TestPluginCubeTV(unittest.TestCase):

@@ -1,5 +1,5 @@
-from io import StringIO
 import unittest
+from io import StringIO
 from unittest.mock import patch
 
 from streamlink_cli.console import ConsoleOutput

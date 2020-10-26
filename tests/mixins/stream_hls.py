@@ -1,10 +1,10 @@
+import unittest
 from binascii import hexlify
 from collections import OrderedDict
 from functools import partial
 from threading import Event, Thread
 
 import requests_mock
-import unittest
 
 from streamlink import Streamlink
 from streamlink.stream.hls import HLSStream

@@ -3,8 +3,8 @@ from inspect import getfullargspec
 import requests
 
 from streamlink.exceptions import StreamError
-from streamlink.stream import Stream
-from streamlink.stream.wrappers import StreamIOThreadWrapper, StreamIOIterWrapper
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
 
 
 def normalize_key(keyval):

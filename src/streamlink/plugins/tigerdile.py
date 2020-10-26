@@ -3,9 +3,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.stream import RTMPStream
-from streamlink.stream import HLSStream
-
+from streamlink.stream import HLSStream, RTMPStream
 
 log = logging.getLogger(__name__)
 

@@ -21,7 +21,7 @@ from functools import singledispatch
 from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
-from ...exceptions import PluginError
+from streamlink.exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
