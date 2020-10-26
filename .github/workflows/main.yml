@@ -83,7 +83,7 @@ jobs:
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
-          python -m pip install pynsist==2.4
+          python -m pip install pynsist
           sudo apt update
           sudo apt install -y nsis imagemagick inkscape
       - name: Installer file name
