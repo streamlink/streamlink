@@ -16,6 +16,7 @@ class TestPluginzdf_mediathek(unittest.TestCase):
             'https://www.zdf.de/dokumentation/zdfinfo-doku/zdfinfo-live-beitrag-100.html',
             'https://www.zdf.de/comedy/heute-show/videos/diy-hazel-habeck-100.html',
             'https://www.zdf.de/nachrichten/heute-sendungen/so-wird-das-wetter-102.html',
+            'https://www.3sat.de/wissen/nano',
         ]
         for url in should_match:
             self.assertTrue(zdf_mediathek.can_handle_url(url))
