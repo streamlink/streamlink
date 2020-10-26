@@ -35,12 +35,12 @@ jobs:
       - name: Install dependencies
         continue-on-error: ${{ matrix.continue || false }}
         run: bash ./script/install-dependencies.sh
+      - name: Lint
+        continue-on-error: ${{ matrix.continue || false }}
+        run: flake8 --count
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
         run: pytest -r a --cov --cov-branch --cov-report=xml
-      - name: Lint
-        continue-on-error: ${{ matrix.continue || false }}
-        run: flake8
       - name: Upload coverage data
         if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
