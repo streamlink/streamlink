@@ -55,14 +55,14 @@ LiveProxy
 Wtwitch
 -------
 
-.. image:: https://i.imgur.com/oaxH3ss.jpg
+.. image:: https://user-images.githubusercontent.com/25400030/97115072-6951e600-16ec-11eb-88f7-51939c0d0bc1.jpg
   :align: center
   :alt: Wtwitch screenshot of checking subscriptions
 
 :Description: Browse Twitch streams; subscribe to streamers locally without an account
 :Type: TUI (terminal user interface)
-:OS: |Linux|
-:Author: `krathalan <https://git.sr.ht/~krathalan/>`_
+:OS: |Linux| |MacOS|
+:Author: `Hunter Peavey <https://krathalan.net>`_
 :Website: https://git.sr.ht/~krathalan/wtwitch
 :Info: wtwitch is a Bash program that lets you browse the top games on Twitch, the |br|
   top streamers for a given game, and lets you check the status of streamers you |br|
