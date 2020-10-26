@@ -4,8 +4,7 @@ from time import time
 
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import validate
-from streamlink.stream import RTMPStream, HLSStream
-
+from streamlink.stream import HLSStream, RTMPStream
 
 log = logging.getLogger(__name__)
 

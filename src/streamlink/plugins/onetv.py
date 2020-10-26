@@ -1,13 +1,12 @@
 import logging
 import random
 import re
-from urllib.parse import urlencode, unquote, urljoin
+from urllib.parse import unquote, urlencode, urljoin
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import stream_weight
-from streamlink.stream import HLSStream, HTTPStream, DASHStream
+from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import update_scheme
-
 
 log = logging.getLogger(__name__)
 

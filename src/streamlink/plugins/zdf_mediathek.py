@@ -7,7 +7,6 @@ from streamlink.stream import HDSStream, HLSStream
 from streamlink.utils import parse_json
 from streamlink.utils.url import url_concat
 
-
 log = logging.getLogger(__name__)
 
 API_URL = "https://api.zdf.de"

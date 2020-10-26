@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch
 
 from streamlink import Streamlink
-from streamlink.plugin.plugin import stream_weight, parse_params
+from streamlink.plugin.plugin import parse_params, stream_weight
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
 
 

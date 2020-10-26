@@ -1,13 +1,12 @@
 import datetime
-from html import unescape as html_unescape
 import logging
 import re
+from html import unescape as html_unescape
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
-
 
 log = logging.getLogger(__name__)
 

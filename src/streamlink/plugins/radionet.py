@@ -4,7 +4,7 @@ from urllib.parse import urlparse, urlunparse
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)

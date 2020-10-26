@@ -1,5 +1,6 @@
-from streamlink.plugins.senategov import SenateGov
 import unittest
+
+from streamlink.plugins.senategov import SenateGov
 
 
 class TestPluginSenateGov(unittest.TestCase):

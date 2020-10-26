@@ -4,15 +4,13 @@ import re
 from string import printable
 from textwrap import dedent
 
-from streamlink import logger, __version__ as streamlink_version
+from streamlink import __version__ as streamlink_version, logger
 from streamlink.utils.args import (
     boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 )
 from streamlink.utils.times import hours_minutes_seconds
-from .constants import (
-    STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
-)
-from .utils import find_default_player
+from streamlink_cli.constants import (DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS)
+from streamlink_cli.utils import find_default_player
 
 _printable_re = re.compile(r"[{0}]".format(printable))
 _option_re = re.compile(r"""

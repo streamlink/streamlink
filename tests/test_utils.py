@@ -5,8 +5,8 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from streamlink.exceptions import PluginError
-from streamlink.plugin.api.validate import xml_element, text
 from streamlink.plugin.api import validate
+from streamlink.plugin.api.validate import text, xml_element
 from streamlink.utils import (
     absolute_url,
     load_module,

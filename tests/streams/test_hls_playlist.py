@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta
 import unittest
+from datetime import datetime, timedelta
 
 from isodate import tzinfo
 
+from streamlink.stream.hls_playlist import DateRange, Media, Resolution, Segment, StreamInfo, load
 from tests.resources import text
-
-from streamlink.stream.hls_playlist import load, StreamInfo, Resolution, Media, DateRange, Segment
 
 
 class TestHLSPlaylist(unittest.TestCase):

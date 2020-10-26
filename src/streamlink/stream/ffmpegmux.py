@@ -1,17 +1,15 @@
 import logging
 import os
 import random
-from shutil import which
 import subprocess
 import sys
 import threading
+from shutil import which
 
 from streamlink import StreamError
-from streamlink.stream import Stream
-from streamlink.stream.stream import StreamIO
-from streamlink.utils import NamedPipe
 from streamlink.compat import devnull
-
+from streamlink.stream.stream import Stream, StreamIO
+from streamlink.utils import NamedPipe
 
 log = logging.getLogger(__name__)
 

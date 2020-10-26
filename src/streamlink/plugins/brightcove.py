@@ -1,16 +1,15 @@
-from io import BytesIO
 import logging
 import random
 import re
-from urllib.parse import urlparse, parse_qsl
+from io import BytesIO
+from urllib.parse import parse_qsl, urlparse
 
 from streamlink import PluginError
 from streamlink.packages.flashmedia import AMFMessage, AMFPacket
 from streamlink.packages.flashmedia.types import AMF3ObjectBase
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
-
 
 log = logging.getLogger(__name__)
 

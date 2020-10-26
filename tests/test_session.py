@@ -1,8 +1,8 @@
 import os
 import unittest
-from unittest.mock import patch, call
+from unittest.mock import call, patch
 
-from streamlink import Streamlink, NoPluginError
+from streamlink import NoPluginError, Streamlink
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
 from streamlink.session import print_small_exception

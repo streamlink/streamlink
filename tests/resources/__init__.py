@@ -1,12 +1,11 @@
 import codecs
 import os.path
 import xml.etree.ElementTree as ET
+from contextlib import contextmanager
+from io import BytesIO
 
 import requests_mock
 import six
-
-from contextlib import contextmanager
-from io import BytesIO
 
 __here__ = os.path.abspath(os.path.dirname(__file__))
 

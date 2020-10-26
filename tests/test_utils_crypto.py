@@ -1,8 +1,7 @@
 import base64
-
 import unittest
 
-from streamlink.utils.crypto import evp_bytestokey, decrypt_openssl
+from streamlink.utils.crypto import decrypt_openssl, evp_bytestokey
 
 
 class TestUtil(unittest.TestCase):

@@ -6,10 +6,8 @@ from requests.cookies import cookiejar_from_dict
 
 from streamlink import PluginError
 from streamlink.cache import Cache
-from streamlink.plugin import Plugin
-from streamlink.plugin import PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import DASHStream, HLSStream
 from streamlink.utils.args import comma_list_filter
 

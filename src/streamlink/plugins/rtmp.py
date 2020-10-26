@@ -5,7 +5,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import parse_url_params
 from streamlink.stream import RTMPStream
 
-
 log = logging.getLogger(__name__)
 
 

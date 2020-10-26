@@ -1,14 +1,14 @@
 import base64
+import json
+import random
 import re
 import time
 import uuid
-import random
-import json
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.useragents import CHROME as USER_AGENT
-from streamlink.stream import (HTTPStream, HLSStream)
+from streamlink.stream import (HLSStream, HTTPStream)
 
 HUAJIAO_URL = "http://www.huajiao.com/l/{}"
 LAPI_URL = "http://g2.live.360.cn/liveplay?stype=flv&channel={}&bid=huajiao&sn={}&sid={}&_rate=xd&ts={}&r={}" \

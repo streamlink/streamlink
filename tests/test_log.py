@@ -1,7 +1,7 @@
-from datetime import datetime
-from io import StringIO
 import logging
 import unittest
+from datetime import datetime
+from io import StringIO
 
 import freezegun
 

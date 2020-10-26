@@ -1,15 +1,14 @@
 import datetime
 import itertools
-from operator import attrgetter
 import unittest
+from operator import attrgetter
 from unittest.mock import Mock
 
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
 
+from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation, utc
 from tests.resources import xml
-
-from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, utc, Representation
 
 
 class TestMPDParsers(unittest.TestCase):

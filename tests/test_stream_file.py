@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
 from streamlink import Streamlink
 from streamlink.stream.file import FileStream

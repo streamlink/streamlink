@@ -1,5 +1,6 @@
-from streamlink_cli.utils.progress import terminal_width, get_cut_prefix
 import unittest
+
+from streamlink_cli.utils.progress import get_cut_prefix, terminal_width
 
 
 class TestCliUtilProgess(unittest.TestCase):

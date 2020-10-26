@@ -8,7 +8,6 @@ from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 from streamlink.utils import rtmpparse
 
-
 log = logging.getLogger(__name__)
 
 STREAM_API_URL = "https://playapi.mtgx.tv/v3/videos/stream/{0}"

@@ -3,8 +3,8 @@ import datetime
 import hashlib
 import random
 import re
-from urllib.parse import urlencode
 import xml.etree.ElementTree as ET
+from urllib.parse import urlencode
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents

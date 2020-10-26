@@ -1,16 +1,15 @@
-from collections import defaultdict, namedtuple
-from contextlib import contextmanager
 import copy
 import datetime
-from itertools import repeat, count
 import logging
 import math
 import re
 import time
-from urllib.parse import urlparse, urljoin, urlunparse, urlsplit, urlunsplit
+from collections import defaultdict, namedtuple
+from contextlib import contextmanager
+from itertools import count, repeat
+from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
-from isodate import parse_datetime, parse_duration, Duration
-
+from isodate import Duration, parse_datetime, parse_duration
 
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc

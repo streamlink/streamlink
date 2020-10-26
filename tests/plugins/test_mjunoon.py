@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, Mock, ANY, call
+from unittest.mock import ANY, Mock, call, patch
 
 import requests_mock
 

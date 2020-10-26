@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import patch, Mock, ANY, MagicMock, call
+from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 from streamlink import Streamlink
 from streamlink.plugin.api import HTTPSession

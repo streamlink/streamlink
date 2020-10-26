@@ -1,6 +1,6 @@
-from html import unescape as html_unescape
 import logging
 import re
+from html import unescape as html_unescape
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents

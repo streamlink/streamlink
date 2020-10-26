@@ -1,15 +1,15 @@
 import json
 import logging
 import re
-import websocket
 import threading
 import time
-from urllib.parse import urlparse, unquote_plus
+from urllib.parse import unquote_plus, urlparse
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+import websocket
+
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-
 
 _log = logging.getLogger(__name__)
 

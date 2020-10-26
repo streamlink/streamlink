@@ -5,7 +5,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
-
 log = logging.getLogger(__name__)
 
 

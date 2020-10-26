@@ -6,7 +6,6 @@ from streamlink.plugin.plugin import parse_url_params
 from streamlink.stream import AkamaiHDStream
 from streamlink.utils import update_scheme
 
-
 log = logging.getLogger(__name__)
 
 

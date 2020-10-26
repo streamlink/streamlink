@@ -2,10 +2,9 @@ import logging
 import re
 import time
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-
 
 log = logging.getLogger(__name__)
 

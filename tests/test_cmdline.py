@@ -1,9 +1,9 @@
 import os.path
 import unittest
-from unittest.mock import patch, ANY
+from unittest.mock import ANY, patch
 
-from streamlink import Streamlink
 import streamlink_cli.main
+from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
 
 

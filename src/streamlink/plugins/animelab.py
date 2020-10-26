@@ -1,11 +1,10 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
-
 
 log = logging.getLogger(__name__)
 

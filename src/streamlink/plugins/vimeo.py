@@ -1,9 +1,9 @@
-from html import unescape as html_unescape
 import logging
 import re
+from html import unescape as html_unescape
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream

@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from urllib.parse import urljoin, urlparse, urlunparse, parse_qsl, urlencode
+from urllib.parse import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 
 def update_scheme(current, target):

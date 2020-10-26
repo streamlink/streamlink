@@ -4,17 +4,13 @@ from io import IOBase
 from itertools import chain, islice
 from threading import Thread
 
-from ..buffers import RingBuffer
-from ..packages.flashmedia import FLVError
-from ..packages.flashmedia.tag import (AudioData, AACAudioData, VideoData,
-                                       AVCVideoData, VideoCommandFrame,
-                                       Header, ScriptData, Tag)
-from ..packages.flashmedia.tag import (AAC_PACKET_TYPE_SEQUENCE_HEADER,
-                                       AVC_PACKET_TYPE_SEQUENCE_HEADER,
-                                       AUDIO_CODEC_ID_AAC,
-                                       VIDEO_CODEC_ID_AVC,
-                                       TAG_TYPE_AUDIO,
-                                       TAG_TYPE_VIDEO)
+from streamlink.buffers import RingBuffer
+from streamlink.packages.flashmedia import FLVError
+from streamlink.packages.flashmedia.tag import (
+    AACAudioData, AAC_PACKET_TYPE_SEQUENCE_HEADER, AUDIO_CODEC_ID_AAC, AVCVideoData,
+    AVC_PACKET_TYPE_SEQUENCE_HEADER, AudioData, Header, ScriptData, TAG_TYPE_AUDIO,
+    TAG_TYPE_VIDEO, Tag, VIDEO_CODEC_ID_AVC, VideoCommandFrame, VideoData
+)
 
 __all__ = ["extract_flv_header_tags", "FLVTagConcat", "FLVTagConcatIO"]
 log = logging.getLogger(__name__)

@@ -5,19 +5,16 @@ import re
 import struct
 import time
 import uuid
-
 from base64 import urlsafe_b64encode
 from binascii import unhexlify
 
 from Crypto.Cipher import AES
-
 from requests import Response
 from requests.adapters import BaseAdapter
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils.url import update_qsd
 
