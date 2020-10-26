@@ -15,7 +15,6 @@ class TestPluginCNEWS(unittest.TestCase):
             self.assertTrue(CNEWS.can_handle_url(url))
 
         should_not_match = [
-            "http://www.cnews.fr/",
             "http://www.tvcatchup.com/",
             "http://www.youtube.com/"
         ]
