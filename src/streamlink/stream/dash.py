@@ -262,3 +262,6 @@ class DASHStream(Stream):
 
     def to_url(self):
         return self.mpd.url
+
+    def to_manifest_url(self):
+        return self.mpd.url
