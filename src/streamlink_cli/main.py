@@ -932,11 +932,11 @@ def check_version(force=False):
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
 
-    #if force or not latest_version:
-    #    res = requests.get("https://pypi.python.org/pypi/streamlink/json")
-    #    data = res.json()
-    #    latest_version = data.get("info").get("version")
-    #    cache.set("latest_version", latest_version, (60 * 60 * 24))
+#    if force or not latest_version:
+#        res = requests.get("https://pypi.python.org/pypi/streamlink/json")
+#        data = res.json()
+#        latest_version = data.get("info").get("version")
+#        cache.set("latest_version", latest_version, (60 * 60 * 24))
 
     version_info_printed = cache.get("version_info_printed")
     if not force and version_info_printed:
