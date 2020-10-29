@@ -11,15 +11,56 @@ log = logging.getLogger(__name__)
 
 class NBCNews(Plugin):
     url_re = re.compile(r'https?://(?:www\.)?nbcnews\.com/now')
-    js_re = re.compile(r'https://ndassets\.s-nbcnews\.com/main-[0-9a-f]{20}\.js')
-    api_re = re.compile(r'NEWS_NOW_PID="([0-9]+)"')
-    api_url = 'https://stream.nbcnews.com/data/live_sources_{0}.json'
-    api_schema = validate.Schema(validate.transform(parse_json), {
-        'videoSources': [{
-            'sourceUrl': validate.url(),
-            'type': validate.text
-        }]
-    }, validate.get('videoSources'), validate.get(0))
+    json_data_re = re.compile(
+        r'<script id="__NEXT_DATA__" type="application/json">({.*})</script>'
+    )
+    api_url = 'https://stream.nbcnews.com/data/live_sources_{}.json'
+    token_url = 'https://tokens.playmakerservices.com/'
+
+    api_schema = validate.Schema(
+        validate.transform(parse_json), {
+            'videoSources': [{
+                'sourceUrl': validate.url(),
+                'type': validate.text,
+            }],
+        },
+        validate.get('videoSources'),
+        validate.get(0),
+    )
+
+    json_data_schema = validate.Schema(
+        validate.transform(json_data_re.search),
+        validate.any(None, validate.all(
+            validate.get(1),
+            validate.transform(parse_json), {
+                'props': {'initialState': {'front': {'curation': {
+                    'layouts': [{'packages': [{'metadata': {
+                        validate.optional('playmakerIdOverride'): str,
+                    }}]}],
+                }}}},
+            },
+            validate.get('props'),
+            validate.get('initialState'),
+            validate.get('front'),
+            validate.get('curation'),
+            validate.get('layouts'),
+            validate.get(0),
+            validate.get('packages'),
+            validate.get(1),
+            validate.get('metadata'),
+            validate.get('playmakerIdOverride'),
+        )),
+    )
+
+    token_schema = validate.Schema(
+        validate.transform(parse_json),
+        {'akamai': [{
+            'tokenizedUrl': validate.url(),
+        }]},
+        validate.get('akamai'),
+        validate.get(0),
+        validate.get('tokenizedUrl'),
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -28,20 +69,36 @@ class NBCNews(Plugin):
     def get_title(self):
         return 'NBC News Now'
 
-    @Plugin.broken(3123)
     def _get_streams(self):
-        html = self.session.http.get(self.url).text
-        match = self.js_re.search(html)
-        js = self.session.http.get(match.group(0)).text
-        match = self.api_re.search(js)
-        log.debug('API ID: {0}'.format(match.group(1)))
-        api_url = self.api_url.format(match.group(1))
+        video_id = self.session.http.get(self.url, schema=self.json_data_schema)
+        log.debug('API ID: {0}'.format(video_id))
+
+        api_url = self.api_url.format(video_id)
         stream = self.session.http.get(api_url, schema=self.api_schema)
         log.trace('{0!r}'.format(stream))
         if stream['type'].lower() != 'live':
-            log.error('invalid stream type "{0}"'.format(stream['type']))
+            log.error('Invalid stream type "{0}"'.format(stream['type']))
             return
-        return HLSStream.parse_variant_playlist(self.session, stream['sourceUrl'])
+
+        json_post_data = {
+            'requestorId': 'nbcnews',
+            'pid': video_id,
+            'application': 'NBCSports',
+            'version': 'v1',
+            'platform': 'desktop',
+            'token': '',
+            'resourceId': '',
+            'inPath': 'false',
+            'authenticationType': 'unauth',
+            'cdn': 'akamai',
+            'url': stream['sourceUrl'],
+        }
+        url = self.session.http.post(
+            self.token_url,
+            json=json_post_data,
+            schema=self.token_schema,
+        )
+        return HLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = NBCNews
