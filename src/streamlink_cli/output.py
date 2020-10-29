@@ -5,10 +5,10 @@ import subprocess
 import sys
 from time import sleep
 
-from streamlink.utils.encoding import get_filesystem_encoding, maybe_encode, maybe_decode
-from .compat import is_win32, stdout
-from .constants import DEFAULT_PLAYER_ARGUMENTS, SUPPORTED_PLAYERS
-from .utils import ignored
+from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
+from streamlink_cli.compat import is_win32, stdout
+from streamlink_cli.constants import DEFAULT_PLAYER_ARGUMENTS, SUPPORTED_PLAYERS
+from streamlink_cli.utils import ignored
 
 if is_win32:
     import msvcrt

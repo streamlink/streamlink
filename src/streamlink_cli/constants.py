@@ -1,6 +1,6 @@
 import os
 
-from .compat import is_win32
+from streamlink_cli.compat import is_win32
 
 DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
 DEFAULT_STREAM_METADATA = {

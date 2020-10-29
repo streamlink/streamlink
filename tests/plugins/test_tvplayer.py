@@ -4,7 +4,7 @@ from streamlink import Streamlink
 from streamlink.plugin.api import HTTPSession
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
-from tests.mock import patch, Mock, ANY, MagicMock, call
+from tests.mock import ANY, MagicMock, Mock, call, patch
 
 
 class TestPluginTVPlayer(unittest.TestCase):

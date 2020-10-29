@@ -1,13 +1,12 @@
 import unittest
 
-from streamlink.stream.file import FileStream
-
 try:
     from unittest.mock import Mock, patch, mock_open
 except ImportError:
     from mock import Mock, patch, mock_open
 
 from streamlink import Streamlink
+from streamlink.stream.file import FileStream
 
 
 class TestFileStream(unittest.TestCase):

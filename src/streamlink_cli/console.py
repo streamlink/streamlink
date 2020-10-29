@@ -4,8 +4,8 @@ import sys
 from getpass import getpass
 
 from streamlink.plugin.plugin import UserInputRequester
-from .compat import input
-from .utils import JSONEncoder
+from streamlink_cli.compat import input
+from streamlink_cli.utils import JSONEncoder
 
 log = logging.getLogger("streamlink.cli")
 

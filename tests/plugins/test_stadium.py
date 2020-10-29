@@ -1,5 +1,6 @@
-from streamlink.plugins.stadium import Stadium
 import unittest
+
+from streamlink.plugins.stadium import Stadium
 
 
 class TestPluginStadium(unittest.TestCase):

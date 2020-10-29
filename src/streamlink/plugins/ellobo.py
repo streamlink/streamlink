@@ -1,7 +1,6 @@
 import re
 
-from streamlink import NoPluginError
-from streamlink import PluginError
+from streamlink import NoPluginError, PluginError
 from streamlink.plugin import Plugin
 
 

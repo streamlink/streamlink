@@ -1,7 +1,7 @@
 import logging
 import sys
 import warnings
-from logging import NOTSET, ERROR, WARN, INFO, DEBUG, CRITICAL
+from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARN
 from threading import Lock
 
 from streamlink.compat import is_py2

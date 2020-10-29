@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HLSStream, RTMPStream, HTTPStream
+from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
 log = logging.getLogger(__name__)
 

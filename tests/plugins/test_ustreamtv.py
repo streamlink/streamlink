@@ -1,11 +1,11 @@
 import unittest
 
-from streamlink import Streamlink
-
 try:
     from unittest.mock import ANY, MagicMock
 except ImportError:
     from mock import ANY, MagicMock
+
+from streamlink import Streamlink
 from streamlink.plugins.ustreamtv import UStreamTV
 
 

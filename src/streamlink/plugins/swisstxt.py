@@ -3,10 +3,9 @@ from __future__ import print_function
 import logging
 import re
 
-from streamlink.compat import urlparse, parse_qsl, urlunparse
+from streamlink.compat import parse_qsl, urlparse, urlunparse
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
-
 
 log = logging.getLogger(__name__)
 

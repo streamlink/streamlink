@@ -8,7 +8,6 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 from streamlink.utils import parse_json, update_scheme
 
-
 log = logging.getLogger(__name__)
 
 

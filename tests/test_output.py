@@ -2,8 +2,8 @@ import ntpath
 import posixpath
 import unittest
 
-from tests.mock import patch
 from streamlink_cli.output import PlayerOutput
+from tests.mock import patch
 
 
 class TestPlayerOutput(unittest.TestCase):

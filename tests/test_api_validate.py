@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import re
 import unittest
-
 from xml.etree.ElementTree import Element
 
 from streamlink.plugin.api.validate import (
-    validate, all, any, optional, transform, text, filter, map, hasattr,
-    get, getattr, length, xml_element, xml_find, xml_findtext, xml_findall,
-    union, attr, url, startswith, endswith
+    all, any, attr, endswith, filter, get, getattr, hasattr,
+    length, map, optional, startswith, text, transform, union, url,
+    validate, xml_element, xml_find, xml_findall, xml_findtext
 )
 
 

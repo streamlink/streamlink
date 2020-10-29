@@ -3,14 +3,14 @@ import logging
 import operator
 import re
 import time
+from collections import OrderedDict
+from functools import partial
+
 import requests.cookies
 
-from functools import partial
-from collections import OrderedDict
-
 from streamlink.cache import Cache
-from streamlink.exceptions import PluginError, NoStreamsError, FatalPluginError
-from streamlink.options import Options, Arguments
+from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
+from streamlink.options import Arguments, Options
 
 log = logging.getLogger(__name__)
 

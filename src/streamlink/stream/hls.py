@@ -1,19 +1,17 @@
 import logging
 import re
 import struct
+from collections import OrderedDict, defaultdict, namedtuple
 
-from collections import defaultdict, namedtuple, OrderedDict
 from Crypto.Cipher import AES
 from requests.exceptions import ChunkedEncodingError
 
-from streamlink.compat import urlparse, str
+from streamlink.compat import str, urlparse
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.segmented import (SegmentedStreamReader,
-                                         SegmentedStreamWriter,
-                                         SegmentedStreamWorker)
+from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
 from streamlink.utils import LazyFormatter
 
 log = logging.getLogger(__name__)

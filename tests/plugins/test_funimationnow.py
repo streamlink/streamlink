@@ -1,11 +1,11 @@
 import unittest
 
-from streamlink import Streamlink
-
 try:
     from unittest.mock import ANY, MagicMock, call
 except ImportError:
     from mock import ANY, MagicMock, call
+
+from streamlink import Streamlink
 from streamlink.plugins.funimationnow import FunimationNow
 
 

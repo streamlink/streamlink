@@ -1,4 +1,5 @@
 import re
+
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 

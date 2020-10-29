@@ -2,16 +2,14 @@
 import base64
 import logging
 import re
-
 from collections import defaultdict
 from hashlib import sha1
 
 from streamlink.compat import urlparse
 from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
-from streamlink.stream import HDSStream
-from streamlink.stream import HLSStream
+from streamlink.stream import HDSStream, HLSStream
 from streamlink.stream.dash import DASHStream
 from streamlink.utils import parse_json
 

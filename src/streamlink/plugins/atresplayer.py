@@ -6,8 +6,8 @@ from functools import partial
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, DASHStream
-from streamlink.utils import parse_json, update_scheme, search_dict
+from streamlink.stream import DASHStream, HLSStream
+from streamlink.utils import parse_json, search_dict, update_scheme
 
 log = logging.getLogger(__name__)
 

@@ -2,12 +2,10 @@ import logging
 import random
 import re
 
+from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.compat import urlparse, parse_qsl
-from streamlink.stream import HLSStream
-from streamlink.stream import HTTPStream
-
+from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 

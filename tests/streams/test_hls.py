@@ -1,17 +1,16 @@
 import os
 import unittest
 
-from Crypto.Cipher import AES
 import pytest
 import requests_mock
-
-from tests.mixins.stream_hls import Playlist, Tag, Segment, TestMixinStreamHLS
-from tests.mock import patch, Mock
-from tests.resources import text
+from Crypto.Cipher import AES
 
 from streamlink.compat import str
 from streamlink.session import Streamlink
 from streamlink.stream import hls
+from tests.mixins.stream_hls import Playlist, Segment, Tag, TestMixinStreamHLS
+from tests.mock import Mock, patch
+from tests.resources import text
 
 
 def pkcs7_encode(data, keySize):

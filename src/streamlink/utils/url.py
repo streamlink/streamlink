@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from streamlink.compat import urljoin, urlparse, urlunparse, parse_qsl, urlencode
+from streamlink.compat import parse_qsl, urlencode, urljoin, urlparse, urlunparse
 
 
 def update_scheme(current, target):

@@ -3,7 +3,7 @@ import re
 from functools import partial
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json, update_scheme
 

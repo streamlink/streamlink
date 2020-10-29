@@ -2,12 +2,11 @@ import logging
 import random
 import re
 
-from streamlink.compat import urlencode, unquote, urljoin
+from streamlink.compat import unquote, urlencode, urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import stream_weight
-from streamlink.stream import HLSStream, HTTPStream, DASHStream
+from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import update_scheme
-
 
 log = logging.getLogger(__name__)
 

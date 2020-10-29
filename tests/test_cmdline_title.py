@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from streamlink.compat import is_win32, is_py3, is_py2
+from streamlink.compat import is_py2, is_py3, is_win32
 from streamlink.utils import get_filesystem_encoding
 from tests.test_cmdline import CommandLineTestCase
 

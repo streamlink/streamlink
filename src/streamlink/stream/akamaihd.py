@@ -1,20 +1,18 @@
 import base64
-import io
 import hashlib
 import hmac
+import io
+import logging
 import random
 
-from .stream import Stream
-from .wrappers import StreamIOThreadWrapper, StreamIOIterWrapper
-
-from ..buffers import Buffer
-from ..compat import str, bytes, urlparse
-from ..exceptions import StreamError
-from ..utils import swfdecompress
-
-from ..packages.flashmedia import FLV, FLVError
-from ..packages.flashmedia.tag import ScriptData
-import logging
+from streamlink.buffers import Buffer
+from streamlink.compat import bytes, str, urlparse
+from streamlink.exceptions import StreamError
+from streamlink.packages.flashmedia import FLV, FLVError
+from streamlink.packages.flashmedia.tag import ScriptData
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
+from streamlink.utils import swfdecompress
 
 log = logging.getLogger(__name__)
 

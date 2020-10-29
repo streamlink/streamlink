@@ -1,23 +1,22 @@
 # -*- coding: utf-8 -*-
-from collections import namedtuple
 import json
 import logging
 import re
+from collections import namedtuple
 from random import random
 
 import requests
 
 from streamlink.compat import urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json, parse_query
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.hls import HLSStreamWorker
-from streamlink.stream.hls_filtered import FilteredHLSStreamWriter, FilteredHLSStreamReader
+from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
 from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
-
 
 log = logging.getLogger(__name__)
 

@@ -11,15 +11,15 @@ Following channels are working:
 
 Additionally, videos from iVysilani archive should work as well.
 """
+import json
 import logging
 import re
-import json
 
+from streamlink.compat import html_unescape, quote
+from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HLSStream, DASHStream
-from streamlink.exceptions import PluginError
-from streamlink.compat import html_unescape, quote
+from streamlink.stream import DASHStream, HLSStream
 
 log = logging.getLogger(__name__)
 

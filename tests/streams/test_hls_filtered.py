@@ -1,13 +1,10 @@
+import unittest
 from threading import Event
 
-import unittest
-
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
 from tests.mixins.stream_hls import Playlist, Segment, TestMixinStreamHLS
 from tests.mock import MagicMock, call, patch
-
-from streamlink.stream.hls import HLSStream
-from streamlink.stream.hls_filtered import FilteredHLSStreamWriter, FilteredHLSStreamReader
-
 
 FILTERED = "filtered"
 

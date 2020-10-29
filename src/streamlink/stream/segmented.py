@@ -1,12 +1,12 @@
+import logging
 from concurrent import futures
 from concurrent.futures.thread import ThreadPoolExecutor
-import logging
-from threading import Thread, Event
 from sys import version_info
+from threading import Event, Thread
 
-from .stream import StreamIO
-from ..buffers import RingBuffer
-from ..compat import queue
+from streamlink.buffers import RingBuffer
+from streamlink.compat import queue
+from streamlink.stream.stream import StreamIO
 
 log = logging.getLogger(__name__)
 

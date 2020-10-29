@@ -4,9 +4,7 @@ import re
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
-from streamlink.stream import HLSStream
-from streamlink.stream import HTTPStream
-
+from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 

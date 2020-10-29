@@ -1,9 +1,9 @@
 from __future__ import print_function
+
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.stream import HDSStream
-from streamlink.stream import HLSStream
+from streamlink.stream import HDSStream, HLSStream
 
 
 class TRTSpor(Plugin):

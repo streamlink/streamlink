@@ -1,12 +1,11 @@
-import unittest
 import os.path
+import unittest
 from contextlib import contextmanager
 
+from streamlink import PluginError, Streamlink
 from streamlink.plugin.plugin import UserInputRequester
-from tests.mock import MagicMock, patch
-
-from streamlink import Streamlink, PluginError
 from streamlink_cli.console import ConsoleUserInputRequester
+from tests.mock import MagicMock, patch
 from tests.plugins.testplugin import TestPlugin as _TestPlugin
 
 

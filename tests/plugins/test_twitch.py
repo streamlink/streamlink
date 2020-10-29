@@ -1,14 +1,13 @@
-from datetime import datetime, timedelta
 import unittest
+from datetime import datetime, timedelta
 
 import requests_mock
-
-from tests.mixins.stream_hls import Playlist, Tag, Segment as _Segment, TestMixinStreamHLS
-from tests.mock import MagicMock, call, patch
 
 from streamlink import Streamlink
 from streamlink.plugin import PluginError
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream
+from tests.mixins.stream_hls import Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
+from tests.mock import MagicMock, call, patch
 
 
 DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0)

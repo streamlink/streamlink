@@ -1,6 +1,6 @@
 from sys import getfilesystemencoding
 
-from streamlink.compat import is_win32, is_py2
+from streamlink.compat import is_py2, is_win32
 
 
 def get_filesystem_encoding():

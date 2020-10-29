@@ -1,8 +1,8 @@
 import unittest
-from tests.mock import Mock
 
+from streamlink.options import Argument, Arguments, Options
 from streamlink_cli.main import setup_plugin_args
-from streamlink.options import Options, Arguments, Argument
+from tests.mock import Mock
 
 
 class TestOptions(unittest.TestCase):

@@ -15,17 +15,16 @@
 
 """
 
-
-from xml.etree import ElementTree as ET
 from copy import copy as copy_obj
+from xml.etree import ElementTree as ET
 
 try:
     from functools import singledispatch
 except ImportError:
     from singledispatch import singledispatch
 
-from ...compat import is_py2, urlparse
-from ...exceptions import PluginError
+from streamlink.compat import is_py2, urlparse
+from streamlink.exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",

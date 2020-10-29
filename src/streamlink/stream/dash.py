@@ -1,17 +1,18 @@
 import copy
+import datetime
 import itertools
 import logging
-import datetime
 import os.path
 
 import requests
-from streamlink import StreamError, PluginError
+
+from streamlink import PluginError, StreamError
 from streamlink.compat import urlparse, urlunparse
-from streamlink.stream.http import valid_args, normalize_key
-from streamlink.stream.stream import Stream
-from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc, freeze_timeline
+from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, sleeper, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
+from streamlink.stream.http import normalize_key, valid_args
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+from streamlink.stream.stream import Stream
 from streamlink.utils import parse_xml
 from streamlink.utils.l10n import Language
 

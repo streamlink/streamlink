@@ -1,15 +1,14 @@
 import logging
-import subprocess
 import os.path
-
+import subprocess
+import tempfile
+import time
 from operator import itemgetter
-from streamlink.stream import Stream
-from streamlink.stream.wrappers import StreamIOThreadWrapper
+
 from streamlink.compat import devnull, which
 from streamlink.exceptions import StreamError
-
-import time
-import tempfile
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOThreadWrapper
 
 log = logging.getLogger(__name__)
 

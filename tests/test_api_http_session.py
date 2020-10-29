@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-import requests
 
 import unittest
-from tests.mock import patch, PropertyMock
+
+import requests
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api.http_session import HTTPSession
+from tests.mock import PropertyMock, patch
 
 
 class TestPluginAPIHTTPSession(unittest.TestCase):

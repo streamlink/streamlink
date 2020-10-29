@@ -1,6 +1,5 @@
-import re
 import logging
-
+import re
 from binascii import unhexlify
 from collections import namedtuple
 from datetime import timedelta
@@ -9,7 +8,6 @@ from itertools import starmap
 from isodate import parse_datetime
 
 from streamlink.compat import urljoin, urlparse
-
 
 log = logging.getLogger(__name__)
 

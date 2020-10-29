@@ -1,12 +1,13 @@
-import unittest
-import time
 import datetime
+import time
+import unittest
+
 import freezegun
 import requests.cookies
 
 
-from tests.mock import Mock, call
 from streamlink.plugin import Plugin
+from tests.mock import Mock, call
 
 
 class TestPlugin(unittest.TestCase):

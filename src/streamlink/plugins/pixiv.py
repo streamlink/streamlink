@@ -5,7 +5,7 @@ import logging
 import re
 
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils.encoding import maybe_decode

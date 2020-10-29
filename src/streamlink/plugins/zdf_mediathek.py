@@ -8,7 +8,6 @@ from streamlink.stream import HDSStream, HLSStream
 from streamlink.utils import parse_json
 from streamlink.utils.url import url_concat
 
-
 log = logging.getLogger(__name__)
 
 QUALITY_WEIGHTS = {

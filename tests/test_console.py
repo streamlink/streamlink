@@ -5,8 +5,8 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-from tests.mock import Mock, patch
 from streamlink_cli.console import ConsoleOutput
+from tests.mock import Mock, patch
 
 
 class _TestObj(object):

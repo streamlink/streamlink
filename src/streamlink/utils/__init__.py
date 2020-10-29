@@ -4,11 +4,11 @@ import re
 import xml.etree.ElementTree as ET
 import zlib
 
-from streamlink.compat import urljoin, urlparse, parse_qsl, is_py2, is_py3
+from streamlink.compat import is_py2, is_py3, parse_qsl, urljoin, urlparse
 from streamlink.exceptions import PluginError
-from streamlink.utils.named_pipe import NamedPipe
-from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
+from streamlink.utils.lazy_formatter import LazyFormatter
+from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.url import update_scheme, url_equal
 
 

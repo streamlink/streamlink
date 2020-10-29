@@ -3,38 +3,34 @@ import errno
 import logging
 import os
 import platform
-from collections import OrderedDict
-from gettext import gettext
-
-import requests
-import sys
 import signal
-
+import sys
+from collections import OrderedDict
 from contextlib import closing
 from distutils.version import StrictVersion
 from functools import partial
+from gettext import gettext
 from itertools import chain
-from socks import __version__ as socks_version
 from time import sleep
+
+import requests
+from socks import __version__ as socks_version
 from websocket import __version__ as websocket_version
 
-from streamlink import __version__ as streamlink_version
-from streamlink import (Streamlink, StreamError, PluginError,
-                        NoPluginError)
+import streamlink.logger as logger
+from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
-from streamlink.stream import StreamProcess
 from streamlink.plugin import PluginOptions
+from streamlink.stream import StreamProcess
 from streamlink.utils import LazyFormatter
-
-import streamlink.logger as logger
-from .argparser import build_parser
-from .compat import stdout, is_win32
-from streamlink.utils.encoding import maybe_decode, get_filesystem_encoding
-from .console import ConsoleOutput, ConsoleUserInputRequester
-from .constants import CONFIG_FILES, PLUGINS_DIR, STREAM_SYNONYMS, DEFAULT_STREAM_METADATA
-from .output import FileOutput, PlayerOutput
-from .utils import NamedPipe, HTTPServer, ignored, progress, stream_to_url
+from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode
+from streamlink_cli.argparser import build_parser
+from streamlink_cli.compat import is_win32, stdout
+from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
+from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, PLUGINS_DIR, STREAM_SYNONYMS
+from streamlink_cli.output import FileOutput, PlayerOutput
+from streamlink_cli.utils import HTTPServer, NamedPipe, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:

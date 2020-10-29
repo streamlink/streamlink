@@ -3,7 +3,7 @@ import logging
 import unittest
 import warnings
 
-from streamlink import logger, Streamlink
+from streamlink import Streamlink, logger
 from streamlink.compat import is_py2
 from streamlink.utils.encoding import maybe_decode
 from tests import catch_warnings

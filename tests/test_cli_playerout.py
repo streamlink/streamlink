@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+
 from streamlink.utils import get_filesystem_encoding
 from streamlink_cli.output import PlayerOutput
-from tests import posix_only, windows_only, py2_only, py3_only
-from tests.mock import patch, ANY
+from tests import posix_only, py2_only, py3_only, windows_only
+from tests.mock import ANY, patch
 
 UNICODE_TITLE = u"기타치는소율 with UL섬 "
 

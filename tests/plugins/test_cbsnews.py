@@ -1,5 +1,7 @@
 import unittest  # noqa: F401
+
 import pytest
+
 from streamlink.plugins.cbsnews import CBSNews
 
 

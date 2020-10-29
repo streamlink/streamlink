@@ -11,7 +11,6 @@ from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
 from streamlink.utils.crypto import unpad_pkcs5
 
-
 log = logging.getLogger(__name__)
 
 

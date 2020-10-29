@@ -12,7 +12,7 @@ from Crypto.Util.Padding import pad, unpad
 
 from streamlink import PluginError
 from streamlink.compat import urljoin, urlparse
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)

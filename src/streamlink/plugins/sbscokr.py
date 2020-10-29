@@ -3,7 +3,7 @@ import logging
 import random
 import re
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 

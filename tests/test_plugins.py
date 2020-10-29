@@ -1,9 +1,9 @@
 import imp
 import os.path
 import pkgutil
-import six
-
 import unittest
+
+import six
 
 import streamlink.plugins
 from streamlink import Streamlink

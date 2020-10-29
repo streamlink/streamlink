@@ -3,10 +3,10 @@ from __future__ import print_function
 import json
 import re
 
+from streamlink.compat import unquote
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import unquote
 
 
 class CinerGroup(Plugin):

@@ -5,7 +5,6 @@ from streamlink.compat import parse_qsl
 from streamlink.plugin import Plugin
 from streamlink.stream import HTTPStream
 
-
 log = logging.getLogger(__name__)
 
 

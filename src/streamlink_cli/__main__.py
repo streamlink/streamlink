@@ -1,3 +1,3 @@
 if __name__ == "__main__":
-    from .main import main
+    from streamlink_cli.main import main
     main()

@@ -1,9 +1,8 @@
 import sys
-
 from collections import deque
 from time import time
 
-from ..compat import is_win32, get_terminal_size
+from streamlink_cli.compat import get_terminal_size, is_win32
 
 PROGRESS_FORMATS = (
     "[download][{prefix}] Written {written} ({elapsed} @ {speed}/s)",

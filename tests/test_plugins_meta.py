@@ -1,8 +1,8 @@
 import os.path
 import re
 import unittest
-
 from glob import glob
+
 from streamlink import Streamlink
 
 

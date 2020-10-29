@@ -1,11 +1,11 @@
 import os.path
 import tempfile
+import unittest
 
 import streamlink_cli.main
-from streamlink_cli.main import resolve_stream_name, format_valid_streams, check_file_output, create_output
-from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink.plugin.plugin import Plugin
-import unittest
+from streamlink_cli.main import check_file_output, create_output, format_valid_streams, resolve_stream_name
+from streamlink_cli.output import FileOutput, PlayerOutput
 from tests.mock import Mock, patch
 
 

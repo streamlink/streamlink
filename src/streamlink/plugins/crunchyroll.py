@@ -1,9 +1,9 @@
 import datetime
-import re
 import logging
+import re
 from uuid import uuid4
 
-from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 

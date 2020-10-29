@@ -1,10 +1,10 @@
 import re
 
+from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.plugin import parse_url_params, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY
+from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, parse_url_params
 from streamlink.stream import HDSStream
 from streamlink.utils import update_scheme
-from streamlink.compat import urlparse
 
 
 class HDSPlugin(Plugin):

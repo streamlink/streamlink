@@ -3,7 +3,7 @@ import re
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HTTPStream
 
 log = logging.getLogger(__name__)

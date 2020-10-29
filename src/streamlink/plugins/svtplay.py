@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.compat import urljoin
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream

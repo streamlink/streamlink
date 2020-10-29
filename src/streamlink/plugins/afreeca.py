@@ -1,11 +1,9 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
-from streamlink.plugin import PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-
 
 log = logging.getLogger(__name__)
 

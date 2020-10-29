@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.compat import bytes, is_py3, html_unescape, unquote_plus, urlencode
+from streamlink.compat import bytes, html_unescape, is_py3, unquote_plus, urlencode
 from streamlink.plugin import Plugin
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import DASHStream, HTTPStream

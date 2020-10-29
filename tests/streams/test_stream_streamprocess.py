@@ -1,10 +1,11 @@
 import unittest
 
 import pytest
-from tests.mock import patch, PropertyMock
+
 from streamlink import StreamError
 from streamlink import Streamlink
 from streamlink.stream import StreamProcess
+from tests.mock import PropertyMock, patch
 
 
 @pytest.mark.parametrize("parameters,arguments,expected", [

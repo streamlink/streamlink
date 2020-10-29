@@ -1,16 +1,15 @@
 import logging
 import re
+from threading import Event, Thread
+
 import websocket
 
 from streamlink import logger
 from streamlink.buffers import RingBuffer
-from streamlink.compat import urlparse, unquote_plus
+from streamlink.compat import unquote_plus, urlparse
 from streamlink.plugin import Plugin, PluginError
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
-from streamlink.stream import Stream
-from streamlink.stream.stream import StreamIO
-from threading import Thread, Event
+from streamlink.plugin.api import useragents, validate
+from streamlink.stream.stream import Stream, StreamIO
 
 log = logging.getLogger(__name__)
 

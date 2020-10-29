@@ -7,13 +7,13 @@ from Crypto.Cipher import PKCS1_v1_5
 from Crypto.PublicKey import RSA
 
 import streamlink
+from streamlink.compat import html_unescape
 from streamlink.exceptions import FatalPluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags, parse_json
 from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
-from streamlink.compat import html_unescape
 
 log = logging.getLogger(__name__)
 

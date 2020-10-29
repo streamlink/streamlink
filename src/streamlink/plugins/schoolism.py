@@ -4,9 +4,8 @@ import logging
 import re
 from functools import partial
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
 

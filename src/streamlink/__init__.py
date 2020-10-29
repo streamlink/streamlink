@@ -17,7 +17,7 @@ __author__ = "Streamlink, Billy2011"
 __copyright__ = "Copyright 2020 Streamlink, Billy2011"
 __credits__ = ["https://github.com/streamlink/streamlink/blob/master/AUTHORS"]
 
-from .api import streams
-from .exceptions import (StreamlinkError, PluginError, NoStreamsError,
-                         NoPluginError, StreamError)
-from .session import Streamlink
+from streamlink.api import streams
+from streamlink.exceptions import (StreamlinkError, PluginError, NoStreamsError,
+                                   NoPluginError, StreamError)
+from streamlink.session import Streamlink

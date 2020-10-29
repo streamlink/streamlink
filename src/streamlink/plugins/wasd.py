@@ -3,8 +3,8 @@ import re
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.stream import HLSStream
 from streamlink.plugin.api import validate
+from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 

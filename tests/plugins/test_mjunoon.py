@@ -1,9 +1,10 @@
 import unittest
+
 import requests_mock
 
 from streamlink import Streamlink
-from tests.mock import patch, Mock, ANY, call
 from streamlink.plugins.mjunoon import Mjunoon
+from tests.mock import ANY, Mock, call, patch
 
 
 class TestPluginMixer(unittest.TestCase):

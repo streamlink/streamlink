@@ -1,13 +1,11 @@
+import datetime
+import os.path
 import sys
 import tempfile
-import os.path
-
-import datetime
+import unittest
+from shutil import rmtree
 
 import streamlink.cache
-
-from shutil import rmtree
-import unittest
 from tests.mock import patch
 
 is_py2 = (sys.version_info[0] == 2)

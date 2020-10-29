@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 import codecs
 import os
-from os import environ, path
 import re
+from os import environ, path
 from sys import argv, path as sys_path
 
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 here = os.path.abspath(os.path.dirname(__file__))
 

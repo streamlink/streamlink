@@ -5,11 +5,11 @@ import logging
 import re
 
 from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.compat import parse_qsl, urlparse
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import memoize
-from streamlink.compat import urlparse, parse_qsl
 from streamlink.utils.times import seconds_to_hhmmss
 
 log = logging.getLogger(__name__)

@@ -9,7 +9,6 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import update_scheme
 
-
 log = logging.getLogger(__name__)
 
 

@@ -8,7 +8,6 @@ from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
 
-
 log = logging.getLogger(__name__)
 
 

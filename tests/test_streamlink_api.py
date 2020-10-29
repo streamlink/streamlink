@@ -1,10 +1,9 @@
 import os.path
-
 import unittest
-from tests.mock import patch
 
 from streamlink import Streamlink
 from streamlink.api import streams
+from tests.mock import patch
 
 PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
 

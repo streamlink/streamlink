@@ -1,6 +1,5 @@
 import logging
 import re
-
 from base64 import b64decode
 
 from streamlink.compat import parse_qsl, urlparse

@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import RTMPStream, HLSStream
+from streamlink.stream import HLSStream, RTMPStream
 
 RUURL = "b=chrome&p=win&v=56&f=0&d=1"
 

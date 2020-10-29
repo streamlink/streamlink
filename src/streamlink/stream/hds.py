@@ -1,12 +1,12 @@
 from __future__ import division
-import logging
+
 import base64
 import hmac
+import logging
+import os.path
 import random
 import re
-import os.path
 import string
-
 from binascii import unhexlify
 from collections import namedtuple
 from copy import deepcopy
@@ -14,21 +14,17 @@ from hashlib import sha256
 from io import BytesIO
 from math import ceil
 
-from .flvconcat import FLVTagConcat
-from .segmented import (SegmentedStreamReader,
-                        SegmentedStreamWriter,
-                        SegmentedStreamWorker)
-from .stream import Stream
-from .wrappers import StreamIOIterWrapper
-
-from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
-from ..exceptions import StreamError, PluginError
-from ..utils import absolute_url, swfdecompress
-
-from ..packages.flashmedia import F4V, F4VError
-from ..packages.flashmedia.box import Box
-from ..packages.flashmedia.tag import ScriptData, Tag, TAG_TYPE_SCRIPT
+from streamlink.cache import Cache
+from streamlink.compat import bytes, parse_qsl, range, urljoin, urlparse, urlunparse
+from streamlink.exceptions import PluginError, StreamError
+from streamlink.packages.flashmedia import F4V, F4VError
+from streamlink.packages.flashmedia.box import Box
+from streamlink.packages.flashmedia.tag import ScriptData, TAG_TYPE_SCRIPT, Tag
+from streamlink.stream.flvconcat import FLVTagConcat
+from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOIterWrapper
+from streamlink.utils import absolute_url, swfdecompress
 
 log = logging.getLogger(__name__)
 # Akamai HD player verification key

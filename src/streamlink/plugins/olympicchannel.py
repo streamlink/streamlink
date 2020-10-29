@@ -1,12 +1,12 @@
+import json
+import logging
 import re
 from time import time
-import logging
-import json
 
+from streamlink.compat import urljoin, urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.compat import urlparse, urljoin
 
 log = logging.getLogger(__name__)
 

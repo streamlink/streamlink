@@ -2,9 +2,9 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
+from streamlink.plugins.common_jwplayer import _js_to_json
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
-from streamlink.plugins.common_jwplayer import _js_to_json
 
 
 class TV5Monde(Plugin):

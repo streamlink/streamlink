@@ -3,24 +3,22 @@ import errno
 import json
 import logging
 import re
-import websocket
-
 from collections import deque, namedtuple
 from random import randint
 from socket import error as SocketError
-from threading import Thread, Event
+from threading import Event, Thread
 from time import sleep
 
-from streamlink.compat import range, urljoin, urlunparse, urlparse, unquote_plus
+import websocket
+
+from streamlink.compat import range, unquote_plus, urljoin, urlparse, urlunparse
 from streamlink.exceptions import PluginError, StreamError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import Stream
 from streamlink.stream.dash_manifest import sleep_until, utc
 from streamlink.stream.flvconcat import FLVTagConcat
-from streamlink.stream.segmented import (
-    SegmentedStreamReader, SegmentedStreamWriter, SegmentedStreamWorker
-)
+from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
+from streamlink.stream.stream import Stream
 from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)

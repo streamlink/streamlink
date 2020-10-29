@@ -6,10 +6,8 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
-from streamlink.stream import RTMPStream
+from streamlink.stream import HLSStream, RTMPStream
 from streamlink.utils import parse_json
-
 
 log = logging.getLogger(__name__)
 

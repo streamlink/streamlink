@@ -1,6 +1,5 @@
 import logging
 import re
-
 from itertools import chain
 
 from streamlink.compat import urlparse
@@ -8,7 +7,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import absolute_url
-
 
 log = logging.getLogger(__name__)
 

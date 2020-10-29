@@ -1,11 +1,10 @@
 import logging
-
 import re
-from streamlink.plugin import Plugin
-from streamlink.plugin.plugin import stream_weight
-from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY
-from streamlink.stream.dash import DASHStream
+
 from streamlink.compat import urlparse
+from streamlink.plugin import Plugin
+from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, stream_weight
+from streamlink.stream.dash import DASHStream
 
 log = logging.getLogger(__name__)
 

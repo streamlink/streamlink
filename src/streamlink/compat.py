@@ -1,6 +1,6 @@
+import inspect
 import os
 import sys
-import inspect
 
 is_py2 = (sys.version_info[0] == 2)
 is_py3 = (sys.version_info[0] == 3)

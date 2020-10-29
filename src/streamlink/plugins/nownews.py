@@ -1,6 +1,6 @@
+import json
 import logging
 import re
-import json
 
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream

@@ -1,6 +1,7 @@
 import unittest
 
 from mock import MagicMock
+
 from streamlink.utils import LazyFormatter
 
 

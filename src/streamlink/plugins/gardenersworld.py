@@ -8,7 +8,6 @@ from streamlink.plugin import Plugin
 from streamlink.plugin.api.utils import itertags
 from streamlink.utils import update_scheme
 
-
 log = logging.getLogger(__name__)
 
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 
-from streamlink.compat import is_py3, is_py2
+from streamlink.compat import is_py2, is_py3
 from streamlink.utils.encoding import maybe_decode, maybe_encode
 
 

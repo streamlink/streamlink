@@ -6,7 +6,7 @@ from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
 from streamlink.stream import RTMPStream
-from streamlink.stream import Stream
+from streamlink.stream.stream import Stream
 
 
 class TestStreamToJSON(unittest.TestCase):

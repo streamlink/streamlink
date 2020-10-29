@@ -1,7 +1,8 @@
-from .flvconcat import FLVTagConcatIO
-from .stream import Stream
-from ..exceptions import StreamError
 import logging
+
+from streamlink.exceptions import StreamError
+from streamlink.stream.flvconcat import FLVTagConcatIO
+from streamlink.stream.stream import Stream
 
 __all__ = ["Playlist", "FLVPlaylist"]
 log = logging.getLogger(__name__)

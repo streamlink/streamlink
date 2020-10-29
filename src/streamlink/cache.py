@@ -2,9 +2,9 @@ import json
 import os
 import shutil
 import tempfile
-from time import time, mktime
+from time import mktime, time
 
-from .compat import is_win32
+from streamlink.compat import is_win32
 
 if is_win32:
     xdg_cache = os.environ.get("APPDATA", os.path.expanduser("~"))

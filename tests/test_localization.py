@@ -1,7 +1,7 @@
 import unittest
-from tests.mock import patch
 
 import streamlink.utils.l10n as l10n
+from tests.mock import patch
 
 try:
     import iso639  # noqa: F401
