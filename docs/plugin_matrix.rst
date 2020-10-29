@@ -78,7 +78,6 @@ dommune                 dommune.com          Yes   --
 drdk                    dr.dk                Yes   No    Streams may be geo-restricted to Denmark.
 earthcam                earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
 egame                   egame.qq.com         Yes   No
-ellobo                  ellobo106.com        Yes   -
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
 euronews                euronews.com         Yes   No
 facebook                facebook.com         Yes   Yes
