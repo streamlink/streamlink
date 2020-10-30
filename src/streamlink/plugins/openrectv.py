@@ -73,7 +73,7 @@ class OPENRECtv(Plugin):
     )
 
     def __init__(self, url):
-        super(OPENRECtv, self).__init__(url)
+        super().__init__(url)
         self._pdata = None
         self._pres = None
         self._pconfig = None

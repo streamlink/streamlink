@@ -42,7 +42,7 @@ class YuppTV(Plugin):
     )
 
     def __init__(self, url):
-        super(YuppTV, self).__init__(url)
+        super().__init__(url)
         self._authed = (self.session.http.cookies.get("BoxId")
                         and self.session.http.cookies.get("YuppflixToken"))
 

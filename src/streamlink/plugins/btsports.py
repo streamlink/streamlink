@@ -41,7 +41,7 @@ class BTSports(Plugin):
     login_url = "https://signin1.bt.com/siteminderagent/forms/login.fcc"
 
     def __init__(self, url):
-        super(BTSports, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers = {"User-Agent": useragents.FIREFOX}
 
     @classmethod

@@ -13,7 +13,7 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
     def write(self, sequence, *args, **kwargs):
         if not self.should_filter_sequence(sequence):
             try:
-                return super(FilteredHLSStreamWriter, self).write(sequence, *args, **kwargs)
+                return super().write(sequence, *args, **kwargs)
             finally:
                 # unblock reader thread after writing data to the buffer
                 if not self.reader.filter_event.is_set():
@@ -28,14 +28,14 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
 
 class FilteredHLSStreamReader(HLSStreamReader):
     def __init__(self, *args, **kwargs):
-        super(FilteredHLSStreamReader, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.filter_event = Event()
         self.filter_event.set()
 
     def read(self, size):
         while True:
             try:
-                return super(FilteredHLSStreamReader, self).read(size)
+                return super().read(size)
             except IOError:
                 # wait indefinitely until filtering ends
                 self.filter_event.wait()
@@ -48,5 +48,5 @@ class FilteredHLSStreamReader(HLSStreamReader):
                 raise
 
     def close(self):
-        super(FilteredHLSStreamReader, self).close()
+        super().close()
         self.filter_event.set()

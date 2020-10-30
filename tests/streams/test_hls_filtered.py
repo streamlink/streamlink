@@ -12,13 +12,13 @@ FILTERED = "filtered"
 
 class SegmentFiltered(Segment):
     def __init__(self, *args, **kwargs):
-        super(SegmentFiltered, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.title = FILTERED
 
 
 class _TestSubjectFilteredHLSStreamWriter(FilteredHLSStreamWriter):
     def __init__(self, *args, **kwargs):
-        super(_TestSubjectFilteredHLSStreamWriter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.write_wait = Event()
         self.write_done = Event()
 
@@ -30,7 +30,7 @@ class _TestSubjectFilteredHLSStreamWriter(FilteredHLSStreamWriter):
         try:
             # don't write again during teardown
             if not self.closed:
-                super(_TestSubjectFilteredHLSStreamWriter, self).write(*args, **kwargs)
+                super().write(*args, **kwargs)
         finally:
             # notify main thread that writing has finished
             self.write_done.set()
@@ -58,7 +58,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     def close_thread(self):
         self.thread.reader.writer.write_wait.set()
-        super(TestFilteredHLSStream, self).close_thread()
+        super().close_thread()
 
     # make one write call on the write thread and wait until it has finished
     def await_write(self):
@@ -68,7 +68,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         writer.write_done.clear()
 
     def get_session(self, options=None, *args, **kwargs):
-        session = super(TestFilteredHLSStream, self).get_session(options)
+        session = super().get_session(options)
         session.set_option("hls-live-edge", 2)
         session.set_option("hls-timeout", 0)
         session.set_option("stream-timeout", 0)
@@ -76,7 +76,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         return session
 
     def subject(self, *args, **kwargs):
-        thread, segments = super(TestFilteredHLSStream, self).subject(*args, **kwargs)
+        thread, segments = super().subject(*args, **kwargs)
 
         return thread, thread.reader, thread.reader.writer, segments
 

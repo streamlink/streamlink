@@ -25,7 +25,7 @@ class Streann(Plugin):
     passphrase_re = re.compile(r'''CryptoJS\.AES\.decrypt\(.*?,\s*(['"])(?P<passphrase>(?:(?!\1).)*)\1\s*?\);''')
 
     def __init__(self, url):
-        super(Streann, self).__init__(url)
+        super().__init__(url)
         self._device_id = None
         self._headers = {"User-Agent": useragents.FIREFOX}
 

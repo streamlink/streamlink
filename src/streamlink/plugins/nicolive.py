@@ -338,7 +338,7 @@ class NicoLive(Plugin):
 class NicoHLSStream(HLSStream):
 
     def __init__(self, hls_stream, nicolive_plugin):
-        super(NicoHLSStream, self).__init__(
+        super().__init__(
             hls_stream.session,
             force_restart=hls_stream.force_restart,
             start_offset=hls_stream.start_offset,
@@ -349,7 +349,7 @@ class NicoHLSStream(HLSStream):
         self.nicolive_plugin = nicolive_plugin
 
     def open(self):
-        reader = super(NicoHLSStream, self).open()
+        reader = super().open()
         self.nicolive_plugin.stream_reader = reader
         return reader
 

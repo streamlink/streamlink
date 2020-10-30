@@ -36,16 +36,16 @@ class TagKey(Tag):
             attrs.update({"KEYFORMAT": self.val_quoted_string(keyformat)})
         if keyformatversions is not None:  # pragma: no branch
             attrs.update({"KEYFORMATVERSIONS": self.val_quoted_string(keyformatversions)})
-        super(TagKey, self).__init__("EXT-X-KEY", attrs)
+        super().__init__("EXT-X-KEY", attrs)
         self.uri = uri
 
     def url(self, namespace):
-        return self.uri.format(namespace=namespace) if self.uri else super(TagKey, self).url(namespace)
+        return self.uri.format(namespace=namespace) if self.uri else super().url(namespace)
 
 
 class SegmentEnc(Segment):
     def __init__(self, num, key, iv, *args, **kwargs):
-        super(SegmentEnc, self).__init__(num, *args, **kwargs)
+        super().__init__(num, *args, **kwargs)
         self.content_plain = self.content
         self.content = encrypt(self.content, key, iv)
 
@@ -82,7 +82,7 @@ class TestHLSVariantPlaylist(unittest.TestCase):
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def get_session(self, options=None, *args, **kwargs):
-        session = super(TestHLSStream, self).get_session(options)
+        session = super().get_session(options)
         session.set_option("hls-live-edge", 3)
 
         return session
@@ -101,7 +101,7 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
     def get_session(self, options=None, *args, **kwargs):
-        session = super(TestHLSStreamEncrypted, self).get_session(options)
+        session = super().get_session(options)
         session.set_option("hls-live-edge", 3)
 
         return session
@@ -155,13 +155,13 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
     segments = [Segment(0, "", 11), Segment(1, "", 7), Segment(2, "", 5), Segment(3, "", 3)]
 
     def get_session(self, options=None, reload_time=None, *args, **kwargs):
-        return super(TestHlsPlaylistReloadTime, self).get_session(dict(options or {}, **{
+        return super().get_session(dict(options or {}, **{
             "hls-live-edge": 3,
             "hls-playlist-reload-time": reload_time
         }))
 
     def subject(self, *args, **kwargs):
-        thread, _ = super(TestHlsPlaylistReloadTime, self).subject(*args, **kwargs)
+        thread, _ = super().subject(*args, **kwargs)
         self.await_read(read_all=True)
 
         return thread.reader.worker.playlist_reload_time

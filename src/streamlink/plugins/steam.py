@@ -76,7 +76,7 @@ class SteamBroadcastPlugin(Plugin):
         ))
 
     def __init__(self, url):
-        super(SteamBroadcastPlugin, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers["User-Agent"] = self._user_agent
 
     @classmethod

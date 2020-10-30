@@ -43,7 +43,7 @@ class AbemaTVLicenseAdapter(BaseAdapter):
         self._session = session
         self.deviceid = deviceid
         self.usertoken = usertoken
-        super(AbemaTVLicenseAdapter, self).__init__()
+        super().__init__()
 
     def _get_videokey_from_ticket(self, ticket):
         params = {
@@ -152,7 +152,7 @@ class AbemaTV(Plugin):
         return cls._url_re.match(url) is not None
 
     def __init__(self, url):
-        super(AbemaTV, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def _generate_applicationkeysecret(self, deviceid):

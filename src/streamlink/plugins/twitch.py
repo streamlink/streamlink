@@ -26,7 +26,7 @@ LOW_LATENCY_MAX_LIVE_EDGE = 2
 
 class TwitchM3U8(M3U8):
     def __init__(self):
-        super(TwitchM3U8, self).__init__()
+        super().__init__()
         self.dateranges_ads = []
 
 
@@ -37,7 +37,7 @@ class TwitchM3U8Parser(M3U8Parser):
             segments.append(segments[-1]._replace(uri=self.uri(value), prefetch=True))
 
     def parse_tag_ext_x_daterange(self, value):
-        super(TwitchM3U8Parser, self).parse_tag_ext_x_daterange(value)
+        super().parse_tag_ext_x_daterange(value)
         daterange = self.m3u8.dateranges[-1]
         is_ad = (
             daterange.classname == "twitch-stitched-ad"
@@ -73,7 +73,7 @@ class TwitchM3U8Parser(M3U8Parser):
 class TwitchHLSStreamWorker(HLSStreamWorker):
     def __init__(self, reader, *args, **kwargs):
         self.had_content = False
-        super(TwitchHLSStreamWorker, self).__init__(reader, *args, **kwargs)
+        super().__init__(reader, *args, **kwargs)
 
     def _reload_playlist(self, *args):
         return load_hls_playlist(*args, parser=TwitchM3U8Parser, m3u8=TwitchM3U8)
@@ -82,7 +82,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         if self.stream.low_latency and sequences:
             return sequences[-1].segment.duration
 
-        return super(TwitchHLSStreamWorker, self)._playlist_reload_time(playlist, sequences)
+        return super()._playlist_reload_time(playlist, sequences)
 
     def process_sequences(self, playlist, sequences):
         # ignore prefetch segments if not LL streaming
@@ -106,7 +106,7 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
 
-        return super(TwitchHLSStreamWorker, self).process_sequences(playlist, sequences)
+        return super().process_sequences(playlist, sequences)
 
 
 class TwitchHLSStreamWriter(FilteredHLSStreamWriter):
@@ -121,7 +121,7 @@ class TwitchHLSStreamReader(FilteredHLSStreamReader):
 
 class TwitchHLSStream(HLSStream):
     def __init__(self, *args, **kwargs):
-        super(TwitchHLSStream, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
         self.low_latency = self.session.get_plugin_option("twitch", "low-latency")
 
@@ -443,7 +443,7 @@ class Twitch(Plugin):
         return cls._re_url.match(url)
 
     def __init__(self, url):
-        super(Twitch, self).__init__(url)
+        super().__init__(url)
         match = self._re_url.match(url).groupdict()
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)

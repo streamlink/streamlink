@@ -50,13 +50,13 @@ def _is_re_match(value):
 class any(tuple):
     """At least one of the schemas must be valid."""
     def __new__(cls, *args):
-        return super(any, cls).__new__(cls, args)
+        return super().__new__(cls, args)
 
 
 class all(tuple):
     """All schemas must be valid."""
     def __new__(cls, *args):
-        return super(all, cls).__new__(cls, args)
+        return super().__new__(cls, args)
 
 
 class SchemaContainer(object):

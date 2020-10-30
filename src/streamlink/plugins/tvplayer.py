@@ -45,7 +45,7 @@ class TVPlayer(Plugin):
         return match is not None
 
     def __init__(self, url):
-        super(TVPlayer, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
 
     def authenticate(self, username, password):

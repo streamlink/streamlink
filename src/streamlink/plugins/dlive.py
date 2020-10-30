@@ -61,7 +61,7 @@ class DLive(Plugin):
         return Plugin.stream_weight(key)
 
     def __init__(self, *args, **kwargs):
-        super(DLive, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.author = None
         self.title = None
 
