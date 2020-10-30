@@ -65,7 +65,7 @@ class StreamMe(Plugin):
     }
 
     def __init__(self, url):
-        super(StreamMe, self).__init__(url)
+        super().__init__(url)
         self.author = None
         self.title = None
         self.session.http.headers.update({'User-Agent': useragents.FIREFOX})

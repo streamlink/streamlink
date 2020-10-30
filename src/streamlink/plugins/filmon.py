@@ -74,7 +74,7 @@ class FilmOnHLS(HLSStream):
     __shortname__ = "hls-filmon"
 
     def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
-        super(FilmOnHLS, self).__init__(session_, None, **args)
+        super().__init__(session_, None, **args)
         self.channel = channel
         self.vod_id = vod_id
         if self.channel is None and self.vod_id is None:
@@ -197,7 +197,7 @@ class Filmon(Plugin):
     TIME_CHANNEL = 60 * 60 * 24 * 365
 
     def __init__(self, url):
-        super(Filmon, self).__init__(url)
+        super().__init__(url)
         parsed = urlparse(self.url)
         if parsed.path.startswith("/channel/"):
             self.url = urlunparse(parsed._replace(path=parsed.path.replace("/channel/", "/tv/")))

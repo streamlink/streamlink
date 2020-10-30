@@ -44,7 +44,7 @@ class USTVNow(Plugin):
     )
 
     def __init__(self, url):
-        super(USTVNow, self).__init__(url)
+        super().__init__(url)
         self._encryption_config = {}
         self._token = None
 

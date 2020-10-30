@@ -149,7 +149,7 @@ class TestMixinStreamHLS(unittest.TestCase):
     __readthread__ = HLSStreamReadThread
 
     def __init__(self, *args, **kwargs):
-        super(TestMixinStreamHLS, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.mocker = requests_mock.Mocker()
         self.mocks = {}
         self.session = None
@@ -157,11 +157,11 @@ class TestMixinStreamHLS(unittest.TestCase):
         self.thread = None
 
     def setUp(self):
-        super(TestMixinStreamHLS, self).setUp()
+        super().setUp()
         self.mocker.start()
 
     def tearDown(self):
-        super(TestMixinStreamHLS, self).tearDown()
+        super().tearDown()
         self.close_thread()
         self.mocker.stop()
         self.mocks.clear()

@@ -24,18 +24,18 @@ class TagDateRangeAd(Tag):
         }
         if custom is not None:
             attrs.update(**{key: self.val_quoted_string(value) for (key, value) in custom.items()})
-        super(TagDateRangeAd, self).__init__("EXT-X-DATERANGE", attrs)
+        super().__init__("EXT-X-DATERANGE", attrs)
 
 
 class Segment(_Segment):
     def __init__(self, num, title="live", *args, **kwargs):
-        super(Segment, self).__init__(num, title, *args, **kwargs)
+        super().__init__(num, title, *args, **kwargs)
         self.date = DATETIME_BASE + timedelta(seconds=num)
 
     def build(self, namespace):
         return "#EXT-X-PROGRAM-DATE-TIME:{0}\n{1}".format(
             self.date.strftime(DATETIME_FORMAT),
-            super(Segment, self).build(namespace)
+            super().build(namespace)
         )
 
 
@@ -69,7 +69,7 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = TwitchHLSStream
 
     def get_session(self, options=None, disable_ads=False, low_latency=False):
-        session = super(TestTwitchHLSStream, self).get_session(options)
+        session = super().get_session(options)
         session.set_option("hls-live-edge", 4)
         session.set_plugin_option("twitch", "disable-ads", disable_ads)
         session.set_plugin_option("twitch", "low-latency", low_latency)

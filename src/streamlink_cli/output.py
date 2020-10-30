@@ -47,7 +47,7 @@ class Output(object):
 
 class FileOutput(Output):
     def __init__(self, filename=None, fd=None, record=None):
-        super(FileOutput, self).__init__()
+        super().__init__()
         self.filename = filename
         self.fd = fd
         self.record = record
@@ -79,7 +79,7 @@ class PlayerOutput(Output):
 
     def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True,
                  call=False, http=None, namedpipe=None, record=None, title=None):
-        super(PlayerOutput, self).__init__()
+        super().__init__()
         self.cmd = cmd
         self.args = args
         self.kill = kill

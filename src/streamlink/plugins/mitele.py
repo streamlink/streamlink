@@ -44,7 +44,7 @@ class Mitele(Plugin):
     )
 
     def __init__(self, url):
-        super(Mitele, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers.update({
             "User-Agent": useragents.FIREFOX,
             "Referer": self.url

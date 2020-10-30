@@ -151,7 +151,7 @@ class DASHStream(Stream):
                  audio_representation=None,
                  period=0,
                  **args):
-        super(DASHStream, self).__init__(session)
+        super().__init__(session)
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation

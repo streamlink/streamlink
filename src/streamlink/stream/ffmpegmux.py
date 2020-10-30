@@ -18,7 +18,7 @@ class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
 
     def __init__(self, session, *substreams, **options):
-        super(MuxedStream, self).__init__(session)
+        super().__init__(session)
         self.substreams = substreams
         self.subtitles = options.pop("subtitles", {})
         self.options = options

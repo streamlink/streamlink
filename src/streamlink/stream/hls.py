@@ -352,7 +352,7 @@ class MuxedHLSStream(MuxedStream):
         substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), tracks)
         ffmpeg_options = ffmpeg_options or {}
 
-        super(MuxedHLSStream, self).__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
+        super().__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
 
 
 class HLSStream(HTTPStream):

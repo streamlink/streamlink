@@ -28,7 +28,7 @@ class TVRBy(Plugin):
         # ensure the URL ends with a /
         if not url.endswith("/"):
             url += "/"
-        super(TVRBy, self).__init__(url)
+        super().__init__(url)
 
     @classmethod
     def can_handle_url(cls, url):

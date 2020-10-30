@@ -48,7 +48,7 @@ class AtresPlayer(Plugin):
 
     def __init__(self, url):
         # must be HTTPS
-        super(AtresPlayer, self).__init__(update_scheme("https://", url))
+        super().__init__(update_scheme("https://", url))
 
     def _get_streams(self):
         api_urls = self.session.http.get(self.url, schema=self.channel_id_schema)

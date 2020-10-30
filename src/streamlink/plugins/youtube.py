@@ -123,7 +123,7 @@ class YouTube(Plugin):
     }
 
     def __init__(self, url):
-        super(YouTube, self).__init__(url)
+        super().__init__(url)
         parsed = urlparse(self.url)
         if parsed.netloc == 'gaming.youtube.com':
             self.url = urlunparse(parsed._replace(netloc='www.youtube.com'))

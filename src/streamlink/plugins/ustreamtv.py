@@ -336,7 +336,7 @@ class UHSStream(Stream):
                                      datetime.datetime.now(tz=utc))
 
     def __init__(self, session, api, first_chunk_data, template_url):
-        super(UHSStream, self).__init__(session)
+        super().__init__(session)
         self.session = session
         self.poller = self.APIPoller(api)
         self.poller.setDaemon(True)

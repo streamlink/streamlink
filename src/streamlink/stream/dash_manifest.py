@@ -221,7 +221,7 @@ class MPD(MPDNode):
 
     def __init__(self, node, root=None, parent=None, url=None, *args, **kwargs):
         # top level has no parent
-        super(MPD, self).__init__(node, root=self, *args, **kwargs)
+        super().__init__(node, root=self, *args, **kwargs)
         # parser attributes
         self.url = url
         self.timelines = defaultdict(lambda: -1)
@@ -263,7 +263,7 @@ class BaseURL(MPDNode):
     __tag__ = "BaseURL"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(BaseURL, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
         self.url = self.node.text.strip()
 
     @property
@@ -293,7 +293,7 @@ class Period(MPDNode):
     __tag__ = u"Period"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(Period, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
         self.i = kwargs.get(u"i", 0)
         self.id = self.attr(u"id")
         self.bitstreamSwitching = self.attr(u"bitstreamSwitching", parser=MPDParsers.bool_str)
@@ -335,7 +335,7 @@ class Initialization(MPDNode):
     __tag__ = "Initialization"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(Initialization, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
         self.source_url = self.attr("sourceURL")
 
 
@@ -343,7 +343,7 @@ class SegmentURL(MPDNode):
     __tag__ = "SegmentURL"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(SegmentURL, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
         self.media = self.attr("media")
         self.media_range = self.attr("mediaRange", parser=MPDParsers.range)
 
@@ -352,7 +352,7 @@ class SegmentList(MPDNode):
     __tag__ = "SegmentList"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(SegmentList, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
 
         self.presentation_time_offset = self.attr("presentationTimeOffset")
         self.timescale = self.attr("timescale", parser=int)
@@ -382,7 +382,7 @@ class AdaptationSet(MPDNode):
     __tag__ = u"AdaptationSet"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(AdaptationSet, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
 
         self.id = self.attr(u"id")
         self.group = self.attr(u"group")
@@ -413,7 +413,7 @@ class SegmentTemplate(MPDNode):
     __tag__ = "SegmentTemplate"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(SegmentTemplate, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
         self.defaultSegmentTemplate = self.walk_back_get_attr('segmentTemplate')
 
         self.initialization = self.attr(u"initialization", parser=MPDParsers.segment_template)
@@ -560,7 +560,7 @@ class Representation(MPDNode):
     __tag__ = u"Representation"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(Representation, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
         self.id = self.attr(u"id", required=True)
         self.bandwidth = self.attr(u"bandwidth", parser=lambda b: float(b) / 1000.0, required=True)
         self.mimeType = self.attr(u"mimeType", required=True, inherited=True)
@@ -630,7 +630,7 @@ class SegmentTimeline(MPDNode):
     TimelineSegment = namedtuple("TimelineSegment", "t d")
 
     def __init__(self, node, *args, **kwargs):
-        super(SegmentTimeline, self).__init__(node, *args, **kwargs)
+        super().__init__(node, *args, **kwargs)
 
         self.timescale = self.walk_back_get_attr("timescale")
 
@@ -652,7 +652,7 @@ class _TimelineSegment(MPDNode):
     __tag__ = "S"
 
     def __init__(self, node, *args, **kwargs):
-        super(_TimelineSegment, self).__init__(node, *args, **kwargs)
+        super().__init__(node, *args, **kwargs)
 
         self.t = self.attr("t", parser=int)
         self.d = self.attr("d", parser=int)
@@ -663,7 +663,7 @@ class ContentProtection(MPDNode):
     __tag__ = "ContentProtection"
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
-        super(ContentProtection, self).__init__(node, root, parent, *args, **kwargs)
+        super().__init__(node, root, parent, *args, **kwargs)
 
         self.schemeIdUri = self.attr(u"schemeIdUri")
         self.value = self.attr(u"value")

@@ -126,7 +126,7 @@ class Zattoo(Plugin):
     )
 
     def __init__(self, url):
-        super(Zattoo, self).__init__(url)
+        super().__init__(url)
         self.domain = self._url_re.match(url).group('base_url')
         self._session_attributes = Cache(
             filename='plugin-cache.json',

@@ -87,7 +87,7 @@ class Pixiv(Plugin):
     )
 
     def __init__(self, url):
-        super(Pixiv, self).__init__(url)
+        super().__init__(url)
         self._authed = (self.session.http.cookies.get("PHPSESSID")
                         and self.session.http.cookies.get("device_token"))
         self.session.http.headers.update({

@@ -58,7 +58,7 @@ class ABweb(Plugin):
     )
 
     def __init__(self, url):
-        super(ABweb, self).__init__(url)
+        super().__init__(url)
         self._session_attributes = Cache(filename='plugin-cache.json', key_prefix='abweb:attributes')
         self._authed = self._session_attributes.get('ASP.NET_SessionId') and self._session_attributes.get('.abportail1')
         self._expires = self._session_attributes.get('expires', time.time() + self.expires_time)

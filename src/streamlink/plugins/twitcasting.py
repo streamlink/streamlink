@@ -190,7 +190,7 @@ class TwitCastingReader(StreamIO):
 
 class TwitCastingStream(Stream):
     def __init__(self, session, url):
-        super(TwitCastingStream, self).__init__(session)
+        super().__init__(session)
         self.url = url
 
     def __repr__(self):

@@ -35,7 +35,7 @@ class Albavision(Plugin):
     }
 
     def __init__(self, url):
-        super(Albavision, self).__init__(url)
+        super().__init__(url)
         self._page = None
 
     @classmethod
