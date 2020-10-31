@@ -47,7 +47,7 @@ class ArteTV(Plugin):
     def _create_stream(self, streams):
         variant, variantname = min([(stream["versionProg"], stream["versionLibelle"]) for stream in streams.values()],
                                    key=itemgetter(0))
-        log.debug(u"Using the '{0}' stream variant".format(variantname))
+        log.debug(f"Using the '{variantname}' stream variant")
         for sname, stream in streams.items():
             if stream["versionProg"] == variant:
                 if stream["mediaType"] == "hls":
@@ -55,9 +55,7 @@ class ArteTV(Plugin):
                         streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
                         yield from streams.items()
                     except IOError as err:
-                        log.warning(u"Failed to extract HLS streams for {0}/{1}: {2}".format(sname,
-                                                                                             stream["versionLibelle"],
-                                                                                             err))
+                        log.warning(f"Failed to extract HLS streams for {sname}/{stream['versionLibelle']}: {err}")
 
     def _get_streams(self):
         match = _url_re.match(self.url)

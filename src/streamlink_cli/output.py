@@ -184,13 +184,13 @@ class PlayerOutput(Output):
             if self.player_name == "vlc":
                 # see https://wiki.videolan.org/Documentation:Format_String/, allow escaping with \$
                 self.title = self.title.replace("$", "$$").replace(r'\$$', "$")
-                extra_args.extend([u"--input-title-format", self.title])
+                extra_args.extend(["--input-title-format", self.title])
 
             # mpv
             if self.player_name == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
                 self.title = self._mpv_title_escape(self.title)
-                extra_args.append(u"--title={}".format(self.title))
+                extra_args.append(f"--title={self.title}")
 
             # potplayer
             if self.player_name == "potplayer":
@@ -208,7 +208,7 @@ class PlayerOutput(Output):
         if is_win32:
             eargs = subprocess.list2cmdline(extra_args)
             # do not insert and extra " " when there are no extra_args
-            return u' '.join([cmd] + ([eargs] if eargs else []) + [args])
+            return " ".join([cmd] + ([eargs] if eargs else []) + [args])
         return shlex.split(cmd) + extra_args + shlex.split(args)
 
     def _open(self):
@@ -231,7 +231,7 @@ class PlayerOutput(Output):
             fargs = args
         else:
             fargs = subprocess.list2cmdline(args)
-        log.debug(u"Calling: {0}".format(fargs))
+        log.debug(f"Calling: {fargs}")
 
         subprocess.call(args,
                         stdout=self.stdout,
@@ -245,7 +245,7 @@ class PlayerOutput(Output):
             fargs = args
         else:
             fargs = subprocess.list2cmdline(args)
-        log.debug(u"Opening subprocess: {0}".format(fargs))
+        log.debug(f"Opening subprocess: {fargs}")
 
         self.player = subprocess.Popen(args,
                                        stdin=self.stdin, bufsize=0,

@@ -125,7 +125,7 @@ class NicoLive(Plugin):
         self.wss_api_url = "{0}&frontend_id={1}".format(self.wss_api_url, self.frontend_id)
 
         _log.debug("Video page response code: {0}".format(resp.status_code))
-        _log.trace(u"Video page response body: {0}".format(resp.text))
+        _log.trace("Video page response body: {0}".format(resp.text))
         _log.debug("Got wss_api_url: {0}".format(self.wss_api_url))
         _log.debug("Got frontend_id: {0}".format(self.frontend_id))
 
@@ -172,7 +172,7 @@ class NicoLive(Plugin):
     def send_message(self, type_, body):
         msg = {"type": type_, "body": body}
         msg_json = json.dumps(msg)
-        _log.debug(u"Sending: {0}".format(msg_json))
+        _log.debug(f"Sending: {msg_json}")
         if self._ws and self._ws.sock.connected:
             self._ws.send(msg_json)
         else:
@@ -181,7 +181,7 @@ class NicoLive(Plugin):
     def send_no_body_message(self, type_):
         msg = {"type": type_}
         msg_json = json.dumps(msg)
-        _log.debug(u"Sending: {0}".format(msg_json))
+        _log.debug(f"Sending: {msg_json}")
         if self._ws and self._ws.sock.connected:
             self._ws.send(msg_json)
         else:
@@ -189,7 +189,7 @@ class NicoLive(Plugin):
 
     def send_custom_message(self, msg):
         msg_json = json.dumps(msg)
-        _log.debug(u"Sending: {0}".format(msg_json))
+        _log.debug(f"Sending: {msg_json}")
         if self._ws and self._ws.sock.connected:
             self._ws.send(msg_json)
         else:
@@ -235,7 +235,7 @@ class NicoLive(Plugin):
         self.send_no_body_message("keepSeat")
 
     def handle_api_message(self, message):
-        _log.debug(u"Received: {0}".format(message))
+        _log.debug(f"Received: {message}")
         message_parsed = json.loads(message)
 
         if message_parsed["type"] == "stream":
@@ -311,7 +311,7 @@ class NicoLive(Plugin):
                                           params=_login_url_params)
 
             _log.debug("Login response code: {0}".format(resp.status_code))
-            _log.trace(u"Login response body: {0}".format(resp.text))
+            _log.trace("Login response body: {0}".format(resp.text))
             _log.debug("Cookies: {0}".format(
                 self.session.http.cookies.get_dict()))
 

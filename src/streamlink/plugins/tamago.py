@@ -13,19 +13,19 @@ class Tamago(Plugin):
     _api_url_base = "https://player.tamago.live/api/rooms/{id}"
 
     _api_response_schema = validate.Schema({
-        u"status": 200,
-        u"message": u"Success",
-        u"data": {
-            u"room_number": validate.text,
-            u"stream": {validate.text: validate.url()}
+        "status": 200,
+        "message": "Success",
+        "data": {
+            "room_number": validate.text,
+            "stream": {validate.text: validate.url()}
         }
     })
 
     _stream_qualities = {
-        u"150": "144p",
-        u"350": "360p",
-        u"550": "540p",
-        u"900": "720p",
+        "150": "144p",
+        "350": "360p",
+        "550": "540p",
+        "900": "720p",
     }
 
     @classmethod

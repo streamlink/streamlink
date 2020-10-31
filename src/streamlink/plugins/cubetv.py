@@ -13,20 +13,20 @@ class CubeTV(Plugin):
     _stream_data_api_url_base = "https://www.cube.tv/studioApi/getStudioSrcBySid?sid={gid}&videoType=1&https=1"
 
     _channel_info_schema = validate.Schema({
-        u"code": 1,
-        u"msg": u"success",
-        u"data": {
-            u"gid": validate.text,
-            u"cube_id": validate.text
+        "code": 1,
+        "msg": "success",
+        "data": {
+            "gid": validate.text,
+            "cube_id": validate.text
         }
     })
 
     _stream_data_schema = validate.Schema({
-        u"code": 1,
-        u"msg": u"success",
-        u"data": {
-            u"video": u"hls",
-            u"video_src": validate.url()
+        "code": 1,
+        "msg": "success",
+        "data": {
+            "video": "hls",
+            "video_src": validate.url()
         }
     })
 

@@ -42,7 +42,7 @@ class TestPluginTVPlayer(unittest.TestCase):
         }
 
         page_resp = Mock()
-        page_resp.text = u"""
+        page_resp.text = """
             <div class="col-xs-12">
                 <div id="live-player-root"
                     data-player-library="videojs"
@@ -99,7 +99,7 @@ class TestPluginTVPlayer(unittest.TestCase):
 
     def test_get_invalid_page(self):
         page_resp = Mock()
-        page_resp.text = u"""
+        page_resp.text = """
             var validate = "foo";
             var resourceId = "1234";
         """

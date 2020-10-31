@@ -94,7 +94,7 @@ class OneTV(Plugin):
             log.debug("Attempting to find VOD stream for {0}...".format(self.channel))
             vod_data = self.vod_data()
             if vod_data:
-                log.info(u"Found VOD: {0}".format(vod_data[0]['title']))
+                log.info(f"Found VOD: {vod_data[0]['title']}")
                 for stream in vod_data[0]['mbr']:
                     yield stream['name'], HTTPStream(self.session, update_scheme(self.url, stream['src']))
 

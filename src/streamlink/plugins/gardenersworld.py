@@ -18,7 +18,7 @@ class GardenersWorld(Plugin):
 
     def _get_streams(self):
         page = self.session.http.get(self.url)
-        for iframe in itertags(page.text, u"iframe"):
+        for iframe in itertags(page.text, "iframe"):
             url = iframe.attributes["src"]
             log.debug("Handing off of {0}".format(url))
             try:

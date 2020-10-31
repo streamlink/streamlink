@@ -508,12 +508,11 @@ class HLSStream(HTTPStream):
             external_audio = preferred_audio or default_audio or fallback_audio
 
             if external_audio and FFMPEGMuxer.is_usable(session_):
-                external_audio_msg = u", ".join([
-                    u"(language={0}, name={1})".format(x.language, (x.name or "N/A"))
+                external_audio_msg = ", ".join([
+                    f"(language={x.language}, name={x.name or 'N/A'})"
                     for x in external_audio
                 ])
-                log.debug(u"Using external audio tracks for stream {0} {1}".format(
-                          stream_name, external_audio_msg))
+                log.debug(f"Using external audio tracks for stream {stream_name} {external_audio_msg}")
 
                 stream = MuxedHLSStream(session_,
                                         video=playlist.uri,

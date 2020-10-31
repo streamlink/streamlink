@@ -83,11 +83,11 @@ class Dogan(Plugin):
     def _get_streams(self):
         content_id = self._get_content_id()
         if content_id:
-            log.debug(u"Loading content: {0}".format(content_id))
+            log.debug(f"Loading content: {content_id}")
             hls_url = self._get_hls_url(content_id)
             return HLSStream.parse_variant_playlist(self.session, hls_url)
         else:
-            log.error(u"Could not find the contentId for this stream")
+            log.error("Could not find the contentId for this stream")
 
 
 __plugin__ = Dogan
