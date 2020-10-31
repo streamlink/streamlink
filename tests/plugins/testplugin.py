@@ -27,7 +27,7 @@ class TestPlugin(Plugin):
         return "Test Title"
 
     def get_author(self):
-        return u"Tѥst Āuƭhǿr"
+        return "Tѥst Āuƭhǿr"
 
     def get_category(self):
         return None

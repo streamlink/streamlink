@@ -219,7 +219,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                     sleep(10)
                     continue
             except PluginError as err:
-                log.error(u"Unable to fetch new streams: {0}".format(err))
+                log.error(f"Unable to fetch new streams: {err}")
                 continue
 
             try:
@@ -467,7 +467,7 @@ def fetch_streams_with_retry(plugin, interval, count):
     try:
         streams = fetch_streams(plugin)
     except PluginError as err:
-        log.error(u"{0}".format(err))
+        log.error(err)
         streams = None
 
     if not streams:
@@ -483,7 +483,7 @@ def fetch_streams_with_retry(plugin, interval, count):
         except FatalPluginError:
             raise
         except PluginError as err:
-            log.error(u"{0}".format(err))
+            log.error(err)
 
         if count > 0:
             attempts += 1
@@ -581,7 +581,7 @@ def handle_url():
     except NoPluginError:
         console.exit("No plugin can handle URL: {0}", args.url)
     except PluginError as err:
-        console.exit(u"{0}", err)
+        console.exit("{0}", err)
 
     if not streams:
         console.exit("No playable streams found on this URL: {0}", args.url)

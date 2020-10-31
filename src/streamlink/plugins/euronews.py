@@ -11,12 +11,12 @@ class Euronews(Plugin):
     _re_vod = re.compile(r'<meta\s+property="og:video"\s+content="(http.*?)"\s*/>')
     _live_api_url = "http://{0}.euronews.com/api/watchlive.json"
     _live_schema = validate.Schema({
-        u"url": validate.url()
+        "url": validate.url()
     })
     _stream_api_schema = validate.Schema({
-        u'status': u'ok',
-        u'primary': validate.url(),
-        validate.optional(u'backup'): validate.url()
+        "status": "ok",
+        "primary": validate.url(),
+        validate.optional("backup"): validate.url()
     })
 
     @classmethod

@@ -21,7 +21,7 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
         self.assertRaises(PluginError, stream_data)
 
     def test_json_encoding(self):
-        json_str = u"{\"test\": \"Α and Ω\"}"
+        json_str = "{\"test\": \"Α and Ω\"}"
 
         # encode the json string with each encoding and assert that the correct one is detected
         for encoding in ["UTF-32BE", "UTF-32LE", "UTF-16BE", "UTF-16LE", "UTF-8"]:
@@ -29,14 +29,14 @@ class TestPluginAPIHTTPSession(unittest.TestCase):
                 mock_content.return_value = json_str.encode(encoding)
                 res = requests.Response()
 
-                self.assertEqual(HTTPSession.json(res), {u"test": u"\u0391 and \u03a9"})
+                self.assertEqual(HTTPSession.json(res), {"test": "\u0391 and \u03a9"})
 
     def test_json_encoding_override(self):
-        json_text = u"{\"test\": \"Α and Ω\"}".encode("cp949")
+        json_text = "{\"test\": \"Α and Ω\"}".encode("cp949")
 
         with patch('requests.Response.content', new_callable=PropertyMock) as mock_content:
             mock_content.return_value = json_text
             res = requests.Response()
             res.encoding = "cp949"
 
-            self.assertEqual(HTTPSession.json(res), {u"test": u"\u0391 and \u03a9"})
+            self.assertEqual(HTTPSession.json(res), {"test": "\u0391 and \u03a9"})

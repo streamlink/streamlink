@@ -19,7 +19,7 @@ class WebTV(Plugin):
     _sources_re = re.compile(r'"sources": (\[.*?\]),', re.DOTALL)
     _sources_schema = validate.Schema([
         {
-            u"src": validate.any(
+            "src": validate.any(
                 validate.contains("m3u8"),
                 validate.all(
                     validate.text,
@@ -27,8 +27,8 @@ class WebTV(Plugin):
                     validate.contains("m3u8")
                 )
             ),
-            u"type": validate.text,
-            u"label": validate.text
+            "type": validate.text,
+            "label": validate.text
         }
     ])
 
@@ -60,9 +60,9 @@ class WebTV(Plugin):
         if len(sources):
             sdata = parse_json(sources[0], schema=self._sources_schema)
             for source in sdata:
-                log.debug("Found stream of type: {}".format(source[u'type']))
-                if source[u'type'] == u"application/vnd.apple.mpegurl":
-                    url = update_scheme(self.url, source[u"src"])
+                log.debug(f"Found stream of type: {source['type']}")
+                if source["type"] == "application/vnd.apple.mpegurl":
+                    url = update_scheme(self.url, source["src"])
 
                     try:
                         # try to parse the stream as a variant playlist

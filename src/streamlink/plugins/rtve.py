@@ -131,7 +131,7 @@ class Rtve(Plugin):
         qmap = {}
         for item in data["qualities"]:
             qname = {"MED": "Media", "HIGH": "Alta", "ORIGINAL": "Original"}.get(item["preset"], item["preset"])
-            qmap[qname] = u"{0}p".format(item["height"])
+            qmap[qname] = f"{item['height']}p"
         return qmap
 
     def _get_streams(self):

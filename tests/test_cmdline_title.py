@@ -12,7 +12,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
 
     def test_open_player_with_unicode_author_vlc(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc", "--title", "{author}", "http://test.se", "test"],
-                        ["/usr/bin/vlc", "--input-title-format", u"Tѥst Āuƭhǿr", "-"])
+                        ["/usr/bin/vlc", "--input-title-format", "Tѥst Āuƭhǿr", "-"])
 
     def test_open_player_with_default_title_vlc(self):
         self._test_args(["streamlink", "-p", "/usr/bin/vlc", "http://test.se", "test"],
@@ -28,7 +28,7 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
 
     def test_unicode_title_2444(self):
         self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
-                        ["mpv", u'--title=\u2605', "-"])
+                        ["mpv", "--title=\u2605", "-"])
 
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")
@@ -44,7 +44,7 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
         self._test_args(
             ["streamlink", "-p", "c:\\Program Files\\VideoLAN\\vlc.exe",
              "--title", "{author}", "http://test.se", "test"],
-            u"c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"Tѥst Āuƭhǿr\" -"
+            "c:\\Program Files\\VideoLAN\\vlc.exe --input-title-format \"Tѥst Āuƭhǿr\" -"
         )
 
     def test_open_player_with_default_title_vlc(self):
@@ -72,8 +72,8 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
         self._test_args(
             ["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"",
              "--title", "{author}", "http://test.se/stream", "hls", "--player-passthrough", "hls"],
-            u"\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\" "
-            + u"\"http://test.se/playlist.m3u8\\Tѥst Āuƭhǿr\"",
+            "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\" "
+            + "\"http://test.se/playlist.m3u8\\Tѥst Āuƭhǿr\"",
             passthrough=True
         )
 

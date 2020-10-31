@@ -34,10 +34,10 @@ class AbemaTVLicenseAdapter(BaseAdapter):
 
     _LICENSE_API = "https://license.abema.io/abematv-hls"
 
-    _MEDIATOKEN_SCHEMA = validate.Schema({u"token": validate.text})
+    _MEDIATOKEN_SCHEMA = validate.Schema({"token": validate.text})
 
-    _LICENSE_SCHEMA = validate.Schema({u"k": validate.text,
-                                       u"cid": validate.text})
+    _LICENSE_SCHEMA = validate.Schema({"k": validate.text,
+                                       "cid": validate.text})
 
     def __init__(self, session, deviceid, usertoken):
         self._session = session
@@ -131,21 +131,18 @@ class AbemaTV(Plugin):
                  b"Rbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$"
                  b"k9cD=3TxwWe86!x#Zyhe")
 
-    _USER_SCHEMA = validate.Schema({u"profile": {u"userId": validate.text},
-                                    u"token": validate.text})
+    _USER_SCHEMA = validate.Schema({"profile": {"userId": validate.text},
+                                    "token": validate.text})
 
-    _CHANNEL_SCHEMA = validate.Schema({u"channels": [{u"id": validate.text,
+    _CHANNEL_SCHEMA = validate.Schema({"channels": [{"id": validate.text,
                                       "name": validate.text,
-                                       "playback": {validate.optional(u"dash"):
+                                       "playback": {validate.optional("dash"):
                                                     validate.text,
-                                                    u"hls": validate.text}}]})
+                                                    "hls": validate.text}}]})
 
-    _PRGM_SCHEMA = validate.Schema({u"label": {validate.optional(u"free"): bool
-                                               }})
+    _PRGM_SCHEMA = validate.Schema({"label": {validate.optional("free"): bool}})
 
-    _SLOT_SCHEMA = validate.Schema({u"slot": {u"flags": {
-                                    validate.optional("timeshiftFree"): bool}}}
-                                   )
+    _SLOT_SCHEMA = validate.Schema({"slot": {"flags": {validate.optional("timeshiftFree"): bool}}})
 
     @classmethod
     def can_handle_url(cls, url):

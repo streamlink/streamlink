@@ -39,9 +39,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         name, value = option.group("name", "value")
         if name and value:
-            yield u"--{0}={1}".format(name, value)
+            yield f"--{name}={value}"
         elif name:
-            yield u"--{0}".format(name)
+            yield f"--{name}"
 
     def _match_argument(self, action, arg_strings_pattern):
         # - https://github.com/streamlink/streamlink/issues/971

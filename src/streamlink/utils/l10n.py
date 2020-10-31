@@ -48,14 +48,13 @@ class Country(object):
         )
 
     def __str__(self):
-        return self.__unicode__()
-
-    def __unicode__(self):
-        return u"Country({0!r}, {1!r}, {2!r}, {3!r}, official_name={4!r})".format(self.alpha2,
-                                                                                  self.alpha3,
-                                                                                  self.numeric,
-                                                                                  self.name,
-                                                                                  self.official_name)
+        return "Country({0!r}, {1!r}, {2!r}, {3!r}, official_name={4!r})".format(
+            self.alpha2,
+            self.alpha3,
+            self.numeric,
+            self.name,
+            self.official_name
+        )
 
 
 class Language(object):
@@ -99,13 +98,12 @@ class Language(object):
         )
 
     def __str__(self):
-        return self.__unicode__()
-
-    def __unicode__(self):
-        return u"Language({0!r}, {1!r}, {2!r}, bibliographic={3!r})".format(self.alpha2,
-                                                                            self.alpha3,
-                                                                            self.name,
-                                                                            self.bibliographic)
+        return "Language({0!r}, {1!r}, {2!r}, bibliographic={3!r})".format(
+            self.alpha2,
+            self.alpha3,
+            self.name,
+            self.bibliographic
+        )
 
 
 class Localization(object):
