@@ -103,7 +103,6 @@ huya                    huya.com             Yes   No    Temporarily only HLS st
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
 invintus                player.invintus.com  Yes   Yes
-kingkong                kingkong.com.tw      Yes   --
 kugou                   fanxing.kugou.com    Yes   --
 latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
 linelive                live.line.me         Yes   Yes
