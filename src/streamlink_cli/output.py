@@ -1,12 +1,13 @@
 import logging
 import os
+import re
 import shlex
 import subprocess
 import sys
 from time import sleep
 
 from streamlink_cli.compat import is_win32, stdout
-from streamlink_cli.constants import DEFAULT_PLAYER_ARGUMENTS, SUPPORTED_PLAYERS
+from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
 from streamlink_cli.utils import ignored
 
 if is_win32:
@@ -77,7 +78,12 @@ class FileOutput(Output):
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True,
+    _re_player_args_input = re.compile("|".join(map(
+        lambda const: re.escape(f"{{{const}}}"),
+        [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK]
+    )))
+
+    def __init__(self, cmd, args="", filename=None, quiet=True, kill=True,
                  call=False, http=None, namedpipe=None, record=None, title=None):
         super().__init__()
         self.cmd = cmd
@@ -105,6 +111,9 @@ class PlayerOutput(Output):
         else:
             self.stdout = sys.stdout
             self.stderr = sys.stderr
+
+        if not self._re_player_args_input.search(self.args):
+            self.args += f"{' ' if self.args else ''}{{{PLAYER_ARGS_INPUT_DEFAULT}}}"
 
     @property
     def running(self):
@@ -201,7 +210,7 @@ class PlayerOutput(Output):
                     self.title = self.title.replace('"', '')
                     filename = filename[:-1] + '\\' + self.title + filename[-1]
 
-        args = self.args.format(filename=filename)
+        args = self.args.format(**{PLAYER_ARGS_INPUT_DEFAULT: filename, PLAYER_ARGS_INPUT_FALLBACK: filename})
         cmd = self.cmd
 
         # player command
