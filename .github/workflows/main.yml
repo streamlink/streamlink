@@ -20,7 +20,7 @@ jobs:
       # please remember to change the `codecov.notify.after_n_builds` value in .codecov.yml
       # when changing the build matrix and changing the number of test runners
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-20.04, windows-latest]
         python: [3.6, 3.7, 3.8, 3.9]
 #       include:
 #         - python: X.Y-dev
@@ -51,7 +51,7 @@ jobs:
   documentation:
     name: Test docs
     if: github.event_name != 'schedule'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -60,7 +60,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
@@ -70,7 +70,7 @@ jobs:
 
   windows-installer:
     name: Windows installer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -79,7 +79,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
@@ -105,7 +105,7 @@ jobs:
       - test
       - documentation
       - windows-installer
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -114,7 +114,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
@@ -131,7 +131,7 @@ jobs:
     if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs:
       - deploy-documentation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -140,7 +140,7 @@ jobs:
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
       - uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
