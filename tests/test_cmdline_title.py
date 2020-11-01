@@ -87,7 +87,7 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
             ["streamlink", "-p", "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\"",
              "--title", "{author}", "http://test.se/stream", "hls", "--player-passthrough", "hls"],
             "\"c:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe\" \"http://test.se/playlist.m3u8\\"
-            + u"Tѥst Āuƭhǿr".encode(get_filesystem_encoding())
+            + "Tѥst Āuƭhǿr"
             + "\"",
             passthrough=True
         )

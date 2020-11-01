@@ -9,7 +9,9 @@ from streamlink.utils.args import (
     boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 )
 from streamlink.utils.times import hours_minutes_seconds
-from streamlink_cli.constants import (DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS)
+from streamlink_cli.constants import (
+    DEFAULT_STREAM_METADATA, PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS
+)
 from streamlink_cli.utils import find_default_player
 
 _printable_re = re.compile(r"[{0}]".format(printable))
@@ -310,33 +312,36 @@ def build_parser():
     player.add_argument(
         "-a", "--player-args",
         metavar="ARGUMENTS",
-        default=DEFAULT_PLAYER_ARGUMENTS,
+        default="",
         help="""
         This option allows you to customize the default arguments which are put
         together with the value of --player to create a command to execute.
-        Unlike the --player parameter, custom player arguments will not be logged.
 
-        This value can contain formatting variables surrounded by curly braces,
+        It's usually enough to only use --player instead of this unless you need
+        to add arguments after the player's input argument or if you don't want
+        any of the player arguments to be logged.
+
+        The value can contain formatting variables surrounded by curly braces,
         {{ and }}. If you need to include a brace character, it can be escaped
         by doubling, e.g. {{{{ and }}}}.
 
         Formatting variables available:
 
-        {{filename}}
-            This is the filename that the player will use. It's usually "-"
-            (stdin), but can also be a URL or a file depending on the options
-            used.
+        {{{0}}}
+            This is the input that the player will use. For standard input (stdin),
+            it is ``-``, but it can also be a URL, depending on the options used.
 
-        It's usually enough to use --player instead of this unless you need to
-        add arguments after the filename.
-
-        Default is "{0}".
+        {{{1}}}
+            The old fallback variable name with the same functionality.
 
         Example:
 
-          %(prog)s -p vlc -a "--play-and-exit {{filename}}" <url> [stream]
+          %(prog)s -p vlc -a "--play-and-exit {{{0}}}" <url> [stream]
 
-        """.format(DEFAULT_PLAYER_ARGUMENTS)
+        Note: When neither of the variables are found, ``{{{0}}}``
+        will be appended to the whole parameter value, to ensure that the player
+        always receives an input argument.
+        """.format(PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK)
     )
     player.add_argument(
         "-v", "--verbose-player",

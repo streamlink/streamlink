@@ -1,13 +1,15 @@
+# -*- coding: utf-8 -*-
 import logging
 import os
+import re
 import shlex
 import subprocess
 import sys
 from time import sleep
 
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
-from streamlink_cli.compat import is_win32, stdout
-from streamlink_cli.constants import DEFAULT_PLAYER_ARGUMENTS, SUPPORTED_PLAYERS
+from streamlink_cli.compat import is_py2, is_win32, stdout
+from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
 from streamlink_cli.utils import ignored
 
 if is_win32:
@@ -78,7 +80,12 @@ class FileOutput(Output):
 class PlayerOutput(Output):
     PLAYER_TERMINATE_TIMEOUT = 10.0
 
-    def __init__(self, cmd, args=DEFAULT_PLAYER_ARGUMENTS, filename=None, quiet=True, kill=True,
+    _re_player_args_input = re.compile("|".join(map(
+        lambda const: re.escape("{{{0}}}".format(const)),
+        [PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK]
+    )))
+
+    def __init__(self, cmd, args="", filename=None, quiet=True, kill=True,
                  call=False, http=None, namedpipe=None, record=None, title=None):
         super(PlayerOutput, self).__init__()
         self.cmd = cmd
@@ -106,6 +113,9 @@ class PlayerOutput(Output):
         else:
             self.stdout = sys.stdout
             self.stderr = sys.stderr
+
+        if not self._re_player_args_input.search(self.args):
+            self.args += "{0}{{{1}}}".format(' ' if self.args else '', PLAYER_ARGS_INPUT_DEFAULT)
 
     @property
     def running(self):
@@ -202,14 +212,17 @@ class PlayerOutput(Output):
                     self.title = self.title.replace('"', '')
                     filename = filename[:-1] + '\\' + self.title + filename[-1]
 
-        args = self.args.format(filename=filename)
+        if is_py2:
+            filename = filename.encode("utf-8")
+        log.info("filename: {}".format(filename))
+        args = self.args.format(**{PLAYER_ARGS_INPUT_DEFAULT: filename, PLAYER_ARGS_INPUT_FALLBACK: filename})
         cmd = self.cmd
 
         # player command
         if is_win32:
             eargs = maybe_decode(subprocess.list2cmdline(extra_args))
             # do not insert and extra " " when there are no extra_args
-            return u' '.join([cmd] + ([eargs] if eargs else []) + [args])
+            return ' '.join([cmd] + ([eargs] if eargs else []) + [args])
         return shlex.split(cmd) + extra_args + shlex.split(args)
 
     def _open(self):
@@ -232,7 +245,7 @@ class PlayerOutput(Output):
             fargs = args
         else:
             fargs = subprocess.list2cmdline(args)
-        log.debug(u"Calling: {0}".format(fargs))
+        log.debug("Calling: {0}".format(fargs))
 
         subprocess.call(maybe_encode(args, get_filesystem_encoding()),
                         stdout=self.stdout,

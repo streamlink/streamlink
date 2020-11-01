@@ -139,6 +139,7 @@ class TestCLIMain(unittest.TestCase):
         args.record_and_pipe = None
         args.title = None
         args.player = "mpv"
+        args.player_args = ""
         self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
 
     def test_create_output_file_output(self):
@@ -182,6 +183,7 @@ class TestCLIMain(unittest.TestCase):
             args.record_and_pipe = None
             args.title = None
             args.player = "mpv"
+            args.player_args = ""
             args.player_fifo = None
             self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
         finally:

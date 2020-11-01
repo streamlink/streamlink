@@ -2,7 +2,10 @@ import os
 
 from streamlink_cli.compat import is_win32
 
-DEFAULT_PLAYER_ARGUMENTS = u"{filename}"
+DEFAULT_PLAYER_ARGUMENTS = "{filename}"
+PLAYER_ARGS_INPUT_DEFAULT = "playerinput"
+PLAYER_ARGS_INPUT_FALLBACK = "filename"
+
 DEFAULT_STREAM_METADATA = {
     "title": u"Unknown Title",
     "author": u"Unknown Author",
@@ -34,6 +37,7 @@ STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 
 __all__ = [
-    "CONFIG_FILES", "DEFAULT_PLAYER_ARGUMENTS",
-    "PLUGINS_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
+    "PLAYER_ARGS_INPUT_DEFAULT", "PLAYER_ARGS_INPUT_FALLBACK",
+    "DEFAULT_STREAM_METADATA", "SUPPORTED_PLAYERS",
+    "CONFIG_FILES", "PLUGINS_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
 ]
