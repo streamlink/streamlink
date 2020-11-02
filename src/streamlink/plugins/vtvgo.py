@@ -3,7 +3,6 @@ import re
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -24,7 +23,6 @@ class VTVgo(Plugin):
         self.session.http.headers.update({
             'Origin': 'https://vtvgo.vn',
             'Referer': self.url,
-            'User-Agent': useragents.FIREFOX,
             'X-Requested-With': 'XMLHttpRequest',
         })
         res = self.session.http.get(self.url)

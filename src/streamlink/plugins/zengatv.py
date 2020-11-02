@@ -2,7 +2,6 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -22,10 +21,7 @@ class ZengaTV(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        headers = {
-            "User-Agent": useragents.FIREFOX,
-            "Referer": self.url,
-        }
+        headers = {"Referer": self.url}
 
         res = self.session.http.get(self.url, headers=headers)
         for id_re in (self._id_re, self._id_2_re):

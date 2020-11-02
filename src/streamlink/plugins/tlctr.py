@@ -2,7 +2,6 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -19,7 +18,6 @@ class TLCtr(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
         res = self.session.http.get(self.url)
 
         m = self._hls_re.search(res.text)

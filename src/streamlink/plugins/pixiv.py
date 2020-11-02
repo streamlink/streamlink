@@ -3,7 +3,7 @@ import re
 
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -90,10 +90,7 @@ class Pixiv(Plugin):
         super().__init__(url)
         self._authed = (self.session.http.cookies.get("PHPSESSID")
                         and self.session.http.cookies.get("device_token"))
-        self.session.http.headers.update({
-            "User-Agent": useragents.FIREFOX,
-            "Referer": self.url
-        })
+        self.session.http.headers.update({"Referer": self.url})
 
     @classmethod
     def can_handle_url(cls, url):

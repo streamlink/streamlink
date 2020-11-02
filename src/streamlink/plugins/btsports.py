@@ -5,7 +5,6 @@ from urllib.parse import quote
 from uuid import uuid4
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -39,10 +38,6 @@ class BTSports(Plugin):
     api_url = "https://be.avs.bt.com/AVS/besc"
     saml_url = "https://samlfed.bt.com/sportgetfedwebhls"
     login_url = "https://signin1.bt.com/siteminderagent/forms/login.fcc"
-
-    def __init__(self, url):
-        super().__init__(url)
-        self.session.http.headers = {"User-Agent": useragents.FIREFOX}
 
     @classmethod
     def can_handle_url(cls, url):

@@ -3,7 +3,6 @@ import re
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -26,7 +25,6 @@ class STV(Plugin):
         return self.title
 
     def _get_api_results(self):
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
         res = self.session.http.get(self.API_URL)
         data = self.session.http.json(res)
 
