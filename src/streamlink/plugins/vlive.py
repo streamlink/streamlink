@@ -32,14 +32,14 @@ class Vlive(Plugin):
 
     _schema_stream = validate.Schema(
         validate.transform(parse_json),
-        validate.any(None, validate.all(
+        validate.all(
             {"result": {"streamList": [{
                 "streamName": str,
                 "serviceUrl": str,
             }]}},
             validate.get("result"),
             validate.get("streamList")
-        ))
+        )
     )
 
     @classmethod
@@ -49,6 +49,9 @@ class Vlive(Plugin):
     def _get_streams(self):
         video_json = self.session.http.get(self.url, headers={"Referer": self.url},
                                            schema=self._schema_video)
+        if video_json is None:
+            log.error('Could not parse video page')
+            return
 
         if video_json['type'] == 'VOD':
             log.error('VODs are not supported')
