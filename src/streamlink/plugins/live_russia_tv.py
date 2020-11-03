@@ -3,7 +3,6 @@ import re
 
 from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -46,7 +45,6 @@ class LiveRussia(Plugin):
             return self.DATA_LIVE_URL.format(**args)
 
     def _get_streams(self):
-        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         info_url = None
 
         channel = self.url_re.match(self.url).group('channel')

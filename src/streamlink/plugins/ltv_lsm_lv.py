@@ -3,7 +3,6 @@ import re
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 
@@ -21,10 +20,7 @@ class LtvLsmLv(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        self.session.http.headers.update({
-            "Referer": self.url,
-            "User-Agent": useragents.FIREFOX
-        })
+        self.session.http.headers.update({"Referer": self.url})
 
         iframe_url = None
         res = self.session.http.get(self.url)

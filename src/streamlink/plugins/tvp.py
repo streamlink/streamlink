@@ -3,7 +3,6 @@ import re
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
@@ -37,8 +36,6 @@ class TVP(Plugin):
         return p_url
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
-
         embed_url = self.get_embed_url()
         res = self.session.http.get(embed_url)
         m = self._stream_re.findall(res.text)

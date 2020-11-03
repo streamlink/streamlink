@@ -7,7 +7,6 @@ import xml.etree.ElementTree as ET
 
 from streamlink.compat import urlencode
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 
@@ -31,7 +30,6 @@ class Radiko(Plugin):
             start_at = match.group('start_at')
             url, token = self._timefree(station_id, start_at)
         headers = {
-            'User-Agent': useragents.FIREFOX,
             'X-Radiko-AuthToken': token
         }
         self.session.http.headers = headers
@@ -71,7 +69,6 @@ class Radiko(Plugin):
 
     def _authorize(self):
         headers = {
-            'User-Agent': useragents.FIREFOX,
             'x-radiko-app': 'pc_html5',
             'x-radiko-app-version': '0.0.1',
             'x-radiko-device': 'pc',

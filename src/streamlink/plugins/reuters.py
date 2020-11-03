@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -46,7 +46,6 @@ class Reuters(Plugin):
 
     def __init__(self, url):
         super(Reuters, self).__init__(url)
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
         self.title = None
 
     @classmethod

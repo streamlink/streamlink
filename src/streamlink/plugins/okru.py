@@ -5,7 +5,7 @@ import re
 from streamlink.compat import html_unescape, unquote
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
 
@@ -76,10 +76,7 @@ class OKru(Plugin):
         return Plugin.stream_weight(key)
 
     def _get_streams(self):
-        self.session.http.headers.update({
-            'User-Agent': useragents.FIREFOX,
-            'Referer': self.url,
-        })
+        self.session.http.headers.update({'Referer': self.url})
 
         try:
             data = self.session.http.get(self.url, schema=self._data_schema)

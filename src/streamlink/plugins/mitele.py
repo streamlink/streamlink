@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
@@ -45,10 +45,7 @@ class Mitele(Plugin):
 
     def __init__(self, url):
         super(Mitele, self).__init__(url)
-        self.session.http.headers.update({
-            "User-Agent": useragents.FIREFOX,
-            "Referer": self.url
-        })
+        self.session.http.headers.update({"Referer": self.url})
 
     @classmethod
     def can_handle_url(cls, url):

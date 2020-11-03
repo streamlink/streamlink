@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
@@ -27,8 +27,6 @@ class VinhLongTV(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
-
         channel = self._url_re.match(self.url).group('channel')
 
         res = self.session.http.get(self.api_url.format(channel))

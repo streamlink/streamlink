@@ -8,7 +8,6 @@ import time
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_qsd
 from streamlink.utils.crypto import decrypt_openssl
@@ -29,7 +28,6 @@ class Streann(Plugin):
     def __init__(self, url):
         super(Streann, self).__init__(url)
         self._device_id = None
-        self._headers = {"User-Agent": useragents.FIREFOX}
 
     @classmethod
     def can_handle_url(cls, url):
@@ -64,7 +62,6 @@ class Streann(Plugin):
                      arg2=base64.b64encode(self.time.encode("utf8")))
 
         headers = {
-            "User-Agent": useragents.FIREFOX,
             "Referer": self.url,
             "X-Requested-With": "XMLHttpRequest",
             "Content-Type": "application/x-www-form-urlencoded"

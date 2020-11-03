@@ -3,7 +3,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker
 
@@ -116,10 +116,7 @@ class Showroom(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-        self._headers = {
-            'Referer': self.url,
-            'User-Agent': useragents.FIREFOX
-        }
+        self._headers = {'Referer': self.url}
         self._room_id = None
         self._stream_urls = None
 

@@ -3,7 +3,7 @@ import re
 
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 
 log = logging.getLogger(__name__)
@@ -55,9 +55,7 @@ class Bilibili(Plugin):
         return Plugin.stream_weight(stream)
 
     def _get_streams(self):
-        self.session.http.headers.update({
-            'User-Agent': useragents.FIREFOX,
-            'Referer': self.url})
+        self.session.http.headers.update({'Referer': self.url})
         match = _url_re.match(self.url)
         channel = match.group("channel")
         res_room_id = self.session.http.get(ROOM_API.format(channel))

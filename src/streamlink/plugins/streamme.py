@@ -3,7 +3,7 @@ import re
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
 
@@ -68,7 +68,6 @@ class StreamMe(Plugin):
         super(StreamMe, self).__init__(url)
         self.author = None
         self.title = None
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
 
     @classmethod
     def can_handle_url(cls, url):

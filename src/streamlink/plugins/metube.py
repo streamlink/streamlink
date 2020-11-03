@@ -1,7 +1,6 @@
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 
@@ -26,10 +25,7 @@ class MeTube(Plugin):
         stream_type = self._url_re.match(self.url).group("type")
         hls_re = re.compile(r"""["'](?P<url>[^"']+\.m3u8[^"']*?)["']""")
 
-        headers = {
-            "Origin": "https://www.metube.id",
-            "User-Agent": useragents.FIREFOX
-        }
+        headers = {"Origin": "https://www.metube.id"}
 
         res = self.session.http.get(self.url)
         match = hls_re.search(res.text)

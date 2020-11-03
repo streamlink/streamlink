@@ -4,7 +4,7 @@ import re
 from streamlink.compat import urlparse
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
@@ -36,8 +36,6 @@ class TeleclubZoom(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        self.session.http.headers.update({'User-Agent': useragents.FIREFOX})
-
         iframe_url = None
         page = self.session.http.get(self.url)
         for a in itertags(page.text, 'a'):
