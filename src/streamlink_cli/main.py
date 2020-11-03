@@ -614,12 +614,16 @@ def handle_url():
         else:
             console.exit("{0}.\n       Available streams: {1}",
                          err, validstreams)
+    elif console.json:
+        console.msg_json(dict(plugin=plugin.module, streams=streams))
+    elif args.stream_url:
+        try:
+            console.msg("{0}", streams[list(streams)[-1]].to_manifest_url())
+        except TypeError:
+            console.exit("The stream specified cannot be translated to a URL")
     else:
-        if console.json:
-            console.msg_json(dict(streams=streams, plugin=plugin.module))
-        else:
-            validstreams = format_valid_streams(plugin, streams)
-            console.msg("Available streams: {0}", validstreams)
+        validstreams = format_valid_streams(plugin, streams)
+        console.msg("Available streams: {0}", validstreams)
 
 
 def print_plugins():

@@ -340,7 +340,7 @@ class HLSStreamReader(SegmentedStreamReader):
 class MuxedHLSStream(MuxedStream):
     __shortname__ = "hls-multi"
 
-    def __init__(self, session, video, audio, force_restart=False, ffmpeg_options=None, **args):
+    def __init__(self, session, video, audio, url_master=None, force_restart=False, ffmpeg_options=None, **args):
         tracks = [video]
         maps = ["0:v?", "0:a?"]
         if audio:
@@ -354,6 +354,10 @@ class MuxedHLSStream(MuxedStream):
         ffmpeg_options = ffmpeg_options or {}
 
         super(MuxedHLSStream, self).__init__(session, *substreams, format="mpegts", maps=maps, **ffmpeg_options)
+        self.url_master = url_master
+
+    def to_manifest_url(self):
+        return self.url_master
 
 
 class HLSStream(HTTPStream):
@@ -369,23 +373,30 @@ class HLSStream(HTTPStream):
 
     __shortname__ = "hls"
 
-    def __init__(self, session_, url, force_restart=False, start_offset=0, duration=None, **args):
+    def __init__(self, session_, url, url_master=None, force_restart=False, start_offset=0, duration=None, **args):
         HTTPStream.__init__(self, session_, url, **args)
+        self.url_master = url_master
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
 
     def __repr__(self):
-        return "<HLSStream({0!r})>".format(self.url)
+        return "<HLSStream({0!r}, {1!r})>".format(self.url, self.url_master)
 
     def __json__(self):
         json = HTTPStream.__json__(self)
+
+        if self.url_master:
+            json["master"] = self.url_master
 
         # Pretty sure HLS is GET only.
         del json["method"]
         del json["body"]
 
         return json
+
+    def to_manifest_url(self):
+        return self.url_master
 
     def open(self):
         reader = HLSStreamReader(self)
@@ -519,6 +530,7 @@ class HLSStream(HTTPStream):
                 stream = MuxedHLSStream(session_,
                                         video=playlist.uri,
                                         audio=[x.uri for x in external_audio if x.uri],
+                                        url_master=url,
                                         force_restart=force_restart,
                                         start_offset=start_offset,
                                         duration=duration,
@@ -526,6 +538,7 @@ class HLSStream(HTTPStream):
             else:
                 stream = cls(session_,
                              playlist.uri,
+                             url_master=url,
                              force_restart=force_restart,
                              start_offset=start_offset,
                              duration=duration,

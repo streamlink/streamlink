@@ -51,6 +51,17 @@ class SegmentEnc(Segment):
         self.content = encrypt(self.content, key, iv)
 
 
+class TestHLSStreamRepr(unittest.TestCase):
+    def test_repr(self):
+        session = Streamlink()
+
+        stream = hls.HLSStream(session, "https://foo.bar/playlist.m3u8")
+        self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', None)>")
+
+        stream = hls.HLSStream(session, "https://foo.bar/playlist.m3u8", "https://foo.bar/master.m3u8")
+        self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', 'https://foo.bar/master.m3u8')>")
+
+
 class TestHLSVariantPlaylist(unittest.TestCase):
     @classmethod
     def get_master_playlist(cls, playlist):

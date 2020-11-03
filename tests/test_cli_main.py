@@ -4,9 +4,12 @@ import unittest
 
 import streamlink_cli.main
 from streamlink.plugin.plugin import Plugin
-from streamlink_cli.main import check_file_output, create_output, format_valid_streams, resolve_stream_name
+from streamlink_cli.compat import is_py3
+from streamlink_cli.main import (
+    check_file_output, create_output, format_valid_streams, handle_stream, handle_url, resolve_stream_name
+)
 from streamlink_cli.output import FileOutput, PlayerOutput
-from tests.mock import Mock, patch
+from tests.mock import Mock, call, patch
 
 
 class FakePlugin:
@@ -129,6 +132,61 @@ class TestCLIMain(unittest.TestCase):
                 "1080p (best-unfiltered)"
             ])
         )
+
+    @patch("streamlink_cli.main.args", stream_url=True, subprocess_cmdline=False)
+    @patch("streamlink_cli.main.console", json=True)
+    def test_handle_stream_with_json_and_stream_url(self, console, args):
+        stream = Mock()
+        streams = dict(best=stream)
+        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
+
+        handle_stream(plugin, streams, "best")
+        self.assertEqual(console.msg.mock_calls, [])
+        self.assertEqual(console.msg_json.mock_calls, [call(stream)])
+        self.assertEqual(console.error.mock_calls, [])
+        if is_py3:
+            console.msg_json.mock_calls.clear()
+
+            console.json = False
+            handle_stream(plugin, streams, "best")
+            self.assertEqual(console.msg.mock_calls, [call("{0}", stream.to_url())])
+            self.assertEqual(console.msg_json.mock_calls, [])
+            self.assertEqual(console.error.mock_calls, [])
+            console.msg.mock_calls.clear()
+    
+            stream.to_url.side_effect = TypeError()
+            handle_stream(plugin, streams, "best")
+            self.assertEqual(console.msg.mock_calls, [])
+            self.assertEqual(console.msg_json.mock_calls, [])
+            self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
+
+    @patch("streamlink_cli.main.args", stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
+    @patch("streamlink_cli.main.console", json=True)
+    def test_handle_url_with_json_and_stream_url(self, console, args):
+        stream = Mock()
+        streams = dict(worst=Mock(), best=stream)
+        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
+
+        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=plugin)):
+            handle_url()
+            self.assertEqual(console.msg.mock_calls, [])
+            self.assertEqual(console.msg_json.mock_calls, [call(dict(plugin="fake", streams=streams))])
+            self.assertEqual(console.error.mock_calls, [])
+            if is_py3:
+                console.msg_json.mock_calls.clear()
+
+                console.json = False
+                handle_url()
+                self.assertEqual(console.msg.mock_calls, [call("{0}", stream.to_manifest_url())])
+                self.assertEqual(console.msg_json.mock_calls, [])
+                self.assertEqual(console.error.mock_calls, [])
+                console.msg_json.mock_calls.clear()
+
+                stream.to_manifest_url.side_effect = TypeError()
+                handle_url()
+                self.assertEqual(console.msg.mock_calls, [])
+                self.assertEqual(console.msg_json.mock_calls, [])
+                self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
 
     def test_create_output_no_file_output_options(self):
         streamlink_cli.main.console = Mock()
