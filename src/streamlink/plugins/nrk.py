@@ -41,6 +41,7 @@ _playable_schema = validate.Schema({
     },
 })
 
+
 class NRK(Plugin):
     _psapi_url = 'https://psapi.nrk.no'
 
@@ -49,9 +50,6 @@ class NRK(Plugin):
         return _url_re.match(url)
 
     def _get_streams(self):
-        # Get the stream type from the url (tv/radio).
-        stream_type = _url_re.match(self.url).group(1).upper()
-
         # Construct manifest URL for this program.
         program_type, program_id = _id_re.search(self.url).groups()
         if program_type == 'direkte':
@@ -84,5 +82,6 @@ class NRK(Plugin):
         if not data:
             return None
         return data.get("title")
+
 
 __plugin__ = NRK
