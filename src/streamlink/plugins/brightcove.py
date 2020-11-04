@@ -39,7 +39,7 @@ class ContentOverride(AMF3ObjectBase):
         self.contentRefId = contentRefId
 
 
-class BrightcovePlayer(object):
+class BrightcovePlayer:
     player_page = "http://players.brightcove.net/{account_id}/{player_id}/index.html"
     api_url = "https://edge.api.brightcove.com/playback/v1/"
     amf_broker = "http://c.brightcove.com/services/messagebroker/amf"

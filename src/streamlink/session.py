@@ -45,7 +45,7 @@ class PythonDeprecatedWarning(UserWarning):
     pass
 
 
-class Streamlink(object):
+class Streamlink:
     """A Streamlink session is used to keep track of plugins,
        options and log settings."""
 

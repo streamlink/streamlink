@@ -11,7 +11,7 @@ from streamlink.stream.ffmpegmux import MuxedStream
 log = logging.getLogger(__name__)
 
 
-class Experience(object):
+class Experience:
     CSRF_NAME = "csrfmiddlewaretoken"
     login_url = "https://www.funimation.com/log-in/"
     api_base = "https://www.funimation.com/api"

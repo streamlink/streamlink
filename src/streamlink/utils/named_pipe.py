@@ -14,7 +14,7 @@ if is_win32:
     INVALID_HANDLE_VALUE = -1
 
 
-class NamedPipe(object):
+class NamedPipe:
     def __init__(self, name):
         self.fifo = None
         self.pipe = None

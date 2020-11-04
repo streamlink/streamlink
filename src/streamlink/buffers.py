@@ -15,7 +15,7 @@ class Chunk(BytesIO):
         return self.tell() == self.length
 
 
-class Buffer(object):
+class Buffer:
     """Simple buffer for use in single-threaded consumer/filler.
 
     Stores chunks in a deque to avoid inefficient reallocating

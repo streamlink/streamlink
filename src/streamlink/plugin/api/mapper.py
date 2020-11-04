@@ -3,7 +3,7 @@ from itertools import product
 from operator import eq
 
 
-class StreamMapper(object):
+class StreamMapper:
     """The stream mapper can be used to simplify the process of creating
        stream objects from data.
 

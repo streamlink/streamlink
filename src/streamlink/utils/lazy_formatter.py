@@ -1,7 +1,7 @@
 import string
 
 
-class LazyFormatter(object):
+class LazyFormatter:
     def __init__(self, **lazy_props):
         self.lazy_props = lazy_props
 

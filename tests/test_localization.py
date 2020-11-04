@@ -19,7 +19,7 @@ except ImportError:
     PYCOUNTRY = False
 
 
-class LocalizationTestsMixin(object):
+class LocalizationTestsMixin:
     def test_language_code_us(self):
         locale = l10n.Localization("en_US")
         self.assertEqual("en_US", locale.language_code)

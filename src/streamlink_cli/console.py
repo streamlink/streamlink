@@ -29,7 +29,7 @@ class ConsoleUserInputRequester(UserInputRequester):
             raise IOError("no TTY available")
 
 
-class ConsoleOutput(object):
+class ConsoleOutput:
     def __init__(self, output, json=False):
         self.json = json
         self.output = output

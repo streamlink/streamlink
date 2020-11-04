@@ -160,7 +160,7 @@ class Ceskatelevize(Plugin):
         return 'http://ceskatelevize.cz/' + url
 
 
-class CeskatelevizeAPI2(object):
+class CeskatelevizeAPI2:
     _player_api = 'https://playlist.ceskatelevize.cz/'
     _url_re = re.compile(r'http(s)?://([^.]*.)?ceskatelevize.cz')
     _playlist_info_re = re.compile(r'{\s*"type":\s*"([a-z]+)",\s*"id":\s*"(\w+)"')

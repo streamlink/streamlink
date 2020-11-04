@@ -42,7 +42,7 @@ Resolution = namedtuple("Resolution", "width height")
 Segment = namedtuple("Segment", "uri duration title key discontinuity byterange date map")
 
 
-class M3U8(object):
+class M3U8:
     def __init__(self):
         self.is_endlist = False
         self.is_master = False
@@ -77,7 +77,7 @@ class M3U8(object):
         return daterange.start_date <= date
 
 
-class M3U8Parser(object):
+class M3U8Parser:
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
     _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")

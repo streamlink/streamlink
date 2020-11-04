@@ -14,7 +14,7 @@ else:
 cache_dir = os.path.join(xdg_cache, "streamlink")
 
 
-class Cache(object):
+class Cache:
     """Caches Python values as JSON and prunes expired entries."""
 
     def __init__(self, filename, key_prefix=""):

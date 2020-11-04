@@ -157,7 +157,7 @@ def parse_params(params):
     return rval
 
 
-class UserInputRequester(object):
+class UserInputRequester:
     """
     Base Class / Interface for requesting user input
 
@@ -184,7 +184,7 @@ class UserInputRequester(object):
         raise NotImplementedError
 
 
-class Plugin(object):
+class Plugin:
     """A plugin can retrieve stream information from the URL specified.
 
     :param url: URL that the plugin will operate on

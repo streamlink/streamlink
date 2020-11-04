@@ -67,7 +67,7 @@ def extract_flv_header_tags(stream):
     return FLVHeaderTags(metadata, aac_header, avc_header)
 
 
-class FLVTagConcat(object):
+class FLVTagConcat:
     def __init__(self, duration=None, tags=[], has_video=True, has_audio=True,
                  flatten_timestamps=False, sync_headers=False):
         self.duration = duration

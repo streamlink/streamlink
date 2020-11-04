@@ -15,7 +15,7 @@ from streamlink.utils import parse_xml
 log = logging.getLogger(__name__)
 
 
-class ZTNRClient(object):
+class ZTNRClient:
     base_url = "http://ztnr.rtve.es/ztnr/res/"
     block_size = 16
 

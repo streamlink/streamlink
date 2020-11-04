@@ -20,7 +20,7 @@ DEFAULT_LANGUAGE_CODE = "{0}_{1}".format(DEFAULT_LANGUAGE, DEFAULT_COUNTRY)
 log = logging.getLogger(__name__)
 
 
-class Country(object):
+class Country:
     def __init__(self, alpha2, alpha3, numeric, name, official_name=None):
         self.alpha2 = alpha2
         self.alpha3 = alpha3
@@ -57,7 +57,7 @@ class Country(object):
         )
 
 
-class Language(object):
+class Language:
     def __init__(self, alpha2, alpha3, name, bibliographic=None):
         self.alpha2 = alpha2
         self.alpha3 = alpha3
@@ -106,7 +106,7 @@ class Language(object):
         )
 
 
-class Localization(object):
+class Localization:
     def __init__(self, language_code=None):
         self._language_code = None
         self.country = None

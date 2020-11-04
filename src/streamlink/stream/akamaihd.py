@@ -17,7 +17,7 @@ from streamlink.utils import swfdecompress
 log = logging.getLogger(__name__)
 
 
-class TokenGenerator(object):
+class TokenGenerator:
     def __init__(self, stream):
         self.stream = stream
 
