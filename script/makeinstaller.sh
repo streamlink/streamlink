@@ -33,7 +33,7 @@ cd "${ROOT}"
 STREAMLINK_VERSION=$(python setup.py --version)
 STREAMLINK_VERSION_PLAIN="${STREAMLINK_VERSION%%+*}"
 STREAMLINK_INSTALLER="${1:-"streamlink-${STREAMLINK_VERSION/\+/_}"}"
-STREAMLINK_PYTHON_VERSION=3.6.6
+STREAMLINK_PYTHON_VERSION=3.9.0
 STREAMLINK_ASSETS_REPO="${STREAMLINK_ASSETS_REPO:-streamlink/streamlink-assets}"
 STREAMLINK_ASSETS_RELEASE="${STREAMLINK_ASSETS_RELEASE:-latest}"
 
@@ -118,7 +118,7 @@ packages=pkg_resources
          socks
          sockshandler
          isodate
-pypi_wheels=pycryptodome==3.6.4
+pypi_wheels=pycryptodome==3.9.9
 
 files=${ROOT}/win32/THIRD-PARTY.txt > \$INSTDIR
       ${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs
