@@ -144,7 +144,7 @@ class TwitchHLSStream(HLSStream):
         return load_hls_playlist(res.text, base_uri=res.url)
 
 
-class UsherService(object):
+class UsherService:
     def __init__(self, session):
         self.session = session
 
@@ -173,7 +173,7 @@ class UsherService(object):
         return self._create_url("/vod/{0}".format(video_id), **extra_params)
 
 
-class TwitchAPI(object):
+class TwitchAPI:
     # Streamlink's client-id used for public API calls (don't steal this and register your own application on Twitch)
     TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
     # Twitch's client-id used for private API calls (see issue #2680 for why we are doing this)

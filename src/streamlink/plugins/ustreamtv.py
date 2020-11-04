@@ -31,7 +31,7 @@ class ModuleInfoNoStreams(Exception):
     pass
 
 
-class UHSClient(object):
+class UHSClient:
     """
     API Client, reverse engineered by observing the interactions
     between the web browser and the ustream servers.

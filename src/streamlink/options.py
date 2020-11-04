@@ -9,7 +9,7 @@ def _normalise_argument_name(name):
     return name.replace('_', '-').strip("-")
 
 
-class Options(object):
+class Options:
     """
     For storing options to be used by plugins, with default values.
 
@@ -43,7 +43,7 @@ class Options(object):
             self.set(key, value)
 
 
-class Argument(object):
+class Argument:
     """
         :class:`Argument` accepts most of the same parameters as :func:`ArgumentParser.add_argument`,
         except requires is a special case as in this case it is only enforced if the plugin is in use.
@@ -93,7 +93,7 @@ class Argument(object):
         return self._default
 
 
-class Arguments(object):
+class Arguments:
     """
     Provides a wrapper around a list of :class:`Argument`. For example
 

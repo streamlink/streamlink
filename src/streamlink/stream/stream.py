@@ -5,7 +5,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class Stream(object):
+class Stream:
     __shortname__ = "stream"
 
     """

@@ -10,7 +10,7 @@ from streamlink import Streamlink
 from streamlink.stream.hls import HLSStream
 
 
-class HLSItemBase(object):
+class HLSItemBase:
     path = ""
 
     def url(self, namespace):

@@ -123,7 +123,7 @@ class FilmOnHLS(HLSStream):
         return reader
 
 
-class FilmOnAPI(object):
+class FilmOnAPI:
     def __init__(self, session):
         self.session = session
 

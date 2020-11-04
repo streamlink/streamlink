@@ -97,7 +97,7 @@ class CrunchyrollAPIError(Exception):
         self.code = code
 
 
-class CrunchyrollAPI(object):
+class CrunchyrollAPI:
     _api_url = "https://api.crunchyroll.com/{0}.0.json"
     _default_locale = "en_US"
     _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; Android SDK built for x86 Build/KK)"

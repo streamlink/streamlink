@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
 
 
-class Segment(object):
+class Segment:
     def __init__(self, url, duration, init=False, content=True, available_at=epoch_start, range=None):
         self.url = url
         self.duration = duration
@@ -74,7 +74,7 @@ def sleep_until(walltime):
         time.sleep(time_to_wait)
 
 
-class MPDParsers(object):
+class MPDParsers:
     @staticmethod
     def bool_str(v):
         return v.lower() == "true"
@@ -133,7 +133,7 @@ class MPDParsingError(Exception):
     pass
 
 
-class MPDNode(object):
+class MPDNode:
     __tag__ = None
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):

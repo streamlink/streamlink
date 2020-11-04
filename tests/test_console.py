@@ -5,7 +5,7 @@ from unittest.mock import patch
 from streamlink_cli.console import ConsoleOutput
 
 
-class _TestObj(object):
+class _TestObj:
     def __json__(self):
         return {"test": 1}
 
