@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 class Vlive(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)vlive\.tv/(?P<format>video|post)/(?P<id>[0-9\-]+)")
+    _url_re = re.compile(r"https://www\.vlive\.tv/(?P<format>video|post)/(?P<id>[0-9\-]+)")
     _page_info = re.compile(r'window\.__PRELOADED_STATE__\s*=\s*({.*})\s*<', re.DOTALL)
     _playinfo_url = "https://www.vlive.tv/globalv-web/vam-web/old/v3/live/{0}/playInfo"
 
