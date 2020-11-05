@@ -12,6 +12,7 @@ class NRK(Plugin):
     _program_type_map = {
         'direkte': 'channel',
         'serie': 'program',
+        'program': 'program',
         'podkast': 'podcast',
     }
 
