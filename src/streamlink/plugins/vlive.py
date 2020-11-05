@@ -57,7 +57,7 @@ class Vlive(Plugin):
             log.error('VODs are not supported')
             return
 
-        url_format, video_id = re.match(self._url_re, self.url).group('format', 'id')
+        url_format, video_id = self._url_re.match(self.url).groups()
         if url_format == 'post':
             video_id = str(video_json['videoSeq'])
 
