@@ -1,0 +1,38 @@
+language: python
+
+matrix:
+  include:
+  - python: '2.7'
+  - python: '3.6'
+    env: BUILD_DOCS=yes
+  - python: '3.7'
+    dist: xenial
+    sudo: true
+
+before_install:
+  - pip install --upgrade pip setuptools
+  - pip install --upgrade -r dev-requirements.txt
+  - if [[ $BUILD_DOCS == 'yes' ]]; then
+      pip install --upgrade -r docs-requirements.txt;
+      pip install --upgrade doctr;
+    fi
+
+install:
+  - pip install -e .
+
+script:
+  - streamlink --version
+  - flake8
+  - pytest --cov
+  - if [[ $BUILD_DOCS == 'yes' ]]; then make --directory=docs clean html; fi
+
+after_success:
+  - set -e
+  # push docs for master
+  # - if [[ $BUILD_DOCS == 'yes' && $TRAVIS_REPO_SLUG == 'Billy2011/streamlink-27' ]]; then doctr deploy .; fi
+
+doctr:
+  build-tags: True
+  deploy-repo: https://billy2011.github.io/streamlink-27/
+  key-path: deploy_key_doctr.enc
+  require-master: True
