@@ -1,9 +1,12 @@
+import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
+
+log = logging.getLogger(__name__)
 
 
 class NRK(Plugin):
@@ -16,60 +19,51 @@ class NRK(Plugin):
         'podkast': 'podcast',
     }
 
-    _url_re = re.compile(r"https?://(?:tv|radio).nrk.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)")
+    _url_re = re.compile(r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)")
 
-    _playable_schema = validate.Schema({
-        "playable": validate.any(
-            None,
-            {
+    _playable_schema = validate.Schema(validate.any(
+        {
+            "playable": {
                 "assets": [{
-                    "url": validate.url(
-                        path=validate.any(
-                            validate.endswith(".m3u8"),
-                            validate.endswith(".mp3")
-                        ),
-                    ),
+                    "url": validate.url(),
                     "format": str,
                 }],
             },
-        ),
-        "nonPlayable": validate.any(
-            None,
-            {
-                "reason": str,
-            },
-        ),
-        "statistics": {
-            validate.optional("luna"): validate.any(
-                None,
-                {
+            "statistics": {
+                validate.optional("luna"): validate.any(None, {
                     "data": {
                         "title": str,
                     },
-                },
-            ),
+                }),
+            },
         },
-    })
+        {
+            "nonPlayable": {
+                "reason": str,
+            },
+        },
+    ))
 
     @classmethod
-    def can_handle_url(self, url):
-        return self._url_re.match(url)
+    def can_handle_url(cls, url):
+        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         # Construct manifest URL for this program.
-        program_type, program_id = self._url_re.search(self.url).groups()
+        program_type, program_id = self._url_re.match(self.url).groups()
         manifest_type = self._program_type_map.get(program_type)
         if manifest_type is None:
-            raise PluginError(f"Unknown program type '{program_type}'")
+            log.error(f"Unknown program type '{program_type}'")
+            return None
         manifest_url = urljoin(self._psapi_url, f"playback/manifest/{manifest_type}/{program_id}")
 
         # Extract media URL.
         res = self.session.http.get(manifest_url)
         manifest = self.session.http.json(res, schema=self._playable_schema)
-        playable = manifest['playable']
-        if playable is None:
+        if 'nonPlayable' in manifest:
             reason = manifest["nonPlayable"]["reason"]
-            raise PluginError(f"Not playable ({reason})")
+            log.error(f"Not playable ({reason})")
+            return None
         asset = manifest['playable']['assets'][0]
 
         # Some streams such as podcasts are not HLS but plain files.
