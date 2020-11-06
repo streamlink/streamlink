@@ -83,7 +83,7 @@ jobs:
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
-          python -m pip install git+https://github.com/takluyver/pynsist.git@ba9d161370c1b04dec82f72d30a28851c5eef884
+          python -m pip install pynsist
           sudo apt update
           sudo apt install -y nsis imagemagick inkscape
       - name: Installer file name
