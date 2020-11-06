@@ -25,6 +25,7 @@ develop-eggs
 downloads
 eggs
 fake-eggs
+gh-pages
 parts
 dist
 .installed.cfg

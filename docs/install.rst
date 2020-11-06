@@ -10,30 +10,30 @@ Installation
 ==================================== ===========================================
 Version                              Installing
 ==================================== ===========================================
-`Development version (pip)`_         .. code-block:: bash
+`Latest release(pip)`_               .. code-block:: bash
 
                                         # Current user
-                                        pip install --upgrade --user git+https://github.com/Billy2011/streamlink-27.git
+                                        pip install --upgrade --user git+https://github.com/Billy2011/streamlink-27/tree/release-1.27.0.0.git
 
                                         # System wide
-                                        sudo pip install --upgrade git+https://github.com/Billy2011/streamlink-27.git
+                                        sudo pip install --upgrade git+https://github.com/Billy2011/streamlink-27/tree/release-1.27.0.0.git
 
-`Development version (git)`_         .. code-block:: bash
+`Latest release(git)`_               .. code-block:: bash
 
                                         # Current user
-                                        git clone https://github.com/Billy2011/streamlink-27.git
+                                        git clone https://github.com/Billy2011/streamlink-27/tree/release-1.27.0.0.git
                                         cd streamlink
                                         python setup.py install --user
 
                                         # System wide
-                                        git clone https://github.com/Billy2011/streamlink-27.git
+                                        git clone https://github.com/Billy2011/streamlink-27/tree/release-1.27.0.0.git
                                         cd streamlink
                                         sudo python setup.py install
 ==================================== ===========================================
 
 .. _git: https://git-scm.com/
-.. _Development version (pip): https://github.com/Billy2011/streamlink-27
-.. _Development version (git): https://github.com/Billy2011/streamlink-27
+.. _Latest release(pip): https://github.com/Billy2011/streamlink-27/tree/release-1.27.0.0
+.. _Latest release(git): https://github.com/Billy2011/streamlink-27/tree/release-1.27.0.0
 
 Virtual environment
 ^^^^^^^^^^^^^^^^^^^
