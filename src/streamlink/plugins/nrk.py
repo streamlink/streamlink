@@ -33,6 +33,7 @@ class NRK(Plugin):
                 validate.optional("luna"): validate.any(None, {
                     "data": {
                         "title": str,
+                        "category": validate.any(None, str),
                     },
                 }),
             },
@@ -44,9 +45,18 @@ class NRK(Plugin):
         },
     ))
 
+    category = None
+    title = None
+
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
+
+    def get_category(self):
+        return self.category
+
+    def get_title(self):
+        return self.title
 
     def _get_streams(self):
         # Construct manifest URL for this program.
@@ -64,19 +74,22 @@ class NRK(Plugin):
             reason = manifest["nonPlayable"]["reason"]
             log.error(f"Not playable ({reason})")
             return None
+        self._set_metadata(manifest)
         asset = manifest['playable']['assets'][0]
 
         # Some streams such as podcasts are not HLS but plain files.
         if asset['format'] == 'HLS':
             return HLSStream.parse_variant_playlist(self.session, asset['url'])
         else:
-            return [(self._get_title(manifest), HTTPStream(self.session, asset['url']))]
+            return [("live", HTTPStream(self.session, asset['url']))]
 
-    def _get_title(self, manifest):
+    def _set_metadata(self, manifest):
         luna = manifest.get("statistics").get("luna")
         if not luna:
-            return None
-        return luna.get("data").get("title")
+            return
+        data = luna["data"]
+        self.category = data.get("category")
+        self.title = data.get("title")
 
 
 __plugin__ = NRK
