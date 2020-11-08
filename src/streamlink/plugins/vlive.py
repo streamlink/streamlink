@@ -27,14 +27,13 @@ class Vlive(Plugin):
                 }}}},
                 validate.get("postDetail"),
                 validate.get("post"),
-                validate.get("officialVideo")
-                ), validate.all(
+                validate.get("officialVideo")),
+                validate.all(
                     {"postDetail": {"error": {
                         "errorCode": str,
                     }}},
                     validate.get("postDetail"),
-                    validate.get("error")
-                ))
+                    validate.get("error")))
         ))
     )
 
