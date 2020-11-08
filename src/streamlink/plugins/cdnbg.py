@@ -1,5 +1,6 @@
 import logging
 import re
+from html import unescape as html_unescape
 from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin
@@ -43,29 +44,24 @@ class CDNBG(Plugin):
     def find_iframe(self, url):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
         res = self.session.http.get(self.url)
-        p = urlparse(url)
         for iframe_url in self.iframe_re.findall(res.text):
             if "googletagmanager" not in iframe_url:
-                log.debug(f"Found iframe: {iframe_url}")
-                iframe_url = iframe_url.replace("&#58;", ":")
-                if iframe_url.startswith("//"):
-                    return update_scheme(p.scheme, iframe_url)
-                else:
-                    return iframe_url
+                iframe_url = html_unescape(iframe_url)
+                return update_scheme(self.url, iframe_url)
 
     def _get_streams(self):
-        if "i.cdn.bg/live/" in self.url:
+        if "cdn.bg" in urlparse(self.url).netloc:
             iframe_url = self.url
         else:
             iframe_url = self.find_iframe(self.url)
 
-        if iframe_url:
-            res = self.session.http.get(iframe_url, headers={"Referer": self.url})
-            stream_url = update_scheme(self.url, self.stream_schema.validate(res.text))
-            log.warning("SSL Verification disabled.")
-            return HLSStream.parse_variant_playlist(self.session,
-                                                    stream_url,
-                                                    verify=False)
+        log.debug(f"Found iframe: {iframe_url}")
+        res = self.session.http.get(iframe_url, headers={"Referer": self.url})
+        stream_url = update_scheme(self.url, self.stream_schema.validate(res.text))
+        log.warning("SSL Verification disabled.")
+        return HLSStream.parse_variant_playlist(self.session,
+                                                stream_url,
+                                                verify=False)
 
 
 __plugin__ = CDNBG
