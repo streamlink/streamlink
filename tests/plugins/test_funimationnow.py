@@ -38,10 +38,11 @@ class TestPluginFunimationNow(unittest.TestCase):
         }
 
         setup_plugin_args(session, parser)
-        self.assertSequenceEqual(plugin_parser.add_argument.mock_calls,
-                                 [call('--funimation-email', help=ANY),
-                                  call('--funimation-password', help=ANY),
-                                  call('--funimation-language',
-                                       choices=["en", "ja", "english", "japanese"],
-                                       default="english", help=ANY),
-                                  call('--funimation-mux-subtitles', action="store_true", help=ANY)])
+        self.assertSequenceEqual(
+            plugin_parser.add_argument.mock_calls,
+            [
+                call('--funimation-email', help=ANY),
+                call('--funimation-password', help=ANY),
+                call('--funimation-language', choices=["en", "ja", "english", "japanese"], default="english", help=ANY)
+            ]
+        )

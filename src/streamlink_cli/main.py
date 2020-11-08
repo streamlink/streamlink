@@ -855,6 +855,9 @@ def setup_options():
     if args.ffmpeg_audio_transcode:
         streamlink.set_option("ffmpeg-audio-transcode", args.ffmpeg_audio_transcode)
 
+    if args.mux_subtitles:
+        streamlink.set_option("mux-subtitles", args.mux_subtitles)
+
     streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
     streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)

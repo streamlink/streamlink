@@ -88,6 +88,7 @@ class Streamlink(object):
             "ffmpeg-ffmpeg": None,
             "ffmpeg-video-transcode": "copy",
             "ffmpeg-audio-transcode": "copy",
+            "mux-subtitles": False,
             "locale": None,
             "user-input-requester": None
         })
@@ -227,6 +228,9 @@ class Streamlink(object):
         ffmpeg-audio-transcode   (str) The codec to use if transcoding
                                  audio when muxing with ffmpeg
                                  e.g. ``aac``
+
+        mux-subtitles            (bool) Mux available subtitles into the
+                                 output stream.
 
         stream-segment-attempts  (int) How many attempts should be done
                                  to download each segment, default: ``3``.
