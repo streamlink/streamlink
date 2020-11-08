@@ -2,9 +2,6 @@
 
 Inspired by sphinxcontrib.autoprogram but with a few differences:
 
-- Instead of relying on private argparse structures uses hooking
-  to extract information from a argparse parser.
-
 - Contains some simple pre-processing on the help messages to make
   the Sphinx version a bit prettier.
 
@@ -13,7 +10,6 @@ Inspired by sphinxcontrib.autoprogram but with a few differences:
 import argparse
 import re
 
-from collections import namedtuple
 from textwrap import dedent
 
 from docutils import nodes
@@ -23,9 +19,6 @@ from docutils.statemachine import ViewList
 from sphinx.util.nodes import nested_parse_with_titles
 
 
-_ArgumentParser = argparse.ArgumentParser
-_Argument = namedtuple("Argument", ["args", "options"])
-
 _block_re = re.compile(r":\n{2}\s{2}")
 _default_re = re.compile(r"Default is (.+)\.\n")
 _note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
@@ -34,27 +27,8 @@ _option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
 _prog_re = re.compile(r"%\(prog\)s")
 
 
-class ArgumentParser(object):
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-        self.groups = []
-        self.arguments = []
-
-    def add_argument(self, *args, **options):
-        if not options.get("help") == argparse.SUPPRESS:
-            self.arguments.append(_Argument(args, options))
-
-    def add_argument_group(self, *args, **options):
-        group = ArgumentParser(*args, **options)
-        self.groups.append(group)
-        return group
-
-
 def get_parser(module_name, attr):
-    argparse.ArgumentParser = ArgumentParser
     module = __import__(module_name, globals(), locals(), [attr])
-    argparse.ArgumentParser = _ArgumentParser
     parser = getattr(module, attr)
     return parser if not(callable(parser)) else parser.__call__()
 
@@ -110,34 +84,45 @@ class ArgparseDirective(Directive):
         return indent(help)
 
     def generate_group_rst(self, group):
-        for arg in group.arguments:
-            help = arg.options.get("help")
-            metavar = arg.options.get("metavar")
+        for action in group._group_actions:
+            # don't document suppressed parameters
+            if action.help == argparse.SUPPRESS:
+                continue
 
+            metavar = action.metavar
             if isinstance(metavar, tuple):
                 metavar = " ".join(metavar)
 
-            if metavar:
-                options = []
-                for a in arg.args:
-                    if a.startswith("-"):
-                        if arg.options.get("nargs") == "?":
-                            metavar = "[{0}]".format(metavar)
-                        options.append("{0} {1}".format(a, metavar))
-                    else:
-                        options.append(metavar)
+            options = []
+            # parameter(s) with metavar
+            if action.option_strings and metavar:
+                for arg in action.option_strings:
+                    # optional parameter value
+                    if action.nargs == "?":
+                        metavar = f"[{metavar}]"
+                    options.append(f"{arg} {metavar}")
+            # positional parameter
+            elif metavar:
+                options.append(metavar)
+            # parameter(s) without metavar
             else:
-                options = arg.args
+                options += action.option_strings
 
-            yield ".. option:: {0}".format(", ".join(options))
+            yield f".. option:: {', '.join(options)}"
             yield ""
-            for line in self.process_help(help).split("\n"):
+            for line in self.process_help(action.help).split("\n"):
                 yield line
             yield ""
+            if hasattr(action, "plugins") and len(action.plugins) > 0:
+                yield f"    **Supported plugins:** {', '.join(action.plugins)}"
+                yield ""
 
     def generate_parser_rst(self, parser):
-        for group in parser.groups:
-            title = group.args[0]
+        for group in parser._action_groups:
+            # Exclude empty groups
+            if len(group._group_actions) == 0:
+                continue
+            title = group.title
             yield ""
             yield title
             yield "^" * len(title)
@@ -150,9 +135,9 @@ class ArgparseDirective(Directive):
         parser = get_parser(module, attr)
 
         self._available_options = []
-        for group in parser.groups:
-            for arg in group.arguments:
-                self._available_options += arg.args
+        for action in parser._actions:
+            # positional parameters have an empty option_strings list
+            self._available_options += action.option_strings or [action.dest]
 
         node = nodes.section()
         node.document = self.state.document
