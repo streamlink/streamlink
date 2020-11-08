@@ -94,14 +94,9 @@ class Rtve(Plugin):
         validate.get("page"),
         validate.get("items"),
         validate.get(0))
+
     arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="""
-        Automatically mux available subtitles in to the output stream.
-        """
-        )
+        PluginArgument("mux-subtitles", is_global=True)
     )
 
     @classmethod

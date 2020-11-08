@@ -51,11 +51,7 @@ class Vimeo(Plugin):
     )
 
     arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="Automatically mux available subtitles in to the output stream.",
-        )
+        PluginArgument("mux-subtitles", is_global=True)
     )
 
     @classmethod

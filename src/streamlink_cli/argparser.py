@@ -1097,6 +1097,15 @@ def build_parser():
         Example: "aac"
         """
     )
+    transport.add_argument(
+        "--mux-subtitles",
+        action="store_true",
+        help="""
+        Automatically mux available subtitles into the output stream.
+
+        Needs to be supported by the used plugin.
+        """
+    )
 
     http = parser.add_argument_group("HTTP options")
     http.add_argument(
