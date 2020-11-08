@@ -19,14 +19,22 @@ class Vlive(Plugin):
         validate.any(None, validate.all(
             validate.get(1),
             validate.transform(parse_json),
-            {"postDetail": {"post": {"officialVideo": {
-                "type": str,
-                "videoSeq": int,
-                validate.optional("status"): str,
-            }}}},
-            validate.get("postDetail"),
-            validate.get("post"),
-            validate.get("officialVideo")
+            validate.any(validate.all(
+                {"postDetail": {"post": {"officialVideo": {
+                    "type": str,
+                    "videoSeq": int,
+                    validate.optional("status"): str,
+                }}}},
+                validate.get("postDetail"),
+                validate.get("post"),
+                validate.get("officialVideo")
+                ), validate.all(
+                    {"postDetail": {"error": {
+                        "errorCode": str,
+                    }}},
+                    validate.get("postDetail"),
+                    validate.get("error")
+                ))
         ))
     )
 
@@ -51,6 +59,20 @@ class Vlive(Plugin):
                                            schema=self._schema_video)
         if video_json is None:
             log.error('Could not parse video page')
+            return
+
+        err = video_json.get('errorCode')
+        if err == 'common_700':
+            log.error('Available only to members of the channel')
+            return
+        elif err == 'common_702':
+            log.error('Vlive+ VODs are not supported')
+            return
+        elif err == 'common_404':
+            log.error('Could not find video page')
+            return
+        elif err is not None:
+            log.error('Unknown error code: {0}'.format(err))
             return
 
         if video_json['type'] == 'VOD':
