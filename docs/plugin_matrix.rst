@@ -97,7 +97,7 @@ hitbox                  - hitbox.tv          Yes   Yes
 huajiao                 huajiao.com          Yes   No
 huomao                  - huomao.com         Yes   Yes
                         - huomao.tv
-huya                    huya.com             Yes   No    Temporarily only HLS streams available.
+huya                    huya.com             Yes   No
 idf1                    idf1.fr              Yes   Yes
 ine                     ine.com              ---   Yes
 invintus                player.invintus.com  Yes   Yes
