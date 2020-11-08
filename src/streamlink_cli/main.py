@@ -857,9 +857,23 @@ def setup_plugin_args(session, parser):
     plugin_args = parser.add_argument_group("Plugin options")
     for pname, plugin in session.plugins.items():
         defaults = {}
+
         for parg in plugin.arguments:
-            plugin_args.add_argument(parg.argument_name(pname), **parg.options)
-            defaults[parg.dest] = parg.default
+            if not parg.is_global:
+                plugin_args.add_argument(parg.argument_name(pname), **parg.options)
+                defaults[parg.dest] = parg.default
+            else:
+                pargdest = parg.dest
+                for action in parser._actions:
+                    # find matching global argument
+                    if pargdest != action.dest:
+                        continue
+                    defaults[pargdest] = action.default
+
+                    # add plugin to global argument
+                    plugins = getattr(action, "plugins", [])
+                    plugins.append(pname)
+                    setattr(action, "plugins", plugins)
 
         plugin.options = PluginOptions(defaults)
 
@@ -868,21 +882,26 @@ def setup_plugin_options(session, plugin):
     """Sets Streamlink plugin options."""
     pname = plugin.module
     required = OrderedDict({})
+
     for parg in plugin.arguments:
-        if parg.options.get("help") != argparse.SUPPRESS:
+        if parg.options.get("help") == argparse.SUPPRESS:
+            continue
+
+        value = getattr(args, parg.dest if parg.is_global else parg.namespace_dest(pname))
+        session.set_plugin_option(pname, parg.dest, value)
+
+        if not parg.is_global:
             if parg.required:
                 required[parg.name] = parg
-            value = getattr(args, parg.namespace_dest(pname))
-            session.set_plugin_option(pname, parg.dest, value)
             # if the value is set, check to see if any of the required arguments are not set
             if parg.required or value:
                 try:
                     for rparg in plugin.arguments.requires(parg.name):
                         required[rparg.name] = rparg
                 except RuntimeError:
-                    log.error("{0} plugin has a configuration error and the arguments "
-                              "cannot be parsed".format(pname))
+                    log.error(f"{pname} plugin has a configuration error and the arguments cannot be parsed")
                     break
+
     if required:
         for req in required.values():
             if not session.get_plugin_option(pname, req.dest):
