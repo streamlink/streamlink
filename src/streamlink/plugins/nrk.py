@@ -19,6 +19,7 @@ class NRK(Plugin):
         'podkast': 'podcast',
     }
 
+    _program_id_re = re.compile(r'<meta property="nrk:program-id" content="([^"]+)"')
     _url_re = re.compile(r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)")
 
     _playable_schema = validate.Schema(validate.any(
@@ -65,6 +66,16 @@ class NRK(Plugin):
         if manifest_type is None:
             log.error(f"Unknown program type '{program_type}'")
             return None
+
+        # Fetch program_id.
+        res = self.session.http.get(self.url)
+        m = self._program_id_re.search(res.text)
+        if m is not None:
+            program_id = m.group(1)
+        elif program_id is None:
+            log.error(f"Could not extract program ID from URL")
+            return None
+
         manifest_url = urljoin(self._psapi_url, f"playback/manifest/{manifest_type}/{program_id}")
 
         # Extract media URL.
