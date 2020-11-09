@@ -40,6 +40,12 @@ Portable                             See the `Windows portable version`_ section
 
 .. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
+.. note::
+
+    As of Streamlink version 2.0.0 this software will no longer operate on Windows 7 or Windows Vista.
+    These operationg systems do not support Python 3.9 which is now required. We recommend upgrading your
+    operating system as both versions of Windows noted above are now EoL and receive no support by Microsoft.
+
 macOS
 -----
 
