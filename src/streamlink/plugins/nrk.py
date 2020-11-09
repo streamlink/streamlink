@@ -73,7 +73,7 @@ class NRK(Plugin):
         if m is not None:
             program_id = m.group(1)
         elif program_id is None:
-            log.error(f"Could not extract program ID from URL")
+            log.error("Could not extract program ID from URL")
             return None
 
         manifest_url = urljoin(self._psapi_url, f"playback/manifest/{manifest_type}/{program_id}")
