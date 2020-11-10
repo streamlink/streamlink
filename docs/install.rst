@@ -177,6 +177,7 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
                                      beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
+.. _PyPI package and source code:
 
 PyPI package and source code
 ----------------------------
@@ -285,6 +286,8 @@ using `virtualenv`_, which creates a user owned Python environment instead.
 
 .. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 
+.. _Dependencies:
+
 Dependencies
 ^^^^^^^^^^^^
 
@@ -356,6 +359,17 @@ Release                              Notes
                                      the recent scheduled builds. Build artifacts are stored by Github for 90 days. |br|
                                      See the `commit log`_ for a list of changes since the last stable release.
 ==================================== ====================================
+
+.. note::
+
+    **The Streamlink installer for Windows is currently based on Python 3.8.** |br|
+    Versions of Windows prior to 7 are not supported.
+
+    Be aware that the packages for `Chocolatey`_ and the `Windows Package Manager`_ are just wrappers
+    around the stable installer and thus depend on Windows 7+ as well.
+
+    Alternatively, :ref:`Streamlink can be installed via python-pip<PyPI package and source code>`
+    in a :ref:`compatible<Dependencies>` Python environment.
 
 .. _Stable release:
 .. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
