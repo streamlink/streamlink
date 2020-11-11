@@ -26,13 +26,13 @@ modes.
 ===================================================== ========== ========== ====
 Name                                                  Stdin Pipe Named Pipe HTTP
 ===================================================== ========== ========== ====
-`Daum Pot Player <http://potplayer.daum.net>`_        Yes        No         Yes [1]_
-`MPC-HC <http://mpc-hc.org/>`_                        Yes [2]_   No         Yes [1]_
-`MPlayer <http://mplayerhq.hu>`_                      Yes        Yes        Yes
-`mpv <http://mpv.io>`_                                Yes        Yes        Yes
-`QuickTime <http://apple.com/quicktime>`_             No         No         No
-`VLC media player <http://videolan.org>`_             Yes [3]_   Yes        Yes
-OMXPlayer                                             No         Yes        Yes [4]_
+`Daum Pot Player`_                                    Yes        No         Yes [1]_
+`MPC-HC`_                                             Yes [2]_   No         Yes [1]_
+`MPlayer`_                                            Yes        Yes        Yes
+`mpv`_                                                Yes        Yes        Yes
+`OMXPlayer`_                                          No         Yes        Yes [4]_
+`QuickTime`_                                          No         No         No
+`VLC media player`_                                   Yes [3]_   Yes        Yes
 ===================================================== ========== ========== ====
 
 .. [1] :option:`--player-continuous-http` must be used.
@@ -54,6 +54,14 @@ OMXPlayer                                             No         Yes        Yes 
        (see `When using OMXPlayer the stream stops unexpectedly`_.)
        Other stream types may not work as expected, it is recommended that
        :option:`--player-fifo` be used.
+
+.. _Daum Pot Player: https://potplayer.daum.net
+.. _MPC-HC: https://mpc-hc.org/
+.. _MPlayer: https://mplayerhq.hu
+.. _mpv: https://mpv.io
+.. _OMXPlayer: https://www.raspberrypi.org/documentation/raspbian/applications/omxplayer.md
+.. _QuickTime: https://apple.com/quicktime
+.. _VLC media player: https://videolan.org
 
 
 Known issues and workarounds
@@ -78,7 +86,7 @@ reported to work.
 
 MPlayer tries to play Twitch streams at the wrong FPS
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This is a bug in MPlayer, using the MPlayer fork `mpv <http://mpv.io>`_ instead
+This is a bug in MPlayer, using the MPlayer fork `mpv`_ instead
 is recommended.
 
 VLC hangs when buffering and no playback starts

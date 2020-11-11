@@ -6,7 +6,7 @@ Tutorial
 
 Streamlink is a command-line application, which means that the commands described
 here should be typed into a terminal. On Windows, you have to open either the
-`command prompt`_ or the `PowerShell`_, on macOS open the `Terminal`_ app
+`Command Prompt`_, `PowerShell`_ or `Windows Terminal`_, on macOS open the `Terminal <macOS-Terminal>`_ app,
 and if you're on Linux or BSD you probably already know the drill.
 
 The way Streamlink works is that it's only a means to extract and transport
@@ -73,11 +73,12 @@ into customizing it to your own needs, such as:
   before playing the stream to help avoiding buffering issues
 
 
-.. _command prompt: http://windows.microsoft.com/en-us/windows/command-prompt-faq#1TC=windows-8
-.. _PowerShell: http://www.microsoft.com/powershell
-.. _Terminal: http://en.wikipedia.org/wiki/Terminal_(OS_X)
-.. _VLC: http://videolan.org/
-.. _mpv: http://mpv.io/
+.. _Command Prompt: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands
+.. _PowerShell: https://docs.microsoft.com/en-us/powershell/
+.. _Windows Terminal: https://docs.microsoft.com/en-us/windows/terminal/get-started
+.. _macOS Terminal: https://support.apple.com/guide/terminal/welcome/mac
+.. _VLC: https://videolan.org/
+.. _mpv: https://mpv.io/
 
 
 Configuration file
@@ -180,7 +181,7 @@ You can login like this:
 
 .. sourcecode:: console
 
-    $ streamlink --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link
+    $ streamlink --crunchyroll-username=xxxx --crunchyroll-password=xxx https://crunchyroll.com/a-crunchyroll-episode-link
 
 .. note::
 
@@ -233,7 +234,7 @@ For example:
     There are multiple ways to retrieve the required cookie.  For more
     information on browser cookies, please consult the following:
 
-    - `What are cookies? <http://www.whatarecookies.com/view.asp>`_
+    - `What are cookies? <https://en.wikipedia.org/wiki/HTTP_cookie>`_
 
 Sideloading plugins
 -------------------
