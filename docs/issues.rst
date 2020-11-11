@@ -1,9 +1,5 @@
-.. _issues:
-
 Common issues
 =============
-
-.. _issues-player_caching:
 
 Streams are buffering/lagging
 -----------------------------

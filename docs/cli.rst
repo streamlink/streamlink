@@ -1,5 +1,3 @@
-.. _cli:
-
 Command-Line Interface
 ======================
 
@@ -14,7 +12,7 @@ and if you're on Linux or BSD you probably already know the drill.
 The way Streamlink works is that it's only a means to extract and transport
 the streams, and the playback is done by an external video player. Streamlink
 works best with `VLC`_ or `mpv`_, which are also cross-platform, but other players
-may be compatible too, see the :ref:`Players` page for a complete overview.
+may be compatible too, see the :ref:`Players <players:Players>` page for a complete overview.
 
 Now to get into actually using Streamlink, let's say you want to watch the
 stream located on twitch.tv/day9tv, you start off by telling Streamlink
@@ -69,9 +67,9 @@ specify ``worst`` to get the lowest quality.
 Now that you have a basic grasp of how Streamlink works, you may want to look
 into customizing it to your own needs, such as:
 
-- Creating a :ref:`configuration file <cli-streamlinkrc>` of options you
+- Creating a :ref:`configuration file <cli:Configuration file>` of options you
   want to use
-- Setting up your player to :ref:`cache some data <issues-player_caching>`
+- Setting up your player to :ref:`cache some data <issues:Streams are buffering/lagging>`
   before playing the stream to help avoiding buffering issues
 
 
@@ -81,8 +79,6 @@ into customizing it to your own needs, such as:
 .. _VLC: http://videolan.org/
 .. _mpv: http://mpv.io/
 
-
-.. _cli-streamlinkrc:
 
 Configuration file
 ------------------
@@ -118,7 +114,7 @@ Syntax
 ^^^^^^
 
 The config file is a simple text file and should contain one
-:ref:`command-line option <cli-options>` (omitting the dashes) per
+:ref:`command-line option <cli:Command-line usage>` (omitting the dashes) per
 line in the format::
 
   option=value
@@ -166,7 +162,7 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config\ **.twitch**
 Windows           %APPDATA%\\streamlink\\streamlinkrc\ **.youtube**
 ================= ====================================================
 
-Have a look at the :ref:`list of plugins <plugin_matrix>` to see
+Have a look at the :ref:`list of plugins <plugin_matrix:Plugins>` to see
 the name of each built-in plugin.
 
 
@@ -195,7 +191,7 @@ asking your username and password again.
 
 Nevertheless, these credentials are valid for a limited amount of time, so it
 might be a good idea to save your username and password in your
-:ref:`configuration file <cli-streamlinkrc>` anyway.
+:ref:`configuration file <cli:Configuration file>` anyway.
 
 .. warning::
 
@@ -219,8 +215,6 @@ you're in that region.
 For this, the plugin provides the :option:`--crunchyroll-purge-credentials`
 option, which removes your saved session and credentials and tries to log
 in again using your username and password.
-
-.. _cli-funimationnow:
 
 Authenticating with FunimationNow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -324,7 +318,6 @@ Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 
 .. [1] supports local files using the file:// protocol
 .. [2] Dynamic Adaptive Streaming over HTTP
-.. _cli-options:
 
 Proxy Support
 -------------

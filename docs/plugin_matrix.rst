@@ -1,6 +1,3 @@
-.. _plugin_matrix:
-
-
 Plugins
 =======
 
@@ -82,7 +79,7 @@ euronews                euronews.com         Yes   No
 facebook                facebook.com         Yes   Yes
 filmon                  filmon.com           Yes   Yes   Only SD quality streams.
 foxtr                   fox.com.tr           Yes   No
-funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli-funimationnow>`
+funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli:Authenticating with FunimationNow>`
                         - funimationnow.uk
 galatasaraytv           galatasaray.com      Yes   No
 gardenersworld          gardenersworld.com   --    Yes

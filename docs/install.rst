@@ -1,5 +1,3 @@
-.. _install:
-
 .. |br| raw:: html
 
   <br />
@@ -177,7 +175,6 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
                                      beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
-.. _PyPI package and source code:
 
 PyPI package and source code
 ----------------------------
@@ -286,8 +283,6 @@ using `virtualenv`_, which creates a user owned Python environment instead.
 
 .. _virtualenv: https://virtualenv.readthedocs.io/en/latest/
 
-.. _Dependencies:
-
 Dependencies
 ^^^^^^^^^^^^
 
@@ -368,8 +363,8 @@ Release                              Notes
     Be aware that the packages for `Chocolatey`_ and the `Windows Package Manager`_ are just wrappers
     around the stable installer and thus depend on Windows 7+ as well.
 
-    Alternatively, :ref:`Streamlink can be installed via python-pip<PyPI package and source code>`
-    in a :ref:`compatible<Dependencies>` Python environment.
+    Alternatively, :ref:`Streamlink can be installed via python-pip <install:PyPI package and source code>`
+    in a :ref:`compatible <install:Dependencies>` Python environment.
 
 .. _Stable release:
 .. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
