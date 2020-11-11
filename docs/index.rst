@@ -1,11 +1,11 @@
 Overview
 --------
 
-Streamlink is a :ref:`command-line utility <cli>` which pipes video streams
+Streamlink is a :ref:`command-line utility <cli:Command-Line Interface>` which pipes video streams
 from various services into a video player, such as `VLC`_.
 The main purpose of Streamlink is to avoid resource-heavy and unoptimized websites,
 while still allowing the user to enjoy various streamed content.
-There is also an :ref:`API <api_guide>` available for developers who want access
+There is also an :ref:`API <api_guide:API Guide>` available for developers who want access
 to the stream data.
 
 This project was forked from Livestreamer, which is no longer maintained.
@@ -33,7 +33,7 @@ to be easily added. Most of the big streaming services are supported, such as:
 - `Dailymotion.com <https://www.dailymotion.com/live>`_
 
 ... and many more. A full list of plugins currently included can be found
-on the :ref:`plugin_matrix` page.
+on the :ref:`Plugins <plugin_matrix:Plugins>` page.
 
 Quickstart
 ----------
@@ -53,7 +53,7 @@ For more in-depth usage and install instructions, please refer to the `User guid
 User guide
 ----------
 
-Streamlink is made up of two parts, a :ref:`cli` and a library :ref:`API <api>`.
+Streamlink is made up of two parts, a :ref:`cli <cli:Command-Line Interface>` and a library :ref:`API <api:API Reference>`.
 See their respective sections for more information on how to use them.
 
 .. toctree::

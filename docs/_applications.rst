@@ -1,5 +1,3 @@
-.. _applications:
-
 :orphan:
 
 
