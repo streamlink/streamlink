@@ -1,5 +1,3 @@
-.. _api:
-
 API Reference
 =============
 
@@ -45,8 +43,6 @@ All streams inherit from the :class:`Stream` class.
 .. autoclass:: Stream
     :members:
 
-
-.. _api-stream-subclasses:
 
 Stream subclasses
 ^^^^^^^^^^^^^^^^^

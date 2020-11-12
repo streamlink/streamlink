@@ -1,5 +1,3 @@
-.. _install:
-
 .. |br| raw:: html
 
   <br />

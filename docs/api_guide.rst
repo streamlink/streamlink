@@ -1,9 +1,7 @@
-.. _api_guide:
-
 API Guide
 =========
 
-This API is what powers the :ref:`cli` but is also available to developers that wish
+This API is what powers the :ref:`cli <cli:Command-Line Interface>` but is also available to developers that wish
 to make use of the data Streamlink can retrieve in their own application.
 
 
@@ -60,8 +58,8 @@ If an error occurs while opening a stream, a :exc:`StreamError` will be raised.
 Inspecting streams
 ------------------
 
-It's also possible to inspect streams internal parameters, see
-:ref:`api-stream-subclasses` to see what attributes are available
+It's also possible to inspect streams internal parameters, go to
+:ref:`Stream subclasses <api:Stream subclasses>` to see what attributes are available
 for inspection for each stream type.
 
 For example this is a :class:`HLSStream <stream.HLSStream>` object which

@@ -1,6 +1,3 @@
-.. _players:
-
-
 Players
 =======
 
