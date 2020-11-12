@@ -1,3 +1,6 @@
+Streamlink
+==========
+
 Overview
 --------
 
@@ -59,6 +62,7 @@ See their respective sections for more information on how to use them.
 .. toctree::
     :maxdepth: 2
 
+    Overview <self>
     install
     cli
     plugin_matrix
