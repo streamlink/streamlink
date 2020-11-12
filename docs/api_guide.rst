@@ -13,7 +13,7 @@ The simplest use of the Streamlink API looks like this:
 .. code-block:: python
 
     >>> import streamlink
-    >>> streams = streamlink.streams("http://twitch.tv/day9tv")
+    >>> streams = streamlink.streams("https://twitch.tv/day9tv")
 
 This simply attempts to find a plugin and use it to extract streams from
 the URL. This works great in simple cases but if you want more
@@ -24,13 +24,13 @@ The returned value is a dict containing :class:`Stream <stream.Stream>` objects:
 .. code-block:: python
 
     >>> streams
-    {'best': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>,
-     'high': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>,
-     'low': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>,
-     'medium': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>,
-     'mobile': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>,
-     'source': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>,
-     'worst': <HLSStream('http://video11.fra01.hls.twitch.tv/ ...')>}
+    {'best': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>,
+     'high': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>,
+     'low': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>,
+     'medium': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>,
+     'mobile': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>,
+     'source': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>,
+     'worst': <HLSStream('https://video11.fra01.hls.twitch.tv/ ...')>}
 
 
 If no plugin for the URL is found, a :exc:`NoPluginError` will be raised.
@@ -68,7 +68,7 @@ contains a `url` attribute.
 .. code-block:: python
 
     >>> stream.url
-    'http://video38.ams01.hls.twitch.tv/hls11/ ...'
+    'https://video38.ams01.hls.twitch.tv/hls11/ ...'
 
 
 Session object
@@ -87,7 +87,7 @@ You can then extract streams like this:
 
 .. code-block:: python
 
-    >>> streams = session.streams("http://twitch.tv/day9tv")
+    >>> streams = session.streams("https://twitch.tv/day9tv")
 
 or set options like this:
 
@@ -109,6 +109,6 @@ This example uses the `PyGObject`_ module to playback a stream using the
 `GStreamer`_ framework.
 
 .. _PyGObject: https://wiki.gnome.org/action/show/Projects/PyGObject
-.. _GStreamer: http://gstreamer.freedesktop.org/
+.. _GStreamer: https://gstreamer.freedesktop.org/
 
 .. literalinclude:: ../examples/gst-player.py

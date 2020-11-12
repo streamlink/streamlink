@@ -114,9 +114,9 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
 .. _python-futures: https://pypi.org/project/futures/
-.. _python-requests: http://python-requests.org/
 .. _python-singledispatch: https://pypi.org/project/singledispatch/
-.. _RTMPDump: http://rtmpdump.mplayerhq.hu/
+.. _python-requests: https://requests.readthedocs.io/en/master/
+.. _RTMPDump: https://rtmpdump.mplayerhq.hu/
 .. _pycountry: https://pypi.org/project/pycountry/
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
