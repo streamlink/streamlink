@@ -1,3 +1,6 @@
+Streamlink[-27]
+===============
+
 Overview
 --------
 
@@ -8,7 +11,10 @@ while still allowing the user to enjoy various streamed content.
 There is also an :ref:`API <api_guide:API Guide>` available for developers who want access
 to the stream data.
 
-This project was forked from Streamlink, which has no python 2.7 support in versions > 1.7.0.
+Streamlink[-27] is a fork of the <a href="https://github.com/streamlink/streamlink">Streamlink</a> project.
+
+The project extension [-27] indicates that this project continues to support python 2.7,
+as the streamlink project has discontinued python 2.7 support as of version 1.7.0.
 
 Releases (|version|)
     https://github.com/Billy2011/streamlink-27/releases
@@ -57,6 +63,7 @@ See their respective sections for more information on how to use them.
 .. toctree::
     :maxdepth: 2
 
+    Overview <self>
     install
     cli
     plugin_matrix
