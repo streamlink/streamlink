@@ -98,15 +98,6 @@ html_theme = 'furo'
 # further.  For a list of options available for each theme, see the
 # documentation.
 # html_theme_options = { "github_fork": "Billy2011/streamlink-27" }
-html_theme_options = {
-   "oneliner": (
-       "Command-line utility that extracts streams from various services "
-       "and pipes them into a video player of choice."
-   ),
-   "github_user": "Billy2011",
-   "github_repo": "streamlink-27",
-   "sticky_navigation": True
-}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -134,6 +125,9 @@ html_static_path = ['_static']
 
 html_css_files = [
     'styles/custom.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/fontawesome.min.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/solid.min.css',
+    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/brands.min.css',
 ]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
