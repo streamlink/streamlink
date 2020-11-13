@@ -19,7 +19,5 @@ trim_trailing_whitespace = false
 indent_size = 8
 indent_style = tab
 
-[docs/_themes/**]
-indent_size = ignore
-indent_style = ignore
-trim_trailing_whitespace = ignore
+[docs/{_templates/**.html,_static/**.css}]
+indent_size = 2
