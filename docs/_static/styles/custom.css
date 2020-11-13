@@ -1,4 +1,48 @@
 /*
+  Furo CSS variables
+  https://github.com/pradyunsg/furo/blob/main/src/furo/assets/styles/variables/_index.scss
+  https://github.com/pradyunsg/furo/blob/main/src/furo/theme/partials/_head_css_variables.html
+*/
+:root {
+  /* adjust font-stack by adding "SF Pro Display" and "SF Mono" */
+  --font-stack: -apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+  --font-stack--monospace: SFMono-Regular, SF Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
+  /* Streamlink colors */
+  --color-brand-primary: rgb(18, 22, 87);   /* dark icon color (shadow icon color: rgb(13, 16, 65)) */
+  --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
+  /* misc */
+  --sidebar-item-spacing-vertical: .4rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-brand-primary: rgb(0, 115, 189);  /* bright icon color */
+    --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
+  }
+}
+
+/*
+  Generic style overrides
+*/
+
+html {
+  /* unset @media (min-width: $full-width + $sidebar-width) query which sets font-size to 110% */
+  font-size: 100% !important;
+}
+
+code.literal {
+  font-size: var(--font-size--small);
+}
+
+strong.command {
+  padding: .1em .2em;
+  border-radius: .2em;
+  background: var(--color-background-secondary);
+  color: var(--color-api-name);
+  font: normal var(--font-size--small) var(--font-stack--monospace);
+}
+
+/*
   Sidebar/Menubar and related
 */
 
@@ -48,4 +92,49 @@
 }
 .github-buttons {
   margin: 1.5rem 0 1rem;
+}
+
+.toc-tree li.scroll-current > .reference {
+  position: relative;
+  font-weight: normal;
+}
+.toc-tree li.scroll-current > .reference::before {
+  content: "\2023";
+  display: inline-block;
+  position: absolute;
+  left: -1em;
+  width: 1em;
+  color: var(--color-toc-item-text);
+  font: normal normal 400 1em var(--font-stack);
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  opacity: .75;
+}
+
+/*
+  Components
+*/
+
+table.table-custom-layout {
+  width: 100%;
+  table-layout: fixed;
+}
+table.table-custom-layout colgroup {
+  display: none;
+}
+table.table-custom-layout colgroup col {
+  width: auto;
+}
+table.table-custom-layout th {
+  text-align: left;
+}
+table.table-custom-layout th:first-of-type {
+  width: 14rem;
+}
+table.table-custom-layout tbody tr td {
+  overflow: unset;
+  white-space: unset;
+}
+table.table-custom-layout tbody tr td:first-of-type {
+  vertical-align: top;
 }
