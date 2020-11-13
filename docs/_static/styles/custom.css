@@ -151,3 +151,29 @@ table.table-custom-layout tbody tr td {
 table.table-custom-layout tbody tr td:first-of-type {
   vertical-align: top;
 }
+
+/*
+  Content
+*/
+
+.github-avatar {
+  float: left;
+  width: 150px;
+  height: 150px;
+  margin: 0 1rem 1rem 0;
+}
+.github-avatar + .container > ul > li {
+  list-style: none;
+}
+
+/*
+  Utils
+*/
+
+.clearfix:before, .clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both;
+}
