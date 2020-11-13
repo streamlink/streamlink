@@ -1,0 +1,9 @@
+{% extends '!page.html' %}
+{% block content %}
+  {% if release != version %}
+    <div class="admonition important version-warning">
+      <p class="admonition-title">You are reading the documentation for the in-development version of Streamlink.</p>
+    </div>
+  {% endif %}
+  {{ super() }}
+{% endblock %}
