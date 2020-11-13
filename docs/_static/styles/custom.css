@@ -12,6 +12,8 @@
   --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
   /* misc */
   --sidebar-item-spacing-vertical: .4rem;
+  --admonition-font-size: var(--font-size--small);
+  --admonition-title-font-size: var(--font-size--normal);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -114,6 +116,17 @@ strong.command {
 /*
   Components
 */
+
+.admonition p.admonition-title {
+  font-weight: bold;
+}
+.admonition.version-warning {
+  padding-bottom: 0;
+}
+.admonition.version-warning > .admonition-title {
+  margin-bottom: 0;
+  font-weight: normal;
+}
 
 table.table-custom-layout {
   width: 100%;
