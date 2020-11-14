@@ -116,7 +116,7 @@ class TestSetupOptions(unittest.TestCase):
     def test_setup_plugin_args(self):
         session = Mock()
         plugin = Mock()
-        parser = argparse.ArgumentParser()
+        parser = argparse.ArgumentParser(add_help=False)
         parser.add_argument("--global-arg1", default=123)
         parser.add_argument("--global-arg2", default=456)
 
@@ -130,12 +130,19 @@ class TestSetupOptions(unittest.TestCase):
 
         setup_plugin_args(session, parser)
 
-        group = next((group for group in parser._action_groups if group.title == "Plugin options"), None)
-        self.assertIsNotNone(group, "Adds the 'Plugin options' arguments group")
+        group_plugins = next((grp for grp in parser._action_groups if grp.title == "Plugin options"), None)  # pragma: no branch
+        self.assertIsNotNone(group_plugins, "Adds the 'Plugin options' arguments group")
+        group_plugin = next((grp for grp in group_plugins._action_groups if grp.title == "Mock"), None)  # pragma: no branch
+        self.assertIsNotNone(group_plugin, "Adds the 'Mock' arguments group to the 'Plugin options' group")
         self.assertEqual(
-            [item for action in group._group_actions for item in action.option_strings],
+            [item for action in group_plugin._group_actions for item in action.option_strings],
             ["--mock-test1", "--mock-test2", "--mock-test3"],
             "Only adds plugin arguments and ignores global argument references"
+        )
+        self.assertEqual(
+            [item for action in parser._actions for item in action.option_strings],
+            ["--global-arg1", "--global-arg2", "--mock-test1", "--mock-test2", "--mock-test3"],
+            "Parser has all arguments registered"
         )
 
         self.assertEqual(plugin.options.get("global-arg1"), 123)

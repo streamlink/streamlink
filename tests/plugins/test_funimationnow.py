@@ -26,8 +26,7 @@ class TestPluginFunimationNow(unittest.TestCase):
         from streamlink_cli.main import setup_plugin_args
         session = Streamlink()
         parser = MagicMock()
-        plugin_parser = MagicMock()
-        parser.add_argument_group = MagicMock(return_value=plugin_parser)
+        group = parser.add_argument_group("Plugin Options").add_argument_group("FunimationNow")
 
         session.plugins = {
             'funimationnow': FunimationNow
@@ -35,7 +34,7 @@ class TestPluginFunimationNow(unittest.TestCase):
 
         setup_plugin_args(session, parser)
         self.assertSequenceEqual(
-            plugin_parser.add_argument.mock_calls,
+            group.add_argument.mock_calls,
             [
                 call('--funimation-email', help=ANY),
                 call('--funimation-password', help=ANY),

@@ -866,10 +866,11 @@ def setup_plugin_args(session, parser):
     plugin_args = parser.add_argument_group("Plugin options")
     for pname, plugin in session.plugins.items():
         defaults = {}
+        group = plugin_args.add_argument_group(pname.capitalize())
 
         for parg in plugin.arguments:
             if not parg.is_global:
-                plugin_args.add_argument(parg.argument_name(pname), **parg.options)
+                group.add_argument(parg.argument_name(pname), **parg.options)
                 defaults[parg.dest] = parg.default
             else:
                 pargdest = parg.dest
