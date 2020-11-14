@@ -30,8 +30,7 @@ class TestPluginUStreamTV(unittest.TestCase):
         from streamlink_cli.main import setup_plugin_args
         session = Streamlink()
         parser = MagicMock()
-        plugin_parser = MagicMock()
-        parser.add_argument_group = MagicMock(return_value=plugin_parser)
+        group = parser.add_argument_group("Plugin Options").add_argument_group("UStreamTV")
 
         session.plugins = {
             'ustreamtv': UStreamTV
@@ -39,4 +38,4 @@ class TestPluginUStreamTV(unittest.TestCase):
 
         setup_plugin_args(session, parser)
 
-        plugin_parser.add_argument.assert_called_with('--ustream-password', metavar="PASSWORD", help=ANY)
+        group.add_argument.assert_called_with('--ustream-password', metavar="PASSWORD", help=ANY)

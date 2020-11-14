@@ -76,6 +76,34 @@ class ArgumentParser(argparse.ArgumentParser):
         # return the number of arguments matched
         return len(match.group(1))
 
+    # fix `--help` not including nested argument groups
+    def format_help(self):
+        formatter = self._get_formatter()
+
+        # usage
+        formatter.add_usage(self.usage, self._actions,
+                            self._mutually_exclusive_groups)
+
+        # description
+        formatter.add_text(self.description)
+
+        def format_group(group):
+            # positionals, optionals and user-defined groups
+            for action_group in group._action_groups:
+                formatter.start_section(action_group.title)
+                formatter.add_text(action_group.description)
+                formatter.add_arguments(action_group._group_actions)
+                format_group(action_group)
+                formatter.end_section()
+
+        format_group(self)
+
+        # epilog
+        formatter.add_text(self.epilog)
+
+        # determine help from format above
+        return formatter.format_help()
+
 
 class HelpFormatter(argparse.RawDescriptionHelpFormatter):
     """A nicer help formatter.
