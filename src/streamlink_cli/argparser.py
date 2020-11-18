@@ -468,7 +468,7 @@ def build_parser():
             inserted inside your --title string.
 
             A full list of the format codes mpv uses is available here:
-            https://mpv.io/manual/stable/#property-expansion
+            https://mpv.io/manual/master/#property-list
 
         Formatting variables available to use in --title:
 
