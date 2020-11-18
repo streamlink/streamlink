@@ -286,36 +286,6 @@ class TwitchAPI(object):
             validate.get("stream")
         ))
 
-    # Private API calls
-
-    def access_token(self, endpoint, asset):
-        return self.call("/api/{0}/{1}/access_token".format(endpoint, asset), private=True, schema=validate.Schema(
-            {
-                "token": validate.text,
-                "sig": validate.text
-            },
-            validate.union((
-                validate.get("sig"),
-                validate.get("token")
-            ))
-        ))
-
-    def token(self, tokenstr):
-        return parse_json(tokenstr, schema=validate.Schema(
-            {
-                "chansub": {
-                    "restricted_bitrates": validate.all(
-                        [validate.text],
-                        validate.filter(
-                            lambda n: not re.match(r"(.+_)?archives|live|chunked", n)
-                        )
-                    )
-                }
-            },
-            validate.get("chansub"),
-            validate.get("restricted_bitrates")
-        ))
-
     def hosted_channel(self, channel_id):
         return self.call("/hosts", subdomain="tmi", include_logins=1, host=channel_id, schema=validate.Schema(
             {
@@ -337,6 +307,62 @@ class TwitchAPI(object):
         ))
 
     # GraphQL API calls
+
+    def access_token(self, is_live, channel_or_vod):
+        request = {
+            "operationName": "PlaybackAccessToken",
+            "extensions": {
+                "persistedQuery": {
+                    "version": 1,
+                    "sha256Hash": "0828119ded1c13477966434e15800ff57ddacf13ba1911c129dc2200705b0712"
+                }
+            },
+            "variables": {
+                "isLive": is_live,
+                "login": channel_or_vod if is_live else "",
+                "isVod": not is_live,
+                "vodID": channel_or_vod if not is_live else "",
+                "playerType": "site"
+            }
+        }
+        subschema = {
+            "value": validate.text,
+            "signature": validate.text,
+            "__typename": "PlaybackAccessToken"
+        }
+        return self.call_gql(request, schema=validate.Schema(
+            {"data": validate.any(
+                validate.all(
+                    {"streamPlaybackAccessToken": subschema},
+                    validate.get("streamPlaybackAccessToken")
+                ),
+                validate.all(
+                    {"videoPlaybackAccessToken": subschema},
+                    validate.get("videoPlaybackAccessToken")
+                )
+            )},
+            validate.get("data"),
+            validate.union((
+                validate.get("signature"),
+                validate.get("value")
+            ))
+        ))
+
+    def parse_token(self, tokenstr):
+        return parse_json(tokenstr, schema=validate.Schema(
+            {
+                "chansub": {
+                    "restricted_bitrates": validate.all(
+                        [validate.text],
+                        validate.filter(
+                            lambda n: not re.match(r"(.+_)?archives|live|chunked", n)
+                        )
+                    )
+                }
+            },
+            validate.get("chansub"),
+            validate.get("restricted_bitrates")
+        ))
 
     def clips(self, clipname):
         query = """{{
@@ -524,9 +550,9 @@ class Twitch(Plugin):
         except PluginError:
             raise PluginError("Unable to find channel: {0}".format(channel))
 
-    def _access_token(self, endpoint, asset):
+    def _access_token(self, is_live, channel_or_vod):
         try:
-            sig, token = self.api.access_token(endpoint, asset)
+            sig, token = self.api.access_token(is_live, channel_or_vod)
         except PluginError as err:
             if "404 Client Error" in str(err):
                 raise NoStreamsError(self.url)
@@ -534,7 +560,7 @@ class Twitch(Plugin):
                 raise
 
         try:
-            restricted_bitrates = self.api.token(token)
+            restricted_bitrates = self.api.parse_token(token)
         except PluginError:
             restricted_bitrates = []
 
@@ -587,14 +613,14 @@ class Twitch(Plugin):
 
         # only get the token once the channel has been resolved
         log.debug("Getting live HLS streams for {0}".format(self.channel))
-        sig, token, restricted_bitrates = self._access_token("channels", self.channel)
+        sig, token, restricted_bitrates = self._access_token(True, self.channel)
         url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
 
         return self._get_hls_streams(url, restricted_bitrates)
 
     def _get_hls_streams_video(self):
         log.debug("Getting video HLS streams for {0}".format(self.channel))
-        sig, token, restricted_bitrates = self._access_token("vods", self.video_id)
+        sig, token, restricted_bitrates = self._access_token(False, self.video_id)
         url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
 
         # If the stream is a VOD that is still being recorded, the stream should start at the beginning of the recording
