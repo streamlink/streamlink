@@ -298,7 +298,7 @@ class TwitchAPI(object):
                 validate.get("sig"),
                 validate.get("token")
             ))
-        ), player_type="frontpage")
+        ))
 
     def token(self, tokenstr):
         return parse_json(tokenstr, schema=validate.Schema(
