@@ -1,25 +1,17 @@
-ANDROID = ("Mozilla/5.0 (Linux; Android 7.1.1; SM-J510FN Build/NMF26X) "
-           "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Mobile Safari/537.36")
-CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36"
-CHROME_OS = ("Mozilla/5.0 (X11; CrOS armv7l 10718.34.0) "
-             "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.40 Safari/537.36")
-EDGE = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36 Edg/80.0.361.111"
-FIREFOX = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0"
-FIREFOX_MAC = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:81.0) Gecko/20100101 Firefox/81.0"
-IE_6 = "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0; WOW64; Trident/4.0; SLCC1)"
-IE_7 = "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0; WOW64; Trident/4.0; SLCC1)"
-IE_8 = "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; WOW64; Trident/4.0; SLCC1)"
-IE_9 = "Mozilla/5.0 (MSIE 9.0; Windows NT 6.1; Trident/5.0)"
+ANDROID = "Mozilla/5.0 (Linux; Android 10; SM-G960U) AppleWebKit/537.36 (KHTML, like Gecko) 87.0.4280.66 Mobile Safari/537.36"
+CHROME = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) 87.0.4280.66 Safari/537.36"
+CHROME_OS = "Mozilla/5.0 (X11; CrOS armv7l 13421.99.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36"
+EDGE = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36 Edg/86.0.622.68"
+FIREFOX = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:83.0) Gecko/20100101 Firefox/83.0"
 IE_11 = "Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko"
-IPAD = "Mozilla/5.0 (iPad; CPU OS 12_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
-IPHONE = IPHONE_6 = "Mozilla/5.0 (iPhone; CPU iPhone OS 12_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1"
-OPERA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36 OPR/54.0.2952.64")
-SAFARI = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) "
-          "AppleWebKit/603.3.8 (KHTML, like Gecko) Version/10.1.2 Safari/603.3.8")
-SAFARI_8 = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) "
-            "AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12")
-SAFARI_7 = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) "
-            "AppleWebKit/537.75.14 (KHTML, like Gecko) Version/7.0.3 Safari/7046A194A")
-WINDOWS_PHONE_8 = ("Mozilla/5.0 (compatible; MSIE 10.0; Windows Phone 8.0; "
-                   "Trident/6.0; IEMobile/10.0; ARM; Touch; NOKIA; Lumia 920)")
+IPAD = "Mozilla/5.0 (iPad; CPU OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
+OPERA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 OPR/72.0.3815.378"
+SAFARI = "Mozilla/5.0 (Macintosh; Intel Mac OS X 11_0_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Safari/605.1.15"
+
+# Backwards compatibility
+FIREFOX_MAC = FIREFOX
+IE_6 = IE_7 = IE_8 = IE_9 = IE_11
+IPHONE_6 = IPHONE
+SAFARI_7 = SAFARI_8 = SAFARI
+WINDOWS_PHONE_8 = ANDROID
