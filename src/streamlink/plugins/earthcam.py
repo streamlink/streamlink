@@ -52,7 +52,7 @@ class EarthCam(Plugin):
         # RTMP data
         rtmp_playpath = ""
         if is_live:
-            n = "live"
+            n = "0_live"
             rtmp_domain = cam_data["streamingdomain"]
             rtmp_path = cam_data["livestreamingpath"]
             rtmp_live = cam_data["liveon"]
@@ -62,7 +62,7 @@ class EarthCam(Plugin):
                 rtmp_playpath = match.group("file")
                 rtmp_url = rtmp_domain + match.group("folder")
         else:
-            n = "vod"
+            n = "0_vod"
             rtmp_domain = cam_data["archivedomain"]
             rtmp_path = cam_data["archivepath"]
             rtmp_live = cam_data["archiveon"]
