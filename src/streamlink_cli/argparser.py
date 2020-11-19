@@ -932,7 +932,7 @@ def build_parser():
         processing (such as HDS) to avoid unnecessary background processing.
         """)
     transport.add_argument(
-        "--rtmp-proxy", "--rtmpdump-proxy",
+        "--rtmp-proxy",
         metavar="PROXY",
         help="""
         A SOCKS proxy that RTMP streams will use.
@@ -941,7 +941,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--rtmp-rtmpdump", "--rtmpdump",
+        "--rtmp-rtmpdump",
         metavar="FILENAME",
         help="""
         RTMPDump is used to access RTMP streams. You can specify the
@@ -950,6 +950,7 @@ def build_parser():
         Example: "/usr/local/bin/rtmpdump"
         """
     )
+    transport.add_argument("--rtmpdump", help=argparse.SUPPRESS)
     transport.add_argument(
         "--rtmp-timeout",
         type=num(float, min=0),
@@ -1020,7 +1021,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--subprocess-cmdline", "--cmdline", "-c",
+        "--subprocess-cmdline",
         action="store_true",
         help="""
         Print the command-line used internally to play the stream.
@@ -1029,7 +1030,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--subprocess-errorlog", "--errorlog", "-e",
+        "--subprocess-errorlog",
         action="store_true",
         help="""
         Log possible errors from internal subprocesses to a temporary file. The
@@ -1039,7 +1040,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--subprocess-errorlog-path", "--errorlog-path",
+        "--subprocess-errorlog-path",
         type=str,
         metavar="PATH",
         help="""
