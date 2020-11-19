@@ -819,6 +819,8 @@ def setup_options():
 
     if args.rtmp_rtmpdump:
         streamlink.set_option("rtmp-rtmpdump", args.rtmp_rtmpdump)
+    elif args.rtmpdump:
+        streamlink.set_option("rtmp-rtmpdump", args.rtmpdump)
 
     if args.rtmp_timeout:
         streamlink.set_option("rtmp-timeout", args.rtmp_timeout)

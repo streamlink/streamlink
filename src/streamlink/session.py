@@ -246,16 +246,6 @@ class Streamlink(object):
 
         """
 
-        # Backwards compatibility
-        if key == "rtmpdump":
-            key = "rtmp-rtmpdump"
-        elif key == "rtmpdump-proxy":
-            key = "rtmp-proxy"
-        elif key == "errorlog":
-            key = "subprocess-errorlog"
-        elif key == "errorlog-path":
-            key = "subprocess-errorlog-path"
-
         if key == "http-proxy":
             self.http.proxies["http"] = update_scheme("http://", value)
             if "https" not in self.http.proxies:
@@ -304,13 +294,6 @@ class Streamlink(object):
         :param key: key of the option
 
         """
-        # Backwards compatibility
-        if key == "rtmpdump":
-            key = "rtmp-rtmpdump"
-        elif key == "rtmpdump-proxy":
-            key = "rtmp-proxy"
-        elif key == "errorlog":
-            key = "subprocess-errorlog"
 
         if key == "http-proxy":
             return self.http.proxies.get("http")
