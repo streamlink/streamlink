@@ -425,9 +425,6 @@ class HLSStream(HTTPStream):
                          name, pixels, bitrate.
         """
         locale = session_.localization
-        # Backwards compatibility with "namekey" and "nameprefix" params.
-        name_key = request_params.pop("namekey", name_key)
-        name_prefix = request_params.pop("nameprefix", name_prefix)
         audio_select = session_.options.get("hls-audio-select") or []
 
         res = session_.http.get(url, exception=IOError, **request_params)
