@@ -23,13 +23,13 @@ from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import PluginOptions
 from streamlink.stream import StreamProcess
-from streamlink.utils import LazyFormatter
+from streamlink.utils import LazyFormatter, NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, PLUGINS_DIR, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils import HTTPServer, NamedPipe, ignored, progress, stream_to_url
+from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
