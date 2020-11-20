@@ -53,7 +53,6 @@ cinergroup              - showtv.com.tr      Yes   No
 clubbingtv              clubbingtv.com       Yes   Yes   Requires a login.
 cnews                   cnews.fr             Yes   Yes
 crunchyroll             crunchyroll.com      --    Yes
-cubetv                  cube.tv              Yes   --
 dailymotion             dailymotion.com      Yes   Yes
 delfi                   - delfi.lt           --    Yes
                         - delfi.ee
