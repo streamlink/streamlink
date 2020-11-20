@@ -73,7 +73,7 @@ class Mitele(Plugin):
                                         headers={"origin": "https://www.mitele.es"},
                                         schema=self.cerbero_schema)
 
-        if "code" in pdata:
+        if "code" in tokens:
             log.error("Could not get stream tokens: {} ({})".format(tokens["code"],
                                                                     self.token_errors.get(tokens["code"], "unknown error")))
             return
