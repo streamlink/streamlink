@@ -17,10 +17,10 @@ class CNEWS(Plugin):
             validate.transform(parse_json),
             {
                 validate.optional('dm_player_live_dailymotion'): {
-                    validate.optional('video_id'): str,
+                    validate.optional('video_id'): validate.text,
                 },
                 validate.optional('dm_player_node_dailymotion'): {
-                    validate.optional('video_id'): str,
+                    validate.optional('video_id'): validate.text,
                 },
             },
         )),

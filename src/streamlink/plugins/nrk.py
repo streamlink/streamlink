@@ -27,21 +27,21 @@ class NRK(Plugin):
             "playable": {
                 "assets": [{
                     "url": validate.url(),
-                    "format": str,
+                    "format": validate.text,
                 }],
             },
             "statistics": {
                 validate.optional("luna"): validate.any(None, {
                     "data": {
-                        "title": str,
-                        "category": validate.any(None, str),
+                        "title": validate.text,
+                        "category": validate.any(None, validate.text),
                     },
                 }),
             },
         },
         {
             "nonPlayable": {
-                "reason": str,
+                "reason": validate.text,
             },
         },
     ))

@@ -21,16 +21,16 @@ class Vlive(Plugin):
             validate.transform(parse_json),
             validate.any(validate.all(
                 {"postDetail": {"post": {"officialVideo": {
-                    "type": str,
+                    "type": validate.text,
                     "videoSeq": int,
-                    validate.optional("status"): str,
+                    validate.optional("status"): validate.text,
                 }}}},
                 validate.get("postDetail"),
                 validate.get("post"),
                 validate.get("officialVideo")),
                 validate.all(
                     {"postDetail": {"error": {
-                        "errorCode": str,
+                        "errorCode": validate.text,
                     }}},
                     validate.get("postDetail"),
                     validate.get("error")))
@@ -41,8 +41,8 @@ class Vlive(Plugin):
         validate.transform(parse_json),
         validate.all(
             {"result": {"streamList": [{
-                "streamName": str,
-                "serviceUrl": str,
+                "streamName": validate.text,
+                "serviceUrl": validate.text,
             }]}},
             validate.get("result"),
             validate.get("streamList")
