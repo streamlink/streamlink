@@ -1,5 +1,5 @@
 import pytest
-from tests.mock import patch, ANY
+from unittest.mock import ANY, patch
 
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 
