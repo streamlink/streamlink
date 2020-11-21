@@ -1,25 +1,18 @@
-# encoding=utf8
 import logging
 import unittest
-import warnings
+from datetime import datetime
+from io import StringIO
 
-from streamlink import logger, Streamlink
-from streamlink.compat import is_py2
-from streamlink.utils.encoding import maybe_decode
-from tests import catch_warnings
+import freezegun
 
-if is_py2:
-    from io import BytesIO as StringIO
-else:
-    from io import StringIO
-
+from streamlink import logger
 
 
 class TestLogging(unittest.TestCase):
     @classmethod
-    def _new_logger(cls):
+    def _new_logger(cls, format="[{name}][{levelname}] {message}", style="{", **params):
         output = StringIO()
-        logger.basicConfig(stream=output, format="[{name}][{levelname}] {message}", style="{")
+        logger.basicConfig(stream=output, format=format, style=style, **params)
         return logging.getLogger("streamlink.test"), output
 
     def test_level(self):
@@ -56,63 +49,27 @@ class TestLogging(unittest.TestCase):
         log.debug("test")
         self.assertEqual(output.getvalue(), "[test][debug] test\n")
 
-    def test_log_unicode(self):
-        log, output = self._new_logger()
+    def test_style_percent(self):
+        log, output = self._new_logger(style="%", format="[%(name)s][%(levelname)s] %(message)s")
         logger.root.setLevel("info")
-        log.info(u"Special Character: Ѩ")
-        self.assertEqual(maybe_decode(output.getvalue()), u"[test][info] Special Character: Ѩ\n")
+        log.info("test")
+        self.assertEqual(output.getvalue(), "[test][info] test\n")
 
+    def test_style_invalid(self):
+        with self.assertRaises(ValueError) as cm:
+            self._new_logger(style="invalid")
+        self.assertEqual(str(cm.exception), "Only {} and % formatting styles are supported")
 
-class TestDeprecatedLogger(unittest.TestCase):
-    def setUp(self):
-        warnings.resetwarnings()
-        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+    def test_datefmt_default(self):
+        with freezegun.freeze_time(datetime(2000, 1, 2, 3, 4, 5, 123456), tz_offset=0):
+            log, output = self._new_logger(format="[{asctime}][{name}][{levelname}] {message}")
+            logger.root.setLevel("info")
+            log.info("test")
+            self.assertEqual(output.getvalue(), "[03:04:05][test][info] test\n")
 
-    def tearDown(self):
-        warnings.simplefilter('default', DeprecationWarning)  # restore filter
-
-    def _new_logger(self):
-        output = StringIO()
-        manager = logger.Logger()
-        manager.set_output(output)
-        return manager, output
-
-    @catch_warnings()
-    def test_deprecated_level(self):
-        manager, output = self._new_logger()
-
-        with warnings.catch_warnings(record=True):
-            log = manager.new_module("test_level")
-            log.debug("test")
-            self.assertEqual(output.tell(), 0)
-            manager.set_level("debug")
-            log.debug("test")
-            self.assertNotEqual(output.tell(), 0)
-
-    @catch_warnings()
-    def test_deprecated_output(self):
-        manager, output = self._new_logger()
-
-        log = manager.new_module("test_output")
-        manager.set_level("debug")
-        log.debug("test")
-        self.assertEqual(output.getvalue(), "[test_output][debug] test\n")
-
-    @catch_warnings()
-    def test_deprecated_session_logger(self):
-        session = Streamlink()
-        output = StringIO()
-
-        new_log = session.logger.new_module("test")
-        session.set_logoutput(output)
-        session.set_loglevel("info")
-
-        new_log.info("test1")
-
-        # regular python loggers shouldn't log here
-        logging.getLogger("streamlink.test").critical("should not log")
-        self.assertEqual(output.getvalue(), "[test][info] test1\n")
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_datefmt_custom(self):
+        with freezegun.freeze_time(datetime(2000, 1, 2, 3, 4, 5, 123456), tz_offset=0):
+            log, output = self._new_logger(format="[{asctime}][{name}][{levelname}] {message}", datefmt="%H:%M:%S.%f")
+            logger.root.setLevel("info")
+            log.info("test")
+            self.assertEqual(output.getvalue(), "[03:04:05.123456][test][info] test\n")

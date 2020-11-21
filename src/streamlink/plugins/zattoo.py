@@ -6,10 +6,8 @@ from requests.cookies import cookiejar_from_dict
 
 from streamlink import PluginError
 from streamlink.cache import Cache
-from streamlink.plugin import Plugin
-from streamlink.plugin import PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import DASHStream, HLSStream
 from streamlink.utils.args import comma_list_filter
 
@@ -19,7 +17,10 @@ log = logging.getLogger(__name__)
 class Zattoo(Plugin):
     API_CHANNELS = '{0}/zapi/v2/cached/channels/{1}?details=False'
     API_HELLO = '{0}/zapi/session/hello'
+    API_HELLO_V2 = '{0}/zapi/v2/session/hello'
+    API_HELLO_V3 = '{0}/zapi/v3/session/hello'
     API_LOGIN = '{0}/zapi/v2/account/login'
+    API_LOGIN_V3 = '{0}/zapi/v3/account/login'
     API_SESSION = '{0}/zapi/v2/session'
     API_WATCH = '{0}/zapi/watch'
     API_WATCH_REC = '{0}/zapi/watch/recording/{1}'
@@ -50,7 +51,7 @@ class Zattoo(Plugin):
         )/
         (?:
             (?:
-                recordings\?recording=
+                recording(?:s\?recording=|/)
                 |
                 (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/))
             )(?P<recording_id>\d+)
@@ -125,7 +126,7 @@ class Zattoo(Plugin):
     )
 
     def __init__(self, url):
-        super(Zattoo, self).__init__(url)
+        super().__init__(url)
         self.domain = self._url_re.match(url).group('base_url')
         self._session_attributes = Cache(
             filename='plugin-cache.json',
@@ -155,11 +156,24 @@ class Zattoo(Plugin):
 
         # a new session is required for the app_token
         self.session.http.cookies = cookiejar_from_dict({})
-        res = self.session.http.get(self.base_url)
-        match = self._app_token_re.search(res.text)
+        if self.base_url == 'https://zattoo.com':
+            app_token_url = 'https://zattoo.com/client/token-2fb69f883fea03d06c68c6e5f21ddaea.json'
+        elif self.base_url == 'https://www.quantum-tv.com':
+            app_token_url = 'https://www.quantum-tv.com/token-4d0d61d4ce0bf8d9982171f349d19f34.json'
+        else:
+            app_token_url = self.base_url
 
-        app_token = match.group(1)
-        hello_url = self.API_HELLO.format(self.base_url)
+        res = self.session.http.get(app_token_url)
+        if self.base_url == 'https://www.quantum-tv.com':
+            app_token = self.session.http.json(res)["session_token"]
+            hello_url = self.API_HELLO_V3.format(self.base_url)
+        elif self.base_url == 'https://zattoo.com':
+            app_token = self.session.http.json(res)['app_tid']
+            hello_url = self.API_HELLO_V2.format(self.base_url)
+        else:
+            match = self._app_token_re.search(res.text)
+            app_token = match.group(1)
+            hello_url = self.API_HELLO.format(self.base_url)
 
         if self._uuid:
             __uuid = self._uuid
@@ -168,23 +182,39 @@ class Zattoo(Plugin):
             self._session_attributes.set(
                 'uuid', __uuid, expires=self.TIME_SESSION)
 
-        params = {
-            'client_app_token': app_token,
-            'uuid': __uuid,
-            'lang': 'en',
-            'format': 'json'
-        }
+        if self.base_url == 'https://zattoo.com':
+            params = {
+                'uuid': __uuid,
+                'app_tid': app_token,
+                'app_version': '1.0.0'
+            }
+        else:
+            params = {
+                'client_app_token': app_token,
+                'uuid': __uuid,
+            }
+
+        if self.base_url == 'https://www.quantum-tv.com':
+            params['app_version'] = '3.2028.3'
+        else:
+            params['lang'] = 'en'
+            params['format'] = 'json'
+
         res = self.session.http.post(hello_url, headers=self.headers, data=params)
 
     def _login(self, email, password):
         log.debug('_login ... Attempting login as {0}'.format(email))
 
-        login_url = self.API_LOGIN.format(self.base_url)
         params = {
             'login': email,
             'password': password,
             'remember': 'true'
         }
+
+        if self.base_url == 'https://quantum-tv.com':
+            login_url = self.API_LOGIN_V3.format(self.base_url)
+        else:
+            login_url = self.API_LOGIN.format(self.base_url)
 
         try:
             res = self.session.http.post(login_url, headers=self.headers, data=params)

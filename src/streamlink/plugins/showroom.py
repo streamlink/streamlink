@@ -1,9 +1,12 @@
-# -*- coding: utf-8 -*-
+import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker
+
+log = logging.getLogger(__name__)
 
 _url_re = re.compile(r'''^https?://
     (?:\w*.)?
@@ -78,6 +81,23 @@ _info_pages = set((
 ))
 
 
+class ShowroomHLSStreamWorker(HLSStreamWorker):
+    def _playlist_reload_time(self, playlist, sequences):
+        return 1.5
+
+
+class ShowroomHLSStreamReader(HLSStreamReader):
+    __worker__ = ShowroomHLSStreamWorker
+
+
+class ShowroomHLSStream(HLSStream):
+    def open(self):
+        reader = ShowroomHLSStreamReader(self)
+        reader.open()
+
+        return reader
+
+
 class Showroom(Plugin):
     @classmethod
     def can_handle_url(cls, url):
@@ -95,10 +115,7 @@ class Showroom(Plugin):
 
     def __init__(self, url):
         Plugin.__init__(self, url)
-        self._headers = {
-            'Referer': self.url,
-            'User-Agent': useragents.FIREFOX
-        }
+        self._headers = {'Referer': self.url}
         self._room_id = None
         self._stream_urls = None
 
@@ -123,10 +140,10 @@ class Showroom(Plugin):
             match = _room_id_re.search(res.text)
             if not match:
                 title = self.url.rsplit('/', 1)[-1]
-                self.logger.debug(_room_id_lookup_failure_log.format(title, 'primary'))
+                log.debug(_room_id_lookup_failure_log.format(title, 'primary'))
                 match = _room_id_alt_re.search(res.text)
                 if not match:
-                    self.logger.debug(_room_id_lookup_failure_log.format(title, 'secondary'))
+                    log.debug(_room_id_lookup_failure_log.format(title, 'secondary'))
                     return  # Raise exception?
             return match.group('room_id')
 
@@ -150,8 +167,12 @@ class Showroom(Plugin):
             if stream_info["type"] == "rtmp":
                 yield self._get_rtmp_stream(stream_info)
             elif stream_info["type"] == "hls":
-                for s in HLSStream.parse_variant_playlist(self.session, stream_info["url"]).items():
-                    yield s
+                streams = ShowroomHLSStream.parse_variant_playlist(self.session, stream_info["url"])
+                if not streams:
+                    quality = _rtmp_quality_lookup.get(stream_info["label"], "other")
+                    yield quality, ShowroomHLSStream(self.session, stream_info["url"])
+                else:
+                    yield from streams.items()
 
 
 __plugin__ = Showroom

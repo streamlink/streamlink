@@ -1,8 +1,7 @@
-import json
-import re
 import base64
-
 import binascii
+import logging
+import re
 
 from Crypto.Cipher import AES
 
@@ -12,13 +11,15 @@ from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
 from streamlink.utils.crypto import unpad_pkcs5
 
+log = logging.getLogger(__name__)
+
 
 class WebTV(Plugin):
     _url_re = re.compile(r"http(?:s)?://(\w+)\.web.tv/?")
     _sources_re = re.compile(r'"sources": (\[.*?\]),', re.DOTALL)
     _sources_schema = validate.Schema([
         {
-            u"src": validate.any(
+            "src": validate.any(
                 validate.contains("m3u8"),
                 validate.all(
                     validate.text,
@@ -26,8 +27,8 @@ class WebTV(Plugin):
                     validate.contains("m3u8")
                 )
             ),
-            u"type": validate.text,
-            u"label": validate.text
+            "type": validate.text,
+            "label": validate.text
         }
     ])
 
@@ -59,21 +60,20 @@ class WebTV(Plugin):
         if len(sources):
             sdata = parse_json(sources[0], schema=self._sources_schema)
             for source in sdata:
-                self.logger.debug("Found stream of type: {}", source[u'type'])
-                if source[u'type'] == u"application/vnd.apple.mpegurl":
-                    url = update_scheme(self.url, source[u"src"])
+                log.debug(f"Found stream of type: {source['type']}")
+                if source["type"] == "application/vnd.apple.mpegurl":
+                    url = update_scheme(self.url, source["src"])
 
                     try:
                         # try to parse the stream as a variant playlist
                         variant = HLSStream.parse_variant_playlist(self.session, url, headers=headers)
                         if variant:
-                            for q, s in variant.items():
-                                yield q, s
+                            yield from variant.items()
                         else:
                             # and if that fails, try it as a plain HLS stream
                             yield 'live', HLSStream(self.session, url, headers=headers)
                     except IOError:
-                        self.logger.warning("Could not open the stream, perhaps the channel is offline")
+                        log.warning("Could not open the stream, perhaps the channel is offline")
 
 
 __plugin__ = WebTV

@@ -3,12 +3,15 @@ Plugin for vidio.com
 - https://www.vidio.com/live/5075-dw-tv-stream
 - https://www.vidio.com/watch/766861-5-rekor-fantastis-zidane-bersama-real-madrid
 """
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 
 class Vidio(Plugin):
@@ -27,17 +30,23 @@ class Vidio(Plugin):
         return cls._url_re.match(url)
 
     def get_csrf_tokens(self):
-        return self.session.http.get(self.csrf_tokens_url,
-                        schema=self.token_schema)
+        return self.session.http.get(
+            self.csrf_tokens_url,
+            schema=self.token_schema
+        )
 
     def get_url_tokens(self, stream_id):
-        self.logger.debug("Getting stream tokens")
+        log.debug("Getting stream tokens")
         csrf_token = self.get_csrf_tokens()
-        return self.session.http.post(self.tokens_url.format(id=stream_id),
-                         files={"authenticity_token": (None, csrf_token)},
-                         headers={"User-Agent": useragents.CHROME,
-                                  "Referer": self.url},
-                         schema=self.token_schema)
+        return self.session.http.post(
+            self.tokens_url.format(id=stream_id),
+            files={"authenticity_token": (None, csrf_token)},
+            headers={
+                "User-Agent": useragents.CHROME,
+                "Referer": self.url
+            },
+            schema=self.token_schema
+        )
 
     def _get_streams(self):
         res = self.session.http.get(self.url)
@@ -51,9 +60,10 @@ class Vidio(Plugin):
         tokens = self.get_url_tokens(stream_id)
 
         if hls_url:
-            self.logger.debug("HLS URL: {0}".format(hls_url))
-            self.logger.debug("Tokens: {0}".format(tokens))
-            return HLSStream.parse_variant_playlist(self.session, hls_url+"?"+tokens,
+            log.debug("HLS URL: {0}".format(hls_url))
+            log.debug("Tokens: {0}".format(tokens))
+            return HLSStream.parse_variant_playlist(self.session,
+                                                    hls_url + "?" + tokens,
                                                     headers={"User-Agent": useragents.CHROME,
                                                              "Referer": self.url})
 

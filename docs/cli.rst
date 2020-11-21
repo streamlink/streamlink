@@ -1,5 +1,3 @@
-.. _cli:
-
 Command-Line Interface
 ======================
 
@@ -8,13 +6,13 @@ Tutorial
 
 Streamlink is a command-line application, which means that the commands described
 here should be typed into a terminal. On Windows, you have to open either the
-`command prompt`_ or the `PowerShell`_, on macOS open the `Terminal`_ app
+`Command Prompt`_, `PowerShell`_ or `Windows Terminal`_, on macOS open the `Terminal <macOS-Terminal>`_ app,
 and if you're on Linux or BSD you probably already know the drill.
 
 The way Streamlink works is that it's only a means to extract and transport
 the streams, and the playback is done by an external video player. Streamlink
 works best with `VLC`_ or `mpv`_, which are also cross-platform, but other players
-may be compatible too, see the :ref:`Players` page for a complete overview.
+may be compatible too, see the :ref:`Players <players:Players>` page for a complete overview.
 
 Now to get into actually using Streamlink, let's say you want to watch the
 stream located on twitch.tv/day9tv, you start off by telling Streamlink
@@ -69,20 +67,19 @@ specify ``worst`` to get the lowest quality.
 Now that you have a basic grasp of how Streamlink works, you may want to look
 into customizing it to your own needs, such as:
 
-- Creating a :ref:`configuration file <cli-streamlinkrc>` of options you
+- Creating a :ref:`configuration file <cli:Configuration file>` of options you
   want to use
-- Setting up your player to :ref:`cache some data <issues-player_caching>`
+- Setting up your player to :ref:`cache some data <issues:Streams are buffering/lagging>`
   before playing the stream to help avoiding buffering issues
 
 
-.. _command prompt: http://windows.microsoft.com/en-us/windows/command-prompt-faq#1TC=windows-8
-.. _PowerShell: http://www.microsoft.com/powershell
-.. _Terminal: http://en.wikipedia.org/wiki/Terminal_(OS_X)
-.. _VLC: http://videolan.org/
-.. _mpv: http://mpv.io/
+.. _Command Prompt: https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/windows-commands
+.. _PowerShell: https://docs.microsoft.com/en-us/powershell/
+.. _Windows Terminal: https://docs.microsoft.com/en-us/windows/terminal/get-started
+.. _macOS Terminal: https://support.apple.com/guide/terminal/welcome/mac
+.. _VLC: https://videolan.org/
+.. _mpv: https://mpv.io/
 
-
-.. _cli-streamlinkrc:
 
 Configuration file
 ------------------
@@ -118,7 +115,7 @@ Syntax
 ^^^^^^
 
 The config file is a simple text file and should contain one
-:ref:`command-line option <cli-options>` (omitting the dashes) per
+:ref:`command-line option <cli:Command-line usage>` (omitting the dashes) per
 line in the format::
 
   option=value
@@ -139,9 +136,6 @@ Example
     # Player options
     player=mpv --cache 2048
     player-no-close
-
-    # Authenticate with Twitch
-    twitch-oauth-token=mytoken
 
 .. note::
     Full player paths are supported via configuration file options such as
@@ -169,31 +163,12 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config\ **.twitch**
 Windows           %APPDATA%\\streamlink\\streamlinkrc\ **.youtube**
 ================= ====================================================
 
-Have a look at the :ref:`list of plugins <plugin_matrix>` to see
+Have a look at the :ref:`list of plugins <plugin_matrix:Plugins>` to see
 the name of each built-in plugin.
 
 
 Plugin specific usage
 ---------------------
-
-Authenticating with Twitch
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-It's possible to access subscription content on Twitch by giving Streamlink
-access to your account.
-
-Authentication is done by creating an OAuth token that Streamlink will
-use to access your account. It's done like this:
-
-.. sourcecode:: console
-
-    $ streamlink --twitch-oauth-authenticate
-
-
-This will open a web browser where Twitch will ask you if you want to give
-Streamlink permission to access your account, then forwards you to a page
-with further instructions on how to use it.
-
 
 Authenticating with Crunchyroll
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -206,7 +181,7 @@ You can login like this:
 
 .. sourcecode:: console
 
-    $ streamlink --crunchyroll-username=xxxx --crunchyroll-password=xxx http://crunchyroll.com/a-crunchyroll-episode-link
+    $ streamlink --crunchyroll-username=xxxx --crunchyroll-password=xxx https://crunchyroll.com/a-crunchyroll-episode-link
 
 .. note::
 
@@ -217,7 +192,7 @@ asking your username and password again.
 
 Nevertheless, these credentials are valid for a limited amount of time, so it
 might be a good idea to save your username and password in your
-:ref:`configuration file <cli-streamlinkrc>` anyway.
+:ref:`configuration file <cli:Configuration file>` anyway.
 
 .. warning::
 
@@ -242,8 +217,6 @@ For this, the plugin provides the :option:`--crunchyroll-purge-credentials`
 option, which removes your saved session and credentials and tries to log
 in again using your username and password.
 
-.. _cli-funimationnow:
-
 Authenticating with FunimationNow
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Like Crunchyroll, the FunimationNow plugin requires authenticating with a premium account to access some
@@ -261,7 +234,7 @@ For example:
     There are multiple ways to retrieve the required cookie.  For more
     information on browser cookies, please consult the following:
 
-    - `What are cookies? <http://www.whatarecookies.com/view.asp>`_
+    - `What are cookies? <https://en.wikipedia.org/wiki/HTTP_cookie>`_
 
 Sideloading plugins
 -------------------
@@ -346,7 +319,6 @@ Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 
 .. [1] supports local files using the file:// protocol
 .. [2] Dynamic Adaptive Streaming over HTTP
-.. _cli-options:
 
 Proxy Support
 -------------

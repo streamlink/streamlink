@@ -1,20 +1,18 @@
 import base64
-import io
 import hashlib
 import hmac
-import random
-
-from .stream import Stream
-from .wrappers import StreamIOThreadWrapper, StreamIOIterWrapper
-
-from ..buffers import Buffer
-from ..compat import str, bytes, urlparse
-from ..exceptions import StreamError
-from ..utils import swfdecompress
-
-from ..packages.flashmedia import FLV, FLVError
-from ..packages.flashmedia.tag import ScriptData
+import io
 import logging
+import random
+from urllib.parse import urlparse
+
+from streamlink.buffers import Buffer
+from streamlink.exceptions import StreamError
+from streamlink.packages.flashmedia import FLV, FLVError
+from streamlink.packages.flashmedia.tag import ScriptData
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
+from streamlink.utils import swfdecompress
 
 log = logging.getLogger(__name__)
 
@@ -101,7 +99,7 @@ class AkamaiHDStreamIO(io.IOBase):
         url = self.StreamURLFormat.format(host=self.host, streamname=self.streamname)
         params = self._create_params(seek=self.seek)
 
-        log.debug("Opening host={} streamname={}", self.host, self.streamname)
+        log.debug(f"Opening host={self.host} streamname={self.streamname}")
 
         try:
             res = self.session.http.get(url, stream=True, params=params)
@@ -201,7 +199,7 @@ class AkamaiHDStreamIO(io.IOBase):
             if isinstance(val, str):
                 val = val[:50]
 
-            log.debug(" {}={}", key, val)
+            log.debug(f" {key}={val}")
 
         updateattr("islive", "isLive")
         updateattr("sessionid", "session")

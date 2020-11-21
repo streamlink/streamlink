@@ -8,6 +8,7 @@ class TestPluginDogus(unittest.TestCase):
         should_match = [
             'http://www.ntvspor.net/canli-yayin',
             'http://eurostartv.com.tr/canli-izle',
+            'http://startv.com.tr/canli-yayin',
         ]
         for url in should_match:
             self.assertTrue(Dogus.can_handle_url(url))

@@ -24,8 +24,7 @@ class LRT(Plugin):
             data = self.session.http.get(self.API_URL.format(video_id)).json()
             hls_url = data["response"]["data"]["content"]
 
-            for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
         else:
             log.debug("No match for video_id regex")
 

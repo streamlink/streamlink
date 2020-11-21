@@ -3,13 +3,20 @@ import unittest
 from streamlink.plugins.yupptv import YuppTV
 
 
-class TestPluginZattoo(unittest.TestCase):
+class TestPluginYuppTV(unittest.TestCase):
     def test_can_handle_url(self):
-        self.assertTrue(YuppTV.can_handle_url('https://www.yupptv.com/channels/etv-telugu/live'))
-        self.assertTrue(YuppTV.can_handle_url('https://www.yupptv.com/channels/india-today-news/news/25326023/15-jun-2018'))
+        should_match = [
+            'https://www.yupptv.com/channels/etv-telugu/live',
+            'https://www.yupptv.com/channels/india-today-news/news/25326023/15-jun-2018',
+        ]
+        for url in should_match:
+            self.assertTrue(YuppTV.can_handle_url(url))
 
-    def test_can_handle_negative(self):
-        # shouldn't match
-        self.assertFalse(YuppTV.can_handle_url('https://ewe.de'))
-        self.assertFalse(YuppTV.can_handle_url('https://netcologne.de'))
-        self.assertFalse(YuppTV.can_handle_url('https://zattoo.com'))
+    def test_can_handle_url_negative(self):
+        should_not_match = [
+            'https://ewe.de',
+            'https://netcologne.de',
+            'https://zattoo.com',
+        ]
+        for url in should_not_match:
+            self.assertFalse(YuppTV.can_handle_url(url))

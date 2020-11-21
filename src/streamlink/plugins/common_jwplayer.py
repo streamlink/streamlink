@@ -1,5 +1,4 @@
 import re
-
 from functools import partial
 
 from streamlink.plugin.api import validate

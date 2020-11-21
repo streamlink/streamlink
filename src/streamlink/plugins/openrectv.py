@@ -73,7 +73,7 @@ class OPENRECtv(Plugin):
     )
 
     def __init__(self, url):
-        super(OPENRECtv, self).__init__(url)
+        super().__init__(url)
         self._pdata = None
         self._pres = None
         self._pconfig = None
@@ -138,15 +138,13 @@ class OPENRECtv(Plugin):
         if mdata:
             log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
             if mdata["media"]["url"]:
-                for s in HLSStream.parse_variant_playlist(self.session, mdata["media"]["url"]).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, mdata["media"]["url"]).items()
             elif self.get_option("email") and self.get_option("password"):
                 if self.login(self.get_option("email"), self.get_option("password")):
                     details = self._get_details(mdata["id"])
                     if details:
                         for item in details["items"]:
-                            for s in HLSStream.parse_variant_playlist(self.session, item["media"]["url"]).items():
-                                yield s
+                            yield from HLSStream.parse_variant_playlist(self.session, item["media"]["url"]).items()
             else:
                 log.error("You must login to access this stream")
 

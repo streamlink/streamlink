@@ -5,8 +5,8 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from streamlink.exceptions import PluginError
-from streamlink.plugin.api.validate import xml_element, text
 from streamlink.plugin.api import validate
+from streamlink.plugin.api.validate import text, xml_element
 from streamlink.utils import (
     absolute_url,
     load_module,
@@ -54,48 +54,48 @@ class TestUtil(unittest.TestCase):
 
     def test_parse_xml(self):
         expected = ET.Element("test", {"foo": "bar"})
-        actual = parse_xml(u"""<test foo="bar"/>""", ignore_ns=True)
+        actual = parse_xml("""<test foo="bar"/>""", ignore_ns=True)
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
     def test_parse_xml_ns_ignore(self):
         expected = ET.Element("test", {"foo": "bar"})
-        actual = parse_xml(u"""<test foo="bar" xmlns="foo:bar"/>""", ignore_ns=True)
+        actual = parse_xml("""<test foo="bar" xmlns="foo:bar"/>""", ignore_ns=True)
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
     def test_parse_xml_ns_ignore_tab(self):
         expected = ET.Element("test", {"foo": "bar"})
-        actual = parse_xml(u"""<test	foo="bar"	xmlns="foo:bar"/>""", ignore_ns=True)
+        actual = parse_xml("""<test	foo="bar"	xmlns="foo:bar"/>""", ignore_ns=True)
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
     def test_parse_xml_ns(self):
         expected = ET.Element("{foo:bar}test", {"foo": "bar"})
-        actual = parse_xml(u"""<h:test foo="bar" xmlns:h="foo:bar"/>""")
+        actual = parse_xml("""<h:test foo="bar" xmlns:h="foo:bar"/>""")
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
     def test_parse_xml_fail(self):
         self.assertRaises(PluginError,
-                          parse_xml, u"1" * 1000)
+                          parse_xml, "1" * 1000)
         self.assertRaises(IOError,
-                          parse_xml, u"1" * 1000, exception=IOError)
+                          parse_xml, "1" * 1000, exception=IOError)
 
     def test_parse_xml_validate(self):
         expected = ET.Element("test", {"foo": "bar"})
-        actual = parse_xml(u"""<test foo="bar"/>""",
+        actual = parse_xml("""<test foo="bar"/>""",
                            schema=validate.Schema(xml_element(tag="test", attrib={"foo": text})))
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
     def test_parse_xml_entities_fail(self):
         self.assertRaises(PluginError,
-                          parse_xml, u"""<test foo="bar &"/>""")
+                          parse_xml, """<test foo="bar &"/>""")
 
     def test_parse_xml_entities(self):
         expected = ET.Element("test", {"foo": "bar &"})
-        actual = parse_xml(u"""<test foo="bar &"/>""",
+        actual = parse_xml("""<test foo="bar &"/>""",
                            schema=validate.Schema(xml_element(tag="test", attrib={"foo": text})),
                            invalid_char_entities=True)
         self.assertEqual(expected.tag, actual.tag)

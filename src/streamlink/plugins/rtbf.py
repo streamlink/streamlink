@@ -1,11 +1,14 @@
 import datetime
+import logging
 import re
+from html import unescape as html_unescape
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
-from streamlink.compat import html_unescape
+
+log = logging.getLogger(__name__)
 
 
 class RTBF(Plugin):
@@ -13,12 +16,23 @@ class RTBF(Plugin):
     TOKEN_URL = 'https://token.rtbf.be/'
     RADIO_STREAM_URL = 'http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json'
 
-    _url_re = re.compile(r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/.+)')
-    _stream_size_re = re.compile(r'https?://.+-(?P<size>\d+p?)\..+?$')
+    _url_re = re.compile(
+        r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/.+)'
+    )
+    _stream_size_re = re.compile(
+        r'https?://.+-(?P<size>\d+p?)\..+?$'
+    )
 
-    _video_player_re = re.compile(r'<iframe\s+class="embed-responsive-item\s+js-embed-iframe".*src="(?P<player_url>.+?)".*?</iframe>', re.DOTALL)
-    _video_stream_data_re = re.compile(r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"')
-    _radio_id_re = re.compile(r'var currentStationKey = "(?P<radio_id>.+?)"')
+    _video_player_re = re.compile(
+        r'<iframe\s+class="embed-responsive-item\s+js-embed-iframe".*src="(?P<player_url>.+?)".*?</iframe>',
+        re.DOTALL
+    )
+    _video_stream_data_re = re.compile(
+        r'<div\s+id="js-embed-player"\s+class="js-embed-player\s+embed-player"\s+data-media="(.+?)"'
+    )
+    _radio_id_re = re.compile(
+        r'var currentStationKey = "(?P<radio_id>.+?)"'
+    )
 
     _geo_schema = validate.Schema(
         {
@@ -67,18 +81,16 @@ class RTBF(Plugin):
         }
     )
 
-    @classmethod
-    def check_geolocation(cls, geoloc_flag):
+    def check_geolocation(self, geoloc_flag):
         if geoloc_flag == 'open':
             return True
 
-        res = self.session.http.get(cls.GEO_URL)
-        data = self.session.http.json(res, schema=cls._geo_schema)
+        res = self.session.http.get(self.GEO_URL)
+        data = self.session.http.json(res, schema=self._geo_schema)
         return data['country'] == geoloc_flag or data['zone'] == geoloc_flag
 
-    @classmethod
-    def tokenize_stream(cls, url):
-        res = self.session.http.post(cls.TOKEN_URL, data={'streams[url]': url})
+    def tokenize_stream(self, url):
+        res = self.session.http.post(self.TOKEN_URL, data={'streams[url]': url})
         data = self.session.http.json(res)
         return data['streams']['url']
 
@@ -121,12 +133,12 @@ class RTBF(Plugin):
 
         # Check geolocation to prevent further errors when stream is parsed
         if not self.check_geolocation(stream_data['geoLocRestriction']):
-            self.logger.error('Stream is geo-restricted')
+            log.error('Stream is geo-restricted')
             return
 
         # Check whether streams are DRM-protected
         if stream_data.get('drm', False):
-            self.logger.error('Stream is DRM-protected')
+            log.error('Stream is DRM-protected')
             return
 
         now = datetime.datetime.now()
@@ -149,26 +161,24 @@ class RTBF(Plugin):
                 if stream_data.get('isLive', False):
                     # Live streams require a token
                     hls_url = self.tokenize_stream(hls_url)
-                for stream in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                    yield stream
+                yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
             dash_url = stream_data.get('urlDash') or stream_data.get('streamUrlDash')
             if dash_url:
                 if stream_data.get('isLive', False):
                     # Live streams require a token
                     dash_url = self.tokenize_stream(dash_url)
-                for stream in DASHStream.parse_manifest(self.session, dash_url).items():
-                    yield stream
+                yield from DASHStream.parse_manifest(self.session, dash_url).items()
 
         except IOError as err:
             if '403 Client Error' in str(err):
                 # Check whether video is expired
                 if 'startDate' in stream_data:
                     if now < self.iso8601_to_epoch(stream_data['startDate']):
-                        self.logger.error('Stream is not yet available')
+                        log.error('Stream is not yet available')
                 elif 'endDate' in stream_data:
                     if now > self.iso8601_to_epoch(stream_data['endDate']):
-                        self.logger.error('Stream has expired')
+                        log.error('Stream has expired')
 
     def _get_streams(self):
         match = self.can_handle_url(self.url)

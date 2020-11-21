@@ -1,8 +1,10 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
+
+log = logging.getLogger(__name__)
 
 
 class ZengaTV(Plugin):
@@ -19,10 +21,7 @@ class ZengaTV(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        headers = {
-            "User-Agent": useragents.FIREFOX,
-            "Referer": self.url,
-        }
+        headers = {"Referer": self.url}
 
         res = self.session.http.get(self.url, headers=headers)
         for id_re in (self._id_re, self._id_2_re):
@@ -32,16 +31,15 @@ class ZengaTV(Plugin):
             break
 
         if not m:
-            self.logger.error("No video id found")
+            log.error("No video id found")
             return
 
         dvr_id = m.group("id")
-        self.logger.debug("Found video id: {0}".format(dvr_id))
+        log.debug("Found video id: {0}".format(dvr_id))
         data = {"feed": "hd", "dvrId": dvr_id}
         res = self.session.http.post(self.api_url, headers=headers, data=data)
         if res.status_code == 200:
-            for s in HLSStream.parse_variant_playlist(self.session, res.text, headers=headers).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, res.text, headers=headers).items()
 
 
 __plugin__ = ZengaTV

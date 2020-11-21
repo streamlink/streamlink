@@ -1,7 +1,7 @@
 import logging
 import re
+from urllib.parse import urljoin
 
-from streamlink.compat import urljoin
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
@@ -57,8 +57,10 @@ class TV4Play(Plugin):
             "service": "tv4",
         }
         try:
-            res = self.session.http.get(self.api_assets.format(self.get_video_id),
-                           params=params)
+            res = self.session.http.get(
+                self.api_assets.format(self.get_video_id),
+                params=params
+            )
         except Exception as e:
             if "404 Client Error" in str(e):
                 raise PluginError("This Video is not available")

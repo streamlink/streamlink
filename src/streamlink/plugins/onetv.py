@@ -1,11 +1,14 @@
+import logging
 import random
 import re
+from urllib.parse import unquote, urlencode, urljoin
 
-from streamlink.compat import urlencode, unquote, urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.plugin import stream_weight
-from streamlink.stream import HLSStream, HTTPStream, DASHStream
+from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import update_scheme
+
+log = logging.getLogger(__name__)
 
 
 class OneTV(Plugin):
@@ -64,13 +67,13 @@ class OneTV(Plugin):
         m = self._vod_re.search(page.text)
         vod_data_url = m and urljoin(self.url, m.group(0))
         if vod_data_url:
-            self.logger.debug("Found VOD data url: {0}", vod_data_url)
+            log.debug("Found VOD data url: {0}".format(vod_data_url))
             res = self.session.http.get(vod_data_url)
             return self.session.http.json(res)
 
     def _get_streams(self):
         if self.is_live:
-            self.logger.debug("Loading live stream for {0}...", self.channel)
+            log.debug("Loading live stream for {0}...".format(self.channel))
 
             res = self.session.http.get(self.live_api_url, data={"r": random.randint(1, 100000)})
             live_data = self.session.http.json(res)
@@ -80,20 +83,18 @@ class OneTV(Plugin):
             if hls_streams:
                 url = random.choice(hls_streams)
                 url = url + '&' + urlencode(self.hls_session())  # TODO: use update_qsd
-                for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items()
 
             mpd_streams = live_data.get("mpd")
             if mpd_streams:
                 url = random.choice(mpd_streams)
-                for s in DASHStream.parse_manifest(self.session, url).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, url).items()
 
         elif self.channel == "1tv":
-            self.logger.debug("Attempting to find VOD stream...", self.channel)
+            log.debug("Attempting to find VOD stream for {0}...".format(self.channel))
             vod_data = self.vod_data()
             if vod_data:
-                self.logger.info(u"Found VOD: {0}".format(vod_data[0]['title']))
+                log.info(f"Found VOD: {vod_data[0]['title']}")
                 for stream in vod_data[0]['mbr']:
                     yield stream['name'], HTTPStream(self.session, update_scheme(self.url, stream['src']))
 

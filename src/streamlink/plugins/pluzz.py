@@ -3,7 +3,7 @@ import re
 import sys
 import time
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -15,7 +15,8 @@ class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
     API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}'
     TOKEN_URL = 'http://hdfauthftv-a.akamaihd.net/esi/TA?url={0}'
-    SWF_PLAYER_URL = 'https://staticftv-a.akamaihd.net/player/bower_components/player_flash/dist/FranceTVNVPVFlashPlayer.akamai-7301b6035a43c4e29b7935c9c36771d2.swf'
+    SWF_PLAYER_URL = 'https://staticftv-a.akamaihd.net/player/bower_components/player_flash/dist/' \
+                     'FranceTVNVPVFlashPlayer.akamai-7301b6035a43c4e29b7935c9c36771d2.swf'
 
     _url_re = re.compile(r'''
         https?://(
@@ -84,13 +85,7 @@ class Pluzz(Plugin):
     _player_schema = validate.Schema({'result': validate.url()})
 
     arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="""
-        Automatically mux available subtitles in to the output stream.
-        """
-        )
+        PluginArgument("mux-subtitles", is_global=True)
     )
 
     @classmethod

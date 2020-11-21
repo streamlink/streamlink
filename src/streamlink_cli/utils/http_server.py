@@ -1,5 +1,4 @@
 import socket
-
 from io import BytesIO
 
 try:

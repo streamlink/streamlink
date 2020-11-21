@@ -1,13 +1,11 @@
-# coding: utf8
 import re
 import unittest
-
 from xml.etree.ElementTree import Element
 
 from streamlink.plugin.api.validate import (
-    validate, all, any, optional, transform, text, filter, map, hasattr,
-    get, getattr, length, xml_element, xml_find, xml_findtext, xml_findall,
-    union, attr, url, startswith, endswith
+    all, any, attr, endswith, filter, get, getattr, hasattr,
+    length, map, optional, startswith, text, transform, union, url,
+    validate, xml_element, xml_find, xml_findall, xml_findtext
 )
 
 
@@ -20,7 +18,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(transform(int), "1") == 1
 
         assert validate(text, "abc") == "abc"
-        assert validate(text, u"日本語") == u"日本語"
+        assert validate(text, "日本語") == "日本語"
         assert validate(transform(text), 1) == "1"
 
         assert validate(list, ["a", 1]) == ["a", 1]
@@ -157,8 +155,4 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(startswith("abc"), "abcedf")
 
     def test_endswith(self):
-        assert validate(endswith(u"åäö"), u"xyzåäö")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert validate(endswith("åäö"), "xyzåäö")

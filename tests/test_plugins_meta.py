@@ -1,8 +1,8 @@
 import os.path
 import re
 import unittest
-
 from glob import glob
+
 from streamlink import Streamlink
 
 
@@ -58,3 +58,13 @@ class TestPluginMeta(unittest.TestCase):
             if pname not in self.built_in_plugins:
                 self.assertIn(pname, self.session.plugins.keys(),
                               "{0} is not a plugin but has tests".format(pname))
+
+    def test_plugin_has_valid_global_args(self):
+        from streamlink_cli.argparser import build_parser
+        parser = build_parser()
+        global_arg_dests = [action.dest for action in parser._actions]
+        for pname, plugin in self.session.plugins.items():
+            for parg in plugin.arguments:
+                if parg.is_global:
+                    self.assertIn(parg.dest, global_arg_dests,
+                                  f"{parg.name} from plugins.{pname} is not a valid global argument")

@@ -1,14 +1,13 @@
 import json
 from contextlib import contextmanager
 
-from streamlink.utils.named_pipe import NamedPipe
 from streamlink_cli.utils.http_server import HTTPServer
 from streamlink_cli.utils.player import find_default_player
 from streamlink_cli.utils.progress import progress
 from streamlink_cli.utils.stream import stream_to_url
 
 __all__ = [
-    "NamedPipe", "HTTPServer", "JSONEncoder",
+    "HTTPServer", "JSONEncoder",
     "find_default_player", "ignored", "progress", "stream_to_url"
 ]
 

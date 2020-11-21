@@ -51,6 +51,8 @@ https://streamlink.github.io/cli.html#cmdoption-l
 
 Make sure to **remove usernames and passwords**
 You can copy the output to https://gist.github.com/ or paste it below.
+
+Don't post screenshots of the log output and instead copy the text from your terminal application.
 -->
 
 ```
@@ -58,7 +60,7 @@ REPLACE THIS TEXT WITH THE LOG OUTPUT
 ```
 
 
-### Additional comments, screenshots, etc.
+### Additional comments, etc.
 
 
 

@@ -5,13 +5,10 @@ from functools import partial
 
 from Crypto.Cipher import Blowfish
 
-from streamlink.compat import bytes, is_py3
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HLSStream
-from streamlink.stream import HTTPStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_xml
 
@@ -33,10 +30,7 @@ class ZTNRClient(object):
 
     @staticmethod
     def unpad(data):
-        if is_py3:
-            return data[0:-data[-1]]
-        else:
-            return data[0:-ord(data[-1])]
+        return data[0:-data[-1]]
 
     def encrypt(self, data):
         return base64.b64encode(self.cipher.encrypt(self.pad(bytes(data, "utf-8"))), altchars=b"-_").decode("ascii")
@@ -59,7 +53,7 @@ class ZTNRClient(object):
 class Rtve(Plugin):
     secret_key = base64.b64decode("eWVMJmRhRDM=")
     url_re = re.compile(r"""
-        https?://(?:www\.)?rtve\.es/(?:directo|noticias|television|deportes|alacarta|drmn)/.*?/?
+        https?://(?:www\.)?rtve\.es/(?:directo|infantil|noticias|television|deportes|alacarta|drmn)/.*?/?
     """, re.VERBOSE)
     cdn_schema = validate.Schema(
         validate.transform(partial(parse_xml, invalid_char_entities=True)),
@@ -100,14 +94,9 @@ class Rtve(Plugin):
         validate.get("page"),
         validate.get("items"),
         validate.get(0))
+
     arguments = PluginArguments(
-        PluginArgument(
-            "mux-subtitles",
-            action="store_true",
-            help="""
-        Automatically mux available subtitles in to the output stream.
-        """
-        )
+        PluginArgument("mux-subtitles", is_global=True)
     )
 
     @classmethod
@@ -137,14 +126,14 @@ class Rtve(Plugin):
         qmap = {}
         for item in data["qualities"]:
             qname = {"MED": "Media", "HIGH": "Alta", "ORIGINAL": "Original"}.get(item["preset"], item["preset"])
-            qmap[qname] = u"{0}p".format(item["height"])
+            qmap[qname] = f"{item['height']}p"
         return qmap
 
     def _get_streams(self):
         streams = []
         content_id = self._get_content_id()
         if content_id:
-            log.debug("Found content with id: {0}", content_id)
+            log.debug(f"Found content with id: {content_id}")
             stream_data = self.zclient.get_cdn_list(content_id, schema=self.cdn_schema)
             quality_map = None
 

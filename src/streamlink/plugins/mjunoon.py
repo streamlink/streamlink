@@ -1,9 +1,8 @@
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse
 
-from streamlink.compat import urlparse, parse_qsl
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 
@@ -18,7 +17,6 @@ class Mjunoon(Plugin):
         return cls.url_re.match(url) is not None
 
     def _get_streams(self):
-        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         res = self.session.http.get(self.url)
         for script in itertags(res.text, 'script'):
             if script.attributes.get("id") == "playerScript":
@@ -29,8 +27,7 @@ class Mjunoon(Plugin):
                 for key, url in parse_qsl(urlparts.query):
                     if key == "streamUrl":
                         i += 1
-                        for s in HLSStream.parse_variant_playlist(self.session, url, params=dict(id=i), verify=False).items():
-                            yield s
+                        yield from HLSStream.parse_variant_playlist(self.session, url, params=dict(id=i), verify=False).items()
 
 
 __plugin__ = Mjunoon

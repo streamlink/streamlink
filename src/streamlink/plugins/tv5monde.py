@@ -2,9 +2,9 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
+from streamlink.plugins.common_jwplayer import _js_to_json
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
-from streamlink.plugins.common_jwplayer import _js_to_json
 
 
 class TV5Monde(Plugin):
@@ -67,8 +67,7 @@ class TV5Monde(Plugin):
 
         for url in videos:
             if '.m3u8' in url:
-                for stream in HLSStream.parse_variant_playlist(self.session, url).items():
-                    yield stream
+                yield from HLSStream.parse_variant_playlist(self.session, url).items()
             elif 'rtmp' in url:
                 yield 'vod', RTMPStream(self.session, {'rtmp': url})
             elif '.mp4' in url:

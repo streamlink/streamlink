@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import logging
 import re
 
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
@@ -24,8 +20,7 @@ class Pixiv(Plugin):
         {
             "user": {
                 "unique_name": validate.text,
-                "name": validate.all(validate.text,
-                                     validate.transform(maybe_decode))
+                "name": validate.text
             },
             validate.optional("hls_movie"): {
                 "url": validate.text
@@ -57,22 +52,6 @@ class Pixiv(Plugin):
     login_url_post = "https://accounts.pixiv.net/api/login"
 
     arguments = PluginArguments(
-        PluginArgument(
-            "username",
-            requires=["password"],
-            metavar="USERNAME",
-            help="""
-        The email/username used to register with pixiv.net
-        """
-        ),
-        PluginArgument(
-            "password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="""
-        A pixiv.net account password to use with --pixiv-username
-        """
-        ),
         PluginArgument(
             "sessionid",
             requires=["devicetoken"],
@@ -108,45 +87,17 @@ class Pixiv(Plugin):
     )
 
     def __init__(self, url):
-        super(Pixiv, self).__init__(url)
+        super().__init__(url)
         self._authed = (self.session.http.cookies.get("PHPSESSID")
                         and self.session.http.cookies.get("device_token"))
-        self.session.http.headers.update({
-            "User-Agent": useragents.FIREFOX,
-            "Referer": self.url
-        })
+        self.session.http.headers.update({"Referer": self.url})
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
 
-    def _login(self, username, password):
-        res = self.session.http.get(self.login_url_get)
-        m = self._post_key_re.search(res.text)
-        if not m:
-            raise PluginError("Missing post_key, no login posible.")
-
-        post_key = m.group("data")
-        data = {
-            "lang": "en",
-            "source": "sketch",
-            "post_key": post_key,
-            "pixiv_id": username,
-            "password": password,
-        }
-
-        res = self.session.http.post(self.login_url_post, data=data)
-        res = self.session.http.json(res)
-        log.trace("{0!r}".format(res))
-        if res["body"].get("success"):
-            self.save_cookies()
-            log.info("Successfully logged in")
-        else:
-            log.error("Failed to log in.")
-
-
     def _login_using_session_id_and_device_token(self, session_id, device_token):
-        res = self.session.http.get(self.login_url_get)
+        self.session.http.get(self.login_url_get)
 
         self.session.http.cookies.set('PHPSESSID', session_id, domain='.pixiv.net', path='/')
         self.session.http.cookies.set('device_token', device_token, domain='.pixiv.net', path='/')
@@ -154,11 +105,9 @@ class Pixiv(Plugin):
         self.save_cookies()
         log.info("Successfully set sessionId and deviceToken")
 
-
     def hls_stream(self, hls_url):
         log.debug("URL={0}".format(hls_url))
-        for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-            yield s
+        yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
     def get_streamer_data(self):
         res = self.session.http.get(self.api_lives)
@@ -173,9 +122,6 @@ class Pixiv(Plugin):
         raise NoStreamsError(self.url)
 
     def _get_streams(self):
-        login_username = self.get_option("username")
-        login_password = self.get_option("password")
-
         login_session_id = self.get_option("sessionid")
         login_device_token = self.get_option("devicetoken")
 
@@ -186,8 +132,6 @@ class Pixiv(Plugin):
 
         if self._authed:
             log.debug("Attempting to authenticate using cached cookies")
-        elif not self._authed and login_username and login_password:
-            self._login(login_username, login_password)
         elif not self._authed and login_session_id and login_device_token:
             self._login_using_session_id_and_device_token(login_session_id, login_device_token)
 

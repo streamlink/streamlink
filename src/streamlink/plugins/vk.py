@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 import logging
 import re
+from html import unescape as html_unescape
+from urllib.parse import unquote, urlparse
 
-from streamlink.compat import html_unescape, urlparse, unquote
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import update_scheme
 
 log = logging.getLogger(__name__)
@@ -77,10 +77,9 @@ class VK(Plugin):
             if _i.attributes.get('src'):
                 iframe_url = update_scheme(self.url, _i.attributes['src'])
                 log.debug('Found iframe: {0}'.format(iframe_url))
-                for s in self.session.streams(iframe_url).items():
-                    yield s
+                yield from self.session.streams(iframe_url).items()
 
-        for _i in itertags(res.text, 'source'):
+        for _i in itertags(res.text.replace('\\', ''), 'source'):
             if _i.attributes.get('type') == 'application/vnd.apple.mpegurl':
                 video_url = html_unescape(_i.attributes['src'])
                 streams = HLSStream.parse_variant_playlist(self.session,
@@ -88,8 +87,7 @@ class VK(Plugin):
                 if not streams:
                     yield 'live', HLSStream(self.session, video_url)
                 else:
-                    for s in streams.items():
-                        yield s
+                    yield from streams.items()
             elif _i.attributes.get('type') == 'video/mp4':
                 q = 'vod'
                 video_url = _i.attributes['src']

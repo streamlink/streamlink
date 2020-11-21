@@ -1,17 +1,15 @@
+import logging
 import os
 import random
-import threading
-
 import subprocess
-
 import sys
+import threading
+from shutil import which
 
 from streamlink import StreamError
-from streamlink.stream import Stream
-from streamlink.stream.stream import StreamIO
+from streamlink.compat import devnull
+from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils import NamedPipe
-from streamlink.compat import devnull, which
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +18,7 @@ class MuxedStream(Stream):
     __shortname__ = "muxed-stream"
 
     def __init__(self, session, *substreams, **options):
-        super(MuxedStream, self).__init__(session)
+        super().__init__(session)
         self.substreams = substreams
         self.subtitles = options.pop("subtitles", {})
         self.options = options

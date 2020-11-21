@@ -1,13 +1,13 @@
-from __future__ import print_function
-
-import re
 import json
+import logging
+import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
-from streamlink.stream import RTMPStream
+from streamlink.stream import HLSStream, RTMPStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 
 class Picarto(Plugin):
@@ -16,7 +16,6 @@ class Picarto(Plugin):
     RTMP_URL = "rtmp://{server}:1935/play/"
     RTMP_PLAYPATH = "golive+{channel}?token={token}"
     HLS_URL = "https://{server}/hls/{channel}/index.m3u8?token={token}"
-
 
     # Regex for all usable URLs
     _url_re = re.compile(r"""
@@ -40,7 +39,6 @@ class Picarto(Plugin):
         )
     )
 
-
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
@@ -53,10 +51,10 @@ class Picarto(Plugin):
                                                        token=token),
                                                    verify=False)
         if len(streams) > 1:
-            self.logger.debug("Multiple HLS streams found")
+            log.debug("Multiple HLS streams found")
             return streams
         elif len(streams) == 0:
-            self.logger.warning("No HLS streams found when expected")
+            log.warning("No HLS streams found when expected")
             return {}
         else:
             # one HLS streams, rename it to live
@@ -79,27 +77,30 @@ class Picarto(Plugin):
         url_channel_name = self._url_re.match(self.url).group(1)
 
         # Handle VODs first, since their "channel name" is different
-        if url_channel_name.endswith(".flv"):
-            self.logger.debug("Possible VOD stream...")
+        if url_channel_name.endswith((".flv", ".mkv")):
+            log.debug("Possible VOD stream...")
             page = self.session.http.get(self.url)
             vod_streams = self._get_vod_stream(page)
             if vod_streams:
-                for s in vod_streams.items():
-                    yield s
+                yield from vod_streams.items()
                 return
             else:
-                self.logger.warning("Probably a VOD stream but no VOD found?")
+                log.warning("Probably a VOD stream but no VOD found?")
 
         ci = self.session.http.get(self.CHANNEL_API_URL.format(channel=url_channel_name), raise_for_status=False)
 
         if ci.status_code == 404:
-            self.logger.error("The channel {0} does not exist".format(url_channel_name))
+            log.error("The channel {0} does not exist".format(url_channel_name))
             return
 
         channel_api_json = json.loads(ci.text)
 
-        if channel_api_json["online"] != True:
-            self.logger.error("The channel {0} is currently offline".format(url_channel_name))
+        if not channel_api_json["online"]:
+            log.error("The channel {0} is currently offline".format(url_channel_name))
+            return
+
+        if channel_api_json["private"]:
+            log.error("The channel {0} is private, such streams are not yet supported".format(url_channel_name))
             return
 
         server = None
@@ -114,15 +115,11 @@ class Picarto(Plugin):
             if i["id"] == pref:
                 server = i["ep"]
                 break
-        self.logger.debug("Using load balancing server {0} : {1} for channel {2}",
-                          pref,
-                          server,
-                          channel)
+        log.debug("Using load balancing server {0} : {1} for channel {2}".format(pref, server, channel))
 
         for i in info_json["techs"]:
             if i["label"] == "HLS":
-                for s in self._create_hls_stream(server, channel, token).items():
-                    yield s
+                yield from self._create_hls_stream(server, channel, token).items()
             elif i["label"] == "RTMP Flash":
                 stream = self._create_flash_stream(server, channel, token)
                 yield "live", stream

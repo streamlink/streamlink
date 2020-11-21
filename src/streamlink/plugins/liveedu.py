@@ -1,11 +1,13 @@
+import logging
 import re
+from urllib.parse import urljoin
 
 from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
-from streamlink.stream import RTMPStream
-from streamlink.compat import urljoin
+from streamlink.stream import HLSStream, RTMPStream
+
+log = logging.getLogger(__name__)
 
 
 class LiveEdu(Plugin):
@@ -60,16 +62,18 @@ class LiveEdu(Plugin):
             res = self.session.http.get(self.login_url)
             csrf_match = self.csrf_re.search(res.text)
             token = csrf_match and csrf_match.group(1)
-            self.logger.debug("Attempting login as {0} (token={1})", email, token)
+            log.debug("Attempting login as {0} (token={1})".format(email, token))
 
-            res = self.session.http.post(self.login_url,
-                            data=dict(login=email, password=password, csrfmiddlewaretoken=token),
-                            allow_redirects=False,
-                            raise_for_status=False,
-                            headers={"Referer": self.login_url})
+            res = self.session.http.post(
+                self.login_url,
+                data=dict(login=email, password=password, csrfmiddlewaretoken=token),
+                allow_redirects=False,
+                raise_for_status=False,
+                headers={"Referer": self.login_url}
+            )
 
             if res.status_code != 302:
-                self.logger.error("Failed to login to LiveEdu account: {0}", email)
+                log.error("Failed to login to LiveEdu account: {0}".format(email))
 
     def _get_streams(self):
         """
@@ -91,10 +95,10 @@ class LiveEdu(Plugin):
             return
 
         if config["selectedVideoHID"]:
-            self.logger.debug("Found video hash ID: {0}", config["selectedVideoHID"])
+            log.debug("Found video hash ID: {0}".format(config["selectedVideoHID"]))
             api_url = urljoin(self.url, urljoin(config["videosURL"], config["selectedVideoHID"]))
         elif config["livestreamURL"]:
-            self.logger.debug("Found live stream URL: {0}", config["livestreamURL"])
+            log.debug("Found live stream URL: {0}".format(config["livestreamURL"]))
             api_url = urljoin(self.url, config["livestreamURL"])
         else:
             return
@@ -104,7 +108,7 @@ class LiveEdu(Plugin):
         viewing_urls = data["viewing_urls"]
 
         if "error" in viewing_urls:
-            self.logger.error("Failed to load streams: {0}", viewing_urls["error"])
+            log.error("Failed to load streams: {0}".format(viewing_urls["error"]))
         else:
             for url in viewing_urls["urls"]:
                 try:
@@ -121,8 +125,7 @@ class LiveEdu(Plugin):
                     yield label, RTMPStream(self.session, params)
 
                 elif url["type"] == "application/x-mpegURL":
-                    for s in HLSStream.parse_variant_playlist(self.session, url["src"]).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, url["src"]).items()
 
 
 __plugin__ = LiveEdu

@@ -1,34 +1,28 @@
-from __future__ import division
-import logging
 import base64
 import hmac
+import logging
+import os.path
 import random
 import re
-import os.path
 import string
-
 from binascii import unhexlify
 from collections import namedtuple
 from copy import deepcopy
 from hashlib import sha256
 from io import BytesIO
 from math import ceil
+from urllib.parse import parse_qsl, urljoin, urlparse, urlunparse
 
-from .flvconcat import FLVTagConcat
-from .segmented import (SegmentedStreamReader,
-                        SegmentedStreamWriter,
-                        SegmentedStreamWorker)
-from .stream import Stream
-from .wrappers import StreamIOIterWrapper
-
-from ..cache import Cache
-from ..compat import parse_qsl, urljoin, urlparse, urlunparse, bytes, range
-from ..exceptions import StreamError, PluginError
-from ..utils import absolute_url, swfdecompress
-
-from ..packages.flashmedia import F4V, F4VError
-from ..packages.flashmedia.box import Box
-from ..packages.flashmedia.tag import ScriptData, Tag, TAG_TYPE_SCRIPT
+from streamlink.cache import Cache
+from streamlink.exceptions import PluginError, StreamError
+from streamlink.packages.flashmedia import F4V, F4VError
+from streamlink.packages.flashmedia.box import Box
+from streamlink.packages.flashmedia.tag import ScriptData, TAG_TYPE_SCRIPT, Tag
+from streamlink.stream.flvconcat import FLVTagConcat
+from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOIterWrapper
+from streamlink.utils import absolute_url, swfdecompress
 
 log = logging.getLogger(__name__)
 # Akamai HD player verification key
@@ -81,8 +75,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
                                          params=params,
                                          **request_params)
         except StreamError as err:
-            log.error("Failed to open fragment {0}-{1}: {2}",
-                      fragment.segment, fragment.fragment, err)
+            log.error(f"Failed to open fragment {fragment.segment}-{fragment.fragment}: {err}")
             return self.fetch(fragment, retries - 1)
 
     def write(self, fragment, res, chunk_size=8192):
@@ -99,13 +92,11 @@ class HDSStreamWriter(SegmentedStreamWriter):
                     mdat = box.payload.data
                     break
         except F4VError as err:
-            log.error("Failed to parse fragment {0}-{1}: {2}",
-                      fragment.segment, fragment.fragment, err)
+            log.error(f"Failed to parse fragment {fragment.segment}-{fragment.fragment}: {err}")
             return
 
         if not mdat:
-            log.error("No MDAT box found in fragment {0}-{1}",
-                      fragment.segment, fragment.fragment)
+            log.error(f"No MDAT box found in fragment {fragment.segment}-{fragment.fragment}")
             return
 
         try:
@@ -115,17 +106,14 @@ class HDSStreamWriter(SegmentedStreamWriter):
                 if self.closed:
                     break
             else:
-                log.debug("Download of fragment {0}-{1} complete",
-                          fragment.segment, fragment.fragment)
+                log.debug(f"Download of fragment {fragment.segment}-{fragment.fragment} complete")
         except IOError as err:
             if "Unknown tag type" in str(err):
-                log.error("Unknown tag type found, this stream is "
-                          "probably encrypted")
+                log.error("Unknown tag type found, this stream is probably encrypted")
                 self.close()
                 return
 
-            log.error("Error reading fragment {0}-{1}: {2}",
-                      fragment.segment, fragment.fragment, err)
+            log.error(f"Error reading fragment {fragment.segment}-{fragment.fragment}: {err}")
 
 
 class HDSStreamWorker(SegmentedStreamWorker):
@@ -181,8 +169,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 current_fragment = max(self.first_fragment,
                                        current_fragment - (fragment_buffer - 1))
 
-                log.debug("Live edge buffer {0} sec is {1} fragments",
-                          self.live_edge, fragment_buffer)
+                log.debug(f"Live edge buffer {self.live_edge} sec is {fragment_buffer} fragments")
 
                 # Make sure we don't have a duration set when it's a
                 # live stream since it will just confuse players anyway.
@@ -192,12 +179,12 @@ class HDSStreamWorker(SegmentedStreamWorker):
 
             self.current_fragment = current_fragment
 
-        log.debug("Current timestamp: {0}", self.timestamp / self.time_scale)
-        log.debug("Current segment: {0}", self.current_segment)
-        log.debug("Current fragment: {0}", self.current_fragment)
-        log.debug("First fragment: {0}", self.first_fragment)
-        log.debug("Last fragment: {0}", self.last_fragment)
-        log.debug("End fragment: {0}", self.end_fragment)
+        log.debug(f"Current timestamp: {self.timestamp / self.time_scale}")
+        log.debug(f"Current segment: {self.current_segment}")
+        log.debug(f"Current fragment: {self.current_fragment}")
+        log.debug(f"First fragment: {self.first_fragment}")
+        log.debug(f"Last fragment: {self.last_fragment}")
+        log.debug(f"End fragment: {self.end_fragment}")
 
         self.bootstrap_reload_time = fragment_duration
 
@@ -237,12 +224,10 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 first_fragment = fragmentrun.first_fragment
 
             end_fragment = fragmentrun.first_fragment
-            fragment_duration = (fragmentrun.first_fragment_timestamp +
-                                 fragmentrun.fragment_duration)
+            fragment_duration = fragmentrun.first_fragment_timestamp + fragmentrun.fragment_duration
 
             if self.timestamp > fragment_duration:
-                offset = ((self.timestamp - fragment_duration) /
-                          fragmentrun.fragment_duration)
+                offset = (self.timestamp - fragment_duration) / fragmentrun.fragment_duration
                 end_fragment += int(offset)
 
         if first_fragment is None:
@@ -326,8 +311,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 fragment = Fragment(self.current_segment, fragment,
                                     fragment_duration, fragment_url)
 
-                log.debug("Adding fragment {0}-{1} to queue",
-                          fragment.segment, fragment.fragment)
+                log.debug(f"Adding fragment {fragment.segment}-{fragment.fragment} to queue")
                 yield fragment
 
                 # End of stream
@@ -339,7 +323,7 @@ class HDSStreamWorker(SegmentedStreamWorker):
                 try:
                     self.update_bootstrap()
                 except StreamError as err:
-                    log.warning("Failed to update bootstrap: {0}", err)
+                    log.warning(f"Failed to update bootstrap: {err}")
 
 
 class HDSStreamReader(SegmentedStreamReader):
@@ -459,7 +443,7 @@ class HDSStream(Stream):
                                     exception=IOError)
 
         if manifest.findtext("drmAdditionalHeader"):
-            log.debug("Omitting HDS stream protected by DRM: {}", url)
+            log.debug(f"Omitting HDS stream protected by DRM: {url}")
             if raise_for_drm:
                 raise PluginError("{} is protected by DRM".format(url))
             log.warning("Some or all streams are unavailable as they are protected by DRM")

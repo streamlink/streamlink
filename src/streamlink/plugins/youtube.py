@@ -1,106 +1,59 @@
-from __future__ import unicode_literals
-
-import argparse
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse, urlunparse
 
-from streamlink.compat import is_py2, parse_qsl, urlparse, urlunparse
-from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags, parse_query
-from streamlink.stream import HTTPStream, HLSStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
 
-def parse_stream_map(stream_map):
-    if not stream_map:
-        return []
-
-    return [parse_query(s) for s in stream_map.split(",")]
-
-
-def parse_fmt_list(formatsmap):
-    formats = {}
-    if not formatsmap:
-        return formats
-
-    for format in formatsmap.split(","):
-        s = format.split("/")
-        (w, h) = s[1].split("x")
-        formats[int(s[0])] = "{0}p".format(h)
-
-    return formats
-
-
 _config_schema = validate.Schema(
     {
-        validate.optional("fmt_list"): validate.all(
-            validate.text,
-            validate.transform(parse_fmt_list)
-        ),
-        validate.optional("url_encoded_fmt_stream_map"): validate.all(
-            validate.text,
-            validate.transform(parse_stream_map),
-            [{
-                "itag": validate.all(
-                    validate.text,
-                    validate.transform(int)
-                ),
-                "quality": validate.text,
-                "url": validate.url(scheme="http"),
-                validate.optional("s"): validate.text,
-                validate.optional("stereo3d"): validate.all(
-                    validate.text,
-                    validate.transform(int),
-                    validate.transform(bool)
-                ),
-            }]
-        ),
-        validate.optional("adaptive_fmts"): validate.all(
-            validate.text,
-            validate.transform(parse_stream_map),
-            [{
-                validate.optional("s"): validate.text,
-                "type": validate.all(
-                    validate.text,
-                    validate.transform(lambda t: t.split(";")[0].split("/")),
-                    [validate.text, validate.text]
-                ),
-                "url": validate.all(
-                    validate.url(scheme="http")
-                )
-            }]
-        ),
-        validate.optional("hlsvp"): validate.text,
         validate.optional("player_response"): validate.all(
             validate.text,
             validate.transform(parse_json),
             {
                 validate.optional("streamingData"): {
                     validate.optional("hlsManifestUrl"): validate.text,
+                    validate.optional("formats"): [{
+                        "itag": int,
+                        validate.optional("url"): validate.text,
+                        validate.optional("cipher"): validate.text,
+                        "qualityLabel": validate.text
+                    }],
+                    validate.optional("adaptiveFormats"): [{
+                        "itag": int,
+                        "mimeType": validate.all(
+                            validate.text,
+                            validate.transform(
+                                lambda t:
+                                    [t.split(';')[0].split('/')[0], t.split(';')[1].split('=')[1].strip('"')]
+                            ),
+                            [validate.text, validate.text],
+                        ),
+                        validate.optional("url"): validate.url(scheme="http"),
+                        validate.optional("cipher"): validate.text,
+                        validate.optional("signatureCipher"): validate.text,
+                        validate.optional("qualityLabel"): validate.text,
+                        validate.optional("bitrate"): int
+                    }]
                 },
                 validate.optional("videoDetails"): {
                     validate.optional("isLive"): validate.transform(bool),
+                    validate.optional("author"): validate.text,
+                    validate.optional("title"): validate.text
                 },
                 validate.optional("playabilityStatus"): {
                     validate.optional("status"): validate.text,
-                    validate.optional("reason"): validate.all(validate.text,
-                                                              validate.transform(maybe_decode)),
+                    validate.optional("reason"): validate.text
                 },
             },
         ),
-        validate.optional("live_playback"): validate.transform(bool),
-        validate.optional("reason"): validate.all(validate.text, validate.transform(maybe_decode)),
-        validate.optional("livestream"): validate.text,
-        validate.optional("live_playback"): validate.text,
-        validate.optional("author"): validate.all(validate.text,
-                                                  validate.transform(maybe_decode)),
-        validate.optional("title"): validate.all(validate.text,
-                                                 validate.transform(maybe_decode)),
         "status": validate.text
     }
 )
@@ -139,13 +92,12 @@ class YouTube(Plugin):
 
     _oembed_schema = validate.Schema(
         {
-            "author_name": validate.all(validate.text,
-                                        validate.transform(maybe_decode)),
-            "title": validate.all(validate.text,
-                                  validate.transform(maybe_decode))
+            "author_name": validate.text,
+            "title": validate.text
         }
     )
 
+    # There are missing itags
     adp_video = {
         137: "1080p",
         299: "1080p60",  # HFR
@@ -155,6 +107,9 @@ class YouTube(Plugin):
         315: "2160p60",  # HFR
         138: "2160p",
         302: "720p60",  # HFR
+        135: "480p",
+        133: "240p",
+        160: "144p",
     }
     adp_audio = {
         140: 128,
@@ -167,16 +122,8 @@ class YouTube(Plugin):
         258: 258,
     }
 
-    arguments = PluginArguments(
-        PluginArgument(
-            "api-key",
-            sensitive=True,
-            help=argparse.SUPPRESS  # no longer used
-        )
-    )
-
     def __init__(self, url):
-        super(YouTube, self).__init__(url)
+        super().__init__(url)
         parsed = urlparse(self.url)
         if parsed.netloc == 'gaming.youtube.com':
             self.url = urlunparse(parsed._replace(netloc='www.youtube.com'))
@@ -231,16 +178,15 @@ class YouTube(Plugin):
         self.author = data["author_name"]
         self.title = data["title"]
 
-    def _create_adaptive_streams(self, info, streams, protected):
+    def _create_adaptive_streams(self, info, streams):
         adaptive_streams = {}
         best_audio_itag = None
 
-        # Extract audio streams from the DASH format list
-        for stream_info in info.get("adaptive_fmts", []):
-            if stream_info.get("s"):
-                protected = True
+        # Extract audio streams from the adaptive format list
+        streaming_data = info.get("player_response", {}).get("streamingData", {})
+        for stream_info in streaming_data.get("adaptiveFormats", []):
+            if "url" not in stream_info:
                 continue
-
             stream_params = dict(parse_qsl(stream_info["url"]))
             if "itag" not in stream_params:
                 continue
@@ -248,7 +194,8 @@ class YouTube(Plugin):
             # extract any high quality streams only available in adaptive formats
             adaptive_streams[itag] = stream_info["url"]
 
-            stream_type, stream_format = stream_info["type"]
+            stream_type, stream_format = stream_info["mimeType"]
+
             if stream_type == "audio":
                 stream = HTTPStream(self.session, stream_info["url"])
                 name = "audio_{0}".format(stream_format)
@@ -272,7 +219,7 @@ class YouTube(Plugin):
                                                 HTTPStream(self.session, vurl),
                                                 HTTPStream(self.session, aurl))
 
-        return streams, protected
+        return streams
 
     def _find_video_id(self, url):
 
@@ -292,6 +239,10 @@ class YouTube(Plugin):
                     log.debug("Video ID from currentVideoEndpoint")
                     return video_id
             for x in search_dict(data, 'videoRenderer'):
+                if x.get("viewCountText", {}).get("runs"):
+                    if x.get("videoId"):
+                        log.debug("Video ID from videoRenderer (live)")
+                        return x["videoId"]
                 for bstyle in search_dict(x.get("badges", {}), "style"):
                     if bstyle == "BADGE_STYLE_TYPE_LIVE_NOW":
                         if x.get("videoId"):
@@ -303,8 +254,12 @@ class YouTube(Plugin):
                 if link.attributes.get("rel") == "canonical":
                     canon_link = link.attributes.get("href")
                     if canon_link != url:
-                        log.debug("Re-directing to canonical URL: {0}".format(canon_link))
-                        return self._find_video_id(canon_link)
+                        if canon_link.endswith("v=live_stream"):
+                            log.debug("The video is not available")
+                            break
+                        else:
+                            log.debug("Re-directing to canonical URL: {0}".format(canon_link))
+                            return self._find_video_id(canon_link)
 
         raise PluginError("Could not find a video on this page")
 
@@ -324,17 +279,17 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.content if is_py2 else res.text, name="config", schema=_config_schema)
-            if (info_parsed.get("player_response", {}).get("playabilityStatus", {}).get("status") != "OK"
-                    or info_parsed.get("status") == "fail"):
-                reason = (info_parsed.get("player_response", {}).get("playabilityStatus", {}).get("reason")
-                          or info_parsed.get("reason"))
+            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
+            player_response = info_parsed.get("player_response", {})
+            playability_status = player_response.get("playabilityStatus", {})
+            if (playability_status.get("status") != "OK"):
+                reason = playability_status.get("reason")
                 log.debug("get_video_info - {0}: {1}".format(
                     count, reason)
                 )
                 continue
-            self.author = info_parsed.get("author")
-            self.title = info_parsed.get("title")
+            self.author = player_response.get("videoDetails", {}).get("author")
+            self.title = player_response.get("videoDetails", {}).get("title")
             log.debug("get_video_info - {0}: Found data".format(count))
             break
 
@@ -344,7 +299,7 @@ class YouTube(Plugin):
         is_live = False
 
         self.video_id = self._find_video_id(self.url)
-        log.debug("Using video ID: {0}", self.video_id)
+        log.debug(f"Using video ID: {self.video_id}")
 
         info = self._get_stream_info(self.video_id)
         if info and info.get("status") == "fail":
@@ -354,39 +309,38 @@ class YouTube(Plugin):
             log.error("Could not get video info")
             return
 
-        if info.get("livestream") == '1' or info.get("live_playback") == '1' \
-                or info.get("player_response", {}).get("videoDetails", {}).get("isLive") == True:
+        if info.get("player_response", {}).get("videoDetails", {}).get("isLive"):
             log.debug("This video is live.")
             is_live = True
 
-        formats = info.get("fmt_list")
         streams = {}
         protected = False
-        for stream_info in info.get("url_encoded_fmt_stream_map", []):
-            if stream_info.get("s"):
-                protected = True
+        if (info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [{}])[0].get("cipher")
+           or info.get("player_response", {}).get("streamingData", {}).get("adaptiveFormats", [{}])[0].get("signatureCipher")
+           or info.get("player_response", {}).get("streamingData", {}).get("formats", [{}])[0].get("cipher")):
+            protected = True
+            log.debug("This video may be protected.")
+
+        for stream_info in info.get("player_response", {}).get("streamingData", {}).get("formats", []):
+            if "url" not in stream_info:
                 continue
-
             stream = HTTPStream(self.session, stream_info["url"])
-            name = formats.get(stream_info["itag"]) or stream_info["quality"]
-
-            if stream_info.get("stereo3d"):
-                name += "_3d"
+            name = stream_info["qualityLabel"]
 
             streams[name] = stream
 
         if not is_live:
-            streams, protected = self._create_adaptive_streams(info, streams, protected)
+            streams = self._create_adaptive_streams(info, streams)
 
-        hls_playlist = info.get("hlsvp") or info.get("player_response", {}).get("streamingData", {}).get("hlsManifestUrl")
-        if hls_playlist:
+        hls_manifest = info.get("player_response", {}).get("streamingData", {}).get("hlsManifestUrl")
+        if hls_manifest:
             try:
                 hls_streams = HLSStream.parse_variant_playlist(
-                    self.session, hls_playlist, namekey="pixels"
+                    self.session, hls_manifest, name_key="pixels"
                 )
                 streams.update(hls_streams)
             except IOError as err:
-                log.warning("Failed to extract HLS streams: {0}", err)
+                log.warning(f"Failed to extract HLS streams: {err}")
 
         if not streams and protected:
             raise PluginError("This plugin does not support protected videos, "

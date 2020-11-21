@@ -1,9 +1,8 @@
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse
 
-from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -46,7 +45,6 @@ class LiveRussia(Plugin):
             return self.DATA_LIVE_URL.format(**args)
 
     def _get_streams(self):
-        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         info_url = None
 
         channel = self.url_re.match(self.url).group('channel')
@@ -84,8 +82,7 @@ class LiveRussia(Plugin):
                         if media_type == 'm3u8':
                             hls_url = media['sources'][media_type]['auto']
                             log.debug('hls_url={0}'.format(hls_url))
-                            for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                                yield s
+                            yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
                         elif media_type == 'http':
                             for pix, http_url in media['sources'][media_type].items():
                                 log.debug('http_url={0}'.format(http_url))

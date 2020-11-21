@@ -6,7 +6,7 @@ from streamlink.stream import HDSStream
 from streamlink.stream import HLSStream
 from streamlink.stream import HTTPStream
 from streamlink.stream import RTMPStream
-from streamlink.stream import Stream
+from streamlink.stream.stream import Stream
 
 
 class TestStreamToJSON(unittest.TestCase):
@@ -39,16 +39,36 @@ class TestStreamToJSON(unittest.TestCase):
 
     def test_hls_stream(self):
         url = "http://test.se/stream.m3u8"
+        master = "http://test.se/master.m3u8"
+
         stream = HLSStream(self.session, url, headers={"User-Agent": "Test"})
         self.assertEqual(
-            {"type": "hls",
-             "url": url,
-             "headers": {
-                 "User-Agent": "Test",
-                 "Accept": "*/*",
-                 "Accept-Encoding": "gzip, deflate",
-                 "Connection": "keep-alive",
-             }},
+            {
+                "type": "hls",
+                "url": url,
+                "headers": {
+                    "User-Agent": "Test",
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                }
+            },
+            stream.__json__()
+        )
+
+        stream = HLSStream(self.session, url, master, headers={"User-Agent": "Test"})
+        self.assertEqual(
+            {
+                "type": "hls",
+                "url": url,
+                "headers": {
+                    "User-Agent": "Test",
+                    "Accept": "*/*",
+                    "Accept-Encoding": "gzip, deflate",
+                    "Connection": "keep-alive",
+                },
+                "master": master
+            },
             stream.__json__()
         )
 

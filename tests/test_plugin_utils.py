@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import sys
 import unittest
 
@@ -40,7 +39,7 @@ alert("Hello, world!"); });</script>
 href="http://test.se/foo">bar</a>
 </p>
 </html>
-        """
+        """  # noqa: W291
 
     def test_itertags_single_text(self):
         title = list(itertags(self.test_html, "title"))

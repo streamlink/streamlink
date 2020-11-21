@@ -4,15 +4,15 @@ import re
 from string import printable
 from textwrap import dedent
 
-from streamlink import logger
+from streamlink import __version__ as streamlink_version, logger
 from streamlink.utils.args import (
     boolean, comma_list, comma_list_filter, filesize, keyvalue, num
 )
 from streamlink.utils.times import hours_minutes_seconds
-from .constants import (
-    LIVESTREAMER_VERSION, STREAM_PASSTHROUGH, DEFAULT_PLAYER_ARGUMENTS, DEFAULT_STREAM_METADATA, SUPPORTED_PLAYERS
+from streamlink_cli.constants import (
+    DEFAULT_STREAM_METADATA, PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, STREAM_PASSTHROUGH, SUPPORTED_PLAYERS
 )
-from .utils import find_default_player
+from streamlink_cli.utils import find_default_player
 
 _printable_re = re.compile(r"[{0}]".format(printable))
 _option_re = re.compile(r"""
@@ -41,9 +41,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         name, value = option.group("name", "value")
         if name and value:
-            yield u"--{0}={1}".format(name, value)
+            yield f"--{name}={value}"
         elif name:
-            yield u"--{0}".format(name)
+            yield f"--{name}"
 
     def _match_argument(self, action, arg_strings_pattern):
         # - https://github.com/streamlink/streamlink/issues/971
@@ -162,7 +162,7 @@ def build_parser():
     general.add_argument(
         "-V", "--version",
         action="version",
-        version="%(prog)s {0}".format(LIVESTREAMER_VERSION),
+        version=f"%(prog)s {streamlink_version}",
         help="""
         Show version number and exit.
         """
@@ -275,14 +275,6 @@ def build_parser():
         Default is system locale.
         """
     )
-    general.add_argument(
-        "--twitch-oauth-authenticate",
-        action="store_true",
-        help="""
-        Open a web browser where you can grant Streamlink access to your Twitch
-        account which creates a token for use with --twitch-oauth-token.
-        """
-    )
 
     player = parser.add_argument_group("Player options")
     player.add_argument(
@@ -320,33 +312,36 @@ def build_parser():
     player.add_argument(
         "-a", "--player-args",
         metavar="ARGUMENTS",
-        default=DEFAULT_PLAYER_ARGUMENTS,
-        help="""
+        default="",
+        help=f"""
         This option allows you to customize the default arguments which are put
         together with the value of --player to create a command to execute.
-        Unlike the --player parameter, custom player arguments will not be logged.
 
-        This value can contain formatting variables surrounded by curly braces,
+        It's usually enough to only use --player instead of this unless you need
+        to add arguments after the player's input argument or if you don't want
+        any of the player arguments to be logged.
+
+        The value can contain formatting variables surrounded by curly braces,
         {{ and }}. If you need to include a brace character, it can be escaped
         by doubling, e.g. {{{{ and }}}}.
 
         Formatting variables available:
 
-        {{filename}}
-            This is the filename that the player will use. It's usually "-"
-            (stdin), but can also be a URL or a file depending on the options
-            used.
+        {{{PLAYER_ARGS_INPUT_DEFAULT}}}
+            This is the input that the player will use. For standard input (stdin),
+            it is ``-``, but it can also be a URL, depending on the options used.
 
-        It's usually enough to use --player instead of this unless you need to
-        add arguments after the filename.
-
-        Default is "{0}".
+        {{{PLAYER_ARGS_INPUT_FALLBACK}}}
+            The old fallback variable name with the same functionality.
 
         Example:
 
-          %(prog)s -p vlc -a "--play-and-exit {{filename}}" <url> [stream]
+          %(prog)s -p vlc -a "--play-and-exit {{{PLAYER_ARGS_INPUT_DEFAULT}}}" <url> [stream]
 
-        """.format(DEFAULT_PLAYER_ARGUMENTS)
+        Note: When neither of the variables are found, ``{{{PLAYER_ARGS_INPUT_DEFAULT}}}``
+        will be appended to the whole parameter value, to ensure that the player
+        always receives an input argument.
+        """
     )
     player.add_argument(
         "-v", "--verbose-player",
@@ -472,7 +467,7 @@ def build_parser():
             inserted inside your --title string.
 
             A full list of the format codes mpv uses is available here:
-            https://mpv.io/manual/stable/#property-expansion
+            https://mpv.io/manual/stable/#property-list
 
         Formatting variables available to use in --title:
 
@@ -526,6 +521,14 @@ def build_parser():
         action="store_true",
         help="""
         When using -o or -r, always write to file even if it already exists.
+        """
+    )
+    output.add_argument(
+        "--force-progress",
+        action="store_true",
+        help="""
+        When using -o or -r,
+        show the download progress bar even if there is no terminal.
         """
     )
     output.add_argument(
@@ -736,6 +739,13 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--hls-segment-stream-data",
+        action="store_true",
+        help="""
+        Immediately write segment data into output buffer while downloading.
+        """
+    )
+    transport.add_argument(
         "--hls-segment-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
@@ -755,6 +765,20 @@ def build_parser():
         giving up.
 
         Default is 3.
+        """
+    )
+    transport.add_argument(
+        "--hls-playlist-reload-time",
+        metavar="TIME",
+        help="""
+        Set a custom HLS playlist reload time value, either in seconds
+        or by using one of the following keywords:
+
+            segment: The duration of the last segment in the current playlist
+            live-edge: The sum of segment durations of the live edge value minus one
+            default: The playlist's target duration metadata
+
+        Default is default.
         """
     )
     transport.add_argument(
@@ -802,7 +826,16 @@ def build_parser():
         URI to segment encryption key. If no URI is specified, the URI contained
         in the segments will be used.
 
-        Example: --hls-segment-key-uri "https://example.com/hls/encryption_key"
+        URI can be templated using the following variables, which will be
+        replaced with its respective part from the source segment URI:
+
+          {url} {scheme} {netloc} {path} {query}
+
+        Examples:
+
+          --hls-segment-key-uri "https://example.com/hls/encryption_key"
+          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
+          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
 
         Default is None.
         """
@@ -899,7 +932,7 @@ def build_parser():
         processing (such as HDS) to avoid unnecessary background processing.
         """)
     transport.add_argument(
-        "--rtmp-proxy", "--rtmpdump-proxy",
+        "--rtmp-proxy",
         metavar="PROXY",
         help="""
         A SOCKS proxy that RTMP streams will use.
@@ -908,7 +941,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--rtmp-rtmpdump", "--rtmpdump",
+        "--rtmp-rtmpdump",
         metavar="FILENAME",
         help="""
         RTMPDump is used to access RTMP streams. You can specify the
@@ -917,6 +950,7 @@ def build_parser():
         Example: "/usr/local/bin/rtmpdump"
         """
     )
+    transport.add_argument("--rtmpdump", help=argparse.SUPPRESS)
     transport.add_argument(
         "--rtmp-timeout",
         type=num(float, min=0),
@@ -987,7 +1021,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--subprocess-cmdline", "--cmdline", "-c",
+        "--subprocess-cmdline",
         action="store_true",
         help="""
         Print the command-line used internally to play the stream.
@@ -996,7 +1030,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--subprocess-errorlog", "--errorlog", "-e",
+        "--subprocess-errorlog",
         action="store_true",
         help="""
         Log possible errors from internal subprocesses to a temporary file. The
@@ -1006,7 +1040,7 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--subprocess-errorlog-path", "--errorlog-path",
+        "--subprocess-errorlog-path",
         type=str,
         metavar="PATH",
         help="""
@@ -1082,13 +1116,22 @@ def build_parser():
         when using copyts.
         """
     )
+    transport.add_argument(
+        "--mux-subtitles",
+        action="store_true",
+        help="""
+        Automatically mux available subtitles into the output stream.
+
+        Needs to be supported by the used plugin.
+        """
+    )
 
     http = parser.add_argument_group("HTTP options")
     http.add_argument(
         "--http-proxy",
         metavar="HTTP_PROXY",
         help="""
-        A HTTP proxy to use for all HTTP requests, including WebSocket connections. 
+        A HTTP proxy to use for all HTTP requests, including WebSocket connections.
         By default this proxy will be used for all HTTPS requests too.
 
         Example: "http://hostname:port/"
@@ -1193,27 +1236,6 @@ def build_parser():
         """
     )
 
-    # Deprecated options
-    http.add_argument(
-        "--http-cookies",
-        metavar="COOKIES",
-        help=argparse.SUPPRESS
-    )
-    http.add_argument(
-        "--http-headers",
-        metavar="HEADERS",
-        help=argparse.SUPPRESS
-    )
-    http.add_argument(
-        "--http-query-params",
-        metavar="PARAMS",
-        help=argparse.SUPPRESS
-    )
-    general.add_argument(
-        "--no-version-check",
-        action="store_true",
-        help=argparse.SUPPRESS
-    )
     return parser
 
 

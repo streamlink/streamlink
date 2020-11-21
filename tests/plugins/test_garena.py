@@ -1,11 +1,9 @@
 import json
 import unittest
+from unittest.mock import MagicMock, Mock
 
 from streamlink import Streamlink
 from streamlink.plugin.api import HTTPSession
-
-from tests.mock import patch, Mock, MagicMock
-
 from streamlink.plugins.garena import Garena
 
 

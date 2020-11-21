@@ -1,8 +1,11 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
+
+log = logging.getLogger(__name__)
 
 
 class CanalPlus(Plugin):
@@ -57,8 +60,7 @@ class CanalPlus(Plugin):
 
         # Some videos may be also available on Dailymotion (especially on CNews)
         if videos['ID_DM'] != '':
-            for stream in self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items():
-                yield stream
+            yield from self.session.streams('https://www.dailymotion.com/video/' + videos['ID_DM']).items()
 
         for quality, video_url in list(videos['MEDIA']['VIDEOS'].items()):
             # Ignore empty URLs
@@ -96,7 +98,7 @@ class CanalPlus(Plugin):
                                               headers=headers)
             except IOError as err:
                 if '403 Client Error' in str(err):
-                    self.logger.error('Failed to access stream, may be due to geo-restriction')
+                    log.error('Failed to access stream, may be due to geo-restriction')
 
 
 __plugin__ = CanalPlus

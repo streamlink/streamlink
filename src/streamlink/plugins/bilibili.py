@@ -1,8 +1,12 @@
+import logging
 import re
+from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import validate, useragents
+from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
+
+log = logging.getLogger(__name__)
 
 API_URL = "https://api.live.bilibili.com/room/v1/Room/playUrl"
 ROOM_API = "https://api.live.bilibili.com/room/v1/Room/room_init?id={}"
@@ -51,9 +55,7 @@ class Bilibili(Plugin):
         return Plugin.stream_weight(stream)
 
     def _get_streams(self):
-        self.session.http.headers.update({
-            'User-Agent': useragents.FIREFOX,
-            'Referer': self.url})
+        self.session.http.headers.update({'Referer': self.url})
         match = _url_re.match(self.url)
         channel = match.group("channel")
         res_room_id = self.session.http.get(ROOM_API.format(channel))
@@ -75,6 +77,19 @@ class Bilibili(Plugin):
         for stream_list in room["durl"]:
             name = "source"
             url = stream_list["url"]
+            # check if the URL is available
+            log.trace('URL={0}'.format(url))
+            r = self.session.http.get(url,
+                                      retries=0,
+                                      timeout=3,
+                                      stream=True,
+                                      acceptable_status=(200, 403, 404, 405))
+            p = urlparse(url)
+            if r.status_code != 200:
+                log.error('Netloc: {0} with error {1}'.format(p.netloc, r.status_code))
+                continue
+
+            log.debug('Netloc: {0}'.format(p.netloc))
             stream = HTTPStream(self.session, url)
             yield name, stream
 

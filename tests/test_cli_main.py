@@ -1,18 +1,21 @@
 import os.path
 import tempfile
+import unittest
+from unittest.mock import Mock, call, patch
 
 import streamlink_cli.main
-from streamlink_cli.main import resolve_stream_name, format_valid_streams, check_file_output, create_output
-from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink.plugin.plugin import Plugin
-import unittest
-from tests.mock import Mock, patch
+from streamlink_cli.main import (
+    check_file_output, create_output, format_valid_streams, handle_stream, handle_url, resolve_stream_name
+)
+from streamlink_cli.output import FileOutput, PlayerOutput
 
 
 class FakePlugin:
     @classmethod
     def stream_weight(cls, stream):
         return Plugin.stream_weight(stream)
+
 
 class TestCLIMain(unittest.TestCase):
     def test_check_file_output(self):
@@ -34,7 +37,7 @@ class TestCLIMain(unittest.TestCase):
     def test_check_file_output_exists_notty(self):
         tmpfile = tempfile.NamedTemporaryFile()
         try:
-            streamlink_cli.main.console = console = Mock()
+            streamlink_cli.main.console = Mock()
             streamlink_cli.main.sys.stdin = stdin = Mock()
             stdin.isatty.return_value = False
             self.assertTrue(os.path.exists(tmpfile.name))
@@ -45,7 +48,7 @@ class TestCLIMain(unittest.TestCase):
     def test_check_file_output_exists_force(self):
         tmpfile = tempfile.NamedTemporaryFile()
         try:
-            streamlink_cli.main.console = console = Mock()
+            streamlink_cli.main.console = Mock()
             self.assertTrue(os.path.exists(tmpfile.name))
             self.assertIsInstance(check_file_output(tmpfile.name, True), FileOutput)
         finally:
@@ -129,6 +132,60 @@ class TestCLIMain(unittest.TestCase):
             ])
         )
 
+    @patch("streamlink_cli.main.args", stream_url=True, subprocess_cmdline=False)
+    @patch("streamlink_cli.main.console", json=True)
+    def test_handle_stream_with_json_and_stream_url(self, console, args):
+        stream = Mock()
+        streams = dict(best=stream)
+        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
+
+        handle_stream(plugin, streams, "best")
+        self.assertEqual(console.msg.mock_calls, [])
+        self.assertEqual(console.msg_json.mock_calls, [call(stream)])
+        self.assertEqual(console.error.mock_calls, [])
+        console.msg_json.mock_calls.clear()
+
+        console.json = False
+        handle_stream(plugin, streams, "best")
+        self.assertEqual(console.msg.mock_calls, [call("{0}", stream.to_url())])
+        self.assertEqual(console.msg_json.mock_calls, [])
+        self.assertEqual(console.error.mock_calls, [])
+        console.msg.mock_calls.clear()
+
+        stream.to_url.side_effect = TypeError()
+        handle_stream(plugin, streams, "best")
+        self.assertEqual(console.msg.mock_calls, [])
+        self.assertEqual(console.msg_json.mock_calls, [])
+        self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
+
+    @patch("streamlink_cli.main.args", stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
+    @patch("streamlink_cli.main.console", json=True)
+    def test_handle_url_with_json_and_stream_url(self, console, args):
+        stream = Mock()
+        streams = dict(worst=Mock(), best=stream)
+        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
+
+        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=plugin)):
+            handle_url()
+            self.assertEqual(console.msg.mock_calls, [])
+            self.assertEqual(console.msg_json.mock_calls, [call(dict(plugin="fake", streams=streams))])
+            self.assertEqual(console.error.mock_calls, [])
+            console.msg_json.mock_calls.clear()
+
+            console.json = False
+            handle_url()
+            self.assertEqual(console.msg.mock_calls, [call("{0}", stream.to_manifest_url())])
+            self.assertEqual(console.msg_json.mock_calls, [])
+            self.assertEqual(console.error.mock_calls, [])
+            console.msg.mock_calls.clear()
+
+            stream.to_manifest_url.side_effect = TypeError()
+            handle_url()
+            self.assertEqual(console.msg.mock_calls, [])
+            self.assertEqual(console.msg_json.mock_calls, [])
+            self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
+            console.exit.mock_calls.clear()
+
     def test_create_output_no_file_output_options(self):
         streamlink_cli.main.console = Mock()
         streamlink_cli.main.args = args = Mock()
@@ -138,6 +195,7 @@ class TestCLIMain(unittest.TestCase):
         args.record_and_pipe = None
         args.title = None
         args.player = "mpv"
+        args.player_args = ""
         self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
 
     def test_create_output_file_output(self):
@@ -181,6 +239,7 @@ class TestCLIMain(unittest.TestCase):
             args.record_and_pipe = None
             args.title = None
             args.player = "mpv"
+            args.player_args = ""
             args.player_fifo = None
             self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
         finally:

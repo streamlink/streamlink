@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 import logging
 import re
+from html import unescape as html_unescape
+from urllib.parse import unquote
 
-from streamlink.compat import html_unescape, unquote
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
 
@@ -76,10 +76,7 @@ class OKru(Plugin):
         return Plugin.stream_weight(key)
 
     def _get_streams(self):
-        self.session.http.headers.update({
-            'User-Agent': useragents.FIREFOX,
-            'Referer': self.url,
-        })
+        self.session.http.headers.update({'Referer': self.url})
 
         try:
             data = self.session.http.get(self.url, schema=self._data_schema)
@@ -98,8 +95,7 @@ class OKru(Plugin):
             for hls_url in [metadata.get('hlsManifestUrl'),
                             metadata.get('hlsMasterPlaylistUrl')]:
                 if hls_url is not None:
-                    for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
             if metadata.get('videos'):
                 for http_stream in metadata['videos']:

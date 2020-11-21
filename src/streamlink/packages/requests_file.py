@@ -26,7 +26,7 @@ import stat
 import locale
 import io
 
-from streamlink.compat import is_win32, is_py3
+from streamlink.compat import is_win32
 
 
 class FileAdapter(BaseAdapter):
@@ -69,10 +69,7 @@ class FileAdapter(BaseAdapter):
         try:
             # If the netloc is - then read from stdin
             if url_parts.netloc == "-":
-                if is_py3:
-                    resp.raw = sys.stdin.buffer
-                else:
-                    resp.raw = sys.stdin
+                resp.raw = sys.stdin.buffer
                 # make a fake response URL, the current directory
                 resp.url = "file://" + os.path.abspath(".").replace(os.sep, "/") + "/"
             else:
@@ -93,8 +90,7 @@ class FileAdapter(BaseAdapter):
                 # so that a directory separator can correctly be added to the real
                 # path, and remove any empty path parts between the drive and the path.
                 # Assume that a part ending with : or | (legacy) is a drive.
-                if path_parts and (path_parts[0].endswith('|') or
-                                   path_parts[0].endswith(':')):
+                if path_parts and (path_parts[0].endswith('|') or path_parts[0].endswith(':')):
                     path_drive = path_parts.pop(0)
                     if path_drive.endswith('|'):
                         path_drive = path_drive[:-1] + ':'

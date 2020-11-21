@@ -3,14 +3,14 @@ import logging
 import operator
 import re
 import time
+from collections import OrderedDict
+from functools import partial
+
 import requests.cookies
 
-from functools import partial
-from collections import OrderedDict
-
 from streamlink.cache import Cache
-from streamlink.exceptions import PluginError, NoStreamsError, FatalPluginError
-from streamlink.options import Options, Arguments
+from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
+from streamlink.options import Arguments, Options
 
 log = logging.getLogger(__name__)
 
@@ -370,17 +370,15 @@ class Plugin(object):
             if match:
                 name = match.group(1)
             else:
-                self.logger.debug("The stream '{0}' has been ignored "
-                                  "since it is badly named.", name)
+                self.logger.debug(f"The stream '{name}' has been ignored since it is badly named.")
                 continue
 
             # Force lowercase name and replace space with underscore.
             streams[name.lower()] = stream
 
-        # Create the best/worst synonmys
+        # Create the best/worst synonyms
         def stream_weight_only(s):
-            return (self.stream_weight(s)[0] or
-                    (len(streams) == 1 and 1))
+            return (self.stream_weight(s)[0] or (len(streams) == 1 and 1))
 
         stream_names = filter(stream_weight_only, streams.keys())
         sorted_streams = sorted(stream_names, key=stream_weight_only)
@@ -527,5 +525,6 @@ class Plugin(object):
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
+
 
 __all__ = ["Plugin"]

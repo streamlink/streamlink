@@ -1,4 +1,4 @@
-import unittest
+import unittest  # noqa: F401
 
 import pytest
 
@@ -8,6 +8,7 @@ from streamlink.plugins.vlive import Vlive
 class TestPluginVlive:
     valid_urls = [
         ("https://www.vlive.tv/video/156824",),
+        ("https://www.vlive.tv/post/0-19740901",)
     ]
     invalid_urls = [
         ("https://www.vlive.tv/events/2019vheartbeat?lang=en",),

@@ -1,4 +1,5 @@
 import re
+
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 
@@ -22,5 +23,6 @@ class NTV(Plugin):
                 mrl = match.group(1)
         if mrl:
             return HLSStream.parse_variant_playlist(self.session, mrl)
+
 
 __plugin__ = NTV

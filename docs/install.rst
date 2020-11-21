@@ -1,5 +1,3 @@
-.. _install:
-
 .. |br| raw:: html
 
   <br />
@@ -24,11 +22,21 @@ Portable                             See the `Windows portable version`_ section
                                         choco install streamlink
 
                                      `Installing Chocolatey packages`_
+
+`Windows Package Manager`_           .. code-block:: bat
+
+                                        winget install streamlink
+
+                                     `Installing Winget packages`_
 ==================================== ===========================================
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
+
+.. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/Streamlink/Streamlink
+
 .. _Installing Chocolatey packages: https://chocolatey.org
 
+.. _Installing Winget packages: https://docs.microsoft.com/en-us/windows/package-manager/
 
 macOS
 -----
@@ -38,9 +46,7 @@ macOS
 ==================================== ===========================================
 Method                               Installing
 ==================================== ===========================================
-Easy install                         .. code-block:: bash
-
-                                        sudo easy_install -U streamlink
+Python pip                           See the `PyPI package and source code`_ section below
 
 `Homebrew`_                          .. code-block:: bash
 
@@ -80,10 +86,13 @@ Distribution                         Installing
 
 `Debian (stable)`_                   .. code-block:: bash
 
-                                        wget -qO- "https://bintray.com/user/downloadSubjectPublicKey?username=amurzeau" | sudo apt-key add -
-                                        echo "deb https://dl.bintray.com/amurzeau/streamlink-debian stretch-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+                                        # If you don't have Debian backports already (see link below):
+                                        echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+
                                         sudo apt update
                                         sudo apt install streamlink
+
+                                     `Installing Debian backported packages`_
 
 `Fedora`_                            .. code-block:: bash
 
@@ -126,18 +135,19 @@ Distribution                         Installing
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
 .. _Debian (sid, testing): https://packages.debian.org/unstable/streamlink
-.. _Debian (stable): https://bintray.com/amurzeau/streamlink-debian/streamlink
+.. _Debian (stable): https://packages.debian.org/unstable/streamlink
 .. _Fedora: https://apps.fedoraproject.org/packages/python-streamlink
 .. _Gentoo Linux: https://packages.gentoo.org/package/net-misc/streamlink
-.. _NetBSD (pkgsrc): http://pkgsrc.se/multimedia/streamlink
+.. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
-.. _OpenBSD: http://openports.se/multimedia/streamlink
+.. _OpenBSD: https://openports.se/multimedia/streamlink
 .. _Solus: https://dev.solus-project.com/source/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
-.. _NixOS channel: https://nixos.org/nixos/packages.html#streamlink
+.. _Installing Debian backported packages: https://wiki.debian.org/Backports#Using_the_command_line
+.. _NixOS channel: https://search.nixos.org/packages?show=streamlink&query=streamlink
 
 
 Package maintainers
@@ -166,14 +176,17 @@ Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
 ==================================== ===========================================
 
 
-Source code
------------
+PyPI package and source code
+----------------------------
 
-If a package is not available on your platform (or if it's out of date), Streamlink can be installed from source.
+If a package is not available on your platform, or if it's out of date,
+Streamlink can be installed via `pip`_, the Python package manager.
 
-This can be done in a couple of different ways, for example by using `pip`_, the Python package manager,
-or by checking out the source code with `git`_ and installing it via setuptools. |br|
-Using :command:`easy_install` is no longer recommended.
+In addition to using `pip`_, Streamlink can also be installed from source
+via `setuptools`_ after cloning the `git`_ repository.
+
+Before running :command:`pip`, make sure that it's the Python 3 version of `pip`_ (to check, run :command:`pip --version`).
+On some systems, this isn't the case by default and an alternative, like :command:`pip3` for example, needs to be run instead.
 
 .. note::
 
@@ -230,6 +243,7 @@ Version                              Installing
 ==================================== ===========================================
 
 .. _pip: https://pip.readthedocs.org/en/latest/installing.html
+.. _setuptools: https://setuptools.readthedocs.io/en/latest/
 .. _git: https://git-scm.com/
 .. _Latest release (pip): https://pypi.python.org/pypi/streamlink
 .. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
@@ -279,22 +293,18 @@ To install Streamlink from source you will need these dependencies.
 ==================================== ===========================================
 Name                                 Notes
 ==================================== ===========================================
-`Python`_                            At least version **2.7** or **3.5**.
+`Python`_                            At least version **3.6**.
 `python-setuptools`_
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-futures`_                    Only needed on Python **2.7**.
 `python-requests`_                   At least version **2.21.0**.
-`python-singledispatch`_             Only needed on Python **2.7**.
 `pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
 `PySocks`_                           Used for SOCKS Proxies
 `websocket-client`_                  Used for some plugins
-`shutil_get_terminal_size`_          Only needed on Python **2.7**.
-`shutil_which`_                      Only needed on Python **2.7**.
 
 **Optional**
 --------------------------------------------------------------------------------
@@ -316,10 +326,8 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
-.. _python-futures: https://pypi.org/project/futures/
-.. _python-requests: http://python-requests.org/
-.. _python-singledispatch: https://pypi.org/project/singledispatch/
-.. _RTMPDump: http://rtmpdump.mplayerhq.hu/
+.. _python-requests: https://requests.readthedocs.io/en/master/
+.. _RTMPDump: https://rtmpdump.mplayerhq.hu/
 .. _pycountry: https://pypi.org/project/pycountry/
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
@@ -329,17 +337,10 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _isodate: https://pypi.org/project/isodate/
 .. _PySocks: https://github.com/Anorov/PySocks
 .. _websocket-client: https://pypi.org/project/websocket-client/
-.. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
-.. _shutil_which: https://pypi.org/project/backports.shutil_which/
 
 
 Windows binaries
 ----------------
-
-.. important::
-
-    Windows XP is not supported. |br|
-    Windows Vista requires at least SP2 to be installed.
 
 .. rst-class:: table-custom-layout
 
@@ -348,16 +349,28 @@ Release                              Notes
 ==================================== ====================================
 `Stable release`_                    Download the installer from the `GitHub releases page`_.
 
-`Development build`_                 For testing purposes only! Updated once per day. |br|
-                                     Download the installer from `Bintray`_. |br|
-                                     See the `list of recent changes`_ since the last stable release.
+`Development build`_                 For testing purposes only! Built each day at midnight (UTC). |br|
+                                     Download the zipped installer from the `build artifacts`_ section of one of
+                                     the recent scheduled builds. Build artifacts are stored by Github for 90 days. |br|
+                                     See the `commit log`_ for a list of changes since the last stable release.
 ==================================== ====================================
+
+.. note::
+
+    **The Streamlink installer for Windows is currently based on Python 3.8.** |br|
+    Versions of Windows prior to 7 are not supported.
+
+    Be aware that the packages for `Chocolatey`_ and the `Windows Package Manager`_ are just wrappers
+    around the stable installer and thus depend on Windows 7+ as well.
+
+    Alternatively, :ref:`Streamlink can be installed via python-pip <install:PyPI package and source code>`
+    in a :ref:`compatible <install:Dependencies>` Python environment.
 
 .. _Stable release:
 .. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
 .. _Development build:
-.. _Bintray: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#files
-.. _list of recent changes: https://bintray.com/streamlink/streamlink-nightly/streamlink/_latestVersion/#release
+.. _build artifacts: https://github.com/streamlink/streamlink/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
+.. _commit log: https://github.com/streamlink/streamlink/commits/master
 
 These installers contain:
 

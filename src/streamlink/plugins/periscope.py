@@ -1,9 +1,12 @@
+import logging
 import re
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
+
+log = logging.getLogger(__name__)
 
 STREAM_INFO_URL = "https://api.periscope.tv/api/v2/getAccessPublic"
 
@@ -37,9 +40,11 @@ class Periscope(Plugin):
 
     def _get_streams(self):
         match = _url_re.match(self.url)
-        res = self.session.http.get(STREAM_INFO_URL,
-                       params=match.groupdict(),
-                       acceptable_status=STATUS_UNAVAILABLE)
+        res = self.session.http.get(
+            STREAM_INFO_URL,
+            params=match.groupdict(),
+            acceptable_status=STATUS_UNAVAILABLE
+        )
 
         if res.status_code in STATUS_UNAVAILABLE:
             return
@@ -49,7 +54,7 @@ class Periscope(Plugin):
             hls_url = data["hls_url"]
             hls_name = "live"
         elif data.get("replay_url"):
-            self.logger.info("Live Stream ended, using replay instead")
+            log.info("Live Stream ended, using replay instead")
             hls_url = data["replay_url"]
             hls_name = "replay"
         else:

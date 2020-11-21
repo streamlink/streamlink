@@ -1,22 +1,20 @@
-from __future__ import print_function
-
 import json
 import logging
 import re
+from urllib.parse import parse_qsl, urlparse
 
 from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import memoize
-from streamlink.compat import urlparse, parse_qsl
 from streamlink.utils.times import seconds_to_hhmmss
 
 log = logging.getLogger(__name__)
 
 
 class WWENetwork(Plugin):
-    url_re = re.compile(r"https?://watch.wwe.com/(channel)?")
+    url_re = re.compile(r"https?://watch\.wwe\.com/(channel)?")
     site_config_re = re.compile(r'''">window.__data = (\{.*?\})</script>''')
     stream_url = "https://dce-frontoffice.imggaming.com/api/v2/stream/{id}"
     live_url = "https://dce-frontoffice.imggaming.com/api/v2/event/live"
@@ -47,7 +45,7 @@ class WWENetwork(Plugin):
     )
 
     def __init__(self, url):
-        super(WWENetwork, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
         self.auth_token = None
 
@@ -74,11 +72,15 @@ class WWENetwork(Plugin):
         data = self.session.http.json(res)
 
         if "status" in data and data["status"] != 200:
-            log.debug("API request failed: {0}:{1} ({2})".format(data["status"], data.get("code"), "; ".join(data.get("messages", []))))
+            log.debug("API request failed: {0}:{1} ({2})".format(
+                data["status"],
+                data.get("code"),
+                "; ".join(data.get("messages", []))
+            ))
         return data
 
     def login(self, email, password):
-        self.logger.debug("Attempting login as {0}", email)
+        log.debug("Attempting login as {0}".format(email))
         # sets some required cookies to login
         data = self.request('POST', self.login_url,
                             data=json.dumps({"id": email, "secret": password}),
@@ -148,10 +150,14 @@ class WWENetwork(Plugin):
         content_id = self._get_video_id()
 
         if content_id:
-            self.logger.debug("Found content ID: {0}", content_id)
+            log.debug("Found content ID: {0}".format(content_id))
             info = self._get_media_info(content_id)
             if info.get("hlsUrl"):
-                for s in HLSStream.parse_variant_playlist(self.session, info["hlsUrl"], start_offset=start_point).items():
+                for s in HLSStream.parse_variant_playlist(
+                    self.session,
+                    info["hlsUrl"],
+                    start_offset=start_point
+                ).items():
                     yield s
             else:
                 log.error("Could not find the HLS URL")

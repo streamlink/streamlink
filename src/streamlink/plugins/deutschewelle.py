@@ -1,9 +1,12 @@
+import logging
 import re
+from urllib.parse import parse_qsl, urlparse
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.compat import urlparse, parse_qsl
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+
+log = logging.getLogger(__name__)
 
 
 class DeutscheWelle(Plugin):
@@ -73,11 +76,11 @@ class DeutscheWelle(Plugin):
             m = self.channel_re.search(page.text)
             channel = m and m.group(1)
 
-        self.logger.debug("Using sub-channel ID: {0}", channel)
+        log.debug("Using sub-channel ID: {0}".format(channel))
 
         # extract the streams from the page, mapping between channel-id and stream url
         media_items = self.live_stream_div.finditer(page.text)
-        stream_map = dict([m.groups((1, 2)) for m in media_items])
+        stream_map = dict([mi.groups((1, 2)) for mi in media_items])
 
         stream_url = stream_map.get(str(channel) or self.default_channel)
         if stream_url:

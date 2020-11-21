@@ -1,12 +1,10 @@
-# -*- coding: utf8 -*-
 from io import BytesIO
 
 from streamlink import NoStreamsError
-from streamlink.plugins import Plugin
 from streamlink.options import Options
-from streamlink.stream import *
-
 from streamlink.plugin.api.support_plugin import testplugin_support
+from streamlink.plugins import Plugin
+from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
 
 
 class TestStream(Stream):
@@ -29,7 +27,7 @@ class TestPlugin(Plugin):
         return "Test Title"
 
     def get_author(self):
-        return u"Tѥst Āuƭhǿr"
+        return "Tѥst Āuƭhǿr"
 
     def get_category(self):
         return None

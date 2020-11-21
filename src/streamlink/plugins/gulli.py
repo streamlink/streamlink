@@ -1,9 +1,12 @@
+import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
+
+log = logging.getLogger(__name__)
 
 
 class Gulli(Plugin):
@@ -67,8 +70,7 @@ class Gulli(Plugin):
 
             try:
                 if '.m3u8' in video_url:
-                    for stream in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                        yield stream
+                    yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
                 elif '.mp4' in video_url:
                     match = self._mp4_bitrate_re.match(video_url)
                     if match is not None:
@@ -78,7 +80,7 @@ class Gulli(Plugin):
                     yield bitrate, HTTPStream(self.session, video_url)
             except IOError as err:
                 if '403 Client Error' in str(err):
-                    self.logger.error('Failed to access stream, may be due to geo-restriction')
+                    log.error('Failed to access stream, may be due to geo-restriction')
                 raise
 
 

@@ -1,0 +1,43 @@
+codecov:
+  notify:
+    require_ci_to_pass: true
+    # wait until at all test runners have uploaded a report (see the test job's build matrix)
+    # otherwise, coverage failures may be shown while some reports are still missing
+    after_n_builds: 8
+comment:
+  # this also configures the layout of PR check summaries / comments
+  layout: "reach, diff, flags, files"
+  # don't ever let the codecov bot comment on PRs
+  after_n_builds: 999999999
+coverage:
+  range: "50...100"
+  precision: 2
+  round: down
+  status:
+    changes: false
+    patch: false
+    # split up coverage reports by path
+    # don't set coverage targets and instead set coverage thresholds
+    project:
+      # we can't disable the overall default project, because only this will have PR check summaries / comments
+      # this replaces the PR comment
+      default:
+        target: 50
+      streamlink:
+        threshold: 1
+        paths:
+          - "src/streamlink/"
+          - "!src/streamlink/plugins/"
+      streamlink_cli:
+        threshold: 1
+        paths:
+          - "src/streamlink_cli/"
+      plugins:
+        # don't set a threshold on plugins
+        target: 30
+        paths:
+          - "src/streamlink/plugins/"
+      tests:
+        threshold: 1
+        paths:
+          - "tests/"

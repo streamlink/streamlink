@@ -1,19 +1,14 @@
 import logging
 import re
-
 from base64 import b64decode
-from streamlink.compat import urlparse
+from html.parser import HTMLParser
+from urllib.parse import urlparse
+
 from streamlink.exceptions import PluginError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
-
-try:
-    from html.parser import HTMLParser
-except ImportError:
-    from HTMLParser import HTMLParser
 
 log = logging.getLogger(__name__)
 
@@ -76,7 +71,6 @@ class OnePlusOne(Plugin):
                 return data
 
     def _get_streams(self):
-        self.session.http.headers.update({"User-Agent": useragents.FIREFOX})
         res = self.session.http.get(self.url)
         iframe_url = self.find_iframe(res)
         if iframe_url:

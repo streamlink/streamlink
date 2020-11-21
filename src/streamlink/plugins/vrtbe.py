@@ -1,11 +1,11 @@
 import logging
 import re
+from urllib.parse import urljoin
 
-from streamlink.compat import urljoin
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HLSStream, DASHStream
+from streamlink.stream import DASHStream, HLSStream
 
 log = logging.getLogger(__name__)
 
@@ -17,8 +17,7 @@ class VRTbe(Plugin):
         validate.any({
             "code": validate.text,
             "message": validate.text
-        },
-        {
+        }, {
             "drm": validate.any(None, validate.text),
             'targetUrls': [{
                 'type': validate.text,
@@ -63,11 +62,14 @@ class VRTbe(Plugin):
 
         log.debug("Got token: {0}".format(token))
         log.debug("Getting stream data: {0}".format(api_info["stream_url"]))
-        res = self.session.http.get(api_info["stream_url"],
-                                    params={
-                                        "vrtPlayerToken": token,
-                                        "client": "vrtvideo"
-                                    }, raise_for_status=False)
+        res = self.session.http.get(
+            api_info["stream_url"],
+            params={
+                "vrtPlayerToken": token,
+                "client": "vrtvideo"
+            },
+            raise_for_status=False
+        )
         data = self.session.http.json(res, schema=self._stream_schema)
 
         if "code" in data:
@@ -79,14 +81,11 @@ class VRTbe(Plugin):
         for target in data["targetUrls"]:
             if data["drm"]:
                 if target["type"] == "hls_aes":
-                    for s in HLSStream.parse_variant_playlist(self.session, target["url"]).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, target["url"]).items()
             elif target["type"] == "hls":
-                for s in HLSStream.parse_variant_playlist(self.session, target["url"]).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, target["url"]).items()
             elif target["type"] == "mpeg_dash":
-                for s in DASHStream.parse_manifest(self.session, target["url"]).items():
-                    yield s
+                yield from DASHStream.parse_manifest(self.session, target["url"]).items()
 
 
 __plugin__ = VRTbe

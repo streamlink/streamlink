@@ -1,12 +1,9 @@
-from __future__ import print_function
-
 import logging
 import re
 from functools import partial
 
-from streamlink.plugin import Plugin, PluginArguments, PluginArgument
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
 
@@ -101,14 +98,14 @@ class Schoolism(Plugin):
     def _get_streams(self):
         user = self.login(self.options.get("email"), self.options.get("password"))
         if user:
-            log.debug("Logged in to Schoolism as {0}", user)
+            log.debug(f"Logged in to Schoolism as {user}")
             res = self.session.http.get(self.url, headers={"User-Agent": useragents.SAFARI_8})
             lesson_playlist = self.playlist_schema.validate(res.text)
 
             part = self.options.get("part")
             video_type = "Lesson" if "lesson" in self.url_re.match(self.url).group(1).lower() else "Assignment Feedback"
 
-            log.info("Attempting to play {0} Part {1}", video_type, part)
+            log.info(f"Attempting to play {video_type} Part {part}")
             found = False
 
             # make request to key-time api, to get key specific headers
@@ -130,7 +127,7 @@ class Schoolism(Plugin):
                                 yield s
 
             if not found:
-                log.error("Could not find {0} Part {1}", video_type, part)
+                log.error(f"Could not find {video_type} Part {part}")
 
 
 __plugin__ = Schoolism

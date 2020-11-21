@@ -10,6 +10,7 @@ class TestPluginRtve(unittest.TestCase):
             'http://www.rtve.es/directo/la-2/',
             'http://www.rtve.es/directo/teledeporte/',
             'http://www.rtve.es/directo/canal-24h/',
+            'http://www.rtve.es/infantil/directo/',
         ]
         for url in should_match:
             self.assertTrue(Rtve.can_handle_url(url))

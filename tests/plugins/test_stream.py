@@ -1,9 +1,9 @@
 import unittest
+from unittest.mock import patch
 
 from streamlink import Streamlink
-from streamlink.plugin.plugin import stream_weight, parse_params
+from streamlink.plugin.plugin import parse_params, stream_weight
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
-from tests.mock import patch
 
 
 class TestPluginStream(unittest.TestCase):
@@ -172,7 +172,3 @@ class TestPluginStream(unittest.TestCase):
 
         self.assertGreater(stream_weight("720p+a128k"),
                            stream_weight("360p+a256k"))
-
-
-if __name__ == "__main__":
-    unittest.main()

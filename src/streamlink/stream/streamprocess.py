@@ -1,15 +1,15 @@
 import logging
-import subprocess
 import os.path
-
-from operator import itemgetter
-from streamlink.stream import Stream
-from streamlink.stream.wrappers import StreamIOThreadWrapper
-from streamlink.compat import devnull, which
-from streamlink.exceptions import StreamError
-
-import time
+import subprocess
 import tempfile
+import time
+from operator import itemgetter
+from shutil import which
+
+from streamlink.compat import devnull
+from streamlink.exceptions import StreamError
+from streamlink.stream.stream import Stream
+from streamlink.stream.wrappers import StreamIOThreadWrapper
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class StreamProcessIO(StreamIOThreadWrapper):
     def __init__(self, session, process, fd, **kwargs):
         self.process = process
 
-        super(StreamProcessIO, self).__init__(session, fd, **kwargs)
+        super().__init__(session, fd, **kwargs)
 
     def close(self):
         try:
@@ -26,7 +26,7 @@ class StreamProcessIO(StreamIOThreadWrapper):
         except Exception:
             pass
         finally:
-            super(StreamProcessIO, self).close()
+            super().close()
 
 
 class StreamProcess(Stream):
@@ -38,7 +38,7 @@ class StreamProcess(Stream):
         :param args: positional arguments
         :param timeout: timeout for process
         """
-        super(StreamProcess, self).__init__(session)
+        super().__init__(session)
 
         self.parameters = params or {}
         self.arguments = args or []
@@ -81,7 +81,9 @@ class StreamProcess(Stream):
 
             return StreamProcessIO(self.session, process, process.stdout, timeout=self.timeout)
         else:
-            raise StreamError("{0} is not installed or not supported on your system".format(os.path.basename(self.cmd)))
+            raise StreamError(
+                "{0} is not installed or not supported on your system".format(os.path.basename(self.cmd))
+            )
 
     @classmethod
     def bake(cls, cmd, parameters=None, arguments=None, short_option_prefix="-", long_option_prefix="--"):
@@ -111,7 +113,8 @@ class StreamProcess(Stream):
 
         return cmdline
 
-    def spawn(self, parameters=None, arguments=None, stderr=None, timeout=None, short_option_prefix="-", long_option_prefix="--"):
+    def spawn(self, parameters=None, arguments=None, stderr=None, timeout=None,
+              short_option_prefix="-", long_option_prefix="--"):
         """
         Spawn the process defined in `cmd`
 
@@ -132,7 +135,7 @@ class StreamProcess(Stream):
         """
         stderr = stderr or self.stderr
         cmd = self.bake(self._check_cmd(), parameters, arguments, short_option_prefix, long_option_prefix)
-        log.debug("Spawning command: {0}", subprocess.list2cmdline(cmd))
+        log.debug(f"Spawning command: {subprocess.list2cmdline(cmd)}")
 
         try:
             process = subprocess.Popen(cmd, stderr=stderr, stdout=subprocess.PIPE)

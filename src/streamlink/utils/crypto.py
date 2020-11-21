@@ -1,9 +1,6 @@
-from __future__ import absolute_import
 import hashlib
 
 from Crypto.Cipher import AES
-
-from streamlink.compat import is_py3
 
 
 def evp_bytestokey(password, salt, key_len, iv_len):
@@ -32,7 +29,4 @@ def decrypt_openssl(data, passphrase, key_length=32):
 
 
 def unpad_pkcs5(padded):
-    if is_py3:
-        return padded[:-padded[-1]]
-    else:
-        return padded[:-ord(padded[-1])]
+    return padded[:-padded[-1]]

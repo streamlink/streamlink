@@ -5,20 +5,18 @@ import re
 import struct
 import time
 import uuid
-
 from base64 import urlsafe_b64encode
 from binascii import unhexlify
 
 from Crypto.Cipher import AES
-
 from requests import Response
 from requests.adapters import BaseAdapter
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents
-from streamlink.plugin.api import validate
+from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
+from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
 
@@ -36,16 +34,16 @@ class AbemaTVLicenseAdapter(BaseAdapter):
 
     _LICENSE_API = "https://license.abema.io/abematv-hls"
 
-    _MEDIATOKEN_SCHEMA = validate.Schema({u"token": validate.text})
+    _MEDIATOKEN_SCHEMA = validate.Schema({"token": validate.text})
 
-    _LICENSE_SCHEMA = validate.Schema({u"k": validate.text,
-                                       u"cid": validate.text})
+    _LICENSE_SCHEMA = validate.Schema({"k": validate.text,
+                                       "cid": validate.text})
 
     def __init__(self, session, deviceid, usertoken):
         self._session = session
         self.deviceid = deviceid
         self.usertoken = usertoken
-        super(AbemaTVLicenseAdapter, self).__init__()
+        super().__init__()
 
     def _get_videokey_from_ticket(self, ticket):
         params = {
@@ -133,28 +131,25 @@ class AbemaTV(Plugin):
                  b"Rbp5KwY4hEmcj5#fykMjJ=AuWz5GSMY-d@H7DMEh3M@9n2G552Us$$"
                  b"k9cD=3TxwWe86!x#Zyhe")
 
-    _USER_SCHEMA = validate.Schema({u"profile": {u"userId": validate.text},
-                                    u"token": validate.text})
+    _USER_SCHEMA = validate.Schema({"profile": {"userId": validate.text},
+                                    "token": validate.text})
 
-    _CHANNEL_SCHEMA = validate.Schema({u"channels": [{u"id": validate.text,
+    _CHANNEL_SCHEMA = validate.Schema({"channels": [{"id": validate.text,
                                       "name": validate.text,
-                                       "playback": {validate.optional(u"dash"):
+                                       "playback": {validate.optional("dash"):
                                                     validate.text,
-                                                    u"hls": validate.text}}]})
+                                                    "hls": validate.text}}]})
 
-    _PRGM_SCHEMA = validate.Schema({u"label": {validate.optional(u"free"): bool
-                                               }})
+    _PRGM_SCHEMA = validate.Schema({"label": {validate.optional("free"): bool}})
 
-    _SLOT_SCHEMA = validate.Schema({u"slot": {u"flags": {
-                                    validate.optional("timeshiftFree"): bool}}}
-                                   )
+    _SLOT_SCHEMA = validate.Schema({"slot": {"flags": {validate.optional("timeshiftFree"): bool}}})
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url) is not None
 
     def __init__(self, url):
-        super(AbemaTV, self).__init__(url)
+        super().__init__(url)
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def _generate_applicationkeysecret(self, deviceid):
@@ -216,6 +211,8 @@ class AbemaTV(Plugin):
         matchresult = self._url_re.match(self.url)
         if matchresult.group("onair"):
             onair = matchresult.group("onair")
+            if onair == "news-global":
+                self._CHANNEL = update_qsd(self._CHANNEL, {"division": "1"})
             res = self.session.http.get(self._CHANNEL)
             jsonres = self.session.http.json(res, schema=self._CHANNEL_SCHEMA)
             channels = jsonres["channels"]

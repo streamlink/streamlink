@@ -1,4 +1,4 @@
-from .session import Streamlink
+from streamlink.session import Streamlink
 
 
 def streams(url, **params):

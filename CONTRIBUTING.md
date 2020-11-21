@@ -43,11 +43,17 @@ Plugins which fall under the following categories will not be implemented or con
 
 5. NSFW sites of a pornographic nature (cam sites, porn sites, etc.)
 
-6. Sites which are mostly hosting VODs (stolen or legitimate), or require large changes to existing code to watch VODs
+6. Sites which don't provide any real live streaming content, eg. only VODs or VODs being rebroadcasted
 
-7. Sites where the maintainer has requested we not add their site to Streamlink
+7. Sites which don't provide any video streaming content, eg. radio stations
 
-8. Sites which are unmaintained.
+8. Sites where the maintainer has requested we not add their site to Streamlink
+
+9. Sites which are unmaintained, are in beta or are undergoing heavy amounts of development and may change rapidly
+
+10. Sites which have no way to determine viewership numbers
+
+11. Sites which are static cameras of a physical location
 
 ## Pull requests
 

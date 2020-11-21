@@ -1,9 +1,12 @@
+import logging
 import re
 
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
+
+log = logging.getLogger(__name__)
 
 COOKIES = {
     "family_filter": "off",
@@ -55,7 +58,7 @@ class DailyMotion(Plugin):
         media = self.session.http.json(res, schema=_media_schema)
 
         if media.get("error"):
-            self.logger.error("Failed to get stream: {0}".format(media["error"]["title"]))
+            log.error("Failed to get stream: {0}".format(media["error"]["title"]))
             return
 
         for quality, streams in media['qualities'].items():
@@ -64,8 +67,7 @@ class DailyMotion(Plugin):
                     if quality != 'auto':
                         # Avoid duplicate HLS streams with bitrate selector in the URL query
                         continue
-                    for s in HLSStream.parse_variant_playlist(self.session, stream['url']).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, stream['url']).items()
                 elif stream['type'] == 'video/mp4':
                     # Drop FPS in quality
                     resolution = re.sub('@[0-9]+', '', quality) + 'p'
@@ -80,10 +82,12 @@ class DailyMotion(Plugin):
         }
         api_user_videos = USER_INFO_URL.format(username) + "/videos"
         try:
-            res = self.session.http.get(api_user_videos.format(username),
-                           params=params)
-        except Exception as e:
-            self.logger.error("invalid username")
+            res = self.session.http.get(
+                api_user_videos.format(username),
+                params=params
+            )
+        except Exception:
+            log.error("invalid username")
             raise NoStreamsError(self.url)
 
         data = self.session.http.json(res, schema=_live_id_schema)
@@ -101,7 +105,7 @@ class DailyMotion(Plugin):
             media_id = self.get_live_id(username)
 
         if media_id:
-            self.logger.debug("Found media ID: {0}", media_id)
+            log.debug("Found media ID: {0}".format(media_id))
             return self._get_streams_from_media(media_id)
 
 

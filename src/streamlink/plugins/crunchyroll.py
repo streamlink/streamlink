@@ -1,15 +1,13 @@
-import argparse
 import datetime
-import re
 import logging
+import re
 from uuid import uuid4
 
-from streamlink.plugin import Plugin, PluginError, PluginArguments, PluginArgument
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
-
 
 STREAM_WEIGHTS = {
     "low": 240,
@@ -27,9 +25,9 @@ STREAM_NAMES = {
 def parse_timestamp(ts):
     """Takes ISO 8601 format(string) and converts into a utc datetime(naive)"""
     return (
-        datetime.datetime.strptime(ts[:-7], "%Y-%m-%dT%H:%M:%S") +
-        datetime.timedelta(hours=int(ts[-5:-3]), minutes=int(ts[-2:])) *
-        int(ts[-6:-5] + "1")
+        datetime.datetime.strptime(ts[:-7], "%Y-%m-%dT%H:%M:%S")
+        + datetime.timedelta(hours=int(ts[-5:-3]), minutes=int(ts[-2:]))
+        * int(ts[-6:-5] + "1")
     )
 
 
@@ -72,7 +70,7 @@ _media_schema = validate.Schema(
     validate.get("stream_data")
 )
 _login_schema = validate.Schema({
-    "auth": validate.text,
+    "auth": validate.any(validate.text, None),
     "expires": validate.all(
         validate.text,
         validate.transform(parse_timestamp)
@@ -105,7 +103,7 @@ class CrunchyrollAPI(object):
     _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; Android SDK built for x86 Build/KK)"
     _version_code = 444
     _version_name = "2.1.10"
-    _access_token = "Scwg9PRRZ19iVwD"
+    _access_token = "WveH9VkPLrXvuNm"
     _access_type = "com.crunchyroll.crunchyroid"
 
     def __init__(self, cache, session, session_id=None, locale=_default_locale):
@@ -214,9 +212,16 @@ class CrunchyrollAPI(object):
         return login
 
     def authenticate(self):
-        data = self._api_call("authenticate", {"auth": self.auth}, schema=_login_schema)
-        self.auth = data["auth"]
-        self.cache.set("auth", data["auth"], expires_at=data["expires"])
+        try:
+            data = self._api_call("authenticate", {"auth": self.auth}, schema=_login_schema)
+        except CrunchyrollAPIError:
+            self.auth = None
+            self.cache.set("auth", None, expires_at=0)
+            log.warning("Saved credentials have expired")
+            return
+
+        log.debug("Credentials expire at: {}".format(data["expires"]))
+        self.cache.set("auth", self.auth, expires_at=data["expires"])
         return data
 
     def get_info(self, media_id, fields=None, schema=None):
@@ -281,12 +286,6 @@ class Crunchyroll(Plugin):
             Note: The session ID will be overwritten if authentication is used
             and the session ID does not match the account.
             """
-        ),
-        # Deprecated, uses the general locale setting
-        PluginArgument(
-            "locale",
-            metavar="LOCALE",
-            help=argparse.SUPPRESS
         )
     )
 
@@ -311,7 +310,7 @@ class Crunchyroll(Plugin):
             # the media.stream_data field is required, no stream data is returned otherwise
             info = api.get_info(media_id, fields=["media.stream_data"], schema=_media_schema)
         except CrunchyrollAPIError as err:
-            raise PluginError(u"Media lookup error: {0}".format(err.msg))
+            raise PluginError(f"Media lookup error: {err.msg}")
 
         if not info:
             return
@@ -319,24 +318,24 @@ class Crunchyroll(Plugin):
         streams = {}
 
         # The adaptive quality stream sometimes a subset of all the other streams listed, ultra is no included
-        has_adaptive = any([s[u"quality"] == u"adaptive" for s in info[u"streams"]])
+        has_adaptive = any([s["quality"] == "adaptive" for s in info["streams"]])
         if has_adaptive:
-            self.logger.debug(u"Loading streams from adaptive playlist")
-            for stream in filter(lambda x: x[u"quality"] == u"adaptive", info[u"streams"]):
-                for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
+            log.debug("Loading streams from adaptive playlist")
+            for stream in filter(lambda x: x["quality"] == "adaptive", info["streams"]):
+                for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
                     # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
                     name = STREAM_NAMES.get(q, q)
                     streams[name] = s
 
         # If there is no adaptive quality stream then parse each individual result
-        for stream in info[u"streams"]:
-            if stream[u"quality"] != u"adaptive":
+        for stream in info["streams"]:
+            if stream["quality"] != "adaptive":
                 # the video_encode_id indicates that the stream is not a variant playlist
-                if u"video_encode_id" in stream:
-                    streams[stream[u"quality"]] = HLSStream(self.session, stream[u"url"])
+                if "video_encode_id" in stream:
+                    streams[stream["quality"]] = HLSStream(self.session, stream["url"])
                 else:
                     # otherwise the stream url is actually a list of stream qualities
-                    for q, s in HLSStream.parse_variant_playlist(self.session, stream[u"url"]).items():
+                    for q, s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
                         # rename the bitrates to low, mid, or high. ultra doesn't seem to appear in the adaptive streams
                         name = STREAM_NAMES.get(q, q)
                         streams[name] = s
@@ -361,27 +360,28 @@ class Crunchyroll(Plugin):
                              locale=locale)
 
         if not self.get_option("session_id"):
-            self.logger.debug("Creating session with locale: {0}", locale)
+            log.debug(f"Creating session with locale: {locale}")
             api.start_session()
 
             if api.auth:
-                self.logger.debug("Using saved credentials")
+                log.debug("Using saved credentials")
                 login = api.authenticate()
-                self.logger.info("Successfully logged in as '{0}'",
-                                 login["user"]["username"] or login["user"]["email"])
-            elif self.options.get("username"):
+                if login:
+                    login_name = login["user"]["username"] or login["user"]["email"]
+                    log.info(f"Successfully logged in as '{login_name}'")
+            if not api.auth and self.options.get("username"):
                 try:
-                    self.logger.debug("Attempting to login using username and password")
+                    log.debug("Attempting to login using username and password")
                     api.login(self.options.get("username"),
                               self.options.get("password"))
                     login = api.authenticate()
-                    self.logger.info("Logged in as '{0}'",
-                                     login["user"]["username"] or login["user"]["email"])
+                    login_name = login["user"]["username"] or login["user"]["email"]
+                    log.info(f"Logged in as '{login_name}'")
 
                 except CrunchyrollAPIError as err:
-                    raise PluginError(u"Authentication error: {0}".format(err.msg))
-            else:
-                self.logger.warning(
+                    raise PluginError(f"Authentication error: {err.msg}")
+            if not api.auth:
+                log.warning(
                     "No authentication provided, you won't be able to access "
                     "premium restricted content"
                 )

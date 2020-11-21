@@ -1,5 +1,4 @@
-from __future__ import print_function
-
+import logging
 import re
 
 from streamlink.plugin import Plugin
@@ -7,9 +6,11 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 from streamlink.utils import parse_json, update_scheme
 
+log = logging.getLogger(__name__)
+
 
 class EarthCam(Plugin):
-    url_re = re.compile(r"https?://(?:www.)?earthcam.com/.*")
+    url_re = re.compile(r"https?://(?:www\.)?earthcam\.com/.*")
     playpath_re = re.compile(r"(?P<folder>/.*/)(?P<file>.*?\.flv)")
     swf_url = "http://static.earthcam.com/swf/streaming/stream_viewer_v3.swf"
     json_base_re = re.compile(r"""var[ ]+json_base[^=]+=.*?(\{.*?});""", re.DOTALL)
@@ -38,7 +39,7 @@ class EarthCam(Plugin):
 
         cam_data = json_base["cam"][cam_name]
 
-        self.logger.debug("Found cam for {0} - {1}", cam_data["group"], cam_data["title"])
+        log.debug("Found cam for {0} - {1}".format(cam_data["group"], cam_data["title"]))
 
         is_live = (cam_data["liveon"] == "true" and cam_data["defaulttab"] == "live")
 
@@ -70,7 +71,7 @@ class EarthCam(Plugin):
 
         # RTMP stream
         if rtmp_playpath:
-            self.logger.debug("RTMP URL: {0}{1}", rtmp_url, rtmp_playpath)
+            log.debug("RTMP URL: {0}{1}".format(rtmp_url, rtmp_playpath))
 
             params = {
                 "rtmp": rtmp_url,
@@ -87,14 +88,13 @@ class EarthCam(Plugin):
             hls_url = hls_domain + hls_playpath
             hls_url = update_scheme(self.url, hls_url)
 
-            self.logger.debug("HLS URL: {0}", hls_url)
+            log.debug("HLS URL: {0}".format(hls_url))
 
-            for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                yield s
+            yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
         if not (rtmp_playpath or hls_playpath):
-            self.logger.error("This cam stream appears to be in offline or "
-                              "snapshot mode and not live stream can be played.")
+            log.error("This cam stream appears to be in offline or "
+                      "snapshot mode and not live stream can be played.")
             return
 
 

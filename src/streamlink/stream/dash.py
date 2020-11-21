@@ -1,17 +1,18 @@
 import copy
+import datetime
 import itertools
 import logging
-import datetime
 import os.path
+from urllib.parse import urlparse, urlunparse
 
 import requests
-from streamlink import StreamError, PluginError
-from streamlink.compat import urlparse, urlunparse
-from streamlink.stream.http import valid_args, normalize_key
-from streamlink.stream.stream import Stream
-from streamlink.stream.dash_manifest import MPD, sleeper, sleep_until, utc, freeze_timeline
+
+from streamlink import PluginError, StreamError
+from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, sleeper, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
+from streamlink.stream.http import normalize_key, valid_args
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
+from streamlink.stream.stream import Stream
 from streamlink.utils import parse_xml
 from streamlink.utils.l10n import Language
 
@@ -54,7 +55,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                                          headers=headers,
                                          **request_args)
         except StreamError as err:
-            log.error("Failed to open segment {0}: {1}", segment.url, err)
+            log.error(f"Failed to open segment {segment.url}: {err}")
             return self.fetch(segment, retries - 1)
 
     def write(self, segment, res, chunk_size=8192):
@@ -95,7 +96,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
                         if self.closed:
                             break
                         yield segment
-                        # log.debug("Adding segment {0} to queue", segment.url)
+                        # log.debug(f"Adding segment {segment.url} to queue")
 
                     if self.mpd.type == "dynamic":
                         if not self.reload():
@@ -140,7 +141,6 @@ class DASHStreamReader(SegmentedStreamReader):
         log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))
 
 
-
 class DASHStream(Stream):
     __shortname__ = "dash"
 
@@ -151,7 +151,7 @@ class DASHStream(Stream):
                  audio_representation=None,
                  period=0,
                  **args):
-        super(DASHStream, self).__init__(session)
+        super().__init__(session)
         self.mpd = mpd
         self.video_representation = video_representation
         self.audio_representation = audio_representation
@@ -224,7 +224,10 @@ class DASHStream(Stream):
             # filter by the first language that appears
             lang = audio[0] and audio[0].lang
 
-        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(", ".join(available_languages) or "NONE", lang or "n/a"))
+        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(
+            ", ".join(available_languages) or "NONE",
+            lang or "n/a"
+        ))
 
         # if the language is given by the stream, filter out other languages that do not match
         if len(available_languages) > 1:
@@ -258,4 +261,7 @@ class DASHStream(Stream):
             return audio
 
     def to_url(self):
+        return self.mpd.url
+
+    def to_manifest_url(self):
         return self.mpd.url

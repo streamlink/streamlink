@@ -3,19 +3,18 @@ import logging
 import pkgutil
 import sys
 import traceback
+from collections import OrderedDict
 
 import requests
 
-from collections import OrderedDict
-
-from streamlink.logger import StreamlinkLogger, Logger
-from streamlink.utils import update_scheme, memoize
+from streamlink import __version__, plugins
+from streamlink.compat import is_win32
+from streamlink.exceptions import NoPluginError, PluginError
+from streamlink.logger import StreamlinkLogger
+from streamlink.options import Options
+from streamlink.plugin import api
+from streamlink.utils import memoize, update_scheme
 from streamlink.utils.l10n import Localization
-from . import plugins, __version__
-from .compat import is_win32
-from .exceptions import NoPluginError, PluginError
-from .options import Options
-from .plugin import api
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
 logging.setLoggerClass(StreamlinkLogger)
@@ -42,6 +41,10 @@ def print_small_exception(start_after):
     sys.stderr.write("\n")
 
 
+class PythonDeprecatedWarning(UserWarning):
+    pass
+
+
 class Streamlink(object):
     """A Streamlink session is used to keep track of plugins,
        options and log settings."""
@@ -58,8 +61,10 @@ class Streamlink(object):
             "hls-segment-attempts": 3,
             "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
+            "hls-segment-stream-data": False,
             "hls-timeout": 60.0,
             "hls-playlist-reload-attempts": 3,
+            "hls-playlist-reload-time": "default",
             "hls-start-offset": 0,
             "hls-duration": None,
             "http-stream-timeout": 60.0,
@@ -78,6 +83,7 @@ class Streamlink(object):
             "ffmpeg-video-transcode": None,
             "ffmpeg-audio-transcode": None,
             "ffmpeg-start-at-zero": None,
+            "mux-subtitles": False,
             "locale": None,
             "user-input-requester": None
         })
@@ -85,17 +91,6 @@ class Streamlink(object):
             self.options.update(options)
         self.plugins = OrderedDict({})
         self.load_builtin_plugins()
-        self._logger = None
-
-    @property
-    def logger(self):
-        """
-        Backwards compatible logger property
-        :return: Logger instance
-        """
-        if not self._logger:
-            self._logger = Logger()
-        return self._logger
 
     def set_option(self, key, value):
         """Sets general options used by plugins and streams originating
@@ -132,6 +127,9 @@ class Streamlink(object):
 
         hls-segment-threads      (int) The size of the thread pool used
                                  to download segments, default: ``1``
+
+        hls-segment-stream-data  (bool) Stream HLS segment downloads,
+                                 default: ``False``
 
         hls-segment-timeout      (float) HLS segment connect and read
                                  timeout, default: ``10.0``
@@ -222,6 +220,9 @@ class Streamlink(object):
         ffmpeg-start-at-zero     (bool) When used with ffmpeg and copyts,
                                  shift input timestamps so they start at zero
 
+        mux-subtitles            (bool) Mux available subtitles into the
+                                 output stream.
+
         stream-segment-attempts  (int) How many attempts should be done
                                  to download each segment, default: ``3``.
                                  General option used by streams not
@@ -253,16 +254,6 @@ class Streamlink(object):
         ======================== =========================================
 
         """
-
-        # Backwards compatibility
-        if key == "rtmpdump":
-            key = "rtmp-rtmpdump"
-        elif key == "rtmpdump-proxy":
-            key = "rtmp-proxy"
-        elif key == "errorlog":
-            key = "subprocess-errorlog"
-        elif key == "errorlog-path":
-            key = "subprocess-errorlog-path"
 
         if key == "http-proxy":
             self.http.proxies["http"] = update_scheme("http://", value)
@@ -312,13 +303,6 @@ class Streamlink(object):
         :param key: key of the option
 
         """
-        # Backwards compatibility
-        if key == "rtmpdump":
-            key = "rtmp-rtmpdump"
-        elif key == "rtmpdump-proxy":
-            key = "rtmp-proxy"
-        elif key == "errorlog":
-            key = "subprocess-errorlog"
 
         if key == "http-proxy":
             return self.http.proxies.get("http")
@@ -366,25 +350,6 @@ class Streamlink(object):
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             return plugin.get_option(key)
-
-    def set_loglevel(self, level):
-        """Sets the log level used by this session.
-
-        Valid levels are: "none", "error", "warning", "info"
-        and "debug".
-
-        :param level: level of logging to output
-
-        """
-        self.logger.set_level(level)
-
-    def set_logoutput(self, output):
-        """Sets the log output used by this session.
-
-        :param output: a file-like object with a write method
-
-        """
-        self.logger.set_output(output)
 
     @memoize
     def resolve_url(self, url, follow_redirect=True):

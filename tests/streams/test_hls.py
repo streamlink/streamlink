@@ -1,19 +1,15 @@
-import logging
 import os
 import unittest
-from binascii import hexlify
-from functools import partial
+from unittest.mock import Mock, patch
 
 import pytest
 import requests_mock
 from Crypto.Cipher import AES
-from mock import patch, Mock
 
 from streamlink.session import Streamlink
 from streamlink.stream import hls
+from tests.mixins.stream_hls import Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
-
-log = logging.getLogger(__name__)
 
 
 def pkcs7_encode(data, keySize):
@@ -27,100 +23,187 @@ def encrypt(data, key, iv):
     return encrypted_data
 
 
-class TestHLS(unittest.TestCase):
-    """
-    Test that when invoked for the command line arguments are parsed as expected
-    """
-    mediaSequence = 1651
+class TagKey(Tag):
+    path = "encryption.key"
 
-    def getMasterPlaylist(self):
-        with text("hls/test_master.m3u8") as pl:
+    def __init__(self, method="NONE", uri=None, iv=None, keyformat=None, keyformatversions=None):
+        attrs = {"METHOD": method}
+        if uri is not False:  # pragma: no branch
+            attrs.update({"URI": lambda tag, namespace: tag.val_quoted_string(tag.url(namespace))})
+        if iv is not None:  # pragma: no branch
+            attrs.update({"IV": self.val_hex(iv)})
+        if keyformat is not None:  # pragma: no branch
+            attrs.update({"KEYFORMAT": self.val_quoted_string(keyformat)})
+        if keyformatversions is not None:  # pragma: no branch
+            attrs.update({"KEYFORMATVERSIONS": self.val_quoted_string(keyformatversions)})
+        super().__init__("EXT-X-KEY", attrs)
+        self.uri = uri
+
+    def url(self, namespace):
+        return self.uri.format(namespace=namespace) if self.uri else super().url(namespace)
+
+
+class SegmentEnc(Segment):
+    def __init__(self, num, key, iv, *args, **kwargs):
+        super().__init__(num, *args, **kwargs)
+        self.content_plain = self.content
+        self.content = encrypt(self.content, key, iv)
+
+
+class TestHLSStreamRepr(unittest.TestCase):
+    def test_repr(self):
+        session = Streamlink()
+
+        stream = hls.HLSStream(session, "https://foo.bar/playlist.m3u8")
+        self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', None)>")
+
+        stream = hls.HLSStream(session, "https://foo.bar/playlist.m3u8", "https://foo.bar/master.m3u8")
+        self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', 'https://foo.bar/master.m3u8')>")
+
+
+class TestHLSVariantPlaylist(unittest.TestCase):
+    @classmethod
+    def get_master_playlist(cls, playlist):
+        with text(playlist) as pl:
             return pl.read()
 
-    def getPlaylist(self, aesIv, streamNameTemplate):
-        playlist = """
-#EXTM3U
-#EXT-X-VERSION:5
-#EXT-X-TARGETDURATION:1
-#ID3-EQUIV-TDTG:2018-01-01T18:20:05
-#EXT-X-MEDIA-SEQUENCE:{0}
-#EXT-X-TWITCH-ELAPSED-SECS:3367.800
-#EXT-X-TWITCH-TOTAL-SECS:3379.943
-""".format(self.mediaSequence)
-
-        playlistEnd = ""
-        if aesIv is not None:
-            playlistEnd = playlistEnd + "#EXT-X-KEY:METHOD=AES-128,URI=\"encryption_key.key\",IV=0x{0},KEYFORMAT=identity,KEYFORMATVERSIONS=1\n".format(hexlify(aesIv).decode("UTF-8"))
-
-        for i in range(4):
-            playlistEnd = playlistEnd + "#EXTINF:1.000,\n{0}\n".format(streamNameTemplate.format(i))
-            self.mediaSequence += 1
-
-        return playlist + playlistEnd
-
-    def start_streamlink(self, masterPlaylist, kwargs=None):
-        kwargs = kwargs or {}
-        log.info("Executing streamlink")
-        streamlink = Streamlink()
-
-        # Set to default value to avoid a test fail if the default change
-        streamlink.set_option("hls-live-edge", 3)
-
-        masterStream = hls.HLSStream.parse_variant_playlist(streamlink, masterPlaylist, **kwargs)
-        stream = masterStream["1080p (source)"].open()
-        data = b"".join(iter(partial(stream.read, 8192), b""))
-        stream.close()
-        log.info("End of streamlink execution")
-        return data
-
-    def test_hls_non_encrypted(self):
-        streams = [os.urandom(1024) for _ in range(4)]
-        masterPlaylist = self.getMasterPlaylist()
-        firstSequence = self.mediaSequence
-        playlist = self.getPlaylist(None, "stream{0}.ts") + "#EXT-X-ENDLIST\n"
+    def subject(self, playlist, options=None):
         with requests_mock.Mocker() as mock:
-            mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
-            mock.get("http://mocked/path/playlist.m3u8", text=playlist)
-            for i, stream in enumerate(streams):
-                mock.get("http://mocked/path/stream{0}.ts".format(i), content=stream)
+            url = "http://mocked/{0}/master.m3u8".format(self.id())
+            content = self.get_master_playlist(playlist)
+            mock.get(url, text=content)
 
-            # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8",
-                                                     {'start_offset': 1, 'duration': 1})
+            session = Streamlink(options)
 
-        # Check result, each segment is 1 second, with duration=1 only one segment should be returned
-        expectedResult = b''.join(streams[1:2])
-        self.assertEqual(streamlinkResult, expectedResult)
+            return hls.HLSStream.parse_variant_playlist(session, url)
 
-    def test_hls_encryted_aes128(self):
-        # Encryption parameters
-        aesKey = os.urandom(16)
-        aesIv = os.urandom(16)
-        # Generate stream data files
-        clearStreams = [os.urandom(1024) for i in range(4)]
-        encryptedStreams = [encrypt(clearStream, aesKey, aesIv) for clearStream in clearStreams]
+    def test_variant_playlist(self):
+        streams = self.subject("hls/test_master.m3u8")
+        self.assertEqual(
+            list(streams.keys()),
+            ["720p", "720p_alt", "480p", "360p", "160p", "1080p (source)", "90k"],
+            "Finds all streams in master playlist"
+        )
+        self.assertTrue(
+            all([isinstance(stream, hls.HLSStream) for stream in streams.values()]),
+            "Returns HLSStream instances"
+        )
 
-        masterPlaylist = self.getMasterPlaylist()
-        playlist1 = self.getPlaylist(aesIv, "stream{0}.ts.enc")
-        playlist2 = self.getPlaylist(aesIv, "stream2_{0}.ts.enc") + "#EXT-X-ENDLIST\n"
 
-        streamlinkResult = None
-        with requests_mock.Mocker() as mock:
-            mock.get("http://mocked/path/master.m3u8", text=masterPlaylist)
-            mock.get("http://mocked/path/playlist.m3u8", [{'text': playlist1}, {'text': playlist2}])
-            mock.get("http://mocked/path/encryption_key.key", content=aesKey)
-            for i, encryptedStream in enumerate(encryptedStreams):
-                mock.get("http://mocked/path/stream{0}.ts.enc".format(i), content=encryptedStream)
-            for i, encryptedStream in enumerate(encryptedStreams):
-                mock.get("http://mocked/path/stream2_{0}.ts.enc".format(i), content=encryptedStream)
+@patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
+class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
+    def get_session(self, options=None, *args, **kwargs):
+        session = super().get_session(options)
+        session.set_option("hls-live-edge", 3)
 
-            # Start streamlink on the generated stream
-            streamlinkResult = self.start_streamlink("http://mocked/path/master.m3u8")
+        return session
 
-        # Check result
-        # Live streams starts the last 3 segments from the playlist
-        expectedResult = b''.join(clearStreams[1:] + clearStreams)
-        self.assertEqual(streamlinkResult, expectedResult)
+    def test_offset_and_duration(self):
+        thread, segments = self.subject([
+            Playlist(1234, [Segment(0), Segment(1, duration=0.5), Segment(2, duration=0.5), Segment(3)], end=True)
+        ], streamoptions={"start_offset": 1, "duration": 1})
+
+        data = self.await_read(read_all=True)
+        self.assertEqual(data, self.content(segments, cond=lambda s: 0 < s.num < 3), "Respects the offset and duration")
+        self.assertTrue(all([self.called(s) for s in segments.values() if 0 < s.num < 3]), "Downloads second and third segment")
+        self.assertFalse(any([self.called(s) for s in segments.values() if 0 > s.num > 3]), "Skips other segments")
+
+
+@patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
+class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
+    def get_session(self, options=None, *args, **kwargs):
+        session = super().get_session(options)
+        session.set_option("hls-live-edge", 3)
+
+        return session
+
+    def gen_key(self, aes_key=None, aes_iv=None, method="AES-128", uri=None, keyformat="identity", keyformatversions=1):
+        aes_key = aes_key or os.urandom(16)
+        aes_iv = aes_iv or os.urandom(16)
+
+        key = TagKey(method=method, uri=uri, iv=aes_iv, keyformat=keyformat, keyformatversions=keyformatversions)
+        self.mock("GET", key.url(self.id()), content=aes_key)
+
+        return aes_key, aes_iv, key
+
+    def test_hls_encrypted_aes128(self):
+        aesKey, aesIv, key = self.gen_key()
+
+        # noinspection PyTypeChecker
+        thread, segments = self.subject([
+            Playlist(0, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 4)]),
+            Playlist(4, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(4, 8)], end=True)
+        ])
+
+        data = self.await_read(read_all=True)
+        expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
+        self.assertEqual(data, expected, "Decrypts the AES-128 identity stream")
+        self.assertTrue(self.called(key), "Downloads encryption key")
+        self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 1]), "Skips first segment")
+        self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 1]), "Downloads all remaining segments")
+
+    def test_hls_encrypted_aes128_key_uri_override(self):
+        aesKey, aesIv, key = self.gen_key(uri="http://real-mocked/{namespace}/encryption.key?foo=bar")
+        aesKeyInvalid = bytes([ord(aesKey[i:i + 1]) ^ 0xFF for i in range(16)])
+        _, __, key_invalid = self.gen_key(aesKeyInvalid, aesIv, uri="http://mocked/{namespace}/encryption.key?foo=bar")
+
+        # noinspection PyTypeChecker
+        thread, segments = self.subject([
+            Playlist(0, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 4)]),
+            Playlist(4, [key_invalid] + [SegmentEnc(num, aesKey, aesIv) for num in range(4, 8)], end=True)
+        ], options={"hls-segment-key-uri": "{scheme}://real-{netloc}{path}?{query}"})
+
+        data = self.await_read(read_all=True)
+        expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
+        self.assertEqual(data, expected, "Decrypts stream from custom key")
+        self.assertFalse(self.called(key_invalid), "Skips encryption key")
+        self.assertTrue(self.called(key), "Downloads custom encryption key")
+
+
+@patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
+@patch("streamlink.stream.hls.HLSStreamWriter.run", Mock(return_value=True))
+class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
+    segments = [Segment(0, "", 11), Segment(1, "", 7), Segment(2, "", 5), Segment(3, "", 3)]
+
+    def get_session(self, options=None, reload_time=None, *args, **kwargs):
+        return super().get_session(dict(options or {}, **{
+            "hls-live-edge": 3,
+            "hls-playlist-reload-time": reload_time
+        }))
+
+    def subject(self, *args, **kwargs):
+        thread, _ = super().subject(*args, **kwargs)
+        self.await_read(read_all=True)
+
+        return thread.reader.worker.playlist_reload_time
+
+    def test_hls_playlist_reload_time_default(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="default")
+        self.assertEqual(time, 6, "default sets the reload time to the playlist's target duration")
+
+    def test_hls_playlist_reload_time_segment(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="segment")
+        self.assertEqual(time, 3, "segment sets the reload time to the playlist's last segment")
+
+    def test_hls_playlist_reload_time_live_edge(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="live-edge")
+        self.assertEqual(time, 8, "live-edge sets the reload time to the sum of the number of segments of the live-edge")
+
+    def test_hls_playlist_reload_time_number(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="4")
+        self.assertEqual(time, 4, "number values override the reload time")
+
+    def test_hls_playlist_reload_time_number_invalid(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="0")
+        self.assertEqual(time, 6, "invalid number values set the reload time to the playlist's targetduration")
+
+    def test_hls_playlist_reload_time_no_target_duration(self):
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=0)], reload_time="default")
+        self.assertEqual(time, 8, "uses the live-edge sum if the playlist is missing the targetduration data")
+
+    def test_hls_playlist_reload_time_no_data(self):
+        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
+        self.assertEqual(time, 15, "sets reload time to 15 seconds when no data is available")
 
 
 @patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
@@ -225,7 +308,3 @@ class TestHlsExtAudio(unittest.TestCase):
 
         # Check result
         self.assertEqual(result, expected)
-
-
-if __name__ == "__main__":
-    unittest.main()

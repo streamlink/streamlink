@@ -1,11 +1,11 @@
 import os.path
 import unittest
+from unittest.mock import ANY, patch
 
-from streamlink import Streamlink
 import streamlink_cli.main
+from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
 
-from tests.mock import patch, ANY
 
 PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
 
@@ -26,7 +26,8 @@ class CommandLineTestCase(unittest.TestCase):
     @patch('streamlink_cli.output.sleep')
     @patch('subprocess.Popen')
     @patch('sys.argv')
-    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_sleep, mock_setup_streamlink, passthrough=False, exit_code=0):
+    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_sleep, mock_setup_streamlink,
+                   passthrough=False, exit_code=0):
         mock_argv.__getitem__.side_effect = lambda x: args[x]
 
         def side_effect(results):

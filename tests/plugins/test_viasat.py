@@ -9,7 +9,6 @@ class TestPluginViasat(unittest.TestCase):
             "http://www.juicyplay.dk/story/se-robinson-benjamins-store-forandring",
             "http://www.tv3.dk/paradise-hotel/paradise-hotel-2018-her-er-deltagerne",
             "http://www.tv3.dk/paradise-hotel/paradise-hotel-2018-her-er-deltagerne",
-            "https://play.nova.bg/programi/kh-faktor/902681?autostart=true",
             "https://play.tv3.lt/programos/eurocup/903167?autostart=true",
             "https://play.tv3.lt/programos/pamilti-vel/903174?autostart=true",
             "https://skaties.lv/sports/futbols/video-liverpool-izbraukuma-rada-klasi-pret-bournemouth/",
@@ -17,7 +16,8 @@ class TestPluginViasat(unittest.TestCase):
             "https://tv3play.tv3.ee/sisu/inglite-aeg/902432?autostart=true",
             "https://tvplay.skaties.lv/parraides/darma-un-gregs/902597?autostart=true&collection=719",
             "https://tvplay.skaties.lv/parraides/kungfu-panda/900510?autostart=true",
-            "https://www.tv3.lt/naujiena/938699/ispudingiausi-kobe-bryanto-karjeros-epizodai-monstriski-dejimai-ir-pergalingi-metimai",
+            "https://www.tv3.lt/naujiena/938699/ispudingiausi-kobe-bryanto-karjeros-epizodai-monstriski-dejimai-ir"
+            + "-pergalingi-metimai",
             "https://www.tv6play.no/programmer/underholdning/paradise-hotel-sverige/sesong-8/episode-19",
             "https://www.tv6play.no/programmer/underholdning/paradise-hotel/sesong-9/822763",
             "https://www.viafree.dk/",
@@ -30,11 +30,13 @@ class TestPluginViasat(unittest.TestCase):
             "https://www.viafree.se/program/underhallning/det-stora-experimentet/sasong-1/avsnitt-19",
         ]
         for url in should_match:
-            self.assertTrue(Viasat.can_handle_url(url))
+            self.assertTrue(Viasat.can_handle_url(url), url)
 
+    def test_can_handle_url_negative(self):
         should_not_match = [
             "http://www.tv3play.no",
             "http://www.tv6play.se",
+            "https://play.nova.bg/programi/kh-faktor/902681?autostart=true",
         ]
         for url in should_not_match:
-            self.assertFalse(Viasat.can_handle_url(url))
+            self.assertFalse(Viasat.can_handle_url(url), url)
