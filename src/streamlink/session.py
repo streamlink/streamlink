@@ -79,8 +79,10 @@ class Streamlink(object):
             "subprocess-errorlog": False,
             "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
-            "ffmpeg-video-transcode": "copy",
-            "ffmpeg-audio-transcode": "copy",
+            "ffmpeg-fout": None,
+            "ffmpeg-video-transcode": None,
+            "ffmpeg-audio-transcode": None,
+            "ffmpeg-start-at-zero": None,
             "mux-subtitles": False,
             "locale": None,
             "user-input-requester": None
@@ -203,6 +205,10 @@ class Streamlink(object):
         ffmpeg-verbose-path      (str) Specify the location of the
                                  ffmpeg stderr log file
 
+        ffmpeg-fout              (str) The output file format
+                                 when muxing with ffmpeg
+                                 e.g. ``matroska``
+
         ffmpeg-video-transcode   (str) The codec to use if transcoding
                                  video when muxing with ffmpeg
                                  e.g. ``h264``
@@ -210,6 +216,9 @@ class Streamlink(object):
         ffmpeg-audio-transcode   (str) The codec to use if transcoding
                                  audio when muxing with ffmpeg
                                  e.g. ``aac``
+
+        ffmpeg-start-at-zero     (bool) When used with ffmpeg and copyts,
+                                 shift input timestamps so they start at zero
 
         mux-subtitles            (bool) Mux available subtitles into the
                                  output stream.

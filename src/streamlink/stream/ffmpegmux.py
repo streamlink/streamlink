@@ -55,6 +55,9 @@ class MuxedStream(Stream):
 
 class FFMPEGMuxer(StreamIO):
     __commands__ = ['ffmpeg', 'ffmpeg.exe', 'avconv', 'avconv.exe']
+    DEFAULT_OUTPUT_FORMAT = "matroska"
+    DEFAULT_VIDEO_CODEC = "copy"
+    DEFAULT_AUDIO_CODEC = "copy"
 
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
@@ -89,13 +92,17 @@ class FFMPEGMuxer(StreamIO):
                              for stream, np in
                              zip(self.streams, self.pipes)]
 
-        ofmt = options.pop("format", "matroska")
+        ofmt = session.options.get("ffmpeg-fout") or options.pop("format", self.DEFAULT_OUTPUT_FORMAT)
         outpath = options.pop("outpath", "pipe:1")
-        videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", "copy")
-        audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", "copy")
+        videocodec = session.options.get("ffmpeg-video-transcode") or options.pop("vcodec", self.DEFAULT_VIDEO_CODEC)
+        audiocodec = session.options.get("ffmpeg-audio-transcode") or options.pop("acodec", self.DEFAULT_AUDIO_CODEC)
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
         copyts = options.pop("copyts", False)
+        if session.options.get("ffmpeg-start-at-zero") is not None:
+            start_at_zero = session.options.get("ffmpeg-start-at-zero")
+        else:
+            start_at_zero = options.pop("start_at_zero", True)
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
@@ -109,11 +116,13 @@ class FFMPEGMuxer(StreamIO):
 
         if copyts:
             self._cmd.extend(["-copyts"])
-            self._cmd.extend(["-start_at_zero"])
+            if start_at_zero:
+                self._cmd.extend(["-start_at_zero"])
 
         for stream, data in metadata.items():
             for datum in data:
-                self._cmd.extend(["-metadata:{0}".format(stream), datum])
+                stream_id = ":{0}".format(stream) if stream else ""
+                self._cmd.extend(["-metadata{0}".format(stream_id), datum])
 
         self._cmd.extend(['-f', ofmt, outpath])
         log.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))

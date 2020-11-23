@@ -1077,6 +1077,16 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--ffmpeg-fout",
+        type=str,
+        metavar="OUTFORMAT",
+        help="""
+        Set output file format.
+
+        Example: "mpegts"
+        """
+    )
+    transport.add_argument(
         "--ffmpeg-video-transcode",
         metavar="CODEC",
         help="""
@@ -1096,6 +1106,14 @@ def build_parser():
         Default is "copy".
 
         Example: "aac"
+        """
+    )
+    transport.add_argument(
+        "--ffmpeg-no-start-at-zero",
+        action="store_true",
+        help="""
+        Disables the -start_at_zero ffmpeg option
+        when using copyts.
         """
     )
     transport.add_argument(
