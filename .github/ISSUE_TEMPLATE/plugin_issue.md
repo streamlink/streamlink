@@ -19,8 +19,9 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ## Plugin Issue
 
-<!-- Replace [ ] with [x] in order to check the box -->
+<!-- Replace the space character between the square brackets with an x in order to check the boxes -->
 - [ ] This is a plugin issue and I have read the contribution guidelines.
+- [ ] I am using the latest development version from the master branch.
 
 
 ### Description
