@@ -116,7 +116,10 @@ class Pixiv(Plugin):
             yield s
 
     def get_streamer_data(self):
-        res = self.session.http.get(self.api_lives)
+        headers = {
+            "X-Requested-With": "https://sketch.pixiv.net/lives",
+        }
+        res = self.session.http.get(self.api_lives, headers=headers)
         data = self.session.http.json(res, schema=self._data_lives_schema)
         log.debug("Found {0} streams".format(len(data)))
 
