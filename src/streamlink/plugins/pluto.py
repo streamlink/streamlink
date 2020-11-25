@@ -12,13 +12,13 @@ log = logging.getLogger(__name__)
 
 
 class Pluto(Plugin):
-    _re_url = re.compile(r'''(?x)^https?://(?:www\.)?pluto\.tv/(?:
+    _re_url = re.compile(r'''^https?://(?:www\.)?pluto\.tv/(?:
         live-tv/(?P<slug_live>[^/?]+)/?$
         |
         on-demand/series/(?P<slug_series>[^/]+)/season/\d+/episode/(?P<slug_episode>[^/]+)$
         |
         on-demand/movies/(?P<slug_movies>[^/]+)$
-    )''')
+    )''', re.VERBOSE)
 
     title = None
 
@@ -30,11 +30,11 @@ class Pluto(Plugin):
         return self.title
 
     def _schema_media(self, slug):
-        return validate.Schema(validate.all(
+        return validate.Schema(
             [{
-                'name': validate.text,
-                'slug': validate.text,
-                validate.optional('stitched'): {
+                'name': str,
+                'slug': str,
+                'stitched': {
                     'urls': [
                         {
                             'type': str,
@@ -45,7 +45,7 @@ class Pluto(Plugin):
             }],
             validate.filter(lambda k: k['slug'].lower() == slug.lower()),
             validate.get(0),
-        ))
+        )
 
     def _get_streams(self):
         data = None
@@ -87,10 +87,10 @@ class Pluto(Plugin):
         if data is None:
             return
 
-        self.title = data.get('name')
-        stream_link_no_sid = data['stitched']['urls'][0]['url']
+        self.title = data['name']
+        stream_url_no_sid = data['stitched']['urls'][0]['url']
         device_id = str(uuid4())
-        stream_url = update_qsd(stream_link_no_sid, {
+        stream_url = update_qsd(stream_url_no_sid, {
             'deviceId': device_id,
             'sid': device_id,
             'deviceType': 'web',
