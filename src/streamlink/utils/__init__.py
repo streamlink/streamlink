@@ -3,12 +3,27 @@ import json
 import re
 import xml.etree.ElementTree as ET
 import zlib
+from importlib.machinery import FileFinder, SOURCE_SUFFIXES, SourceFileLoader
+from importlib.util import module_from_spec
 from urllib.parse import parse_qsl, urljoin, urlparse
 
 from streamlink.exceptions import PluginError
 from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.url import update_scheme, url_equal
+
+
+_loader_details = [(SourceFileLoader, SOURCE_SUFFIXES)]
+
+
+def load_module(name, path=None):
+    finder = FileFinder(path, *_loader_details)
+    spec = finder.find_spec(name)
+    if not spec or not spec.loader:
+        raise ImportError(f"no module named {name}")
+    mod = module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def swfdecompress(data):
@@ -168,20 +183,6 @@ def search_dict(data, key):
                 yield result
 
 
-def load_module(name, path=None):
-    import importlib.machinery
-    import importlib.util
-
-    loader_details = [(importlib.machinery.SourceFileLoader, importlib.machinery.SOURCE_SUFFIXES)]
-    finder = importlib.machinery.FileFinder(path, *loader_details)
-    spec = finder.find_spec(name)
-    if not spec or not spec.loader:
-        raise ImportError("no module named {0}".format(name))
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
 def escape_librtmp(value):  # pragma: no cover
     if isinstance(value, bool):
         value = "1" if value else "0"
@@ -195,7 +196,7 @@ def escape_librtmp(value):  # pragma: no cover
     return value
 
 
-__all__ = ["swfdecompress", "update_scheme", "url_equal",
+__all__ = ["load_module", "swfdecompress", "update_scheme", "url_equal",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json",
            "parse_xml", "rtmpparse", "prepend_www", "NamedPipe",
            "escape_librtmp", "LazyFormatter"]

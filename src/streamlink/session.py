@@ -1,8 +1,5 @@
-import imp
 import logging
 import pkgutil
-import sys
-import traceback
 from collections import OrderedDict
 
 import requests
@@ -12,33 +9,13 @@ from streamlink.compat import is_win32
 from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
-from streamlink.plugin import api
-from streamlink.utils import memoize, update_scheme
+from streamlink.plugin import Plugin, api
+from streamlink.utils import load_module, memoize, update_scheme
 from streamlink.utils.l10n import Localization
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
 logging.setLoggerClass(StreamlinkLogger)
 log = logging.getLogger(__name__)
-
-
-def print_small_exception(start_after):
-    type, value, traceback_ = sys.exc_info()
-
-    tb = traceback.extract_tb(traceback_)
-    index = 0
-
-    for i, trace in enumerate(tb):
-        if trace[2] == start_after:
-            index = i + 1
-            break
-
-    lines = traceback.format_list(tb[index:])
-    lines += traceback.format_exception_only(type, value)
-
-    for line in lines:
-        sys.stderr.write(line)
-
-    sys.stderr.write("\n")
 
 
 class PythonDeprecatedWarning(UserWarning):
@@ -429,40 +406,23 @@ class Streamlink(object):
         :param path: full path to a directory where to look for plugins
 
         """
+        user_input_requester = self.get_option("user-input-requester")
         for loader, name, ispkg in pkgutil.iter_modules([path]):
-            file, pathname, desc = imp.find_module(name, [path])
             # set the full plugin module name
-            module_name = "streamlink.plugin.{0}".format(name)
-
+            module_name = f"streamlink.plugins.{name}"
             try:
-                self.load_plugin(module_name, file, pathname, desc)
-            except Exception:
-                sys.stderr.write("Failed to load plugin {0}:\n".format(name))
-                print_small_exception("load_plugin")
-
+                mod = load_module(module_name, path)
+            except ImportError:
+                log.exception(f"Failed to load plugin {name} from {path}\n")
                 continue
 
-    def load_plugin(self, name, file, pathname, desc):
-        # Set the global http session for this plugin
-        user_input_requester = self.get_option("user-input-requester")
-        api.http = self.http
-
-        module = imp.load_module(name, file, pathname, desc)
-
-        if hasattr(module, "__plugin__"):
-            module_name = getattr(module, "__name__")
-            plugin_name = module_name.split(".")[-1]  # get the plugin part of the module name
-
-            plugin = getattr(module, "__plugin__")
-            plugin.bind(self, plugin_name, user_input_requester)
-
+            if not hasattr(mod, "__plugin__") or not issubclass(mod.__plugin__, Plugin):
+                continue
+            plugin = mod.__plugin__
+            plugin.bind(self, name, user_input_requester)
             if plugin.module in self.plugins:
-                log.debug("Plugin {0} is being overridden by {1}".format(plugin.module, pathname))
-
+                log.debug(f"Plugin {plugin.module} is being overridden by {mod.__file__}")
             self.plugins[plugin.module] = plugin
-
-        if file:
-            file.close()
 
     @property
     def version(self):

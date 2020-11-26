@@ -1,11 +1,9 @@
 import os
 import unittest
-from unittest.mock import call, patch
 
 from streamlink import NoPluginError, Streamlink
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
-from streamlink.session import print_small_exception
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
 
 
@@ -21,11 +19,21 @@ class TestSession(unittest.TestCase):
 
     def test_load_plugins(self):
         plugins = self.session.get_plugins()
-        self.assertTrue(plugins["testplugin"])
+        self.assertIn("testplugin", plugins)
+        self.assertNotIn("testplugin_missing", plugins)
+        self.assertNotIn("testplugin_invalid", plugins)
 
     def test_builtin_plugins(self):
         plugins = self.session.get_plugins()
-        self.assertTrue("twitch" in plugins)
+        self.assertIn("twitch", plugins)
+        self.assertEqual(plugins["twitch"].__module__, "streamlink.plugins.twitch")
+
+    def test_override_plugins(self):
+        plugins = self.session.get_plugins()
+        self.assertIn("testplugin", plugins)
+        self.assertNotIn("testplugin_override", plugins)
+        self.assertEqual(plugins["testplugin"].__name__, "TestPluginOverride")
+        self.assertEqual(plugins["testplugin"].__module__, "streamlink.plugins.testplugin_override")
 
     def test_resolve_url(self):
         plugins = self.session.get_plugins()
@@ -148,16 +156,6 @@ class TestSession(unittest.TestCase):
 
         self.assertTrue("support" in streams)
         self.assertTrue(isinstance(streams["support"], HTTPStream))
-
-    @patch("streamlink.session.sys.stderr")
-    def test_short_exception(self, stderr):
-        try:
-            raise RuntimeError("test exception")
-        except RuntimeError:
-            print_small_exception("test_short_exception")
-            self.assertSequenceEqual(
-                [call('RuntimeError: test exception\n'), call('\n')],
-                stderr.write.mock_calls)
 
     def test_set_and_get_locale(self):
         session = Streamlink()
