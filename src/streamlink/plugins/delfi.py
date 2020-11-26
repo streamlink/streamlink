@@ -57,8 +57,7 @@ class Delfi(Plugin):
             if div.attributes.get("data-provider") == "dvideo":
                 video_id = div.attributes.get("data-id")
                 log.debug("Found video ID: {0}".format(video_id))
-                for s in self._get_streams_api(video_id):
-                    yield s
+                yield from self._get_streams_api(video_id)
 
 
 __plugin__ = Delfi

@@ -81,8 +81,7 @@ class ard_mediathek(Plugin):
                     log.error("Unexpected stream type: '{0}'".format(stream_))
 
                 try:
-                    for s in parser(stream):
-                        yield s
+                    yield from parser(stream)
                 except IOError as err:
                     log.error("Failed to extract {0} streams: {1}".format(parser_name, err))
 

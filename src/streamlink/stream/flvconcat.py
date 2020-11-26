@@ -193,8 +193,7 @@ class FLVTagConcat:
         tags_iterator = filter(None, self.tags)
         flv_iterator = iter_flv_tags(fd=fd, buf=buf, skip_header=skip_header)
 
-        for tag in chain(tags_iterator, flv_iterator):
-            yield tag
+        yield from chain(tags_iterator, flv_iterator)
 
     def iter_chunks(self, fd=None, buf=None, skip_header=None):
         """Reads FLV tags from fd or buf and returns them with adjusted

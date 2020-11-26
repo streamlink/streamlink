@@ -153,12 +153,11 @@ class WWENetwork(Plugin):
             log.debug("Found content ID: {0}".format(content_id))
             info = self._get_media_info(content_id)
             if info.get("hlsUrl"):
-                for s in HLSStream.parse_variant_playlist(
+                yield from HLSStream.parse_variant_playlist(
                     self.session,
                     info["hlsUrl"],
                     start_offset=start_point
-                ).items():
-                    yield s
+                ).items()
             else:
                 log.error("Could not find the HLS URL")
 

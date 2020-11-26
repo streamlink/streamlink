@@ -120,11 +120,14 @@ class Schoolism(Plugin):
                                                      headers={"User-Agent": useragents.SAFARI_8,
                                                               "Referer": self.url})
                         elif source['type'] == "application/x-mpegurl":
-                            for s in HLSStream.parse_variant_playlist(self.session,
-                                                                      source["src"],
-                                                                      headers={"User-Agent": useragents.SAFARI_8,
-                                                                               "Referer": self.url}).items():
-                                yield s
+                            yield from HLSStream.parse_variant_playlist(
+                                self.session,
+                                source["src"],
+                                headers={
+                                    "User-Agent": useragents.SAFARI_8,
+                                    "Referer": self.url
+                                }
+                            ).items()
 
             if not found:
                 log.error(f"Could not find {video_type} Part {part}")

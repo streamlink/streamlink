@@ -160,12 +160,10 @@ def search_dict(data, key):
         for dkey, value in data.items():
             if dkey == key:
                 yield value
-            for result in search_dict(value, key):
-                yield result
+            yield from search_dict(value, key)
     elif isinstance(data, list):
         for value in data:
-            for result in search_dict(value, key):
-                yield result
+            yield from search_dict(value, key)
 
 
 def load_module(name, path=None):
