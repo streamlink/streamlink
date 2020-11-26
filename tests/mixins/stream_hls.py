@@ -132,7 +132,7 @@ class HLSStreamReadThread(Thread):
                     return
 
                 self.data.append(self.reader.read(-1))
-            except IOError as err:
+            except OSError as err:
                 self.error = err
                 return
             finally:

@@ -339,7 +339,7 @@ class YouTube(Plugin):
                     self.session, hls_manifest, name_key="pixels"
                 )
                 streams.update(hls_streams)
-            except IOError as err:
+            except OSError as err:
                 log.warning(f"Failed to extract HLS streams: {err}")
 
         if not streams and protected:

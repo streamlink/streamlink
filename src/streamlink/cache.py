@@ -59,7 +59,7 @@ class Cache:
                 os.makedirs(os.path.dirname(self.filename))
 
             shutil.move(tempname, self.filename)
-        except (IOError, OSError):
+        except OSError:
             os.remove(tempname)
 
     def set(self, key, value, expires=60 * 60 * 24 * 7, expires_at=None):

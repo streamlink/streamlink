@@ -72,7 +72,7 @@ class WebTV(Plugin):
                         else:
                             # and if that fails, try it as a plain HLS stream
                             yield 'live', HLSStream(self.session, url, headers=headers)
-                    except IOError:
+                    except OSError:
                         log.warning("Could not open the stream, perhaps the channel is offline")
 
 

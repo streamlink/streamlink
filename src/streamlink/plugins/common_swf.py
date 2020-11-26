@@ -36,7 +36,7 @@ def read_tags(fd):
     while True:
         try:
             yield read_tag(fd)
-        except IOError:
+        except OSError:
             break
 
 

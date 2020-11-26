@@ -36,7 +36,7 @@ class FilteredHLSStreamReader(HLSStreamReader):
         while True:
             try:
                 return super().read(size)
-            except IOError:
+            except OSError:
                 # wait indefinitely until filtering ends
                 self.filter_event.wait()
                 if self.buffer.closed:

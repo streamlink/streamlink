@@ -98,7 +98,7 @@ class CanalPlus(Plugin):
                                               video_url,
                                               params={'secret': self.SECRET},
                                               headers=headers)
-            except IOError as err:
+            except OSError as err:
                 if '403 Client Error' in str(err):
                     log.error('Failed to access stream, may be due to geo-restriction')
 

@@ -139,7 +139,7 @@ class StreamProcess(Stream):
 
         try:
             process = subprocess.Popen(cmd, stderr=stderr, stdout=subprocess.PIPE)
-        except (OSError, IOError) as err:
+        except OSError as err:
             raise StreamError("Failed to start process: {0} ({1})".format(self._check_cmd(), str(err)))
 
         if timeout:

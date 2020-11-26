@@ -170,7 +170,7 @@ class RTBF(Plugin):
                     dash_url = self.tokenize_stream(dash_url)
                 yield from DASHStream.parse_manifest(self.session, dash_url).items()
 
-        except IOError as err:
+        except OSError as err:
             if '403 Client Error' in str(err):
                 # Check whether video is expired
                 if 'startDate' in stream_data:

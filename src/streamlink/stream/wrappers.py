@@ -65,7 +65,7 @@ class StreamIOThreadWrapper(io.IOBase):
             while self.running:
                 try:
                     data = self.fd.read(8192)
-                except IOError as error:
+                except OSError as error:
                     self.error = error
                     break
 
