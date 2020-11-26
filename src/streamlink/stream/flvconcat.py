@@ -34,11 +34,11 @@ def iter_flv_tags(fd=None, buf=None, strict=False, skip_header=False):
                 tag = Tag.deserialize(fd, strict=strict)
             elif buf:
                 tag, offset = Tag.deserialize_from(buf, offset, strict=strict)
-        except (IOError, FLVError) as err:
+        except (OSError, FLVError) as err:
             if "Insufficient tag header" in str(err):
                 break
 
-            raise IOError(err)
+            raise OSError(err)
 
         yield tag
 
@@ -93,7 +93,7 @@ class FLVTagConcat:
 
     def verify_tag(self, tag):
         if tag.filter:
-            raise IOError("Tag has filter flag set, probably encrypted")
+            raise OSError("Tag has filter flag set, probably encrypted")
 
         # Only AAC and AVC has detectable headers
         if isinstance(tag.data, AudioData) and tag.data.codec != AUDIO_CODEC_ID_AAC:
@@ -252,7 +252,7 @@ class FLVTagConcatWorker(Thread):
 
                     if not self.running:
                         return
-            except IOError as err:
+            except OSError as err:
                 self.error = err
                 break
 

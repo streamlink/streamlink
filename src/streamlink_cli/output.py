@@ -32,7 +32,7 @@ class Output:
 
     def write(self, data):
         if not self.opened:
-            raise IOError("Output is not opened")
+            raise OSError("Output is not opened")
 
         return self._write(data)
 

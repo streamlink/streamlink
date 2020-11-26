@@ -635,7 +635,7 @@ class Twitch(Plugin):
 
         try:
             streams = TwitchHLSStream.parse_variant_playlist(self.session, url, start_offset=time_offset, **extra_params)
-        except IOError as err:
+        except OSError as err:
             err = str(err)
             if "404 Client Error" in err or "Failed to parse playlist" in err:
                 return

@@ -101,7 +101,7 @@ class Hitbox(Plugin):
             try:
                 streams = HLSStream.parse_variant_playlist(self.session, url)
                 return streams.items()
-            except IOError as err:
+            except OSError as err:
                 log.warning("Failed to extract HLS streams: {0}".format(err))
         else:
             return quality, HLSStream(self.session, url)
@@ -152,7 +152,7 @@ class Hitbox(Plugin):
         if bitrate["label"].lower() == "auto":
             try:
                 return cls.parse_variant_playlist(self.session, url).items()
-            except IOError as err:
+            except OSError as err:
                 log.warning("Failed to extract HLS streams: {0}".format(err))
                 return
 

@@ -107,7 +107,7 @@ class zdf_mediathek(Plugin):
     def _parse_track(self, track, parser, name):
         try:
             return parser(self.session, track["uri"])
-        except IOError as err:
+        except OSError as err:
             log.error("Failed to extract {0} streams: {1}".format(name, err))
 
     def _extract_from_format(self, format_):

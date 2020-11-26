@@ -54,7 +54,7 @@ class HTTPServer:
     def bind(self, host="127.0.0.1", port=0):
         try:
             self.socket.bind((host or "", port))
-        except socket.error as err:
+        except OSError as err:
             raise OSError(err)
 
         self.socket.listen(1)
@@ -74,7 +74,7 @@ class HTTPServer:
 
         try:
             req_data = conn.recv(1024)
-        except socket.error:
+        except OSError:
             raise OSError("Failed to read data from socket")
 
         req = HTTPRequest(req_data)
@@ -88,7 +88,7 @@ class HTTPServer:
             conn.send(b"Server: Streamlink\r\n")
             conn.send(b"Content-Type: video/unknown\r\n")
             conn.send(b"\r\n")
-        except socket.error:
+        except OSError:
             raise OSError("Failed to write data to socket")
 
         # We don't want to send any data on HEAD requests.
@@ -102,7 +102,7 @@ class HTTPServer:
 
     def write(self, data):
         if not self.conn:
-            raise IOError("No connection")
+            raise OSError("No connection")
 
         self.conn.sendall(data)
 
@@ -113,6 +113,6 @@ class HTTPServer:
         if not client_only:
             try:
                 self.socket.shutdown(2)
-            except (OSError, socket.error):
+            except OSError:
                 pass
             self.socket.close()

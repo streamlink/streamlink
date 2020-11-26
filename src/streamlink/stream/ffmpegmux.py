@@ -70,12 +70,12 @@ class FFMPEGMuxer(StreamIO):
                     pipe.write(data)
                 else:
                     break
-            except IOError:
+            except OSError:
                 log.error("Pipe copy aborted: {0}".format(pipe.path))
                 return
         try:
             pipe.close()
-        except IOError:  # might fail closing, but that should be ok for the pipe
+        except OSError:  # might fail closing, but that should be ok for the pipe
             pass
         log.debug("Pipe copy complete: {0}".format(pipe.path))
 

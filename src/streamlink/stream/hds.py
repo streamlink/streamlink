@@ -107,7 +107,7 @@ class HDSStreamWriter(SegmentedStreamWriter):
                     break
             else:
                 log.debug(f"Download of fragment {fragment.segment}-{fragment.fragment} complete")
-        except IOError as err:
+        except OSError as err:
             if "Unknown tag type" in str(err):
                 log.error("Unknown tag type found, this stream is probably encrypted")
                 self.close()
@@ -476,7 +476,7 @@ class HDSStream(Stream):
         pvtoken = manifest.findtext("pv-2.0")
         if pvtoken:
             if not pvswf:
-                raise IOError("This manifest requires the 'pvswf' parameter "
+                raise OSError("This manifest requires the 'pvswf' parameter "
                               "to verify the SWF")
 
             params = cls._pv_params(session, pvswf, pvtoken, **request_params)

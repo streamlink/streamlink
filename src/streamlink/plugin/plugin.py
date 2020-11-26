@@ -323,7 +323,7 @@ class Plugin:
                 ostreams = list(ostreams)
         except NoStreamsError:
             return {}
-        except (IOError, OSError, ValueError) as err:
+        except (OSError, ValueError) as err:
             raise PluginError(err)
 
         if not ostreams:
@@ -510,7 +510,7 @@ class Plugin:
         if self._user_input_requester:
             try:
                 return self._user_input_requester.ask(prompt)
-            except IOError as e:
+            except OSError as e:
                 raise FatalPluginError("User input error: {0}".format(e))
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
@@ -520,7 +520,7 @@ class Plugin:
         if self._user_input_requester:
             try:
                 return self._user_input_requester.ask_password(prompt)
-            except IOError as e:
+            except OSError as e:
                 raise FatalPluginError("User input error: {0}".format(e))
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass

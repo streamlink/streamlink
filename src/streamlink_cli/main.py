@@ -101,7 +101,7 @@ def create_output(plugin):
 
             try:
                 namedpipe = NamedPipe(pipename)
-            except IOError as err:
+            except OSError as err:
                 console.exit("Failed to create pipe: {0}", err)
         elif args.player_http:
             http = create_http_server()
@@ -280,7 +280,7 @@ def open_stream(stream):
     try:
         log.debug("Pre-buffering 8192 bytes")
         prebuffer = stream_fd.read(8192)
-    except IOError as err:
+    except OSError as err:
         stream_fd.close()
         raise StreamError("Failed to read data from stream: {0}".format(err))
 
@@ -312,7 +312,7 @@ def output_stream(plugin, stream):
 
     try:
         output.open()
-    except (IOError, OSError) as err:
+    except OSError as err:
         if isinstance(output, PlayerOutput):
             console.exit("Failed to start player: {0} ({1})",
                          args.player, err)
@@ -369,7 +369,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
 
             try:
                 output.write(data)
-            except IOError as err:
+            except OSError as err:
                 if is_player and err.errno in ACCEPTABLE_ERRNO:
                     log.info("Player closed")
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
@@ -378,7 +378,7 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
                     console.exit("Error when writing to output: {0}, exiting", err)
 
                 break
-    except IOError as err:
+    except OSError as err:
         console.exit("Error when reading from stream: {0}, exiting", err)
     finally:
         stream.close()

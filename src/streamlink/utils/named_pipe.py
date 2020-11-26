@@ -42,7 +42,7 @@ class NamedPipe:
 
         if pipe == INVALID_HANDLE_VALUE:
             error_code = windll.kernel32.GetLastError()
-            raise IOError("Error code 0x{0:08X}".format(error_code))
+            raise OSError("Error code 0x{0:08X}".format(error_code))
 
         return pipe
 

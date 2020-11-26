@@ -54,7 +54,7 @@ class ArteTV(Plugin):
                     try:
                         streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
                         yield from streams.items()
-                    except IOError as err:
+                    except OSError as err:
                         log.warning(f"Failed to extract HLS streams for {sname}/{stream['versionLibelle']}: {err}")
 
     def _get_streams(self):

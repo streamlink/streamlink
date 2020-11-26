@@ -78,7 +78,7 @@ class Gulli(Plugin):
                     else:
                         bitrate = 'vod'
                     yield bitrate, HTTPStream(self.session, video_url)
-            except IOError as err:
+            except OSError as err:
                 if '403 Client Error' in str(err):
                     log.error('Failed to access stream, may be due to geo-restriction')
                 raise

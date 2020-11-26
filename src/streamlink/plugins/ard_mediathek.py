@@ -82,7 +82,7 @@ class ard_mediathek(Plugin):
 
                 try:
                     yield from parser(stream)
-                except IOError as err:
+                except OSError as err:
                     log.error("Failed to extract {0} streams: {1}".format(parser_name, err))
 
 

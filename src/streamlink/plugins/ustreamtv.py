@@ -190,7 +190,7 @@ class UHSStreamWriter(SegmentedStreamWriter):
                     return
             else:
                 log.debug(f"Download of chunk {chunk.num} complete")
-        except IOError as err:
+        except OSError as err:
             log.error(f"Failed to read chunk {chunk.num}: {err}")
 
 
