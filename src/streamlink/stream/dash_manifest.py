@@ -141,7 +141,7 @@ class MPDNode:
         self.root = root
         self.parent = parent
         self._base_url = kwargs.get("base_url")
-        self.attributes = set([])
+        self.attributes = set()
         if self.__tag__ and self.node.tag.lower() != self.__tag__.lower():
             raise MPDParsingError("root tag did not match the expected tag: {}".format(self.__tag__))
 

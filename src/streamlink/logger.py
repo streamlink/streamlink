@@ -4,9 +4,16 @@ from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARN
 from threading import Lock
 
 TRACE = 5
-_levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),
-                     (TRACE, "trace"), (NOTSET, "none")])
-_nameToLevel = dict([(name, level) for level, name in _levelToName.items()])
+_levelToName = {
+    CRITICAL: "critical",
+    ERROR: "error",
+    WARN: "warning",
+    INFO: "info",
+    DEBUG: "debug",
+    TRACE: "trace",
+    NOTSET: "none",
+}
+_nameToLevel = {name: level for level, name in _levelToName.items()}
 
 for level, name in _levelToName.items():
     logging.addLevelName(level, name)

@@ -24,5 +24,5 @@ def itertags(html, tag):
     """
     for match in tag_re.finditer(html):
         if match.group("tag") == tag:
-            attrs = dict((a.group("key").lower(), a.group("value")) for a in attr_re.finditer(match.group("attr")))
+            attrs = {a.group("key").lower(): a.group("value") for a in attr_re.finditer(match.group("attr"))}
             yield Tag(match.group("tag"), attrs, match.group("inner"))
