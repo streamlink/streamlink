@@ -504,8 +504,7 @@ class SegmentTemplate(MPDNode):
             available_iter = count_dt(available_start,
                                       step=datetime.timedelta(seconds=self.duration_seconds))
 
-        for number, available_at in zip(number_iter, available_iter):
-            yield number, available_at
+        yield from zip(number_iter, available_iter)
 
     def format_media(self, **kwargs):
         if self.segmentTimeline:

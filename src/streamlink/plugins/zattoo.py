@@ -287,14 +287,10 @@ class Zattoo(Plugin):
             log.debug('Found data for {0}'.format(stream_type))
             if data['success'] and stream_type in ['hls', 'hls5']:
                 for url in data['stream']['watch_urls']:
-                    for s in HLSStream.parse_variant_playlist(
-                            self.session, url['url']).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, url['url']).items()
             elif data['success'] and stream_type == 'dash':
                 for url in data['stream']['watch_urls']:
-                    for s in DASHStream.parse_manifest(
-                            self.session, url['url']).items():
-                        yield s
+                    yield from DASHStream.parse_manifest(self.session, url['url']).items()
 
     def _get_params_cid(self, channel):
         log.debug('get channel ID for {0}'.format(channel))

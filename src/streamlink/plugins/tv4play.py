@@ -89,9 +89,7 @@ class TV4Play(Plugin):
         data = self.session.http.json(res)
         hls_url = data["playbackItem"]["manifestUrl"]
         log.debug("URL={0}".format(hls_url))
-        for s in HLSStream.parse_variant_playlist(self.session,
-                                                  hls_url).items():
-            yield s
+        yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
 
 __plugin__ = TV4Play

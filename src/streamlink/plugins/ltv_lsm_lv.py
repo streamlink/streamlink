@@ -40,9 +40,7 @@ class LtvLsmLv(Plugin):
                 stream_url = source.attributes.get("src")
                 url_path = urlparse(stream_url).path
                 if url_path.endswith(".m3u8"):
-                    for s in HLSStream.parse_variant_playlist(self.session,
-                                                              stream_url).items():
-                        yield s
+                    yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()
                 else:
                     log.debug("Not used URL path: {0}".format(url_path))
 

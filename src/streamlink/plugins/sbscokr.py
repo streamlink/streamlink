@@ -100,9 +100,7 @@ class SBScokr(Plugin):
 
         for media in res['source']['mediasourcelist']:
             if media['mediaurl']:
-                for s in HLSStream.parse_variant_playlist(self.session,
-                                                          media['mediaurl']).items():
-                    yield s
+                yield from HLSStream.parse_variant_playlist(self.session, media['mediaurl']).items()
         else:
             if res['info']['onair_yn'] != 'Y':
                 log.error('This channel is currently unavailable')
