@@ -1,10 +1,10 @@
-import imp
+import inspect
 import os.path
 import pkgutil
 import unittest
 
 import streamlink.plugins
-from streamlink import Streamlink
+from streamlink.plugins import Plugin
 from streamlink.utils import load_module
 
 
@@ -13,27 +13,25 @@ class PluginTestMeta(type):
         plugin_path = os.path.dirname(streamlink.plugins.__file__)
         plugins = []
         for loader, pname, ispkg in pkgutil.iter_modules([plugin_path]):
-            module = load_module(pname, plugin_path)
+            module = load_module(f"streamlink.plugins.{pname}", plugin_path)
             if hasattr(module, "__plugin__"):
-                plugins.append((pname))
+                plugins.append((loader, pname))
 
-        session = Streamlink()
-
-        def gentest(pname):
+        def gentest(loader, pname):
             def load_plugin_test(self):
-                # Reset file variable to ensure it is still open when doing
-                # load_plugin else python might open the plugin source .py
-                # using ascii encoding instead of utf-8.
-                # See also open() call here: imp._HackedGetData.get_data
-                file, pathname, desc = imp.find_module(pname, [plugin_path])
-                session.load_plugin(pname, file, pathname, desc)
-                # validate that can_handle_url does not fail
-                session.plugins[pname].can_handle_url("http://test.com")
+                plugin = loader.find_module(pname).load_module(pname)
+                assert hasattr(plugin, "__plugin__"), "It exports __plugin__"
+                assert issubclass(plugin.__plugin__, Plugin), "__plugin__ is an instance of the Plugin class"
+
+                assert callable(plugin.__plugin__._get_streams), "The plugin implements _get_streams"
+                assert callable(plugin.__plugin__.can_handle_url), "The plugin implements can_handle_url"
+                sig = inspect.signature(plugin.__plugin__.can_handle_url)
+                assert str(sig) == "(url)", "can_handle_url only accepts the url arg"
 
             return load_plugin_test
 
-        for pname in plugins:
-            dict['test_{0}_load'.format(pname)] = gentest(pname)
+        for loader, pname in plugins:
+            dict[f"test_{pname}_load"] = gentest(loader, pname)
 
         return type.__new__(mcs, name, bases, dict)
 
