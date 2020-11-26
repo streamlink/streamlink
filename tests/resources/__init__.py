@@ -5,16 +5,12 @@ from contextlib import contextmanager
 from io import BytesIO
 
 import requests_mock
-import six
 
 __here__ = os.path.abspath(os.path.dirname(__file__))
 
 
 def _parse_xml(data, strip_ns=False):
-    if six.PY2 and isinstance(data, six.text_type):
-        data = data.encode("utf8")
-    elif six.PY3:
-        data = bytearray(data, "utf8")
+    data = bytearray(data, "utf8")
     try:
         it = ET.iterparse(BytesIO(data))
         for _, el in it:

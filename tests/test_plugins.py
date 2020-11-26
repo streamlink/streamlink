@@ -3,8 +3,6 @@ import os.path
 import pkgutil
 import unittest
 
-import six
-
 import streamlink.plugins
 from streamlink import Streamlink
 from streamlink.utils import load_module
@@ -40,8 +38,7 @@ class PluginTestMeta(type):
         return type.__new__(mcs, name, bases, dict)
 
 
-@six.add_metaclass(PluginTestMeta)
-class TestPlugins(unittest.TestCase):
+class TestPlugins(unittest.TestCase, metaclass=PluginTestMeta):
     """
     Test that each plugin can be loaded and does not fail when calling can_handle_url.
     """
