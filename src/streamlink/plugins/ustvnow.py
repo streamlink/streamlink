@@ -135,7 +135,7 @@ class USTVNow(Plugin):
                    "tenant-code": self.TENANT_CODE,
                    "content-type": "application/json"}
         res = self.session.http.post(self._api_url + path, data=json.dumps(post_data), headers=headers).json()
-        data = dict((k, v and json.loads(self.decrypt_data(v, key, iv)))for k, v in res.items())
+        data = {k: v and json.loads(self.decrypt_data(v, key, iv)) for k, v in res.items()}
         return data
 
     def login(self, username, password):
