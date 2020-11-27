@@ -322,14 +322,14 @@ class NicoLive(Plugin):
                 except Exception as e:
                     _log.debug(e)
                     msg = "unknown reason"
-                _log.warn("Login failed. {0}".format(msg))
+                _log.warning("Login failed. {0}".format(msg))
                 return False
             else:
                 _log.info("Logged in.")
                 self.save_cookies()
                 return True
         else:
-            _log.warn(
+            _log.warning(
                 "Neither a email and password combination nor a user session "
                 "token is provided. Cannot attempt login.")
             return False
