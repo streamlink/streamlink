@@ -139,6 +139,7 @@ piczel                  piczel.tv            Yes   No
 pixiv                   sketch.pixiv.net     Yes   --
 playtv                  - playtv.fr          Yes   --    Streams may be geo-restricted to France.
                         - play.tv
+pluto                   pluto.tv             Yes   Yes
 pluzz                   - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                         - ludo.fr
                         - zouzous.fr
