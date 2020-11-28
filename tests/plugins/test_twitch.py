@@ -470,22 +470,8 @@ class TestTwitchReruns(unittest.TestCase):
     log_call = call("Reruns were disabled by command line option")
 
     def subject(self, **params):
-        with requests_mock.Mocker() as mock:
-            mock.get(
-                "https://api.twitch.tv/kraken/users?login=foo",
-                json={"users": [{"_id": 1234}]}
-            )
-            mock.get(
-                "https://api.twitch.tv/kraken/streams/1234",
-                json={"stream": None} if params.pop("offline", False) else {"stream": {
-                    "stream_type": params.pop("stream_type", "live"),
-                    "broadcast_platform": params.pop("broadcast_platform", "live"),
-                    "channel": {
-                        "broadcaster_software": params.pop("broadcaster_software", "")
-                    }
-                }}
-            )
-
+        with patch("streamlink.plugins.twitch.TwitchAPI.stream_metadata") as mock:
+            mock.return_value = None if params.pop("offline", False) else {"type": params.pop("stream_type", "live")}
             session = Streamlink()
             Twitch.bind(session, "tests.plugins.test_twitch")
             plugin = Twitch("https://www.twitch.tv/foo")
@@ -499,18 +485,6 @@ class TestTwitchReruns(unittest.TestCase):
 
     def test_disable_reruns_not_live(self, mock_log):
         self.assertTrue(self.subject(stream_type="rerun"))
-        self.assertIn(self.log_call, mock_log.info.call_args_list)
-
-    def test_disable_reruns_mixed(self, mock_log):
-        self.assertTrue(self.subject(stream_type="rerun", broadcast_platform="live"))
-        self.assertIn(self.log_call, mock_log.info.call_args_list)
-
-    def test_disable_reruns_mixed2(self, mock_log):
-        self.assertTrue(self.subject(stream_type="live", broadcast_platform="rerun"))
-        self.assertIn(self.log_call, mock_log.info.call_args_list)
-
-    def test_disable_reruns_broadcaster_software(self, mock_log):
-        self.assertTrue(self.subject(broadcaster_software="watch_party_rerun"))
         self.assertIn(self.log_call, mock_log.info.call_args_list)
 
     def test_disable_reruns_offline(self, mock_log):
