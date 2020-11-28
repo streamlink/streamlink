@@ -232,24 +232,6 @@ class TwitchAPI:
             validate.transform(int)
         ))
 
-    def stream_rerun(self, channel_id):
-        return self.call("/kraken/streams/{0}".format(channel_id), schema=validate.Schema(
-            {
-                "stream": validate.any(None, validate.all({
-                    "stream_type": validate.text,
-                    "broadcast_platform": validate.text,
-                    "channel": validate.all({
-                        "broadcaster_software": validate.text
-                    }, validate.get("broadcaster_software"))
-                }, validate.union((
-                    validate.get("stream_type"),
-                    validate.get("broadcast_platform"),
-                    validate.get("channel")
-                ))))
-            },
-            validate.get("stream")
-        ))
-
     def metadata_video(self, video_id):
         return self.call("/kraken/videos/{0}".format(video_id), schema=validate.Schema(validate.any(
             validate.all(
@@ -405,6 +387,35 @@ class TwitchAPI:
             }},
             validate.get("data"),
             validate.get("clip")
+        ))
+
+    def stream_metadata(self, channel):
+        request = {
+            "operationName": "StreamMetadata",
+            "extensions": {
+                "persistedQuery": {
+                    "version": 1,
+                    "sha256Hash": "1c719a40e481453e5c48d9bb585d971b8b372f8ebb105b17076722264dfa5b3e"
+                }
+            },
+            "variables": {
+                "channelLogin": channel
+            }
+        }
+
+        return self.call_gql(request, schema=validate.Schema(
+            {
+                "data": {
+                    "user": {
+                        "stream": {
+                            "type": str,
+                        }
+                    }
+                }
+            },
+            validate.get("data"),
+            validate.get("user"),
+            validate.get("stream")
         ))
 
 
@@ -595,8 +606,8 @@ class Twitch(Plugin):
             return False
 
         try:
-            stream_type, broadcast_platform, broadcaster_software = self.api.stream_rerun(self.channel_id)
-            if stream_type != "live" or broadcast_platform == "rerun" or broadcaster_software == "watch_party_rerun":
+            stream = self.api.stream_metadata(self.channel)
+            if stream["type"] != "live":
                 log.info("Reruns were disabled by command line option")
                 return True
         except (PluginError, TypeError):
