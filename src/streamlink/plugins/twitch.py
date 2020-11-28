@@ -304,7 +304,7 @@ class TwitchAPI(object):
                 "login": channel_or_vod if is_live else "",
                 "isVod": not is_live,
                 "vodID": channel_or_vod if not is_live else "",
-                "playerType": "site"
+                "playerType": "embed"
             }
         }
         subschema = {
@@ -624,6 +624,10 @@ class Twitch(Plugin):
 
         # only get the token once the channel has been resolved
         log.debug("Getting live HLS streams for {0}".format(self.channel))
+        self.session.http.headers.update({
+            "referer": "https://player.twitch.tv",
+            "origin": "https://player.twitch.tv",
+        })
         sig, token, restricted_bitrates = self._access_token(True, self.channel)
         url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
 
