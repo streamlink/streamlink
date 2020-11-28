@@ -11,6 +11,8 @@
   --color-brand-primary: rgb(18, 22, 87);   /* dark icon color (shadow icon color: rgb(13, 16, 65)) */
   --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
   /* misc */
+  --sidebar-width: 15rem;
+  --sidebar-scrollbar-width: .5rem;
   --sidebar-item-spacing-vertical: .4rem;
   --admonition-font-size: var(--font-size--small);
   --admonition-title-font-size: var(--font-size--normal);
@@ -48,6 +50,27 @@ strong.command {
   Sidebar/Menubar and related
 */
 
+.toc-scroll:not(:hover) {
+  scrollbar-color: transparent;
+}
+.toc-scroll:not(:hover)::-webkit-scrollbar-thumb {
+  background-color: transparent;
+}
+
+.sidebar-brand,
+.sidebar-versions,
+.sidebar-search,
+.github-buttons {
+  box-sizing: border-box;
+  width: calc(var(--sidebar-width) - 2 * var(--sidebar-scrollbar-width)) !important;
+  margin-left: var(--sidebar-scrollbar-width) !important;
+  margin-right: 0 !important;
+}
+.toc-title,
+.toc-tree > ul {
+  padding-right: .5em;
+}
+
 .sidebar-logo-container {
   margin: 0;
 }
@@ -59,7 +82,7 @@ strong.command {
 }
 .sidebar-brand-oneliner {
   font-size: var(--font-size--small--2);
-  margin: 0 .5rem;
+  margin: 0;
 }
 
 .sidebar-versions {
@@ -92,6 +115,21 @@ strong.command {
 .sidebar-versions-others .version-current {
   font-weight: bold;
 }
+
+.sidebar-search-container {
+  border-top: 1px solid var(--color-sidebar-search-border);
+  border-bottom: 1px solid var(--color-sidebar-search-border);
+}
+.sidebar-search {
+  border: 0;
+  padding-left: calc(
+      var(--sidebar-item-spacing-horizontal)
+    + var(--sidebar-search-input-spacing-horizontal)
+    + var(--sidebar-search-icon-size)
+    - var(--sidebar-scrollbar-width)
+  );
+}
+
 .github-buttons {
   margin: 1.5rem 0 1rem;
 }
