@@ -249,7 +249,7 @@ class YouTube(Plugin):
                             log.debug("Video ID from videoRenderer (live)")
                             return x["videoId"]
 
-        if "/embed/live_stream" in url:
+        if urlparse(url).path.endswith(("/embed/live_stream", "/live")):
             for link in itertags(res.text, "link"):
                 if link.attributes.get("rel") == "canonical":
                     canon_link = link.attributes.get("href")
