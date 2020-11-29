@@ -4827,6 +4827,21 @@ table.table-custom-layout tbody tr td {
   white-space: unset;
 }
 
+/* fix CLI arguments */
+.rst-content dl.option:not(.docutils) > dt {
+  float: left;
+}
+.rst-content dl.option:not(.docutils) > dt,
+.rst-content dl.option:not(.docutils) > dd {
+  clear: left;
+}
+.rst-content dl.option:not(.docutils) > dt + dt {
+  margin-top: 0;
+}
+.rst-content dl.option:not(.docutils) > dt > code.descclassname:empty {
+  display: none;
+}
+
 /* github avatar pictures on the donate page */
 .github-avatar {
   float: left;
