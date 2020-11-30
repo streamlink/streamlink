@@ -149,17 +149,24 @@ class FilmOnAPI:
 
     def channel(self, channel):
         for _ in range(5):
+            if _ > 0:
+                log.debug("channel sleep {0}".format(_))
+                time.sleep(0.75)
+
             # retry for 50X errors
             try:
                 res = self.session.http.get(self.channel_url.format(channel))
                 if res:
-                    break
+                    # retry for invalid response data
+                    try:
+                        return self.session.http.json(res, schema=self.api_schema)
+                    except PluginError:
+                        log.debug("invalid or non-JSON data received")
+                        continue
             except Exception:
-                log.debug("channel sleep {0}".format(_))
-                time.sleep(0.75)
-        else:
-            raise PluginError("Unable to find 'self.api.channel' for {0}".format(channel))
-        return self.session.http.json(res, schema=self.api_schema)
+                log.debug("invalid server response")
+
+        raise PluginError("Unable to find 'self.api.channel' for {0}".format(channel))
 
     def vod(self, vod_id):
         res = self.session.http.get(self.vod_url.format(vod_id))
