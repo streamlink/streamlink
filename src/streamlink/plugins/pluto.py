@@ -34,7 +34,7 @@ class Pluto(Plugin):
             [{
                 'name': str,
                 'slug': str,
-                'stitched': {
+                validate.optional('stitched'): {
                     'urls': [
                         {
                             'type': str,
@@ -84,7 +84,7 @@ class Pluto(Plugin):
             )
 
         log.trace(f'{data!r}')
-        if data is None:
+        if data is None or not data.get('stitched'):
             return
 
         self.title = data['name']
