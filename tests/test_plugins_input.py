@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 from streamlink import PluginError, Streamlink
 from streamlink.plugin.plugin import UserInputRequester
 from streamlink_cli.console import ConsoleUserInputRequester
-from tests.plugins.testplugin import TestPlugin as _TestPlugin
+from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 
 class TestPluginUserInput(unittest.TestCase):
@@ -50,7 +50,7 @@ class TestPluginUserInput(unittest.TestCase):
     def test_set_via_session(self):
         with self._mock_console_input() as console_input:
             session = Streamlink({"user-input-requester": console_input})
-            session.load_plugins(os.path.join(os.path.dirname(__file__), "plugins"))
+            session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
             p = session.resolve_url("http://test.se/channel")
             self.assertEqual("username", p.input_ask("username"))

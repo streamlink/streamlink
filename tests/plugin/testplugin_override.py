@@ -1,4 +1,4 @@
-from tests.plugins.testplugin import __plugin__ as TestPlugin
+from tests.plugin.testplugin import __plugin__ as TestPlugin
 
 
 class TestPluginOverride(TestPlugin):
