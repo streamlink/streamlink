@@ -126,6 +126,7 @@ ntv                     ntv.ru               Yes   No
 okru                    ok.ru                Yes   Yes
 olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
 oneplusone              1plus1.video         Yes   No
+onespotmedia            1spotmedia.com       Yes   No
 onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
                         - ctc.ru
                         - chetv.ru
