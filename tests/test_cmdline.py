@@ -7,7 +7,7 @@ from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
 
 
-PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
+PluginPath = os.path.join(os.path.dirname(__file__), "plugin")
 
 
 def setup_streamlink():
