@@ -186,6 +186,13 @@ Windows           %APPDATA%\\streamlink\\plugins
     the added plugin will take precedence. This is useful if you want
     to upgrade plugins independently of the Streamlink version.
 
+.. warning::
+
+    If one of the sideloaded plugins fails to load, eg. due to a
+    ``SyntaxError`` being raised by the parser, this exception will
+    not get caught by Streamlink and the execution will stop, even if
+    the input stream URL does not match the faulty plugin.
+
 
 Plugin specific usage
 ---------------------
