@@ -108,7 +108,9 @@ class ArgparseDirective(Directive):
             else:
                 options += action.option_strings
 
-            yield ".. option:: {0}".format(', '.join(options))
+            directive = ".. option:: "
+            options = "\n{0}".format(' ' * len(directive)).join(options)
+            yield "{0}{1}".format(directive, options)
             yield ""
             for line in self.process_help(action.help).split("\n"):
                 yield line
