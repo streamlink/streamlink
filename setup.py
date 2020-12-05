@@ -80,7 +80,7 @@ setup(name="streamlink",
       },
       author="Streamlink",
       # temp until we have a mailing list / global email
-      author_email="charlie@charliedrage.com",
+      author_email="streamlink@protonmail.com",
       license="Simplified BSD",
       packages=find_packages("src"),
       package_dir={"": "src"},
