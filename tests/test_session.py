@@ -184,14 +184,6 @@ class TestSession(unittest.TestCase):
         self.assertTrue("vod_alt" in streams)
         self.assertTrue("vod_alt2" in streams)
 
-    def test_plugin_support(self):
-        session = self.subject()
-        plugin = session.resolve_url("http://test.se/channel")
-        streams = plugin.streams()
-
-        self.assertTrue("support" in streams)
-        self.assertTrue(isinstance(streams["support"], HTTPStream))
-
     def test_set_and_get_locale(self):
         session = Streamlink()
         session.set_option("locale", "en_US")
