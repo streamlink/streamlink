@@ -1,19 +1,10 @@
 import os.path
 import unittest
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 import streamlink_cli.main
 from streamlink import Streamlink
 from streamlink_cli.compat import is_win32
-
-
-PluginPath = os.path.join(os.path.dirname(__file__), "plugin")
-
-
-def setup_streamlink():
-    streamlink_cli.main.streamlink = Streamlink()
-    streamlink_cli.main.streamlink.load_plugins(PluginPath)
-    return streamlink_cli.main.streamlink
 
 
 class CommandLineTestCase(unittest.TestCase):
@@ -22,11 +13,12 @@ class CommandLineTestCase(unittest.TestCase):
     """
 
     @patch('streamlink_cli.main.CONFIG_FILES', ["/dev/null"])
-    @patch('streamlink_cli.main.setup_streamlink', side_effect=setup_streamlink)
+    @patch('streamlink_cli.main.setup_streamlink')
     @patch('streamlink_cli.output.sleep')
-    @patch('subprocess.Popen')
+    @patch('streamlink_cli.output.subprocess.call')
+    @patch('streamlink_cli.output.subprocess.Popen')
     @patch('sys.argv')
-    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_sleep, mock_setup_streamlink,
+    def _test_args(self, args, commandline, mock_argv, mock_popen, mock_call, mock_sleep, mock_setup_streamlink,
                    passthrough=False, exit_code=0):
         mock_argv.__getitem__.side_effect = lambda x: args[x]
 
@@ -37,20 +29,24 @@ class CommandLineTestCase(unittest.TestCase):
 
             return fn
 
-        mock_popen().poll.side_effect = side_effect([None, 0])
+        mock_popen.return_value = Mock(poll=Mock(side_effect=side_effect([None, 0])))
+
+        session = Streamlink()
+        session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
         actual_exit_code = 0
-        try:
-            streamlink_cli.main.main()
-        except SystemExit as exc:
-            actual_exit_code = exc.code
+        with patch('streamlink_cli.main.streamlink', session):
+            try:
+                streamlink_cli.main.main()
+            except SystemExit as exc:
+                actual_exit_code = exc.code
 
         self.assertEqual(exit_code, actual_exit_code)
         mock_setup_streamlink.assert_called_with()
         if not passthrough:
             mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY, bufsize=ANY, stdin=ANY)
         else:
-            mock_popen.assert_called_with(commandline, stderr=ANY, stdout=ANY)
+            mock_call.assert_called_with(commandline, stderr=ANY, stdout=ANY)
 
 
 @unittest.skipIf(is_win32, "test only applicable in a POSIX OS")
