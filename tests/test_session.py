@@ -142,13 +142,6 @@ class TestSession(unittest.TestCase):
         self.assertTrue("vod_alt" in streams)
         self.assertTrue("vod_alt2" in streams)
 
-    def test_plugin_support(self):
-        channel = self.session.resolve_url("http://test.se/channel")
-        streams = channel.streams()
-
-        self.assertTrue("support" in streams)
-        self.assertTrue(isinstance(streams["support"], HTTPStream))
-
     @patch("streamlink.session.sys.stderr")
     def test_short_exception(self, stderr):
         try:
