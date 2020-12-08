@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "Help"
+    about: "The issue tracker is only meant for bug reports, feature/plugin requests and plugin issues. Please ask your questions on the discussions forum and look for already existing answers."
+    url: https://github.com/streamlink/streamlink/discussions
+  - name: "Documentation"
+    about: "Please refer to Streamlink's documentation first before opening new issues or asking questions."
+    url: https://streamlink.github.io/
+  - name: "Gitter channel"
+    about: "Get in touch with other Streamlink users."
+    url: https://gitter.im/streamlink/streamlink
