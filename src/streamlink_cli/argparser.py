@@ -1141,6 +1141,14 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--ffmpeg-copyts",
+        action="store_true",
+        help="""
+        Forces the -copyts ffmpeg option and does not remove
+        the initial start time offset value.
+        """
+    )
+    transport.add_argument(
         "--mux-subtitles",
         action="store_true",
         help="""
