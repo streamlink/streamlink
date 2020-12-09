@@ -256,7 +256,7 @@ class M3U8Parser:
     def parse_tag_ext_x_map(self, value):
         attr = self.parse_attributes(value)
         byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
-        self.state["map"] = Map(attr.get("URI"), byterange)
+        self.state["map"] = Map(self.uri(attr.get("URI")), byterange)
 
     def parse_tag_ext_x_i_frame_stream_inf(self, value):
         attr = self.parse_attributes(value)
