@@ -169,6 +169,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         SegmentedStreamWorker.__init__(self, *args, **kwargs)
         self.stream = self.reader.stream
 
+        self.init_map = None
         self.playlist_changed = False
         self.playlist_end = None
         self.playlist_sequence = -1
@@ -299,6 +300,13 @@ class HLSStreamWorker(SegmentedStreamWorker):
         total_duration = 0
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
+                if self.init_map != sequence.segment.map:
+                    self.init_map = sequence.segment.map
+                    _segment = hls_playlist.Segment(
+                        self.init_map.uri, 0, None, None, False, self.init_map.byterange, None, None)
+                    _sequence = Sequence(sequence.num, _segment)
+                    log.info(f"Adding map segment {sequence.num} to queue")
+                    yield _sequence
                 log.debug(f"Adding segment {sequence.num} to queue")
                 yield sequence
                 total_duration += sequence.segment.duration
