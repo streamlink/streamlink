@@ -13,7 +13,7 @@ def test_output_mpv_unicode_title_posix(popen):
     po = PlayerOutput("mpv", title=UNICODE_TITLE)
     popen().poll.side_effect = lambda: None
     po.open()
-    popen.assert_called_with(["mpv", f"--title={UNICODE_TITLE}", "-"],
+    popen.assert_called_with(["mpv", f"--force-media-title={UNICODE_TITLE}", "-"],
                              bufsize=ANY, stderr=ANY, stdout=ANY, stdin=ANY)
 
 
@@ -35,7 +35,7 @@ def test_output_mpv_unicode_title_windows_py3(popen):
     po = PlayerOutput("mpv.exe", title=UNICODE_TITLE)
     popen().poll.side_effect = lambda: None
     po.open()
-    popen.assert_called_with(f"mpv.exe \"--title={UNICODE_TITLE}\" -",
+    popen.assert_called_with(f"mpv.exe \"--force-media-title={UNICODE_TITLE}\" -",
                              bufsize=ANY, stderr=ANY, stdout=ANY, stdin=ANY)
 
 
