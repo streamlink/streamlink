@@ -170,6 +170,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.stream = self.reader.stream
 
         self.init_map = None
+        self.maps = None
         self.playlist_changed = False
         self.playlist_end = None
         self.playlist_sequence = -1
@@ -232,6 +233,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         if playlist.iframes_only:
             raise StreamError("Streams containing I-frames only is not playable")
 
+        self.maps = playlist.maps
         media_sequence = playlist.media_sequence or 0
         sequences = [Sequence(media_sequence + i, s)
                      for i, s in enumerate(playlist.segments)]
@@ -301,12 +303,15 @@ class HLSStreamWorker(SegmentedStreamWorker):
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
                 if self.init_map != sequence.segment.map:
-                    self.init_map = sequence.segment.map
-                    _segment = hls_playlist.Segment(
-                        self.init_map.uri, 0, None, None, False, self.init_map.byterange, None, None)
-                    _sequence = Sequence(sequence.num, _segment)
-                    log.info(f"Adding map segment {sequence.num} to queue")
-                    yield _sequence
+                    if sequence.segment.map is not None:
+                        self.init_map = sequence.segment.map
+                        _segment = hls_playlist.Segment(
+                            self.maps[self.init_map].uri, 0, None, None, False, self.maps[self.init_map].byterange, None, None)
+                        _sequence = Sequence(sequence.num, _segment)
+                        log.debug(f"Adding map segment {sequence.num} to queue")
+                        yield _sequence
+                    else:
+                        log.warning(f"Missing segment init map, maybe corrupted playlist, sequence num: {sequence.num}")
                 log.debug(f"Adding segment {sequence.num} to queue")
                 yield sequence
                 total_duration += sequence.segment.duration
