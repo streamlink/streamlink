@@ -235,3 +235,17 @@ class TestMPDParser(unittest.TestCase):
         self.assertEqual(mock_rep(45.6 * 1000.0).bandwidth_rounded, 46.0)
         self.assertEqual(mock_rep(134.0 * 1000.0).bandwidth_rounded, 130.0)
         self.assertEqual(mock_rep(1324.0 * 1000.0).bandwidth_rounded, 1300.0)
+
+    def test_duplicated_resolutions(self):
+        """
+            Verify the fix for https://github.com/streamlink/streamlink/issues/3365
+        """
+        with xml("dash/test_10.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+
+            representations_0 = mpd.periods[0].adaptationSets[0].representations[0]
+            self.assertEqual(representations_0.height, 804)
+            self.assertEqual(representations_0.bandwidth, 10000.0)
+            representations_1 = mpd.periods[0].adaptationSets[0].representations[1]
+            self.assertEqual(representations_1.height, 804)
+            self.assertEqual(representations_1.bandwidth, 8000.0)
