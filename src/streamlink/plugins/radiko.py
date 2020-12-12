@@ -11,7 +11,7 @@ from streamlink.stream import HLSStream
 
 
 class Radiko(Plugin):
-    _url_re = re.compile(r'http://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?')
+    _url_re = re.compile(r'https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?')
     _api_auth_1 = 'https://radiko.jp/v2/api/auth1'
     _api_auth_2 = 'https://radiko.jp/v2/api/auth2'
     _auth_key = 'bcd151073c03b352e1ef2fd66c32209da9ca0afa'
@@ -49,7 +49,7 @@ class Radiko(Plugin):
         return url, token
 
     def _timefree(self, station_id, start_at):
-        m3u8_url = 'https://radiko.jp/v2/api/ts/playlist.m3u8'
+        m3u8_url = 'https://tf-rpaa.smartstream.ne.jp/tf/playlist.m3u8'
         token, area_id = self._authorize()
         lsid = hashlib.md5(str(random.random()).encode('utf-8')).hexdigest()
         end_at = self._get_xml(start_at, station_id)
