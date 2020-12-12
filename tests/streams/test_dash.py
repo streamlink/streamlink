@@ -263,7 +263,8 @@ class TestDASHStream(unittest.TestCase):
                      representations=[
                          Mock(id=1, mimeType="video/mp4", height=1080, bandwidth=128.0),
                          Mock(id=2, mimeType="video/mp4", height=1080, bandwidth=64.0),
-                         Mock(id=3, mimeType="video/mp4", height=720),
+                         Mock(id=3, mimeType="video/mp4", height=1080, bandwidth=32.0),
+                         Mock(id=4, mimeType="video/mp4", height=720),
                      ])
             ])
         ])
@@ -273,7 +274,7 @@ class TestDASHStream(unittest.TestCase):
 
         self.assertSequenceEqual(
             sorted(list(streams.keys())),
-            sorted(["720p", "1080p", "1080p_alt"])
+            sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"])
         )
 
 

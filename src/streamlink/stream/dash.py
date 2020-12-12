@@ -258,7 +258,7 @@ class DASHStream(Stream):
                 elif n == 1:
                     ret_new[f'{q}_alt'] = items[n]
                 else:
-                    ret_new[f'{q}_alt_{n}'] = items[n]
+                    ret_new[f'{q}_alt{n}'] = items[n]
         return ret_new
 
     def open(self):
