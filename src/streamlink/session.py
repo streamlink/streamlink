@@ -36,6 +36,7 @@ class Streamlink:
             "hds-timeout": 60.0,
             "hls-live-edge": 3,
             "hls-segment-attempts": 3,
+            "hls-segment-ignore-names": [],
             "hls-segment-threads": 1,
             "hls-segment-timeout": 10.0,
             "hls-segment-stream-data": False,
@@ -101,6 +102,10 @@ class Streamlink:
 
         hls-segment-attempts     (int) How many attempts should be done
                                  to download each HLS segment, default: ``3``
+
+        hls-segment-ignore-names (str[]) List of segment names without
+                                 file endings which should get filtered out,
+                                 default: ``[]``
 
         hls-segment-threads      (int) The size of the thread pool used
                                  to download segments, default: ``1``

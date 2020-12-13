@@ -4,17 +4,17 @@ import re
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
 
 log = logging.getLogger(__name__)
 
 
-class AfreecaHLSStreamWriter(FilteredHLSStreamWriter):
+class AfreecaHLSStreamWriter(HLSStreamWriter):
     def should_filter_sequence(self, sequence):
-        return "preloading" in sequence.segment.uri
+        return "preloading" in sequence.segment.uri or super().should_filter_sequence(sequence)
 
 
-class AfreecaHLSStreamReader(FilteredHLSStreamReader):
+class AfreecaHLSStreamReader(HLSStreamReader):
     __writer__ = AfreecaHLSStreamWriter
 
 
