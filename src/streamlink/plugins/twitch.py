@@ -12,8 +12,7 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.stream.hls import HLSStreamWorker
-from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker, HLSStreamWriter
 from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
 
@@ -109,12 +108,12 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         return super().process_sequences(playlist, sequences)
 
 
-class TwitchHLSStreamWriter(FilteredHLSStreamWriter):
+class TwitchHLSStreamWriter(HLSStreamWriter):
     def should_filter_sequence(self, sequence):
         return self.stream.disable_ads and sequence.segment.ad
 
 
-class TwitchHLSStreamReader(FilteredHLSStreamReader):
+class TwitchHLSStreamReader(HLSStreamReader):
     __worker__ = TwitchHLSStreamWorker
     __writer__ = TwitchHLSStreamWriter
 
