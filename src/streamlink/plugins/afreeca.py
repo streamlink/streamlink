@@ -42,11 +42,11 @@ class AfreecaTV(Plugin):
         {
             "CHANNEL": {
                 "RESULT": validate.transform(int),
-                validate.optional("BPWD"): validate.text,
-                validate.optional("BNO"): validate.text,
-                validate.optional("RMD"): validate.text,
-                validate.optional("AID"): validate.text,
-                validate.optional("CDN"): validate.text
+                validate.optional("BPWD"): str,
+                validate.optional("BNO"): str,
+                validate.optional("RMD"): str,
+                validate.optional("AID"): str,
+                validate.optional("CDN"): str,
             }
         },
         validate.get("CHANNEL")
@@ -56,7 +56,7 @@ class AfreecaTV(Plugin):
             validate.optional("view_url"): validate.url(
                 scheme=validate.any("rtmp", "http")
             ),
-            "stream_status": validate.text
+            "stream_status": str,
         }
     )
 
