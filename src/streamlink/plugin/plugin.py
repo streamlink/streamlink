@@ -202,7 +202,7 @@ class Plugin:
     def bind(cls, session, module, user_input_requester=None):
         cls.cache = Cache(filename="plugin-cache.json",
                           key_prefix=module)
-        cls.logger = logging.getLogger("streamlink.plugin." + module)
+        cls.logger = logging.getLogger("streamlink.plugins." + module)
         cls.module = module
         cls.session = session
         if user_input_requester is not None:
