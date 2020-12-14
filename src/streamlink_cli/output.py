@@ -201,7 +201,7 @@ class PlayerOutput(Output):
             if self.player_name == "mpv":
                 # see https://mpv.io/manual/stable/#property-expansion, allow escaping with \$, respect mpv's $>
                 self.title = self._mpv_title_escape(self.title)
-                extra_args.append(u"--title={}".format(self.title))
+                extra_args.append(u"--force-media-title={}".format(self.title))
 
             # potplayer
             if self.player_name == "potplayer":

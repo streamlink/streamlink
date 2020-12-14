@@ -26,11 +26,11 @@ class TestCommandLineWithTitlePOSIX(CommandLineTestCase):
 
     def test_open_player_with_title_mpv(self):
         self._test_args(["streamlink", "-p", "/usr/bin/mpv", "--title", "{title}", "http://test.se", "test"],
-                        ["/usr/bin/mpv", "--title=Test Title", "-"])
+                        ["/usr/bin/mpv", "--force-media-title=Test Title", "-"])
 
     def test_unicode_title_2444(self):
-        self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
-                        ["mpv", u'--title=\u2605', "-"])
+        self._test_args(["streamlink", "-p", "mpv", "-t", "★ ★ ★", "http://test.se", "test"],
+                        ["mpv", u'--force-media-title=★ ★ ★', "-"])
 
 
 @unittest.skipIf(not is_win32, "test only applicable on Windows")
@@ -114,9 +114,9 @@ class TestCommandLineWithTitleWindows(CommandLineTestCase):
     @unittest.skipUnless(is_py2, "test only valid for Python 2")
     def test_unicode_title_2444_py2(self):
         self._test_args(["streamlink", "-p", "mpv", "-t", u"★".encode(get_filesystem_encoding()), "http://test.se", "test"],
-                        "mpv --title=" + u"★".encode(get_filesystem_encoding()) + " -")
+                        "mpv --force-media-title=" + u"★".encode(get_filesystem_encoding()) + " -")
 
     @unittest.skipUnless(is_py3, "test only valid for Python 3")
     def test_unicode_title_2444_py3(self):
-        self._test_args(["streamlink", "-p", "mpv", "-t", "★", "http://test.se", "test"],
-                        "mpv --title=★ -")
+        self._test_args(["streamlink", "-p", "mpv", "-t", "★ ★ ★", "http://test.se", "test"],
+                        "mpv \"--force-media-title=\u2605 \u2605 \u2605\" -")
