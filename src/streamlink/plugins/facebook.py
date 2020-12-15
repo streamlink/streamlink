@@ -83,6 +83,8 @@ class Facebook(Plugin):
                     yield s
 
     def _get_streams(self):
+        self.session.set_option("ffmpeg-start-at-zero", True)
+
         done = False
         res = self.session.http.get(self.url)
         for s in self._parse_streams(res):

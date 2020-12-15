@@ -858,8 +858,8 @@ def setup_options():
         streamlink.set_option("ffmpeg-video-transcode", args.ffmpeg_video_transcode)
     if args.ffmpeg_audio_transcode:
         streamlink.set_option("ffmpeg-audio-transcode", args.ffmpeg_audio_transcode)
-    if args.ffmpeg_no_start_at_zero:
-        streamlink.set_option("ffmpeg-start-at-zero", False)
+    if args.ffmpeg_start_at_zero:
+        streamlink.set_option("ffmpeg-start-at-zero", args.ffmpeg_start_at_zero)
 
     if args.mux_subtitles:
         streamlink.set_option("mux-subtitles", args.mux_subtitles)

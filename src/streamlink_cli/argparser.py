@@ -1137,11 +1137,10 @@ def build_parser():
         """
     )
     transport.add_argument(
-        "--ffmpeg-no-start-at-zero",
+        "--ffmpeg-start-at-zero",
         action="store_true",
         help="""
-        Disables the -start_at_zero ffmpeg option
-        when using copyts.
+        Enable the -start_at_zero ffmpeg option when using copyts.
         """
     )
     transport.add_argument(
