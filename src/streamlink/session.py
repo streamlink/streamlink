@@ -60,8 +60,8 @@ class Streamlink:
             "ffmpeg-fout": None,
             "ffmpeg-video-transcode": None,
             "ffmpeg-audio-transcode": None,
-            "ffmpeg-start-at-zero": False,
             "ffmpeg-copyts": False,
+            "ffmpeg-start-at-zero": False,
             "mux-subtitles": False,
             "locale": None,
             "user-input-requester": None
@@ -200,11 +200,11 @@ class Streamlink:
                                  audio when muxing with ffmpeg
                                  e.g. ``aac``
 
+        ffmpeg-copyts            (bool) When used with ffmpeg, do not shift input timestamps.
+
         ffmpeg-start-at-zero     (bool) When used with ffmpeg and copyts,
                                  shift input timestamps so they start at zero
                                  default: ``False``
-
-        ffmpeg-copyts            (bool) When used with ffmpeg, do not shift input timestamps.
 
         mux-subtitles            (bool) Mux available subtitles into the
                                  output stream.
