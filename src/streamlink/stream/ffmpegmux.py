@@ -99,10 +99,7 @@ class FFMPEGMuxer(StreamIO):
         metadata = options.pop("metadata", {})
         maps = options.pop("maps", [])
         copyts = options.pop("copyts", False)
-        if session.options.get("ffmpeg-start-at-zero") is not None:
-            start_at_zero = session.options.get("ffmpeg-start-at-zero")
-        else:
-            start_at_zero = options.pop("start_at_zero", True)
+        start_at_zero = session.options.get("ffmpeg-start-at-zero") or options.pop("start_at_zero", False)
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:

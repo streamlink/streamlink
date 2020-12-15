@@ -59,13 +59,13 @@ def test_ffmpeg_open_copyts(session):
         with patch('subprocess.Popen') as popen:
             f.open()
             popen.assert_called_with(['ffmpeg', '-nostats', '-y', '-c:v', FFMPEGMuxer.DEFAULT_VIDEO_CODEC, '-c:a',
-                                      FFMPEGMuxer.DEFAULT_AUDIO_CODEC, '-copyts', '-start_at_zero', '-f', 'matroska', 'pipe:1'],
+                                      FFMPEGMuxer.DEFAULT_AUDIO_CODEC, '-copyts', '-f', 'matroska', 'pipe:1'],
                                      stderr=ANY,
                                      stdout=ANY,
                                      stdin=ANY)
 
 
-def test_ffmpeg_open_copyts_disable(session):
+def test_ffmpeg_open_copyts_disable_session_start_at_zero(session):
     with patch('streamlink.stream.ffmpegmux.which', return_value="ffmpeg"):
         session.options.set("ffmpeg-start-at-zero", False)
         f = FFMPEGMuxer(session, copyts=True)
@@ -78,13 +78,38 @@ def test_ffmpeg_open_copyts_disable(session):
                                      stdin=ANY)
 
 
-def test_ffmpeg_open_copyts_no_start_at_zero(session):
+def test_ffmpeg_open_copyts_enable_session_start_at_zero(session):
+    with patch('streamlink.stream.ffmpegmux.which', return_value="ffmpeg"):
+        session.options.set("ffmpeg-start-at-zero", True)
+        f = FFMPEGMuxer(session, copyts=True)
+        with patch('subprocess.Popen') as popen:
+            f.open()
+            popen.assert_called_with(['ffmpeg', '-nostats', '-y', '-c:v', FFMPEGMuxer.DEFAULT_VIDEO_CODEC, '-c:a',
+                                      FFMPEGMuxer.DEFAULT_AUDIO_CODEC, '-copyts', '-start_at_zero', '-f', 'matroska', 'pipe:1'],
+                                     stderr=ANY,
+                                     stdout=ANY,
+                                     stdin=ANY)
+
+
+def test_ffmpeg_open_copyts_disable_start_at_zero(session):
     with patch('streamlink.stream.ffmpegmux.which', return_value="ffmpeg"):
         f = FFMPEGMuxer(session, copyts=True, start_at_zero=False)
         with patch('subprocess.Popen') as popen:
             f.open()
             popen.assert_called_with(['ffmpeg', '-nostats', '-y', '-c:v', FFMPEGMuxer.DEFAULT_VIDEO_CODEC, '-c:a',
                                       FFMPEGMuxer.DEFAULT_AUDIO_CODEC, '-copyts', '-f', 'matroska', 'pipe:1'],
+                                     stderr=ANY,
+                                     stdout=ANY,
+                                     stdin=ANY)
+
+
+def test_ffmpeg_open_copyts_enable_start_at_zero(session):
+    with patch('streamlink.stream.ffmpegmux.which', return_value="ffmpeg"):
+        f = FFMPEGMuxer(session, copyts=True, start_at_zero=True)
+        with patch('subprocess.Popen') as popen:
+            f.open()
+            popen.assert_called_with(['ffmpeg', '-nostats', '-y', '-c:v', FFMPEGMuxer.DEFAULT_VIDEO_CODEC, '-c:a',
+                                      FFMPEGMuxer.DEFAULT_AUDIO_CODEC, '-copyts', '-start_at_zero', '-f', 'matroska', 'pipe:1'],
                                      stderr=ANY,
                                      stdout=ANY,
                                      stdin=ANY)
