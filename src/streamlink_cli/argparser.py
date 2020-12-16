@@ -1137,6 +1137,14 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--ffmpeg-copyts",
+        action="store_true",
+        help="""
+        Forces the -copyts ffmpeg option and does not remove
+        the initial start time offset value.
+        """
+    )
+    transport.add_argument(
         "--ffmpeg-start-at-zero",
         action="store_true",
         help="""
