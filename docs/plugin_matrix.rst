@@ -59,11 +59,11 @@ delfi                   - delfi.lt           --    Yes
                         - delfi.lv
 deutschewelle           dw.com               Yes   Yes
 dlive                   dlive.tv             Yes   Yes
-dogan                   - teve2.com.tr       Yes   Yes   VOD is supported for teve2 and kanald
-                        - kanald.com.tr
-                        - dreamtv.com.tr
-                        - cnnturk.com
+dogan                   - cnnturk.com        Yes   Yes
                         - dreamturk.com.tr
+                        - dreamtv.com.tr
+                        - kanald.com.tr
+                        - teve2.com.tr
 dogus                   - ntvspor.net        Yes   No
                         - kralmuzik.com.tr
                         - ntv.com.tr

@@ -14,29 +14,51 @@ class Dogan(Plugin):
     Support for the live streams from Doğan Media Group channels
     """
     url_re = re.compile(r"""
-        https?://(?:www.)?
-        (?:teve2.com.tr/(?:canli-yayin|filmler/.*|programlar/.*)|
-           kanald.com.tr/.*|
-           cnnturk.com/canli-yayin|
-           dreamtv.com.tr/canli-yayin|
-           dreamturk.com.tr/canli)
+        https?://(?:www\.)?
+        (?:cnnturk\.com/(?:action/embedvideo/.*|canli-yayin|tv-cnn-turk|video/.*)|
+           dreamturk\.com\.tr/(?:canli|canli-yayin-izle|dream-turk-ozel/.*|programlar/.*)|
+           dreamtv\.com\.tr/dream-ozel/.*|
+           kanald\.com\.tr/.*|
+           teve2\.com\.tr/(?:canli-yayin|diziler/.*|embed/.*|filmler/.*|programlar/.*))
     """, re.VERBOSE)
-    playerctrl_re = re.compile(r'''<div[^>]*?ng-controller=(?P<quote>["'])(?:Live)?PlayerCtrl(?P=quote).*?>''', re.DOTALL)
-    data_id_re = re.compile(r'''data-id=(?P<quote>["'])(?P<id>\w+)(?P=quote)''')
-    content_id_re = re.compile(r'"content(?:I|i)d", "(\w+)"')
+    playerctrl_re = re.compile(r'''<div\s+id="video-element".*?>''', re.DOTALL)
+    data_id_re = re.compile(r'''data-id=(?P<quote>["'])/?(?P<id>\w+)(?P=quote)''')
+    content_id_re = re.compile(r'"content[Ii]d",\s*"(\w+)"')
     item_id_re = re.compile(r"_itemId\s+=\s+'(\w+)';")
-    content_api = "/actions/content/media/{id}"
+    content_api = "/actions/media?id={id}"
+    dream_api = "/actions/content/media/{id}"
     new_content_api = "/action/media/{id}"
-    content_api_schema = validate.Schema({
-        "Id": validate.text,
-        "Media": {
-            "Link": {
-                "DefaultServiceUrl": validate.url(),
-                validate.optional("ServiceUrl"): validate.any(validate.url(), ""),
-                "SecurePath": validate.text,
-            }
-        }
-    })
+    content_api_schema = validate.Schema(
+        {
+            "data": {
+                "id": str,
+                "media": {
+                    "link": {
+                        validate.optional("defaultServiceUrl"): validate.any(validate.url(), ""),
+                        validate.optional("serviceUrl"): validate.any(validate.url(), ""),
+                        "securePath": str,
+                    },
+                },
+            },
+        },
+        validate.get("data"),
+        validate.get("media"),
+        validate.get("link"),
+    )
+    new_content_api_schema = validate.Schema(
+        {
+            "Media": {
+                "Link": {
+                    "ContentId": str,
+                    validate.optional("DefaultServiceUrl"): validate.any(validate.url(), ""),
+                    validate.optional("ServiceUrl"): validate.any(validate.url(), ""),
+                    "SecurePath": str,
+                },
+            },
+        },
+        validate.get("Media"),
+        validate.get("Link"),
+    )
 
     @classmethod
     def can_handle_url(cls, url):
@@ -66,19 +88,34 @@ class Dogan(Plugin):
             log.debug("Found contentId by itemId regex")
             return item_id_m.group(1)
 
+    def _get_new_content_hls_url(self, content_id, api_url):
+        log.debug("Using new content API url")
+        d = self.session.http.get(urljoin(self.url, api_url.format(id=content_id)))
+        d = self.session.http.json(d, schema=self.new_content_api_schema)
+
+        if d["DefaultServiceUrl"] == "https://www.kanald.com.tr":
+            self.url = d["DefaultServiceUrl"]
+            return self._get_content_hls_url(content_id)
+        else:
+            if d["SecurePath"].startswith("http"):
+                return d["SecurePath"]
+            else:
+                return urljoin((d["ServiceUrl"] or d["DefaultServiceUrl"]), d["SecurePath"])
+
+    def _get_content_hls_url(self, content_id):
+        d = self.session.http.get(urljoin(self.url, self.content_api.format(id=content_id)))
+        d = self.session.http.json(d, schema=self.content_api_schema)
+
+        return urljoin((d["serviceUrl"] or d["defaultServiceUrl"]), d["securePath"])
+
     def _get_hls_url(self, content_id):
         # make the api url relative to the current domain
-        if "cnnturk" in self.url or "teve2.com.tr" in self.url:
-            log.debug("Using new content API url")
-            api_url = urljoin(self.url, self.new_content_api.format(id=content_id))
+        if "cnnturk.com" in self.url or "teve2.com.tr" in self.url:
+            return self._get_new_content_hls_url(content_id, self.new_content_api)
+        elif "dreamturk.com.tr" in self.url or "dreamtv.com.tr" in self.url:
+            return self._get_new_content_hls_url(content_id, self.dream_api)
         else:
-            api_url = urljoin(self.url, self.content_api.format(id=content_id))
-
-        apires = self.session.http.get(api_url)
-
-        stream_data = self.session.http.json(apires, schema=self.content_api_schema)
-        d = stream_data["Media"]["Link"]
-        return urljoin((d["ServiceUrl"] or d["DefaultServiceUrl"]), d["SecurePath"])
+            return self._get_content_hls_url(content_id)
 
     def _get_streams(self):
         content_id = self._get_content_id()
