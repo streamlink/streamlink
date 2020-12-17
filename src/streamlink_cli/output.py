@@ -214,7 +214,6 @@ class PlayerOutput(Output):
 
         if is_py2:
             filename = filename.encode("utf-8")
-        log.info("filename: {}".format(filename))
         args = self.args.format(**{PLAYER_ARGS_INPUT_DEFAULT: filename, PLAYER_ARGS_INPUT_FALLBACK: filename})
         cmd = self.cmd
 
