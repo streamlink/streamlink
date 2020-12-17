@@ -619,6 +619,13 @@ def build_parser():
         """
     )
     stream.add_argument(
+        "--stream-url",
+        action="store_true",
+        help="""
+        If possible, translate the resolved stream to a URL and print it.
+        """
+    )
+    stream.add_argument(
         "--retry-streams",
         metavar="DELAY",
         type=num(float, min=0),
@@ -1038,13 +1045,6 @@ def build_parser():
 
         Default is 60.0.
         """)
-    transport.add_argument(
-        "--stream-url",
-        action="store_true",
-        help="""
-        If possible, translate the stream to a URL and print it.
-        """
-    )
     transport.add_argument(
         "--subprocess-cmdline",
         action="store_true",
