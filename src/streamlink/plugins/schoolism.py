@@ -19,6 +19,7 @@ class Schoolism(Plugin):
     playlist_re = re.compile(r"var allVideos\s*=\s*(\[.*\]);", re.DOTALL)
     js_to_json = partial(re.compile(r'(?!<")(\w+):(?!/)').sub, r'"\1":')
     fix_brackets = partial(re.compile(r',\s*\}').sub, r'}')
+    fix_colon_in_title = partial(re.compile(r'"title":""(.*?)":(.*?)"').sub, r'"title":"\1:\2"')
     playlist_schema = validate.Schema(
         validate.transform(playlist_re.search),
         validate.any(
@@ -27,6 +28,7 @@ class Schoolism(Plugin):
                 validate.get(1),
                 validate.transform(js_to_json),
                 validate.transform(fix_brackets),  # remove invalid ,
+                validate.transform(fix_colon_in_title),
                 validate.transform(parse_json),
                 [{
                     "sources": validate.all([{

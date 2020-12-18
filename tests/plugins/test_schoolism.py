@@ -50,3 +50,20 @@ class TestPluginSchoolism(unittest.TestCase):
 
         self.assertIsNotNone(data)
         self.assertEqual(2, len(data))
+
+    def test_playlist_parse_colon_in_title(self):
+        colon_in_title = """var allVideos=[
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part1.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 1",playlistTitle:"Part 1",}],},
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part2.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 2",playlistTitle:"Part 2",}],},
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part3.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 3",playlistTitle:"Part 3",}],},
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part4.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 4",playlistTitle:"Part 4",}],},
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part5.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 5",playlistTitle:"Part 5",}],},
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part6.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 6",playlistTitle:"Part 6",}],},
+            {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/52/1/part7.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Deconstructed: Drawing People - Lesson 1 - Part 7",playlistTitle:"Part 7",}]}
+            ];
+        """  # noqa: E501
+
+        data = Schoolism.playlist_schema.validate(colon_in_title)
+
+        self.assertIsNotNone(data)
+        self.assertEqual(7, len(data))
