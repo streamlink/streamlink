@@ -38,7 +38,7 @@ class Cache:
         pruned = []
 
         for key, value in self._cache.items():
-            expires = value.get("expires", time())
+            expires = value.get("expires", now)
             if expires <= now:
                 pruned.append(key)
 
@@ -69,10 +69,13 @@ class Cache:
         if self.key_prefix:
             key = "{0}:{1}".format(self.key_prefix, key)
 
-        expires += time()
-
-        if expires_at:
-            expires = mktime(expires_at.timetuple())
+        if expires_at is None:
+            expires += time()
+        else:
+            try:
+                expires = mktime(expires_at.timetuple())
+            except OverflowError:
+                expires = 0
 
         self._cache[key] = dict(value=value, expires=expires)
         self._save()

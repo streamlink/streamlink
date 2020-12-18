@@ -55,6 +55,11 @@ class TestCache(unittest.TestCase):
         self.cache.set("value", 10, expires_at=datetime.datetime.now() + datetime.timedelta(seconds=20))
         self.assertEqual(10, self.cache.get("value"))
 
+    @patch("streamlink.cache.mktime", side_effect=OverflowError)
+    def test_expired_at_raise_overflowerror(self, mock):
+        self.cache.set("value", 10, expires_at=datetime.datetime.now())
+        self.assertEqual(None, self.cache.get("value"))
+
     def test_not_expired(self):
         self.cache.set("value", 10, expires=20)
         self.assertEqual(10, self.cache.get("value"))
