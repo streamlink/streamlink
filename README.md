@@ -21,7 +21,7 @@ Please refer to our documentation for different ways to install Streamlink:
 - [Windows][streamlink-installation-windows]
 - [macOS][streamlink-installation-macos]
 - [Linux and BSD][streamlink-installation-linux-and-bsd]
-- [Source code][streamlink-installation-source]
+- [PyPI package and source code][streamlink-installation-pypi-source]
 
 # Features
 
@@ -88,7 +88,7 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
   [streamlink-installation-windows]: https://streamlink.github.io/install.html#windows
   [streamlink-installation-macos]: https://streamlink.github.io/install.html#macos
   [streamlink-installation-linux-and-bsd]: https://streamlink.github.io/install.html#linux-and-bsd
-  [streamlink-installation-source]: https://streamlink.github.io/install.html#source-code
+  [streamlink-installation-pypi-source]: https://streamlink.github.io/install.html#pypi-package-and-source-code
   [livestreamer]: https://github.com/chrippa/livestreamer
   [contributing]: https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md
   [changelog]: https://github.com/streamlink/streamlink/blob/master/CHANGELOG.rst
