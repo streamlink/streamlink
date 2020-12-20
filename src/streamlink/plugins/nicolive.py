@@ -11,6 +11,7 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.url import update_qsd
 
 _log = logging.getLogger(__name__)
 
@@ -252,12 +253,8 @@ class NicoLive(Plugin):
             self.hls_stream_url = data["uri"]
             # load in the offset for timeshift live videos
             offset = self.get_option("timeshift-offset")
-            if offset:
-                if 'timeshift' in self.wss_api_url:
-                    self.hls_stream_url += '&start={0}'.format(offset)
-                    _log.debug("Timeshift offset stream URL is now {0}".format(self.hls_stream_url))
-                else:
-                    _log.debug("Not a timeshift video, ignoring offset")
+            if offset and 'timeshift' in self.wss_api_url:
+                self.hls_stream_url = update_qsd(self.hls_stream_url, {"start": offset})
             self.is_stream_ready = True
 
         if message_parsed["type"] == "watch":
