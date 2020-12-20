@@ -10,6 +10,8 @@ from streamlink.compat import unquote_plus, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
+from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.url import update_qsd
 
 _log = logging.getLogger(__name__)
 
@@ -45,7 +47,15 @@ class NicoLive(Plugin):
             sensitive=True,
             metavar="VALUE",
             help="Value of the user-session token \n(can be used in "
-                 "case you do not want to put your password here)"))
+                 "case you do not want to put your password here)"),
+        PluginArgument(
+            "timeshift-offset",
+            type=hours_minutes_seconds,
+            argument_name="niconico-timeshift-offset",
+            metavar="[HH:]MM:SS",
+            default=None,
+            help="Amount of time to skip from the beginning of a stream. "
+                 "Default is 00:00:00."))
 
     is_stream_ready = False
     is_stream_ended = False
@@ -241,6 +251,10 @@ class NicoLive(Plugin):
         if message_parsed["type"] == "stream":
             data = message_parsed["data"]
             self.hls_stream_url = data["uri"]
+            # load in the offset for timeshift live videos
+            offset = self.get_option("timeshift-offset")
+            if offset and 'timeshift' in self.wss_api_url:
+                self.hls_stream_url = update_qsd(self.hls_stream_url, {"start": offset})
             self.is_stream_ready = True
 
         if message_parsed["type"] == "watch":
