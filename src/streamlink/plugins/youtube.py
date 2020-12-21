@@ -58,7 +58,7 @@ _config_schema = validate.Schema(
     }
 )
 
-_ytdata_re = re.compile(r'window\["ytInitialData"\]\s*=\s*({.*?});', re.DOTALL)
+_ytdata_re = re.compile(r'ytInitialData\s*=\s*({.*?});', re.DOTALL)
 _url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
     (?:
         (?:
