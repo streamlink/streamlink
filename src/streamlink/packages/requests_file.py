@@ -13,19 +13,18 @@ Copyright 2015 Red Hat, Inc.
    See the License for the specific language governing permissions and
    limitations under the License.
 """
-from io import BytesIO
-
-import sys
-from requests.adapters import BaseAdapter
-from requests.compat import urlparse, unquote, urljoin
-from requests import Response, codes
 import errno
+import io
+import locale
 import os
 import os.path
 import stat
-import locale
-import io
+import sys
+from io import BytesIO
 
+from requests.adapters import BaseAdapter
+from requests import Response, codes
+from requests.compat import unquote, urljoin, urlparse
 from streamlink.compat import is_win32, is_py3
 
 
