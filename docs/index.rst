@@ -11,7 +11,7 @@ while still allowing the user to enjoy various streamed content.
 There is also an :ref:`API <api_guide:API Guide>` available for developers who want access
 to the stream data.
 
-Streamlink[-27] is a fork of the <a href="https://github.com/streamlink/streamlink">Streamlink</a> project.
+Streamlink[-27] is a fork of the `Streamlink <https://github.com/streamlink/streamlink>`_ project.
 
 The project extension [-27] indicates that this project continues to support python 2.7,
 as the streamlink project has discontinued python 2.7 support as of version 1.7.0.
