@@ -76,16 +76,15 @@ class NicoLive(Plugin):
             "User-Agent": useragents.CHROME,
         })
 
+        _log.debug("Attempting initial login")
+        self.niconico_web_login()
+
         if not self.get_wss_api_url():
-            _log.debug("Coundn't extract wss_api_url. Attempting login...")
-            if not self.niconico_web_login():
-                return None
-            if not self.get_wss_api_url():
-                _log.error("Failed to get wss_api_url.")
-                _log.error(
-                    "Please check if the URL is correct, "
-                    "and make sure your account has access to the video.")
-                return None
+            _log.error(
+                "Failed to get wss_api_url. "
+                "Please check if the URL is correct, "
+                "and make sure your account has access to the video.")
+            return None
 
         self.api_connect(self.wss_api_url)
 
