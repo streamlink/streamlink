@@ -91,6 +91,10 @@ class DASHStreamWorker(SegmentedStreamWorker):
             representation = self.get_representation(self.mpd, self.reader.representation_id, self.reader.mime_type)
             refresh_wait = max(self.mpd.minimumUpdatePeriod.total_seconds(),
                                self.mpd.periods[0].duration.total_seconds()) or 5
+
+            if self.mpd.type == "static":
+                refresh_wait = 5
+
             with sleeper(refresh_wait * back_off_factor):
                 if representation:
                     for segment in representation.segments(init=init):

@@ -249,3 +249,12 @@ class TestMPDParser(unittest.TestCase):
             representations_1 = mpd.periods[0].adaptationSets[0].representations[1]
             self.assertEqual(representations_1.height, 804)
             self.assertEqual(representations_1.bandwidth, 8000.0)
+
+    def test_segments_static_periods_duration(self):
+        """
+            Verify the fix for https://github.com/streamlink/streamlink/issues/2873
+        """
+        with xml("dash/test_11_static.mpd") as mpd_xml:
+            mpd = MPD(mpd_xml, base_url="http://test.se/", url="http://test.se/manifest.mpd")
+            duration = mpd.periods[0].duration.total_seconds()
+            self.assertEqual(duration, 204.32)
