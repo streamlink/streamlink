@@ -342,6 +342,41 @@ class TestDASHStreamWorker(unittest.TestCase):
         self.assertSequenceEqual(list(worker.iter_segments()), segments)
         representation.segments.assert_called_with(init=True)
 
+    @patch("streamlink.stream.dash_manifest.time.time")
+    @patch("streamlink.stream.dash_manifest.time.sleep")
+    def test_static_refresh_wait(self, sleep, time):
+        """
+            Verify the fix for https://github.com/streamlink/streamlink/issues/2873
+        """
+        time.return_value = 1
+        reader = MagicMock()
+        worker = DASHStreamWorker(reader)
+        reader.representation_id = 1
+        reader.mime_type = "video/mp4"
+
+        representation = Mock(id=1, mimeType="video/mp4", height=720)
+        segments = [Mock(url="init_segment"), Mock(url="first_segment"), Mock(url="second_segment")]
+        representation.segments.return_value = [segments[0]]
+        worker.mpd = Mock(dynamic=False,
+                          publishTime=1,
+                          periods=[
+                              Mock(adaptationSets=[
+                                  Mock(contentProtection=None,
+                                       representations=[
+                                           representation
+                                       ])
+                              ])
+                          ])
+        worker.mpd.type = "static"
+        for duration in (0, 204.32):
+            worker.mpd.minimumUpdatePeriod.total_seconds.return_value = 0
+            worker.mpd.periods[0].duration.total_seconds.return_value = duration
+
+            representation.segments.return_value = segments
+            self.assertSequenceEqual(list(worker.iter_segments()), segments)
+            representation.segments.assert_called_with(init=True)
+            sleep.assert_called_with(5)
+
     @patch("streamlink.stream.dash_manifest.time.sleep")
     def test_duplicate_rep_id(self, sleep):
         representation_vid = Mock(id=1, mimeType="video/mp4", height=720)
