@@ -72,6 +72,7 @@ class FilmOnHLSStreamReader(HLSStreamReader):
 
 class FilmOnHLS(HLSStream):
     __shortname__ = "hls-filmon"
+    __reader__ = FilmOnHLSStreamReader
 
     def __init__(self, session_, channel=None, vod_id=None, quality="high", **args):
         super().__init__(session_, None, **args)
@@ -115,12 +116,6 @@ class FilmOnHLS(HLSStream):
         if expires < 0:
             raise TypeError("Stream has expired and cannot be converted to a URL")
         return url
-
-    def open(self):
-        reader = FilmOnHLSStreamReader(self)
-        reader.open()
-
-        return reader
 
 
 class FilmOnAPI:

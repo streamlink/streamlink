@@ -19,10 +19,7 @@ class AfreecaHLSStreamReader(HLSStreamReader):
 
 
 class AfreecaHLSStream(HLSStream):
-    def open(self):
-        reader = AfreecaHLSStreamReader(self)
-        reader.open()
-        return reader
+    __reader__ = AfreecaHLSStreamReader
 
 
 class AfreecaTV(Plugin):
