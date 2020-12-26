@@ -123,7 +123,7 @@ def create_output(plugin):
     return out
 
 
-def create_http_server(host=None, port=0):
+def create_http_server(*_args, **_kwargs):
     """Creates a HTTP server listening on a given host and port.
 
     If host is empty, listen on all available interfaces, and if port is 0,
@@ -132,7 +132,7 @@ def create_http_server(host=None, port=0):
 
     try:
         http = HTTPServer()
-        http.bind(host=host, port=port)
+        http.bind(*_args, **_kwargs)
     except OSError as err:
         console.exit("Failed to create HTTP server: {0}", err)
 
