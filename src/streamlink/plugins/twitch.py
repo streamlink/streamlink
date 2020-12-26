@@ -119,6 +119,8 @@ class TwitchHLSStreamReader(HLSStreamReader):
 
 
 class TwitchHLSStream(HLSStream):
+    __reader__ = TwitchHLSStreamReader
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
@@ -133,10 +135,7 @@ class TwitchHLSStream(HLSStream):
             self.session.options.set("hls-segment-stream-data", True)
             log.info("Low latency streaming (HLS live edge: {0})".format(live_edge))
 
-        reader = TwitchHLSStreamReader(self)
-        reader.open()
-
-        return reader
+        return super().open()
 
     @classmethod
     def _get_variant_playlist(cls, res):

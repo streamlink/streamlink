@@ -405,6 +405,7 @@ class HLSStream(HTTPStream):
     """
 
     __shortname__ = "hls"
+    __reader__ = HLSStreamReader
 
     def __init__(self, session_, url, url_master=None, force_restart=False, start_offset=0, duration=None, **args):
         HTTPStream.__init__(self, session_, url, **args)
@@ -432,7 +433,7 @@ class HLSStream(HTTPStream):
         return self.url_master
 
     def open(self):
-        reader = HLSStreamReader(self)
+        reader = self.__reader__(self)
         reader.open()
 
         return reader
