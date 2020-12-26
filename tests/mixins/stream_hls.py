@@ -7,7 +7,7 @@ from threading import Event, Thread
 import requests_mock
 
 from streamlink import Streamlink
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import HLSStream, HLSStreamWriter as _HLSStreamWriter
 
 
 class HLSItemBase:
@@ -82,6 +82,26 @@ class Segment(HLSItemBase):
         )
 
 
+class EventedHLSStreamWriter(_HLSStreamWriter):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.write_wait = Event()
+        self.write_done = Event()
+
+    def write(self, *args, **kwargs):
+        # only write once per step
+        self.write_wait.wait()
+        self.write_wait.clear()
+
+        try:
+            # don't write again during teardown
+            if not self.closed:
+                super().write(*args, **kwargs)
+        finally:
+            # notify main thread that writing has finished
+            self.write_done.set()
+
+
 class HLSStreamReadThread(Thread):
     """
     Run the reader on a separate thread, so that each read can be controlled from within the main thread
@@ -116,10 +136,11 @@ class HLSStreamReadThread(Thread):
 
     def run(self):
         while not self.reader.buffer.closed:
+            # at least one read was attempted
+            self.read_once.set()
             # only read once per step
             self.read_wait.wait()
             self.read_wait.clear()
-            self.read_once.set()
 
             try:
                 # don't read again during teardown
@@ -184,11 +205,21 @@ class TestMixinStreamHLS(unittest.TestCase):
     # close read thread and make sure that all threads have terminated before moving on
     def close_thread(self):
         thread = self.thread
+        if isinstance(thread.reader.writer, EventedHLSStreamWriter):
+            thread.reader.writer.write_wait.set()
         thread.reader.close()
         thread.read_wait.set()
         thread.reader.writer.join()
         thread.reader.worker.join()
         thread.join()
+
+    # make one write call on the write thread and wait until it has finished
+    def await_write(self, write_calls=1, timeout=5):
+        writer = self.thread.reader.writer
+        for _ in range(write_calls):
+            writer.write_wait.set()
+            writer.write_done.wait(timeout)
+            writer.write_done.clear()
 
     # make one read call on the read thread and wait until it has finished
     def await_read(self, read_all=False, timeout=5):

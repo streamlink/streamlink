@@ -2,8 +2,8 @@ import unittest
 from threading import Event
 from unittest.mock import MagicMock, call, patch
 
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
-from tests.mixins.stream_hls import Playlist, Segment, TestMixinStreamHLS
+from streamlink.stream.hls import HLSStream, HLSStreamReader
+from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, TestMixinStreamHLS
 
 
 FILTERED = "filtered"
@@ -15,28 +15,8 @@ class SegmentFiltered(Segment):
         self.title = FILTERED
 
 
-class _TestSubjectHLSStreamWriter(HLSStreamWriter):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.write_wait = Event()
-        self.write_done = Event()
-
-    def write(self, *args, **kwargs):
-        # only write once per step
-        self.write_wait.wait()
-        self.write_wait.clear()
-
-        try:
-            # don't write again during teardown
-            if not self.closed:
-                super().write(*args, **kwargs)
-        finally:
-            # notify main thread that writing has finished
-            self.write_done.set()
-
-
 class _TestSubjectHLSReader(HLSStreamReader):
-    __writer__ = _TestSubjectHLSStreamWriter
+    __writer__ = EventedHLSStreamWriter
 
 
 class _TestSubjectHLSStream(HLSStream):
@@ -50,17 +30,6 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     @classmethod
     def filter_sequence(cls, sequence):
         return sequence.segment.title == FILTERED
-
-    def close_thread(self):
-        self.thread.reader.writer.write_wait.set()
-        super().close_thread()
-
-    # make one write call on the write thread and wait until it has finished
-    def await_write(self):
-        writer = self.thread.reader.writer
-        writer.write_wait.set()
-        writer.write_done.wait()
-        writer.write_done.clear()
 
     def get_session(self, options=None, *args, **kwargs):
         session = super().get_session(options)
@@ -81,8 +50,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True)
         ])
 
-        self.await_write()
-        self.await_write()
+        self.await_write(2)
         data = self.await_read()
         self.assertEqual(data, self.content(segments), "Does not filter by default")
 
@@ -100,14 +68,12 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
 
         for i in range(2):
-            self.await_write()
-            self.await_write()
+            self.await_write(2)
             self.assertEqual(len(mock_log.info.mock_calls), i * 2 + 1)
             self.assertEqual(mock_log.info.mock_calls[i * 2 + 0], call("Filtering out segments and pausing stream output"))
             self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
 
-            self.await_write()
-            self.await_write()
+            self.await_write(2)
             self.assertEqual(len(mock_log.info.mock_calls), i * 2 + 2)
             self.assertEqual(mock_log.info.mock_calls[i * 2 + 1], call("Resuming stream output"))
             self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
@@ -146,8 +112,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
 
-        self.await_write()
-        self.await_write()
+        self.await_write(2)
         self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
 
         # make reader read (no data available yet)
@@ -210,7 +175,5 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             "segment2",
         ]})
 
-        for _ in range(4):
-            self.await_write()
-
+        self.await_write(4)
         self.assertEqual(self.await_read(), self.content(segments, cond=lambda s: s.num % 2 > 0))
