@@ -104,7 +104,7 @@ def create_output(plugin):
             except OSError as err:
                 console.exit("Failed to create pipe: {0}", err)
         elif args.player_http:
-            http = create_http_server("127.0.0.1")
+            http = create_http_server()
 
         title = create_title(plugin)
 
@@ -122,7 +122,7 @@ def create_output(plugin):
     return out
 
 
-def create_http_server(host=None, port=0):
+def create_http_server(*_args, **_kwargs):
     """Creates a HTTP server listening on a given host and port.
 
     If host is empty, listen on all available interfaces, and if port is 0,
@@ -131,7 +131,7 @@ def create_http_server(host=None, port=0):
 
     try:
         http = HTTPServer()
-        http.bind(host=host, port=port)
+        http.bind(*_args, **_kwargs)
     except OSError as err:
         console.exit("Failed to create HTTP server: {0}", err)
 
@@ -178,7 +178,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "executable with --player.")
 
         title = create_title(plugin)
-        server = create_http_server(host="127.0.0.1")
+        server = create_http_server()
         player = output = PlayerOutput(args.player, args=args.player_args,
                                        filename=server.url,
                                        quiet=not args.verbose_player,
