@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 import requests_mock
 from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad
 
 from streamlink.session import Streamlink
 from streamlink.stream import hls
@@ -12,14 +13,9 @@ from tests.mixins.stream_hls import Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
 
 
-def pkcs7_encode(data, keySize):
-    val = keySize - (len(data) % keySize)
-    return b''.join([data, bytes(bytearray(val * [val]))])
-
-
 def encrypt(data, key, iv):
     aesCipher = AES.new(key, AES.MODE_CBC, iv)
-    encrypted_data = aesCipher.encrypt(pkcs7_encode(data, len(key)))
+    encrypted_data = aesCipher.encrypt(pad(data, AES.block_size, style="pkcs7"))
     return encrypted_data
 
 
