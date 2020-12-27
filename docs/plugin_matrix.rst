@@ -108,7 +108,6 @@ livestream              livestream.com       Yes   --
 lrt                     lrt.lt               Yes   No
 ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
 mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
-mico                    micous.com           Yes   --
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
 mjunoon                 mjunoon.tv           Yes   Yes
 mrtmk                   play.mrt.com.mk      Yes   Yes   Streams may be geo-restricted to North Macedonia.
