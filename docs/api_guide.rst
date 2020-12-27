@@ -97,18 +97,3 @@ or set options like this:
 
 
 See :func:`Streamlink.set_option` to see which options are available.
-
-
-Examples
---------
-
-Simple player
-^^^^^^^^^^^^^
-
-This example uses the `PyGObject`_ module to playback a stream using the
-`GStreamer`_ framework.
-
-.. _PyGObject: https://wiki.gnome.org/action/show/Projects/PyGObject
-.. _GStreamer: https://gstreamer.freedesktop.org/
-
-.. literalinclude:: ../examples/gst-player.py
