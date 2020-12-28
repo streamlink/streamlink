@@ -150,7 +150,10 @@ jobs:
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
+          python -m pip install -r docs-requirements.txt
           python -m pip install --upgrade wheel twine
+      - name: Build man page
+        run: make --directory=docs man
       - name: Installer file name
         id: installer
         run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
