@@ -92,11 +92,7 @@ class ShowroomHLSStreamReader(HLSStreamReader):
 
 
 class ShowroomHLSStream(HLSStream):
-    def open(self):
-        reader = ShowroomHLSStreamReader(self)
-        reader.open()
-
-        return reader
+    __reader__ = ShowroomHLSStreamReader
 
 
 class Showroom(Plugin):

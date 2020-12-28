@@ -40,11 +40,7 @@ class _TestSubjectFilteredHLSReader(FilteredHLSStreamReader):
 
 
 class _TestSubjectFilteredHLSStream(HLSStream):
-    def open(self):
-        reader = _TestSubjectFilteredHLSReader(self)
-        reader.open()
-
-        return reader
+    __reader__ = _TestSubjectFilteredHLSReader
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
