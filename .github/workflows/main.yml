@@ -35,9 +35,15 @@ jobs:
       - name: Install dependencies
         continue-on-error: ${{ matrix.continue || false }}
         run: bash ./script/install-dependencies.sh
-      - name: Lint
+      - name: Lint (flake8)
         continue-on-error: ${{ matrix.continue || false }}
         run: flake8 --count
+      - name: Lint (line terminators)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: "! grep 'with CRLF line terminators' <(git ls-files | file -nNf-)"
+      - name: Lint (file permissions)
+        if: startsWith(matrix.os, 'ubuntu')
+        run: "! grep -Ev '^644' <(git ls-files src/ tests/ | xargs stat '--format=%a %n')"
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
         run: pytest -r a --cov --cov-branch --cov-report=xml
