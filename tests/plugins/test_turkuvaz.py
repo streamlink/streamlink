@@ -6,8 +6,12 @@ from streamlink.plugins.turkuvaz import Turkuvaz
 class TestPluginTurkuvaz(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
+            'http://www.atv.com.tr/a2tv/canli-yayin',
+            'https://www.atv.com.tr/a2tv/canli-yayin',
             'https://www.atv.com.tr/webtv/canli-yayin',
             'http://www.a2tv.com.tr/webtv/canli-yayin',
+            'http://www.ahaber.com.tr/video/canli-yayin',
+            'https://www.ahaber.com.tr/video/canli-yayin',
             'https://www.ahaber.com.tr/webtv/canli-yayin',
             'https://www.aspor.com.tr/webtv/canli-yayin',
             'http://www.anews.com.tr/webtv/live-broadcast',
