@@ -21,6 +21,10 @@ class Turkuvaz(Plugin):
             (atv|a2tv|ahaber|aspor|minikago|minikacocuk|anews)\.com\.tr
         )/webtv/(?:live-broadcast|canli-yayin)
     |
+        (ahaber)\.com\.tr/video/canli-yayin
+    |
+        atv\.com\.tr/(a2tv)/canli-yayin
+    |
         sabah\.com\.tr/(apara)/canli-yayin
     )""")
     _hls_url = "https://trkvz-live.ercdn.net/{channel}/{channel}.m3u8"
@@ -39,7 +43,7 @@ class Turkuvaz(Plugin):
 
     def _get_streams(self):
         url_m = self._url_re.match(self.url)
-        domain = url_m.group(1) or url_m.group(2) or url_m.group(3)
+        domain = url_m.group(1) or url_m.group(2) or url_m.group(3) or url_m.group(4) or url_m.group(5)
         # remap the domain to channel
         channel = {"atv": "atvhd",
                    "ahaber": "ahaberhd",
