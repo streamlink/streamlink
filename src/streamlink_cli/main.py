@@ -751,6 +751,15 @@ def setup_streamlink():
 
 def setup_options():
     """Sets Streamlink options."""
+    if args.interface:
+        streamlink.set_option("interface", args.interface)
+
+    if args.ipv4:
+        streamlink.set_option("ipv4", args.ipv4)
+
+    if args.ipv6:
+        streamlink.set_option("ipv6", args.ipv6)
+
     if args.hls_live_edge:
         streamlink.set_option("hls-live-edge", args.hls_live_edge)
 
