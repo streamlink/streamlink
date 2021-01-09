@@ -14,6 +14,10 @@ class BFMTV(Plugin):
         r'accountid="(?P<account_id>[0-9]+).*?videoid="(?P<video_id>[0-9]+)"',
         re.DOTALL
     )
+    _brightcove_video_alt_re = re.compile(
+        r'data-account="(?P<account_id>[0-9]+).*?data-video-id="(?P<video_id>[0-9]+)"',
+        re.DOTALL
+    )
     _embed_video_id_re = re.compile(
         r'<iframe.*?src=".*?/(?P<video_id>\w+)"',
         re.DOTALL
@@ -26,7 +30,7 @@ class BFMTV(Plugin):
     def _get_streams(self):
         # Retrieve URL page and search for Brightcove video data
         res = self.session.http.get(self.url)
-        match = self._brightcove_video_re.search(res.text)
+        match = self._brightcove_video_re.search(res.text) or self._brightcove_video_alt_re.search(res.text)
         if match is not None:
             account_id = match.group('account_id')
             log.debug(f'Account ID: {account_id}')
