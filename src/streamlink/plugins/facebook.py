@@ -84,9 +84,16 @@ class Facebook(Plugin):
 
     def _get_streams(self):
         self.session.set_option("ffmpeg-start-at-zero", True)
+        self.session.http.headers.update({"Accept-Language": "en-US"})
 
         done = False
         res = self.session.http.get(self.url)
+        log.trace("{0}".format(res.url))
+        for title in itertags(res.text, "title"):
+            if title.text.startswith("Log into Facebook"):
+                log.error("Video is not available, You must log in to continue.")
+                return
+
         for s in self._parse_streams(res):
             done = True
             yield s
