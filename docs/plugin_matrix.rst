@@ -64,10 +64,9 @@ dogan                   - cnnturk.com        Yes   Yes
                         - dreamtv.com.tr
                         - kanald.com.tr
                         - teve2.com.tr
-dogus                   - ntvspor.net        Yes   No
+dogus                   - eurostartv.com.tr  Yes   No
                         - kralmuzik.com.tr
                         - ntv.com.tr
-                        - eurostartv.com.tr
                         - startv.com.tr
 dommune                 dommune.com          Yes   --
 drdk                    dr.dk                Yes   No    Streams may be geo-restricted to Denmark.

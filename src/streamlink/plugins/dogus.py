@@ -12,16 +12,15 @@ log = logging.getLogger(__name__)
 
 class Dogus(Plugin):
     """
-    Support for live streams from Dogus sites include ntv, ntvspor, and kralmuzik
+    Support for live streams from Dogus sites include ntv, and kralmuzik
     """
 
-    url_re = re.compile(r"""https?://(?:www.)?
+    url_re = re.compile(r"""https?://(?:www\.)?
         (?:
-            ntv.com.tr/canli-yayin/ntv|
-            ntvspor.net/canli-yayin|
-            kralmuzik.com.tr/tv/|
-            eurostartv.com.tr/canli-izle|
-            startv.com.tr/canli-yayin
+            eurostartv\.com\.tr/canli-izle|
+            kralmuzik\.com\.tr/tv/|
+            ntv\.com\.tr/canli-yayin/ntv|
+            startv\.com\.tr/canli-yayin
         )/?""", re.VERBOSE)
     mobile_url_re = re.compile(r"""(?P<q>["'])(?P<url>(https?:)?//[^'"]*?/live/hls/[^'"]*?\?token=)
                                    (?P<token>[^'"]*?)(?P=q)""", re.VERBOSE)
