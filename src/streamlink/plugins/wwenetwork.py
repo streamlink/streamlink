@@ -1,13 +1,13 @@
 import json
 import logging
 import re
+from functools import lru_cache
 from urllib.parse import parse_qsl, urlparse
 
 from streamlink import PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
-from streamlink.utils import memoize
 from streamlink.utils.times import seconds_to_hhmmss
 
 log = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ class WWENetwork(Plugin):
         return self.auth_token
 
     @property
-    @memoize
+    @lru_cache(maxsize=128)
     def item_config(self):
         log.debug("Loading page config")
         p = urlparse(self.url)

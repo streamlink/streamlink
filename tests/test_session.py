@@ -68,6 +68,7 @@ class TestSession(unittest.TestCase):
         plugin = session.resolve_url("http://test.se/channel")
         self.assertTrue(isinstance(plugin, Plugin))
         self.assertTrue(isinstance(plugin, plugins["testplugin"]))
+        self.assertTrue(hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache")
 
     def test_resolve_url_priority(self):
         from tests.plugin.testplugin import TestPlugin

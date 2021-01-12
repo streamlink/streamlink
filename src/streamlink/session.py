@@ -1,6 +1,7 @@
 import logging
 import pkgutil
 from collections import OrderedDict
+from functools import lru_cache
 
 import requests
 
@@ -10,7 +11,7 @@ from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
 from streamlink.plugin import Plugin, api
-from streamlink.utils import load_module, memoize, update_scheme
+from streamlink.utils import load_module, update_scheme
 from streamlink.utils.l10n import Localization
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
@@ -337,7 +338,7 @@ class Streamlink:
             plugin = self.plugins[plugin]
             return plugin.get_option(key)
 
-    @memoize
+    @lru_cache(maxsize=128)
     def resolve_url(self, url, follow_redirect=True):
         """Attempts to find a plugin that can use this URL.
 

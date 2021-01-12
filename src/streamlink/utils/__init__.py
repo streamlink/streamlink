@@ -1,4 +1,3 @@
-import functools
 import json
 import re
 import xml.etree.ElementTree as ET
@@ -149,18 +148,6 @@ def rtmpparse(url):
                                                app=app)
 
     return tcurl, playpath
-
-
-def memoize(obj):
-    cache = obj.cache = {}
-
-    @functools.wraps(obj)
-    def memoizer(*args, **kwargs):
-        key = str(args) + str(kwargs)
-        if key not in cache:
-            cache[key] = obj(*args, **kwargs)
-        return cache[key]
-    return memoizer
 
 
 def search_dict(data, key):
