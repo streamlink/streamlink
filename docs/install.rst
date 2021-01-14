@@ -182,9 +182,6 @@ PyPI package and source code
 If a package is not available on your platform, or if it's out of date,
 Streamlink can be installed via `pip`_, the Python package manager.
 
-In addition to using `pip`_, Streamlink can also be installed from source
-via `setuptools`_ after cloning the `git`_ repository.
-
 Before running :command:`pip`, make sure that it's the Python 3 version of `pip`_ (to check, run :command:`pip --version`).
 On some systems, this isn't the case by default and an alternative, like :command:`pip3` for example, needs to be run instead.
 
@@ -195,10 +192,10 @@ On some systems, this isn't the case by default and an alternative, like :comman
 
     Ensure that you are using an up-to-date version of `pip`_. At least version **6** is required.
 
-.. note::
+.. warning::
 
-    On Linux, when not using a virtual environment, it is recommended to install custom python packages like this
-    only for the current user (see the ``--user`` parameter below), since system-wide packages can cause conflicts with
+    On Linux, when not using a virtual environment, it is recommended to **install custom python packages like this
+    only for the current user** (see the ``--user`` parameter below), since system-wide packages can cause conflicts with
     the system's regular package manager.
 
     Those user-packages will be installed into ``~/.local`` instead of ``/usr`` and entry-scripts for
@@ -213,42 +210,23 @@ On some systems, this isn't the case by default and an alternative, like :comman
 ==================================== ===========================================
 Version                              Installing
 ==================================== ===========================================
-`Latest release (pip)`_              .. code-block:: bash
+`Latest release`_                    .. code-block:: bash
 
-                                        # Current user
-                                        pip install --upgrade --user streamlink
+                                        pip install --user --upgrade streamlink
 
-                                        # System wide
-                                        sudo pip install --upgrade streamlink
+`Master branch`_                     .. code-block:: bash
 
-`Development version (pip)`_         .. code-block:: bash
+                                        pip install --user --upgrade git+https://github.com/streamlink/streamlink.git
 
-                                        # Current user
-                                        pip install --upgrade --user git+https://github.com/streamlink/streamlink.git
+`Specific tag/branch or commit`_     .. code-block:: bash
 
-                                        # System wide
-                                        sudo pip install --upgrade git+https://github.com/streamlink/streamlink.git
-
-`Development version (git)`_         .. code-block:: bash
-
-                                        # Current user
-                                        git clone https://github.com/streamlink/streamlink.git
-                                        cd streamlink
-                                        python setup.py install --user
-
-                                        # System wide
-                                        git clone https://github.com/streamlink/streamlink.git
-                                        cd streamlink
-                                        sudo python setup.py install
+                                        pip install --user --upgrade git+https://github.com/USERNAME/streamlink.git@BRANCH-OR-COMMIT
 ==================================== ===========================================
 
-.. _pip: https://pip.readthedocs.org/en/latest/installing.html
-.. _setuptools: https://setuptools.readthedocs.io/en/latest/
-.. _git: https://git-scm.com/
-.. _Latest release (pip): https://pypi.python.org/pypi/streamlink
-.. _Latest release (easy_install): https://pypi.python.org/pypi/streamlink
-.. _Development version (pip): https://github.com/streamlink/streamlink
-.. _Development version (git): https://github.com/streamlink/streamlink
+.. _pip: https://pip.pypa.io/en/stable/
+.. _Latest release: https://pypi.python.org/pypi/streamlink
+.. _Master branch: https://github.com/streamlink/streamlink/commits/master
+.. _Specific tag/branch or commit: https://pip.pypa.io/en/stable/reference/pip_install/#git
 
 Virtual environment
 ^^^^^^^^^^^^^^^^^^^
