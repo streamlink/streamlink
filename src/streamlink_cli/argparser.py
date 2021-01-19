@@ -1106,7 +1106,9 @@ def build_parser():
         type=str,
         metavar="OUTFORMAT",
         help="""
-        Set output file format.
+        When muxing streams, set the output format to OUTFORMAT.
+
+        Default is "matroska".
 
         Example: "mpegts"
         """
@@ -1115,7 +1117,7 @@ def build_parser():
         "--ffmpeg-video-transcode",
         metavar="CODEC",
         help="""
-        When muxing streams transcode the video to this CODEC.
+        When muxing streams, transcode the video to CODEC.
 
         Default is "copy".
 
@@ -1126,7 +1128,7 @@ def build_parser():
         "--ffmpeg-audio-transcode",
         metavar="CODEC",
         help="""
-        When muxing streams transcode the audio to this CODEC.
+        When muxing streams, transcode the audio to CODEC.
 
         Default is "copy".
 
