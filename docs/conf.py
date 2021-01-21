@@ -184,7 +184,7 @@ htmlhelp_basename = 'streamlinkdoc'
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('cli', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Streamlink Contributors'], 1)
+    ('_man', 'streamlink', 'extracts streams from various services and pipes them into a video player of choice', ['Streamlink Contributors'], 1)
 ]
 
 # If true, show URL addresses after external links.
