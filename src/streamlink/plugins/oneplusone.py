@@ -55,9 +55,9 @@ class OnePlusOne(Plugin):
         parser = Online_Parser()
         parser.feed(res.text)
         url = parser.iframe_url
-        if url.startswith("//"):
+        if url.startswith("/"):
             p = urlparse(self.url)
-            return "{0}:{1}".format(p.scheme, url)
+            return "{0}://{1}{2}".format(p.scheme, p.netloc, url)
         else:
             return url
 
