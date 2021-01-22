@@ -1,5 +1,5 @@
-import logging
 import hashlib
+import logging
 import re
 from threading import Event, Thread
 from urllib.parse import unquote_plus, urlparse
