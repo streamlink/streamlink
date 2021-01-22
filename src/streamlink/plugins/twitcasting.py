@@ -1,4 +1,5 @@
 import logging
+import hashlib
 import re
 from threading import Event, Thread
 from urllib.parse import unquote_plus, urlparse
@@ -7,7 +8,7 @@ import websocket
 
 from streamlink import logger
 from streamlink.buffers import RingBuffer
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.stream import Stream
 from streamlink.stream.stream import StreamIO
@@ -16,6 +17,13 @@ log = logging.getLogger(__name__)
 
 
 class TwitCasting(Plugin):
+    arguments = PluginArguments(
+        PluginArgument(
+            "twitcasting-password",
+            argument_name="twitcasting-password",
+            help="Password for private Twitcasting streams."
+        )
+    )
     _url_re = re.compile(r"http(s)?://twitcasting.tv/(?P<channel>[^/]+)", re.VERBOSE)
     _STREAM_INFO_URL = "https://twitcasting.tv/streamserver.php?target={channel}&mode=client"
     _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
@@ -66,6 +74,13 @@ class TwitCasting(Plugin):
             raise PluginError("No stream available for user {}".format(self.channel))
 
         real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)
+
+        if self.options.get("twitcasting-password"):
+            password = self.options.get("twitcasting-password")
+            encrypted_password = hashlib.md5(password.encode()).hexdigest()
+
+            real_stream_url = real_stream_url + "&word=" + encrypted_password
+
         log.debug("Real stream url: {}".format(real_stream_url))
 
         return {mode: TwitCastingStream(session=self.session, url=real_stream_url)}
