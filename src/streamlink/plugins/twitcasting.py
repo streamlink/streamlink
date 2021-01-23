@@ -12,6 +12,8 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginErr
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.stream import Stream
 from streamlink.stream.stream import StreamIO
+from streamlink.utils.url import update_qsd
+
 
 log = logging.getLogger(__name__)
 
@@ -19,8 +21,9 @@ log = logging.getLogger(__name__)
 class TwitCasting(Plugin):
     arguments = PluginArguments(
         PluginArgument(
-            "twitcasting-password",
-            argument_name="twitcasting-password",
+            "password",
+            sensitive=True,
+            metavar="PASSWORD",
             help="Password for private Twitcasting streams."
         )
     )
@@ -75,11 +78,10 @@ class TwitCasting(Plugin):
 
         real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)
 
-        if self.options.get("twitcasting-password"):
-            password = self.options.get("twitcasting-password")
-            encrypted_password = hashlib.md5(password.encode()).hexdigest()
-
-            real_stream_url = real_stream_url + "&word=" + encrypted_password
+        password = self.options.get("password")
+        if password is not None:
+            password_hash = hashlib.md5(password.encode()).hexdigest()
+            real_stream_url = update_qsd(real_stream_url, {"word": password_hash})
 
         log.debug("Real stream url: {}".format(real_stream_url))
 
