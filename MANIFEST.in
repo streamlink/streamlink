@@ -11,5 +11,7 @@ recursive-include examples *
 recursive-include tests *
 
 prune docs/_build
+include docs/_build/man/*
+
 prune */__pycache__
 global-exclude *.pyc *~ *.bak *.swp *.pyo
