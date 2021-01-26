@@ -32,12 +32,12 @@ class Pluto(Plugin):
     def _schema_media(self, slug):
         return validate.Schema(
             [{
-                'name': str,
-                'slug': str,
+                'name': validate.text,
+                'slug': validate.text,
                 validate.optional('stitched'): {
                     'urls': [
                         {
-                            'type': str,
+                            'type': validate.text,
                             'url': validate.url(),
                         }
                     ]
