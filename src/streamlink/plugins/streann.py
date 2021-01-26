@@ -112,13 +112,13 @@ class Streann(Plugin):
             return
 
         data = self.session.http.json(res, schema=validate.Schema({
-            "token": str,
-            validate.optional("name"): str,
+            "token": validate.text,
+            validate.optional("name"): validate.text,
             validate.optional("webPlayer"): {
-                validate.optional("id"): str,
-                validate.optional("name"): str,
-                validate.optional("type"): str,
-                validate.optional("allowedDomains"): [str],
+                validate.optional("id"): validate.text,
+                validate.optional("name"): validate.text,
+                validate.optional("type"): validate.text,
+                validate.optional("allowedDomains"): [validate.text],
             },
         }))
         log.trace("{0!r}".format(data))
