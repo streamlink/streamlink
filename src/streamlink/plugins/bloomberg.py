@@ -1,111 +1,87 @@
 import logging
 import re
-from functools import partial
+from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
-from streamlink.utils import parse_json, update_scheme
+from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
 
 class Bloomberg(Plugin):
-    VOD_API_URL = 'https://www.bloomberg.com/api/embed?id={0}'
-    PLAYER_URL = 'https://cdn.gotraffic.net/projector/latest/bplayer.js'
-    CHANNEL_MAP = {
-        'audio': 'BBG_RADIO',
-        'live/europe': 'EU',
-        'live/us': 'US',
-        'live/asia': 'ASIA',
-        'live/stream': 'EVENT',
-        'live/emea': 'EMEA_EVENT',
-        'live/asia_stream': 'ASIA_EVENT'
-    }
+    LIVE_API_URL = "https://cdn.gotraffic.net/projector/latest/assets/config/config.min.json?v=1"
+    VOD_API_URL = "https://www.bloomberg.com/api/embed?id={0}"
 
     _url_re = re.compile(r'''
         https?://(?:www\.)?bloomberg\.com/
         (?:
-            news/videos/[^/]+/[^/]+|
+            news/videos/[^/]+/[^/]+
+            |
             live/(?P<channel>.+)/?
         )
-''', re.VERBOSE)
-    _live_player_re = re.compile(r'{APP_BUNDLE:"(?P<live_player_url>.+?/app.js)"')
-    _js_to_json_re = partial(re.compile(r'(\w+):(["\']|\d?\.?\d+,|true|false|\[|{)').sub, r'"\1":\2')
-    _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
-    _preload_state_re = re.compile(r'<script>\s*window.__PRELOADED_STATE__\s*=\s*({.+});?\s*</script>')
-    _live_stream_info_module_id_re = re.compile(
-        r'{(?:(?:"[^"]+"|\w+):(?:\d+|"[^"]+"),)*"(?:[^"]*/)?config/livestreams":(\d+)(?:,(?:"[^"]+"|\w+):(?:\d+|"[^"]+"))*}'
-    )
-    _live_stream_info_re = r'],{id}:\[function\(.+var n=({{.+}});r.default=n}},{{}}],{next}:\['
+    ''', re.VERBOSE)
 
-    _live_streams_schema = validate.Schema(
-        validate.transform(_js_to_json_re),
-        validate.transform(lambda x: x.replace(':.', ':0.')),
+    _re_preload_state = re.compile(r'<script>\s*window.__PRELOADED_STATE__\s*=\s*({.+});?\s*</script>')
+    _re_mp4_bitrate = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
+
+    _schema_url = validate.all(
+        {"url": validate.url()},
+        validate.get("url")
+    )
+
+    _schema_live_list = validate.Schema(
         validate.transform(parse_json),
-        validate.Schema({
-            validate.text: {
-                validate.optional('cdns'): validate.all(
+        validate.get("live"),
+        validate.get("channels"),
+        validate.get("byChannelId"),
+        {
+            str: validate.all({"liveId": str}, validate.get("liveId"))
+        }
+    )
+    _schema_live_streams = validate.Schema(
+        validate.get("livestreams"),
+        {
+            str: {
+                validate.optional("cdns"): validate.all(
                     [
-                        validate.Schema(
-                            {
-                                'streams': validate.all([
-                                    validate.Schema(
-                                        {'url': validate.transform(lambda x: re.sub(r'(https?:/)([^/])', r'\1/\2', x))},
-                                        validate.get('url'),
-                                        validate.url()
-                                    )
-                                ]),
-                            },
-                            validate.get('streams')
-                        )
+                        validate.all({"streams": [_schema_url]}, validate.get("streams"))
                     ],
                     validate.transform(lambda x: [i for y in x for i in y])
                 )
             }
-        },
-        )
+        }
     )
 
-    _channel_list_schema = validate.Schema(
+    _schema_vod_list = validate.Schema(
         validate.transform(parse_json),
-        {"live": {"channels": {"byChannelId": {
-            validate.text: validate.all({"liveId": validate.text}, validate.get("liveId"))
-        }}}},
-        validate.get("live"),
-        validate.get("channels"),
-        validate.get("byChannelId"),
+        validate.any(
+            validate.all(
+                {"video": {"videoList": list}},
+                validate.get("video"),
+                validate.get("videoList")
+            ),
+            validate.all(
+                {"quicktakeVideo": {"videoStory": dict}},
+                validate.get("quicktakeVideo"),
+                validate.get("videoStory"),
+                validate.transform(lambda x: [x])
+            )
+        ),
+        [
+            {
+                "slug": str,
+                "video": validate.all({"bmmrId": str}, validate.get("bmmrId"))
+            }
+        ]
     )
-
-    _vod_list_schema = validate.Schema(
-        validate.transform(parse_json),
-        validate.get("video"),
-        validate.get("videoList"),
-        validate.all([
-            validate.Schema({
-                "slug": validate.text,
-                "video": validate.Schema({"bmmrId": validate.text}, validate.get("bmmrId"))
-            })
-        ])
-    )
-
-    _vod_api_schema = validate.Schema(
+    _schema_vod_streams = validate.Schema(
         {
-            'secureStreams': validate.all([
-                validate.Schema(
-                    {'url': validate.url()},
-                    validate.get('url')
-                )
-            ]),
-            'streams': validate.all([
-                validate.Schema(
-                    {'url': validate.url()},
-                    validate.get('url')
-                )
-            ]),
-            'contentLoc': validate.url(),
+            "secureStreams": validate.all([_schema_url]),
+            "streams": validate.all([_schema_url])
         },
-        validate.transform(lambda x: list(set(x['secureStreams'] + x['streams'] + [x['contentLoc']])))
+        validate.transform(lambda x: list(set(x["secureStreams"] + x["streams"])))
     )
 
     _headers = {
@@ -124,94 +100,66 @@ class Bloomberg(Plugin):
     def can_handle_url(cls, url):
         return Bloomberg._url_re.match(url)
 
-    def _get_live_streams(self):
-        # Get channel id
-        match = self._url_re.match(self.url)
-        channel = match.group('channel')
-
+    def _get_live_streams(self, channel):
         res = self.session.http.get(self.url, headers=self._headers)
         if "Are you a robot?" in res.text:
             log.error("Are you a robot?")
 
-        match = self._preload_state_re.search(res.text)
+        match = self._re_preload_state.search(res.text)
         if match is None:
             return
 
-        live_ids = self._channel_list_schema.validate(match.group(1))
+        live_ids = self._schema_live_list.validate(match.group(1))
         live_id = live_ids.get(channel)
         if not live_id:
-            log.error("Could not find liveId for channel '{0}'".format(channel))
+            log.error(f"Could not find liveId for channel '{channel}'")
             return
 
-        log.debug("Found liveId: {0}".format(live_id))
-        # Retrieve live player URL
-        res = self.session.http.get(self.PLAYER_URL)
-        match = self._live_player_re.search(res.text)
-        if match is None:
-            return
-        live_player_url = update_scheme(self.url, match.group('live_player_url'))
+        log.debug(f"Found liveId: {live_id}")
+        res = self.session.http.get(self.LIVE_API_URL)
+        streams = self.session.http.json(res, schema=self._schema_live_streams)
+        data = streams.get(live_id, {})
 
-        # Extract streams from the live player page
-        log.debug("Player URL: {0}".format(live_player_url))
-        res = self.session.http.get(live_player_url)
-
-        # Get the ID of the webpack module containing the streams config from another module's dependency list
-        match = self._live_stream_info_module_id_re.search(res.text)
-        if match is None:
-            return
-        webpack_module_id = int(match.group(1))
-        log.debug("Webpack module ID: {0}".format(webpack_module_id))
-
-        # Finally get the streams JSON data from the config/livestreams webpack module
-        regex = re.compile(self._live_stream_info_re.format(id=webpack_module_id, next=webpack_module_id + 1))
-        match = regex.search(res.text)
-        if match is None:
-            return
-        stream_info = self._live_streams_schema.validate(match.group(1))
-        data = stream_info.get(live_id, {})
-
-        return data.get('cdns')
+        return data.get("cdns")
 
     def _get_vod_streams(self):
-        # Retrieve URL page and search for video ID
         res = self.session.http.get(self.url, headers=self._headers)
 
-        match = self._preload_state_re.search(res.text)
+        match = self._re_preload_state.search(res.text)
         if match is None:
             return
 
-        videos = self._vod_list_schema.validate(match.group(1))
+        videos = self._schema_vod_list.validate(match.group(1))
         video_id = next((v["video"] for v in videos if v["slug"] in self.url), None)
         if video_id is None:
             return
 
-        log.debug("Found videoId: {0}".format(video_id))
+        log.debug(f"Found videoId: {video_id}")
         res = self.session.http.get(self.VOD_API_URL.format(video_id), headers=self._headers)
-        streams = self.session.http.json(res, schema=self._vod_api_schema)
+        streams = self.session.http.json(res, schema=self._schema_vod_streams)
 
         return streams
 
     def _get_streams(self):
+        match = self._url_re.match(self.url)
+        channel = match.group("channel")
+
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
-        if '/news/videos/' in self.url:
-            # VOD
-            streams = self._get_vod_streams() or []
+        if channel:
+            streams = self._get_live_streams(channel) or []
         else:
-            # Live
-            streams = self._get_live_streams() or []
+            streams = self._get_vod_streams() or []
 
         for video_url in streams:
-            log.debug("Found stream: {0}".format(video_url))
-            if '.f4m' in video_url:
+            log.debug(f"Found stream: {video_url}")
+            parsed = urlparse(video_url)
+            if parsed.path.endswith(".f4m"):
                 yield from HDSStream.parse_manifest(self.session, video_url).items()
-            elif '.m3u8' in video_url:
+            elif parsed.path.endswith(".m3u8"):
                 yield from HLSStream.parse_variant_playlist(self.session, video_url).items()
-            if '.mp4' in video_url:
-                match = self._mp4_bitrate_re.match(video_url)
-                if match is not None:
-                    bitrate = match.group('bitrate') + 'k'
-                else:
-                    bitrate = 'vod'
+            elif parsed.path.endswith(".mp4"):
+                match = self._re_mp4_bitrate.match(video_url)
+                bitrate = "vod" if match is None else f"{match.group('bitrate')}k"
                 yield bitrate, HTTPStream(self.session, video_url)
 
 
