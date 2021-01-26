@@ -34,12 +34,12 @@ class Dogan(Plugin):
     content_api_schema = validate.Schema(
         {
             "data": {
-                "id": str,
+                "id": validate.text,
                 "media": {
                     "link": {
                         validate.optional("defaultServiceUrl"): validate.any(validate.url(), ""),
                         validate.optional("serviceUrl"): validate.any(validate.url(), ""),
-                        "securePath": str,
+                        "securePath": validate.text,
                     },
                 },
             },
@@ -52,10 +52,10 @@ class Dogan(Plugin):
         {
             "Media": {
                 "Link": {
-                    "ContentId": str,
+                    "ContentId": validate.text,
                     validate.optional("DefaultServiceUrl"): validate.any(validate.url(), ""),
                     validate.optional("ServiceUrl"): validate.any(validate.url(), ""),
-                    "SecurePath": str,
+                    "SecurePath": validate.text,
                 },
             },
         },
