@@ -109,6 +109,14 @@ class LocalizationTestsMixin(object):
         b = l10n.Language("AA", None, "Test")
         self.assertNotEqual(a, b)
 
+    # issue #3517: language lookups without alpha2 but with alpha3 codes should not raise
+    def test_language_a3_no_a2(self):
+        a = l10n.Localization.get_language("des")
+        self.assertEqual(a.alpha2, "")
+        self.assertEqual(a.alpha3, "des")
+        self.assertEqual(a.name, "Desano")
+        self.assertEqual(a.bibliographic, "")
+
 
 @unittest.skipIf(not ISO639, "iso639+iso3166 modules are required to test iso639+iso3166 Localization")
 class TestLocalization(LocalizationTestsMixin, unittest.TestCase):
@@ -131,3 +139,14 @@ class TestLocalizationPyCountry(LocalizationTestsMixin, unittest.TestCase):
 
     def test_pycountry(self):
         self.assertEqual(True, l10n.PYCOUNTRY)
+
+    # issue #3057: generic "en" lookups via pycountry yield the "En" language, but not "English"
+    def test_language_en(self):
+        english_a = l10n.Localization.get_language("en")
+        english_b = l10n.Localization.get_language("eng")
+        english_c = l10n.Localization.get_language("English")
+        for lang in [english_a, english_b, english_c]:
+            self.assertEqual(lang.alpha2, "en")
+            self.assertEqual(lang.alpha3, "eng")
+            self.assertEqual(lang.name, "English")
+            self.assertEqual(lang.bibliographic, "")
