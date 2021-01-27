@@ -1,6 +1,5 @@
 import locale
 import logging
-import re
 
 
 try:
@@ -68,9 +67,19 @@ class Language:
     def get(cls, language):
         try:
             if PYCOUNTRY:
-                # lookup workaround for alpha_2 language codes
-                lang = languages.get(alpha_2=language) if re.match(r"^[a-z]{2}$", language) else languages.lookup(language)
-                return Language(lang.alpha_2, lang.alpha_3, lang.name, getattr(lang, "bibliographic", None))
+                lang = (languages.get(alpha_2=language)
+                        or languages.get(alpha_3=language)
+                        or languages.get(bibliographic=language)
+                        or languages.get(name=language))
+                if not lang:
+                    raise KeyError(language)
+                return Language(
+                    # some languages don't have an alpha_2 code
+                    getattr(lang, "alpha_2", ""),
+                    lang.alpha_3,
+                    lang.name,
+                    getattr(lang, "bibliographic", "")
+                )
             else:
                 lang = None
                 if len(language) == 2:
