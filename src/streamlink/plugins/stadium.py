@@ -2,41 +2,68 @@ import logging
 import re
 
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import validate
+from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
 
 class Stadium(Plugin):
-    url_re = re.compile(r"""https?://(?:www\.)?watchstadium\.com/live""")
-    API_URL = "https://player-api.new.livestream.com/accounts/{account_id}/events/{event_id}/stream_info"
-    _stream_data_re = re.compile(r"var StadiumSiteData = (\{.*?});", re.M | re.DOTALL)
+    _url_re = re.compile(r"""https?://(?:www\.)?watchstadium\.com/live""")
+    _policy_key_re = re.compile(r"""options:\s*\{.+policyKey:\s*"([^"]+)""", re.DOTALL)
+    _API_URL = (
+        "https://edge.api.brightcove.com/playback/v1/accounts/{data_account}/videos/{data_video_id}"
+        "?ad_config_id={data_ad_config_id}"
+    )
+    _PLAYER_URL = "https://players.brightcove.net/{data_account}/{data_player}_default/index.min.js"
+
+    _streams_schema = validate.Schema(
+        {
+            "tags": ["live"],
+            "sources": [
+                {
+                    "src": validate.url(scheme="http"),
+                    validate.optional("ext_x_version"): str,
+                    "type": str,
+                }
+            ],
+        },
+        validate.get("sources"),
+    )
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
+        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)
-        m = self._stream_data_re.search(res.text)
-        if m:
-            data = parse_json(m.group(1))
-            if data['LivestreamEnabled'] == '1':
-                account_id = data['LivestreamArgs']['account_id']
-                event_id = data['LivestreamArgs']['event_id']
-                log.debug("Found account_id={0} and event_id={1}".format(account_id, event_id))
+        for tag in itertags(res.text, "video"):
+            if tag.attributes.get("id") == "brightcove_video_player":
+                data_video_id = tag.attributes.get("data-video-id")
+                data_account = tag.attributes.get("data-account")
+                data_ad_config_id = tag.attributes.get("data-ad-config-id")
+                data_player = tag.attributes.get("data-player")
 
-                url = self.API_URL.format(account_id=account_id, event_id=event_id)
-                api_res = self.session.http.get(url)
-                api_data = self.session.http.json(api_res)
-                stream_url = api_data.get('secure_m3u8_url') or api_data.get('m3u8_url')
-                if stream_url:
-                    return HLSStream.parse_variant_playlist(self.session, stream_url)
-                else:
-                    log.error("Could not find m3u8_url")
-            else:
-                log.error("Stream is offline")
+                url = self._PLAYER_URL.format(data_account=data_account, data_player=data_player)
+                res = self.session.http.get(url)
+                policy_key = self._policy_key_re.search(res.text).group(1)
+
+                headers = {
+                    "Accept": "application/json;pk={0}".format(policy_key),
+                }
+                url = self._API_URL.format(
+                    data_account=data_account, data_video_id=data_video_id, data_ad_config_id=data_ad_config_id
+                )
+                res = self.session.http.get(url, headers=headers)
+                streams = self.session.http.json(res, schema=self._streams_schema)
+
+                for stream in streams:
+                    if stream["type"] == "application/x-mpegURL":
+                        for s in HLSStream.parse_variant_playlist(self.session, stream["src"]).items():
+                            yield s
+                    else:
+                        log.warning("Unexpected stream type: '{0}'".format(stream["type"]))
 
 
 __plugin__ = Stadium
