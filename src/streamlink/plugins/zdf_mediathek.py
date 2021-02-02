@@ -83,7 +83,7 @@ _schema = validate.Schema(
 )
 
 
-class zdf_mediathek(Plugin):
+class ZDFMediathek(Plugin):
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
@@ -157,4 +157,4 @@ class zdf_mediathek(Plugin):
         return streams
 
 
-__plugin__ = zdf_mediathek
+__plugin__ = ZDFMediathek
