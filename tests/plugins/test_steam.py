@@ -1,17 +1,18 @@
-import unittest
-
 from streamlink.plugins.steam import SteamBroadcastPlugin
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginSteamBroadcastPlugin(unittest.TestCase):
-    def test_can_handle_url(self):
-        self.assertTrue(SteamBroadcastPlugin.can_handle_url('https://steamcommunity.com/broadcast/watch/12432432'))
-        self.assertTrue(SteamBroadcastPlugin.can_handle_url('http://steamcommunity.com/broadcast/watch/342342'))
-        self.assertTrue(SteamBroadcastPlugin.can_handle_url('https://steam.tv/dota2'))
-        self.assertTrue(SteamBroadcastPlugin.can_handle_url('http://steam.tv/dota2'))
+class TestPluginCanHandleUrlSteamBroadcastPlugin(PluginCanHandleUrl):
+    __plugin__ = SteamBroadcastPlugin
 
-    def test_can_handle_url_negative(self):
-        # shouldn't match
-        self.assertFalse(SteamBroadcastPlugin.can_handle_url('http://steamcommunity.com/broadcast'))
-        self.assertFalse(SteamBroadcastPlugin.can_handle_url('https://steamcommunity.com'))
-        self.assertFalse(SteamBroadcastPlugin.can_handle_url('https://youtube.com'))
+    should_match = [
+        'https://steamcommunity.com/broadcast/watch/12432432',
+        'http://steamcommunity.com/broadcast/watch/342342',
+        'https://steam.tv/dota2',
+        'http://steam.tv/dota2',
+    ]
+
+    should_not_match = [
+        'http://steamcommunity.com/broadcast',
+        'https://steamcommunity.com',
+    ]

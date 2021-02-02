@@ -1,19 +1,10 @@
-import unittest
-
 from streamlink.plugins.nhkworld import NHKWorld
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginNHKWorld(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'https://www3.nhk.or.jp/nhkworld/en/live/',
-        ]
-        for url in should_match:
-            self.assertTrue(NHKWorld.can_handle_url(url))
+class TestPluginCanHandleUrlNHKWorld(PluginCanHandleUrl):
+    __plugin__ = NHKWorld
 
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://example.com/index.html',
-        ]
-        for url in should_not_match:
-            self.assertFalse(NHKWorld.can_handle_url(url))
+    should_match = [
+        'https://www3.nhk.or.jp/nhkworld/en/live/',
+    ]

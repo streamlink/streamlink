@@ -1,12 +1,11 @@
-import unittest
-
 from streamlink.plugins.stv import STV
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginSTV(unittest.TestCase):
-    def test_can_handle_url(self):
-        self.assertTrue(STV.can_handle_url('https://player.stv.tv/live'))
-        self.assertTrue(STV.can_handle_url('http://player.stv.tv/live'))
+class TestPluginCanHandleUrlSTV(PluginCanHandleUrl):
+    __plugin__ = STV
 
-    def test_can_handle_url_negative(self):
-        self.assertFalse(STV.can_handle_url('http://example.com/live'))
+    should_match = [
+        'https://player.stv.tv/live',
+        'http://player.stv.tv/live',
+    ]

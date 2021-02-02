@@ -1,24 +1,15 @@
-import unittest  # noqa: F401
-
-import pytest
-
 from streamlink.plugins.vlive import Vlive
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginVlive:
-    valid_urls = [
-        ("https://www.vlive.tv/video/156824",),
-        ("https://www.vlive.tv/post/0-19740901",)
+class TestPluginCanHandleUrlVlive(PluginCanHandleUrl):
+    __plugin__ = Vlive
+
+    should_match = [
+        "https://www.vlive.tv/video/156824",
+        "https://www.vlive.tv/post/0-19740901"
     ]
-    invalid_urls = [
-        ("https://www.vlive.tv/events/2019vheartbeat?lang=en",),
-        ("https://twitch.tv/",)
+
+    should_not_match = [
+        "https://www.vlive.tv/events/2019vheartbeat?lang=en",
     ]
-
-    @pytest.mark.parametrize(["url"], valid_urls)
-    def test_can_handle_url(self, url):
-        assert Vlive.can_handle_url(url), "url should be handled"
-
-    @pytest.mark.parametrize(["url"], invalid_urls)
-    def test_can_handle_url_negative(self, url):
-        assert not Vlive.can_handle_url(url), "url should not be handled"

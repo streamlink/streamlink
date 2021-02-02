@@ -1,15 +1,12 @@
-import unittest
-
 from streamlink.plugins.sportal import Sportal
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginSportal(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Sportal.can_handle_url("http://sportal.bg/sportal_live_tv.php?str=15"))
-        self.assertTrue(Sportal.can_handle_url("http://www.sportal.bg/sportal_live_tv.php?"))
-        self.assertTrue(Sportal.can_handle_url("http://www.sportal.bg/sportal_live_tv.php?str=15"))
+class TestPluginCanHandleUrlSportal(PluginCanHandleUrl):
+    __plugin__ = Sportal
 
-        # shouldn't match
-        self.assertFalse(Sportal.can_handle_url("http://www.tvcatchup.com/"))
-        self.assertFalse(Sportal.can_handle_url("http://www.youtube.com/"))
+    should_match = [
+        "http://sportal.bg/sportal_live_tv.php?str=15",
+        "http://www.sportal.bg/sportal_live_tv.php?",
+        "http://www.sportal.bg/sportal_live_tv.php?str=15",
+    ]

@@ -1,31 +1,26 @@
 import unittest
 
 from streamlink.plugins.filmon import Filmon
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
+    __plugin__ = Filmon
+
+    should_match = [
+        'http://www.filmon.tv/channel/grandstand-show',
+        'http://www.filmon.tv/index/popout?channel_id=5510&quality=low',
+        'http://www.filmon.tv/tv/channel/export?channel_id=5510&autoPlay=1',
+        'http://www.filmon.tv/tv/channel/grandstand-show',
+        'http://www.filmon.tv/tv/channel-4',
+        'https://www.filmon.com/tv/bbc-news',
+        'https://www.filmon.tv/tv/55',
+        'http://www.filmon.tv/vod/view/10250-0-crime-boss',
+        'http://www.filmon.tv/group/comedy',
+    ]
 
 
 class TestPluginFilmon(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'http://www.filmon.tv/channel/grandstand-show',
-            'http://www.filmon.tv/index/popout?channel_id=5510&quality=low',
-            'http://www.filmon.tv/tv/channel/export?channel_id=5510&autoPlay=1',
-            'http://www.filmon.tv/tv/channel/grandstand-show',
-            'http://www.filmon.tv/tv/channel-4',
-            'https://www.filmon.com/tv/bbc-news',
-            'https://www.filmon.tv/tv/55',
-            'http://www.filmon.tv/vod/view/10250-0-crime-boss',
-            'http://www.filmon.tv/group/comedy',
-        ]
-        for url in should_match:
-            self.assertTrue(Filmon.can_handle_url(url), url)
-
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://example.com/index.html',
-        ]
-        for url in should_not_match:
-            self.assertFalse(Filmon.can_handle_url(url), url)
-
     def _test_regex(self, url, expected):
         m = Filmon.url_re.match(url)
         self.assertIsNotNone(m, url)

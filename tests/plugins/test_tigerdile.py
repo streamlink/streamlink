@@ -1,22 +1,23 @@
-import unittest
-
 from streamlink.plugins.tigerdile import Tigerdile
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginTigerdile(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Tigerdile.can_handle_url("https://www.tigerdile.com/stream/example_streamer"))
-        self.assertTrue(Tigerdile.can_handle_url("http://www.tigerdile.com/stream/example_streamer"))
-        self.assertTrue(Tigerdile.can_handle_url("https://www.tigerdile.com/stream/example_streamer/"))
-        self.assertTrue(Tigerdile.can_handle_url("http://www.tigerdile.com/stream/example_streamer/"))
-        self.assertTrue(Tigerdile.can_handle_url("https://sfw.tigerdile.com/stream/example_streamer"))
-        self.assertTrue(Tigerdile.can_handle_url("http://sfw.tigerdile.com/stream/example_streamer"))
-        self.assertTrue(Tigerdile.can_handle_url("https://sfw.tigerdile.com/stream/example_streamer/"))
-        self.assertTrue(Tigerdile.can_handle_url("http://sfw.tigerdile.com/stream/example_streamer/"))
+class TestPluginCanHandleUrlTigerdile(PluginCanHandleUrl):
+    __plugin__ = Tigerdile
 
-        # shouldn't match
-        self.assertFalse(Tigerdile.can_handle_url("http://www.tigerdile.com/"))
-        self.assertFalse(Tigerdile.can_handle_url("http://www.tigerdile.com/stream"))
-        self.assertFalse(Tigerdile.can_handle_url("http://www.tigerdile.com/stream/"))
-        self.assertFalse(Tigerdile.can_handle_url("http://www.youtube.com/"))
+    should_match = [
+        "https://www.tigerdile.com/stream/example_streamer",
+        "http://www.tigerdile.com/stream/example_streamer",
+        "https://www.tigerdile.com/stream/example_streamer/",
+        "http://www.tigerdile.com/stream/example_streamer/",
+        "https://sfw.tigerdile.com/stream/example_streamer",
+        "http://sfw.tigerdile.com/stream/example_streamer",
+        "https://sfw.tigerdile.com/stream/example_streamer/",
+        "http://sfw.tigerdile.com/stream/example_streamer/",
+    ]
+
+    should_not_match = [
+        "http://www.tigerdile.com/",
+        "http://www.tigerdile.com/stream",
+        "http://www.tigerdile.com/stream/",
+    ]

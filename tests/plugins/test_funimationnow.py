@@ -3,25 +3,21 @@ from unittest.mock import ANY, MagicMock, call
 
 from streamlink import Streamlink
 from streamlink.plugins.funimationnow import FunimationNow
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlFunimationNow(PluginCanHandleUrl):
+    __plugin__ = FunimationNow
+
+    should_match = [
+        "http://www.funimation.com/anything",
+        "http://www.funimation.com/anything123",
+        "http://www.funimationnow.uk/anything",
+        "http://www.funimationnow.uk/anything123",
+    ]
 
 
 class TestPluginFunimationNow(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            "http://www.funimation.com/anything",
-            "http://www.funimation.com/anything123",
-            "http://www.funimationnow.uk/anything",
-            "http://www.funimationnow.uk/anything123",
-        ]
-        for url in should_match:
-            self.assertTrue(FunimationNow.can_handle_url(url))
-
-        should_not_match = [
-            "https://www.youtube.com/v/aqz-KE-bpKQ",
-        ]
-        for url in should_not_match:
-            self.assertFalse(FunimationNow.can_handle_url(url))
-
     def test_arguments(self):
         from streamlink_cli.main import setup_plugin_args
         session = Streamlink()

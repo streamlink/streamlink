@@ -1,28 +1,29 @@
 import unittest
 
 from streamlink.plugins.welt import Welt
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlWelt(PluginCanHandleUrl):
+    __plugin__ = Welt
+
+    should_match = [
+        "http://welt.de",
+        "http://welt.de/",
+        "http://welt.de/tv-programm-live-stream/",
+        "http://www.welt.de",
+        "http://www.welt.de/",
+        "http://www.welt.de/tv-programm-live-stream/",
+        "https://welt.de",
+        "https://welt.de/",
+        "https://welt.de/tv-programm-live-stream/",
+        "https://www.welt.de",
+        "https://www.welt.de/",
+        "https://www.welt.de/tv-programm-live-stream/",
+    ]
 
 
 class TestPluginWelt(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Welt.can_handle_url("http://welt.de"))
-        self.assertTrue(Welt.can_handle_url("http://welt.de/"))
-        self.assertTrue(Welt.can_handle_url("http://welt.de/tv-programm-live-stream/"))
-        self.assertTrue(Welt.can_handle_url("http://www.welt.de"))
-        self.assertTrue(Welt.can_handle_url("http://www.welt.de/"))
-        self.assertTrue(Welt.can_handle_url("http://www.welt.de/tv-programm-live-stream/"))
-        self.assertTrue(Welt.can_handle_url("https://welt.de"))
-        self.assertTrue(Welt.can_handle_url("https://welt.de/"))
-        self.assertTrue(Welt.can_handle_url("https://welt.de/tv-programm-live-stream/"))
-        self.assertTrue(Welt.can_handle_url("https://www.welt.de"))
-        self.assertTrue(Welt.can_handle_url("https://www.welt.de/"))
-        self.assertTrue(Welt.can_handle_url("https://www.welt.de/tv-programm-live-stream/"))
-
-        # shouldn't match
-        self.assertFalse(Welt.can_handle_url("http://www.youtube.com/"))
-        self.assertFalse(Welt.can_handle_url("http://youtube.com/"))
-
     def test_validate_live(self):
         hls_url = Welt._schema.validate("""
             <!DOCTYPE html><html><body>
