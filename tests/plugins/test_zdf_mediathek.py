@@ -1,9 +1,9 @@
 import unittest
 
-from streamlink.plugins.zdf_mediathek import zdf_mediathek
+from streamlink.plugins.zdf_mediathek import ZDFMediathek
 
 
-class TestPluginzdf_mediathek(unittest.TestCase):
+class TestPluginZDFMediathek(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
             'http://www.zdf.de/live-tv',
@@ -19,11 +19,11 @@ class TestPluginzdf_mediathek(unittest.TestCase):
             'https://www.3sat.de/wissen/nano',
         ]
         for url in should_match:
-            self.assertTrue(zdf_mediathek.can_handle_url(url))
+            self.assertTrue(ZDFMediathek.can_handle_url(url))
 
     def test_can_handle_url_negative(self):
         should_not_match = [
             'https://www.example.com',
         ]
         for url in should_not_match:
-            self.assertFalse(zdf_mediathek.can_handle_url(url))
+            self.assertFalse(ZDFMediathek.can_handle_url(url))

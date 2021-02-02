@@ -31,7 +31,7 @@ _media_schema = validate.Schema({
 log = logging.getLogger(__name__)
 
 
-class ard_mediathek(Plugin):
+class ARDMediathek(Plugin):
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url) is not None
@@ -86,4 +86,4 @@ class ard_mediathek(Plugin):
                     log.error("Failed to extract {0} streams: {1}".format(parser_name, err))
 
 
-__plugin__ = ard_mediathek
+__plugin__ = ARDMediathek
