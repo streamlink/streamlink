@@ -1,26 +1,17 @@
-import unittest
-
 from streamlink.plugins.tv3cat import TV3Cat
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginTV3Cat(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'http://ccma.cat/tv3/directe/tv3/',
-            'http://ccma.cat/tv3/directe/324/',
-            'https://ccma.cat/tv3/directe/tv3/',
-            'https://ccma.cat/tv3/directe/324/',
-            'http://www.ccma.cat/tv3/directe/tv3/',
-            'http://www.ccma.cat/tv3/directe/324/',
-            'https://www.ccma.cat/tv3/directe/tv3/',
-            'https://www.ccma.cat/tv3/directe/324/',
-        ]
-        for url in should_match:
-            self.assertTrue(TV3Cat.can_handle_url(url))
+class TestPluginCanHandleUrlTV3Cat(PluginCanHandleUrl):
+    __plugin__ = TV3Cat
 
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://example.com/index.html',
-        ]
-        for url in should_not_match:
-            self.assertFalse(TV3Cat.can_handle_url(url))
+    should_match = [
+        'http://ccma.cat/tv3/directe/tv3/',
+        'http://ccma.cat/tv3/directe/324/',
+        'https://ccma.cat/tv3/directe/tv3/',
+        'https://ccma.cat/tv3/directe/324/',
+        'http://www.ccma.cat/tv3/directe/tv3/',
+        'http://www.ccma.cat/tv3/directe/324/',
+        'https://www.ccma.cat/tv3/directe/tv3/',
+        'https://www.ccma.cat/tv3/directe/324/',
+    ]

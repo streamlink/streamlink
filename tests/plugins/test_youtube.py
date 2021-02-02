@@ -1,39 +1,39 @@
 import unittest
 
 from streamlink.plugins.youtube import YouTube, _url_re
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
+    __plugin__ = YouTube
+
+    should_match = [
+        "https://www.youtube.com/EXAMPLE/live",
+        "https://www.youtube.com/c/EXAMPLE",
+        "https://www.youtube.com/c/EXAMPLE/",
+        "https://www.youtube.com/c/EXAMPLE/live",
+        "https://www.youtube.com/c/EXAMPLE/live/",
+        "https://www.youtube.com/channel/EXAMPLE",
+        "https://www.youtube.com/channel/EXAMPLE/",
+        "https://www.youtube.com/embed/aqz-KE-bpKQ",
+        "https://www.youtube.com/embed/live_stream?channel=UCNye-wNBqNL5ZzHSJj3l8Bg",
+        "https://www.youtube.com/user/EXAMPLE",
+        "https://www.youtube.com/user/EXAMPLE/",
+        "https://www.youtube.com/user/EXAMPLE/live",
+        "https://www.youtube.com/v/aqz-KE-bpKQ",
+        "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+    ]
+
+    should_not_match = [
+        "https://accounts.google.com/",
+        "https://www.youtube.com",
+        "https://www.youtube.com/account",
+        "https://www.youtube.com/feed/guide_builder",
+        "https://www.youtube.com/t/terms",
+    ]
 
 
 class TestPluginYouTube(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            "https://www.youtube.com/EXAMPLE/live",
-            "https://www.youtube.com/c/EXAMPLE",
-            "https://www.youtube.com/c/EXAMPLE/",
-            "https://www.youtube.com/c/EXAMPLE/live",
-            "https://www.youtube.com/c/EXAMPLE/live/",
-            "https://www.youtube.com/channel/EXAMPLE",
-            "https://www.youtube.com/channel/EXAMPLE/",
-            "https://www.youtube.com/embed/aqz-KE-bpKQ",
-            "https://www.youtube.com/embed/live_stream?channel=UCNye-wNBqNL5ZzHSJj3l8Bg",
-            "https://www.youtube.com/user/EXAMPLE",
-            "https://www.youtube.com/user/EXAMPLE/",
-            "https://www.youtube.com/user/EXAMPLE/live",
-            "https://www.youtube.com/v/aqz-KE-bpKQ",
-            "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-        ]
-        for url in should_match:
-            self.assertTrue(YouTube.can_handle_url(url), url)
-
-        should_not_match = [
-            "https://accounts.google.com/",
-            "https://www.youtube.com",
-            "https://www.youtube.com/account",
-            "https://www.youtube.com/feed/guide_builder",
-            "https://www.youtube.com/t/terms",
-        ]
-        for url in should_not_match:
-            self.assertFalse(YouTube.can_handle_url(url), url)
-
     def _test_regex(self, url, expected_string, expected_group):
         m = _url_re.match(url)
         self.assertIsNotNone(m)

@@ -1,20 +1,11 @@
-import unittest
-
 from streamlink.plugins.picarto import Picarto
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginPicarto(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'https://picarto.tv/example',
-            'https://picarto.tv/videopopout/example_2020.00.00.00.00.00_nsfw.mkv',
-        ]
-        for url in should_match:
-            self.assertTrue(Picarto.can_handle_url(url), url)
+class TestPluginCanHandleUrlPicarto(PluginCanHandleUrl):
+    __plugin__ = Picarto
 
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://example.com/index.html',
-        ]
-        for url in should_not_match:
-            self.assertFalse(Picarto.can_handle_url(url), url)
+    should_match = [
+        'https://picarto.tv/example',
+        'https://picarto.tv/videopopout/example_2020.00.00.00.00.00_nsfw.mkv',
+    ]

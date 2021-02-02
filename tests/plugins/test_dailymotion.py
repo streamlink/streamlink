@@ -1,16 +1,16 @@
-import unittest
-
 from streamlink.plugins.dailymotion import DailyMotion
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginDailyMotion(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(DailyMotion.can_handle_url("https://www.dailymotion.com/video/xigbvx"))
-        self.assertTrue(DailyMotion.can_handle_url("https://www.dailymotion.com/france24"))
-        self.assertTrue(DailyMotion.can_handle_url("https://www.dailymotion.com/embed/video/xigbvx"))
+class TestPluginCanHandleUrlDailyMotion(PluginCanHandleUrl):
+    __plugin__ = DailyMotion
 
-        # shouldn't match
-        self.assertFalse(DailyMotion.can_handle_url("https://www.dailymotion.com/"))
-        self.assertFalse(DailyMotion.can_handle_url("http://www.tvcatchup.com/"))
-        self.assertFalse(DailyMotion.can_handle_url("http://www.youtube.com/"))
+    should_match = [
+        "https://www.dailymotion.com/video/xigbvx",
+        "https://www.dailymotion.com/france24",
+        "https://www.dailymotion.com/embed/video/xigbvx",
+    ]
+
+    should_not_match = [
+        "https://www.dailymotion.com/",
+    ]

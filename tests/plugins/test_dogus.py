@@ -1,23 +1,17 @@
-import unittest
-
 from streamlink.plugins.dogus import Dogus
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginDogus(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'http://eurostartv.com.tr/canli-izle',
-            'http://kralmuzik.com.tr/tv/',
-            'http://ntv.com.tr/canli-yayin/ntv',
-            'http://startv.com.tr/canli-yayin',
-        ]
-        for url in should_match:
-            self.assertTrue(Dogus.can_handle_url(url))
+class TestPluginCanHandleUrlDogus(PluginCanHandleUrl):
+    __plugin__ = Dogus
 
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://example.com/index.html',
-            'http://www.ntvspor.net/canli-yayin',
-        ]
-        for url in should_not_match:
-            self.assertFalse(Dogus.can_handle_url(url))
+    should_match = [
+        'http://eurostartv.com.tr/canli-izle',
+        'http://kralmuzik.com.tr/tv/',
+        'http://ntv.com.tr/canli-yayin/ntv',
+        'http://startv.com.tr/canli-yayin',
+    ]
+
+    should_not_match = [
+        'http://www.ntvspor.net/canli-yayin',
+    ]

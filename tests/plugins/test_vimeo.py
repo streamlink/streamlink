@@ -1,19 +1,19 @@
-import unittest
-
 from streamlink.plugins.vimeo import Vimeo
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginVimeo(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Vimeo.can_handle_url("https://vimeo.com/237163735"))
-        self.assertTrue(Vimeo.can_handle_url("https://vimeo.com/channels/music/176894130"))
-        self.assertTrue(Vimeo.can_handle_url("https://vimeo.com/album/3706071/video/148903960"))
-        self.assertTrue(Vimeo.can_handle_url("https://vimeo.com/ondemand/surveyopenspace/92630739"))
-        self.assertTrue(Vimeo.can_handle_url("https://vimeo.com/ondemand/100footsurfingdays"))
-        self.assertTrue(Vimeo.can_handle_url("https://player.vimeo.com/video/176894130"))
+class TestPluginCanHandleUrlVimeo(PluginCanHandleUrl):
+    __plugin__ = Vimeo
 
-        # shouldn't match
-        self.assertFalse(Vimeo.can_handle_url("https://www.vimeo.com/"))
-        self.assertFalse(Vimeo.can_handle_url("http://www.tvcatchup.com/"))
-        self.assertFalse(Vimeo.can_handle_url("http://www.youtube.com/"))
+    should_match = [
+        "https://vimeo.com/237163735",
+        "https://vimeo.com/channels/music/176894130",
+        "https://vimeo.com/album/3706071/video/148903960",
+        "https://vimeo.com/ondemand/surveyopenspace/92630739",
+        "https://vimeo.com/ondemand/100footsurfingdays",
+        "https://player.vimeo.com/video/176894130",
+    ]
+
+    should_not_match = [
+        "https://www.vimeo.com/"
+    ]
