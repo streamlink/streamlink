@@ -376,18 +376,10 @@ Windows portable version
 ==================================== ===========================================
 Maintainer                           Links
 ==================================== ===========================================
-RosadinTV                            `Latest precompiled stable release`__ |br|
-                                     `Latest builder`__ |br|
-                                     `More info`__
-
 Beardypig                            `Latest precompiled stable release`__ |br|
                                      `Latest builder`__ |br|
                                      `More info`__
 ==================================== ===========================================
-
-__ https://github.com/streamlink/streamlink-portable/releases/latest
-__ https://github.com/streamlink/streamlink-portable/archive/master.zip
-__ https://github.com/streamlink/streamlink-portable
 
 __ https://github.com/beardypig/streamlink-portable/releases/latest
 __ https://github.com/beardypig/streamlink-portable/archive/master.zip
