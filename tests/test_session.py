@@ -1,20 +1,29 @@
 import os
 import unittest
+from socket import AF_INET, AF_INET6
+
+from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import NoPluginError, Streamlink
 from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
 from streamlink.plugins import Plugin
 from streamlink.session import print_small_exception
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
-from tests.mock import call, patch
+from tests.mock import Mock, call, patch
 
 
 class TestSession(unittest.TestCase):
     PluginPath = os.path.join(os.path.dirname(__file__), "plugins")
 
-    def setUp(self):
+    def setUp(self, load_plugins=True):
         self.session = Streamlink()
-        self.session.load_plugins(self.PluginPath)
+        if load_plugins:
+            self.session.load_plugins(self.PluginPath)
+
+    def subject(self, **kwargs):
+        session = Streamlink()
+        self.setUp(**kwargs)
+        return self.session
 
     def test_exceptions(self):
         self.assertRaises(NoPluginError, self.session.resolve_url, "invalid url", follow_redirect=False)
@@ -158,6 +167,66 @@ class TestSession(unittest.TestCase):
         self.assertEqual(session.localization.country.alpha2, "US")
         self.assertEqual(session.localization.language.alpha2, "en")
         self.assertEqual(session.localization.language_code, "en_US")
+
+    @patch("streamlink.session.api")
+    def test_interface(self, mock_api):
+        adapter_http = Mock(poolmanager=Mock(connection_pool_kw={}))
+        adapter_https = Mock(poolmanager=Mock(connection_pool_kw={}))
+        adapter_foo = Mock(poolmanager=Mock(connection_pool_kw={}))
+        mock_api.HTTPSession.return_value = Mock(adapters={
+            "http://": adapter_http,
+            "https://": adapter_https,
+            "foo://": adapter_foo
+        })
+        session = self.subject(load_plugins=False)
+        self.assertEqual(session.get_option("interface"), None)
+
+        session.set_option("interface", "my-interface")
+        self.assertEqual(adapter_http.poolmanager.connection_pool_kw, {"source_address": ("my-interface", 0)})
+        self.assertEqual(adapter_https.poolmanager.connection_pool_kw, {"source_address": ("my-interface", 0)})
+        self.assertEqual(adapter_foo.poolmanager.connection_pool_kw, {})
+        self.assertEqual(session.get_option("interface"), "my-interface")
+
+        session.set_option("interface", None)
+        self.assertEqual(adapter_http.poolmanager.connection_pool_kw, {})
+        self.assertEqual(adapter_https.poolmanager.connection_pool_kw, {})
+        self.assertEqual(adapter_foo.poolmanager.connection_pool_kw, {})
+        self.assertEqual(session.get_option("interface"), None)
+
+    @patch("streamlink.session.urllib3_connection", allowed_gai_family=allowed_gai_family)
+    def test_ipv4_ipv6(self, mock_urllib3_connection):
+        session = self.subject(load_plugins=False)
+        self.assertEqual(session.get_option("ipv4"), False)
+        self.assertEqual(session.get_option("ipv6"), False)
+        self.assertEqual(mock_urllib3_connection.allowed_gai_family, allowed_gai_family)
+
+        session.set_option("ipv4", True)
+        self.assertEqual(session.get_option("ipv4"), True)
+        self.assertEqual(session.get_option("ipv6"), False)
+        self.assertNotEqual(mock_urllib3_connection.allowed_gai_family, allowed_gai_family)
+        self.assertEqual(mock_urllib3_connection.allowed_gai_family(), AF_INET)
+
+        session.set_option("ipv4", False)
+        self.assertEqual(session.get_option("ipv4"), False)
+        self.assertEqual(session.get_option("ipv6"), False)
+        self.assertEqual(mock_urllib3_connection.allowed_gai_family, allowed_gai_family)
+
+        session.set_option("ipv6", True)
+        self.assertEqual(session.get_option("ipv4"), False)
+        self.assertEqual(session.get_option("ipv6"), True)
+        self.assertNotEqual(mock_urllib3_connection.allowed_gai_family, allowed_gai_family)
+        self.assertEqual(mock_urllib3_connection.allowed_gai_family(), AF_INET6)
+
+        session.set_option("ipv6", False)
+        self.assertEqual(session.get_option("ipv4"), False)
+        self.assertEqual(session.get_option("ipv6"), False)
+        self.assertEqual(mock_urllib3_connection.allowed_gai_family, allowed_gai_family)
+
+        session.set_option("ipv4", True)
+        session.set_option("ipv6", False)
+        self.assertEqual(session.get_option("ipv4"), True)
+        self.assertEqual(session.get_option("ipv6"), False)
+        self.assertEqual(mock_urllib3_connection.allowed_gai_family, allowed_gai_family)
 
     def test_https_proxy_default(self):
         session = Streamlink()
