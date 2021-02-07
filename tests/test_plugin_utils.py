@@ -11,15 +11,12 @@ def unsupported_versions_1979():
        - https://bugs.python.org/issue34294
     """
     v = sys.version_info
-    if (v.major == 3) and (
+    return (v.major == 3) and (
         # 3.7.0 - 3.7.2
         (v.minor == 7 and v.micro <= 2)
         # 3.8.0a1
         or (v.minor == 8 and v.micro == 0 and v.releaselevel == 'alpha' and v.serial <= 1)
-    ):
-        return True
-    else:
-        return False
+    )
 
 
 class TestPluginUtil(unittest.TestCase):
