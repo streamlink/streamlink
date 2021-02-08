@@ -21,7 +21,6 @@ class TestSession(unittest.TestCase):
             self.session.load_plugins(self.PluginPath)
 
     def subject(self, **kwargs):
-        session = Streamlink()
         self.setUp(**kwargs)
         return self.session
 
@@ -30,11 +29,23 @@ class TestSession(unittest.TestCase):
 
     def test_load_plugins(self):
         plugins = self.session.get_plugins()
-        self.assertTrue(plugins["testplugin"])
+        self.assertIn("testplugin", plugins)
+        self.assertNotIn("testplugin_missing", plugins)
+        self.assertNotIn("testplugin_invalid", plugins)
 
     def test_builtin_plugins(self):
-        plugins = self.session.get_plugins()
-        self.assertTrue("twitch" in plugins)
+        session = self.subject()
+        plugins = session.get_plugins()
+        self.assertIn("twitch", plugins)
+        self.assertEqual(plugins["twitch"].__module__, "streamlink.plugin.twitch")
+
+    def test_override_plugins(self):
+        session = self.subject()
+        plugins = session.get_plugins()
+        self.assertIn("testplugin", plugins)
+        self.assertNotIn("testplugin_override", plugins)
+        self.assertEqual(plugins["testplugin"].__name__, "TestPluginOverride")
+        self.assertEqual(plugins["testplugin"].__module__, "streamlink.plugin.testplugin_override")
 
     def test_resolve_url(self):
         plugins = self.session.get_plugins()
