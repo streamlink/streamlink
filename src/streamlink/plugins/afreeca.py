@@ -106,8 +106,11 @@ class AfreecaTV(Plugin):
         data = {
             "bid": username,
             "bno": broadcast,
+            "from_api": "0",
             "mode": "landing",
             "player_type": "html5",
+            "pwd": "",
+            "stream_type": "common",
             "type": "live",
         }
         res = self.session.http.post(self.CHANNEL_API_URL, data=data)
@@ -117,29 +120,33 @@ class AfreecaTV(Plugin):
         data = {
             "bid": username,
             "bno": broadcast,
+            "from_api": "0",
+            "mode": "landing",
+            "player_type": "html5",
             "pwd": "",
             "quality": quality,
-            "type": "pwd"
+            "stream_type": "common",
+            "type": "aid",
         }
         res = self.session.http.post(self.CHANNEL_API_URL, data=data)
         return self.session.http.json(res, schema=self._schema_channel)
 
-    def _get_stream_info(self, broadcast, quality, cdn, rmd):
+    def _get_stream_info(self, broadcast, quality, rmd):
         params = {
-            "return_type": cdn,
-            "broad_key": "{0}-flash-{1}-hls".format(broadcast, quality),
+            "return_type": "gs_cdn_pc_web",
+            "broad_key": "{0}-common-{1}-hls".format(broadcast, quality),
         }
         res = self.session.http.get("{0}/broad_stream_assign.html".format(rmd), params=params)
         return self.session.http.json(res, schema=self._schema_stream)
 
-    def _get_hls_stream(self, broadcast, username, quality, cdn, rmd):
+    def _get_hls_stream(self, broadcast, username, quality, rmd):
         keyjson = self._get_hls_key(broadcast, username, quality)
 
         if keyjson["RESULT"] != self.CHANNEL_RESULT_OK:
             return
         key = keyjson["AID"]
 
-        info = self._get_stream_info(broadcast, quality, cdn, rmd)
+        info = self._get_stream_info(broadcast, quality, rmd)
 
         if "view_url" in info:
             return AfreecaHLSStream(self.session, info["view_url"], params={"aid": key})
@@ -168,7 +175,7 @@ class AfreecaTV(Plugin):
         login_username = self.get_option("username")
         login_password = self.get_option("password")
 
-        self.session.http.headers.update({"Referer": self.url})
+        self.session.http.headers.update({"Referer": self.url, "Origin": "http://play.afreecatv.com"})
 
         if self.options.get("purge_credentials"):
             self.clear_cookies()
@@ -206,12 +213,12 @@ class AfreecaTV(Plugin):
         elif channel.get("RESULT") != self.CHANNEL_RESULT_OK:
             return
 
-        (broadcast, rmd, cdn) = (channel["BNO"], channel["RMD"], channel["CDN"])
-        if not (broadcast and rmd and cdn):
+        (broadcast, rmd) = (channel["BNO"], channel["RMD"])
+        if not (broadcast and rmd):
             return
 
         for qkey in self.QUALITYS:
-            hls_stream = self._get_hls_stream(broadcast, username, qkey, cdn, rmd)
+            hls_stream = self._get_hls_stream(broadcast, username, qkey, rmd)
             if hls_stream:
                 yield qkey, hls_stream
 
