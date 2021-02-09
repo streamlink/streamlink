@@ -14,10 +14,14 @@ coverage:
   precision: 2
   round: down
   status:
+    # coverage data of unchanged code (not necessary to have this as another PR status check)
     changes: false
-    patch: false
-    # split up coverage reports by path
-    # don't set coverage targets and instead set coverage thresholds
+    # coverage data of changed code
+    patch:
+      default:
+        # always succeed
+        target: 0
+    # overall coverage data, split up by path
     project:
       # we can't disable the overall default project, because only this will have PR check summaries / comments
       # this replaces the PR comment
@@ -38,6 +42,7 @@ coverage:
         paths:
           - "src/streamlink/plugins/"
       tests:
-        threshold: 1
+        # tests should always be fully covered
+        target: 100
         paths:
           - "tests/"
