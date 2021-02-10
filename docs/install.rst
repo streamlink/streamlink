@@ -90,7 +90,7 @@ Distribution                         Installing
                                         echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
 
                                         sudo apt update
-                                        sudo apt install streamlink
+                                        sudo apt -t buster-backports install streamlink
 
                                      `Installing Debian backported packages`_
 
