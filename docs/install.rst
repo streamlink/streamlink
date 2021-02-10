@@ -171,8 +171,7 @@ Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
 Void                                 wkuipers <wietse at kuiprs.nl>
 Windows binaries                     beardypig <beardypig at protonmail.com>
-Windows port. version                RosadinTV <RosadinTV at outlook.com> |br|
-                                     beardypig <beardypig at protonmail.com>
+Windows port. version                beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
 
 
