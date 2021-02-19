@@ -1,6 +1,8 @@
 ---
 name: Plugin Issue
-about: Create a plugin issue report
+about: One of Streamlink's plugins doesn't work correctly
+title: "plugins.[pluginname]: [A very brief summary of what's broken]"
+labels: plugin issue
 ---
 
 <!--
@@ -9,6 +11,8 @@ USE THE TEMPLATE. Otherwise your plugin issue may be rejected.
 
 First, see the contribution guidelines:
 https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
+
+Plugin issues describe broken functionality within a plugin's code base, eg. the streaming site has made breaking changes, streams don't get resolved correctly, or authentication has stopped working, etc.
 
 Also check the list of open and closed plugin issues:
 https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+issue%22
@@ -40,11 +44,13 @@ Please see the text preview to avoid unnecessary formatting errors.
 ### Log output
 
 <!--
-TEXT LOG OUTPUT IS REQUIRED for a plugin issue!
-Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
-https://streamlink.github.io/cli.html#cmdoption-l
+DEBUG LOG OUTPUT IS REQUIRED for a plugin issue!
+INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove usernames and passwords**
 
-Make sure to **remove usernames and passwords**
+Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
+Debug log includes important details about your platform. Don't remove it.
+https://streamlink.github.io/latest/cli.html#cmdoption-loglevel
+
 You can copy the output to https://gist.github.com/ or paste it below.
 
 Don't post screenshots of the log output and instead copy the text from your terminal application.
@@ -52,6 +58,7 @@ Don't post screenshots of the log output and instead copy the text from your ter
 
 ```
 REPLACE THIS TEXT WITH THE LOG OUTPUT
+All log output should go between two blocks of triple backticks (grave accents) for proper formatting.
 ```
 
 

@@ -1,6 +1,8 @@
 ---
 name: Feature Request
-about: Create a feature request to help us add additional functionality to Streamlink
+about: Discuss adding new functionality to Streamlink
+title: "[A very brief summary of your request]"
+labels: feature request
 ---
 
 <!-- 
@@ -29,10 +31,6 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 <!-- Explain the feature as clearly as you can. What is it, how would you expect it to work, and what value does it bring to Streamlink? -->
 
-
-### Expected / Actual behavior
-
-<!-- What do you expect to happen with this new feature, and what is happening currently that does not satisfy this need? -->
 
 
 ### Additional comments, etc.
