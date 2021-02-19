@@ -1,16 +1,20 @@
 ---
 name: Plugin Request
-about: Create a plugin request to discuss adding a new plugin to Streamlink
+about: Discuss adding a new plugin to Streamlink
+title: "[Name of the website / streaming provider]"
+labels: plugin request
 ---
 
 <!--
 Thanks for requesting a plugin!
 USE THE TEMPLATE. Otherwise your plugin request may be rejected.
 
-First, see the contribution guidelines and plugin request requirements:
+First, see the contribution guidelines:
 https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
 
+READ THE PLUGIN REQUEST REQUIREMENTS BEFORE POSTING!
 Plugin requests which fall into the categories we will not implement will be closed immediately.
+https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests
 
 Also check the list of open and closed plugin requests:
 https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+request%22
