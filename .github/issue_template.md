@@ -16,9 +16,10 @@ Please see the text preview to avoid unnecessary formatting errors.
 
 ## Issue
 
-<!-- Replace [ ] with [x] in order to check the box -->
+<!-- Replace the space character between the square brackets with an x in order to check the boxes -->
 - [ ] This is not a bug report, feature request, or plugin issue/request.
 - [ ] I have read the contribution guidelines.
+- [ ] I am using the latest development version from the master branch.
 
 
 ### Description
@@ -40,17 +41,17 @@ Please see the text preview to avoid unnecessary formatting errors.
 3. ...
 
 
-### Logs
+### Log output
 
 <!--
-TEXT LOG OUTPUT IS OPTIONAL for generic issues!
-However, depending on the issue, log output can be useful for the developers to understand the problem. It also includes information about your platform. If you don't intend to include log output, please at least provide these platform details.
-Thanks!
+DEBUG LOG OUTPUT IS OPTIONAL for generic issues!
+INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove usernames and passwords**
+
+Despite being optional for generic issues, depending on the issue, log output can be useful for the developers to understand the problem. It also includes information about your platform. If you don't intend to include log output, please at least provide these platform details. Thanks!
 
 Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
-https://streamlink.github.io/cli.html#cmdoption-l
+https://streamlink.github.io/latest/cli.html#cmdoption-loglevel
 
-Make sure to **remove usernames and passwords**
 You can copy the output to https://gist.github.com/ or paste it below.
 
 Don't post screenshots of the log output and instead copy the text from your terminal application.
@@ -58,6 +59,7 @@ Don't post screenshots of the log output and instead copy the text from your ter
 
 ```
 REPLACE THIS TEXT WITH THE LOG OUTPUT
+All log output should go between two blocks of triple backticks (grave accents) for proper formatting.
 ```
 
 

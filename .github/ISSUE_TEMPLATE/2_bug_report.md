@@ -1,6 +1,8 @@
 ---
 name: Bug Report
-about: Create a bug report to help us improve Streamlink
+about: A core functionality of Streamlink is broken
+title: "[A very brief summary of what's broken]"
+labels: bug
 ---
 
 <!--
@@ -9,6 +11,8 @@ USE THE TEMPLATE. Otherwise your bug report may be rejected.
 
 First, see the contribution guidelines:
 https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink
+
+Bugs are the result of broken functionality within Streamlink's main code base. Use the plugin issue template if your report is about a broken plugin.
 
 Also check the list of open and closed bug reports:
 https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22bug%22
@@ -46,11 +50,13 @@ Please see the text preview to avoid unnecessary formatting errors.
 ### Log output
 
 <!--
-TEXT LOG OUTPUT IS REQUIRED for a bug report!
-Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
-https://streamlink.github.io/cli.html#cmdoption-l
+DEBUG LOG OUTPUT IS REQUIRED for a bug report!
+INCLUDE THE ENTIRE COMMAND LINE and make sure to **remove usernames and passwords**
 
-Make sure to **remove usernames and passwords**
+Use the `--loglevel debug` parameter and avoid using parameters which suppress log output.
+Debug log includes important details about your platform. Don't remove it.
+https://streamlink.github.io/latest/cli.html#cmdoption-loglevel
+
 You can copy the output to https://gist.github.com/ or paste it below.
 
 Don't post screenshots of the log output and instead copy the text from your terminal application.
@@ -58,6 +64,7 @@ Don't post screenshots of the log output and instead copy the text from your ter
 
 ```
 REPLACE THIS TEXT WITH THE LOG OUTPUT
+All log output should go between two blocks of triple backticks (grave accents) for proper formatting.
 ```
 
 
