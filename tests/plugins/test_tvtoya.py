@@ -1,16 +1,19 @@
-import unittest
-
 from streamlink.plugins.tvtoya import TVToya
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginTVRPlus(unittest.TestCase):
-    def test_can_handle_url(self):
-        self.assertTrue(TVToya.can_handle_url("https://tvtoya.pl/live"))
-        self.assertTrue(TVToya.can_handle_url("http://tvtoya.pl/live"))
+class TestPluginCanHandleUrlTVRPlus(PluginCanHandleUrl):
+    __plugin__ = TVToya
 
-    def test_can_handle_url_negative(self):
-        self.assertFalse(TVToya.can_handle_url("https://tvtoya.pl"))
-        self.assertFalse(TVToya.can_handle_url("http://tvtoya.pl"))
-        self.assertFalse(TVToya.can_handle_url("http://tvtoya.pl/other-page"))
-        self.assertFalse(TVToya.can_handle_url("http://tvtoya.pl/"))
-        self.assertFalse(TVToya.can_handle_url("https://tvtoya.pl/"))
+    should_match = [
+        "https://tvtoya.pl/live",
+        "http://tvtoya.pl/live",
+    ]
+
+    should_not_match = [
+        "https://tvtoya.pl",
+        "http://tvtoya.pl",
+        "http://tvtoya.pl/other-page",
+        "http://tvtoya.pl/",
+        "https://tvtoya.pl/",
+    ]

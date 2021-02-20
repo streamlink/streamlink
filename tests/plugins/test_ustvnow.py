@@ -1,15 +1,18 @@
 import unittest
 
 from streamlink.plugins.ustvnow import USTVNow
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlUSTVNow(PluginCanHandleUrl):
+    __plugin__ = USTVNow
+
+    should_match = [
+        "http://www.ustvnow.com/live/foo/-65"
+    ]
 
 
 class TestPluginUSTVNow(unittest.TestCase):
-    def test_can_handle_url(self):
-        self.assertTrue(USTVNow.can_handle_url("http://www.ustvnow.com/live/foo/-65"))
-
-    def test_can_not_handle_url(self):
-        self.assertFalse(USTVNow.can_handle_url("http://www.tvplayer.com"))
-
     def test_encrypt_data(self):
         key = "80035ad42d7d-bb08-7a14-f726-78403b29"
         iv = "3157b5680927cc4a"

@@ -1,23 +1,22 @@
 import unittest
 
 from streamlink.plugins.schoolism import Schoolism
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlSchoolism(PluginCanHandleUrl):
+    __plugin__ = Schoolism
+
+    should_match = [
+        'https://www.schoolism.com/watchLesson.php',
+    ]
+
+    should_not_match = [
+        'https://www.schoolism.com',
+    ]
 
 
 class TestPluginSchoolism(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'https://www.schoolism.com/watchLesson.php',
-        ]
-        for url in should_match:
-            self.assertTrue(Schoolism.can_handle_url(url))
-
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://www.schoolism.com',
-        ]
-        for url in should_not_match:
-            self.assertFalse(Schoolism.can_handle_url(url))
-
     def test_playlist_parse_subs(self):
         with_subs = """var allVideos=[
             {sources:[{type:"application/x-mpegurl",src:"https://d8u31iyce9xic.cloudfront.net/44/2/part1.m3u8?Policy=TOKEN&Signature=TOKEN&Key-Pair-Id=TOKEN",title:"Digital Painting - Lesson 2 - Part 1",playlistTitle:"Part 1",}],        subtitles: [{

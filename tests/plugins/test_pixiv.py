@@ -1,19 +1,15 @@
-import unittest
-
 from streamlink.plugins.pixiv import Pixiv
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginPixiv(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'https://sketch.pixiv.net/@exampleuser',
-            'https://sketch.pixiv.net/@exampleuser/lives/000000000000000000',
-        ]
-        for url in should_match:
-            self.assertTrue(Pixiv.can_handle_url(url))
+class TestPluginCanHandleUrlPixiv(PluginCanHandleUrl):
+    __plugin__ = Pixiv
 
-        should_not_match = [
-            'https://sketch.pixiv.net',
-        ]
-        for url in should_not_match:
-            self.assertFalse(Pixiv.can_handle_url(url))
+    should_match = [
+        'https://sketch.pixiv.net/@exampleuser',
+        'https://sketch.pixiv.net/@exampleuser/lives/000000000000000000',
+    ]
+
+    should_not_match = [
+        'https://sketch.pixiv.net',
+    ]

@@ -1,16 +1,18 @@
-import unittest
-
 from streamlink.plugins.facebook import Facebook
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginFacebook(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Facebook.can_handle_url("https://www.facebook.com/nos/videos/1725546430794241/"))
-        self.assertTrue(Facebook.can_handle_url("https://www.facebook.com/nytfood/videos/1485091228202006/"))
-        self.assertTrue(Facebook.can_handle_url("https://www.facebook.com/SporTurkTR/videos/798553173631138/"))
-        self.assertTrue(Facebook.can_handle_url("https://www.facebook.com/119555411802156/posts/500665313691162/"))
-        self.assertTrue(Facebook.can_handle_url("https://www.facebookcorewwwi.onion/SporTurkTR/videos/798553173631138/"))
+class TestPluginCanHandleUrlFacebook(PluginCanHandleUrl):
+    __plugin__ = Facebook
 
-        # shouldn't match
-        self.assertFalse(Facebook.can_handle_url("https://www.facebook.com"))
+    should_match = [
+        "https://www.facebook.com/nos/videos/1725546430794241/",
+        "https://www.facebook.com/nytfood/videos/1485091228202006/",
+        "https://www.facebook.com/SporTurkTR/videos/798553173631138/",
+        "https://www.facebook.com/119555411802156/posts/500665313691162/",
+        "https://www.facebookcorewwwi.onion/SporTurkTR/videos/798553173631138/",
+    ]
+
+    should_not_match = [
+        "https://www.facebook.com",
+    ]

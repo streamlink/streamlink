@@ -1,20 +1,15 @@
-import unittest
-
 from streamlink.plugins.openrectv import OPENRECtv
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginOPENRECtv(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'https://www.openrec.tv/live/DXRLAPSGTpx',
-            'https://www.openrec.tv/movie/JsDw3rAV2Rj',
-        ]
-        for url in should_match:
-            self.assertTrue(OPENRECtv.can_handle_url(url))
+class TestPluginCanHandleUrlOPENRECtv(PluginCanHandleUrl):
+    __plugin__ = OPENRECtv
 
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://www.openrec.tv/',
-        ]
-        for url in should_not_match:
-            self.assertFalse(OPENRECtv.can_handle_url(url))
+    should_match = [
+        'https://www.openrec.tv/live/DXRLAPSGTpx',
+        'https://www.openrec.tv/movie/JsDw3rAV2Rj',
+    ]
+
+    should_not_match = [
+        'https://www.openrec.tv/',
+    ]

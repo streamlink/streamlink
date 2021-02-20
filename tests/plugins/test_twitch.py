@@ -8,6 +8,24 @@ from streamlink.plugin import PluginError
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.mock import MagicMock, call, patch
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
+    __plugin__ = Twitch
+
+    should_match = [
+        'https://www.twitch.tv/twitch',
+        'https://www.twitch.tv/videos/150942279',
+        'https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor',
+        'https://www.twitch.tv/twitch/video/292713971',
+        'https://www.twitch.tv/twitch/v/292713971',
+    ]
+
+    should_not_match = [
+        'https://www.twitch.tv',
+        'https://www.twitch.tv/',
+    ]
 
 
 DATETIME_BASE = datetime(2000, 1, 1, 0, 0, 0, 0)
@@ -54,26 +72,6 @@ class _TwitchHLSStreamReader(TwitchHLSStreamReader):
 
 class _TwitchHLSStream(TwitchHLSStream):
     __reader__ = _TwitchHLSStreamReader
-
-
-class TestPluginTwitch(unittest.TestCase):
-    def test_can_handle_url(self):
-        should_match = [
-            'https://www.twitch.tv/twitch',
-            'https://www.twitch.tv/videos/150942279',
-            'https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor',
-            'https://www.twitch.tv/twitch/video/292713971',
-            'https://www.twitch.tv/twitch/v/292713971',
-        ]
-        for url in should_match:
-            self.assertTrue(Twitch.can_handle_url(url))
-
-    def test_can_handle_url_negative(self):
-        should_not_match = [
-            'https://www.twitch.tv',
-        ]
-        for url in should_not_match:
-            self.assertFalse(Twitch.can_handle_url(url))
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))

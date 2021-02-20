@@ -5,6 +5,16 @@ from streamlink import Streamlink
 from streamlink.plugin.api import HTTPSession
 from streamlink.plugins.garena import Garena
 from tests.mock import MagicMock, Mock
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlGarena(PluginCanHandleUrl):
+    __plugin__ = Garena
+
+    should_match = [
+        "https://garena.live/LOLTW",
+        "https://garena.live/358220",
+    ]
 
 
 class TestPluginGarena(unittest.TestCase):
@@ -12,15 +22,6 @@ class TestPluginGarena(unittest.TestCase):
         self.session = Streamlink()
         self.session.http = MagicMock(HTTPSession)
         self.session.http.headers = {}
-
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Garena.can_handle_url("https://garena.live/LOLTW"))
-        self.assertTrue(Garena.can_handle_url("https://garena.live/358220"))
-
-        # shouldn't match
-        self.assertFalse(Garena.can_handle_url("http://local.local/"))
-        self.assertFalse(Garena.can_handle_url("http://localhost.localhost/"))
 
     def test_post_api_info(self):
         API_INFO = Garena.API_INFO

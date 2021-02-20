@@ -1,16 +1,18 @@
-import unittest
-
 from streamlink.plugins.telefe import Telefe
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginTelefe(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Telefe.can_handle_url("http://telefe.com/pone-a-francella/temporada-1/programa-01/"))
-        self.assertTrue(Telefe.can_handle_url("http://telefe.com/los-simuladores/temporada-1/capitulo-01/"))
-        self.assertTrue(Telefe.can_handle_url("http://telefe.com/dulce-amor/capitulos/capitulo-01/"))
+class TestPluginCanHandleUrlTelefe(PluginCanHandleUrl):
+    __plugin__ = Telefe
 
-        # shouldn't match
-        self.assertFalse(Telefe.can_handle_url("http://telefe.com/"))
-        self.assertFalse(Telefe.can_handle_url("http://www.telefeinternacional.com.ar/"))
-        self.assertFalse(Telefe.can_handle_url("http://marketing.telefe.com/"))
+    should_match = [
+        "http://telefe.com/pone-a-francella/temporada-1/programa-01/",
+        "http://telefe.com/los-simuladores/temporada-1/capitulo-01/",
+        "http://telefe.com/dulce-amor/capitulos/capitulo-01/",
+    ]
+
+    should_not_match = [
+        "http://telefe.com/",
+        "http://www.telefeinternacional.com.ar/",
+        "http://marketing.telefe.com/",
+    ]

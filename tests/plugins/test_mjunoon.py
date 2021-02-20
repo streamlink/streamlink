@@ -5,20 +5,25 @@ import requests_mock
 from streamlink import Streamlink
 from streamlink.plugins.mjunoon import Mjunoon
 from tests.mock import ANY, Mock, call, patch
+from tests.plugins import PluginCanHandleUrl
 
 
-class TestPluginMixer(unittest.TestCase):
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(Mjunoon.can_handle_url('https://mjunoon.tv/news-live'))
-        self.assertTrue(Mjunoon.can_handle_url('http://mjunoon.tv/watch/some-long-vod-name23456'))
-        self.assertTrue(Mjunoon.can_handle_url('https://www.mjunoon.tv/other-live'))
-        self.assertTrue(Mjunoon.can_handle_url('https://www.mjunoon.tv/watch/something-else-2321'))
+class TestPluginCanHandleUrlMjunoon(PluginCanHandleUrl):
+    __plugin__ = Mjunoon
 
-    def test_can_handle_url_negative(self):
-        # shouldn't match
-        self.assertFalse(Mjunoon.can_handle_url('https://mjunoon.com'))
+    should_match = [
+        'https://mjunoon.tv/news-live',
+        'http://mjunoon.tv/watch/some-long-vod-name23456',
+        'https://www.mjunoon.tv/other-live',
+        'https://www.mjunoon.tv/watch/something-else-2321',
+    ]
 
+    should_not_match = [
+        'https://mjunoon.com',
+    ]
+
+
+class TestPluginMjunoon(unittest.TestCase):
     @patch('streamlink.plugins.mjunoon.HLSStream.parse_variant_playlist')
     def test_get_streams(self, parse_variant_playlist):
         session = Streamlink()

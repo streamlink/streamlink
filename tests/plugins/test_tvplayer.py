@@ -5,6 +5,31 @@ from streamlink.plugin.api import HTTPSession
 from streamlink.plugins.tvplayer import TVPlayer
 from streamlink.stream import HLSStream
 from tests.mock import ANY, MagicMock, Mock, call, patch
+from tests.plugins import PluginCanHandleUrl
+
+
+class TestPluginCanHandleUrlTVPlayer(PluginCanHandleUrl):
+    __plugin__ = TVPlayer
+
+    should_match = [
+        "http://tvplayer.com/watch/",
+        "http://www.tvplayer.com/watch/",
+        "http://tvplayer.com/watch",
+        "http://www.tvplayer.com/watch",
+        "http://www.tvplayer.com/uk/watch",
+        "http://tvplayer.com/watch/dave",
+        "http://tvplayer.com/uk/watch/dave",
+        "http://www.tvplayer.com/watch/itv",
+        "http://www.tvplayer.com/uk/watch/itv",
+        "https://www.tvplayer.com/watch/itv",
+        "https://www.tvplayer.com/uk/watch/itv",
+        "https://tvplayer.com/watch/itv",
+        "https://tvplayer.com/uk/watch/itv",
+    ]
+
+    should_not_match = [
+        "http://www.tvplayer.com/"
+    ]
 
 
 class TestPluginTVPlayer(unittest.TestCase):
@@ -12,27 +37,6 @@ class TestPluginTVPlayer(unittest.TestCase):
         self.session = Streamlink()
         self.session.http = MagicMock(HTTPSession)
         self.session.http.headers = {}
-
-    def test_can_handle_url(self):
-        # should match
-        self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/watch/"))
-        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/watch/"))
-        self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/watch"))
-        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/watch"))
-        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/uk/watch"))
-        self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/watch/dave"))
-        self.assertTrue(TVPlayer.can_handle_url("http://tvplayer.com/uk/watch/dave"))
-        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/watch/itv"))
-        self.assertTrue(TVPlayer.can_handle_url("http://www.tvplayer.com/uk/watch/itv"))
-        self.assertTrue(TVPlayer.can_handle_url("https://www.tvplayer.com/watch/itv"))
-        self.assertTrue(TVPlayer.can_handle_url("https://www.tvplayer.com/uk/watch/itv"))
-        self.assertTrue(TVPlayer.can_handle_url("https://tvplayer.com/watch/itv"))
-        self.assertTrue(TVPlayer.can_handle_url("https://tvplayer.com/uk/watch/itv"))
-
-        # shouldn't match
-        self.assertFalse(TVPlayer.can_handle_url("http://www.tvplayer.com/"))
-        self.assertFalse(TVPlayer.can_handle_url("http://www.tvcatchup.com/"))
-        self.assertFalse(TVPlayer.can_handle_url("http://www.youtube.com/"))
 
     @patch('streamlink.plugins.tvplayer.TVPlayer._get_stream_data')
     @patch('streamlink.plugins.tvplayer.HLSStream')
