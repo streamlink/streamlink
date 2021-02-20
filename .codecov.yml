@@ -9,6 +9,8 @@ comment:
   layout: "reach, diff, flags, files"
   # don't ever let the codecov bot comment on PRs
   after_n_builds: 999999999
+github_checks:
+  annotations: false
 coverage:
   range: "50...100"
   precision: 2
