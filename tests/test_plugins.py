@@ -25,6 +25,10 @@ class PluginTestMeta(type):
                 assert hasattr(plugin, "__plugin__"), "It exports __plugin__"
                 assert issubclass(plugin.__plugin__, Plugin), "__plugin__ is an instance of the Plugin class"
 
+                classname = plugin.__plugin__.__name__
+                assert classname == classname[0].upper() + classname[1:], "__plugin__ class name starts with uppercase letter"
+                assert "_" not in classname, "__plugin__ class name does not contain underscores"
+
                 assert callable(plugin.__plugin__._get_streams), "The plugin implements _get_streams"
                 assert callable(plugin.__plugin__.can_handle_url), "The plugin implements can_handle_url"
                 if hasattr(inspect, 'signature'):

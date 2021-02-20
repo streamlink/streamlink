@@ -10,7 +10,7 @@ from streamlink.utils import parse_json, verifyjson
 log = logging.getLogger(__name__)
 
 
-class ard_live(Plugin):
+class ARDLive(Plugin):
     _url_re = re.compile(r"https?://((www|live)\.)?daserste\.de/")
     _player_re = re.compile(r'''data-ctrl-player\s*=\s*"(?P<jsondata>.*?)"''')
     _player_url_schema = validate.Schema(
@@ -79,4 +79,4 @@ class ard_live(Plugin):
                         log.error("Unexpected stream type: '{0}'".format(stream_))
 
 
-__plugin__ = ard_live
+__plugin__ = ARDLive

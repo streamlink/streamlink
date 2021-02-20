@@ -7,7 +7,7 @@ from streamlink.stream import HLSStream
 _url_re = re.compile(r"http(?:s)?://(?:\w+\.)?rtl.nl/video/(?P<uuid>.*?)\Z", re.IGNORECASE)
 
 
-class rtlxl(Plugin):
+class RTLxl(Plugin):
     @classmethod
     def can_handle_url(cls, url):
         return _url_re.match(url)
@@ -25,4 +25,4 @@ class rtlxl(Plugin):
         return HLSStream.parse_variant_playlist(self.session, playlist_url)
 
 
-__plugin__ = rtlxl
+__plugin__ = RTLxl

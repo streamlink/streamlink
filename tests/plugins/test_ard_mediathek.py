@@ -1,16 +1,16 @@
 import unittest
 
-from streamlink.plugins.ard_mediathek import ard_mediathek
+from streamlink.plugins.ard_mediathek import ARDMediathek
 
 
-class TestPluginard_mediathek(unittest.TestCase):
+class TestPluginARDMediathek(unittest.TestCase):
     def test_can_handle_url(self):
         should_match = [
             'http://mediathek.daserste.de/live',
             'http://www.ardmediathek.de/tv/Sportschau/'
         ]
         for url in should_match:
-            self.assertTrue(ard_mediathek.can_handle_url(url))
+            self.assertTrue(ARDMediathek.can_handle_url(url))
 
     def test_can_handle_url_negative(self):
         should_not_match = [
@@ -18,4 +18,4 @@ class TestPluginard_mediathek(unittest.TestCase):
             'https://www.daserste.de/live/index.html',
         ]
         for url in should_not_match:
-            self.assertFalse(ard_mediathek.can_handle_url(url))
+            self.assertFalse(ARDMediathek.can_handle_url(url))
