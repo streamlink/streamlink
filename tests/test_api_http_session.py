@@ -6,21 +6,30 @@ import requests
 
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api.http_session import HTTPSession
-from tests.mock import PropertyMock, patch
+from tests.mock import PropertyMock, call, patch
 
 
 class TestPluginAPIHTTPSession(unittest.TestCase):
-    @patch('requests.sessions.Session.send')
-    def test_read_timeout(self, mock_send):
-        mock_send.side_effect = IOError
+    @patch("streamlink.plugin.api.http_session.time.sleep")
+    @patch("streamlink.plugin.api.http_session.Session.request")
+    def test_read_timeout(self, mock_request, mock_sleep):
+        mock_request.side_effect = requests.Timeout
         session = HTTPSession()
 
-        def stream_data():
-            res = session.get("http://httpbin.org/delay/6",
-                              timeout=3, stream=True)
-            next(res.iter_content(8192))
-
-        self.assertRaises(PluginError, stream_data)
+        with self.assertRaises(PluginError) as cm:
+            session.get("http://localhost/", timeout=123, retries=3, retry_backoff=2, retry_max_backoff=5)
+        self.assertTrue(str(cm.exception).startswith("Unable to open URL: http://localhost/"))
+        self.assertEqual(mock_request.mock_calls, [
+            call(session, "GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
+            call(session, "GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
+            call(session, "GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
+            call(session, "GET", "http://localhost/", headers={}, params={}, timeout=123, proxies={}, allow_redirects=True),
+        ])
+        self.assertEqual(mock_sleep.mock_calls, [
+            call(2),
+            call(4),
+            call(5)
+        ])
 
     def test_json_encoding(self):
         json_str = u"{\"test\": \"Α and Ω\"}"

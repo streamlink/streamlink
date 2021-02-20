@@ -8,14 +8,14 @@ try:
     import iso3166  # noqa: F401
 
     ISO639 = True
-except ImportError:
+except ImportError:  # pragma: no cover
     ISO639 = False
 
 try:
     import pycountry  # noqa: F401
 
     PYCOUNTRY = True
-except ImportError:
+except ImportError:  # pragma: no cover
     PYCOUNTRY = False
 
 

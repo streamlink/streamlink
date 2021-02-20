@@ -53,14 +53,10 @@ class TestBuffer(unittest.TestCase):
 
         original = b"original"
         tests = [bytearray(original)]
-        try:
-            m = memoryview(bytearray(original))
-        except NameError:  # Python 2.6 does not have "memoryview"
-            pass
-        else:
-            # Python 2.7 doesn't do bytes(memoryview) properly
-            if bytes(m) == original:
-                tests.append(m)
+        m = memoryview(bytearray(original))
+        # Python 2.7 doesn't do bytes(memoryview) properly
+        if bytes(m) == original:
+            tests.append(m)
 
         for data in tests:
             self.buffer.write(data)
