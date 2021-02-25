@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -102,9 +101,15 @@ class OPENRECtv(Plugin):
         if mdata:
             log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
             if mdata["media"]["url"]:
-                yield from HLSStream.parse_variant_playlist(self.session, mdata["media"]["url"]).items()
+                yield from HLSStream.parse_variant_playlist(
+                    self.session,
+                    mdata["media"]["url"]
+                ).items()
             elif mdata["media"]["url_public"]:
-                yield from HLSStream.parse_variant_playlist(self.session, mdata["media"]["url_public"].replace("public.m3u8", "playlist.m3u8")).items()
+                yield from HLSStream.parse_variant_playlist(
+                    self.session,
+                    mdata["media"]["url_public"].replace("public.m3u8", "playlist.m3u8")
+                ).items()
             else:
                 log.error("You don't have the authority.")
 
