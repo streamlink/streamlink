@@ -31,6 +31,7 @@ bigo                    - live.bigo.tv       Yes   --
                         - bigoweb.co
 bilibili                live.bilibili.com    Yes   ?
 bloomberg               bloomberg.com        Yes   Yes
+booyah                  booyah.live          Yes   Yes
 brightcove              players.brig... [6]_ Yes   Yes
 btsports                sport.bt.com         Yes   Yes   Requires subscription account
 btv                     btvplus.bg           Yes   No    Streams are geo-restricted to Bulgaria.
