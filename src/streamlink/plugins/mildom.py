@@ -20,7 +20,10 @@ class Mildom(Plugin):
 
     _VOD_API_URL = "https://cloudac.mildom.com/nonolive/videocontent/playback/getPlaybackDetail?v_id={}"
 
-    _LIVE_API_URL = "https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?__platform=web&user_id={}"
+    _STATUS_API_URL = "https://cloudac.mildom.com/nonolive/gappserv/live/enterstudio?__platform=web&user_id={}"
+
+    _LIVESERVER_API_URL = 'https://cloudac.mildom.com/nonolive/gappserv/live/liveserver'\
+                          '?__platform=web&user_id=4253873&live_server_type=hls'
 
     @classmethod
     def can_handle_url(cls, url):
@@ -36,7 +39,8 @@ class Mildom(Plugin):
             yield stream["name"], HLSStream(self.session, stream["url"])
 
     def _get_live_streams(self, channel_id):
-        res = self.session.http.get(self._LIVE_API_URL.format(channel_id))
+        # Get quality info and check if user is live1
+        res = self.session.http.get(self._STATUS_API_URL.format(channel_id))
         response_json = self.session.http.json(res)
         if response_json.get("code"):
             log.debug("Mildom API returned an error")
@@ -44,8 +48,19 @@ class Mildom(Plugin):
         if response_json["body"].get("anchor_live") != 11:
             log.debug("User doesn't appear to be live")
             return
-        for stream in response_json["body"]["realtime_playback_info"]["video_link"]:
-            yield stream["name"], HLSStream(self.session, stream["url"])
+        qualities = []
+        for quality_info in response_json["body"]["ext"]["cmode_params"]:
+            qualities.append((quality_info["name"], "_" + quality_info["cmode"] if quality_info["cmode"] != "raw" else ""))
+        # Create stream URLs
+        res = self.session.http.get(self._LIVESERVER_API_URL.format(channel_id))
+        response_json = self.session.http.json(res)
+        if response_json.get("code"):
+            log.debug("Mildom API returned an error")
+            return
+        base_url = response_json["body"]["stream_server"] + "/" + str(channel_id) + "{}.m3u8"
+        for quality in qualities:
+            self.session.http.headers.update({"Referer": "https://www.mildom.com/"})
+            yield quality[0], HLSStream(self.session, base_url.format(quality[1]))
 
     def _get_streams(self):
         match = self._re_url.match(self.url)
