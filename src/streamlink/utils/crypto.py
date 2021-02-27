@@ -3,6 +3,10 @@ from __future__ import absolute_import
 import hashlib
 
 from Crypto.Cipher import AES
+try:
+    from Crypto.Util.Padding import pad, unpad
+except ImportError:
+    from streamlink.utils.Padding import pad, unpad
 
 from streamlink.compat import is_py3
 
@@ -37,3 +41,6 @@ def unpad_pkcs5(padded):
         return padded[:-padded[-1]]
     else:
         return padded[:-ord(padded[-1])]
+
+
+__all__ = ["decrypt_openssl", "pad", "unpad", "unpad_pkcs5"]
