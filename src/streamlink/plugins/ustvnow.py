@@ -8,12 +8,12 @@ from uuid import uuid4
 
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
-from Crypto.Util.Padding import pad, unpad
 
 from streamlink import PluginError
 from streamlink.compat import urljoin, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.stream import HLSStream
+from streamlink.utils.crypto import pad, unpad
 
 log = logging.getLogger(__name__)
 
