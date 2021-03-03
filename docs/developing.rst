@@ -132,4 +132,4 @@ Removing plugins
 
 1. Remove the plugin file in ``src/streamlink/plugins/`` and the test file in ``tests/plugins/``
 2. Remove the plugin entry from the documentation in ``docs/plugin_matrix.rst``
-3. Add an entry to ``src/streamlink/plugins/.removed``
+3. Run ``script/update-removed-plugins.sh`` once to update ``src/streamlink/plugins/.removed``
