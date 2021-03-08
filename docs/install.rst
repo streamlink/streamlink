@@ -67,6 +67,8 @@ Linux and BSD
 ==================================== ===========================================
 Distribution                         Installing
 ==================================== ===========================================
+AppImage                             See the `AppImages`_ section below
+
 `Arch Linux`_                        .. code-block:: bash
 
                                         sudo pacman -S streamlink
@@ -131,6 +133,9 @@ Distribution                         Installing
 
                                         sudo xbps-install streamlink
 ==================================== ===========================================
+
+Please see the `PyPI package and source code`_ or `AppImages`_ sections down below
+if a package is not available for your distro or platform, or if it's out of date.
 
 .. _Arch Linux: https://www.archlinux.org/packages/community/any/streamlink/
 .. _Arch Linux (aur, git): https://aur.archlinux.org/packages/streamlink-git/
@@ -383,3 +388,43 @@ Beardypig                            `Latest precompiled stable release`__ |br|
 __ https://github.com/beardypig/streamlink-portable/releases/latest
 __ https://github.com/beardypig/streamlink-portable/archive/master.zip
 __ https://github.com/beardypig/streamlink-portable
+
+
+AppImages
+---------
+
+Download & Setup
+^^^^^^^^^^^^^^^^
+
+First, download the latest `Streamlink AppImage`_ which matches your system's
+architecture from the `Streamlink AppImage releases page`_. Then simply set the
+executable flag and run the app.
+
+.. code-block:: bash
+
+   # Set the executable flag. Note that all AppImage release file names include
+   # the release version, Python version, platform name and CPU architecture
+   chmod +x streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage
+
+   # Run the Streamlink AppImage with any parameter supported by Streamlink
+   ./streamlink-2.0.0-1-cp39-cp39-manylinux2014_x86_64.AppImage --version
+
+What are AppImages?
+^^^^^^^^^^^^^^^^^^^
+
+AppImages are portable apps for Linux which are independent of the distro and
+package management.
+
+Note: Check out `AppImageLauncher`_, which automates the setup and system
+integration of AppImages. AppImageLauncher may also be available via your
+distro's package management.
+
+Additional information, like for example how to inspect the AppImage contents or
+how to extract the contents if `FUSE`_ is not available on your system, can be
+found in the `AppImage documentation`_.
+
+.. _Streamlink AppImage: https://github.com/streamlink/streamlink-appimage
+.. _Streamlink AppImage releases page: https://github.com/streamlink/streamlink-appimage/releases
+.. _AppImageLauncher: https://github.com/TheAssassin/AppImageLauncher
+.. _FUSE: https://docs.appimage.org/user-guide/troubleshooting/fuse.html
+.. _AppImage documentation: https://docs.appimage.org/user-guide/run-appimages.html
