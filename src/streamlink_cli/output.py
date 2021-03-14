@@ -182,6 +182,11 @@ class PlayerOutput(Output):
     def _create_arguments(self):
         if self.namedpipe:
             filename = self.namedpipe.path
+            if is_win32:
+                if self.player_name == "vlc":
+                    filename = "stream://\\{0}".format(filename)
+                elif self.player_name == "mpv":
+                    filename = "file://{0}".format(filename)
         elif self.filename:
             filename = self.filename
         elif self.http:
