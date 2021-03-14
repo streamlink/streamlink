@@ -1,5 +1,122 @@
 # Changelog
 
+## streamlink 2.1.0 (2021-03-22)
+
+Release highlights:
+
+- Added: `--interface`, `-4` / `--ipv4` and `-6` / `--ipv6` ([#3483](https://github.com/streamlink/streamlink/pull/3483))
+- Added: `--niconico-purge-credentials` ([#3434](https://github.com/streamlink/streamlink/pull/3434))
+- Added: `--twitcasting-password` ([#3505](https://github.com/streamlink/streamlink/pull/3505))
+- Added: Linux AppImages ([#3611](https://github.com/streamlink/streamlink/pull/3611))
+- Added: pre-built man page to bdist wheels and sdist tarballs ([#3459](https://github.com/streamlink/streamlink/pull/3459), [#3510](https://github.com/streamlink/streamlink/pull/3510))
+- Added: plugin for ahaber.com.tr and atv.com.tr ([#3484](https://github.com/streamlink/streamlink/pull/3484)), nimo.tv ([#3508](https://github.com/streamlink/streamlink/pull/3508))
+- Fixed: `--player-http` / `--player-continuous-http` HTTP server being bound to all interfaces ([#3450](https://github.com/streamlink/streamlink/pull/3450))
+- Fixed: handling of languages without alpha_2 code when using pycountry ([#3518](https://github.com/streamlink/streamlink/pull/3518))
+- Fixed: memory leak when calling `streamlink.streams()` ([#3486](https://github.com/streamlink/streamlink/pull/3486))
+- Fixed: race condition in HLS related tests ([#3454](https://github.com/streamlink/streamlink/pull/3454))
+- Fixed: `--player-fifo` issues on Windows with VLC or MPV ([#3619](https://github.com/streamlink/streamlink/pull/3619))
+- Fixed: various plugins issues (see detailed changelog down below)
+- Removed: Windows portable (RosadinTV) ([#3535](https://github.com/streamlink/streamlink/pull/3535))
+- Removed: plugin for micous.com ([#3457](https://github.com/streamlink/streamlink/pull/3457)), ntvspor.net ([#3485](https://github.com/streamlink/streamlink/pull/3485)), btsports ([#3636](https://github.com/streamlink/streamlink/pull/3636))
+- Dependencies: set `websocket-client` to `>=0.58.0` ([#3634](https://github.com/streamlink/streamlink/pull/3634))
+
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      docs: update Debian stable install instructions
+
+Billy2011 <kschmidt2007@googlemail.com> (1):
+      plugins.stadium: adaptions for new player api (#3506)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (7):
+      plugins.mico: plugin removal
+      plugins.dogus: remove channel and update test
+      plugins.turkuvaz: add channels and URL tests
+      plugins.tvtoya: fix playlist regex
+      plugins.nimotv: new plugin
+      plugins.tvtoya: minor fixes
+      plugins.mjunoon: rewrite/fix
+
+Jefffrey <22608443+Jefffrey@users.noreply.github.com> (1):
+      plugins.Nicolive: login before getting wss api url
+
+Miguel Valadas <mvaladas@gmail.com> (1):
+      plugins.rtpplay: add schema and fix HLS URL (#3627)
+
+Vladimir Stavrinov <9163352+vstavrinov@users.noreply.github.com> (1):
+      plugins.oneplusone: fix iframe url pattern (#3503)
+
+alnj <carre.matthieu.lucien@gmail.com> (1):
+      plugins.twitcasting: add support for private/password-protected streams (#3505)
+
+back-to <backto@protonmail.ch> (11):
+      cli.main: use *_args, **_kwargs for create_http_server (#3450)
+      plugins.nicolive: added --niconico-purge-credentials
+      docs: remove outdated gst-player example
+      plugins.facebook: Add 'Log into Facebook' error message.
+      plugins.afreeca: use 'gs_cdn_pc_web' and 'common'
+      stream.dash: Fix static playlist - refresh_wait - Pipe copy aborted - Read timeout
+      plugin.api: update useragents (#3637)
+      plugins.zattoo: use 'dash' as default stream
+      setup.py: require websocket-client>=0.58.0
+      plugins.nicolive: fixed websocket-client
+      plugins.btsports: remove plugin
+
+bastimeyer <mail@bastimeyer.de> (36):
+      tools: force LF line endings via .gitattributes
+      docs: add minimalist code of conduct
+      stream.hls: open reader from class attribute
+      tests.hls: await all filtered-HLS writer calls
+      plugins.twitch: fix access_token on invalid inputs
+      ci: add netlify docs preview deploy config
+      docs: add thank-you section to index page
+      build: include man page in wheels
+      docs: bump furo docs req to 2020.12.28.beta23
+      2021
+      http_session: remove HTTPAdapterWithReadTimeout
+      docs: improve install-via-pip section
+      docs: fix description of `--ffmpeg-fout`
+      build: include man page in sdist tarballs
+      utils/l10n: fix langs without alpha_2 in pycountry
+      plugins.bloomberg: fix and refactor plugin
+      utils: remove custom memoize decorator
+      docs: remove CLI tutorial from man page
+      session: implement --interface, --ipv4 and --ipv6
+      docs: remove RosadinTV Windows portable version
+      ci.github: increase git fetch depth of tests
+      tests: fix test code coverage
+      ci.codecov: 100% tests target, add patch status
+      docs: clean up package maintainers list
+      plugins.vtvgo: ignore duplicate params
+      ci.codecov: disable GH status check annotations
+      chore: reorder and improve issue templates
+      plugins: fix invalid plugin class names
+      tests.plugins: parametrize can_handle_url tests
+      plugins: fix and update removed plugins list
+      docs: add appimages section to install docs
+      ci.netlify: build docs when CHANGELOG.md changes
+      docs: add pip to packages lists
+      cli.output: fix named pipe player input on Windows
+      cli: debug-log arguments set by the user
+      cli: refactor log_current_versions and add tests
+
+bururaku <rakuburu@gmail.com> (1):
+      plugins.abematv: Update abematv.py (#3617)
+
+fenopa <62562166+fenopa@users.noreply.github.com> (1):
+      installer: upgrade to python 3.8.7
+
+losuler <losuler@posteo.net> (1):
+      docs: update URL to Fedora repo
+
+onde2rock <onde2rock@users.noreply.github.com> (1):
+      plugins.bfmtv : fix rmcstory and rmcdecouverte (#3471)
+
+vinyl-umbrella <61788251+vinyl-umbrella@users.noreply.github.com> (1):
+      plugins.openrectv: update/fix (#3583)
+```
+
+
 ## streamlink 2.0.0 (2020-12-22)
 
 Release highlights:
