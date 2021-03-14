@@ -17,6 +17,8 @@ Installers                           See the `Windows binaries`_ section below
 
 Portable                             See the `Windows portable version`_ section below
 
+Python pip                           See the `PyPI package and source code`_ section below
+
 `Chocolatey`_                        .. code-block:: bat
 
                                         choco install streamlink
@@ -68,6 +70,8 @@ Linux and BSD
 Distribution                         Installing
 ==================================== ===========================================
 AppImage                             See the `AppImages`_ section below
+
+Python pip                           See the `PyPI package and source code`_ section below
 
 `Arch Linux`_                        .. code-block:: bash
 
