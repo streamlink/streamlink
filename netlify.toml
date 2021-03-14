@@ -7,11 +7,12 @@
   publish = "docs/_build/html"
   # Since production builds can't be disabled without disabling PRs as well, pushes to the master branch need to be ignored.
   # Also ignore pull requests which don't include any changes that would alter the docs:
+  # - CHANGELOG.md (symlinked from docs/changelog.md)
   # - docs/
   # - docs-requirements.txt
   # - src/streamlink_cli/argparser.py
   # https://docs.netlify.com/configure-builds/file-based-configuration/#ignore-builds
-  ignore = "[ $(git rev-parse --abbrev-ref HEAD) = master ] || git diff --quiet master HEAD docs/ docs-requirements.txt src/streamlink_cli/argparser.py"
+  ignore = "[ $(git rev-parse --abbrev-ref HEAD) = master ] || git diff --quiet master HEAD CHANGELOG.md docs/ docs-requirements.txt src/streamlink_cli/argparser.py"
 
 [build.environment]
   # Set the latest natively available Python version in the Ubuntu env (currently 16.04 / Xenial)
