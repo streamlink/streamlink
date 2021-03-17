@@ -25,6 +25,7 @@ ard_mediathek           - ardmediathek.de    Yes   Yes   Streams may be geo-rest
 artetv                  arte.tv              Yes   Yes
 atresplayer             atresplayer.com      Yes   No    Streams are geo-restricted to Spain.
 attheshore              attheshore.com       Yes   No
+auftanken               auftanken.tv         Yes   No    VOD streams are hosted on youtube
 bbciplayer              bbc.co.uk/iplayer    Yes   Yes   Streams may be geo-restricted to the United Kingdom.
 bfmtv                   bfmtv.com            Yes   Yes
                         01net.com
