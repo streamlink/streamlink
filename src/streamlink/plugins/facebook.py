@@ -81,6 +81,7 @@ class Facebook(Plugin):
     def _get_streams(self):
         self.session.set_option("ffmpeg-start-at-zero", True)
         self.session.http.headers.update({"Accept-Language": "en-US"})
+        self.session.http.headers.update({"Accept": "application/xhtml+xml"})
 
         done = False
         res = self.session.http.get(self.url)
