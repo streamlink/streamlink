@@ -290,7 +290,7 @@ Name                                 Notes
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
 `PySocks`_                           Used for SOCKS Proxies
-`websocket-client`_                  Used for some plugins
+`websocket-client`_                  At least version **0.58.0**. (used for some plugins)
 
 **Optional**
 --------------------------------------------------------------------------------
