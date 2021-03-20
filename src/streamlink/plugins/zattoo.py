@@ -26,7 +26,7 @@ class Zattoo(Plugin):
     API_WATCH_REC = '{0}/zapi/watch/recording/{1}'
     API_WATCH_VOD = '{0}/zapi/avod/videos/{1}/watch'
 
-    STREAMS_ZATTOO = ['dash', 'hls', 'hls5']
+    STREAMS_ZATTOO = ['dash', 'hls5']
 
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
@@ -113,14 +113,14 @@ class Zattoo(Plugin):
             'stream-types',
             metavar='TYPES',
             type=comma_list_filter(STREAMS_ZATTOO),
-            default=['hls'],
+            default=['dash'],
             help='''
             A comma-delimited list of stream types which should be used,
             the following types are allowed:
 
             - {0}
 
-            Default is "hls".
+            Default is "dash".
             '''.format('\n            - '.join(STREAMS_ZATTOO))
         )
     )
@@ -261,7 +261,7 @@ class Zattoo(Plugin):
             log.debug('Missing watch_url')
             return
 
-        zattoo_stream_types = self.get_option('stream-types') or ['hls']
+        zattoo_stream_types = self.get_option('stream-types')
         for stream_type in zattoo_stream_types:
             params_stream_type = {'stream_type': stream_type}
             params.update(params_stream_type)
@@ -285,7 +285,7 @@ class Zattoo(Plugin):
 
             data = self.session.http.json(res)
             log.debug('Found data for {0}'.format(stream_type))
-            if data['success'] and stream_type in ['hls', 'hls5']:
+            if data['success'] and stream_type == 'hls5':
                 for url in data['stream']['watch_urls']:
                     yield from HLSStream.parse_variant_playlist(self.session, url['url']).items()
             elif data['success'] and stream_type == 'dash':
