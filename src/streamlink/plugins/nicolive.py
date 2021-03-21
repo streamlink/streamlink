@@ -6,6 +6,7 @@ import time
 
 import websocket
 
+from streamlink import logger
 from streamlink.compat import unquote_plus, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents
@@ -176,12 +177,24 @@ class NicoLive(Plugin):
                 proxy_options.get('http_proxy_port') or 80))
 
         _log.debug("Connecting: {0}".format(url))
+        if logger.root.level <= logger.TRACE:
+            websocket.enableTrace(True, _log)
+
+        def on_error(wssapp, error):
+            return self.api_on_error(wssapp, error)
+
+        def on_message(wssapp, message):
+            return self.handle_api_message(message)
+
+        def on_open(wssapp):
+            return self.api_on_open()
+
         self._ws = websocket.WebSocketApp(
             url,
             header=["User-Agent: {0}".format(useragents.CHROME)],
-            on_open=self.api_on_open,
-            on_message=self.handle_api_message,
-            on_error=self.api_on_error)
+            on_open=on_open,
+            on_message=on_message,
+            on_error=on_error)
         self.ws_worker_thread = threading.Thread(
             target=self._ws.run_forever,
             args=proxy_options)
