@@ -551,21 +551,7 @@ def handle_url():
     try:
         plugin = streamlink.resolve_url(args.url)
         setup_plugin_options(streamlink, plugin)
-        log.info("Found matching plugin {0} for URL {1}".format(
-                 plugin.module, args.url))
-
-        plugin_args = []
-        for parg in plugin.arguments:
-            value = plugin.get_option(parg.dest)
-            if value:
-                plugin_args.append((parg, value))
-
-        if plugin_args:
-            log.debug("Plugin specific arguments:")
-            for parg, value in plugin_args:
-                log.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
-                                                  value if not parg.sensitive else ("*" * 8),
-                                                  parg.dest))
+        log.info(f"Found matching plugin {plugin.module} for URL {args.url}")
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -959,6 +945,30 @@ def log_current_versions():
             requests.__version__, socks_version, websocket_version))
 
 
+def log_current_arguments(session, parser):
+    global args
+    if not logger.root.isEnabledFor(logging.DEBUG):
+        return
+
+    sensitive = set()
+    for pname, plugin in session.plugins.items():
+        for parg in plugin.arguments:
+            if parg.sensitive:
+                sensitive.add(parg.argument_name(pname))
+
+    log.debug("Arguments:")
+    for action in parser._actions:
+        if not hasattr(args, action.dest):
+            continue
+        value = getattr(args, action.dest)
+        if action.default != value:
+            name = next(  # pragma: no branch
+                (option for option in action.option_strings if option.startswith("--")),
+                action.option_strings[0]
+            ) if action.option_strings else action.dest
+            log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
+
+
 def check_version(force=False):
     cache = Cache(filename="cli.json")
     latest_version = cache.get("latest_version")
@@ -1034,6 +1044,7 @@ def main():
     setup_http_session()
     check_root()
     log_current_versions()
+    log_current_arguments(streamlink, parser)
 
     if args.version_check or args.auto_version_check:
         with ignored(Exception):
