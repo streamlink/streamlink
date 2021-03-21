@@ -3,9 +3,9 @@ import tempfile
 import unittest
 
 import streamlink_cli.main
-from streamlink_cli.compat import is_py3
 from streamlink.plugin.plugin import Plugin
 from streamlink.session import Streamlink
+from streamlink_cli.compat import is_py3
 from streamlink_cli.main import (
     check_file_output,
     create_output,
@@ -13,6 +13,7 @@ from streamlink_cli.main import (
     handle_stream,
     handle_url,
     log_current_arguments,
+    log_current_versions,
     resolve_stream_name
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -283,6 +284,65 @@ class TestCLIMainDebugLogging(unittest.TestCase):
                 streamlink_cli.main.main()
             except SystemExit:
                 pass
+
+    @patch("streamlink_cli.main.log_current_versions")
+    @patch("streamlink_cli.main.streamlink_version", "streamlink")
+    @patch("streamlink_cli.main.requests.__version__", "requests")
+    @patch("streamlink_cli.main.socks_version", "socks")
+    @patch("streamlink_cli.main.websocket_version", "websocket")
+    @patch("platform.python_version", Mock(return_value="python"))
+    def test_log_current_versions(self, mock_log_current_versions, mock_log):
+        def _log_current_versions():
+            log_current_versions()
+            raise SystemExit
+
+        mock_log_current_versions.side_effect = _log_current_versions
+
+        self.subject(["streamlink", "--loglevel", "info"])
+        self.assertEqual(mock_log.debug.mock_calls, [], "Doesn't log anything if not debug logging")
+
+        with patch("sys.platform", "linux"), \
+             patch("platform.platform", Mock(return_value="linux")):
+            self.subject(["streamlink", "--loglevel", "debug"])
+            self.assertEqual(
+                mock_log.debug.mock_calls,
+                [
+                    call("OS:         linux"),
+                    call("Python:     python"),
+                    call("Streamlink: streamlink"),
+                    call("Requests(requests), Socks(socks), Websocket(websocket)")
+                ]
+            )
+            mock_log.debug.mock_calls *= 0
+
+        with patch("sys.platform", "darwin"), \
+             patch("platform.mac_ver", Mock(return_value=["0.0.0"])):
+            self.subject(["streamlink", "--loglevel", "debug"])
+            self.assertEqual(
+                mock_log.debug.mock_calls,
+                [
+                    call("OS:         macOS 0.0.0"),
+                    call("Python:     python"),
+                    call("Streamlink: streamlink"),
+                    call("Requests(requests), Socks(socks), Websocket(websocket)")
+                ]
+            )
+            mock_log.debug.mock_calls *= 0
+
+        with patch("sys.platform", "win32"), \
+             patch("platform.system", Mock(return_value="Windows")), \
+             patch("platform.release", Mock(return_value="0.0.0")):
+            self.subject(["streamlink", "--loglevel", "debug"])
+            self.assertEqual(
+                mock_log.debug.mock_calls,
+                [
+                    call("OS:         Windows 0.0.0"),
+                    call("Python:     python"),
+                    call("Streamlink: streamlink"),
+                    call("Requests(requests), Socks(socks), Websocket(websocket)")
+                ]
+            )
+            mock_log.debug.mock_calls *= 0
 
     @patch("streamlink_cli.main.log_current_arguments")
     @patch("streamlink_cli.main.log_current_versions", Mock())

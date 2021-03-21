@@ -936,22 +936,24 @@ def check_root():
 
 def log_current_versions():
     """Show current installed versions"""
-    if logger.root.isEnabledFor(logging.DEBUG):
-        # MAC OS X
-        if sys.platform == "darwin":
-            os_version = "macOS {0}".format(platform.mac_ver()[0])
-        # Windows
-        elif sys.platform.startswith("win"):
-            os_version = "{0} {1}".format(platform.system(), platform.release())
-        # linux / other
-        else:
-            os_version = platform.platform()
+    if not logger.root.isEnabledFor(logging.DEBUG):
+        return
 
-        log.debug("OS:         {0}".format(os_version))
-        log.debug("Python:     {0}".format(platform.python_version()))
-        log.debug("Streamlink: {0}".format(streamlink_version))
-        log.debug("Requests({0}), Socks({1}), Websocket({2})".format(
-            requests.__version__, socks_version, websocket_version))
+    # macOS
+    if sys.platform == "darwin":
+        os_version = "macOS {0}".format(platform.mac_ver()[0])
+    # Windows
+    elif sys.platform == "win32":
+        os_version = "{0} {1}".format(platform.system(), platform.release())
+    # Linux / other
+    else:
+        os_version = platform.platform()
+
+    log.debug("OS:         {0}".format(os_version))
+    log.debug("Python:     {0}".format(platform.python_version()))
+    log.debug("Streamlink: {0}".format(streamlink_version))
+    log.debug("Requests({0}), Socks({1}), Websocket({2})".format(
+        requests.__version__, socks_version, websocket_version))
 
 
 def log_current_arguments(session, parser):
