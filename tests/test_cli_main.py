@@ -5,8 +5,15 @@ from unittest.mock import Mock, call, patch
 
 import streamlink_cli.main
 from streamlink.plugin.plugin import Plugin
+from streamlink.session import Streamlink
 from streamlink_cli.main import (
-    check_file_output, create_output, format_valid_streams, handle_stream, handle_url, resolve_stream_name
+    check_file_output,
+    create_output,
+    format_valid_streams,
+    handle_stream,
+    handle_url,
+    log_current_arguments,
+    resolve_stream_name
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
 
@@ -254,3 +261,58 @@ class TestCLIMain(unittest.TestCase):
         args.record_and_pipe = True
         create_output(FakePlugin)
         console.exit.assert_called_with("Cannot use record options with other file output options.")
+
+
+@patch("streamlink_cli.main.log")
+@patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"])
+@patch("streamlink_cli.main.setup_plugins", Mock())
+@patch("streamlink_cli.main.setup_streamlink", Mock())
+@patch("streamlink.session.Streamlink.load_builtin_plugins", Mock())
+class TestCLIMainDebugLogging(unittest.TestCase):
+    def subject(self, argv):
+        session = Streamlink()
+        session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
+
+        with patch("streamlink_cli.main.streamlink", session), patch("sys.argv") as mock_argv:
+            mock_argv.__getitem__.side_effect = lambda x: argv[x]
+            try:
+                streamlink_cli.main.main()
+            except SystemExit:
+                pass
+
+    @patch("streamlink_cli.main.log_current_arguments")
+    @patch("streamlink_cli.main.log_current_versions", Mock())
+    def test_log_current_arguments(self, mock_log_current_arguments, mock_log):
+        def _log_current_arguments(*args, **kwargs):
+            log_current_arguments(*args, **kwargs)
+            raise SystemExit
+
+        mock_log_current_arguments.side_effect = _log_current_arguments
+
+        self.subject([
+            "streamlink",
+            "--loglevel", "info"
+        ])
+        self.assertEqual(mock_log.debug.mock_calls, [], "Doesn't log anything if not debug logging")
+
+        self.subject([
+            "streamlink",
+            "--loglevel", "debug",
+            "-p", "custom",
+            "--testplugin-bool",
+            "--testplugin-password=secret",
+            "website.tld/channel",
+            "best,worst"
+        ])
+        self.assertEqual(
+            mock_log.debug.mock_calls,
+            [
+                call("Arguments:"),
+                call(" url=website.tld/channel"),
+                call(" stream=['best', 'worst']"),
+                call(" --loglevel=debug"),
+                call(" --player=custom"),
+                call(" --testplugin-bool=True"),
+                call(" --testplugin-password=********")
+            ]
+        )
