@@ -17,7 +17,7 @@ deps = [
     "requests>=2.21.0,<3.0",
     'urllib3[secure]>=1.23;python_version<"3.0"',
     "isodate",
-    "websocket-client",
+    "websocket-client>=0.58.0",
     # Support for SOCKS proxies
     "PySocks!=1.5.7,>=1.5.6",
     # win-inet-pton is missing a dependency in PySocks, this has been fixed but not released yet

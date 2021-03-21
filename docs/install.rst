@@ -89,7 +89,7 @@ Name                                 Notes
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
 `PySocks`_                           Used for SOCKS Proxies
-`websocket-client`_                  Used for some plugins
+`websocket-client`_                  At least version **0.58.0**. (used for some plugins)
 `shutil_get_terminal_size`_          Only needed on Python **2.7**.
 `shutil_which`_                      Only needed on Python **2.7**.
 
