@@ -11,12 +11,12 @@ import requests.packages.urllib3.util.connection as urllib3_connection
 from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import __version__, plugins
-from streamlink.compat import is_win32
+from streamlink.compat import is_win32, lru_cache
 from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import Logger, StreamlinkLogger
 from streamlink.options import Options
 from streamlink.plugin import api
-from streamlink.utils import memoize, update_scheme
+from streamlink.utils import update_scheme
 from streamlink.utils.l10n import Localization
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)
@@ -419,7 +419,7 @@ class Streamlink(object):
         """
         self.logger.set_output(output)
 
-    @memoize
+    @lru_cache(maxsize=128)
     def resolve_url(self, url, follow_redirect=True):
         """Attempts to find a plugin that can use this URL.
 

@@ -53,6 +53,10 @@ except ImportError:
     from HTMLParser import HTMLParser
     html_unescape = unescape = HTMLParser().unescape
 
+try:
+    from functools import lru_cache
+except ImportError:
+    from backports.functools_lru_cache import lru_cache
 
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
@@ -60,4 +64,4 @@ getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 __all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote",
            "unquote", "unquote_plus", "queue", "range", "urlencode", "devnull", "which",
-           "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape"]
+           "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape", "lru_cache"]

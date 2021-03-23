@@ -48,10 +48,12 @@ class TestSession(unittest.TestCase):
         self.assertEqual(plugins["testplugin"].__module__, "streamlink.plugin.testplugin_override")
 
     def test_resolve_url(self):
-        plugins = self.session.get_plugins()
-        channel = self.session.resolve_url("http://test.se/channel")
-        self.assertTrue(isinstance(channel, Plugin))
-        self.assertTrue(isinstance(channel, plugins["testplugin"]))
+        session = self.subject()
+        plugins = session.get_plugins()
+        plugin = session.resolve_url("http://test.se/channel")
+        self.assertTrue(isinstance(plugin, Plugin))
+        self.assertTrue(isinstance(plugin, plugins["testplugin"]))
+        self.assertTrue(hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache")
 
     def test_resolve_url_priority(self):
         from tests.plugins.testplugin import TestPlugin
