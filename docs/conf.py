@@ -39,7 +39,7 @@ templates_path = ['_templates']
 master_doc = 'index'
 
 # General information about the project.
-project = 'Streamlink'
+project = 'Streamlink[-27]'
 copyright = '2021, Streamlink, Billy2011'
 
 # The version info for the project you're documenting, acts as replacement for

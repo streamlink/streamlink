@@ -20,10 +20,10 @@ General options:
     Show this help message and exit.
 
   -u, --upstream REPO
-    Set the upstream repo (streamlink/streamlink)
+    Set the upstream repo (Billy2011/streamlink-27)
 
   -o, --origin REPO
-    Set the users fork of the upstream repo (gituser/streamlink)
+    Set the users fork of the upstream repo (gituser/streamlink-27)
 
   -v, --version VERSION
     Set the new version number.
@@ -141,18 +141,18 @@ echo -e "Streamlink Release Script\n"
 action "User has git installed" test_available git
 
 if [ -z "$upstream" ]; then
-    echo -n "Upstream repo [streamlink/streamlink]: "
+    echo -n "Upstream repo [Billy2011/streamlink-27]: "
     read upstream
     if [ -z "$upstream" ]; then
-        upstream="streamlink/streamlink"
+        upstream="Billy2011/streamlink-27"
     fi
 fi
 
 if [ -z "$origin" ]; then
-    echo -n "Fork repo [$USER/streamlink]: "
+    echo -n "Fork repo [Billy2011/streamlink-27]: "
     read origin
     if [ -z "$origin" ]; then
-        origin="$USER/streamlink"
+        origin="Billy2011/streamlink-27"
     fi
 fi
 
