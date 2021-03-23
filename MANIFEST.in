@@ -4,6 +4,7 @@ include README.md
 include LICENSE*
 include *requirements.txt
 include src/streamlink/_version.py
+include src/streamlink/plugins/.removed
 include versioneer.py
 
 recursive-include docs *
