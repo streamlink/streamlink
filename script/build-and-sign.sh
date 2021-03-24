@@ -23,14 +23,14 @@ wheel_platforms_windows=("win32" "win-amd64")
 mkdir -p "${dist_dir}"
 
 echo "build: Building Streamlink sdist" >&2
-python setup.py -q sdist --dist-dir "${dist_dir}"
+python setup.py sdist --dist-dir "${dist_dir}"
 
-echo "build: Building Streamlink wheel (universal)" >&2
-python setup.py -q bdist_wheel --dist-dir "${dist_dir}"
+echo "build: Building Streamlink bdist_wheel" >&2
+python setup.py bdist_wheel --dist-dir "${dist_dir}"
 
 for platform in "${wheel_platforms_windows[@]}"; do
-    echo "build: Building Streamlink wheel (${platform})" >&2
-    python setup.py -q bdist_wheel --plat-name "${platform}" --dist-dir "${dist_dir}"
+    echo "build: Building Streamlink bdist_wheel (${platform})" >&2
+    python setup.py bdist_wheel --plat-name "${platform}" --dist-dir "${dist_dir}"
 done
 
 
