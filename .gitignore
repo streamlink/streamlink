@@ -37,6 +37,7 @@ dist
 *.pyo
 *.tmp*
 *.swp
+docs/changelog.md
 docs/_build
 include/
 lib/
