@@ -1,5 +1,18 @@
 # Changelog
 
+## streamlink 1.27.2.1 (2021-03-26)
+
+Patch release:
+
+- Fixed: test failure due to missing removed plugins file in sdist tarball (#3644).
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (29):
+      build: don't build sdist/bdist quietly (#3645)
+      build: include removed plugins file in sdist
+```
+
+
 ## streamlink 1.27.2.0 (2021-03-23)
 
 Release highlights:
