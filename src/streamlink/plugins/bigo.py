@@ -7,13 +7,13 @@ from streamlink.stream import HLSStream
 
 class Bigo(Plugin):
     _url_re = re.compile(r"https?://(?:www\.)?bigo\.tv/([^/]+)$")
-    _api_url = "https://www.bigo.tv/OInterface/getVideoParam?bigoId={0}"
+    _api_url = "https://bigo.tv/studio/getInternalStudioInfo"
 
     _video_info_schema = validate.Schema({
         "code": 0,
         "msg": "success",
         "data": {
-            "videoSrc": validate.any(None, "", validate.url())
+            "hls_src": validate.any(None, "", validate.url())
         }
     })
 
@@ -23,13 +23,14 @@ class Bigo(Plugin):
 
     def _get_streams(self):
         match = self._url_re.match(self.url)
-        res = self.session.http.get(
-            self._api_url.format(match.group(1)),
+        res = self.session.http.post(
+            self._api_url,
             allow_redirects=True,
-            headers={"User-Agent": useragents.IPHONE_6}
+            headers={"User-Agent": useragents.IPHONE_6},
+            data={'siteId': match.group(1)}
         )
         data = self.session.http.json(res, schema=self._video_info_schema)
-        videourl = data["data"]["videoSrc"]
+        videourl = data["data"]["hls_src"]
         if videourl:
             yield "live", HLSStream(self.session, videourl)
 
