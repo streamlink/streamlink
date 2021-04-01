@@ -4,24 +4,32 @@ import re
 from urllib.parse import unquote, urlencode, urljoin
 
 from streamlink.plugin import Plugin
+from streamlink.plugin.api import validate
 from streamlink.plugin.plugin import stream_weight
-from streamlink.stream import DASHStream, HLSStream, HTTPStream
+from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import update_scheme
 
 log = logging.getLogger(__name__)
 
 
 class OneTV(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?(?P<channel>1tv|ctc|chetv|ctclove|domashny).(?:com|ru)/(?P<live>live|online)?")
+    _url_re = re.compile(r"https?://(?:www\.)?(?P<channel>1tv|ctc|chetv|ctclove|domashny)\.(?:com|ru)/(?P<live>live|online)?")
     _vod_re = re.compile(r"""/video_materials\.json[^'"]*""")
     _vod_id_re = re.compile(r'''data-video-material-id="(\d+)"''')
 
+    _token_url = "https://media.mediavitrina.ru/get_token"
     _1tv_api = "//stream.1tv.ru/api/playlist/1tvch_as_array.json"
-    _ctc_api = "//media.1tv.ru/api/v1/ctc/playlist/{channel}_as_array.json"
+    _ctc_api = "//media.mediavitrina.ru/api/v2/ctc/playlist/{channel}_as_array.json?token={token}"
     _session_api = "//stream.1tv.ru/get_hls_session"
     _channel_remap = {"chetv": "ctc-che",
                       "ctclove": "ctc-love",
                       "domashny": "ctc-dom"}
+
+    _token_schema = validate.Schema({
+        "result": {
+            "token": str,
+        },
+    }, validate.get("result"), validate.get("token"))
 
     @classmethod
     def can_handle_url(cls, url):
@@ -43,7 +51,9 @@ class OneTV(Plugin):
         if channel == "1tv":
             url = self._1tv_api
         else:
-            url = self._ctc_api.format(channel=channel)
+            res = self.session.http.get(self._token_url)
+            token = self.session.http.json(res, schema=self._token_schema)
+            url = self._ctc_api.format(channel=channel, token=token)
 
         return update_scheme(self.url, url)
 
@@ -75,7 +85,7 @@ class OneTV(Plugin):
         if self.is_live:
             log.debug("Loading live stream for {0}...".format(self.channel))
 
-            res = self.session.http.get(self.live_api_url, data={"r": random.randint(1, 100000)})
+            res = self.session.http.get(self.live_api_url)
             live_data = self.session.http.json(res)
 
             # all the streams are equal for each type, so pick a random one
@@ -84,11 +94,6 @@ class OneTV(Plugin):
                 url = random.choice(hls_streams)
                 url = url + '&' + urlencode(self.hls_session())  # TODO: use update_qsd
                 yield from HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items()
-
-            mpd_streams = live_data.get("mpd")
-            if mpd_streams:
-                url = random.choice(mpd_streams)
-                yield from DASHStream.parse_manifest(self.session, url).items()
 
         elif self.channel == "1tv":
             log.debug("Attempting to find VOD stream for {0}...".format(self.channel))
