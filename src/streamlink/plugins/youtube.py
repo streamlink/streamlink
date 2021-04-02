@@ -139,6 +139,9 @@ class YouTube(Plugin):
         self.title = None
         self.video_id = None
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
+        consent = self.cache.get("consent_ck")
+        if consent is not None:
+            self.set_consent_ck(consent)
 
     def get_author(self):
         if self.author is None:
@@ -228,14 +231,30 @@ class YouTube(Plugin):
 
         return streams
 
-    def _find_video_id(self, url):
+    def set_consent_ck(self, consent):
+        self.session.http.cookies.set(
+            'CONSENT',
+            consent,
+            domain='.youtube.com', path="/")
 
+    def _find_video_id(self, url):
         m = _url_re.match(url)
-        if m.group("video_id"):
+        if m and m.group("video_id"):
             log.debug("Video ID from URL")
             return m.group("video_id")
 
         res = self.session.http.get(url)
+        if urlparse(res.url).netloc == "consent.youtube.com":
+            c_data = {}
+            for _i in itertags(res.text, "input"):
+                if _i.attributes.get("type") == "hidden":
+                    c_data[_i.attributes.get("name")] = _i.attributes.get("value")
+            log.debug("c_data_keys: {}".format(', '.join(c_data.keys())))
+            res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
+            consent = self.session.http.cookies.get('CONSENT', domain='.youtube.com')
+            if 'YES' in consent:
+                self.cache.set("consent_ck", consent)
+
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
