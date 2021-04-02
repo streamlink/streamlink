@@ -217,7 +217,6 @@ tv360                   tv360.com.tr         Yes   No
 tv999                   tv999.bg             Yes   --    Streams are geo-restricted to Bulgaria
 tvibo                   player.tvibo.com     Yes   --
 tvp                     tvpstream.vod.tvp.pl Yes   No    Streams may be geo-restricted to Poland.
-tvplayer                tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --
