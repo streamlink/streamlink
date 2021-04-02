@@ -296,6 +296,15 @@ class YouTube(Plugin):
         return info_parsed
 
     def _get_streams(self):
+        res = self.session.http.get(self.url)
+        if "consent.youtube" in res.url:
+            c_data = {}
+            for _i in itertags(res.text, "input"):
+                if _i.attributes.get("type") == "hidden":
+                    c_data[_i.attributes.get("name")] = _i.attributes.get("value")
+            log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
+            self.session.http.post("https://consent.youtube.com/s", data=c_data)
+
         is_live = False
 
         self.video_id = self._find_video_id(self.url)
