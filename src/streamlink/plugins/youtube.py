@@ -234,8 +234,7 @@ class YouTube(Plugin):
                 if _i.attributes.get("type") == "hidden":
                     c_data[_i.attributes.get("name")] = _i.attributes.get("value")
             log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
-            self.session.http.post("https://consent.youtube.com/s", data=c_data)
-            res = self.session.http.get(url)
+            res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
 
         datam = _ytdata_re.search(res.text)
         if datam:
