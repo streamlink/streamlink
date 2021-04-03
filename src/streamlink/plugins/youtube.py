@@ -222,13 +222,20 @@ class YouTube(Plugin):
         return streams
 
     def _find_video_id(self, url):
-
         m = _url_re.match(url)
         if m.group("video_id"):
             log.debug("Video ID from URL")
             return m.group("video_id")
 
         res = self.session.http.get(url)
+        if urlparse(res.url).netloc == "consent.youtube.com":
+            c_data = {}
+            for _i in itertags(res.text, "input"):
+                if _i.attributes.get("type") == "hidden":
+                    c_data[_i.attributes.get("name")] = _i.attributes.get("value")
+            log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
+            res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
+
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
