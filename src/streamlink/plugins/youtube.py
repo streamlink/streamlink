@@ -59,7 +59,8 @@ _config_schema = validate.Schema(
 )
 
 _ytdata_re = re.compile(r'ytInitialData\s*=\s*({.*?});', re.DOTALL)
-_url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
+_url_re = re.compile(r"""
+    https?://(?:\w+\.)?youtube\.com
     (?:
         (?:
             /(?:
@@ -83,7 +84,9 @@ _url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
             /(?:c/)?[^/?]+/live/?$
         )
     )
-""")
+    |
+    https?://youtu\.be/(?P<video_id_short>[0-9A-z_-]{11})
+""", re.VERBOSE)
 
 
 class YouTube(Plugin):
@@ -223,9 +226,10 @@ class YouTube(Plugin):
 
     def _find_video_id(self, url):
         m = _url_re.match(url)
-        if m.group("video_id"):
+        video_id = m.group("video_id") or m.group("video_id_short")
+        if video_id:
             log.debug("Video ID from URL")
-            return m.group("video_id")
+            return video_id
 
         res = self.session.http.get(url)
         if urlparse(res.url).netloc == "consent.youtube.com":

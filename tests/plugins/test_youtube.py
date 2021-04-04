@@ -22,6 +22,7 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
         "https://www.youtube.com/user/EXAMPLE/live",
         "https://www.youtube.com/v/aqz-KE-bpKQ",
         "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+        "https://youtu.be/0123456789A",
     ]
 
     should_not_match = [
@@ -30,6 +31,10 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
         "https://www.youtube.com/account",
         "https://www.youtube.com/feed/guide_builder",
         "https://www.youtube.com/t/terms",
+        "https://youtu.be",
+        "https://youtu.be/",
+        "https://youtu.be/c/CHANNEL",
+        "https://youtu.be/c/CHANNEL/live",
     ]
 
 
