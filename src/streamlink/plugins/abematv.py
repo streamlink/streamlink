@@ -192,7 +192,11 @@ class AbemaTV(Plugin):
             res = self.session.http.get(self._PRGM_API.format(vid),
                                         headers=auth_header)
             jsonres = self.session.http.json(res, schema=self._PRGM_SCHEMA)
-            return jsonres["terms"][0].get("onDemandType", False) == 3
+            playable = False
+            for item in jsonres["terms"]:
+                if item.get("onDemandType", False) == 3:
+                    playable = True
+            return playable
         elif vtype == "slots":
             res = self.session.http.get(self._SLOTS_API.format(vid),
                                         headers=auth_header)
