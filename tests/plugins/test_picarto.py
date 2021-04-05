@@ -7,5 +7,8 @@ class TestPluginCanHandleUrlPicarto(PluginCanHandleUrl):
 
     should_match = [
         'https://picarto.tv/example',
-        'https://picarto.tv/videopopout/example_2020.00.00.00.00.00_nsfw.mkv',
+        'https://www.picarto.tv/example',
+        'https://www.picarto.tv/streampopout/example/public',
+        'https://www.picarto.tv/videopopout/123456',
+        'https://www.picarto.tv/example?tab=videos&id=123456',
     ]
