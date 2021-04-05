@@ -1,14 +1,9 @@
 import logging
 import re
-import time
-from urllib.parse import unquote_plus, urlparse
-
-import websocket
 
 from streamlink.plugin import Plugin
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -21,24 +16,15 @@ class Picarto(Plugin):
             (?:\?tab=videos&id=(?P<vod_id>\d+))?
     ''', re.VERBOSE)
 
-    channel_api_url = 'https://ptvintern.picarto.tv/api/channel/detail/{0}'
-    vod_api_url = 'https://ptvintern.picarto.tv/ptvapi'
-    live_wss_url = 'wss://{server}/stream/json_golive%2B{data}.js'
-    vod_wss_server = 'recording-eu-1.picarto.tv'
-    vod_wss_url = 'wss://{server}/stream/json_{data}.js'
-
     channel_schema = validate.Schema({
         'channel': validate.any(None, {
+            'stream_name': str,
             'title': str,
             'online': bool,
             'private': bool,
-            'categories': [{
-                'label': str,
-            }],
+            'categories': [{'label': str}],
         }),
-        'getLoadBalancerUrl': {
-            'url': validate.url(),
-        },
+        'getLoadBalancerUrl': {'origin': str},
         'getMultiStreams': validate.any(None, {
             'multistream': bool,
             'streams': [{
@@ -47,24 +33,18 @@ class Picarto(Plugin):
             }],
         }),
     })
-    stream_schema = validate.Schema(validate.any({'error': str}, {
-        'source': [{
-            'type': str,
-            'url': validate.url(),
-        }],
-    }), validate.get('source'))
     vod_schema = validate.Schema({
         'data': {
             'video': validate.any(None, {
                 'id': str,
                 'title': str,
                 'file_name': str,
-                'channel': {
-                    'name': str,
-                },
+                'channel': {'name': str},
             }),
         },
     }, validate.get('data'), validate.get('video'))
+
+    HLS_URL = 'https://{origin}.picarto.tv/stream/hls/{file_name}/index.m3u8'
 
     author = None
     category = None
@@ -83,72 +63,17 @@ class Picarto(Plugin):
     def get_title(self):
         return self.title
 
-    def parse_proxy_url(self, purl):
-        '''Adapted from UStreamTV plugin (ustreamtv.py)'''
-
-        proxy_options = {}
-        if purl:
-            p = urlparse(purl)
-            proxy_options['proxy_type'] = p.scheme
-            proxy_options['http_proxy_host'] = p.hostname
-            if p.port:
-                proxy_options['http_proxy_port'] = p.port
-            if p.username:
-                proxy_options['http_proxy_auth'] = \
-                    (unquote_plus(p.username), unquote_plus(p.password or ''))
-        return proxy_options
-
-    def get_stream(self, data, live=True, server=None):
-        # Proxy support adapted from the UStreamTV plugin (ustreamtv.py)
-        proxy_url = self.session.get_option('https-proxy')
-        if proxy_url is None:
-            proxy_url = self.session.get_option('http-proxy')
-        proxy_options = self.parse_proxy_url(proxy_url)
-        if proxy_options.get('http_proxy_host'):
-            log.debug('Using proxy ({0}://{1}:{2})'.format(
-                proxy_options.get('proxy_type') or 'http',
-                proxy_options.get('http_proxy_host'),
-                proxy_options.get('http_proxy_port') or 80))
-
-        if live and server:
-            wss_url = self.live_wss_url.format(server=server, data=data)
-        else:
-            wss_url = self.vod_wss_url.format(server=self.vod_wss_server, data=data)
-
-        ws = websocket.create_connection(
-            wss_url,
-            header={'User-Agent': useragents.FIREFOX},
-            **proxy_options,
-        )
-        for i in range(50):
-            res = ws.recv()
-            if 'error' in res:
-                time.sleep(0.1)
-            else:
-                log.debug(f'Got WS reply with {i * 100}ms delay')
-                break
-
-        if 'error' in res:
-            log.error('Failed to get WS reply')
-            return
-
-        ws.close()
-        stream_data = parse_json(res, schema=self.stream_schema)
-
-        for s in stream_data:
-            if s['type'] == 'html5/application/vnd.apple.mpegurl':
-                yield from HLSStream.parse_variant_playlist(self.session, s['url']).items()
-
     def get_live(self, username):
-        res = self.session.http.get(self.channel_api_url.format(username))
+        res = self.session.http.get(f'https://ptvintern.picarto.tv/api/channel/detail/{username}')
         channel_data = self.session.http.json(res, schema=self.channel_schema)
+        log.trace(f'channel_data={channel_data!r}')
 
         if not channel_data['channel'] or not channel_data['getMultiStreams']:
             log.debug('Missing channel or streaming data')
             return
 
         if channel_data['channel']['private']:
-            log.error('This is a private stream')
+            log.info('This is a private stream')
             return
 
         if channel_data['getMultiStreams']['multistream']:
@@ -170,8 +95,9 @@ class Picarto(Plugin):
         self.category = channel_data['channel']['categories'][0]['label']
         self.title = channel_data['channel']['title']
 
-        p = urlparse(channel_data['getLoadBalancerUrl']['url'])
-        return self.get_stream(username, live=True, server=p.netloc)
+        return HLSStream.parse_variant_playlist(self.session,
+                                                self.HLS_URL.format(file_name=channel_data['channel']['stream_name'],
+                                                                    origin=channel_data['getLoadBalancerUrl']['origin']))
 
     def get_vod(self, vod_id):
         data = {
@@ -189,8 +115,9 @@ class Picarto(Plugin):
             ),
             'variables': {'videoId': vod_id},
         }
-        res = self.session.http.post(self.vod_api_url, json=data)
+        res = self.session.http.post('https://ptvintern.picarto.tv/ptvapi', json=data)
         vod_data = self.session.http.json(res, schema=self.vod_schema)
+        log.trace(f'vod_data={vod_data!r}')
         if not vod_data:
             log.debug('Missing video data')
             return
@@ -198,8 +125,9 @@ class Picarto(Plugin):
         self.author = vod_data['channel']['name']
         self.category = 'VOD'
         self.title = vod_data['title']
-
-        return self.get_stream(vod_data['file_name'], live=False)
+        return HLSStream.parse_variant_playlist(self.session,
+                                                self.HLS_URL.format(file_name=vod_data['file_name'],
+                                                                    origin='recording-eu-1'))
 
     def _get_streams(self):
         m = self.url_re.match(self.url).groupdict()
