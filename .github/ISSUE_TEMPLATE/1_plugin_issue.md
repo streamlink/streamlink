@@ -1,7 +1,7 @@
 ---
 name: Plugin Issue
 about: One of Streamlink's plugins doesn't work correctly
-title: "plugins.[pluginname]: [A very brief summary of what's broken]"
+title: "plugins.plugin-name-here: A very brief summary of what's broken"
 labels: plugin issue
 ---
 
