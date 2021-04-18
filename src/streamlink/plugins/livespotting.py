@@ -9,7 +9,13 @@ log = logging.getLogger(__name__)
 
 
 class LivespottingTV(Plugin):
-    _url_re = re.compile(r"https?://livespotting\.tv/locations\?id=(\w+)")
+    _url_re = re.compile(r"""
+        (?:
+            https?://livespotting\.tv/
+            (?:locations\?id=)?
+            (?:[^/].+/)?
+        )(\w+)
+    """, re.VERBOSE)
     _player_re = re.compile(r"player_id:\s*'(\w+)',\s*livesource_id:\s*'(\w+)'")
 
     _URL_PLAYER_CONFIG = "https://player.livespotting.com/v1/config/{player_id}.json"
