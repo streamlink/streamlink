@@ -1,7 +1,7 @@
 ---
 name: Bug Report
 about: A core functionality of Streamlink is broken
-title: "[A very brief summary of what's broken]"
+title: "A very brief summary of what's broken"
 labels: bug
 ---
 

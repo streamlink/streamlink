@@ -1,7 +1,7 @@
 ---
 name: Plugin Request
 about: Discuss adding a new plugin to Streamlink
-title: "[Name of the website / streaming provider]"
+title: "Name of the website / streaming provider"
 labels: plugin request
 ---
 
