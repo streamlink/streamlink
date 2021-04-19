@@ -1,5 +1,34 @@
 # Changelog
 
+## streamlink 1.27.3.0 (2021-04-19)
+
+Release highlights:
+
+- Added: plugin for livespotting.tv
+- Fixed: various plugins issues (see detailed changelog down below)
+- Removed: plugin for hitbox.tv (#3686) (https://github.com/streamlink/streamlink/pull/3686)
+- Removed: plugin for tvplayer.com (#3673) (https://github.com/streamlink/streamlink/pull/3673)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (11):
+      plugins.youtube: fix consent issue
+      plugins.picarto: rewrite/fix (#3661)
+      plugins.youtube: add short video URLs (#3677)
+      plugins.livespotting: new plugin
+      plugins.hitbox: remove plugin (#3686)
+      plugins.livespotting: fix location cams
+      plugins.wetter: add mp4 stream type
+      plugins.tvplayer: plugin removal (#3673)
+      plugins.livespotting: improve _url_re
+
+bastimeyer <mail@bastimeyer.de> (1):
+      chore: remove square brackets from issue titles
+
+bururaku <rakuburu@gmail.com> (1):
+      plugins.abematv: Fixed download problem again. (#3658)
+```
+
+
 ## streamlink 1.27.2.1 (2021-03-26)
 
 Patch release:
