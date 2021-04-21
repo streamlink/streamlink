@@ -34,7 +34,7 @@ Python pip                           See the `PyPI package and source code`_ sec
 
 .. _Chocolatey: https://chocolatey.org/packages/streamlink
 
-.. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/Streamlink/Streamlink
+.. _Windows Package Manager: https://github.com/microsoft/winget-pkgs/tree/master/manifests/s/Streamlink/Streamlink
 
 .. _Installing Chocolatey packages: https://chocolatey.org
 
