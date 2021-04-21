@@ -1,61 +1,52 @@
 import re
 
+from streamlink.compat import urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils.url import update_scheme
+from streamlink.plugin.api.utils import itertags
+from streamlink.stream import HTTPStream
 
 
 class Euronews(Plugin):
-    _url_re = re.compile(r'(?P<scheme>https?)://(?P<subdomain>\w+)\.?euronews.com/(?P<path>live|.*)')
-    _re_vod = re.compile(r'<meta\s+property="og:video"\s+content="(http.*?)"\s*/>')
-    _live_api_url = "http://{0}.euronews.com/api/watchlive.json"
-    _live_schema = validate.Schema({
-        u"url": validate.url()
-    })
-    _stream_api_schema = validate.Schema({
-        u'status': u'ok',
-        u'primary': validate.url(),
-        validate.optional(u'backup'): validate.url()
-    })
+    _url_re = re.compile(r'https?://(?:\w+\.)*euronews\.com/')
 
     @classmethod
     def can_handle_url(cls, url):
         return cls._url_re.match(url)
 
     def _get_vod_stream(self):
-        """
-        Find the VOD video url
-        :return: video url
-        """
-        res = self.session.http.get(self.url)
-        video_urls = self._re_vod.findall(res.text)
-        if len(video_urls):
-            return dict(vod=HTTPStream(self.session, video_urls[0]))
+        def find_video_url(content):
+            for elem in itertags(content, "meta"):
+                if elem.attributes.get("property") == "og:video":
+                    return elem.attributes.get("content")
 
-    def _get_live_streams(self, match):
-        """
-        Get the live stream in a particular language
-        :param match:
-        :return:
-        """
-        live_url = self._live_api_url.format(match.get("subdomain"))
-        live_res = self.session.http.json(self.session.http.get(live_url), schema=self._live_schema)
+        video_url = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(find_video_url),
+            validate.any(None, validate.url())
+        ))
 
-        api_url = update_scheme("{0}:///".format(match.get("scheme")), live_res["url"])
-        api_res = self.session.http.json(self.session.http.get(api_url), schema=self._stream_api_schema)
+        if video_url is not None:
+            return dict(vod=HTTPStream(self.session, video_url))
 
-        return HLSStream.parse_variant_playlist(self.session, api_res["primary"])
+    def _get_live_streams(self):
+        def find_video_id(content):
+            for elem in itertags(content, "div"):
+                if elem.attributes.get("id") == "pfpPlayer" and elem.attributes.get("data-google-src") is not None:
+                    return elem.attributes.get("data-video-id")
+
+        video_id = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(find_video_id),
+            validate.any(None, str)
+        ))
+
+        if video_id is not None:
+            return self.session.streams("https://www.youtube.com/watch?v={0}".format(video_id))
 
     def _get_streams(self):
-        """
-        Find the streams for euronews
-        :return:
-        """
-        match = self._url_re.match(self.url).groupdict()
+        parsed = urlparse(self.url)
 
-        if match.get("path") == "live":
-            return self._get_live_streams(match)
+        if parsed.path == "/live":
+            return self._get_live_streams()
         else:
             return self._get_vod_stream()
 
