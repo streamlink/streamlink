@@ -96,11 +96,8 @@ def create_output(plugin):
                          "executable with --player.")
 
         if args.player_fifo:
-            pipename = "streamlinkpipe-{0}".format(os.getpid())
-            log.info("Creating pipe {0}".format(pipename))
-
             try:
-                namedpipe = NamedPipe(pipename)
+                namedpipe = NamedPipe()
             except OSError as err:
                 console.exit("Failed to create pipe: {0}", err)
         elif args.player_http:
