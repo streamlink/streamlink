@@ -1,10 +1,77 @@
+import abc
+import logging
 import os
+import random
 import tempfile
+import threading
+from pathlib import Path
 
 from streamlink.compat import is_win32
 
 if is_win32:
     from ctypes import windll, cast, c_ulong, c_void_p, byref
+
+
+log = logging.getLogger(__name__)
+
+_lock = threading.Lock()
+_id = 0
+
+
+class NamedPipeBase(abc.ABC):
+    path: Path
+
+    def __init__(self):
+        global _id
+        with _lock:
+            _id += 1
+            self.name = f"streamlinkpipe-{os.getpid()}-{_id}-{random.randint(0, 9999)}"
+        log.info(f"Creating pipe {self.name}")
+        self._create()
+
+    @abc.abstractmethod
+    def _create(self) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def open(self) -> None:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def write(self, data) -> int:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def close(self) -> None:
+        raise NotImplementedError
+
+
+class NamedPipePosix(NamedPipeBase):
+    mode = "wb"
+    permissions = 0o660
+    fifo = None
+
+    def _create(self):
+        self.path = Path(tempfile.gettempdir(), self.name)
+        os.mkfifo(self.path, self.permissions)
+
+    def open(self):
+        self.fifo = open(self.path, self.mode)
+
+    def write(self, data):
+        return self.fifo.write(data)
+
+    def close(self):
+        if self.fifo:
+            self.fifo.close()
+            self.fifo = None
+        if self.path.is_fifo():
+            os.unlink(self.path)
+
+
+class NamedPipeWindows(NamedPipeBase):
+    bufsize = 8192
+    pipe = None
 
     PIPE_ACCESS_OUTBOUND = 0x00000002
     PIPE_TYPE_BYTE = 0x00000000
@@ -13,57 +80,45 @@ if is_win32:
     PIPE_UNLIMITED_INSTANCES = 255
     INVALID_HANDLE_VALUE = -1
 
+    @staticmethod
+    def _get_last_error():
+        error_code = windll.kernel32.GetLastError()
+        raise OSError(f"Named pipe error code 0x{error_code:08X}")
 
-class NamedPipe:
-    def __init__(self, name):
-        self.fifo = None
-        self.pipe = None
+    def _create(self):
+        self.path = Path("\\\\.\\pipe", self.name)
+        self.pipe = windll.kernel32.CreateNamedPipeW(
+            str(self.path),
+            self.PIPE_ACCESS_OUTBOUND,
+            self.PIPE_TYPE_BYTE | self.PIPE_READMODE_BYTE | self.PIPE_WAIT,
+            self.PIPE_UNLIMITED_INSTANCES,
+            self.bufsize,
+            self.bufsize,
+            0,
+            None
+        )
+        if self.pipe == self.INVALID_HANDLE_VALUE:
+            self._get_last_error()
 
-        if is_win32:
-            self.path = os.path.join("\\\\.\\pipe", name)
-            self.pipe = self._create_named_pipe(self.path)
-        else:
-            self.path = os.path.join(tempfile.gettempdir(), name)
-            self._create_fifo(self.path)
-
-    def _create_fifo(self, name):
-        os.mkfifo(name, 0o660)
-
-    def _create_named_pipe(self, path):
-        bufsize = 8192
-
-        create_named_pipe = windll.kernel32.CreateNamedPipeW
-
-        pipe = create_named_pipe(path, PIPE_ACCESS_OUTBOUND,
-                                 PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
-                                 PIPE_UNLIMITED_INSTANCES,
-                                 bufsize, bufsize,
-                                 0, None)
-
-        if pipe == INVALID_HANDLE_VALUE:
-            error_code = windll.kernel32.GetLastError()
-            raise OSError("Error code 0x{0:08X}".format(error_code))
-
-        return pipe
-
-    def open(self, mode):
-        if not self.pipe:
-            self.fifo = open(self.path, mode)
+    def open(self):
+        windll.kernel32.ConnectNamedPipe(self.pipe, None)
 
     def write(self, data):
-        if self.pipe:
-            windll.kernel32.ConnectNamedPipe(self.pipe, None)
-            written = c_ulong(0)
-            windll.kernel32.WriteFile(self.pipe, cast(data, c_void_p),
-                                      len(data), byref(written),
-                                      None)
-            return written
-        else:
-            return self.fifo.write(data)
+        written = c_ulong(0)
+        windll.kernel32.WriteFile(
+            self.pipe,
+            cast(data, c_void_p),
+            len(data),
+            byref(written),
+            None
+        )
+        return written.value
 
     def close(self):
-        if self.pipe:
+        if self.pipe is not None:
             windll.kernel32.DisconnectNamedPipe(self.pipe)
-        else:
-            self.fifo.close()
-            os.unlink(self.path)
+            windll.kernel32.CloseHandle(self.pipe)
+            self.pipe = None
+
+
+NamedPipe = NamedPipePosix if not is_win32 else NamedPipeWindows

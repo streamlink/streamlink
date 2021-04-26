@@ -270,7 +270,7 @@ class PlayerOutput(Output):
             raise OSError("Process exited prematurely")
 
         if self.namedpipe:
-            self.namedpipe.open("wb")
+            self.namedpipe.open()
         elif self.http:
             self.http.open()
 
