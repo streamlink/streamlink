@@ -197,7 +197,7 @@ class NicoLive(Plugin):
             on_error=on_error)
         self.ws_worker_thread = threading.Thread(
             target=self._ws.run_forever,
-            args=proxy_options)
+            kwargs=proxy_options)
         self.ws_worker_thread.daemon = True
         self.ws_worker_thread.start()
 
