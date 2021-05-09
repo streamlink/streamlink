@@ -95,7 +95,7 @@ class M3U8Parser:
 
         bandwidth = streaminf.get("BANDWIDTH")
         if bandwidth:
-            bandwidth = round(float(bandwidth), 1 - int(math.log10(float(bandwidth))))
+            bandwidth = round(int(bandwidth), 1 - int(math.log10(int(bandwidth))))
 
         resolution = streaminf.get("RESOLUTION")
         if resolution:
