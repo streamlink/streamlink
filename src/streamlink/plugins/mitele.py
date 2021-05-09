@@ -78,6 +78,7 @@ class Mitele(Plugin):
                                                                     self.token_errors.get(tokens["code"], "unknown error")))
             return
 
+        list_urls = []
         for stream in pdata["dls"]:
             if stream["drm"]:
                 log.warning("Stream may be protected by DRM")
@@ -87,8 +88,14 @@ class Mitele(Plugin):
                 cdn_token = tokens.get(stream["lid"], {}).get("cdn", "")
                 qsd = parse_qsd(cdn_token)
                 if sformat == "hls":
-                    for stream in HLSStream.parse_variant_playlist(self.session, update_qsd(stream["stream"], qsd)).items():
-                        yield stream
+                    list_urls.append(update_qsd(stream["stream"], qsd))
+
+        if not list_urls:
+            return
+
+        for url in list(set(list_urls)):
+            for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items():
+                yield s
 
 
 __plugin__ = Mitele
