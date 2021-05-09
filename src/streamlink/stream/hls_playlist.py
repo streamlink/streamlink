@@ -1,4 +1,5 @@
 import logging
+import math
 import re
 from binascii import unhexlify
 from collections import namedtuple
@@ -95,7 +96,7 @@ class M3U8Parser(object):
 
         bandwidth = streaminf.get("BANDWIDTH")
         if bandwidth:
-            bandwidth = float(bandwidth)
+            bandwidth = round(int(bandwidth), 1 - int(math.log10(int(bandwidth))))
 
         resolution = streaminf.get("RESOLUTION")
         if resolution:
