@@ -28,7 +28,7 @@ class BBCiPlayer(Plugin):
     """, re.VERBOSE)
     mediator_re = re.compile(
         r'window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});', re.DOTALL)
-    state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*});')
+    state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});</script>')
     account_locals_re = re.compile(r'window.bbcAccount.locals\s*=\s*({.*?});')
     hash = base64.b64decode(b"N2RmZjc2NzFkMGM2OTdmZWRiMWQ5MDVkOWExMjE3MTk5MzhiOTJiZg==")
     api_url = "https://open.live.bbc.co.uk/mediaselector/6/select/version/2.0/mediaset/" \
