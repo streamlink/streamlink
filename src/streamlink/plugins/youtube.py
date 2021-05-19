@@ -286,7 +286,7 @@ class YouTube(Plugin):
         info_parsed = None
         for _params in (_params_1, _params_2, _params_3):
             count += 1
-            params = {"video_id": video_id}
+            params = {"video_id": video_id, "html5": "1"}
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)
