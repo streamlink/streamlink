@@ -1,5 +1,52 @@
 # Changelog
 
+## streamlink 2.1.2 (2021-05-20)
+
+Patch release:
+
+- Fixed: youtube 404 errors ([#3732](https://github.com/streamlink/streamlink/pull/3732)), consent dialog ([#3672](https://github.com/streamlink/streamlink/pull/3672)) and added short URLs ([#3677](https://github.com/streamlink/streamlink/pull/3677))
+- Fixed: picarto plugin ([#3661](https://github.com/streamlink/streamlink/pull/3661))
+- Fixed: euronews plugin ([#3698](https://github.com/streamlink/streamlink/pull/3698))
+- Fixed: bbciplayer plugin ([#3725](https://github.com/streamlink/streamlink/pull/3725))
+- Fixed: missing removed-plugins-file in `setup.py build` ([#3653](https://github.com/streamlink/streamlink/pull/3653))
+- Changed: HLS streams to use rounded bandwidth names ([#3721](https://github.com/streamlink/streamlink/pull/3721))
+- Removed: plugin for hitbox.tv / smashcast.tv ([#3686](https://github.com/streamlink/streamlink/pull/3686)), tvplayer.com ([#3673](https://github.com/streamlink/streamlink/pull/3673))
+
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      build: include .removed file in build
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (3):
+      plugins.tvplayer: plugin removal
+      plugins.picarto: rewrite/fix (#3661)
+      plugins.bbciplayer: fix/update state_re regex
+
+Kagamia <amethyst50504724@msn.com> (1):
+      plugins.nicolive: fix proxy arguments (#3710)
+
+Yavuz Kömeçoğlu <komecoglu.yavuz@gmail.com> (1):
+      plugins.youtube: add html5=1 parameter (#3732)
+
+back-to <backto@protonmail.ch> (3):
+      plugins.youtube: fix consent dialog (#3672)
+      plugins.mitele: use '_{bitrate}' and remove duplicates
+      stream.hls_playlist: round BANDWIDTH and parse as int (#3721)
+
+bastimeyer <mail@bastimeyer.de> (7):
+      plugins.youtube: add short video URLs
+      plugins.hitbox: remove plugin
+      chore: remove square brackets from issue titles
+      plugins.euronews: rewrite and fix live streams
+      utils.named_pipe: rewrite named pipes
+      docs: fix winget package link
+      ci.github: add python 3.10-dev to test runners
+
+bururaku <rakuburu@gmail.com> (1):
+      plugins.abematv: Fixed download problem again. (#3658)
+```
+
+
 ## streamlink 2.1.1 (2021-03-25)
 
 Patch release:
