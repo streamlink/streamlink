@@ -1,5 +1,40 @@
 # Changelog
 
+## streamlink 1.27.4.0 (2021-05-21)
+
+Release highlights:
+
+- Added: skylinewebcams plugin
+- Fixed: youtube 404 errors ([#3732](https://github.com/streamlink/streamlink/pull/3732))
+- Fixed: euronews plugin ([#3698](https://github.com/streamlink/streamlink/pull/3698))
+- Fixed: bbciplayer plugin ([#3725](https://github.com/streamlink/streamlink/pull/3725))
+- Fixed: missing removed-plugins-file in `setup.py build` ([#3653](https://github.com/streamlink/streamlink/pull/3653))
+- Changed: HLS streams to use rounded bandwidth names ([#3721](https://github.com/streamlink/streamlink/pull/3721))
+
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (7):
+      plugins.euronews: rewrite and fix live streams (#3698)
+      plugins.nicolive: fix proxy arguments (streamlink#3710) 
+      plugins.skylinewebcams: add new plugin
+      plugins.mediaklikk: improve _url_re
+      plugins.mitele: use '_{bitrate}' and remove duplicates (#3722)
+      prepare 1.27.4.0
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (1):
+      plugins.bbciplayer: fix/update state_re regex
+
+Kagamia <amethyst50504724@msn.com> (1):
+      plugins.nicolive: fix proxy arguments (#3710)
+
+Yavuz Kömeçoğlu <komecoglu.yavuz@gmail.com> (1):
+      plugins.youtube: add html5=1 parameter (#3732)
+
+back-to <backto@protonmail.ch> (1):
+      stream.hls_playlist: round BANDWIDTH and parse as int (#3721)
+```
+
+
 ## streamlink 1.27.3.0 (2021-04-19)
 
 Release highlights:
