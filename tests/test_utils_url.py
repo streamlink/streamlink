@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from urllib.parse import quote
 
 from streamlink.utils.url import update_qsd, update_scheme, url_concat, url_equal
 
@@ -43,3 +44,16 @@ def test_update_qsd():
     assert update_qsd("http://test.se?&two=", {"one": ''}, keep_blank_values=False) == "http://test.se?one=", \
         "should set one blank"
     assert update_qsd("http://test.se?one=", {"two": 2}) == "http://test.se?one=&two=2"
+
+    assert update_qsd("http://test.se?foo=%3F", {"bar": "!"}) == "http://test.se?foo=%3F&bar=%21", \
+        "urlencode - encoded URL"
+    assert update_qsd("http://test.se?foo=?", {"bar": "!"}) == "http://test.se?foo=%3F&bar=%21", \
+        "urlencode - fix URL"
+    assert update_qsd("http://test.se?foo=?", {"bar": "!"}, quote_via=lambda s, *_: s) == "http://test.se?foo=?&bar=!", \
+        "urlencode - dummy quote method"
+    assert update_qsd("http://test.se", {"foo": "/ "}) == "http://test.se?foo=%2F+", \
+        "urlencode - default quote_plus"
+    assert update_qsd("http://test.se", {"foo": "/ "}, safe="/", quote_via=quote) == "http://test.se?foo=/%20", \
+        "urlencode - regular quote with reserved slash"
+    assert update_qsd("http://test.se", {"foo": "/ "}, safe="", quote_via=quote) == "http://test.se?foo=%2F%20", \
+        "urlencode - regular quote without reserved slash"
