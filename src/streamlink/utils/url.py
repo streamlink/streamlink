@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from streamlink.compat import parse_qsl, urlencode, urljoin, urlparse, urlunparse
+from streamlink.compat import is_py3, parse_qsl, quote_plus, urlencode, urljoin, urlparse, urlunparse
 
 
 def update_scheme(current, target):
@@ -65,7 +65,7 @@ def url_concat(base, *parts, **kwargs):
     return base
 
 
-def update_qsd(url, qsd=None, remove=None, keep_blank_values=True):
+def update_qsd(url, qsd=None, remove=None, keep_blank_values=True, safe="", quote_via=quote_plus):
     """
     Update or remove keys from a query string in a URL
 
@@ -73,7 +73,9 @@ def update_qsd(url, qsd=None, remove=None, keep_blank_values=True):
     :param qsd: dict of keys to update, a None value leaves it unchanged
     :param remove: list of keys to remove, or "*" to remove all
                    note: updated keys are never removed, even if unchanged
-    :param keep_blank_values: if params with blank values should be kept or not
+    :param keep_blank_values: whether params with blank values should be kept or not
+    :param safe: string of reserved encoding characters, passed to the quote_via function
+    :param quote_via: function which encodes query string keys and values. Default: urllib.parse.quote_plus
     :return: updated URL
     """
     qsd = qsd or {}
@@ -101,4 +103,15 @@ def update_qsd(url, qsd=None, remove=None, keep_blank_values=True):
         if not value and not keep_blank_values and key not in qsd:
             del current_qsd[key]
 
-    return parsed._replace(query=urlencode(current_qsd)).geturl()
+    if is_py3:
+        query = urlencode(query=current_qsd, safe=safe, quote_via=quote_via)
+    else:
+        def dict2query(d):
+            query = []
+            for key in d.keys():
+                query.append("{0}={1}".format(key, d[key]))
+            return "&".join(query)
+
+        query = quote_via(dict2query(current_qsd), safe="=&" + safe)
+
+    return parsed._replace(query=query).geturl()
