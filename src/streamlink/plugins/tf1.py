@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 
 class TF1(Plugin):
     url_re = re.compile(r"https?://(?:www\.)?(?:tf1\.fr/([\w-]+)/direct|(lci).fr/direct)/?")
-    api_url = "https://player.tf1.fr/mediainfocombo/{}?context=MYTF1&pver=4001000"
+    api_url = "https://mediainfo.tf1.fr/mediainfocombo/{}?context=MYTF1&pver=4001000"
 
     def api_call(self, channel, useragent=useragents.CHROME):
         url = self.api_url.format("L_" + channel.upper())
@@ -49,10 +49,11 @@ class TF1(Plugin):
                             headers={"User-Agent": useragents.CHROME}
                         ).items():
                             yield s
-                    if sformat == "hls":
+                    elif sformat == "hls":
                         for s in HLSStream.parse_variant_playlist(
                             self.session,
-                            url
+                            url,
+                            headers={"User-Agent": useragents.IPHONE},
                         ).items():
                             yield s
                 except PluginError as e:
