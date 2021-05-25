@@ -187,3 +187,7 @@ man_pages = [
 
 # If true, show URL addresses after external links.
 #man_show_urls = False
+
+# If true, make a section directory on build man page.
+# Always set this to false to fix inconsistencies between recent sphinx releases
+man_make_section_directory = False
