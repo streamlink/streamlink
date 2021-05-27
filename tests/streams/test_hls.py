@@ -115,6 +115,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
     def get_session(self, options=None, *args, **kwargs):
         session = super(TestHLSStreamEncrypted, self).get_session(options)
         session.set_option("hls-live-edge", 3)
+        session.set_option("http-headers", {"X-FOO": "BAR"})
 
         return session
 
@@ -140,8 +141,10 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
         self.assertEqual(data, expected, "Decrypts the AES-128 identity stream")
         self.assertTrue(self.called(key), "Downloads encryption key")
+        self.assertEqual(self.get_mock(key).last_request._request.headers.get("X-FOO"), "BAR")
         self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 1]), "Skips first segment")
         self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 1]), "Downloads all remaining segments")
+        self.assertEqual(self.get_mock(segments[1]).last_request._request.headers.get("X-FOO"), "BAR")
 
     def test_hls_encrypted_aes128_key_uri_override(self):
         aesKey, aesIv, key = self.gen_key(uri="http://real-mocked/{namespace}/encryption.key?foo=bar")
@@ -159,6 +162,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         self.assertEqual(data, expected, "Decrypts stream from custom key")
         self.assertFalse(self.called(key_invalid), "Skips encryption key")
         self.assertTrue(self.called(key), "Downloads custom encryption key")
+        self.assertEqual(self.get_mock(key).last_request._request.headers.get("X-FOO"), "BAR")
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
