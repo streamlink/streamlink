@@ -6,7 +6,7 @@ import logging
 import random
 
 from streamlink.buffers import Buffer
-from streamlink.compat import bytes, str, urlparse
+from streamlink.compat import bytes, range, str, urlparse
 from streamlink.exceptions import StreamError
 from streamlink.packages.flashmedia import FLV, FLVError
 from streamlink.packages.flashmedia.tag import ScriptData

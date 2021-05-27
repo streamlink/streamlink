@@ -2,7 +2,7 @@ import logging
 import random
 import re
 
-from streamlink.compat import parse_qsl, urlparse
+from streamlink.compat import parse_qsl, range, urlparse
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream

@@ -7,6 +7,7 @@ from threading import Event, Thread
 import requests_mock
 
 from streamlink import Streamlink
+from streamlink.compat import range
 from streamlink.stream.hls import HLSStream, HLSStreamWriter as _HLSStreamWriter
 
 

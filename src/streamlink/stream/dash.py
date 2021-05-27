@@ -8,7 +8,7 @@ from collections import defaultdict
 import requests
 
 from streamlink import PluginError, StreamError
-from streamlink.compat import urlparse, urlunparse
+from streamlink.compat import range, urlparse, urlunparse
 from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, sleeper, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.http import normalize_key, valid_args

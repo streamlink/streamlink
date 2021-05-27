@@ -12,7 +12,7 @@ from itertools import count, repeat
 
 from isodate import Duration, parse_datetime, parse_duration
 
-from streamlink.compat import izip, urljoin, urlparse, urlsplit, urlunparse, urlunsplit
+from streamlink.compat import izip, range as xrange, urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
 if hasattr(datetime, "timezone"):
     utc = datetime.timezone.utc
@@ -646,7 +646,7 @@ class SegmentTimeline(MPDNode):
             if t == 0 and tsegment.t is not None:
                 t = tsegment.t
             # check the start time from MPD
-            for repeated_i in range(tsegment.r + 1):
+            for repeated_i in xrange(tsegment.r + 1):
                 yield self.TimelineSegment(t, tsegment.d)
                 t += tsegment.d
 

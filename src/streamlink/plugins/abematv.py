@@ -12,6 +12,7 @@ from Crypto.Cipher import AES
 from requests import Response
 from requests.adapters import BaseAdapter
 
+from streamlink.compat import range
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import useragents, validate

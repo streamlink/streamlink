@@ -4,6 +4,7 @@ import logging
 import random
 import re
 
+from streamlink.compat import range
 from streamlink.plugin import Plugin
 from streamlink.stream import HLSStream
 

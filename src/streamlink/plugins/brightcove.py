@@ -4,7 +4,7 @@ import re
 from io import BytesIO
 
 from streamlink import PluginError
-from streamlink.compat import parse_qsl, urlparse
+from streamlink.compat import parse_qsl, range, urlparse
 from streamlink.packages.flashmedia import AMFMessage, AMFPacket
 from streamlink.packages.flashmedia.types import AMF3ObjectBase
 from streamlink.plugin import Plugin

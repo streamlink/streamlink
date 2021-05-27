@@ -4,6 +4,7 @@ import logging
 import random
 import re
 
+from streamlink.compat import range
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags

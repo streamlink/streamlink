@@ -6,7 +6,7 @@ import random
 import re
 import time
 
-from streamlink.compat import html_unescape, urlparse
+from streamlink.compat import html_unescape, range, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags

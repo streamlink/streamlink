@@ -2,7 +2,7 @@ import logging
 import re
 import time
 
-from streamlink.compat import urlparse, urlunparse
+from streamlink.compat import range, urlparse, urlunparse
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
