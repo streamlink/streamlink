@@ -133,7 +133,7 @@ def build_parser():
         add_help=False,
         usage="%(prog)s [OPTIONS] <URL> [STREAM]",
         description=dedent("""
-        Streamlink is command-line utility that extracts streams from various
+        Streamlink is a command-line utility that extracts streams from various
         services and pipes them into a video player of choice.
         """),
         epilog=dedent("""
