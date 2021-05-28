@@ -6,6 +6,7 @@ from unittest.mock import Mock, call, patch
 import streamlink_cli.main
 from streamlink.plugin.plugin import Plugin
 from streamlink.session import Streamlink
+from streamlink_cli.compat import is_win32
 from streamlink_cli.main import (
     check_file_output,
     create_output,
@@ -13,7 +14,6 @@ from streamlink_cli.main import (
     handle_stream,
     handle_url,
     log_current_arguments,
-    log_current_versions,
     resolve_stream_name
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -264,36 +264,49 @@ class TestCLIMain(unittest.TestCase):
         console.exit.assert_called_with("Cannot use record options with other file output options.")
 
 
-@patch("streamlink_cli.main.log")
-@patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"])
-@patch("streamlink_cli.main.setup_plugins", Mock())
-@patch("streamlink_cli.main.setup_streamlink", Mock())
-@patch("streamlink.session.Streamlink.load_builtin_plugins", Mock())
-class TestCLIMainDebugLogging(unittest.TestCase):
-    def subject(self, argv):
+class _TestCLIMainLogging(unittest.TestCase):
+    @classmethod
+    def subject(cls, argv):
         session = Streamlink()
         session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
-        with patch("streamlink_cli.main.streamlink", session), patch("sys.argv") as mock_argv:
+        def _log_current_arguments(*args, **kwargs):
+            log_current_arguments(*args, **kwargs)
+            raise SystemExit
+
+        with patch("streamlink_cli.main.streamlink", session), \
+             patch("streamlink_cli.main.log_current_arguments", side_effect=_log_current_arguments), \
+             patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"]), \
+             patch("streamlink_cli.main.setup_streamlink"), \
+             patch("streamlink_cli.main.setup_plugins"), \
+             patch("streamlink_cli.main.setup_http_session"), \
+             patch("streamlink.session.Streamlink.load_builtin_plugins"), \
+             patch("sys.argv") as mock_argv:
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
             try:
                 streamlink_cli.main.main()
             except SystemExit:
                 pass
 
-    @patch("streamlink_cli.main.log_current_versions")
+    def tearDown(self):
+        streamlink_cli.main.logger.root.handlers.clear()
+
+
+class TestCLIMainLogging(_TestCLIMainLogging):
+    @unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
+    @patch("streamlink_cli.main.log")
+    @patch("streamlink_cli.main.os.geteuid", Mock(return_value=0))
+    def test_log_root_warning(self, mock_log):
+        self.subject(["streamlink"])
+        self.assertEqual(mock_log.info.mock_calls, [call("streamlink is running as root! Be careful!")])
+
+    @patch("streamlink_cli.main.log")
     @patch("streamlink_cli.main.streamlink_version", "streamlink")
     @patch("streamlink_cli.main.requests.__version__", "requests")
     @patch("streamlink_cli.main.socks_version", "socks")
     @patch("streamlink_cli.main.websocket_version", "websocket")
     @patch("platform.python_version", Mock(return_value="python"))
-    def test_log_current_versions(self, mock_log_current_versions, mock_log):
-        def _log_current_versions():
-            log_current_versions()
-            raise SystemExit
-
-        mock_log_current_versions.side_effect = _log_current_versions
-
+    def test_log_current_versions(self, mock_log):
         self.subject(["streamlink", "--loglevel", "info"])
         self.assertEqual(mock_log.debug.mock_calls, [], "Doesn't log anything if not debug logging")
 
@@ -301,7 +314,7 @@ class TestCLIMainDebugLogging(unittest.TestCase):
              patch("platform.platform", Mock(return_value="linux")):
             self.subject(["streamlink", "--loglevel", "debug"])
             self.assertEqual(
-                mock_log.debug.mock_calls,
+                mock_log.debug.mock_calls[:4],
                 [
                     call("OS:         linux"),
                     call("Python:     python"),
@@ -309,13 +322,13 @@ class TestCLIMainDebugLogging(unittest.TestCase):
                     call("Requests(requests), Socks(socks), Websocket(websocket)")
                 ]
             )
-            mock_log.debug.mock_calls.clear()
+            mock_log.debug.reset_mock()
 
         with patch("sys.platform", "darwin"), \
              patch("platform.mac_ver", Mock(return_value=["0.0.0"])):
             self.subject(["streamlink", "--loglevel", "debug"])
             self.assertEqual(
-                mock_log.debug.mock_calls,
+                mock_log.debug.mock_calls[:4],
                 [
                     call("OS:         macOS 0.0.0"),
                     call("Python:     python"),
@@ -323,14 +336,14 @@ class TestCLIMainDebugLogging(unittest.TestCase):
                     call("Requests(requests), Socks(socks), Websocket(websocket)")
                 ]
             )
-            mock_log.debug.mock_calls.clear()
+            mock_log.debug.reset_mock()
 
         with patch("sys.platform", "win32"), \
              patch("platform.system", Mock(return_value="Windows")), \
              patch("platform.release", Mock(return_value="0.0.0")):
             self.subject(["streamlink", "--loglevel", "debug"])
             self.assertEqual(
-                mock_log.debug.mock_calls,
+                mock_log.debug.mock_calls[:4],
                 [
                     call("OS:         Windows 0.0.0"),
                     call("Python:     python"),
@@ -338,17 +351,10 @@ class TestCLIMainDebugLogging(unittest.TestCase):
                     call("Requests(requests), Socks(socks), Websocket(websocket)")
                 ]
             )
-            mock_log.debug.mock_calls.clear()
+            mock_log.debug.reset_mock()
 
-    @patch("streamlink_cli.main.log_current_arguments")
-    @patch("streamlink_cli.main.log_current_versions", Mock())
-    def test_log_current_arguments(self, mock_log_current_arguments, mock_log):
-        def _log_current_arguments(*args, **kwargs):
-            log_current_arguments(*args, **kwargs)
-            raise SystemExit
-
-        mock_log_current_arguments.side_effect = _log_current_arguments
-
+    @patch("streamlink_cli.main.log")
+    def test_log_current_arguments(self, mock_log):
         self.subject([
             "streamlink",
             "--loglevel", "info"
@@ -365,7 +371,7 @@ class TestCLIMainDebugLogging(unittest.TestCase):
             "best,worst"
         ])
         self.assertEqual(
-            mock_log.debug.mock_calls,
+            mock_log.debug.mock_calls[-7:],
             [
                 call("Arguments:"),
                 call(" url=website.tld/channel"),
