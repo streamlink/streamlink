@@ -1,7 +1,12 @@
-import os.path
+import datetime
+import os
+import sys
 import tempfile
 import unittest
+from pathlib import Path, PosixPath, WindowsPath
 from unittest.mock import Mock, call, patch
+
+import freezegun
 
 import streamlink_cli.main
 from streamlink.plugin.plugin import Plugin
@@ -277,6 +282,7 @@ class _TestCLIMainLogging(unittest.TestCase):
         with patch("streamlink_cli.main.streamlink", session), \
              patch("streamlink_cli.main.log_current_arguments", side_effect=_log_current_arguments), \
              patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"]), \
+             patch("streamlink_cli.main.setup_signals"), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
              patch("streamlink_cli.main.setup_http_session"), \
@@ -290,6 +296,21 @@ class _TestCLIMainLogging(unittest.TestCase):
 
     def tearDown(self):
         streamlink_cli.main.logger.root.handlers.clear()
+
+    # python >=3.7.2: https://bugs.python.org/issue35046
+    _write_calls = (
+        ([call("[cli][info] foo\n")]
+         if sys.version_info >= (3, 7, 2)
+         else [call("[cli][info] foo"), call("\n")])
+        + [call("bar\n")]
+    )
+
+    def write_file_and_assert(self, mock_mkdir: Mock, mock_write: Mock, mock_stdout: Mock):
+        streamlink_cli.main.log.info("foo")
+        streamlink_cli.main.console.msg("bar")
+        self.assertEqual(mock_mkdir.mock_calls, [call(parents=True, exist_ok=True)])
+        self.assertEqual(mock_write.mock_calls, self._write_calls)
+        self.assertFalse(mock_stdout.write.called)
 
 
 class TestCLIMainLogging(_TestCLIMainLogging):
@@ -381,4 +402,116 @@ class TestCLIMainLogging(_TestCLIMainLogging):
                 call(" --testplugin-bool=True"),
                 call(" --testplugin-password=********")
             ]
+        )
+
+
+class TestCLIMainLoggingLogfile(_TestCLIMainLogging):
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    def test_logfile_no_logfile(self, mock_open, mock_stdout):
+        self.subject(["streamlink"])
+        streamlink_cli.main.log.info("foo")
+        streamlink_cli.main.console.msg("bar")
+        self.assertEqual(streamlink_cli.main.console.output, sys.stdout)
+        self.assertFalse(mock_open.called)
+        self.assertEqual(mock_stdout.write.mock_calls, self._write_calls)
+
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    def test_logfile_loglevel_none(self, mock_open, mock_stdout):
+        self.subject(["streamlink", "--loglevel", "none", "--logfile", "foo"])
+        streamlink_cli.main.log.info("foo")
+        streamlink_cli.main.console.msg("bar")
+        self.assertEqual(streamlink_cli.main.console.output, sys.stdout)
+        self.assertFalse(mock_open.called)
+        self.assertEqual(mock_stdout.write.mock_calls, [call("bar\n")])
+
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    def test_logfile_path_relative(self, mock_open, mock_stdout):
+        path = Path("foo").resolve()
+        self.subject(["streamlink", "--logfile", "foo"])
+        self.write_file_and_assert(
+            mock_mkdir=path.mkdir,
+            mock_write=mock_open(str(path), "a").write,
+            mock_stdout=mock_stdout
+        )
+
+
+@unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
+class TestCLIMainLoggingLogfilePosix(_TestCLIMainLogging):
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    def test_logfile_path_absolute(self, mock_open, mock_stdout):
+        self.subject(["streamlink", "--logfile", "/foo/bar"])
+        self.write_file_and_assert(
+            mock_mkdir=PosixPath("/foo").mkdir,
+            mock_write=mock_open("/foo/bar", "a").write,
+            mock_stdout=mock_stdout
+        )
+
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    def test_logfile_path_expanduser(self, mock_open, mock_stdout):
+        with patch.dict(os.environ, {"HOME": "/foo"}):
+            self.subject(["streamlink", "--logfile", "~/bar"])
+        self.write_file_and_assert(
+            mock_mkdir=PosixPath("/foo").mkdir,
+            mock_write=mock_open("/foo/bar", "a").write,
+            mock_stdout=mock_stdout
+        )
+
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    @freezegun.freeze_time(datetime.datetime(2000, 1, 2, 3, 4, 5))
+    def test_logfile_path_auto(self, mock_open, mock_stdout):
+        with patch("streamlink_cli.constants.LOG_DIR", PosixPath("/foo")):
+            self.subject(["streamlink", "--logfile", "-"])
+        self.write_file_and_assert(
+            mock_mkdir=PosixPath("/foo").mkdir,
+            mock_write=mock_open("/foo/2000-01-02_03-04-05.log", "a").write,
+            mock_stdout=mock_stdout
+        )
+
+
+@unittest.skipIf(not is_win32, "test only applicable on Windows")
+class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    def test_logfile_path_absolute(self, mock_open, mock_stdout):
+        self.subject(["streamlink", "--logfile", "C:\\foo\\bar"])
+        self.write_file_and_assert(
+            mock_mkdir=WindowsPath("C:\\foo").mkdir,
+            mock_write=mock_open("C:\\foo\\bar", "a").write,
+            mock_stdout=mock_stdout
+        )
+
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    def test_logfile_path_expanduser(self, mock_open, mock_stdout):
+        with patch.dict(os.environ, {"USERPROFILE": "C:\\foo"}):
+            self.subject(["streamlink", "--logfile", "~\\bar"])
+        self.write_file_and_assert(
+            mock_mkdir=WindowsPath("C:\\foo").mkdir,
+            mock_write=mock_open("C:\\foo\\bar", "a").write,
+            mock_stdout=mock_stdout
+        )
+
+    @patch("sys.stdout")
+    @patch("builtins.open")
+    @patch("pathlib.Path.mkdir", Mock())
+    @freezegun.freeze_time(datetime.datetime(2000, 1, 2, 3, 4, 5))
+    def test_logfile_path_auto(self, mock_open, mock_stdout):
+        with patch("streamlink_cli.constants.LOG_DIR", WindowsPath("C:\\foo")):
+            self.subject(["streamlink", "--logfile", "-"])
+        self.write_file_and_assert(
+            mock_mkdir=WindowsPath("C:\\foo").mkdir,
+            mock_write=mock_open("C:\\foo\\2000-01-02_03-04-05.log", "a").write,
+            mock_stdout=mock_stdout
         )
