@@ -60,7 +60,7 @@ class StringFormatter(logging.Formatter):
         return super().format(record)
 
 
-def basicConfig(**kwargs):
+def basicConfig(**kwargs) -> logging.StreamHandler:
     with _config_lock:
         filename = kwargs.get("filename")
         if filename:
@@ -81,6 +81,8 @@ def basicConfig(**kwargs):
         level = kwargs.get("level")
         if level is not None:
             root.setLevel(level)
+
+    return handler
 
 
 BASIC_FORMAT = "[{name}][{levelname}] {message}"
