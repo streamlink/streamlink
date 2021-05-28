@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 class Mediaklikk(Plugin):
     PLAYER_URL = "https://player.mediaklikk.hu/playernew/player.php"
 
-    _url_re = re.compile(r"https?://(?:www\.)?mediaklikk\.hu/[\w\-]+\-elo/?")
+    _url_re = re.compile(r"https?://(?:www\.)?(?:mediaklikk|m4sport)\.hu/(?:[\w\-]+\-)?elo/?")
     _id_re = re.compile(r'"streamId":"(\w+)"')
     _file_re = re.compile(r'"file":\s*"([\w\./\\=:\-\?]+)"')
 
