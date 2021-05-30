@@ -122,7 +122,8 @@ nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-rest
                         - radio.nrk.no
 ntv                     ntv.ru               Yes   No
 okru                    ok.ru                Yes   Yes
-olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
+olympicchannel          - olympicchannel.com Yes   Yes   Only non-premium content is available.
+                        - olympics.com
 oneplusone              1plus1.video         Yes   No
 onetv                   1tv.ru               Yes   No    Streams may be geo-restricted to Russia.
 openrectv               openrec.tv           Yes   Yes
