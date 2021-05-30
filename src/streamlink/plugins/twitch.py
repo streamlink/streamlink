@@ -15,6 +15,7 @@ from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker, HLSStreamWriter
 from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.utils.times import hours_minutes_seconds
+from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
 
@@ -346,47 +347,89 @@ class TwitchAPI:
         ))
 
     def clips(self, clipname):
-        query = """{{
-            clip(slug: "{clipname}") {{
-                broadcaster {{
-                    displayName
-                }}
-                title
-                game {{
-                    name
-                }}
-                videoQualities {{
-                    quality
-                    sourceURL
-                }}
-            }}
-        }}""".format(clipname=clipname)
+        queries = [
+            {
+                "operationName": "VideoAccessToken_Clip",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11"
+                    }
+                },
+                "variables": {"slug": clipname}
+            },
+            {
+                "operationName": "ClipsView",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f"
+                    }
+                },
+                "variables": {"slug": clipname}
+            },
+            {
+                "operationName": "ClipsTitle",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4"
+                    }
+                },
+                "variables": {"slug": clipname}
+            }
+        ]
 
-        return self.call_gql({"query": query}, schema=validate.Schema(
-            {"data": {
-                "clip": validate.any(None, validate.all({
-                    "broadcaster": validate.all({"displayName": validate.text}, validate.get("displayName")),
-                    "title": validate.text,
-                    "game": validate.all({"name": validate.text}, validate.get("name")),
-                    "videoQualities": [validate.all({
-                        "quality": validate.all(
-                            validate.text,
-                            validate.transform(lambda q: "{0}p".format(q))
-                        ),
-                        "sourceURL": validate.url()
-                    }, validate.union((
-                        validate.get("quality"),
-                        validate.get("sourceURL")
-                    )))]
-                }, validate.union((
-                    validate.get("broadcaster"),
-                    validate.get("title"),
-                    validate.get("game"),
-                    validate.get("videoQualities")
-                ))))
-            }},
-            validate.get("data"),
-            validate.get("clip")
+        return self.call_gql(queries, schema=validate.Schema(
+            [
+                validate.all(
+                    {"data": {
+                        "clip": validate.all({
+                            "playbackAccessToken": validate.all({
+                                "__typename": "PlaybackAccessToken",
+                                "signature": str,
+                                "value": str
+                            }, validate.union((
+                                validate.get("signature"),
+                                validate.get("value")
+                            ))),
+                            "videoQualities": [validate.all({
+                                "frameRate": validate.any(int, float),
+                                "quality": str,
+                                "sourceURL": validate.url()
+                            }, validate.union((
+                                validate.transform(lambda q: f"{q['quality']}p{int(q['frameRate'])}"),
+                                validate.get("sourceURL")
+                            )))]
+                        }, validate.union((
+                            validate.get("playbackAccessToken"),
+                            validate.get("videoQualities")
+                        )))
+                    }},
+                    validate.get("data"),
+                    validate.get("clip")
+                ),
+                validate.all(
+                    {"data": {
+                        "clip": validate.all({
+                            "broadcaster": validate.all({"displayName": str}, validate.get("displayName")),
+                            "game": validate.all({"name": str}, validate.get("name"))
+                        }, validate.union((
+                            validate.get("broadcaster"),
+                            validate.get("game")
+                        )))
+                    }},
+                    validate.get("data"),
+                    validate.get("clip")
+                ),
+                validate.all(
+                    {"data": {
+                        "clip": validate.all({"title": str}, validate.get("title"))
+                    }},
+                    validate.get("data"),
+                    validate.get("clip")
+                )
+            ]
         ))
 
     def stream_metadata(self, channel):
@@ -662,12 +705,12 @@ class Twitch(Plugin):
 
     def _get_clips(self):
         try:
-            (self.author, self.title, self.category, streams) = self.api.clips(self.clip_name)
+            (((sig, token), streams), (self.author, self.category), self.title) = self.api.clips(self.clip_name)
         except (PluginError, TypeError):
             return
 
         for quality, stream in streams:
-            yield quality, HTTPStream(self.session, stream)
+            yield quality, HTTPStream(self.session, update_qsd(stream, {"sig": sig, "token": token}))
 
     def _get_streams(self):
         if self.video_id:
