@@ -1,24 +1,38 @@
+import re
 from collections import OrderedDict
 from urllib.parse import parse_qsl, quote_plus, urlencode, urljoin, urlparse, urlunparse
 
 
-def update_scheme(current, target):
+_re_uri_implicit_scheme = re.compile(r"""^[a-z0-9][a-z0-9.+-]*://""", re.IGNORECASE)
+
+
+def update_scheme(current: str, target: str) -> str:
     """
-    Take the scheme from the current URL and applies it to the
-    target URL if the target URL startswith // or is missing a scheme
+    Take the scheme from the current URL and apply it to the
+    target URL if the target URL starts with // or is missing a scheme
     :param current: current URL
     :param target: target URL
     :return: target URL with the current URLs scheme
     """
     target_p = urlparse(target)
+
+    if (
+        # target URLs with implicit scheme and netloc including a port: ("http://", "foo.bar:1234") -> "http://foo.bar:1234"
+        # urllib.parse.urlparse has incorrect behavior in py<3.9, so we'll have to use a regex here
+        # py>=3.9: urlparse("127.0.0.1:1234") == ParseResult(scheme='127.0.0.1', netloc='', path='1234', ...)
+        # py<3.9 : urlparse("127.0.0.1:1234") == ParseResult(scheme='', netloc='', path='127.0.0.1:1234', ...)
+        not _re_uri_implicit_scheme.search(target) and not target.startswith("//")
+        # target URLs without scheme and netloc: ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
+        or not target_p.scheme and not target_p.netloc
+    ):
+        return f"{urlparse(current).scheme}://{urlunparse(target_p)}"
+
+    # target URLs without scheme but with netloc: ("http://", "//foo.bar/foo") -> "http://foo.bar/foo"
     if not target_p.scheme and target_p.netloc:
-        return "{0}:{1}".format(urlparse(current).scheme,
-                                urlunparse(target_p))
-    elif not target_p.scheme and not target_p.netloc:
-        return "{0}://{1}".format(urlparse(current).scheme,
-                                  urlunparse(target_p))
-    else:
-        return target
+        return f"{urlparse(current).scheme}:{urlunparse(target_p)}"
+
+    # target URLs with scheme
+    return target
 
 
 def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
