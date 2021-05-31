@@ -9,6 +9,9 @@ def test_update_scheme():
     assert update_scheme("http://other.com/bar", "//example.com/foo") == "http://example.com/foo", "should become http"
     assert update_scheme("https://other.com/bar", "http://example.com/foo") == "http://example.com/foo", "should remain http"
     assert update_scheme("https://other.com/bar", "example.com/foo") == "https://example.com/foo", "should become https"
+    assert update_scheme("http://", "127.0.0.1:1234/foo") == "http://127.0.0.1:1234/foo", "implicit scheme with IPv4+port"
+    assert update_scheme("http://", "foo.bar:1234/foo") == "http://foo.bar:1234/foo", "implicit scheme with hostname+port"
+    assert update_scheme("http://", "foo.1+2-bar://baz") == "foo.1+2-bar://baz", "correctly parses all kinds of schemes"
 
 
 def test_url_equal():
