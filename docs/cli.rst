@@ -177,7 +177,8 @@ Streamlink will attempt to load standalone plugins from these directories:
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
+Unix-like (POSIX) - ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
+                  - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
 Windows           - ``%APPDATA%\streamlink\plugins``
 ================= ====================================================
 
