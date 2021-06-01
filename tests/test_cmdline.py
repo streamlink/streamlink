@@ -12,7 +12,7 @@ class CommandLineTestCase(unittest.TestCase):
     Test that when invoked for the command line arguments are parsed as expected
     """
 
-    @patch('streamlink_cli.main.CONFIG_FILES', ["/dev/null"])
+    @patch('streamlink_cli.main.CONFIG_FILES', [])
     @patch('streamlink_cli.main.setup_streamlink')
     @patch('streamlink_cli.output.sleep')
     @patch('streamlink_cli.output.subprocess.call')

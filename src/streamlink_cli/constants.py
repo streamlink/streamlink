@@ -1,6 +1,7 @@
 import os
 import tempfile
 from pathlib import Path
+from typing import List
 
 from streamlink_cli.compat import is_darwin, is_win32
 
@@ -22,22 +23,33 @@ SUPPORTED_PLAYERS = {
     "potplayer": ["potplayer", "potplayermini64.exe", "potplayermini.exe"]
 }
 
+CONFIG_FILES: List[Path]
+PLUGIN_DIRS: List[Path]
+LOG_DIR: Path
+
 if is_win32:
-    APPDATA = os.environ["APPDATA"]
-    CONFIG_FILES = [os.path.join(APPDATA, "streamlink", "streamlinkrc")]
-    PLUGINS_DIR = os.path.join(APPDATA, "streamlink", "plugins")
+    APPDATA = Path(os.environ.get("APPDATA") or Path.home() / "AppData")
+    CONFIG_FILES = [
+        APPDATA / "streamlink" / "streamlinkrc"
+    ]
+    PLUGIN_DIRS = [
+        APPDATA / "streamlink" / "plugins"
+    ]
     LOG_DIR = Path(tempfile.gettempdir()) / "streamlink" / "logs"
 else:
-    XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME", "~/.config")
+    XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
+    XDG_STATE_HOME = Path(os.environ.get("XDG_STATE_HOME", "~/.local/state")).expanduser()
     CONFIG_FILES = [
-        os.path.expanduser(XDG_CONFIG_HOME + "/streamlink/config"),
-        os.path.expanduser("~/.streamlinkrc")
+        XDG_CONFIG_HOME / "streamlink" / "config",
+        Path.home() / ".streamlinkrc"
     ]
-    PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/streamlink/plugins")
+    PLUGIN_DIRS = [
+        XDG_CONFIG_HOME / "streamlink" / "plugins"
+    ]
     if is_darwin:
         LOG_DIR = Path.home() / "Library" / "logs" / "streamlink"
     else:
-        LOG_DIR = Path(os.environ.get("XDG_STATE_HOME", "~/.local/state")).expanduser() / "streamlink" / "logs"
+        LOG_DIR = XDG_STATE_HOME / "streamlink" / "logs"
 
 STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
@@ -45,5 +57,5 @@ STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 __all__ = [
     "PLAYER_ARGS_INPUT_DEFAULT", "PLAYER_ARGS_INPUT_FALLBACK",
     "DEFAULT_STREAM_METADATA", "SUPPORTED_PLAYERS",
-    "CONFIG_FILES", "PLUGINS_DIR", "LOG_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
+    "CONFIG_FILES", "PLUGIN_DIRS", "LOG_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
 ]

@@ -14,6 +14,7 @@ from gettext import gettext
 from itertools import chain
 from pathlib import Path
 from time import sleep
+from typing import List
 
 import requests
 from socks import __version__ as socks_version
@@ -29,7 +30,7 @@ from streamlink.utils import LazyFormatter, NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
-from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGINS_DIR, STREAM_SYNONYMS
+from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
 
@@ -615,27 +616,23 @@ def print_plugins():
         console.msg("Loaded plugins: {0}", pluginlist_formatted)
 
 
-def load_plugins(dirs):
+def load_plugins(dirs: List[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
-
-    dirs = [os.path.expanduser(d) for d in dirs]
-
     for directory in dirs:
-        if os.path.isdir(directory):
-            streamlink.load_plugins(directory)
-        else:
-            log.warning("Plugin path {0} does not exist or is not "
-                        "a directory!".format(directory))
+        if directory.is_dir():
+            streamlink.load_plugins(str(directory))
+        elif showwarning:
+            log.warning(f"Plugin path {directory} does not exist or is not a directory!")
 
 
-def setup_args(parser, config_files=[], ignore_unknown=False):
+def setup_args(parser: argparse.ArgumentParser, config_files: List[Path] = None, ignore_unknown: bool = False):
     """Parses arguments."""
     global args
     arglist = sys.argv[1:]
 
     # Load arguments from config files
-    for config_file in filter(os.path.isfile, config_files):
-        arglist.insert(0, "@" + config_file)
+    for config_file in filter(lambda path: path.is_file(), config_files or []):
+        arglist.insert(0, f"@{config_file}")
 
     args, unknown = parser.parse_known_args(arglist)
     if unknown and not ignore_unknown:
@@ -656,14 +653,14 @@ def setup_config_args(parser, ignore_unknown=False):
     if streamlink and args.url:
         with ignored(NoPluginError):
             plugin = streamlink.resolve_url(args.url)
-            config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
+            config_files += [path.with_name(f"{path.name}.{plugin.module}") for path in CONFIG_FILES]
 
     if args.config:
         # We want the config specified last to get highest priority
-        config_files += list(reversed(args.config))
+        config_files += map(lambda path: Path(path).expanduser(), reversed(args.config))
     else:
         # Only load first available default config
-        for config_file in filter(os.path.isfile, CONFIG_FILES):
+        for config_file in filter(lambda path: path.is_file(), CONFIG_FILES):
             config_files.append(config_file)
             break
 
@@ -714,11 +711,10 @@ def setup_http_session():
 
 def setup_plugins(extra_plugin_dir=None):
     """Loads any additional plugins."""
-    if os.path.isdir(PLUGINS_DIR):
-        load_plugins([PLUGINS_DIR])
+    load_plugins(PLUGIN_DIRS, showwarning=False)
 
     if extra_plugin_dir:
-        load_plugins(extra_plugin_dir)
+        load_plugins([Path(path).expanduser() for path in extra_plugin_dir])
 
 
 def setup_streamlink():

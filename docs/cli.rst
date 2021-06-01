@@ -90,22 +90,19 @@ is capable of reading options from a configuration file instead.
 Streamlink will look for config files in different locations depending on
 your platform:
 
+.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config
-                  - ~/.streamlinkrc
-Windows           %APPDATA%\\streamlink\\streamlinkrc
+Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+                  - ``${HOME}/.streamlinkrc``
+Windows           - ``%APPDATA%\streamlink\streamlinkrc``
 ================= ====================================================
 
 You can also specify the location yourself using the :option:`--config` option.
 
-.. note::
-
-  - `$XDG_CONFIG_HOME` is ``~/.config`` if it has not been overridden
-  - `%APPDATA%` is usually ``<your user directory>\AppData``
-
-.. note::
+.. warning::
 
   On Windows, there is a default config created by the installer, but on any
   other platform you must create the file yourself.
@@ -156,12 +153,14 @@ with ``.<plugin name>`` attached to the end.
 Examples
 ^^^^^^^^
 
+.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config\ **.twitch**
-                  - ~/.streamlinkrc\ **.ustreamtv**
-Windows           %APPDATA%\\streamlink\\streamlinkrc\ **.youtube**
+Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
+                  - ``${HOME}/.streamlinkrc.pluginname``
+Windows           - ``%APPDATA%\streamlink\streamlinkrc.pluginname``
 ================= ====================================================
 
 Have a look at the :ref:`list of plugins <plugin_matrix:Plugins>`, or
@@ -173,11 +172,13 @@ Sideloading plugins
 
 Streamlink will attempt to load standalone plugins from these directories:
 
+.. rst-class:: table-custom-layout table-custom-layout-platform-locations
+
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) $XDG_CONFIG_HOME/streamlink/plugins
-Windows           %APPDATA%\\streamlink\\plugins
+Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
+Windows           - ``%APPDATA%\streamlink\plugins``
 ================= ====================================================
 
 .. note::
