@@ -281,7 +281,7 @@ class _TestCLIMainLogging(unittest.TestCase):
 
         with patch("streamlink_cli.main.streamlink", session), \
              patch("streamlink_cli.main.log_current_arguments", side_effect=_log_current_arguments), \
-             patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"]), \
+             patch("streamlink_cli.main.CONFIG_FILES", []), \
              patch("streamlink_cli.main.setup_signals"), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \

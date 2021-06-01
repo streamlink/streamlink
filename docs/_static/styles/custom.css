@@ -190,6 +190,21 @@ table.table-custom-layout tbody tr td:first-of-type {
   vertical-align: top;
 }
 
+table.table-custom-layout.table-custom-layout-platform-locations th:first-of-type {
+  width: 7rem;
+}
+table.table-custom-layout.table-custom-layout-platform-locations tbody>tr>td:last-of-type {
+  overflow-x: auto;
+}
+table.table-custom-layout.table-custom-layout-platform-locations ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+table.table-custom-layout.table-custom-layout-platform-locations code {
+  white-space: pre;
+}
+
 /*
   Content
 */
