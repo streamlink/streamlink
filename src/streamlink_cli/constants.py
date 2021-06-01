@@ -38,12 +38,14 @@ if is_win32:
     LOG_DIR = Path(tempfile.gettempdir()) / "streamlink" / "logs"
 else:
     XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
+    XDG_DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", "~/.local/share")).expanduser()
     XDG_STATE_HOME = Path(os.environ.get("XDG_STATE_HOME", "~/.local/state")).expanduser()
     CONFIG_FILES = [
         XDG_CONFIG_HOME / "streamlink" / "config",
         Path.home() / ".streamlinkrc"
     ]
     PLUGIN_DIRS = [
+        XDG_DATA_HOME / "streamlink" / "plugins",
         XDG_CONFIG_HOME / "streamlink" / "plugins"
     ]
     if is_darwin:
