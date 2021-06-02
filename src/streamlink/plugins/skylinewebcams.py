@@ -23,6 +23,7 @@ class SkylineWebcams(Plugin):
         m = self._source_re.search(res.text)
         if m and ".m3u8" in m.group(1):
             url = urljoin(self._HD_AUTH_BASE, m.group(1))
+            url = url.replace("livee.", "live.")
             log.debug(url)
             streams = HLSStream.parse_variant_playlist(self.session, url)
             if not streams:
