@@ -928,7 +928,7 @@ def setup_plugin_options(session, plugin):
                                           console.ask(prompt + ": "))
 
 
-def check_root():
+def log_root_warning():
     if hasattr(os, "getuid"):
         if os.geteuid() == 0:
             log.info("streamlink is running as root! Be careful!")
@@ -1050,7 +1050,8 @@ def main():
     logger.root.setLevel(log_level)
 
     setup_http_session()
-    check_root()
+
+    log_root_warning()
     log_current_versions()
     log_current_arguments(streamlink, parser)
 
