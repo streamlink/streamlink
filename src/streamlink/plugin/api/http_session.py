@@ -29,12 +29,10 @@ def _parse_keyvalue_list(val):
 
 
 class HTTPSession(Session):
-    def __init__(self, *args, **kwargs):
-        Session.__init__(self, *args, **kwargs)
+    def __init__(self):
+        super().__init__()
 
-        if self.headers['User-Agent'].startswith('python-requests'):
-            self.headers['User-Agent'] = useragents.FIREFOX
-
+        self.headers['User-Agent'] = useragents.FIREFOX
         self.timeout = 20.0
 
         self.mount('file://', FileAdapter())
@@ -123,12 +121,16 @@ class HTTPSession(Session):
 
         while True:
             try:
-                res = Session.request(self, method, url,
-                                      headers=headers,
-                                      params=params,
-                                      timeout=timeout,
-                                      proxies=proxies,
-                                      *args, **kwargs)
+                res = super().request(
+                    method,
+                    url,
+                    headers=headers,
+                    params=params,
+                    timeout=timeout,
+                    proxies=proxies,
+                    *args,
+                    **kwargs
+                )
                 if raise_for_status and res.status_code not in acceptable_status:
                     res.raise_for_status()
                 break
@@ -136,8 +138,7 @@ class HTTPSession(Session):
                 raise
             except Exception as rerr:
                 if retries >= total_retries:
-                    err = exception("Unable to open URL: {url} ({err})".format(url=url,
-                                                                               err=rerr))
+                    err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr
                     raise err
                 retries += 1
