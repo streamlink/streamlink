@@ -1,4 +1,5 @@
-import os.path
+import os
+import sys
 import tempfile
 import unittest
 
@@ -277,6 +278,7 @@ class _TestCLIMainLogging(unittest.TestCase):
         with patch("streamlink_cli.main.streamlink", session), \
              patch("streamlink_cli.main.log_current_arguments", side_effect=_log_current_arguments), \
              patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"]), \
+             patch("streamlink_cli.main.setup_signals"), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
              patch("streamlink_cli.main.setup_http_session"), \
@@ -290,6 +292,14 @@ class _TestCLIMainLogging(unittest.TestCase):
 
     def tearDown(self):
         streamlink_cli.main.logger.root.handlers *= 0
+
+    # python >=3.7.2: https://bugs.python.org/issue35046
+    _write_calls = (
+        ([call("[cli][info] foo\n")]
+         if sys.version_info >= (3, 7, 2) or sys.version_info < (3, 0, 0)
+         else [call("[cli][info] foo"), call("\n")])
+        + [call("bar\n")]
+    )
 
 
 class TestCLIMainLogging(_TestCLIMainLogging):
@@ -317,20 +327,6 @@ class TestCLIMainLogging(_TestCLIMainLogging):
                 mock_log.debug.mock_calls[:4],
                 [
                     call("OS:         linux"),
-                    call("Python:     python"),
-                    call("Streamlink: streamlink"),
-                    call("Requests(requests), Socks(socks), Websocket(websocket)")
-                ]
-            )
-            mock_log.debug.reset_mock()
-
-        with patch("sys.platform", "darwin"), \
-             patch("platform.mac_ver", Mock(return_value=["0.0.0"])):
-            self.subject(["streamlink", "--loglevel", "debug"])
-            self.assertEqual(
-                mock_log.debug.mock_calls[:4],
-                [
-                    call("OS:         macOS 0.0.0"),
                     call("Python:     python"),
                     call("Streamlink: streamlink"),
                     call("Requests(requests), Socks(socks), Websocket(websocket)")
@@ -382,3 +378,25 @@ class TestCLIMainLogging(_TestCLIMainLogging):
                 call(" --testplugin-password=********")
             ]
         )
+
+
+class TestCLIMainLoggingLogfile(_TestCLIMainLogging):
+    @patch("sys.stdout")
+    @patch("io.open")
+    def test_logfile_no_logfile(self, mock_open, mock_stdout):
+        self.subject(["streamlink"])
+        streamlink_cli.main.log.info("foo")
+        streamlink_cli.main.console.msg("bar")
+        self.assertEqual(streamlink_cli.main.console.output, sys.stdout)
+        self.assertFalse(mock_open.called)
+        self.assertEqual(mock_stdout.write.mock_calls, self._write_calls)
+
+    @patch("sys.stdout")
+    @patch("io.open")
+    def test_logfile_loglevel_none(self, mock_open, mock_stdout):
+        self.subject(["streamlink", "--loglevel", "none", "--logfile", "foo"])
+        streamlink_cli.main.log.info("foo")
+        streamlink_cli.main.console.msg("bar")
+        self.assertEqual(streamlink_cli.main.console.output, sys.stdout)
+        self.assertFalse(mock_open.called)
+        self.assertEqual(mock_stdout.write.mock_calls, [call("bar\n")])

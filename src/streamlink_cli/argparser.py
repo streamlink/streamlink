@@ -254,6 +254,30 @@ def build_parser():
         """
     )
     general.add_argument(
+        "--logfile",
+        metavar="FILE",
+        help="""
+        Append log output to FILE instead of writing to stdout/stderr.
+
+        User prompts and download progress won't be written to FILE.
+
+        A value of ``-`` will set the file name to an ISO8601-like string
+        and will choose the following default log directories.
+
+        Windows:
+
+          %%TEMP%%\\streamlink\\logs
+
+        macOS:
+
+          ${HOME}/Library/logs/streamlink
+
+        Linux/BSD:
+
+          ${XDG_STATE_HOME:-${HOME}/.local/state}/streamlink/logs
+        """
+    )
+    general.add_argument(
         "-Q", "--quiet",
         action="store_true",
         help="""

@@ -218,5 +218,7 @@ def basicConfig(**kwargs):
         if level is not None:
             root.setLevel(level)
 
+    return handler
+
 
 __all__ = ["StreamlinkLogger", "Logger", "basicConfig", "root", "levels"]

@@ -25,6 +25,7 @@ _note_re = re.compile(r"Note: (.*)(?:\n\n|\n*$)", re.DOTALL)
 _option_line_re = re.compile(r"^(?!\s{2}|Example: )(.+)$", re.MULTILINE)
 _option_re = re.compile(r"(?:^|(?<=\s))(--\w[\w-]*\w)\b")
 _prog_re = re.compile(r"%\(prog\)s")
+_percent_re = re.compile(r"%%")
 
 
 def get_parser(module_name, attr):
@@ -82,6 +83,9 @@ class ArgparseDirective(Directive):
 
         # workaround to replace %(prog)s with streamlink
         help = _prog_re.sub("streamlink", help)
+
+        # fix escaped chars for percent-formatted argparse help strings
+        help = _percent_re.sub("%", help)
 
         return indent(help)
 

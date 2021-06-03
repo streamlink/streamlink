@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import errno
 import logging
 import os
@@ -28,7 +29,7 @@ from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
-from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, PLUGINS_DIR, STREAM_SYNONYMS
+from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGINS_DIR, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
 
@@ -680,14 +681,7 @@ def setup_config_args(parser, ignore_unknown=False):
         setup_args(parser, config_files, ignore_unknown=ignore_unknown)
 
 
-def setup_console(output):
-    """Console setup."""
-    global console
-
-    # All console related operations is handled via the ConsoleOutput class
-    console = ConsoleOutput(output, streamlink)
-    console.json = args.json
-
+def setup_signals():
     # Handle SIGTERM just like SIGINT
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
@@ -1009,11 +1003,29 @@ def check_version(force=False):
         sys.exit()
 
 
-def setup_logging(stream=sys.stdout, level="info"):
-    fmt = ("[{asctime},{msecs:03.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}"
-    logger.basicConfig(stream=stream, level=level,
-                       format=fmt, style="{",
-                       datefmt="%H:%M:%S")
+def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", json=False):
+    global console
+
+    if filename == "-":
+        if not os.path.isdir(LOG_DIR):
+            os.makedirs(LOG_DIR)
+        filename = os.path.join(LOG_DIR, datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log"))
+    elif filename:
+        filename = os.path.expanduser(filename)
+        head = os.path.dirname(filename)
+        if head and not os.path.isdir(head):
+            os.makedirs(head)
+
+    streamhandler = logger.basicConfig(
+        stream=stream,
+        filename=filename,
+        level=level,
+        style="{",
+        format=("[{asctime},{msecs:03.0f}]" if level == "trace" else "") + "[{name}][{levelname}] {message}",
+        datefmt="%H:%M:%S"
+    )
+
+    console = ConsoleOutput(streamhandler.stream, json)
 
 
 def main():
@@ -1034,8 +1046,10 @@ def main():
     # We don't want log output when we are printing JSON or a command-line.
     silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
     log_level = args.loglevel if not silent_log else "none"
-    setup_logging(console_out, log_level)
-    setup_console(console_out)
+    log_file = args.logfile if log_level != "none" else None
+    setup_logger_and_console(console_out, log_file, log_level, args.json)
+
+    setup_signals()
 
     setup_streamlink()
     # load additional plugins

@@ -1,4 +1,5 @@
 import os
+import tempfile
 
 from streamlink_cli.compat import is_win32
 
@@ -25,13 +26,16 @@ if is_win32:
     APPDATA = os.environ["APPDATA"]
     CONFIG_FILES = [os.path.join(APPDATA, "streamlink", "streamlinkrc")]
     PLUGINS_DIR = os.path.join(APPDATA, "streamlink", "plugins")
+    LOG_DIR = os.path.join(tempfile.gettempdir(), "streamlink", "logs")
 else:
     XDG_CONFIG_HOME = os.environ.get("XDG_CONFIG_HOME", "~/.config")
+    XDG_STATE_HOME = os.environ.get("XDG_STATE_HOME", "~/.local/state")
     CONFIG_FILES = [
-        os.path.expanduser(XDG_CONFIG_HOME + "/streamlink/config"),
+        os.path.join(os.path.expanduser(XDG_CONFIG_HOME), "streamlink", "config"),
         os.path.expanduser("~/.streamlinkrc")
     ]
-    PLUGINS_DIR = os.path.expanduser(XDG_CONFIG_HOME + "/streamlink/plugins")
+    PLUGINS_DIR = os.path.join(os.path.expanduser(XDG_CONFIG_HOME), "streamlink", "plugins")
+    LOG_DIR = os.path.join(os.path.expanduser(XDG_STATE_HOME), "streamlink", "logs")
 
 STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
@@ -39,5 +43,5 @@ STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 __all__ = [
     "PLAYER_ARGS_INPUT_DEFAULT", "PLAYER_ARGS_INPUT_FALLBACK",
     "DEFAULT_STREAM_METADATA", "SUPPORTED_PLAYERS",
-    "CONFIG_FILES", "PLUGINS_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
+    "CONFIG_FILES", "PLUGINS_DIR", "LOG_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
 ]
