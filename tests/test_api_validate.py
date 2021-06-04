@@ -4,7 +4,7 @@ from xml.etree.ElementTree import Element
 
 from streamlink.plugin.api.validate import (
     all, any, attr, endswith, filter, get, getattr, hasattr,
-    length, map, optional, startswith, text, transform, union, url,
+    length, map, optional, startswith, text, transform, union, union_get, url,
     validate, xml_element, xml_find, xml_findall, xml_findtext
 )
 
@@ -40,6 +40,12 @@ class TestPluginAPIValidate(unittest.TestCase):
     def test_union(self):
         assert validate(union((get("foo"), get("bar"))),
                         {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
+
+    def test_union_get(self):
+        assert validate(union_get("foo", "bar"), {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
+        assert validate(union_get("foo", "bar", seq=list), {"foo": "alpha", "bar": "beta"}) == ["alpha", "beta"]
+        assert validate(union_get(("foo", "bar"), ("baz", "qux")),
+                        {"foo": {"bar": "alpha"}, "baz": {"qux": "beta"}}) == ("alpha", "beta")
 
     def test_list(self):
         assert validate([1, 0], [1, 0, 1, 1]) == [1, 0, 1, 1]
