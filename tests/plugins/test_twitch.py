@@ -18,6 +18,7 @@ class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
         'https://www.twitch.tv/twitch',
         'https://www.twitch.tv/videos/150942279',
         'https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor',
+        'https://www.twitch.tv/weplaydota/clip/FurryIntelligentDonutAMPEnergyCherry-akPRxv7Y3w58WmFq'
         'https://www.twitch.tv/twitch/video/292713971',
         'https://www.twitch.tv/twitch/v/292713971',
     ]

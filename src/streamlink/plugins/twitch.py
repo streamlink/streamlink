@@ -515,7 +515,7 @@ class Twitch(Plugin):
             (?:
                 /video/(?P<video_id>\d+)
                 |
-                /clip/(?P<clip_name>[\w]+)
+                /clip/(?P<clip_name>[\w-]+)
             )?
         )
     """, re.VERBOSE)
