@@ -377,24 +377,20 @@ class TestTwitchMetadata(unittest.TestCase):
 class TestTwitchHosting(unittest.TestCase):
     def subject(self, channel, hosts=None, disable=False):
         with requests_mock.Mocker() as mock:
-            mock.get(
-                "https://api.twitch.tv/kraken/users?login=foo",
-                json={"users": [{"_id": 1}]}
-            )
+            mock.register_uri(requests_mock.ANY, requests_mock.ANY, exc=requests_mock.exceptions.InvalidRequest)
             if hosts is None:
-                mock.get("https://tmi.twitch.tv/hosts", json={})
+                mock.post("https://gql.twitch.tv/gql", json={})
             else:
-                mock.get(
-                    "https://tmi.twitch.tv/hosts",
-                    [{"json": {
-                        "hosts": [dict(
-                            host_id=host_id,
-                            target_id=target_id,
-                            target_login=target_login,
-                            target_display_name=target_display_name
-                        )]}
-                      } for host_id, target_id, target_login, target_display_name in hosts]
-                )
+                mock.post("https://gql.twitch.tv/gql", response_list=[
+                    {"json": {"data": {"user": {
+                        "id": host[0],
+                        "hosting": None if not host[1:4] else {
+                            "id": host[1],
+                            "login": host[2],
+                            "displayName": host[3]
+                        }}}}
+                     } for host in hosts
+                ])
 
             session = Streamlink()
             Twitch.bind(session, "tests.plugins.test_twitch")
@@ -408,25 +404,25 @@ class TestTwitchHosting(unittest.TestCase):
         res, channel, channel_id, author = self.subject("foo")
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "foo", "Doesn't switch channel")
-        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(channel_id, None, "Doesn't set channel id")
         self.assertEqual(author, None, "Doesn't override author metadata")
         self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_no_host_data(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [(1, None, None, None)])
+        res, channel, channel_id, author = self.subject("foo", [(1,)])
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "foo", "Doesn't switch channel")
-        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(channel_id, None, "Doesn't set channel id")
         self.assertEqual(author, None, "Doesn't override author metadata")
         self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_host_single(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar"), (2, None, None, None)])
+        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar"), (2,)])
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "bar", "Switches channel")
-        self.assertEqual(channel_id, 2, "Switches channel id")
+        self.assertEqual(channel_id, 2, "Sets channel id")
         self.assertEqual(author, "Bar", "Overrides author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
@@ -438,7 +434,7 @@ class TestTwitchHosting(unittest.TestCase):
         res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar")], disable=True)
         self.assertTrue(res, "Stops HLS resolve procedure")
         self.assertEqual(channel, "foo", "Doesn't switch channel")
-        self.assertEqual(channel_id, 1, "Doesn't switch channel id")
+        self.assertEqual(channel_id, None, "Doesn't set channel id")
         self.assertEqual(author, None, "Doesn't override author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
@@ -451,11 +447,11 @@ class TestTwitchHosting(unittest.TestCase):
             (1, 2, "bar", "Bar"),
             (2, 3, "baz", "Baz"),
             (3, 4, "qux", "Qux"),
-            (4, None, None, None)
+            (4,)
         ])
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "qux", "Switches channel")
-        self.assertEqual(channel_id, 4, "Switches channel id")
+        self.assertEqual(channel_id, 4, "Sets channel id")
         self.assertEqual(author, "Qux", "Overrides author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
@@ -475,7 +471,7 @@ class TestTwitchHosting(unittest.TestCase):
         ])
         self.assertTrue(res, "Stops HLS resolve procedure")
         self.assertEqual(channel, "baz", "Has switched channel")
-        self.assertEqual(channel_id, 3, "Has switched channel id")
+        self.assertEqual(channel_id, 3, "Has set channel id")
         self.assertEqual(author, "Baz", "Has overridden author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
