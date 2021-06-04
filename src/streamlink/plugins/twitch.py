@@ -266,26 +266,6 @@ class TwitchAPI:
             validate.get("stream")
         ))
 
-    def hosted_channel(self, channel_id):
-        return self.call("/hosts", subdomain="tmi", include_logins=1, host=channel_id, schema=validate.Schema(
-            {
-                "hosts": [{
-                    "host_id": int,
-                    "target_id": int,
-                    "target_login": validate.text,
-                    "target_display_name": validate.text
-                }]
-            },
-            validate.get("hosts"),
-            validate.get(0),
-            validate.union((
-                validate.get("host_id"),
-                validate.get("target_id"),
-                validate.get("target_login"),
-                validate.get("target_display_name")
-            ))
-        ))
-
     # GraphQL API calls
 
     def access_token(self, is_live, channel_or_vod):
@@ -461,6 +441,38 @@ class TwitchAPI:
             validate.get("stream")
         ))
 
+    def hosted_channel(self, channel):
+        query = {
+            "operationName": "UseHosting",
+            "extensions": {
+                "persistedQuery": {
+                    "version": 1,
+                    "sha256Hash": "427f55a3daca510f726c02695a898ef3a0de4355b39af328848876052ea6b337"
+                }
+            },
+            "variables": {
+                "channelLogin": channel
+            }
+        }
+
+        return self.call_gql(query, schema=validate.Schema(
+            {"data": {"user": {
+                "hosting": {
+                    "id": validate.transform(int),
+                    "login": str,
+                    "displayName": str
+                }
+            }}},
+            validate.get("data"),
+            validate.get("user"),
+            validate.get("hosting"),
+            validate.union((
+                validate.get("id"),
+                validate.get("login"),
+                validate.get("displayName")
+            ))
+        ))
+
 
 class Twitch(Plugin):
     arguments = PluginArguments(
@@ -621,7 +633,7 @@ class Twitch(Plugin):
         hosted_chain = [self.channel]
         while True:
             try:
-                host_id, target_id, login, display_name = self.api.hosted_channel(self.channel_id)
+                target_id, login, display_name = self.api.hosted_channel(self.channel)
             except PluginError:
                 return False
 
