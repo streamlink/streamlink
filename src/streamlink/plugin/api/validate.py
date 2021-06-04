@@ -26,7 +26,7 @@ from streamlink.exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "url", "startswith", "endswith", "contains",
+    "transform", "text", "union", "union_get", "url", "startswith", "endswith", "contains",
     "xml_element", "xml_find", "xml_findall", "xml_findtext",
     "validate", "Schema", "SchemaContainer"
 ]
@@ -85,6 +85,12 @@ class union(SchemaContainer):
 
 class attr(SchemaContainer):
     """Validates an object's attributes."""
+
+
+class union_get:
+    def __init__(self, *keys, seq=tuple):
+        self.keys = keys
+        self.seq = seq
 
 
 class xml_element:
@@ -427,6 +433,11 @@ def validate_attr(schema, value):
         setattr(new, attr, validate(schema, _getattr(value, attr)))
 
     return new
+
+
+@validate.register(union_get)
+def validate_union_from(schema, value):
+    return schema.seq(validate(get(k), value) for k in schema.keys)
 
 
 @singledispatch
