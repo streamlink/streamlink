@@ -87,6 +87,7 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
         super().__init__(*args, **kwargs)
         self.write_wait = Event()
         self.write_done = Event()
+        self.write_error = None
 
     def write(self, *args, **kwargs):
         # only write once per step
@@ -97,6 +98,9 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
             # don't write again during teardown
             if not self.closed:
                 super().write(*args, **kwargs)
+        except Exception as err:
+            self.write_error = err
+            self.reader.close()
         finally:
             # notify main thread that writing has finished
             self.write_done.set()
@@ -193,8 +197,11 @@ class TestMixinStreamHLS(unittest.TestCase):
     def mock(self, method, url, *args, **kwargs):
         self.mocks[url] = self.mocker.request(method, url, *args, **kwargs)
 
+    def get_mock(self, item):
+        return self.mocks[self.url(item)]
+
     def called(self, item):
-        return self.mocks[self.url(item)].called
+        return self.get_mock(item).called
 
     def url(self, item):
         return item.url(self.id())
@@ -220,6 +227,8 @@ class TestMixinStreamHLS(unittest.TestCase):
             writer.write_wait.set()
             writer.write_done.wait(timeout)
             writer.write_done.clear()
+            if writer.write_error:
+                raise writer.write_error
 
     # make one read call on the read thread and wait until it has finished
     def await_read(self, read_all=False, timeout=5):

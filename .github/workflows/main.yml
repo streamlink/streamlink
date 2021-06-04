@@ -22,9 +22,13 @@ jobs:
       matrix:
         os: [ubuntu-20.04, windows-latest]
         python: [3.6, 3.7, 3.8, 3.9]
-#       include:
-#         - python: X.Y-dev
-#           continue: true
+        include:
+          - python: 3.10-dev
+            os: ubuntu-20.04
+            continue: true
+          - python: 3.10-dev
+            os: windows-latest
+            continue: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:

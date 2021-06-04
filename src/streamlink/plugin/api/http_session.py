@@ -1,5 +1,7 @@
 import time
 
+import requests.adapters
+import urllib3
 from requests import Session
 
 from streamlink.exceptions import PluginError
@@ -7,16 +9,39 @@ from streamlink.packages.requests_file import FileAdapter
 from streamlink.plugin.api import useragents
 from streamlink.utils import parse_json, parse_xml
 
-try:
-    from requests.packages import urllib3
 
+try:
     # We tell urllib3 to disable warnings about unverified HTTPS requests,
     # because in some plugins we have to do unverified requests intentionally.
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-except (ImportError, AttributeError):
+except AttributeError:
     pass
 
-__all__ = ["HTTPSession"]
+
+class _HTTPResponse(urllib3.response.HTTPResponse):
+    def __init__(self, *args, **kwargs):
+        # Always enforce content length validation!
+        # This fixes a bug in requests which doesn't raise errors on HTTP responses where
+        # the "Content-Length" header doesn't match the response's body length.
+        # https://github.com/psf/requests/issues/4956#issuecomment-573325001
+        #
+        # Summary:
+        # This bug is related to urllib3.response.HTTPResponse.stream() which calls urllib3.response.HTTPResponse.read() as
+        # a wrapper for http.client.HTTPResponse.read(amt=...), where no http.client.IncompleteRead exception gets raised
+        # due to "backwards compatiblity" of an old bug if a specific amount is attempted to be read on an incomplete response.
+        #
+        # urllib3.response.HTTPResponse.read() however has an additional check implemented via the enforce_content_length
+        # parameter, but it doesn't check by default and requests doesn't set the parameter for enabling it either.
+        #
+        # Fix this by overriding urllib3.response.HTTPResponse's constructor and always setting enforce_content_length to True,
+        # as there is no way to make requests set this parameter on its own.
+        kwargs.update({"enforce_content_length": True})
+        super().__init__(*args, **kwargs)
+
+
+# override all urllib3.response.HTTPResponse references in requests.adapters.HTTPAdapter.send
+urllib3.connectionpool.HTTPConnectionPool.ResponseCls = _HTTPResponse
+requests.adapters.HTTPResponse = _HTTPResponse
 
 
 def _parse_keyvalue_list(val):
@@ -29,12 +54,10 @@ def _parse_keyvalue_list(val):
 
 
 class HTTPSession(Session):
-    def __init__(self, *args, **kwargs):
-        Session.__init__(self, *args, **kwargs)
+    def __init__(self):
+        super().__init__()
 
-        if self.headers['User-Agent'].startswith('python-requests'):
-            self.headers['User-Agent'] = useragents.FIREFOX
-
+        self.headers['User-Agent'] = useragents.FIREFOX
         self.timeout = 20.0
 
         self.mount('file://', FileAdapter())
@@ -123,12 +146,16 @@ class HTTPSession(Session):
 
         while True:
             try:
-                res = Session.request(self, method, url,
-                                      headers=headers,
-                                      params=params,
-                                      timeout=timeout,
-                                      proxies=proxies,
-                                      *args, **kwargs)
+                res = super().request(
+                    method,
+                    url,
+                    headers=headers,
+                    params=params,
+                    timeout=timeout,
+                    proxies=proxies,
+                    *args,
+                    **kwargs
+                )
                 if raise_for_status and res.status_code not in acceptable_status:
                     res.raise_for_status()
                 break
@@ -136,8 +163,7 @@ class HTTPSession(Session):
                 raise
             except Exception as rerr:
                 if retries >= total_retries:
-                    err = exception("Unable to open URL: {url} ({err})".format(url=url,
-                                                                               err=rerr))
+                    err = exception(f"Unable to open URL: {url} ({rerr})")
                     err.err = rerr
                     raise err
                 retries += 1
@@ -150,3 +176,6 @@ class HTTPSession(Session):
             res = schema.validate(res.text, name="response text", exception=PluginError)
 
         return res
+
+
+__all__ = ["HTTPSession"]

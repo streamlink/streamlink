@@ -180,6 +180,11 @@ class PlayerOutput(Output):
     def _create_arguments(self):
         if self.namedpipe:
             filename = self.namedpipe.path
+            if is_win32:
+                if self.player_name == "vlc":
+                    filename = f"stream://\\{filename}"
+                elif self.player_name == "mpv":
+                    filename = f"file://{filename}"
         elif self.filename:
             filename = self.filename
         elif self.http:
@@ -265,7 +270,7 @@ class PlayerOutput(Output):
             raise OSError("Process exited prematurely")
 
         if self.namedpipe:
-            self.namedpipe.open("wb")
+            self.namedpipe.open()
         elif self.http:
             self.http.open()
 

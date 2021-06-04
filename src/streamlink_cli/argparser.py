@@ -133,7 +133,7 @@ def build_parser():
         add_help=False,
         usage="%(prog)s [OPTIONS] <URL> [STREAM]",
         description=dedent("""
-        Streamlink is command-line utility that extracts streams from various
+        Streamlink is a command-line utility that extracts streams from various
         services and pipes them into a video player of choice.
         """),
         epilog=dedent("""
@@ -251,6 +251,30 @@ def build_parser():
         Set the log message threshold.
 
         Valid levels are: none, error, warning, info, debug, trace
+        """
+    )
+    general.add_argument(
+        "--logfile",
+        metavar="FILE",
+        help="""
+        Append log output to FILE instead of writing to stdout/stderr.
+
+        User prompts and download progress won't be written to FILE.
+
+        A value of ``-`` will set the file name to an ISO8601-like string
+        and will choose the following default log directories.
+
+        Windows:
+
+          %%TEMP%%\\streamlink\\logs
+
+        macOS:
+
+          ${HOME}/Library/logs/streamlink
+
+        Linux/BSD:
+
+          ${XDG_STATE_HOME:-${HOME}/.local/state}/streamlink/logs
         """
     )
     general.add_argument(

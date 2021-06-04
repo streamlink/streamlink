@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from urllib.parse import quote
 
 from streamlink.utils.url import update_qsd, update_scheme, url_concat, url_equal
 
@@ -8,6 +9,9 @@ def test_update_scheme():
     assert update_scheme("http://other.com/bar", "//example.com/foo") == "http://example.com/foo", "should become http"
     assert update_scheme("https://other.com/bar", "http://example.com/foo") == "http://example.com/foo", "should remain http"
     assert update_scheme("https://other.com/bar", "example.com/foo") == "https://example.com/foo", "should become https"
+    assert update_scheme("http://", "127.0.0.1:1234/foo") == "http://127.0.0.1:1234/foo", "implicit scheme with IPv4+port"
+    assert update_scheme("http://", "foo.bar:1234/foo") == "http://foo.bar:1234/foo", "implicit scheme with hostname+port"
+    assert update_scheme("http://", "foo.1+2-bar://baz") == "foo.1+2-bar://baz", "correctly parses all kinds of schemes"
 
 
 def test_url_equal():
@@ -43,3 +47,16 @@ def test_update_qsd():
     assert update_qsd("http://test.se?&two=", {"one": ''}, keep_blank_values=False) == "http://test.se?one=", \
         "should set one blank"
     assert update_qsd("http://test.se?one=", {"two": 2}) == "http://test.se?one=&two=2"
+
+    assert update_qsd("http://test.se?foo=%3F", {"bar": "!"}) == "http://test.se?foo=%3F&bar=%21", \
+        "urlencode - encoded URL"
+    assert update_qsd("http://test.se?foo=?", {"bar": "!"}) == "http://test.se?foo=%3F&bar=%21", \
+        "urlencode - fix URL"
+    assert update_qsd("http://test.se?foo=?", {"bar": "!"}, quote_via=lambda s, *_: s) == "http://test.se?foo=?&bar=!", \
+        "urlencode - dummy quote method"
+    assert update_qsd("http://test.se", {"foo": "/ "}) == "http://test.se?foo=%2F+", \
+        "urlencode - default quote_plus"
+    assert update_qsd("http://test.se", {"foo": "/ "}, safe="/", quote_via=quote) == "http://test.se?foo=/%20", \
+        "urlencode - regular quote with reserved slash"
+    assert update_qsd("http://test.se", {"foo": "/ "}, safe="", quote_via=quote) == "http://test.se?foo=%2F%20", \
+        "urlencode - regular quote without reserved slash"

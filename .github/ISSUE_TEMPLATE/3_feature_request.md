@@ -1,7 +1,7 @@
 ---
 name: Feature Request
 about: Discuss adding new functionality to Streamlink
-title: "[A very brief summary of your request]"
+title: "A very brief summary of your request"
 labels: feature request
 ---
 

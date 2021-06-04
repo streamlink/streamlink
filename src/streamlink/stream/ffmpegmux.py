@@ -1,6 +1,4 @@
 import logging
-import os
-import random
 import subprocess
 import sys
 import threading
@@ -62,7 +60,7 @@ class FFMPEGMuxer(StreamIO):
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
         log.debug("Starting copy to pipe: {0}".format(pipe.path))
-        pipe.open("wb")
+        pipe.open()
         while not stream.closed:
             try:
                 data = stream.read(8192)
@@ -87,7 +85,7 @@ class FFMPEGMuxer(StreamIO):
         self.process = None
         self.streams = streams
 
-        self.pipes = [NamedPipe("ffmpeg-{0}-{1}".format(os.getpid(), random.randint(0, 1000))) for _ in self.streams]
+        self.pipes = [NamedPipe() for _ in self.streams]
         self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
                              for stream, np in
                              zip(self.streams, self.pipes)]
@@ -103,7 +101,7 @@ class FFMPEGMuxer(StreamIO):
 
         self._cmd = [self.command(session), '-nostats', '-y']
         for np in self.pipes:
-            self._cmd.extend(["-i", np.path])
+            self._cmd.extend(["-i", str(np.path)])
 
         self._cmd.extend(['-c:v', videocodec])
         self._cmd.extend(['-c:a', audiocodec])

@@ -31,8 +31,8 @@ bigo                    - live.bigo.tv       Yes   --
                         - bigoweb.co
 bilibili                live.bilibili.com    Yes   ?
 bloomberg               bloomberg.com        Yes   Yes
+booyah                  booyah.live          Yes   Yes
 brightcove              players.brig... [6]_ Yes   Yes
-btsports                sport.bt.com         Yes   Yes   Requires subscription account
 btv                     btvplus.bg           Yes   No    Streams are geo-restricted to Bulgaria.
 canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
 cbsnews                 cbsnews.com          Yes   No
@@ -87,8 +87,6 @@ goodgame                goodgame.ru          Yes   No    Only HLS streams are av
 googledrive             - docs.google.com    --    Yes
                         - drive.google.com
 gulli                   replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
-hitbox                  - hitbox.tv          Yes   Yes
-                        - smashcast.tv
 huajiao                 huajiao.com          Yes   No
 huomao                  - huomao.com         Yes   Yes
                         - huomao.tv
@@ -106,10 +104,12 @@ liveme                  liveme.com           Yes   --
 livestream              livestream.com       Yes   --
 lrt                     lrt.lt               Yes   No
 ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
-mediaklikk              mediaklikk.hu        Yes   No    Streams may be geo-restricted to Hungary.
-mildom                  mildom.com           Yes   Yes   
+mediaklikk              - mediaklikk.hu      Yes   No    Streams may be geo-restricted to Hungary.
+                        - m4sport.hu
+mediavitrina            mediavitrina.ru      Yes   No    Streams may be geo-restricted to Russia.
+mildom                  mildom.com           Yes   Yes
 mitele                  mitele.es            Yes   No    Streams may be geo-restricted to Spain.
-mjunoon                 mjunoon.tv           Yes   Yes
+mjunoon                 mjunoon.tv           Yes   Yes   Streams may be geo-restricted to Pakistan.
 mrtmk                   play.mrt.com.mk      Yes   Yes   Streams may be geo-restricted to North Macedonia.
 n13tv                   13tv.co.il           Yes   Yes   Streams may be geo-restricted to Israel.
 nbc                     nbc.com              No    Yes   Streams are geo-restricted to USA. Authentication is not supported.
@@ -124,13 +124,10 @@ nrk                     - tv.nrk.no          Yes   Yes   Streams may be geo-rest
                         - radio.nrk.no
 ntv                     ntv.ru               Yes   No
 okru                    ok.ru                Yes   Yes
-olympicchannel          olympicchannel.com   Yes   Yes   Only non-premium content is available.
+olympicchannel          - olympicchannel.com Yes   Yes   Only non-premium content is available.
+                        - olympics.com
 oneplusone              1plus1.video         Yes   No
-onetv                   - 1tv.ru             Yes   Yes   Streams may be geo-restricted to Russia. VOD only for 1tv.ru
-                        - ctc.ru
-                        - chetv.ru
-                        - ctclove.ru
-                        - domashny.ru
+onetv                   1tv.ru               Yes   No    Streams may be geo-restricted to Russia.
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
 periscope               periscope.tv         Yes   Yes   Replay/VOD is supported.
@@ -219,7 +216,6 @@ tv360                   tv360.com.tr         Yes   No
 tv999                   tv999.bg             Yes   --    Streams are geo-restricted to Bulgaria
 tvibo                   player.tvibo.com     Yes   --
 tvp                     tvpstream.vod.tvp.pl Yes   No    Streams may be geo-restricted to Poland.
-tvplayer                tvplayer.com         Yes   No    Streams may be geo-restricted to Great Britain. Premium streams are not supported.
 tvrby                   tvr.by               Yes   No    Streams may be geo-restricted to Belarus.
 tvrplus                 tvrplus.ro           Yes   No    Streams may be geo-restricted to Romania.
 tvtoya                  tvtoya.pl            Yes   --

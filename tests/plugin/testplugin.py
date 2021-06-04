@@ -2,6 +2,7 @@ from io import BytesIO
 
 from streamlink import NoStreamsError
 from streamlink.options import Options
+from streamlink.plugin import PluginArgument, PluginArguments
 from streamlink.plugins import Plugin
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
 
@@ -14,6 +15,18 @@ class TestStream(Stream):
 
 
 class TestPlugin(Plugin):
+    arguments = PluginArguments(
+        PluginArgument(
+            "bool",
+            action="store_true"
+        ),
+        PluginArgument(
+            "password",
+            metavar="PASSWORD",
+            sensitive=True
+        )
+    )
+
     options = Options({
         "a_option": "default"
     })

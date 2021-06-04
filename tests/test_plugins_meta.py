@@ -59,6 +59,13 @@ class TestPluginMeta(unittest.TestCase):
                 self.assertIn(pname, self.session.plugins.keys(),
                               "{0} is not a plugin but has tests".format(pname))
 
+    def test_plugin_not_in_removed_list(self):
+        from streamlink import plugins as streamlinkplugins
+        with open(os.path.abspath(os.path.join(streamlinkplugins.__path__[0], ".removed"))) as file:
+            plugins = {name for name in file.read().split("\n") if name and not name.startswith("#")}
+            for pname in self.session.plugins.keys():
+                self.assertNotIn(pname, plugins, f"{pname} is not in removed plugins list")
+
     def test_plugin_has_valid_global_args(self):
         from streamlink_cli.argparser import build_parser
         parser = build_parser()

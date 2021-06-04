@@ -1,128 +1,144 @@
-import json
 import logging
 import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, RTMPStream
-from streamlink.utils import parse_json
+from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
 class Picarto(Plugin):
-    CHANNEL_API_URL = "https://api.picarto.tv/v1/channel/name/{channel}"
-    VIDEO_API_URL = "https://picarto.tv/process/channel"
-    RTMP_URL = "rtmp://{server}:1935/play/"
-    RTMP_PLAYPATH = "golive+{channel}?token={token}"
-    HLS_URL = "https://{server}/hls/{channel}/index.m3u8?token={token}"
+    url_re = re.compile(r'''
+        https?://(?:www\.)?picarto\.tv/
+            (?:(?P<po>streampopout|videopopout)/)?
+            (?P<user>[^&?/]+)
+            (?:\?tab=videos&id=(?P<vod_id>\d+))?
+    ''', re.VERBOSE)
 
-    # Regex for all usable URLs
-    _url_re = re.compile(r"""
-        https?://(?:\w+\.)?picarto\.tv/(?:videopopout/)?([^&?/]+)
-    """, re.VERBOSE)
+    channel_schema = validate.Schema({
+        'channel': validate.any(None, {
+            'stream_name': str,
+            'title': str,
+            'online': bool,
+            'private': bool,
+            'categories': [{'label': str}],
+        }),
+        'getLoadBalancerUrl': {'origin': str},
+        'getMultiStreams': validate.any(None, {
+            'multistream': bool,
+            'streams': [{
+                'name': str,
+                'online': bool,
+            }],
+        }),
+    })
+    vod_schema = validate.Schema({
+        'data': {
+            'video': validate.any(None, {
+                'id': str,
+                'title': str,
+                'file_name': str,
+                'channel': {'name': str},
+            }),
+        },
+    }, validate.get('data'), validate.get('video'))
 
-    # Regex for VOD extraction
-    _vod_re = re.compile(r'''(?<=#vod-player", )(\{.*?\})''')
+    HLS_URL = 'https://{origin}.picarto.tv/stream/hls/{file_name}/index.m3u8'
 
-    data_schema = validate.Schema(
-        validate.transform(_vod_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(0),
-                validate.transform(parse_json),
-                {
-                    "vod": validate.url(),
-                }
-            )
-        )
-    )
+    author = None
+    category = None
+    title = None
 
     @classmethod
     def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
+        return cls.url_re.match(url) is not None
 
-    def _create_hls_stream(self, server, channel, token):
-        streams = HLSStream.parse_variant_playlist(self.session,
-                                                   self.HLS_URL.format(
-                                                       server=server,
-                                                       channel=channel,
-                                                       token=token),
-                                                   verify=False)
-        if len(streams) > 1:
-            log.debug("Multiple HLS streams found")
-            return streams
-        elif len(streams) == 0:
-            log.warning("No HLS streams found when expected")
-            return {}
-        else:
-            # one HLS streams, rename it to live
-            return {"live": list(streams.values())[0]}
+    def get_author(self):
+        return self.author
 
-    def _create_flash_stream(self, server, channel, token):
-        params = {
-            "rtmp": self.RTMP_URL.format(server=server),
-            "playpath": self.RTMP_PLAYPATH.format(token=token, channel=channel)
+    def get_category(self):
+        return self.category
+
+    def get_title(self):
+        return self.title
+
+    def get_live(self, username):
+        res = self.session.http.get(f'https://ptvintern.picarto.tv/api/channel/detail/{username}')
+        channel_data = self.session.http.json(res, schema=self.channel_schema)
+        log.trace(f'channel_data={channel_data!r}')
+
+        if not channel_data['channel'] or not channel_data['getMultiStreams']:
+            log.debug('Missing channel or streaming data')
+            return
+
+        if channel_data['channel']['private']:
+            log.info('This is a private stream')
+            return
+
+        if channel_data['getMultiStreams']['multistream']:
+            msg = 'Found multistream: '
+            i = 1
+            for user in channel_data['getMultiStreams']['streams']:
+                msg += user['name']
+                msg += ' (online)' if user['online'] else ' (offline)'
+                if i < len(channel_data['getMultiStreams']['streams']):
+                    msg += ', '
+                i += 1
+            log.info(msg)
+
+        if not channel_data['channel']['online']:
+            log.error('User is not online')
+            return
+
+        self.author = username
+        self.category = channel_data['channel']['categories'][0]['label']
+        self.title = channel_data['channel']['title']
+
+        return HLSStream.parse_variant_playlist(self.session,
+                                                self.HLS_URL.format(file_name=channel_data['channel']['stream_name'],
+                                                                    origin=channel_data['getLoadBalancerUrl']['origin']))
+
+    def get_vod(self, vod_id):
+        data = {
+            'query': (
+                'query ($videoId: ID!) {\n'
+                '  video(id: $videoId) {\n'
+                '    id\n'
+                '    title\n'
+                '    file_name\n'
+                '    channel {\n'
+                '      name\n'
+                '      }'
+                '  }\n'
+                '}\n'
+            ),
+            'variables': {'videoId': vod_id},
         }
-        return RTMPStream(self.session, params=params)
+        res = self.session.http.post('https://ptvintern.picarto.tv/ptvapi', json=data)
+        vod_data = self.session.http.json(res, schema=self.vod_schema)
+        log.trace(f'vod_data={vod_data!r}')
+        if not vod_data:
+            log.debug('Missing video data')
+            return
 
-    def _get_vod_stream(self, page):
-        data = self.data_schema.validate(page.text)
-
-        if data:
-            return HLSStream.parse_variant_playlist(self.session, data["vod"])
+        self.author = vod_data['channel']['name']
+        self.category = 'VOD'
+        self.title = vod_data['title']
+        return HLSStream.parse_variant_playlist(self.session,
+                                                self.HLS_URL.format(file_name=vod_data['file_name'],
+                                                                    origin='recording-eu-1'))
 
     def _get_streams(self):
-        url_channel_name = self._url_re.match(self.url).group(1)
+        m = self.url_re.match(self.url).groupdict()
 
-        # Handle VODs first, since their "channel name" is different
-        if url_channel_name.endswith((".flv", ".mkv")):
-            log.debug("Possible VOD stream...")
-            page = self.session.http.get(self.url)
-            vod_streams = self._get_vod_stream(page)
-            if vod_streams:
-                yield from vod_streams.items()
-                return
-            else:
-                log.warning("Probably a VOD stream but no VOD found?")
-
-        ci = self.session.http.get(self.CHANNEL_API_URL.format(channel=url_channel_name), raise_for_status=False)
-
-        if ci.status_code == 404:
-            log.error("The channel {0} does not exist".format(url_channel_name))
-            return
-
-        channel_api_json = json.loads(ci.text)
-
-        if not channel_api_json["online"]:
-            log.error("The channel {0} is currently offline".format(url_channel_name))
-            return
-
-        if channel_api_json["private"]:
-            log.error("The channel {0} is private, such streams are not yet supported".format(url_channel_name))
-            return
-
-        server = None
-        token = "public"
-        channel = channel_api_json["name"]
-
-        # Extract preferred edge server and available techs from the undocumented channel API
-        channel_server_res = self.session.http.post(self.VIDEO_API_URL, data={"loadbalancinginfo": channel})
-        info_json = json.loads(channel_server_res.text)
-        pref = info_json["preferedEdge"]
-        for i in info_json["edges"]:
-            if i["id"] == pref:
-                server = i["ep"]
-                break
-        log.debug("Using load balancing server {0} : {1} for channel {2}".format(pref, server, channel))
-
-        for i in info_json["techs"]:
-            if i["label"] == "HLS":
-                yield from self._create_hls_stream(server, channel, token).items()
-            elif i["label"] == "RTMP Flash":
-                stream = self._create_flash_stream(server, channel, token)
-                yield "live", stream
+        if (m['po'] == 'streampopout' or not m['po']) and m['user'] and not m['vod_id']:
+            log.debug('Type=Live')
+            return self.get_live(m['user'])
+        elif m['po'] == 'videopopout' or (m['user'] and m['vod_id']):
+            log.debug('Type=VOD')
+            vod_id = m['vod_id'] if m['vod_id'] else m['user']
+            return self.get_vod(vod_id)
 
 
 __plugin__ = Picarto

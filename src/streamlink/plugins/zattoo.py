@@ -17,7 +17,6 @@ log = logging.getLogger(__name__)
 class Zattoo(Plugin):
     API_CHANNELS = '{0}/zapi/v2/cached/channels/{1}?details=False'
     API_HELLO = '{0}/zapi/session/hello'
-    API_HELLO_V2 = '{0}/zapi/v2/session/hello'
     API_HELLO_V3 = '{0}/zapi/v3/session/hello'
     API_LOGIN = '{0}/zapi/v2/account/login'
     API_LOGIN_V3 = '{0}/zapi/v3/account/login'
@@ -26,7 +25,7 @@ class Zattoo(Plugin):
     API_WATCH_REC = '{0}/zapi/watch/recording/{1}'
     API_WATCH_VOD = '{0}/zapi/avod/videos/{1}/watch'
 
-    STREAMS_ZATTOO = ['dash', 'hls', 'hls5']
+    STREAMS_ZATTOO = ['dash', 'hls5']
 
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
@@ -113,14 +112,14 @@ class Zattoo(Plugin):
             'stream-types',
             metavar='TYPES',
             type=comma_list_filter(STREAMS_ZATTOO),
-            default=['hls'],
+            default=['dash'],
             help='''
             A comma-delimited list of stream types which should be used,
             the following types are allowed:
 
             - {0}
 
-            Default is "hls".
+            Default is "dash".
             '''.format('\n            - '.join(STREAMS_ZATTOO))
         )
     )
@@ -157,19 +156,16 @@ class Zattoo(Plugin):
         # a new session is required for the app_token
         self.session.http.cookies = cookiejar_from_dict({})
         if self.base_url == 'https://zattoo.com':
-            app_token_url = 'https://zattoo.com/client/token-2fb69f883fea03d06c68c6e5f21ddaea.json'
+            app_token_url = 'https://zattoo.com/token-46a1dfccbd4c3bdaf6182fea8f8aea3f.json'
         elif self.base_url == 'https://www.quantum-tv.com':
             app_token_url = 'https://www.quantum-tv.com/token-4d0d61d4ce0bf8d9982171f349d19f34.json'
         else:
             app_token_url = self.base_url
 
         res = self.session.http.get(app_token_url)
-        if self.base_url == 'https://www.quantum-tv.com':
+        if self.base_url == 'https://www.quantum-tv.com' or self.base_url == 'https://zattoo.com':
             app_token = self.session.http.json(res)["session_token"]
             hello_url = self.API_HELLO_V3.format(self.base_url)
-        elif self.base_url == 'https://zattoo.com':
-            app_token = self.session.http.json(res)['app_tid']
-            hello_url = self.API_HELLO_V2.format(self.base_url)
         else:
             match = self._app_token_re.search(res.text)
             app_token = match.group(1)
@@ -182,19 +178,12 @@ class Zattoo(Plugin):
             self._session_attributes.set(
                 'uuid', __uuid, expires=self.TIME_SESSION)
 
-        if self.base_url == 'https://zattoo.com':
-            params = {
-                'uuid': __uuid,
-                'app_tid': app_token,
-                'app_version': '1.0.0'
-            }
-        else:
-            params = {
-                'client_app_token': app_token,
-                'uuid': __uuid,
-            }
+        params = {
+            'client_app_token': app_token,
+            'uuid': __uuid,
+        }
 
-        if self.base_url == 'https://www.quantum-tv.com':
+        if self.base_url == 'https://www.quantum-tv.com' or self.base_url == 'https://zattoo.com':
             params['app_version'] = '3.2028.3'
         else:
             params['lang'] = 'en'
@@ -261,7 +250,7 @@ class Zattoo(Plugin):
             log.debug('Missing watch_url')
             return
 
-        zattoo_stream_types = self.get_option('stream-types') or ['hls']
+        zattoo_stream_types = self.get_option('stream-types')
         for stream_type in zattoo_stream_types:
             params_stream_type = {'stream_type': stream_type}
             params.update(params_stream_type)
@@ -285,7 +274,7 @@ class Zattoo(Plugin):
 
             data = self.session.http.json(res)
             log.debug('Found data for {0}'.format(stream_type))
-            if data['success'] and stream_type in ['hls', 'hls5']:
+            if data['success'] and stream_type == 'hls5':
                 for url in data['stream']['watch_urls']:
                     yield from HLSStream.parse_variant_playlist(self.session, url['url']).items()
             elif data['success'] and stream_type == 'dash':

@@ -4,7 +4,7 @@ from xml.etree.ElementTree import Element
 
 from streamlink.plugin.api.validate import (
     all, any, attr, endswith, filter, get, getattr, hasattr,
-    length, map, optional, startswith, text, transform, union, url,
+    length, map, optional, startswith, text, transform, union, union_get, url,
     validate, xml_element, xml_find, xml_findall, xml_findtext
 )
 
@@ -40,6 +40,12 @@ class TestPluginAPIValidate(unittest.TestCase):
     def test_union(self):
         assert validate(union((get("foo"), get("bar"))),
                         {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
+
+    def test_union_get(self):
+        assert validate(union_get("foo", "bar"), {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
+        assert validate(union_get("foo", "bar", seq=list), {"foo": "alpha", "bar": "beta"}) == ["alpha", "beta"]
+        assert validate(union_get(("foo", "bar"), ("baz", "qux")),
+                        {"foo": {"bar": "alpha"}, "baz": {"qux": "beta"}}) == ("alpha", "beta")
 
     def test_list(self):
         assert validate([1, 0], [1, 0, 1, 1]) == [1, 0, 1, 1]
@@ -84,7 +90,25 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_get(self):
         assert validate(get("key"), {"key": "value"}) == "value"
+        assert validate(get("key"), re.match(r"(?P<key>.+)", "value")) == "value"
+        assert validate(get("invalidkey"), {"key": "value"}) is None
         assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
+        assert validate(get(3, "default"), [0, 1, 2]) == "default"
+
+        with self.assertRaisesRegex(ValueError, "'NoneType' object is not subscriptable"):
+            validate(get("key"), None)
+
+        data = {"one": {"two": {"three": "value1"}},
+                ("one", "two", "three"): "value2"}
+        assert validate(get(("one", "two", "three")), data) == "value1", "Recursive lookup"
+        assert validate(get(("one", "two", "three"), strict=True), data) == "value2", "Strict tuple-key lookup"
+        assert validate(get(("one", "two", "invalidkey")), data) is None, "Default value is None"
+        assert validate(get(("one", "two", "invalidkey"), "default"), data) == "default", "Custom default value"
+
+        with self.assertRaisesRegex(ValueError, "Object \"{'two': {'three': 'value1'}}\" does not have item \"invalidkey\""):
+            validate(get(("one", "invalidkey", "three")), data)
+        with self.assertRaisesRegex(ValueError, "'NoneType' object is not subscriptable"):
+            validate(all(get("one"), get("invalidkey"), get("three")), data)
 
     def test_get_re(self):
         m = re.match(r"(\d+)p", "720p")

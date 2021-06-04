@@ -59,7 +59,8 @@ _config_schema = validate.Schema(
 )
 
 _ytdata_re = re.compile(r'ytInitialData\s*=\s*({.*?});', re.DOTALL)
-_url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
+_url_re = re.compile(r"""
+    https?://(?:\w+\.)?youtube\.com
     (?:
         (?:
             /(?:
@@ -83,7 +84,9 @@ _url_re = re.compile(r"""(?x)https?://(?:\w+\.)?youtube\.com
             /(?:c/)?[^/?]+/live/?$
         )
     )
-""")
+    |
+    https?://youtu\.be/(?P<video_id_short>[0-9A-z_-]{11})
+""", re.VERBOSE)
 
 
 class YouTube(Plugin):
@@ -222,13 +225,21 @@ class YouTube(Plugin):
         return streams
 
     def _find_video_id(self, url):
-
         m = _url_re.match(url)
-        if m.group("video_id"):
+        video_id = m.group("video_id") or m.group("video_id_short")
+        if video_id:
             log.debug("Video ID from URL")
-            return m.group("video_id")
+            return video_id
 
         res = self.session.http.get(url)
+        if urlparse(res.url).netloc == "consent.youtube.com":
+            c_data = {}
+            for _i in itertags(res.text, "input"):
+                if _i.attributes.get("type") == "hidden":
+                    c_data[_i.attributes.get("name")] = _i.attributes.get("value")
+            log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
+            res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
+
         datam = _ytdata_re.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
@@ -275,7 +286,7 @@ class YouTube(Plugin):
         info_parsed = None
         for _params in (_params_1, _params_2, _params_3):
             count += 1
-            params = {"video_id": video_id}
+            params = {"video_id": video_id, "html5": "1"}
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)

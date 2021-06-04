@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import errno
 import logging
 import os
@@ -11,6 +12,7 @@ from distutils.version import StrictVersion
 from functools import partial
 from gettext import gettext
 from itertools import chain
+from pathlib import Path
 from time import sleep
 
 import requests
@@ -27,7 +29,7 @@ from streamlink.utils import LazyFormatter, NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
-from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, PLUGINS_DIR, STREAM_SYNONYMS
+from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGINS_DIR, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
 
@@ -96,11 +98,8 @@ def create_output(plugin):
                          "executable with --player.")
 
         if args.player_fifo:
-            pipename = "streamlinkpipe-{0}".format(os.getpid())
-            log.info("Creating pipe {0}".format(pipename))
-
             try:
-                namedpipe = NamedPipe(pipename)
+                namedpipe = NamedPipe()
             except OSError as err:
                 console.exit("Failed to create pipe: {0}", err)
         elif args.player_http:
@@ -551,21 +550,7 @@ def handle_url():
     try:
         plugin = streamlink.resolve_url(args.url)
         setup_plugin_options(streamlink, plugin)
-        log.info("Found matching plugin {0} for URL {1}".format(
-                 plugin.module, args.url))
-
-        plugin_args = []
-        for parg in plugin.arguments:
-            value = plugin.get_option(parg.dest)
-            if value:
-                plugin_args.append((parg, value))
-
-        if plugin_args:
-            log.debug("Plugin specific arguments:")
-            for parg, value in plugin_args:
-                log.debug(" {0}={1} ({2})".format(parg.argument_name(plugin.module),
-                                                  value if not parg.sensitive else ("*" * 8),
-                                                  parg.dest))
+        log.info(f"Found matching plugin {plugin.module} for URL {args.url}")
 
         if args.retry_max or args.retry_streams:
             retry_streams = 1
@@ -686,13 +671,7 @@ def setup_config_args(parser, ignore_unknown=False):
         setup_args(parser, config_files, ignore_unknown=ignore_unknown)
 
 
-def setup_console(output):
-    """Console setup."""
-    global console
-
-    # All console related operations is handled via the ConsoleOutput class
-    console = ConsoleOutput(output, args.json)
-
+def setup_signals():
     # Handle SIGTERM just like SIGINT
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
@@ -933,7 +912,7 @@ def setup_plugin_options(session, plugin):
                                           console.ask(prompt + ": "))
 
 
-def check_root():
+def log_root_warning():
     if hasattr(os, "getuid"):
         if os.geteuid() == 0:
             log.info("streamlink is running as root! Be careful!")
@@ -941,22 +920,49 @@ def check_root():
 
 def log_current_versions():
     """Show current installed versions"""
-    if logger.root.isEnabledFor(logging.DEBUG):
-        # MAC OS X
-        if sys.platform == "darwin":
-            os_version = "macOS {0}".format(platform.mac_ver()[0])
-        # Windows
-        elif sys.platform.startswith("win"):
-            os_version = "{0} {1}".format(platform.system(), platform.release())
-        # linux / other
-        else:
-            os_version = platform.platform()
+    if not logger.root.isEnabledFor(logging.DEBUG):
+        return
 
-        log.debug("OS:         {0}".format(os_version))
-        log.debug("Python:     {0}".format(platform.python_version()))
-        log.debug("Streamlink: {0}".format(streamlink_version))
-        log.debug("Requests({0}), Socks({1}), Websocket({2})".format(
-            requests.__version__, socks_version, websocket_version))
+    # macOS
+    if sys.platform == "darwin":
+        os_version = f"macOS {platform.mac_ver()[0]}"
+    # Windows
+    elif sys.platform == "win32":
+        os_version = f"{platform.system()} {platform.release()}"
+    # Linux / other
+    else:
+        os_version = platform.platform()
+
+    log.debug(f"OS:         {os_version}")
+    log.debug(f"Python:     {platform.python_version()}")
+    log.debug(f"Streamlink: {streamlink_version}")
+    log.debug(f"Requests({requests.__version__}), "
+              f"Socks({socks_version}), "
+              f"Websocket({websocket_version})")
+
+
+def log_current_arguments(session, parser):
+    global args
+    if not logger.root.isEnabledFor(logging.DEBUG):
+        return
+
+    sensitive = set()
+    for pname, plugin in session.plugins.items():
+        for parg in plugin.arguments:
+            if parg.sensitive:
+                sensitive.add(parg.argument_name(pname))
+
+    log.debug("Arguments:")
+    for action in parser._actions:
+        if not hasattr(args, action.dest):
+            continue
+        value = getattr(args, action.dest)
+        if action.default != value:
+            name = next(  # pragma: no branch
+                (option for option in action.option_strings if option.startswith("--")),
+                action.option_strings[0]
+            ) if action.option_strings else action.dest
+            log.debug(f" {name}={value if name not in sensitive else '*' * 8}")
 
 
 def check_version(force=False):
@@ -988,14 +994,27 @@ def check_version(force=False):
         sys.exit()
 
 
-def setup_logging(stream=sys.stdout, level="info"):
-    logger.basicConfig(
+def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", json=False):
+    global console
+
+    if filename == "-":
+        filename = LOG_DIR / datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")
+    elif filename:
+        filename = Path(filename).expanduser().resolve()
+
+    if filename:
+        filename.parent.mkdir(parents=True, exist_ok=True)
+
+    streamhandler = logger.basicConfig(
         stream=stream,
+        filename=filename,
         level=level,
         style="{",
         format=("[{asctime}]" if level == "trace" else "") + "[{name}][{levelname}] {message}",
         datefmt="%H:%M:%S" + (".%f" if level == "trace" else "")
     )
+
+    console = ConsoleOutput(streamhandler.stream, json)
 
 
 def main():
@@ -1016,8 +1035,10 @@ def main():
     # We don't want log output when we are printing JSON or a command-line.
     silent_log = any(getattr(args, attr) for attr in QUIET_OPTIONS)
     log_level = args.loglevel if not silent_log else "none"
-    setup_logging(console_out, log_level)
-    setup_console(console_out)
+    log_file = args.logfile if log_level != "none" else None
+    setup_logger_and_console(console_out, log_file, log_level, args.json)
+
+    setup_signals()
 
     setup_streamlink()
     # load additional plugins
@@ -1032,8 +1053,10 @@ def main():
     logger.root.setLevel(log_level)
 
     setup_http_session()
-    check_root()
+
+    log_root_warning()
     log_current_versions()
+    log_current_arguments(streamlink, parser)
 
     if args.version_check or args.auto_version_check:
         with ignored(Exception):

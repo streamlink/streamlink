@@ -18,6 +18,7 @@
 
 from copy import copy as copy_obj
 from functools import singledispatch
+from typing import Any, Tuple, Union
 from urllib.parse import urlparse
 from xml.etree import ElementTree as ET
 
@@ -25,7 +26,7 @@ from streamlink.exceptions import PluginError
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
-    "transform", "text", "union", "url", "startswith", "endswith", "contains",
+    "transform", "text", "union", "union_get", "url", "startswith", "endswith", "contains",
     "xml_element", "xml_find", "xml_findall", "xml_findtext",
     "validate", "Schema", "SchemaContainer"
 ]
@@ -86,6 +87,12 @@ class attr(SchemaContainer):
     """Validates an object's attributes."""
 
 
+class union_get:
+    def __init__(self, *keys, seq=tuple):
+        self.keys = keys
+        self.seq = seq
+
+
 class xml_element:
     """A XML element."""
 
@@ -140,25 +147,36 @@ def contains(string):
     return contains_str
 
 
-def get(item, default=None):
+def get(item: Union[Any, Tuple[Any]], default: Any = None, strict: bool = False):
     """Get item from value (value[item]).
 
-    If the item is not found, return the default.
+    Unless strict is set to True, item can be a tuple of items for recursive lookups.
+
+    If the item is not found in the last object of a recursive lookup, return the default.
 
     Handles XML elements, regex matches and anything that has __getitem__.
     """
 
-    def getter(value):
-        if ET.iselement(value):
-            value = value.attrib
+    if type(item) is not tuple or strict:
+        item = (item,)
 
+    def getter(value):
+        idx = 0
         try:
-            # Use .group() if this is a regex match object
-            if _is_re_match(value):
-                return value.group(item)
-            else:
-                return value[item]
+            for key in item:
+                if ET.iselement(value):
+                    value = value.attrib
+                # Use .group() if this is a regex match object
+                elif _is_re_match(value):
+                    value = value.group(key)
+                else:
+                    value = value[key]
+                idx += 1
+            return value
         except (KeyError, IndexError):
+            # only return default value on last item in nested lookup
+            if idx < len(item) - 1:
+                raise ValueError(f"Object \"{value}\" does not have item \"{key}\"")
             return default
         except (TypeError, AttributeError) as err:
             raise ValueError(err)
@@ -415,6 +433,11 @@ def validate_attr(schema, value):
         setattr(new, attr, validate(schema, _getattr(value, attr)))
 
     return new
+
+
+@validate.register(union_get)
+def validate_union_from(schema, value):
+    return schema.seq(validate(get(k), value) for k in schema.keys)
 
 
 @singledispatch
