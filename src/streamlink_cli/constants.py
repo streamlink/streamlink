@@ -30,6 +30,7 @@ LOG_DIR: Path
 if is_win32:
     APPDATA = Path(os.environ.get("APPDATA") or Path.home() / "AppData")
     CONFIG_FILES = [
+        APPDATA / "streamlink" / "config",
         APPDATA / "streamlink" / "streamlinkrc"
     ]
     PLUGIN_DIRS = [
