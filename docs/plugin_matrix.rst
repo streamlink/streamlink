@@ -92,7 +92,6 @@ huomao                  - huomao.com         Yes   Yes
                         - huomao.tv
 huya                    huya.com             Yes   No
 idf1                    idf1.fr              Yes   Yes
-ine                     ine.com              ---   Yes
 invintus                player.invintus.com  Yes   Yes
 kugou                   fanxing.kugou.com    Yes   --
 latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
