@@ -95,7 +95,10 @@ your platform:
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+Linux, BSD        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+                  - ``${HOME}/.streamlinkrc``
+macOS             - ``${HOME}/Library/Application Support/streamlink/config``
+                  - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
                   - ``${HOME}/.streamlinkrc``
 Windows           - ``%APPDATA%\streamlink\config``
                   - ``%APPDATA%\streamlink\streamlinkrc``
@@ -159,7 +162,10 @@ Examples
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
+Linux, BSD        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
+                  - ``${HOME}/.streamlinkrc.pluginname``
+macOS             - ``${HOME}/Library/Application Support/streamlink/config.pluginname``
+                  - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
                   - ``${HOME}/.streamlinkrc.pluginname``
 Windows           - ``%APPDATA%\streamlink\config.pluginname``
                   - ``%APPDATA%\streamlink\streamlinkrc.pluginname``
@@ -179,7 +185,9 @@ Streamlink will attempt to load standalone plugins from these directories:
 ================= ====================================================
 Platform          Location
 ================= ====================================================
-Unix-like (POSIX) - ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
+Linux, BSD        - ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
+                  - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
+macOS             - ``${HOME}/Library/Application Support/streamlink/plugins``
                   - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
 Windows           - ``%APPDATA%\streamlink\plugins``
 ================= ====================================================

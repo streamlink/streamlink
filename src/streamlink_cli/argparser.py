@@ -270,7 +270,7 @@ def build_parser():
 
         macOS:
 
-          ${HOME}/Library/logs/streamlink
+          ${HOME}/Library/Logs/streamlink
 
         Linux/BSD:
 
