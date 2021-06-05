@@ -97,7 +97,8 @@ Platform          Location
 ================= ====================================================
 Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
                   - ``${HOME}/.streamlinkrc``
-Windows           - ``%APPDATA%\streamlink\streamlinkrc``
+Windows           - ``%APPDATA%\streamlink\config``
+                  - ``%APPDATA%\streamlink\streamlinkrc``
 ================= ====================================================
 
 You can also specify the location yourself using the :option:`--config` option.
@@ -160,7 +161,8 @@ Platform          Location
 ================= ====================================================
 Unix-like (POSIX) - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
                   - ``${HOME}/.streamlinkrc.pluginname``
-Windows           - ``%APPDATA%\streamlink\streamlinkrc.pluginname``
+Windows           - ``%APPDATA%\streamlink\config.pluginname``
+                  - ``%APPDATA%\streamlink\streamlinkrc.pluginname``
 ================= ====================================================
 
 Have a look at the :ref:`list of plugins <plugin_matrix:Plugins>`, or

@@ -169,7 +169,7 @@ cat > "${build_dir}/installer_tmpl.nsi" <<EOF
 
     Function EditConfig
         SetShellVarContext current
-        Exec '"\$WINDIR\notepad.exe" "\$APPDATA\streamlink\streamlinkrc"'
+        Exec '"\$WINDIR\notepad.exe" "\$APPDATA\streamlink\config"'
         SetShellVarContext all
     FunctionEnd
 
@@ -202,7 +202,7 @@ SubSection /e "Bundled tools" bundled
         SetOutPath "\$INSTDIR\rtmpdump"
         File /r "${files_dir}\rtmpdump\*.*"
         SetShellVarContext current
-        \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "rtmpdump=" "\$INSTDIR\rtmpdump\rtmpdump.exe" \$R0
+        \${ConfigWrite} "\$APPDATA\streamlink\config" "rtmpdump=" "\$INSTDIR\rtmpdump\rtmpdump.exe" \$R0
         SetShellVarContext all
         SetOutPath -
     SectionEnd
@@ -211,7 +211,7 @@ SubSection /e "Bundled tools" bundled
         SetOutPath "\$INSTDIR\ffmpeg"
         File /r "${files_dir}\ffmpeg\*.*"
         SetShellVarContext current
-        \${ConfigWrite} "\$APPDATA\streamlink\streamlinkrc" "ffmpeg-ffmpeg=" "\$INSTDIR\ffmpeg\ffmpeg.exe" \$R0
+        \${ConfigWrite} "\$APPDATA\streamlink\config" "ffmpeg-ffmpeg=" "\$INSTDIR\ffmpeg\ffmpeg.exe" \$R0
         SetShellVarContext all
         SetOutPath -
     SectionEnd
@@ -224,7 +224,7 @@ SubSectionEnd
     SetShellVarContext current # install the config file for the current user
     SetOverwrite off # config file we don't want to overwrite
     SetOutPath \$APPDATA\streamlink
-    File /r "${files_dir}\streamlinkrc"
+    File /r "${files_dir}\config"
     SetOverwrite ifnewer
     SetOutPath -
     SetShellVarContext all
@@ -281,9 +281,9 @@ StrCmp \$0 \${ffmpeg} "" +2
 [% endblock %]
 EOF
 
-# copy the streamlinkrc file to the build dir, we cannot use the Include.files property in the config file
+# copy the config file to the build dir, we cannot use the Include.files property in the config file
 # because those files will always overwrite, and for a config file we do not want to overwrite
-cp "${ROOT}/win32/streamlinkrc" "${files_dir}/streamlinkrc"
+cp "${ROOT}/win32/config" "${files_dir}/config"
 
 # make sure the license has a file extension
 cp "${ROOT}/LICENSE" "${files_dir}/LICENSE.txt"
