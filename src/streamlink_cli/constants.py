@@ -3,7 +3,7 @@ import tempfile
 from pathlib import Path
 from typing import List
 
-from streamlink_cli.compat import is_darwin, is_win32
+from streamlink_cli.compat import DeprecatedPath, is_darwin, is_win32
 
 PLAYER_ARGS_INPUT_DEFAULT = "playerinput"
 PLAYER_ARGS_INPUT_FALLBACK = "filename"
@@ -31,7 +31,7 @@ if is_win32:
     APPDATA = Path(os.environ.get("APPDATA") or Path.home() / "AppData")
     CONFIG_FILES = [
         APPDATA / "streamlink" / "config",
-        APPDATA / "streamlink" / "streamlinkrc"
+        DeprecatedPath(APPDATA / "streamlink" / "streamlinkrc")
     ]
     PLUGIN_DIRS = [
         APPDATA / "streamlink" / "plugins"
@@ -41,25 +41,25 @@ elif is_darwin:
     XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
     CONFIG_FILES = [
         Path.home() / "Library" / "Application Support" / "streamlink" / "config",
-        XDG_CONFIG_HOME / "streamlink" / "config",
-        Path.home() / ".streamlinkrc"
+        DeprecatedPath(XDG_CONFIG_HOME / "streamlink" / "config"),
+        DeprecatedPath(Path.home() / ".streamlinkrc")
     ]
     PLUGIN_DIRS = [
         Path.home() / "Library" / "Application Support" / "streamlink" / "plugins",
-        XDG_CONFIG_HOME / "streamlink" / "plugins"
+        DeprecatedPath(XDG_CONFIG_HOME / "streamlink" / "plugins")
     ]
-    LOG_DIR = Path.home() / "Library" / "Logs" / "streamlink"
+    LOG_DIR = DeprecatedPath(Path.home() / "Library" / "Logs" / "streamlink")
 else:
     XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
     XDG_DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", "~/.local/share")).expanduser()
     XDG_STATE_HOME = Path(os.environ.get("XDG_STATE_HOME", "~/.local/state")).expanduser()
     CONFIG_FILES = [
         XDG_CONFIG_HOME / "streamlink" / "config",
-        Path.home() / ".streamlinkrc"
+        DeprecatedPath(Path.home() / ".streamlinkrc")
     ]
     PLUGIN_DIRS = [
         XDG_DATA_HOME / "streamlink" / "plugins",
-        XDG_CONFIG_HOME / "streamlink" / "plugins"
+        DeprecatedPath(XDG_CONFIG_HOME / "streamlink" / "plugins")
     ]
     LOG_DIR = XDG_STATE_HOME / "streamlink" / "logs"
 
