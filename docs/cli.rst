@@ -96,11 +96,20 @@ your platform:
 Platform          Location
 ================= ====================================================
 Linux, BSD        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
+
+                  Deprecated:
+
                   - ``${HOME}/.streamlinkrc``
 macOS             - ``${HOME}/Library/Application Support/streamlink/config``
+
+                  Deprecated:
+
                   - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config``
                   - ``${HOME}/.streamlinkrc``
 Windows           - ``%APPDATA%\streamlink\config``
+
+                  Deprecated:
+
                   - ``%APPDATA%\streamlink\streamlinkrc``
 ================= ====================================================
 
@@ -163,11 +172,20 @@ Examples
 Platform          Location
 ================= ====================================================
 Linux, BSD        - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
+
+                  Deprecated:
+
                   - ``${HOME}/.streamlinkrc.pluginname``
 macOS             - ``${HOME}/Library/Application Support/streamlink/config.pluginname``
+
+                  Deprecated:
+
                   - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config.pluginname``
                   - ``${HOME}/.streamlinkrc.pluginname``
 Windows           - ``%APPDATA%\streamlink\config.pluginname``
+
+                  Deprecated:
+
                   - ``%APPDATA%\streamlink\streamlinkrc.pluginname``
 ================= ====================================================
 
@@ -186,8 +204,14 @@ Streamlink will attempt to load standalone plugins from these directories:
 Platform          Location
 ================= ====================================================
 Linux, BSD        - ``${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins``
+
+                  Deprecated:
+
                   - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
 macOS             - ``${HOME}/Library/Application Support/streamlink/plugins``
+
+                  Deprecated:
+
                   - ``${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins``
 Windows           - ``%APPDATA%\streamlink\plugins``
 ================= ====================================================

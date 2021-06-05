@@ -444,12 +444,13 @@ class Streamlink:
     def load_builtin_plugins(self):
         self.load_plugins(plugins.__path__[0])
 
-    def load_plugins(self, path):
+    def load_plugins(self, path: str) -> bool:
         """Attempt to load plugins from the path specified.
 
         :param path: full path to a directory where to look for plugins
-
+        :return: success
         """
+        success = False
         user_input_requester = self.get_option("user-input-requester")
         for loader, name, ispkg in pkgutil.iter_modules([path]):
             # set the full plugin module name
@@ -462,11 +463,14 @@ class Streamlink:
 
             if not hasattr(mod, "__plugin__") or not issubclass(mod.__plugin__, Plugin):
                 continue
+            success = True
             plugin = mod.__plugin__
             plugin.bind(self, name, user_input_requester)
             if plugin.module in self.plugins:
                 log.debug(f"Plugin {plugin.module} is being overridden by {mod.__file__}")
             self.plugins[plugin.module] = plugin
+
+        return success
 
     @property
     def version(self):

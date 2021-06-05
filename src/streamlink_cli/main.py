@@ -28,7 +28,7 @@ from streamlink.plugin import PluginOptions
 from streamlink.stream import StreamProcess
 from streamlink.utils import LazyFormatter, NamedPipe
 from streamlink_cli.argparser import build_parser
-from streamlink_cli.compat import is_win32, stdout
+from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -620,7 +620,9 @@ def load_plugins(dirs: List[Path], showwarning: bool = True):
     """Attempts to load plugins from a list of directories."""
     for directory in dirs:
         if directory.is_dir():
-            streamlink.load_plugins(str(directory))
+            success = streamlink.load_plugins(str(directory))
+            if success and type(directory) is DeprecatedPath:
+                log.info(f"Loaded plugins from deprecated path, see CLI docs for how to migrate: {directory}")
         elif showwarning:
             log.warning(f"Plugin path {directory} does not exist or is not a directory!")
 
@@ -632,6 +634,8 @@ def setup_args(parser: argparse.ArgumentParser, config_files: List[Path] = None,
 
     # Load arguments from config files
     for config_file in filter(lambda path: path.is_file(), config_files or []):
+        if type(config_file) is DeprecatedPath:
+            log.info(f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}")
         arglist.insert(0, f"@{config_file}")
 
     args, unknown = parser.parse_known_args(arglist)
