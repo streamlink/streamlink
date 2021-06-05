@@ -37,6 +37,18 @@ if is_win32:
         APPDATA / "streamlink" / "plugins"
     ]
     LOG_DIR = Path(tempfile.gettempdir()) / "streamlink" / "logs"
+elif is_darwin:
+    XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
+    CONFIG_FILES = [
+        Path.home() / "Library" / "Application Support" / "streamlink" / "config",
+        XDG_CONFIG_HOME / "streamlink" / "config",
+        Path.home() / ".streamlinkrc"
+    ]
+    PLUGIN_DIRS = [
+        Path.home() / "Library" / "Application Support" / "streamlink" / "plugins",
+        XDG_CONFIG_HOME / "streamlink" / "plugins"
+    ]
+    LOG_DIR = Path.home() / "Library" / "Logs" / "streamlink"
 else:
     XDG_CONFIG_HOME = Path(os.environ.get("XDG_CONFIG_HOME", "~/.config")).expanduser()
     XDG_DATA_HOME = Path(os.environ.get("XDG_DATA_HOME", "~/.local/share")).expanduser()
@@ -49,10 +61,7 @@ else:
         XDG_DATA_HOME / "streamlink" / "plugins",
         XDG_CONFIG_HOME / "streamlink" / "plugins"
     ]
-    if is_darwin:
-        LOG_DIR = Path.home() / "Library" / "logs" / "streamlink"
-    else:
-        LOG_DIR = XDG_STATE_HOME / "streamlink" / "logs"
+    LOG_DIR = XDG_STATE_HOME / "streamlink" / "logs"
 
 STREAM_SYNONYMS = ["best", "worst", "best-unfiltered", "worst-unfiltered"]
 STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
