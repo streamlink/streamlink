@@ -633,12 +633,9 @@ def setup_args(parser: argparse.ArgumentParser, config_files: List[Path] = None,
     arglist = sys.argv[1:]
 
     # Load arguments from config files
-    for config_file in filter(lambda path: path.is_file(), config_files or []):
-        if type(config_file) is DeprecatedPath:
-            log.info(f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}")
-        arglist.insert(0, f"@{config_file}")
+    configs = [f"@{config_file}" for config_file in config_files or []]
 
-    args, unknown = parser.parse_known_args(arglist)
+    args, unknown = parser.parse_known_args(configs + arglist)
     if unknown and not ignore_unknown:
         msg = gettext('unrecognized arguments: %s')
         parser.error(msg % ' '.join(unknown))
@@ -654,19 +651,31 @@ def setup_args(parser: argparse.ArgumentParser, config_files: List[Path] = None,
 def setup_config_args(parser, ignore_unknown=False):
     config_files = []
 
-    if streamlink and args.url:
-        with ignored(NoPluginError):
-            plugin = streamlink.resolve_url(args.url)
-            config_files += [path.with_name(f"{path.name}.{plugin.module}") for path in CONFIG_FILES]
-
     if args.config:
         # We want the config specified last to get highest priority
-        config_files += map(lambda path: Path(path).expanduser(), reversed(args.config))
+        for config_file in map(lambda path: Path(path).expanduser(), reversed(args.config)):
+            if config_file.is_file():
+                config_files.append(config_file)
     else:
         # Only load first available default config
         for config_file in filter(lambda path: path.is_file(), CONFIG_FILES):
+            if type(config_file) is DeprecatedPath:
+                log.info(f"Loaded config from deprecated path, see CLI docs for how to migrate: {config_file}")
             config_files.append(config_file)
             break
+
+    if streamlink and args.url:
+        # Only load first available plugin config
+        with ignored(NoPluginError):
+            plugin = streamlink.resolve_url(args.url)
+            for config_file in CONFIG_FILES:
+                config_file = config_file.with_name(f"{config_file.name}.{plugin.module}")
+                if not config_file.is_file():
+                    continue
+                if type(config_file) is DeprecatedPath:
+                    log.info(f"Loaded plugin config from deprecated path, see CLI docs for how to migrate: {config_file}")
+                config_files.append(config_file)
+                break
 
     if config_files:
         setup_args(parser, config_files, ignore_unknown=ignore_unknown)
