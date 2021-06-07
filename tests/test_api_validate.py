@@ -3,6 +3,8 @@ import re
 import unittest
 from xml.etree.ElementTree import Element
 
+import six
+
 from streamlink.plugin.api.validate import (
     all, any, attr, endswith, filter, get, getattr, hasattr,
     length, map, optional, startswith, text, transform, union, url,
@@ -39,8 +41,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(any(int), 4) == 4
 
     def test_union(self):
-        assert validate(union((get("foo"), get("bar"))),
-                        {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
+        assert validate(union((get("foo"), get("bar"))), {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
 
     def test_list(self):
         assert validate([1, 0], [1, 0, 1, 1]) == [1, 0, 1, 1]
@@ -55,27 +56,21 @@ class TestPluginAPIValidate(unittest.TestCase):
     def test_dict(self):
         assert validate({"key": 5}, {"key": 5}) == {"key": 5}
         assert validate({"key": int}, {"key": 5}) == {"key": 5}
-        assert validate({"n": int, "f": float},
-                        {"n": 5, "f": 3.14}) == {"n": 5, "f": 3.14}
+        assert validate({"n": int, "f": float}, {"n": 5, "f": 3.14}) == {"n": 5, "f": 3.14}
 
     def test_dict_keys(self):
-        assert validate({text: int},
-                        {"a": 1, "b": 2}) == {"a": 1, "b": 2}
-        assert validate({transform(text): transform(int)},
-                        {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
+        assert validate({text: int}, {"a": 1, "b": 2}) == {"a": 1, "b": 2}
+        assert validate({transform(text): transform(int)}, {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
 
     def test_nested_dict_keys(self):
-        assert validate({text: {text: int}},
-                        {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
+        assert validate({text: {text: int}}, {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
 
     def test_dict_optional_keys(self):
         assert validate({"a": 1, optional("b"): 2}, {"a": 1}) == {"a": 1}
-        assert validate({"a": 1, optional("b"): 2},
-                        {"a": 1, "b": 2}) == {"a": 1, "b": 2}
+        assert validate({"a": 1, optional("b"): 2}, {"a": 1, "b": 2}) == {"a": 1, "b": 2}
 
     def test_filter(self):
-        assert validate(filter(lambda i: i > 5),
-                        [10, 5, 4, 6, 7]) == [10, 6, 7]
+        assert validate(filter(lambda i: i > 5), [10, 5, 4, 6, 7]) == [10, 6, 7]
 
     def test_map(self):
         assert validate(map(lambda v: v[0]), [(1, 2), (3, 4)]) == [1, 3]
@@ -85,7 +80,34 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_get(self):
         assert validate(get("key"), {"key": "value"}) == "value"
+        assert validate(get("key"), re.match(r"(?P<key>.+)", "value")) == "value"
+        assert validate(get("invalidkey"), {"key": "value"}) is None
         assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
+        assert validate(get(3, "default"), [0, 1, 2]) == "default"
+
+        if six.PY2:
+            with six.assertRaisesRegex(self, ValueError, "'NoneType' object has no attribute '__getitem__'"):
+                validate(get("key"), None)
+        else:
+            with six.assertRaisesRegex(self, ValueError, "'NoneType' object is not subscriptable"):
+                validate(get("key"), None)
+
+        data = {"one": {"two": {"three": "value1"}}, ("one", "two", "three"): "value2"}
+        assert validate(get(("one", "two", "three")), data) == "value1", "Recursive lookup"
+        assert validate(get(("one", "two", "three"), strict=True), data) == "value2", "Strict tuple-key lookup"
+        assert validate(get(("one", "two", "invalidkey")), data) is None, "Default value is None"
+        assert validate(get(("one", "two", "invalidkey"), "default"), data) == "default", "Custom default value"
+
+        with six.assertRaisesRegex(
+            self, ValueError, "Object \"{'two': {'three': 'value1'}}\" does not have item \"invalidkey\""
+        ):
+            validate(get(("one", "invalidkey", "three")), data)
+        if six.PY2:
+            with six.assertRaisesRegex(self, ValueError, "'NoneType' object has no attribute '__getitem__'"):
+                validate(all(get("one"), get("invalidkey"), get("three")), data)
+        else:
+            with six.assertRaisesRegex(self, ValueError, "'NoneType' object is not subscriptable"):
+                validate(all(get("one"), get("invalidkey"), get("three")), data)
 
     def test_get_re(self):
         m = re.match(r"(\d+)p", "720p")
