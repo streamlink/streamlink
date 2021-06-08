@@ -2,29 +2,17 @@ import logging
 import re
 import uuid
 
-from requests.cookies import cookiejar_from_dict
-
-from streamlink import PluginError
 from streamlink.cache import Cache
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import DASHStream, HLSStream
+from streamlink.utils import parse_json
 from streamlink.utils.args import comma_list_filter
 
 log = logging.getLogger(__name__)
 
 
 class Zattoo(Plugin):
-    API_CHANNELS = '{0}/zapi/v2/cached/channels/{1}?details=False'
-    API_HELLO = '{0}/zapi/session/hello'
-    API_HELLO_V3 = '{0}/zapi/v3/session/hello'
-    API_LOGIN = '{0}/zapi/v2/account/login'
-    API_LOGIN_V3 = '{0}/zapi/v3/account/login'
-    API_SESSION = '{0}/zapi/v2/session'
-    API_WATCH = '{0}/zapi/watch'
-    API_WATCH_REC = '{0}/zapi/watch/recording/{1}'
-    API_WATCH_VOD = '{0}/zapi/avod/videos/{1}/watch'
-
     STREAMS_ZATTOO = ['dash', 'hls5', 'hls7']
 
     TIME_CONTROL = 60 * 60 * 2
@@ -62,28 +50,6 @@ class Zattoo(Plugin):
             ondemand(?:\?video=|/watch/)(?P<vod_id>[^-]+)
         )
         ''')
-
-    _app_token_re = re.compile(r"""window\.appToken\s+=\s+'([^']+)'""")
-
-    _channels_schema = validate.Schema({
-        'success': bool,
-        'channel_groups': [{
-            'channels': [
-                {
-                    'display_alias': validate.text,
-                    'cid': validate.text
-                },
-            ]
-        }]},
-        validate.get('channel_groups'),
-    )
-
-    _session_schema = validate.Schema({
-        'success': bool,
-        'session': {
-            'loggedin': bool
-        }
-    }, validate.get('session'))
 
     arguments = PluginArguments(
         PluginArgument(
@@ -152,25 +118,13 @@ class Zattoo(Plugin):
 
     def _hello(self):
         log.debug('_hello ...')
-
-        # a new session is required for the app_token
-        self.session.http.cookies = cookiejar_from_dict({})
-        if self.base_url == 'https://zattoo.com':
-            app_token_url = 'https://zattoo.com/token-46a1dfccbd4c3bdaf6182fea8f8aea3f.json'
-        elif self.base_url == 'https://www.quantum-tv.com':
-            app_token_url = 'https://www.quantum-tv.com/token-4d0d61d4ce0bf8d9982171f349d19f34.json'
-        else:
-            app_token_url = self.base_url
-
-        res = self.session.http.get(app_token_url)
-        if self.base_url in ('https://zattoo.com', 'https://www.quantum-tv.com'):
-            app_token = self.session.http.json(res)["session_token"]
-            hello_url = self.API_HELLO_V3.format(self.base_url)
-        else:
-            match = self._app_token_re.search(res.text)
-            app_token = match.group(1)
-            hello_url = self.API_HELLO.format(self.base_url)
-
+        app_token = self.session.http.get(
+            '{0}/token.json'.format(self.base_url),
+            schema=validate.Schema(validate.transform(parse_json), {
+                'success': bool,
+                'session_token': validate.text,
+            }, validate.get('session_token'))
+        )
         if self._uuid:
             __uuid = self._uuid
         else:
@@ -179,46 +133,58 @@ class Zattoo(Plugin):
                 'uuid', __uuid, expires=self.TIME_SESSION)
 
         params = {
+            'app_version': '3.2120.1',
             'client_app_token': app_token,
+            'format': 'json',
+            'lang': 'en',
             'uuid': __uuid,
         }
-
-        if self.base_url in ('https://zattoo.com', 'https://www.quantum-tv.com'):
-            params['app_version'] = '3.2028.3'
+        res = self.session.http.post(
+            '{0}/zapi/v3/session/hello'.format(self.base_url),
+            headers=self.headers,
+            data=params,
+            schema=validate.Schema(
+                validate.transform(parse_json),
+                validate.any({'active': bool}, {'success': bool})
+            )
+        )
+        if res.get('active') or res.get('success'):
+            log.debug('Hello was successful.')
         else:
-            params['lang'] = 'en'
-            params['format'] = 'json'
-
-        res = self.session.http.post(hello_url, headers=self.headers, data=params)
+            log.debug('Hello failed.')
 
     def _login(self, email, password):
-        log.debug('_login ... Attempting login as {0}'.format(email))
+        log.debug('_login ...')
+        data = self.session.http.post(
+            '{0}/zapi/v3/account/login'.format(self.base_url),
+            headers=self.headers,
+            data={
+                'login': email,
+                'password': password,
+                'remember': 'true',
+                'format': 'json',
+            },
+            acceptable_status=(200, 400),
+            schema=validate.Schema(validate.transform(parse_json), validate.any(
+                {
+                    'active': bool,
+                    'power_guide_hash': validate.text,
+                }, {
+                    'success': bool,
+                }
+            )),
+        )
 
-        params = {
-            'login': email,
-            'password': password,
-            'remember': 'true'
-        }
-
-        if self.base_url == 'https://quantum-tv.com':
-            login_url = self.API_LOGIN_V3.format(self.base_url)
+        if data.get('active'):
+            log.debug('Login was successful.')
         else:
-            login_url = self.API_LOGIN.format(self.base_url)
+            log.debug('Login failed.')
+            return
 
-        try:
-            res = self.session.http.post(login_url, headers=self.headers, data=params)
-        except Exception as e:
-            if '400 Client Error' in str(e):
-                raise PluginError(
-                    'Failed to login, check your username/password')
-            raise e
-
-        data = self.session.http.json(res)
-        self._authed = data['success']
-        log.debug('New Session Data')
+        self._authed = data['active']
         self.save_cookies(default_expires=self.TIME_SESSION)
         self._session_attributes.set('power_guide_hash',
-                                     data['session']['power_guide_hash'],
+                                     data['power_guide_hash'],
                                      expires=self.TIME_SESSION)
         self._session_attributes.set(
             'session_control', True, expires=self.TIME_CONTROL)
@@ -226,26 +192,23 @@ class Zattoo(Plugin):
     def _watch(self):
         log.debug('_watch ...')
         match = self._url_re.match(self.url)
-        if not match:
-            log.debug('_watch ... no match')
-            return
         channel = match.group('channel')
         vod_id = match.group('vod_id')
         recording_id = match.group('recording_id')
 
         params = {'https_watch_urls': True}
         if channel:
-            watch_url = self.API_WATCH.format(self.base_url)
+            watch_url = '{0}/zapi/watch'.format(self.base_url)
             params_cid = self._get_params_cid(channel)
             if not params_cid:
                 return
             params.update(params_cid)
         elif vod_id:
             log.debug('Found vod_id: {0}'.format(vod_id))
-            watch_url = self.API_WATCH_VOD.format(self.base_url, vod_id)
+            watch_url = '{0}/zapi/avod/videos/{1}/watch'.format(self.base_url, vod_id)
         elif recording_id:
             log.debug('Found recording_id: {0}'.format(recording_id))
-            watch_url = self.API_WATCH_REC.format(self.base_url, recording_id)
+            watch_url = '{0}/zapi/watch/recording/{1}'.format(self.base_url, recording_id)
         else:
             log.debug('Missing watch_url')
             return
@@ -287,19 +250,31 @@ class Zattoo(Plugin):
 
     def _get_params_cid(self, channel):
         log.debug('get channel ID for {0}'.format(channel))
-
-        channels_url = self.API_CHANNELS.format(
-            self.base_url,
-            self._session_attributes.get('power_guide_hash'))
-
         try:
-            res = self.session.http.get(channels_url, headers=self.headers)
+            res = self.session.http.get(
+                '{0}/zapi/v2/cached/channels/{1}'.format(self.base_url, self._session_attributes.get("power_guide_hash")),
+                headers=self.headers,
+                params={'details': 'False'}
+            )
         except Exception:
             log.debug('Force session reset for _get_params_cid')
             self.reset_session()
             return False
 
-        data = self.session.http.json(res, schema=self._channels_schema)
+        data = self.session.http.json(
+            res, schema=validate.Schema({
+                'success': bool,
+                'channel_groups': [{
+                    'channels': [
+                        {
+                            'display_alias': validate.text,
+                            'cid': validate.text
+                        },
+                    ]
+                }]},
+                validate.get('channel_groups'),
+            )
+        )
 
         c_list = []
         for d in data:
@@ -313,7 +288,7 @@ class Zattoo(Plugin):
             if c['display_alias'] == channel:
                 cid = c['cid']
 
-        log.debug('Available zattoo channels in this country: {0}'.format(
+        log.trace('Available zattoo channels in this country: {0}'.format(
             ', '.join(sorted(zattoo_list))))
 
         if not cid:
@@ -339,11 +314,15 @@ class Zattoo(Plugin):
         elif (self._authed and not self._session_control):
             # check every two hours, if the session is actually valid
             log.debug('Session control for {0}'.format(self.domain))
-            res = self.session.http.get(self.API_SESSION.format(self.base_url))
-            res = self.session.http.json(res, schema=self._session_schema)
-            if res['loggedin']:
+            active = self.session.http.get(
+                '{0}/zapi/v3/session'.format(self.base_url),
+                schema=validate.Schema(validate.transform(parse_json),
+                                       {'active': bool}, validate.get('active'))
+            )
+            if active:
                 self._session_attributes.set(
                     'session_control', True, expires=self.TIME_CONTROL)
+                log.debug('User is logged in')
             else:
                 log.debug('User is not logged in')
                 self._authed = False
@@ -358,7 +337,8 @@ class Zattoo(Plugin):
             self._hello()
             self._login(email, password)
 
-        return self._watch()
+        if self._authed:
+            return self._watch()
 
 
 __plugin__ = Zattoo
