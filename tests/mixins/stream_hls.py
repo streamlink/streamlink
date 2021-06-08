@@ -88,6 +88,7 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
         super(EventedHLSStreamWriter, self).__init__(*args, **kwargs)
         self.write_wait = Event()
         self.write_done = Event()
+        self.write_error = None
 
     def write(self, *args, **kwargs):
         # only write once per step
@@ -98,6 +99,9 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
             # don't write again during teardown
             if not self.closed:
                 super(EventedHLSStreamWriter, self).write(*args, **kwargs)
+        except Exception as err:
+            self.write_error = err
+            self.reader.close()
         finally:
             # notify main thread that writing has finished
             self.write_done.set()
@@ -209,13 +213,14 @@ class TestMixinStreamHLS(unittest.TestCase):
     # close read thread and make sure that all threads have terminated before moving on
     def close_thread(self):
         thread = self.thread
-        if isinstance(thread.reader.writer, EventedHLSStreamWriter):
-            thread.reader.writer.write_wait.set()
-        thread.reader.close()
-        thread.read_wait.set()
-        thread.reader.writer.join()
-        thread.reader.worker.join()
-        thread.join()
+        if thread:
+            if isinstance(thread.reader.writer, EventedHLSStreamWriter):
+                thread.reader.writer.write_wait.set()
+            thread.reader.close()
+            thread.read_wait.set()
+            thread.reader.writer.join()
+            thread.reader.worker.join()
+            thread.join()
 
     # make one write call on the write thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=5):
@@ -224,6 +229,8 @@ class TestMixinStreamHLS(unittest.TestCase):
             writer.write_wait.set()
             writer.write_done.wait(timeout)
             writer.write_done.clear()
+            if writer.write_error:
+                raise writer.write_error
 
     # make one read call on the read thread and wait until it has finished
     def await_read(self, read_all=False, timeout=5):

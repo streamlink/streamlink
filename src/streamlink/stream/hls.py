@@ -3,7 +3,6 @@ import re
 import struct
 from collections import OrderedDict, defaultdict, namedtuple
 
-from Crypto.Cipher import AES
 from requests.exceptions import ChunkedEncodingError
 
 from streamlink.compat import str, urlparse
@@ -13,6 +12,7 @@ from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
 from streamlink.utils import LazyFormatter
+from streamlink.utils.crypto import AES, unpad
 
 log = logging.getLogger(__name__)
 Sequence = namedtuple("Sequence", "num segment")
@@ -20,18 +20,6 @@ Sequence = namedtuple("Sequence", "num segment")
 
 def num_to_iv(n):
     return struct.pack(">8xq", n)
-
-
-def pkcs7_decode(paddedData, keySize=16):
-    '''
-    Remove the PKCS#7 padding
-    '''
-    # Use ord + [-1:] to support both python 2 and 3
-    val = ord(paddedData[-1:])
-    if val > keySize:
-        raise StreamError("Input is not padded or padding is corrupt, got padding size of {0}".format(val))
-
-    return paddedData[:-val]
 
 
 class HLSStreamWriter(SegmentedStreamWriter):
@@ -138,31 +126,31 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 decryptor = self.create_decryptor(sequence.segment.key,
                                                   sequence.num)
             except StreamError as err:
-                log.error("Failed to create decryptor: {0}", err)
+                log.error("Failed to create decryptor: {0}".format(err))
                 self.close()
                 return
 
             data = res.content
             # If the input data is not a multiple of 16, cut off any garbage
-            garbage_len = len(data) % 16
+            garbage_len = len(data) % AES.block_size
             if garbage_len:
                 log.debug("Cutting off {0} bytes of garbage "
-                          "before decrypting", garbage_len)
+                          "before decrypting".format(garbage_len))
                 decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
             else:
                 decrypted_chunk = decryptor.decrypt(data)
 
-            self.reader.buffer.write(pkcs7_decode(decrypted_chunk))
+            chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
+            self.reader.buffer.write(chunk)
         else:
             try:
                 for chunk in res.iter_content(chunk_size):
                     self.reader.buffer.write(chunk)
             except ChunkedEncodingError:
-                log.error("Download of segment {0} failed", sequence.num)
-
+                log.error("Download of segment {0} failed".format(sequence.num))
                 return
 
-        log.debug("Download of segment {0} complete", sequence.num)
+        log.debug("Download of segment {0} complete".format(sequence.num))
 
 
 class HLSStreamWorker(SegmentedStreamWorker):
@@ -192,8 +180,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         if self.playlist_end is None:
             if self.duration_offset_start > 0:
-                log.debug("Time offsets negative for live streams, skipping back {0} seconds",
-                          self.duration_offset_start)
+                log.debug("Time offsets negative for live streams, skipping back {0} seconds".format(
+                          self.duration_offset_start))
             # live playlist, force offset durations back to None
             self.duration_offset_start = -self.duration_offset_start
 
@@ -201,11 +189,11 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
 
         if self.playlist_sequences:
-            log.debug("First Sequence: {0}; Last Sequence: {1}",
-                      self.playlist_sequences[0].num, self.playlist_sequences[-1].num)
-            log.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}",
+            log.debug("First Sequence: {0}; Last Sequence: {1}".format(
+                      self.playlist_sequences[0].num, self.playlist_sequences[-1].num))
+            log.debug("Start offset: {0}; Duration: {1}; Start Sequence: {2}; End Sequence: {3}".format(
                       self.duration_offset_start, self.duration_limit,
-                      self.playlist_sequence, self.playlist_end)
+                      self.playlist_sequence, self.playlist_end))
 
     def _reload_playlist(self, text, url):
         return hls_playlist.load(text, url)
@@ -300,7 +288,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         total_duration = 0
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
-                log.debug("Adding segment {0} to queue", sequence.num)
+                log.debug("Adding segment {0} to queue".format(sequence.num))
                 yield sequence
                 total_duration += sequence.segment.duration
                 if self.duration_limit and total_duration >= self.duration_limit:
