@@ -16,7 +16,10 @@
 """
 
 from copy import copy as copy_obj
-from typing import Any, Tuple, Union
+try:
+    from typing import Any, Tuple, Union
+except ImportError:
+    pass
 from xml.etree import ElementTree as ET
 
 try:
@@ -97,13 +100,13 @@ class attr(SchemaContainer):
     """Validates an object's attributes."""
 
 
-class union_get:
+class union_get(object):
     def __init__(self, *keys, **kw):
         self.keys = keys
         self.seq = kw.get("seq", tuple)
 
 
-class xml_element:
+class xml_element(object):
     """A XML element."""
 
     def __init__(self, tag=None, text=None, attrib=None):
