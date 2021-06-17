@@ -1,5 +1,6 @@
 import logging
 import re
+from html import unescape
 from urllib.parse import urlparse, urlunparse
 
 from streamlink.exceptions import NoStreamsError
@@ -219,7 +220,7 @@ class YouTube(Plugin):
             c_data = {}
             for _i in itertags(res.text, "input"):
                 if _i.attributes.get("type") == "hidden":
-                    c_data[_i.attributes.get("name")] = _i.attributes.get("value")
+                    c_data[_i.attributes.get("name")] = unescape(_i.attributes.get("value"))
             log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
             res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
 
