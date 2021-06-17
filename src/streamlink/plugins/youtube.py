@@ -12,91 +12,83 @@ from streamlink.utils import parse_json, search_dict
 log = logging.getLogger(__name__)
 
 
-_config_schema = validate.Schema(
-    {
-        validate.optional("player_response"): validate.all(
-            validate.text,
-            validate.transform(parse_json),
-            {
-                validate.optional("streamingData"): {
-                    validate.optional("hlsManifestUrl"): validate.text,
-                    validate.optional("formats"): [{
-                        "itag": int,
-                        validate.optional("url"): validate.text,
-                        validate.optional("cipher"): validate.text,
-                        "qualityLabel": validate.text
-                    }],
-                    validate.optional("adaptiveFormats"): [{
-                        "itag": int,
-                        "mimeType": validate.all(
-                            validate.text,
-                            validate.transform(
-                                lambda t:
-                                    [t.split(';')[0].split('/')[0], t.split(';')[1].split('=')[1].strip('"')]
-                            ),
-                            [validate.text, validate.text],
-                        ),
-                        validate.optional("url"): validate.url(scheme="http"),
-                        validate.optional("cipher"): validate.text,
-                        validate.optional("signatureCipher"): validate.text,
-                        validate.optional("qualityLabel"): validate.text,
-                        validate.optional("bitrate"): int
-                    }]
-                },
-                validate.optional("videoDetails"): {
-                    validate.optional("isLive"): validate.transform(bool),
-                    validate.optional("author"): validate.text,
-                    validate.optional("title"): validate.text
-                },
-                validate.optional("playabilityStatus"): {
-                    validate.optional("status"): validate.text,
-                    validate.optional("reason"): validate.text
-                },
-            },
-        ),
-        "status": validate.text
-    }
-)
-
-_ytdata_re = re.compile(r'ytInitialData\s*=\s*({.*?});', re.DOTALL)
-_url_re = re.compile(r"""
-    https?://(?:\w+\.)?youtube\.com
-    (?:
-        (?:
-            /(?:
-                watch.+v=
-                |
-                embed/(?!live_stream)
-                |
-                v/
-            )(?P<video_id>[0-9A-z_-]{11})
-        )
-        |
-        (?:
-            /(?:
-                (?:user|c(?:hannel)?)/
-                |
-                embed/live_stream\?channel=
-            )[^/?&]+
-        )
-        |
-        (?:
-            /(?:c/)?[^/?]+/live/?$
-        )
-    )
-    |
-    https?://youtu\.be/(?P<video_id_short>[0-9A-z_-]{11})
-""", re.VERBOSE)
-
-
 class YouTube(Plugin):
-    _oembed_url = "https://www.youtube.com/oembed"
+    _re_url = re.compile(r"""
+        https?://(?:\w+\.)?youtube\.com
+        (?:
+            (?:
+                /(?:
+                    watch.+v=
+                    |
+                    embed/(?!live_stream)
+                    |
+                    v/
+                )(?P<video_id>[0-9A-z_-]{11})
+            )
+            |
+            (?:
+                /(?:
+                    (?:user|c(?:hannel)?)/
+                    |
+                    embed/live_stream\?channel=
+                )[^/?&]+
+            )
+            |
+            (?:
+                /(?:c/)?[^/?]+/live/?$
+            )
+        )
+        |
+        https?://youtu\.be/(?P<video_id_short>[0-9A-z_-]{11})
+    """, re.VERBOSE)
+
+    _re_ytInitialData = re.compile(r'ytInitialData\s*=\s*({.*?});', re.DOTALL)
+
     _video_info_url = "https://youtube.com/get_video_info"
 
-    _oembed_schema = validate.Schema(
+    _config_schema = validate.Schema(
         {
-            "author_name": validate.text,
-            "title": validate.text
+            validate.optional("player_response"): validate.all(
+                str,
+                validate.transform(parse_json),
+                {
+                    validate.optional("streamingData"): {
+                        validate.optional("hlsManifestUrl"): str,
+                        validate.optional("formats"): [{
+                            "itag": int,
+                            validate.optional("url"): str,
+                            validate.optional("cipher"): str,
+                            "qualityLabel": str
+                        }],
+                        validate.optional("adaptiveFormats"): [{
+                            "itag": int,
+                            "mimeType": validate.all(
+                                str,
+                                validate.transform(
+                                    lambda t:
+                                    [t.split(';')[0].split('/')[0], t.split(';')[1].split('=')[1].strip('"')]
+                                ),
+                                [str, str],
+                            ),
+                            validate.optional("url"): validate.url(scheme="http"),
+                            validate.optional("cipher"): str,
+                            validate.optional("signatureCipher"): str,
+                            validate.optional("qualityLabel"): str,
+                            validate.optional("bitrate"): int
+                        }]
+                    },
+                    validate.optional("videoDetails"): {
+                        validate.optional("isLive"): validate.transform(bool),
+                        validate.optional("author"): str,
+                        validate.optional("title"): str
+                    },
+                    validate.optional("playabilityStatus"): {
+                        validate.optional("status"): str,
+                        validate.optional("reason"): str
+                    },
+                },
+            ),
+            "status": str
         }
     )
 
@@ -137,18 +129,14 @@ class YouTube(Plugin):
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def get_author(self):
-        if self.author is None:
-            self.get_oembed
         return self.author
 
     def get_title(self):
-        if self.title is None:
-            self.get_oembed
         return self.title
 
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._re_url.match(url)
 
     @classmethod
     def stream_weight(cls, stream):
@@ -166,20 +154,6 @@ class YouTube(Plugin):
             weight, group = Plugin.stream_weight(stream)
 
         return weight, group
-
-    @property
-    def get_oembed(self):
-        if self.video_id is None:
-            self.video_id = self._find_video_id(self.url)
-
-        params = {
-            "url": "https://www.youtube.com/watch?v={0}".format(self.video_id),
-            "format": "json"
-        }
-        res = self.session.http.get(self._oembed_url, params=params)
-        data = self.session.http.json(res, schema=self._oembed_schema)
-        self.author = data["author_name"]
-        self.title = data["title"]
 
     def _create_adaptive_streams(self, info, streams):
         adaptive_streams = {}
@@ -225,7 +199,7 @@ class YouTube(Plugin):
         return streams
 
     def _find_video_id(self, url):
-        m = _url_re.match(url)
+        m = self._re_url.match(url)
         video_id = m.group("video_id") or m.group("video_id_short")
         if video_id:
             log.debug("Video ID from URL")
@@ -240,7 +214,7 @@ class YouTube(Plugin):
             log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
             res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
 
-        datam = _ytdata_re.search(res.text)
+        datam = self._re_ytInitialData.search(res.text)
         if datam:
             data = parse_json(datam.group(1))
             # find the videoRenderer object, where there is a LVE NOW badge
@@ -290,7 +264,7 @@ class YouTube(Plugin):
             params.update(_params)
 
             res = self.session.http.get(self._video_info_url, params=params)
-            info_parsed = parse_query(res.text, name="config", schema=_config_schema)
+            info_parsed = parse_query(res.text, name="config", schema=self._config_schema)
             player_response = info_parsed.get("player_response", {})
             playability_status = player_response.get("playabilityStatus", {})
             if (playability_status.get("status") != "OK"):
