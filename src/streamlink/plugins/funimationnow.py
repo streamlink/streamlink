@@ -7,6 +7,7 @@ from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
+from streamlink.utils.l10n import Localization
 
 log = logging.getLogger(__name__)
 
@@ -238,7 +239,7 @@ class FunimationNow(Plugin):
                 for subtitle in exp.subtitles():
                     log.debug(f"Subtitles: {subtitle['src']}")
                     if subtitle["src"].endswith(".vtt") or subtitle["src"].endswith(".srt"):
-                        sub_lang = {"en": "eng", "ja": "jpn"}[subtitle["language"]]
+                        sub_lang = Localization.get_language(subtitle["language"]).alpha3
                         # pick the first suitable subtitle stream
                         subtitles = subtitles or HTTPStream(self.session, subtitle["src"])
                         stream_metadata["s:s:0"] = ["language={0}".format(sub_lang)]
