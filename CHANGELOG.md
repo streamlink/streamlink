@@ -1,5 +1,98 @@
 # Changelog
 
+## streamlink 2.2.0 (2021-06-19)
+
+Release highlights:
+
+- Changed: default config file path on macOS and Windows ([#3766](https://github.com/streamlink/streamlink/pull/3766))  
+  - macOS: `${HOME}/Library/Application Support/streamlink/config`
+  - Windows: `%APPDATA%\streamlink\config`
+- Changed: default custom plugins directory path on macOS and Linux/BSD ([#3766](https://github.com/streamlink/streamlink/pull/3766))
+  - macOS: `${HOME}/Library/Application Support/streamlink/plugins`
+  - Linux/BSD: `${XDG_DATA_HOME:-${HOME}/.local/share}/streamlink/plugins`
+- Deprecated: old config file paths and old custom plugins directory paths ([#3784](https://github.com/streamlink/streamlink/pull/3784))
+  - Windows:
+    - `%APPDATA%\streamlink\streamlinkrc`
+  - macOS:
+    - `${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/config`
+    - `${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins`
+    - `${HOME}/.streamlinkrc`
+  - Linux/BSD:
+    - `${XDG_CONFIG_HOME:-${HOME}/.config}/streamlink/plugins`
+    - `${HOME}/.streamlinkrc`
+
+  Support for these old paths will be dropped in the future.  
+  See the [CLI documentation](https://streamlink.github.io/cli.html) for all the details regarding these changes.
+- Implemented: `--logfile` CLI argument ([#3753](https://github.com/streamlink/streamlink/pull/3753))
+- Fixed: Youtube 404 errors by dropping private API calls (plugin rewrite) ([#3797](https://github.com/streamlink/streamlink/pull/3797))
+- Fixed: Twitch clips ([#3762](https://github.com/streamlink/streamlink/pull/3762), [#3775](https://github.com/streamlink/streamlink/pull/3775)) and hosted channel redirection ([#3776](https://github.com/streamlink/streamlink/pull/3776))
+- Fixed: Olympicchannel plugin ([#3760](https://github.com/streamlink/streamlink/pull/3760))
+- Fixed: various Zattoo plugin issues ([#3773](https://github.com/streamlink/streamlink/pull/3773), [#3780](https://github.com/streamlink/streamlink/pull/3780))
+- Fixed: HTTP responses with truncated body and mismatching content-length header ([#3768](https://github.com/streamlink/streamlink/pull/3768))
+- Fixed: scheme-less URLs with address:port for `--http-proxy`, etc. ([#3765](https://github.com/streamlink/streamlink/pull/3765))
+- Fixed: rendered man page path on Sphinx 4 ([#3750](https://github.com/streamlink/streamlink/pull/3750))
+- Added plugins: mildom.com ([#3584](https://github.com/streamlink/streamlink/pull/3584)), booyah.live ([#3585](https://github.com/streamlink/streamlink/pull/3585)), mediavitrina.ru ([#3743](https://github.com/streamlink/streamlink/pull/3743))
+- Removed plugins: ine.com ([#3781](https://github.com/streamlink/streamlink/pull/3781)), playtv.fr ([#3798](https://github.com/streamlink/streamlink/pull/3798))
+
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (2):
+      plugins.mediaklikk: add m4sport.hu (#3757)
+      plugins.olympicchannel: fix / rewrite
+
+DESK-coder <sascha@kleinert.email> (1):
+      plugins.zattoo: changes to hello_v3 and new token.js (#3773)
+
+FaceHiddenInsideTheDark <wesleywitz@gmail.com> (1):
+      plugins.funimationnow: fix subtitle language (#3752)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (2):
+      plugins.bfmtv: fix/find Brightcove video data in JS (#3662)
+      plugins.booyah: new plugin
+
+back-to <backto@protonmail.ch> (7):
+      plugins.tf1: fixed api_url
+      plugins.onetv: cleanup
+      plugins.mediavitrina: new plugin
+      plugin.api: update useragents, remove EDGE
+      plugins.ine: removed
+      plugins.zattoo: cleanup, fix other domains
+      plugins.playtv: removed - SEC_ERROR_EXPIRED_CERTIFICATE (#3798)
+
+bastimeyer <mail@bastimeyer.de> (27):
+      plugins.rtpplay: fix obfuscated HLS URL parsing
+      utils.url: add encoding options to update_qsd
+      docs: set man_make_section_directory to false
+      tests.hls: test headers on segment+key requests
+      cli.argparser: fix description text
+      utils.url: fix update_scheme with implicit schemes
+      plugins.twitch: add access token to clips
+      tests: refactor TestCLIMainLogging
+      cli: implement --logfile
+      plugins.twitch: fix clips URL regex
+      plugin.api.http_session: refactor HTTPSession
+      plugin.api.http_session: enforce_content_length
+      stream.hls: replace custom PKCS#7 unpad function
+      plugin.api.validate: add nested lookups to get()
+      plugin.api.validate: implement union_get()
+      plugins.twitch: query hosted channels on GQL
+      plugins.twitch: tidy up API calls
+      cli: refactor CONFIG_FILES and PLUGIN_DIRS
+      cli: add XDG_DATA_HOME as first plugins dir
+      cli: rename config file on Windows to "config"
+      cli: use correct config and plugins dir on macOS
+      cli: deprecate old config files and plugin dirs
+      cli: fix order of config file deprecation log msgs
+      plugins.youtube: clean up a bit
+      plugins.youtube: update URL regex, translate URLs
+      plugins.youtube: replace private API calls
+      plugins.youtube: unescape consent form values
+
+shirokumacode <79662880+shirokumacode@users.noreply.github.com> (1):
+      plugins.mildom: new plugin for mildom.com (#3584)
+```
+
+
 ## streamlink 2.1.2 (2021-05-20)
 
 Patch release:
