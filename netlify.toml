@@ -12,7 +12,12 @@
   # - docs-requirements.txt
   # - src/streamlink_cli/argparser.py
   # https://docs.netlify.com/configure-builds/file-based-configuration/#ignore-builds
-  ignore = "[ $(git rev-parse --abbrev-ref HEAD) = master ] || git diff --quiet master HEAD CHANGELOG.md docs/ docs-requirements.txt src/streamlink_cli/argparser.py"
+  # Ignore the build when any of the commands return true
+  # - `[ "$(git rev-parse --abbrev-ref HEAD)" = master ]`
+  #   true when the current branch is master, otherwise false
+  # - `git diff --quiet --merge-base master HEAD -- FILES...`
+  #   true when there are NO changes in any of the files on the current branch compared to its base on master, otherwise false
+  ignore = "[ \"$(git rev-parse --abbrev-ref HEAD)\" = master ] || git diff --quiet --merge-base master HEAD -- CHANGELOG.md docs/ docs-requirements.txt src/streamlink_cli/argparser.py"
 
 [build.environment]
   # Set the latest natively available Python version in the Ubuntu env (currently 16.04 / Xenial)
