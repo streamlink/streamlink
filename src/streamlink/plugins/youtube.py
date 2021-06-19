@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import logging
 import re
 
-from streamlink.compat import urlparse, urlunparse
+from streamlink.compat import html_unescape, urlparse, urlunparse
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import useragents, validate
@@ -230,7 +230,7 @@ class YouTube(Plugin):
             c_data = {}
             for _i in itertags(res.text, "input"):
                 if _i.attributes.get("type") == "hidden":
-                    c_data[_i.attributes.get("name")] = _i.attributes.get("value")
+                    c_data[_i.attributes.get("name")] = html_unescape(_i.attributes.get("value"))
             log.debug("c_data_keys: {}".format(', '.join(c_data.keys())))
             res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
             consent = self.session.http.cookies.get('CONSENT', domain='.youtube.com')
