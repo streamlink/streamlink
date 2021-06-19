@@ -1,5 +1,58 @@
 # Changelog
 
+## streamlink 1.27.5.0 (2021-06-19)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (25):
+      v1.27.4.0-dev
+      utils.url: add encoding options to update_qsd (#3746)
+      plugins.tf1: fixed api_url (#3748)
+      plugins.onetv: cleanup (#3743)
+      plugins.mediavitrina: new plugin (#3743)
+      use range() from streamlink.compat
+      plugins.olympics: fix / rewrite
+      utils.url: fix update_scheme with implicit schemes (#3765)
+      plugins.bfmtv: fix/find Brightcove video data in JS (#3662)
+      plugins.skylinewebcams: fix hls url
+      tests: refactor TestCLIMainLogging (#3753)
+      plugins.zattoo: change api to hello_v3
+      plugin.api.validate: add nested lookups to get() (#3774)
+      plugin.api.validate: implement union_get() (#3774)
+      plugins.ine: removed (#3781)
+      plugins.zattoo: cleanup, fix other domains  master (#3780)
+      plugins.twitch: tidy up API calls (#3778)
+      stream.hls: replace custom PKCS#7 unpad function (#3770)
+      utils.named_pipe: rewrite named pipes (#3709)
+      cli: implement logfile
+      plugins.youtube: clean up a bit
+      plugins.youtube: update URL regex, translate URLs (#3797)
+      plugins.youtube: replace private API calls (#3797)
+      plugins.youtube: unescape consent form values (#3797)
+      prepare 1.27.5.0
+
+FaceHiddenInsideTheDark <wesleywitz@gmail.com> (1):
+      plugins.funimationnow: fix subtitle language (#3752)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (1):
+      plugins.booyah: new plugin
+
+back-to <backto@protonmail.ch> (2):
+      plugin.api: update useragents, remove EDGE
+      plugins.playtv: removed - SEC_ERROR_EXPIRED_CERTIFICATE (#3798)
+
+bastimeyer <mail@bastimeyer.de> (6):
+      docs: set man_make_section_directory to false
+      tests.hls: test headers on segment+key requests
+      cli.argparser: fix description text
+      plugins.twitch: add access token to clips
+      plugins.twitch: fix clips URL regex
+      plugins.twitch: query hosted channels on GQL
+
+shirokumacode <79662880+shirokumacode@users.noreply.github.com> (1):
+      plugins.mildom: new plugin for mildom.com (#3584)
+```
+
+
 ## streamlink 1.27.4.0 (2021-05-21)
 
 Release highlights:
