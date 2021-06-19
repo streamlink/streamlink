@@ -10,35 +10,28 @@ from streamlink.plugin.api.utils import itertags, parse_query
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_json, search_dict
-from streamlink.utils.encoding import maybe_decode
 
 log = logging.getLogger(__name__)
 
 
 class YouTube(Plugin):
     _re_url = re.compile(r"""
-        https?://(?:\w+\.)?youtube\.com
+        https?://(?:\w+\.)?youtube\.com/
         (?:
             (?:
-                /(?:
-                    watch.+v=
+                (?:
+                    watch\?(?:.*&)*v=
                     |
-                    embed/(?!live_stream)
+                    (?P<embed>embed)/(?!live_stream)
                     |
                     v/
                 )(?P<video_id>[0-9A-z_-]{11})
             )
             |
             (?:
-                /(?:
-                    (?:user|c(?:hannel)?)/
-                    |
-                    embed/live_stream\?channel=
-                )[^/?&]+
-            )
-            |
-            (?:
-                /(?:c/)?[^/?]+/live/?$
+                (?P<embed_live>embed)/live_stream\?channel=[^/?&]+
+                |
+                (?:c(?:hannel)?/|user/)?[^/?]+/live/?$
             )
         )
         |
@@ -47,6 +40,7 @@ class YouTube(Plugin):
 
     _re_ytInitialData = re.compile(r'ytInitialData\s*=\s*({.*?});', re.DOTALL)
 
+    _url_canonical = "https://www.youtube.com/watch?v={video_id}"
     _video_info_url = "https://youtube.com/get_video_info"
 
     _config_schema = validate.Schema(
@@ -121,11 +115,20 @@ class YouTube(Plugin):
     }
 
     def __init__(self, url):
-        super(YouTube, self).__init__(url)
-        parsed = urlparse(self.url)
-        if parsed.netloc == 'gaming.youtube.com':
-            self.url = urlunparse(parsed._replace(netloc='www.youtube.com'))
+        match = self._re_url.match(url)
+        parsed = urlparse(url)
 
+        if parsed.netloc == "gaming.youtube.com":
+            url = urlunparse(parsed._replace(scheme="https", netloc="www.youtube.com"))
+        elif match.group("video_id_short") is not None:
+            url = self._url_canonical.format(video_id=match.group("video_id_short"))
+        elif match.group("embed") is not None:
+            url = self._url_canonical.format(video_id=match.group("video_id"))
+        else:
+            url = urlunparse(parsed._replace(scheme="https"))
+
+        super(YouTube, self).__init__(url)
+        self._find_canonical_url = match.group("embed_live") is not None
         self.author = None
         self.title = None
         self.video_id = None
@@ -160,6 +163,12 @@ class YouTube(Plugin):
             weight, group = Plugin.stream_weight(stream)
 
         return weight, group
+
+    @classmethod
+    def _get_canonical_url(cls, html):
+        for link in itertags(html, "link"):
+            if link.attributes.get("rel") == "canonical":
+                return link.attributes.get("href")
 
     def _create_adaptive_streams(self, info, streams):
         adaptive_streams = {}
