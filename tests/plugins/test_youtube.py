@@ -1,6 +1,6 @@
 import unittest
 
-from streamlink.plugins.youtube import YouTube, _url_re
+from streamlink.plugins.youtube import YouTube
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -40,7 +40,7 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
 
 class TestPluginYouTube(unittest.TestCase):
     def _test_regex(self, url, expected_string, expected_group):
-        m = _url_re.match(url)
+        m = YouTube._re_url.match(url)
         self.assertIsNotNone(m)
         self.assertEqual(expected_string, m.group(expected_group))
 
