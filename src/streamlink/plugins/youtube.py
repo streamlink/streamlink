@@ -4,7 +4,6 @@ import logging
 import re
 
 from streamlink.compat import html_unescape, urlparse, urlunparse
-from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, PluginError
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
@@ -29,11 +28,9 @@ class YouTube(Plugin):
                 )(?P<video_id>[0-9A-z_-]{11})
             )
             |
-            (?:
-                (?P<embed_live>embed)/live_stream\?channel=[^/?&]+
-                |
-                (?:c(?:hannel)?/|user/)?[^/?]+/live/?$
-            )
+            embed/live_stream\?channel=(?P<embed_live>[^/?&]+)
+            |
+            (?:c(?:hannel)?/|user/)?[^/?]+/live/?$
         )
         |
         https?://youtu\.be/(?P<video_id_short>[0-9A-z_-]{11})
@@ -43,6 +40,7 @@ class YouTube(Plugin):
     _re_mime_type = re.compile(r"""^(?P<type>\w+)/(?P<container>\w+); codecs="(?P<codecs>.+)"$""")
 
     _url_canonical = "https://www.youtube.com/watch?v={video_id}"
+    _url_channelid_live = "https://www.youtube.com/channel/{channel_id}/live"
 
     # There are missing itags
     adp_video = {
@@ -73,17 +71,19 @@ class YouTube(Plugin):
         match = self._re_url.match(url)
         parsed = urlparse(url)
 
+        # translate input URLs to be able to find embedded data and to avoid unnecessary HTTP redirects
         if parsed.netloc == "gaming.youtube.com":
             url = urlunparse(parsed._replace(scheme="https", netloc="www.youtube.com"))
         elif match.group("video_id_short") is not None:
             url = self._url_canonical.format(video_id=match.group("video_id_short"))
         elif match.group("embed") is not None:
             url = self._url_canonical.format(video_id=match.group("video_id"))
+        elif match.group("embed_live") is not None:
+            url = self._url_channelid_live.format(channel_id=match.group("embed_live"))
         else:
             url = urlunparse(parsed._replace(scheme="https"))
 
         super(YouTube, self).__init__(url)
-        self._find_canonical_url = match.group("embed_live") is not None
         self.author = None
         self.title = None
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
@@ -117,12 +117,6 @@ class YouTube(Plugin):
             weight, group = Plugin.stream_weight(stream)
 
         return weight, group
-
-    @classmethod
-    def _get_canonical_url(cls, html):
-        for link in itertags(html, "link"):
-            if link.attributes.get("rel") == "canonical":
-                return link.attributes.get("href")
 
     @classmethod
     def _schema_playabilitystatus(cls, data):
@@ -236,13 +230,6 @@ class YouTube(Plugin):
             consent = self.session.http.cookies.get('CONSENT', domain='.youtube.com')
             if 'YES' in consent:
                 self.cache.set("consent_ck", consent)
-
-        if self._find_canonical_url:
-            self._find_canonical_url = False
-            canonical_url = self._get_canonical_url(res.text)
-            if canonical_url is None:
-                raise NoStreamsError(url)
-            return self._get_data(canonical_url)
 
         match = re.search(self._re_ytInitialPlayerResponse, res.text)
         if not match:

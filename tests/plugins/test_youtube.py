@@ -1,6 +1,10 @@
 import unittest
 
+import pytest
+
+from streamlink.plugin import Plugin
 from streamlink.plugins.youtube import YouTube
+from tests.mock import Mock
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -57,3 +61,15 @@ class TestPluginYouTube(unittest.TestCase):
     def test_regex_video_id_watch(self):
         self._test_regex("https://www.youtube.com/watch?v=aqz-KE-bpKQ",
                          "aqz-KE-bpKQ", "video_id")
+
+
+@pytest.mark.parametrize("url,expected", [
+    ("http://gaming.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
+    ("http://youtu.be/0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
+    ("http://youtube.com/embed/0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
+    ("http://youtube.com/embed/live_stream?channel=CHANNELID", "https://www.youtube.com/channel/CHANNELID/live"),
+    ("http://www.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
+])
+def test_translate_url(url, expected):
+    Plugin.bind(Mock(), "tests.plugins.test_youtube")
+    assert YouTube(url).url == expected
