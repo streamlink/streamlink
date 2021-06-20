@@ -1,3 +1,4 @@
+import json
 import logging
 import re
 from html import unescape
@@ -208,7 +209,7 @@ class YouTube(Plugin):
 
         return streams
 
-    def _get_data(self, url):
+    def _get_res(self, url):
         res = self.session.http.get(url)
         if urlparse(res.url).netloc == "consent.youtube.com":
             c_data = {}
@@ -217,20 +218,75 @@ class YouTube(Plugin):
                     c_data[_i.attributes.get("name")] = unescape(_i.attributes.get("value"))
             log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
             res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
+        return res
 
+    def _get_data(self, res):
         match = re.search(self._re_ytInitialPlayerResponse, res.text)
         if not match:
-            raise PluginError("Missing initial player response data")
-
+            log.debug("Missing initial player response data")
+            return
         return parse_json(match.group(1))
 
-    def _get_streams(self):
-        data = self._get_data(self.url)
+    def _get_data_from_api(self, res):
+        _i_video_id = self._re_url.match(self.url).group("video_id")
+        if _i_video_id is None:
+            for link in itertags(res.text, "link"):
+                if link.attributes.get("rel") == "canonical":
+                    try:
+                        _i_video_id = self._re_url.match(link.attributes.get("href")).group("video_id")
+                    except AttributeError:
+                        return
+                    break
+            else:
+                return
 
+        try:
+            _i_api_key = re.search(r'"INNERTUBE_API_KEY":\s*"([^"]+)"', res.text).group(1)
+        except AttributeError:
+            _i_api_key = "AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8"
+
+        try:
+            _i_version = re.search(r'"INNERTUBE_CLIENT_VERSION":\s*"([\d\.]+)"', res.text).group(1)
+        except AttributeError:
+            _i_version = "1.20210616.1.0"
+
+        res = self.session.http.post(
+            "https://www.youtube.com/youtubei/v1/player",
+            headers={"Content-Type": "application/json"},
+            params={"key": _i_api_key},
+            data=json.dumps({
+                "videoId": _i_video_id,
+                "context": {
+                    "client": {
+                        "clientName": "WEB_EMBEDDED_PLAYER",
+                        "clientVersion": _i_version,
+                        "platform": "DESKTOP",
+                        "clientFormFactor": "UNKNOWN_FORM_FACTOR",
+                        "browserName": "Chrome",
+                    },
+                    "user": {"lockedSafetyMode": "false"},
+                    "request": {"useSsl": "true"},
+                }
+            }),
+        )
+        return parse_json(res.text)
+
+    def _data_status(self, data):
+        if not data:
+            return False
         status, reason = self._schema_playabilitystatus(data)
         if status != "OK":
-            log.error(f"Could not get video info: {reason}")
-            return
+            log.error(f"Could not get video info - {status}: {reason}")
+            return False
+        return True
+
+    def _get_streams(self):
+        res = self._get_res(self.url)
+        data = self._get_data(res)
+        if not self._data_status(data):
+            data = self._get_data_from_api(res)
+            if not self._data_status(data):
+                return
 
         video_id, self.author, self.title, is_live = self._schema_videodetails(data)
         log.debug(f"Using video ID: {video_id}")
