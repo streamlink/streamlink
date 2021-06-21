@@ -136,7 +136,6 @@ pluzz                   - france.tv          Yes   Yes   Streams may be geo-rest
                         - ludo.fr
                         - zouzous.fr
                         - francetvinfo.fr
-powerapp                powerapp.com.tr      Yes   No
 qq                      live.qq.com          Yes   No
 radiko                  radiko.jp            Yes   Yes   Streams are geo-restricted to Japan.
 radionet                - radio.net          Yes   --
