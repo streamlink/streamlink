@@ -2,65 +2,46 @@ import re
 
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, RTMPStream
-
-RUURL = "b=chrome&p=win&v=56&f=0&d=1"
-
-_url_re = re.compile(r"https?://www.rtvs.sk/televizia/live-[\w-]+")
-_playlist_url_re = re.compile(r'"playlist": "([^"]+)"')
-
-_playlist_schema = validate.Schema(
-    [
-        {
-            "sources": [
-                validate.any(
-                    {
-                        "type": "dash",
-                        "file": validate.url(scheme="http")
-                    }, {
-                        "type": "hls",
-                        "file": validate.url(scheme="http")
-                    }, {
-                        "type": "rtmp",
-                        "file": validate.text,
-                        "streamer": validate.url(scheme="rtmp")
-                    }
-                )
-            ]
-        }
-    ],
-    validate.get(0),
-    validate.get("sources")
-)
+from streamlink.stream import HLSStream
+from streamlink.utils import parse_json
 
 
 class Rtvs(Plugin):
+    _re_url = re.compile(r"https?://www\.rtvs\.sk/televizia/live-[\w-]+")
+    _re_channel_id = re.compile(r"'stream':\s*'live-(\d+)'")
+
     @classmethod
     def can_handle_url(cls, url):
-        return _url_re.match(url)
+        return cls._re_url.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)
-        match = _playlist_url_re.search(res.text)
-        if match is None:
+        m = self._re_channel_id.search(res.text)
+        if not m:
             return
 
-        res = self.session.http.get(match.group(1) + RUURL)
-        sources = self.session.http.json(res, schema=_playlist_schema)
-
-        streams = {}
-
-        for source in sources:
-            if source["type"] == "rtmp":
-                streams["rtmp_live"] = RTMPStream(self.session, {
-                    "rtmp": source["streamer"],
-                    "pageUrl": self.url,
-                    "live": True
-                })
-            elif source["type"] == "hls":
-                streams.update(HLSStream.parse_variant_playlist(self.session, source["file"]))
-
-        return streams
+        res = self.session.http.get(
+            "https://www.rtvs.sk/json/live5f.json",
+            params={
+                "c": m.group(1),
+                "b": "mozilla",
+                "p": "win",
+                "f": "0",
+                "d": "1",
+            }
+        )
+        videos = parse_json(res.text, schema=validate.Schema({
+            "clip": {
+                "sources": [{
+                    "src": validate.url(),
+                    "type": str,
+                }],
+            }},
+            validate.get(("clip", "sources")),
+            validate.filter(lambda n: n["type"] == "application/x-mpegurl"),
+        ))
+        for video in videos:
+            yield from HLSStream.parse_variant_playlist(self.session, video["src"]).items()
 
 
 __plugin__ = Rtvs
