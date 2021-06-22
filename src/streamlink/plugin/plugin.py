@@ -5,7 +5,7 @@ import re
 import time
 from collections import OrderedDict
 from functools import partial
-from typing import Callable, ClassVar, List, Match, NamedTuple, Optional, Pattern, Sequence, Type
+from typing import Any, Callable, ClassVar, Dict, List, Match, NamedTuple, Optional, Pattern, Sequence, Type
 
 import requests.cookies
 
@@ -136,15 +136,11 @@ def stream_sorting_filter(expr, stream_weight):
     return func
 
 
-def parse_url_params(url):
-    split = url.split(" ", 1)
-    url = split[0]
-    params = split[1] if len(split) > 1 else ''
-    return url, parse_params(params)
-
-
-def parse_params(params):
+def parse_params(params: Optional[str] = None) -> Dict[str, Any]:
     rval = {}
+    if not params:
+        return rval
+
     matches = re.findall(PARAMS_REGEX, params)
 
     for key, value in matches:

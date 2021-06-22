@@ -1,35 +1,20 @@
 import logging
 import re
-from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin
-from streamlink.plugin.plugin import LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, stream_weight
+from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.plugin import LOW_PRIORITY, stream_weight
 from streamlink.stream.dash import DASHStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"dash://(?P<url>.+)"
+))
+@pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
+    r"(?P<url>.+\.mpd(?:\?.*)?)"
+))
 class MPEGDASH(Plugin):
-    _url_re = re.compile(r"(dash://)?(.+(?:\.mpd)?.*)")
-
-    @classmethod
-    def priority(cls, url):
-        """
-        Returns LOW priority if the URL is not prefixed with dash:// but ends with
-        .mpd and return NORMAL priority if the URL is prefixed.
-        :param url: the URL to find the plugin priority for
-        :return: plugin priority for the given URL
-        """
-        m = cls._url_re.match(url)
-        if m:
-            prefix, url = cls._url_re.match(url).groups()
-            url_path = urlparse(url).path
-            if prefix is None and url_path.endswith(".mpd"):
-                return LOW_PRIORITY
-            elif prefix is not None:
-                return NORMAL_PRIORITY
-        return NO_PRIORITY
-
     @classmethod
     def stream_weight(cls, stream):
         match = re.match(r"^(?:(.*)\+)?(?:a(\d+)k)$", stream)
@@ -42,19 +27,11 @@ class MPEGDASH(Plugin):
         else:
             return stream_weight(stream)
 
-    @classmethod
-    def can_handle_url(cls, url):
-        m = cls._url_re.match(url)
-        if m:
-            url_path = urlparse(m.group(2)).path
-            return m.group(1) is not None or url_path.endswith(".mpd")
-
     def _get_streams(self):
-        mpdurl = self._url_re.match(self.url).group(2)
+        url = self.match.group(1)
+        log.debug(f"Parsing MPD URL: {url}")
 
-        log.debug("Parsing MPD URL: {0}".format(mpdurl))
-
-        return DASHStream.parse_manifest(self.session, mpdurl)
+        return DASHStream.parse_manifest(self.session, url)
 
 
 __plugin__ = MPEGDASH
