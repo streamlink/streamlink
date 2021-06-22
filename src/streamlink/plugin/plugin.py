@@ -5,6 +5,7 @@ import re
 import time
 from collections import OrderedDict
 from functools import partial
+from typing import Callable, ClassVar, List, Match, NamedTuple, Optional, Pattern, Sequence, Type
 
 import requests.cookies
 
@@ -184,11 +185,26 @@ class UserInputRequester:
         raise NotImplementedError
 
 
+class Matcher(NamedTuple):
+    pattern: Pattern
+    priority: int
+
+
 class Plugin:
     """A plugin can retrieve stream information from the URL specified.
 
     :param url: URL that the plugin will operate on
     """
+
+    # the list of plugin matchers (URL pattern + priority)
+    # use the streamlink.plugin.pluginmatcher decorator for initializing this list
+    matchers: ClassVar[List[Matcher]] = None
+    # a tuple of `re.Match` results of all defined matchers
+    matches: Sequence[Optional[Match]]
+    # a reference to the compiled `re.Pattern` of the first matching matcher
+    matcher: Pattern
+    # a reference to the `re.Match` result of the first matching matcher
+    match: Match
 
     cache = None
     logger = None
@@ -196,6 +212,7 @@ class Plugin:
     options = Options()
     arguments = Arguments()
     session = None
+    _url: str = None
     _user_input_requester = None
 
     @classmethod
@@ -211,16 +228,25 @@ class Plugin:
             else:
                 raise RuntimeError("user-input-requester must be an instance of UserInputRequester")
 
-    def __init__(self, url):
+    @property
+    def url(self) -> str:
+        return self._url
+
+    @url.setter
+    def url(self, value: str):
+        self._url = value
+
+        matches = [(pattern, pattern.match(value)) for pattern, priority in self.matchers or []]
+        self.matches = tuple(m for p, m in matches)
+        self.matcher, self.match = next(((p, m) for p, m in matches if m is not None), (None, None))
+
+    def __init__(self, url: str) -> None:
         self.url = url
+
         try:
             self.load_cookies()
         except RuntimeError:
             pass  # unbound cannot load
-
-    @classmethod
-    def can_handle_url(cls, url):
-        raise NotImplementedError
 
     @classmethod
     def set_option(cls, key, value):
@@ -267,15 +293,6 @@ class Plugin:
             return func
 
         return decorator
-
-    @classmethod
-    def priority(cls, url):
-        """
-        Return the plugin priority for a given URL, by default it returns
-        NORMAL priority.
-        :return: priority level
-        """
-        return NORMAL_PRIORITY
 
     def streams(self, stream_types=None, sorting_excludes=None):
         """Attempts to extract available streams.
@@ -527,4 +544,23 @@ class Plugin:
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
 
 
-__all__ = ["Plugin"]
+def pluginmatcher(pattern: Pattern, priority: int = NORMAL_PRIORITY) -> Callable[[Type[Plugin]], Type[Plugin]]:
+    matcher = Matcher(pattern, priority)
+
+    def decorator(cls: Type[Plugin]) -> Type[Plugin]:
+        if not issubclass(cls, Plugin):
+            raise TypeError(f"{repr(cls)} is not a Plugin")
+        if cls.matchers is None:
+            cls.matchers = []
+        cls.matchers.insert(0, matcher)
+
+        return cls
+
+    return decorator
+
+
+__all__ = [
+    "HIGH_PRIORITY", "NORMAL_PRIORITY", "LOW_PRIORITY", "NO_PRIORITY",
+    "Plugin",
+    "Matcher", "pluginmatcher",
+]

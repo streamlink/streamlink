@@ -1,8 +1,9 @@
+import re
 from io import BytesIO
 
 from streamlink import NoStreamsError
 from streamlink.options import Options
-from streamlink.plugin import PluginArgument, PluginArguments
+from streamlink.plugin import PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugins import Plugin
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
 
@@ -14,6 +15,9 @@ class TestStream(Stream):
         return BytesIO(b'x' * 8192 * 2)
 
 
+@pluginmatcher(re.compile(
+    r"https?://test\.se"
+))
 class TestPlugin(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -30,10 +34,6 @@ class TestPlugin(Plugin):
     options = Options({
         "a_option": "default"
     })
-
-    @classmethod
-    def can_handle_url(self, url):
-        return "test.se" in url
 
     def get_title(self):
         return "Test Title"

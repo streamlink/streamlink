@@ -3,6 +3,7 @@ import pkgutil
 from collections import OrderedDict
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
+from typing import Dict, Optional, Type
 
 import requests
 import requests.packages.urllib3.util.connection as urllib3_connection
@@ -14,6 +15,7 @@ from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
 from streamlink.plugin import Plugin, api
+from streamlink.plugin.plugin import Matcher, NO_PRIORITY
 from streamlink.utils import load_module, update_scheme
 from streamlink.utils.l10n import Localization
 
@@ -75,7 +77,7 @@ class Streamlink:
         })
         if options:
             self.options.update(options)
-        self.plugins = OrderedDict({})
+        self.plugins: Dict[str, Type[Plugin]] = OrderedDict({})
         self.load_builtin_plugins()
 
     def set_option(self, key, value):
@@ -373,7 +375,7 @@ class Streamlink:
             return plugin.get_option(key)
 
     @lru_cache(maxsize=128)
-    def resolve_url(self, url, follow_redirect=True):
+    def resolve_url(self, url: str, follow_redirect: bool = True) -> Plugin:
         """Attempts to find a plugin that can use this URL.
 
         The default protocol (http) will be prefixed to the URL if
@@ -387,14 +389,18 @@ class Streamlink:
         """
         url = update_scheme("http://", url)
 
-        available_plugins = []
+        matcher: Matcher
+        candidate: Optional[Type[Plugin]] = None
+        priority = NO_PRIORITY
         for name, plugin in self.plugins.items():
-            if plugin.can_handle_url(url):
-                available_plugins.append(plugin)
+            if plugin.matchers:
+                for matcher in plugin.matchers:
+                    if matcher.priority > priority and matcher.pattern.match(url) is not None:
+                        candidate = plugin
+                        priority = matcher.priority
 
-        available_plugins.sort(key=lambda x: x.priority(url), reverse=True)
-        if available_plugins:
-            return available_plugins[0](url)
+        if candidate:
+            return candidate(url)
 
         if follow_redirect:
             # Attempt to handle a redirect URL
