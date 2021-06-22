@@ -189,7 +189,6 @@ tga                     - star.plu.cn        Yes   No
                         - star.tga.plu.cn
                         - star.longzhu.com
 theplatform             player.thepl... [7]_ No    Yes
-tigerdile               tigerdile.com        Yes   --
 tlctr                   tlctv.com.tr         Yes   No
 turkuvaz                - atv.com.tr         Yes   No    Streams may be geo-restricted.
                         - a2tv.com.tr
