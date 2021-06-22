@@ -68,7 +68,6 @@ dogus                   - eurostartv.com.tr  Yes   No
                         - kralmuzik.com.tr
                         - ntv.com.tr
                         - startv.com.tr
-dommune                 dommune.com          Yes   --
 drdk                    dr.dk                Yes   No    Streams may be geo-restricted to Denmark.
 earthcam                earthcam.com         Yes   Yes   Only works for the cams hosted on EarthCam.
 egame                   egame.qq.com         Yes   No
