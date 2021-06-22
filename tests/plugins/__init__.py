@@ -20,8 +20,8 @@ class PluginCanHandleUrl:
 
     # parametrized dynamically via conftest.py
     def test_can_handle_url_positive(self, url):
-        assert self.__plugin__.can_handle_url(url), "URL matches"
+        assert any(matcher.pattern.match(url) for matcher in self.__plugin__.matchers), "URL matches"
 
     # parametrized dynamically via conftest.py
     def test_can_handle_url_negative(self, url):
-        assert not self.__plugin__.can_handle_url(url), "URL does not match"
+        assert not any(matcher.pattern.match(url) for matcher in self.__plugin__.matchers), "URL does not match"
