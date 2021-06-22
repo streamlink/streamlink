@@ -129,7 +129,6 @@ oneplusone              1plus1.video         Yes   No
 onetv                   1tv.ru               Yes   No    Streams may be geo-restricted to Russia.
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
-periscope               periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto                 picarto.tv           Yes   Yes
 piczel                  piczel.tv            Yes   No
 pixiv                   sketch.pixiv.net     Yes   --
