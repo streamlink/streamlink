@@ -127,6 +127,41 @@ class TestSession(unittest.TestCase):
         with self.assertRaises(NoPluginError):
             session.resolve_url_no_redirect("no")
 
+    @patch("streamlink.session.log")
+    def test_resolve_deprecated(self, mock_log: Mock):
+        @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
+            "http://low"
+        ))
+        class LowPriority(EmptyPlugin):
+            pass
+
+        class DeprecatedNormalPriority(EmptyPlugin):
+            # noinspection PyUnusedLocal
+            @classmethod
+            def can_handle_url(cls, url):
+                return True
+
+        class DeprecatedHighPriority(DeprecatedNormalPriority):
+            # noinspection PyUnusedLocal
+            @classmethod
+            def priority(cls, url):
+                return HIGH_PRIORITY
+
+        session = self.subject(load_plugins=False)
+        session.plugins = {
+            "empty": EmptyPlugin,
+            "low": LowPriority,
+            "dep-normal-one": DeprecatedNormalPriority,
+            "dep-normal-two": DeprecatedNormalPriority,
+            "dep-high": DeprecatedHighPriority,
+        }
+
+        self.assertIsInstance(session.resolve_url_no_redirect("low"), DeprecatedHighPriority)
+        self.assertEqual(mock_log.info.mock_calls, [
+            call("Resolved plugin dep-normal-one with deprecated can_handle_url API"),
+            call("Resolved plugin dep-high with deprecated can_handle_url API")
+        ])
+
     def test_resolve_url_no_redirect(self):
         session = self.subject()
         plugin = session.resolve_url_no_redirect("http://test.se/channel")

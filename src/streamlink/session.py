@@ -15,7 +15,7 @@ from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
 from streamlink.plugin import Plugin, api
-from streamlink.plugin.plugin import Matcher, NO_PRIORITY
+from streamlink.plugin.plugin import Matcher, NORMAL_PRIORITY, NO_PRIORITY
 from streamlink.utils import load_module, update_scheme
 from streamlink.utils.l10n import Localization
 
@@ -398,6 +398,13 @@ class Streamlink:
                     if matcher.priority > priority and matcher.pattern.match(url) is not None:
                         candidate = plugin
                         priority = matcher.priority
+            # TODO: remove deprecated plugin resolver
+            elif hasattr(plugin, "can_handle_url") and callable(plugin.can_handle_url) and plugin.can_handle_url(url):
+                prio = plugin.priority(url) if hasattr(plugin, "priority") and callable(plugin.priority) else NORMAL_PRIORITY
+                if prio > priority:
+                    log.info(f"Resolved plugin {name} with deprecated can_handle_url API")
+                    candidate = plugin
+                    priority = prio
 
         if candidate:
             return candidate(url)
