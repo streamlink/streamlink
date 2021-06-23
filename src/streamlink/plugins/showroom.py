@@ -1,22 +1,12 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker
 
 log = logging.getLogger(__name__)
-
-_url_re = re.compile(r'''^https?://
-    (?:\w*.)?
-    showroom-live.com/
-    (?:
-        (?P<room_title>[\w-]+$)
-        |
-        room/profile\?room_id=(?P<room_id>\d+)$
-    )
-''', re.VERBOSE)
 
 _room_id_re = re.compile(r'"roomId":(?P<room_id>\d+),')
 _room_id_alt_re = re.compile(r'content="showroom:///room\?room_id=(?P<room_id>\d+)"')
@@ -94,14 +84,15 @@ class ShowroomHLSStream(HLSStream):
     __reader__ = ShowroomHLSStreamReader
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:\w+\.)?showroom-live\.com/
+    (?:
+        (?P<room_title>[\w-]+$)
+        |
+        room/profile\?room_id=(?P<room_id>\d+)$
+    )
+""", re.VERBOSE))
 class Showroom(Plugin):
-    @classmethod
-    def can_handle_url(cls, url):
-        match = _url_re.match(url)
-        if not match or match.group("room_title") in _info_pages:
-            return False
-        return True
-
     @classmethod
     def stream_weight(cls, stream):
         if stream in _quality_weights:
@@ -127,7 +118,7 @@ class Showroom(Plugin):
 
         Returns the room_id as a string, or None if no room_id was found
         """
-        match_dict = _url_re.match(self.url).groupdict()
+        match_dict = self.match.groupdict()
 
         if match_dict['room_id'] is not None:
             return match_dict['room_id']
@@ -155,6 +146,9 @@ class Showroom(Plugin):
         return quality, RTMPStream(self.session, params=params)
 
     def _get_streams(self):
+        if self.match.group("room_title") in _info_pages:
+            return
+
         info = self._get_stream_info(self.room_id)
         if not info:
             return

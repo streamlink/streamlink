@@ -17,8 +17,6 @@ class TestPluginCanHandleUrlShowroom(PluginCanHandleUrl):
     ]
 
     should_not_match = [
-        "https://www.showroom-live.com/mypage",
-        "https://www.showroom-live.com/ranking",
         "https://www.showroom-live.com/payment/payment_start",
         "https://www.showroom-live.com/s/licence",
     ]
