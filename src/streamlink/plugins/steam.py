@@ -9,7 +9,7 @@ from Crypto.PublicKey import RSA
 
 import streamlink
 from streamlink.exceptions import FatalPluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags, parse_json
 from streamlink.plugin.api.validate import Schema
@@ -22,9 +22,13 @@ class SteamLoginFailed(Exception):
     pass
 
 
+@pluginmatcher(re.compile(
+    r"https?://steamcommunity\.com/broadcast/watch/(\d+)"
+))
+@pluginmatcher(re.compile(
+    r"https?://steam\.tv/(\w+)"
+))
 class SteamBroadcastPlugin(Plugin):
-    _url_re = re.compile(r"https?://steamcommunity.com/broadcast/watch/(\d+)")
-    _steamtv_url_re = re.compile(r"https?://steam.tv/(\w+)")
     _watch_broadcast_url = "https://steamcommunity.com/broadcast/watch/"
     _get_broadcast_url = "https://steamcommunity.com/broadcast/getbroadcastmpd/"
     _user_agent = "streamlink/{}".format(streamlink.__version__)
@@ -78,10 +82,6 @@ class SteamBroadcastPlugin(Plugin):
     def __init__(self, url):
         super().__init__(url)
         self.session.http.headers["User-Agent"] = self._user_agent
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None or cls._steamtv_url_re.match(url) is not None
 
     @property
     def donotcache(self):
@@ -196,7 +196,7 @@ class SteamBroadcastPlugin(Plugin):
                 self.save_cookies(lambda c: "steamMachineAuth" in c.name)
 
         # Handle steam.tv URLs
-        if self._steamtv_url_re.match(self.url) is not None:
+        if self.matches[1] is not None:
             # extract the steam ID from the page
             res = self.session.http.get(self.url)
             for div in itertags(res.text, 'div'):
@@ -206,7 +206,7 @@ class SteamBroadcastPlugin(Plugin):
                     self.url = self._watch_broadcast_url + steamid
 
         # extract the steam ID from the URL
-        steamid = self._url_re.match(self.url).group(1)
+        steamid = self.match.group(1)
         res = self.session.http.get(self.url)  # get the page to set some cookies
         sessionid = res.cookies.get('sessionid')
 
