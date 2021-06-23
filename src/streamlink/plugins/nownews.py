@@ -2,22 +2,20 @@ import json
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://news\.now\.com/home/live"
+))
 class NowNews(Plugin):
-    _url_re = re.compile(r"https?://news\.now\.com/home/live")
     epg_re = re.compile(r'''epg.getEPG\("(\d+)"\);''')
     api_url = "https://hkt-mobile-api.nowtv.now.com/09/1/getLiveURL"
     backup_332_api = "https://d7lz7jwg8uwgn.cloudfront.net/apps_resource/news/live.json"
     backup_332_stream = "https://d3i3yn6xwv1jpw.cloudfront.net/live/now332/playlist.m3u8"
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

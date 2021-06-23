@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
@@ -9,8 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?animelab\.com/player/"
+))
 class AnimeLab(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?animelab\.com/player/")
     login_url = "https://www.animelab.com/login"
     video_collection_re = re.compile(r"VideoCollection\((\[.*?\])\);")
     playlist_position_re = re.compile(r"playlistPosition\s*=\s*(\d+);")
@@ -49,10 +51,6 @@ class AnimeLab(Plugin):
             help="A animelab.com account password to use with --animelab-email."
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def login(self, email, password):
         log.debug("Attempting to log in as {0}".format(email))

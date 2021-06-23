@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -9,8 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?nbcnews\.com/now'
+))
 class NBCNews(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?nbcnews\.com/now')
     json_data_re = re.compile(
         r'<script id="__NEXT_DATA__" type="application/json">({.*})</script>'
     )
@@ -61,10 +63,6 @@ class NBCNews(Plugin):
         validate.get(0),
         validate.get('tokenizedUrl'),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def get_title(self):
         return 'NBC News Now'

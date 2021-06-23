@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json, verifyjson
@@ -10,8 +10,10 @@ from streamlink.utils import parse_json, verifyjson
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://((www|live)\.)?daserste\.de/"
+))
 class ARDLive(Plugin):
-    _url_re = re.compile(r"https?://((www|live)\.)?daserste\.de/")
     _player_re = re.compile(r'''data-ctrl-player\s*=\s*"(?P<jsondata>.*?)"''')
     _player_url_schema = validate.Schema(
         validate.transform(_player_re.search),
@@ -43,10 +45,6 @@ class ARDLive(Plugin):
         1: "288p",
         0: "144p"
     }
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

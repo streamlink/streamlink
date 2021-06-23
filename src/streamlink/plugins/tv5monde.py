@@ -1,14 +1,16 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugins.common_jwplayer import _js_to_json
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
 
 
+@pluginmatcher(re.compile(
+    r'https?://([\w-]+\.)*(tv|tivi)5monde(plus(afrique)?)?\.com'
+))
 class TV5Monde(Plugin):
-    _url_re = re.compile(r'http://(.+\.)?(tv|tivi)5monde(plus(afrique)?)?\.com')
     _videos_re = re.compile(r'"?(?:files|sources)"?:\s*(?P<videos>\[.+?\])')
     _videos_embed_re = re.compile(r'(?:file:\s*|src=)"(?P<embed>.+?\.mp4|.+?/embed/.+?)"')
 
@@ -28,10 +30,6 @@ class TV5Monde(Plugin):
             )
         ])
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return TV5Monde._url_re.match(url)
 
     def _get_non_embed_streams(self, page):
         match = self._videos_re.search(page)

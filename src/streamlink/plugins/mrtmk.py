@@ -1,15 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://play\.mrt\.com\.mk/(live|play)/"
+))
 class MRTmk(Plugin):
-    url_re = re.compile(r"""https?://play\.mrt\.com\.mk/(live|play)/""")
     file_re = re.compile(r"""(?P<url>https?://vod-[\d\w]+\.interspace\.com[^"',]+\.m3u8[^"',]*)""")
 
     stream_schema = validate.Schema(
@@ -22,10 +24,6 @@ class MRTmk(Plugin):
             validate.transform(list),
         ),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

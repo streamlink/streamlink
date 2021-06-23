@@ -2,17 +2,18 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:\w+\.)?(?:livecoding|liveedu)\.tv/"
+))
 class LiveEdu(Plugin):
     login_url = "https://www.liveedu.tv/accounts/login/"
-    url_re = re.compile(r"https?://(?:\w+\.)?(?:livecoding|liveedu)\.tv/")
     config_re = re.compile(r"""\Wconfig.(?P<key>\w+)\s*=\s*(?P<q>['"])(?P<value>.*?)(?P=q);""")
     csrf_re = re.compile(r'''"csrfToken"\s*:\s*"(\w+)"''')
     api_schema = validate.Schema({
@@ -46,10 +47,6 @@ class LiveEdu(Plugin):
             help="A LiveEdu account password to use with --liveedu-email."
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def login(self):
         """

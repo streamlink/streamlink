@@ -1,27 +1,20 @@
 import logging
 import re
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://tvpstream\.vod\.tvp\.pl'
+))
 class TVP(Plugin):
-    '''Telewizja Polska S.A.
-       http://tvpstream.vod.tvp.pl
-    '''
-
     player_url = 'https://www.tvp.pl/sess/tvplayer.php?object_id={0}&autoplay=true'
 
-    _url_re = re.compile(r'https?://tvpstream\.vod\.tvp\.pl')
     _stream_re = re.compile(r'''src:["'](?P<url>[^"']+\.(?:m3u8|mp4))["']''')
     _video_id_re = re.compile(r'''class=["']tvp_player["'][^>]+data-video-id=["'](?P<video_id>\d+)["']''')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_embed_url(self):
         res = self.session.http.get(self.url)

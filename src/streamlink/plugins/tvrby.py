@@ -1,15 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?tvr\.by/televidenie/belarus"
+))
 class TVRBy(Plugin):
-    url_re = re.compile(r"""https?://(?:www\.)?tvr.by/televidenie/belarus""")
     file_re = re.compile(r"""(?P<url>https://stream\.hoster\.by[^"',]+\.m3u8[^"',]*)""")
     player_re = re.compile(r"""["'](?P<url>[^"']+tvr\.by/plugines/online-tv-main\.php[^"']+)["']""")
 
@@ -29,10 +31,6 @@ class TVRBy(Plugin):
         if not url.endswith("/"):
             url += "/"
         super().__init__(url)
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

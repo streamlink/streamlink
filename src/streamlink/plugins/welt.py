@@ -1,7 +1,7 @@
 import re
 from urllib.parse import quote
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -16,11 +16,10 @@ def get_json(text):
     return None
 
 
+@pluginmatcher(re.compile(
+    r"https?://(\w+\.)?welt\.de/?"
+))
 class Welt(Plugin):
-    _re_url = re.compile(
-        r"""https?://(\w+\.)?welt\.de/?""",
-        re.IGNORECASE
-    )
     _re_url_vod = re.compile(
         r"""mediathek""",
         re.IGNORECASE
@@ -35,13 +34,8 @@ class Welt(Plugin):
         validate.get(0)
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url) is not None
-
     def __init__(self, url):
-        Plugin.__init__(self, url)
-        self.url = url
+        super().__init__(url)
         self.isVod = self._re_url_vod.search(url) is not None
 
     def _get_streams(self):

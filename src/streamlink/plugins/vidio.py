@@ -6,7 +6,7 @@ Plugin for vidio.com
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -14,8 +14,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?vidio\.com/(?:en/)?(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)"
+))
 class Vidio(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?vidio\.com/(?:en/)?(?P<type>live|watch)/(?P<id>\d+)-(?P<name>[^/?#&]+)")
     _playlist_re = re.compile(r'''hls-url=["'](?P<url>[^"']+)["']''')
     _data_id_re = re.compile(r'''meta\s+data-id=["'](?P<id>[^"']+)["']''')
 
@@ -24,10 +26,6 @@ class Vidio(Plugin):
     token_schema = validate.Schema(validate.transform(parse_json),
                                    {"token": validate.text},
                                    validate.get("token"))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
 
     def get_csrf_tokens(self):
         return self.session.http.get(

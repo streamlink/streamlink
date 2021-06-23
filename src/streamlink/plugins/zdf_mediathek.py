@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 from streamlink.utils import parse_json
@@ -27,9 +27,6 @@ STREAMING_TYPES = {
     )
 }
 
-_url_re = re.compile(r"""
-    http(s)?://(\w+\.)?(zdf\.de|3sat\.de)/
-""", re.VERBOSE | re.IGNORECASE)
 _api_json_re = re.compile(r'''data-zdfplayer-jsb=["'](?P<json>{.+?})["']''', re.S)
 
 _api_schema = validate.Schema(
@@ -83,11 +80,10 @@ _schema = validate.Schema(
 )
 
 
+@pluginmatcher(re.compile(
+    r"https?://(\w+\.)?(zdf\.de|3sat\.de)/"
+))
 class ZDFMediathek(Plugin):
-    @classmethod
-    def can_handle_url(cls, url):
-        return _url_re.match(url)
-
     @classmethod
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)

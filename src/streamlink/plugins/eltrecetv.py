@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -9,13 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?eltrecetv\.com\.ar/.+"
+))
 class ElTreceTV(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?eltrecetv.com.ar/.+')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
-
     def _get_streams(self):
         if "eltrecetv.com.ar/vivo" in self.url.lower():
             try:

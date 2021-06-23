@@ -5,7 +5,7 @@ from functools import partial
 
 from Crypto.Cipher import Blowfish
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
@@ -50,11 +50,11 @@ class ZTNRClient:
             return data
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?rtve\.es/(?:directo|infantil|noticias|television|deportes|alacarta|drmn)/.*?/?"
+))
 class Rtve(Plugin):
     secret_key = base64.b64decode("eWVMJmRhRDM=")
-    url_re = re.compile(r"""
-        https?://(?:www\.)?rtve\.es/(?:directo|infantil|noticias|television|deportes|alacarta|drmn)/.*?/?
-    """, re.VERBOSE)
     cdn_schema = validate.Schema(
         validate.transform(partial(parse_xml, invalid_char_entities=True)),
         validate.xml_findall(".//preset"),
@@ -98,10 +98,6 @@ class Rtve(Plugin):
     arguments = PluginArguments(
         PluginArgument("mux-subtitles", is_global=True)
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def __init__(self, url):
         Plugin.__init__(self, url)

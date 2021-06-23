@@ -2,20 +2,17 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugins.afreeca import AfreecaTV
 from streamlink.plugins.twitch import Twitch
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?(?:tl|teamliquid)\.net/video/streams/"
+))
 class Teamliquid(Plugin):
-    _url_re = re.compile(r'''https?://(?:www\.)?(?:tl|teamliquid)\.net/video/streams/''')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
         res = self.session.http.get(self.url)
 

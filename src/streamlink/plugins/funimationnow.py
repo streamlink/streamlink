@@ -2,7 +2,7 @@ import logging
 import random
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
@@ -152,6 +152,9 @@ class Experience:
         return self.token is not None
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?funimation(\.com|now\.uk)"
+))
 class FunimationNow(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -180,15 +183,8 @@ class FunimationNow(Plugin):
         PluginArgument("mux-subtitles", is_global=True)
     )
 
-    url_re = re.compile(r"""
-        https?://(?:www\.)funimation(.com|now.uk)
-    """, re.VERBOSE)
     experience_id_re = re.compile(r"/player/(\d+)")
     mp4_quality = "480p"
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         self.session.http.headers = {"User-Agent": useragents.CHROME}

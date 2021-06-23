@@ -4,8 +4,7 @@ import re
 from functools import lru_cache
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink import PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils.times import seconds_to_hhmmss
@@ -13,8 +12,10 @@ from streamlink.utils.times import seconds_to_hhmmss
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://watch\.wwe\.com/(channel)?"
+))
 class WWENetwork(Plugin):
-    url_re = re.compile(r"https?://watch\.wwe\.com/(channel)?")
     site_config_re = re.compile(r'''">window.__data = (\{.*?\})</script>''')
     stream_url = "https://dce-frontoffice.imggaming.com/api/v2/stream/{id}"
     live_url = "https://dce-frontoffice.imggaming.com/api/v2/event/live"
@@ -48,10 +49,6 @@ class WWENetwork(Plugin):
         super().__init__(url)
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
         self.auth_token = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def get_title(self):
         return self.item_config['title']

@@ -2,20 +2,18 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?ssh101\.com/(?:secure)?live/'
+))
 class SSH101(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?ssh101\.com/(?:secure)?live/')
     src_re = re.compile(r'sources.*?src:\s"(?P<url>.*?)"')
     iframe_re = re.compile(r'iframe.*?src="(?P<url>.*?)"')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url)
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

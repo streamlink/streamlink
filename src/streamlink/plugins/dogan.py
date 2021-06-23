@@ -2,25 +2,24 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?
+    (?:
+        cnnturk\.com/(?:action/embedvideo/|canli-yayin|tv-cnn-turk|video/)|
+        dreamturk\.com\.tr/(?:canli|canli-yayin-izle|dream-turk-ozel/|programlar/)|
+        dreamtv\.com\.tr/dream-ozel/|
+        kanald\.com\.tr/|
+        teve2\.com\.tr/(?:canli-yayin|diziler/|embed/|filmler/|programlar/)
+    )
+""", re.VERBOSE))
 class Dogan(Plugin):
-    """
-    Support for the live streams from Doğan Media Group channels
-    """
-    url_re = re.compile(r"""
-        https?://(?:www\.)?
-        (?:cnnturk\.com/(?:action/embedvideo/.*|canli-yayin|tv-cnn-turk|video/.*)|
-           dreamturk\.com\.tr/(?:canli|canli-yayin-izle|dream-turk-ozel/.*|programlar/.*)|
-           dreamtv\.com\.tr/dream-ozel/.*|
-           kanald\.com\.tr/.*|
-           teve2\.com\.tr/(?:canli-yayin|diziler/.*|embed/.*|filmler/.*|programlar/.*))
-    """, re.VERBOSE)
     playerctrl_re = re.compile(r'''<div\s+id="video-element".*?>''', re.DOTALL)
     data_id_re = re.compile(r'''data-id=(?P<quote>["'])/?(?P<id>\w+)(?P=quote)''')
     content_id_re = re.compile(r'"content[Ii]d",\s*"(\w+)"')
@@ -59,10 +58,6 @@ class Dogan(Plugin):
         validate.get("Media"),
         validate.get("Link"),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_content_id(self):
         res = self.session.http.get(self.url)

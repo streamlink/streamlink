@@ -2,19 +2,19 @@ import logging
 import random
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://play\.sbs\.co\.kr/onair/pc/index\.html'
+))
 class SBScokr(Plugin):
-
     api_channel = 'http://apis.sbs.co.kr/play-api/1.0/onair/channel/{0}'
     api_channels = 'http://static.apis.sbs.co.kr/play-api/1.0/onair/channels'
-
-    _url_re = re.compile(r'https?://play\.sbs\.co\.kr/onair/pc/index.html')
 
     _channels_schema = validate.Schema({
         'list': [{
@@ -61,10 +61,6 @@ class SBScokr(Plugin):
             '''
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         user_channel_id = self.get_option('id')

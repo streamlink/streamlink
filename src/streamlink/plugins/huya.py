@@ -3,7 +3,7 @@ import logging
 import re
 from html import unescape as html_unescape
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
@@ -11,8 +11,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?huya\.com/(?P<channel>[^/]+)'
+))
 class Huya(Plugin):
-    _re_url = re.compile(r'https?://(?:www\.)?huya\.com/(?P<channel>[^/]+)')
     _re_stream = re.compile(r'"stream"\s?:\s?"([^"]+)"')
     _schema_data = validate.Schema(
         {
@@ -42,10 +44,6 @@ class Huya(Plugin):
         validate.get('gameStreamInfoList'),
     )
     QUALITY_WEIGHTS = {}
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url) is not None
 
     @classmethod
     def stream_weight(cls, key):

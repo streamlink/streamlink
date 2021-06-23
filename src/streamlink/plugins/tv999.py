@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils.url import update_scheme
@@ -9,8 +9,10 @@ from streamlink.utils.url import update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?tv999\.bg/live\.html'
+))
 class TV999(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?tv999\.bg/live\.html')
     iframe_re = re.compile(r'<iframe.*src="([^"]+)"')
     hls_re = re.compile(r'src="([^"]+)"\s+type="application/x-mpegURL"')
 
@@ -30,10 +32,6 @@ class TV999(Plugin):
             validate.url(),
         )),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         iframe_url = self.session.http.get(self.url, schema=self.iframe_schema)

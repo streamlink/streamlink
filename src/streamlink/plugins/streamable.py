@@ -1,13 +1,15 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json, update_scheme
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?streamable\.com/(.+)"
+))
 class Streamable(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?streamable\.com/(.+)")
     meta_re = re.compile(r'''var\s*videoObject\s*=\s*({.*});''')
     config_schema = validate.Schema(
         validate.transform(meta_re.search),
@@ -23,10 +25,6 @@ class Streamable(Plugin):
                          })
                      )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         data = self.session.http.get(self.url, schema=self.config_schema)

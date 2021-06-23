@@ -2,16 +2,18 @@ import logging
 import re
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?dw\.com/"
+))
 class DeutscheWelle(Plugin):
     default_channel = "1"
-    url_re = re.compile(r"https?://(?:www\.)?dw\.com/")
 
     channel_re = re.compile(r'''<a.*?data-id="(\d+)".*?class="ici"''')
     live_stream_div = re.compile(r'''
@@ -54,10 +56,6 @@ class DeutscheWelle(Plugin):
             )
         })
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _create_stream(self, url, quality=None):
         if url.startswith('rtmp://'):

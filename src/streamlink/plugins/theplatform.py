@@ -1,23 +1,18 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://player\.theplatform\.com/p/"
+))
 class ThePlatform(Plugin):
-    """
-    Plugin to support streaming videos hosted by thePlatform
-    """
-    url_re = re.compile(r"https?://player\.theplatform\.com/p/")
     release_re = re.compile(r'''tp:releaseUrl\s*=\s*"(.*?)"''')
     video_src_re = re.compile(r'''video.*?src="(.*?)"''')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

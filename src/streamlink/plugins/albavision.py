@@ -11,16 +11,17 @@ import re
 import time
 from urllib.parse import quote, urlencode, urlparse
 
-from streamlink import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?(tvc\.com\.ec|rts\.com\.ec|elnueve\.com\.ar|atv\.pe)/en-?vivo(?:/ATV(?:Mas)?)?"
+))
 class Albavision(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?(tvc.com.ec|rts.com.ec|elnueve.com.ar|atv.pe)/en-?vivo(?:/ATV(?:Mas)?)?")
     _token_input_re = re.compile(r"Math.floor\(Date.now\(\) / 3600000\),'([a-f0-9OK]+)'")
     _live_url_re = re.compile(r"LIVE_URL = '(.*?)';")
     _playlist_re = re.compile(r"file:\s*'(http.*m3u8)'")
@@ -37,10 +38,6 @@ class Albavision(Plugin):
     def __init__(self, url):
         super().__init__(url)
         self._page = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     @property
     def page(self):
