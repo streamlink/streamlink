@@ -179,7 +179,6 @@ swisstxt                - srf.ch             Yes   No    Streams are geo-restric
                         - rsi.ch
 teamliquid              - teamliquid.net     Yes   --
                         - tl.net
-teleclubzoom            teleclubzoom.ch      Yes   No    Streams are geo-restricted to Switzerland.
 telefe                  telefe.com           No    Yes   Streams are geo-restricted to Argentina.
 tf1                     - tf1.fr             Yes   No    Streams may be geo-restricted to France.
                         - lci.fr
