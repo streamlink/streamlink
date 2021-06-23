@@ -4,7 +4,7 @@ import re
 from html import unescape
 from urllib.parse import urlparse, urlunparse
 
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
@@ -14,28 +14,27 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
-class YouTube(Plugin):
-    _re_url = re.compile(r"""
-        https?://(?:\w+\.)?youtube\.com/
+@pluginmatcher(re.compile(r"""
+    https?://(?:\w+\.)?youtube\.com/
+    (?:
         (?:
             (?:
-                (?:
-                    watch\?(?:.*&)*v=
-                    |
-                    (?P<embed>embed)/(?!live_stream)
-                    |
-                    v/
-                )(?P<video_id>[0-9A-z_-]{11})
-            )
-            |
-            embed/live_stream\?channel=(?P<embed_live>[^/?&]+)
-            |
-            (?:c(?:hannel)?/|user/)?[^/?]+/live/?$
+                watch\?(?:.*&)*v=
+                |
+                (?P<embed>embed)/(?!live_stream)
+                |
+                v/
+            )(?P<video_id>[\w-]{11})
         )
         |
-        https?://youtu\.be/(?P<video_id_short>[0-9A-z_-]{11})
-    """, re.VERBOSE)
-
+        embed/live_stream\?channel=(?P<embed_live>[^/?&]+)
+        |
+        (?:c(?:hannel)?/|user/)?[^/?]+/live/?$
+    )
+    |
+    https?://youtu\.be/(?P<video_id_short>[\w-]{11})
+""", re.VERBOSE))
+class YouTube(Plugin):
     _re_ytInitialPlayerResponse = re.compile(r"""var\s+ytInitialPlayerResponse\s*=\s*({.*?});\s*var\s+meta\s*=""", re.DOTALL)
     _re_mime_type = re.compile(r"""^(?P<type>\w+)/(?P<container>\w+); codecs="(?P<codecs>.+)"$""")
 
@@ -68,22 +67,21 @@ class YouTube(Plugin):
     }
 
     def __init__(self, url):
-        match = self._re_url.match(url)
+        super().__init__(url)
         parsed = urlparse(url)
 
         # translate input URLs to be able to find embedded data and to avoid unnecessary HTTP redirects
         if parsed.netloc == "gaming.youtube.com":
-            url = urlunparse(parsed._replace(scheme="https", netloc="www.youtube.com"))
-        elif match.group("video_id_short") is not None:
-            url = self._url_canonical.format(video_id=match.group("video_id_short"))
-        elif match.group("embed") is not None:
-            url = self._url_canonical.format(video_id=match.group("video_id"))
-        elif match.group("embed_live") is not None:
-            url = self._url_channelid_live.format(channel_id=match.group("embed_live"))
-        else:
-            url = urlunparse(parsed._replace(scheme="https"))
+            self.url = urlunparse(parsed._replace(scheme="https", netloc="www.youtube.com"))
+        elif self.match.group("video_id_short") is not None:
+            self.url = self._url_canonical.format(video_id=self.match.group("video_id_short"))
+        elif self.match.group("embed") is not None:
+            self.url = self._url_canonical.format(video_id=self.match.group("video_id"))
+        elif self.match.group("embed_live") is not None:
+            self.url = self._url_channelid_live.format(channel_id=self.match.group("embed_live"))
+        elif parsed.scheme != "https":
+            self.url = urlunparse(parsed._replace(scheme="https"))
 
-        super().__init__(url)
         self.author = None
         self.title = None
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
@@ -93,10 +91,6 @@ class YouTube(Plugin):
 
     def get_title(self):
         return self.title
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url)
 
     @classmethod
     def stream_weight(cls, stream):
@@ -228,12 +222,12 @@ class YouTube(Plugin):
         return parse_json(match.group(1))
 
     def _get_data_from_api(self, res):
-        _i_video_id = self._re_url.match(self.url).group("video_id")
+        _i_video_id = self.match.group("video_id")
         if _i_video_id is None:
             for link in itertags(res.text, "link"):
                 if link.attributes.get("rel") == "canonical":
                     try:
-                        _i_video_id = self._re_url.match(link.attributes.get("href")).group("video_id")
+                        _i_video_id = self.matcher.match(link.attributes.get("href")).group("video_id")
                     except AttributeError:
                         return
                     break
