@@ -4,22 +4,13 @@ import logging
 import re
 from operator import itemgetter
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{0}/{1}?platform=ARTE_NEXT"
 JSON_LIVE_URL = "https://api.arte.tv/api/player/v1/livestream/{0}"
-
-_url_re = re.compile(r"""
-    https?://(?:\w+\.)?arte\.tv/(?:guide/)?
-    (?P<language>[a-z]{2})/
-    (?:
-        (?:videos/)?(?P<video_id>(?!RC\-|videos)[^/]+?)/.+ | # VOD
-        (?:direct|live)        # Live TV
-    )
-""", re.VERBOSE)
 
 _video_schema = validate.Schema({
     "videoJsonPlayer": {
@@ -39,11 +30,16 @@ _video_schema = validate.Schema({
 })
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:\w+\.)?arte\.tv/(?:guide/)?
+    (?P<language>[a-z]{2})/
+    (?:
+        (?:videos/)?(?P<video_id>(?!RC-|videos)[^/]+?)/.+
+        |
+        (?:direct|live)
+    )
+""", re.VERBOSE))
 class ArteTV(Plugin):
-    @classmethod
-    def can_handle_url(cls, url):
-        return _url_re.match(url)
-
     def _create_stream(self, streams):
         variant, variantname = min([(stream["versionProg"], stream["versionLibelle"]) for stream in streams.values()],
                                    key=itemgetter(0))
@@ -58,9 +54,8 @@ class ArteTV(Plugin):
                         log.warning(f"Failed to extract HLS streams for {sname}/{stream['versionLibelle']}: {err}")
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        language = match.group('language')
-        video_id = match.group('video_id')
+        language = self.match.group('language')
+        video_id = self.match.group('video_id')
         if video_id is None:
             json_url = JSON_LIVE_URL.format(language)
         else:

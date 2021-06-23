@@ -1,23 +1,20 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://player\.tvibo\.com/\w+/(?P<id>\d+)"
+))
 class Tvibo(Plugin):
-
-    _url_re = re.compile(r"https?://player\.tvibo\.com/\w+/(?P<id>\d+)")
     _api_url = "http://panel.tvibo.com/api/player/streamurl/{id}"
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        channel_id = self._url_re.match(self.url).group("id")
+        channel_id = self.match.group("id")
 
         api_response = self.session.http.get(
             self._api_url.format(id=channel_id),

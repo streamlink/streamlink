@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -11,11 +11,6 @@ API_URL = "https://www.zhanqi.tv/api/static/v2.1/room/domain/{0}.json"
 
 STATUS_ONLINE = 4
 STATUS_OFFLINE = 0
-
-_url_re = re.compile(r"""
-    http(s)?://(www\.)?zhanqi.tv
-    /(?P<channel>[^/]+)
-""", re.VERBOSE)
 
 _room_schema = validate.Schema(
     {
@@ -31,14 +26,12 @@ _room_schema = validate.Schema(
 )
 
 
+@pluginmatcher(re.compile(
+    r"https?://(www\.)?zhanqi\.tv/(?P<channel>[^/]+)"
+))
 class Zhanqitv(Plugin):
-    @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        channel = match.group("channel")
+        channel = self.match.group("channel")
 
         res = self.session.http.get(API_URL.format(channel))
         room = self.session.http.json(res, schema=_room_schema)

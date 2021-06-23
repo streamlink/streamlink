@@ -2,7 +2,7 @@ import logging
 import re
 from uuid import uuid4
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -11,20 +11,17 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-class Pluto(Plugin):
-    _re_url = re.compile(r'''^https?://(?:www\.)?pluto\.tv/(?:
+@pluginmatcher(re.compile(r'''
+    https?://(?:www\.)?pluto\.tv/(?:
         live-tv/(?P<slug_live>[^/?]+)/?$
         |
         on-demand/series/(?P<slug_series>[^/]+)/season/\d+/episode/(?P<slug_episode>[^/]+)$
         |
         on-demand/movies/(?P<slug_movies>[^/]+)$
-    )''', re.VERBOSE)
-
+    )
+''', re.VERBOSE))
+class Pluto(Plugin):
     title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url) is not None
 
     def get_title(self):
         return self.title
@@ -50,7 +47,7 @@ class Pluto(Plugin):
     def _get_streams(self):
         data = None
 
-        m = self._re_url.match(self.url).groupdict()
+        m = self.match.groupdict()
         if m['slug_live']:
             res = self.session.http.get('https://api.pluto.tv/v2/channels')
             data = self.session.http.json(res,

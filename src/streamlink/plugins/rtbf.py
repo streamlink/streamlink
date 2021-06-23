@@ -3,7 +3,7 @@ import logging
 import re
 from html import unescape as html_unescape
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
@@ -11,14 +11,19 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r'''
+    https?://(?:www\.)?
+    (?:
+        rtbf\.be/auvio/.*\?l?id=(?P<video_id>\d+)#?
+        |
+        rtbfradioplayer\.be/radio/liveradio/.+
+    )
+''', re.VERBOSE))
 class RTBF(Plugin):
     GEO_URL = 'https://www.rtbf.be/api/geoloc'
     TOKEN_URL = 'https://token.rtbf.be/'
     RADIO_STREAM_URL = 'http://www.rtbfradioplayer.be/radio/liveradio/rtbf/radios/{}/config.json'
 
-    _url_re = re.compile(
-        r'https?://(?:www\.)?(?:rtbf\.be/auvio/.*\?l?id=(?P<video_id>[0-9]+)#?|rtbfradioplayer\.be/radio/liveradio/.+)'
-    )
     _stream_size_re = re.compile(
         r'https?://.+-(?P<size>\d+p?)\..+?$'
     )
@@ -100,10 +105,6 @@ class RTBF(Plugin):
         return datetime.datetime.strptime(date[:-6], '%Y-%m-%dT%H:%M:%S') + \
             datetime.timedelta(hours=int(date[-6:-3]), minutes=int(date[-2:]))
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return RTBF._url_re.match(url)
-
     def _get_radio_streams(self):
         res = self.session.http.get(self.url)
         match = self._radio_id_re.search(res.text)
@@ -181,8 +182,7 @@ class RTBF(Plugin):
                         log.error('Stream has expired')
 
     def _get_streams(self):
-        match = self.can_handle_url(self.url)
-        if match.group('video_id'):
+        if self.match.group('video_id'):
             return self._get_video_streams()
         return self._get_radio_streams()
 

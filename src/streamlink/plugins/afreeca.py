@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
@@ -22,9 +22,11 @@ class AfreecaHLSStream(HLSStream):
     __reader__ = AfreecaHLSStreamReader
 
 
+@pluginmatcher(re.compile(
+    r"https?://play\.afreecatv\.com/(?P<username>\w+)(?:/(?P<bno>:\d+))?"
+))
 class AfreecaTV(Plugin):
     _re_bno = re.compile(r"var nBroadNo = (?P<bno>\d+);")
-    _re_url = re.compile(r"https?://play\.afreecatv\.com/(?P<username>\w+)(?:/(?P<bno>:\d+))?")
 
     CHANNEL_API_URL = "http://live.afreecatv.com/afreeca/player_live_api.php"
     CHANNEL_RESULT_OK = 1
@@ -89,10 +91,6 @@ class AfreecaTV(Plugin):
             and self.session.http.cookies.get("PdboxUser")
             and self.session.http.cookies.get("RDB")
         )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url) is not None
 
     @classmethod
     def stream_weight(cls, key):
@@ -191,7 +189,7 @@ class AfreecaTV(Plugin):
             else:
                 log.error("Failed to login")
 
-        m = self._re_url.match(self.url).groupdict()
+        m = self.match.groupdict()
         username = m["username"]
         bno = m["bno"]
         if bno is None:

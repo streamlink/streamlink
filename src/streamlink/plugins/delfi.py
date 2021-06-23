@@ -7,7 +7,7 @@ import itertools
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.utils import update_scheme
@@ -15,22 +15,19 @@ from streamlink.utils import update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:[\w-]+\.)?delfi\.(lt|lv|ee)"
+))
 class Delfi(Plugin):
-    url_re = re.compile(r"https?://(?:[\w-]+\.)?delfi\.(lt|lv|ee)")
     _api = {
         "lt": "http://g2.dcdn.lt/vfe/data.php",
         "lv": "http://g.delphi.lv/vfe/data.php",
         "ee": "http://g4.nh.ee/vfe/data.php"
     }
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     @property
     def api_server(self):
-        m = self.url_re.match(self.url)
-        domain = m and m.group(1)
+        domain = self.match.group(1)
         return self._api.get(domain, "lt")  # fallback to lt
 
     def _get_streams_api(self, video_id):

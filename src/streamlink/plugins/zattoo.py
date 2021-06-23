@@ -3,7 +3,7 @@ import re
 import uuid
 
 from streamlink.cache import Cache
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import DASHStream, HLSStream
 from streamlink.utils import parse_json
@@ -12,44 +12,43 @@ from streamlink.utils.args import comma_list_filter
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r'''
+    https?://
+    (?P<base_url>
+        (?:
+            iptv\.glattvision|www\.(?:myvisiontv|saktv|vtxtv)
+        )\.ch
+        |(?:
+            mobiltv\.quickline|www\.quantum-tv|zattoo
+        )\.com
+        |(?:
+            tvonline\.ewe|nettv\.netcologne|tvplus\.m-net
+        )\.de
+        |(?:
+            player\.waly|www\.(?:1und1|netplus)
+        )\.tv
+        |www\.bbv-tv\.net
+        |www\.meinewelt\.cc
+    )/
+    (?:
+        (?:
+            recording(?:s\?recording=|/)
+            |
+            (?:ondemand/)?watch/[^/\s]+/[^/]+/
+        )(?P<recording_id>\d+)
+        |
+        (?:
+            (?:live/|watch/)|(?:channels(?:/\w+)?|guide)\?channel=
+        )(?P<channel>[^/\s]+)
+        |
+        ondemand(?:\?video=|/watch/)(?P<vod_id>[^-]+)
+    )
+''', re.VERBOSE))
 class Zattoo(Plugin):
     STREAMS_ZATTOO = ['dash', 'hls5']
 
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
-
-    _url_re = re.compile(r'''(?x)
-        https?://
-        (?P<base_url>
-            (?:(?:
-                iptv\.glattvision|www\.(?:myvisiontv|saktv|vtxtv)
-            )\.ch
-            )|(?:(?:
-                mobiltv\.quickline|www\.quantum-tv|zattoo
-            )\.com
-            )|(?:(?:
-                tvonline\.ewe|nettv\.netcologne|tvplus\.m-net
-            )\.de
-            )|(?:(?:
-                player\.waly|www\.(?:1und1|netplus)
-            )\.tv)
-            |www\.bbv-tv\.net
-            |www\.meinewelt\.cc
-        )/
-        (?:
-            (?:
-                recording(?:s\?recording=|/)
-                |
-                (?:ondemand/)?(?:watch/(?:[^/\s]+)(?:/[^/]+/))
-            )(?P<recording_id>\d+)
-            |
-            (?:
-                (?:live/|watch/)|(?:channels(?:/\w+)?|guide)\?channel=
-            )(?P<channel>[^/\s]+)
-            |
-            ondemand(?:\?video=|/watch/)(?P<vod_id>[^-]+)
-        )
-        ''')
 
     arguments = PluginArguments(
         PluginArgument(
@@ -92,7 +91,7 @@ class Zattoo(Plugin):
 
     def __init__(self, url):
         super().__init__(url)
-        self.domain = self._url_re.match(url).group('base_url')
+        self.domain = self.match.group('base_url')
         self._session_attributes = Cache(
             filename='plugin-cache.json',
             key_prefix='zattoo:attributes:{0}'.format(self.domain))
@@ -111,10 +110,6 @@ class Zattoo(Plugin):
             'X-Requested-With': 'XMLHttpRequest',
             'Referer': self.base_url
         }
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _hello(self):
         log.debug('_hello ...')
@@ -191,10 +186,9 @@ class Zattoo(Plugin):
 
     def _watch(self):
         log.debug('_watch ...')
-        match = self._url_re.match(self.url)
-        channel = match.group('channel')
-        vod_id = match.group('vod_id')
-        recording_id = match.group('recording_id')
+        channel = self.match.group('channel')
+        vod_id = self.match.group('vod_id')
+        recording_id = self.match.group('recording_id')
 
         params = {'https_watch_urls': True}
         if channel:

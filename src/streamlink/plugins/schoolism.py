@@ -2,7 +2,7 @@ import logging
 import re
 from functools import partial
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
@@ -10,8 +10,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?schoolism\.com/(viewAssignment|watchLesson)\.php"
+))
 class Schoolism(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?schoolism\.com/(viewAssignment|watchLesson).php")
     login_url = "https://www.schoolism.com/index.php"
     key_time_url = "https://www.schoolism.com/video-html/key-time.php"
     playlist_re = re.compile(r"var allVideos\s*=\s*(\[.*\]);", re.DOTALL)
@@ -73,10 +75,6 @@ class Schoolism(Plugin):
         )
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def login(self, email, password):
         """
         Login to the schoolism account and return the users account
@@ -105,7 +103,7 @@ class Schoolism(Plugin):
             lesson_playlist = self.playlist_schema.validate(res.text)
 
             part = self.options.get("part")
-            video_type = "Lesson" if "lesson" in self.url_re.match(self.url).group(1).lower() else "Assignment Feedback"
+            video_type = "Lesson" if "lesson" in self.match.group(1).lower() else "Assignment Feedback"
 
             log.info(f"Attempting to play {video_type} Part {part}")
             found = False

@@ -13,7 +13,7 @@ from urllib.parse import unquote_plus, urljoin, urlparse, urlunparse
 import websocket
 
 from streamlink.exceptions import PluginError, StreamError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.dash_manifest import sleep_until, utc
 from streamlink.stream.flvconcat import FLVTagConcat
@@ -354,8 +354,7 @@ class UHSStream(Stream):
         return reader
 
 
-class UStreamTV(Plugin):
-    url_re = re.compile(r"""(?x)
+@pluginmatcher(re.compile(r"""
     https?://(?:(www\.)?ustream\.tv|video\.ibm\.com)
         (?:
             (/embed/|/channel/id/)(?P<channel_id>\d+)
@@ -363,7 +362,8 @@ class UStreamTV(Plugin):
         (?:
             (/embed)?/recorded/(?P<video_id>\d+)
         )?
-    """)
+""", re.VERBOSE))
+class UStreamTV(Plugin):
     media_id_re = re.compile(r'"ustream:channel_id"\s+content\s*=\s*"(\d+)"')
     arguments = PluginArguments(
         PluginArgument("password",
@@ -377,10 +377,6 @@ class UStreamTV(Plugin):
     STREAM_WEIGHTS = {
         "original": 65535,
     }
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     @classmethod
     def stream_weight(cls, stream):
@@ -496,11 +492,10 @@ class UStreamTV(Plugin):
                     break
 
     def _get_media_app(self):
-        umatch = self.url_re.match(self.url)
         application = "channel"
 
-        channel_id = umatch.group("channel_id")
-        video_id = umatch.group("video_id")
+        channel_id = self.match.group("channel_id")
+        video_id = self.match.group("video_id")
         if channel_id:
             application = "channel"
             media_id = channel_id

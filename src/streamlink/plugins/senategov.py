@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -10,8 +10,10 @@ from streamlink.stream import HLSStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:[\w-]+\.)*senate\.gov/(isvp)?"
+))
 class SenateGov(Plugin):
-    url_re = re.compile(r"""https?://(?:.+\.)?senate\.gov/(isvp)?""")
     streaminfo_re = re.compile(r"""var\s+streamInfo\s+=\s+new\s+Array\s*\(\s*(\[.*\])\);""")
     stt_re = re.compile(r"""^(?:(?P<hours>\d+):)?(?P<minutes>\d+):(?P<seconds>\d+)$""")
     url_lookup = {
@@ -50,10 +52,6 @@ class SenateGov(Plugin):
     hls_url = "{base}/i/{filename}_1@{number}/master.m3u8?"
     hlsarch_url = "https://ussenate-f.akamaihd.net/i/{filename}.mp4/master.m3u8"
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def _isvp_to_m3u8(self, url):
         qs = dict(parse_qsl(urlparse(url).query))
         if "comm" not in qs:
@@ -74,8 +72,7 @@ class SenateGov(Plugin):
         self.session.http.headers.update({
             "User-Agent": useragents.CHROME,
         })
-        m = self.url_re.match(self.url)
-        if m and not m.group(1):
+        if not self.match.group(1):
             log.debug("Searching for ISVP URL")
             isvp_url = self._get_isvp_url()
         else:

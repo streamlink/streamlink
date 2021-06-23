@@ -2,16 +2,17 @@ import logging
 import re
 from urllib.parse import urljoin, urlunparse
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?13tv\.co\.il/(live|.*?/)"
+))
 class N13TV(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?13tv\.co\.il/(live|.*?/)")
     api_url = "https://13tv-api.oplayer.io/api/getlink/"
     main_js_url_re = re.compile(r'type="text/javascript" src="(.*?main\..+\.js)"')
     user_id_re = re.compile(r'"data-ccid":"(.*?)"')
@@ -41,10 +42,6 @@ class N13TV(Plugin):
             validate.transform(lambda x: x.lstrip("?"))
         )
     }], validate.get(0)))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_live(self, user_id):
         res = self.session.http.get(
@@ -111,8 +108,7 @@ class N13TV(Plugin):
             return HLSStream.parse_variant_playlist(self.session, vod_url)
 
     def _get_streams(self):
-        m = self.url_re.match(self.url)
-        url_type = m and m.group(1)
+        url_type = self.match.group(1)
         log.debug("URL type={0}".format(url_type))
 
         res = self.session.http.get(self.url)

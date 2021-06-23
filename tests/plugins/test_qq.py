@@ -1,5 +1,8 @@
-import unittest
+from unittest.mock import Mock
 
+import pytest
+
+from streamlink.plugin import Plugin
 from streamlink.plugins.qq import QQ
 from tests.plugins import PluginCanHandleUrl
 
@@ -23,19 +26,12 @@ class TestPluginCanHandleUrlQQ(PluginCanHandleUrl):
     ]
 
 
-class TestPluginQQ(unittest.TestCase):
-    def test_url_re(self):
-        regex_match_list = [
-            {
-                "data": "http://live.qq.com/10003715",
-                "result": "10003715"
-            },
-            {
-                "data": "http://m.live.qq.com/10039165",
-                "result": "10039165"
-            }
-        ]
-        for m_test in regex_match_list:
-            m = QQ._url_re.match(m_test.get("data"))
-            self.assertIsNotNone(m)
-            self.assertEqual(m_test.get("result"), m.group("room_id"))
+@pytest.mark.parametrize("url,group,expected", [
+    ("http://live.qq.com/10003715", "room_id", "10003715"),
+    ("http://m.live.qq.com/10039165", "room_id", "10039165")
+])
+def test_match_url(url, group, expected):
+    Plugin.bind(Mock(), "tests.plugins.test_qq")
+    plugin = QQ(url)
+    assert plugin.match is not None
+    assert plugin.match.group(group) == expected

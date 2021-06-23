@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import requests
 
 from streamlink.exceptions import NoStreamsError, PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import HLSStream, HTTPStream
@@ -397,6 +397,19 @@ class TwitchAPI:
         ))
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:(?P<subdomain>[\w-]+)\.)?twitch\.tv/
+    (?:
+        videos/(?P<videos_id>\d+)
+        |
+        (?P<channel>[^/]+)
+        (?:
+            /video/(?P<video_id>\d+)
+            |
+            /clip/(?P<clip_name>[\w-]+)
+        )?
+    )
+""", re.VERBOSE))
 class Twitch(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -439,27 +452,9 @@ class Twitch(Plugin):
         )
     )
 
-    _re_url = re.compile(r"""
-        https?://(?:(?P<subdomain>[\w\-]+)\.)?twitch\.tv/
-        (?:
-            videos/(?P<videos_id>\d+)
-            |
-            (?P<channel>[^/]+)
-            (?:
-                /video/(?P<video_id>\d+)
-                |
-                /clip/(?P<clip_name>[\w-]+)
-            )?
-        )
-    """, re.VERBOSE)
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url)
-
     def __init__(self, url):
         super().__init__(url)
-        match = self._re_url.match(url).groupdict()
+        match = self.match.groupdict()
         parsed = urlparse(url)
         self.params = parse_query(parsed.query)
         self.subdomain = match.get("subdomain")

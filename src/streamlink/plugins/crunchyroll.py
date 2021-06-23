@@ -3,7 +3,7 @@ import logging
 import re
 from uuid import uuid4
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -30,18 +30,6 @@ def parse_timestamp(ts):
         * int(ts[-6:-5] + "1")
     )
 
-
-_url_re = re.compile(r"""
-    http(s)?://(\w+\.)?crunchyroll\.
-    (?:
-        com|de|es|fr|co.jp
-    )
-    (?:
-        /(en-gb|es|es-es|pt-pt|pt-br|fr|de|ar|it|ru)
-    )?
-    (?:/[^/&?]+)?
-    /[^/&?]+-(?P<media_id>\d+)
-""", re.VERBOSE)
 
 _api_schema = validate.Schema({
     "error": bool,
@@ -244,6 +232,17 @@ class CrunchyrollAPI:
         return self._api_call("info", params, schema=schema)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(\w+\.)?crunchyroll\.
+    (?:
+        com|de|es|fr|co\.jp
+    )
+    (?:
+        /(en-gb|es|es-es|pt-pt|pt-br|fr|de|ar|it|ru)
+    )?
+    (?:/[^/&?]+)?
+    /[^/&?]+-(?P<media_id>\d+)
+""", re.VERBOSE))
 class Crunchyroll(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -290,10 +289,6 @@ class Crunchyroll(Plugin):
     )
 
     @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
-    @classmethod
     def stream_weight(cls, key):
         weight = STREAM_WEIGHTS.get(key)
         if weight:
@@ -303,8 +298,7 @@ class Crunchyroll(Plugin):
 
     def _get_streams(self):
         api = self._create_api()
-        match = _url_re.match(self.url)
-        media_id = int(match.group("media_id"))
+        media_id = int(self.match.group("media_id"))
 
         try:
             # the media.stream_data field is required, no stream data is returned otherwise

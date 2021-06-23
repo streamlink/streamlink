@@ -2,7 +2,7 @@ import logging
 import re
 from time import time
 
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 
@@ -11,9 +11,6 @@ log = logging.getLogger(__name__)
 SWF_URL = "http://play.streamingvideoprovider.com/player2.swf"
 API_URL = "http://player.webvideocore.net/index.php"
 
-_url_re = re.compile(
-    r"http(s)?://(\w+\.)?streamingvideoprovider\.co\.uk/(?P<channel>[^/&?]+)"
-)
 _hls_re = re.compile(r"'(http://.+\.m3u8)'")
 
 _rtmp_schema = validate.Schema(
@@ -35,11 +32,10 @@ _hls_schema = validate.Schema(
 )
 
 
+@pluginmatcher(re.compile(
+    r"https?://(\w+\.)?streamingvideoprovider\.co\.uk/(?P<channel>[^/&?]+)"
+))
 class Streamingvideoprovider(Plugin):
-    @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
     def _get_hls_stream(self, channel_name):
         params = {
             "l": "info",
@@ -70,8 +66,7 @@ class Streamingvideoprovider(Plugin):
         })
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        channel_name = match.group("channel")
+        channel_name = self.match.group("channel")
 
         try:
             stream = self._get_rtmp_stream(channel_name)

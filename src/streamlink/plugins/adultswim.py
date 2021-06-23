@@ -2,8 +2,7 @@ import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -11,6 +10,12 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?adultswim\.com
+    /(streams|videos)
+    (?:/([^/]+))?
+    (?:/([^/]+))?
+""", re.VERBOSE))
 class AdultSwim(Plugin):
     token_url = 'https://token.ngtv.io/token/token_spe'
     video_data_url = 'https://www.adultswim.com/api/shows/v1/media/{0}/desktop'
@@ -28,14 +33,6 @@ class AdultSwim(Plugin):
     )
 
     truncate_url_re = re.compile(r'''(.*)/\w+/?''')
-
-    url_re = re.compile(
-        r'''https?://(?:www\.)?adultswim\.com
-        /(streams|videos)
-        (?:/([^/]+))?
-        (?:/([^/]+))?
-        ''', re.VERBOSE,
-    )
 
     _api_schema = validate.Schema({
         'media': {
@@ -80,11 +77,6 @@ class AdultSwim(Plugin):
         validate.get('__APOLLO_STATE__'),
         validate.filter(lambda k, v: k.startswith('Video:')),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        match = AdultSwim.url_re.match(url)
-        return match is not None
 
     def _get_stream_data(self, id):
         res = self.session.http.get(self.url)
@@ -146,8 +138,7 @@ class AdultSwim(Plugin):
         return token_data['token']
 
     def _get_streams(self):
-        url_match = self.url_re.match(self.url)
-        url_type, show_name, episode_name = url_match.groups()
+        url_type, show_name, episode_name = self.match.groups()
 
         if url_type == 'streams' and not show_name:
             url_type = 'live-stream'

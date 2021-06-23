@@ -4,19 +4,17 @@ import logging
 import random
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://viu\.tv/ch/(\d+)"
+))
 class ViuTV(Plugin):
-    _url_re = re.compile(r"https?://viu\.tv/ch/(\d+)")
     api_url = "https://api.viu.now.com/p8/2/getLiveURL"
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     @property
     def device_id(self):
@@ -24,7 +22,7 @@ class ViuTV(Plugin):
 
     @property
     def channel_id(self):
-        return self._url_re.match(self.url).group(1)
+        return self.match.group(1)
 
     def _get_streams(self):
         api_res = self.session.http.post(self.api_url,
