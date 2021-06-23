@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -9,8 +9,10 @@ from streamlink.stream import HLSStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?watchstadium\.com/live"
+))
 class Stadium(Plugin):
-    _url_re = re.compile(r"""https?://(?:www\.)?watchstadium\.com/live""")
     _policy_key_re = re.compile(r"""options:\s*\{.+policyKey:\s*"([^"]+)""", re.DOTALL)
     _API_URL = (
         "https://edge.api.brightcove.com/playback/v1/accounts/{data_account}/videos/{data_video_id}"
@@ -31,10 +33,6 @@ class Stadium(Plugin):
         },
         validate.get("sources"),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

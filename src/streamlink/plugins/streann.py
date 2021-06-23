@@ -6,7 +6,7 @@ import time
 from html import unescape as html_unescape
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -16,6 +16,25 @@ from streamlink.utils.crypto import decrypt_openssl
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:
+        ott\.streann\.com/s(?:treaming|-secure)/player\.html
+        |
+        (?:www\.)?(?:
+            centroecuador\.ec
+            |
+            columnaestilos\.com
+            |
+            crc\.cr/estaciones/
+            |
+            evtv\.online/noticias-de-venezuela/
+            |
+            telecuracao\.com
+            |
+            willax\.tv/en-vivo
+        )
+    )
+""", re.VERBOSE))
 class Streann(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -29,24 +48,6 @@ class Streann(Plugin):
         )
     )
 
-    _url_re = re.compile(r"""(?x)https?://(?:
-        ott\.streann\.com/s(?:treaming|-secure)/player\.html
-        |
-        (?:www\.)?(?:
-            centroecuador\.ec
-            |
-            columnaestilos\.com
-            |
-            crc.cr/estaciones/
-            |
-            evtv\.online/noticias-de-venezuela/
-            |
-            telecuracao\.com
-            |
-            willax\.tv/en-vivo
-        )
-    )""")
-
     base_url = "https://ott.streann.com"
     get_time_url = base_url + "/web/services/public/get-server-time"
     token_url = base_url + "/loadbalancer/services/web-players/{playerId}/token/{type}/{dataId}/{deviceId}"
@@ -58,10 +59,6 @@ class Streann(Plugin):
     _device_id = None
     _domain = None
     title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_title(self):
         return self.title

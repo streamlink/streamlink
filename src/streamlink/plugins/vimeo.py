@@ -3,7 +3,7 @@ import re
 from html import unescape as html_unescape
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -12,8 +12,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(player\.vimeo\.com/video/\d+|(www\.)?vimeo\.com/.+)"
+))
 class Vimeo(Plugin):
-    _url_re = re.compile(r"https?://(player\.vimeo\.com/video/\d+|(www\.)?vimeo\.com/.+)")
     _config_url_re = re.compile(r'(?:"config_url"|\bdata-config-url)\s*[:=]\s*(".+?")')
     _config_re = re.compile(r"var\s+config\s*=\s*({.+?})\s*;")
     _config_url_schema = validate.Schema(
@@ -53,10 +55,6 @@ class Vimeo(Plugin):
     arguments = PluginArguments(
         PluginArgument("mux-subtitles", is_global=True)
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
 
     def _get_streams(self):
         if "player.vimeo.com" in self.url:

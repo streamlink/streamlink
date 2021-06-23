@@ -17,20 +17,18 @@ import re
 from html import unescape as html_unescape
 from urllib.parse import quote
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import DASHStream, HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://([\w-]+\.)*ceskatelevize\.cz'
+))
 class Ceskatelevize(Plugin):
-
     ajax_url = 'https://www.ceskatelevize.cz/ivysilani/ajax/get-client-playlist'
-    _url_re = re.compile(
-        r'http(s)?://([^.]*.)?ceskatelevize.cz'
-    )
     _player_re = re.compile(
         r'ivysilani/embed/iFramePlayer[^"]+'
     )
@@ -56,10 +54,6 @@ class Ceskatelevize(Plugin):
             }
         }]
     })
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
 
     def _get_streams(self):
         self.session.http.headers.update({'User-Agent': useragents.IPAD})

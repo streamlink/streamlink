@@ -2,7 +2,7 @@ import logging
 import re
 from functools import partial
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream
 from streamlink.utils import parse_json, search_dict, update_scheme
@@ -10,8 +10,10 @@ from streamlink.utils import parse_json, search_dict, update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?atresplayer\.com/"
+))
 class AtresPlayer(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?atresplayer\.com/")
     state_re = re.compile(r"""window.__PRELOADED_STATE__\s*=\s*({.*?});""", re.DOTALL)
     channel_id_schema = validate.Schema(
         validate.transform(state_re.search),
@@ -41,10 +43,6 @@ class AtresPlayer(Plugin):
                 validate.optional("type"): validate.text
             })
         ]}, validate.get("sources"))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def __init__(self, url):
         # must be HTTPS

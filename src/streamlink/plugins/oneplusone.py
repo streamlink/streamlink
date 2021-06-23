@@ -4,8 +4,7 @@ from base64 import b64decode
 from html.parser import HTMLParser
 from urllib.parse import urlparse
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -35,8 +34,10 @@ class Iframe_Parser(HTMLParser):
             self.data = data
 
 
+@pluginmatcher(re.compile(
+    r"https?://1plus1\.video/tvguide/.*/online"
+))
 class OnePlusOne(Plugin):
-    url_re = re.compile(r'https://1plus1\.video/tvguide/.*/online')
     data_re = re.compile(r"ovva-player\",\"([^\"]*)\"\)")
     ovva_data_schema = validate.Schema({
         "balancer": validate.url()
@@ -46,10 +47,6 @@ class OnePlusOne(Plugin):
         ['302', validate.url()],
         validate.get(1)
     ))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def find_iframe(self, res):
         parser = Online_Parser()

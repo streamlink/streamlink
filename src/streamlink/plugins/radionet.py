@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urlparse, urlunparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
@@ -10,8 +10,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(\w+)\.radio\.(net|at|de|dk|es|fr|it|pl|pt|se)"
+))
 class RadioNet(Plugin):
-    _url_re = re.compile(r"https?://(\w+)\.radio\.(net|at|de|dk|es|fr|it|pl|pt|se)")
     _stream_data_re = re.compile(r'\bstation\s*:\s*(\{.+\}),?\s*')
 
     _stream_schema = validate.Schema(
@@ -31,10 +33,6 @@ class RadioNet(Plugin):
             )
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         streams = self.session.http.get(self.url, schema=self._stream_schema)

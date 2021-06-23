@@ -1,19 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?tvtoya\.pl/live"
+))
 class TVToya(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?tvtoya\.pl/live")
     _playlist_re = re.compile(r'<source src="([^"]+)" type="application/x-mpegURL">')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         self.session.set_option('hls-live-edge', 10)

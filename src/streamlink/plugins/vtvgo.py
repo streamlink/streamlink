@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -10,10 +10,12 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://vtvgo\.vn/xem-truc-tuyen-kenh-'
+))
 class VTVgo(Plugin):
     AJAX_URL = 'https://vtvgo.vn/ajax-get-stream'
 
-    _url_re = re.compile(r'https://vtvgo\.vn/xem-truc-tuyen-kenh-')
     _params_re = re.compile(r'''var\s+(?P<key>(?:type_)?id|time|token)\s*=\s*["']?(?P<value>[^"']+)["']?;''')
 
     _schema_params = validate.Schema(
@@ -32,10 +34,6 @@ class VTVgo(Plugin):
         validate.get("stream_url"),
         validate.get(0)
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         self.session.http.headers.update({

@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -10,8 +10,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://([\w-]+\.)*reuters\.(com|tv)'
+))
 class Reuters(Plugin):
-    _url_re = re.compile(r'https?://(.*?\.)?reuters\.(com|tv)')
     _id_re = re.compile(r'(/l/|id=)(?P<id>.*?)(/|\?|$)')
     _iframe_url = 'https://www.reuters.tv/l/{0}/?nonav=true'
     _hls_re = re.compile(r'''(?<!')https://[^"';!<>]+\.m3u8''')
@@ -47,10 +49,6 @@ class Reuters(Plugin):
     def __init__(self, url):
         super().__init__(url)
         self.title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_title(self):
         if not self.title:

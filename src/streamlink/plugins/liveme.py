@@ -3,15 +3,17 @@ import random
 import re
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(www\.)?liveme\.com/live\.html\?videoid=(\d+)"
+))
 class LiveMe(Plugin):
-    url_re = re.compile(r"https?://(www\.)?liveme\.com/live\.html\?videoid=(\d+)")
     api_url = "https://live.ksmobile.net/live/queryinfo"
     api_schema = validate.Schema(validate.all({
         "status": "200",
@@ -22,10 +24,6 @@ class LiveMe(Plugin):
             }
         }
     }, validate.get("data")))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _random_t(self, t):
         return "".join(random.choice("ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678") for _ in range(t))

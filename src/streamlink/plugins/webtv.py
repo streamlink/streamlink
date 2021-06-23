@@ -5,7 +5,7 @@ import re
 
 from Crypto.Cipher import AES
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
@@ -14,8 +14,10 @@ from streamlink.utils.crypto import unpad_pkcs5
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(\w+)\.web\.tv/?"
+))
 class WebTV(Plugin):
-    _url_re = re.compile(r"http(?:s)?://(\w+)\.web.tv/?")
     _sources_re = re.compile(r'"sources": (\[.*?\]),', re.DOTALL)
     _sources_schema = validate.Schema([
         {
@@ -31,10 +33,6 @@ class WebTV(Plugin):
             "label": validate.text
         }
     ])
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     @staticmethod
     def decrypt_stream_url(encoded_url):

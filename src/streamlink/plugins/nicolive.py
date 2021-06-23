@@ -8,16 +8,13 @@ from urllib.parse import unquote_plus, urlparse
 import websocket
 
 from streamlink import logger
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 
 _log = logging.getLogger(__name__)
-
-_url_re = re.compile(
-    r"^https?://(?P<domain>live[0-9]*\.nicovideo\.jp)/watch/lv[0-9]*")
 
 _login_url = "https://account.nicovideo.jp/login/redirector"
 
@@ -27,6 +24,9 @@ _login_url_params = {
     "next_url": "/"}
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/lv\d*"
+))
 class NicoLive(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -74,10 +74,6 @@ class NicoLive(Plugin):
     _ws = None
 
     frontend_id = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return _url_re.match(url) is not None
 
     def _get_streams(self):
         if self.options.get("purge_credentials"):

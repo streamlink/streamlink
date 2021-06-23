@@ -1,8 +1,7 @@
 import logging
 import re
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
@@ -11,10 +10,13 @@ from streamlink.utils.url import url_concat
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?abweb\.com/BIS-TV-Online/bistvo-tele-universal\.aspx",
+    re.IGNORECASE
+))
 class ABweb(Plugin):
     url_l = 'https://www.abweb.com/BIS-TV-Online/identification.aspx?ReturnUrl=%2fBIS-TV-Online%2fbistvo-tele-universal.aspx'
 
-    _url_re = re.compile(r'https?://(?:www\.)?abweb\.com/BIS-TV-Online/bistvo-tele-universal.aspx', re.IGNORECASE)
     _hls_re = re.compile(r'''["']file["']:\s?["'](?P<url>[^"']+\.m3u8[^"']+)["']''')
 
     arguments = PluginArguments(
@@ -49,10 +51,6 @@ class ABweb(Plugin):
         super().__init__(url)
         self._authed = (self.session.http.cookies.get('ASP.NET_SessionId', domain='.abweb.com')
                         and self.session.http.cookies.get('.abportail1', domain='.abweb.com'))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _login(self, username, password):
         log.debug('Attempting to login.')

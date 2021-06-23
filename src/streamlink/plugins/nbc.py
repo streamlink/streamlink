@@ -1,17 +1,15 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugins.theplatform import ThePlatform
 from streamlink.utils import update_scheme
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?nbc\.com"
+))
 class NBC(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?nbc\.com")
     embed_url_re = re.compile(r'''(?P<q>["'])embedURL(?P=q)\s*:\s*(?P<q2>["'])(?P<url>.*?)(?P=q2)''')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

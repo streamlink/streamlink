@@ -2,23 +2,20 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://ltv\.lsm\.lv/lv/tieshraide"
+))
 class LtvLsmLv(Plugin):
     """
     Support for Latvian live channels streams on ltv.lsm.lv
     """
-    url_re = re.compile(r"https?://ltv\.lsm\.lv/lv/tieshraide")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def _get_streams(self):
         self.session.http.headers.update({"Referer": self.url})
 

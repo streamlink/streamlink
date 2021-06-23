@@ -3,7 +3,7 @@ import re
 import sys
 import time
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HDSStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -11,6 +11,15 @@ from streamlink.stream.ffmpegmux import MuxedStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r'''
+    https?://(
+        (?:www\.)?france\.tv/.+\.html
+        |
+        www\.(ludo|zouzous)\.fr/heros/[\w-]+
+        |
+        (.+\.)?francetvinfo\.fr
+    )
+''', re.VERBOSE))
 class Pluzz(Plugin):
     GEO_URL = 'http://geo.francetv.fr/ws/edgescape.json'
     API_URL = 'http://sivideo.webservices.francetelevisions.fr/tools/getInfosOeuvre/v2/?idDiffusion={0}'
@@ -18,12 +27,6 @@ class Pluzz(Plugin):
     SWF_PLAYER_URL = 'https://staticftv-a.akamaihd.net/player/bower_components/player_flash/dist/' \
                      'FranceTVNVPVFlashPlayer.akamai-7301b6035a43c4e29b7935c9c36771d2.swf'
 
-    _url_re = re.compile(r'''
-        https?://(
-            (?:www\.)france\.tv/.+\.html |
-            www\.(ludo|zouzous)\.fr/heros/[\w-]+ |
-            (.+\.)?francetvinfo\.fr)
-    ''', re.VERBOSE)
     _pluzz_video_id_re = re.compile(r'''(?P<q>["']*)videoId(?P=q):\s*["'](?P<video_id>[^"']+)["']''')
     _jeunesse_video_id_re = re.compile(r'playlist: \[{.*?,"identity":"(?P<video_id>.+?)@(?P<catalogue>Ludo|Zouzous)"')
     _sport_video_id_re = re.compile(r'data-video="(?P<video_id>.+?)"')
@@ -87,10 +90,6 @@ class Pluzz(Plugin):
     arguments = PluginArguments(
         PluginArgument("mux-subtitles", is_global=True)
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         # Retrieve geolocation data

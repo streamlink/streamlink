@@ -22,6 +22,4 @@ class TestPluginCanHandleUrlVTVgo(PluginCanHandleUrl):
     should_not_match = [
         # POST request will error with www.
         'https://www.vtvgo.vn/xem-truc-tuyen-kenh-vtv1-1.html',
-        # POST request will error with http://
-        'http://vtvgo.vn/xem-truc-tuyen-kenh-vtv1-1.html',
     ]

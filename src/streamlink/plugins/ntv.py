@@ -1,16 +1,13 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 
+@pluginmatcher(re.compile(
+    r'https?://www\.ntv\.ru/air/'
+))
 class NTV(Plugin):
-    url_re = re.compile(r'https?://www.ntv.ru/air/.*')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def _get_streams(self):
         body = self.session.http.get(self.url).text
         mrl = None

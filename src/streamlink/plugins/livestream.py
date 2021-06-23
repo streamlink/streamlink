@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
@@ -9,8 +9,10 @@ from streamlink.stream import HLSStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?livestream\.com/"
+))
 class Livestream(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?livestream\.com/")
     _config_re = re.compile(r"window.config = ({.+})")
     _stream_config_schema = validate.Schema(validate.any({
         "event": {
@@ -20,10 +22,6 @@ class Livestream(Plugin):
             }, None),
         }
     }, {}), validate.get("event", {}), validate.get("stream_info", {}))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

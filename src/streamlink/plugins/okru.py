@@ -3,8 +3,7 @@ import re
 from html import unescape as html_unescape
 from urllib.parse import unquote
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 from streamlink.utils import parse_json
@@ -12,10 +11,11 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?ok\.ru/'
+))
 class OKru(Plugin):
-
     _data_re = re.compile(r'''data-options=(?P<q>["'])(?P<data>{[^"']+})(?P=q)''')
-    _url_re = re.compile(r'''https?://(?:www\.)?ok\.ru/''')
 
     _metadata_schema = validate.Schema(
         validate.transform(parse_json),
@@ -62,10 +62,6 @@ class OKru(Plugin):
         'lowest': 240,
         'mobile': 144,
     }
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     @classmethod
     def stream_weight(cls, key):

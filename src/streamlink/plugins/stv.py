@@ -1,23 +1,19 @@
 import logging
 import re
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://player\.stv\.tv/live'
+))
 class STV(Plugin):
-    _url_re = re.compile(r'https?://player\.stv\.tv/live')
-
     API_URL = 'https://player.api.stv.tv/v1/streams/stv/'
 
     title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_title(self):
         if self.title is None:

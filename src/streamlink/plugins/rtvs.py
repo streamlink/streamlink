@@ -1,18 +1,16 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
 
+@pluginmatcher(re.compile(
+    r"https?://www\.rtvs\.sk/televizia/live-[\w-]+"
+))
 class Rtvs(Plugin):
-    _re_url = re.compile(r"https?://www\.rtvs\.sk/televizia/live-[\w-]+")
     _re_channel_id = re.compile(r"'stream':\s*'live-(\d+)'")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

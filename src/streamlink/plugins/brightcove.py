@@ -4,10 +4,9 @@ import re
 from io import BytesIO
 from urllib.parse import parse_qsl, urlparse
 
-from streamlink import PluginError
 from streamlink.packages.flashmedia import AMFMessage, AMFPacket
 from streamlink.packages.flashmedia.types import AMF3ObjectBase
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
@@ -166,13 +165,10 @@ class BrightcovePlayer:
         return bp.get_streams(video_id)
 
 
+@pluginmatcher(re.compile(
+    r"https?://players\.brightcove\.net/.*?/index\.html"
+))
 class Brightcove(Plugin):
-    url_re = re.compile(r"https?://players\.brightcove\.net/.*?/index.html")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def _get_streams(self):
         return BrightcovePlayer.from_url(self.session, self.url)
 

@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urljoin, urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.plugins.brightcove import BrightcovePlayer
 from streamlink.stream import HTTPStream
@@ -10,8 +10,10 @@ from streamlink.stream import HTTPStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:[\w-]+\.)+(?:bfmtv|01net)\.com'
+))
 class BFMTV(Plugin):
-    _url_re = re.compile(r'https://.+\.(?:bfmtv|01net)\.com')
     _dailymotion_url = 'https://www.dailymotion.com/embed/video/{}'
     _brightcove_video_re = re.compile(
         r'accountid="(?P<account_id>[0-9]+).*?videoid="(?P<video_id>[0-9]+)"',
@@ -29,10 +31,6 @@ class BFMTV(Plugin):
     _js_brightcove_video_re = re.compile(
         r'i\?\([A-Z]="[^"]+",y="(?P<video_id>[0-9]+).*"data-account"\s*:\s*"(?P<account_id>[0-9]+)',
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

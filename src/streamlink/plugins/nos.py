@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -10,26 +10,16 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:\w+\.)?nos\.nl/(?:livestream|collectie|video|uitzendingen)",
+))
 class NOS(Plugin):
-    _re_url = re.compile(r"""https?://(?:\w+\.)?nos\.nl/(?:
-        livestream
-        |
-        collectie
-        |
-        video
-        |
-        uitzendingen
-    )""", re.VERBOSE)
     _msg_live_offline = "This livestream is offline."
     title = None
     vod_keys = {
         "pages/Collection/Video/Video": "item",
         "pages/Video/Video": "video",
     }
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url) is not None
 
     def get_title(self):
         return self.title

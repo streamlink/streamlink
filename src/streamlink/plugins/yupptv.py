@@ -2,15 +2,17 @@ import logging
 import re
 import time
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?yupptv\.com'
+))
 class YuppTV(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?yupptv\.com')
     _m3u8_re = re.compile(r'''['"](http.+\.m3u8.*?)['"]''')
     _cookie_expiry = 3600 * 24 * 365
 
@@ -45,10 +47,6 @@ class YuppTV(Plugin):
         super().__init__(url)
         self._authed = (self.session.http.cookies.get("BoxId")
                         and self.session.http.cookies.get("YuppflixToken"))
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _login_using_box_id_and_yuppflix_token(self, box_id, yuppflix_token):
         time_now = time.time()

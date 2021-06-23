@@ -2,20 +2,17 @@ import logging
 import re
 
 from streamlink import NoPluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.utils import update_scheme
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?gardenersworld\.com/"
+))
 class GardenersWorld(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?gardenersworld\.com/")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def _get_streams(self):
         page = self.session.http.get(self.url)
         for iframe in itertags(page.text, "iframe"):

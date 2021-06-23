@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 from streamlink.utils import parse_json
@@ -9,8 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://egame\.qq\.com/(?P<channel>\d+)"
+))
 class Egame(Plugin):
-
     STREAM_WEIGHTS = {
         "source": 65535,
         # "sd6m": 6000,
@@ -21,17 +23,12 @@ class Egame(Plugin):
         # "low": 900,
     }
 
-    _url_re = re.compile(r"https://egame\.qq\.com/(?P<channel>\d+)")
     _room_json_re = re.compile(r"window\._playerInfo\s*=\s*({.*});")
 
     data_schema = validate.Schema({
         "vid": validate.text,
         "urlArray": [{"playUrl": validate.text}],
     })
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
 
     @classmethod
     def stream_weight(cls, stream):

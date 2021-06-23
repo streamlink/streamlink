@@ -1,17 +1,18 @@
-
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
 
 
+@pluginmatcher(re.compile(
+    r'https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)'
+))
 class IDF1(Plugin):
     DACAST_API_URL = 'https://json.dacast.com/b/{}/{}/{}'
     DACAST_TOKEN_URL = 'https://services.dacast.com/token/i/b/{}/{}/{}'
 
-    _url_re = re.compile(r'https?://www\.idf1\.fr/(videos/[^/]+/[^/]+\.html|live\b)')
     _video_id_re = re.compile(r"""
             dacast\('(?P<broadcaster_id>\d+)_(?P<video_type>[a-z]+)_(?P<video_id>\d+)',\s*'replay_content',\s*data\);
         """, re.VERBOSE)
@@ -47,10 +48,6 @@ class IDF1(Plugin):
     )
 
     _user_agent = useragents.IE_11
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return IDF1._url_re.match(url)
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

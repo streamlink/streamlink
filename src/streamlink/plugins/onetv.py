@@ -3,7 +3,7 @@ import random
 import re
 from urllib.parse import unquote
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.plugin import stream_weight
 from streamlink.stream import HLSStream
@@ -13,13 +13,10 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?1tv\.ru/live"
+))
 class OneTV(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?1tv\.ru/live")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     @classmethod
     def stream_weight(cls, stream):
         return dict(ld=(140, "pixels"), sd=(360, "pixels"), hd=(720, "pixels")).get(stream, stream_weight(stream))

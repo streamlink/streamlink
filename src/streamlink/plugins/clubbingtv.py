@@ -1,16 +1,18 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(www\.)?clubbingtv\.com/"
+))
 class ClubbingTV(Plugin):
     _login_url = "https://www.clubbingtv.com/user/login"
 
-    _url_re = re.compile(r"https://(www\.)?clubbingtv\.com/")
     _live_re = re.compile(
         r'playerInstance\.setup\({\s*"file"\s*:\s*"(?P<stream_url>.+?)"',
         re.DOTALL,
@@ -31,10 +33,6 @@ class ClubbingTV(Plugin):
             help="A Clubbing TV account password to use with --clubbingtv-username.",
         ),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def login(self):
         username = self.get_option("username")
