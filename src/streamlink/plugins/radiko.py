@@ -6,28 +6,25 @@ import re
 import xml.etree.ElementTree as ET
 from urllib.parse import urlencode
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 
+@pluginmatcher(re.compile(
+    r'https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?'
+))
 class Radiko(Plugin):
-    _url_re = re.compile(r'https?://radiko\.jp/(#!/)?(?P<state>live|ts)/(?P<station_id>[a-zA-Z0-9-]+)/?(?P<start_at>\d+)?')
     _api_auth_1 = 'https://radiko.jp/v2/api/auth1'
     _api_auth_2 = 'https://radiko.jp/v2/api/auth2'
     _auth_key = 'bcd151073c03b352e1ef2fd66c32209da9ca0afa'
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
-
     def _get_streams(self):
-        match = self._url_re.match(self.url)
-        state = match.group('state')
-        station_id = match.group('station_id').upper()
+        state = self.match.group('state')
+        station_id = self.match.group('station_id').upper()
         if state == 'live':
             url, token = self._live(station_id)
         else:
-            start_at = match.group('start_at')
+            start_at = self.match.group('start_at')
             url, token = self._timefree(station_id, start_at)
         headers = {
             'X-Radiko-AuthToken': token

@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -10,19 +10,15 @@ from streamlink.utils.url import url_concat
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?mildom\.com/
+    (?:
+        playback/(\d+)(/(?P<video_id>(\d+)-(\w+)))
+        |
+        (?P<channel_id>\d+)
+    )
+""", re.VERBOSE))
 class Mildom(Plugin):
-    _re_url = re.compile(r"""https?://(?:www\.)?mildom\.com/
-        (?:
-            playback/(\d+)(/(?P<video_id>(\d+)\-(\w+)))
-            |
-            (?P<channel_id>\d+)
-        )
-    """, re.VERBOSE)
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url)
-
     def _get_vod_streams(self, video_id):
         data = self.session.http.get(
             "https://cloudac.mildom.com/nonolive/videocontent/playback/getPlaybackDetail",
@@ -117,9 +113,8 @@ class Mildom(Plugin):
             yield quality[0], HLSStream(self.session, base_url.format(quality[1]))
 
     def _get_streams(self):
-        match = self._re_url.match(self.url)
-        channel_id = match.group("channel_id")
-        video_id = match.group("video_id")
+        channel_id = self.match.group("channel_id")
+        video_id = self.match.group("video_id")
         if video_id:
             return self._get_vod_streams(video_id)
         else:

@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -9,8 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://www\.vlive\.tv/(?P<format>video|post)/(?P<id>[\d-]+)"
+))
 class Vlive(Plugin):
-    _url_re = re.compile(r"https://www\.vlive\.tv/(?P<format>video|post)/(?P<id>[0-9\-]+)")
     _page_info = re.compile(r"window\.__PRELOADED_STATE__\s*=\s*({.*})\s*(?:<|,\s*function)", re.DOTALL)
     _playinfo_url = "https://www.vlive.tv/globalv-web/vam-web/old/v3/live/{0}/playInfo"
 
@@ -40,10 +42,6 @@ class Vlive(Plugin):
         validate.get(("result", "adaptiveStreamUrl")),
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
         self.session.http.headers.update({"Referer": self.url})
         video_json = self.session.http.get(self.url, schema=self._schema_video)
@@ -69,7 +67,7 @@ class Vlive(Plugin):
             log.error('VODs are not supported')
             return
 
-        url_format, video_id = self._url_re.match(self.url).groups()
+        url_format, video_id = self.match.groups()
         if url_format == 'post':
             video_id = str(video_json['videoSeq'])
 

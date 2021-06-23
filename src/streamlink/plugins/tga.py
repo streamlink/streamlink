@@ -1,6 +1,6 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
@@ -8,7 +8,6 @@ CHANNEL_INFO_URL = "http://api.plu.cn/tga/streams/%s"
 QQ_STREAM_INFO_URL = "http://info.zb.qq.com/?cnlid=%d&cmd=2&stream=%d&system=1&sdtfrom=113"
 PLU_STREAM_INFO_URL = "http://livestream.plu.cn/live/getlivePlayurl?roomId=%d"
 _quality_re = re.compile(r"\d+x(\d+)$")
-_url_re = re.compile(r"http://(star|y)\.longzhu\.(?:tv|com)/(m\/)?(?P<domain>[a-z0-9]+)")
 
 _channel_schema = validate.Schema(
     {
@@ -47,11 +46,10 @@ STREAM_WEIGHTS = {
 }
 
 
+@pluginmatcher(re.compile(
+    r"http?://(star|y)\.longzhu\.(?:tv|com)/(m/)?(?P<domain>[a-z0-9]+)"
+))
 class Tga(Plugin):
-    @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
     @classmethod
     def stream_weight(cls, stream):
         if stream in STREAM_WEIGHTS:
@@ -99,8 +97,7 @@ class Tga(Plugin):
                 })
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        domain = match.group('domain')
+        domain = self.match.group('domain')
 
         vid, cid = self._get_channel_id(domain)
 

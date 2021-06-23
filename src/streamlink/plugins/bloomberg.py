@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 from streamlink.utils import parse_json
@@ -10,18 +10,17 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?bloomberg\.com/
+    (?:
+        news/videos/[^/]+/[^/]+
+        |
+        live/(?P<channel>.+)/?
+    )
+""", re.VERBOSE))
 class Bloomberg(Plugin):
     LIVE_API_URL = "https://cdn.gotraffic.net/projector/latest/assets/config/config.min.json?v=1"
     VOD_API_URL = "https://www.bloomberg.com/api/embed?id={0}"
-
-    _url_re = re.compile(r'''
-        https?://(?:www\.)?bloomberg\.com/
-        (?:
-            news/videos/[^/]+/[^/]+
-            |
-            live/(?P<channel>.+)/?
-        )
-    ''', re.VERBOSE)
 
     _re_preload_state = re.compile(r'<script>\s*window.__PRELOADED_STATE__\s*=\s*({.+});?\s*</script>')
     _re_mp4_bitrate = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
@@ -96,10 +95,6 @@ class Bloomberg(Plugin):
         ])
     }
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return Bloomberg._url_re.match(url)
-
     def _get_live_streams(self, channel):
         res = self.session.http.get(self.url, headers=self._headers)
         if "Are you a robot?" in res.text:
@@ -141,8 +136,7 @@ class Bloomberg(Plugin):
         return streams
 
     def _get_streams(self):
-        match = self._url_re.match(self.url)
-        channel = match.group("channel")
+        channel = self.match.group("channel")
 
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
         if channel:

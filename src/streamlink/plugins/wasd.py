@@ -1,16 +1,17 @@
 import logging
 import re
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?wasd\.tv/(?P<nickname>[^/]+)/?$'
+))
 class WASD(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?wasd\.tv/(?P<nickname>[^/]+)/?$')
     _media_schema = validate.Schema({
         'user_id': int,
         'media_container_online_status': validate.text,
@@ -43,13 +44,9 @@ class WASD(Plugin):
         },
     }, validate.get('result'), validate.get('channel_id'))
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        res = self.session.http.get('https://wasd.tv/api/channels/nicknames/{0}'.format(
-            self._url_re.match(self.url).group('nickname')))
+        nickname = self.match.group('nickname')
+        res = self.session.http.get(f'https://wasd.tv/api/channels/nicknames/{nickname}')
         channel_id = self.session.http.json(res, schema=self._api_nicknames_schema)
 
         res = self.session.http.get(

@@ -3,7 +3,7 @@ import logging
 import re
 from urllib.parse import unquote_plus
 
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
@@ -15,15 +15,15 @@ QUALITY_WEIGHTS = {
 }
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?dlive\.tv/
+    (?:
+        p/(?P<video>[^/]+)
+        |
+        (?P<channel>[^/]+)
+    )
+""", re.VERBOSE))
 class DLive(Plugin):
-    _re_url = re.compile(r"""
-        https?://(?:www\.)?dlive\.tv/
-        (?:
-            (?:p/(?P<video>[^/]+))
-            |
-            (?P<channel>[^/]+)
-        )
-    """, re.VERBOSE)
     _re_videoPlaybackUrl = re.compile(r'"playbackUrl"\s*:\s*"([^"]+\.m3u8)"')
 
     _schema_userByDisplayName = validate.Schema({
@@ -49,10 +49,6 @@ class DLive(Plugin):
     )
 
     @classmethod
-    def can_handle_url(cls, url):
-        return cls._re_url.match(url)
-
-    @classmethod
     def stream_weight(cls, key):
         weight = QUALITY_WEIGHTS.get(key)
         if weight:
@@ -65,9 +61,8 @@ class DLive(Plugin):
         self.author = None
         self.title = None
 
-        match = self._re_url.match(self.url)
-        self.video = match.group("video")
-        self.channel = match.group("channel")
+        self.video = self.match.group("video")
+        self.channel = self.match.group("channel")
 
     def get_author(self):
         return self.author

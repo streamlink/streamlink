@@ -4,7 +4,7 @@ import time
 from urllib.parse import urlparse, urlunparse
 
 from streamlink.exceptions import PluginError, StreamError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, hls_playlist
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker, Sequence
@@ -168,12 +168,13 @@ class FilmOnAPI:
         return self.session.http.json(res, schema=self.api_schema)
 
 
-class Filmon(Plugin):
-    url_re = re.compile(r"""(?x)https?://(?:www\.)?filmon\.(?:tv|com)/(?:
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?filmon\.(?:tv|com)/
+    (?:
         (?:
             index/popout\?
             |
-            (?:tv/)channel/(?:export\?)?
+            (?:tv/)?channel/(?:export\?)?
             |
             tv/(?!channel/)
             |
@@ -181,10 +182,11 @@ class Filmon(Plugin):
             |
             (?P<is_group>group/)
         )(?:channel_id=)?(?P<channel>[-_\w]+)
-    |
+        |
         vod/view/(?P<vod_id>\d+)-
-    )""")
-
+    )
+""", re.VERBOSE))
+class Filmon(Plugin):
     _channel_id_re = re.compile(r"""channel_id\s*=\s*(?P<quote>['"]?)(?P<value>\d+)(?P=quote)""")
     _channel_id_schema = validate.Schema(
         validate.transform(_channel_id_re.search),
@@ -206,10 +208,6 @@ class Filmon(Plugin):
         self.api = FilmOnAPI(self.session)
 
     @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
-    @classmethod
     def stream_weight(cls, key):
         weight = cls.quality_weights.get(key)
         if weight:
@@ -218,11 +216,9 @@ class Filmon(Plugin):
         return Plugin.stream_weight(key)
 
     def _get_streams(self):
-        url_m = self.url_re.match(self.url)
-
-        channel = url_m and url_m.group("channel")
-        vod_id = url_m and url_m.group("vod_id")
-        is_group = url_m and url_m.group("is_group")
+        channel = self.match.group("channel")
+        vod_id = self.match.group("vod_id")
+        is_group = self.match.group("is_group")
 
         if vod_id:
             data = self.api.vod(vod_id)

@@ -2,15 +2,17 @@ import logging
 import re
 import time
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://fanxing\.kugou\.com/(?P<room_id>\d+)"
+))
 class Kugou(Plugin):
-    _url_re = re.compile(r"""https?://fanxing\.kugou\.com/(?P<room_id>\d+)""")
     _roomid_re = re.compile(r"roomId:\s*'(\d+)'")
     _room_stream_list_schema = validate.Schema(
         {
@@ -39,17 +41,13 @@ class Kugou(Plugin):
         }
     })
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
         res = self.session.http.get(self.url)
         m = self._roomid_re.search(res.text)
         if m:
             room_id = m.group(1)
         else:
-            room_id = self._url_re.match(self.url).group("room_id")
+            room_id = self.match.group("room_id")
 
         res = self.session.http.get(
             "https://fx2.service.kugou.com/video/pc/live/pull/v3/streamaddr",

@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HTTPStream
 
@@ -16,11 +16,6 @@ SHOW_STATUS_ROUND = 2
 STREAM_WEIGHTS = {
     "source": 1080
 }
-
-_url_re = re.compile(r"""
-    http(s)?://live.bilibili.com
-    /(?P<channel>[^/]+)
-""", re.VERBOSE)
 
 _room_id_schema = validate.Schema(
     {
@@ -42,11 +37,10 @@ _room_stream_list_schema = validate.Schema(
 )
 
 
+@pluginmatcher(re.compile(
+    r"https?://live\.bilibili\.com/(?P<channel>[^/]+)"
+))
 class Bilibili(Plugin):
-    @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
     @classmethod
     def stream_weight(cls, stream):
         if stream in STREAM_WEIGHTS:
@@ -56,8 +50,7 @@ class Bilibili(Plugin):
 
     def _get_streams(self):
         self.session.http.headers.update({'Referer': self.url})
-        match = _url_re.match(self.url)
-        channel = match.group("channel")
+        channel = self.match.group("channel")
         res_room_id = self.session.http.get(ROOM_API.format(channel))
         room_id_json = self.session.http.json(res_room_id, schema=_room_id_schema)
         room_id = room_id_json['room_id']

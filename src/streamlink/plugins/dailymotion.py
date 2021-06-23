@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.exceptions import NoStreamsError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
@@ -14,17 +14,6 @@ COOKIES = {
 }
 STREAM_INFO_URL = "https://www.dailymotion.com/player/metadata/video/{0}"
 USER_INFO_URL = "https://api.dailymotion.com/user/{0}"
-
-_url_re = re.compile(r"""
-    http(s)?://(\w+\.)?
-    dailymotion.com
-    (?:
-        (/embed)?/(video|live)
-        /(?P<media_id>[^_?/]+)
-    |
-        /(?P<channel_name>[A-Za-z0-9-_]+)
-    )
-""", re.VERBOSE)
 
 _media_schema = validate.Schema(validate.any(
     {"error": {"title": validate.text}},
@@ -48,11 +37,15 @@ _live_id_schema = validate.Schema(
 )
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:\w+\.)?dailymotion\.com
+    (?:
+        (/embed)?/(video|live)/(?P<media_id>[^_?/]+)
+        |
+        /(?P<channel_name>[\w-]+)
+    )
+""", re.VERBOSE))
 class DailyMotion(Plugin):
-    @classmethod
-    def can_handle_url(cls, url):
-        return _url_re.match(url)
-
     def _get_streams_from_media(self, media_id):
         res = self.session.http.get(STREAM_INFO_URL.format(media_id), cookies=COOKIES)
         media = self.session.http.json(res, schema=_media_schema)
@@ -97,9 +90,8 @@ class DailyMotion(Plugin):
         return False
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        media_id = match.group("media_id")
-        username = match.group("channel_name")
+        media_id = self.match.group("media_id")
+        username = self.match.group("channel_name")
 
         if not media_id and username:
             media_id = self.get_live_id(username)

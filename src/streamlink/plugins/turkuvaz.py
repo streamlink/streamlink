@@ -1,32 +1,29 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
-class Turkuvaz(Plugin):
-    """
-    Plugin to support ATV/A2TV Live streams from www.atv.com.tr and www.a2tv.com.tr
-    """
-
-    _url_re = re.compile(r"""(?x)https?://(?:www\.)?
+@pluginmatcher(re.compile(r"""https?://(?:www\.)?
     (?:
         (?:
             (atvavrupa)\.tv
             |
             (atv|a2tv|ahaber|aspor|minikago|minikacocuk|anews)\.com\.tr
         )/webtv/(?:live-broadcast|canli-yayin)
-    |
+        |
         (ahaber)\.com\.tr/video/canli-yayin
-    |
+        |
         atv\.com\.tr/(a2tv)/canli-yayin
-    |
+        |
         sabah\.com\.tr/(apara)/canli-yayin
-    )""")
+    )
+""", re.VERBOSE))
+class Turkuvaz(Plugin):
     _hls_url = "https://trkvz-live.ercdn.net/{channel}/{channel}.m3u8"
     _token_url = "https://securevideotoken.tmgrup.com.tr/webtv/secure"
     _token_schema = validate.Schema(validate.all(
@@ -37,12 +34,8 @@ class Turkuvaz(Plugin):
         validate.get("Url"))
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        url_m = self._url_re.match(self.url)
+        url_m = self.match
         domain = url_m.group(1) or url_m.group(2) or url_m.group(3) or url_m.group(4) or url_m.group(5)
         # remap the domain to channel
         channel = {"atv": "atvhd",

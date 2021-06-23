@@ -2,13 +2,16 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)"
+))
 class NRK(Plugin):
     _psapi_url = 'https://psapi.nrk.no'
     # Program type to manifest type mapping
@@ -20,7 +23,6 @@ class NRK(Plugin):
     }
 
     _program_id_re = re.compile(r'<meta property="nrk:program-id" content="([^"]+)"')
-    _url_re = re.compile(r"https?://(?:tv|radio)\.nrk\.no/(program|direkte|serie|podkast)(?:/.+)?/([^/]+)")
 
     _playable_schema = validate.Schema(validate.any(
         {
@@ -49,10 +51,6 @@ class NRK(Plugin):
     category = None
     title = None
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def get_category(self):
         return self.category
 
@@ -61,7 +59,7 @@ class NRK(Plugin):
 
     def _get_streams(self):
         # Construct manifest URL for this program.
-        program_type, program_id = self._url_re.match(self.url).groups()
+        program_type, program_id = self.match.groups()
         manifest_type = self._program_type_map.get(program_type)
         if manifest_type is None:
             log.error(f"Unknown program type '{program_type}'")

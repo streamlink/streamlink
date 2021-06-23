@@ -1,13 +1,16 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://www\.mycanal\.fr/(.*)/(.*)/p/(?P<video_id>\d+)"
+))
 class CanalPlus(Plugin):
     # NOTE : no live url for the moment
     API_URL = 'https://secure-service.canal-plus.com/video/rest/getVideos/cplus/{0}?format=json'
@@ -15,12 +18,6 @@ class CanalPlus(Plugin):
     # Secret parameter needed to download HTTP videos on canalplus.fr
     SECRET = 'pqzerjlsmdkjfoiuerhsdlfknaes'
 
-    _url_re = re.compile(r'''
-        https?://
-        (
-            www.mycanal.fr/(.*)/(.*)/p/(?P<video_id>[0-9]+)
-        )
-''', re.VERBOSE)
     _video_id_re = re.compile(r'(\bdata-video="|<meta property="og:video" content=".+?&videoId=)(?P<video_id>[0-9]+)"')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+k)\.mp4')
     _api_schema = validate.Schema({
@@ -37,14 +34,9 @@ class CanalPlus(Plugin):
     })
     _user_agent = useragents.CHROME
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return CanalPlus._url_re.match(url)
-
     def _get_streams(self):
         # Get video ID and channel from URL
-        match = self._url_re.match(self.url)
-        video_id = match.group('video_id')
+        video_id = self.match.group('video_id')
         if video_id is None:
             # Retrieve URL page and search for video ID
             res = self.session.http.get(self.url)

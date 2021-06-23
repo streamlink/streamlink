@@ -15,8 +15,6 @@ class TestPluginCanHandleUrlAbemaTV(PluginCanHandleUrl):
     ]
 
     should_not_match = [
-        'http://abema.tv/now-on-air/abema-news',
-        'http://www.abema.tv/now-on-air/abema-news',
         'https://www.abema.tv/now-on-air/abema-news',
         'https://www.abema.tv/now-on-air/',
         'https://abema.tv/timetable',

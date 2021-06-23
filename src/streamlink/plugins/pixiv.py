@@ -2,17 +2,17 @@ import logging
 import re
 
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://sketch\.pixiv\.net/@?(?P<user>[^/]+)"
+))
 class Pixiv(Plugin):
-    """Plugin for https://sketch.pixiv.net/lives"""
-
-    _url_re = re.compile(r"https?://sketch\.pixiv\.net/@?(?P<user>[^/]+)")
     _post_key_re = re.compile(
         r"""name=["']post_key["']\svalue=["'](?P<data>[^"']+)["']""")
 
@@ -92,10 +92,6 @@ class Pixiv(Plugin):
                         and self.session.http.cookies.get("device_token"))
         self.session.http.headers.update({"Referer": self.url})
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _login_using_session_id_and_device_token(self, session_id, device_token):
         self.session.http.get(self.login_url_get)
 
@@ -117,9 +113,8 @@ class Pixiv(Plugin):
         data = self.session.http.json(res, schema=self._data_lives_schema)
         log.debug("Found {0} streams".format(len(data)))
 
-        m = self._url_re.match(self.url)
         for item in data:
-            if item["owner"]["user"]["unique_name"] == m.group("user"):
+            if item["owner"]["user"]["unique_name"] == self.match.group("user"):
                 return item
 
         raise NoStreamsError(self.url)

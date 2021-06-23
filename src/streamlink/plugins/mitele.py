@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, parse_qsd
@@ -10,9 +10,10 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?mitele\.es/directo/(?P<channel>[\w-]+)"
+))
 class Mitele(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?mitele\.es/directo/(?P<channel>[\w-]+)")
-
     caronte_url = "https://caronte.mediaset.es/delivery/channel/mmc/{channel}/mtweb"
     gbx_url = "https://mab.mediaset.es/1.0.0/get?oid=mtmw&eid=%2Fapi%2Fmtmw%2Fv2%2Fgbx%2Fmtweb%2Flive%2Fmmc%2F{channel}"
 
@@ -50,12 +51,8 @@ class Mitele(Plugin):
         4038: "User has no privileges"
     }
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        channel = self._url_re.match(self.url).group("channel")
+        channel = self.match.group("channel")
 
         pdata = self.session.http.get(self.caronte_url.format(channel=channel),
                                       acceptable_status=(200, 403, 404),

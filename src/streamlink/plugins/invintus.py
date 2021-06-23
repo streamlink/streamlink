@@ -1,34 +1,31 @@
 import json
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils.url import update_scheme
 
 
+@pluginmatcher(re.compile(
+    r"https?://player\.invintus\.com/\?clientID=(\d+)&eventID=(\d+)"
+))
 class InvintusMedia(Plugin):
     WSC_API_KEY = "7WhiEBzijpritypp8bqcU7pfU9uicDR"  # hard coded in the middle of https://player.invintus.com/app.js
     API_URL = "https://api.v3.invintusmedia.com/v2/Event/getDetailed"
 
-    url_re = re.compile(r"https?://player\.invintus\.com/\?clientID=(\d+)&eventID=(\d+)")
     api_response_schema = validate.Schema({"data": {"streamingURIs": {"main": validate.url()}}})
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def _get_streams(self):
-        m = self.url_re.match(self.url)
         postdata = {
-            "clientID": m.group(1),
+            "clientID": self.match.group(1),
             "showEncoder": True,
             "showMediaAssets": True,
             "showStreams": True,
             "includePrivate": False,
             "advancedDetails": True,
             "VAST": True,
-            "eventID": m.group(2)
+            "eventID": self.match.group(2)
         }
         headers = {
             "Content-Type": "application/json",

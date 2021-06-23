@@ -1,20 +1,18 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?dr\.dk/drtv(/kanal/[\w-]+)"
+))
 class DRDK(Plugin):
     live_api_url = 'https://www.dr-massive.com/api/page'
-
-    url_re = re.compile(r'''
-        https?://(?:www\.)?dr\.dk/drtv
-        (/kanal/[\w-]+)
-    ''', re.VERBOSE)
 
     _live_data_schema = validate.Schema(
         {'item': {'customFields': {
@@ -24,10 +22,6 @@ class DRDK(Plugin):
         validate.get('item'),
         validate.get('customFields'),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_live(self, path):
         params = dict(
@@ -52,8 +46,7 @@ class DRDK(Plugin):
         return streams
 
     def _get_streams(self):
-        m = self.url_re.match(self.url)
-        path = m and m.group(1)
+        path = self.match.group(1)
         log.debug("Path={0}".format(path))
 
         return self._get_live(path)

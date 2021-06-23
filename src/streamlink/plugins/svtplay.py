@@ -2,7 +2,7 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -10,17 +10,15 @@ from streamlink.stream.ffmpegmux import MuxedStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?(?:svtplay|oppetarkiv)\.se(/(kanaler/)?)'
+))
 class SVTPlay(Plugin):
     api_url = 'https://api.svt.se/videoplayer-api/video/{0}'
 
     author = None
     category = None
     title = None
-
-    url_re = re.compile(r'''
-        https?://(?:www\.)?(?:svtplay|oppetarkiv)\.se
-        (/(kanaler/)?.*)
-    ''', re.VERBOSE)
 
     latest_episode_url_re = re.compile(r'''
         class="play_titlepage__latest-video"\s+href="(?P<url>[^"]+)"
@@ -49,10 +47,6 @@ class SVTPlay(Plugin):
     arguments = PluginArguments(
         PluginArgument("mux-subtitles", is_global=True)
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def get_author(self):
         if self.author is not None:
@@ -131,7 +125,7 @@ class SVTPlay(Plugin):
                         yield q, s
 
     def _get_streams(self):
-        path, live = self.url_re.match(self.url).groups()
+        path, live = self.match.groups()
         log.debug("Path={0}".format(path))
 
         if live:
