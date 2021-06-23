@@ -1,9 +1,10 @@
 import logging
 import re
 from html import unescape as html_unescape
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qsl, unquote, urlparse
 
-from streamlink.plugin import Plugin
+from streamlink.exceptions import NoStreamsError
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
@@ -12,58 +13,34 @@ from streamlink.utils import update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:\w+\.)?vk\.com/video(?:\?z=video)?(?P<video_id>-?\d*_\d*)"
+))
+@pluginmatcher(re.compile(
+    r"https?://(\w+\.)?vk\.com/videos-?\d*"
+))
 class VK(Plugin):
-
     API_URL = 'https://vk.com/al_video.php'
 
-    _url_re = re.compile(r'''https?://(?:\w+\.)?vk\.com/video
-        (?:\?z=video)?(?P<video_id>-?[0-9]*_[0-9]*)
-        ''', re.VERBOSE)
-    _url_catalog_re = re.compile(r"https?://(\w+\.)?vk\.com/videos-?[0-9]*")
     _vod_quality_re = re.compile(r"\.([0-9]*?)\.mp4")
 
-    @classmethod
-    def can_handle_url(cls, url):
-        if cls._url_catalog_re.match(url) is not None:
-            url = cls.follow_vk_redirect(url)
-            if url is None:
-                return False
-        return cls._url_re.match(url) is not None
-
-    @classmethod
-    def follow_vk_redirect(cls, url):
+    def follow_vk_redirect(self):
         # If this is a 'videos' catalog URL
         # with an video ID in the GET request, get that instead
-        parsed_url = urlparse(url)
-        if parsed_url.path.startswith('/videos'):
-            query = {v[0]: v[1] for v in [q.split('=') for q in parsed_url.query.split('&')] if v[0] == 'z'}
+        if self.matches[1]:
             try:
-                true_path = unquote(query['z']).split('/')[0]
-                return parsed_url.scheme + '://' + parsed_url.netloc + '/' + true_path
-            except KeyError:
-                # No redirect found in query string,
-                # so return the catalog url and fail later
-                return url
-        else:
-            return url
+                parsed_url = urlparse(self.url)
+                true_path = next(unquote(v).split('/')[0] for k, v in parse_qsl(parsed_url.query) if k == "z")
+                self.url = parsed_url.scheme + '://' + parsed_url.netloc + '/' + true_path
+            except StopIteration:
+                raise NoStreamsError(self.url)
 
     def _get_streams(self):
-        """
-        Find the streams for vk.com
-        :return:
-        """
         self.session.http.headers.update({'User-Agent': useragents.IPHONE_6})
 
-        # If this is a 'videos' catalog URL
-        # with an video ID in the GET request, get that instead
-        url = self.follow_vk_redirect(self.url)
+        self.follow_vk_redirect()
 
-        m = self._url_re.match(url)
-        if not m:
-            log.error('URL is not compatible: {0}'.format(url))
-            return
-
-        video_id = m.group('video_id')
+        video_id = self.match.group('video_id')
         log.debug('video ID: {0}'.format(video_id))
 
         params = {
