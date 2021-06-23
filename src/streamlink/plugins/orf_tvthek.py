@@ -1,28 +1,26 @@
 import json
 import re
 
-from streamlink.plugin import Plugin, PluginError
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.stream import HLSStream
 
-_stream_url_re = re.compile(r'https?://tvthek\.orf\.at/(index\.php/)?live/(?P<title>[^/]+)/(?P<id>[0-9]+)')
-_vod_url_re = re.compile(r'''
-    https?://tvthek\.orf\.at/pro(gram|file)
-    /(?P<showtitle>[^/]+)/(?P<showid>[0-9]+)
-    /(?P<episodetitle>[^/]+)/(?P<epsiodeid>[0-9]+)
-    (/(?P<segmenttitle>[^/]+)/(?P<segmentid>[0-9]+))?
-''', re.VERBOSE)
 _json_re = re.compile(r'<div class="jsb_ jsb_VideoPlaylist" data-jsb="(?P<json>[^"]+)">')
 
 MODE_STREAM, MODE_VOD = 0, 1
 
 
+@pluginmatcher(re.compile(
+    r"https?://tvthek\.orf\.at/(index\.php/)?live/(?P<title>[^/]+)/(?P<id>\d+)"
+))
+@pluginmatcher(re.compile(r"""
+    https?://tvthek\.orf\.at/pro(gram|file)
+    /(?P<showtitle>[^/]+)/(?P<showid>\d+)
+    /(?P<episodetitle>[^/]+)/(?P<epsiodeid>\d+)
+    (/(?P<segmenttitle>[^/]+)/(?P<segmentid>\d+))?
+""", re.VERBOSE))
 class ORFTVThek(Plugin):
-    @classmethod
-    def can_handle_url(self, url):
-        return _stream_url_re.match(url) or _vod_url_re.match(url)
-
     def _get_streams(self):
-        if _stream_url_re.match(self.url):
+        if self.matches[0]:
             mode = MODE_STREAM
         else:
             mode = MODE_VOD
