@@ -13,6 +13,7 @@ class TestPluginCanHandleUrlMediaklikk(PluginCanHandleUrl):
         'https://m4sport.hu/elo/',
         'https://m4sport.hu/elo/?channelId=m4sport+',
         'https://m4sport.hu/elo/?showchannel=mtv4plus',
+        'https://m4sport.hu/elo/mtv4live/',
     ]
 
     should_not_match = [
