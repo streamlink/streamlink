@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 class Vlive(Plugin):
     _url_re = re.compile(r"https://www\.vlive\.tv/(?P<format>video|post)/(?P<id>[0-9\-]+)")
-    _page_info = re.compile(r'window\.__PRELOADED_STATE__\s*=\s*({.*})\s*<', re.DOTALL)
+    _page_info = re.compile(r"window\.__PRELOADED_STATE__\s*=\s*({.*})\s*(?:<|,\s*function)", re.DOTALL)
     _playinfo_url = "https://www.vlive.tv/globalv-web/vam-web/old/v3/live/{0}/playInfo"
 
     _schema_video = validate.Schema(
@@ -19,34 +19,25 @@ class Vlive(Plugin):
         validate.any(None, validate.all(
             validate.get(1),
             validate.transform(parse_json),
-            validate.any(validate.all(
-                {"postDetail": {"post": {"officialVideo": {
-                    "type": validate.text,
-                    "videoSeq": int,
-                    validate.optional("status"): validate.text,
-                }}}},
-                validate.get("postDetail"),
-                validate.get("post"),
-                validate.get("officialVideo")),
+            validate.any(
                 validate.all(
-                    {"postDetail": {"error": {
-                        "errorCode": validate.text,
-                    }}},
-                    validate.get("postDetail"),
-                    validate.get("error")))
+                    {"postDetail": {"post": {"officialVideo": {
+                        "type": validate.text,
+                        "videoSeq": int,
+                        validate.optional("status"): validate.text}}}},
+                    validate.get(("postDetail", "post", "officialVideo"))),
+                validate.all(
+                    {"postDetail": {"error": {"errorCode": validate.text}}},
+                    validate.get(("postDetail", "error")),
+                )
+            )
         ))
     )
 
     _schema_stream = validate.Schema(
         validate.transform(parse_json),
-        validate.all(
-            {"result": {"streamList": [{
-                "streamName": validate.text,
-                "serviceUrl": validate.text,
-            }]}},
-            validate.get("result"),
-            validate.get("streamList")
-        )
+        {"result": {"adaptiveStreamUrl": validate.url()}},
+        validate.get(("result", "adaptiveStreamUrl")),
     )
 
     @classmethod
@@ -54,8 +45,8 @@ class Vlive(Plugin):
         return cls._url_re.match(url) is not None
 
     def _get_streams(self):
-        video_json = self.session.http.get(self.url, headers={"Referer": self.url},
-                                           schema=self._schema_video)
+        self.session.http.headers.update({"Referer": self.url})
+        video_json = self.session.http.get(self.url, schema=self._schema_video)
         if video_json is None:
             log.error('Could not parse video page')
             return
@@ -90,17 +81,10 @@ class Vlive(Plugin):
             log.error('Unknown video status: {0}'.format(video_status))
             return
 
-        stream_info = self.session.http.get(self._playinfo_url.format(video_id),
-                                            headers={"Referer": self.url},
-                                            schema=self._schema_stream)
-
-        # All "resolutions" have a variant playlist with only one entry, so just combine them
-        for i in stream_info:
-            res_streams = HLSStream.parse_variant_playlist(self.session, i['serviceUrl'])
-            if len(res_streams.values()) > 1:
-                log.warning('More than one stream in variant playlist, using first entry!')
-
-            yield i['streamName'], res_streams.popitem()[1]
+        stream_url = self.session.http.get(
+            self._playinfo_url.format(video_id),
+            schema=self._schema_stream)
+        return HLSStream.parse_variant_playlist(self.session, stream_url).items()
 
 
 __plugin__ = Vlive
