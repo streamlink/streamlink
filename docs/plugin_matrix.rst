@@ -133,7 +133,6 @@ onetv                   1tv.ru               Yes   No    Streams may be geo-rest
 openrectv               openrec.tv           Yes   Yes
 orf_tvthek              tvthek.orf.at        Yes   Yes
 ozolio                  ozolio.com           Yes   No
-periscope               periscope.tv         Yes   Yes   Replay/VOD is supported.
 picarto                 picarto.tv           Yes   Yes
 piczel                  piczel.tv            Yes   No
 pixiv                   sketch.pixiv.net     Yes   --
