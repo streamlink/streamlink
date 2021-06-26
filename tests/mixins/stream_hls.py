@@ -200,14 +200,18 @@ class TestMixinStreamHLS(unittest.TestCase):
     def get_mock(self, item):
         return self.mocks[self.url(item)]
 
-    def called(self, item):
-        return self.get_mock(item).called
+    def called(self, item, once=False):
+        mock = self.get_mock(item)
+        return mock.called_once if once else mock.called
 
     def url(self, item):
         return item.url(self.id())
 
-    def content(self, segments, prop="content", cond=None):
-        return b"".join([getattr(segment, prop) for segment in segments.values() if cond is None or cond(segment)])
+    @staticmethod
+    def content(segments, prop="content", cond=None):
+        if isinstance(segments, dict):
+            segments = segments.values()
+        return b"".join([getattr(segment, prop) for segment in segments if cond is None or cond(segment)])
 
     # close read thread and make sure that all threads have terminated before moving on
     def close_thread(self):

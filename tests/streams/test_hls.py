@@ -13,6 +13,26 @@ from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, T
 from tests.resources import text
 
 
+class EncryptedBase:
+    def __init__(self, num, key, iv, *args, padding=b"", append=b"", **kwargs):
+        super().__init__(num, *args, **kwargs)
+        aesCipher = AES.new(key, AES.MODE_CBC, iv)
+        padded = self.content + padding if padding else pad(self.content, AES.block_size, style="pkcs7")
+        self.content_plain = self.content
+        self.content = aesCipher.encrypt(padded) + append
+
+
+class TagMap(Tag):
+    def __init__(self, num, namespace):
+        self.path = f"map{num}"
+        self.content = f"[map{num}]".encode("ascii")
+        super().__init__("EXT-X-MAP", {"URI": self.val_quoted_string(self.url(namespace))})
+
+
+class TagMapEnc(EncryptedBase, TagMap):
+    pass
+
+
 class TagKey(Tag):
     path = "encryption.key"
 
@@ -33,13 +53,8 @@ class TagKey(Tag):
         return self.uri.format(namespace=namespace) if self.uri else super().url(namespace)
 
 
-class SegmentEnc(Segment):
-    def __init__(self, num, key, iv, *args, padding=b"", append=b"", **kwargs):
-        super().__init__(num, *args, **kwargs)
-        aesCipher = AES.new(key, AES.MODE_CBC, iv)
-        padded = self.content + padding if padding else pad(self.content, AES.block_size, style="pkcs7")
-        self.content_plain = self.content
-        self.content = aesCipher.encrypt(padded) + append
+class SegmentEnc(EncryptedBase, Segment):
+    pass
 
 
 class TestHLSStreamRepr(unittest.TestCase):
@@ -105,8 +120,28 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
         data = self.await_read(read_all=True)
         self.assertEqual(data, self.content(segments, cond=lambda s: 0 < s.num < 3), "Respects the offset and duration")
-        self.assertTrue(all([self.called(s) for s in segments.values() if 0 < s.num < 3]), "Downloads second and third segment")
-        self.assertFalse(any([self.called(s) for s in segments.values() if 0 > s.num > 3]), "Skips other segments")
+        self.assertTrue(all(self.called(s) for s in segments.values() if 0 < s.num < 3), "Downloads second and third segment")
+        self.assertFalse(any(self.called(s) for s in segments.values() if 0 > s.num > 3), "Skips other segments")
+
+    def test_map(self):
+        discontinuity = Tag("EXT-X-DISCONTINUITY")
+        map1 = TagMap(1, self.id())
+        map2 = TagMap(2, self.id())
+        self.mock("GET", self.url(map1), content=map1.content)
+        self.mock("GET", self.url(map2), content=map2.content)
+
+        thread, segments = self.subject([
+            Playlist(0, [map1, Segment(0), Segment(1), Segment(2), Segment(3)]),
+            Playlist(4, [map1, Segment(4), map2, Segment(5), Segment(6), discontinuity, Segment(7)], end=True)
+        ])
+
+        data = self.await_read(read_all=True, timeout=None)
+        self.assertEqual(data, self.content([
+            map1, segments[1], map1, segments[2], map1, segments[3],
+            map1, segments[4], map2, segments[5], map2, segments[6], segments[7]
+        ]))
+        self.assertTrue(self.called(map1, once=True), "Downloads first map only once")
+        self.assertTrue(self.called(map2, once=True), "Downloads second map only once")
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
@@ -142,11 +177,30 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
         self.assertEqual(data, expected, "Decrypts the AES-128 identity stream")
-        self.assertTrue(self.called(key), "Downloads encryption key")
+        self.assertTrue(self.called(key, once=True), "Downloads encryption key only once")
         self.assertEqual(self.get_mock(key).last_request._request.headers.get("X-FOO"), "BAR")
-        self.assertFalse(any([self.called(s) for s in segments.values() if s.num < 1]), "Skips first segment")
-        self.assertTrue(all([self.called(s) for s in segments.values() if s.num >= 1]), "Downloads all remaining segments")
+        self.assertFalse(any(self.called(s) for s in segments.values() if s.num < 1), "Skips first segment")
+        self.assertTrue(all(self.called(s) for s in segments.values() if s.num >= 1), "Downloads all remaining segments")
         self.assertEqual(self.get_mock(segments[1]).last_request._request.headers.get("X-FOO"), "BAR")
+
+    def test_hls_encrypted_aes128_with_map(self):
+        aesKey, aesIv, key = self.gen_key()
+        map1 = TagMapEnc(1, namespace=self.id(), key=aesKey, iv=aesIv)
+        map2 = TagMapEnc(2, namespace=self.id(), key=aesKey, iv=aesIv)
+        self.mock("GET", self.url(map1), content=map1.content)
+        self.mock("GET", self.url(map2), content=map2.content)
+
+        # noinspection PyTypeChecker
+        thread, segments = self.subject([
+            Playlist(0, [key, map1] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 2)]),
+            Playlist(2, [key, map2] + [SegmentEnc(num, aesKey, aesIv) for num in range(2, 4)], end=True)
+        ])
+
+        self.await_write(2 * 2 + 2 * 2)
+        data = self.await_read(read_all=True)
+        self.assertEqual(data, self.content([
+            map1, segments[0], map1, segments[1], map2, segments[2], map2, segments[3]
+        ], prop="content_plain"))
 
     def test_hls_encrypted_aes128_key_uri_override(self):
         aesKey, aesIv, key = self.gen_key(uri="http://real-mocked/{namespace}/encryption.key?foo=bar")
@@ -164,7 +218,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         expected = self.content(segments, prop="content_plain", cond=lambda s: s.num >= 1)
         self.assertEqual(data, expected, "Decrypts stream from custom key")
         self.assertFalse(self.called(key_invalid), "Skips encryption key")
-        self.assertTrue(self.called(key), "Downloads custom encryption key")
+        self.assertTrue(self.called(key, once=True), "Downloads custom encryption key")
         self.assertEqual(self.get_mock(key).last_request._request.headers.get("X-FOO"), "BAR")
 
     @patch("streamlink.stream.hls.log")

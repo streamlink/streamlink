@@ -2,8 +2,9 @@ import logging
 import re
 import struct
 from collections import OrderedDict, defaultdict
+from concurrent.futures import Future
 from threading import Event
-from typing import List, NamedTuple, Optional
+from typing import List, NamedTuple, Optional, Union
 from urllib.parse import urlparse
 
 # noinspection PyPackageRequirements
@@ -16,10 +17,10 @@ from requests.exceptions import ChunkedEncodingError
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
-from streamlink.stream.hls_playlist import Key, M3U8, Segment
+from streamlink.stream.hls_playlist import Key, M3U8, Map, Segment
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
-from streamlink.utils import LazyFormatter
+from streamlink.utils import LRUCache, LazyFormatter
 
 log = logging.getLogger(__name__)
 
@@ -38,6 +39,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         super().__init__(reader, *args, **kwargs)
 
         self.byterange_offsets = defaultdict(int)
+        self.map_cache: LRUCache[Sequence.segment.map.uri, Future] = LRUCache(kwargs["threads"])
         self.key_data = None
         self.key_uri = None
         self.key_uri_override = options.get("hls-segment-key-uri")
@@ -88,7 +90,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         return AES.new(self.key_data, AES.MODE_CBC, iv)
 
-    def create_request_params(self, segment: Segment):
+    def create_request_params(self, segment: Union[Segment, Map]):
         request_params = dict(self.reader.request_params)
         headers = request_params.pop("headers", {})
 
@@ -99,31 +101,60 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
             bytes_len = max(segment.byterange.range - 1, 0)
             bytes_end = bytes_start + bytes_len
-            headers["Range"] = f"bytes={0}-{1}".format(bytes_start, bytes_end)
+            headers["Range"] = f"bytes={bytes_start}-{bytes_end}"
             self.byterange_offsets[segment.uri] = bytes_end + 1
 
         request_params["headers"] = headers
 
         return request_params
 
-    def fetch(self, sequence: Sequence, retries: Optional[int] = None) -> Optional[Response]:
-        if self.closed or not retries:
+    def put(self, sequence: Sequence):
+        if self.closed:
             return
 
+        if sequence is None:
+            self.queue(None, None)
+        else:
+            # always queue the segment's map first if it exists
+            if sequence.segment.map is not None:
+                future = self.map_cache.get(sequence.segment.map.uri)
+                # use cached map request if not a stream discontinuity
+                # don't fetch multiple times when map request of previous segment is still pending
+                if future is None or sequence.segment.discontinuity:
+                    future = self.executor.submit(self.fetch_map, sequence)
+                    self.map_cache.set(sequence.segment.map.uri, future)
+                self.queue(future, sequence, True)
+
+            # regular segment request
+            future = self.executor.submit(self.fetch, sequence)
+            self.queue(future, sequence, False)
+
+    def fetch(self, sequence: Sequence) -> Optional[Response]:
         try:
-            request_params = self.create_request_params(sequence.segment)
+            return self._fetch(sequence.segment, self.stream_data and not sequence.segment.key)
+        except StreamError as err:  # pragma: no cover
+            log.error(f"Failed to fetch segment {sequence.num}: {err}")
 
-            return self.session.http.get(
-                sequence.segment.uri,
-                stream=(self.stream_data and not sequence.segment.key),
-                timeout=self.timeout,
-                exception=StreamError,
-                retries=self.retries,
-                **request_params
-            )
-        except StreamError as err:
-            log.error(f"Failed to open segment {sequence.num}: {err}")
+    def fetch_map(self, sequence: Sequence) -> Optional[Response]:
+        try:
+            return self._fetch(sequence.segment.map, self.stream_data and not sequence.segment.key)
+        except StreamError as err:  # pragma: no cover
+            log.error(f"Failed to fetch map for segment {sequence.num}: {err}")
+
+    def _fetch(self, segment: Union[Segment, Map], stream: bool) -> Optional[Response]:
+        if self.closed or not self.retries:  # pragma: no cover
             return
+
+        request_params = self.create_request_params(segment)
+
+        return self.session.http.get(
+            segment.uri,
+            stream=stream,
+            timeout=self.timeout,
+            exception=StreamError,
+            retries=self.retries,
+            **request_params
+        )
 
     def should_filter_sequence(self, sequence: Sequence) -> bool:
         return self.ignore_names and self.ignore_names.search(sequence.segment.uri) is not None
@@ -143,11 +174,10 @@ class HLSStreamWriter(SegmentedStreamWriter):
             log.info("Filtering out segments and pausing stream output")
             self.reader.filter_event.clear()
 
-    def _write(self, sequence: Sequence, res: Response, chunk_size: int = 8192):
+    def _write(self, sequence: Sequence, res: Response, is_map: bool):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
-                decryptor = self.create_decryptor(sequence.segment.key,
-                                                  sequence.num)
+                decryptor = self.create_decryptor(sequence.segment.key, sequence.num)
             except StreamError as err:
                 log.error(f"Failed to create decryptor: {err}")
                 self.close()
@@ -166,13 +196,16 @@ class HLSStreamWriter(SegmentedStreamWriter):
             self.reader.buffer.write(chunk)
         else:
             try:
-                for chunk in res.iter_content(chunk_size):
+                for chunk in res.iter_content(8192):
                     self.reader.buffer.write(chunk)
             except ChunkedEncodingError:
                 log.error(f"Download of segment {sequence.num} failed")
                 return
 
-        log.debug(f"Download of segment {sequence.num} complete")
+        if is_map:
+            log.debug(f"Segment initialization {sequence.num} complete")
+        else:
+            log.debug(f"Segment {sequence.num} complete")
 
 
 class HLSStreamWorker(SegmentedStreamWorker):
