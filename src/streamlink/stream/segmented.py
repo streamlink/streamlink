@@ -1,9 +1,10 @@
 import logging
 import queue
 from concurrent import futures
-from concurrent.futures.thread import ThreadPoolExecutor
+from concurrent.futures import Future, ThreadPoolExecutor
 from sys import version_info
 from threading import Event, Thread
+from typing import Any, Optional
 
 from streamlink.buffers import RingBuffer
 from streamlink.stream.stream import StreamIO
@@ -13,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class CompatThreadPoolExecutor(ThreadPoolExecutor):
     if version_info < (3, 9):
-        def shutdown(self, wait=True, cancel_futures=False):
+        def shutdown(self, wait=True, cancel_futures=False):  # pragma: no cover
             with self._shutdown_lock:
                 self._shutdown = True
                 if cancel_futures:
@@ -51,8 +52,7 @@ class SegmentedStreamWorker(Thread):
 
         self._wait = None
 
-        Thread.__init__(self, name="Thread-{0}".format(self.__class__.__name__))
-        self.daemon = True
+        super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
     def close(self):
         """Shuts down the thread."""
@@ -118,8 +118,7 @@ class SegmentedStreamWriter(Thread):
         self.executor = CompatThreadPoolExecutor(max_workers=threads)
         self.futures = queue.Queue(size)
 
-        Thread.__init__(self, name="Thread-{0}".format(self.__class__.__name__))
-        self.daemon = True
+        super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
     def close(self):
         """Shuts down the thread."""
@@ -135,21 +134,20 @@ class SegmentedStreamWriter(Thread):
         if self.closed:
             return
 
-        if segment is not None:
-            future = self.executor.submit(self.fetch, segment,
-                                          retries=self.retries)
-        else:
+        if segment is None:
             future = None
+        else:
+            future = self.executor.submit(self.fetch, segment, retries=self.retries)
 
-        self.queue(self.futures, (segment, future))
+        self.queue(future, segment)
 
-    def queue(self, queue_, value):
-        """Puts a value into a queue but aborts if this thread is closed."""
+    def queue(self, future: Optional[Future], segment: Any, *data):
+        """Puts values into a queue but aborts if this thread is closed."""
         while not self.closed:
             try:
-                queue_.put(value, block=True, timeout=1)
+                self.futures.put((future, segment, *data), block=True, timeout=1)
                 return
-            except queue.Full:
+            except queue.Full:  # pragma: no cover
                 continue
 
     def fetch(self, segment):
@@ -159,7 +157,7 @@ class SegmentedStreamWriter(Thread):
         """
         pass
 
-    def write(self, segment, result):
+    def write(self, segment, result, *data):
         """Writes a segment to the buffer.
 
         Should be overridden by the inheriting class.
@@ -169,24 +167,24 @@ class SegmentedStreamWriter(Thread):
     def run(self):
         while not self.closed:
             try:
-                segment, future = self.futures.get(block=True, timeout=0.5)
-            except queue.Empty:
+                future, segment, *data = self.futures.get(block=True, timeout=0.5)
+            except queue.Empty:  # pragma: no cover
                 continue
 
             # End of stream
             if future is None:
                 break
 
-            while not self.closed:
+            while not self.closed:  # pragma: no branch
                 try:
                     result = future.result(timeout=0.5)
-                except futures.TimeoutError:
+                except futures.TimeoutError:  # pragma: no cover
                     continue
-                except futures.CancelledError:
+                except futures.CancelledError:  # pragma: no cover
                     break
 
-                if result is not None:
-                    self.write(segment, result)
+                if result is not None:  # pragma: no branch
+                    self.write(segment, result, *data)
 
                 break
 
@@ -198,7 +196,7 @@ class SegmentedStreamReader(StreamIO):
     __writer__ = SegmentedStreamWriter
 
     def __init__(self, stream, timeout=None):
-        StreamIO.__init__(self)
+        super().__init__()
         self.session = stream.session
         self.stream = stream
 

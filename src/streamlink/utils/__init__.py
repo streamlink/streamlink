@@ -2,8 +2,10 @@ import json
 import re
 import xml.etree.ElementTree as ET
 import zlib
+from collections import OrderedDict
 from importlib.machinery import FileFinder, SOURCE_SUFFIXES, SourceFileLoader
 from importlib.util import module_from_spec
+from typing import Dict, Generic, Optional, TypeVar
 from urllib.parse import parse_qsl, urljoin, urlparse
 
 from streamlink.exceptions import PluginError
@@ -181,7 +183,33 @@ def escape_librtmp(value):  # pragma: no cover
     return value
 
 
+TCacheKey = TypeVar("TCacheKey")
+TCacheValue = TypeVar("TCacheValue")
+
+
+class LRUCache(Generic[TCacheKey, TCacheValue]):
+    def __init__(self, num: int):
+        # TODO: fix type after dropping py36
+        self.cache: Dict[TCacheKey, TCacheValue] = OrderedDict()
+        self.num = num
+
+    def get(self, key: TCacheKey) -> Optional[TCacheValue]:
+        if key not in self.cache:
+            return None
+        # noinspection PyUnresolvedReferences
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def set(self, key: TCacheKey, value: TCacheValue) -> None:
+        self.cache[key] = value
+        # noinspection PyUnresolvedReferences
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.num:
+            # noinspection PyArgumentList
+            self.cache.popitem(last=False)
+
+
 __all__ = ["load_module", "swfdecompress", "update_scheme", "url_equal",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json",
            "parse_xml", "rtmpparse", "prepend_www", "NamedPipe",
-           "escape_librtmp", "LazyFormatter"]
+           "escape_librtmp", "LRUCache", "LazyFormatter"]
