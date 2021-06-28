@@ -5,7 +5,6 @@ from uuid import uuid4
 from streamlink.plugin import Plugin
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
@@ -100,8 +99,8 @@ class Pluto(Plugin):
         })
 
         self.session.set_option('ffmpeg-fout', 'mpegts')
-        for q, s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
-            yield q, MuxedStream(self.session, s)
+        for s in HLSStream.parse_variant_playlist(self.session, stream_url).items():
+            yield s
 
 
 __plugin__ = Pluto
