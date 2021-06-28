@@ -10,11 +10,7 @@ class TestPluginCanHandleUrlMediaklikk(PluginCanHandleUrl):
         'https://www.mediaklikk.hu/duna-world-radio-elo',
         'https://www.mediaklikk.hu/m1-elo',
         'https://www.mediaklikk.hu/m2-elo',
+        'https://mediaklikk.hu/video/hirado-2021-06-24-i-adas-6/',
         'https://m4sport.hu/elo/',
         'https://m4sport.hu/elo/?channelId=m4sport+',
-    ]
-
-    should_not_match = [
-        'https://www.mediaklikk.hu',
-        'https://m4sport.hu',
     ]
