@@ -6,7 +6,7 @@ from collections import namedtuple
 from datetime import timedelta
 from itertools import starmap
 
-from isodate import parse_datetime
+from isodate import ISO8601Error, parse_datetime
 
 from streamlink.compat import urljoin, urlparse
 
@@ -14,6 +14,8 @@ log = logging.getLogger(__name__)
 
 __all__ = ["load", "M3U8Parser"]
 
+# EXTINF
+ExtInf = namedtuple("ExtInf", "duration title")
 
 # EXT-X-BYTERANGE
 ByteRange = namedtuple("ByteRange", "range offset")
@@ -124,47 +126,46 @@ class M3U8Parser(object):
 
         return None, None
 
+    @staticmethod
+    def map_attribute(key, value, quoted):
+        return key, quoted or value
+
     def parse_attributes(self, value):
-        def map_attribute(key, value, quoted):
-            return (key, quoted or value)
+        return dict(starmap(self.map_attribute, self._attr_re.findall(value)))
 
-        attr = self._attr_re.findall(value)
-
-        return dict(starmap(map_attribute, attr))
-
-    def parse_bool(self, value):
+    @staticmethod
+    def parse_bool(value):
         return value == "YES"
 
     def parse_byterange(self, value):
         match = self._range_re.match(value)
-
-        if match:
-            return ByteRange(int(match.group("range")),
-                             int(match.group("offset") or 0))
+        return None if match is None else ByteRange(int(match.group("range")), int(match.group("offset") or 0))
 
     def parse_extinf(self, value):
         match = self._extinf_re.match(value)
-        if match:
-            return float(match.group("duration")), match.group("title")
-        return (0, None)
+        return ExtInf(0, None) if match is None else ExtInf(float(match.group("duration")), match.group("title"))
 
-    def parse_hex(self, value):
+    @staticmethod
+    def parse_hex(value):
+        if value is None:
+            return value
+
         value = value[2:]
         if len(value) % 2:
             value = "0" + value
 
         return unhexlify(value)
 
-    def parse_iso8601(self, value):
-        if value is None:
-            return None
+    @staticmethod
+    def parse_iso8601(value):
         try:
-            return parse_datetime(value)
-        except ValueError:
+            return None if value is None else parse_datetime(value)
+        except (ISO8601Error, ValueError):
             return None
 
-    def parse_timedelta(self, value):
-        return timedelta(seconds=float(value)) if value is not None else None
+    @staticmethod
+    def parse_timedelta(value):
+        return None if value is None else timedelta(seconds=float(value))
 
     def parse_resolution(self, value):
         match = self._res_re.match(value)
@@ -192,13 +193,13 @@ class M3U8Parser(object):
 
     def parse_tag_ext_x_key(self, value):
         attr = self.parse_attributes(value)
-        iv = attr.get("IV")
-        if iv:
-            iv = self.parse_hex(iv)
-        self.state["key"] = Key(attr.get("METHOD"),
-                                self.uri(attr.get("URI")),
-                                iv, attr.get("KEYFORMAT"),
-                                attr.get("KEYFORMATVERSIONS"))
+        self.state["key"] = Key(
+            attr.get("METHOD"),
+            self.uri(attr.get("URI")),
+            self.parse_hex(attr.get("IV")),
+            attr.get("KEYFORMAT"),
+            attr.get("KEYFORMATVERSIONS")
+        )
 
     def parse_tag_ext_x_program_date_time(self, value):
         self.state["date"] = self.parse_iso8601(value)
@@ -217,7 +218,7 @@ class M3U8Parser(object):
         )
         self.m3u8.dateranges.append(daterange)
 
-    def parse_tag_ext_x_allow_cache(self, value):
+    def parse_tag_ext_x_allow_cache(self, value):  # version < 7
         self.m3u8.allow_cache = self.parse_bool(value)
 
     def parse_tag_ext_x_stream_inf(self, value):
@@ -227,6 +228,7 @@ class M3U8Parser(object):
     def parse_tag_ext_x_playlist_type(self, value):
         self.m3u8.playlist_type = value
 
+    # noinspection PyUnusedLocal
     def parse_tag_ext_x_endlist(self, value):
         self.m3u8.is_endlist = True
 
@@ -245,6 +247,7 @@ class M3U8Parser(object):
         )
         self.m3u8.media.append(media)
 
+    # noinspection PyUnusedLocal
     def parse_tag_ext_x_discontinuity(self, value):
         self.state["discontinuity"] = True
         self.state["map"] = None
@@ -252,13 +255,14 @@ class M3U8Parser(object):
     def parse_tag_ext_x_discontinuity_sequence(self, value):
         self.m3u8.discontinuity_sequence = int(value)
 
-    def parse_tag_ext_x_i_frames_only(self, value):
+    # noinspection PyUnusedLocal
+    def parse_tag_ext_x_i_frames_only(self, value):  # version >= 4
         self.m3u8.iframes_only = True
 
-    def parse_tag_ext_x_map(self, value):
+    def parse_tag_ext_x_map(self, value):  # version >= 5
         attr = self.parse_attributes(value)
         byterange = self.parse_byterange(attr.get("BYTERANGE", ""))
-        self.state["map"] = Map(attr.get("URI"), byterange)
+        self.state["map"] = Map(self.uri(attr.get("URI")), byterange)
 
     def parse_tag_ext_x_i_frame_stream_inf(self, value):
         attr = self.parse_attributes(value)
@@ -272,9 +276,10 @@ class M3U8Parser(object):
 
     def parse_tag_ext_x_start(self, value):
         attr = self.parse_attributes(value)
-        start = Start(attr.get("TIME-OFFSET"),
-                      self.parse_bool(attr.get("PRECISE", "NO")))
-        self.m3u8.start = start
+        self.m3u8.start = Start(
+            float(attr.get("TIME-OFFSET", 0)),
+            self.parse_bool(attr.get("PRECISE", "NO"))
+        )
 
     def parse_line(self, line):
         if line.startswith("#"):
@@ -329,22 +334,16 @@ class M3U8Parser(object):
             return uri
 
     def get_segment(self, uri):
-        byterange = self.state.pop("byterange", None)
         extinf = self.state.pop("extinf", (0, None))
-        date = self.state.pop("date", None)
-        map_ = self.state.get("map")
-        key = self.state.get("key")
-        discontinuity = self.state.pop("discontinuity", False)
-
         return Segment(
             uri,
-            extinf[0],
-            extinf[1],
-            key,
-            discontinuity,
-            byterange,
-            date,
-            map_
+            extinf.duration,
+            extinf.title,
+            self.state.get("key"),
+            self.state.pop("discontinuity", False),
+            self.state.pop("byterange", None),
+            self.state.pop("date", None),
+            self.state.get("map")
         )
 
     def get_playlist(self, uri):

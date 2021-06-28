@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import unittest
 from datetime import datetime, timedelta
 
+# noinspection PyPackageRequirements
 from isodate import tzinfo
 
 from streamlink.stream.hls_playlist import DateRange, Media, Resolution, Segment, StreamInfo, load
