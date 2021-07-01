@@ -1,6 +1,8 @@
-import unittest
+import pytest
 
+from streamlink.exceptions import NoStreamsError
 from streamlink.plugins.vk import VK
+from tests.mock import Mock
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -22,28 +24,35 @@ class TestPluginCanHandleUrlVK(PluginCanHandleUrl):
     should_not_match = [
         "https://vk.com/",
         "https://vk.com/restore",
-        "https://www.vk.com/videos-24136539",
-        "http://vk.com/videos-24136539",
     ]
 
 
-class TestPluginVK(unittest.TestCase):
-    def test_follow_vk_redirect(self):
-        # should redirect
-        self.assertEqual(VK.follow_vk_redirect(
-            "https://vk.com/videos-24136539?z=video-24136539_456241176%2Fclub24136539%2Fpl_-24136539_-2"),
-            "https://vk.com/video-24136539_456241176"
-        )
-        self.assertEqual(VK.follow_vk_redirect(
-            "https://vk.com/videos-24136539?z=video-24136539_456241181%2Fpl_-24136539_-2"),
-            "https://vk.com/video-24136539_456241181"
-        )
-        self.assertEqual(VK.follow_vk_redirect(
-            "https://vk.com/videos132886594?z=video132886594_167211693"),
-            "https://vk.com/video132886594_167211693"
-        )
-
-        # shouldn't redirect
-        self.assertEqual(VK.follow_vk_redirect("http://vk.com/"), "http://vk.com/")
-        self.assertEqual(VK.follow_vk_redirect("http://vk.com/videos-24136539"), "http://vk.com/videos-24136539")
-        self.assertEqual(VK.follow_vk_redirect("http://www.youtube.com/"), "http://www.youtube.com/")
+@pytest.mark.parametrize("url,newurl,raises", [
+    ("https://vk.com/videos-24136539?z=video-24136539_456241176%2Fclub24136539%2Fpl_-24136539_-2",
+     "https://vk.com/video-24136539_456241176",
+     False),
+    ("https://vk.com/videos-24136539?z=video-24136539_456241181%2Fpl_-24136539_-2",
+     "https://vk.com/video-24136539_456241181",
+     False),
+    ("https://vk.com/videos132886594?z=video132886594_167211693",
+     "https://vk.com/video132886594_167211693",
+     False),
+    ("http://vk.com/",
+     "http://vk.com/",
+     False),
+    ("http://vk.com/videos-24136539",
+     "http://vk.com/videos-24136539",
+     True),
+    ("http://vk.com/videos-24136539?z=",
+     "http://vk.com/videos-24136539?z=",
+     True),
+])
+def test_url_redirect(url, newurl, raises):
+    VK.bind(Mock(), "tests.plugins.test_vk")
+    plugin = VK(url)
+    try:
+        plugin.follow_vk_redirect()
+        assert not raises
+    except NoStreamsError:
+        assert raises
+    assert plugin.url == newurl
