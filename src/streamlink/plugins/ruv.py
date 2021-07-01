@@ -2,39 +2,12 @@
 
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 # URL to the RUV LIVE API
 RUV_LIVE_API = """http://www.ruv.is/sites/all/themes/at_ruv/scripts/\
 ruv-stream.php?channel={0}&format=json"""
-
-
-_live_url_re = re.compile(r"""^(?:https?://)?(?:www\.)?ruv\.is/
-                                (?P<stream_id>
-                                    ruv/?$|
-                                    ruv2/?$|
-                                    ruv-2/?$|
-                                    ras1/?$|
-                                    ras2/?$|
-                                    rondo/?$
-                                )
-                                /?
-                                """, re.VERBOSE)
-
-_sarpurinn_url_re = re.compile(r"""^(?:https?://)?(?:www\.)?ruv\.is/spila/
-                                    (?P<stream_id>
-                                        ruv|
-                                        ruv2|
-                                        ruv-2|
-                                        ruv-aukaras|
-                                    )
-                                    /
-                                    [a-zA-Z0-9_-]+
-                                    /
-                                    [0-9]+
-                                    /?
-                                    """, re.VERBOSE)
 
 _single_re = re.compile(r"""(?P<url>http://[0-9a-zA-Z\-\.]*/
                             (lokad|opid)
@@ -52,30 +25,30 @@ _multi_re = re.compile(r"""(?P<base_url>http://[0-9a-zA-Z\-\.]*/
                          """, re.VERBOSE)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?ruv\.is/
+    (?P<stream_id>ruv|ruv2|ruv-2|ras1|ras2|rondo)
+    /?$
+""", re.VERBOSE))
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?ruv\.is/spila/
+    (?P<stream_id>ruv|ruv2|ruv-2|ruv-aukaras)
+    /[a-zA-Z0-9_-]+
+    /[0-9]+
+    /?
+""", re.VERBOSE))
 class Ruv(Plugin):
-    @classmethod
-    def can_handle_url(cls, url):
-        return _live_url_re.match(url) or _sarpurinn_url_re.match(url)
-
     def __init__(self, url):
-        Plugin.__init__(self, url)
-        live_match = _live_url_re.match(url)
+        super().__init__(url)
 
-        if live_match:
-            self.live = True
-            self.stream_id = live_match.group("stream_id")
-
-            # Remove slashes
-            self.stream_id.replace("/", "")
-
+        self.live = self.matches[0] is not None
+        if self.live:
             # Remove dashes
-            self.stream_id.replace("-", "")
+            self.stream_id = self.match.group("stream_id").replace("-", "")
 
             # Rondo is identified as ras3
             if self.stream_id == "rondo":
                 self.stream_id = "ras3"
-        else:
-            self.live = False
 
     def _get_live_streams(self):
         # Get JSON API
