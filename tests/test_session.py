@@ -1,15 +1,21 @@
 import os
+import re
 import unittest
 from socket import AF_INET, AF_INET6
 
 from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import NoPluginError, Streamlink
-from streamlink.plugin.plugin import HIGH_PRIORITY, LOW_PRIORITY
-from streamlink.plugins import Plugin
+# from streamlink.plugins import Plugin
+from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
 from streamlink.session import print_small_exception
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
 from tests.mock import Mock, call, patch
+
+
+class EmptyPlugin(Plugin):
+    def _get_streams(self):
+        pass  # pragma: no cover
 
 
 class TestSession(unittest.TestCase):
@@ -56,28 +62,53 @@ class TestSession(unittest.TestCase):
         self.assertTrue(hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache")
 
     def test_resolve_url_priority(self):
-        from tests.plugins.testplugin import TestPlugin
+        @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
+            "http://(high|normal|low|no)$"
+        ))
+        class HighPriority(EmptyPlugin):
+            pass
 
-        class HighPriority(TestPlugin):
-            @classmethod
-            def priority(cls, url):
-                return HIGH_PRIORITY
+        @pluginmatcher(priority=NORMAL_PRIORITY, pattern=re.compile(
+            "http://(normal|low|no)$"
+        ))
+        class NormalPriority(EmptyPlugin):
+            pass
 
-        class LowPriority(TestPlugin):
-            @classmethod
-            def priority(cls, url):
-                return LOW_PRIORITY
+        @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
+            "http://(low|no)$"
+        ))
+        class LowPriority(EmptyPlugin):
+            pass
 
-        self.session.plugins = {
-            "test_plugin": TestPlugin,
-            "test_plugin_low": LowPriority,
-            "test_plugin_high": HighPriority,
+        @pluginmatcher(priority=NO_PRIORITY, pattern=re.compile(
+            "http://(no)$"
+        ))
+        class NoPriority(EmptyPlugin):
+            pass
+
+        session = self.subject(load_plugins=False)
+        session.plugins = {
+            "high": HighPriority,
+            "normal": NormalPriority,
+            "low": LowPriority,
+            "no": NoPriority,
         }
-        channel = self.session.resolve_url_no_redirect("http://test.se/channel")
-        plugins = self.session.get_plugins()
+        no = session.resolve_url_no_redirect("no")
+        low = session.resolve_url_no_redirect("low")
+        normal = session.resolve_url_no_redirect("normal")
+        high = session.resolve_url_no_redirect("high")
 
-        self.assertTrue(isinstance(channel, plugins["test_plugin_high"]))
-        self.assertEqual(HIGH_PRIORITY, channel.priority(channel.url))
+        self.assertIsInstance(no, HighPriority)
+        self.assertIsInstance(low, HighPriority)
+        self.assertIsInstance(normal, HighPriority)
+        self.assertIsInstance(high, HighPriority)
+
+        session.resolve_url.cache_clear()
+        session.plugins = {
+            "no": NoPriority,
+        }
+        with self.assertRaises(NoPluginError):
+            session.resolve_url_no_redirect("no")
 
     def test_resolve_url_no_redirect(self):
         plugins = self.session.get_plugins()

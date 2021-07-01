@@ -1,13 +1,14 @@
 import datetime
+import re
 import time
 import unittest
 
 import freezegun
 import requests.cookies
 
-
-from streamlink.plugin import Plugin
-from tests.mock import Mock, call
+from streamlink.plugin import HIGH_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
+from streamlink.plugin.plugin import Matcher
+from tests.mock import Mock, call, patch
 
 
 class TestPlugin(unittest.TestCase):
@@ -140,3 +141,63 @@ class TestPlugin(unittest.TestCase):
     def test_cookie_clear_unbound(self):
         plugin = Plugin("http://test.se")
         self.assertRaises(RuntimeError, plugin.clear_cookies)
+
+
+class TestPluginMatcher(unittest.TestCase):
+    @patch("builtins.repr", Mock(return_value="Foo"))
+    def test_decorator(self):
+        with self.assertRaises(TypeError) as cm:
+            @pluginmatcher(re.compile(""))
+            class Foo:
+                pass
+        m = re.search(r"(Foo )(?:.*?)(is not a Plugin)", str(cm.exception))
+        if m:
+            exception = "".join(m.groups())
+        else:
+            exception = str(cm.exception)
+        self.assertEqual(exception, "Foo is not a Plugin")
+
+        @pluginmatcher(re.compile("foo", re.VERBOSE))
+        @pluginmatcher(re.compile("bar"), priority=HIGH_PRIORITY)
+        class Bar(Plugin):
+            def _get_streams(self):
+                pass  # pragma: no cover
+
+        self.assertEqual(Bar.matchers, [
+            Matcher(re.compile("foo", re.VERBOSE), NORMAL_PRIORITY),
+            Matcher(re.compile("bar"), HIGH_PRIORITY)
+        ])
+
+    def test_url_setter(self):
+        @pluginmatcher(re.compile("http://(foo)"))
+        @pluginmatcher(re.compile("http://(bar)"))
+        @pluginmatcher(re.compile("http://(baz)"))
+        class MyPlugin(Plugin):
+            def _get_streams(self):
+                pass  # pragma: no cover
+
+        MyPlugin.bind(Mock(), "tests.test_plugin")
+
+        plugin = MyPlugin("http://foo")
+        self.assertEqual(plugin.url, "http://foo")
+        self.assertEqual([m is not None for m in plugin.matches], [True, False, False])
+        self.assertEqual(plugin.matcher, plugin.matchers[0].pattern)
+        self.assertEqual(plugin.match.group(1), "foo")
+
+        plugin.url = "http://bar"
+        self.assertEqual(plugin.url, "http://bar")
+        self.assertEqual([m is not None for m in plugin.matches], [False, True, False])
+        self.assertEqual(plugin.matcher, plugin.matchers[1].pattern)
+        self.assertEqual(plugin.match.group(1), "bar")
+
+        plugin.url = "http://baz"
+        self.assertEqual(plugin.url, "http://baz")
+        self.assertEqual([m is not None for m in plugin.matches], [False, False, True])
+        self.assertEqual(plugin.matcher, plugin.matchers[2].pattern)
+        self.assertEqual(plugin.match.group(1), "baz")
+
+        plugin.url = "http://qux"
+        self.assertEqual(plugin.url, "http://qux")
+        self.assertEqual([m is not None for m in plugin.matches], [False, False, False])
+        self.assertEqual(plugin.matcher, None)
+        self.assertEqual(plugin.match, None)

@@ -15,7 +15,8 @@ from streamlink.compat import is_win32, lru_cache
 from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import Logger, StreamlinkLogger
 from streamlink.options import Options
-from streamlink.plugin import api
+from streamlink.plugin import Plugin, api
+from streamlink.plugin.plugin import NO_PRIORITY
 from streamlink.utils import update_scheme
 from streamlink.utils.l10n import Localization
 
@@ -421,6 +422,7 @@ class Streamlink(object):
 
     @lru_cache(maxsize=128)
     def resolve_url(self, url, follow_redirect=True):
+        # type: (str, bool) -> Plugin
         """Attempts to find a plugin that can use this URL.
 
         The default protocol (http) will be prefixed to the URL if
@@ -434,14 +436,19 @@ class Streamlink(object):
         """
         url = update_scheme("http://", url)
 
-        available_plugins = []
+        # matcher: Matcher
+        # candidate: Optional[Type[Plugin]] = None
+        candidate = None
+        priority = NO_PRIORITY
         for name, plugin in self.plugins.items():
-            if plugin.can_handle_url(url):
-                available_plugins.append(plugin)
+            if plugin.matchers:
+                for matcher in plugin.matchers:
+                    if matcher.priority > priority and matcher.pattern.match(url) is not None:
+                        candidate = plugin
+                        priority = matcher.priority
 
-        available_plugins.sort(key=lambda x: x.priority(url), reverse=True)
-        if available_plugins:
-            return available_plugins[0](url)
+        if candidate:
+            return candidate(url)
 
         if follow_redirect:
             # Attempt to handle a redirect URL
