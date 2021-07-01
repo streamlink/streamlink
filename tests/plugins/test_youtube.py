@@ -1,5 +1,3 @@
-import unittest
-
 import pytest
 
 from streamlink.plugin import Plugin
@@ -44,23 +42,16 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
     ]
 
 
-class TestPluginYouTube(unittest.TestCase):
-    def _test_regex(self, url, expected_string, expected_group):
-        m = YouTube._re_url.match(url)
-        self.assertIsNotNone(m)
-        self.assertEqual(expected_string, m.group(expected_group))
-
-    def test_regex_video_id_v(self):
-        self._test_regex("https://www.youtube.com/v/aqz-KE-bpKQ",
-                         "aqz-KE-bpKQ", "video_id")
-
-    def test_regex_video_id_embed(self):
-        self._test_regex("https://www.youtube.com/embed/aqz-KE-bpKQ",
-                         "aqz-KE-bpKQ", "video_id")
-
-    def test_regex_video_id_watch(self):
-        self._test_regex("https://www.youtube.com/watch?v=aqz-KE-bpKQ",
-                         "aqz-KE-bpKQ", "video_id")
+@pytest.mark.parametrize("url,group,expected", [
+    ("https://www.youtube.com/v/aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
+    ("https://www.youtube.com/embed/aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
+    ("https://www.youtube.com/watch?v=aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
+])
+def test_match_url(url, group, expected):
+    Plugin.bind(Mock(), "tests.plugins.test_youtube")
+    plugin = YouTube(url)
+    assert plugin.match is not None
+    assert plugin.match.group(group) == expected
 
 
 @pytest.mark.parametrize("url,expected", [
