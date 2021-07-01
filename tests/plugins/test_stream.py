@@ -121,6 +121,7 @@ class TestPluginStream(unittest.TestCase):
                         "https://hostname.se/auth.php?key=a+value", dict(verify=False, params=dict(key='a value')))
 
     def test_parse_params(self):
+        self.assertEqual({}, parse_params())
         self.assertEqual(
             dict(verify=False, params=dict(key="a value")),
             parse_params("""verify=False params={'key': 'a value'}""")
