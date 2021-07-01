@@ -6,7 +6,7 @@ from socket import AF_INET, AF_INET6
 from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import NoPluginError, Streamlink
-# from streamlink.plugins import Plugin
+from streamlink.compat import is_py2
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
 from streamlink.session import print_small_exception
 from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
@@ -109,6 +109,47 @@ class TestSession(unittest.TestCase):
         }
         with self.assertRaises(NoPluginError):
             session.resolve_url_no_redirect("no")
+
+    @patch("streamlink.session.log")
+    def test_resolve_deprecated(self, mock_log):
+        # type: (Mock)
+        @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
+            "http://low"
+        ))
+        class LowPriority(EmptyPlugin):
+            pass
+
+        class DeprecatedNormalPriority(EmptyPlugin):
+            # noinspection PyUnusedLocal
+            @classmethod
+            def can_handle_url(cls, url):
+                return True
+
+        class DeprecatedHighPriority(DeprecatedNormalPriority):
+            # noinspection PyUnusedLocal
+            @classmethod
+            def priority(cls, url):
+                return HIGH_PRIORITY
+
+        session = self.subject(load_plugins=False)
+        session.plugins = {
+            "empty": EmptyPlugin,
+            "low": LowPriority,
+            "dep-normal-one": DeprecatedNormalPriority,
+            "dep-normal-two": DeprecatedNormalPriority,
+            "dep-high": DeprecatedHighPriority,
+        }
+
+        self.assertIsInstance(session.resolve_url_no_redirect("low"), DeprecatedHighPriority)
+        if is_py2:
+            self.assertEqual(mock_log.info.mock_calls, [
+                call("Resolved plugin dep-high with deprecated can_handle_url API"),
+            ])
+        else:
+            self.assertEqual(mock_log.info.mock_calls, [
+                call("Resolved plugin dep-normal-one with deprecated can_handle_url API"),
+                call("Resolved plugin dep-high with deprecated can_handle_url API")
+            ])
 
     def test_resolve_url_no_redirect(self):
         plugins = self.session.get_plugins()
