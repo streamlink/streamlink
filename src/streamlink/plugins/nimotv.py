@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -9,8 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?nimo\.tv/(?P<username>.*)'
+))
 class NimoTV(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?nimo\.tv/(?P<username>.*)')
     data_url = 'https://m.nimo.tv/{0}'
     data_re = re.compile(r'<script>var G_roomBaseInfo = ({.*?});</script>')
 
@@ -48,10 +50,6 @@ class NimoTV(Plugin):
         6000: '1080p',
     }
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
-
     def get_author(self):
         if self.author is not None:
             return self.author
@@ -65,10 +63,8 @@ class NimoTV(Plugin):
             return self.title
 
     def _get_streams(self):
-        m = self.url_re.match(self.url)
-        if m and m.group('username'):
-            username = m.group('username')
-        else:
+        username = self.match.group('username')
+        if not username:
             return
 
         headers = {'User-Agent': useragents.ANDROID}

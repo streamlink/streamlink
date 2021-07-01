@@ -2,19 +2,17 @@ import logging
 import re
 
 from streamlink.compat import urljoin
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?booyah\.live/(?:(?P<type>channels|clips|vods)/)?(?P<id>[^?]+)"
+))
 class Booyah(Plugin):
-    url_re = re.compile(r'''
-        https?://(?:www\.)?booyah\.live/
-        (?:(?P<type>channels|clips|vods)/)?(?P<id>[^?]+)
-    ''', re.VERBOSE)
-
     auth_api_url = 'https://booyah.live/api/v3/auths/sessions'
     vod_api_url = 'https://booyah.live/api/v3/playbacks/{0}'
     live_api_url = 'https://booyah.live/api/v3/channels/{0}'
@@ -69,10 +67,6 @@ class Booyah(Plugin):
     author = None
     category = None
     title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def get_author(self):
         return self.author
@@ -138,8 +132,7 @@ class Booyah(Plugin):
     def _get_streams(self):
         self.do_auth()
 
-        m = self.url_re.match(self.url)
-        url_data = m.groupdict()
+        url_data = self.match.groupdict()
         log.debug('ID={}'.format(url_data["id"]))
 
         if not url_data['type'] or url_data['type'] == 'channels':

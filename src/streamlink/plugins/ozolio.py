@@ -1,16 +1,17 @@
 import logging
 import re
 
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?ozolio\.com/explore/?(?P<id>(\w+))?"
+))
 class Ozolio(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?ozolio\.com/explore/?(?P<id>(\w+))?")
     _og_url_re = re.compile(r"""<meta\s*property="og:url"\s*content="https?://(?:www\.)?ozolio\.com/explore/?(?P<id>(\w+)")?""")
 
     _sesapi_cid_url = "https://relay.ozolio.com/ses.api?cmd=init&oid=CID_{cid}&ver=5&channel=0&control=1"
@@ -35,12 +36,8 @@ class Ozolio(Plugin):
         validate.get("source"),
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        res = self._url_re.search(self.url).group("id")
+        res = self.match.group("id")
         if not res:
             res = self.session.http.get(self.url)
             res = self._og_url_re.search(res.text).group("id")

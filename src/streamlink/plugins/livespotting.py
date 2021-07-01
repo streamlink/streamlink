@@ -1,21 +1,23 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
-class LivespottingTV(Plugin):
-    _url_re = re.compile(r"""
+@pluginmatcher(re.compile(
+    r"""
         (?:
             https?://livespotting\.tv/
             (?:locations\?id=)?
             (?:[^/].+/)?
         )(\w+)
-    """, re.VERBOSE)
+    """, re.VERBOSE
+))
+class LivespottingTV(Plugin):
     _player_re = re.compile(r"player_id:\s*'(\w+)',\s*livesource_id:\s*'(\w+)'")
 
     _URL_PLAYER_CONFIG = "https://player.livespotting.com/v1/config/{player_id}.json"
@@ -38,12 +40,8 @@ class LivespottingTV(Plugin):
         "source": validate.all(validate.url(scheme="http"), validate.contains(".m3u8")),
     })
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        source_id = self._url_re.search(self.url).group(1)
+        source_id = self.match.group(1)
         res = self.session.http.get(self.url)
         m = self._player_re.search(res.text)
         if m:

@@ -8,7 +8,7 @@ import websocket
 from streamlink import logger
 from streamlink.buffers import RingBuffer
 from streamlink.compat import unquote_plus, urlparse
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.stream import Stream
 from streamlink.stream.stream import StreamIO
@@ -17,6 +17,9 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://twitcasting\.tv/(?P<channel>[^/]+)"
+))
 class TwitCasting(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -26,7 +29,6 @@ class TwitCasting(Plugin):
             help="Password for private Twitcasting streams."
         )
     )
-    _url_re = re.compile(r"http(s)?://twitcasting.tv/(?P<channel>[^/]+)", re.VERBOSE)
     _STREAM_INFO_URL = "https://twitcasting.tv/streamserver.php?target={channel}&mode=client"
     _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
 
@@ -44,14 +46,9 @@ class TwitCasting(Plugin):
     })
 
     def __init__(self, url):
-        Plugin.__init__(self, url)
-        match = self._url_re.match(url).groupdict()
-        self.channel = match.get("channel")
+        super().__init__(url)
+        self.channel = self.match.group("channel")
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         stream_info = self._get_stream_info()

@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.compat import bytes, html_unescape, is_py3, unquote_plus, urlencode
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import DASHStream, HTTPStream
 from streamlink.utils import parse_json
@@ -10,9 +10,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?facebook(?:\.com|corewwwi\.onion)/[^/]+/(?:posts|videos)/(?P<video_id>\d+)"
+))
 class Facebook(Plugin):
-    _url_re = re.compile(r'''(?x)https?://(?:www\.)?facebook(?:\.com|corewwwi.onion)
-        /[^/]+/(?:posts|videos)/(?P<video_id>[0-9]+)''')
     _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
     _dash_manifest_re = re.compile(r'''dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],''')
     _playlist_re = re.compile(r'''video:\[({url:".+?}\])''')
@@ -24,10 +25,6 @@ class Facebook(Plugin):
     _DEFAULT_PC = "PHASED:DEFAULT"
     _DEFAULT_REV = 4681796
     _TAHOE_URL = "https://www.facebook.com/video/tahoe/async/{0}/?chain=true&isvideo=true&payloadtype=primary"
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_title(self):
         res = self.session.http.get(self.url)
@@ -113,7 +110,7 @@ class Facebook(Plugin):
 
         # fallback to tahoe player url
         log.debug("Falling back to tahoe player")
-        video_id = self._url_re.match(self.url).group("video_id")
+        video_id = self.match.group("video_id")
         url = self._TAHOE_URL.format(video_id)
         data = {
             "__a": 1,

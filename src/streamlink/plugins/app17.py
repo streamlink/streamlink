@@ -1,15 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://17\.live/live/(?P<channel>[^/&?]+)"
+))
 class App17(Plugin):
-    _url_re = re.compile(r"https://17.live/live/(?P<channel>[^/&?]+)")
     API_URL = "https://api-dsa.17app.co/api/v1/lives/{0}/viewers/alive"
 
     _api_schema = validate.Schema(
@@ -22,13 +24,8 @@ class App17(Plugin):
         validate.get("rtmpUrls"),
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        match = self._url_re.match(self.url)
-        channel = match.group("channel")
+        channel = self.match.group("channel")
 
         self.session.http.headers.update({'User-Agent': useragents.CHROME, 'Referer': self.url})
 

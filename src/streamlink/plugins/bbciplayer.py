@@ -6,8 +6,7 @@ from collections import defaultdict
 from hashlib import sha1
 
 from streamlink.compat import urlparse
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 from streamlink.stream.dash import DASHStream
@@ -16,17 +15,19 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?bbc\.co\.uk/iplayer/
+    (
+        episode/(?P<episode_id>\w+)
+        |
+        live/(?P<channel_name>\w+)
+    )
+""", re.VERBOSE))
 class BBCiPlayer(Plugin):
     """
     Allows streaming of live channels from bbc.co.uk/iplayer/live/* and of iPlayer programmes from
     bbc.co.uk/iplayer/episode/*
     """
-    url_re = re.compile(r"""https?://(?:www\.)?bbc.co.uk/iplayer/
-        (
-            episode/(?P<episode_id>\w+)|
-            live/(?P<channel_name>\w+)
-        )
-    """, re.VERBOSE)
     mediator_re = re.compile(
         r'window\.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});', re.DOTALL)
     state_re = re.compile(r'window.__IPLAYER_REDUX_STATE__\s*=\s*({.*?});</script>')
@@ -81,10 +82,6 @@ class BBCiPlayer(Plugin):
             """
         ),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     @classmethod
     def _hash_vpid(cls, vpid):
@@ -200,9 +197,8 @@ class BBCiPlayer(Plugin):
                 "Could not authenticate, check your username and password")
             return
 
-        m = self.url_re.match(self.url)
-        episode_id = m.group("episode_id")
-        channel_name = m.group("channel_name")
+        episode_id = self.match.group("episode_id")
+        channel_name = self.match.group("channel_name")
 
         if episode_id:
             log.debug("Loading streams for episode: {0}", episode_id)

@@ -1,19 +1,18 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?thvli\.vn/live/(?P<channel>[^/]+)'
+))
 class VinhLongTV(Plugin):
-
     api_url = 'http://api.thvli.vn/backend/cm/detail/{0}/'
-
-    _url_re = re.compile(
-        r'https?://(?:www\.)?thvli\.vn/live/(?P<channel>[^/]+)')
 
     _data_schema = validate.Schema(
         {
@@ -22,12 +21,8 @@ class VinhLongTV(Plugin):
         validate.get('link_play')
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def _get_streams(self):
-        channel = self._url_re.match(self.url).group('channel')
+        channel = self.match.group('channel')
 
         res = self.session.http.get(self.api_url.format(channel))
         hls_url = self.session.http.json(res, schema=self._data_schema)

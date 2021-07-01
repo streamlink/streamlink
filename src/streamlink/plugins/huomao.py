@@ -4,8 +4,7 @@ import re
 import time
 
 from streamlink.compat import bytes
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -13,6 +12,9 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?huomao\.(?:tv|com)(?P<path>/|/video/v/)(?P<room_id>\d+)'
+))
 class Huomao(Plugin):
     magic_val = '6FE26D855E1AEAE090E243EB1AF73685'
     mobile_url = 'https://m.huomao.com/mobile/mob_live/{0}'
@@ -22,12 +24,6 @@ class Huomao(Plugin):
     author = None
     category = None
     title = None
-
-    url_re = re.compile(r'''
-        (?:https?://)?(?:www\.)?huomao(?:\.tv|\.com)
-        (?P<path>/|/video/v/)
-        (?P<room_id>\d+)
-    ''', re.VERBOSE)
 
     author_re = re.compile(
         r'<p class="nickname_live">\s*<span>\s*(.*?)\s*</span>',
@@ -62,10 +58,6 @@ class Huomao(Plugin):
             }],
         ),
     })
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_live_streams_data(self, video_id):
         client_type = 'huomaomobileh5'
@@ -185,7 +177,7 @@ class Huomao(Plugin):
             return self.title
 
     def _get_streams(self):
-        path, url_id = self.url_re.search(self.url).groups()
+        path, url_id = self.match.groups()
         log.debug("Path={0}".format(path))
         log.debug("URL ID={0}".format(url_id))
 

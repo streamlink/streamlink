@@ -5,7 +5,7 @@ import re
 from Crypto.Cipher import AES
 
 from streamlink.compat import bytes, urljoin
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -14,9 +14,10 @@ from streamlink.utils.crypto import unpad
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?mjunoon\.tv/(?:watch/)?([\w-]+)'
+))
 class Mjunoon(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?mjunoon\.tv/(?:watch/)?([\w-]+)')
-
     login_url = 'https://cdn2.mjunoon.tv:9191/v2/auth/login'
     stream_url = 'https://cdn2.mjunoon.tv:9191/v2/streaming-url'
 
@@ -63,10 +64,6 @@ class Mjunoon(Plugin):
     author = None
     category = None
     title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def get_author(self):
         return self.author
@@ -169,8 +166,7 @@ class Mjunoon(Plugin):
         return stream_data['live_stream_url']
 
     def _get_streams(self):
-        m = self.url_re.match(self.url)
-        slug = m.group(1)
+        slug = self.match.group(1)
         log.debug('Slug={0}'.format(slug))
 
         js_data = self.get_data()

@@ -2,8 +2,7 @@ import logging
 import re
 
 from streamlink import NoStreamsError
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
 from streamlink.utils import rtmpparse
@@ -29,39 +28,33 @@ _stream_schema = validate.Schema(
 )
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?
+    (?:
+        juicyplay\.dk
+        |
+        (?:tvplay\.)?
+            skaties\.lv
+        |
+        (?:(?:tv3)?play\.)?
+            tv3\.(?:dk|ee|lt)
+        |
+        tv6play\.no
+        |
+        viafree\.(?:dk|no|se|fi)
+    )
+    /(?:
+        (?:
+            .+/
+            |
+            embed\?id=
+        )
+        (?P<stream_id>\d+)
+    )?
+""", re.VERBOSE))
 class Viasat(Plugin):
-    """Streamlink Plugin for Viasat"""
-
     _iframe_re = re.compile(r"""<iframe.+src=["'](?P<url>[^"']+)["'].+allowfullscreen""")
     _image_re = re.compile(r"""<meta\sproperty=["']og:image["']\scontent=".+/(?P<stream_id>\d+)/[^/]+\.jpg""")
-
-    _url_re = re.compile(r"""https?://(?:www\.)?
-        (?:
-            juicyplay\.dk
-            |
-            (?:tvplay\.)?
-                skaties\.lv
-            |
-            (?:(?:tv3)?play\.)?
-                tv3\.(?:dk|ee|lt)
-            |
-            tv6play\.no
-            |
-            viafree\.(?:dk|no|se|fi)
-        )
-        /(?:
-            (?:
-                .+/
-            |
-                embed\?id=
-            )
-            (?P<stream_id>\d+)
-        )?
-    """, re.VERBOSE)
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
 
     def _get_swf_url(self):
         res = self.session.http.get(self.url)
@@ -132,8 +125,7 @@ class Viasat(Plugin):
             return self.session.streams(m.group("url"))
 
     def _get_streams(self):
-        match = self._url_re.match(self.url)
-        stream_id = match.group("stream_id")
+        stream_id = self.match.group("stream_id")
 
         if not stream_id:
             text = self.session.http.get(self.url).text

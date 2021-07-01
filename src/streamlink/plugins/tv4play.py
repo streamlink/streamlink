@@ -2,32 +2,28 @@ import logging
 import re
 
 from streamlink.compat import urljoin
-from streamlink.exceptions import PluginError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?
+    (?:
+        tv4play\.se/program/[^?/]+
+        |
+        fotbollskanalen\.se/video
+    )
+    /(?P<video_id>\d+)
+""", re.VERBOSE))
 class TV4Play(Plugin):
-    """Plugin for TV4 Play, swedish TV channel TV4's streaming service."""
-
     title = None
     video_id = None
 
     api_url = "https://playback-api.b17g.net"
     api_assets = urljoin(api_url, "/asset/{0}")
-
-    _url_re = re.compile(r"""
-        https?://(?:www\.)?
-        (?:
-            tv4play.se/program/[^\?/]+
-            |
-            fotbollskanalen.se/video
-        )
-        /(?P<video_id>\d+)
-    """, re.VERBOSE)
 
     _meta_schema = validate.Schema(
         {
@@ -38,15 +34,10 @@ class TV4Play(Plugin):
         }
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     @property
     def get_video_id(self):
         if self.video_id is None:
-            match = self._url_re.match(self.url)
-            self.video_id = match.group("video_id")
+            self.video_id = self.match.group("video_id")
             log.debug("Found video ID: {0}".format(self.video_id))
         return self.video_id
 

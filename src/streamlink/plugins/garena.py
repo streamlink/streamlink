@@ -1,12 +1,13 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
-_url_re = re.compile(r"https?\:\/\/garena\.live\/(?:(?P<channel_id>\d+)|(?P<alias>\w+))")
 
-
+@pluginmatcher(re.compile(
+    r"https?://garena\.live/(?:(?P<channel_id>\d+)|(?P<alias>\w+))"
+))
 class Garena(Plugin):
     API_INFO = "https://garena.live/api/channel_info_get"
     API_STREAM = "https://garena.live/api/channel_stream_get"
@@ -35,10 +36,6 @@ class Garena(Plugin):
         }
     )
 
-    @classmethod
-    def can_handle_url(self, url):
-        return _url_re.match(url)
-
     def _post_api(self, api, payload, schema):
         res = self.session.http.post(api, json=payload)
         data = self.session.http.json(res, schema=schema)
@@ -48,13 +45,12 @@ class Garena(Plugin):
             return post_data
 
     def _get_streams(self):
-        match = _url_re.match(self.url)
-        if match.group("alias"):
-            payload = {"alias": match.group("alias")}
+        if self.match.group("alias"):
+            payload = {"alias": self.match.group("alias")}
             info_data = self._post_api(self.API_INFO, payload, self._info_schema)
             channel_id = info_data["channel_id"]
-        elif match.group("channel_id"):
-            channel_id = int(match.group("channel_id"))
+        elif self.match.group("channel_id"):
+            channel_id = int(self.match.group("channel_id"))
 
         if channel_id:
             payload = {"channel_id": channel_id}

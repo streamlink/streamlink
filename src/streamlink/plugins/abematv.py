@@ -14,7 +14,7 @@ from requests.adapters import BaseAdapter
 
 from streamlink.compat import range
 from streamlink.exceptions import NoStreamsError
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils.url import update_qsd
@@ -102,20 +102,16 @@ class AbemaTVLicenseAdapter(BaseAdapter):
         return
 
 
+@pluginmatcher(re.compile(r"""
+    https?://abema\.tv/(
+        now-on-air/(?P<onair>[^?]+)
+        |
+        video/episode/(?P<episode>[^?]+)
+        |
+        channels/.+?/slots/(?P<slots>[^?]+)
+    )
+""", re.VERBOSE))
 class AbemaTV(Plugin):
-    '''
-    Abema.tv https://abema.tv/
-    Note: Streams are geo-restricted to Japan
-
-    '''
-    _url_re = re.compile(r"""https://abema\.tv/(
-        now-on-air/(?P<onair>[^\?]+)
-        |
-        video/episode/(?P<episode>[^\?]+)
-        |
-        channels/.+?/slots/(?P<slots>[^\?]+)
-        )""", re.VERBOSE)
-
     _CHANNEL = "https://api.abema.io/v1/channels"
 
     _USER_API = "https://api.abema.io/v1/users"
@@ -146,10 +142,6 @@ class AbemaTV(Plugin):
     _SLOT_SCHEMA = validate.Schema({u"slot": {u"flags": {
                                     validate.optional("timeshiftFree"): bool}}}
                                    )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def __init__(self, url):
         super(AbemaTV, self).__init__(url)
@@ -215,7 +207,7 @@ class AbemaTV(Plugin):
         jsonres = self.session.http.json(res, schema=self._USER_SCHEMA)
         self.usertoken = jsonres['token']  # for authorzation
 
-        matchresult = self._url_re.match(self.url)
+        matchresult = self.match
         if matchresult.group("onair"):
             onair = matchresult.group("onair")
             if onair == "news-global":

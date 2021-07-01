@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
@@ -9,11 +9,13 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD\d+))'
+))
 class Gulli(Plugin):
     LIVE_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embedstreamtv'
     VOD_PLAYER_URL = 'https://replay.gulli.fr/jwplayer/embed/{0}'
 
-    _url_re = re.compile(r'https?://replay\.gulli\.fr/(?:Direct|.+/(?P<video_id>VOD[0-9]+))')
     _playlist_re = re.compile(r'sources: (\[.+?\])', re.DOTALL)
     _vod_video_index_re = re.compile(r'jwplayer\(idplayer\).playlistItem\((?P<video_index>[0-9]+)\)')
     _mp4_bitrate_re = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
@@ -31,13 +33,8 @@ class Gulli(Plugin):
         )
     )
 
-    @classmethod
-    def can_handle_url(cls, url):
-        return Gulli._url_re.match(url)
-
     def _get_streams(self):
-        match = self._url_re.match(self.url)
-        video_id = match.group('video_id')
+        video_id = self.match.group('video_id')
         if video_id is not None:
             # VOD
             live = False

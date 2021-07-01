@@ -3,21 +3,20 @@ from __future__ import print_function
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?picarto\.tv/
+    (?:(?P<po>streampopout|videopopout)/)?
+    (?P<user>[^&?/]+)
+    (?:\?tab=videos&id=(?P<vod_id>\d+))?
+""", re.VERBOSE))
 class Picarto(Plugin):
-    url_re = re.compile(r'''
-        https?://(?:www\.)?picarto\.tv/
-            (?:(?P<po>streampopout|videopopout)/)?
-            (?P<user>[^&?/]+)
-            (?:\?tab=videos&id=(?P<vod_id>\d+))?
-    ''', re.VERBOSE)
-
     channel_schema = validate.Schema({
         'channel': validate.any(None, {
             'stream_name': validate.text,
@@ -51,10 +50,6 @@ class Picarto(Plugin):
     author = None
     category = None
     title = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def get_author(self):
         return self.author
@@ -132,7 +127,7 @@ class Picarto(Plugin):
                                                                     origin='recording-eu-1'))
 
     def _get_streams(self):
-        m = self.url_re.match(self.url).groupdict()
+        m = self.match.groupdict()
 
         if (m['po'] == 'streampopout' or not m['po']) and m['user'] and not m['vod_id']:
             log.debug('Type=Live')
