@@ -69,6 +69,7 @@ See their respective sections for more information on how to use them.
     plugin_matrix
     players
     issues
+    deprecations
     developing
     api_guide
     api
