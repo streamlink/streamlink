@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.compat import html_unescape, urlparse
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import update_scheme
@@ -10,19 +10,19 @@ from streamlink.utils import update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?(?:
+        armymedia\.bg|
+        bgonair\.bg/tvonline|
+        bloombergtv\.bg/video|
+        (?:tv\.)?bnt\.bg/\w+(?:/\w+)?|
+        live\.bstv\.bg|
+        i\.cdn\.bg/live/|
+        nova\.bg/live|
+        mu-vi\.tv/LiveStreams/pages/Live\.aspx
+    )/?
+""", re.VERBOSE))
 class CDNBG(Plugin):
-    url_re = re.compile(r"""
-        https?://(?:www\.)?(?:
-            armymedia\.bg|
-            bgonair\.bg/tvonline|
-            bloombergtv\.bg/video|
-            (?:tv\.)?bnt\.bg/\w+(?:/\w+)?|
-            live\.bstv\.bg|
-            i\.cdn\.bg/live/|
-            nova\.bg/live|
-            mu-vi\.tv/LiveStreams/pages/Live\.aspx
-        )/?
-    """, re.VERBOSE)
     iframe_re = re.compile(r"iframe .*?src=\"((?:https?(?::|&#58;))?//(?:\w+\.)?cdn.bg/live[^\"]+)\"", re.DOTALL)
     sdata_re = re.compile(r"sdata\.src.*?=.*?(?P<q>[\"'])(?P<url>http.*?)(?P=q)")
     hls_file_re = re.compile(r"(src|file): (?P<q>[\"'])(?P<url>(https?:)?//.+?m3u8.*?)(?P=q)")
@@ -35,10 +35,6 @@ class CDNBG(Plugin):
             validate.all(validate.transform(hls_src_re.search), validate.get("url")),
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def find_iframe(self, url):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})

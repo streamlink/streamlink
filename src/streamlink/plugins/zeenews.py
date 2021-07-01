@@ -1,21 +1,18 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://zeenews\.india\.com/live-tv'
+))
 class ZeeNews(Plugin):
-    _url_re = re.compile(r'https?://zeenews\.india\.com/live-tv')
-
     HLS_URL = 'https://z5ams.akamaized.net/zeenews/index.m3u8{0}'
     TOKEN_URL = 'https://useraction.zee5.com/token/live.php'
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_title(self):
         return 'Zee News'

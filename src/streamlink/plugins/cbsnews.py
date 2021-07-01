@@ -1,13 +1,15 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
 
+@pluginmatcher(re.compile(
+    r"https?://www\.cbsnews\.com/live/"
+))
 class CBSNews(Plugin):
-    url_re = re.compile(r"https://www\.cbsnews\.com/live/")
     _re_default_payload = re.compile(r"CBSNEWS.defaultPayload = (\{.*)")
 
     _schema_items = validate.Schema(
@@ -22,10 +24,6 @@ class CBSNews(Plugin):
             validate.get("items")
         ))
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         items = self.session.http.get(self.url, schema=self._schema_items)

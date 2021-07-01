@@ -2,7 +2,7 @@ import logging
 import re
 
 from streamlink.compat import unquote, urlparse
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json, update_scheme
@@ -11,10 +11,11 @@ from streamlink.utils import parse_json, update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?(?:mediaklikk|m4sport|hirado|petofilive)\.hu/"
+))
 class Mediaklikk(Plugin):
     PLAYER_URL = "https://player.mediaklikk.hu/playernew/player.php"
-
-    _url_re = re.compile(r"https?://(?:www\.)?(?:mediaklikk|m4sport|hirado|petofilive)\.hu/")
 
     _re_player_manager = re.compile(r"""
         mtva_player_manager\.player\s*\(\s*
@@ -23,10 +24,6 @@ class Mediaklikk(Plugin):
         \)\s*;
     """, re.VERBOSE | re.DOTALL)
     _re_player_json = re.compile(r"pl\.setup\s*\(\s*(?P<json>{.*?})\s*\)\s*;", re.DOTALL)
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         params = self.session.http.get(self.url, schema=validate.Schema(

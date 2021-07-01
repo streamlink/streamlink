@@ -3,7 +3,7 @@ import re
 from time import time
 
 from streamlink.compat import html_unescape, urljoin, urlparse
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
@@ -11,8 +11,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(\w+\.)?(?:olympics|olympicchannel)\.com/(?:[\w-]+/)?../.+"
+))
 class OlympicChannel(Plugin):
-    _url_re = re.compile(r"https?://(\w+\.)?(?:olympics|olympicchannel)\.com/(?:[\w-]+/)?../.+")
     _token_api_path = "/tokenGenerator?url={url}&domain={netloc}&_ts={time}"
     _api_schema = validate.Schema(
         validate.transform(parse_json),
@@ -41,10 +43,6 @@ class OlympicChannel(Plugin):
         validate.transform(parse_json),
         validate.url(),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
 
     def _get_streams(self):
         api_url = self.session.http.get(self.url, schema=self._data_content_schema)

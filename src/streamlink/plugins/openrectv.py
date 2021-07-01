@@ -1,15 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?openrec\.tv/(?:live|movie)/(?P<id>[^/]+)"
+))
 class OPENRECtv(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?openrec.tv/(?:live|movie)/(?P<id>[^/]+)")
     _stores_re = re.compile(r"window.stores\s*=\s*({.*?});", re.DOTALL | re.MULTILINE)
     _config_re = re.compile(r"window.sharedConfig\s*=\s*({.*?});", re.DOTALL | re.MULTILINE)
 
@@ -57,10 +59,6 @@ class OPENRECtv(Plugin):
         self.author = None
         self.title = None
         self.video_id = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def login(self, email, password):
         res = self.session.http.post(self.login_url, data={"mail": email, "password": password})

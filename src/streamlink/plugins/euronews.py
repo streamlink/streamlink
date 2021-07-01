@@ -1,19 +1,16 @@
 import re
 
 from streamlink.compat import urlparse
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HTTPStream
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:\w+\.)*euronews\.com/'
+))
 class Euronews(Plugin):
-    _url_re = re.compile(r'https?://(?:\w+\.)*euronews\.com/')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
-
     def _get_vod_stream(self):
         def find_video_url(content):
             for elem in itertags(content, "meta"):

@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
@@ -9,13 +9,10 @@ from streamlink.stream import HLSStream
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?latina\.pe/tvenvivo"
+))
 class Latina(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?latina\.pe/tvenvivo")
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
-
     def get_title(self):
         return "Latina"
 

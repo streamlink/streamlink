@@ -1,20 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?webcast\.gov\.in/.+'
+))
 class WebcastIndiaGov(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?webcast.gov.in/.+')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
-
     def _get_streams(self):
         try:
             url_content = ""

@@ -3,7 +3,7 @@ from __future__ import print_function
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
 from streamlink.utils import parse_json, update_scheme
@@ -11,8 +11,10 @@ from streamlink.utils import parse_json, update_scheme
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?earthcam\.com/"
+))
 class EarthCam(Plugin):
-    url_re = re.compile(r"https?://(?:www\.)?earthcam\.com/.*")
     playpath_re = re.compile(r"(?P<folder>/.*/)(?P<file>.*?\.flv)")
     swf_url = "http://static.earthcam.com/swf/streaming/stream_viewer_v3.swf"
     json_base_re = re.compile(r"""var[ ]+json_base[^=]+=.*?(\{.*?});""", re.DOTALL)
@@ -28,10 +30,6 @@ class EarthCam(Plugin):
             )
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls.url_re.match(url) is not None
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

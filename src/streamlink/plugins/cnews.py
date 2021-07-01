@@ -1,12 +1,14 @@
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.utils import parse_json
 
 
+@pluginmatcher(re.compile(
+    r'https?://(?:www\.)?cnews\.fr'
+))
 class CNEWS(Plugin):
-    _url_re = re.compile(r'https?://(?:www\.)?cnews\.fr')
     _json_data_re = re.compile(r'jQuery\.extend\(Drupal\.settings, ({.*})\);')
     _dailymotion_url = 'https://www.dailymotion.com/embed/video/{}'
 
@@ -25,10 +27,6 @@ class CNEWS(Plugin):
             },
         )),
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         data = self.session.http.get(self.url, schema=self._data_schema)

@@ -1,15 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?wetter\.com/"
+))
 class Wetter(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?wetter\.com/")
     _videourl_re = re.compile(r'data-video-url-(hls|rtmp|endpoint|mp4)\s*=\s*"(.+)"')
 
     _stream_schema = validate.Schema(
@@ -31,10 +33,6 @@ class Wetter(Plugin):
             }
         ],
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         streams = self.session.http.get(self.url, schema=self._stream_schema)

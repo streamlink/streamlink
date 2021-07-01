@@ -1,15 +1,17 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://www\.tv8\.com\.tr/canli-yayin'
+))
 class TV8(Plugin):
-    _url_re = re.compile(r'https?://www\.tv8\.com\.tr/canli-yayin')
     _player_schema = validate.Schema(validate.all({
         'servers': {
             validate.optional('manifest'): validate.url(),
@@ -18,10 +20,6 @@ class TV8(Plugin):
         validate.get('servers')))
 
     API_URL = 'https://static.personamedia.tv/player/config/tv8.json'
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def get_title(self):
         return 'TV8'

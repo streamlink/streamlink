@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.utils import parse_json
@@ -9,13 +9,10 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r'https?://telefe\.com/.+'
+))
 class Telefe(Plugin):
-    _url_re = re.compile(r'https?://telefe.com/.+')
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url)
-
     def _get_streams(self):
         res = self.session.http.get(self.url, headers={'User-Agent': useragents.CHROME})
         video_search = res.text

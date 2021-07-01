@@ -9,17 +9,18 @@ from uuid import uuid4
 from Crypto.Cipher import AES
 from Crypto.Hash import SHA256
 
-from streamlink import PluginError
 from streamlink.compat import urljoin, urlparse
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.stream import HLSStream
 from streamlink.utils.crypto import pad, unpad
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(?:www\.)?ustvnow\.com/live/(?P<scode>\w+)/-(?P<id>\d+)"
+))
 class USTVNow(Plugin):
-    _url_re = re.compile(r"https?://(?:www\.)?ustvnow\.com/live/(?P<scode>\w+)/-(?P<id>\d+)")
     _main_js_re = re.compile(r"""src=['"](main\..*\.js)['"]""")
     _enc_key_re = re.compile(r'(?P<key>AES_(?:Key|IV))\s*:\s*"(?P<value>[^"]+)"')
 
@@ -49,10 +50,6 @@ class USTVNow(Plugin):
         super(USTVNow, self).__init__(url)
         self._encryption_config = {}
         self._token = None
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     @classmethod
     def encrypt_data(cls, data, key, iv):

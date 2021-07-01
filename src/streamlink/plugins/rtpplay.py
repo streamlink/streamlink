@@ -1,14 +1,16 @@
 import re
 
 from streamlink.compat import unquote
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
 from streamlink.utils import parse_json
 
 
+@pluginmatcher(re.compile(
+    r"https?://www\.rtp\.pt/play/"
+))
 class RTPPlay(Plugin):
-    _url_re = re.compile(r"https?://www\.rtp\.pt/play/")
     _m3u8_re = re.compile(r"""
         hls:\s*(?:(["'])(?P<string>[^"']+)\1
         |
@@ -30,10 +32,6 @@ class RTPPlay(Plugin):
             )
         )
     )
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         self.session.http.headers.update({"User-Agent": useragents.CHROME,

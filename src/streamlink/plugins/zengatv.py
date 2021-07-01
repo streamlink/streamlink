@@ -1,24 +1,22 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin
+from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
 
+@pluginmatcher(re.compile(
+    r"https?://(www\.)?zengatv\.com/\w+"
+))
 class ZengaTV(Plugin):
     """Streamlink Plugin for livestreams on zengatv.com"""
 
-    _url_re = re.compile(r"https?://(www\.)?zengatv\.com/\w+")
     _id_re = re.compile(r"""id=(?P<q>["'])dvrid(?P=q)\svalue=(?P=q)(?P<id>[^"']+)(?P=q)""")
     _id_2_re = re.compile(r"""LivePlayer\(.+["'](?P<id>D\d+)["']""")
 
     api_url = "http://www.zengatv.com/changeResulation/"
-
-    @classmethod
-    def can_handle_url(cls, url):
-        return cls._url_re.match(url) is not None
 
     def _get_streams(self):
         headers = {"Referer": self.url}
