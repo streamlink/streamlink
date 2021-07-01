@@ -78,6 +78,7 @@ Table of contents
     plugin_matrix
     players
     issues
+    deprecations
     developing
     api_guide
     api
