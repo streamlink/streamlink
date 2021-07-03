@@ -23,6 +23,7 @@ class TestPluginCanHandleUrlCDNBG(PluginCanHandleUrl):
         'http://live.bstv.bg/',
         'https://www.bloombergtv.bg/video',
         'https://i.cdn.bg/live/xfr3453g0d',
+        'https://armymedia.bg/%d0%bd%d0%b0-%d0%b6%d0%b8%d0%b2%d0%be/',
     ]
 
     should_not_match = [
