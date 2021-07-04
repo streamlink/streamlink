@@ -9,7 +9,7 @@ from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.utils import parse_json
+from streamlink.utils import parse_json, search_dict
 
 log = logging.getLogger(__name__)
 
@@ -29,12 +29,13 @@ log = logging.getLogger(__name__)
         |
         embed/live_stream\?channel=(?P<embed_live>[^/?&]+)
         |
-        (?:c(?:hannel)?/|user/)?[^/?]+/live/?$
+        (?:c(?:hannel)?/|user/)?(?P<channel>[^/?]+)(?P<channel_live>/live)?/?$
     )
     |
     https?://youtu\.be/(?P<video_id_short>[\w-]{11})
 """, re.VERBOSE))
 class YouTube(Plugin):
+    _re_ytInitialData = re.compile(r"""var\s+ytInitialData\s*=\s*({.*?})\s*;\s*</script>""", re.DOTALL)
     _re_ytInitialPlayerResponse = re.compile(r"""var\s+ytInitialPlayerResponse\s*=\s*({.*?});\s*var\s+meta\s*=""", re.DOTALL)
     _re_mime_type = re.compile(r"""^(?P<type>\w+)/(?P<container>\w+); codecs="(?P<codecs>.+)"$""")
 
@@ -214,10 +215,11 @@ class YouTube(Plugin):
             res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
         return res
 
-    def _get_data(self, res):
-        match = re.search(self._re_ytInitialPlayerResponse, res.text)
+    @staticmethod
+    def _get_data_from_regex(res, regex, descr):
+        match = re.search(regex, res.text)
         if not match:
-            log.debug("Missing initial player response data")
+            log.debug(f"Missing {descr}")
             return
         return parse_json(match.group(1))
 
@@ -265,6 +267,14 @@ class YouTube(Plugin):
         )
         return parse_json(res.text)
 
+    @staticmethod
+    def _data_video_id(data):
+        if data:
+            for videoRenderer in search_dict(data, "videoRenderer"):
+                videoId = videoRenderer.get("videoId")
+                if videoId is not None:
+                    return videoId
+
     def _data_status(self, data):
         if not data:
             return False
@@ -276,7 +286,17 @@ class YouTube(Plugin):
 
     def _get_streams(self):
         res = self._get_res(self.url)
-        data = self._get_data(res)
+
+        if self.match.group("channel") and not self.match.group("channel_live"):
+            initial = self._get_data_from_regex(res, self._re_ytInitialData, "initial data")
+            video_id = self._data_video_id(initial)
+            if video_id is None:
+                log.error("Could not find videoId on channel page")
+                return
+            self.url = self._url_canonical.format(video_id=video_id)
+            res = self._get_res(self.url)
+
+        data = self._get_data_from_regex(res, self._re_ytInitialPlayerResponse, "initial player response")
         if not self._data_status(data):
             data = self._get_data_from_api(res)
             if not self._data_status(data):
