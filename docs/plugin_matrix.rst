@@ -165,8 +165,6 @@ ssh101                  ssh101.com           Yes   No
 stadium                 watchstadium.com     Yes   No
 steam                   steamcommunity.com   Yes   No    Some streams will require a Steam account.
 streamable              streamable.com       -     Yes
-streamingvideoprovider  streamingvid... [2]_ Yes   --    RTMP streams requires rtmpdump with
-                                                         K-S-V patches.
 streann                 ott.streann.com      Yes   Yes
 stv                     player.stv.tv        Yes   No    Streams are geo-restricted to Great Britain.
 svtplay                 - svtplay.se         Yes   Yes   Streams may be geo-restricted to Sweden.
@@ -259,7 +257,6 @@ zhanqi                  zhanqi.tv            Yes   No
 ======================= ==================== ===== ===== ===========================
 
 
-.. [2] streamingvideoprovider.co.uk
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
