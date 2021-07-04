@@ -34,7 +34,6 @@ bloomberg               bloomberg.com        Yes   Yes
 booyah                  booyah.live          Yes   Yes
 brightcove              players.brig... [6]_ Yes   Yes
 btv                     btvplus.bg           Yes   No    Streams are geo-restricted to Bulgaria.
-canalplus               mycanal.fr           No    Yes   Streams may be geo-restricted to France.
 cbsnews                 cbsnews.com          Yes   No
 cdnbg                   - armymedia.bg       Yes   No    Streams may be geo-restricted to Bulgaria
                         - bgonair.bg
