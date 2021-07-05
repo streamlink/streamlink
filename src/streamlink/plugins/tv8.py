@@ -12,23 +12,18 @@ log = logging.getLogger(__name__)
     r'https?://www\.tv8\.com\.tr/canli-yayin'
 ))
 class TV8(Plugin):
-    _player_schema = validate.Schema(validate.all({
-        'servers': {
-            validate.optional('manifest'): validate.url(),
-            'hlsmanifest': validate.url(),
-        }},
-        validate.get('servers')))
-
-    API_URL = 'https://static.personamedia.tv/player/config/tv8.json'
+    _re_hls = re.compile(r"""file\s*:\s*(["'])(?P<hls_url>https?://.*?\.m3u8.*?)\1""")
 
     def get_title(self):
         return 'TV8'
 
     def _get_streams(self):
-        res = self.session.http.get(self.API_URL)
-        data = self.session.http.json(res, schema=self._player_schema)
-        log.debug('{0!r}'.format(data))
-        return HLSStream.parse_variant_playlist(self.session, data['hlsmanifest'])
+        hls_url = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(self._re_hls.search),
+            validate.any(None, validate.get("hls_url"))
+        ))
+        if hls_url is not None:
+            return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = TV8
