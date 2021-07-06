@@ -96,20 +96,29 @@ class OPENRECtv(Plugin):
         if self.get_option("email") and self.get_option("password"):
             self.login(self.get_option("email"), self.get_option("password"))
         mdata = self._get_movie_data()
+
         if mdata:
             log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
-            if mdata["media"]["url"]:
-                yield from HLSStream.parse_variant_playlist(
-                    self.session,
-                    mdata["media"]["url"]
-                ).items()
-            elif mdata["media"]["url_public"]:
-                yield from HLSStream.parse_variant_playlist(
-                    self.session,
-                    mdata["media"]["url_public"].replace("public.m3u8", "playlist.m3u8")
-                ).items()
+            # streaming
+            if mdata["onair_status"] == 1:
+                m3u8_file = mdata["media"]["url_ull"]
+            # archive
+            elif mdata["onair_status"] == 2:
+                m3u8_file = mdata["media"]["url_public"].replace("public.m3u8", "playlist.m3u8")
+            # uploaded video
+            elif mdata["onair_status"] is None and mdata["movie_type"] == 2:
+                m3u8_file = mdata["media"]["url"]
             else:
-                log.error("You don't have the authority.")
+                log.error("There is no video file.")
+
+            if m3u8_file is not None:
+                yield from HLSStream.parse_variant_playlist(
+                    self.session,
+                    m3u8_file
+                ).items()
+
+        else:
+            log.error("You don't have the authority or no video file.")
 
 
 __plugin__ = OPENRECtv
