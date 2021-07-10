@@ -1,0 +1,52 @@
+name: Feature request
+description: Discuss adding new functionality to Streamlink
+title: "A very brief summary of your request"
+labels:
+  - feature request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for filing a feature request!
+
+        Open a plugin request if you're requesting a new plugin instead of a new feature.
+
+        **DON'T IGNORE this template and fill in all the required details.**
+        **Issues that don't adhere to our request will be closed and ignored.**
+        This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: This is a feature request and not a different kind of issue
+          required: true
+        - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
+          required: true
+        - label: "[I have checked the list of open and closed plugin requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22feature+request%22)"
+          required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        Explain the feature as clearly as you can.
+
+        What is it?
+        How would you expect it to work?
+        What value does it bring to Streamlink?
+        Does it fit into the scope and aims of the project?
+        etc.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ### Before submitting
+
+        Make sure that you have
+        - properly filled in the title of this feature request
+        - checked the rendered text previews to avoid unnecessary formatting errors
+
+        ----
+
+        [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)
