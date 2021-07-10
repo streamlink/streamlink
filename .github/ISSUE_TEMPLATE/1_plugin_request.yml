@@ -1,0 +1,63 @@
+name: Plugin request
+description: Discuss adding a new plugin to Streamlink
+title: "Name of the website / streaming provider"
+labels:
+  - plugin request
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Thanks for requesting a plugin!
+
+        [READ THE PLUGIN REQUEST REQUIREMENTS IN THE CONTRIBUTION GUIDELINES BEFORE POSTING!](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#plugin-requests)
+
+        **DON'T IGNORE this template and fill in all the required details.**
+        **Issues that don't adhere to our request will be closed and ignored.**
+        This is because analyzing bugs, issues or requests without proper details and log output is harder than necessary.
+        Low quality and low effort issues are noise and steal the time of the maintainers and contributors.
+  - type: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: This is a plugin request and not a different kind of issue
+          required: true
+        - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
+          required: true
+        - label: "[I have checked the list of open and closed plugin requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+request%22)"
+          required: true
+  - type: textarea
+    attributes:
+      label: Description
+      description: |
+        Explain the plugin and site as clearly as you can.
+
+        What is the site about?
+        Who is it run by?
+        What content does it provide?
+        etc.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Input URLs
+      description: |
+        Please provide a list of example stream input URLs
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+        etc.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ### Before submitting
+
+        Make sure that you have
+        - properly filled in the title of this plugin request
+        - checked the rendered text previews to avoid unnecessary formatting errors
+
+        ----
+
+        [Love Streamlink? Please consider supporting our collective. Thanks!](https://opencollective.com/streamlink/donate)

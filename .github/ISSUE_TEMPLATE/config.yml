@@ -1,4 +1,4 @@
-blank_issues_enabled: true
+blank_issues_enabled: false
 contact_links:
   - name: "Help"
     about: "The issue tracker is only meant for bug reports, feature/plugin requests and plugin issues. Please ask your questions on the discussions forum and look for already existing answers."
@@ -9,3 +9,6 @@ contact_links:
   - name: "Gitter channel"
     about: "Get in touch with other Streamlink users."
     url: https://gitter.im/streamlink/streamlink
+  - name: "Matrix channel (Gitter bridge)"
+    about: "Get in touch with other Streamlink users."
+    url: https://matrix.to/#/#streamlink_streamlink:gitter.im
