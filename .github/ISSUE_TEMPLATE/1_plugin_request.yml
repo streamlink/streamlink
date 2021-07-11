@@ -23,7 +23,7 @@ body:
           required: true
         - label: "[I have read the contribution guidelines](https://github.com/streamlink/streamlink/blob/master/CONTRIBUTING.md#contributing-to-streamlink)"
           required: true
-        - label: "[I have checked the list of open and closed plugin requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+request%22)"
+        - label: "[I have checked the list of open and recently closed plugin requests](https://github.com/streamlink/streamlink/issues?q=is%3Aissue+label%3A%22plugin+request%22)"
           required: true
   - type: textarea
     attributes:
