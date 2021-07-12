@@ -2,7 +2,6 @@ pip>=6
 pytest
 pytest-cov
 coverage
-mock
 requests-mock
 freezegun>=1.0.0
 flake8
