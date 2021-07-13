@@ -89,36 +89,19 @@ version=${STREAMLINK_PYTHON_VERSION}
 format=bundled
 
 [Include]
-; dep tree
-;   streamlink+streamlink_cli
-;       - pkg-resources (indirect)
-;           - pyparsing
-;           - packaging
-;           - six
-;       - iso639
-;       - iso3166
-;       - pycryptodome
-;       - requests
-;           - certifi
-;           - idna
-;           - urllib3
-;           - socks / sockshandler
-;       - websocket-client
-;       - isodate
 packages=pkg_resources
-         six
          iso639
-         iso3166
-         requests
-         urllib3
-         idna
-         chardet
-         certifi
-         websocket
-         socks
-         sockshandler
-         isodate
-pypi_wheels=pycryptodome==3.9.9
+pypi_wheels=certifi==2021.5.30
+            charset-normalizer==2.0.1
+            idna==3.2
+            iso3166==1.0.1
+            isodate==0.6.0
+            pycryptodome==3.10.1
+            PySocks==1.7.1
+            requests==2.26.0
+            six==1.16.0
+            urllib3==1.26.6
+            websocket-client==1.1.0
 
 files=${ROOT}/win32/THIRD-PARTY.txt > \$INSTDIR
       ${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs

@@ -10,7 +10,7 @@ import versioneer
 
 data_files = []
 deps = [
-    "requests>=2.21.0,<3.0",
+    "requests>=2.26.0,<3.0",
     "isodate",
     "websocket-client>=0.58.0",
     # Support for SOCKS proxies
