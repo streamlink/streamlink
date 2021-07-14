@@ -363,14 +363,14 @@ class TestCLIMainLogging(_TestCLIMainLogging):
             "-p", "custom",
             "--testplugin-bool",
             "--testplugin-password=secret",
-            "website.tld/channel",
+            "test.se/channel",
             "best,worst"
         ])
         self.assertEqual(
             mock_log.debug.mock_calls[-7:],
             [
                 call("Arguments:"),
-                call(" url=website.tld/channel"),
+                call(" url=test.se/channel"),
                 call(" stream=['best', 'worst']"),
                 call(" --loglevel=debug"),
                 call(" --player=custom"),
