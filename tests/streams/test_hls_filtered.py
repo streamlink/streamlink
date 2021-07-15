@@ -2,6 +2,7 @@ import unittest
 from threading import Event
 from unittest.mock import MagicMock, call, patch
 
+from streamlink.compat import is_win32
 from streamlink.stream.hls import HLSStream, HLSStreamReader
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, TestMixinStreamHLS
 
@@ -23,6 +24,7 @@ class _TestSubjectHLSStream(HLSStream):
     __reader__ = _TestSubjectHLSReader
 
 
+@unittest.skipIf(is_win32, "temporarily skip EventedHLSStreamWriter related tests on Windows")
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
 class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = _TestSubjectHLSStream
