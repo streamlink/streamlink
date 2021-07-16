@@ -5,7 +5,10 @@ import re
 import time
 from collections import OrderedDict, namedtuple
 from functools import partial
-from typing import Any, Callable, Dict, Optional, Pattern, Type
+try:
+    from typing import Any, Callable, Dict, Optional, Pattern, Type
+except ImportError:
+    pass
 
 import requests.cookies
 
