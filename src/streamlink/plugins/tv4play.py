@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 @pluginmatcher(re.compile(r"""
     https?://(?:www\.)?
     (?:
-        tv4play\.se/program/[^?/]+
+        tv4play\.se/program/[^?/]+/[^?/]+
         |
         fotbollskanalen\.se/video
     )
