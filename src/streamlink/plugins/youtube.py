@@ -129,12 +129,19 @@ class YouTube(Plugin):
                 "videoId": str,
                 "author": str,
                 "title": str,
-                validate.optional("isLiveContent"): validate.transform(bool)
+                validate.optional("isLive"): validate.transform(bool),
+                validate.optional("isLiveContent"): validate.transform(bool),
+                validate.optional("isLiveDvrEnabled"): validate.transform(bool),
+                validate.optional("isLowLatencyLiveStream"): validate.transform(bool),
+                validate.optional("isPrivate"): validate.transform(bool),
             }},
             validate.get("videoDetails"),
-            validate.union_get("videoId", "author", "title", "isLiveContent")
         )
-        return validate.validate(schema, data)
+        videoDetails = validate.validate(schema, data)
+        log.trace(f"videoDetails = {videoDetails!r}")
+        return validate.validate(
+            validate.union_get("videoId", "author", "title", "isLive"),
+            videoDetails)
 
     @classmethod
     def _schema_streamingdata(cls, data):
