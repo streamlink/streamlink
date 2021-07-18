@@ -1,8 +1,8 @@
 Deprecations
 ============
 
-2.3.0
------
+streamlink 2.3.0
+----------------
 
 Plugin.can_handle_url() and Plugin.priority()
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -84,8 +84,8 @@ message will be written to the info log output for the first plugin that gets re
    ``NoStreamsError`` when there are no streams to be found on that particular URL.
 
 
-2.2.0
------
+streamlink 2.2.0
+----------------
 
 Config file paths
 ^^^^^^^^^^^^^^^^^
