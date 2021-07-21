@@ -133,7 +133,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_closed(self):
         thread, reader, writer, segments = self.subject([
-            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)])
+            Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True)
         ])
 
         # mock the reader thread's filter_event.wait method, so that the main thread can wait on its call
@@ -144,27 +144,24 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             filter_event_wait_called.set()
             return orig_wait(*args, **kwargs)
 
-        mock = patch.object(reader.filter_event, "wait", side_effect=mocked_wait)
-        mock.start()
+        with patch.object(reader.filter_event, "wait", side_effect=mocked_wait):
+            # write first filtered segment and trigger the filter_event's lock
+            self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
+            self.await_write()
+            self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
 
-        # write first filtered segment and trigger the filter_event's lock
-        self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
-        self.await_write()
-        self.assertFalse(reader.filter_event.is_set(), "Lets the reader wait if filtering")
+            # make reader read (no data available yet)
+            thread.read_wait.set()
+            # before calling reader.close(), wait until reader thread's filter_event.wait was called
+            if not filter_event_wait_called.wait(timeout=5):  # pragma: no cover
+                raise RuntimeError("Missing filter_event.wait() call")
 
-        # make reader read (no data available yet)
-        thread.read_wait.set()
-        # before calling reader.close(), wait until reader thread's filter_event.wait was called
-        filter_event_wait_called.wait()
-
-        # close stream while reader is waiting for filtering to end
-        thread.reader.close()
-        thread.read_done.wait()
-        thread.read_done.clear()
-        self.assertEqual(thread.data, [b""], "Stops reading on stream close")
-        self.assertFalse(thread.error, "Is not a read timeout on stream close")
-
-        mock.stop()
+            # close stream while reader is waiting for filtering to end
+            thread.reader.close()
+            thread.read_done.wait()
+            thread.read_done.clear()
+            self.assertEqual(thread.data, [b""], "Stops reading on stream close")
+            self.assertFalse(thread.error, "Is not a read timeout on stream close")
 
     def test_hls_segment_ignore_names(self):
         thread, reader, writer, segments = self.subject([

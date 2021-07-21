@@ -10,6 +10,11 @@ from streamlink import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamWriter as _HLSStreamWriter
 
 
+TIMEOUT_AWAIT_READ = 5
+TIMEOUT_AWAIT_READ_ONCE = 5
+TIMEOUT_AWAIT_WRITE = 5
+
+
 class HLSItemBase:
     path = ""
 
@@ -110,13 +115,8 @@ class HLSStreamReadThread(Thread):
     """
     Run the reader on a separate thread, so that each read can be controlled from within the main thread
     """
-    def __init__(self, session, stream, *args, **kwargs):
-        """
-        :param Streamlink session:
-        :param HLSStream stream:
-        """
-        Thread.__init__(self, *args, **kwargs)
-        self.daemon = True
+    def __init__(self, session: Streamlink, stream: HLSStream, *args, **kwargs):
+        super().__init__(*args, **kwargs, daemon=True)
 
         self.read_wait = Event()
         self.read_once = Event()
@@ -132,7 +132,7 @@ class HLSStreamReadThread(Thread):
         # ensure that at least one read was attempted before closing the writer thread early
         # otherwise, the writer will close the reader's buffer, making it not block on read and yielding empty results
         def _await_read_then_close():
-            self.read_once.wait(timeout=5)
+            self.read_once.wait(timeout=TIMEOUT_AWAIT_READ_ONCE)
             return self.writer_close()
 
         self.writer_close = self.reader.writer.close
@@ -168,18 +168,24 @@ class HLSStreamReadThread(Thread):
         self.data[:] = []
         self.error = None
 
+    def close(self):
+        self.reader.buffer.close()
+        self.read_once.set()
+        self.read_wait.set()
+
 
 class TestMixinStreamHLS(unittest.TestCase):
     __stream__ = HLSStream
     __readthread__ = HLSStreamReadThread
 
+    session: Streamlink
+    stream: HLSStream
+    thread: HLSStreamReadThread
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.mocker = requests_mock.Mocker()
         self.mocks = {}
-        self.session = None
-        self.stream = None
-        self.thread = None
 
     def setUp(self):
         super().setUp()
@@ -187,12 +193,19 @@ class TestMixinStreamHLS(unittest.TestCase):
 
     def tearDown(self):
         super().tearDown()
-        self.close_thread()
+
+        # close read thread and make sure that all threads have terminated before moving on
+        thread = self.thread
+        thread.reader.close()
+        if isinstance(thread.reader.writer, EventedHLSStreamWriter):
+            thread.reader.writer.write_wait.set()
+        thread.read_wait.set()
+        thread.reader.writer.join()
+        thread.reader.worker.join()
+        thread.join()
+
         self.mocker.stop()
         self.mocks.clear()
-        self.session = None
-        self.stream = None
-        self.thread = None
 
     def mock(self, method, url, *args, **kwargs):
         self.mocks[url] = self.mocker.request(method, url, *args, **kwargs)
@@ -213,40 +226,39 @@ class TestMixinStreamHLS(unittest.TestCase):
             segments = segments.values()
         return b"".join([getattr(segment, prop) for segment in segments if cond is None or cond(segment)])
 
-    # close read thread and make sure that all threads have terminated before moving on
-    def close_thread(self):
-        thread = self.thread
-        if isinstance(thread.reader.writer, EventedHLSStreamWriter):
-            thread.reader.writer.write_wait.set()
-        thread.reader.close()
-        thread.read_wait.set()
-        thread.reader.writer.join()
-        thread.reader.worker.join()
-        thread.join()
-
     # make one write call on the write thread and wait until it has finished
-    def await_write(self, write_calls=1, timeout=5):
+    def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE):
         writer = self.thread.reader.writer
-        for _ in range(write_calls):
+        if not writer.is_alive():  # pragma: no cover
+            raise RuntimeError("Write thread is not alive")
+
+        for write_call in range(write_calls):
             writer.write_wait.set()
-            writer.write_done.wait(timeout)
-            writer.write_done.clear()
+            done = writer.write_done.wait(timeout)
             if writer.write_error:
                 raise writer.write_error
+            if not done:  # pragma: no cover
+                raise RuntimeError(f"Await write timeout: write_call={write_call + 1}")
+            writer.write_done.clear()
 
     # make one read call on the read thread and wait until it has finished
-    def await_read(self, read_all=False, timeout=5):
+    def await_read(self, read_all=False, timeout=TIMEOUT_AWAIT_READ):
         thread = self.thread
+        if not thread.is_alive():  # pragma: no cover
+            raise RuntimeError("Read thread is not alive")
+
         thread.read_all = read_all
         thread.read_wait.set()
-        thread.read_done.wait(timeout)
-        thread.read_done.clear()
+        done = thread.read_done.wait(timeout)
 
         try:
             if thread.error:
                 raise thread.error
+            if not done:  # pragma: no cover
+                raise RuntimeError(f"Await read timeout: read_all={read_all}")
             return b"".join(thread.data)
         finally:
+            thread.read_done.clear()
             thread.reset()
 
     def get_session(self, options=None, *args, **kwargs):
@@ -264,7 +276,7 @@ class TestMixinStreamHLS(unittest.TestCase):
 
         self.session = self.get_session(options, *args, **kwargs)
         self.stream = self.__stream__(self.session, self.url(playlists[0]), **(streamoptions or {}))
-        self.thread = self.__readthread__(self.session, self.stream, **(threadoptions or {}))
+        self.thread = self.__readthread__(self.session, self.stream, name=f"ReadThread-{self.id()}", **(threadoptions or {}))
         self.thread.start()
 
         return self.thread, segments
