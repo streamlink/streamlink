@@ -248,6 +248,9 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
             Playlist(0, [key, SegmentEnc(0, aesKey, aesIv, padding=padding)], end=True)
         ])
 
+        # close read thread early
+        self.thread.close()
+
         with self.assertRaises(ValueError) as cm:
             self.await_write()
         self.assertEqual(str(cm.exception), "Padding is incorrect.", "Crypto.Util.Padding.unpad exception")
@@ -259,6 +262,9 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         self.subject([
             Playlist(0, [key, SegmentEnc(0, aesKey, aesIv, padding=padding)], end=True)
         ])
+
+        # close read thread early
+        self.thread.close()
 
         with self.assertRaises(ValueError) as cm:
             self.await_write()
