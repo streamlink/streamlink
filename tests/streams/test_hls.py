@@ -7,7 +7,6 @@ import requests_mock
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
-from streamlink.compat import is_win32
 from streamlink.session import Streamlink
 from streamlink.stream import hls
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
@@ -145,7 +144,6 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         self.assertTrue(self.called(map2, once=True), "Downloads second map only once")
 
 
-@unittest.skipIf(is_win32, "temporarily skip EventedHLSStreamWriter related tests on Windows")
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = EventedHLSStream

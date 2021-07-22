@@ -92,13 +92,13 @@ format=bundled
 packages=pkg_resources
          iso639
 pypi_wheels=certifi==2021.5.30
-            charset-normalizer==2.0.1
-            idna==3.2
+            chardet==4.0.0
+            idna==2.10
             iso3166==1.0.1
             isodate==0.6.0
             pycryptodome==3.10.1
             PySocks==1.7.1
-            requests==2.26.0
+            requests==2.25.1
             six==1.16.0
             urllib3==1.26.6
             websocket-client==1.1.0
