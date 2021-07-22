@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, call, patch
 import requests_mock
 
 from streamlink import Streamlink
-from streamlink.compat import is_win32
 from streamlink.plugin import PluginError
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
@@ -76,7 +75,6 @@ class _TwitchHLSStream(TwitchHLSStream):
     __reader__ = _TwitchHLSStreamReader
 
 
-@unittest.skipIf(is_win32, "temporarily skip EventedHLSStreamWriter related tests on Windows")
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", MagicMock(return_value=True))
 class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
     __stream__ = _TwitchHLSStream

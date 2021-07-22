@@ -10,7 +10,10 @@ import versioneer
 
 data_files = []
 deps = [
-    "requests>=2.26.0,<3.0",
+    # Temporarily set requests to 2.25.1 on Windows to fix issues with randomly failing tests
+    # Don't force an older requests version on non-Windows systems due to packaging reasons
+    "requests>=2.26.0,<3.0 ; platform_system!='Windows'",
+    "requests==2.25.1      ; platform_system=='Windows'",
     "isodate",
     "websocket-client>=0.58.0",
     # Support for SOCKS proxies
