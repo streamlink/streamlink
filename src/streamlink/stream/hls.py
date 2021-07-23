@@ -231,25 +231,6 @@ class HLSStreamWorker(SegmentedStreamWorker):
         elif self.playlist_reload_time_override not in ["segment", "live-edge"]:
             self.playlist_reload_time_override = 0
 
-        self.reload_playlist()
-
-        if self.playlist_end is None:
-            if self.duration_offset_start > 0:
-                log.debug(f"Time offsets negative for live streams, skipping back {self.duration_offset_start} seconds")
-            # live playlist, force offset durations back to None
-            self.duration_offset_start = -self.duration_offset_start
-
-        if self.duration_offset_start != 0:
-            self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
-
-        if self.playlist_sequences:
-            log.debug(f"First Sequence: {self.playlist_sequences[0].num}; "
-                      f"Last Sequence: {self.playlist_sequences[-1].num}")
-            log.debug(f"Start offset: {self.duration_offset_start}; "
-                      f"Duration: {self.duration_limit}; "
-                      f"Start Sequence: {self.playlist_sequence}; "
-                      f"End Sequence: {self.playlist_end}")
-
     def _reload_playlist(self, text, url):
         return hls_playlist.load(text, url)
 
@@ -341,6 +322,25 @@ class HLSStreamWorker(SegmentedStreamWorker):
         return default
 
     def iter_segments(self):
+        self.reload_playlist()
+
+        if self.playlist_end is None:
+            if self.duration_offset_start > 0:
+                log.debug(f"Time offsets negative for live streams, skipping back {self.duration_offset_start} seconds")
+            # live playlist, force offset durations back to None
+            self.duration_offset_start = -self.duration_offset_start
+
+        if self.duration_offset_start != 0:
+            self.playlist_sequence = self.duration_to_sequence(self.duration_offset_start, self.playlist_sequences)
+
+        if self.playlist_sequences:
+            log.debug(f"First Sequence: {self.playlist_sequences[0].num}; "
+                      f"Last Sequence: {self.playlist_sequences[-1].num}")
+            log.debug(f"Start offset: {self.duration_offset_start}; "
+                      f"Duration: {self.duration_limit}; "
+                      f"Start Sequence: {self.playlist_sequence}; "
+                      f"End Sequence: {self.playlist_end}")
+
         total_duration = 0
         while not self.closed:
             for sequence in filter(self.valid_sequence, self.playlist_sequences):
