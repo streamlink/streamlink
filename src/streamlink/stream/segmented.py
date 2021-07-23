@@ -211,18 +211,14 @@ class SegmentedStreamReader(StreamIO):
         super().__init__()
         self.session = stream.session
         self.stream = stream
+        self.timeout = timeout or self.session.options.get("stream-timeout")
 
-        if not timeout:
-            timeout = self.session.options.get("stream-timeout")
-
-        self.timeout = timeout
-
-    def open(self):
         buffer_size = self.session.get_option("ringbuffer-size")
         self.buffer = RingBuffer(buffer_size)
         self.writer = self.__writer__(self)
         self.worker = self.__worker__(self)
 
+    def open(self):
         self.writer.start()
         self.worker.start()
 
@@ -232,8 +228,8 @@ class SegmentedStreamReader(StreamIO):
         self.buffer.close()
 
     def read(self, size):
-        if not self.buffer:
-            return b""
-
-        return self.buffer.read(size, block=self.writer.is_alive(),
-                                timeout=self.timeout)
+        return self.buffer.read(
+            size,
+            block=self.writer.is_alive(),
+            timeout=self.timeout
+        )

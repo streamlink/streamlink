@@ -369,19 +369,20 @@ class HLSStreamReader(SegmentedStreamReader):
     __worker__ = HLSStreamWorker
     __writer__ = HLSStreamWriter
 
-    def __init__(self, stream, *args, **kwargs):
-        super().__init__(stream, *args, **kwargs)
+    def __init__(self, stream):
         self.request_params = dict(stream.args)
-        self.timeout = stream.session.options.get("hls-timeout")
-
-        self.filter_event = Event()
-        self.filter_event.set()
-
         # These params are reserved for internal use
         self.request_params.pop("exception", None)
         self.request_params.pop("stream", None)
         self.request_params.pop("timeout", None)
         self.request_params.pop("url", None)
+
+        self.filter_event = Event()
+        self.filter_event.set()
+
+        timeout = stream.session.options.get("hls-timeout")
+
+        super().__init__(stream, timeout)
 
     def read(self, size):
         while True:
