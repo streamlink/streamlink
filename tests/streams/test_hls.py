@@ -272,9 +272,15 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
-@patch("streamlink.stream.hls.HLSStreamWriter.run", Mock(return_value=True))
 class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
-    segments = [Segment(0, "", 11), Segment(1, "", 7), Segment(2, "", 5), Segment(3, "", 3)]
+    __stream__ = EventedHLSStream
+
+    segments = [
+        Segment(0, duration=11),
+        Segment(1, duration=7),
+        Segment(2, duration=5),
+        Segment(3, duration=3)
+    ]
 
     def get_session(self, options=None, reload_time=None, *args, **kwargs):
         return super().get_session(dict(options or {}, **{
@@ -283,8 +289,9 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
         }))
 
     def subject(self, *args, **kwargs):
-        thread, _ = super().subject(*args, **kwargs)
-        self.await_read(read_all=True)
+        thread, segments = super().subject(*args, **kwargs)
+        # wait for the segments to be written, so that we're sure the playlist was parsed
+        self.await_write(len(segments))
 
         return thread.reader.worker.playlist_reload_time
 
