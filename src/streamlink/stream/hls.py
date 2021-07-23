@@ -123,11 +123,11 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 if future is None or sequence.segment.discontinuity:
                     future = self.executor.submit(self.fetch_map, sequence)
                     self.map_cache.set(sequence.segment.map.uri, future)
-                self.queue(future, sequence, True)
+                self.queue(sequence, future, True)
 
             # regular segment request
             future = self.executor.submit(self.fetch, sequence)
-            self.queue(future, sequence, False)
+            self.queue(sequence, future, False)
 
     def fetch(self, sequence: Sequence) -> Optional[Response]:
         try:

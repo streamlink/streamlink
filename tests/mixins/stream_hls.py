@@ -94,6 +94,16 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
         self.write_done = Event()
         self.write_error = None
 
+    def _futures_put(self, item):
+        self.futures.put_nowait(item)
+
+    def _futures_get(self):
+        return self.futures.get_nowait()
+
+    @staticmethod
+    def _future_result(future):
+        return future.result(timeout=0)
+
     def write(self, *args, **kwargs):
         # only write once per step
         self.write_wait.wait()

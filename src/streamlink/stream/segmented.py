@@ -48,20 +48,21 @@ class SegmentedStreamWorker(Thread):
         self.reader = reader
         self.writer = reader.writer
         self.stream = reader.stream
-        self.session = reader.stream.session
+        self.session = reader.session
 
-        self._wait = None
+        self._wait = Event()
 
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
     def close(self):
         """Shuts down the thread."""
-        if not self.closed:
-            log.debug("Closing worker thread")
+        if self.closed:  # pragma: no cover
+            return
+
+        log.debug("Closing worker thread")
 
         self.closed = True
-        if self._wait:
-            self._wait.set()
+        self._wait.set()
 
     def wait(self, time):
         """Pauses the thread for a specified time.
@@ -69,7 +70,6 @@ class SegmentedStreamWorker(Thread):
         Returns False if interrupted by another thread and True if the
         time runs out normally.
         """
-        self._wait = Event()
         return not self._wait.wait(time)
 
     def iter_segments(self):
@@ -82,7 +82,7 @@ class SegmentedStreamWorker(Thread):
 
     def run(self):
         for segment in self.iter_segments():
-            if self.closed:
+            if self.closed:  # pragma: no cover
                 break
             self.writer.put(segment)
 
@@ -102,7 +102,7 @@ class SegmentedStreamWriter(Thread):
         self.closed = False
         self.reader = reader
         self.stream = reader.stream
-        self.session = reader.stream.session
+        self.session = reader.session
 
         if not retries:
             retries = self.session.options.get("stream-segment-attempts")
@@ -121,17 +121,19 @@ class SegmentedStreamWriter(Thread):
         super().__init__(daemon=True, name=f"Thread-{self.__class__.__name__}")
 
     def close(self):
-        """Shuts down the thread."""
-        if not self.closed:
-            log.debug("Closing writer thread")
+        """Shuts down the thread, its executor and closes the reader (worker thread and buffer)."""
+        if self.closed:  # pragma: no cover
+            return
+
+        log.debug("Closing writer thread")
 
         self.closed = True
-        self.reader.buffer.close()
+        self.reader.close()
         self.executor.shutdown(wait=True, cancel_futures=True)
 
     def put(self, segment):
         """Adds a segment to the download pool and write queue."""
-        if self.closed:
+        if self.closed:  # pragma: no cover
             return
 
         if segment is None:
@@ -139,16 +141,26 @@ class SegmentedStreamWriter(Thread):
         else:
             future = self.executor.submit(self.fetch, segment, retries=self.retries)
 
-        self.queue(future, segment)
+        self.queue(segment, future)
 
-    def queue(self, future: Optional[Future], segment: Any, *data):
+    def queue(self, segment: Any, future: Optional[Future], *data):
         """Puts values into a queue but aborts if this thread is closed."""
-        while not self.closed:
+        while not self.closed:  # pragma: no branch
             try:
-                self.futures.put((future, segment, *data), block=True, timeout=1)
+                self._futures_put((segment, future, *data))
                 return
             except queue.Full:  # pragma: no cover
                 continue
+
+    def _futures_put(self, item):
+        self.futures.put(item, block=True, timeout=1)
+
+    def _futures_get(self):
+        return self.futures.get(block=True, timeout=0.5)
+
+    @staticmethod
+    def _future_result(future: Future):
+        return future.result(timeout=0.5)
 
     def fetch(self, segment):
         """Fetches a segment.
@@ -167,7 +179,7 @@ class SegmentedStreamWriter(Thread):
     def run(self):
         while not self.closed:
             try:
-                future, segment, *data = self.futures.get(block=True, timeout=0.5)
+                segment, future, *data = self._futures_get()
             except queue.Empty:  # pragma: no cover
                 continue
 
@@ -177,7 +189,7 @@ class SegmentedStreamWriter(Thread):
 
             while not self.closed:  # pragma: no branch
                 try:
-                    result = future.result(timeout=0.5)
+                    result = self._future_result(future)
                 except futures.TimeoutError:  # pragma: no cover
                     continue
                 except futures.CancelledError:  # pragma: no cover
