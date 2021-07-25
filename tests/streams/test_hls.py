@@ -1,5 +1,6 @@
 import os
 import unittest
+from threading import Event
 from unittest.mock import Mock, call, patch
 
 import pytest
@@ -289,11 +290,24 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
         }))
 
     def subject(self, *args, **kwargs):
-        thread, segments = super().subject(*args, **kwargs)
-        # wait for the segments to be written, so that we're sure the playlist was parsed
-        self.await_write(len(segments))
+        thread, segments = super().subject(start=False, *args, **kwargs)
 
-        return thread.reader.worker.playlist_reload_time
+        # mock the worker thread's _playlist_reload_time method, so that the main thread can wait on its call
+        playlist_reload_time_called = Event()
+        orig_playlist_reload_time = thread.reader.worker._playlist_reload_time
+
+        def mocked_playlist_reload_time(*args, **kwargs):
+            playlist_reload_time_called.set()
+            return orig_playlist_reload_time(*args, **kwargs)
+
+        with patch.object(thread.reader.worker, "_playlist_reload_time", side_effect=mocked_playlist_reload_time):
+            self.start()
+            self.await_write(len(segments))
+
+            if not playlist_reload_time_called.wait(timeout=5):  # pragma: no cover
+                raise RuntimeError("Missing _playlist_reload_time() call")
+
+            return thread.reader.worker.playlist_reload_time
 
     def test_hls_playlist_reload_time_default(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="default")
@@ -303,9 +317,25 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="segment")
         self.assertEqual(time, 3, "segment sets the reload time to the playlist's last segment")
 
+    def test_hls_playlist_reload_time_segment_no_segments(self):
+        time = self.subject([Playlist(0, [], end=True, targetduration=6)], reload_time="segment")
+        self.assertEqual(time, 6, "segment sets the reload time to the targetduration if no segments are available")
+
+    def test_hls_playlist_reload_time_segment_no_segments_no_targetduration(self):
+        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="segment")
+        self.assertEqual(time, 15, "sets reload time to 15 seconds when no segments and no targetduration are available")
+
     def test_hls_playlist_reload_time_live_edge(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="live-edge")
         self.assertEqual(time, 8, "live-edge sets the reload time to the sum of the number of segments of the live-edge")
+
+    def test_hls_playlist_reload_time_live_edge_no_segments(self):
+        time = self.subject([Playlist(0, [], end=True, targetduration=6)], reload_time="live-edge")
+        self.assertEqual(time, 6, "live-edge sets the reload time to the targetduration if no segments are available")
+
+    def test_hls_playlist_reload_time_live_edge_no_segments_no_targetduration(self):
+        time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="live-edge")
+        self.assertEqual(time, 15, "sets reload time to 15 seconds when no segments and no targetduration are available")
 
     def test_hls_playlist_reload_time_number(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="4")

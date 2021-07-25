@@ -118,6 +118,16 @@ class TwitchHLSStreamReader(HLSStreamReader):
     __worker__ = TwitchHLSStreamWorker
     __writer__ = TwitchHLSStreamWriter
 
+    def __init__(self, stream):
+        if stream.disable_ads:
+            log.info("Will skip ad segments")
+        if stream.low_latency:
+            live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, stream.session.options.get("hls-live-edge")))
+            stream.session.options.set("hls-live-edge", live_edge)
+            stream.session.options.set("hls-segment-stream-data", True)
+            log.info(f"Low latency streaming (HLS live edge: {live_edge})")
+        super().__init__(stream)
+
 
 class TwitchHLSStream(HLSStream):
     __reader__ = TwitchHLSStreamReader
@@ -126,17 +136,6 @@ class TwitchHLSStream(HLSStream):
         super().__init__(*args, **kwargs)
         self.disable_ads = self.session.get_plugin_option("twitch", "disable-ads")
         self.low_latency = self.session.get_plugin_option("twitch", "low-latency")
-
-    def open(self):
-        if self.disable_ads:
-            log.info("Will skip ad segments")
-        if self.low_latency:
-            live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, self.session.options.get("hls-live-edge")))
-            self.session.options.set("hls-live-edge", live_edge)
-            self.session.options.set("hls-segment-stream-data", True)
-            log.info("Low latency streaming (HLS live edge: {0})".format(live_edge))
-
-        return super().open()
 
     @classmethod
     def _get_variant_playlist(cls, res):

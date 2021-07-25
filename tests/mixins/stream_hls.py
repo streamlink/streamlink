@@ -137,7 +137,7 @@ class HLSStreamReadThread(Thread):
 
         self.session = session
         self.stream = stream
-        self.reader = stream.open()
+        self.reader = stream.__reader__(stream)
 
         # ensure that at least one read was attempted before closing the writer thread early
         # otherwise, the writer will close the reader's buffer, making it not block on read and yielding empty results
@@ -275,7 +275,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         return Streamlink(options)
 
     # set up HLS responses, create the session and read thread and start it
-    def subject(self, playlists, options=None, streamoptions=None, threadoptions=None, *args, **kwargs):
+    def subject(self, playlists, options=None, streamoptions=None, threadoptions=None, start=True, *args, **kwargs):
         # filter out tags and duplicate segments between playlist responses while keeping index order
         segments_all = [item for playlist in playlists for item in playlist.items if isinstance(item, Segment)]
         segments = OrderedDict([(segment.num, segment) for segment in segments_all])
@@ -287,6 +287,12 @@ class TestMixinStreamHLS(unittest.TestCase):
         self.session = self.get_session(options, *args, **kwargs)
         self.stream = self.__stream__(self.session, self.url(playlists[0]), **(streamoptions or {}))
         self.thread = self.__readthread__(self.session, self.stream, name=f"ReadThread-{self.id()}", **(threadoptions or {}))
-        self.thread.start()
+
+        if start:
+            self.start()
 
         return self.thread, segments
+
+    def start(self):
+        self.thread.reader.open()
+        self.thread.start()
