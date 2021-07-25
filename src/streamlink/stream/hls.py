@@ -217,7 +217,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         self.playlist_end: Optional[Sequence.num] = None
         self.playlist_sequence: int = -1
         self.playlist_sequences: List[Sequence] = []
-        self.playlist_reload_time: float = 15
+        self.playlist_reload_time: float = 6
         self.playlist_reload_time_override = self.session.options.get("hls-playlist-reload-time")
         self.playlist_reload_retries = self.session.options.get("hls-playlist-reload-attempts")
         self.live_edge = self.session.options.get("hls-live-edge")

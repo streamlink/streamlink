@@ -323,7 +323,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
 
     def test_hls_playlist_reload_time_segment_no_segments_no_targetduration(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="segment")
-        self.assertEqual(time, 15, "sets reload time to 15 seconds when no segments and no targetduration are available")
+        self.assertEqual(time, 6, "sets reload time to 6 seconds when no segments and no targetduration are available")
 
     def test_hls_playlist_reload_time_live_edge(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="live-edge")
@@ -335,7 +335,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
 
     def test_hls_playlist_reload_time_live_edge_no_segments_no_targetduration(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="live-edge")
-        self.assertEqual(time, 15, "sets reload time to 15 seconds when no segments and no targetduration are available")
+        self.assertEqual(time, 6, "sets reload time to 6 seconds when no segments and no targetduration are available")
 
     def test_hls_playlist_reload_time_number(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="4")
@@ -351,7 +351,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
 
     def test_hls_playlist_reload_time_no_data(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
-        self.assertEqual(time, 15, "sets reload time to 15 seconds when no data is available")
+        self.assertEqual(time, 6, "sets reload time to 6 seconds when no data is available")
 
 
 @patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
