@@ -1,5 +1,79 @@
 # Changelog
 
+## streamlink 2.3.0 (2021-07-26)
+
+Release highlights:
+
+- Implemented: new plugin URL matching API ([#3814](https://github.com/streamlink/streamlink/issues/3814), [#3821](https://github.com/streamlink/streamlink/pull/3821))  
+  Third-party plugins which use the old API will still be resolved, but those plugins will have to upgrade in the future. See the documentation's [deprecations page](https://streamlink.github.io/latest/deprecations.html#streamlink-2-3-0) for more information.
+- Implemented: HLS media initialization section (fragmented MPEG-4 streams) ([#3828](https://github.com/streamlink/streamlink/pull/3828))
+- Upgraded: `requests` to `>=2.26.0,<3` and set it to `==2.25.1` on Windows ([#3864](https://github.com/streamlink/streamlink/pull/3864), [#3880](https://github.com/streamlink/streamlink/pull/3880))
+- Fixed: YouTube channel URLs, premiering live streams, added API fallback ([#3847](https://github.com/streamlink/streamlink/pull/3847), [#3873](https://github.com/streamlink/streamlink/pull/3873), [#3809](https://github.com/streamlink/streamlink/pull/3809))
+- Removed plugins: canalplus ([#3841](https://github.com/streamlink/streamlink/pull/3841)), dommune ([#3818](https://github.com/streamlink/streamlink/pull/3818)), liveedu ([#3845](https://github.com/streamlink/streamlink/pull/3845)), periscope ([#3813](https://github.com/streamlink/streamlink/pull/3813)), powerapp ([#3816](https://github.com/streamlink/streamlink/pull/3816)), rtlxl ([#3842](https://github.com/streamlink/streamlink/pull/3842)), streamingvideoprovider ([#3843](https://github.com/streamlink/streamlink/pull/3843)), teleclubzoom ([#3817](https://github.com/streamlink/streamlink/pull/3817)), tigerdile ([#3819](https://github.com/streamlink/streamlink/pull/3819))
+
+
+```text
+Hakkin Lain <Hakkin@users.noreply.github.com> (1):
+      stream.hls: set fallback playlist reload time to 6 seconds (#3887)
+
+back-to <backto@protonmail.ch> (16):
+      plugins.youtube: added API fallback
+      plugins.rtvs: fixed livestream
+      plugins.nos: Fixed Livestream and VOD
+      plugins.vlive: fixed livestream (#3820)
+      plugins.Tigerdile: removed
+      plugins.Dommune: removed
+      plugins.PowerApp: removed
+      plugins.TeleclubZoom: removed (#3817)
+      plugins.cdnbg: Fix regex and referer issues
+      plugins.rtlxl: removed
+      plugins.CanalPlus: removed
+      plugins.liveedu: removed
+      plugins.Streamingvideoprovider: removed
+      plugin.api: update useragents
+      plugins.youtube: detect Livestreams with 'isLive'
+      plugins.nimotv: use 'mStreamPkg'
+
+bastimeyer <mail@bastimeyer.de> (30):
+      plugins.youtube: translate embed_live URLs
+      plugins.periscope: remove plugin
+      plugins.mediaklikk: rewrite plugin
+      stream.hls: add type hints and refactor
+      stream.hls: implement media initialization section
+      plugin: new matchers API
+      plugins: update protocol plugins
+      plugins: update basic plugins
+      plugins: update plugins with URL capture groups
+      plugins: update plugins with spec. can_handle_url
+      plugins: update plugins with multiple URL matchers
+      plugins: update plugins with URL translations
+      session: resolve deprecated plugins
+      plugins.zdf_mediathek: refactor plugin, drop HDS
+      docs: add deprecations page
+      plugins.tv8: remove API, find HLS via simple regex
+      plugins.youtube: find videoId on channel pages
+      chore: replace issue templates with forms
+      chore: fix issue forms checklist
+      tests: remove mock from dev dependencies
+      vendor: set requests to >=2.26.0,<3
+      tests: temporarily skip broken tests on win32
+      tests: fix unnecessary hostname lookup in cli_main
+      docs: fix headline anchors on deprecations page
+      vendor: downgrade requests to 2.25.1 on Windows
+      tests: refactor TestMixinStreamHLS
+      streams.segmented: refactor worker and writer
+      streams.segmented: refactor reader
+      streams.hls: refactor worker
+      streams.hls: fix playlist_reload_time
+
+gustaf <gustaf@protonmail.ch> (1):
+      plugins.tv4play: fix plugin URL regex
+
+vinyl-umbrella <61788251+vinyl-umbrella@users.noreply.github.com> (1):
+      plugins.openrectv: update HLS URLs (#3850)
+```
+
+
 ## streamlink 2.2.0 (2021-06-19)
 
 Release highlights:
