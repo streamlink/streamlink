@@ -310,40 +310,40 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
             return thread.reader.worker.playlist_reload_time
 
     def test_hls_playlist_reload_time_default(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="default")
-        self.assertEqual(time, 6, "default sets the reload time to the playlist's target duration")
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="default")
+        self.assertEqual(time, 4, "default sets the reload time to the playlist's target duration")
 
     def test_hls_playlist_reload_time_segment(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="segment")
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="segment")
         self.assertEqual(time, 3, "segment sets the reload time to the playlist's last segment")
 
     def test_hls_playlist_reload_time_segment_no_segments(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=6)], reload_time="segment")
-        self.assertEqual(time, 6, "segment sets the reload time to the targetduration if no segments are available")
+        time = self.subject([Playlist(0, [], end=True, targetduration=4)], reload_time="segment")
+        self.assertEqual(time, 4, "segment sets the reload time to the targetduration if no segments are available")
 
     def test_hls_playlist_reload_time_segment_no_segments_no_targetduration(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="segment")
-        self.assertEqual(time, 15, "sets reload time to 15 seconds when no segments and no targetduration are available")
+        self.assertEqual(time, 6, "sets reload time to 6 seconds when no segments and no targetduration are available")
 
     def test_hls_playlist_reload_time_live_edge(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="live-edge")
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="live-edge")
         self.assertEqual(time, 8, "live-edge sets the reload time to the sum of the number of segments of the live-edge")
 
     def test_hls_playlist_reload_time_live_edge_no_segments(self):
-        time = self.subject([Playlist(0, [], end=True, targetduration=6)], reload_time="live-edge")
-        self.assertEqual(time, 6, "live-edge sets the reload time to the targetduration if no segments are available")
+        time = self.subject([Playlist(0, [], end=True, targetduration=4)], reload_time="live-edge")
+        self.assertEqual(time, 4, "live-edge sets the reload time to the targetduration if no segments are available")
 
     def test_hls_playlist_reload_time_live_edge_no_segments_no_targetduration(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="live-edge")
-        self.assertEqual(time, 15, "sets reload time to 15 seconds when no segments and no targetduration are available")
+        self.assertEqual(time, 6, "sets reload time to 6 seconds when no segments and no targetduration are available")
 
     def test_hls_playlist_reload_time_number(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="4")
-        self.assertEqual(time, 4, "number values override the reload time")
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="2")
+        self.assertEqual(time, 2, "number values override the reload time")
 
     def test_hls_playlist_reload_time_number_invalid(self):
-        time = self.subject([Playlist(0, self.segments, end=True, targetduration=6)], reload_time="0")
-        self.assertEqual(time, 6, "invalid number values set the reload time to the playlist's targetduration")
+        time = self.subject([Playlist(0, self.segments, end=True, targetduration=4)], reload_time="0")
+        self.assertEqual(time, 4, "invalid number values set the reload time to the playlist's targetduration")
 
     def test_hls_playlist_reload_time_no_target_duration(self):
         time = self.subject([Playlist(0, self.segments, end=True, targetduration=0)], reload_time="default")
@@ -351,7 +351,7 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
 
     def test_hls_playlist_reload_time_no_data(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
-        self.assertEqual(time, 15, "sets reload time to 15 seconds when no data is available")
+        self.assertEqual(time, 6, "sets reload time to 6 seconds when no data is available")
 
 
 @patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))
