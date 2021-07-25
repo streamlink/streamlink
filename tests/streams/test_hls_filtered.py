@@ -132,7 +132,7 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.stream.hls.HLSStreamWriter.should_filter_sequence", new=filter_sequence)
     def test_filtered_closed(self):
-        thread, reader, writer, segments = self.subject([
+        thread, reader, writer, segments = self.subject(start=False, playlists=[
             Playlist(0, [SegmentFiltered(0), SegmentFiltered(1)], end=True)
         ])
 
@@ -145,6 +145,8 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
             return orig_wait(*args, **kwargs)
 
         with patch.object(reader.filter_event, "wait", side_effect=mocked_wait):
+            self.start()
+
             # write first filtered segment and trigger the filter_event's lock
             self.assertTrue(reader.filter_event.is_set(), "Doesn't let the reader wait if not filtering")
             self.await_write()
