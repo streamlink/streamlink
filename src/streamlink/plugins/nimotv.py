@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://(?:www\.)?nimo\.tv/(?P<username>.*)'
+    r'https?://(?:www\.|m\.)?nimo\.tv/(?P<username>.*)'
 ))
 class NimoTV(Plugin):
     data_url = 'https://m.nimo.tv/{0}'
@@ -28,16 +28,8 @@ class NimoTV(Plugin):
                 'title': validate.text,
                 'nickname': validate.text,
                 'game': validate.text,
-                'roomLineInfo': validate.any(None, {
-                    'vCodeLines2': [{
-                        'iBitRate': int,
-                        'vCdns': [{
-                            'vCdnUrls': [{
-                                'smediaUrl': validate.url(),
-                            }],
-                        }],
-                    }],
-                }),
+                'liveStreamStatus': int,
+                validate.optional('mStreamPkg'): validate.text,
             },
         )),
     )
@@ -46,21 +38,23 @@ class NimoTV(Plugin):
         250: '240p',
         500: '360p',
         1000: '480p',
-        2000: '720p',
+        2500: '720p',
         6000: '1080p',
     }
 
+    _re_appid = re.compile(br'appid=(\d+)')
+    _re_domain = re.compile(br'(https?:\/\/[A-Za-z]{2,3}.hls[A-Za-z\.\/]+)(?:V|&)')
+    _re_id = re.compile(br'id=([^|\\]+)')
+    _re_tp = re.compile(br'tp=(\d+)')
+
     def get_author(self):
-        if self.author is not None:
-            return self.author
+        return self.author
 
     def get_category(self):
-        if self.category is not None:
-            return self.category
+        return self.category
 
     def get_title(self):
-        if self.title is not None:
-            return self.title
+        return self.title
 
     def _get_streams(self):
         username = self.match.group('username')
@@ -74,20 +68,50 @@ class NimoTV(Plugin):
             schema=self.data_schema,
         )
 
-        if data is None or data['roomLineInfo'] is None:
+        if data['liveStreamStatus'] == 0:
+            log.info('This stream is currently offline')
             return
+
+        mStreamPkg = data.get('mStreamPkg')
+        if not mStreamPkg:
+            log.debug('missing mStreamPkg')
+            return
+
+        mStreamPkg = bytes.fromhex(mStreamPkg)
+        try:
+            _appid = self._re_appid.search(mStreamPkg).group(1).decode('utf-8')
+            _domain = self._re_domain.search(mStreamPkg).group(1).decode('utf-8')
+            _id = self._re_id.search(mStreamPkg).group(1).decode('utf-8')
+            _tp = self._re_tp.search(mStreamPkg).group(1).decode('utf-8')
+        except AttributeError:
+            log.error('invalid mStreamPkg')
+            return
+
+        params = {
+            'appid': _appid,
+            'id': _id,
+            'tp': _tp,
+            'u': '0',
+            't': '100',
+            'needwm': 1,
+        }
+        url = '{0}{1}.m3u8'.format(_domain, _id)
+        log.debug('URL={0}'.format(url))
+        for k, v in self.video_qualities.items():
+            _params = params.copy()
+            _params.update({'ratio': k})
+            if v == '1080p':
+                _params.update({'needwm': 0})
+            elif v in ('720p', '480p', '360p'):
+                _params.update({'sphd': 1})
+
+            log.trace('{0} params={1!r}'.format(v, _params))
+            # some qualities might not exist, but it will select a different lower quality
+            yield v, HLSStream(self.session, url, params=_params)
 
         self.author = data['nickname']
         self.category = data['game']
         self.title = data['title']
-
-        for vcl2 in data['roomLineInfo']['vCodeLines2']:
-            q = self.video_qualities[vcl2['iBitRate']]
-            for vcdn in vcl2['vCdns']:
-                for vcdnurl in vcdn['vCdnUrls']:
-                    if 'tx.hls.nimo.tv' in vcdnurl['smediaUrl']:
-                        log.debug("HLS URL={0} ({1})".format(vcdnurl['smediaUrl'], q))
-                        yield q, HLSStream(self.session, vcdnurl['smediaUrl'])
 
 
 __plugin__ = NimoTV
