@@ -1,5 +1,57 @@
 # Changelog
 
+## streamlink 1.27.6.0 (2021-07-27)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (28):
+      plugins.youtube: translate embed_live URLs (#3804)
+      plugins.youtube: added API fallback (#3809)
+      plugins.periscope: remove plugin (#3813)
+      plugins.vlive: fixed livestream (#3820)
+      plugins.PowerApp: removed (#3816)
+      plugins.TeleclubZoom: removed (#3817)
+      Update pluto.py
+      plugins.mediaklikk: rewrite plugin (#3825)
+      stream.hls_playlist: refactor
+      plugin: new matchers API (#3821)
+      plugins: update protocol plugins (#3821)
+      plugins: update basic plugins (#3821)
+      plugins: update plugins with URL capture groups (#3821)
+      plugins: update plugins with spec. can_handle_url (#3821)
+      plugins: update plugins with multiple URL matchers (#3821)
+      plugins: update plugins with URL translations (#3821)
+      session: resolve deprecated plugins (#3821)
+      plugins.zdf_mediathek: refactor plugin, drop HDS (#3832)
+      plugins.cdnbg: Fix regex and referer issues (#3838)
+      plugins.CanalPlus: removed (#3841)
+      plugins.liveedu: removed (#3845)
+      plugins.openrectv: update HLS URLs (#3850)
+      plugin.plugin: make typing optional
+      plugins.youtube: detect Livestreams with 'isLive' (#3872)
+      plugins.nimotv: use 'mStreamPkg' (#3882)
+      stream.hls: set fallback playlist reload time to 6 seconds (#3887)
+      setup: add future dep for py2
+
+back-to <backto@protonmail.ch> (7):
+      plugins.rtvs: fixed livestream
+      plugins.nos: Fixed Livestream and VOD
+      plugins.Tigerdile: removed
+      plugins.Dommune: removed
+      plugins.rtlxl: removed
+      plugins.Streamingvideoprovider: removed
+      plugin.api: update useragents
+
+bastimeyer <mail@bastimeyer.de> (4):
+      docs: add deprecations page
+      plugins.tv8: remove API, find HLS via simple regex
+      plugins.youtube: find videoId on channel pages
+      tests: fix unnecessary hostname lookup in cli_main
+
+gustaf <gustaf@protonmail.ch> (1):
+      plugins.tv4play: fix plugin URL regex
+```
+
+
 ## streamlink 1.27.5.0 (2021-06-19)
 
 ```text
