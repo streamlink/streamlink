@@ -10,6 +10,7 @@ from setuptools import find_packages, setup
 here = os.path.abspath(os.path.dirname(__file__))
 
 deps = [
+    'future;python_version<"3.0"',
     # Require backport of concurrent.futures on Python 2
     'futures;python_version<"3.0"',
     # Require singledispatch on Python <3.4
