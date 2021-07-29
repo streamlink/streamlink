@@ -1,13 +1,13 @@
 Deprecations
 ============
 
-1.27.5.0
---------
+streamlink 1.27.6.0
+-------------------
 
 Plugin.can_handle_url() and Plugin.priority()
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A new plugin URL matching API was introduced in 1.27.5.0 which will help Streamlink with static code analysis and an improved
+A new plugin URL matching API was introduced in 1.27.6.0 which will help Streamlink with static code analysis and an improved
 plugin loading mechanism in the future. Plugins now define their matching URLs and priorities declaratively.
 
 The old ``can_handle_url`` and ``priority`` classmethods have therefore been deprecated and will be removed in the future.
