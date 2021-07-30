@@ -29,17 +29,9 @@ Multi-threaded streaming
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 On segmented streaming protocols (such as HLS and HDS) it's possible to use
-multiple threads to potentially increase the throughput.
-Each stream type has its own option, and these are the ones that are currently available:
-
-=================================== ============================================
-Option                              Used by these plugins
-=================================== ============================================
-:option:`--hls-segment-threads`     `twitch`, `youtube` and many more.
-:option:`--hds-segment-threads`     `dailymotion` and many more.
-:option:`--stream-segment-threads`  `ustreamtv` and any other plugins implementing
-                                    their own segmented streaming protocol.
-=================================== ============================================
+multiple threads for downloading multiple segments at the same time to
+potentially increase the throughput. This can be done via Streamlink's
+:option:`--stream-segment-threads` argument.
 
 .. note::
 

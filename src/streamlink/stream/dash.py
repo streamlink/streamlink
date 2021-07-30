@@ -21,13 +21,6 @@ log = logging.getLogger(__name__)
 
 
 class DASHStreamWriter(SegmentedStreamWriter):
-    def __init__(self, reader, *args, **kwargs):
-        options = reader.stream.session.options
-        kwargs["retries"] = options.get("dash-segment-attempts")
-        kwargs["threads"] = options.get("dash-segment-threads")
-        kwargs["timeout"] = options.get("dash-segment-timeout")
-        SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
-
     def fetch(self, segment, retries=None):
         if self.closed or not retries:
             return

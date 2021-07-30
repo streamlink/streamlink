@@ -1,6 +1,21 @@
 Deprecations
 ============
 
+streamlink 2.4.0
+----------------
+
+Stream-type related CLI arguments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ref:`Stream-type related CLI arguments <cli:Stream transport options>` and the respective :ref:`Session options <api:Session>`
+have been deprecated in favor of existing generic arguments/options, to avoid redundancy and potential confusion.
+
+- use :option:`--stream-segment-attempts` instead of ``--{dash,hds,hls}-segment-attempts``
+- use :option:`--stream-segment-threads` instead of ``--{dash,hds,hls}-segment-threads``
+- use :option:`--stream-segment-timeout` instead of ``--{dash,hds,hls}-segment-timeout``
+- use :option:`--stream-timeout` instead of ``--{dash,hds,hls,rtmp,http-stream}-timeout``
+
+
 streamlink 2.3.0
 ----------------
 

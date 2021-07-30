@@ -26,7 +26,7 @@ class RTMPStream(StreamProcess):
     def __init__(self, session, params, redirect=False, **kwargs):
         StreamProcess.__init__(self, session, params=params, **kwargs)
 
-        self.timeout = self.session.options.get("rtmp-timeout")
+        self.timeout = self.session.options.get("stream-timeout")
         self.redirect = redirect
 
         # set rtmpdump logging level

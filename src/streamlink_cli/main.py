@@ -754,29 +754,17 @@ def setup_options():
     if args.hls_segment_stream_data:
         streamlink.set_option("hls-segment-stream-data", args.hls_segment_stream_data)
 
-    if args.hls_segment_attempts:
-        streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
-
     if args.hls_playlist_reload_attempts:
         streamlink.set_option("hls-playlist-reload-attempts", args.hls_playlist_reload_attempts)
 
     if args.hls_playlist_reload_time:
         streamlink.set_option("hls-playlist-reload-time", args.hls_playlist_reload_time)
 
-    if args.hls_segment_threads:
-        streamlink.set_option("hls-segment-threads", args.hls_segment_threads)
-
-    if args.hls_segment_timeout:
-        streamlink.set_option("hls-segment-timeout", args.hls_segment_timeout)
-
     if args.hls_segment_ignore_names:
         streamlink.set_option("hls-segment-ignore-names", args.hls_segment_ignore_names)
 
     if args.hls_segment_key_uri:
         streamlink.set_option("hls-segment-key-uri", args.hls_segment_key_uri)
-
-    if args.hls_timeout:
-        streamlink.set_option("hls-timeout", args.hls_timeout)
 
     if args.hls_audio_select:
         streamlink.set_option("hls-audio-select", args.hls_audio_select)
@@ -793,21 +781,6 @@ def setup_options():
     if args.hds_live_edge:
         streamlink.set_option("hds-live-edge", args.hds_live_edge)
 
-    if args.hds_segment_attempts:
-        streamlink.set_option("hds-segment-attempts", args.hds_segment_attempts)
-
-    if args.hds_segment_threads:
-        streamlink.set_option("hds-segment-threads", args.hds_segment_threads)
-
-    if args.hds_segment_timeout:
-        streamlink.set_option("hds-segment-timeout", args.hds_segment_timeout)
-
-    if args.hds_timeout:
-        streamlink.set_option("hds-timeout", args.hds_timeout)
-
-    if args.http_stream_timeout:
-        streamlink.set_option("http-stream-timeout", args.http_stream_timeout)
-
     if args.ringbuffer_size:
         streamlink.set_option("ringbuffer-size", args.ringbuffer_size)
 
@@ -819,18 +792,35 @@ def setup_options():
     elif args.rtmpdump:
         streamlink.set_option("rtmp-rtmpdump", args.rtmpdump)
 
+    # deprecated
+    if args.hds_segment_attempts:
+        streamlink.set_option("hds-segment-attempts", args.hds_segment_attempts)
+    if args.hds_segment_threads:
+        streamlink.set_option("hds-segment-threads", args.hds_segment_threads)
+    if args.hds_segment_timeout:
+        streamlink.set_option("hds-segment-timeout", args.hds_segment_timeout)
+    if args.hds_timeout:
+        streamlink.set_option("hds-timeout", args.hds_timeout)
+    if args.hls_segment_attempts:
+        streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
+    if args.hls_segment_threads:
+        streamlink.set_option("hls-segment-threads", args.hls_segment_threads)
+    if args.hls_segment_timeout:
+        streamlink.set_option("hls-segment-timeout", args.hls_segment_timeout)
+    if args.hls_timeout:
+        streamlink.set_option("hls-timeout", args.hls_timeout)
+    if args.http_stream_timeout:
+        streamlink.set_option("http-stream-timeout", args.http_stream_timeout)
     if args.rtmp_timeout:
         streamlink.set_option("rtmp-timeout", args.rtmp_timeout)
 
+    # generic stream- arguments take precedence over deprecated stream-type arguments
     if args.stream_segment_attempts:
         streamlink.set_option("stream-segment-attempts", args.stream_segment_attempts)
-
     if args.stream_segment_threads:
         streamlink.set_option("stream-segment-threads", args.stream_segment_threads)
-
     if args.stream_segment_timeout:
         streamlink.set_option("stream-segment-timeout", args.stream_segment_timeout)
-
     if args.stream_timeout:
         streamlink.set_option("stream-timeout", args.stream_timeout)
 
