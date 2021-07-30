@@ -764,48 +764,10 @@ def build_parser():
         Default is 10.0.
         """
     )
-    transport.add_argument(
-        "--hds-segment-attempts",
-        type=num(int, min=0),
-        metavar="ATTEMPTS",
-        help="""
-        How many attempts should be done to download each HDS segment before
-        giving up.
-
-        Default is 3.
-        """
-    )
-    transport.add_argument(
-        "--hds-segment-threads",
-        type=num(int, max=10),
-        metavar="THREADS",
-        help="""
-        The size of the thread pool used to download HDS segments. Minimum value
-        is 1 and maximum is 10.
-
-        Default is 1.
-        """
-    )
-    transport.add_argument(
-        "--hds-segment-timeout",
-        type=num(float, min=0),
-        metavar="TIMEOUT",
-        help="""
-        HDS segment connect and read timeout.
-
-        Default is 10.0.
-        """
-    )
-    transport.add_argument(
-        "--hds-timeout",
-        type=num(float, min=0),
-        metavar="TIMEOUT",
-        help="""
-        Timeout for reading data from HDS streams.
-
-        Default is 60.0.
-        """
-    )
+    transport.add_argument("--hds-segment-attempts", help=argparse.SUPPRESS)
+    transport.add_argument("--hds-segment-threads", help=argparse.SUPPRESS)
+    transport.add_argument("--hds-segment-timeout", help=argparse.SUPPRESS)
+    transport.add_argument("--hds-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--hls-live-edge",
         type=num(int, min=0),
@@ -824,17 +786,6 @@ def build_parser():
         action="store_true",
         help="""
         Immediately write segment data into output buffer while downloading.
-        """
-    )
-    transport.add_argument(
-        "--hls-segment-attempts",
-        type=num(int, min=0),
-        metavar="ATTEMPTS",
-        help="""
-        How many attempts should be done to download each HLS segment before
-        giving up.
-
-        Default is 3.
         """
     )
     transport.add_argument(
@@ -862,26 +813,9 @@ def build_parser():
         Default is default.
         """
     )
-    transport.add_argument(
-        "--hls-segment-threads",
-        type=num(int, max=10),
-        metavar="THREADS",
-        help="""
-        The size of the thread pool used to download HLS segments. Minimum value
-        is 1 and maximum is 10.
-
-        Default is 1.
-        """
-    )
-    transport.add_argument(
-        "--hls-segment-timeout",
-        type=num(float, min=0),
-        metavar="TIMEOUT",
-        help="""
-        HLS segment connect and read timeout.
-
-        Default is 10.0.
-        """)
+    transport.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
+    transport.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
+    transport.add_argument("--hls-segment-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--hls-segment-ignore-names",
         metavar="NAMES",
@@ -936,16 +870,9 @@ def build_parser():
         Note: This is only useful in special circumstances where the regular
         locale option fails, such as when multiple sources of the same language
         exists.
-        """)
-    transport.add_argument(
-        "--hls-timeout",
-        type=num(float, min=0),
-        metavar="TIMEOUT",
-        help="""
-        Timeout for reading data from HLS streams.
-
-        Default is 60.0.
-        """)
+        """
+    )
+    transport.add_argument("--hls-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--hls-start-offset",
         type=hours_minutes_seconds,
@@ -956,7 +883,8 @@ def build_parser():
         streams, this is a negative offset from the end of the stream (rewind).
 
         Default is 00:00:00.
-        """)
+        """
+    )
     transport.add_argument(
         "--hls-duration",
         type=hours_minutes_seconds,
@@ -968,22 +896,16 @@ def build_parser():
         nearest HLS segment.
 
         Default is unlimited.
-        """)
+        """
+    )
     transport.add_argument(
         "--hls-live-restart",
         action="store_true",
         help="""
         Skip to the beginning of a live stream, or as far back as possible.
-        """)
-    transport.add_argument(
-        "--http-stream-timeout",
-        type=num(float, min=0),
-        metavar="TIMEOUT",
-        help="""
-        Timeout for reading data from HTTP streams.
-
-        Default is 60.0.
-        """)
+        """
+    )
+    transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--ringbuffer-size",
         metavar="SIZE",
@@ -1008,7 +930,8 @@ def build_parser():
         Note: A smaller size is recommended on lower end systems (such as
         Raspberry Pi) when playing stream types that require some extra
         processing (such as HDS) to avoid unnecessary background processing.
-        """)
+        """
+    )
     transport.add_argument(
         "--rtmp-proxy",
         metavar="PROXY",
@@ -1029,26 +952,15 @@ def build_parser():
         """
     )
     transport.add_argument("--rtmpdump", help=argparse.SUPPRESS)
-    transport.add_argument(
-        "--rtmp-timeout",
-        type=num(float, min=0),
-        metavar="TIMEOUT",
-        help="""
-        Timeout for reading data from RTMP streams.
-
-        Default is 60.0.
-        """
-    )
+    transport.add_argument("--rtmp-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--stream-segment-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
         help="""
-        How many attempts should be done to download each segment before giving
-        up.
+        How many attempts should be done to download each segment before giving up.
 
-        This is generic option used by streams not covered by other options,
-        such as stream protocols specific to plugins, e.g. UStream.
+        This applies to all different kinds of segmented stream types, such as DASH, HDS, HLS, etc.
 
         Default is 3.
         """
@@ -1058,11 +970,9 @@ def build_parser():
         type=num(int, max=10),
         metavar="THREADS",
         help="""
-        The size of the thread pool used to download segments. Minimum value is
-        1 and maximum is 10.
+        The size of the thread pool used to download segments. Minimum value is 1 and maximum is 10.
 
-        This is generic option used by streams not covered by other options,
-        such as stream protocols specific to plugins, e.g. UStream.
+        This applies to all different kinds of segmented stream types, such as DASH, HDS, HLS, etc.
 
         Default is 1.
         """
@@ -1074,11 +984,11 @@ def build_parser():
         help="""
         Segment connect and read timeout.
 
-        This is generic option used by streams not covered by other options,
-        such as stream protocols specific to plugins, e.g. UStream.
+        This applies to all different kinds of segmented stream types, such as DASH, HDS, HLS, etc.
 
         Default is 10.0.
-        """)
+        """
+    )
     transport.add_argument(
         "--stream-timeout",
         type=num(float, min=0),
@@ -1086,11 +996,11 @@ def build_parser():
         help="""
         Timeout for reading data from streams.
 
-        This is generic option used by streams not covered by other options,
-        such as stream protocols specific to plugins, e.g. UStream.
+        This applies to all different kinds of stream types, such as DASH, HDS, HLS, HTTP, RTMP, etc.
 
         Default is 60.0.
-        """)
+        """
+    )
     transport.add_argument(
         "--subprocess-cmdline",
         action="store_true",
