@@ -193,7 +193,6 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         ], disable_ads=False, low_latency=True)
 
         self.assertEqual(2, self.session.options.get("hls-live-edge"))
-        self.assertEqual(True, self.session.options.get("hls-segment-stream-data"))
 
         self.await_write(6)
         self.assertEqual(
@@ -215,7 +214,6 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
         ], disable_ads=False, low_latency=False)
 
         self.assertEqual(4, self.session.options.get("hls-live-edge"))
-        self.assertEqual(False, self.session.options.get("hls-segment-stream-data"))
 
         self.await_write(8)
         self.assertEqual(
