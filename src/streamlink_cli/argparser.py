@@ -781,13 +781,7 @@ def build_parser():
         Default is 3.
         """
     )
-    transport.add_argument(
-        "--hls-segment-stream-data",
-        action="store_true",
-        help="""
-        Immediately write segment data into output buffer while downloading.
-        """
-    )
+    transport.add_argument("--hls-segment-stream-data", action="store_true", help=argparse.SUPPRESS)
     transport.add_argument(
         "--hls-playlist-reload-attempts",
         type=num(int, min=0),

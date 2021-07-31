@@ -124,7 +124,6 @@ class TwitchHLSStreamReader(HLSStreamReader):
         if stream.low_latency:
             live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, stream.session.options.get("hls-live-edge")))
             stream.session.options.set("hls-live-edge", live_edge)
-            stream.session.options.set("hls-segment-stream-data", True)
             log.info(f"Low latency streaming (HLS live edge: {live_edge})")
         super().__init__(stream)
 
@@ -436,18 +435,19 @@ class Twitch(Plugin):
         PluginArgument(
             "low-latency",
             action="store_true",
-            help="""
+            help=f"""
             Enables low latency streaming by prefetching HLS segments.
-            Sets --hls-segment-stream-data to true and --hls-live-edge to {live_edge}, if it is higher.
-            Reducing --hls-live-edge to 1 will result in the lowest latency possible.
+            Sets --hls-live-edge to {LOW_LATENCY_MAX_LIVE_EDGE}, if it is higher.
+            Reducing it to 1 will result in the lowest latency possible, but will most likely cause buffering.
 
-            Low latency streams have to be enabled by the broadcasters on Twitch themselves.
-            Regular streams can cause buffering issues with this option enabled.
+            In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
+            need to be adjusted and reduced to a value as low as possible, but still high enough to not cause any buffering.
+            This depends on the stream's bitrate and the quality of the connection to Twitch's servers. Please refer to the
+            player's own documentation for the required configuration. Player parameters can be set via --player-args.
 
-            Note: The caching/buffering settings of the chosen player may need to be adjusted as well.
-            Please refer to the player's own documentation for the required parameters and its configuration.
-            Player parameters can be set via Streamlink's --player or --player-args parameters.
-            """.format(live_edge=LOW_LATENCY_MAX_LIVE_EDGE)
+            Note: Low latency streams have to be enabled by the broadcasters on Twitch themselves.
+            Regular streams can cause buffering issues with this option enabled due to the reduced --hls-live-edge value.
+            """
         )
     )
 
