@@ -65,7 +65,6 @@ class TestFilteredHLSStream(TestMixinStreamHLS, unittest.TestCase):
     def get_session(self, options=None, *args, **kwargs):
         session = super(TestFilteredHLSStream, self).get_session(options)
         session.set_option("hls-live-edge", 2)
-        session.set_option("hls-timeout", 0)
         session.set_option("stream-timeout", 0)
 
         return session

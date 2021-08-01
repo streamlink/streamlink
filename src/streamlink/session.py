@@ -60,23 +60,14 @@ class Streamlink(object):
             "ipv4": False,
             "ipv6": False,
             "hds-live-edge": 10.0,
-            "hds-segment-attempts": 3,
-            "hds-segment-threads": 1,
-            "hds-segment-timeout": 10.0,
-            "hds-timeout": 60.0,
             "hls-live-edge": 3,
-            "hls-segment-attempts": 3,
-            "hls-segment-threads": 1,
-            "hls-segment-timeout": 10.0,
+            "hls-segment-ignore-names": [],
             "hls-segment-stream-data": False,
-            "hls-timeout": 60.0,
             "hls-playlist-reload-attempts": 3,
             "hls-playlist-reload-time": "default",
             "hls-start-offset": 0,
             "hls-duration": None,
-            "http-stream-timeout": 60.0,
             "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
-            "rtmp-timeout": 60.0,
             "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
             "rtmp-proxy": None,
             "stream-segment-attempts": 3,
@@ -132,35 +123,15 @@ class Streamlink(object):
                                  streams will start from the edge of
                                  stream, default: ``10.0``
 
-        hds-segment-attempts     (int) How many attempts should be done
-                                 to download each HDS segment, default: ``3``
-
-        hds-segment-threads      (int) The size of the thread pool used
-                                 to download segments, default: ``1``
-
-        hds-segment-timeout      (float) HDS segment connect and read
-                                 timeout, default: ``10.0``
-
-        hds-timeout              (float) Timeout for reading data from
-                                 HDS streams, default: ``60.0``
-
         hls-live-edge            (int) How many segments from the end
                                  to start live streams on, default: ``3``
 
-        hls-segment-attempts     (int) How many attempts should be done
-                                 to download each HLS segment, default: ``3``
-
-        hls-segment-threads      (int) The size of the thread pool used
-                                 to download segments, default: ``1``
+        hls-segment-ignore-names (str[]) List of segment names without
+                                 file endings which should get filtered out,
+                                 default: ``[]``
 
         hls-segment-stream-data  (bool) Stream HLS segment downloads,
                                  default: ``False``
-
-        hls-segment-timeout      (float) HLS segment connect and read
-                                 timeout, default: ``10.0``
-
-        hls-timeout              (float) Timeout for reading data from
-                                 HLS streams, default: ``60.0``
 
         http-proxy               (str) Specify a HTTP proxy to use for
                                  all HTTP requests
@@ -197,9 +168,6 @@ class Streamlink(object):
                                  requests except the ones covered by
                                  other options, default: ``20.0``
 
-        http-stream-timeout      (float) Timeout for reading data from
-                                 HTTP streams, default: ``60.0``
-
         subprocess-errorlog      (bool) Log errors from subprocesses to
                                  a file located in the temp directory
 
@@ -216,9 +184,6 @@ class Streamlink(object):
         rtmp-rtmpdump            (str) Specify the location of the
                                  rtmpdump executable used by RTMP streams,
                                  e.g. ``/usr/local/bin/rtmpdump``
-
-        rtmp-timeout             (float) Timeout for reading data from
-                                 RTMP streams, default: ``60.0``
 
         ffmpeg-ffmpeg            (str) Specify the location of the
                                  ffmpeg executable use by Muxing streams
@@ -253,23 +218,15 @@ class Streamlink(object):
 
         stream-segment-attempts  (int) How many attempts should be done
                                  to download each segment, default: ``3``.
-                                 General option used by streams not
-                                 covered by other options.
 
         stream-segment-threads   (int) The size of the thread pool used
                                  to download segments, default: ``1``.
-                                 General option used by streams not
-                                 covered by other options.
 
         stream-segment-timeout   (float) Segment connect and read
                                  timeout, default: ``10.0``.
-                                 General option used by streams not
-                                 covered by other options.
 
         stream-timeout           (float) Timeout for reading data from
                                  stream, default: ``60.0``.
-                                 General option used by streams not
-                                 covered by other options.
 
         locale                   (str) Locale setting, in the RFC 1766 format
                                  eg. en_US or es_ES
@@ -344,6 +301,20 @@ class Streamlink(object):
             self.http.cert = value
         elif key == "http-timeout":
             self.http.timeout = value
+
+        # deprecated: {dash,hds,hls}-segment-attempts
+        elif key in ("dash-segment-attempts", "hds-segment-attempts", "hls-segment-attempts"):
+            self.options.set("stream-segment-attempts", int(value))
+        # deprecated: {dash,hds,hls}-segment-threads
+        elif key in ("dash-segment-threads", "hds-segment-threads", "hls-segment-threads"):
+            self.options.set("stream-segment-threads", int(value))
+        # deprecated: {dash,hds,hls}-segment-timeout
+        elif key in ("dash-segment-timeout", "hds-segment-timeout", "hls-segment-timeout"):
+            self.options.set("stream-segment-timeout", float(value))
+        # deprecated: {hds,hls,rtmp,dash,http-stream}-timeout
+        elif key in ("dash-timeout", "hds-timeout", "hls-timeout", "http-stream-timeout", "rtmp-timeout"):
+            self.options.set("stream-timeout", float(value))
+
         else:
             self.options.set(key, value)
 

@@ -18,16 +18,9 @@ log = logging.getLogger(__name__)
 Sequence = namedtuple("Sequence", "num segment")
 
 
-def num_to_iv(n):
-    return struct.pack(">8xq", n)
-
-
 class HLSStreamWriter(SegmentedStreamWriter):
     def __init__(self, reader, *args, **kwargs):
         options = reader.stream.session.options
-        kwargs["retries"] = options.get("hls-segment-attempts")
-        kwargs["threads"] = options.get("hls-segment-threads")
-        kwargs["timeout"] = options.get("hls-segment-timeout")
         kwargs["ignore_names"] = options.get("hls-segment-ignore-names")
         SegmentedStreamWriter.__init__(self, reader, *args, **kwargs)
 
@@ -44,6 +37,11 @@ class HLSStreamWriter(SegmentedStreamWriter):
             self.ignore_names = "|".join(list(map(re.escape, self.ignore_names)))
             self.ignore_names_re = re.compile(r"(?:{blacklist})\.ts".format(
                 blacklist=self.ignore_names), re.IGNORECASE)
+
+    @staticmethod
+    def num_to_iv(n):
+        # type: (int) -> bytes
+        return struct.pack(">8xq", n)
 
     def create_decryptor(self, key, sequence):
         if key.method != "AES-128":
@@ -73,7 +71,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             self.key_data = res.content
             self.key_uri = key_uri
 
-        iv = key.iv or num_to_iv(sequence)
+        iv = key.iv or self.num_to_iv(sequence)
 
         # Pad IV if needed
         iv = b"\x00" * (16 - len(iv)) + iv
@@ -316,7 +314,6 @@ class HLSStreamReader(SegmentedStreamReader):
     def __init__(self, stream, *args, **kwargs):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
         self.request_params = dict(stream.args)
-        self.timeout = stream.session.options.get("hls-timeout")
 
         # These params are reserved for internal use
         self.request_params.pop("exception", None)

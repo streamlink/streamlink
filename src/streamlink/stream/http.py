@@ -65,7 +65,7 @@ class HTTPStream(Stream):
 
     def open(self):
         method = self.args.get("method", "GET")
-        timeout = self.session.options.get("http-timeout")
+        timeout = self.session.options.get("stream-timeout")
         res = self.session.http.request(method=method,
                                         stream=True,
                                         exception=StreamError,
