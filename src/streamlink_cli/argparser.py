@@ -754,202 +754,35 @@ def build_parser():
     )
 
     transport = parser.add_argument_group("Stream transport options")
-    transport.add_argument(
-        "--hds-live-edge",
-        type=num(float, min=0),
-        metavar="SECONDS",
-        help="""
-        The time live HDS streams will start from the edge of stream.
+    transport_hds = transport.add_argument_group("HDS options")
+    transport_hls = transport.add_argument_group("HLS options")
+    transport_rtmp = transport.add_argument_group("RTMP options")
+    transport_subprocess = transport.add_argument_group("Subprocess options")
+    transport_ffmpeg = transport.add_argument_group("FFmpeg options")
 
-        Default is 10.0.
-        """
-    )
-    transport.add_argument("--hds-segment-attempts", help=argparse.SUPPRESS)
-    transport.add_argument("--hds-segment-threads", help=argparse.SUPPRESS)
-    transport.add_argument("--hds-segment-timeout", help=argparse.SUPPRESS)
-    transport.add_argument("--hds-timeout", help=argparse.SUPPRESS)
-    transport.add_argument(
-        "--hls-live-edge",
-        type=num(int, min=0),
-        metavar="SEGMENTS",
-        help="""
-        How many segments from the end to start live HLS streams on.
-
-        The lower the value the lower latency from the source you will be,
-        but also increases the chance of buffering.
-
-        Default is 3.
-        """
-    )
-    transport.add_argument("--hls-segment-stream-data", action="store_true", help=argparse.SUPPRESS)
-    transport.add_argument(
-        "--hls-playlist-reload-attempts",
-        type=num(int, min=0),
-        metavar="ATTEMPTS",
-        help="""
-        How many attempts should be done to reload the HLS playlist before
-        giving up.
-
-        Default is 3.
-        """
-    )
-    transport.add_argument(
-        "--hls-playlist-reload-time",
-        metavar="TIME",
-        help="""
-        Set a custom HLS playlist reload time value, either in seconds
-        or by using one of the following keywords:
-
-            segment: The duration of the last segment in the current playlist
-            live-edge: The sum of segment durations of the live edge value minus one
-            default: The playlist's target duration metadata
-
-        Default is default.
-        """
-    )
-    transport.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
-    transport.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
-    transport.add_argument("--hls-segment-timeout", help=argparse.SUPPRESS)
-    transport.add_argument(
-        "--hls-segment-ignore-names",
-        metavar="NAMES",
-        type=comma_list,
-        help="""
-        A comma-delimited list of segment names that will not be fetched.
-
-        Example: --hls-segment-ignore-names 000,001,002
-
-        This will ignore every segment that ends with 000.ts, 001.ts and 002.ts
-
-        Default is None.
-
-        Note: The --hls-timeout must be increased, to a time that is longer than
-        the ignored break.
-        """
-    )
-    transport.add_argument(
-        "--hls-segment-key-uri",
-        metavar="URI",
-        type=str,
-        help="""
-        URI to segment encryption key. If no URI is specified, the URI contained
-        in the segments will be used.
-
-        URI can be templated using the following variables, which will be
-        replaced with its respective part from the source segment URI:
-
-          {url} {scheme} {netloc} {path} {query}
-
-        Examples:
-
-          --hls-segment-key-uri "https://example.com/hls/encryption_key"
-          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
-          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
-
-        Default is None.
-        """
-    )
-    transport.add_argument(
-        "--hls-audio-select",
-        type=comma_list,
-        metavar="CODE",
-        help="""
-        Selects a specific audio source or sources, by language code or name,
-        when multiple audio sources are available. Can be * to download all
-        audio sources.
-
-        Examples:
-
-          --hls-audio-select "English,German"
-          --hls-audio-select "en,de"
-          --hls-audio-select "*"
-
-        Note: This is only useful in special circumstances where the regular
-        locale option fails, such as when multiple sources of the same language
-        exists.
-        """
-    )
-    transport.add_argument("--hls-timeout", help=argparse.SUPPRESS)
-    transport.add_argument(
-        "--hls-start-offset",
-        type=hours_minutes_seconds,
-        metavar="[HH:]MM:SS",
-        default=None,
-        help="""
-        Amount of time to skip from the beginning of the stream. For live
-        streams, this is a negative offset from the end of the stream (rewind).
-
-        Default is 00:00:00.
-        """
-    )
-    transport.add_argument(
-        "--hls-duration",
-        type=hours_minutes_seconds,
-        metavar="[HH:]MM:SS",
-        default=None,
-        help="""
-        Limit the playback duration, useful for watching segments of a stream.
-        The actual duration may be slightly longer, as it is rounded to the
-        nearest HLS segment.
-
-        Default is unlimited.
-        """
-    )
-    transport.add_argument(
-        "--hls-live-restart",
-        action="store_true",
-        help="""
-        Skip to the beginning of a live stream, or as far back as possible.
-        """
-    )
-    transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--ringbuffer-size",
         metavar="SIZE",
         type=filesize,
         help="""
-        The maximum size of ringbuffer. Add a M or K suffix to specify mega or
-        kilo bytes instead of bytes.
+        The maximum size of the ringbuffer. Mega- or kilobytes can be specified via the M or K suffix respectively.
 
-        The ringbuffer is used as a temporary storage between the stream and the
-        player. This is to allows us to download the stream faster than the
-        player wants to read it.
+        The ringbuffer is used as a temporary storage between the stream and the player.
+        This allows Streamlink to download the stream faster than the player which reads the data from the ringbuffer.
 
-        The smaller the size, the higher chance of the player buffering if there
-        are download speed dips and the higher size the more data we can use as
-        a storage to catch up from speed dips.
+        The smaller the size of the ringbuffer, the higher the chance of the player buffering if the download speed decreases,
+        and the higher the size, the more data can be use as a storage to recover from volatile download speeds.
 
-        It also allows you to temporary pause as long as the ringbuffer doesn't
-        get full since we continue to download the stream in the background.
+        Most players have their own additional cache and will read the ringbuffer's content as soon as data is available.
+        If the player stops reading data while playback is paused, Streamlink will continue to download the stream in the
+        background as long as the ringbuffer doesn't get full.
 
         Default is "16M".
 
-        Note: A smaller size is recommended on lower end systems (such as
-        Raspberry Pi) when playing stream types that require some extra
-        processing (such as HDS) to avoid unnecessary background processing.
+        Note: A smaller size is recommended on lower end systems (such as Raspberry Pi) when playing stream types that require
+        some extra processing (such as HDS) to avoid unnecessary background processing.
         """
     )
-    transport.add_argument(
-        "--rtmp-proxy",
-        metavar="PROXY",
-        help="""
-        A SOCKS proxy that RTMP streams will use.
-
-        Example: 127.0.0.1:9050
-        """
-    )
-    transport.add_argument(
-        "--rtmp-rtmpdump",
-        metavar="FILENAME",
-        help="""
-        RTMPDump is used to access RTMP streams. You can specify the
-        location of the rtmpdump executable if it is not in your PATH.
-
-        Example: "/usr/local/bin/rtmpdump"
-        """
-    )
-    transport.add_argument("--rtmpdump", help=argparse.SUPPRESS)
-    transport.add_argument("--rtmp-timeout", help=argparse.SUPPRESS)
     transport.add_argument(
         "--stream-segment-attempts",
         type=num(int, min=0),
@@ -999,6 +832,195 @@ def build_parser():
         """
     )
     transport.add_argument(
+        "--mux-subtitles",
+        action="store_true",
+        help="""
+        Automatically mux available subtitles into the output stream.
+
+        Needs to be supported by the used plugin.
+        """
+    )
+
+    transport_hds.add_argument(
+        "--hds-live-edge",
+        type=num(float, min=0),
+        metavar="SECONDS",
+        help="""
+        The time live HDS streams will start from the edge of the stream.
+
+        Default is 10.0.
+        """
+    )
+    transport_hds.add_argument("--hds-segment-attempts", help=argparse.SUPPRESS)
+    transport_hds.add_argument("--hds-segment-threads", help=argparse.SUPPRESS)
+    transport_hds.add_argument("--hds-segment-timeout", help=argparse.SUPPRESS)
+    transport_hds.add_argument("--hds-timeout", help=argparse.SUPPRESS)
+
+    transport_hls.add_argument(
+        "--hls-live-edge",
+        type=num(int, min=0),
+        metavar="SEGMENTS",
+        help="""
+        Number of segments from the live stream's current live position to begin streaming.
+        The size or length of each segment is determined by the streaming provider.
+
+        Lower values will decrease the latency, but will also increase the chance of buffering, as there is less time for
+        Streamlink to download segments and write their data to the output buffer. The number of parallel segment downloads
+        can be set with --stream-segment-threads and the HLS playlist reload time to fetch and queue new segments can be
+        overridden with --hls-playlist-reload-time.
+
+        Default is 3.
+
+        Note: During live playback, the caching/buffering settings of the used player will add additional latency. To adjust
+        this, please refer to the player's own documentation for the required configuration. Player parameters can be set via
+        --player-args.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-playlist-reload-attempts",
+        type=num(int, min=0),
+        metavar="ATTEMPTS",
+        help="""
+        How many attempts should be done to reload the HLS playlist before giving up.
+
+        Default is 3.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-playlist-reload-time",
+        metavar="TIME",
+        help="""
+        Set a custom HLS playlist reload time value, either in seconds
+        or by using one of the following keywords:
+
+            segment: The duration of the last segment in the current playlist
+            live-edge: The sum of segment durations of the live edge value minus one
+            default: The playlist's target duration metadata
+
+        Default is default.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-segment-ignore-names",
+        metavar="NAMES",
+        type=comma_list,
+        help="""
+        A comma-delimited list of segment names that will not be fetched.
+
+        Example: --hls-segment-ignore-names 000,001,002
+
+        This will ignore every segment that ends with 000.ts, 001.ts and 002.ts
+
+        Default is None.
+
+        Note: The --hls-timeout must be increased, to a time that is longer than
+        the ignored break.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-segment-key-uri",
+        metavar="URI",
+        type=str,
+        help="""
+        Override the segment encryption key URIs for encrypted streams.
+
+        The value can be templated using the following variables, which will be
+        replaced with their respective part from the source segment URI:
+
+          {url} {scheme} {netloc} {path} {query}
+
+        Examples:
+
+          --hls-segment-key-uri "https://example.com/hls/encryption_key"
+          --hls-segment-key-uri "{scheme}://1.2.3.4{path}{query}"
+          --hls-segment-key-uri "{scheme}://{netloc}/custom/path/to/key"
+
+        Default is None.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-audio-select",
+        type=comma_list,
+        metavar="CODE",
+        help="""
+        Selects a specific audio source or sources, by language code or name,
+        when multiple audio sources are available. Can be * to download all
+        audio sources.
+
+        Examples:
+
+          --hls-audio-select "English,German"
+          --hls-audio-select "en,de"
+          --hls-audio-select "*"
+
+        Note: This is only useful in special circumstances where the regular
+        locale option fails, such as when multiple sources of the same language
+        exists.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-start-offset",
+        type=hours_minutes_seconds,
+        metavar="[HH:]MM:SS",
+        default=None,
+        help="""
+        Amount of time to skip from the beginning of the stream. For live
+        streams, this is a negative offset from the end of the stream (rewind).
+
+        Default is 00:00:00.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-duration",
+        type=hours_minutes_seconds,
+        metavar="[HH:]MM:SS",
+        default=None,
+        help="""
+        Limit the playback duration, useful for watching segments of a stream.
+        The actual duration may be slightly longer, as it is rounded to the
+        nearest HLS segment.
+
+        Default is unlimited.
+        """
+    )
+    transport_hls.add_argument(
+        "--hls-live-restart",
+        action="store_true",
+        help="""
+        Skip to the beginning of a live stream, or as far back as possible.
+        """
+    )
+    transport_hls.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
+    transport_hls.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
+    transport_hls.add_argument("--hls-segment-timeout", help=argparse.SUPPRESS)
+    transport_hls.add_argument("--hls-segment-stream-data", action="store_true", help=argparse.SUPPRESS)
+    transport_hls.add_argument("--hls-timeout", help=argparse.SUPPRESS)
+
+    transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
+
+    transport_rtmp.add_argument(
+        "--rtmp-rtmpdump",
+        metavar="FILENAME",
+        help="""
+        RTMPDump is used to access RTMP streams. You can specify the
+        location of the rtmpdump executable if it is not in your PATH.
+
+        Example: "/usr/local/bin/rtmpdump"
+        """
+    )
+    transport_rtmp.add_argument(
+        "--rtmp-proxy",
+        metavar="PROXY",
+        help="""
+        A SOCKS proxy that RTMP streams will use.
+
+        Example: 127.0.0.1:9050
+        """
+    )
+    transport_rtmp.add_argument("--rtmpdump", help=argparse.SUPPRESS)
+    transport_rtmp.add_argument("--rtmp-timeout", help=argparse.SUPPRESS)
+
+    transport_subprocess.add_argument(
         "--subprocess-cmdline",
         action="store_true",
         help="""
@@ -1007,7 +1029,7 @@ def build_parser():
         This is only available on RTMP streams.
         """
     )
-    transport.add_argument(
+    transport_subprocess.add_argument(
         "--subprocess-errorlog",
         action="store_true",
         help="""
@@ -1017,7 +1039,7 @@ def build_parser():
         Useful when debugging rtmpdump related issues.
         """
     )
-    transport.add_argument(
+    transport_subprocess.add_argument(
         "--subprocess-errorlog-path",
         type=str,
         metavar="PATH",
@@ -1028,7 +1050,8 @@ def build_parser():
         Useful when debugging rtmpdump related issues.
         """
     )
-    transport.add_argument(
+
+    transport_ffmpeg.add_argument(
         "--ffmpeg-ffmpeg",
         metavar="FILENAME",
         help="""
@@ -1039,14 +1062,14 @@ def build_parser():
         Example: "/usr/local/bin/ffmpeg"
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-verbose",
         action="store_true",
         help="""
         Write the console output from ffmpeg to the console.
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-verbose-path",
         type=str,
         metavar="PATH",
@@ -1054,7 +1077,7 @@ def build_parser():
         Path to write the output from the ffmpeg console.
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-fout",
         type=str,
         metavar="OUTFORMAT",
@@ -1066,7 +1089,7 @@ def build_parser():
         Example: "mpegts"
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-video-transcode",
         metavar="CODEC",
         help="""
@@ -1077,7 +1100,7 @@ def build_parser():
         Example: "h264"
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-audio-transcode",
         metavar="CODEC",
         help="""
@@ -1088,7 +1111,7 @@ def build_parser():
         Example: "aac"
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-copyts",
         action="store_true",
         help="""
@@ -1096,20 +1119,11 @@ def build_parser():
         the initial start time offset value.
         """
     )
-    transport.add_argument(
+    transport_ffmpeg.add_argument(
         "--ffmpeg-start-at-zero",
         action="store_true",
         help="""
         Enable the -start_at_zero ffmpeg option when using copyts.
-        """
-    )
-    transport.add_argument(
-        "--mux-subtitles",
-        action="store_true",
-        help="""
-        Automatically mux available subtitles into the output stream.
-
-        Needs to be supported by the used plugin.
         """
     )
 
