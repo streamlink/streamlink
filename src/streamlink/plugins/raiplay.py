@@ -10,6 +10,13 @@ from streamlink.utils import parse_json
 log = logging.getLogger(__name__)
 
 
+class RaiPlayHLSStream(HLSStream):
+    @classmethod
+    def _get_variant_playlist(cls, res):
+        res.encoding = "UTF-8"
+        return super()._get_variant_playlist(res)
+
+
 @pluginmatcher(re.compile(
     r"https?://(?:www\.)?raiplay\.it/dirette/(\w+)/?"
 ))
@@ -43,7 +50,7 @@ class RaiPlay(Plugin):
             log.error("Geo-restricted content")
             return
 
-        yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()
+        yield from RaiPlayHLSStream.parse_variant_playlist(self.session, stream_url).items()
 
 
 __plugin__ = RaiPlay
