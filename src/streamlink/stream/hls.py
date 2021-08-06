@@ -12,7 +12,7 @@ from Crypto.Cipher import AES
 # noinspection PyPackageRequirements
 from Crypto.Util.Padding import unpad
 from requests import Response
-from requests.exceptions import ChunkedEncodingError
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError
 
 from streamlink.exceptions import StreamError
 from streamlink.stream import hls_playlist
@@ -194,8 +194,8 @@ class HLSStreamWriter(SegmentedStreamWriter):
             try:
                 for chunk in res.iter_content(8192):
                     self.reader.buffer.write(chunk)
-            except ChunkedEncodingError:
-                log.error(f"Download of segment {sequence.num} failed")
+            except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
+                log.error(f"Download of segment {sequence.num} failed ({err})")
                 return
 
         if is_map:
