@@ -2,12 +2,12 @@ import base64
 import logging
 import re
 from functools import partial
+from urllib.parse import urlparse
 
 from Crypto.Cipher import Blowfish
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
-from streamlink.plugin.api import useragents, validate
-from streamlink.plugin.api.utils import itertags
+from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.utils import parse_xml
@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 
 
 class ZTNRClient:
-    base_url = "http://ztnr.rtve.es/ztnr/res/"
+    base_url = "https://ztnr.rtve.es/ztnr/res/"
     block_size = 16
 
     def __init__(self, key, session):
@@ -51,9 +51,10 @@ class ZTNRClient:
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?rtve\.es/(?:directo|infantil|noticias|television|deportes|alacarta|drmn)/.*?/?"
+    r"https?://(?:www\.)?rtve\.es/play/videos/.+"
 ))
 class Rtve(Plugin):
+    _re_idAsset = re.compile(r"\"idAsset\":\"(\d+)\"")
     secret_key = base64.b64decode("eWVMJmRhRDM=")
     cdn_schema = validate.Schema(
         validate.transform(partial(parse_xml, invalid_char_entities=True)),
@@ -69,7 +70,7 @@ class Rtve(Plugin):
             })
         ]
     )
-    subtitles_api = "http://www.rtve.es/api/videos/{id}/subtitulos.json"
+    subtitles_api = "https://www.rtve.es/api/videos/{id}/subtitulos.json"
     subtitles_schema = validate.Schema({
         "page": {
             "items": [{
@@ -80,7 +81,7 @@ class Rtve(Plugin):
     },
         validate.get("page"),
         validate.get("items"))
-    video_api = "http://www.rtve.es/api/videos/{id}.json"
+    video_api = "https://www.rtve.es/api/videos/{id}.json"
     video_schema = validate.Schema({
         "page": {
             "items": [{
@@ -100,17 +101,8 @@ class Rtve(Plugin):
     )
 
     def __init__(self, url):
-        Plugin.__init__(self, url)
-        self.session.http.headers = {"User-Agent": useragents.SAFARI_8}
+        super().__init__(url)
         self.zclient = ZTNRClient(self.secret_key, self.session)
-
-    def _get_content_id(self):
-        res = self.session.http.get(self.url)
-        for div in itertags(res.text, "div"):
-            if div.attributes.get("data-id"):
-                return int(div.attributes.get("data-id"))
-        else:
-            log.error("Failed to get content_id")
 
     def _get_subtitles(self, content_id):
         res = self.session.http.get(self.subtitles_api.format(id=content_id))
@@ -126,27 +118,38 @@ class Rtve(Plugin):
         return qmap
 
     def _get_streams(self):
-        streams = []
-        content_id = self._get_content_id()
-        if content_id:
+        res = self.session.http.get(self.url)
+        m = self._re_idAsset.search(res.text)
+        if m:
+            content_id = m.group(1)
             log.debug(f"Found content with id: {content_id}")
             stream_data = self.zclient.get_cdn_list(content_id, schema=self.cdn_schema)
             quality_map = None
 
+            streams = []
             for stream in stream_data:
+                # only use one stream
+                _one_m3u8 = False
+                _one_mp4 = False
                 for url in stream["urls"]:
-                    if ".m3u8" in url:
+                    p_url = urlparse(url)
+                    if p_url.path.endswith(".m3u8"):
+                        if _one_m3u8:
+                            continue
                         try:
                             streams.extend(HLSStream.parse_variant_playlist(self.session, url).items())
+                            _one_m3u8 = True
                         except OSError as err:
                             log.error(str(err))
-                    elif ((url.endswith("mp4") or url.endswith("mov") or url.endswith("avi"))
-                          and self.session.http.head(url, raise_for_status=False).status_code == 200):
+                    elif p_url.path.endswith(".mp4"):
+                        if _one_mp4:
+                            continue
                         if quality_map is None:  # only make the request when it is necessary
                             quality_map = self._get_quality_map(content_id)
                         # rename the HTTP sources to match the HLS sources
                         quality = quality_map.get(stream["quality"], stream["quality"])
                         streams.append((quality, HTTPStream(self.session, url)))
+                        _one_mp4 = True
 
             subtitles = None
             if self.get_option("mux_subtitles"):

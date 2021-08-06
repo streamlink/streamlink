@@ -152,7 +152,7 @@ rotana                  rotana.net           Yes   --    Streams are geo-restric
 rtbf                    - rtbf.be/auvio      Yes   Yes   Streams may be geo-restricted to Belgium or Europe.
                         - rtbfradioplayer.be
 rtpplay                 rtp.pt/play          Yes   Yes   Streams may be geo-restricted to Portugal.
-rtve                    rtve.es              Yes   No    Streams may be geo-restricted to Spain.
+rtve                    rtve.es              Yes   Yes   Streams may be geo-restricted to Spain.
 rtvs                    rtvs.sk              Yes   No    Streams may be geo-restricted to Slovakia.
 ruv                     ruv.is               Yes   Yes   Streams may be geo-restricted to Iceland.
 sbscokr                 play.sbs.co.kr       Yes   No    Streams may be geo-restricted to South Korea.
