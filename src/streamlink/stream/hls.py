@@ -3,7 +3,7 @@ import re
 import struct
 from collections import OrderedDict, defaultdict, namedtuple
 
-from requests.exceptions import ChunkedEncodingError
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError
 
 from streamlink.compat import str, urlparse
 from streamlink.exceptions import StreamError
@@ -142,8 +142,8 @@ class HLSStreamWriter(SegmentedStreamWriter):
             try:
                 for chunk in res.iter_content(chunk_size):
                     self.reader.buffer.write(chunk)
-            except ChunkedEncodingError:
-                log.error("Download of segment {0} failed".format(sequence.num))
+            except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
+                log.error("Download of segment {0} failed ({1})".format(sequence.num, err))
                 return
 
         log.debug("Download of segment {0} complete".format(sequence.num))
