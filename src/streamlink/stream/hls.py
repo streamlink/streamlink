@@ -318,7 +318,11 @@ class HLSStreamWorker(SegmentedStreamWorker):
         return default
 
     def iter_segments(self):
-        self.reload_playlist()
+        try:
+            self.reload_playlist()
+        except StreamError as err:
+            log.error(f'{err}')
+            return
 
         if self.playlist_end is None:
             if self.duration_offset_start > 0:
