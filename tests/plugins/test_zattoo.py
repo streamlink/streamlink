@@ -13,7 +13,6 @@ class TestPluginCanHandleUrlZattoo(PluginCanHandleUrl):
         "https://tvplus.m-net.de/watch/ard",
         "https://www.bbv-tv.net/watch/ard",
         "https://www.meinewelt.cc/watch/ard",
-        "https://www.myvisiontv.ch/watch/ard",
         "https://www.netplus.tv/watch/ard",
         "https://www.quantum-tv.com/watch/ard",
         "https://www.saktv.ch/watch/ard",
