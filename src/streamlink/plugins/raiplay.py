@@ -14,7 +14,7 @@ class RaiPlayHLSStream(HLSStream):
     @classmethod
     def _get_variant_playlist(cls, res):
         res.encoding = "UTF-8"
-        return super(RaiPlayHLSStream, self)._get_variant_playlist(res)
+        return super(RaiPlayHLSStream, cls)._get_variant_playlist(res)
 
 
 @pluginmatcher(re.compile(
