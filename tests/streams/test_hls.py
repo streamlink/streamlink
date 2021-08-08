@@ -274,8 +274,6 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
 class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
-    __stream__ = EventedHLSStream
-
     segments = [
         Segment(0, duration=11),
         Segment(1, duration=7),
@@ -300,12 +298,19 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
             playlist_reload_time_called.set()
             return orig_playlist_reload_time(*args, **kwargs)
 
-        with patch.object(thread.reader.worker, "_playlist_reload_time", side_effect=mocked_playlist_reload_time):
+        # immediately kill the writer thread as we don't need it and don't want to wait for its queue polling to end
+        def mocked_futures_get():
+            return None, None
+
+        with patch.object(thread.reader.worker, "_playlist_reload_time", side_effect=mocked_playlist_reload_time), \
+             patch.object(thread.reader.writer, "_futures_get", side_effect=mocked_futures_get):
             self.start()
-            self.await_write(len(segments))
 
             if not playlist_reload_time_called.wait(timeout=5):  # pragma: no cover
                 raise RuntimeError("Missing _playlist_reload_time() call")
+
+            # wait for the worker thread to terminate, so that deterministic assertions can be done about the reload time
+            thread.reader.worker.join()
 
             return thread.reader.worker.playlist_reload_time
 
