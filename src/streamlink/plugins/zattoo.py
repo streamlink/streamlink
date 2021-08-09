@@ -3,8 +3,9 @@ import re
 import uuid
 
 from streamlink.cache import Cache
+from streamlink.compat import str
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream
 from streamlink.utils import parse_json
 from streamlink.utils.args import comma_list_filter
@@ -16,7 +17,7 @@ log = logging.getLogger(__name__)
     https?://
     (?P<base_url>
         (?:
-            iptv\.glattvision|www\.(?:myvisiontv|saktv|vtxtv)
+            iptv\.glattvision|www\.(?:saktv|vtxtv)
         )\.ch
         |(?:
             mobiltv\.quickline|www\.quantum-tv|zattoo
@@ -45,7 +46,7 @@ log = logging.getLogger(__name__)
     )
 ''', re.VERBOSE))
 class Zattoo(Plugin):
-    STREAMS_ZATTOO = ['dash', 'hls5', 'hls7']
+    STREAMS_ZATTOO = ['dash', 'hls7']
 
     TIME_CONTROL = 60 * 60 * 2
     TIME_SESSION = 60 * 60 * 24 * 30
@@ -105,7 +106,6 @@ class Zattoo(Plugin):
                                                              False)
         self.base_url = 'https://{0}'.format(self.domain)
         self.headers = {
-            'User-Agent': useragents.CHROME,
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'X-Requested-With': 'XMLHttpRequest',
             'Referer': self.base_url
@@ -161,12 +161,8 @@ class Zattoo(Plugin):
             },
             acceptable_status=(200, 400),
             schema=validate.Schema(validate.transform(parse_json), validate.any(
-                {
-                    'active': bool,
-                    'power_guide_hash': validate.text,
-                }, {
-                    'success': bool,
-                }
+                {'active': bool, 'power_guide_hash': validate.text},
+                {'success': bool},
             )),
         )
 
@@ -212,31 +208,49 @@ class Zattoo(Plugin):
             params_stream_type = {'stream_type': stream_type}
             params.update(params_stream_type)
 
-            try:
-                res = self.session.http.post(watch_url, headers=self.headers, data=params)
-            except Exception as e:
-                if '404 Client Error' in str(e):
-                    log.error('Unfortunately streaming is not permitted in '
-                              'this country or this channel does not exist.')
-                elif '402 Client Error: Payment Required' in str(e):
+            data = self.session.http.post(
+                watch_url,
+                headers=self.headers,
+                data=params,
+                acceptable_status=(200, 402, 403, 404),
+                schema=validate.Schema(validate.transform(parse_json), validate.any({
+                    'success': validate.transform(bool),
+                    'stream': {
+                        'watch_urls': [{
+                            'url': validate.url(),
+                            validate.optional('maxrate'): int,
+                            validate.optional('audio_channel'): validate.text,
+                        }],
+                        validate.optional('quality'): validate.text,
+                    },
+                }, {
+                    'success': validate.transform(bool),
+                    'internal_code': int,
+                    validate.optional('http_status'): int,
+                })),
+            )
+
+            if not data['success']:
+                if data['internal_code'] == 401:
+                    log.error('invalid stream_type {0}'.format(stream_type))
+                elif data['internal_code'] == 421:
+                    log.error('Unfortunately streaming is not permitted in this country or this channel does not exist.')
+                elif data['internal_code'] == 422:
                     log.error('Paid subscription required for this channel.')
-                    log.info('If paid subscription exist, use --zattoo-purge'
-                             '-credentials to start a new session.')
-                elif '403 Client Error' in str(e):
+                    log.info('If paid subscription exist, use --zattoo-purge-credentials to start a new session.')
+                else:
+                    log.debug('unknown error {0!r}'.format(data))
                     log.debug('Force session reset for watch_url')
                     self.reset_session()
-                else:
-                    log.error(str(e))
-                return
+                continue
 
-            data = self.session.http.json(res)
             log.debug('Found data for {0}'.format(stream_type))
-            if data['success'] and stream_type in ('hls5', 'hls7'):
+            if stream_type == 'hls7':
                 for url in data['stream']['watch_urls']:
                     for s in HLSStream.parse_variant_playlist(
                             self.session, url['url']).items():
                         yield s
-            elif data['success'] and stream_type == 'dash':
+            elif stream_type == 'dash':
                 for url in data['stream']['watch_urls']:
                     for s in DASHStream.parse_manifest(
                             self.session, url['url']).items():
@@ -257,14 +271,23 @@ class Zattoo(Plugin):
 
         data = self.session.http.json(
             res, schema=validate.Schema({
-                'success': bool,
+                'success': validate.transform(bool),
                 'channel_groups': [{
                     'channels': [
                         {
                             'display_alias': validate.text,
-                            'cid': validate.text
+                            'cid': validate.text,
+                            'qualities': [{
+                                'title': validate.text,
+                                'stream_types': validate.all(
+                                    [validate.text],
+                                    validate.filter(lambda n: not re.match(r"(.+_(?:fairplay|playready|widevine))", n))
+                                ),
+                                'level': validate.text,
+                                'availability': validate.text,
+                            }],
                         },
-                    ]
+                    ],
                 }]},
                 validate.get('channel_groups'),
             )
@@ -275,12 +298,13 @@ class Zattoo(Plugin):
             for c in d['channels']:
                 c_list.append(c)
 
-        cid = []
+        cid = None
         zattoo_list = []
         for c in c_list:
             zattoo_list.append(c['display_alias'])
             if c['display_alias'] == channel:
                 cid = c['cid']
+                log.debug('{0!r}'.format(c))
 
         log.trace('Available zattoo channels in this country: {0}'.format(
             ', '.join(sorted(zattoo_list))))
@@ -289,7 +313,6 @@ class Zattoo(Plugin):
             cid = channel
 
         log.debug('CHANNEL ID: {0}'.format(cid))
-
         return {'cid': cid}
 
     def reset_session(self):
