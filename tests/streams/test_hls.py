@@ -1,4 +1,5 @@
 import os
+import typing
 import unittest
 from threading import Event
 from unittest.mock import Mock, call, patch
@@ -357,6 +358,65 @@ class TestHlsPlaylistReloadTime(TestMixinStreamHLS, unittest.TestCase):
     def test_hls_playlist_reload_time_no_data(self):
         time = self.subject([Playlist(0, [], end=True, targetduration=0)], reload_time="default")
         self.assertEqual(time, 6, "sets reload time to 6 seconds when no data is available")
+
+
+@patch("streamlink.stream.hls.log")
+@patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
+class TestHlsPlaylistParseErrors(TestMixinStreamHLS, unittest.TestCase):
+    __stream__ = EventedHLSStream
+
+    class FakePlaylist(typing.NamedTuple):
+        is_master: bool = False
+        iframes_only: bool = False
+
+    class InvalidPlaylist(Playlist):
+        def build(self, *args, **kwargs):
+            return "invalid"
+
+    def test_generic(self, mock_log):
+        self.subject([self.InvalidPlaylist()])
+        self.assertEqual(self.await_read(read_all=True), b"")
+        self.await_close()
+        self.assertTrue(self.thread.reader.buffer.closed, "Closes the stream on initial playlist parsing error")
+        self.assertEqual(mock_log.debug.mock_calls, [call("Reloading playlist")])
+        self.assertEqual(mock_log.error.mock_calls, [call("Missing #EXTM3U header")])
+
+    def test_reload(self, mock_log):
+        thread, segments = self.subject([
+            Playlist(1, [Segment(0)]),
+            self.InvalidPlaylist(),
+            self.InvalidPlaylist(),
+            Playlist(2, [Segment(2)], end=True)
+        ])
+        self.await_write(2)
+        data = self.await_read(read_all=True)
+        self.assertEqual(data, self.content(segments))
+        self.close()
+        self.await_close()
+        self.assertEqual(mock_log.warning.mock_calls, [
+            call("Failed to reload playlist: Missing #EXTM3U header"),
+            call("Failed to reload playlist: Missing #EXTM3U header")
+        ])
+
+    @patch("streamlink.stream.hls.HLSStreamWorker._reload_playlist", Mock(return_value=FakePlaylist(is_master=True)))
+    def test_is_master(self, mock_log):
+        self.subject([Playlist()])
+        self.assertEqual(self.await_read(read_all=True), b"")
+        self.await_close()
+        self.assertTrue(self.thread.reader.buffer.closed, "Closes the stream on initial playlist parsing error")
+        self.assertEqual(mock_log.debug.mock_calls, [call("Reloading playlist")])
+        self.assertEqual(mock_log.error.mock_calls, [
+            call(f"Attempted to play a variant playlist, use 'hls://{self.stream.url}' instead")
+        ])
+
+    @patch("streamlink.stream.hls.HLSStreamWorker._reload_playlist", Mock(return_value=FakePlaylist(iframes_only=True)))
+    def test_iframes_only(self, mock_log):
+        self.subject([Playlist()])
+        self.assertEqual(self.await_read(read_all=True), b"")
+        self.await_close()
+        self.assertTrue(self.thread.reader.buffer.closed, "Closes the stream on initial playlist parsing error")
+        self.assertEqual(mock_log.debug.mock_calls, [call("Reloading playlist")])
+        self.assertEqual(mock_log.error.mock_calls, [call("Streams containing I-frames only are not playable")])
 
 
 @patch('streamlink.stream.hls.FFMPEGMuxer.is_usable', Mock(return_value=True))

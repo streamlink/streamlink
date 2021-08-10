@@ -231,7 +231,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
         return hls_playlist.load(text, url)
 
     def reload_playlist(self):
-        if self.closed:
+        if self.closed:  # pragma: no cover
             return
 
         self.reader.buffer.wait_free()
@@ -246,11 +246,10 @@ class HLSStreamWorker(SegmentedStreamWorker):
             raise StreamError(err)
 
         if playlist.is_master:
-            raise StreamError("Attempted to play a variant playlist, use "
-                              "'hls://{0}' instead".format(self.stream.url))
+            raise StreamError(f"Attempted to play a variant playlist, use 'hls://{self.stream.url}' instead")
 
         if playlist.iframes_only:
-            raise StreamError("Streams containing I-frames only is not playable")
+            raise StreamError("Streams containing I-frames only are not playable")
 
         media_sequence = playlist.media_sequence or 0
         sequences = [Sequence(media_sequence + i, s)
@@ -322,6 +321,7 @@ class HLSStreamWorker(SegmentedStreamWorker):
             self.reload_playlist()
         except StreamError as err:
             log.error(f'{err}')
+            self.reader.close()
             return
 
         if self.playlist_end is None:

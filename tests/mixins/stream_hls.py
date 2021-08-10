@@ -13,6 +13,7 @@ from streamlink.stream.hls import HLSStream, HLSStreamWriter as _HLSStreamWriter
 TIMEOUT_AWAIT_READ = 5
 TIMEOUT_AWAIT_READ_ONCE = 5
 TIMEOUT_AWAIT_WRITE = 5
+TIMEOUT_AWAIT_CLOSE = 5
 
 
 class HLSItemBase:
@@ -205,14 +206,8 @@ class TestMixinStreamHLS(unittest.TestCase):
         super().tearDown()
 
         # close read thread and make sure that all threads have terminated before moving on
-        thread = self.thread
-        thread.reader.close()
-        if isinstance(thread.reader.writer, EventedHLSStreamWriter):
-            thread.reader.writer.write_wait.set()
-        thread.read_wait.set()
-        thread.reader.writer.join()
-        thread.reader.worker.join()
-        thread.join()
+        self.close()
+        self.await_close()
 
         self.mocker.stop()
         self.mocks.clear()
@@ -235,6 +230,12 @@ class TestMixinStreamHLS(unittest.TestCase):
         if isinstance(segments, dict):
             segments = segments.values()
         return b"".join([getattr(segment, prop) for segment in segments if cond is None or cond(segment)])
+
+    def await_close(self, timeout=TIMEOUT_AWAIT_CLOSE):
+        thread = self.thread
+        thread.reader.writer.join(timeout)
+        thread.reader.worker.join(timeout)
+        thread.join(timeout)
 
     # make one write call on the write thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE):
@@ -296,3 +297,10 @@ class TestMixinStreamHLS(unittest.TestCase):
     def start(self):
         self.thread.reader.open()
         self.thread.start()
+
+    def close(self):
+        thread = self.thread
+        thread.reader.close()
+        if isinstance(thread.reader.writer, EventedHLSStreamWriter):
+            thread.reader.writer.write_wait.set()
+        thread.read_wait.set()
