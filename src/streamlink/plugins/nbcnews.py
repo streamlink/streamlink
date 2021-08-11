@@ -13,9 +13,8 @@ log = logging.getLogger(__name__)
     r'https?://(?:www\.)?nbcnews\.com/now'
 ))
 class NBCNews(Plugin):
-    url_re = re.compile(r'https?://(?:www\.)?nbcnews\.com/now')
     json_data_re = re.compile(
-        r'<script type="application/ld+json">({.*?})</script>'
+        r'<script type="application/ld\+json">({.*?})</script>'
     )
     api_url = 'https://stream.nbcnews.com/data/live_sources_{}.json'
     token_url = 'https://tokens.playmakerservices.com/'
@@ -41,19 +40,24 @@ class NBCNews(Plugin):
         validate.get('tokenizedUrl'),
     )
 
+    json_data_schema = validate.Schema(
+        validate.transform(json_data_re.search),
+        validate.any(None, validate.all(
+            validate.get(1),
+            validate.transform(parse_json),
+            {"embedUrl": validate.url()},
+            validate.get("embedUrl"),
+            validate.transform(lambda url: url.split("/")[-1])
+        ))
+    )
+
     def get_title(self):
         return 'NBC News Now'
 
-    def _get_video_id(self, site_url):
-        maininfo_res = self.session.http.get(site_url)
-        video_info_json = re.findall(r'<script type="application/ld\+json">(.*?)</script>', maininfo_res.text)[0]
-        video_info_json = parse_json(video_info_json)
-        embedUrl = video_info_json["embedUrl"]
-        video_id = embedUrl.split("/")[-1]
-        return video_id
-
     def _get_streams(self):
-        video_id = self._get_video_id(self.url)
+        video_id = self.session.http.get(self.url, schema=self.json_data_schema)
+        if video_id is None:
+            return
         log.debug('API ID: {0}'.format(video_id))
 
         api_url = self.api_url.format(video_id)
