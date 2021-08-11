@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 ))
 class NBCNews(Plugin):
     json_data_re = re.compile(
-        r'<script id="__NEXT_DATA__" type="application/json">({.*})</script>'
+        r'<script type="application/ld\+json">({.*?})</script>'
     )
     api_url = 'https://stream.nbcnews.com/data/live_sources_{}.json'
     token_url = 'https://tokens.playmakerservices.com/'
@@ -30,30 +30,6 @@ class NBCNews(Plugin):
         validate.get(0),
     )
 
-    json_data_schema = validate.Schema(
-        validate.transform(json_data_re.search),
-        validate.any(None, validate.all(
-            validate.get(1),
-            validate.transform(parse_json), {
-                'props': {'initialState': {'front': {'curation': {
-                    'layouts': [{'packages': [{'metadata': {
-                        validate.optional('playmakerIdOverride'): str,
-                    }}]}],
-                }}}},
-            },
-            validate.get('props'),
-            validate.get('initialState'),
-            validate.get('front'),
-            validate.get('curation'),
-            validate.get('layouts'),
-            validate.get(0),
-            validate.get('packages'),
-            validate.get(1),
-            validate.get('metadata'),
-            validate.get('playmakerIdOverride'),
-        )),
-    )
-
     token_schema = validate.Schema(
         validate.transform(parse_json),
         {'akamai': [{
@@ -64,11 +40,24 @@ class NBCNews(Plugin):
         validate.get('tokenizedUrl'),
     )
 
+    json_data_schema = validate.Schema(
+        validate.transform(json_data_re.search),
+        validate.any(None, validate.all(
+            validate.get(1),
+            validate.transform(parse_json),
+            {"embedUrl": validate.url()},
+            validate.get("embedUrl"),
+            validate.transform(lambda url: url.split("/")[-1])
+        ))
+    )
+
     def get_title(self):
         return 'NBC News Now'
 
     def _get_streams(self):
         video_id = self.session.http.get(self.url, schema=self.json_data_schema)
+        if video_id is None:
+            return
         log.debug('API ID: {0}'.format(video_id))
 
         api_url = self.api_url.format(video_id)
