@@ -28,6 +28,8 @@ from streamlink_cli.output import FileOutput, PlayerOutput
 
 
 class FakePlugin:
+    url = "url"
+
     @classmethod
     def stream_weight(cls, stream):
         return Plugin.stream_weight(stream)

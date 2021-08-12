@@ -588,6 +588,10 @@ def build_parser():
         Write stream data to FILENAME instead of playing it.
 
         You will be prompted if the file already exists.
+
+        The formatting variables available for the -t/--title option may be used.
+        Invalid characters (cross platform) are replaced with an underscore.
+        Filenames are truncated to 255 characters (cross platform limit).
         """
     )
     output.add_argument(
@@ -619,6 +623,10 @@ def build_parser():
         Open the stream in the player, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
+
+        The formatting variables available for the -t/--title option may be used.
+        Invalid characters (cross platform) are replaced with an underscore.
+        Filenames are truncated to 255 characters (cross platform limit).
         """
     )
     output.add_argument(
@@ -628,6 +636,10 @@ def build_parser():
         Write stream data to stdout, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
+
+        The formatting variables available for the -t/--title option may be used.
+        Invalid characters (cross platform) are replaced with an underscore.
+        Filenames are truncated to 255 characters (cross platform limit).
         """
     )
 

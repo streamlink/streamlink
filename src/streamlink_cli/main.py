@@ -16,6 +16,7 @@ from pathlib import Path
 from time import sleep
 from typing import List
 
+import pathvalidate
 import requests
 from socks import __version__ as socks_version
 from websocket import __version__ as websocket_version
@@ -84,10 +85,12 @@ def create_output(plugin):
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
+            args.output = create_filename(plugin, args.output)
             out = check_file_output(args.output, args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
     elif args.record_and_pipe:
+        args.record = args.record_and_pipe = create_filename(plugin, args.record_and_pipe)
         record = check_file_output(args.record_and_pipe, args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
@@ -109,6 +112,7 @@ def create_output(plugin):
         title = create_title(plugin)
 
         if args.record:
+            args.record = create_filename(plugin, args.record)
             record = check_file_output(args.record, args.force)
 
         log.info("Starting player: {0}".format(args.player))
@@ -138,19 +142,35 @@ def create_http_server(*_args, **_kwargs):
     return http
 
 
+def apply_format_vars(plugin, unformatted_str):
+    return LazyFormatter.format(
+        unformatted_str,
+        title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
+        author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
+        category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
+        game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
+        url=plugin.url
+    )
+
+
+def create_filename(plugin=None, unformatted_str=None):
+    if plugin and unformatted_str and unformatted_str != "-":
+        try:
+            return pathvalidate.sanitize_filename(
+                apply_format_vars(plugin, unformatted_str),
+                replacement_text="_"
+            )
+        except pathvalidate.ValidationError as err:
+            console.exit("Failed to sanitize output filename: {0}", err)
+    else:
+        return unformatted_str
+
+
 def create_title(plugin=None):
     if args.title and plugin:
-        title = LazyFormatter.format(
-            args.title,
-            title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
-            author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
-            category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
-            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
-            url=plugin.url
-        )
+        return apply_format_vars(plugin, args.title)
     else:
-        title = args.url
-    return title
+        return args.url
 
 
 def iter_http_requests(server, player):

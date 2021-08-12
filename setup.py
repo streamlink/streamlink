@@ -15,6 +15,7 @@ deps = [
     "requests>=2.26.0,<3.0 ; platform_system!='Windows'",
     "requests==2.25.1      ; platform_system=='Windows'",
     "isodate",
+    "pathvalidate",
     "websocket-client>=0.58.0",
     # Support for SOCKS proxies
     "PySocks!=1.5.7,>=1.5.6",
