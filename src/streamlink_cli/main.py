@@ -28,7 +28,7 @@ from streamlink.plugin import PluginOptions
 from streamlink.stream import StreamProcess
 from streamlink.utils import LazyFormatter, NamedPipe
 from streamlink_cli.argparser import build_parser
-from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
+from streamlink_cli.compat import DeprecatedPath, is_win32, make_fs_safe, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -41,7 +41,7 @@ except AttributeError:
     pass  # Not windows
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
-args = console = streamlink = plugin = stream_fd = output = None
+args = console = formatted_filename = streamlink = plugin = stream_fd = output = None
 
 log = logging.getLogger("streamlink.cli")
 
@@ -76,19 +76,25 @@ def create_output(plugin):
      - A regular file
 
     """
+    global formatted_filename
 
     if (args.output or args.stdout) and (args.record or args.record_and_pipe):
         console.exit("Cannot use record options with other file output options.")
+
+    for unformatted_filename in args.output, args.record, args.record_and_pipe:
+        if unformatted_filename and isinstance(unformatted_filename, str):
+            formatted_filename = create_filename(plugin, unformatted_filename)
+            break
 
     if args.output:
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
-            out = check_file_output(args.output, args.force)
+            out = check_file_output(formatted_filename, args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
     elif args.record_and_pipe:
-        record = check_file_output(args.record_and_pipe, args.force)
+        record = check_file_output(formatted_filename, args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
         http = namedpipe = record = None
@@ -109,7 +115,7 @@ def create_output(plugin):
         title = create_title(plugin)
 
         if args.record:
-            record = check_file_output(args.record, args.force)
+            record = check_file_output(formatted_filename, args.force)
 
         log.info("Starting player: {0}".format(args.player))
 
@@ -138,19 +144,43 @@ def create_http_server(*_args, **_kwargs):
     return http
 
 
+def apply_format_vars(plugin, unformatted_str, fs_safe=False):
+    title = plugin.get_title() or DEFAULT_STREAM_METADATA["title"]
+    author = plugin.get_author() or DEFAULT_STREAM_METADATA["author"]
+    category = plugin.get_category() or DEFAULT_STREAM_METADATA["category"]
+    game = plugin.get_category() or DEFAULT_STREAM_METADATA["game"]
+    url = plugin.url
+
+    if fs_safe:
+        rules = args.fs_safe_rules
+        title = make_fs_safe(title, rules=rules)
+        author = make_fs_safe(author, rules=rules)
+        category = make_fs_safe(category, rules=rules)
+        game = make_fs_safe(game, rules=rules)
+        url = make_fs_safe(url, rules=rules)
+
+    return LazyFormatter.format(
+        unformatted_str,
+        title=title,
+        author=author,
+        category=category,
+        game=game,
+        url=url
+    )
+
+
+def create_filename(plugin=None, unformatted_str=None):
+    if plugin and unformatted_str:
+        return apply_format_vars(plugin, unformatted_str, fs_safe=True)
+    else:
+        return unformatted_str
+
+
 def create_title(plugin=None):
     if args.title and plugin:
-        title = LazyFormatter.format(
-            args.title,
-            title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
-            author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
-            category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
-            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
-            url=plugin.url
-        )
+        return apply_format_vars(plugin, args.title)
     else:
-        title = args.url
-    return title
+        return args.url
 
 
 def iter_http_requests(server, player):
@@ -318,7 +348,7 @@ def output_stream(plugin, stream):
                          args.player, err)
         else:
             console.exit("Failed to open output: {0} ({1})",
-                         args.output, err)
+                         formatted_filename, err)
 
     with closing(output):
         log.debug("Writing stream to output")
@@ -350,10 +380,10 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
     )
     if show_progress:
         stream_iterator = progress(stream_iterator,
-                                   prefix=os.path.basename(args.output))
+                                   prefix=os.path.basename(formatted_filename))
     elif show_record_progress:
         stream_iterator = progress(stream_iterator,
-                                   prefix=os.path.basename(args.record))
+                                   prefix=os.path.basename(formatted_filename))
 
     try:
         for data in stream_iterator:

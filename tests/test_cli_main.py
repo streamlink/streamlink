@@ -12,10 +12,11 @@ import streamlink_cli.main
 import tests.resources
 from streamlink.plugin.plugin import Plugin
 from streamlink.session import Streamlink
-from streamlink_cli.compat import DeprecatedPath, is_win32
+from streamlink_cli.compat import DeprecatedPath, INVALID_FILENAME_CHARS, is_win32
 from streamlink_cli.main import (
     NoPluginError,
     check_file_output,
+    create_filename,
     create_output,
     format_valid_streams,
     handle_stream,
@@ -28,9 +29,20 @@ from streamlink_cli.output import FileOutput, PlayerOutput
 
 
 class FakePlugin:
+    url = "url"
+
     @classmethod
     def stream_weight(cls, stream):
         return Plugin.stream_weight(stream)
+
+    def get_title():
+        return "title"
+
+    def get_author():
+        return "author"
+
+    def get_category():
+        return "category"
 
 
 class TestCLIMain(unittest.TestCase):
@@ -201,6 +213,142 @@ class TestCLIMain(unittest.TestCase):
             self.assertEqual(console.msg_json.mock_calls, [])
             self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
             console.exit.mock_calls.clear()
+
+    def test_create_filename_invalid_chars_native_rules_auto(self):
+        streamlink_cli.main.args = args = Mock()
+        args.fs_safe_rules = None
+
+        if is_win32:
+            test_chars = INVALID_FILENAME_CHARS["windows"]
+        else:
+            test_chars = INVALID_FILENAME_CHARS["unix"]
+
+        plugin = Mock(
+            FakePlugin(),
+            get_title=Mock(return_value=test_chars + "title"),
+            get_author=Mock(return_value=test_chars + "author"),
+            get_category=Mock(return_value=test_chars + "category"),
+            url="url"
+        )
+        res = create_filename(plugin, "{title} {author} {category} {url}")
+        self.assertTrue("title" in res)
+        self.assertTrue("author" in res)
+        self.assertTrue("category" in res)
+        self.assertTrue("url" in res)
+        self.assertTrue(test_chars not in res)
+
+    def test_create_filename_invalid_chars_native_rules_native(self):
+        streamlink_cli.main.args = args = Mock()
+
+        if is_win32:
+            args.fs_safe_rules = "windows"
+            test_chars = INVALID_FILENAME_CHARS["windows"]
+        else:
+            args.fs_safe_rules = "unix"
+            test_chars = INVALID_FILENAME_CHARS["unix"]
+
+        plugin = Mock(
+            FakePlugin(),
+            get_title=Mock(return_value=test_chars + "title"),
+            get_author=Mock(return_value=test_chars + "author"),
+            get_category=Mock(return_value=test_chars + "category"),
+            url="url"
+        )
+        res = create_filename(plugin, "{title} {author} {category} {url}")
+        self.assertTrue("title" in res)
+        self.assertTrue("author" in res)
+        self.assertTrue("category" in res)
+        self.assertTrue("url" in res)
+        self.assertTrue(test_chars not in res)
+
+    def test_create_filename_invalid_chars_native_rules_non_native(self):
+        streamlink_cli.main.args = args = Mock()
+
+        if is_win32:
+            args.fs_safe_rules = "unix"
+            test_chars = INVALID_FILENAME_CHARS["unix"]
+        else:
+            args.fs_safe_rules = "windows"
+            test_chars = INVALID_FILENAME_CHARS["windows"]
+
+        plugin = Mock(
+            FakePlugin(),
+            get_title=Mock(return_value=test_chars + "title"),
+            get_author=Mock(return_value=test_chars + "author"),
+            get_category=Mock(return_value=test_chars + "category"),
+            url="url"
+        )
+        res = create_filename(plugin, "{title} {author} {category} {url}")
+        self.assertTrue("title" in res)
+        self.assertTrue("author" in res)
+        self.assertTrue("category" in res)
+        self.assertTrue("url" in res)
+        self.assertTrue(test_chars not in res)
+
+    def test_create_filename_filepath_native_rules_auto(self):
+        streamlink_cli.main.args = args = Mock()
+        args.fs_safe_rules = None
+
+        if is_win32:
+            test_path = "c:\\{title}\\{author}\\..\\{category}\\{url}.ts"
+            test_res = "c:\\title_\\author_\\..\\category_\\url_.ts"
+        else:
+            test_path = "/{title}/{author}/../{category}/{url}.ts"
+            test_res = "/title_/author_/../category_/url_.ts"
+
+        plugin = Mock(
+            FakePlugin(),
+            get_title=Mock(return_value="title/"),
+            get_author=Mock(return_value="author/"),
+            get_category=Mock(return_value="category/"),
+            url="url/"
+        )
+        res = create_filename(plugin, test_path)
+        self.assertEqual(test_res, res)
+
+    def test_create_filename_filepath_native_rules_native(self):
+        streamlink_cli.main.args = args = Mock()
+
+        if is_win32:
+            args.fs_safe_rules = "windows"
+            test_path = "c:\\{title}\\{author}\\..\\{category}\\{url}.ts"
+            test_res = "c:\\title_\\author_\\..\\category_\\url_.ts"
+        else:
+            args.fs_safe_rules = "unix"
+            test_path = "/{title}/{author}/../{category}/{url}.ts"
+            test_res = "/title_/author_/../category_/url_.ts"
+
+        plugin = Mock(
+            FakePlugin(),
+            get_title=Mock(return_value="title/"),
+            get_author=Mock(return_value="author/"),
+            get_category=Mock(return_value="category/"),
+            url="url/"
+        )
+        res = create_filename(plugin, test_path)
+        self.assertEqual(test_res, res)
+
+    def test_create_filename_filepath_native_rules_non_native(self):
+        streamlink_cli.main.args = args = Mock()
+
+        if is_win32:
+            args.fs_safe_rules = "unix"
+            test_path = "/{title}/{author}/../{category}/{url}.ts"
+            test_res = "/title_/author_/../category_/url_.ts"
+        else:
+            args.fs_safe_rules = "windows"
+            test_path = "c:\\{title}\\{author}\\..\\{category}\\{url}.ts"
+            test_res = "c:\\title_\\author_\\..\\category_\\url_.ts"
+
+        plugin = Mock(
+            FakePlugin(),
+            get_title=Mock(return_value="title/"),
+            get_author=Mock(return_value="author/"),
+            get_category=Mock(return_value="category/"),
+            url="url/"
+        )
+        res = create_filename(plugin, test_path)
+        self.assertEqual(test_res, res)
 
     def test_create_output_no_file_output_options(self):
         streamlink_cli.main.console = Mock()

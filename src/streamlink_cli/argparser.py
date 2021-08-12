@@ -588,6 +588,9 @@ def build_parser():
         Write stream data to FILENAME instead of playing it.
 
         You will be prompted if the file already exists.
+
+        The formatting variables available for the --title option may be used.
+        Invalid characters in formatting variables are replaced with an underscore.
         """
     )
     output.add_argument(
@@ -619,6 +622,9 @@ def build_parser():
         Open the stream in the player, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
+
+        The formatting variables available for the --title option may be used.
+        Invalid characters in formatting variables are replaced with an underscore.
         """
     )
     output.add_argument(
@@ -628,6 +634,28 @@ def build_parser():
         Write stream data to stdout, while at the same time writing it to FILENAME.
 
         You will be prompted if the file already exists.
+
+        The formatting variables available for the --title option may be used.
+        Invalid characters in formatting variables are replaced with an underscore.
+        """
+    )
+    output.add_argument(
+        "--fs-safe-rules",
+        choices=["windows", "unix"],
+        type=str,
+        help="""
+        The rules used to make formatting variables filesystem-safe are chosen
+        automatically according to the type of system in use.  This overrides
+        the automatic detection.
+
+        Intended for use when Streamlink is running on a UNIX like OS but writing
+        to Windows filesystems such as NTFS; USB devices using VFAT or exFAT; CIFS
+        shares that are enforcing Windows filename limitations, etc.
+
+        These characters are replaced with an underscore for the rules in use:
+
+          "windows": 0x00-0x1F 0x7F " * / : < > ? \\ |
+          "unix":    0x00 /
         """
     )
 
