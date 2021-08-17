@@ -488,7 +488,7 @@ class Plugin(object):
         :return: list of the restored cookie names
         """
         if not self.session or not self.cache:
-            raise RuntimeError("Cannot loaded cached cookies in unbound plugin")
+            raise RuntimeError("Cannot load cached cookies in unbound plugin")
 
         restored = []
 
@@ -512,7 +512,7 @@ class Plugin(object):
         :return: list of the removed cookie names
         """
         if not self.session or not self.cache:
-            raise RuntimeError("Cannot loaded cached cookies in unbound plugin")
+            raise RuntimeError("Cannot clear cached cookies in unbound plugin")
 
         cookie_filter = cookie_filter or (lambda c: True)
         removed = []
