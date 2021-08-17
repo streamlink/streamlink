@@ -1,6 +1,5 @@
 import pytest
 
-from streamlink.plugin import Plugin
 from streamlink.plugins.youtube import YouTube
 from tests.mock import Mock
 from tests.plugins import PluginCanHandleUrl
@@ -53,7 +52,7 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
     ("https://www.youtube.com/watch?v=aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
 ])
 def test_match_url(url, group, expected):
-    Plugin.bind(Mock(), "tests.plugins.test_youtube")
+    YouTube.bind(Mock(), "tests.plugins.test_youtube")
     plugin = YouTube(url)
     assert plugin.match is not None
     assert plugin.match.group(group) == expected
@@ -67,5 +66,5 @@ def test_match_url(url, group, expected):
     ("http://www.youtube.com/watch?v=0123456789A", "https://www.youtube.com/watch?v=0123456789A"),
 ])
 def test_translate_url(url, expected):
-    Plugin.bind(Mock(), "tests.plugins.test_youtube")
+    YouTube.bind(Mock(), "tests.plugins.test_youtube")
     assert YouTube(url).url == expected

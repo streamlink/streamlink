@@ -1,6 +1,5 @@
 import pytest
 
-from streamlink.plugin import Plugin
 from streamlink.plugins.filmon import Filmon
 from tests.mock import Mock
 from tests.plugins import PluginCanHandleUrl
@@ -34,7 +33,7 @@ class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
     ('http://www.filmon.tv/vod/view/10250-0-crime-boss', [None, None, '10250'])
 ])
 def test_match_url(url, expected):
-    Plugin.bind(Mock(), "tests.plugins.test_filmon")
+    Filmon.bind(Mock(), "tests.plugins.test_filmon")
     plugin = Filmon(url)
     assert plugin.match is not None
     # expected must return [is_group, channel, vod_id]
