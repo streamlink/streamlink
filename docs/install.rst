@@ -341,16 +341,16 @@ Release                              Notes
                                      See the `commit log`_ for a list of changes since the last stable release.
 ==================================== ====================================
 
-.. note::
+.. warning::
 
-    **The Streamlink installer for Windows is currently based on Python 3.8.** |br|
-    Versions of Windows prior to 7 are not supported.
+    **The Streamlink installer for Windows is currently based on Python 3.9.** |br|
+    Versions of Windows prior to 10 are **not** supported.
 
     Be aware that the packages for `Chocolatey`_ and the `Windows Package Manager`_ are just wrappers
-    around the stable installer and thus depend on Windows 7+ as well.
+    around the stable installer and thus depend on Windows 10+ as well.
 
     Alternatively, :ref:`Streamlink can be installed via python-pip <install:PyPI package and source code>`
-    in a :ref:`compatible <install:Dependencies>` Python environment.
+    in a :ref:`compatible Python environment <install:Dependencies>`.
 
 .. _Stable release:
 .. _GitHub releases page: https://github.com/streamlink/streamlink/releases/latest
