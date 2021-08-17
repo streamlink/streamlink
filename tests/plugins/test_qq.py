@@ -2,7 +2,6 @@ from unittest.mock import Mock
 
 import pytest
 
-from streamlink.plugin import Plugin
 from streamlink.plugins.qq import QQ
 from tests.plugins import PluginCanHandleUrl
 
@@ -31,7 +30,7 @@ class TestPluginCanHandleUrlQQ(PluginCanHandleUrl):
     ("http://m.live.qq.com/10039165", "room_id", "10039165")
 ])
 def test_match_url(url, group, expected):
-    Plugin.bind(Mock(), "tests.plugins.test_qq")
+    QQ.bind(Mock(), "tests.plugins.test_qq")
     plugin = QQ(url)
     assert plugin.match is not None
     assert plugin.match.group(group) == expected

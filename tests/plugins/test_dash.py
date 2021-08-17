@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from streamlink.plugin.plugin import BIT_RATE_WEIGHT_RATIO, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin
+from streamlink.plugin.plugin import BIT_RATE_WEIGHT_RATIO, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY
 from streamlink.plugins.dash import MPEGDASH
 from tests.plugins import PluginCanHandleUrl
 
@@ -26,7 +26,7 @@ class TestPluginCanHandleUrlMPEGDASH(PluginCanHandleUrl):
 ])
 def test_priority(url, priority):
     session = Mock()
-    Plugin.bind(session, "tests.plugins.test_dash")
+    MPEGDASH.bind(session, "tests.plugins.test_dash")
     assert next((matcher.priority for matcher in MPEGDASH.matchers if matcher.pattern.match(url)), NO_PRIORITY) == priority
 
 
@@ -41,7 +41,7 @@ class TestPluginMPEGDASH(unittest.TestCase):
     @patch("streamlink.stream.DASHStream.parse_manifest")
     def test_get_streams_prefix(self, parse_manifest):
         session = Mock()
-        Plugin.bind(session, "tests.plugins.test_dash")
+        MPEGDASH.bind(session, "tests.plugins.test_dash")
         p = MPEGDASH("dash://http://example.com/foo.mpd")
         p.streams()
         parse_manifest.assert_called_with(session, "http://example.com/foo.mpd")
@@ -49,7 +49,7 @@ class TestPluginMPEGDASH(unittest.TestCase):
     @patch("streamlink.stream.DASHStream.parse_manifest")
     def test_get_streams(self, parse_manifest):
         session = Mock()
-        Plugin.bind(session, "tests.plugins.test_dash")
+        MPEGDASH.bind(session, "tests.plugins.test_dash")
         p = MPEGDASH("http://example.com/foo.mpd")
         p.streams()
         parse_manifest.assert_called_with(session, "http://example.com/foo.mpd")
