@@ -132,15 +132,21 @@ class TestPlugin(unittest.TestCase):
 
     def test_cookie_load_unbound(self):
         plugin = Plugin("http://test.se")
-        self.assertRaises(RuntimeError, plugin.load_cookies)
+        with self.assertRaises(RuntimeError) as cm:
+            plugin.load_cookies()
+        self.assertEqual(str(cm.exception), "Cannot load cached cookies in unbound plugin")
 
     def test_cookie_save_unbound(self):
         plugin = Plugin("http://test.se")
-        self.assertRaises(RuntimeError, plugin.save_cookies)
+        with self.assertRaises(RuntimeError) as cm:
+            plugin.save_cookies()
+        self.assertEqual(str(cm.exception), "Cannot cache cookies in unbound plugin")
 
     def test_cookie_clear_unbound(self):
         plugin = Plugin("http://test.se")
-        self.assertRaises(RuntimeError, plugin.clear_cookies)
+        with self.assertRaises(RuntimeError) as cm:
+            plugin.clear_cookies()
+        self.assertEqual(str(cm.exception), "Cannot clear cached cookies in unbound plugin")
 
 
 class TestPluginMatcher(unittest.TestCase):
