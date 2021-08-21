@@ -212,57 +212,73 @@ class TwitchAPI:
             "variables": dict(**variables)
         }
 
-    # Public API calls
-
-    def channel_from_video_id(self, video_id):
-        return self.call("/kraken/videos/{0}".format(video_id), schema=validate.Schema(
-            {"channel": {
-                "_id": validate.transform(int),
-                "name": validate.all(str, validate.transform(lambda n: n.lower()))
-            }},
-            validate.get("channel"),
-            validate.union_get("_id", "name")
-        ))
-
-    def channel_from_login(self, channel):
-        return self.call("/kraken/users", login=channel, schema=validate.Schema(
-            {"users": [{
-                "_id": validate.transform(int)
-            }]},
-            validate.get(("users", 0, "_id"))
-        ))
+    # GraphQL API calls
 
     def metadata_video(self, video_id):
-        return self.call("/kraken/videos/{0}".format(video_id), schema=validate.Schema(validate.any(
-            validate.all(
-                {
-                    "title": str,
-                    "game": str,
-                    "channel": {"display_name": str}
-                },
-                validate.union_get(("channel", "display_name"), "title", "game")
-            ),
-            validate.all({}, validate.transform(lambda _: (None,) * 3))
-        )))
+        query = self._gql_persisted_query(
+            "VideoMetadata",
+            "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806",
+            channelLogin="",  # parameter can be empty
+            videoID=video_id
+        )
 
-    def metadata_channel(self, channel_id):
-        return self.call("/kraken/streams/{0}".format(channel_id), schema=validate.Schema(
-            {"stream": validate.any(
-                validate.all(
-                    {"channel": {
-                        "display_name": str,
-                        "game": str,
-                        "status": str
-                    }},
-                    validate.get("channel"),
-                    validate.union_get("display_name", "status", "game")
-                ),
-                validate.all(None, validate.transform(lambda _: (None,) * 3))
-            )},
-            validate.get("stream")
+        return self.call_gql(query, schema=validate.Schema(
+            {"data": {"video": {
+                "owner": {
+                    "displayName": str
+                },
+                "title": str,
+                "game": {
+                    "displayName": str
+                }
+            }}},
+            validate.get(("data", "video")),
+            validate.union_get(
+                ("owner", "displayName"),
+                "title",
+                ("game", "displayName")
+            )
         ))
 
-    # GraphQL API calls
+    def metadata_channel(self, channel):
+        queries = [
+            self._gql_persisted_query(
+                "ChannelShell",
+                "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55",
+                login=channel,
+                lcpVideosEnabled=False
+            ),
+            self._gql_persisted_query(
+                "StreamMetadata",
+                "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f",
+                channelLogin=channel
+            )
+        ]
+
+        return self.call_gql(queries, schema=validate.Schema(
+            [
+                validate.all(
+                    {"data": {"userOrError": {
+                        "displayName": str
+                    }}}
+                ),
+                validate.all(
+                    {"data": {"user": {
+                        "lastBroadcast": {
+                            "title": str
+                        },
+                        "stream": {"game": {
+                            "name": str
+                        }}
+                    }}}
+                )
+            ],
+            validate.union_get(
+                (0, "data", "userOrError", "displayName"),
+                (1, "data", "user", "lastBroadcast", "title"),
+                (1, "data", "user", "stream", "game", "name")
+            )
+        ))
 
     def access_token(self, is_live, channel_or_vod):
         query = self._gql_persisted_query(
@@ -385,13 +401,12 @@ class TwitchAPI:
         return self.call_gql(query, schema=validate.Schema(
             {"data": {"user": {
                 "hosting": {
-                    "id": validate.transform(int),
                     "login": str,
                     "displayName": str
                 }
             }}},
             validate.get(("data", "user", "hosting")),
-            validate.union_get("id", "login", "displayName")
+            validate.union_get("login", "displayName")
         ))
 
 
@@ -458,8 +473,7 @@ class Twitch(Plugin):
         self.params = parse_query(parsed.query)
         self.subdomain = match.get("subdomain")
         self.video_id = None
-        self._channel_id = None
-        self._channel = None
+        self.channel = None
         self.clip_name = None
         self.title = None
         self.author = None
@@ -469,12 +483,12 @@ class Twitch(Plugin):
             # pop-out player
             if self.params.get("video"):
                 self.video_id = self.params["video"]
-            self._channel = self.params.get("channel")
+            self.channel = self.params.get("channel")
         elif self.subdomain == "clips":
             # clip share URL
             self.clip_name = match.get("channel")
         else:
-            self._channel = match.get("channel") and match.get("channel").lower()
+            self.channel = match.get("channel") and match.get("channel").lower()
             self.video_id = match.get("video_id") or match.get("videos_id")
             self.clip_name = match.get("clip_name")
 
@@ -497,40 +511,15 @@ class Twitch(Plugin):
         return self.category
 
     def _get_metadata(self):
-        if self.video_id:
-            (self.author, self.title, self.category) = self.api.metadata_video(self.video_id)
-        elif self.clip_name:
-            self._get_clips()
-        elif self._channel:
-            (self.author, self.title, self.category) = self.api.metadata_channel(self.channel_id)
-
-    @property
-    def channel(self):
-        if not self._channel:
+        try:
             if self.video_id:
-                self._channel_from_video_id(self.video_id)
-        return self._channel
-
-    @property
-    def channel_id(self):
-        if not self._channel_id:
-            if self._channel:
-                self._channel_from_login(self._channel)
-            elif self.video_id:
-                self._channel_from_video_id(self.video_id)
-        return self._channel_id
-
-    def _channel_from_video_id(self, video_id):
-        try:
-            self._channel_id, self._channel = self.api.channel_from_video_id(video_id)
-        except PluginError:
-            raise PluginError("Unable to find video: {0}".format(video_id))
-
-    def _channel_from_login(self, channel):
-        try:
-            self._channel_id = self.api.channel_from_login(channel)
-        except PluginError:
-            raise PluginError("Unable to find channel: {0}".format(channel))
+                (self.author, self.title, self.category) = self.api.metadata_video(self.video_id)
+            elif self.clip_name:
+                self._get_clips()
+            elif self.channel:
+                (self.author, self.title, self.category) = self.api.metadata_channel(self.channel)
+        except (PluginError, TypeError):
+            pass
 
     def _access_token(self, is_live, channel_or_vod):
         try:
@@ -550,7 +539,7 @@ class Twitch(Plugin):
         hosted_chain = [self.channel]
         while True:
             try:
-                target_id, login, display_name = self.api.hosted_channel(self.channel)
+                login, display_name = self.api.hosted_channel(self.channel)
             except PluginError:
                 return False
 
@@ -566,8 +555,7 @@ class Twitch(Plugin):
 
             hosted_chain.append(login)
             log.info("switching to {0}".format(login))
-            self._channel_id = target_id
-            self._channel = login
+            self.channel = login
             self.author = display_name
 
     def _check_for_rerun(self):
@@ -591,7 +579,7 @@ class Twitch(Plugin):
             return
 
         # only get the token once the channel has been resolved
-        log.debug("Getting live HLS streams for {0}".format(self.channel))
+        log.debug(f"Getting live HLS streams for {self.channel}")
         self.session.http.headers.update({
             "referer": "https://player.twitch.tv",
             "origin": "https://player.twitch.tv",
@@ -602,7 +590,7 @@ class Twitch(Plugin):
         return self._get_hls_streams(url, restricted_bitrates)
 
     def _get_hls_streams_video(self):
-        log.debug("Getting video HLS streams for {0}".format(self.channel))
+        log.debug(f"Getting HLS streams for video ID {self.video_id}")
         sig, token, restricted_bitrates = self._access_token(False, self.video_id)
         url = self.usher.video(self.video_id, nauthsig=sig, nauth=token)
 
@@ -646,7 +634,7 @@ class Twitch(Plugin):
             return self._get_hls_streams_video()
         elif self.clip_name:
             return self._get_clips()
-        elif self._channel:
+        elif self.channel:
             return self._get_hls_streams_live()
 
 
