@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, call, patch
 import requests_mock
 
 from streamlink import Streamlink
-from streamlink.plugin import PluginError
 from streamlink.plugins.twitch import Twitch, TwitchHLSStream, TwitchHLSStreamReader, TwitchHLSStreamWriter
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment as _Segment, Tag, TestMixinStreamHLS
 from tests.plugins import PluginCanHandleUrl
@@ -299,81 +298,127 @@ class TestTwitchHLSStream(TestMixinStreamHLS, unittest.TestCase):
 class TestTwitchMetadata(unittest.TestCase):
     def setUp(self):
         self.mock = requests_mock.Mocker()
+        self.mock.register_uri(requests_mock.ANY, requests_mock.ANY, exc=requests_mock.exceptions.InvalidRequest)
         self.mock.start()
 
     def tearDown(self):
         self.mock.stop()
 
-    def subject(self, url):
+    @staticmethod
+    def subject(url):
         session = Streamlink()
         Twitch.bind(session, "tests.plugins.test_twitch")
         plugin = Twitch(url)
         return plugin.get_author(), plugin.get_title(), plugin.get_category()
 
-    def subject_channel(self, data=True, failure=False):
-        self.mock.get(
-            "https://api.twitch.tv/kraken/users?login=foo",
-            json={"users": [{"_id": 1234}]}
+    def mock_request_channel(self, data=True):
+        return self.mock.post(
+            "https://gql.twitch.tv/gql",
+            json=[
+                {"data": {"userOrError": {"userDoesNotExist": "error"} if not data else {
+                    "displayName": "channel name"
+                }}},
+                {"data": {"user": None if not data else {
+                    "lastBroadcast": {
+                        "title": "channel status"
+                    },
+                    "stream": {"game": {
+                        "name": "channel game"
+                    }}
+                }}}
+            ]
         )
-        self.mock.get(
-            "https://api.twitch.tv/kraken/streams/1234",
-            status_code=200 if not failure else 404,
-            json={"stream": None} if not data else {"stream": {
-                "channel": {
-                    "display_name": "channel name",
-                    "status": "channel status",
-                    "game": "channel game"
-                }
-            }}
-        )
-        return self.subject("https://twitch.tv/foo")
 
-    def subject_video(self, data=True, failure=False):
-        self.mock.get(
-            "https://api.twitch.tv/kraken/videos/1337",
-            status_code=200 if not failure else 404,
-            json={} if not data else {
+    def mock_request_video(self, data=True):
+        return self.mock.post(
+            "https://gql.twitch.tv/gql",
+            json={"data": {"video": None if not data else {
                 "title": "video title",
-                "game": "video game",
-                "channel": {
-                    "display_name": "channel name"
+                "game": {
+                    "displayName": "video game"
+                },
+                "owner": {
+                    "displayName": "channel name"
                 }
-            }
+            }}}
         )
-        return self.subject("https://twitch.tv/videos/1337")
 
-    def test_metadata_channel_exists(self):
-        author, title, category = self.subject_channel()
+    def test_metadata_channel(self):
+        mock = self.mock_request_channel()
+        author, title, category = self.subject("https://twitch.tv/foo")
         self.assertEqual(author, "channel name")
         self.assertEqual(title, "channel status")
         self.assertEqual(category, "channel game")
+        self.assertEqual(mock.request_history[0].json(), [
+            {
+                "operationName": "ChannelShell",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "c3ea5a669ec074a58df5c11ce3c27093fa38534c94286dc14b68a25d5adcbf55"
+                    }
+                },
+                "variables": {
+                    "login": "foo",
+                    "lcpVideosEnabled": False
+                }
+            },
+            {
+                "operationName": "StreamMetadata",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "059c4653b788f5bdb2f5a2d2a24b0ddc3831a15079001a3d927556a96fb0517f"
+                    }
+                },
+                "variables": {
+                    "channelLogin": "foo"
+                }
+            }
+        ])
 
-    def test_metadata_channel_missing(self):
-        metadata = self.subject_channel(data=False)
-        self.assertEqual(metadata, (None, None, None))
+    def test_metadata_channel_no_data(self):
+        self.mock_request_channel(data=False)
+        author, title, category = self.subject("https://twitch.tv/foo")
+        self.assertEqual(author, None)
+        self.assertEqual(title, None)
+        self.assertEqual(category, None)
 
-    def test_metadata_channel_invalid(self):
-        with self.assertRaises(PluginError):
-            self.subject_channel(failure=True)
-
-    def test_metadata_video_exists(self):
-        author, title, category = self.subject_video()
+    def test_metadata_video(self):
+        mock = self.mock_request_video()
+        author, title, category = self.subject("https://twitch.tv/videos/1337")
         self.assertEqual(author, "channel name")
         self.assertEqual(title, "video title")
         self.assertEqual(category, "video game")
+        self.assertEqual(
+            mock.request_history[0].json(),
+            {
+                "operationName": "VideoMetadata",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "cb3b1eb2f2d2b2f65b8389ba446ec521d76c3aa44f5424a1b1d235fe21eb4806"
+                    }
+                },
+                "variables": {
+                    "channelLogin": "",
+                    "videoID": "1337"
+                }
+            }
+        )
 
-    def test_metadata_video_missing(self):
-        metadata = self.subject_video(data=False)
-        self.assertEqual(metadata, (None, None, None))
-
-    def test_metadata_video_invalid(self):
-        with self.assertRaises(PluginError):
-            self.subject_video(failure=True)
+    def test_metadata_video_no_data(self):
+        self.mock_request_video(data=False)
+        author, title, category = self.subject("https://twitch.tv/videos/1337")
+        self.assertEqual(author, None)
+        self.assertEqual(title, None)
+        self.assertEqual(category, None)
 
 
 @patch("streamlink.plugins.twitch.log")
 class TestTwitchHosting(unittest.TestCase):
-    def subject(self, channel, hosts=None, disable=False):
+    @staticmethod
+    def subject(channel, hosts=None, disable=False):
         with requests_mock.Mocker() as mock:
             mock.register_uri(requests_mock.ANY, requests_mock.ANY, exc=requests_mock.exceptions.InvalidRequest)
             if hosts is None:
@@ -382,10 +427,9 @@ class TestTwitchHosting(unittest.TestCase):
                 mock.post("https://gql.twitch.tv/gql", response_list=[
                     {"json": {"data": {"user": {
                         "id": host[0],
-                        "hosting": None if not host[1:4] else {
-                            "id": host[1],
-                            "login": host[2],
-                            "displayName": host[3]
+                        "hosting": None if not host[1:3] else {
+                            "login": host[1],
+                            "displayName": host[2]
                         }}}}
                      } for host in hosts
                 ])
@@ -396,31 +440,28 @@ class TestTwitchHosting(unittest.TestCase):
             plugin.options.set("disable-hosting", disable)
 
             res = plugin._switch_to_hosted_channel()
-            return res, plugin.channel, plugin._channel_id, plugin.author
+            return res, plugin.channel, plugin.author
 
     def test_hosting_invalid_host_data(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo")
+        res, channel, author = self.subject("foo")
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "foo", "Doesn't switch channel")
-        self.assertEqual(channel_id, None, "Doesn't set channel id")
         self.assertEqual(author, None, "Doesn't override author metadata")
         self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_no_host_data(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [(1,)])
+        res, channel, author = self.subject("foo", [(1,)])
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "foo", "Doesn't switch channel")
-        self.assertEqual(channel_id, None, "Doesn't set channel id")
         self.assertEqual(author, None, "Doesn't override author metadata")
         self.assertEqual(mock_log.info.mock_calls, [], "Doesn't log anything to info")
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_host_single(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar"), (2,)])
+        res, channel, author = self.subject("foo", [(1, "bar", "Bar"), (2,)])
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "bar", "Switches channel")
-        self.assertEqual(channel_id, 2, "Sets channel id")
         self.assertEqual(author, "Bar", "Overrides author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
@@ -429,10 +470,9 @@ class TestTwitchHosting(unittest.TestCase):
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_host_single_disable(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [(1, 2, "bar", "Bar")], disable=True)
+        res, channel, author = self.subject("foo", [(1, "bar", "Bar")], disable=True)
         self.assertTrue(res, "Stops HLS resolve procedure")
         self.assertEqual(channel, "foo", "Doesn't switch channel")
-        self.assertEqual(channel_id, None, "Doesn't set channel id")
         self.assertEqual(author, None, "Doesn't override author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
@@ -441,15 +481,14 @@ class TestTwitchHosting(unittest.TestCase):
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_host_multiple(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [
-            (1, 2, "bar", "Bar"),
-            (2, 3, "baz", "Baz"),
-            (3, 4, "qux", "Qux"),
+        res, channel, author = self.subject("foo", [
+            (1, "bar", "Bar"),
+            (2, "baz", "Baz"),
+            (3, "qux", "Qux"),
             (4,)
         ])
         self.assertFalse(res, "Doesn't stop HLS resolve procedure")
         self.assertEqual(channel, "qux", "Switches channel")
-        self.assertEqual(channel_id, 4, "Sets channel id")
         self.assertEqual(author, "Qux", "Overrides author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
@@ -462,14 +501,13 @@ class TestTwitchHosting(unittest.TestCase):
         self.assertEqual(mock_log.error.mock_calls, [], "Doesn't log anything to error")
 
     def test_hosting_host_multiple_loop(self, mock_log):
-        res, channel, channel_id, author = self.subject("foo", [
-            (1, 2, "bar", "Bar"),
-            (2, 3, "baz", "Baz"),
-            (3, 1, "foo", "Foo")
+        res, channel, author = self.subject("foo", [
+            (1, "bar", "Bar"),
+            (2, "baz", "Baz"),
+            (3, "foo", "Foo")
         ])
         self.assertTrue(res, "Stops HLS resolve procedure")
         self.assertEqual(channel, "baz", "Has switched channel")
-        self.assertEqual(channel_id, 3, "Has set channel id")
         self.assertEqual(author, "Baz", "Has overridden author metadata")
         self.assertEqual(mock_log.info.mock_calls, [
             call("foo is hosting bar"),
