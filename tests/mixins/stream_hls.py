@@ -12,7 +12,7 @@ from streamlink.stream.hls import HLSStream, HLSStreamWriter as _HLSStreamWriter
 
 TIMEOUT_AWAIT_READ = 5
 TIMEOUT_AWAIT_READ_ONCE = 5
-TIMEOUT_AWAIT_WRITE = 5
+TIMEOUT_AWAIT_WRITE = 60  # https://github.com/streamlink/streamlink/issues/3868
 TIMEOUT_AWAIT_CLOSE = 5
 
 
