@@ -82,7 +82,8 @@ Name                                 Notes
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
 `python-futures`_                    Only needed on Python **2.7**.
-`python-requests`_                   At least version **2.21.0**.
+`python-requests`_                   At least version **2.26.0** |br|
+                                     Temporarily pinpointed to **2.25.1** on Windows (see `#3880`_)
 `python-singledispatch`_             Only needed on Python **2.7**.
 `pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
@@ -128,6 +129,7 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _websocket-client: https://pypi.org/project/websocket-client/
 .. _shutil_get_terminal_size: https://pypi.org/project/backports.shutil_get_terminal_size/
 .. _shutil_which: https://pypi.org/project/backports.shutil_which/
+.. _#3880: https://github.com/streamlink/streamlink/pull/3880
 
 .. _Development build:
 .. _build artifacts: https://github.com/Billy2011/streamlink-27/actions?query=event%3Aschedule+is%3Asuccess+branch%3Amaster
