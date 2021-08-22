@@ -173,37 +173,25 @@ class UsherService(object):
         return self._create_url("/vod/{0}".format(video_id), **extra_params)
 
 
-class TwitchAPI(object):
-    # Streamlink's client-id used for public API calls (don't steal this and register your own application on Twitch)
-    TWITCH_CLIENT_ID = "pwkzresl8kj2rdj6g7bvxl9ys1wly3j"
-    # Twitch's client-id used for private API calls (see issue #2680 for why we are doing this)
-    TWITCH_CLIENT_ID_PRIVATE = "kimne78kx3ncx6brgo4mv6wki5h1ko"
+class TwitchAPI:
+    headers = {
+        "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko"
+    }
 
     def __init__(self, session):
         self.session = session
 
-    def _call(self, method="GET", subdomain="api", path="/", headers=None, private=False, data=None, **params):
-        url = "https://{0}.twitch.tv{1}".format(subdomain, path)
-        headers = headers or dict()
-        headers.update({
-            "Client-ID": self.TWITCH_CLIENT_ID if not private else self.TWITCH_CLIENT_ID_PRIVATE
-        })
-
-        return self.session.http.request(method, url, data=data, params=params, headers=headers)
-
-    def call(self, path, schema=None, **params):
-        headers = {"Accept": "application/vnd.twitchtv.v5+json"}
-        res = self._call(path=path, headers=headers, **params)
+    def call(self, data, schema=None):
+        res = self.session.http.post(
+            "https://gql.twitch.tv/gql",
+            data=json.dumps(data),
+            headers=self.headers
+        )
 
         return self.session.http.json(res, schema=schema)
 
-    def call_gql(self, data, schema=None, **params):
-        res = self._call(method="POST", subdomain="gql", path="/gql", data=json.dumps(data), private=True, **params)
-
-        return self.session.http.json(res, schema=schema)
-
-    @classmethod
-    def _gql_persisted_query(cls, operationname, sha256hash, **variables):
+    @staticmethod
+    def _gql_persisted_query(operationname, sha256hash, **variables):
         return {
             "operationName": operationname,
             "extensions": {
@@ -215,6 +203,16 @@ class TwitchAPI(object):
             "variables": dict(**variables)
         }
 
+    @staticmethod
+    def parse_token(tokenstr):
+        return parse_json(tokenstr, schema=validate.Schema(
+            {"chansub": {"restricted_bitrates": validate.all(
+                [validate.text],
+                validate.filter(lambda n: not re.match(r"(.+_)?archives|live|chunked", n))
+            )}},
+            validate.get(("chansub", "restricted_bitrates"))
+        ))
+
     # GraphQL API calls
 
     def metadata_video(self, video_id):
@@ -225,7 +223,7 @@ class TwitchAPI(object):
             videoID=video_id
         )
 
-        return self.call_gql(query, schema=validate.Schema(
+        return self.call(query, schema=validate.Schema(
             {"data": {"video": {
                 "owner": {
                     "displayName": validate.text
@@ -258,7 +256,7 @@ class TwitchAPI(object):
             )
         ]
 
-        return self.call_gql(queries, schema=validate.Schema(
+        return self.call(queries, schema=validate.Schema(
             [
                 validate.all(
                     {"data": {"userOrError": {
@@ -302,7 +300,7 @@ class TwitchAPI(object):
             validate.union_get("signature", "value")
         ))
 
-        return self.call_gql(query, schema=validate.Schema(
+        return self.call(query, schema=validate.Schema(
             {"data": validate.any(
                 validate.all(
                     {"streamPlaybackAccessToken": subschema},
@@ -314,16 +312,6 @@ class TwitchAPI(object):
                 )
             )},
             validate.get("data")
-        ))
-
-    @classmethod
-    def parse_token(cls, tokenstr):
-        return parse_json(tokenstr, schema=validate.Schema(
-            {"chansub": {"restricted_bitrates": validate.all(
-                [validate.text],
-                validate.filter(lambda n: not re.match(r"(.+_)?archives|live|chunked", n))
-            )}},
-            validate.get(("chansub", "restricted_bitrates"))
         ))
 
     def clips(self, clipname):
@@ -345,7 +333,7 @@ class TwitchAPI(object):
             )
         ]
 
-        return self.call_gql(queries, schema=validate.Schema([
+        return self.call(queries, schema=validate.Schema([
             validate.all(
                 {"data": {"clip": {
                     "playbackAccessToken": validate.all(
@@ -402,7 +390,7 @@ class TwitchAPI(object):
             channelLogin=channel
         )
 
-        return self.call_gql(query, schema=validate.Schema(
+        return self.call(query, schema=validate.Schema(
             {"data": {"user": {
                 "hosting": {
                     "login": validate.text,
