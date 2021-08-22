@@ -52,7 +52,7 @@ jobs:
         run: "! grep -Ev '^644' <(git ls-files src/ tests/ | xargs stat '--format=%a %n')"
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
-        run: pytest -r a --cov --cov-branch --cov-report=xml
+        run: pytest -r a --cov --cov-branch --cov-report=xml --durations 10
       - name: Upload coverage data
         if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
