@@ -86,8 +86,6 @@ googledrive             - docs.google.com    --    Yes
                         - drive.google.com
 gulli                   replay.gulli.fr      Yes   Yes   Streams may be geo-restricted to France.
 huajiao                 huajiao.com          Yes   No
-huomao                  - huomao.com         Yes   Yes
-                        - huomao.tv
 huya                    huya.com             Yes   No
 idf1                    idf1.fr              Yes   Yes
 invintus                player.invintus.com  Yes   Yes
