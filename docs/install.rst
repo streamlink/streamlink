@@ -284,8 +284,7 @@ Name                                 Notes
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-requests`_                   At least version **2.26.0** |br|
-                                     Temporarily pinpointed to **2.25.1** on Windows (see `#3880`_)
+`python-requests`_                   At least version **2.26.0**
 `pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
@@ -313,7 +312,7 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
-.. _python-requests: https://requests.readthedocs.io/en/master/
+.. _python-requests: https://docs.python-requests.org/en/master/
 .. _RTMPDump: https://rtmpdump.mplayerhq.hu/
 .. _pycountry: https://pypi.org/project/pycountry/
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
@@ -324,7 +323,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _isodate: https://pypi.org/project/isodate/
 .. _PySocks: https://github.com/Anorov/PySocks
 .. _websocket-client: https://pypi.org/project/websocket-client/
-.. _#3880: https://github.com/streamlink/streamlink/pull/3880
 
 
 Windows binaries
