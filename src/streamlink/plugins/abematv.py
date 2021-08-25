@@ -16,9 +16,23 @@ from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
+
+
+class AbemaTVHLSStreamWriter(HLSStreamWriter):
+    def should_filter_sequence(self, sequence):
+        return "/tsad/" in sequence.segment.uri or super().should_filter_sequence(sequence)
+
+
+class AbemaTVHLSStreamReader(HLSStreamReader):
+    __writer__ = AbemaTVHLSStreamWriter
+
+
+class AbemaTVHLSStream(HLSStream):
+    __reader__ = AbemaTVHLSStreamReader
 
 
 class AbemaTVLicenseAdapter(BaseAdapter):
@@ -238,11 +252,7 @@ class AbemaTV(Plugin):
                                 AbemaTVLicenseAdapter(self.session, deviceid,
                                                       self.usertoken))
 
-        streams = HLSStream.parse_variant_playlist(self.session, playlisturl)
-        if not streams:
-            return {"live": HLSStream(self.session, playlisturl)}
-        else:
-            return streams
+        return AbemaTVHLSStream.parse_variant_playlist(self.session, playlisturl)
 
 
 __plugin__ = AbemaTV
