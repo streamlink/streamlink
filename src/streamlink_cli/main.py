@@ -414,7 +414,8 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print JSON representation of the stream
     elif console.json:
-        console.msg_json(stream)
+        title = create_title(plugin)
+        console.msg_json(dict(title=title,stream=stream))
 
     elif args.stream_url:
         try:
