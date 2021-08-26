@@ -595,7 +595,7 @@ def handle_url():
                          err, validstreams)
     elif console.json:
         title = create_title(plugin)
-        console.msg_json(dict(title=title, plugin=plugin.module, streams=streams))
+        console.msg_json(dict(plugin=plugin.module, title=title, streams=streams))
     elif args.stream_url:
         try:
             console.msg("{0}", streams[list(streams)[-1]].to_manifest_url())
