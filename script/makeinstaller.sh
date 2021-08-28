@@ -96,6 +96,7 @@ pypi_wheels=certifi==2021.5.30
             idna==3.2
             iso3166==1.0.1
             isodate==0.6.0
+            lxml==4.6.3
             pycryptodome==3.10.1
             PySocks==1.7.1
             requests==2.26.0
