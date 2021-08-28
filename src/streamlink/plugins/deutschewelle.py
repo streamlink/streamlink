@@ -2,9 +2,12 @@ import logging
 import re
 from urllib.parse import parse_qsl, urlparse
 
+from lxml.etree import HTML, _Element as Element
+
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.stream import HLSStream, HTTPStream
+from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -13,124 +16,72 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?dw\.com/"
 ))
 class DeutscheWelle(Plugin):
-    default_channel = "1"
+    DEFAULT_CHANNEL = "1"
+    API_URL = "https://www.dw.com/playersources/v-{media_id}?hls=true"
 
-    channel_re = re.compile(r'''<a.*?data-id="(\d+)".*?class="ici"''')
-    live_stream_div = re.compile(r'''
-        <div\s+class="mediaItem"\s+data-channel-id="(\d+)".*?>.*?
-        <input\s+type="hidden"\s+name="file_name"\s+value="(.*?)"\s*>.*?<div
-    ''', re.DOTALL | re.VERBOSE)
+    author = None
+    title = None
 
-    smil_api_url = "http://www.dw.com/smil/{}"
-    html5_api_url = "http://www.dw.com/html5Resource/{}"
-    vod_player_type_re = re.compile(r'<input type="hidden" name="player_type" value="(?P<stream_type>.+?)">')
-    stream_vod_data_re = re.compile(r'<input\s+type="hidden"\s+name="file_name"\s+value="(?P<stream_url>.+?)">.*?'
-                                    r'<input\s+type="hidden"\s+name="media_id"\s+value="(?P<stream_id>\d+)">',
-                                    re.DOTALL)
+    def get_author(self):
+        return self.author
 
-    smil_schema = validate.Schema(
-        validate.union({
-            "base": validate.all(
-                validate.xml_find(".//meta"),
-                validate.xml_element(attrib={"base": validate.text}),
-                validate.get("base")
-            ),
-            "streams": validate.all(
-                validate.xml_findall(".//switch/*"),
-                [
-                    validate.all(
-                        validate.getattr("attrib"),
-                        {
-                            "src": validate.text,
-                            "system-bitrate": validate.all(
-                                validate.text,
-                                validate.transform(int),
-                            ),
-                            validate.optional("width"): validate.all(
-                                validate.text,
-                                validate.transform(int)
-                            )
-                        }
-                    )
-                ]
-            )
-        })
-    )
+    def get_title(self):
+        return self.title
 
-    def _create_stream(self, url, quality=None):
-        if url.startswith('rtmp://'):
-            return (quality, RTMPStream(self.session, {'rtmp': url}))
-        if url.endswith('.m3u8'):
-            return HLSStream.parse_variant_playlist(self.session, url).items()
+    def _find_metadata(self, elem: Element):
+        self.author = elem.xpath("string(.//input[@name='channel_name'][1]/@value)") or None
+        self.title = elem.xpath("string(.//input[@name='media_title'][1]/@value)") or None
 
-        return (quality, HTTPStream(self.session, url))
-
-    def _get_live_streams(self, page):
+    def _get_live_streams(self, root: Element):
         # check if a different language has been selected
-        qs = dict(parse_qsl(urlparse(self.url).query))
-        channel = qs.get("channel")
+        channel: str = (
+            dict(parse_qsl(urlparse(self.url).query)).get("channel")
+            or root.xpath("string(.//a[@data-id][@class='ici'][1]/@data-id)")
+            or self.DEFAULT_CHANNEL
+        )
+        log.debug(f"Using channel ID: {channel}")
 
-        if not channel:
-            m = self.channel_re.search(page.text)
-            channel = m and m.group(1)
+        media_item: Element = root.find(f".//*[@data-channel-id='{channel}']")
+        if media_item is None:
+            return
 
-        log.debug("Using sub-channel ID: {0}".format(channel))
-
-        # extract the streams from the page, mapping between channel-id and stream url
-        media_items = self.live_stream_div.finditer(page.text)
-        stream_map = dict([mi.groups((1, 2)) for mi in media_items])
-
-        stream_url = stream_map.get(str(channel) or self.default_channel)
+        self._find_metadata(media_item)
+        stream_url: str = media_item.xpath("string(.//input[@name='file_name'][1]/@value)")
         if stream_url:
-            return self._create_stream(stream_url)
+            return HLSStream.parse_variant_playlist(self.session, stream_url)
 
-    def _get_vod_streams(self, stream_type, page):
-        m = self.stream_vod_data_re.search(page.text)
-        if m is None:
-            return
-        stream_url, stream_id = m.groups()
-
-        if stream_type == "video":
-            stream_api_id = "v-{}".format(stream_id)
-            default_quality = "vod"
-        elif stream_type == "audio":
-            stream_api_id = "a-{}".format(stream_id)
-            default_quality = "audio"
-        else:
+    def _get_vod_streams(self, root: Element):
+        media_id: str = root.xpath("string(.//input[@type='hidden'][@name='media_id'][1]/@value)")
+        if not media_id:
             return
 
-        # Retrieve stream embedded in web page
-        yield self._create_stream(stream_url, default_quality)
+        self._find_metadata(root)
+        api_url = self.API_URL.format(media_id=media_id)
+        stream_url = self.session.http.get(api_url, schema=validate.Schema(
+            validate.transform(parse_json),
+            [{"file": validate.url()}],
+            validate.get((0, "file"))
+        ))
+        return HLSStream.parse_variant_playlist(self.session, stream_url)
 
-        # Retrieve streams using API
-        res = self.session.http.get(self.smil_api_url.format(stream_api_id))
-        videos = self.session.http.xml(res, schema=self.smil_schema)
-
-        for video in videos['streams']:
-            url = videos["base"] + video["src"]
-            if url == stream_url or url.replace("_dwdownload.", ".") == stream_url:
-                continue
-
-            if video["system-bitrate"] > 0:
-                # If width is available, use it to select the best stream
-                # amongst those with same bitrate
-                quality = "{}k".format((video["system-bitrate"] + video.get("width", 0)) // 1000)
-            else:
-                quality = default_quality
-
-            yield self._create_stream(url, quality)
+    def _get_audio_streams(self, root: Element):
+        self._find_metadata(root)
+        file_name: str = root.xpath("string(.//input[@type='hidden'][@name='file_name'][1]/@value)")
+        if file_name:
+            yield "audio", HTTPStream(self.session, file_name)
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        m = self.vod_player_type_re.search(res.text)
-        if m is None:
-            return
+        root = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(HTML)
+        ))
+        player_type: str = root.xpath("string(.//input[@type='hidden'][@name='player_type'][1]/@value)")
 
-        stream_type = m.group("stream_type")
-        if stream_type == "dwlivestream":
-            return self._get_live_streams(res)
-
-        return self._get_vod_streams(stream_type, res)
+        if player_type == "dwlivestream":
+            return self._get_live_streams(root)
+        elif player_type == "video":
+            return self._get_vod_streams(root)
+        elif player_type == "audio":
+            return self._get_audio_streams(root)
 
 
 __plugin__ = DeutscheWelle
