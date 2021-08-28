@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(r'''
-    https?://(?:www\.)?pluto\.tv/(?:
+    https?://(?:www\.)?pluto\.tv/(?:\w{2}/)?(?:
         live-tv/(?P<slug_live>[^/?]+)/?$
         |
         on-demand/series/(?P<slug_series>[^/]+)/season/\d+/episode/(?P<slug_episode>[^/]+)$
