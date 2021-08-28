@@ -126,7 +126,7 @@ orf_tvthek              tvthek.orf.at        Yes   Yes
 picarto                 picarto.tv           Yes   Yes
 piczel                  piczel.tv            Yes   No
 pixiv                   sketch.pixiv.net     Yes   --
-pluto                   pluto.tv             Yes   Yes
+pluto                   pluto.tv             Yes   Yes   geo-restricted to USA
 pluzz                   - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
                         - ludo.fr
                         - zouzous.fr
