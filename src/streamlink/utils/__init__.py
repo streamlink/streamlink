@@ -9,6 +9,7 @@ from typing import Dict, Generic, Optional, TypeVar
 from urllib.parse import parse_qsl, urljoin, urlparse
 
 from streamlink.exceptions import PluginError
+from streamlink.utils.formatter import Formatter
 from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.url import update_scheme, url_equal
@@ -211,5 +212,5 @@ class LRUCache(Generic[TCacheKey, TCacheValue]):
 
 __all__ = ["load_module", "swfdecompress", "update_scheme", "url_equal",
            "verifyjson", "absolute_url", "parse_qsd", "parse_json",
-           "parse_xml", "rtmpparse", "prepend_www", "NamedPipe",
+           "parse_xml", "rtmpparse", "prepend_www", "Formatter", "NamedPipe",
            "escape_librtmp", "LRUCache", "LazyFormatter"]

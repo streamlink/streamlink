@@ -23,6 +23,12 @@ SUPPORTED_PLAYERS = {
     "potplayer": ["potplayer", "potplayermini64.exe", "potplayermini.exe"]
 }
 
+FS_SAFE_REPLACEMENT_CHAR = "_"
+INVALID_FILENAME_CHARS = {
+    "POSIX": "\x00/",
+    "Windows": "".join((chr(c) for c in range(32))) + "\x7f\"*/:<>?\\|"
+}
+
 CONFIG_FILES: List[Path]
 PLUGIN_DIRS: List[Path]
 LOG_DIR: Path
@@ -69,5 +75,6 @@ STREAM_PASSTHROUGH = ["hls", "http", "rtmp"]
 __all__ = [
     "PLAYER_ARGS_INPUT_DEFAULT", "PLAYER_ARGS_INPUT_FALLBACK",
     "DEFAULT_STREAM_METADATA", "SUPPORTED_PLAYERS",
+    "FS_SAFE_REPLACEMENT_CHAR", "INVALID_FILENAME_CHARS",
     "CONFIG_FILES", "PLUGIN_DIRS", "LOG_DIR", "STREAM_SYNONYMS", "STREAM_PASSTHROUGH"
 ]
