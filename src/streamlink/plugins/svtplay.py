@@ -1,7 +1,7 @@
 import logging
 import re
 
-from streamlink.compat import urljoin
+from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HTTPStream
@@ -21,15 +21,10 @@ class SVTPlay(Plugin):
     title = None
 
     latest_episode_url_re = re.compile(r'''
-        class="play_titlepage__latest-video"\s+href="(?P<url>[^"]+)"
+        data-rt="top-area-play-button"\s+href="(?P<url>[^"]+)"
     ''', re.VERBOSE)
 
     live_id_re = re.compile(r'.*/(?P<live_id>[^?]+)')
-
-    vod_id_re = re.compile(r'''
-        (?:DATA_LAKE\s+=\s+{"content":{"id":|"svtId":|data-video-id=)
-        "(?P<vod_id>[^"]+)"
-    ''', re.VERBOSE)
 
     _video_schema = validate.Schema({
         validate.optional('programTitle'): validate.text,
@@ -88,18 +83,18 @@ class SVTPlay(Plugin):
                     yield s
 
     def _get_vod(self):
-        res = self.session.http.get(self.url)
-        match = self.latest_episode_url_re.search(res.text)
-        if match:
-            res = self.session.http.get(
-                urljoin(self.url, match.group('url')),
-            )
+        vod_id = self._get_vod_id(self.url)
 
-        match = self.vod_id_re.search(res.text)
-        if match is None:
+        if vod_id is None:
+            res = self.session.http.get(self.url)
+            match = self.latest_episode_url_re.search(res.text)
+            if match is None:
+                return
+            vod_id = self._get_vod_id(match.group("url"))
+
+        if vod_id is None:
             return
 
-        vod_id = match.group('vod_id')
         log.debug("VOD ID={0}".format(vod_id))
 
         res = self.session.http.get(self.api_url.format(vod_id))
@@ -124,6 +119,10 @@ class SVTPlay(Plugin):
                         yield q, MuxedStream(self.session, s, subtitles=substreams)
                     else:
                         yield q, s
+
+    def _get_vod_id(self, url):
+        qs = dict(parse_qsl(urlparse(url).query))
+        return qs.get("id")
 
     def _get_streams(self):
         path, live = self.match.groups()
