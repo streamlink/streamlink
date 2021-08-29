@@ -26,13 +26,13 @@ from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import PluginOptions
 from streamlink.stream import StreamProcess
-from streamlink.utils import LazyFormatter, NamedPipe
+from streamlink.utils import NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
+from streamlink_cli.utils import Formatter, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -54,19 +54,17 @@ def check_file_output(filename, force):
 
     if os.path.isfile(filename) and not force:
         if sys.stdin.isatty():
-            answer = console.ask("File {0} already exists! Overwrite it? [y/N] ",
-                                 filename)
-
+            answer = console.ask(f"File {filename} already exists! Overwrite it? [y/N] ")
             if answer.lower() != "y":
                 sys.exit()
         else:
-            log.error("File {0} already exists, use --force to overwrite it.".format(filename))
+            log.error(f"File {filename} already exists, use --force to overwrite it.")
             sys.exit()
 
     return FileOutput(filename)
 
 
-def create_output(plugin):
+def create_output(formatter: Formatter):
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -84,11 +82,11 @@ def create_output(plugin):
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
-            out = check_file_output(args.output, args.force)
+            out = check_file_output(formatter.filename(args.output, args.fs_safe_rules), args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
     elif args.record_and_pipe:
-        record = check_file_output(args.record_and_pipe, args.force)
+        record = check_file_output(formatter.filename(args.record_and_pipe, args.fs_safe_rules), args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
         http = namedpipe = record = None
@@ -106,18 +104,21 @@ def create_output(plugin):
         elif args.player_http:
             http = create_http_server()
 
-        title = create_title(plugin)
-
         if args.record:
-            record = check_file_output(args.record, args.force)
+            record = check_file_output(formatter.filename(args.record, args.fs_safe_rules), args.force)
 
         log.info("Starting player: {0}".format(args.player))
 
-        out = PlayerOutput(args.player, args=args.player_args,
-                           quiet=not args.verbose_player,
-                           kill=not args.player_no_close,
-                           namedpipe=namedpipe, http=http,
-                           record=record, title=title)
+        out = PlayerOutput(
+            args.player,
+            args=args.player_args,
+            quiet=not args.verbose_player,
+            kill=not args.player_no_close,
+            namedpipe=namedpipe,
+            http=http,
+            record=record,
+            title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
+        )
 
     return out
 
@@ -138,21 +139,6 @@ def create_http_server(*_args, **_kwargs):
     return http
 
 
-def create_title(plugin=None):
-    if args.title and plugin:
-        title = LazyFormatter.format(
-            args.title,
-            title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
-            author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
-            category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
-            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
-            url=plugin.url
-        )
-    else:
-        title = args.url
-    return title
-
-
 def iter_http_requests(server, player):
     """Repeatedly accept HTTP connections on a server.
 
@@ -167,7 +153,7 @@ def iter_http_requests(server, player):
             continue
 
 
-def output_stream_http(plugin, initial_streams, external=False, port=0):
+def output_stream_http(plugin, initial_streams, formatter: Formatter, external=False, port=0):
     """Continuously output the stream over HTTP."""
     global output
 
@@ -177,12 +163,14 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
                          "installed. You must specify the path to a player "
                          "executable with --player.")
 
-        title = create_title(plugin)
         server = create_http_server()
-        player = output = PlayerOutput(args.player, args=args.player_args,
-                                       filename=server.url,
-                                       quiet=not args.verbose_player,
-                                       title=title)
+        player = output = PlayerOutput(
+            args.player,
+            args=args.player_args,
+            filename=server.url,
+            quiet=not args.verbose_player,
+            title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
+        )
 
         try:
             log.info("Starting player: {0}".format(args.player))
@@ -231,7 +219,7 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
 
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
-            read_stream(stream_fd, server, prebuffer)
+            read_stream(stream_fd, server, prebuffer, formatter)
 
         server.close(True)
 
@@ -239,16 +227,19 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(plugin, stream):
+def output_stream_passthrough(stream, formatter: Formatter):
     """Prepares a filename to be passed to the player."""
     global output
 
-    title = create_title(plugin)
-    filename = '"{0}"'.format(stream_to_url(stream))
-    output = PlayerOutput(args.player, args=args.player_args,
-                          filename=filename, call=True,
-                          quiet=not args.verbose_player,
-                          title=title)
+    filename = f'"{stream_to_url(stream)}"'
+    output = PlayerOutput(
+        args.player,
+        args=args.player_args,
+        filename=filename,
+        call=True,
+        quiet=not args.verbose_player,
+        title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
+    )
 
     try:
         log.info("Starting player: {0}".format(args.player))
@@ -291,7 +282,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(plugin, stream):
+def output_stream(stream, formatter: Formatter):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -308,26 +299,24 @@ def output_stream(plugin, stream):
     if not success_open:
         console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
 
-    output = create_output(plugin)
+    output = create_output(formatter)
 
     try:
         output.open()
     except OSError as err:
         if isinstance(output, PlayerOutput):
-            console.exit("Failed to start player: {0} ({1})",
-                         args.player, err)
+            console.exit(f"Failed to start player: {args.player} ({err})")
         else:
-            console.exit("Failed to open output: {0} ({1})",
-                         args.output, err)
+            console.exit(f"Failed to open output: {output.filename} ({err})")
 
     with closing(output):
         log.debug("Writing stream to output")
-        read_stream(stream_fd, output, prebuffer)
+        read_stream(stream_fd, output, prebuffer, formatter)
 
     return True
 
 
-def read_stream(stream, output, prebuffer, chunk_size=8192):
+def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192):
     """Reads data from stream and then writes it to the output."""
     is_player = isinstance(output, PlayerOutput)
     is_http = isinstance(output, HTTPServer)
@@ -349,11 +338,15 @@ def read_stream(stream, output, prebuffer, chunk_size=8192):
         iter(partial(stream.read, chunk_size), b"")
     )
     if show_progress:
-        stream_iterator = progress(stream_iterator,
-                                   prefix=os.path.basename(args.output))
+        stream_iterator = progress(
+            stream_iterator,
+            prefix=os.path.basename(output.filename)
+        )
     elif show_record_progress:
-        stream_iterator = progress(stream_iterator,
-                                   prefix=os.path.basename(args.record))
+        stream_iterator = progress(
+            stream_iterator,
+            prefix=os.path.basename(output.record.filename)
+        )
 
     try:
         for data in stream_iterator:
@@ -430,24 +423,29 @@ def handle_stream(plugin, streams, stream_name):
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
 
+        formatter = Formatter({
+            "url": lambda: args.url,
+            "author": lambda: plugin.get_author(),
+            "category": lambda: plugin.get_category(),
+            "game": lambda: plugin.get_category(),
+            "title": lambda: plugin.get_title(),
+        })
+
         for stream_name in [stream_name] + alt_streams:
             stream = streams[stream_name]
             stream_type = type(stream).shortname()
 
             if stream_type in args.player_passthrough and not file_output:
-                log.info("Opening stream: {0} ({1})".format(stream_name,
-                                                            stream_type))
-                success = output_stream_passthrough(plugin, stream)
+                log.info(f"Opening stream: {stream_name} ({stream_type})")
+                success = output_stream_passthrough(stream, formatter)
             elif args.player_external_http:
-                return output_stream_http(plugin, streams, external=True,
+                return output_stream_http(plugin, streams, formatter, external=True,
                                           port=args.player_external_http_port)
             elif args.player_continuous_http and not file_output:
-                return output_stream_http(plugin, streams)
+                return output_stream_http(plugin, streams, formatter)
             else:
-                log.info("Opening stream: {0} ({1})".format(stream_name,
-                                                            stream_type))
-
-                success = output_stream(plugin, stream)
+                log.info(f"Opening stream: {stream_name} ({stream_type})")
+                success = output_stream(stream, formatter)
 
             if success:
                 break
