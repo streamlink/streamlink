@@ -13,8 +13,7 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?latina\.pe/tvenvivo"
 ))
 class Latina(Plugin):
-    def get_title(self):
-        return "Latina"
+    title = "Latina"
 
     def _get_streams(self):
         self.session.http.headers.update({

@@ -16,10 +16,6 @@ class NimoTV(Plugin):
     data_url = 'https://m.nimo.tv/{0}'
     data_re = re.compile(r'<script>var G_roomBaseInfo = ({.*?});</script>')
 
-    author = None
-    category = None
-    title = None
-
     data_schema = validate.Schema(
         validate.transform(data_re.search),
         validate.any(None, validate.all(
@@ -46,15 +42,6 @@ class NimoTV(Plugin):
     _re_domain = re.compile(br'(https?:\/\/[A-Za-z]{2,3}.hls[A-Za-z\.\/]+)(?:V|&)')
     _re_id = re.compile(br'id=([^|\\]+)')
     _re_tp = re.compile(br'tp=(\d+)')
-
-    def get_author(self):
-        return self.author
-
-    def get_category(self):
-        return self.category
-
-    def get_title(self):
-        return self.title
 
     def _get_streams(self):
         username = self.match.group('username')

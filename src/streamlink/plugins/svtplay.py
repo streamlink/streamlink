@@ -16,10 +16,6 @@ log = logging.getLogger(__name__)
 class SVTPlay(Plugin):
     api_url = 'https://api.svt.se/videoplayer-api/video/{0}'
 
-    author = None
-    category = None
-    title = None
-
     latest_episode_url_re = re.compile(r'''
         data-rt="top-area-play-button"\s+href="(?P<url>[^"]+)"
     ''', re.VERBOSE)
@@ -42,18 +38,6 @@ class SVTPlay(Plugin):
     arguments = PluginArguments(
         PluginArgument("mux-subtitles", is_global=True)
     )
-
-    def get_author(self):
-        if self.author is not None:
-            return self.author
-
-    def get_category(self):
-        if self.category is not None:
-            return self.category
-
-    def get_title(self):
-        if self.title is not None:
-            return self.title
 
     def _set_metadata(self, data, category):
         if 'programTitle' in data:

@@ -61,19 +61,6 @@ class Mjunoon(Plugin):
         'aes-256-cbc': AES.MODE_CBC,
     }
 
-    author = None
-    category = None
-    title = None
-
-    def get_author(self):
-        return self.author
-
-    def get_category(self):
-        return self.category
-
-    def get_title(self):
-        return self.title
-
     def get_data(self):
         js_data = {}
         res = self.session.http.get(self.url)

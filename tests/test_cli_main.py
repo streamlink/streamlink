@@ -346,7 +346,10 @@ class TestCLIMainHandleStream(unittest.TestCase):
         args.player_continuous_http = False
         mock_output_stream.return_value = True
 
-        plugin = Mock(FakePlugin(""), get_author=lambda: "AUTHOR", get_category=lambda: "CATEGORY", get_title=lambda: "TITLE")
+        plugin = FakePlugin("")
+        plugin.author = "AUTHOR"
+        plugin.category = "CATEGORY"
+        plugin.title = "TITLE"
         stream = Stream(session=Mock())
         streams = {"best": stream}
 

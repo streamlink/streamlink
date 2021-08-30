@@ -56,8 +56,6 @@ class OPENRECtv(Plugin):
 
     def __init__(self, url):
         super().__init__(url)
-        self.author = None
-        self.title = None
         self.video_id = None
 
     def login(self, email, password):

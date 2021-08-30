@@ -202,6 +202,11 @@ class Plugin:
     # a reference to the `re.Match` result of the first matching matcher
     match: Match
 
+    # plugin metadata attributes
+    author: Optional[str] = None
+    category: Optional[str] = None
+    title: Optional[str] = None
+
     cache = None
     logger = None
     module = "unknown"
@@ -425,14 +430,14 @@ class Plugin:
     def _get_streams(self):
         raise NotImplementedError
 
-    def get_title(self):
-        return None
+    def get_title(self) -> Optional[str]:
+        return self.title
 
-    def get_author(self):
-        return None
+    def get_author(self) -> Optional[str]:
+        return self.author
 
-    def get_category(self):
-        return None
+    def get_category(self) -> Optional[str]:
+        return self.category
 
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """

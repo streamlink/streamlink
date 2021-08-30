@@ -46,10 +46,6 @@ class Reuters(Plugin):
         )
     )
 
-    def __init__(self, url):
-        super().__init__(url)
-        self.title = None
-
     def get_title(self):
         if not self.title:
             self._get_data()

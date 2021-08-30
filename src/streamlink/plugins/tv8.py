@@ -14,8 +14,7 @@ log = logging.getLogger(__name__)
 class TV8(Plugin):
     _re_hls = re.compile(r"""file\s*:\s*(["'])(?P<hls_url>https?://.*?\.m3u8.*?)\1""")
 
-    def get_title(self):
-        return 'TV8'
+    title = "TV8"
 
     def _get_streams(self):
         hls_url = self.session.http.get(self.url, schema=validate.Schema(
