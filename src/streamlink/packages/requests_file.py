@@ -84,7 +84,7 @@ class FileAdapter(BaseAdapter):
                 # If os.sep is in any of the parts, someone fed us some shenanigans.
                 # Treat is like a missing file.
                 if any(os.sep in p for p in path_parts):
-                    raise IOError(errno.ENOENT, os.strerror(errno.ENOENT))
+                    raise OSError(errno.ENOENT, os.strerror(errno.ENOENT))
 
                 # Look for a drive component. If one is present, store it separately
                 # so that a directory separator can correctly be added to the real
@@ -114,9 +114,9 @@ class FileAdapter(BaseAdapter):
 
                 # Use io.open since we need to add a release_conn method, and
                 # methods can't be added to file objects in python 2.
-                resp.raw = io.open(path, "rb")
+                resp.raw = open(path, "rb")
                 resp.raw.release_conn = resp.raw.close
-        except IOError as e:
+        except OSError as e:
             if e.errno == errno.EACCES:
                 resp.status_code = codes.forbidden
             elif e.errno == errno.ENOENT:

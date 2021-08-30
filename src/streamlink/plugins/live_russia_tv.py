@@ -30,7 +30,7 @@ class LiveRussia(Plugin):
         for m in self._data_re.finditer(res.text):
             data[m.group(1)] = m.group(2)
 
-        log.debug("Got pl_data={0}".format(data))
+        log.debug(f"Got pl_data={data}")
 
         if data:
             if data["isVod"] == '0':
@@ -47,7 +47,7 @@ class LiveRussia(Plugin):
 
         channel = self.match.group('channel')
         if channel:
-            log.debug('Channel: {0}'.format(channel))
+            log.debug(f'Channel: {channel}')
             API_URL = 'https://live.russia.tv/api/now/channel/{0}'
             res = self.session.http.get(API_URL.format(channel))
             data = self.session.http.json(res)
@@ -64,11 +64,11 @@ class LiveRussia(Plugin):
         else:
             iframe_url = self._get_iframe_url(self.url)
             if iframe_url:
-                log.debug('Found iframe URL: {0}'.format(iframe_url))
+                log.debug(f'Found iframe URL: {iframe_url}')
                 info_url = self._get_stream_info_url(iframe_url)
 
         if info_url:
-            log.debug('Getting info from URL: {0}'.format(info_url))
+            log.debug(f'Getting info from URL: {info_url}')
             res = self.session.http.get(info_url, headers={'Referer': self.url})
             data = self.session.http.json(res)
             if data['status'] == 200:
@@ -79,14 +79,14 @@ class LiveRussia(Plugin):
                     for media_type in media.get('sources', []):
                         if media_type == 'm3u8':
                             hls_url = media['sources'][media_type]['auto']
-                            log.debug('hls_url={0}'.format(hls_url))
+                            log.debug(f'hls_url={hls_url}')
                             yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
                         elif media_type == 'http':
                             for pix, http_url in media['sources'][media_type].items():
-                                log.debug('http_url={0}'.format(http_url))
-                                yield '{0}p'.format(pix), HTTPStream(self.session, http_url)
+                                log.debug(f'http_url={http_url}')
+                                yield f'{pix}p', HTTPStream(self.session, http_url)
             else:
-                log.error('An error occurred: {0}'.format(
+                log.error('An error occurred: {}'.format(
                     data['errors'].replace('\n', '').replace('\r', '')))
         else:
             log.error('Unable to get stream info URL')

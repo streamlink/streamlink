@@ -56,7 +56,7 @@ class Garena(Plugin):
             payload = {"channel_id": channel_id}
             stream_data = self._post_api(self.API_STREAM, payload, self._stream_schema)
             for stream in stream_data["streams"]:
-                n = "{0}p".format(stream["resolution"])
+                n = "{}p".format(stream["resolution"])
                 if stream["format"] == 3:
                     s = HLSStream(self.session, stream["url"])
                     yield n, s

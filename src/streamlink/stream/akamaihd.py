@@ -187,7 +187,7 @@ class AkamaiHDStreamIO(io.IOBase):
 
             return generator.generate()
         else:
-            raise StreamError(("No token generator available for hash '{0}'").format(hash))
+            raise StreamError(("No token generator available for hash '{}'").format(hash))
 
     def _on_edge(self, data, exception=IOError):
         def updateattr(attr, key):
@@ -249,8 +249,8 @@ class AkamaiHDStream(Stream):
         self.url = url
 
     def __repr__(self):
-        return ("<AkamaiHDStream({0!r}, "
-                "swf={1!r})>".format(self.url, self.swf))
+        return ("<AkamaiHDStream({!r}, "
+                "swf={!r})>".format(self.url, self.swf))
 
     def __json__(self):
         return dict(type=AkamaiHDStream.shortname(),

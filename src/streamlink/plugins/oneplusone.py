@@ -56,8 +56,8 @@ class OnePlusOne(Plugin):
         if url.startswith("/"):
             p = urlparse(self.url)
             if url.startswith("//"):
-                return "{0}:{1}".format(p.scheme, url)
-            return "{0}://{1}{2}".format(p.scheme, p.netloc, url)
+                return f"{p.scheme}:{url}"
+            return f"{p.scheme}://{p.netloc}{url}"
         else:
             return url
 
@@ -74,7 +74,7 @@ class OnePlusOne(Plugin):
         res = self.session.http.get(self.url)
         iframe_url = self.find_iframe(res)
         if iframe_url:
-            log.debug("Found iframe: {0}".format(iframe_url))
+            log.debug(f"Found iframe: {iframe_url}")
             res = self.session.http.get(
                 iframe_url,
                 headers={"Referer": self.url})
@@ -84,16 +84,16 @@ class OnePlusOne(Plugin):
                     ovva_url = parse_json(
                         b64decode(data).decode(),
                         schema=self.ovva_data_schema)
-                    log.debug("Found ovva: {0}".format(ovva_url))
+                    log.debug(f"Found ovva: {ovva_url}")
 
                     stream_url = self.session.http.get(
                         ovva_url,
                         schema=self.ovva_redirect_schema,
                         headers={"Referer": iframe_url})
-                    log.debug("Found stream: {0}".format(stream_url))
+                    log.debug(f"Found stream: {stream_url}")
 
                 except PluginError as e:
-                    log.error("Could not find stream URL: {0}".format(e))
+                    log.error(f"Could not find stream URL: {e}")
                 else:
                     return HLSStream.parse_variant_playlist(self.session, stream_url)
 

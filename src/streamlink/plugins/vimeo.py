@@ -72,7 +72,7 @@ class Vimeo(Plugin):
             if stream_type not in videos:
                 continue
             for _, video_data in videos[stream_type]["cdns"].items():
-                log.trace("{0!r}".format(video_data))
+                log.trace(f"{video_data!r}")
                 url = video_data.get("url")
                 if stream_type == "hls":
                     for stream in HLSStream.parse_variant_playlist(self.session, url).items():
@@ -86,7 +86,7 @@ class Vimeo(Plugin):
                         # VOD
                         url = url.replace("master.json", "master.mpd")
                     else:
-                        log.error("Unsupported DASH path: {0}".format(p.path))
+                        log.error(f"Unsupported DASH path: {p.path}")
                         continue
 
                     for stream in DASHStream.parse_manifest(self.session, url).items():

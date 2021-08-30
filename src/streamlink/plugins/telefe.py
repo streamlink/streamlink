@@ -24,7 +24,7 @@ class Telefe(Plugin):
 
         json_video_search = parse_json(video_search)
         json_video_search_sources = json_video_search["top"]["model"]["videos"][0]["sources"]
-        log.debug('Video ID found: {0}'.format(json_video_search["top"]["model"]["id"]))
+        log.debug('Video ID found: {}'.format(json_video_search["top"]["model"]["id"]))
         for current_video_source in json_video_search_sources:
             if "HLS" in current_video_source["type"]:
                 video_url_found_hls = "http://telefe.com" + current_video_source["url"]

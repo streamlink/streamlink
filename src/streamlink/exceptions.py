@@ -20,7 +20,7 @@ class FatalPluginError(PluginError):
 class NoStreamsError(StreamlinkError):
     def __init__(self, url):
         self.url = url
-        err = "No streams found on this URL: {0}".format(url)
+        err = f"No streams found on this URL: {url}"
         Exception.__init__(self, err)
 
 

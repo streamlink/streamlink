@@ -30,7 +30,7 @@ class LtvLsmLv(Plugin):
             log.error("Could not find player iframe")
             return
 
-        log.debug("Found iframe: {0}".format(iframe_url))
+        log.debug(f"Found iframe: {iframe_url}")
         res = self.session.http.get(iframe_url)
         for source in itertags(res.text, "source"):
             if source.attributes.get("src"):
@@ -39,7 +39,7 @@ class LtvLsmLv(Plugin):
                 if url_path.endswith(".m3u8"):
                     yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()
                 else:
-                    log.debug("Not used URL path: {0}".format(url_path))
+                    log.debug(f"Not used URL path: {url_path}")
 
 
 __plugin__ = LtvLsmLv

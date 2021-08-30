@@ -71,7 +71,7 @@ class Bilibili(Plugin):
             name = "source"
             url = stream_list["url"]
             # check if the URL is available
-            log.trace('URL={0}'.format(url))
+            log.trace(f'URL={url}')
             r = self.session.http.get(url,
                                       retries=0,
                                       timeout=3,
@@ -79,10 +79,10 @@ class Bilibili(Plugin):
                                       acceptable_status=(200, 403, 404, 405))
             p = urlparse(url)
             if r.status_code != 200:
-                log.error('Netloc: {0} with error {1}'.format(p.netloc, r.status_code))
+                log.error(f'Netloc: {p.netloc} with error {r.status_code}')
                 continue
 
-            log.debug('Netloc: {0}'.format(p.netloc))
+            log.debug(f'Netloc: {p.netloc}')
             stream = HTTPStream(self.session, url)
             yield name, stream
 

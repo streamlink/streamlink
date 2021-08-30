@@ -58,8 +58,8 @@ class Vidio(Plugin):
         tokens = self.get_url_tokens(stream_id)
 
         if hls_url:
-            log.debug("HLS URL: {0}".format(hls_url))
-            log.debug("Tokens: {0}".format(tokens))
+            log.debug(f"HLS URL: {hls_url}")
+            log.debug(f"Tokens: {tokens}")
             return HLSStream.parse_variant_playlist(self.session,
                                                     hls_url + "?" + tokens,
                                                     headers={"User-Agent": useragents.CHROME,

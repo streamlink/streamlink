@@ -22,7 +22,7 @@ class NowNews(Plugin):
         m = self.epg_re.search(res.text)
         channel_id = m and m.group(1)
         if channel_id:
-            log.debug("Channel ID: {0}".format(channel_id))
+            log.debug(f"Channel ID: {channel_id}")
 
             if channel_id == "332":
                 # there is a special backup stream for channel 332

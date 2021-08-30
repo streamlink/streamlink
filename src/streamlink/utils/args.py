@@ -63,14 +63,14 @@ def num(type, min=None, max=None):
 
         if min is not None and not (value > min):
             raise argparse.ArgumentTypeError(
-                '{0} value must be more than {1} but is {2}'.format(
+                '{} value must be more than {} but is {}'.format(
                     type.__name__, min, value
                 )
             )
 
         if max is not None and not (value <= max):
             raise argparse.ArgumentTypeError(
-                '{0} value must be at most {1} but is {2}'.format(
+                '{} value must be at most {} but is {}'.format(
                     type.__name__, max, value
                 )
             )

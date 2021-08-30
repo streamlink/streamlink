@@ -61,7 +61,7 @@ def print_inplace(msg):
     if is_win32:
         spacing -= 1
 
-    sys.stderr.write("\r{0}".format(msg))
+    sys.stderr.write(f"\r{msg}")
     sys.stderr.write(" " * max(0, spacing))
     sys.stderr.flush()
 
@@ -71,9 +71,9 @@ def format_filesize(size):
     for suffix in ("bytes", "KB", "MB", "GB", "TB"):
         if size < 1024.0:
             if suffix in ("GB", "TB"):
-                return "{0:3.2f} {1}".format(size, suffix)
+                return f"{size:3.2f} {suffix}"
             else:
-                return "{0:3.1f} {1}".format(size, suffix)
+                return f"{size:3.1f} {suffix}"
 
         size /= 1024.0
 
@@ -86,12 +86,12 @@ def format_time(elapsed):
 
     rval = ""
     if hours:
-        rval += "{0}h".format(hours)
+        rval += f"{hours}h"
 
     if elapsed > 60:
-        rval += "{0}m".format(minutes)
+        rval += f"{minutes}m"
 
-    rval += "{0}s".format(seconds)
+    rval += f"{seconds}s"
     return rval
 
 

@@ -36,12 +36,12 @@ def main(repo, tag, assets, api_key, dry_run=False):
     primary_headers = {
         "Accept": "application/vnd.github.v3+json",
         "User-Agent": repo,
-        "Authorization": "token {}".format(api_key)
+        "Authorization": f"token {api_key}"
     }
 
     def github_api_call(host="api.github.com", method="GET", endpoint="/", headers=None, raise_failure=True, **kwargs):
         req = requests.post if method == "POST" else requests.patch if method == "PATCH" else requests.get
-        url = "https://{host}{endpoint}".format(host=host, endpoint=endpoint)
+        url = f"https://{host}{endpoint}"
 
         response = req(url, headers={**(headers or {}), **primary_headers}, **kwargs)
         if raise_failure and response.status_code >= 400:
@@ -54,7 +54,7 @@ def main(repo, tag, assets, api_key, dry_run=False):
     def get_response_json_key(response, key):
         data = response.json()
         if key not in data:
-            raise KeyError("Missing key '{}' in Github API response".format(key))
+            raise KeyError(f"Missing key '{key}' in Github API response")
 
         return data[key]
 
@@ -62,17 +62,17 @@ def main(repo, tag, assets, api_key, dry_run=False):
         return get_response_json_key(response, "id")
 
     def get_release_id():
-        log.debug("Checking for existing release in {} tagged by {}".format(repo, tag))
+        log.debug(f"Checking for existing release in {repo} tagged by {tag}")
         response = github_api_call(
-            endpoint="/repos/{repo}/releases/tags/{tag}".format(repo=repo, tag=tag),
+            endpoint=f"/repos/{repo}/releases/tags/{tag}",
             raise_failure=False
         )
 
         return None if response.status_code >= 400 else get_id(response)
 
     def get_changelog(changelog_file):
-        log.debug("Opening changelog file: {}".format(changelog_file))
-        with open(changelog_file, "r") as fh:
+        log.debug(f"Opening changelog file: {changelog_file}")
+        with open(changelog_file) as fh:
             contents = fh.read()
             if not contents:
                 raise ValueError("Missing changelog file")
@@ -81,15 +81,15 @@ def main(repo, tag, assets, api_key, dry_run=False):
         changelogs = RE_LOG_HEADER.split(contents)[1:]
         changelogs = {v: changelogs[i + 1] for i, v in enumerate(changelogs) if i % 2 == 0}
 
-        log.debug("Found {} changelogs".format(len(changelogs)))
+        log.debug(f"Found {len(changelogs)} changelogs")
         if tag not in changelogs:
             raise KeyError("Missing changelog for current release")
 
         return RE_GITLOG.search(changelogs[tag]).groups()
 
     def get_release_template(template_file):
-        log.debug("Opening release template file: {}".format(template_file))
-        with open(template_file, "r") as fh:
+        log.debug(f"Opening release template file: {template_file}")
+        with open(template_file) as fh:
             contents = fh.read()
             if not contents:
                 raise ValueError("Missing release template file")
@@ -118,49 +118,49 @@ def main(repo, tag, assets, api_key, dry_run=False):
 
         payload = {
             "tag_name": tag,
-            "name": "Streamlink {}".format(tag),
+            "name": f"Streamlink {tag}",
             "body": template.format(changelog=changelog.strip(), gitlog=gitlog.strip(), version=tag)
         }
         release_id = get_release_id()
 
         if not release_id:
             if dry_run:
-                log.info("dry-run: Would have created GitHub release {}#{} with:\n{}".format(repo, tag, pformat(payload)))
+                log.info(f"dry-run: Would have created GitHub release {repo}#{tag} with:\n{pformat(payload)}")
             else:
-                log.info("Creating new Github release {}#{}".format(repo, tag))
+                log.info(f"Creating new Github release {repo}#{tag}")
                 res = github_api_call(
                     method="POST",
-                    endpoint="/repos/{repo}/releases".format(repo=repo),
+                    endpoint=f"/repos/{repo}/releases",
                     json=payload
                 )
-                log.info("Successfully created new Github release {}#{}".format(repo, tag))
+                log.info(f"Successfully created new Github release {repo}#{tag}")
                 release_id = get_id(res)
         else:
             if dry_run:
-                log.info("dry-run: Would have updated GitHub release {}#{} with:\n{}".format(repo, tag, pformat(payload)))
+                log.info(f"dry-run: Would have updated GitHub release {repo}#{tag} with:\n{pformat(payload)}")
             else:
-                log.info("Updating existing Github release {}#{}".format(repo, tag))
+                log.info(f"Updating existing Github release {repo}#{tag}")
                 github_api_call(
                     method="PATCH",
-                    endpoint="/repos/{repo}/releases/{release_id}".format(repo=repo, release_id=release_id),
+                    endpoint=f"/repos/{repo}/releases/{release_id}",
                     json=payload
                 )
-                log.info("Successfully updated existing Github release {}#{}".format(repo, tag))
+                log.info(f"Successfully updated existing Github release {repo}#{tag}")
 
         for filename, filehandle in filehandles.items():
             if dry_run:
-                log.info("dry-run: Would have uploaded '{}' to Github release {}#{}".format(filename, repo, tag))
+                log.info(f"dry-run: Would have uploaded '{filename}' to Github release {repo}#{tag}")
             else:
-                log.info("Uploading '{}' to Github release {}#{}".format(filename, repo, tag))
+                log.info(f"Uploading '{filename}' to Github release {repo}#{tag}")
                 github_api_call(
                     host="uploads.github.com",
                     method="POST",
-                    endpoint="/repos/{repo}/releases/{release_id}/assets".format(repo=repo, release_id=release_id),
+                    endpoint=f"/repos/{repo}/releases/{release_id}/assets",
                     headers={"Content-Type": "application/octet-stream"},
                     params={"name": filename},
                     data=filehandle
                 )
-                log.info("Successfully uploaded '{}' to Github release {}#{}".format(filename, repo, tag))
+                log.info(f"Successfully uploaded '{filename}' to Github release {repo}#{tag}")
 
         log.info("Done")
         return 0

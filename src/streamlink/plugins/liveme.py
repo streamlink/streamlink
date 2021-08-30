@@ -39,7 +39,7 @@ class LiveMe(Plugin):
         video_id = url_params.get("videoid")
 
         if video_id:
-            vali = '{0}l{1}m{2}'.format(self._random_t(4), self._random_t(4), self._random_t(5))
+            vali = f'{self._random_t(4)}l{self._random_t(4)}m{self._random_t(5)}'
             data = {
                 'userid': 1,
                 'videoid': video_id,
@@ -47,7 +47,7 @@ class LiveMe(Plugin):
                 'h5': 1,
                 'vali': vali
             }
-            log.debug("Found Video ID: {0}".format(video_id))
+            log.debug(f"Found Video ID: {video_id}")
             res = self.session.http.post(self.api_url, data=data)
             data = self.session.http.json(res, schema=self.api_schema)
             hls = self._make_stream(data["video_info"]["hlsvideosource"])

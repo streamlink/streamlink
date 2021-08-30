@@ -17,11 +17,11 @@ class GardenersWorld(Plugin):
         page = self.session.http.get(self.url)
         for iframe in itertags(page.text, "iframe"):
             url = iframe.attributes["src"]
-            log.debug("Handing off of {0}".format(url))
+            log.debug(f"Handing off of {url}")
             try:
                 return self.session.streams(update_scheme(self.url, url))
             except NoPluginError:
-                log.error("Handing off of {0} failed".format(url))
+                log.error(f"Handing off of {url} failed")
                 return None
 
 

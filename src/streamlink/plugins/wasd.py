@@ -61,12 +61,12 @@ class WASD(Plugin):
         )
 
         json_res = self.session.http.json(res, schema=self._api_schema)
-        log.trace('{0!r}'.format(json_res))
+        log.trace(f'{json_res!r}')
         if not json_res:
-            raise PluginError('No data returned from URL={0}'.format(res.url))
+            raise PluginError(f'No data returned from URL={res.url}')
 
         for stream in json_res['media_container_streams']:
-            log.debug('media_container_status: {0}, media_container_online_status: {1}'.format(
+            log.debug('media_container_status: {}, media_container_online_status: {}'.format(
                 json_res['media_container_status'], json_res['media_container_online_status']))
             for stream in stream['stream_media']:
                 if stream['media_status'] == 'STOPPED':

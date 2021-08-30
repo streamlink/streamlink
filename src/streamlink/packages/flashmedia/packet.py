@@ -1,7 +1,7 @@
 import struct
 
 
-class Packet(object):
+class Packet:
     exception = IOError
 
     @classmethod
@@ -16,14 +16,14 @@ class Packet(object):
     def deserialize(cls, fd, **kw):
         try:
             return cls._deserialize(fd, **kw)
-        except (struct.error, IOError) as err:
+        except (struct.error, OSError) as err:
             raise cls.exception(err)
 
     @classmethod
     def deserialize_from(cls, buf, offset, **kw):
         try:
             return cls._deserialize_from(buf, offset, **kw)
-        except (struct.error, IOError) as err:
+        except (struct.error, OSError) as err:
             raise cls.exception(err)
 
     def _serialize(self):

@@ -264,13 +264,13 @@ class HLSStreamWorker(SegmentedStreamWorker):
         if self.playlist_reload_time_override == "segment" and sequences:
             return sequences[-1].segment.duration
         if self.playlist_reload_time_override == "live-edge" and sequences:
-            return sum([s.segment.duration for s in sequences[-max(1, self.live_edge - 1):]])
+            return sum(s.segment.duration for s in sequences[-max(1, self.live_edge - 1):])
         if type(self.playlist_reload_time_override) is float and self.playlist_reload_time_override > 0:
             return self.playlist_reload_time_override
         if playlist.target_duration:
             return playlist.target_duration
         if sequences:
-            return sum([s.segment.duration for s in sequences[-max(1, self.live_edge - 1):]])
+            return sum(s.segment.duration for s in sequences[-max(1, self.live_edge - 1):])
 
         return self.playlist_reload_time
 
@@ -414,7 +414,7 @@ class MuxedHLSStream(MuxedStream):
             else:
                 tracks.append(audio)
         for i in range(1, len(tracks)):
-            maps.append("{0}:a".format(i))
+            maps.append(f"{i}:a")
         substreams = map(lambda url: HLSStream(session, url, force_restart=force_restart, **args), tracks)
         ffmpeg_options = ffmpeg_options or {}
 
@@ -499,7 +499,7 @@ class HLSStream(HTTPStream):
         try:
             parser = cls._get_variant_playlist(res)
         except ValueError as err:
-            raise OSError("Failed to parse playlist: {0}".format(err))
+            raise OSError(f"Failed to parse playlist: {err}")
 
         streams = OrderedDict()
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
@@ -537,15 +537,15 @@ class HLSStream(HTTPStream):
 
             if playlist.stream_info.resolution:
                 width, height = playlist.stream_info.resolution
-                names["pixels"] = "{0}p".format(height)
+                names["pixels"] = f"{height}p"
 
             if playlist.stream_info.bandwidth:
                 bw = playlist.stream_info.bandwidth
 
                 if bw >= 1000:
-                    names["bitrate"] = "{0}k".format(int(bw / 1000.0))
+                    names["bitrate"] = f"{int(bw / 1000.0)}k"
                 else:
-                    names["bitrate"] = "{0}k".format(bw / 1000.0)
+                    names["bitrate"] = f"{bw / 1000.0}k"
 
             if name_fmt:
                 stream_name = name_fmt.format(**names)
@@ -560,17 +560,17 @@ class HLSStream(HTTPStream):
             if not stream_name:
                 continue
             if name_prefix:
-                stream_name = "{0}{1}".format(name_prefix, stream_name)
+                stream_name = f"{name_prefix}{stream_name}"
 
             if stream_name in streams:  # rename duplicate streams
-                stream_name = "{0}_alt".format(stream_name)
+                stream_name = f"{stream_name}_alt"
                 num_alts = len(list(filter(lambda n: n.startswith(stream_name), streams.keys())))
 
                 # We shouldn't need more than 2 alt streams
                 if num_alts >= 2:
                     continue
                 elif num_alts > 0:
-                    stream_name = "{0}{1}".format(stream_name, num_alts + 1)
+                    stream_name = f"{stream_name}{num_alts + 1}"
 
             if check_streams:
                 try:

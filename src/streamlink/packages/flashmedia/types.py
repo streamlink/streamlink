@@ -40,7 +40,7 @@ class PrimitiveType(Struct):
         data = fd.read(self.size)
 
         if len(data) != self.size:
-            raise IOError("Unable to read required amount of data")
+            raise OSError("Unable to read required amount of data")
 
         return self.unpack(data)[0]
 
@@ -70,7 +70,7 @@ class PrimitiveClassType(PrimitiveType):
         return (rval,)
 
 
-class DynamicType(object):
+class DynamicType:
     def __new__(cls, *args, **kwargs):
         return cls.pack(*args, **kwargs)
 
@@ -117,7 +117,7 @@ class TwosComplement(PrimitiveType):
 
     def pack(self, val):
         if val < self.lower or val > self.upper:
-            msg = "{0} format requires {1} <= number <= {2}".format(self.primitive.format,
+            msg = "{} format requires {} <= number <= {}".format(self.primitive.format,
                                                                     self.lower, self.upper)
             raise struct_error(msg)
 
@@ -128,7 +128,7 @@ class TwosComplement(PrimitiveType):
 
     def pack_into(self, buf, offset, val):
         if val < self.lower or val > self.upper:
-            msg = "{0} format requires {1} <= number <= {2}".format(self.primitive.format,
+            msg = "{} format requires {} <= number <= {}".format(self.primitive.format,
                                                                     self.lower, self.upper)
             raise struct_error(msg)
 
@@ -166,7 +166,7 @@ class HighLowCombo(PrimitiveType):
 
     def pack(self, val):
         if val < self.lower or val > self.upper:
-            msg = "{0} format requires {1} <= number <= {2}".format(self.format,
+            msg = "{} format requires {} <= number <= {}".format(self.format,
                                                                     self.lower, self.upper)
             raise struct_error(msg)
 
@@ -181,7 +181,7 @@ class HighLowCombo(PrimitiveType):
 
     def pack_into(self, buf, offset, val):
         if val < self.lower or val > self.upper:
-            msg = "{0} format requires {1} <= number <= {2}".format(self.format,
+            msg = "{} format requires {} <= number <= {}".format(self.format,
                                                                     self.lower, self.upper)
             raise struct_error(msg)
 
@@ -450,7 +450,7 @@ class CString(String):
         return (rval, offset)
 
 
-class ScriptDataType(object):
+class ScriptDataType:
     __identifier__ = 0
 
 
@@ -777,7 +777,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             rval += AMF3Value.pack(val)
 
         else:
-            raise ValueError("Unable to pack value of type {0}".format(type(val)))
+            raise ValueError(f"Unable to pack value of type {type(val)}")
 
         return rval
 
@@ -832,7 +832,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             offset += packer.size
 
         else:
-            raise ValueError("Unable to pack value of type {0}".format(type(val)))
+            raise ValueError(f"Unable to pack value of type {type(val)}")
 
         return offset
 
@@ -858,7 +858,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             return None
 
         else:
-            raise IOError("Unhandled script data type: {0}".format(type_))
+            raise OSError(f"Unhandled script data type: {type_}")
 
     @classmethod
     def unpack_from(cls, buf, offset):
@@ -884,7 +884,7 @@ class ScriptDataValue(DynamicType, ScriptDataType):
             return (None, offset)
 
         else:
-            raise IOError("Unhandled script data type: {0}".format(hex(type_)))
+            raise OSError(f"Unhandled script data type: {hex(type_)}")
 
 
 class AMF0Value(ScriptDataValue):
@@ -1031,7 +1031,7 @@ class AMF3String(String):
             return rval
 
 
-class AMF3ObjectBase(object):
+class AMF3ObjectBase:
     __dynamic__ = False
     __externalizable__ = False
     __members__ = []
@@ -1043,7 +1043,7 @@ class AMF3ObjectBase(object):
             setattr(self, key, value)
 
     def __repr__(self):
-        return "<{0} {1!r}".format(self.__class__.__name__, self.__dict__)
+        return f"<{self.__class__.__name__} {self.__dict__!r}"
 
     @classmethod
     def register(cls, name):
@@ -1409,7 +1409,7 @@ class AMF3ArrayPacker(DynamicType, AMF3Type):
         return obj
 
 
-class AMF3Date(object):
+class AMF3Date:
     def __init__(self, time):
         self.time = time
 
@@ -1511,7 +1511,7 @@ class AMF3Value(DynamicType):
             size += AMF3DatePacker.size(val, cache=object_cache)
 
         else:
-            raise ValueError("Unable to pack value of type {0}".format(type(val)))
+            raise ValueError(f"Unable to pack value of type {type(val)}")
 
         return size
 
@@ -1570,7 +1570,7 @@ class AMF3Value(DynamicType):
             chunks.append(AMF3DatePacker.pack(val, cache=object_cache))
 
         else:
-            raise ValueError("Unable to pack value of type {0}".format(type(val)))
+            raise ValueError(f"Unable to pack value of type {type(val)}")
 
         return b"".join(chunks)
 
@@ -1615,4 +1615,4 @@ class AMF3Value(DynamicType):
             return cls.Readers[type_].read(fd)
 
         else:
-            raise IOError("Unhandled AMF3 type: {0}".format(hex(type_)))
+            raise OSError(f"Unhandled AMF3 type: {hex(type_)}")

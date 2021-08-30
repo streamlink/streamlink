@@ -75,14 +75,14 @@ class StreamProcess(Stream):
             if not process.poll() is None:
                 if hasattr(self.stderr, "name"):
                     raise StreamError(("Error while executing subprocess, "
-                                       "error output logged to: {0}").format(self.stderr.name))
+                                       "error output logged to: {}").format(self.stderr.name))
                 else:
                     raise StreamError("Error while executing subprocess")
 
             return StreamProcessIO(self.session, process, process.stdout, timeout=self.timeout)
         else:
             raise StreamError(
-                "{0} is not installed or not supported on your system".format(os.path.basename(self.cmd))
+                f"{os.path.basename(self.cmd)} is not installed or not supported on your system"
             )
 
     @classmethod
@@ -93,20 +93,20 @@ class StreamProcess(Stream):
 
         def to_option(key):
             if len(key) == 1:  # short argument
-                return "{0}{1}".format(short_option_prefix, key)
+                return f"{short_option_prefix}{key}"
             else:  # long argument
-                return "{0}{1}".format(long_option_prefix, key.replace("_", "-"))
+                return "{}{}".format(long_option_prefix, key.replace("_", "-"))
 
         # sorted for stability
         for k, v in sorted(parameters.items(), key=itemgetter(0)):
             if not isinstance(v, list):  # long argument
                 cmdline.append(to_option(k))
                 if v is not True:
-                    cmdline.append("{0}".format(v))
+                    cmdline.append(f"{v}")
             else:  # duplicate the argument if given a list of values
                 for sv in v:
                     cmdline.append(to_option(k))
-                    cmdline.append("{0}".format(sv))
+                    cmdline.append(f"{sv}")
 
         # positional arguments last
         cmdline.extend(arguments)
@@ -140,7 +140,7 @@ class StreamProcess(Stream):
         try:
             process = subprocess.Popen(cmd, stderr=stderr, stdout=subprocess.PIPE)
         except OSError as err:
-            raise StreamError("Failed to start process: {0} ({1})".format(self._check_cmd(), str(err)))
+            raise StreamError(f"Failed to start process: {self._check_cmd()} ({str(err)})")
 
         if timeout:
             elapsed = 0
@@ -151,7 +151,7 @@ class StreamProcess(Stream):
             # kill after the timeout has expired and the process still hasn't ended
             if not process.poll():
                 try:
-                    log.debug("Process timeout expired ({0}s), killing process".format(timeout))
+                    log.debug(f"Process timeout expired ({timeout}s), killing process")
                     process.kill()
                 except Exception:
                     pass
@@ -170,7 +170,7 @@ class StreamProcess(Stream):
         cmd = which(self.cmd)
 
         if not cmd:
-            raise StreamError("Unable to find `{0}' command".format(self.cmd))
+            raise StreamError(f"Unable to find `{self.cmd}' command")
 
         return cmd
 

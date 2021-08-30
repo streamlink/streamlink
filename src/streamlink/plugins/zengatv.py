@@ -33,7 +33,7 @@ class ZengaTV(Plugin):
             return
 
         dvr_id = m.group("id")
-        log.debug("Found video id: {0}".format(dvr_id))
+        log.debug(f"Found video id: {dvr_id}")
         data = {"feed": "hd", "dvrId": dvr_id}
         res = self.session.http.post(self.api_url, headers=headers, data=data)
         if res.status_code == 200:

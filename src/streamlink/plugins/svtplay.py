@@ -69,8 +69,8 @@ class SVTPlay(Plugin):
         if match is None:
             return
 
-        live_id = "ch-{0}".format(match.group('live_id'))
-        log.debug("Live ID={0}".format(live_id))
+        live_id = "ch-{}".format(match.group('live_id'))
+        log.debug(f"Live ID={live_id}")
 
         res = self.session.http.get(self.api_url.format(live_id))
         api_data = self.session.http.json(res, schema=self._video_schema)
@@ -94,7 +94,7 @@ class SVTPlay(Plugin):
         if vod_id is None:
             return
 
-        log.debug("VOD ID={0}".format(vod_id))
+        log.debug(f"VOD ID={vod_id}")
 
         res = self.session.http.get(self.api_url.format(vod_id))
         api_data = self.session.http.json(res, schema=self._video_schema)
@@ -105,7 +105,7 @@ class SVTPlay(Plugin):
         if 'subtitleReferences' in api_data:
             for subtitle in api_data['subtitleReferences']:
                 if subtitle['format'] == 'webvtt':
-                    log.debug("Subtitle={0}".format(subtitle['url']))
+                    log.debug("Subtitle={}".format(subtitle['url']))
                     substreams[subtitle['format']] = HTTPStream(
                         self.session,
                         subtitle['url'],
@@ -125,7 +125,7 @@ class SVTPlay(Plugin):
 
     def _get_streams(self):
         path, live = self.match.groups()
-        log.debug("Path={0}".format(path))
+        log.debug(f"Path={path}")
 
         if live:
             return self._get_live(path)

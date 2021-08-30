@@ -143,7 +143,7 @@ class MPDNode:
         self._base_url = kwargs.get("base_url")
         self.attributes = set()
         if self.__tag__ and self.node.tag.lower() != self.__tag__.lower():
-            raise MPDParsingError("root tag did not match the expected tag: {}".format(self.__tag__))
+            raise MPDParsingError(f"root tag did not match the expected tag: {self.__tag__}")
 
     @property
     def attrib(self):
@@ -156,7 +156,7 @@ class MPDNode:
     def __str__(self):
         return "<{tag} {attrs}>".format(
             tag=self.__tag__,
-            attrs=" ".join("@{}={}".format(attr, getattr(self, attr)) for attr in self.attributes)
+            attrs=" ".join(f"@{attr}={getattr(self, attr)}" for attr in self.attributes)
         )
 
     def attr(self, key, default=None, parser=None, required=False, inherited=False):
@@ -172,7 +172,7 @@ class MPDNode:
                 return getattr(self.parent, key)
 
         if required:
-            raise MPDParsingError("could not find required attribute {tag}@{attr} ".format(attr=key, tag=self.__tag__))
+            raise MPDParsingError(f"could not find required attribute {self.__tag__}@{key} ")
         else:
             return default
 
@@ -468,7 +468,7 @@ class SegmentTemplate(MPDNode):
         in the simplest case the segment number is based on the time since the availabilityStartTime
         :return:
         """
-        log.debug("Generating segment numbers for {0} playlist (id={1})".format(self.root.type, self.parent.id))
+        log.debug(f"Generating segment numbers for {self.root.type} playlist (id={self.parent.id})")
         if self.root.type == "static":
             available_iter = repeat(epoch_start)
             duration = self.period.duration.seconds or self.root.mediaPresentationDuration.seconds
@@ -512,7 +512,7 @@ class SegmentTemplate(MPDNode):
                 # workaround for invalid `self.root.timelines[self.parent.id]`
                 # creates a timeline for every mimeType instead of one for both
                 self.parent.id = self.parent.mimeType
-            log.debug("Generating segment timeline for {0} playlist (id={1}))".format(self.root.type, self.parent.id))
+            log.debug(f"Generating segment timeline for {self.root.type} playlist (id={self.parent.id}))")
             if self.root.type == "dynamic":
                 # if there is no delay, use a delay of 3 seconds
                 suggested_delay = datetime.timedelta(seconds=(self.root.suggestedPresentationDelay.total_seconds()

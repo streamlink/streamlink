@@ -59,7 +59,7 @@ class ArgparseDirective(Directive):
             lambda m: (
                 _option_re.sub(
                     lambda m2: (
-                        ":option:`{0}`".format(m2.group(1))
+                        f":option:`{m2.group(1)}`"
                         if m2.group(1) in self._available_options
                         else m2.group(0)
                     ),
@@ -118,8 +118,7 @@ class ArgparseDirective(Directive):
             options = f"\n{' ' * len(directive)}".join(options)
             yield f"{directive}{options}"
             yield ""
-            for line in self.process_help(action.help).split("\n"):
-                yield line
+            yield from self.process_help(action.help).split("\n")
             yield ""
             if hasattr(action, "plugins") and len(action.plugins) > 0:
                 yield f"    **Supported plugins:** {', '.join(action.plugins)}"

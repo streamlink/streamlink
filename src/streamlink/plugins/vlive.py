@@ -60,7 +60,7 @@ class Vlive(Plugin):
             log.error('Could not find video page')
             return
         elif err is not None:
-            log.error('Unknown error code: {0}'.format(err))
+            log.error(f'Unknown error code: {err}')
             return
 
         if video_json['type'] == 'VOD':
@@ -76,7 +76,7 @@ class Vlive(Plugin):
             log.error('Stream has ended')
             return
         elif video_status != 'ON_AIR':
-            log.error('Unknown video status: {0}'.format(video_status))
+            log.error(f'Unknown video status: {video_status}')
             return
 
         stream_url = self.session.http.get(

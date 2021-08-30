@@ -35,7 +35,7 @@ class TV3Cat(Plugin):
                 try:
                     return HLSStream.parse_variant_playlist(self.session, stream['url'], name_fmt="{pixels}_{bitrate}")
                 except PluginError:
-                    log.debug("Failed to get streams for: {0}".format(stream['geo']))
+                    log.debug("Failed to get streams for: {}".format(stream['geo']))
 
 
 __plugin__ = TV3Cat

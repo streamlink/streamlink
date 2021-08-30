@@ -168,7 +168,7 @@ class CrunchyrollAPI:
         device_id = str(uuid4())
         # cache the device id
         self.cache.set("device_id", 365 * 24 * 60 * 60)
-        log.debug("Device ID: {0}".format(device_id))
+        log.debug(f"Device ID: {device_id}")
         return device_id
 
     def start_session(self):
@@ -181,7 +181,7 @@ class CrunchyrollAPI:
         if self.auth:
             params["auth"] = self.auth
         self.session_id = self._api_call("start_session", params, schema=_session_schema)
-        log.debug("Session created with ID: {0}".format(self.session_id))
+        log.debug(f"Session created with ID: {self.session_id}")
         return self.session_id
 
     def login(self, username, password):

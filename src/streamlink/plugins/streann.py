@@ -160,7 +160,7 @@ class Streann(Plugin):
                                              deviceId=self.device_id,
                                              token=token,
                                              **config)
-            log.debug("URL={0}".format(hls_url))
+            log.debug(f"URL={hls_url}")
             return HLSStream.parse_variant_playlist(self.session,
                                                     hls_url,
                                                     acceptable_status=(200, 403, 404, 500))

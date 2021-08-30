@@ -42,7 +42,7 @@ class VRTbe(Plugin):
                 if div.attributes.get("data-videotype") == "live":
                     data["stream_url"] = urljoin(urljoin(api_base, "videos/"), div.attributes.get("data-livestream"))
                 else:
-                    resource = "{0}%24{1}".format(div.attributes.get("data-publicationid"), div.attributes.get("data-videoid"))
+                    resource = "{}%24{}".format(div.attributes.get("data-publicationid"), div.attributes.get("data-videoid"))
                     data["stream_url"] = urljoin(urljoin(api_base, "videos/"), resource)
                 return data
 
@@ -57,8 +57,8 @@ class VRTbe(Plugin):
         token_res = self.session.http.post(api_info["token_url"])
         token = self.session.http.json(token_res, schema=self._token_schema)
 
-        log.debug("Got token: {0}".format(token))
-        log.debug("Getting stream data: {0}".format(api_info["stream_url"]))
+        log.debug(f"Got token: {token}")
+        log.debug("Getting stream data: {}".format(api_info["stream_url"]))
         res = self.session.http.get(
             api_info["stream_url"],
             params={
@@ -70,10 +70,10 @@ class VRTbe(Plugin):
         data = self.session.http.json(res, schema=self._stream_schema)
 
         if "code" in data:
-            log.error("{0} ({1})".format(data['message'], data['code']))
+            log.error("{} ({})".format(data['message'], data['code']))
             return
 
-        log.debug("Streams have {0}DRM".format("no " if not data["drm"] else ""))
+        log.debug("Streams have {}DRM".format("no " if not data["drm"] else ""))
 
         for target in data["targetUrls"]:
             if data["drm"]:

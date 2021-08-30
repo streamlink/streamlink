@@ -41,7 +41,7 @@ class QQ(Plugin):
         except Exception:
             raise NoStreamsError(self.url)
 
-        log.debug("URL={0}".format(hls_url))
+        log.debug(f"URL={hls_url}")
         return {"live": HLSStream(self.session, hls_url)}
 
 

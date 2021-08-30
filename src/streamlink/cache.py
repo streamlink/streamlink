@@ -26,7 +26,7 @@ class Cache:
     def _load(self):
         if os.path.exists(self.filename):
             try:
-                with open(self.filename, "r") as fd:
+                with open(self.filename) as fd:
                     self._cache = json.load(fd)
             except Exception:
                 self._cache = {}
@@ -67,7 +67,7 @@ class Cache:
         self._prune()
 
         if self.key_prefix:
-            key = "{0}:{1}".format(self.key_prefix, key)
+            key = f"{self.key_prefix}:{key}"
 
         if expires_at is None:
             expires += time()
@@ -87,7 +87,7 @@ class Cache:
             self._save()
 
         if self.key_prefix:
-            key = "{0}:{1}".format(self.key_prefix, key)
+            key = f"{self.key_prefix}:{key}"
 
         if key in self._cache and "value" in self._cache[key]:
             return self._cache[key]["value"]

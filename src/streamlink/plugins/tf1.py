@@ -34,7 +34,7 @@ class TF1(Plugin):
         m = self.match
         if m:
             channel = m.group(1) or m.group(2)
-            log.debug("Found channel {0}".format(channel))
+            log.debug(f"Found channel {channel}")
             for sformat, url in self.get_stream_urls(channel):
                 try:
                     if sformat == "dash":
@@ -50,8 +50,8 @@ class TF1(Plugin):
                             headers={"User-Agent": useragents.IPHONE},
                         ).items()
                 except PluginError as e:
-                    log.error("Could not open {0} stream".format(sformat))
-                    log.debug("Failed with error: {0}".format(e))
+                    log.error(f"Could not open {sformat} stream")
+                    log.debug(f"Failed with error: {e}")
 
 
 __plugin__ = TF1

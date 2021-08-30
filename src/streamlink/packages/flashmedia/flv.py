@@ -3,7 +3,7 @@ from .compat import is_py2
 from .tag import Header, Tag
 
 
-class FLV(object):
+class FLV:
     def __init__(self, fd=None, strict=False):
         self.fd = fd
         self.header = Header.deserialize(self.fd)
@@ -15,7 +15,7 @@ class FLV(object):
     def __next__(self):
         try:
             tag = Tag.deserialize(self.fd, strict=self.strict)
-        except (IOError, FLVError):
+        except (OSError, FLVError):
             raise StopIteration
 
         return tag

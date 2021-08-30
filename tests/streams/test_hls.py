@@ -78,7 +78,7 @@ class TestHLSVariantPlaylist(unittest.TestCase):
 
     def subject(self, playlist, options=None):
         with requests_mock.Mocker() as mock:
-            url = "http://mocked/{0}/master.m3u8".format(self.id())
+            url = f"http://mocked/{self.id()}/master.m3u8"
             content = self.get_master_playlist(playlist)
             mock.get(url, text=content)
 
@@ -206,7 +206,7 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
     def test_hls_encrypted_aes128_key_uri_override(self):
         aesKey, aesIv, key = self.gen_key(uri="http://real-mocked/{namespace}/encryption.key?foo=bar")
-        aesKeyInvalid = bytes([ord(aesKey[i:i + 1]) ^ 0xFF for i in range(16)])
+        aesKeyInvalid = bytes(ord(aesKey[i:i + 1]) ^ 0xFF for i in range(16))
         _, __, key_invalid = self.gen_key(aesKeyInvalid, aesIv, uri="http://mocked/{namespace}/encryption.key?foo=bar")
 
         # noinspection PyTypeChecker

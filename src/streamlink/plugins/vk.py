@@ -41,7 +41,7 @@ class VK(Plugin):
         self.follow_vk_redirect()
 
         video_id = self.match.group('video_id')
-        log.debug('video ID: {0}'.format(video_id))
+        log.debug(f'video ID: {video_id}')
 
         params = {
             'act': 'show_inline',
@@ -53,7 +53,7 @@ class VK(Plugin):
         for _i in itertags(res.text, 'iframe'):
             if _i.attributes.get('src'):
                 iframe_url = update_scheme(self.url, _i.attributes['src'])
-                log.debug('Found iframe: {0}'.format(iframe_url))
+                log.debug(f'Found iframe: {iframe_url}')
                 yield from self.session.streams(iframe_url).items()
 
         for _i in itertags(res.text.replace('\\', ''), 'source'):
@@ -70,7 +70,7 @@ class VK(Plugin):
                 video_url = _i.attributes['src']
                 m = self._vod_quality_re.search(video_url)
                 if m:
-                    q = '{0}p'.format(m.group(1))
+                    q = f'{m.group(1)}p'
                 yield q, HTTPStream(self.session, video_url)
 
 

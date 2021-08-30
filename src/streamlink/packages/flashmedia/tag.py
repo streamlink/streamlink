@@ -336,7 +336,7 @@ class FrameData(TagData):
 
     def __repr__(self):
         if not isinstance(self.data, Packet):
-            data = ("<{0}>").format(type(self.data).__name__)
+            data = ("<{}>").format(type(self.data).__name__)
         else:
             data = repr(self.data)
 
@@ -428,7 +428,7 @@ class AudioData(TagData):
 
     def __repr__(self):
         if not isinstance(self.data, Packet):
-            data = ("<{0}>").format(type(self.data).__name__)
+            data = ("<{}>").format(type(self.data).__name__)
         else:
             data = repr(self.data)
 
@@ -512,7 +512,7 @@ class VideoData(TagData):
 
     def __repr__(self):
         if not isinstance(self.data, Packet):
-            data = ("<{0}>").format(type(self.data).__name__)
+            data = ("<{}>").format(type(self.data).__name__)
         else:
             data = repr(self.data)
 
@@ -602,7 +602,7 @@ class AVCVideoData(TagData):
 
     def __repr__(self):
         if not isinstance(self.data, Packet):
-            data = ("<{0}>").format(type(self.data).__name__)
+            data = ("<{}>").format(type(self.data).__name__)
         else:
             data = repr(self.data)
 

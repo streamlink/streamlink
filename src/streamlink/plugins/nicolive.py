@@ -118,7 +118,7 @@ class NicoLive(Plugin):
         return nico_streams
 
     def get_wss_api_url(self):
-        _log.debug("Getting video page: {0}".format(self.url))
+        _log.debug(f"Getting video page: {self.url}")
         resp = self.session.http.get(self.url)
 
         try:
@@ -138,12 +138,12 @@ class NicoLive(Plugin):
             _log.debug(e)
             _log.warning("Failed to extract frontend id")
 
-        self.wss_api_url = "{0}&frontend_id={1}".format(self.wss_api_url, self.frontend_id)
+        self.wss_api_url = f"{self.wss_api_url}&frontend_id={self.frontend_id}"
 
-        _log.debug("Video page response code: {0}".format(resp.status_code))
-        _log.trace("Video page response body: {0}".format(resp.text))
-        _log.debug("Got wss_api_url: {0}".format(self.wss_api_url))
-        _log.debug("Got frontend_id: {0}".format(self.frontend_id))
+        _log.debug(f"Video page response code: {resp.status_code}")
+        _log.trace(f"Video page response body: {resp.text}")
+        _log.debug(f"Got wss_api_url: {self.wss_api_url}")
+        _log.debug(f"Got frontend_id: {self.frontend_id}")
 
         return self.wss_api_url.startswith("wss://")
 
@@ -167,12 +167,12 @@ class NicoLive(Plugin):
             proxy_url = self.session.get_option("http-proxy")
         proxy_options = parse_proxy_url(proxy_url)
         if proxy_options.get('http_proxy_host'):
-            _log.debug("Using proxy ({0}://{1}:{2})".format(
+            _log.debug("Using proxy ({}://{}:{})".format(
                 proxy_options.get('proxy_type') or "http",
                 proxy_options.get('http_proxy_host'),
                 proxy_options.get('http_proxy_port') or 80))
 
-        _log.debug("Connecting: {0}".format(url))
+        _log.debug(f"Connecting: {url}")
         if logger.root.level <= logger.TRACE:
             websocket.enableTrace(True, _log)
 
@@ -187,7 +187,7 @@ class NicoLive(Plugin):
 
         self._ws = websocket.WebSocketApp(
             url,
-            header=["User-Agent: {0}".format(useragents.CHROME)],
+            header=[f"User-Agent: {useragents.CHROME}"],
             on_open=on_open,
             on_message=on_message,
             on_error=on_error)
@@ -286,7 +286,7 @@ class NicoLive(Plugin):
 
             elif command == "watchinginterval":
                 self.watching_interval = int(body["params"][0])
-                _log.debug("Got watching_interval: {0}".format(
+                _log.debug("Got watching_interval: {}".format(
                     self.watching_interval))
 
                 if self.watching_interval_worker_thread is None:
@@ -344,9 +344,9 @@ class NicoLive(Plugin):
             resp = self.session.http.post(_login_url, data=payload,
                                           params=_login_url_params)
 
-            _log.debug("Login response code: {0}".format(resp.status_code))
-            _log.trace("Login response body: {0}".format(resp.text))
-            _log.debug("Cookies: {0}".format(
+            _log.debug(f"Login response code: {resp.status_code}")
+            _log.trace(f"Login response body: {resp.text}")
+            _log.debug("Cookies: {}".format(
                 self.session.http.cookies.get_dict()))
 
             if self.session.http.cookies.get("user_session") is None:
@@ -356,7 +356,7 @@ class NicoLive(Plugin):
                 except Exception as e:
                     _log.debug(e)
                     msg = "unknown reason"
-                _log.warning("Login failed. {0}".format(msg))
+                _log.warning(f"Login failed. {msg}")
                 return False
             else:
                 _log.info("Logged in.")
@@ -387,10 +387,10 @@ class NicoHLSStream(HLSStream):
 
 def extract_text(text, left, right):
     """Extract text from HTML"""
-    result = re.findall("{0}(.*?){1}".format(left, right), text)
+    result = re.findall(f"{left}(.*?){right}", text)
     if len(result) != 1:
         raise Exception("Failed to extract string. "
-                        "Expected 1, found {0}".format(len(result)))
+                        "Expected 1, found {}".format(len(result)))
     return result[0]
 
 

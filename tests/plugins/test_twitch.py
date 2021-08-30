@@ -51,7 +51,7 @@ class Segment(_Segment):
         self.date = DATETIME_BASE + timedelta(seconds=num)
 
     def build(self, namespace):
-        return "#EXT-X-PROGRAM-DATE-TIME:{0}\n{1}".format(
+        return "#EXT-X-PROGRAM-DATE-TIME:{}\n{}".format(
             self.date.strftime(DATETIME_FORMAT),
             super().build(namespace)
         )
@@ -59,7 +59,7 @@ class Segment(_Segment):
 
 class SegmentPrefetch(Segment):
     def build(self, namespace):
-        return "#EXT-X-TWITCH-PREFETCH:{0}".format(self.url(namespace))
+        return f"#EXT-X-TWITCH-PREFETCH:{self.url(namespace)}"
 
 
 class _TwitchHLSStreamWriter(EventedHLSStreamWriter, TwitchHLSStreamWriter):
@@ -436,7 +436,7 @@ class TestTwitchHosting(unittest.TestCase):
 
             session = Streamlink()
             Twitch.bind(session, "tests.plugins.test_twitch")
-            plugin = Twitch("https://twitch.tv/{0}".format(channel))
+            plugin = Twitch(f"https://twitch.tv/{channel}")
             plugin.options.set("disable-hosting", disable)
 
             res = plugin._switch_to_hosted_channel()

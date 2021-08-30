@@ -44,7 +44,7 @@ class RadioNet(Plugin):
 
         stream_urls = set()
         for stream in streams['streams']:
-            log.trace('{0!r}'.format(stream))
+            log.trace(f'{stream!r}')
             url = stream['url']
 
             url_no_scheme = urlunparse(urlparse(url)._replace(scheme=''))

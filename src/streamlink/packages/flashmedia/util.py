@@ -10,7 +10,7 @@ def byte(ordinal):
     return bytes((ordinal,))
 
 
-class flagproperty(object):
+class flagproperty:
     def __init__(self, flags, attr, boolean=False):
         self.flags = flags
         self.attr = attr
@@ -84,8 +84,8 @@ def chunked_read(fd, length, chunk_size=8192, exception=IOError):
     while data_left > 0:
         try:
             data = fd.read(min(8192, data_left))
-        except IOError as err:
-            raise exception("Failed to read data: {0}".format(str(err)))
+        except OSError as err:
+            raise exception(f"Failed to read data: {str(err)}")
 
         if not data:
             raise exception("End of stream before required data could be read")

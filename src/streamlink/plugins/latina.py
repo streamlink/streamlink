@@ -28,7 +28,7 @@ class Latina(Plugin):
                 stream_url = div.attributes.get("data-stream")
 
         if stream_url:
-            log.debug("URL={0}".format(stream_url))
+            log.debug(f"URL={stream_url}")
             return HLSStream.parse_variant_playlist(self.session,
                                                     stream_url,
                                                     name_fmt="{pixels}_{bitrate}")

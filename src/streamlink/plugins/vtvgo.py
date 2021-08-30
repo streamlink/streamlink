@@ -43,7 +43,7 @@ class VTVgo(Plugin):
         })
         params = self.session.http.get(self.url, schema=self._schema_params)
 
-        log.trace('{0!r}'.format(params))
+        log.trace(f'{params!r}')
         hls_url = self.session.http.post(self.AJAX_URL, data=dict(params), schema=self._schema_stream_url)
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)

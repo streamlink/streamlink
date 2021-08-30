@@ -37,7 +37,7 @@ class EarthCam(Plugin):
 
         cam_data = json_base["cam"][cam_name]
 
-        log.debug("Found cam for {0} - {1}".format(cam_data["group"], cam_data["title"]))
+        log.debug("Found cam for {} - {}".format(cam_data["group"], cam_data["title"]))
 
         is_live = (cam_data["liveon"] == "true" and cam_data["defaulttab"] == "live")
 
@@ -69,7 +69,7 @@ class EarthCam(Plugin):
 
         # RTMP stream
         if rtmp_playpath:
-            log.debug("RTMP URL: {0}{1}".format(rtmp_url, rtmp_playpath))
+            log.debug(f"RTMP URL: {rtmp_url}{rtmp_playpath}")
 
             params = {
                 "rtmp": rtmp_url,
@@ -86,7 +86,7 @@ class EarthCam(Plugin):
             hls_url = hls_domain + hls_playpath
             hls_url = update_scheme(self.url, hls_url)
 
-            log.debug("HLS URL: {0}".format(hls_url))
+            log.debug(f"HLS URL: {hls_url}")
 
             yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 

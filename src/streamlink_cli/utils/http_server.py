@@ -45,7 +45,7 @@ class HTTPServer:
     @property
     def urls(self):
         for addr in self.addresses:
-            yield "http://{0}:{1}/".format(addr, self.port)
+            yield f"http://{addr}:{self.port}/"
 
     @property
     def url(self):
@@ -81,7 +81,7 @@ class HTTPServer:
         if req.command not in ("GET", "HEAD"):
             conn.send(b"HTTP/1.1 501 Not Implemented\r\n")
             conn.close()
-            raise OSError("Invalid request method: {0}".format(req.command))
+            raise OSError(f"Invalid request method: {req.command}")
 
         try:
             conn.send(b"HTTP/1.1 200 OK\r\n")

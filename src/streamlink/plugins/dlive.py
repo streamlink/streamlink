@@ -71,7 +71,7 @@ class DLive(Plugin):
         return self.title
 
     def _get_streams_video(self):
-        log.debug("Getting video HLS streams for {0}".format(self.video))
+        log.debug(f"Getting video HLS streams for {self.video}")
         try:
             hls_url = self.session.http.get(self.url, schema=self._schema_videoPlaybackUrl)
             if hls_url is None:
@@ -82,7 +82,7 @@ class DLive(Plugin):
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
     def _get_streams_live(self):
-        log.debug("Getting live HLS streams for {0}".format(self.channel))
+        log.debug(f"Getting live HLS streams for {self.channel}")
         try:
             data = json.dumps({"query": """query {{
                 userByDisplayName(displayname:"{displayname}") {{
@@ -102,7 +102,7 @@ class DLive(Plugin):
         self.author = self.channel
         self.title = res["livestream"]["title"]
 
-        hls_url = "https://live.prd.dlive.tv/hls/live/{0}.m3u8".format(res["username"])
+        hls_url = "https://live.prd.dlive.tv/hls/live/{}.m3u8".format(res["username"])
 
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 

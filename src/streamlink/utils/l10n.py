@@ -14,7 +14,7 @@ except ImportError:  # pragma: no cover
 
 DEFAULT_LANGUAGE = "en"
 DEFAULT_COUNTRY = "US"
-DEFAULT_LANGUAGE_CODE = "{0}_{1}".format(DEFAULT_LANGUAGE, DEFAULT_COUNTRY)
+DEFAULT_LANGUAGE_CODE = f"{DEFAULT_LANGUAGE}_{DEFAULT_COUNTRY}"
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class Country:
                 c = countries.get(country)
                 return Country(c.alpha2, c.alpha3, c.numeric, c.name, c.apolitical_name)
         except (LookupError, KeyError):
-            raise LookupError("Invalid country code: {0}".format(country))
+            raise LookupError(f"Invalid country code: {country}")
 
     def __eq__(self, other):
         return (
@@ -47,7 +47,7 @@ class Country:
         )
 
     def __str__(self):
-        return "Country({0!r}, {1!r}, {2!r}, {3!r}, official_name={4!r})".format(
+        return "Country({!r}, {!r}, {!r}, {!r}, official_name={!r})".format(
             self.alpha2,
             self.alpha3,
             self.numeric,
@@ -97,7 +97,7 @@ class Language:
                     raise KeyError(language)
                 return Language(lang.alpha2, lang.part3, lang.name, lang.part2b or lang.part2t)
         except (LookupError, KeyError):
-            raise LookupError("Invalid language code: {0}".format(language))
+            raise LookupError(f"Invalid language code: {language}")
 
     def __eq__(self, other):
         return (
@@ -107,7 +107,7 @@ class Language:
         )
 
     def __str__(self):
-        return "Language({0!r}, {1!r}, {2!r}, bibliographic={3!r})".format(
+        return "Language({!r}, {!r}, {!r}, bibliographic={!r})".format(
             self.alpha2,
             self.alpha3,
             self.name,
@@ -130,7 +130,7 @@ class Localization:
     def _parse_locale_code(self, language_code):
         parts = language_code.split("_", 1)
         if len(parts) != 2 or len(parts[0]) != 2 or len(parts[1]) != 2:
-            raise LookupError("Invalid language code: {0}".format(language_code))
+            raise LookupError(f"Invalid language code: {language_code}")
         return self.get_language(parts[0]), self.get_country(parts[1])
 
     @language_code.setter
@@ -156,7 +156,7 @@ class Localization:
                 self._language_code = DEFAULT_LANGUAGE_CODE
             else:
                 raise
-        log.debug("Language code: {0}".format(self._language_code))
+        log.debug(f"Language code: {self._language_code}")
 
     def equivalent(self, language=None, country=None):
         equivalent = True

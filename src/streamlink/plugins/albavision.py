@@ -67,11 +67,11 @@ class Albavision(Plugin):
         if token_out.endswith("OK"):
             return token_out[:-2]
         else:
-            log.error("Invalid site token: {0} => {1}".format(token_in, token_out))
+            log.error(f"Invalid site token: {token_in} => {token_out}")
 
     def _get_live_url_token(self, channelnumber):
         m = self._token_input_re.findall(self.page.text)
-        log.debug("Token input: {0}".format(m[channelnumber]))
+        log.debug(f"Token input: {m[channelnumber]}")
         if m:
             date = int(time.time() // 3600)
             return self.transform_token(m[channelnumber], date) or self.transform_token(m[channelnumber], date - 1)
@@ -102,12 +102,12 @@ class Albavision(Plugin):
             else:
                 live_channel = "ATV"
         token = self._get_token(channelnumber)
-        log.debug("token {0}".format(token))
+        log.debug(f"token {token}")
         if playlist_url:
             log.debug("Found playlist URL in the page")
         else:
             if live_channel:
-                log.debug("Live channel: {0}".format(live_channel))
+                log.debug(f"Live channel: {live_channel}")
                 player_url = self._channel_urls[live_channel] + quote(token)
                 page = self.session.http.get(player_url, raise_for_status=False)
                 if "block access from your country." in page.text:
@@ -118,7 +118,7 @@ class Albavision(Plugin):
                 log.error("Could not find the live channel")
 
         if playlist_url:
-            stream_url = "{0}?{1}".format(playlist_url, urlencode({"iut": token}))
+            stream_url = "{}?{}".format(playlist_url, urlencode({"iut": token}))
             return HLSStream.parse_variant_playlist(self.session, stream_url, headers={"referer": player_url})
 
 

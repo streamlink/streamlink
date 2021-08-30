@@ -83,8 +83,8 @@ class AbemaTVLicenseAdapter(BaseAdapter):
         cid = jsonres['cid']
         k = jsonres['k']
 
-        res = sum([self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
-                  for i in range(len(k))])
+        res = sum(self.STRTABLE.find(k[i]) * (58 ** (len(k) - 1 - i))
+                  for i in range(len(k)))
         encvideokey = struct.pack('>QQ', res >> 64, res & 0xffffffffffffffff)
 
         # HKEY:
@@ -245,7 +245,7 @@ class AbemaTV(Plugin):
                 return {}
             playlisturl = self._SLOTM3U8.format(slots)
 
-        log.debug("URL={0}".format(playlisturl))
+        log.debug(f"URL={playlisturl}")
 
         # hook abematv private protocol
         self.session.http.mount("abematv-license://",

@@ -96,7 +96,7 @@ class Pluzz(Plugin):
         res = self.session.http.get(self.GEO_URL)
         geo = self.session.http.json(res, schema=self._geo_schema)
         country_code = geo['reponse']['geo_info']['country_code']
-        log.debug('Country: {0}'.format(country_code))
+        log.debug(f'Country: {country_code}')
 
         # Retrieve URL page and search for video ID
         res = self.session.http.get(self.url)
@@ -111,7 +111,7 @@ class Pluzz(Plugin):
         if match is None:
             return
         video_id = match.group('video_id')
-        log.debug('Video ID: {0}'.format(video_id))
+        log.debug(f'Video ID: {video_id}')
 
         res = self.session.http.get(self.API_URL.format(video_id))
         videos = self.session.http.json(res, schema=self._api_schema)
@@ -124,7 +124,7 @@ class Pluzz(Plugin):
 
         streams = []
         for video in videos['videos']:
-            log.trace('{0!r}'.format(video))
+            log.trace(f'{video!r}')
             video_url = video['url']
 
             # Check whether video format is available

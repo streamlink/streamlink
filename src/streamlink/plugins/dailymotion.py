@@ -51,7 +51,7 @@ class DailyMotion(Plugin):
         media = self.session.http.json(res, schema=_media_schema)
 
         if media.get("error"):
-            log.error("Failed to get stream: {0}".format(media["error"]["title"]))
+            log.error("Failed to get stream: {}".format(media["error"]["title"]))
             return
 
         for quality, streams in media['qualities'].items():
@@ -97,7 +97,7 @@ class DailyMotion(Plugin):
             media_id = self.get_live_id(username)
 
         if media_id:
-            log.debug("Found media ID: {0}".format(media_id))
+            log.debug(f"Found media ID: {media_id}")
             return self._get_streams_from_media(media_id)
 
 

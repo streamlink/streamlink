@@ -34,7 +34,7 @@ class App17(Plugin):
         try:
             res = self.session.http.post(self.API_URL.format(channel), data=data)
             res_json = self.session.http.json(res, schema=self._api_schema)
-            log.trace("{0!r}".format(res_json))
+            log.trace(f"{res_json!r}")
             http_url = res_json[0]["url"]
         except Exception as e:
             log.info("Stream currently unavailable.")

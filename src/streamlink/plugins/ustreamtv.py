@@ -64,7 +64,7 @@ class UHSClient:
 
     @referrer.setter
     def referrer(self, referrer):
-        log.info("Updating referrer to: {0}".format(referrer))
+        log.info(f"Updating referrer to: {referrer}")
         self._referrer = referrer
         self.reconnect()
 
@@ -74,7 +74,7 @@ class UHSClient:
 
     @cluster.setter
     def cluster(self, cluster):
-        log.info("Switching cluster to: {0}".format(cluster))
+        log.info(f"Switching cluster to: {cluster}")
         self._cluster = cluster
         self.reconnect()
 
@@ -94,14 +94,14 @@ class UHSClient:
     def connect(self):
         proxy_options = self.parse_proxy_url(self._proxy_url)
         if proxy_options.get('http_proxy_host'):
-            log.debug("Connecting to {0} via proxy ({1}://{2}:{3})".format(self.host,
+            log.debug("Connecting to {} via proxy ({}://{}:{})".format(self.host,
                                                                            proxy_options.get('proxy_type') or "http",
                                                                            proxy_options.get('http_proxy_host'),
                                                                            proxy_options.get('http_proxy_port') or 80))
         else:
-            log.debug("Connecting to {0}".format(self.host))
+            log.debug(f"Connecting to {self.host}")
         self._ws = websocket.create_connection(self.host,
-                                               header=["User-Agent: {0}".format(useragents.CHROME)],
+                                               header=[f"User-Agent: {useragents.CHROME}"],
                                                origin="https://www.ustream.tv",
                                                **proxy_options)
 
@@ -127,20 +127,20 @@ class UHSClient:
         return self.connect()
 
     def generate_rsid(self):
-        return "{0:x}:{1:x}".format(randint(0, 1e10), randint(0, 1e10))
+        return f"{randint(0, 1e10):x}:{randint(0, 1e10):x}"
 
     def generate_rpin(self):
-        return "_rpin.{0}".format(randint(0, 1e15))
+        return f"_rpin.{randint(0, 1e15)}"
 
     def send(self, command, **args):
-        log.debug("Sending `{0}` command".format(command))
-        log.trace("{0!r}".format({"cmd": command, "args": [args]}))
+        log.debug(f"Sending `{command}` command")
+        log.trace("{!r}".format({"cmd": command, "args": [args]}))
         return self._ws.send(json.dumps({"cmd": command, "args": [args]}))
 
     def recv(self):
         data = parse_json(self._ws.recv(), schema=self.api_schema)
-        log.debug("Received `{0}` command".format(data["cmd"]))
-        log.trace("{0!r}".format(data))
+        log.debug("Received `{}` command".format(data["cmd"]))
+        log.trace(f"{data!r}")
         return data
 
     def disconnect(self):
@@ -302,7 +302,7 @@ class UHSStream(Stream):
                             except websocket._exceptions.WebSocketAddressException:
                                 # no connection available
                                 reconnect_time_ws = 5
-                                log.error("Local network issue, websocket reconnecting in {0}s".format(reconnect_time_ws))
+                                log.error(f"Local network issue, websocket reconnecting in {reconnect_time_ws}s")
                                 sleep(reconnect_time_ws)
                     else:
                         raise
@@ -410,7 +410,7 @@ class UStreamTV(Plugin):
                     res["streams"] = []
                     for stream in flv_segmented["streams"]:
                         res["streams"] += [dict(
-                            stream_name="{0}p".format(stream["videoCodec"]["height"]),
+                            stream_name="{}p".format(stream["videoCodec"]["height"]),
                             path=urljoin(path,
                                          stream["segmentUrl"].replace("%", "%s")),
                             hashes=flv_segmented["hashes"],
@@ -424,7 +424,7 @@ class UStreamTV(Plugin):
                     # - flv
                     # - mp4
                     # - mp4/segmented
-                    raise PluginError("Stream format is not supported: {0}".format(
+                    raise PluginError("Stream format is not supported: {}".format(
                         ", ".join(data["streamFormats"].keys())))
             elif "stream" in arg and arg["stream"]["contentAvailable"] is False:
                 log.error("This stream is currently offline")
@@ -470,8 +470,8 @@ class UStreamTV(Plugin):
                     elif data["cmd"] == "reject":
                         self.handle_reject(api, data["args"])
                     else:
-                        log.debug("Unexpected `{0}` command".format(data["cmd"]))
-                        log.trace("{0!r}".format(data))
+                        log.debug("Unexpected `{}` command".format(data["cmd"]))
+                        log.trace(f"{data!r}")
                 except ModuleInfoNoStreams:
                     break
 

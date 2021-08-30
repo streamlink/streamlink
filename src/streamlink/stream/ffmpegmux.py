@@ -28,18 +28,18 @@ class MuxedStream(Stream):
         # only update the maps values if they haven't been set
         update_maps = not maps
         for i, substream in enumerate(self.substreams):
-            log.debug("Opening {0} substream".format(substream.shortname()))
+            log.debug(f"Opening {substream.shortname()} substream")
             if update_maps:
                 maps.append(len(fds))
             fds.append(substream and substream.open())
 
         for i, subtitle in enumerate(self.subtitles.items()):
             language, substream = subtitle
-            log.debug("Opening {0} subtitle stream".format(substream.shortname()))
+            log.debug(f"Opening {substream.shortname()} subtitle stream")
             if update_maps:
                 maps.append(len(fds))
             fds.append(substream and substream.open())
-            metadata["s:s:{0}".format(i)] = ["language={0}".format(language)]
+            metadata[f"s:s:{i}"] = [f"language={language}"]
 
         self.options["metadata"] = metadata
         self.options["maps"] = maps
@@ -59,7 +59,7 @@ class FFMPEGMuxer(StreamIO):
 
     @staticmethod
     def copy_to_pipe(self, stream, pipe):
-        log.debug("Starting copy to pipe: {0}".format(pipe.path))
+        log.debug(f"Starting copy to pipe: {pipe.path}")
         pipe.open()
         while not stream.closed:
             try:
@@ -69,13 +69,13 @@ class FFMPEGMuxer(StreamIO):
                 else:
                     break
             except OSError:
-                log.error("Pipe copy aborted: {0}".format(pipe.path))
+                log.error(f"Pipe copy aborted: {pipe.path}")
                 return
         try:
             pipe.close()
         except OSError:  # might fail closing, but that should be ok for the pipe
             pass
-        log.debug("Pipe copy complete: {0}".format(pipe.path))
+        log.debug(f"Pipe copy complete: {pipe.path}")
 
     def __init__(self, session, *streams, **options):
         if not self.is_usable(session):
@@ -116,11 +116,11 @@ class FFMPEGMuxer(StreamIO):
 
         for stream, data in metadata.items():
             for datum in data:
-                stream_id = ":{0}".format(stream) if stream else ""
-                self._cmd.extend(["-metadata{0}".format(stream_id), datum])
+                stream_id = f":{stream}" if stream else ""
+                self._cmd.extend([f"-metadata{stream_id}", datum])
 
         self._cmd.extend(['-f', ofmt, outpath])
-        log.debug("ffmpeg command: {0}".format(' '.join(self._cmd)))
+        log.debug("ffmpeg command: {}".format(' '.join(self._cmd)))
         self.close_errorlog = False
 
         if session.options.get("ffmpeg-verbose"):

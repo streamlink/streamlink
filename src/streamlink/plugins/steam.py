@@ -31,7 +31,7 @@ class SteamLoginFailed(Exception):
 class SteamBroadcastPlugin(Plugin):
     _watch_broadcast_url = "https://steamcommunity.com/broadcast/watch/"
     _get_broadcast_url = "https://steamcommunity.com/broadcast/getbroadcastmpd/"
-    _user_agent = "streamlink/{}".format(streamlink.__version__)
+    _user_agent = f"streamlink/{streamlink.__version__}"
     _broadcast_schema = Schema({
         "success": validate.any("ready", "unavailable", "waiting", "waiting_to_start", "waiting_for_start"),
         "retry": int,
@@ -176,11 +176,11 @@ class SteamBroadcastPlugin(Plugin):
             return False
 
     def login(self, email, password):
-        log.info("Attempting to login to Steam as {}".format(email))
+        log.info(f"Attempting to login to Steam as {email}")
         return self.dologin(email, password)
 
     def _get_broadcast_stream(self, steamid, viewertoken=0, sessionid=None):
-        log.debug("Getting broadcast stream: sessionid={0}".format(sessionid))
+        log.debug(f"Getting broadcast stream: sessionid={sessionid}")
         res = self.session.http.get(self._get_broadcast_url,
                                     params=dict(broadcastid=0,
                                                 steamid=steamid,
@@ -192,7 +192,7 @@ class SteamBroadcastPlugin(Plugin):
         streamdata = None
         if self.get_option("email"):
             if self.login(self.get_option("email"), self.get_option("password")):
-                log.info("Logged in as {0}".format(self.get_option("email")))
+                log.info("Logged in as {}".format(self.get_option("email")))
                 self.save_cookies(lambda c: "steamMachineAuth" in c.name)
 
         # Handle steam.tv URLs
@@ -221,7 +221,7 @@ class SteamBroadcastPlugin(Plugin):
                 return
             else:
                 r = streamdata["retry"] / 1000.0
-                log.info("Waiting for stream, will retry again in {} seconds...".format(r))
+                log.info(f"Waiting for stream, will retry again in {r} seconds...")
                 time.sleep(r)
 
 

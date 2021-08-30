@@ -61,7 +61,7 @@ class Reuters(Plugin):
             if script.attributes.get('type') == 'text/javascript' and '#rtvIframe' in script.text:
                 m = self._id_re.search(self.url)
                 if m and m.group('id'):
-                    log.debug('ID: {0}'.format(m.group('id')))
+                    log.debug('ID: {}'.format(m.group('id')))
                     res = self.session.http.get(self._iframe_url.format(m.group('id')))
 
         for script in itertags(res.text, 'script'):
@@ -72,8 +72,8 @@ class Reuters(Plugin):
                 self.title = data['title']
                 for item in data['items']:
                     if data['title'] == item['title']:
-                        log.trace('{0!r}'.format(item))
-                        log.debug('Type: {0}'.format(item['type']))
+                        log.trace(f'{item!r}')
+                        log.debug('Type: {}'.format(item['type']))
                         for res in item['resources']:
                             if res['mimeType'] == 'application/x-mpegURL':
                                 return res['uri']
@@ -91,7 +91,7 @@ class Reuters(Plugin):
         hls_url = self._get_data()
         if not hls_url:
             return
-        log.debug('URL={0}'.format(hls_url))
+        log.debug(f'URL={hls_url}')
         return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 

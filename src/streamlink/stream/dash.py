@@ -32,7 +32,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
             if segment.available_at > now:
                 time_to_wait = (segment.available_at - now).total_seconds()
                 fname = os.path.basename(urlparse(segment.url).path)
-                log.debug("Waiting for segment: {fname} ({wait:.01f}s)".format(fname=fname, wait=time_to_wait))
+                log.debug(f"Waiting for segment: {fname} ({time_to_wait:.01f}s)")
                 sleep_until(segment.available_at)
 
             if segment.range:
@@ -41,7 +41,7 @@ class DASHStreamWriter(SegmentedStreamWriter):
                     end = start + length - 1
                 else:
                     end = ""
-                headers["Range"] = "bytes={0}-{1}".format(start, end)
+                headers["Range"] = f"bytes={start}-{end}"
 
             return self.session.http.get(segment.url,
                                          timeout=self.timeout,
@@ -57,10 +57,10 @@ class DASHStreamWriter(SegmentedStreamWriter):
             if not self.closed:
                 self.reader.buffer.write(chunk)
             else:
-                log.warning("Download of segment: {} aborted".format(segment.url))
+                log.warning(f"Download of segment: {segment.url} aborted")
                 return
 
-        log.debug("Download of segment: {} complete".format(segment.url))
+        log.debug(f"Download of segment: {segment.url} complete")
 
 
 class DASHStreamWorker(SegmentedStreamWorker):
@@ -110,7 +110,7 @@ class DASHStreamWorker(SegmentedStreamWorker):
             return
 
         self.reader.buffer.wait_free()
-        log.debug("Reloading manifest ({0}:{1})".format(self.reader.representation_id, self.reader.mime_type))
+        log.debug(f"Reloading manifest ({self.reader.representation_id}:{self.reader.mime_type})")
         res = self.session.http.get(self.mpd.url, exception=StreamError, **self.stream.args)
 
         new_mpd = MPD(self.session.http.xml(res, ignore_ns=True),
@@ -136,7 +136,7 @@ class DASHStreamReader(SegmentedStreamReader):
         SegmentedStreamReader.__init__(self, stream, *args, **kwargs)
         self.mime_type = mime_type
         self.representation_id = representation_id
-        log.debug("Opening DASH reader for: {0} ({1})".format(self.representation_id, self.mime_type))
+        log.debug(f"Opening DASH reader for: {self.representation_id} ({self.mime_type})")
 
 
 class DASHStream(Stream):
@@ -189,7 +189,7 @@ class DASHStream(Stream):
         # Search for suitable video and audio representations
         for aset in mpd.periods[0].adaptationSets:
             if aset.contentProtection:
-                raise PluginError("{} is protected by DRM".format(url))
+                raise PluginError(f"{url} is protected by DRM")
             for rep in aset.representations:
                 if rep.mimeType.startswith("video"):
                     video.append(rep)
@@ -221,7 +221,7 @@ class DASHStream(Stream):
             # filter by the first language that appears
             lang = audio[0] and audio[0].lang
 
-        log.debug("Available languages for DASH audio streams: {0} (using: {1})".format(
+        log.debug("Available languages for DASH audio streams: {} (using: {})".format(
             ", ".join(available_languages) or "NONE",
             lang or "n/a"
         ))
@@ -238,7 +238,7 @@ class DASHStream(Stream):
             if vid:
                 stream_name.append("{:0.0f}{}".format(vid.height or vid.bandwidth_rounded, "p" if vid.height else "k"))
             if audio and len(audio) > 1:
-                stream_name.append("a{:0.0f}k".format(aud.bandwidth))
+                stream_name.append(f"a{aud.bandwidth:0.0f}k")
             ret.append(('+'.join(stream_name), stream))
 
         # rename duplicate streams

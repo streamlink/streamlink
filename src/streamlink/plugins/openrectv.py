@@ -64,9 +64,9 @@ class OPENRECtv(Plugin):
         res = self.session.http.post(self.login_url, data={"mail": email, "password": password})
         data = self.session.http.json(res, self._login_schema)
         if data["status"] == 0:
-            log.debug("Logged in as {0}".format(data["data"]["user_name"]))
+            log.debug("Logged in as {}".format(data["data"]["user_name"]))
         else:
-            log.error("Failed to login: {0}".format(data["error_message"]))
+            log.error("Failed to login: {}".format(data["error_message"]))
         return data["status"] == 0
 
     def _get_movie_data(self):
@@ -81,7 +81,7 @@ class OPENRECtv(Plugin):
             log.debug("Got valid detail response")
             return data
         else:
-            log.error("Failed to get video stream: {0}".format(data["message"]))
+            log.error("Failed to get video stream: {}".format(data["message"]))
 
     def get_author(self):
         mdata = self._get_movie_data()
@@ -100,7 +100,7 @@ class OPENRECtv(Plugin):
         mdata = self._get_movie_data()
 
         if mdata:
-            log.debug("Found video: {0} ({1})".format(mdata["title"], mdata["id"]))
+            log.debug("Found video: {} ({})".format(mdata["title"], mdata["id"]))
             m3u8_file = None
             # streaming
             if mdata["onair_status"] == 1:

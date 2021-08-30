@@ -43,7 +43,7 @@ class ZTNRClient:
         return self.decrypt(res.content)
 
     def get_cdn_list(self, vid, manager="apedemak", vtype="video", lang="es", schema=None):
-        data = self.request("{id}_{manager}_{type}_{lang}".format(id=vid, manager=manager, type=vtype, lang=lang))
+        data = self.request(f"{vid}_{manager}_{vtype}_{lang}")
         if schema:
             return schema.validate(data)
         else:

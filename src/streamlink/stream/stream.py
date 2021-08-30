@@ -41,10 +41,10 @@ class Stream:
         return cls.__shortname__
 
     def to_url(self):
-        raise TypeError("{0} cannot be converted to a URL".format(self.shortname()))
+        raise TypeError(f"{self.shortname()} cannot be converted to a URL")
 
     def to_manifest_url(self):
-        raise TypeError("{0} cannot be converted to a URL".format(self.shortname()))
+        raise TypeError(f"{self.shortname()} cannot be converted to a URL")
 
 
 class StreamIO(io.IOBase):

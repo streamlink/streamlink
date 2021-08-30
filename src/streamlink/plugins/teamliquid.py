@@ -21,7 +21,7 @@ class Teamliquid(Plugin):
         stream_url_match = stream_address_re.search(res.text)
         if stream_url_match:
             stream_url = stream_url_match.group(1)
-            log.info("Attempting to play streams from {0}".format(stream_url))
+            log.info(f"Attempting to play streams from {stream_url}")
             p = urlparse(stream_url)
             if p.netloc.endswith("afreecatv.com"):
                 self.stream_weight = AfreecaTV.stream_weight

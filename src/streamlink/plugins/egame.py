@@ -52,7 +52,7 @@ class Egame(Plugin):
             url = d["playUrl"]
             match = bitrate_re.search(url)
             if match:
-                stream_name = "{0}k".format(int(match.group(1)))
+                stream_name = f"{int(match.group(1))}k"
             else:
                 stream_name = "source"
             yield stream_name, HTTPStream(self.session, url)

@@ -146,7 +146,7 @@ class UsherService:
         self.session = session
 
     def _create_url(self, endpoint, **extra_params):
-        url = "https://usher.ttvnw.net{0}".format(endpoint)
+        url = f"https://usher.ttvnw.net{endpoint}"
         params = {
             "player": "twitchweb",
             "p": int(random() * 999999),
@@ -163,11 +163,11 @@ class UsherService:
         return req.url
 
     def channel(self, channel, **extra_params):
-        return self._create_url("/api/channel/hls/{0}.m3u8".format(channel),
+        return self._create_url(f"/api/channel/hls/{channel}.m3u8",
                                 **extra_params)
 
     def video(self, video_id, **extra_params):
-        return self._create_url("/vod/{0}".format(video_id), **extra_params)
+        return self._create_url(f"/vod/{video_id}", **extra_params)
 
 
 class TwitchAPI:
@@ -531,18 +531,18 @@ class Twitch(Plugin):
             except PluginError:
                 return False
 
-            log.info("{0} is hosting {1}".format(self.channel, login))
+            log.info(f"{self.channel} is hosting {login}")
             if disabled:
                 log.info("hosting was disabled by command line option")
                 return True
 
             if login in hosted_chain:
                 loop = " -> ".join(hosted_chain + [login])
-                log.error("A loop of hosted channels has been detected, cannot find a playable stream. ({0})".format(loop))
+                log.error(f"A loop of hosted channels has been detected, cannot find a playable stream. ({loop})")
                 return True
 
             hosted_chain.append(login)
-            log.info("switching to {0}".format(login))
+            log.info(f"switching to {login}")
             self.channel = login
             self.author = display_name
 
@@ -604,7 +604,7 @@ class Twitch(Plugin):
 
         for name in restricted_bitrates:
             if name not in streams:
-                log.warning("The quality '{0}' is not available since it requires a subscription.".format(name))
+                log.warning(f"The quality '{name}' is not available since it requires a subscription.")
 
         return streams
 

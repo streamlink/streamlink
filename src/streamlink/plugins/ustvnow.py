@@ -114,7 +114,7 @@ class USTVNow(Plugin):
             data = res.json()
             if data['status']:
                 self._token = data['response']['sessionId']
-                log.debug("New token: {}".format(self._token))
+                log.debug(f"New token: {self._token}")
             else:
                 log.error("Token acquisition failed: {details} ({detail})".format(**data['error']))
                 raise PluginError("could not obtain token")

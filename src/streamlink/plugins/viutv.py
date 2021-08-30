@@ -38,7 +38,7 @@ class ViuTV(Plugin):
             for stream_url in data.get("asset", {}).get("hls", {}).get("adaptive", []):
                 return HLSStream.parse_variant_playlist(self.session, stream_url)
         else:
-            log.error("Failed to get stream URL: {0}".format(data['responseCode']))
+            log.error("Failed to get stream URL: {}".format(data['responseCode']))
 
 
 __plugin__ = ViuTV

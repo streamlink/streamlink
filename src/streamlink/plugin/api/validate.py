@@ -107,7 +107,7 @@ def length(length):
     def min_len(value):
         if not len(value) >= length:
             raise ValueError(
-                "Minimum length is {0} but value is {1}".format(length, len(value))
+                f"Minimum length is {length} but value is {len(value)}"
             )
         return True
 
@@ -119,7 +119,7 @@ def startswith(string):
     def starts_with(value):
         validate(text, value)
         if not value.startswith(string):
-            raise ValueError("'{0}' does not start with '{1}'".format(value, string))
+            raise ValueError(f"'{value}' does not start with '{string}'")
         return True
 
     return starts_with
@@ -130,7 +130,7 @@ def endswith(string):
     def ends_with(value):
         validate(text, value)
         if not value.endswith(string):
-            raise ValueError("'{0}' does not end with '{1}'".format(value, string))
+            raise ValueError(f"'{value}' does not end with '{string}'")
         return True
 
     return ends_with
@@ -141,7 +141,7 @@ def contains(string):
     def contains_str(value):
         validate(text, value)
         if string not in value:
-            raise ValueError("'{0}' does not contain '{1}'".format(value, string))
+            raise ValueError(f"'{value}' does not contain '{string}'")
         return True
 
     return contains_str
@@ -248,17 +248,17 @@ def url(**attributes):
         validate(text, value)
         parsed = urlparse(value)
         if not parsed.netloc:
-            raise ValueError("'{0}' is not a valid URL".format(value))
+            raise ValueError(f"'{value}' is not a valid URL")
 
         for name, schema in attributes.items():
             if not _hasattr(parsed, name):
-                raise ValueError("Invalid URL attribute '{0}'".format(name))
+                raise ValueError(f"Invalid URL attribute '{name}'")
 
             try:
                 validate(schema, _getattr(parsed, name))
             except ValueError as err:
                 raise ValueError(
-                    "Unable to validate URL attribute '{0}': {1}".format(
+                    "Unable to validate URL attribute '{}': {}".format(
                         name, err
                     )
                 )
@@ -278,7 +278,7 @@ def xml_find(xpath):
         validate(ET.iselement, value)
         value = value.find(xpath)
         if value is None:
-            raise ValueError("XPath '{0}' did not return an element".format(xpath))
+            raise ValueError(f"XPath '{xpath}' did not return an element")
 
         return validate(ET.iselement, value)
 
@@ -308,12 +308,12 @@ def validate(schema, value):
         if schema(value):
             return value
         else:
-            raise ValueError("{0}({1!r}) is not true".format(schema.__name__, value))
+            raise ValueError(f"{schema.__name__}({value!r}) is not true")
 
     if schema == value:
         return value
     else:
-        raise ValueError("{0!r} does not equal {1!r}".format(value, schema))
+        raise ValueError(f"{value!r} does not equal {schema!r}")
 
 
 @validate.register(any)
@@ -369,12 +369,12 @@ def validate_dict(schema, value):
             break
         else:
             if key not in value:
-                raise ValueError("Key '{0}' not found in {1!r}".format(key, value))
+                raise ValueError(f"Key '{key}' not found in {value!r}")
 
             try:
                 new[key] = validate(subschema, value[key])
             except ValueError as err:
-                raise ValueError("Unable to validate key '{0}': {1}".format(key, err))
+                raise ValueError(f"Unable to validate key '{key}': {err}")
 
     return new
 
@@ -385,7 +385,7 @@ def validate_type(schema, value):
         return value
     else:
         raise ValueError(
-            "Type of {0!r} should be '{1}' but is '{2}'".format(
+            "Type of {!r} should be '{}' but is '{}'".format(
                 value, schema.__name__, type(value).__name__
             )
         )
@@ -400,19 +400,19 @@ def validate_xml_element(schema, value):
         try:
             new.attrib = validate(schema.attrib, value.attrib)
         except ValueError as err:
-            raise ValueError("Unable to validate XML attributes: {0}".format(err))
+            raise ValueError(f"Unable to validate XML attributes: {err}")
 
     if schema.tag is not None:
         try:
             new.tag = validate(schema.tag, value.tag)
         except ValueError as err:
-            raise ValueError("Unable to validate XML tag: {0}".format(err))
+            raise ValueError(f"Unable to validate XML tag: {err}")
 
     if schema.text is not None:
         try:
             new.text = validate(schema.text, value.text)
         except ValueError as err:
-            raise ValueError("Unable to validate XML text: {0}".format(err))
+            raise ValueError(f"Unable to validate XML text: {err}")
 
     for child in value:
         new.append(child)
@@ -426,7 +426,7 @@ def validate_attr(schema, value):
 
     for attr, schema in schema.schema.items():
         if not _hasattr(value, attr):
-            raise ValueError("Attribute '{0}' not found on object '{1}'".format(
+            raise ValueError("Attribute '{}' not found on object '{}'".format(
                 attr, value
             ))
 
@@ -442,7 +442,7 @@ def validate_union_from(schema, value):
 
 @singledispatch
 def validate_union(schema, value):
-    raise ValueError("Invalid union type: {0}".format(type(schema).__name__))
+    raise ValueError(f"Invalid union type: {type(schema).__name__}")
 
 
 @validate_union.register(dict)
@@ -459,7 +459,7 @@ def validate_union_dict(schema, value):
             if optional_:
                 continue
 
-            raise ValueError("Unable to validate union '{0}': {1}".format(key, err))
+            raise ValueError(f"Unable to validate union '{key}': {err}")
 
     return new
 
@@ -487,7 +487,7 @@ class Schema:
         try:
             return validate(self.schema, value)
         except ValueError as err:
-            raise exception("Unable to validate {0}: {1}".format(name, err))
+            raise exception(f"Unable to validate {name}: {err}")
 
 
 @validate.register(Schema)

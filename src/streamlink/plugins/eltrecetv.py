@@ -22,7 +22,7 @@ class ElTreceTV(Plugin):
                 }
                 res = self.session.http.get('https://api.iamat.com/metadata/atcodes/eltrece')
                 yt_id = parse_json(res.text)["atcodes"][0]["context"]["ahora"]["vivo"]["youtubeVideo"]
-                yt_url = "https://www.youtube.com/watch?v={0}".format(yt_id)
+                yt_url = f"https://www.youtube.com/watch?v={yt_id}"
                 return self.session.streams(yt_url)
             except BaseException:
                 log.info("Live content is temporarily unavailable. Please try again later.")
@@ -39,7 +39,7 @@ class ElTreceTV(Plugin):
                     return
                 entry_id = parse_json(match.group(1).replace("&quot;", '"'))["entryId"]
                 hls_url = "https://vodgc.com/p/111/sp/11100/playManifest/entryId/" \
-                          "{0}/format/applehttp/protocol/https/a.m3u8".format(entry_id)
+                          "{}/format/applehttp/protocol/https/a.m3u8".format(entry_id)
                 return HLSStream.parse_variant_playlist(self.session, hls_url)
             except BaseException:
                 log.error("The requested VOD content is unavailable.")

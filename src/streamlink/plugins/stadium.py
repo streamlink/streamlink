@@ -48,7 +48,7 @@ class Stadium(Plugin):
                 policy_key = self._policy_key_re.search(res.text).group(1)
 
                 headers = {
-                    "Accept": "application/json;pk={0}".format(policy_key),
+                    "Accept": f"application/json;pk={policy_key}",
                 }
                 url = self._API_URL.format(
                     data_account=data_account, data_video_id=data_video_id, data_ad_config_id=data_ad_config_id
@@ -58,10 +58,9 @@ class Stadium(Plugin):
 
                 for stream in streams:
                     if stream["type"] == "application/x-mpegURL":
-                        for s in HLSStream.parse_variant_playlist(self.session, stream["src"]).items():
-                            yield s
+                        yield from HLSStream.parse_variant_playlist(self.session, stream["src"]).items()
                     else:
-                        log.warning("Unexpected stream type: '{0}'".format(stream["type"]))
+                        log.warning("Unexpected stream type: '{}'".format(stream["type"]))
 
 
 __plugin__ = Stadium

@@ -14,7 +14,7 @@ from streamlink_cli.constants import (
 )
 from streamlink_cli.utils import find_default_player
 
-_printable_re = re.compile(r"[{0}]".format(printable))
+_printable_re = re.compile(fr"[{printable}]")
 _option_re = re.compile(r"""
     (?P<name>[A-z-]+) # A option name, valid characters are A to z and dash.
     \s*
@@ -488,7 +488,7 @@ def build_parser():
 
         Stream types that can be converted into a playable URL are:
 
-        - {0}
+        - {}
 
         Make sure your player can handle the stream type when using this.
         """.format("\n        - ".join(STREAM_PASSTHROUGH))

@@ -105,7 +105,7 @@ class BBCiPlayer(Plugin):
         return vpid
 
     def find_tvip(self, url, master=False):
-        log.debug("Looking for {0} tvip on {1}".format("master" if master else "", url))
+        log.debug("Looking for {} tvip on {}".format("master" if master else "", url))
         res = self.session.http.get(url)
         m = self.state_re.search(res.text)
         data = m and parse_json(m.group(1))

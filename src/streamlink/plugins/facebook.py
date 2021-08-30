@@ -56,13 +56,13 @@ class Facebook(Plugin):
             stream_url = match.group("url")
             if "\\/" in stream_url:
                 # if the URL is json encoded, decode it
-                stream_url = parse_json("\"{}\"".format(stream_url))
+                stream_url = parse_json(f"\"{stream_url}\"")
             if ".mpd" in stream_url:
                 yield from DASHStream.parse_manifest(self.session, stream_url).items()
             elif ".mp4" in stream_url:
                 yield match.group(1), HTTPStream(self.session, stream_url)
             else:
-                log.debug("Non-dash/mp4 stream: {0}".format(stream_url))
+                log.debug(f"Non-dash/mp4 stream: {stream_url}")
 
         match = self._dash_manifest_re.search(res.text)
         if match:

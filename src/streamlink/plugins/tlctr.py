@@ -23,7 +23,7 @@ class TLCtr(Plugin):
             return
 
         hls_url = m.group('url')
-        log.debug('URL={0}'.format(hls_url))
+        log.debug(f'URL={hls_url}')
         streams = HLSStream.parse_variant_playlist(self.session, hls_url)
         if not streams:
             return {'live': HLSStream(self.session, hls_url)}

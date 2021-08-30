@@ -61,15 +61,15 @@ class WWENetwork(Plugin):
                         "Accept": "application/json",
                         "Realm": "dce.wwe"})
         if self.auth_token:
-            headers["Authorization"] = "Bearer {0}".format(self.auth_token)
+            headers["Authorization"] = f"Bearer {self.auth_token}"
 
         kwargs["raise_for_status"] = False
-        log.debug("API request: {0} {1}".format(method, url))
+        log.debug(f"API request: {method} {url}")
         res = self.session.http.request(method, url, headers=headers, **kwargs)
         data = self.session.http.json(res)
 
         if "status" in data and data["status"] != 200:
-            log.debug("API request failed: {0}:{1} ({2})".format(
+            log.debug("API request failed: {}:{} ({})".format(
                 data["status"],
                 data.get("code"),
                 "; ".join(data.get("messages", []))
@@ -77,7 +77,7 @@ class WWENetwork(Plugin):
         return data
 
     def login(self, email, password):
-        log.debug("Attempting login as {0}".format(email))
+        log.debug(f"Attempting login as {email}")
         # sets some required cookies to login
         data = self.request('POST', self.login_url,
                             data=json.dumps({"id": email, "secret": password}),
@@ -140,14 +140,14 @@ class WWENetwork(Plugin):
         try:
             start_point = int(float(dict(parse_qsl(urlparse(self.url).query)).get("startPoint", 0.0)))
             if start_point > 0:
-                log.info("Stream will start at {0}".format(seconds_to_hhmmss(start_point)))
+                log.info(f"Stream will start at {seconds_to_hhmmss(start_point)}")
         except ValueError:
             start_point = 0
 
         content_id = self._get_video_id()
 
         if content_id:
-            log.debug("Found content ID: {0}".format(content_id))
+            log.debug(f"Found content ID: {content_id}")
             info = self._get_media_info(content_id)
             if info.get("hlsUrl"):
                 yield from HLSStream.parse_variant_playlist(

@@ -73,13 +73,13 @@ class SBScokr(Plugin):
             if channel.get('type') in ('TV', 'Radio'):
                 channels[channel['channelid']] = channel['channelname']
 
-        log.info('Available IDs: {0}'.format(', '.join(
-            '{0} ({1})'.format(key, value) for key, value in channels.items())))
+        log.info('Available IDs: {}'.format(', '.join(
+            f'{key} ({value})' for key, value in channels.items())))
         if not user_channel_id:
             log.error('No channel selected, use --sbscokr-id CHANNELID')
             return
         elif user_channel_id and user_channel_id not in channels.keys():
-            log.error('Channel ID "{0}" is not available.'.format(user_channel_id))
+            log.error(f'Channel ID "{user_channel_id}" is not available.')
             return
 
         params = {

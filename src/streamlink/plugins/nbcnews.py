@@ -58,13 +58,13 @@ class NBCNews(Plugin):
         video_id = self.session.http.get(self.url, schema=self.json_data_schema)
         if video_id is None:
             return
-        log.debug('API ID: {0}'.format(video_id))
+        log.debug(f'API ID: {video_id}')
 
         api_url = self.api_url.format(video_id)
         stream = self.session.http.get(api_url, schema=self.api_schema)
-        log.trace('{0!r}'.format(stream))
+        log.trace(f'{stream!r}')
         if stream['type'].lower() != 'live':
-            log.error('Invalid stream type "{0}"'.format(stream['type']))
+            log.error('Invalid stream type "{}"'.format(stream['type']))
             return
 
         json_post_data = {

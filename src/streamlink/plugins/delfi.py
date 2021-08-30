@@ -42,9 +42,9 @@ class Delfi(Plugin):
                 elif x['type'] == "application/dash+xml":
                     yield from DASHStream.parse_manifest(self.session, src).items()
                 elif x['type'] == "video/mp4":
-                    yield "{0}p".format(x['res']), HTTPStream(self.session, src)
+                    yield "{}p".format(x['res']), HTTPStream(self.session, src)
         else:
-            log.error("Failed to get streams: {0} ({1})".format(
+            log.error("Failed to get streams: {} ({})".format(
                 data['message'], data['code']
             ))
 
@@ -53,7 +53,7 @@ class Delfi(Plugin):
         for div in itertags(res.text, 'div'):
             if div.attributes.get("data-provider") == "dvideo":
                 video_id = div.attributes.get("data-id")
-                log.debug("Found video ID: {0}".format(video_id))
+                log.debug(f"Found video ID: {video_id}")
                 yield from self._get_streams_api(video_id)
 
 

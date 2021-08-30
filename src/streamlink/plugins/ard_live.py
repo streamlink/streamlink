@@ -57,7 +57,7 @@ class ARDLive(Plugin):
         log.debug(f"Player URL: '{data_url}'")
         res = self.session.http.get(data_url)
         mediainfo = parse_json(res.text, name="MEDIAINFO", schema=self._mediainfo_schema)
-        log.trace("Mediainfo: {0!r}".format(mediainfo))
+        log.trace(f"Mediainfo: {mediainfo!r}")
 
         for media in mediainfo["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:
@@ -70,10 +70,10 @@ class ARDLive(Plugin):
                 if ".m3u8" in stream_:
                     yield from HLSStream.parse_variant_playlist(self.session, stream_).items()
                 elif ".mp4" in stream_ and ".f4m" not in stream_:
-                    yield "{0}".format(self._QUALITY_MAP[stream["_quality"]]), HTTPStream(self.session, stream_)
+                    yield "{}".format(self._QUALITY_MAP[stream["_quality"]]), HTTPStream(self.session, stream_)
                 else:
                     if ".f4m" not in stream_:
-                        log.error("Unexpected stream type: '{0}'".format(stream_))
+                        log.error(f"Unexpected stream type: '{stream_}'")
 
 
 __plugin__ = ARDLive

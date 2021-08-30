@@ -76,7 +76,7 @@ class Argument:
         self.is_global = is_global
 
     def _name(self, plugin):
-        return self._argument_name or _normalise_argument_name("{0}-{1}".format(plugin, self.name))
+        return self._argument_name or _normalise_argument_name(f"{plugin}-{self.name}")
 
     def argument_name(self, plugin):
         return f"--{self.name if self.is_global else self._name(plugin)}"
@@ -137,7 +137,7 @@ class Arguments:
         for reqname in argument.requires:
             required = self.get(reqname)
             if not required:
-                raise KeyError("{0} is not a valid argument for this plugin".format(reqname))
+                raise KeyError(f"{reqname} is not a valid argument for this plugin")
 
             if required.name in results:
                 raise RuntimeError("cycle detected in plugin argument config")

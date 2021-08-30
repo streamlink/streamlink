@@ -74,7 +74,7 @@ class BFMTV(Plugin):
             url = source.attributes.get('src')
             if url:
                 p_url = urlparse(url)
-                if p_url.path.endswith(('.mp3')):
+                if p_url.path.endswith('.mp3'):
                     audio_url = url
 
         # Audio VOD

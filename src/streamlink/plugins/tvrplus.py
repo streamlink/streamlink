@@ -27,7 +27,7 @@ class TVRPlus(Plugin):
         if stream_url:
             stream_url = list(set(stream_url))
             for url in stream_url:
-                log.debug("URL={0}".format(url))
+                log.debug(f"URL={url}")
                 yield from HLSStream.parse_variant_playlist(self.session, url, headers=headers).items()
 
 

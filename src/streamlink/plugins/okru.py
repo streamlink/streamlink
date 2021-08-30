@@ -77,7 +77,7 @@ class OKru(Plugin):
         try:
             data = self.session.http.get(self.url, schema=self._data_schema)
         except PluginError:
-            log.error('unable to validate _data_schema for {0}'.format(self.url))
+            log.error(f'unable to validate _data_schema for {self.url}')
             return
 
         metadata = data.get('metadata')
@@ -87,7 +87,7 @@ class OKru(Plugin):
                                               schema=self._metadata_schema)
 
         if metadata:
-            log.trace('{0!r}'.format(metadata))
+            log.trace(f'{metadata!r}')
             for hls_url in [metadata.get('hlsManifestUrl'),
                             metadata.get('hlsMasterPlaylistUrl')]:
                 if hls_url is not None:
@@ -98,7 +98,7 @@ class OKru(Plugin):
                     http_name = http_stream['name']
                     http_url = http_stream['url']
                     try:
-                        http_name = '{0}p'.format(self.QUALITY_WEIGHTS[http_name])
+                        http_name = f'{self.QUALITY_WEIGHTS[http_name]}p'
                     except KeyError:
                         pass
                     yield http_name, HTTPStream(self.session, http_url)

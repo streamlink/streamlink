@@ -43,10 +43,10 @@ class Experience:
     def request(self, method, url, *args, **kwargs):
         headers = kwargs.pop("headers", {})
         if self.token:
-            headers.update({"Authorization": "Token {0}".format(self.token)})
+            headers.update({"Authorization": f"Token {self.token}"})
             self.session.http.cookies.update({"src_token": self.token})
 
-        log.debug("Making {0}request to {1}".format("authorized " if self.token else "", url))
+        log.debug("Making {}request to {}".format("authorized " if self.token else "", url))
 
         res = self.session.http.request(method, url, *args, headers=headers, **kwargs)
         if "_Incapsula_Resource" in res.text:
@@ -72,7 +72,7 @@ class Experience:
 
     def _update(self):
         api_url = self.show_api_url.format(experience_id=self.experience_id)
-        log.debug("Requesting experience data: {0}".format(api_url))
+        log.debug(f"Requesting experience data: {api_url}")
         res = self.get(api_url)
         if res:
             data = self.session.http.json(res)
@@ -142,7 +142,7 @@ class Experience:
                 return input.attributes.get("value")
 
     def login(self, email, password):
-        log.debug("Attempting to login as {0}".format(email))
+        log.debug(f"Attempting to login as {email}")
         r = self.post(self.login_api_url,
                       data={'username': email, 'password': password, self.CSRF_NAME: self.login_csrf()},
                       raise_for_status=False,
@@ -238,13 +238,13 @@ class FunimationNow(Plugin):
                         sub_lang = Localization.get_language(subtitle["language"]).alpha3
                         # pick the first suitable subtitle stream
                         subtitles = subtitles or HTTPStream(self.session, subtitle["src"])
-                        stream_metadata["s:s:0"] = ["language={0}".format(sub_lang)]
-                    stream_metadata["s:a:0"] = ["language={0}".format(exp.language_code)]
+                        stream_metadata["s:s:0"] = [f"language={sub_lang}"]
+                    stream_metadata["s:a:0"] = [f"language={exp.language_code}"]
 
                 sources = exp.sources()
                 if 'errors' in sources:
                     for error in sources['errors']:
-                        log.error("{0} : {1}".format(error['title'], error['detail']))
+                        log.error("{} : {}".format(error['title'], error['detail']))
                     return
 
                 for item in sources["items"]:

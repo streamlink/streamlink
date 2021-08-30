@@ -40,7 +40,7 @@ class HTTPStream(Stream):
         self.buffered = buffered
 
     def __repr__(self):
-        return "<HTTPStream({0!r})>".format(self.url)
+        return f"<HTTPStream({self.url!r})>"
 
     def __json__(self):
         method = self.args.get("method", "GET")

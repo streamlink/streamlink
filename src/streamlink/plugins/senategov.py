@@ -82,10 +82,10 @@ class SenateGov(Plugin):
             log.error("Could not find the ISVP URL")
             return
         else:
-            log.debug("ISVP URL: {0}".format(isvp_url))
+            log.debug(f"ISVP URL: {isvp_url}")
 
         stream_url, start_offset = self._isvp_to_m3u8(isvp_url)
-        log.debug("Start offset is: {0}s".format(start_offset))
+        log.debug(f"Start offset is: {start_offset}s")
         return HLSStream.parse_variant_playlist(self.session, stream_url, start_offset=start_offset)
 
     def _get_isvp_url(self):

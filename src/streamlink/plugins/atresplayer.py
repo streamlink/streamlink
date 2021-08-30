@@ -51,12 +51,12 @@ class AtresPlayer(Plugin):
     def _get_streams(self):
         api_urls = self.session.http.get(self.url, schema=self.channel_id_schema)
         _api_url = list(api_urls)[0]
-        log.debug("API URL: {0}".format(_api_url))
+        log.debug(f"API URL: {_api_url}")
         player_api_url = self.session.http.get(_api_url, schema=self.player_api_schema)
         for api_url in player_api_url:
-            log.debug("Player API URL: {0}".format(api_url))
+            log.debug(f"Player API URL: {api_url}")
             for source in self.session.http.get(api_url, schema=self.stream_schema):
-                log.debug("Stream source: {0} ({1})".format(source['src'], source.get("type", "n/a")))
+                log.debug("Stream source: {} ({})".format(source['src'], source.get("type", "n/a")))
 
                 if "type" not in source or source["type"] == "application/vnd.apple.mpegurl":
                     streams = HLSStream.parse_variant_playlist(self.session, source["src"])

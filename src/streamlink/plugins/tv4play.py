@@ -38,7 +38,7 @@ class TV4Play(Plugin):
     def get_video_id(self):
         if self.video_id is None:
             self.video_id = self.match.group("video_id")
-            log.debug("Found video ID: {0}".format(self.video_id))
+            log.debug(f"Found video ID: {self.video_id}")
         return self.video_id
 
     def get_metadata(self):
@@ -79,7 +79,7 @@ class TV4Play(Plugin):
         log.debug("Found stream data")
         data = self.session.http.json(res)
         hls_url = data["playbackItem"]["manifestUrl"]
-        log.debug("URL={0}".format(hls_url))
+        log.debug(f"URL={hls_url}")
         yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
 

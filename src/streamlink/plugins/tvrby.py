@@ -41,7 +41,7 @@ class TVRBy(Plugin):
         player_url = m.group("url")
         res = self.session.http.get(player_url)
         stream_urls = self.stream_schema.validate(res.text)
-        log.debug("Found {0} stream URL{1}".format(len(stream_urls), "" if len(stream_urls) == 1 else "s"))
+        log.debug("Found {} stream URL{}".format(len(stream_urls), "" if len(stream_urls) == 1 else "s"))
 
         for stream_url in stream_urls:
             yield from HLSStream.parse_variant_playlist(self.session, stream_url).items()

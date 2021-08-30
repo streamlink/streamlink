@@ -38,7 +38,7 @@ def main(url, quality='best', fps=30.0):
     face_cascade = cv2.CascadeClassifier(os.path.join(cv2.haarcascades, 'haarcascade_frontalface_default.xml'))
 
     stream_url = stream_to_url(url, quality)
-    log.info("Loading stream {0}".format(stream_url))
+    log.info(f"Loading stream {stream_url}")
     cap = cv2.VideoCapture(stream_url)
 
     frame_time = int((1.0 / fps) * 1000.0)

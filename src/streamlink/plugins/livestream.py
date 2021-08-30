@@ -33,7 +33,7 @@ class Livestream(Plugin):
         stream_info = parse_json(m.group(1), "config JSON",
                                  schema=self._stream_config_schema)
 
-        log.trace("stream_info: {0!r}".format(stream_info))
+        log.trace(f"stream_info: {stream_info!r}")
         if not (stream_info and stream_info["is_live"]):
             log.debug("Stream might be Off Air")
             return

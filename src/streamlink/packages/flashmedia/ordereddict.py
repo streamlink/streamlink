@@ -203,8 +203,8 @@ class OrderedDict(dict):
         _repr_running[call_key] = 1
         try:
             if not self:
-                return '%s()' % (self.__class__.__name__,)
-            return '%s(%r)' % (self.__class__.__name__, self.items())
+                return f'{self.__class__.__name__}()'
+            return f'{self.__class__.__name__}({self.items()!r})'
         finally:
             del _repr_running[call_key]
 

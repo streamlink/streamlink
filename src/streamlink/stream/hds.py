@@ -376,8 +376,8 @@ class HDSStream(Stream):
         )
 
     def __repr__(self):
-        return ("<HDSStream({0!r}, {1!r}, {2!r},"
-                " metadata={3!r}, timeout={4!r})>").format(self.baseurl,
+        return ("<HDSStream({!r}, {!r}, {!r},"
+                " metadata={!r}, timeout={!r})>").format(self.baseurl,
                                                            self.url,
                                                            self.bootstrap,
                                                            self.metadata,
@@ -441,7 +441,7 @@ class HDSStream(Stream):
         if manifest.findtext("drmAdditionalHeader"):
             log.debug(f"Omitting HDS stream protected by DRM: {url}")
             if raise_for_drm:
-                raise PluginError("{} is protected by DRM".format(url))
+                raise PluginError(f"{url} is protected by DRM")
             log.warning("Some or all streams are unavailable as they are protected by DRM")
             return {}
 
@@ -583,9 +583,9 @@ class HDSStream(Stream):
             if len(modified) < 40:
                 cache.set(key, dict(hash=hash, modified=modified))
 
-        msg = "st=0~exp=9999999999~acl=*~data={0}!{1}".format(data, hash)
+        msg = f"st=0~exp=9999999999~acl=*~data={data}!{hash}"
         auth = hmac.new(AKAMAIHD_PV_KEY, msg.encode("ascii"), sha256)
-        pvtoken = "{0}~hmac={1}".format(msg, auth.hexdigest())
+        pvtoken = f"{msg}~hmac={auth.hexdigest()}"
 
         # The "hdntl" parameter can be accepted as a cookie or passed in the
         # query string, but the "pvtoken" parameter can only be in the query

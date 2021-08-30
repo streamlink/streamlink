@@ -39,10 +39,10 @@ class RaiPlay(Plugin):
             return
 
         json_url = urlunparse(urlparse(self.url)._replace(path=json_url))
-        log.debug("Found JSON URL: {0}".format(json_url))
+        log.debug(f"Found JSON URL: {json_url}")
 
         stream_url = self.session.http.get(json_url, schema=self._schema_json)
-        log.debug("Found stream URL: {0}".format(stream_url))
+        log.debug(f"Found stream URL: {stream_url}")
 
         res = self.session.http.request("HEAD", stream_url)
         # status code will be 200 even if geo-blocked, so check the returned content-type

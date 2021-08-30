@@ -82,7 +82,7 @@ class Ceskatelevize(Plugin):
                 log.debug('Cannot find playlist info in the player url, do next try with new API')
                 return _fallback_api()
 
-        log.trace('{0!r}'.format(info))
+        log.trace(f'{info!r}')
 
         data = {
             'playlist[0][type]': info['type'],
@@ -102,7 +102,7 @@ class Ceskatelevize(Plugin):
             headers=headers
         )
         json_data = self.session.http.json(response, schema=self._playlist_url_schema)
-        log.trace('{0!r}'.format(json_data))
+        log.trace(f'{json_data!r}')
 
         if json_data['url'] in ['Error', 'error_region']:
             log.error('This stream is not available')
@@ -111,7 +111,7 @@ class Ceskatelevize(Plugin):
         # fetch playlist
         response = self.session.http.post(json_data['url'])
         json_data = self.session.http.json(response, schema=self._playlist_schema)
-        log.trace('{0!r}'.format(json_data))
+        log.trace(f'{json_data!r}')
         playlist = json_data['playlist'][0]['streamUrls']['main']
         return HLSStream.parse_variant_playlist(self.session, playlist)
 
@@ -212,7 +212,7 @@ class CeskatelevizeAPI2:
             if vod_prio and pl['type'] != 'VOD':
                 continue
 
-            log.trace('{0!r}'.format(info))
+            log.trace(f'{info!r}')
             if pl['type'] == 'LIVE':
                 data = {
                     "contentType": "live",
@@ -250,11 +250,11 @@ class CeskatelevizeAPI2:
         data = json.dumps(data)
         response = self.session.http.post(
             self._player_api,
-            data="data={}".format(quote(data)),
+            data=f"data={quote(data)}",
             headers=headers
         )
         json_data = self.session.http.json(response, schema=self._playlist_schema)
-        log.trace('{0!r}'.format(json_data))
+        log.trace(f'{json_data!r}')
         playlist = json_data['RESULT']['playlist'][0]['streamUrls']['main']
         yield from DASHStream.parse_manifest(self.session, playlist).items()
 

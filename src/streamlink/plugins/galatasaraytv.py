@@ -21,7 +21,7 @@ class GalatasarayTV(Plugin):
         match = self.playervars_re.search(res.text)
         if match:
             stream_url = match.group(2)
-            log.debug("URL={0}".format(stream_url))
+            log.debug(f"URL={stream_url}")
             return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 

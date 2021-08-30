@@ -34,13 +34,13 @@ class LineLive(Plugin):
         for stream in json["liveHLSURLs"]:
             url = json["liveHLSURLs"][stream]
             if url is not None:
-                yield "{0}p.".format(stream), HLSStream(self.session, url)
+                yield f"{stream}p.", HLSStream(self.session, url)
 
     def _get_vod_streams(self, json):
         for stream in json["archivedHLSURLs"]:
             url = json["archivedHLSURLs"][stream]
             if url is not None:
-                yield "{0}p.".format(stream), HLSStream(self.session, url)
+                yield f"{stream}p.", HLSStream(self.session, url)
 
     def _get_streams(self):
         channel = self.match.group("channel")

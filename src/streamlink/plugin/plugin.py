@@ -119,7 +119,7 @@ def stream_sorting_filter(expr, stream_weight):
     match = re.match(r"(?P<op><=|>=|<|>)?(?P<value>[\w+]+)", expr)
 
     if not match:
-        raise PluginError("Invalid filter expression: {0}".format(expr))
+        raise PluginError(f"Invalid filter expression: {expr}")
 
     op, value = match.group("op", "value")
     op = FILTER_OPERATORS.get(op, operator.eq)
@@ -281,7 +281,7 @@ class Plugin:
             )
 
             if issue:
-                msg += "More info: https://github.com/streamlink/streamlink/issues/{0}".format(issue)
+                msg += f"More info: https://github.com/streamlink/streamlink/issues/{issue}"
 
             raise PluginError(msg)
 
@@ -366,17 +366,17 @@ class Plugin:
             if existing:
                 existing_stream_type = type(existing).shortname()
                 if existing_stream_type != stream_type:
-                    name = "{0}_{1}".format(name, stream_type)
+                    name = f"{name}_{stream_type}"
 
                 if name in streams:
-                    name = "{0}_alt".format(name)
+                    name = f"{name}_alt"
                     num_alts = len(list(filter(lambda n: n.startswith(name), streams.keys())))
 
                     # We shouldn't need more than 2 alt streams
                     if num_alts >= 2:
                         continue
                     elif num_alts > 0:
-                        name = "{0}{1}".format(name, num_alts + 1)
+                        name = f"{name}{num_alts + 1}"
 
             # Validate stream name and discard the stream if it's bad.
             match = re.match("([A-z0-9_+]+)", name)
@@ -462,7 +462,7 @@ class Plugin:
             expires = default_expires
             if cookie_dict['expires']:
                 expires = int(cookie_dict['expires'] - time.time())
-            key = "__cookie:{0}:{1}:{2}:{3}".format(cookie.name,
+            key = "__cookie:{}:{}:{}:{}".format(cookie.name,
                                                     cookie.domain,
                                                     cookie.port_specified and cookie.port or "80",
                                                     cookie.path_specified and cookie.path or "*")
@@ -470,7 +470,7 @@ class Plugin:
             saved.append(cookie.name)
 
         if saved:
-            self.logger.debug("Saved cookies: {0}".format(", ".join(saved)))
+            self.logger.debug("Saved cookies: {}".format(", ".join(saved)))
         return saved
 
     def load_cookies(self):
@@ -491,7 +491,7 @@ class Plugin:
                 restored.append(cookie.name)
 
         if restored:
-            self.logger.debug("Restored cookies: {0}".format(", ".join(restored)))
+            self.logger.debug("Restored cookies: {}".format(", ".join(restored)))
         return restored
 
     def clear_cookies(self, cookie_filter=None):
@@ -524,7 +524,7 @@ class Plugin:
             try:
                 return self._user_input_requester.ask(prompt)
             except OSError as e:
-                raise FatalPluginError("User input error: {0}".format(e))
+                raise FatalPluginError(f"User input error: {e}")
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")
@@ -534,7 +534,7 @@ class Plugin:
             try:
                 return self._user_input_requester.ask_password(prompt)
             except OSError as e:
-                raise FatalPluginError("User input error: {0}".format(e))
+                raise FatalPluginError(f"User input error: {e}")
             except NotImplementedError:  # ignore this and raise a FatalPluginError
                 pass
         raise FatalPluginError("This plugin requires user input, however it is not supported on this platform")

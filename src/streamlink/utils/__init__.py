@@ -39,7 +39,7 @@ def verifyjson(json, key):
         raise PluginError("JSON result is not a dict")
 
     if key not in json:
-        raise PluginError("Missing '{0}' key in JSON".format(key))
+        raise PluginError(f"Missing '{key}' key in JSON")
 
     return json[key]
 
@@ -74,7 +74,7 @@ def parse_json(data, name="JSON", exception=PluginError, schema=None):
         else:
             snippet = data
 
-        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
+        raise exception(f"Unable to parse {name}: {err} ({snippet})")
 
     if schema:
         json_data = schema.validate(json_data, name=name, exception=exception)
@@ -106,7 +106,7 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
         if len(snippet) > 35:
             snippet = snippet[:35] + " ..."
 
-        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
+        raise exception(f"Unable to parse {name}: {err} ({snippet})")
 
     if schema:
         tree = schema.validate(tree, name=name, exception=exception)
@@ -143,7 +143,7 @@ def rtmpparse(url):
         app = split[0]
 
     if len(parse.query) > 0:
-        playpath += "?{parse.query}".format(parse=parse)
+        playpath += f"?{parse.query}"
 
     tcurl = "{scheme}://{netloc}/{app}".format(scheme=parse.scheme,
                                                netloc=netloc,

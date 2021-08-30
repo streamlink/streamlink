@@ -57,7 +57,7 @@ class OlympicChannel(Plugin):
 
         parsed = urlparse(stream_url)
         api_url = urljoin(self.url, self._token_api_path.format(url=stream_url,
-                          netloc="{0}://{1}".format(parsed.scheme, parsed.netloc), time=int(time())))
+                          netloc=f"{parsed.scheme}://{parsed.netloc}", time=int(time())))
         stream_url = self.session.http.get(api_url, schema=self._stream_schema, headers={"Referer": self.url})
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 

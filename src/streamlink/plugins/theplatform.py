@@ -28,7 +28,7 @@ class ThePlatform(Plugin):
                 })
             else:
                 error = self.session.http.json(res)
-                log.error("{0}: {1}".format(
+                log.error("{}: {}".format(
                     error.get("title", "Error"),
                     error.get("description", "An unknown error occurred")
                 ))

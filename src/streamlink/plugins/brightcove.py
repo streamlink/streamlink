@@ -61,7 +61,7 @@ class BrightcovePlayer:
 
     def __init__(self, session, account_id, player_id="default_default"):
         self.session = session
-        log.debug("Creating player for account {0} (player_id={1})".format(account_id, player_id))
+        log.debug(f"Creating player for account {account_id} (player_id={player_id})")
         self.account_id = account_id
         self.player_id = player_id
 
@@ -79,7 +79,7 @@ class BrightcovePlayer:
             headers={
                 "User-Agent": useragents.CHROME,
                 "Referer": self.player_url(video_id),
-                "Accept": "application/json;pk={0}".format(policy_key)
+                "Accept": f"application/json;pk={policy_key}"
             }
         )
         return self.session.http.json(res, schema=self.schema)
@@ -96,18 +96,18 @@ class BrightcovePlayer:
         return policy_key
 
     def get_streams(self, video_id):
-        log.debug("Finding streams for video: {0}".format(video_id))
+        log.debug(f"Finding streams for video: {video_id}")
         policy_key = self.policy_key(video_id)
-        log.debug("Found policy key: {0}".format(policy_key))
+        log.debug(f"Found policy key: {policy_key}")
         data = self.video_info(video_id, policy_key)
         headers = {"Referer": self.player_url(video_id)}
 
         for source in data.get("sources"):
             # determine quality name
             if source.get("height"):
-                q = "{0}p".format(source.get("height"))
+                q = "{}p".format(source.get("height"))
             elif source.get("avg_bitrate"):
-                q = "{0}k".format(source.get("avg_bitrate") // 1000)
+                q = "{}k".format(source.get("avg_bitrate") // 1000)
             else:
                 q = "live"
             if ((source.get("type") == "application/x-mpegURL" and source.get("src"))
@@ -137,7 +137,7 @@ class BrightcovePlayer:
         amf_message = AMFMessage("com.brightcove.experience.ExperienceRuntimeFacade.getDataForExperience",
                                  "/1",
                                  [
-                                     ''.join(["{0:02x}".format(random.randint(0, 255)) for _ in range(20)]),  # random id
+                                     ''.join([f"{random.randint(0, 255):02x}" for _ in range(20)]),  # random id
                                      ViewerExperienceRequest(experienceId=int(player_id),
                                                              URL=url or "",
                                                              playerKey=player_key,

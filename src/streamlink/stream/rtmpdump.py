@@ -46,7 +46,7 @@ class RTMPStream(StreamProcess):
         return self.session.options.get("rtmp-rtmpdump")
 
     def __repr__(self):
-        return "<RTMPStream({0!r}, redirect={1!r}>".format(self.parameters,
+        return "<RTMPStream({!r}, redirect={!r}>".format(self.parameters,
                                                            self.redirect)
 
     def __json__(self):
@@ -101,7 +101,7 @@ class RTMPStream(StreamProcess):
             if "rtmp" in self.parameters:
                 tcurl, playpath = rtmpparse(self.parameters["rtmp"])
                 if playpath:
-                    rtmp = "{redirect}/{playpath}".format(redirect=redirect, playpath=playpath)
+                    rtmp = f"{redirect}/{playpath}"
                 else:
                     rtmp = redirect
                 self.parameters["rtmp"] = rtmp
@@ -113,7 +113,7 @@ class RTMPStream(StreamProcess):
         try:
             rtmpdump = self.spawn(dict(help=True), timeout=timeout, stderr=subprocess.PIPE)
         except StreamError as err:
-            raise StreamError("Error while checking rtmpdump compatibility: {0}".format(err.message))
+            raise StreamError(f"Error while checking rtmpdump compatibility: {err.message}")
 
         for line in rtmpdump.stderr.readlines():
             m = re.match(r"^--(\w+)", str(line, "ascii"))
@@ -149,8 +149,8 @@ class RTMPStream(StreamProcess):
         for key, value in sorted(stream_params.items(), key=itemgetter(0)):
             if isinstance(value, list):
                 for svalue in value:
-                    params.append("{0}={1}".format(key, escape_librtmp(svalue)))
+                    params.append(f"{key}={escape_librtmp(svalue)}")
             else:
-                params.append("{0}={1}".format(key, escape_librtmp(value)))
+                params.append(f"{key}={escape_librtmp(value)}")
 
         return " ".join(params)

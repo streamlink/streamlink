@@ -55,10 +55,10 @@ class ARDMediathek(Plugin):
         else:
             return
 
-        log.debug("Found media id: {0}".format(media_id))
+        log.debug(f"Found media id: {media_id}")
         res = self.session.http.get(MEDIA_URL.format(media_id))
         media = self.session.http.json(res, schema=_media_schema)
-        log.trace("{0!r}".format(media))
+        log.trace(f"{media!r}")
 
         for media in media["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:
@@ -76,12 +76,12 @@ class ARDMediathek(Plugin):
                     parser = self._get_http_streams
                     parser_name = "HTTP"
                 else:
-                    log.error("Unexpected stream type: '{0}'".format(stream_))
+                    log.error(f"Unexpected stream type: '{stream_}'")
 
                 try:
                     yield from parser(stream)
                 except OSError as err:
-                    log.error("Failed to extract {0} streams: {1}".format(parser_name, err))
+                    log.error(f"Failed to extract {parser_name} streams: {err}")
 
 
 __plugin__ = ARDMediathek

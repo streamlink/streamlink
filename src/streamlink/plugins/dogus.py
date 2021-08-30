@@ -38,7 +38,7 @@ class Dogus(Plugin):
         mobile_url_m = self.mobile_url_re.search(res.text)
         mobile_url = mobile_url_m and update_scheme(self.url, mobile_url_m.group("url"))
         if mobile_url:
-            log.debug("Found mobile stream: {0}".format(mobile_url_m.group(0)))
+            log.debug(f"Found mobile stream: {mobile_url_m.group(0)}")
 
             token = mobile_url_m and mobile_url_m.group("token")
             if not token and "kralmuzik" in self.url:

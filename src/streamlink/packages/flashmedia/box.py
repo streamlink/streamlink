@@ -120,7 +120,7 @@ class BoxContainer(BoxPayload):
         while True:
             try:
                 box = Box.deserialize(io)
-            except IOError:
+            except OSError:
                 break
 
             boxes.append(box)
@@ -151,7 +151,7 @@ class RawPayload(BoxPayload):
         self.data = data
 
     def __repr__(self):
-        return "<RawPayload size={0}>".format(self.size)
+        return f"<RawPayload size={self.size}>"
 
     @property
     def size(self):
@@ -193,7 +193,7 @@ class BoxPayloadFTYP(BoxPayload):
         while True:
             try:
                 brand = FourCC.read(io)
-            except IOError:
+            except OSError:
                 break
 
             compatible_brands.append(brand)
@@ -702,17 +702,17 @@ class BoxPayloadVisualSample(BoxContainer):
 
 class BoxPayloadMDAT(RawPayload):
     def __repr__(self):
-        return "<BoxPayloadMDAT size={0}>".format(self.size)
+        return f"<BoxPayloadMDAT size={self.size}>"
 
 
 class BoxPayloadSKIP(RawPayload):
     def __repr__(self):
-        return "<BoxPayloadSKIP size={0}>".format(self.size)
+        return f"<BoxPayloadSKIP size={self.size}>"
 
 
 class BoxPayloadFREE(RawPayload):
     def __repr__(self):
-        return "<BoxPayloadFREE size={0}>".format(self.size)
+        return f"<BoxPayloadFREE size={self.size}>"
 
 
 class BoxPayloadABST(BoxPayload):

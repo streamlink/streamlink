@@ -24,7 +24,7 @@ class TVP(Plugin):
             raise PluginError('Unable to find a video id')
 
         video_id = m.group('video_id')
-        log.debug('Found video id: {0}'.format(video_id))
+        log.debug(f'Found video id: {video_id}')
         p_url = self.player_url.format(video_id)
         return p_url
 
@@ -37,7 +37,7 @@ class TVP(Plugin):
 
         streams = []
         for url in m:
-            log.debug('URL={0}'.format(url))
+            log.debug(f'URL={url}')
             if url.endswith('.m3u8'):
                 for s in HLSStream.parse_variant_playlist(self.session, url, name_fmt='{pixels}_{bitrate}').items():
                     streams.append(s)

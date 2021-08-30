@@ -40,24 +40,24 @@ class TestPluginMeta(unittest.TestCase):
         for pname in self.session.plugins.keys():
             if pname not in self.built_in_plugins:
                 self.assertIn(pname, self.plugins_in_docs,
-                              "{0} is not in plugin matrix".format(pname))
+                              f"{pname} is not in plugin matrix")
 
     def test_docs_matrix_has_plugin(self):
         for pname in self.plugins_in_docs:
             self.assertIn(pname, self.session.plugins,
-                          "{0} plugin does not exist".format(pname))
+                          f"{pname} plugin does not exist")
 
     def test_plugin_has_tests(self):
         for pname in self.session.plugins.keys():
             if pname not in self.built_in_plugins:
                 self.assertIn(pname, self.plugins_with_tests,
-                              "{0} has no tests".format(pname))
+                              f"{pname} has no tests")
 
     def test_unknown_plugin_has_tests(self):
         for pname in self.plugins_with_tests:
             if pname not in self.built_in_plugins:
                 self.assertIn(pname, self.session.plugins.keys(),
-                              "{0} is not a plugin but has tests".format(pname))
+                              f"{pname} is not a plugin but has tests")
 
     def test_plugin_not_in_removed_list(self):
         from streamlink import plugins as streamlinkplugins

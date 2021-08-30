@@ -69,7 +69,7 @@ class Viasat(Plugin):
             streams = parser(self.session, video[1])
             return streams.items()
         except OSError as err:
-            log.error("Failed to extract {0} streams: {1}".format(stream_type, err))
+            log.error(f"Failed to extract {stream_type} streams: {err}")
 
     def _create_rtmp_stream(self, video):
         name, stream_url = video

@@ -26,7 +26,7 @@ class VinhLongTV(Plugin):
 
         res = self.session.http.get(self.api_url.format(channel))
         hls_url = self.session.http.json(res, schema=self._data_schema)
-        log.debug('URL={0}'.format(hls_url))
+        log.debug(f'URL={hls_url}')
 
         streams = HLSStream.parse_variant_playlist(self.session, hls_url)
         if not streams:

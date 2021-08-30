@@ -2,7 +2,7 @@ from .box import Box, RawPayload
 from .compat import is_py2
 
 
-class F4V(object):
+class F4V:
     def __init__(self, fd, strict=False, raw_payload=False):
         self.fd = fd
         self.raw_payload = raw_payload
@@ -16,7 +16,7 @@ class F4V(object):
             box = Box.deserialize(self.fd,
                                   strict=self.strict,
                                   raw_payload=self.raw_payload)
-        except IOError:
+        except OSError:
             raise StopIteration
 
         return box

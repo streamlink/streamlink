@@ -33,7 +33,7 @@ class SSH101(Plugin):
                 log.error("This stream is currently offline")
                 return
 
-            log.debug("URL={0}".format(stream_src))
+            log.debug(f"URL={stream_src}")
             streams = HLSStream.parse_variant_playlist(self.session, stream_src)
             if not streams:
                 return {"live": HLSStream(self.session, stream_src)}

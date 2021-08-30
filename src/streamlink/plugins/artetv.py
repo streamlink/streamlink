@@ -41,7 +41,7 @@ _video_schema = validate.Schema({
 """, re.VERBOSE))
 class ArteTV(Plugin):
     def _create_stream(self, streams):
-        variant, variantname = min([(stream["versionProg"], stream["versionLibelle"]) for stream in streams.values()],
+        variant, variantname = min(((stream["versionProg"], stream["versionLibelle"]) for stream in streams.values()),
                                    key=itemgetter(0))
         log.debug(f"Using the '{variantname}' stream variant")
         for sname, stream in streams.items():

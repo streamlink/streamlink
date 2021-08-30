@@ -53,7 +53,7 @@ class FilmOnHLSStreamWorker(HLSStreamWorker):
 
         if playlist.is_master:
             raise StreamError("Attempted to play a variant playlist, use "
-                              "'hls://{0}' instead".format(self.stream.url))
+                              "'hls://{}' instead".format(self.stream.url))
 
         if playlist.iframes_only:
             raise StreamError("Streams containing I-frames only is not playable")
@@ -145,7 +145,7 @@ class FilmOnAPI:
     def channel(self, channel):
         for _ in range(5):
             if _ > 0:
-                log.debug("channel sleep {0}".format(_))
+                log.debug(f"channel sleep {_}")
                 time.sleep(0.75)
 
             # retry for 50X errors
@@ -161,7 +161,7 @@ class FilmOnAPI:
             except Exception:
                 log.debug("invalid server response")
 
-        raise PluginError("Unable to find 'self.api.channel' for {0}".format(channel))
+        raise PluginError(f"Unable to find 'self.api.channel' for {channel}")
 
     def vod(self, vod_id):
         res = self.session.http.get(self.vod_url.format(vod_id))
@@ -243,7 +243,7 @@ class Filmon(Plugin):
                 _id = channel
 
             if _id is None:
-                raise PluginError("Unable to find channel ID: {0}".format(channel))
+                raise PluginError(f"Unable to find channel ID: {channel}")
 
             try:
                 data = self.api.channel(_id)

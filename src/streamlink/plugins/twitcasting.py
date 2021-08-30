@@ -53,7 +53,7 @@ class TwitCasting(Plugin):
 
     def _get_streams(self):
         stream_info = self._get_stream_info()
-        log.debug("Live stream info: {}".format(stream_info))
+        log.debug(f"Live stream info: {stream_info}")
 
         if not stream_info["movie"]["live"]:
             raise PluginError("The live stream is offline")
@@ -71,7 +71,7 @@ class TwitCasting(Plugin):
             mode = "base"  # Low quality
 
         if (proto == '') or (host == '') or (not movie_id):
-            raise PluginError("No stream available for user {}".format(self.channel))
+            raise PluginError(f"No stream available for user {self.channel}")
 
         real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)
 
@@ -80,7 +80,7 @@ class TwitCasting(Plugin):
             password_hash = hashlib.md5(password.encode()).hexdigest()
             real_stream_url = update_qsd(real_stream_url, {"word": password_hash})
 
-        log.debug("Real stream url: {}".format(real_stream_url))
+        log.debug(f"Real stream url: {real_stream_url}")
 
         return {mode: TwitCastingStream(session=self.session, url=real_stream_url)}
 
@@ -145,19 +145,19 @@ class TwitCastingWsClient(Thread):
         # Parse proxy string for websocket-client
         proxy_options = self.parse_proxy_url(self.proxy)
         if proxy_options.get('http_proxy_host'):
-            log.debug("Connecting to {0} via proxy ({1}://{2}:{3})".format(
+            log.debug("Connecting to {} via proxy ({}://{}:{})".format(
                 self.url,
                 proxy_options.get('proxy_type') or "http",
                 proxy_options.get('http_proxy_host'),
                 proxy_options.get('http_proxy_port') or 80
             ))
         else:
-            log.debug("Connecting to {0} without proxy".format(self.url))
+            log.debug(f"Connecting to {self.url} without proxy")
 
         # Connect to WebSocket server
         self.ws = websocket.WebSocketApp(
             self.url,
-            header=["User-Agent: {0}".format(useragents.CHROME)],
+            header=[f"User-Agent: {useragents.CHROME}"],
             on_message=on_message,
             on_error=on_error,
             on_close=on_close
@@ -208,7 +208,7 @@ class TwitCastingStream(Stream):
         self.url = url
 
     def __repr__(self):
-        return "<TwitCastingStream({0!r})>".format(self.url)
+        return f"<TwitCastingStream({self.url!r})>"
 
     def open(self):
         reader = TwitCastingReader(self)
