@@ -24,7 +24,6 @@ import os
 import os.path
 import stat
 import locale
-import io
 
 from streamlink.compat import is_win32
 
