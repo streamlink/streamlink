@@ -13,8 +13,6 @@ log = logging.getLogger(__name__)
 class STV(Plugin):
     API_URL = 'https://player.api.stv.tv/v1/streams/stv/'
 
-    title = None
-
     def get_title(self):
         if self.title is None:
             self._get_api_results()

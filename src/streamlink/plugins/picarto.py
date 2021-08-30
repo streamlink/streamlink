@@ -45,19 +45,6 @@ class Picarto(Plugin):
 
     HLS_URL = 'https://{origin}.picarto.tv/stream/hls/{file_name}/index.m3u8'
 
-    author = None
-    category = None
-    title = None
-
-    def get_author(self):
-        return self.author
-
-    def get_category(self):
-        return self.category
-
-    def get_title(self):
-        return self.title
-
     def get_live(self, username):
         res = self.session.http.get(f'https://ptvintern.picarto.tv/api/channel/detail/{username}')
         channel_data = self.session.http.json(res, schema=self.channel_schema)

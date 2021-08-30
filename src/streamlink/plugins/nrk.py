@@ -48,15 +48,6 @@ class NRK(Plugin):
         },
     ))
 
-    category = None
-    title = None
-
-    def get_category(self):
-        return self.category
-
-    def get_title(self):
-        return self.title
-
     def _get_streams(self):
         # Construct manifest URL for this program.
         program_type, program_id = self.match.groups()

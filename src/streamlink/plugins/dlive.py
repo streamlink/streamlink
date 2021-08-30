@@ -58,17 +58,9 @@ class DLive(Plugin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.author = None
-        self.title = None
 
         self.video = self.match.group("video")
         self.channel = self.match.group("channel")
-
-    def get_author(self):
-        return self.author
-
-    def get_title(self):
-        return self.title
 
     def _get_streams_video(self):
         log.debug("Getting video HLS streams for {0}".format(self.video))

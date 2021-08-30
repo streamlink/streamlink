@@ -21,11 +21,6 @@ log = logging.getLogger(__name__)
     )
 ''', re.VERBOSE))
 class Pluto(Plugin):
-    title = None
-
-    def get_title(self):
-        return self.title
-
     def _schema_media(self, slug):
         return validate.Schema(
             [{

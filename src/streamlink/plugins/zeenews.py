@@ -14,8 +14,7 @@ class ZeeNews(Plugin):
     HLS_URL = 'https://z5ams.akamaized.net/zeenews/index.m3u8{0}'
     TOKEN_URL = 'https://useraction.zee5.com/token/live.php'
 
-    def get_title(self):
-        return 'Zee News'
+    title = 'Zee News'
 
     def _get_streams(self):
         res = self.session.http.get(self.TOKEN_URL)

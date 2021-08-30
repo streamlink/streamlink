@@ -35,14 +35,9 @@ class TestPlugin(Plugin):
         "a_option": "default"
     })
 
-    def get_title(self):
-        return "Test Title"
-
-    def get_author(self):
-        return "Tѥst Āuƭhǿr"
-
-    def get_category(self):
-        return None
+    author = "Tѥst Āuƭhǿr"
+    category = None
+    title = "Test Title"
 
     def _get_streams(self):
         if "empty" in self.url:
