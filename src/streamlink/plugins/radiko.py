@@ -3,8 +3,9 @@ import datetime
 import hashlib
 import random
 import re
-import xml.etree.ElementTree as ET
 from urllib.parse import urlencode
+
+from lxml.etree import XML
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.stream import HLSStream
@@ -96,7 +97,7 @@ class Radiko(Plugin):
             date = today.strftime('%Y%m%d')
         api = 'http://radiko.jp/v3/program/station/date/{}/{}.xml'.format(date, station_id)
         r = self.session.http.get(api)
-        tree = ET.XML(r.content)
+        tree = XML(r.content)
         for x in tree[2][0][1].findall('prog'):
             if x.attrib['ft'] == start_at:
                 return x.attrib['to']
