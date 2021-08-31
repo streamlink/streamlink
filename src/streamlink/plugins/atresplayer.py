@@ -1,6 +1,5 @@
 import logging
 import re
-from functools import partial
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -22,7 +21,7 @@ class AtresPlayer(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(parse_json),
-                validate.transform(partial(search_dict, key="href")),
+                validate.transform(search_dict, key="href"),
             )
         )
     )
@@ -31,7 +30,7 @@ class AtresPlayer(Plugin):
             None,
             validate.all(
                 validate.transform(parse_json),
-                validate.transform(partial(search_dict, key="urlVideo")),
+                validate.transform(search_dict, key="urlVideo"),
             )
         )
     )
