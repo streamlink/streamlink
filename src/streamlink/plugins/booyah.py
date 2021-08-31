@@ -17,6 +17,13 @@ class Booyah(Plugin):
     vod_api_url = 'https://booyah.live/api/v3/playbacks/{0}'
     live_api_url = 'https://booyah.live/api/v3/channels/{0}'
     streams_api_url = 'https://booyah.live/api/v3/channels/{0}/streams'
+    
+    @classmethod
+    def stream_weight(cls, key):
+        if key.startswith("source"):
+            return 65535, "source"
+
+        return Plugin.stream_weight(key)
 
     auth_schema = validate.Schema({
         'expiry_time': int,
@@ -62,6 +69,7 @@ class Booyah(Plugin):
         'mirror_list': [{
             'url_domain': validate.url(),
         }],
+        'source_stream_url_path': str,
     })
 
     author = None
@@ -128,6 +136,12 @@ class Booyah(Plugin):
                         self.session,
                         urljoin(mirror['url_domain'], stream['url_path']),
                     )
+                    
+        for mirror in streams['mirror_list']:
+            yield 'source', HLSStream(
+                self.session,
+                urljoin(mirror['url_domain'], streams['source_stream_url_path']),
+            )
 
     def _get_streams(self):
         self.do_auth()
