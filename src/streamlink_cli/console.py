@@ -70,11 +70,13 @@ class ConsoleOutput:
         if hasattr(obj, "__json__"):
             obj = obj.__json__()
 
+        neobj = dict(obj)
+
         if kwargs:
             for key, value in kwargs.items():
-                obj[key] = value
+                neobj[key] = value
 
-        msg = json.dumps(obj, cls=JSONEncoder,
+        msg = json.dumps(neobj, cls=JSONEncoder,
                          indent=2)
         self.msg("{0}", msg)
 
