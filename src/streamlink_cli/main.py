@@ -1,7 +1,6 @@
 import argparse
 import datetime
 import errno
-import json
 import logging
 import os
 import platform
@@ -33,7 +32,7 @@ from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url, JSONEncoder
+from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -416,17 +415,7 @@ def handle_stream(plugin, streams, stream_name):
     # Print JSON representation of the stream
     elif console.json:
         title = create_title(plugin)
-
-        if hasattr(stream, "__json__"):
-            stream = stream.__json__()
-
-        streamdata = json.dumps(stream, cls=JSONEncoder, indent=2)
-        streamdata = json.loads(streamdata)
-
-        streamdata['title'] = title
-        streamdata['quality'] = stream_name
-
-        console.msg_json(streamdata)
+        console.msg_json(stream, title=title, quality=stream_name)
 
     elif args.stream_url:
         try:
