@@ -67,7 +67,7 @@ class Booyah(Plugin):
 
     def get_title(self):
         return self.title
-        
+
     @classmethod
     def stream_weight(cls, stream):
         if stream == "source":
