@@ -63,12 +63,16 @@ class ConsoleOutput:
         formatted = f"{msg.format(*args, **kwargs)}\n"
         self.output.write(formatted)
 
-    def msg_json(self, obj):
+    def msg_json(self, obj, **kwargs):
         if not self.json:
             return
 
         if hasattr(obj, "__json__"):
             obj = obj.__json__()
+
+        if kwargs:
+            for key, value in kwargs.items():
+                obj[key] = value
 
         msg = json.dumps(obj, cls=JSONEncoder,
                          indent=2)
