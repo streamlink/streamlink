@@ -77,7 +77,6 @@ foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli:Authenticating with FunimationNow>`
                         - funimationnow.uk
 galatasaraytv           galatasaray.com      Yes   No
-gardenersworld          gardenersworld.com   --    Yes
 garena                  garena.live          Yes   --
 goltelevision           goltelevision.com    Yes   No    Streams may be geo-restricted to Spain.
 goodgame                goodgame.ru          Yes   No    Only HLS streams are available.
@@ -232,7 +231,7 @@ wwenetwork              network.wwe.com      Yes   Yes   Requires an account to 
 youtube                 - youtube.com        Yes   Yes   Protected videos are not supported.
                         - youtu.be
 yupptv                  yupptv.com           Yes   Yes   Some streams require an account and subscription.
-zattoo                  zattoo.com           Yes   Yes   Other sub-providers are also available. 
+zattoo                  zattoo.com           Yes   Yes   Other sub-providers are also available.
 zdf_mediathek           zdf.de               Yes   Yes   Streams may be geo-restricted to Germany.
 zeenews                 zeenews.india.com    Yes   No
 zengatv                 zengatv.com          Yes   No
