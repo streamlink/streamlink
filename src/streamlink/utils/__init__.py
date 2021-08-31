@@ -1,12 +1,13 @@
 import json
 import re
-import xml.etree.ElementTree as ET
 import zlib
 from collections import OrderedDict
 from importlib.machinery import FileFinder, SOURCE_SUFFIXES, SourceFileLoader
 from importlib.util import module_from_spec
 from typing import Dict, Generic, Optional, TypeVar
 from urllib.parse import parse_qsl, urljoin, urlparse
+
+from lxml.etree import XML
 
 from streamlink.exceptions import PluginError
 from streamlink.utils.lazy_formatter import LazyFormatter
@@ -91,22 +92,22 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
      - Wraps errors in custom exception with a snippet of the data in the message
     """
     if isinstance(data, str):
-        data = bytearray(data, "utf8")
+        data = bytes(data, "utf8")
 
     if ignore_ns:
         data = re.sub(br"[\t ]xmlns=\"(.+?)\"", b"", data)
 
     if invalid_char_entities:
-        data = re.sub(br'&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)', b'&amp;', data)
+        data = re.sub(br"&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)", b"&amp;", data)
 
     try:
-        tree = ET.fromstring(data)
+        tree = XML(data)
     except Exception as err:
         snippet = repr(data)
         if len(snippet) > 35:
             snippet = snippet[:35] + " ..."
 
-        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
+        raise exception(f"Unable to parse {name}: {err} ({snippet})")
 
     if schema:
         tree = schema.validate(tree, name=name, exception=exception)
