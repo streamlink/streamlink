@@ -16,11 +16,8 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(int, 1) == 1
 
-        assert validate(transform(int), "1") == 1
-
         assert validate(text, "abc") == "abc"
         assert validate(text, "日本語") == "日本語"
-        assert validate(transform(text), 1) == "1"
 
         assert validate(list, ["a", 1]) == ["a", 1]
         assert validate(dict, {"a": 1}) == {"a": 1}
@@ -37,6 +34,23 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(any(int, dict), {}) == {}
 
         assert validate(any(int), 4) == 4
+
+    def test_transform(self):
+        assert validate(transform(int), "1") == 1
+        assert validate(transform(str), 1) == "1"
+        assert validate(
+            transform(
+                lambda value, *args, **kwargs: f"{value}{args}{kwargs}",
+                *("b", "c"),
+                **dict(d="d", e="e")
+            ),
+            "a"
+        ) == "a('b', 'c'){'d': 'd', 'e': 'e'}"
+
+        def no_args():
+            pass  # pragma: no cover
+
+        self.assertRaises(TypeError, validate, transform(no_args), "some value")
 
     def test_union(self):
         assert validate(union((get("foo"), get("bar"))),
