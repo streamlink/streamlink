@@ -378,7 +378,7 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
         log.info("Stream ended")
 
 
-def handle_stream(plugin, streams, stream_name):
+def handle_stream(plugin, streams, stream_name, formatter: Formatter):
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
@@ -407,7 +407,7 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print JSON representation of the stream
     elif console.json:
-        title = create_title(plugin)
+        title = formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
         console.msg_json(stream, title=title, quality=stream_name)
 
     elif args.stream_url:
@@ -423,14 +423,6 @@ def handle_stream(plugin, streams, stream_name):
         alt_streams = list(filter(lambda k: stream_name + "_alt" in k,
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
-
-        formatter = Formatter({
-            "url": lambda: args.url,
-            "author": lambda: plugin.get_author(),
-            "category": lambda: plugin.get_category(),
-            "game": lambda: plugin.get_category(),
-            "title": lambda: plugin.get_title(),
-        })
 
         for stream_name in [stream_name] + alt_streams:
             stream = streams[stream_name]
@@ -574,12 +566,20 @@ def handle_url():
     if args.default_stream and not args.stream and not args.json:
         args.stream = args.default_stream
 
+    formatter = Formatter({
+        "url": lambda: args.url,
+        "author": lambda: plugin.get_author(),
+        "category": lambda: plugin.get_category(),
+        "game": lambda: plugin.get_category(),
+        "title": lambda: plugin.get_title(),
+    })
+
     if args.stream:
         validstreams = format_valid_streams(plugin, streams)
         for stream_name in args.stream:
             if stream_name in streams:
                 log.info("Available streams: {0}".format(validstreams))
-                handle_stream(plugin, streams, stream_name)
+                handle_stream(plugin, streams, stream_name, formatter)
                 return
 
         err = ("The specified stream(s) '{0}' could not be "
@@ -591,8 +591,9 @@ def handle_url():
         else:
             console.exit("{0}.\n       Available streams: {1}",
                          err, validstreams)
+
     elif console.json:
-        title = create_title(plugin)
+        title = formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url
         console.msg_json(dict(plugin=plugin.module, title=title, streams=streams))
     elif args.stream_url:
         try:
