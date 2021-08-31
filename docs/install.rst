@@ -289,6 +289,7 @@ Name                                 Notes
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for MPEG-DASH streams
+`lxml`_                              Used for processing HTML and XML data
 `PySocks`_                           Used for SOCKS Proxies
 `websocket-client`_                  At least version **0.58.0**. (used for some plugins)
 
@@ -321,6 +322,7 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _iso-639: https://pypi.org/project/iso-639/
 .. _iso3166: https://pypi.org/project/iso3166/
 .. _isodate: https://pypi.org/project/isodate/
+.. _lxml: https://lxml.de/
 .. _PySocks: https://github.com/Anorov/PySocks
 .. _websocket-client: https://pypi.org/project/websocket-client/
 
