@@ -1,7 +1,6 @@
 import base64
 import logging
 import re
-from functools import partial
 
 from Crypto.Cipher import Blowfish
 
@@ -60,7 +59,7 @@ class Rtve(Plugin):
     _re_idAsset = re.compile(r"\"idAsset\":\"(\d+)\"")
     secret_key = base64.b64decode("eWVMJmRhRDM=")
     cdn_schema = validate.Schema(
-        validate.transform(partial(parse_xml, invalid_char_entities=True)),
+        validate.transform(parse_xml, invalid_char_entities=True),
         validate.xml_findall(".//preset"),
         [
             validate.union({

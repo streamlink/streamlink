@@ -76,14 +76,15 @@ class SchemaContainer(object):
 class transform(object):
     """Applies function to value to transform it."""
 
-    def __init__(self, func):
+    def __init__(self, func, *args, **kwargs):
         # text is an alias for basestring on Python 2, which cannot be
         # instantiated and therefore can't be used to transform the value,
-        # so we force to unicode instead.
         if is_py2 and func == text:
             func = unicode
 
         self.func = func
+        self.args = args
+        self.kwargs = kwargs
 
 
 class optional(object):
@@ -372,8 +373,9 @@ def validate_all(schemas, value):
 
 @validate.register(transform)
 def validate_transform(schema, value):
+    # type: (transform)
     validate(callable, schema.func)
-    return schema.func(value)
+    return schema.func(value, *schema.args, **schema.kwargs)
 
 
 @validate.register(list)
