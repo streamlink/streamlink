@@ -1,5 +1,6 @@
 import logging
 import re
+import sys
 
 from streamlink.compat import urljoin
 from streamlink.plugin import Plugin, pluginmatcher
@@ -54,16 +55,6 @@ class Booyah(Plugin):
         },
     })
 
-    streams_schema = validate.Schema({
-        'stream_addr_list': [{
-            'resolution': validate.text,
-            'url_path': validate.text,
-        }],
-        'mirror_list': [{
-            'url_domain': validate.url(),
-        }],
-    })
-
     author = None
     category = None
     title = None
@@ -76,6 +67,12 @@ class Booyah(Plugin):
 
     def get_title(self):
         return self.title
+
+    @classmethod
+    def stream_weight(cls, stream):
+        if stream == "source":
+            return sys.maxsize, "source"
+        return super(Booyah, cls).stream_weight(stream)
 
     def do_auth(self):
         res = self.session.http.post(self.auth_api_url)
@@ -119,15 +116,32 @@ class Booyah(Plugin):
         self.title = user_data['channel']['name']
 
         res = self.session.http.get(self.streams_api_url.format(stream_id))
-        streams = self.session.http.json(res, schema=self.streams_schema)
+        streams = self.session.http.json(res, schema=validate.Schema({
+            "default_mirror": validate.text,
+            "mirror_list": [{
+                "name": validate.text,
+                "url_domain": validate.url(),
+            }],
+            "source_stream_url_path": validate.text,
+            "stream_addr_list": [{
+                "resolution": validate.text,
+                "url_path": validate.text,
+            }],
+        }))
 
-        for stream in streams['stream_addr_list']:
-            if stream['resolution'] != 'Auto':
-                for mirror in streams['mirror_list']:
-                    yield stream['resolution'], HLSStream(
-                        self.session,
-                        urljoin(mirror['url_domain'], stream['url_path']),
-                    )
+        mirror = (
+            next(filter(lambda item: item["name"] == streams["default_mirror"], streams["mirror_list"]), None)
+            or next(iter(streams["mirror_list"]), None)
+        )
+        if not mirror:
+            return
+
+        auto = next(filter(lambda item: item["resolution"] == "Auto", streams["stream_addr_list"]), None)
+        if auto:
+            yield from HLSStream.parse_variant_playlist(self.session, urljoin(mirror["url_domain"], auto["url_path"])).items()
+
+        if streams["source_stream_url_path"]:
+            yield "source", HLSStream(self.session, urljoin(mirror["url_domain"], streams["source_stream_url_path"]))
 
     def _get_streams(self):
         self.do_auth()
