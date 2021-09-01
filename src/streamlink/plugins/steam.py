@@ -11,9 +11,10 @@ import streamlink
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import itertags, parse_json
+from streamlink.plugin.api.utils import itertags
 from streamlink.plugin.api.validate import Schema
 from streamlink.stream.dash import DASHStream
+from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
