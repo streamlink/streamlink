@@ -30,11 +30,19 @@ except ImportError:
 
 from streamlink.compat import is_py2, urlparse
 from streamlink.exceptions import PluginError
+from streamlink.utils.parse import (
+    parse_html as _parse_html,
+    parse_json as _parse_json,
+    parse_qsd as _parse_qsd,
+    parse_xml as _parse_xml
+)
+
 
 __all__ = [
     "any", "all", "filter", "get", "getattr", "hasattr", "length", "optional",
     "transform", "text", "union", "union_get", "url", "startswith", "endswith", "contains",
     "xml_element", "xml_find", "xml_findall", "xml_findtext", "xml_xpath", "xml_xpath_string",
+    "parse_json", "parse_html", "parse_xml", "parse_qsd",
     "validate", "Schema", "SchemaContainer"
 ]
 
@@ -115,6 +123,9 @@ class xml_element(object):
         self.tag = tag
         self.text = text
         self.attrib = attrib
+
+
+# ----
 
 
 def length(length):
@@ -334,6 +345,29 @@ def xml_xpath(xpath):
 
 def xml_xpath_string(xpath):
     return xml_xpath("string({0})".format(xpath))
+
+
+def parse_json(*args, **kwargs):
+    if is_py2:
+        kwargs.update({"exception": ValueError, "schema": None})
+        return transform(_parse_json, *args, **kwargs)
+    else:
+        return transform(_parse_json, exception=ValueError, schema=None, *args, **kwargs)
+
+
+def parse_html(*args, **kwargs):
+    return transform(_parse_html, exception=ValueError, schema=None, *args, **kwargs)
+
+
+def parse_xml(*args, **kwargs):
+    return transform(_parse_xml, exception=ValueError, schema=None, *args, **kwargs)
+
+
+def parse_qsd(*args, **kwargs):
+    return transform(_parse_qsd, exception=ValueError, schema=None, *args, **kwargs)
+
+
+# ----
 
 
 @singledispatch

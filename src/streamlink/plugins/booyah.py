@@ -138,7 +138,8 @@ class Booyah(Plugin):
 
         auto = next(filter(lambda item: item["resolution"] == "Auto", streams["stream_addr_list"]), None)
         if auto:
-            yield from HLSStream.parse_variant_playlist(self.session, urljoin(mirror["url_domain"], auto["url_path"])).items()
+            for s in HLSStream.parse_variant_playlist(self.session, urljoin(mirror["url_domain"], auto["url_path"])).items():
+                yield s
 
         if streams["source_stream_url_path"]:
             yield "source", HLSStream(self.session, urljoin(mirror["url_domain"], streams["source_stream_url_path"]))

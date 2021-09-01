@@ -1,14 +1,13 @@
-import json
-import re
 import zlib
+from collections import OrderedDict
+from typing import Dict, Generic, Optional, TypeVar
 
-from lxml.etree import XML
-
-from streamlink.compat import is_py2, is_py3, parse_qsl, urljoin, urlparse
+from streamlink.compat import is_py3, urljoin, urlparse
 from streamlink.exceptions import PluginError
-from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode, maybe_encode
+from streamlink.utils.encoding import get_filesystem_encoding
 from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.named_pipe import NamedPipe
+from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
 from streamlink.utils.url import update_scheme, url_equal
 
 
@@ -43,76 +42,6 @@ def prepend_www(url):
         return parsed.scheme + "://www." + parsed.netloc + parsed.path
     else:
         return url
-
-
-def parse_json(data, name="JSON", exception=PluginError, schema=None):
-    """Wrapper around json.loads.
-
-    Wraps errors in custom exception with a snippet of the data in the message.
-    """
-    try:
-        json_data = json.loads(data)
-    except ValueError as err:
-        snippet = repr(data)
-        if len(snippet) > 35:
-            snippet = snippet[:35] + " ..."
-        else:
-            snippet = data
-
-        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
-
-    if schema:
-        json_data = schema.validate(json_data, name=name, exception=exception)
-
-    return json_data
-
-
-def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=None, invalid_char_entities=False):
-    """Wrapper around ElementTree.fromstring with some extras.
-
-    Provides these extra features:
-     - Handles incorrectly encoded XML
-     - Allows stripping namespace information
-     - Wraps errors in custom exception with a snippet of the data in the message
-    """
-    if is_py2 and isinstance(data, unicode):
-        data = data.encode("utf8")
-    elif is_py3 and isinstance(data, str):
-        data = bytes(data, "utf8")
-
-    if ignore_ns:
-        data = re.sub(br"[\t ]xmlns=\"(.+?)\"", b"", data)
-
-    if invalid_char_entities:
-        data = re.sub(br"&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)", b"&amp;", data)
-
-    try:
-        tree = XML(data)
-    except Exception as err:
-        snippet = repr(data)
-        if len(snippet) > 35:
-            snippet = snippet[:35] + " ..."
-
-        raise exception("Unable to parse {0}: {1} ({2})".format(name, err, snippet))
-
-    if schema:
-        tree = schema.validate(tree, name=name, exception=exception)
-
-    return tree
-
-
-def parse_qsd(data, name="query string", exception=PluginError, schema=None, **params):
-    """Parses a query string into a dict.
-
-    Unlike parse_qs and parse_qsl, duplicate keys are not preserved in
-    favor of a simpler return value.
-    """
-
-    value = dict(parse_qsl(data, **params))
-    if schema:
-        value = schema.validate(value, name=name, exception=exception)
-
-    return value
 
 
 def rtmpparse(url):
@@ -200,8 +129,46 @@ def escape_librtmp(value):  # pragma: no cover
     return value
 
 
-__all__ = ["swfdecompress", "update_scheme", "url_equal",
-           "verifyjson", "absolute_url", "parse_qsd", "parse_json",
-           "parse_xml", "rtmpparse", "prepend_www", "NamedPipe",
-           "escape_librtmp", "LazyFormatter", "get_filesystem_encoding",
-           "maybe_decode", "maybe_encode"]
+TCacheKey = TypeVar("TCacheKey")
+TCacheValue = TypeVar("TCacheValue")
+
+
+class LRUCache(Generic[TCacheKey, TCacheValue]):
+    def __init__(self, num):
+        # type: (int)
+        # TODO: fix type after dropping py36
+        self.cache = OrderedDict()
+        # type: Dict[TCacheKey, TCacheValue]
+        self.num = num
+
+    def get(self, key):
+        # type: (TCacheKey) -> Optional[TCacheValue]
+        if key not in self.cache:
+            return None
+        # noinspection PyUnresolvedReferences
+        self.cache.move_to_end(key)
+        return self.cache[key]
+
+    def set(self, key, value):
+        # type: (TCacheKey, TCacheValue) -> None
+        self.cache[key] = value
+        # noinspection PyUnresolvedReferences
+        self.cache.move_to_end(key)
+        if len(self.cache) > self.num:
+            # noinspection PyArgumentList
+            self.cache.popitem(last=False)
+
+
+__all__ = [
+    "load_module",
+    "escape_librtmp", "rtmpparse", "swfdecompress",
+    "verifyjson",
+    "absolute_url", "prepend_www",
+    "search_dict",
+    "LRUCache",
+    "LazyFormatter",
+    "NamedPipe",
+    "parse_html", "parse_json", "parse_qsd", "parse_xml",
+    "update_scheme", "url_equal",
+    "get_filesystem_encoding",
+]

@@ -5,10 +5,36 @@ import unittest
 import six
 from lxml.etree import Element
 
+from streamlink.compat import is_py2
 from streamlink.plugin.api.validate import (
-    all, any, attr, endswith, filter, get, getattr, hasattr,
-    length, map, optional, startswith, text, transform, union, union_get, url,
-    validate, xml_element, xml_find, xml_findall, xml_findtext, xml_xpath, xml_xpath_string
+    all,
+    any,
+    attr,
+    endswith,
+    filter,
+    get,
+    getattr,
+    hasattr,
+    length,
+    map,
+    optional,
+    parse_html,
+    parse_json,
+    parse_qsd,
+    parse_xml,
+    startswith,
+    text,
+    transform,
+    union,
+    union_get,
+    url,
+    validate,
+    xml_element,
+    xml_find,
+    xml_findall,
+    xml_findtext,
+    xml_xpath,
+    xml_xpath_string,
 )
 
 
@@ -42,12 +68,12 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(transform(str), 1) == "1"
         assert validate(
             transform(
-                lambda value, *args, **kwargs: f"{value}{args}{kwargs}",
+                lambda value, *args, **kwargs: "{0}{1}{2}".format(value, args, kwargs),
                 *("b", "c"),
                 **dict(d="d", e="e")
             ),
             "a"
-        ) == "a('b', 'c'){'d': 'd', 'e': 'e'}"
+        ) == "a('b', 'c'){'e': 'e', 'd': 'd'}" if is_py2 else "a('b', 'c'){'d': 'd', 'e': 'e'}"
 
         def no_args():
             pass  # pragma: no cover
@@ -256,3 +282,33 @@ class TestPluginAPIValidate(unittest.TestCase):
 
     def test_endswith(self):
         assert validate(endswith(u"åäö"), u"xyzåäö")
+
+    def test_parse_json(self):
+        assert validate(parse_json(), '{"a": ["b", true, false, null, 1, 2.3]}') == {"a": ["b", True, False, None, 1, 2.3]}
+        with self.assertRaises(ValueError) as cm:
+            validate(parse_json(), "invalid")
+        if is_py2:
+            assert str(cm.exception) == "Unable to parse JSON: No JSON object could be decoded ('invalid')"
+        else:
+            assert str(cm.exception) == "Unable to parse JSON: Expecting value: line 1 column 1 (char 0) ('invalid')"
+
+    def test_parse_html(self):
+        assert validate(parse_html(), '<!DOCTYPE html><body>&quot;perfectly&quot;<a>valid<div>HTML').tag == "html"
+        with self.assertRaises(ValueError) as cm:
+            validate(parse_html(), None)
+        assert str(cm.exception) == "Unable to parse HTML: can only parse strings (None)"
+
+    def test_parse_xml(self):
+        assert validate(parse_xml(), '<?xml version="1.0" encoding="utf-8"?><root></root>').tag == "root"
+        with self.assertRaises(ValueError) as cm:
+            validate(parse_xml(), None)
+        assert str(cm.exception) == "Unable to parse XML: can only parse strings (None)"
+
+    def test_parse_qsd(self):
+        assert validate(parse_qsd(), 'foo=bar&foo=baz') == {"foo": "baz"}
+        with self.assertRaises(ValueError) as cm:
+            validate(parse_qsd(), 123)
+        if is_py2:
+            assert str(cm.exception) == "Unable to parse query string: 'int' object has no attribute 'split' (123)"
+        else:
+            assert str(cm.exception) == "Unable to parse query string: 'int' object has no attribute 'decode' (123)"
