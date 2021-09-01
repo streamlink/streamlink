@@ -2,8 +2,6 @@ import logging
 import re
 from urllib.parse import parse_qsl, urlparse
 
-from lxml.etree import HTML, _Element as Element
-
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
@@ -19,11 +17,11 @@ class DeutscheWelle(Plugin):
     DEFAULT_CHANNEL = "1"
     API_URL = "https://www.dw.com/playersources/v-{media_id}?hls=true"
 
-    def _find_metadata(self, elem: Element):
+    def _find_metadata(self, elem):
         self.author = elem.xpath("string(.//input[@name='channel_name'][1]/@value)") or None
         self.title = elem.xpath("string(.//input[@name='media_title'][1]/@value)") or None
 
-    def _get_live_streams(self, root: Element):
+    def _get_live_streams(self, root):
         # check if a different language has been selected
         channel: str = (
             dict(parse_qsl(urlparse(self.url).query)).get("channel")
@@ -32,7 +30,7 @@ class DeutscheWelle(Plugin):
         )
         log.debug(f"Using channel ID: {channel}")
 
-        media_item: Element = root.find(f".//*[@data-channel-id='{channel}']")
+        media_item = root.find(f".//*[@data-channel-id='{channel}']")
         if media_item is None:
             return
 
@@ -41,7 +39,7 @@ class DeutscheWelle(Plugin):
         if stream_url:
             return HLSStream.parse_variant_playlist(self.session, stream_url)
 
-    def _get_vod_streams(self, root: Element):
+    def _get_vod_streams(self, root):
         media_id: str = root.xpath("string(.//input[@type='hidden'][@name='media_id'][1]/@value)")
         if not media_id:
             return
@@ -55,7 +53,7 @@ class DeutscheWelle(Plugin):
         ))
         return HLSStream.parse_variant_playlist(self.session, stream_url)
 
-    def _get_audio_streams(self, root: Element):
+    def _get_audio_streams(self, root):
         self._find_metadata(root)
         file_name: str = root.xpath("string(.//input[@type='hidden'][@name='file_name'][1]/@value)")
         if file_name:
@@ -63,7 +61,7 @@ class DeutscheWelle(Plugin):
 
     def _get_streams(self):
         root = self.session.http.get(self.url, schema=validate.Schema(
-            validate.transform(HTML)
+            validate.parse_html()
         ))
         player_type: str = root.xpath("string(.//input[@type='hidden'][@name='player_type'][1]/@value)")
 
