@@ -3,9 +3,9 @@ import re
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import itertags, parse_json
+from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import update_scheme
+from streamlink.utils import parse_json, update_scheme
 
 
 @pluginmatcher(re.compile(

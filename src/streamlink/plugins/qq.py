@@ -5,8 +5,8 @@ import re
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import parse_json
 from streamlink.stream import HLSStream
+from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
