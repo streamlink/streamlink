@@ -2,7 +2,7 @@ import re
 from functools import partial
 
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import parse_json
+from streamlink.utils import parse_json
 
 __all__ = ["parse_playlist"]
 

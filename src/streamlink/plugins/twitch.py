@@ -10,10 +10,10 @@ import requests
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import parse_json, parse_query
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker, HLSStreamWriter
 from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
+from streamlink.utils import parse_json, parse_qsd
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 
@@ -458,7 +458,7 @@ class Twitch(Plugin):
         super().__init__(url)
         match = self.match.groupdict()
         parsed = urlparse(url)
-        self.params = parse_query(parsed.query)
+        self.params = parse_qsd(parsed.query)
         self.subdomain = match.get("subdomain")
         self.video_id = None
         self.channel = None
