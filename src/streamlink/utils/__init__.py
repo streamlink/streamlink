@@ -1,7 +1,8 @@
 import json
 import re
-import xml.etree.ElementTree as ET
 import zlib
+
+from lxml.etree import XML
 
 from streamlink.compat import is_py2, is_py3, parse_qsl, urljoin, urlparse
 from streamlink.exceptions import PluginError
@@ -77,16 +78,16 @@ def parse_xml(data, name="XML", ignore_ns=False, exception=PluginError, schema=N
     if is_py2 and isinstance(data, unicode):
         data = data.encode("utf8")
     elif is_py3 and isinstance(data, str):
-        data = bytearray(data, "utf8")
+        data = bytes(data, "utf8")
 
     if ignore_ns:
         data = re.sub(br"[\t ]xmlns=\"(.+?)\"", b"", data)
 
     if invalid_char_entities:
-        data = re.sub(br'&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)', b'&amp;', data)
+        data = re.sub(br"&(?!(?:#(?:[0-9]+|[Xx][0-9A-Fa-f]+)|[A-Za-z0-9]+);)", b"&amp;", data)
 
     try:
-        tree = ET.fromstring(data)
+        tree = XML(data)
     except Exception as err:
         snippet = repr(data)
         if len(snippet) > 35:

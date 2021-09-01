@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import re
 import unittest
-from xml.etree.ElementTree import Element
 
 import six
+from lxml.etree import Element
 
 from streamlink.plugin.api.validate import (
     all, any, attr, endswith, filter, get, getattr, hasattr,
     length, map, optional, startswith, text, transform, union, union_get, url,
-    validate, xml_element, xml_find, xml_findall, xml_findtext
+    validate, xml_element, xml_find, xml_findall, xml_findtext, xml_xpath, xml_xpath_string
 )
 
 
@@ -90,6 +90,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(get("invalidkey"), {"key": "value"}) is None
         assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
         assert validate(get(3, "default"), [0, 1, 2]) == "default"
+        assert validate(get("attr"), Element("foo", {"attr": "value"})) == "value"
 
         if six.PY2:
             with six.assertRaisesRegex(self, ValueError, "'NoneType' object has no attribute '__getitem__'"):
@@ -139,12 +140,33 @@ class TestPluginAPIValidate(unittest.TestCase):
         self.assertRaises(ValueError, invalid_length)
 
     def test_xml_element(self):
-        el = Element("tag", attrib={"key": "value"})
+        el = Element("tag")
+        el.set("key", "value")
         el.text = "test"
+        childA = Element("childA")
+        childB = Element("childB")
+        el.append(childA)
+        el.append(childB)
 
-        assert validate(xml_element("tag"), el).tag == "tag"
-        assert validate(xml_element(text="test"), el).text == "test"
-        assert validate(xml_element(attrib={"key": text}), el).attrib == {"key": "value"}
+        upper = transform(str.upper)
+        newelem = validate(xml_element(tag=upper, text=upper, attrib={upper: upper}), el)
+
+        assert newelem.tag == "TAG"
+        assert newelem.text == "TEST"
+        assert newelem.attrib == {"KEY": "VALUE"}
+        assert list(newelem.iterchildren()) == [childA, childB]
+
+        with self.assertRaises(ValueError) as cm:
+            validate(xml_element(tag="invalid"), el)
+        assert str(cm.exception).startswith("Unable to validate XML tag: ")
+
+        with self.assertRaises(ValueError) as cm:
+            validate(xml_element(text="invalid"), el)
+        assert str(cm.exception).startswith("Unable to validate XML text: ")
+
+        with self.assertRaises(ValueError) as cm:
+            validate(xml_element(attrib={"key": "invalid"}), el)
+        assert str(cm.exception).startswith("Unable to validate XML attributes: ")
 
     def test_xml_find(self):
         el = Element("parent")
@@ -152,6 +174,10 @@ class TestPluginAPIValidate(unittest.TestCase):
         el.append(Element("bar"))
 
         assert validate(xml_find("bar"), el).tag == "bar"
+
+        with self.assertRaises(ValueError) as cm:
+            validate(xml_find("baz"), el)
+        assert str(cm.exception) == "XPath 'baz' did not return an element"
 
     def test_xml_findtext(self):
         el = Element("foo")
@@ -166,6 +192,37 @@ class TestPluginAPIValidate(unittest.TestCase):
             el.append(child)
 
         assert validate(xml_findall("child"), el) == children
+
+    def test_xml_xpath(self):
+        root = Element("root")
+        foo = Element("foo")
+        bar = Element("bar")
+        baz = Element("baz")
+        root.append(foo)
+        root.append(bar)
+        foo.append(baz)
+
+        assert validate(xml_xpath("./descendant-or-self::node()"), root) == [root, foo, baz, bar], "Returns correct node set"
+        assert validate(xml_xpath("./child::qux"), root) is None, "Returns None when node set is empty"
+        assert validate(xml_xpath("name(.)"), root) == "root", "Returns function values instead of node sets"
+        self.assertRaises(ValueError, validate, xml_xpath("."), "not an Element")
+
+    def test_xml_xpath_string(self):
+        root = Element("root")
+        foo = Element("foo")
+        bar = Element("bar")
+        root.set("attr", "")
+        foo.set("attr", "FOO")
+        bar.set("attr", "BAR")
+        root.append(foo)
+        root.append(bar)
+
+        assert validate(xml_xpath_string("./baz"), root) is None, "Returns None if nothing was found"
+        assert validate(xml_xpath_string("./@attr"), root) is None, "Returns None if string is empty"
+        assert validate(xml_xpath_string("./foo/@attr"), root) == "FOO", "Returns the attr value of foo"
+        assert validate(xml_xpath_string("./bar/@attr"), root) == "BAR", "Returns the attr value of bar"
+        assert validate(xml_xpath_string("count(./*)"), root) == "2", "Wraps arbitrary functions"
+        assert validate(xml_xpath_string("./*/@attr"), root) == "FOO", "Returns the first item of a set of nodes"
 
     def test_attr(self):
         el = Element("foo")

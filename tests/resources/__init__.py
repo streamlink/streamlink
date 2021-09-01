@@ -1,10 +1,10 @@
 import codecs
 import os.path
-import xml.etree.ElementTree as ET
 from contextlib import contextmanager
 from io import BytesIO
 
 import six
+from lxml.etree import iterparse
 
 __here__ = os.path.abspath(os.path.dirname(__file__))
 
@@ -13,9 +13,9 @@ def _parse_xml(data, strip_ns=False):
     if six.PY2 and isinstance(data, six.text_type):
         data = data.encode("utf8")
     elif six.PY3:
-        data = bytearray(data, "utf8")
+        data = bytes(data, "utf8")
     try:
-        it = ET.iterparse(BytesIO(data))
+        it = iterparse(BytesIO(data))
         for _, el in it:
             if '}' in el.tag and strip_ns:  # pragma: no branch
                 # strip all namespaces
