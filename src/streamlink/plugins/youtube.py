@@ -84,18 +84,10 @@ class YouTube(Plugin):
         elif parsed.scheme != "https":
             self.url = urlunparse(parsed._replace(scheme="https"))
 
-        self.author = None
-        self.title = None
         self.session.http.headers.update({'User-Agent': useragents.CHROME})
         consent = self.cache.get("consent_ck")
         if consent is not None:
             self.set_consent_ck(consent)
-
-    def get_author(self):
-        return self.author
-
-    def get_title(self):
-        return self.title
 
     @classmethod
     def stream_weight(cls, stream):

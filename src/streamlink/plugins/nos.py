@@ -15,14 +15,10 @@ log = logging.getLogger(__name__)
 ))
 class NOS(Plugin):
     _msg_live_offline = "This livestream is offline."
-    title = None
     vod_keys = {
         "pages/Collection/Video/Video": "item",
         "pages/Video/Video": "video",
     }
-
-    def get_title(self):
-        return self.title
 
     def _get_streams(self):
         res = self.session.http.get(self.url)

@@ -55,19 +55,6 @@ class Booyah(Plugin):
         },
     })
 
-    author = None
-    category = None
-    title = None
-
-    def get_author(self):
-        return self.author
-
-    def get_category(self):
-        return self.category
-
-    def get_title(self):
-        return self.title
-
     @classmethod
     def stream_weight(cls, stream):
         if stream == "source":

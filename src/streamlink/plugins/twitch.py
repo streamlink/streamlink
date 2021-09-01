@@ -467,9 +467,6 @@ class Twitch(Plugin):
         self.video_id = None
         self.channel = None
         self.clip_name = None
-        self.title = None
-        self.author = None
-        self.category = None
 
         if self.subdomain == "player":
             # pop-out player

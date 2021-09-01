@@ -205,6 +205,14 @@ class Plugin(object):
     # a reference to the `re.Match` result of the first matching matcher
     # match: Match
 
+    # plugin metadata attributes
+    author = None
+    # type: Optional[str]
+    category = None
+    # type: Optional[str]
+    title = None
+    # type: Optional[str]
+
     cache = None
     logger = None
     module = "unknown"
@@ -434,13 +442,16 @@ class Plugin(object):
         raise NotImplementedError
 
     def get_title(self):
-        return None
+        # type: () -> Optional[str]
+        return self.title
 
     def get_author(self):
-        return None
+        # type: () -> Optional[str]
+        return self.author
 
     def get_category(self):
-        return None
+        # type: () -> Optional[str]
+        return self.category
 
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """

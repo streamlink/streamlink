@@ -51,8 +51,7 @@ class NBCNews(Plugin):
         ))
     )
 
-    def get_title(self):
-        return 'NBC News Now'
+    title = "NBC News Now"
 
     def _get_streams(self):
         video_id = self.session.http.get(self.url, schema=self.json_data_schema)

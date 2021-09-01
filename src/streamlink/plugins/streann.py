@@ -59,10 +59,6 @@ class Streann(Plugin):
 
     _device_id = None
     _domain = None
-    title = None
-
-    def get_title(self):
-        return self.title
 
     @property
     def device_id(self):

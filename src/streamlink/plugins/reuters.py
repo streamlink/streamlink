@@ -48,7 +48,6 @@ class Reuters(Plugin):
 
     def __init__(self, url):
         super(Reuters, self).__init__(url)
-        self.title = None
 
     def get_title(self):
         if not self.title:

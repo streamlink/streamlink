@@ -19,15 +19,6 @@ class DeutscheWelle(Plugin):
     DEFAULT_CHANNEL = "1"
     API_URL = "https://www.dw.com/playersources/v-{media_id}?hls=true"
 
-    author = None
-    title = None
-
-    def get_author(self):
-        return self.author
-
-    def get_title(self):
-        return self.title
-
     def _find_metadata(self, elem):
         # type: (Element)
         self.author = elem.xpath("string(.//input[@name='channel_name'][1]/@value)") or None
