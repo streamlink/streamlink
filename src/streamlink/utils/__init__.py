@@ -1,6 +1,10 @@
 import zlib
 from collections import OrderedDict
-from typing import Dict, Generic, Optional, TypeVar
+try:
+    from typing import Dict, Generic, Optional, TypeVar
+    is_typing = True
+except ImportError:
+    is_typing = False
 
 from streamlink.compat import is_py3, urljoin, urlparse
 from streamlink.exceptions import PluginError
@@ -129,11 +133,15 @@ def escape_librtmp(value):  # pragma: no cover
     return value
 
 
-TCacheKey = TypeVar("TCacheKey")
-TCacheValue = TypeVar("TCacheValue")
+if is_typing:
+    TCacheKey = TypeVar("TCacheKey")
+    TCacheValue = TypeVar("TCacheValue")
+    _baseClass = Generic[TCacheKey, TCacheValue]
+else:
+    _baseClass = object
 
 
-class LRUCache(Generic[TCacheKey, TCacheValue]):
+class LRUCache(_baseClass):
     def __init__(self, num):
         # type: (int)
         # TODO: fix type after dropping py36
