@@ -1,12 +1,10 @@
-import json
-import logging
 import sys
 from getpass import getpass
+from json import dumps
+from typing import Any, IO, Union
 
 from streamlink.plugin.plugin import UserInputRequester
 from streamlink_cli.utils import JSONEncoder
-
-log = logging.getLogger("streamlink.cli")
 
 
 class ConsoleUserInputRequester(UserInputRequester):
@@ -16,77 +14,81 @@ class ConsoleUserInputRequester(UserInputRequester):
     def __init__(self, console):
         self.console = console
 
-    def ask(self, prompt):
-        if sys.stdin.isatty():
-            return self.console.ask(prompt.strip() + ": ")
-        else:
+    def ask(self, prompt: str) -> str:
+        if not sys.stdin.isatty():
             raise OSError("no TTY available")
+        return self.console.ask(f"{prompt.strip()}: ")
 
-    def ask_password(self, prompt):
-        if sys.stdin.isatty():
-            return self.console.askpass(prompt.strip() + ": ")
-        else:
+    def ask_password(self, prompt: str) -> str:
+        if not sys.stdin.isatty():
             raise OSError("no TTY available")
+        return self.console.askpass(f"{prompt.strip()}: ")
 
 
 class ConsoleOutput:
-    def __init__(self, output, json=False):
+    def __init__(self, output: IO, json: bool = False):
         self.json = json
         self.output = output
 
-    def set_output(self, output):
-        self.output = output
+    def ask(self, prompt: str) -> Union[None, str]:
+        if not sys.stdin.isatty():
+            return
 
-    @classmethod
-    def ask(cls, msg, *args, **kwargs):
-        if sys.stdin.isatty():
-            formatted = msg.format(*args, **kwargs)
-            sys.stderr.write(formatted)
+        self.output.write(prompt)
 
-            try:
-                answer = input()
-            except Exception:
-                answer = ""
+        try:
+            return input().strip()
+        except Exception:
+            return
 
-            return answer.strip()
-        else:
-            return ""
+    def askpass(self, prompt: str) -> Union[None, str]:
+        if not sys.stdin.isatty():
+            return
 
-    @classmethod
-    def askpass(cls, msg, *args, **kwargs):
-        if sys.stdin.isatty():
-            return getpass(msg.format(*args, **kwargs))
-        else:
-            return ""
+        return getpass(prompt, self.output)
 
-    def msg(self, msg, *args, **kwargs):
-        formatted = f"{msg.format(*args, **kwargs)}\n"
-        self.output.write(formatted)
+    def msg(self, msg: str) -> None:
+        self.output.write(f"{msg}\n")
 
-    def msg_json(self, obj):
+    def msg_json(self, *objs: Any, **keywords: Any) -> None:
         if not self.json:
             return
 
-        if hasattr(obj, "__json__"):
-            obj = obj.__json__()
+        if objs and isinstance(objs[0], list):
+            out = []
+            for obj in objs:
+                if isinstance(obj, list):
+                    for item in obj:
+                        out.append(item)
+                else:
+                    if hasattr(obj, "__json__") and callable(obj.__json__):
+                        obj = obj.__json__()
+                    out.append(obj)
+            if keywords:
+                out.append(keywords)
+        else:
+            out = {}
+            for obj in objs:
+                if hasattr(obj, "__json__") and callable(obj.__json__):
+                    obj = obj.__json__()
+                if not isinstance(obj, dict):
+                    continue
+                out.update(**obj)
+            out.update(**keywords)
 
-        msg = json.dumps(obj, cls=JSONEncoder,
-                         indent=2)
-        self.msg("{0}", msg)
+        msg = dumps(out, cls=JSONEncoder, indent=2)
+        self.msg(msg)
 
-        if isinstance(obj, dict) and obj.get("error"):
+        if type(out) is dict and out.get("error"):
             sys.exit(1)
 
-    def exit(self, msg, *args, **kwargs):
-        formatted = msg.format(*args, **kwargs)
-
+    def exit(self, msg: str) -> None:
         if self.json:
-            obj = dict(error=formatted)
-            self.msg_json(obj)
+            self.msg_json(error=msg)
         else:
-            self.msg("{0}", f"error: {formatted}")
+            self.msg(f"error: {msg}")
 
         sys.exit(1)
 
 
-__all__ = ["ConsoleOutput"]
+__all__ = ["ConsoleOutput", "ConsoleUserInputRequester"]
