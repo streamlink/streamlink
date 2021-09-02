@@ -24,14 +24,14 @@ import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
-from streamlink.plugin import PluginOptions
-from streamlink.stream import StreamProcess
+from streamlink.plugin import Plugin, PluginOptions
+from streamlink.stream import StreamIO, StreamProcess
 from streamlink.utils import NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
-from streamlink_cli.output import FileOutput, PlayerOutput
+from streamlink_cli.output import FileOutput, Output, PlayerOutput
 from streamlink_cli.utils import Formatter, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
@@ -41,7 +41,12 @@ except AttributeError:
     pass  # Not windows
 QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 
-args = console = streamlink = plugin = stream_fd = output = None
+args = None
+console: ConsoleOutput = None
+output: Output = None
+plugin: Plugin = None
+stream_fd: StreamIO = None
+streamlink: Streamlink = None
 
 log = logging.getLogger("streamlink.cli")
 
