@@ -1,10 +1,10 @@
 [
     {
-        "url": "https://github.com/streamlink/streamlink-assets/releases/download/2020.4.21/ffmpeg-4.2.2-win32-static.zip",
-        "sha256": "1f6adff50db6cad54fdab15013c4c95cb6f83d7fe6d1167f3896cf4550573565",
-        "filename": "ffmpeg-4.2.2-win32-static.zip",
+        "url": "https://github.com/streamlink/FFmpeg-Builds/releases/download/20210826-1/ffmpeg-n4.4-80-gbf87bdd3f6-win32-gpl-4.4.zip",
+        "sha256": "38af31a76b233cf0e83645e19c6dc758f8236981533ed3427424b9fb09285d29",
+        "filename": "ffmpeg-n4.4-80-gbf87bdd3f6-win32-gpl-4.4.zip",
         "type": "zip",
-        "sourcedir": "ffmpeg-4.2.2-win32-static",
+        "sourcedir": "ffmpeg-n4.4-80-gbf87bdd3f6-win32-gpl-4.4",
         "targetdir": "ffmpeg",
         "files": [
             {
@@ -14,19 +14,9 @@
             {
                 "from": "LICENSE.txt",
                 "to": "LICENSE.txt"
-            }
-        ]
-    },
-    {
-        "url": "https://github.com/streamlink/streamlink-assets/releases/download/2020.4.21/ffmpeg-4.2.2-win32-static-readme.txt",
-        "sha256": "6252abd8981ff3b61728bf58868c3dab2d4f96495907bae15ebbdad6b9bb9934",
-        "filename": "ffmpeg-4.2.2-win32-static-readme.txt",
-        "type": "file",
-        "sourcedir": null,
-        "targetdir": "ffmpeg",
-        "files": [
+            },
             {
-                "from": "ffmpeg-4.2.2-win32-static-readme.txt",
+                "from": "BUILDINFO.txt",
                 "to": "BUILDINFO.txt"
             }
         ]
