@@ -102,8 +102,8 @@ class TestCLIMain(unittest.TestCase):
 
 
 class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
-    @patch("streamlink_cli.main.args", stream_url=True, subprocess_cmdline=False)
-    @patch("streamlink_cli.main.console", json=True)
+    @patch("streamlink_cli.main.args", json=True, stream_url=True, subprocess_cmdline=False)
+    @patch("streamlink_cli.main.console")
     def test_handle_stream_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(best=stream)
@@ -115,7 +115,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         self.assertEqual(console.error.mock_calls, [])
         console.msg_json.mock_calls.clear()
 
-        console.json = False
+        args.json = False
         handle_stream(plugin, streams, "best")
         self.assertEqual(console.msg.mock_calls, [call(stream.to_url())])
         self.assertEqual(console.msg_json.mock_calls, [])
@@ -128,8 +128,8 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         self.assertEqual(console.msg_json.mock_calls, [])
         self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
 
-    @patch("streamlink_cli.main.args", stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
-    @patch("streamlink_cli.main.console", json=True)
+    @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
+    @patch("streamlink_cli.main.console")
     def test_handle_url_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(worst=Mock(), best=stream)
@@ -142,7 +142,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
             self.assertEqual(console.error.mock_calls, [])
             console.msg_json.mock_calls.clear()
 
-            console.json = False
+            args.json = False
             handle_url()
             self.assertEqual(console.msg.mock_calls, [call(stream.to_manifest_url())])
             self.assertEqual(console.msg_json.mock_calls, [])
@@ -330,12 +330,11 @@ class TestCLIMainCreateOutput(unittest.TestCase):
 class TestCLIMainHandleStream(unittest.TestCase):
     @patch("streamlink_cli.main.output_stream")
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console")
-    def test_handle_stream_output_stream(self, console: Mock, args: Mock, mock_output_stream: Mock):
+    def test_handle_stream_output_stream(self, args: Mock, mock_output_stream: Mock):
         """
         Test that the formatter does define the correct variables
         """
-        console.json = False
+        args.json = False
         args.subprocess_cmdline = False
         args.stream_url = False
         args.output = False

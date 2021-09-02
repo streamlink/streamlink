@@ -407,7 +407,7 @@ def handle_stream(plugin, streams, stream_name):
             console.exit("The stream specified cannot be translated to a command")
 
     # Print JSON representation of the stream
-    elif console.json:
+    elif args.json:
         console.msg_json(stream)
 
     elif args.stream_url:
@@ -582,12 +582,12 @@ def handle_url():
                 return
 
         err = f"The specified stream(s) '{', '.join(args.stream)}' could not be found"
-        if console.json:
+        if args.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module,
                                   error=err))
         else:
             console.exit(f"{err}.\n       Available streams: {validstreams}")
-    elif console.json:
+    elif args.json:
         console.msg_json(dict(plugin=plugin.module, streams=streams))
     elif args.stream_url:
         try:
@@ -605,7 +605,7 @@ def print_plugins():
     pluginlist = list(streamlink.get_plugins().keys())
     pluginlist_formatted = ", ".join(sorted(pluginlist))
 
-    if console.json:
+    if args.json:
         console.msg_json(pluginlist)
     else:
         console.msg(f"Loaded plugins: {pluginlist_formatted}")
