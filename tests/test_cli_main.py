@@ -117,7 +117,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
 
         console.json = False
         handle_stream(plugin, streams, "best")
-        self.assertEqual(console.msg.mock_calls, [call("{0}", stream.to_url())])
+        self.assertEqual(console.msg.mock_calls, [call(stream.to_url())])
         self.assertEqual(console.msg_json.mock_calls, [])
         self.assertEqual(console.error.mock_calls, [])
         console.msg.mock_calls.clear()
@@ -144,7 +144,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
 
             console.json = False
             handle_url()
-            self.assertEqual(console.msg.mock_calls, [call("{0}", stream.to_manifest_url())])
+            self.assertEqual(console.msg.mock_calls, [call(stream.to_manifest_url())])
             self.assertEqual(console.msg_json.mock_calls, [])
             self.assertEqual(console.error.mock_calls, [])
             console.msg.mock_calls.clear()

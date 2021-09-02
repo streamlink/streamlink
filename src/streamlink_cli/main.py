@@ -100,14 +100,14 @@ def create_output(formatter: Formatter):
             try:
                 namedpipe = NamedPipe()
             except OSError as err:
-                console.exit("Failed to create pipe: {0}", err)
+                console.exit(f"Failed to create pipe: {err}")
         elif args.player_http:
             http = create_http_server()
 
         if args.record:
             record = check_file_output(formatter.filename(args.record, args.fs_safe_rules), args.force)
 
-        log.info("Starting player: {0}".format(args.player))
+        log.info(f"Starting player: {args.player}")
 
         out = PlayerOutput(
             args.player,
@@ -134,7 +134,7 @@ def create_http_server(*_args, **_kwargs):
         http = HTTPServer()
         http.bind(*_args, **_kwargs)
     except OSError as err:
-        console.exit("Failed to create HTTP server: {0}", err)
+        console.exit(f"Failed to create HTTP server: {err}")
 
     return http
 
@@ -173,12 +173,11 @@ def output_stream_http(plugin, initial_streams, formatter: Formatter, external=F
         )
 
         try:
-            log.info("Starting player: {0}".format(args.player))
+            log.info(f"Starting player: {args.player}")
             if player:
                 player.open()
         except OSError as err:
-            console.exit("Failed to start player: {0} ({1})",
-                         args.player, err)
+            console.exit(f"Failed to start player: {args.player} ({err})")
     else:
         server = create_http_server(host=None, port=port)
         player = None
@@ -189,7 +188,7 @@ def output_stream_http(plugin, initial_streams, formatter: Formatter, external=F
 
     for req in iter_http_requests(server, player):
         user_agent = req.headers.get("User-Agent") or "unknown player"
-        log.info("Got HTTP request from {0}".format(user_agent))
+        log.info(f"Got HTTP request from {user_agent}")
 
         stream_fd = prebuffer = None
         while not stream_fd and (not player or player.running):
@@ -202,8 +201,7 @@ def output_stream_http(plugin, initial_streams, formatter: Formatter, external=F
                         stream = streams[stream_name]
                         break
                 else:
-                    log.info("Stream not available, will re-fetch "
-                             "streams in 10 sec")
+                    log.info("Stream not available, will re-fetch streams in 10 sec")
                     sleep(10)
                     continue
             except PluginError as err:
@@ -211,11 +209,10 @@ def output_stream_http(plugin, initial_streams, formatter: Formatter, external=F
                 continue
 
             try:
-                log.info("Opening stream: {0} ({1})".format(stream_name,
-                                                            type(stream).shortname()))
+                log.info(f"Opening stream: {stream_name} ({type(stream).shortname()})")
                 stream_fd, prebuffer = open_stream(stream)
             except StreamError as err:
-                log.error("{0}".format(err))
+                log.error(err)
 
         if stream_fd and prebuffer:
             log.debug("Writing stream to player")
@@ -242,10 +239,10 @@ def output_stream_passthrough(stream, formatter: Formatter):
     )
 
     try:
-        log.info("Starting player: {0}".format(args.player))
+        log.info(f"Starting player: {args.player}")
         output.open()
     except OSError as err:
-        console.exit("Failed to start player: {0} ({1})", args.player, err)
+        console.exit(f"Failed to start player: {args.player} ({err})")
         return False
 
     return True
@@ -264,7 +261,7 @@ def open_stream(stream):
     try:
         stream_fd = stream.open()
     except StreamError as err:
-        raise StreamError("Could not open stream: {0}".format(err))
+        raise StreamError(f"Could not open stream: {err}")
 
     # Read 8192 bytes before proceeding to check for errors.
     # This is to avoid opening the output unnecessarily.
@@ -273,7 +270,7 @@ def open_stream(stream):
         prebuffer = stream_fd.read(8192)
     except OSError as err:
         stream_fd.close()
-        raise StreamError("Failed to read data from stream: {0}".format(err))
+        raise StreamError(f"Failed to read data from stream: {err}")
 
     if not prebuffer:
         stream_fd.close()
@@ -293,11 +290,10 @@ def output_stream(stream, formatter: Formatter):
             success_open = True
             break
         except StreamError as err:
-            log.error("Try {0}/{1}: Could not open stream {2} ({3})".format(
-                i + 1, args.retry_open, stream, err))
+            log.error(f"Try {i + 1}/{args.retry_open}: Could not open stream {stream} ({err})")
 
     if not success_open:
-        console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
+        console.exit(f"Could not open stream {stream}, tried {args.retry_open} times, exiting")
 
     output = create_output(formatter)
 
@@ -368,11 +364,11 @@ def read_stream(stream, output, prebuffer, formatter: Formatter, chunk_size=8192
                 elif is_http and err.errno in ACCEPTABLE_ERRNO:
                     log.info("HTTP connection closed")
                 else:
-                    console.exit("Error when writing to output: {0}, exiting", err)
+                    console.exit(f"Error when writing to output: {err}, exiting")
 
                 break
     except OSError as err:
-        console.exit("Error when reading from stream: {0}, exiting", err)
+        console.exit(f"Error when reading from stream: {err}, exiting")
     finally:
         stream.close()
         log.info("Stream ended")
@@ -399,9 +395,9 @@ def handle_stream(plugin, streams, stream_name):
             try:
                 cmdline = stream.cmdline()
             except StreamError as err:
-                console.exit("{0}", err)
+                console.exit(err)
 
-            console.msg("{0}", cmdline)
+            console.msg(cmdline)
         else:
             console.exit("The stream specified cannot be translated to a command")
 
@@ -411,7 +407,7 @@ def handle_stream(plugin, streams, stream_name):
 
     elif args.stream_url:
         try:
-            console.msg("{0}", stream.to_url())
+            console.msg(stream.to_url())
         except TypeError:
             console.exit("The stream specified cannot be translated to a URL")
 
@@ -469,8 +465,7 @@ def fetch_streams_with_retry(plugin, interval, count):
         streams = None
 
     if not streams:
-        log.info("Waiting for streams, retrying every {0} "
-                 "second(s)".format(interval))
+        log.info(f"Waiting for streams, retrying every {interval} second(s)")
     attempts = 0
 
     while not streams:
@@ -528,7 +523,7 @@ def format_valid_streams(plugin, streams):
 
         if len(synonyms) > 0:
             joined = delimiter.join(synonyms)
-            name = "{0} ({1})".format(name, joined)
+            name = f"{name} ({joined})"
 
         validstreams.append(name)
 
@@ -563,12 +558,12 @@ def handle_url():
         else:
             streams = fetch_streams(plugin)
     except NoPluginError:
-        console.exit("No plugin can handle URL: {0}", args.url)
+        console.exit(f"No plugin can handle URL: {args.url}")
     except PluginError as err:
-        console.exit("{0}", err)
+        console.exit(err)
 
     if not streams:
-        console.exit("No playable streams found on this URL: {0}", args.url)
+        console.exit(f"No playable streams found on this URL: {args.url}")
 
     if args.default_stream and not args.stream and not args.json:
         args.stream = args.default_stream
@@ -577,29 +572,26 @@ def handle_url():
         validstreams = format_valid_streams(plugin, streams)
         for stream_name in args.stream:
             if stream_name in streams:
-                log.info("Available streams: {0}".format(validstreams))
+                log.info(f"Available streams: {validstreams}")
                 handle_stream(plugin, streams, stream_name)
                 return
 
-        err = ("The specified stream(s) '{0}' could not be "
-               "found".format(", ".join(args.stream)))
-
+        err = f"The specified stream(s) '{', '.join(args.stream)}' could not be found"
         if console.json:
             console.msg_json(dict(streams=streams, plugin=plugin.module,
                                   error=err))
         else:
-            console.exit("{0}.\n       Available streams: {1}",
-                         err, validstreams)
+            console.exit(f"{err}.\n       Available streams: {validstreams}")
     elif console.json:
         console.msg_json(dict(plugin=plugin.module, streams=streams))
     elif args.stream_url:
         try:
-            console.msg("{0}", streams[list(streams)[-1]].to_manifest_url())
+            console.msg(streams[list(streams)[-1]].to_manifest_url())
         except TypeError:
             console.exit("The stream specified cannot be translated to a URL")
     else:
         validstreams = format_valid_streams(plugin, streams)
-        console.msg("Available streams: {0}", validstreams)
+        console.msg(f"Available streams: {validstreams}")
 
 
 def print_plugins():
@@ -611,7 +603,7 @@ def print_plugins():
     if console.json:
         console.msg_json(pluginlist)
     else:
-        console.msg("Loaded plugins: {0}", pluginlist_formatted)
+        console.msg(f"Loaded plugins: {pluginlist_formatted}")
 
 
 def load_plugins(dirs: List[Path], showwarning: bool = True):
@@ -635,8 +627,8 @@ def setup_args(parser: argparse.ArgumentParser, config_files: List[Path] = None,
 
     args, unknown = parser.parse_known_args(configs + arglist)
     if unknown and not ignore_unknown:
-        msg = gettext('unrecognized arguments: %s')
-        parser.error(msg % ' '.join(unknown))
+        msg = gettext("unrecognized arguments: %s")
+        parser.error(msg % " ".join(unknown))
 
     # Force lowercase to allow case-insensitive lookup
     if args.stream:
@@ -887,11 +879,12 @@ def setup_plugin_options(session, plugin):
     if required:
         for req in required.values():
             if not session.get_plugin_option(pname, req.dest):
-                prompt = req.prompt or "Enter {0} {1}".format(pname, req.name)
-                session.set_plugin_option(pname, req.dest,
-                                          console.askpass(prompt + ": ")
-                                          if req.sensitive else
-                                          console.ask(prompt + ": "))
+                prompt = f"{req.prompt or f'Enter {pname} {req.name}'}: "
+                session.set_plugin_option(
+                    pname,
+                    req.dest,
+                    console.askpass(prompt) if req.sensitive else console.ask(prompt)
+                )
 
 
 def log_root_warning():
@@ -965,12 +958,10 @@ def check_version(force=False):
     latest_version = StrictVersion(latest_version)
 
     if latest_version > installed_version:
-        log.info("A new version of Streamlink ({0}) is "
-                 "available!".format(latest_version))
+        log.info(f"A new version of Streamlink ({latest_version}) is available!")
         cache.set("version_info_printed", True, (60 * 60 * 6))
     elif force:
-        log.info("Your Streamlink version ({0}) is up to date!".format(
-                 installed_version))
+        log.info(f"Your Streamlink version ({installed_version}) is up to date!")
 
     if force:
         sys.exit()
@@ -1081,11 +1072,10 @@ def main():
         parser.print_help()
     else:
         usage = parser.format_usage()
-        msg = (
-            "{usage}\nUse -h/--help to see the available options or "
-            "read the manual at https://streamlink.github.io"
-        ).format(usage=usage)
-        console.msg(msg)
+        console.msg(
+            f"{usage}\n"
+            f"Use -h/--help to see the available options or read the manual at https://streamlink.github.io"
+        )
 
     sys.exit(error_code)
 
