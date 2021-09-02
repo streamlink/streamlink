@@ -1,0 +1,52 @@
+[
+    {
+        "url": "https://github.com/streamlink/streamlink-assets/releases/download/2020.4.21/ffmpeg-4.2.2-win32-static.zip",
+        "sha256": "1f6adff50db6cad54fdab15013c4c95cb6f83d7fe6d1167f3896cf4550573565",
+        "filename": "ffmpeg-4.2.2-win32-static.zip",
+        "type": "zip",
+        "sourcedir": "ffmpeg-4.2.2-win32-static",
+        "targetdir": "ffmpeg",
+        "files": [
+            {
+                "from": "bin/ffmpeg.exe",
+                "to": "ffmpeg.exe"
+            },
+            {
+                "from": "LICENSE.txt",
+                "to": "LICENSE.txt"
+            }
+        ]
+    },
+    {
+        "url": "https://github.com/streamlink/streamlink-assets/releases/download/2020.4.21/ffmpeg-4.2.2-win32-static-readme.txt",
+        "sha256": "6252abd8981ff3b61728bf58868c3dab2d4f96495907bae15ebbdad6b9bb9934",
+        "filename": "ffmpeg-4.2.2-win32-static-readme.txt",
+        "type": "file",
+        "sourcedir": null,
+        "targetdir": "ffmpeg",
+        "files": [
+            {
+                "from": "ffmpeg-4.2.2-win32-static-readme.txt",
+                "to": "BUILDINFO.txt"
+            }
+        ]
+    },
+    {
+        "url": "https://github.com/streamlink/streamlink-assets/releases/download/2020.4.21/rtmpdump-2.3-windows.zip",
+        "sha256": "6948aa372f04952d5675917c6ca2c7c0bf6b109de21a4323adc93247fff0189f",
+        "filename": "rtmpdump-2.3-windows.zip",
+        "type": "zip",
+        "sourcedir": "rtmpdump-2.3",
+        "targetdir": "rtmpdump",
+        "files": [
+            {
+                "from": "rtmpdump.exe",
+                "to": "rtmpdump.exe"
+            },
+            {
+                "from": "COPYING",
+                "to": "LICENSE.txt"
+            }
+        ]
+    }
+]
