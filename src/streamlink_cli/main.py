@@ -583,12 +583,11 @@ def handle_url():
 
         err = f"The specified stream(s) '{', '.join(args.stream)}' could not be found"
         if args.json:
-            console.msg_json(dict(streams=streams, plugin=plugin.module,
-                                  error=err))
+            console.msg_json(plugin=plugin.module, streams=streams, error=err)
         else:
             console.exit(f"{err}.\n       Available streams: {validstreams}")
     elif args.json:
-        console.msg_json(dict(plugin=plugin.module, streams=streams))
+        console.msg_json(plugin=plugin.module, streams=streams)
     elif args.stream_url:
         try:
             console.msg(streams[list(streams)[-1]].to_manifest_url())

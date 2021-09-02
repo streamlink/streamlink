@@ -138,7 +138,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=plugin)):
             handle_url()
             self.assertEqual(console.msg.mock_calls, [])
-            self.assertEqual(console.msg_json.mock_calls, [call(dict(plugin="fake", streams=streams))])
+            self.assertEqual(console.msg_json.mock_calls, [call(plugin="fake", streams=streams)])
             self.assertEqual(console.error.mock_calls, [])
             console.msg_json.mock_calls.clear()
 
