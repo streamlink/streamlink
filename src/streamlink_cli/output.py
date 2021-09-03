@@ -8,7 +8,7 @@ from time import sleep
 
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
-from streamlink_cli.utils import ignored
+from streamlink_cli.utils import Formatter, ignored
 
 if is_win32:
     import msvcrt
@@ -215,7 +215,12 @@ class PlayerOutput(Output):
                     self.title = self.title.replace('"', '')
                     filename = filename[:-1] + '\\' + self.title + filename[-1]
 
-        args = self.args.format(**{PLAYER_ARGS_INPUT_DEFAULT: filename, PLAYER_ARGS_INPUT_FALLBACK: filename})
+        # format args via the formatter, so that invalid/unknown variables don't raise a KeyError
+        argsformatter = Formatter({
+            PLAYER_ARGS_INPUT_DEFAULT: lambda: filename,
+            PLAYER_ARGS_INPUT_FALLBACK: lambda: filename
+        })
+        args = argsformatter.title(self.args)
         cmd = self.cmd
 
         # player command

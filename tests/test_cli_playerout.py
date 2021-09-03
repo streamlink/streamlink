@@ -64,6 +64,12 @@ def test_output_args_posix():
     po_fallback = PlayerOutput("foo", args="--bar {filename}")
     assert po_fallback._create_arguments() == ["foo", "--bar", "-"]
 
+    po_fallback = PlayerOutput("foo", args="--bar {playerinput} {filename}")
+    assert po_fallback._create_arguments() == ["foo", "--bar", "-", "-"]
+
+    po_fallback = PlayerOutput("foo", args="--bar {qux}")
+    assert po_fallback._create_arguments() == ["foo", "--bar", "{qux}", "-"]
+
 
 @windows_only
 def test_output_args_windows():
@@ -78,3 +84,9 @@ def test_output_args_windows():
 
     po_fallback = PlayerOutput("foo", args="--bar {filename}")
     assert po_fallback._create_arguments() == "foo --bar -"
+
+    po_fallback = PlayerOutput("foo", args="--bar {playerinput} {filename}")
+    assert po_fallback._create_arguments() == "foo --bar - -"
+
+    po_fallback = PlayerOutput("foo", args="--bar {qux}")
+    assert po_fallback._create_arguments() == "foo --bar {qux} -"
