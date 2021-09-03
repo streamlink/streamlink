@@ -408,7 +408,10 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print JSON representation of the stream
     elif args.json:
-        console.msg_json(stream)
+        console.msg_json(
+            stream,
+            metadata=plugin.get_metadata()
+        )
 
     elif args.stream_url:
         try:
@@ -583,11 +586,20 @@ def handle_url():
 
         err = f"The specified stream(s) '{', '.join(args.stream)}' could not be found"
         if args.json:
-            console.msg_json(plugin=plugin.module, streams=streams, error=err)
+            console.msg_json(
+                plugin=plugin.module,
+                metadata=plugin.get_metadata(),
+                streams=streams,
+                error=err
+            )
         else:
             console.exit(f"{err}.\n       Available streams: {validstreams}")
     elif args.json:
-        console.msg_json(plugin=plugin.module, streams=streams)
+        console.msg_json(
+            plugin=plugin.module,
+            metadata=plugin.get_metadata(),
+            streams=streams
+        )
     elif args.stream_url:
         try:
             console.msg(streams[list(streams)[-1]].to_manifest_url())
