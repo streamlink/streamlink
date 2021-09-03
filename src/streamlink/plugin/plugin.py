@@ -430,6 +430,13 @@ class Plugin:
     def _get_streams(self):
         raise NotImplementedError
 
+    def get_metadata(self) -> Dict[str, Optional[str]]:
+        return dict(
+            author=self.get_author(),
+            category=self.get_category(),
+            title=self.get_title()
+        )
+
     def get_title(self) -> Optional[str]:
         return self.title
 

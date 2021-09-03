@@ -9,7 +9,6 @@ import freezegun
 
 import streamlink_cli.main
 import tests.resources
-from streamlink.plugin.plugin import Plugin
 from streamlink.session import Streamlink
 from streamlink.stream.stream import Stream
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
@@ -26,11 +25,7 @@ from streamlink_cli.main import (
     setup_config_args
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
-
-
-class FakePlugin(Plugin):
-    def _get_streams(self):
-        pass  # pragma: no cover
+from tests.plugin.testplugin import TestPlugin as FakePlugin
 
 
 class TestCLIMain(unittest.TestCase):
@@ -107,11 +102,21 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
     def test_handle_stream_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(best=stream)
-        plugin = Mock(FakePlugin(""), module="fake", arguments=[], streams=Mock(return_value=streams))
+        plugin = FakePlugin("")
+        plugin.module = "fake"
+        plugin.arguments = []
+        plugin.streams = Mock(return_value=streams)
 
         handle_stream(plugin, streams, "best")
         self.assertEqual(console.msg.mock_calls, [])
-        self.assertEqual(console.msg_json.mock_calls, [call(stream)])
+        self.assertEqual(console.msg_json.mock_calls, [call(
+            stream,
+            metadata=dict(
+                author="Tѥst Āuƭhǿr",
+                category=None,
+                title="Test Title"
+            )
+        )])
         self.assertEqual(console.error.mock_calls, [])
         console.msg_json.mock_calls.clear()
 
@@ -133,12 +138,23 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
     def test_handle_url_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(worst=Mock(), best=stream)
-        plugin = Mock(FakePlugin(""), module="fake", arguments=[], streams=Mock(return_value=streams))
+        plugin = FakePlugin("")
+        plugin.module = "fake"
+        plugin.arguments = []
+        plugin.streams = Mock(return_value=streams)
 
         with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=plugin)):
             handle_url()
             self.assertEqual(console.msg.mock_calls, [])
-            self.assertEqual(console.msg_json.mock_calls, [call(plugin="fake", streams=streams)])
+            self.assertEqual(console.msg_json.mock_calls, [call(
+                plugin="fake",
+                metadata=dict(
+                    author="Tѥst Āuƭhǿr",
+                    category=None,
+                    title="Test Title"
+                ),
+                streams=streams
+            )])
             self.assertEqual(console.error.mock_calls, [])
             console.msg_json.mock_calls.clear()
 
