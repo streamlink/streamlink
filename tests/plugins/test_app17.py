@@ -6,5 +6,5 @@ class TestPluginCanHandleUrlApp17(PluginCanHandleUrl):
     __plugin__ = App17
 
     should_match = [
-        'https://17.live/live/123123',
+        'https://17.live/en/live/123123',
     ]

@@ -9,10 +9,10 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://17\.live/live/(?P<channel>[^/&?]+)"
+    r"https?://17\.live/.+/live/(?P<channel>[^/&?]+)"
 ))
 class App17(Plugin):
-    API_URL = "https://api-dsa.17app.co/api/v1/lives/{0}/viewers/alive"
+    API_URL = "https://wap-api.17app.co/api/v1/lives/{0}/viewers/alive"
 
     _api_schema = validate.Schema(
         {
