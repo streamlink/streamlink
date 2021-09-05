@@ -13,14 +13,15 @@ def _identity(obj):
 
 
 class Formatter:
-    def __init__(self, mapping: Dict[str, Callable]):
+    def __init__(self, mapping: Dict[str, Callable], formatting: Optional[Dict[str, Callable]] = None):
         super().__init__()
         self.mapping = mapping
+        self.formatting = formatting or {}
         self.cache = {}
 
-    def _get_value(self, field_name: str, defaults: Dict[str, str]) -> Any:
+    def _get_value(self, field_name: str, format_spec: str, defaults: Dict[str, str]) -> Any:
         if field_name not in self.mapping:
-            return defaults.get(field_name, f"{{{field_name}}}")
+            return defaults.get(field_name, f"{{{field_name}}}" if not format_spec else f"{{{field_name}:{format_spec}}}")
 
         if field_name in self.cache:
             value = self.cache[field_name]
@@ -30,6 +31,13 @@ class Formatter:
 
         if value is None:
             value = defaults.get(field_name, "")
+
+        if format_spec and field_name in self.formatting:
+            # noinspection PyBroadException
+            try:
+                return self.formatting[field_name](value, format_spec)
+            except Exception:
+                return f"{{{field_name}:{format_spec}}}"
 
         return value
 
@@ -43,7 +51,7 @@ class Formatter:
             if field_name is None:
                 continue
 
-            value = self._get_value(field_name, defaults)
+            value = self._get_value(field_name, format_spec, defaults)
             result.append(mapper(str(value)))
 
         return "".join(result)
