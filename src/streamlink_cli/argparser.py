@@ -569,6 +569,11 @@ def build_parser():
         {{url}}
             URL of the stream.
 
+        {{time}}
+            The current timestamp, which can optionally be formatted via {{time:format}}.
+            This format parameter string is passed to Python's datetime.strftime() method,
+            so all usual time directives are available. The default format is "%Y-%m-%d_%H-%M-%S".
+
         Examples:
 
             %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
