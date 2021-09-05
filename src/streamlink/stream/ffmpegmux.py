@@ -6,7 +6,7 @@ import threading
 from streamlink import StreamError
 from streamlink.compat import devnull, which
 from streamlink.stream.stream import Stream, StreamIO
-from streamlink.utils import NamedPipe
+from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase
 
 log = logging.getLogger(__name__)
 
@@ -57,7 +57,8 @@ class FFMPEGMuxer(StreamIO):
     DEFAULT_AUDIO_CODEC = "copy"
 
     @staticmethod
-    def copy_to_pipe(self, stream, pipe):
+    def copy_to_pipe(stream, pipe):
+        # type: (StreamIO, NamedPipeBase)
         log.debug("Starting copy to pipe: {0}".format(pipe.path))
         pipe.open()
         while not stream.closed:
@@ -67,12 +68,12 @@ class FFMPEGMuxer(StreamIO):
                     pipe.write(data)
                 else:
                     break
-            except IOError:
+            except (IOError, OSError):
                 log.error("Pipe copy aborted: {0}".format(pipe.path))
-                return
+                break
         try:
             pipe.close()
-        except IOError:  # might fail closing, but that should be ok for the pipe
+        except (IOError, OSError):  # might fail closing, but that should be ok for the pipe
             pass
         log.debug("Pipe copy complete: {0}".format(pipe.path))
 
@@ -85,7 +86,7 @@ class FFMPEGMuxer(StreamIO):
         self.streams = streams
 
         self.pipes = [NamedPipe() for _ in self.streams]
-        self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(self, stream, np))
+        self.pipe_threads = [threading.Thread(target=self.copy_to_pipe, args=(stream, np))
                              for stream, np in
                              zip(self.streams, self.pipes)]
 
