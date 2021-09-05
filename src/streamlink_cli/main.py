@@ -1,5 +1,4 @@
 import argparse
-import datetime
 import errno
 import logging
 import os
@@ -32,7 +31,7 @@ from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, Output, PlayerOutput
-from streamlink_cli.utils import Formatter, HTTPServer, ignored, progress, stream_to_url
+from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -49,6 +48,22 @@ stream_fd: StreamIO = None
 streamlink: Streamlink = None
 
 log = logging.getLogger("streamlink.cli")
+
+
+def get_formatter(plugin: Plugin):
+    return Formatter(
+        {
+            "url": lambda: args.url,
+            "author": lambda: plugin.get_author(),
+            "category": lambda: plugin.get_category(),
+            "game": lambda: plugin.get_category(),
+            "title": lambda: plugin.get_title(),
+            "time": lambda: datetime.now()
+        },
+        {
+            "time": lambda dt, fmt: dt.strftime(fmt)
+        }
+    )
 
 
 def check_file_output(filename, force):
@@ -427,13 +442,7 @@ def handle_stream(plugin, streams, stream_name):
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
 
-        formatter = Formatter({
-            "url": lambda: args.url,
-            "author": lambda: plugin.get_author(),
-            "category": lambda: plugin.get_category(),
-            "game": lambda: plugin.get_category(),
-            "title": lambda: plugin.get_title(),
-        })
+        formatter = get_formatter(plugin)
 
         for stream_name in [stream_name] + alt_streams:
             stream = streams[stream_name]
@@ -987,7 +996,7 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
     global console
 
     if filename == "-":
-        filename = LOG_DIR / datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S.log")
+        filename = LOG_DIR / f"{datetime.now()}.log"
     elif filename:
         filename = Path(filename).expanduser().resolve()
 
