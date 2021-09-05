@@ -572,7 +572,7 @@ def build_parser():
         {{time}}
             The current timestamp, which can optionally be formatted via {{time:format}}.
             This format parameter string is passed to Python's datetime.strftime() method,
-            so all usual time directives are available. The default format is "%Y-%m-%d_%H-%M-%S".
+            so all usual time directives are available. The default format is "%%Y-%%m-%%d_%%H-%%M-%%S".
 
         Examples:
 
