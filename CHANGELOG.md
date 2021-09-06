@@ -1,5 +1,105 @@
 # Changelog
 
+## streamlink 2.4.0 (2021-09-07)
+
+Release highlights:
+
+- Deprecated: stream-type specific stream transport options in favor of generic options ([#3893](https://github.com/streamlink/streamlink/pull/3893))
+  - use `--stream-segment-attempts` instead of `--{dash,hds,hls}-segment-attempts`
+  - use `--stream-segment-threads` instead of `--{dash,hds,hls}-segment-threads`
+  - use `--stream-segment-timeout` instead of `--{dash,hds,hls}-segment-timeout`
+  - use `--stream-timeout` instead of `--{dash,hds,hls,rtmp,http-stream}-timeout`
+
+  See the documentation's [deprecations page](https://streamlink.github.io/latest/deprecations.html#streamlink-2-4-0) for more information.
+- Deprecated: `--hls-segment-stream-data` option and made it always stream segment data ([#3894](https://github.com/streamlink/streamlink/pull/3894))
+- Updated: Python version of the Windows installer from 3.8 to 3.9 and dropped support for Windows 7 due to Python incompatibilities ([#3918](https://github.com/streamlink/streamlink/pull/3918))  
+  See the documentation's [install page](https://streamlink.github.io/install.html) for alternative installation methods on Windows 7.
+- Updated: FFmpeg in the Windows Installer from 4.2 (Zeranoe) to 4.4 ([streamlink/FFmpeg-Builds](https://github.com/streamlink/FFmpeg-Builds)) ([#3981](https://github.com/streamlink/streamlink/pull/3981))
+- Added: `{author}`, `{category}`/`{game}`, `{title}` and `{url}` variables to `--output`, `--record` and `--record-and-play` ([#3962](https://github.com/streamlink/streamlink/pull/3962))
+- Added: `{time}`/`{time:custom-format}` variable to `--title`, `--output`, `--record` and `--record-and-play` ([#3993](https://github.com/streamlink/streamlink/pull/3993))
+- Added: `--fs-safe-rules` for changing character replacement rules in file outputs ([#3962](https://github.com/streamlink/streamlink/pull/3962))
+- Added: plugin metadata to `--json` stream data output ([#3987](https://github.com/streamlink/streamlink/pull/3987))
+- Fixed: named pipes not being cleaned up by FFMPEGMuxer ([#3992](https://github.com/streamlink/streamlink/pull/3992))
+- Fixed: KeyError on invalid variables in `--player-args` ([#3988](https://github.com/streamlink/streamlink/pull/3988))
+- Fixed: tests failing in certain cases when run in different order ([#3920](https://github.com/streamlink/streamlink/pull/3920))
+- Fixed: initial HLS playlist parsing issues ([#3903](https://github.com/streamlink/streamlink/pull/3903), [#3910](https://github.com/streamlink/streamlink/pull/3910))
+- Fixed: various plugin issues. Please see the changelog down below.
+- Dependencies: added `lxml>=4.6.3` ([#3952](https://github.com/streamlink/streamlink/pull/3952))
+- Dependencies: switched back to `requests>=2.26.0` on Windows ([#3930](https://github.com/streamlink/streamlink/pull/3930))
+- Removed plugins: animeworld ([#3951](https://github.com/streamlink/streamlink/pull/3951)), gardenersworld ([#3966](https://github.com/streamlink/streamlink/pull/3966)), huomao ([#3932](https://github.com/streamlink/streamlink/pull/3932))
+
+
+```text
+Grabien <60237587+Grabien@users.noreply.github.com> (1):
+      plugins.nbcnews: fix stream URL extraction (#3909)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (2):
+      plugins.huomao: plugin removal
+      plugins.pluto: fix URL match for 2 letter language codes
+
+Leonardo Nascimento <lbnascimento@inf.ufrgs.br> (1):
+      plugins.booyah: add support for source stream (#3969)
+
+back-to <backto@protonmail.ch> (9):
+      stream.hls: handle exception StreamError in Thread-HLSStreamWorker - iter_segments
+      plugins.raiplay: use 'res.encoding = "UTF-8"'
+      plugins.rtve: update for /play/ URLs
+      plugins.zattoo: fix HLS stream, added more debug details
+      tests.mixins.stream_hls: increase TIMEOUT_AWAIT_WRITE timeout, use --durations 10 for pytest
+      setup: update requests version >=2.26.0 and makeinstaller.sh
+      plugins.abematv: skip invalid ad segments
+      plugins.animelab: removed
+      cli.argparser: Fixed ValueError for streamlink --help
+
+bastimeyer <mail@bastimeyer.de> (39):
+      session: deprecate options for spec. stream types
+      stream.hls: remove hls-segment-stream-data option
+      docs: reorganize stream transport options
+      stream.hls: except more errors raised by requests
+      tests.hls: fix playlist reload time tests
+      stream.hls: close stream on initial parsing error
+      installer: upgrade to python 3.9
+      tests: fix Plugin.bind(session) calls
+      plugin: fix cookie related error messages
+      docs: update python-requests version comment
+      plugins.twitch: replace remaining kraken API calls
+      plugins.twitch: refactor TwitchAPI class methods
+      plugins.euronews: add API fallback requests
+      plugins.sportschau: fix audio streams
+      vendor: add lxml dependency
+      plugins.deutschewelle: rewrite plugin
+      plugins.gardenersworld: remove plugin
+      cli: player title and file output metadata vars
+      plugin.api.validate: switch to lxml.etree
+      plugin.api.validate: add args+kwargs to transform
+      plugin.api.validate: add parse_{json,html,xml,qsd}
+      plugin: metadata attributes
+      plugins: fix utils imports
+      plugins.welt: rewrite and simplify using XPath
+      plugins.deutschewelle: validate.parse_html
+      plugins.reuters: rewrite and fix using XPath
+      plugins.euronews: rewrite and fix using XPath
+      installer: move assets config to local JSON file
+      installer: switch to streamlink/FFmpeg-Builds
+      cli.main: f-strings
+      cli.main: annotate types of global vars
+      cli.main: check args.json instead of console.json
+      cli.console: refactor ConsoleOutput
+      cli: include plugin metadata in --json output
+      cli.output: fix unknown vars in --player-args / -a
+      stream.ffmpegmux: always clean up named pipes
+      cli.utils.formatter: rewrite Formatter
+      cli.utils.formatter: implement format_spec
+      cli: add {time:format} var to --output / --title
+
+gustaf <gustaf@protonmail.ch> (1):
+      plugins.svtplay: fix plugin video id
+
+steven7851 <steven7851@msn.com> (1):
+      plugins.app17: fix API_URL and URL match (#3989)
+```
+
+
 ## streamlink 2.3.0 (2021-07-26)
 
 Release highlights:
