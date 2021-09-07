@@ -9,8 +9,8 @@ An API is also provided that allows direct access to stream data.
 Full documentation is available at https://Billy2011.github.io/streamlink-27.
 
 """
-__version__ = "1.27.6.0-dev"
-__version_date__ = "2021-07-27"
+__version__ = "1.27.7.0"
+__version_date__ = "2021-09-07"
 __title__ = "streamlink-27"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink, Billy2011"

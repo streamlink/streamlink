@@ -905,16 +905,13 @@ def build_parser():
         metavar="NAMES",
         type=comma_list,
         help="""
-        A comma-delimited list of segment names that will not be fetched.
+        A comma-delimited list of segment names that will get filtered out.
 
         Example: --hls-segment-ignore-names 000,001,002
 
         This will ignore every segment that ends with 000.ts, 001.ts and 002.ts
 
         Default is None.
-
-        Note: The --hls-timeout must be increased, to a time that is longer than
-        the ignored break.
         """
     )
     transport_hls.add_argument(
