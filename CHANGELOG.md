@@ -1,5 +1,58 @@
 # Changelog
 
+## streamlink 1.27.7.0 (2021-09-07)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (31):
+      docs: fix / update deprecations page
+      session: deprecate options for spec. stream types (#3893)
+      stream.hls: remove hls-segment-stream-data option (#3894)
+      stream.hls: except more errors raised by requests (#3902)
+      plugins.raiplay: use 'res.encoding = "UTF-8"' (#3904)
+      plugins.rtve: update for /play/ URLs (#3905)
+      plugins.zattoo: fix HLS stream, added more debug details
+      plugins.nbcnews: fix stream URL extraction (#3909)
+      docs: update python-requests version comment (#3928)
+      plugins.twitch: replace remaining kraken API calls (#3929)
+      plugins.twitch: refactor TwitchAPI class methods (#3929)
+      setup: update requests version (#3880)>=2.26.0
+      plugins.huomao: plugin removal (#3932)
+      plugins.sportschau: fix audio streams (#3947)
+      plugins.animelab: removed (#3951)
+      plugins.svtplay: fix plugin video id (#3949)
+      vendor: add lxml dependency (#3952)
+      plugins.deutschewelle: rewrite plugin (#3953)
+      plugins.gardenersworld: remove plugin (#3966)
+      plugin.api.validate: switch to lxml.etree (#3967)
+      plugins.booyah: add support for source stream (#3969)
+      plugin.api.validate: add args+kwargs to transform (#3972)
+      plugin.api.validate: add parse_{json,html,xml,qsd} (#3972)
+      plugin: metadata attributes (#3970)
+      plugins.deutschewelle: validate.parse_html (#3975)
+      plugins.reuters: rewrite and fix using XPath (#3977)
+      plugins.euronews: rewrite and fix using XPath (#3976)
+      utils.__init__: make typing optional
+      stream.ffmpegmux: always clean up named pipes (#3992)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (1):
+      plugins.pluto: fix URL match for 2 letter language codes
+
+back-to <backto@protonmail.ch> (1):
+      plugins.abematv: skip invalid ad segments
+
+bastimeyer <mail@bastimeyer.de> (6):
+      docs: reorganize stream transport options
+      tests: fix Plugin.bind(session) calls
+      plugin: fix cookie related error messages
+      plugins.euronews: add API fallback requests
+      plugins: fix utils imports
+      plugins.welt: rewrite and simplify using XPath
+
+steven7851 <steven7851@msn.com> (1):
+      plugins.app17: fix API_URL and URL match (#3989)
+```
+
+
 ## streamlink 1.27.6.0 (2021-07-27)
 
 ```text
