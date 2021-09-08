@@ -17,7 +17,7 @@ Synopsis
    streamlink --output /path/to/file --http-timeout 60 URL STREAM
    streamlink --stdout URL STREAM | ffmpeg -i pipe:0 ...
    streamlink --http-header 'Authorization=OAuth TOKEN' --http-header 'Referer=URL' URL STREAM
-   streamlink --hls-live-edge 5 --hls-segment-threads 5 'hls://https://host/playlist.m3u8' best
+   streamlink --hls-live-edge 5 --stream-segment-threads 5 'hls://https://host/playlist.m3u8' best
    streamlink --twitch-low-latency -p mpv -a '--cache=yes --demuxer-max-bytes=750k' twitch.tv/CHANNEL best
 
 
