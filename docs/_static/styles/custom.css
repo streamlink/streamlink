@@ -3,7 +3,7 @@
   https://github.com/pradyunsg/furo/blob/main/src/furo/assets/styles/variables/_index.scss
   https://github.com/pradyunsg/furo/blob/main/src/furo/theme/partials/_head_css_variables.html
 */
-:root {
+body, body[data-theme="auto"], body[data-theme="light"], body[data-theme="dark"] {
   /* adjust font-stack by adding "SF Pro Display" and "SF Mono" */
   --font-stack: -apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI, Helvetica, Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
   --font-stack--monospace: SFMono-Regular, SF Mono, Menlo, Consolas, Monaco, Liberation Mono, Lucida Console, monospace;
@@ -16,10 +16,16 @@
   --sidebar-item-spacing-vertical: .4rem;
   --admonition-font-size: var(--font-size--small);
   --admonition-title-font-size: var(--font-size--normal);
+  --custom-thumb-color: var(--color-foreground-border);
+  --custom-track-color: transparent;
 }
 
+body[data-theme="dark"] {
+  --color-brand-primary: rgb(0, 115, 189);  /* bright icon color */
+  --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  body[data-theme="auto"] {
     --color-brand-primary: rgb(0, 115, 189);  /* bright icon color */
     --color-brand-content: rgb(0, 115, 189);  /* bright icon color */
   }
@@ -51,10 +57,10 @@ strong.command {
 */
 
 .toc-scroll:not(:hover) {
-  scrollbar-color: transparent;
+  scrollbar-color: transparent !important;
 }
 .toc-scroll:not(:hover)::-webkit-scrollbar-thumb {
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
 .sidebar-brand,
@@ -77,12 +83,17 @@ strong.command {
 .sidebar-logo {
   max-width: 62.5%;
 }
+.sidebar-brand {
+  color: var(--color-sidebar-brand-text);
+}
 .sidebar-brand-text {
   font-size: 1.75rem;
+  color: unset;
 }
 .sidebar-brand-oneliner {
-  font-size: var(--font-size--small--2);
   margin: 0;
+  font-size: var(--font-size--small--2);
+  color: unset;
 }
 
 .sidebar-versions {
@@ -203,6 +214,11 @@ table.table-custom-layout.table-custom-layout-platform-locations ul {
 }
 table.table-custom-layout.table-custom-layout-platform-locations code {
   white-space: pre;
+}
+
+.option .sig-name,
+.option .sig-prename {
+  font-family: var(--font-stack--monospace);
 }
 
 /*
