@@ -2,10 +2,9 @@ import logging
 import re
 from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import parse_json, verifyjson
 
 log = logging.getLogger(__name__)
 
@@ -14,66 +13,58 @@ log = logging.getLogger(__name__)
     r"https?://((www|live)\.)?daserste\.de/"
 ))
 class ARDLive(Plugin):
-    _player_re = re.compile(r'''data-ctrl-player\s*=\s*"(?P<jsondata>.*?)"''')
-    _player_url_schema = validate.Schema(
-        validate.transform(_player_re.search),
-        validate.any(None, validate.all(
-            validate.get("jsondata"),
-            validate.text,
-            validate.transform(lambda v: parse_json(v.replace("'", '"'))),
-            validate.transform(lambda v: verifyjson(v, "url")),
-        ))
-    )
-    _mediainfo_schema = validate.Schema({
-        "mc": {
-            validate.optional("_title"): validate.text,
-            validate.optional("_isLive"): bool,
-            validate.optional("_geoblocked"): bool,
-            "_mediaArray": [{
-                "_mediaStreamArray": [{
-                    "_quality": validate.any(validate.text, int),
-                    "_stream": validate.any(validate.text, [validate.text]),
-                }]
-            }],
-        },
-    }, validate.get("mc"))
     _QUALITY_MAP = {
-        "auto": "auto",
         4: "1080p",
         3: "720p",
-        2: "544p",
-        1: "288p",
-        0: "144p"
+        2: "540p",
+        1: "270p",
+        0: "180p"
     }
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        data_url = self._player_url_schema.validate(res.text)
-        if not data_url:
-            log.error("Could not find video at this url.")
+        try:
+            data_url = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//*[@data-ctrl-player]"),
+                validate.get("data-ctrl-player"),
+                validate.transform(lambda s: s.replace("'", "\"")),
+                validate.parse_json(),
+                {"url": str},
+                validate.get("url")
+            ))
+        except PluginError:
             return
 
-        data_url = urljoin(res.url, data_url)
+        data_url = urljoin(self.url, data_url)
         log.debug(f"Player URL: '{data_url}'")
-        res = self.session.http.get(data_url)
-        mediainfo = parse_json(res.text, name="MEDIAINFO", schema=self._mediainfo_schema)
-        log.trace("Mediainfo: {0!r}".format(mediainfo))
 
-        for media in mediainfo["_mediaArray"]:
-            for stream in media["_mediaStreamArray"]:
-                stream_ = stream["_stream"]
-                if isinstance(stream_, list):
-                    if not stream_:
-                        continue
-                    stream_ = stream_[0]
+        self.title, media = self.session.http.get(data_url, schema=validate.Schema(
+            validate.parse_json(name="MEDIAINFO"),
+            {"mc": {
+                validate.optional("_title"): str,
+                "_mediaArray": [validate.all(
+                    {
+                        "_mediaStreamArray": [validate.all(
+                            {
+                                "_quality": validate.any(str, int),
+                                "_stream": [validate.url()],
+                            },
+                            validate.union_get("_quality", ("_stream", 0))
+                        )]
+                    },
+                    validate.get("_mediaStreamArray"),
+                    validate.transform(dict)
+                )]
+            }},
+            validate.get("mc"),
+            validate.union_get("_title", ("_mediaArray", 0))
+        ))
 
-                if ".m3u8" in stream_:
-                    yield from HLSStream.parse_variant_playlist(self.session, stream_).items()
-                elif ".mp4" in stream_ and ".f4m" not in stream_:
-                    yield "{0}".format(self._QUALITY_MAP[stream["_quality"]]), HTTPStream(self.session, stream_)
-                else:
-                    if ".f4m" not in stream_:
-                        log.error("Unexpected stream type: '{0}'".format(stream_))
+        if media.get("auto"):
+            yield from HLSStream.parse_variant_playlist(self.session, media.get("auto")).items()
+        else:
+            for quality, stream in media.items():
+                yield self._QUALITY_MAP.get(quality, quality), HTTPStream(self.session, stream)
 
 
 __plugin__ = ARDLive
