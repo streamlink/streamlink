@@ -5,7 +5,6 @@ from importlib.util import module_from_spec
 from typing import Dict, Generic, Optional, TypeVar
 from urllib.parse import urljoin, urlparse
 
-from streamlink.exceptions import PluginError
 from streamlink.utils.lazy_formatter import LazyFormatter
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
@@ -30,16 +29,6 @@ def swfdecompress(data):
         data = b"F" + data[1:8] + zlib.decompress(data[8:])
 
     return data
-
-
-def verifyjson(json, key):
-    if not isinstance(json, dict):
-        raise PluginError("JSON result is not a dict")
-
-    if key not in json:
-        raise PluginError("Missing '{0}' key in JSON".format(key))
-
-    return json[key]
 
 
 def absolute_url(baseurl, url):
@@ -142,7 +131,6 @@ class LRUCache(Generic[TCacheKey, TCacheValue]):
 __all__ = [
     "load_module",
     "escape_librtmp", "rtmpparse", "swfdecompress",
-    "verifyjson",
     "absolute_url", "prepend_www",
     "search_dict",
     "LRUCache",
