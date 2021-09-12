@@ -20,7 +20,7 @@ def catch_warnings(record=False, module=None):
     return _catch_warnings_wrapper
 
 
-windows_only = pytest.mark.skipif(os.name != "nt", reason="test only applicable on Window")
+windows_only = pytest.mark.skipif(os.name != "nt", reason="test only applicable on Windows")
 posix_only = pytest.mark.skipif(os.name != "posix", reason="test only applicable on a POSIX OS")
 py3_only = pytest.mark.skipif(not is_py3, reason="test only applicable for Python 3")
 py2_only = pytest.mark.skipif(not is_py2, reason="test only applicable for Python 2")
