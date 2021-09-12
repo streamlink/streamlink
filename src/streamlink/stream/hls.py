@@ -20,7 +20,7 @@ from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.hls_playlist import Key, M3U8, Map, Segment
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
-from streamlink.utils import LRUCache, LazyFormatter
+from streamlink.utils import Formatter, LRUCache
 
 log = logging.getLogger(__name__)
 
@@ -60,14 +60,14 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
         if self.key_uri_override:
             p = urlparse(key.uri)
-            key_uri = LazyFormatter.format(
-                self.key_uri_override,
-                url=key.uri,
-                scheme=p.scheme,
-                netloc=p.netloc,
-                path=p.path,
-                query=p.query,
-            )
+            formatter = Formatter({
+                "url": lambda: key.uri,
+                "scheme": lambda: p.scheme,
+                "netloc": lambda: p.netloc,
+                "path": lambda: p.path,
+                "query": lambda: p.query,
+            })
+            key_uri = formatter.format(self.key_uri_override)
         else:
             key_uri = key.uri
 
