@@ -3,7 +3,8 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json, update_scheme
+from streamlink.utils import parse_json
+from streamlink.utils.url import update_scheme
 
 
 @pluginmatcher(re.compile(

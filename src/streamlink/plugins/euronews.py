@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import update_scheme
+from streamlink.utils.url import update_scheme
 
 
 @pluginmatcher(re.compile(

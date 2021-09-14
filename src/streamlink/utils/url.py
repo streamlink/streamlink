@@ -3,6 +3,23 @@ from collections import OrderedDict
 from urllib.parse import parse_qsl, quote_plus, urlencode, urljoin, urlparse, urlunparse
 
 
+def absolute_url(baseurl, url):
+    parsed = urlparse(url)
+    if not parsed.scheme:
+        url = urljoin(baseurl, url)
+
+    return url
+
+
+def prepend_www(url):
+    parsed = urlparse(url)
+    if not parsed.netloc.startswith("www."):
+        # noinspection PyProtectedMember
+        parsed = parsed._replace(netloc=f"www.{parsed.netloc}")
+
+    return parsed.geturl()
+
+
 _re_uri_implicit_scheme = re.compile(r"""^[a-z0-9][a-z0-9.+-]*://""", re.IGNORECASE)
 
 

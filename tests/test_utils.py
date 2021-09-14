@@ -9,12 +9,10 @@ from streamlink.exceptions import PluginError
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.validate import xml_element
 from streamlink.utils import (
-    absolute_url,
     load_module,
     parse_json,
     parse_qsd,
     parse_xml,
-    prepend_www,
     rtmpparse,
     search_dict,
     swfdecompress,
@@ -25,18 +23,6 @@ __test_marker__ = "test_marker"
 
 
 class TestUtil(unittest.TestCase):
-    def test_absolute_url(self):
-        self.assertEqual("http://test.se/test",
-                         absolute_url("http://test.se", "/test"))
-        self.assertEqual("http://test2.se/test",
-                         absolute_url("http://test.se", "http://test2.se/test"))
-
-    def test_prepend_www(self):
-        self.assertEqual("http://www.test.se/test",
-                         prepend_www("http://test.se/test"))
-        self.assertEqual("http://www.test.se",
-                         prepend_www("http://www.test.se"))
-
     def test_parse_json(self):
         self.assertEqual({}, parse_json("{}"))
         self.assertEqual({"test": 1}, parse_json("""{"test": 1}"""))
