@@ -53,7 +53,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
     def create_decryptor(self, key: Key, num: int) -> AES:
         if key.method != "AES-128":
-            raise StreamError("Unable to decrypt cipher {0}", key.method)
+            raise StreamError(f"Unable to decrypt cipher {key.method}")
 
         if not self.key_uri_override and not key.uri:
             raise StreamError("Missing URI to decryption key")
