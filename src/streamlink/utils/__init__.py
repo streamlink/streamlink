@@ -3,12 +3,12 @@ from collections import OrderedDict
 from importlib.machinery import FileFinder, SOURCE_SUFFIXES, SourceFileLoader
 from importlib.util import module_from_spec
 from typing import Dict, Generic, Optional, TypeVar
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 from streamlink.utils.formatter import Formatter
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
-from streamlink.utils.url import update_scheme, url_equal
+from streamlink.utils.url import absolute_url, prepend_www, update_qsd, update_scheme, url_concat, url_equal
 
 
 _loader_details = [(SourceFileLoader, SOURCE_SUFFIXES)]
@@ -29,22 +29,6 @@ def swfdecompress(data):
         data = b"F" + data[1:8] + zlib.decompress(data[8:])
 
     return data
-
-
-def absolute_url(baseurl, url):
-    if not url.startswith("http"):
-        return urljoin(baseurl, url)
-    else:
-        return url
-
-
-def prepend_www(url):
-    """Changes google.com to www.google.com"""
-    parsed = urlparse(url)
-    if parsed.netloc.split(".")[0] != "www":
-        return parsed.scheme + "://www." + parsed.netloc + parsed.path
-    else:
-        return url
 
 
 def rtmpparse(url):
@@ -131,11 +115,10 @@ class LRUCache(Generic[TCacheKey, TCacheValue]):
 __all__ = [
     "load_module",
     "escape_librtmp", "rtmpparse", "swfdecompress",
-    "absolute_url", "prepend_www",
     "search_dict",
     "LRUCache",
     "Formatter",
     "NamedPipe",
     "parse_html", "parse_json", "parse_qsd", "parse_xml",
-    "update_scheme", "url_equal",
+    "absolute_url", "prepend_www", "update_qsd", "update_scheme", "url_concat", "url_equal",
 ]
