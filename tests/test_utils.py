@@ -18,7 +18,6 @@ from streamlink.utils import (
     rtmpparse,
     search_dict,
     swfdecompress,
-    verifyjson,
 )
 
 # used in the import test to verify that this module was imported
@@ -26,13 +25,6 @@ __test_marker__ = "test_marker"
 
 
 class TestUtil(unittest.TestCase):
-    def test_verifyjson(self):
-        self.assertEqual(verifyjson({"test": 1}, "test"),
-                         1)
-
-        self.assertRaises(PluginError, verifyjson, None, "test")
-        self.assertRaises(PluginError, verifyjson, {}, "test")
-
     def test_absolute_url(self):
         self.assertEqual("http://test.se/test",
                          absolute_url("http://test.se", "/test"))
