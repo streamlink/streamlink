@@ -24,14 +24,14 @@ from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import PluginOptions
 from streamlink.stream import StreamProcess
-from streamlink.utils import LazyFormatter, NamedPipe
+from streamlink.utils import NamedPipe
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGINS_DIR, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
-from streamlink_cli.utils import HTTPServer, ignored, progress, stream_to_url
+from streamlink_cli.utils import Formatter, HTTPServer, ignored, progress, stream_to_url
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -43,6 +43,22 @@ QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 args = console = streamlink = plugin = stream_fd = output = None
 
 log = logging.getLogger("streamlink.cli")
+
+
+def get_formatter(plugin):
+    return Formatter(
+        {
+            "url": lambda: args.url,
+            "author": lambda: plugin.get_author(),
+            "category": lambda: plugin.get_category(),
+            "game": lambda: plugin.get_category(),
+            "title": lambda: plugin.get_title(),
+            "time": lambda: datetime.now()
+        },
+        {
+            "time": lambda dt, fmt: dt.strftime(fmt)
+        }
+    )
 
 
 def check_file_output(filename, force):
@@ -139,14 +155,8 @@ def create_http_server(*_args, **_kwargs):
 
 def create_title(plugin=None):
     if args.title and plugin:
-        title = LazyFormatter.format(
-            maybe_decode(args.title, get_filesystem_encoding()),
-            title=lambda: plugin.get_title() or DEFAULT_STREAM_METADATA["title"],
-            author=lambda: plugin.get_author() or DEFAULT_STREAM_METADATA["author"],
-            category=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["category"],
-            game=lambda: plugin.get_category() or DEFAULT_STREAM_METADATA["game"],
-            url=plugin.url
-        )
+        formatter = get_formatter(plugin)
+        title = formatter.title(maybe_decode(args.title, get_filesystem_encoding()), defaults=DEFAULT_STREAM_METADATA)
     else:
         title = args.url
     return title

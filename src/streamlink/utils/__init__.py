@@ -8,7 +8,7 @@ except ImportError:
 
 from streamlink.compat import is_py3, urljoin, urlparse
 from streamlink.utils.encoding import get_filesystem_encoding
-from streamlink.utils.lazy_formatter import LazyFormatter
+from streamlink.utils.formatter import Formatter
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
 from streamlink.utils.url import update_scheme, url_equal
@@ -162,7 +162,7 @@ __all__ = [
     "absolute_url", "prepend_www",
     "search_dict",
     "LRUCache",
-    "LazyFormatter",
+    "Formatter",
     "NamedPipe",
     "parse_html", "parse_json", "parse_qsd", "parse_xml",
     "update_scheme", "url_equal",
