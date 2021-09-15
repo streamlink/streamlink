@@ -8,7 +8,7 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import update_scheme
+from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
 

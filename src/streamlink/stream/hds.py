@@ -24,7 +24,8 @@ from streamlink.stream.flvconcat import FLVTagConcat
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper
-from streamlink.utils import absolute_url, swfdecompress
+from streamlink.utils import swfdecompress
+from streamlink.utils.url import absolute_url
 
 log = logging.getLogger(__name__)
 # Akamai HD player verification key

@@ -6,12 +6,12 @@ try:
 except ImportError:
     is_typing = False
 
-from streamlink.compat import is_py3, urljoin, urlparse
+from streamlink.compat import is_py3, urlparse
 from streamlink.utils.encoding import get_filesystem_encoding
 from streamlink.utils.formatter import Formatter
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
-from streamlink.utils.url import update_scheme, url_equal
+from streamlink.utils.url import absolute_url, prepend_www, update_qsd, update_scheme, url_concat, url_equal
 
 
 def swfdecompress(data):
@@ -19,22 +19,6 @@ def swfdecompress(data):
         data = b"F" + data[1:8] + zlib.decompress(data[8:])
 
     return data
-
-
-def absolute_url(baseurl, url):
-    if not url.startswith("http"):
-        return urljoin(baseurl, url)
-    else:
-        return url
-
-
-def prepend_www(url):
-    """Changes google.com to www.google.com"""
-    parsed = urlparse(url)
-    if parsed.netloc.split(".")[0] != "www":
-        return parsed.scheme + "://www." + parsed.netloc + parsed.path
-    else:
-        return url
 
 
 def rtmpparse(url):
@@ -159,12 +143,11 @@ class LRUCache(_baseClass):
 __all__ = [
     "load_module",
     "escape_librtmp", "rtmpparse", "swfdecompress",
-    "absolute_url", "prepend_www",
     "search_dict",
     "LRUCache",
     "Formatter",
     "NamedPipe",
     "parse_html", "parse_json", "parse_qsd", "parse_xml",
-    "update_scheme", "url_equal",
     "get_filesystem_encoding",
+    "absolute_url", "prepend_www", "update_qsd", "update_scheme", "url_concat", "url_equal",
 ]

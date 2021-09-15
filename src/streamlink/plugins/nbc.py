@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugins.theplatform import ThePlatform
-from streamlink.utils import update_scheme
+from streamlink.utils.url import update_scheme
 
 
 @pluginmatcher(re.compile(

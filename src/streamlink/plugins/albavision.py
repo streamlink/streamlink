@@ -13,7 +13,7 @@ import time
 from streamlink.compat import quote, range, urlencode, urlparse
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.stream import HLSStream
-from streamlink.utils import update_scheme
+from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
 
