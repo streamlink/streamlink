@@ -126,8 +126,6 @@ piczel                  piczel.tv            Yes   No
 pixiv                   sketch.pixiv.net     Yes   --
 pluto                   pluto.tv             Yes   Yes
 pluzz                   - france.tv          Yes   Yes   Streams may be geo-restricted to France, Andorra and Monaco.
-                        - ludo.fr
-                        - zouzous.fr
                         - francetvinfo.fr
 qq                      live.qq.com          Yes   No
 radiko                  radiko.jp            Yes   Yes   Streams are geo-restricted to Japan.
