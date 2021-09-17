@@ -221,7 +221,6 @@ vlive                   vlive.tv             Yes   No    Embedded Naver VODs are
 vrtbe                   vrt.be/vrtnu         Yes   Yes
 vtvgo                   vtvgo.vn             Yes   No
 wasd                    wasd.tv              Yes   No
-webcast_india_gov       webcast.gov.in       Yes   No    You can use #Channel to indicate CH number.
 webtv                   web.tv               Yes   --
 welt                    welt.de              Yes   Yes   Streams may be geo-restricted to Germany.
 wwenetwork              network.wwe.com      Yes   Yes   Requires an account to access any content.
