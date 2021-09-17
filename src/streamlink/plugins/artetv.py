@@ -9,24 +9,29 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
-JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{0}/{1}?platform=ARTE_NEXT"
-JSON_LIVE_URL = "https://api.arte.tv/api/player/v1/livestream/{0}"
+JSON_VOD_URL = "https://api.arte.tv/api/player/v2/config/{0}/{1}"
+JSON_LIVE_URL = "https://api.arte.tv/api/player/v2/config/{0}/LIVE"
+V2_API_BEARER = "MzYyZDYyYmM1Y2Q3ZWRlZWFjMmIyZjZjNTRiMGY4MzY4NzBhOWQ5YjE4MGQ1NGFiODJmOTFlZDQwN2FkOTZjMQ"
 
 _video_schema = validate.Schema({
-    "videoJsonPlayer": {
-        "VSR": validate.any(
-            [],
-            {
-                validate.text: {
-                    "height": int,
-                    "mediaType": validate.text,
-                    "url": validate.text,
-                    "versionProg": int,
-                    "versionLibelle": validate.text
-                },
-            },
-        )
-    }
+    "data": {
+        "attributes": {
+            "streams": validate.any(
+                [],
+                [{
+                    "url": validate.url(),
+                    "slot": int,
+                    "protocol": validate.text,
+                    "versions": validate.all(
+                        [{
+                            "label": validate.text
+                        }],
+                        validate.transform(lambda x: x[0])
+                    )
+                }]
+            )
+        }
+    },
 })
 
 
@@ -41,17 +46,17 @@ _video_schema = validate.Schema({
 """, re.VERBOSE))
 class ArteTV(Plugin):
     def _create_stream(self, streams):
-        variant, variantname = min([(stream["versionProg"], stream["versionLibelle"]) for stream in streams.values()],
+        variant, variantname = min([(stream["slot"], stream["versions"]["label"]) for stream in streams],
                                    key=itemgetter(0))
         log.debug(f"Using the '{variantname}' stream variant")
-        for sname, stream in streams.items():
-            if stream["versionProg"] == variant:
-                if stream["mediaType"] == "hls":
+        for stream in streams:
+            if stream["slot"] == variant:
+                if "hls" in stream["protocol"].lower():
                     try:
                         streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
                         yield from streams.items()
                     except OSError as err:
-                        log.warning(f"Failed to extract HLS streams for {sname}/{stream['versionLibelle']}: {err}")
+                        log.warning(f"Failed to extract HLS streams for {stream['versions']['label']}: {err}")
 
     def _get_streams(self):
         language = self.match.group('language')
@@ -60,14 +65,14 @@ class ArteTV(Plugin):
             json_url = JSON_LIVE_URL.format(language)
         else:
             json_url = JSON_VOD_URL.format(language, video_id)
-        res = self.session.http.get(json_url)
+        res = self.session.http.get(json_url, headers={"Authorization": "Bearer {}".format(V2_API_BEARER)})
         video = self.session.http.json(res, schema=_video_schema)
 
-        if not video["videoJsonPlayer"]["VSR"]:
+        if not (vsr := video["data"]["attributes"]["streams"]):
             return
 
-        vsr = video["videoJsonPlayer"]["VSR"]
         return self._create_stream(vsr)
 
 
 __plugin__ = ArteTV
+
