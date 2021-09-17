@@ -3,7 +3,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 
 @pluginmatcher(re.compile(
@@ -16,7 +15,7 @@ class CBSNews(Plugin):
         validate.transform(_re_default_payload.search),
         validate.any(None, validate.all(
             validate.get(1),
-            validate.transform(parse_json),
+            validate.parse_json(),
             {"items": [validate.all({
                 "video": validate.url(),
                 "format": "application/x-mpegURL"

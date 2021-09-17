@@ -5,7 +5,6 @@ from urllib.parse import urlparse, urlunparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import url_concat
 
 log = logging.getLogger(__name__)
@@ -24,7 +23,7 @@ class ZDFMediathek(Plugin):
             validate.transform(self._re_api_json.search),
             validate.any(None, validate.all(
                 validate.get("json"),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {
                     "apiToken": str,
                     "content": validate.url()
@@ -46,7 +45,7 @@ class ZDFMediathek(Plugin):
         pApiUrl = urlparse(apiUrl)
         apiUrlBase = urlunparse((pApiUrl.scheme, pApiUrl.netloc, "", "", "", ""))
         apiUrlPath = self.session.http.get(apiUrl, headers=headers, schema=validate.Schema(
-            validate.transform(parse_json),
+            validate.parse_json(),
             {"mainVideoContent": {
                 "http://zdf.de/rels/target": {
                     "http://zdf.de/rels/streams/ptmd-template": str
@@ -58,7 +57,7 @@ class ZDFMediathek(Plugin):
 
         stream_request_url = url_concat(apiUrlBase, apiUrlPath)
         data = self.session.http.get(stream_request_url, headers=headers, schema=validate.Schema(
-            validate.transform(parse_json),
+            validate.parse_json(),
             {"priorityList": [{
                 "formitaeten": validate.all(
                     [{

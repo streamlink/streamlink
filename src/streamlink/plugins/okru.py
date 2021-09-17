@@ -6,7 +6,6 @@ from urllib.parse import unquote
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ class OKru(Plugin):
     _data_re = re.compile(r'''data-options=(?P<q>["'])(?P<data>{[^"']+})(?P=q)''')
 
     _metadata_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.any({
             'videos': validate.any(
                 [],
@@ -40,7 +39,7 @@ class OKru(Plugin):
             validate.transform(_data_re.search),
             validate.get('data'),
             validate.transform(html_unescape),
-            validate.transform(parse_json),
+            validate.parse_json(),
             validate.get('flashvars'),
             validate.any({
                 'metadata': _metadata_schema

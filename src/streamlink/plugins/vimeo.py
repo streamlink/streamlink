@@ -7,7 +7,6 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmat
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -24,14 +23,14 @@ class Vimeo(Plugin):
             None,
             validate.Schema(
                 validate.get(1),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 validate.transform(html_unescape),
                 validate.url(),
             ),
         ),
     )
     _config_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         {
             "request": {
                 "files": {

@@ -5,7 +5,6 @@ from urllib.parse import urlparse, urlunparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ class RadioNet(Plugin):
             None,
             validate.all(
                 validate.get(1),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {
                     'type': validate.text,
                     'streams': validate.all([{

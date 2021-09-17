@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +34,7 @@ class Reuters(Plugin):
             log.debug("Trying to find source via next-head")
             schema = validate.Schema(
                 validate.xml_findtext(".//script[@type='application/ld+json'][@class='next-head']"),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"contentUrl": validate.url()},
                 validate.get("contentUrl")
             )
@@ -54,7 +53,7 @@ class Reuters(Plugin):
                 schema_fusion,
                 validate.transform(self._re_fusion_global_content.search),
                 validate.get("json"),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"result": {"related_content": {"videos": list}}},
                 validate.get(("result", "related_content", "videos", 0)),
                 schema_video
@@ -69,7 +68,7 @@ class Reuters(Plugin):
                 schema_fusion,
                 validate.transform(self._re_fusion_content_cache.search),
                 validate.get("json"),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"videohub-by-guid-v1": {str: {"data": {"result": {"videos": list}}}}},
                 validate.get("videohub-by-guid-v1"),
                 validate.transform(lambda obj: obj[list(obj.keys())[0]]),

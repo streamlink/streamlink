@@ -10,8 +10,8 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmat
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_qsd
 from streamlink.utils.crypto import decrypt_openssl
+from streamlink.utils.parse import parse_qsd
 
 log = logging.getLogger(__name__)
 

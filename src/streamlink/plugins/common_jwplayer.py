@@ -2,7 +2,6 @@ import re
 from functools import partial
 
 from streamlink.plugin.api import validate
-from streamlink.utils import parse_json
 
 __all__ = ["parse_playlist"]
 
@@ -16,7 +15,7 @@ _playlist_schema = validate.Schema(
         validate.all(
             validate.get(1),
             validate.transform(_js_to_json),
-            validate.transform(parse_json),
+            validate.parse_json(),
             [{
                 "sources": [{
                     "file": validate.text,

@@ -5,7 +5,6 @@ from urllib.parse import unquote
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 
 @pluginmatcher(re.compile(
@@ -37,13 +36,15 @@ class RTPPlay(Plugin):
             validate.all(
                 validate.get("obfuscated"),
                 str,
-                validate.transform(lambda arr: unquote("".join(parse_json(arr)))),
+                validate.parse_json(),
+                validate.transform(lambda arr: unquote("".join(arr))),
                 validate.url()
             ),
             validate.all(
                 validate.get("obfuscated_b64"),
                 str,
-                validate.transform(lambda arr: unquote("".join(parse_json(arr)))),
+                validate.parse_json(),
+                validate.transform(lambda arr: unquote("".join(arr))),
                 validate.transform(lambda b64: b64decode(b64).decode("utf-8")),
                 validate.url()
             )

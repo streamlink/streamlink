@@ -9,7 +9,7 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginErr
 from streamlink.plugin.api import validate
 from streamlink.stream import HDSStream, HLSStream
 from streamlink.stream.dash import DASHStream
-from streamlink.utils import parse_json
+from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class BBCiPlayer(Plugin):
         validate.get("id")
     )
     mediaselector_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         {"media": [
             {"connection":
                 validate.all([{

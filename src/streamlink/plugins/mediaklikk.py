@@ -5,7 +5,6 @@ from urllib.parse import unquote, urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import update_scheme
 
 
@@ -31,7 +30,7 @@ class Mediaklikk(Plugin):
             validate.transform(self._re_player_manager.search),
             validate.any(None, validate.all(
                 validate.get("json"),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {
                     "contentId": validate.any(str, int),
                     validate.optional("streamId"): str,
@@ -60,7 +59,7 @@ class Mediaklikk(Plugin):
             validate.transform(self._re_player_json.search),
             validate.any(None, validate.all(
                 validate.get("json"),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"playlist": [{
                     "file": validate.url(),
                     "type": str

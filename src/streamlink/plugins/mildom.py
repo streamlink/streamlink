@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import url_concat
 
 log = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ class Mildom(Plugin):
                 "__platform": "web",
                 "v_id": video_id,
             },
-            schema=validate.Schema(validate.transform(parse_json), {
+            schema=validate.Schema(validate.parse_json(), {
                 "code": int,
                 validate.optional("message"): str,
                 validate.optional("body"): {
@@ -53,7 +52,7 @@ class Mildom(Plugin):
             },
             headers={"Accept-Language": "en"},
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {
                     "code": int,
                     validate.optional("message"): str,
@@ -93,7 +92,7 @@ class Mildom(Plugin):
             },
             headers={"Accept-Language": "en"},
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {
                     "code": int,
                     validate.optional("message"): str,
