@@ -7,7 +7,7 @@ from shutil import which
 from streamlink import logger
 from streamlink.exceptions import StreamError
 from streamlink.stream.streamprocess import StreamProcess
-from streamlink.utils import escape_librtmp, rtmpparse
+from streamlink.utils.rtmp import escape_librtmp, rtmpparse
 
 log = logging.getLogger(__name__)
 

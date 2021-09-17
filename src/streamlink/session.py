@@ -16,8 +16,8 @@ from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
 from streamlink.plugin import Plugin, api
 from streamlink.plugin.plugin import Matcher, NORMAL_PRIORITY, NO_PRIORITY
-from streamlink.utils import load_module
 from streamlink.utils.l10n import Localization
+from streamlink.utils.module import load_module
 from streamlink.utils.url import update_scheme
 
 # Ensure that the Logger class returned is Streamslink's for using the API (for backwards compatibility)

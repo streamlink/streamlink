@@ -25,7 +25,7 @@ from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream import StreamIO, StreamProcess
-from streamlink.utils import NamedPipe
+from streamlink.utils.named_pipe import NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester

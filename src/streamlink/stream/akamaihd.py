@@ -12,7 +12,7 @@ from streamlink.packages.flashmedia import FLV, FLVError
 from streamlink.packages.flashmedia.tag import ScriptData
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
-from streamlink.utils import swfdecompress
+from streamlink.utils.swf import swfdecompress
 
 log = logging.getLogger(__name__)
 
