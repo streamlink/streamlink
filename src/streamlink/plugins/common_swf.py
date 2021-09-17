@@ -2,7 +2,7 @@ from collections import namedtuple
 from io import BytesIO
 
 from streamlink.packages.flashmedia.types import U16LE, U32LE
-from streamlink.utils import swfdecompress
+from streamlink.utils.swf import swfdecompress
 
 __all__ = ["parse_swf"]
 

@@ -5,7 +5,7 @@ from streamlink import NoStreamsError
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import StreamMapper, validate
 from streamlink.stream import HDSStream, HLSStream, RTMPStream
-from streamlink.utils import rtmpparse
+from streamlink.utils.rtmp import rtmpparse
 
 log = logging.getLogger(__name__)
 

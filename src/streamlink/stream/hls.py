@@ -20,7 +20,8 @@ from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.hls_playlist import Key, M3U8, Map, Segment
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
-from streamlink.utils import Formatter, LRUCache
+from streamlink.utils.cache import LRUCache
+from streamlink.utils.formatter import Formatter
 
 log = logging.getLogger(__name__)
 

@@ -7,7 +7,6 @@ from streamlink.utils.args import (
 
 
 class TestUtilsArgs(unittest.TestCase):
-
     def test_boolean_true(self):
         self.assertEqual(boolean('1'), True)
         self.assertEqual(boolean('on'), True)
