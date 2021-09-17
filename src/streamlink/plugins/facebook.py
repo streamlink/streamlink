@@ -6,7 +6,7 @@ from urllib.parse import unquote_plus, urlencode
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import DASHStream, HTTPStream
-from streamlink.utils import parse_json
+from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 

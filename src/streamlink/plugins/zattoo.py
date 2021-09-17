@@ -6,7 +6,6 @@ from streamlink.cache import Cache
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.args import comma_list_filter
 
 log = logging.getLogger(__name__)
@@ -114,7 +113,7 @@ class Zattoo(Plugin):
         log.debug('_hello ...')
         app_token = self.session.http.get(
             f'{self.base_url}/token.json',
-            schema=validate.Schema(validate.transform(parse_json), {
+            schema=validate.Schema(validate.parse_json(), {
                 'success': bool,
                 'session_token': str,
             }, validate.get('session_token'))
@@ -138,7 +137,7 @@ class Zattoo(Plugin):
             headers=self.headers,
             data=params,
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 validate.any({'active': bool}, {'success': bool})
             )
         )
@@ -159,7 +158,7 @@ class Zattoo(Plugin):
                 'format': 'json',
             },
             acceptable_status=(200, 400),
-            schema=validate.Schema(validate.transform(parse_json), validate.any(
+            schema=validate.Schema(validate.parse_json(), validate.any(
                 {'active': bool, 'power_guide_hash': str},
                 {'success': bool},
             )),
@@ -212,7 +211,7 @@ class Zattoo(Plugin):
                 headers=self.headers,
                 data=params,
                 acceptable_status=(200, 402, 403, 404),
-                schema=validate.Schema(validate.transform(parse_json), validate.any({
+                schema=validate.Schema(validate.parse_json(), validate.any({
                     'success': validate.transform(bool),
                     'stream': {
                         'watch_urls': [{
@@ -328,7 +327,7 @@ class Zattoo(Plugin):
             log.debug('Session control for {0}'.format(self.domain))
             active = self.session.http.get(
                 f'{self.base_url}/zapi/v3/session',
-                schema=validate.Schema(validate.transform(parse_json),
+                schema=validate.Schema(validate.parse_json(),
                                        {'active': bool}, validate.get('active'))
             )
             if active:

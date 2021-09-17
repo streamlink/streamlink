@@ -7,7 +7,6 @@ from urllib.parse import urljoin, urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ log = logging.getLogger(__name__)
 class OlympicChannel(Plugin):
     _token_api_path = "/tokenGenerator?url={url}&domain={netloc}&_ts={time}"
     _api_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         [{
             validate.optional("src"): validate.url(),
             validate.optional("srcType"): "HLS",
@@ -41,7 +40,7 @@ class OlympicChannel(Plugin):
         validate.any(None, validate.transform(html_unescape)),
     )
     _stream_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.url(),
     )
 

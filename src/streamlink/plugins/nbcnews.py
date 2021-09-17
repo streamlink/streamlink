@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +19,8 @@ class NBCNews(Plugin):
     token_url = 'https://tokens.playmakerservices.com/'
 
     api_schema = validate.Schema(
-        validate.transform(parse_json), {
+        validate.parse_json(),
+        {
             'videoSources': [{
                 'sourceUrl': validate.url(),
                 'type': validate.text,
@@ -31,7 +31,7 @@ class NBCNews(Plugin):
     )
 
     token_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         {'akamai': [{
             'tokenizedUrl': validate.url(),
         }]},
@@ -44,7 +44,7 @@ class NBCNews(Plugin):
         validate.transform(json_data_re.search),
         validate.any(None, validate.all(
             validate.get(1),
-            validate.transform(parse_json),
+            validate.parse_json(),
             {"embedUrl": validate.url()},
             validate.get("embedUrl"),
             validate.transform(lambda url: url.split("/")[-1])

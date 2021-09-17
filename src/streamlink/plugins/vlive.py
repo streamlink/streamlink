@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +19,7 @@ class Vlive(Plugin):
         validate.transform(_page_info.search),
         validate.any(None, validate.all(
             validate.get(1),
-            validate.transform(parse_json),
+            validate.parse_json(),
             validate.any(
                 validate.all(
                     {"postDetail": {"post": {"officialVideo": {
@@ -37,7 +36,7 @@ class Vlive(Plugin):
     )
 
     _schema_stream = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         {"result": {"adaptiveStreamUrl": validate.url()}},
         validate.get(("result", "adaptiveStreamUrl")),
     )

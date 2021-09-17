@@ -2,7 +2,6 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.utils import parse_json
 
 
 @pluginmatcher(re.compile(
@@ -16,7 +15,7 @@ class CNEWS(Plugin):
         validate.transform(_json_data_re.search),
         validate.any(None, validate.all(
             validate.get(1),
-            validate.transform(parse_json),
+            validate.parse_json(),
             {
                 validate.optional('dm_player_live_dailymotion'): {
                     validate.optional('video_id'): str,

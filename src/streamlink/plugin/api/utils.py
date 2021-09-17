@@ -2,7 +2,7 @@
 import re
 from collections import namedtuple
 
-from streamlink.utils import parse_json, parse_qsd as parse_query, parse_xml
+from streamlink.utils.parse import parse_json, parse_qsd as parse_query, parse_xml
 
 __all__ = ["parse_json", "parse_xml", "parse_query"]
 

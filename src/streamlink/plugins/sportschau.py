@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
@@ -32,7 +31,7 @@ class Sportschau(Plugin):
         data = self.session.http.get(player_js, schema=validate.Schema(
             validate.transform(self._re_json.match),
             validate.get(1),
-            validate.transform(parse_json),
+            validate.parse_json(),
             validate.get("mediaResource"),
             validate.get("dflt"),
             {
