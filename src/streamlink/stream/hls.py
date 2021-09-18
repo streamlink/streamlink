@@ -11,8 +11,8 @@ from streamlink.stream import hls_playlist
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
-from streamlink.utils import Formatter
 from streamlink.utils.crypto import AES, unpad
+from streamlink.utils.formatter import Formatter
 
 log = logging.getLogger(__name__)
 Sequence = namedtuple("Sequence", "num segment")

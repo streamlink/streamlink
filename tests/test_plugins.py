@@ -7,7 +7,7 @@ import six
 import streamlink.plugins
 # from streamlink.plugins import Plugin
 from streamlink.plugin.plugin import Matcher, Plugin
-from streamlink.utils import load_module
+from streamlink.utils.module import load_module
 
 
 class PluginTestMeta(type):

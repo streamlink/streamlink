@@ -6,7 +6,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream
-from streamlink.utils import search_dict
+from streamlink.utils.data import search_dict
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)

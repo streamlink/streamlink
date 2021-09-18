@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from streamlink.utils import Formatter as _BaseFormatter
+from streamlink.utils.formatter import Formatter as _BaseFormatter
 from streamlink_cli.utils.path import replace_chars
 
 
