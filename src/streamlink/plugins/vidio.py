@@ -9,7 +9,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ class Vidio(Plugin):
 
     csrf_tokens_url = "https://www.vidio.com/csrf_tokens"
     tokens_url = "https://www.vidio.com/live/{id}/tokens"
-    token_schema = validate.Schema(validate.transform(parse_json),
+    token_schema = validate.Schema(validate.parse_json(),
                                    {"token": validate.text},
                                    validate.get("token"))
 

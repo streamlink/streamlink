@@ -5,7 +5,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 
 @pluginmatcher(re.compile(
@@ -13,7 +12,7 @@ from streamlink.utils import parse_json
 ))
 class GOLTelevision(Plugin):
     api_url = "https://api.goltelevision.com/api/v1/media/hls/service/live"
-    api_schema = validate.Schema(validate.transform(parse_json), {
+    api_schema = validate.Schema(validate.parse_json(), {
         "code": 200,
         "message": {
             "success": {

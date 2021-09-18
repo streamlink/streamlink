@@ -4,7 +4,6 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugins.common_jwplayer import _js_to_json
 from streamlink.stream import HLSStream, HTTPStream, RTMPStream
-from streamlink.utils import parse_json
 
 
 @pluginmatcher(re.compile(
@@ -16,7 +15,7 @@ class TV5Monde(Plugin):
 
     _videos_schema = validate.Schema(
         validate.transform(_js_to_json),
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.all([
             validate.any(
                 validate.Schema(

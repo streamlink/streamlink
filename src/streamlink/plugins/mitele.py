@@ -4,7 +4,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json, parse_qsd
+from streamlink.utils.parse import parse_qsd
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ class Mitele(Plugin):
     gbx_url = "https://mab.mediaset.es/1.0.0/get?oid=mtmw&eid=%2Fapi%2Fmtmw%2Fv2%2Fgbx%2Fmtweb%2Flive%2Fmmc%2F{channel}"
 
     error_schema = validate.Schema({"code": int})
-    caronte_schema = validate.Schema(validate.transform(parse_json), validate.any(
+    caronte_schema = validate.Schema(validate.parse_json(), validate.any(
         {
             "cerbero": validate.url(),
             "bbx": validate.text,
@@ -33,12 +33,12 @@ class Mitele(Plugin):
         error_schema,
     ))
     gbx_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         {"gbx": validate.text},
         validate.get("gbx")
     )
     cerbero_schema = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.any(
             validate.all(
                 {"tokens": {validate.text: {"cdn": validate.text}}},

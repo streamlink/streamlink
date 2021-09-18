@@ -8,8 +8,8 @@ from streamlink.compat import bytes, urljoin
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.crypto import unpad
+from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 

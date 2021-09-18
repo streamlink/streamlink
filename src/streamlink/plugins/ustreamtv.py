@@ -19,7 +19,7 @@ from streamlink.stream.dash_manifest import sleep_until, utc
 from streamlink.stream.flvconcat import FLVTagConcat
 from streamlink.stream.segmented import (SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter)
 from streamlink.stream.stream import Stream
-from streamlink.utils import parse_json
+from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 

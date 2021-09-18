@@ -5,7 +5,6 @@ from streamlink.compat import urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream import HDSStream, HLSStream, HTTPStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -31,7 +30,7 @@ class Bloomberg(Plugin):
     )
 
     _schema_live_list = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.get("live"),
         validate.get("channels"),
         validate.get("byChannelId"),
@@ -54,7 +53,7 @@ class Bloomberg(Plugin):
     )
 
     _schema_vod_list = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.any(
             validate.all(
                 {"video": {"videoList": list}},

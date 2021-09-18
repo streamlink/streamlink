@@ -9,7 +9,6 @@ from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmat
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.utils import parse_xml
 
 log = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ class Rtve(Plugin):
     _re_idAsset = re.compile(r"\"idAsset\":\"(\d+)\"")
     secret_key = base64.b64decode("eWVMJmRhRDM=")
     cdn_schema = validate.Schema(
-        validate.transform(parse_xml, invalid_char_entities=True),
+        validate.parse_xml(invalid_char_entities=True),
         validate.xml_findall(".//preset"),
         [
             validate.union({

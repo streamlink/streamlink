@@ -10,7 +10,7 @@ from requests import Session
 from streamlink.exceptions import PluginError
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.plugin.api import useragents
-from streamlink.utils import parse_json, parse_xml
+from streamlink.utils.parse import parse_json, parse_xml
 
 
 urllib3_version = tuple(map(int, urllib3.__version__.split(".")[:3]))

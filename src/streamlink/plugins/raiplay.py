@@ -5,7 +5,6 @@ from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +26,7 @@ class RaiPlay(Plugin):
         validate.any(None, validate.get(1))
     )
     _schema_json = validate.Schema(
-        validate.transform(parse_json),
+        validate.parse_json(),
         validate.get("video"),
         validate.get("content_url"),
         validate.url()

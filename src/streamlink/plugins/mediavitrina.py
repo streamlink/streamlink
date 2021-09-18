@@ -4,7 +4,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
@@ -52,7 +51,7 @@ class MediaVitrina(Plugin):
         res_token = self.session.http.get(
             "https://media.mediavitrina.ru/get_token",
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"result": {"token": validate.text}},
                 validate.get("result"),
             ),
@@ -62,7 +61,7 @@ class MediaVitrina(Plugin):
                 "https://media.mediavitrina.ru/api/v2/{0}/playlist/{1}_as_array.json".format(path, channel), qsd=res_token
             ),
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"hls": [validate.url()]},
                 validate.get("hls"),
                 validate.get(0),

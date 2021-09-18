@@ -14,8 +14,8 @@ from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.http import normalize_key, valid_args
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
-from streamlink.utils import parse_xml
 from streamlink.utils.l10n import Language
+from streamlink.utils.parse import parse_xml
 
 log = logging.getLogger(__name__)
 

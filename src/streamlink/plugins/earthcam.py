@@ -6,7 +6,6 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, RTMPStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
@@ -27,7 +26,7 @@ class EarthCam(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(lambda d: d.replace("\\/", "/")),
-                validate.transform(parse_json),
+                validate.parse_json(),
             )
         )
     )

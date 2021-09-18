@@ -7,7 +7,6 @@ from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.plugin import stream_weight
 from streamlink.stream import HLSStream
-from streamlink.utils import parse_json
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
@@ -26,7 +25,7 @@ class OneTV(Plugin):
             "https://stream.1tv.ru/api/playlist/1tvch_as_array.json",
             data={"r": random.randint(1, 100000)},
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"hls": [validate.url()]},
                 validate.get("hls"),
                 validate.get(0),
@@ -42,7 +41,7 @@ class OneTV(Plugin):
         hls_session = self.session.http.get(
             "https://stream.1tv.ru/get_hls_session",
             schema=validate.Schema(
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {"s": validate.transform(unquote)},
             ))
         url = update_qsd(url, qsd=hls_session, safe="/:")

@@ -10,7 +10,8 @@ from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.utils import itertags
 from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
-from streamlink.utils import parse_json, search_dict
+from streamlink.utils import search_dict
+from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 

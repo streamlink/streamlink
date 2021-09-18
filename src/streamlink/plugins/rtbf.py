@@ -6,7 +6,6 @@ from streamlink.compat import html_unescape
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import DASHStream, HLSStream, HTTPStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +52,7 @@ class RTBF(Plugin):
             validate.all(
                 validate.get(1),
                 validate.transform(html_unescape),
-                validate.transform(parse_json),
+                validate.parse_json(),
                 {
                     'geoLocRestriction': validate.text,
                     validate.optional('isLive'): bool,

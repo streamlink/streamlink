@@ -5,7 +5,6 @@ from streamlink.compat import parse_qsl, urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream, HTTPStream
-from streamlink.utils import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +46,7 @@ class DeutscheWelle(Plugin):
         self._find_metadata(root)
         api_url = self.API_URL.format(media_id=media_id)
         stream_url = self.session.http.get(api_url, schema=validate.Schema(
-            validate.transform(parse_json),
+            validate.parse_json(),
             [{"file": validate.url()}],
             validate.get((0, "file"))
         ))
