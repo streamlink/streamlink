@@ -1,5 +1,3 @@
-"""Plugin for Arte.tv, bi-lingual art and culture channel."""
-
 import logging
 import re
 from operator import itemgetter
@@ -9,25 +7,6 @@ from streamlink.plugin.api import validate
 from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
-JSON_VOD_URL = "https://api.arte.tv/api/player/v1/config/{0}/{1}?platform=ARTE_NEXT"
-JSON_LIVE_URL = "https://api.arte.tv/api/player/v1/livestream/{0}"
-
-_video_schema = validate.Schema({
-    "videoJsonPlayer": {
-        "VSR": validate.any(
-            [],
-            {
-                validate.text: {
-                    "height": int,
-                    "mediaType": validate.text,
-                    "url": validate.text,
-                    "versionProg": int,
-                    "versionLibelle": validate.text
-                },
-            },
-        )
-    }
-})
 
 
 @pluginmatcher(re.compile(r"""
@@ -40,37 +19,49 @@ _video_schema = validate.Schema({
     )
 """, re.VERBOSE))
 class ArteTV(Plugin):
-    def _create_stream(self, streams):
-        variant, variantname = min([(stream["versionProg"], stream["versionLibelle"]) for stream in streams.values()],
-                                   key=itemgetter(0))
-        log.debug(u"Using the '{0}' stream variant".format(variantname))
-        for sname, stream in streams.items():
-            if stream["versionProg"] == variant:
-                if stream["mediaType"] == "hls":
-                    try:
-                        streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
-                        for s in streams.items():
-                            yield s
-                    except IOError as err:
-                        log.warning(u"Failed to extract HLS streams for {0}/{1}: {2}".format(sname,
-                                                                                             stream["versionLibelle"],
-                                                                                             err))
+    API_URL = "https://api.arte.tv/api/player/v2/config/{0}/{1}"
+    API_TOKEN = "MzYyZDYyYmM1Y2Q3ZWRlZWFjMmIyZjZjNTRiMGY4MzY4NzBhOWQ5YjE4MGQ1NGFiODJmOTFlZDQwN2FkOTZjMQ"
 
     def _get_streams(self):
-        language = self.match.group('language')
-        video_id = self.match.group('video_id')
-        if video_id is None:
-            json_url = JSON_LIVE_URL.format(language)
-        else:
-            json_url = JSON_VOD_URL.format(language, video_id)
-        res = self.session.http.get(json_url)
-        video = self.session.http.json(res, schema=_video_schema)
+        language = self.match.group("language")
+        video_id = self.match.group("video_id")
 
-        if not video["videoJsonPlayer"]["VSR"]:
+        json_url = self.API_URL.format(language, video_id or "LIVE")
+        headers = {
+            "Authorization": "Bearer {0}".format(self.API_TOKEN)
+        }
+        streams, metadata = self.session.http.get(json_url, headers=headers, schema=validate.Schema(
+            validate.parse_json(),
+            {"data": {"attributes": {
+                "streams": validate.any(
+                    [],
+                    [
+                        validate.all(
+                            {
+                                "url": validate.url(),
+                                "slot": int,
+                                "protocol": validate.any("HLS", "HLS_NG"),
+                            },
+                            validate.union_get("slot", "protocol", "url")
+                        )
+                    ]
+                ),
+                "metadata": {
+                    "title": validate.text,
+                    "subtitle": validate.any(None, validate.text)
+                }
+            }}},
+            validate.get(("data", "attributes")),
+            validate.union_get("streams", "metadata")
+        ))
+
+        if not streams:
             return
 
-        vsr = video["videoJsonPlayer"]["VSR"]
-        return self._create_stream(vsr)
+        self.title = "{0} - {1}".format(metadata['title'], metadata['subtitle']) if metadata["subtitle"] else metadata["title"]
+
+        for slot, protocol, url in sorted(streams, key=itemgetter(0)):
+            return HLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = ArteTV
