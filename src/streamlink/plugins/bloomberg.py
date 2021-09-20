@@ -1,10 +1,9 @@
 import logging
 import re
 
-from streamlink.compat import urlparse
-from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HDSStream, HLSStream, HTTPStream
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin.api import validate
+from streamlink.stream import HLSStream
 
 log = logging.getLogger(__name__)
 
@@ -21,141 +20,117 @@ class Bloomberg(Plugin):
     LIVE_API_URL = "https://cdn.gotraffic.net/projector/latest/assets/config/config.min.json?v=1"
     VOD_API_URL = "https://www.bloomberg.com/api/embed?id={0}"
 
-    _re_preload_state = re.compile(r'<script>\s*window.__PRELOADED_STATE__\s*=\s*({.+});?\s*</script>')
-    _re_mp4_bitrate = re.compile(r'.*_(?P<bitrate>[0-9]+)\.mp4')
+    _re_mp4_bitrate = re.compile(r".*_(?P<bitrate>[0-9]+)\.mp4")
 
-    _schema_url = validate.all(
-        {"url": validate.url()},
-        validate.get("url")
-    )
-
-    _schema_live_list = validate.Schema(
-        validate.parse_json(),
-        validate.get("live"),
-        validate.get("channels"),
-        validate.get("byChannelId"),
-        {
-            str: validate.all({"liveId": str}, validate.get("liveId"))
-        }
-    )
-    _schema_live_streams = validate.Schema(
-        validate.get("livestreams"),
-        {
-            str: {
-                validate.optional("cdns"): validate.all(
-                    [
-                        validate.all({"streams": [_schema_url]}, validate.get("streams"))
-                    ],
-                    validate.transform(lambda x: [i for y in x for i in y])
+    def _get_live_streams(self, data, channel):
+        schema_live_ids = validate.Schema(
+            {"live": {"channels": {"byChannelId": {
+                channel: validate.all(
+                    {"liveId": validate.text},
+                    validate.get("liveId")
                 )
-            }
-        }
-    )
-
-    _schema_vod_list = validate.Schema(
-        validate.parse_json(),
-        validate.any(
-            validate.all(
-                {"video": {"videoList": list}},
-                validate.get("video"),
-                validate.get("videoList")
-            ),
-            validate.all(
-                {"quicktakeVideo": {"videoStory": dict}},
-                validate.get("quicktakeVideo"),
-                validate.get("videoStory"),
-                validate.transform(lambda x: [x])
-            )
-        ),
-        [
-            {
-                "slug": str,
-                "video": validate.all({"bmmrId": str}, validate.get("bmmrId"))
-            }
-        ]
-    )
-    _schema_vod_streams = validate.Schema(
-        {
-            "secureStreams": validate.all([_schema_url]),
-            "streams": validate.all([_schema_url])
-        },
-        validate.transform(lambda x: list(set(x["secureStreams"] + x["streams"])))
-    )
-
-    _headers = {
-        "authority": "www.bloomberg.com",
-        "upgrade-insecure-requests": "1",
-        "dnt": "1",
-        "accept": ";".join([
-            "text/html,application/xhtml+xml,application/xml",
-            "q=0.9,image/webp,image/apng,*/*",
-            "q=0.8,application/signed-exchange",
-            "v=b3"
-        ])
-    }
-
-    def _get_live_streams(self, channel):
-        res = self.session.http.get(self.url, headers=self._headers)
-        if "Are you a robot?" in res.text:
-            log.error("Are you a robot?")
-
-        match = self._re_preload_state.search(res.text)
-        if match is None:
-            return
-
-        live_ids = self._schema_live_list.validate(match.group(1))
-        live_id = live_ids.get(channel)
-        if not live_id:
+            }}}},
+            validate.get(("live", "channels", "byChannelId", channel)),
+        )
+        try:
+            live_id = schema_live_ids.validate(data)
+        except PluginError:
             log.error("Could not find liveId for channel '{0}'".format(channel))
             return
 
         log.debug("Found liveId: {0}".format(live_id))
-        res = self.session.http.get(self.LIVE_API_URL)
-        streams = self.session.http.json(res, schema=self._schema_live_streams)
-        data = streams.get(live_id, {})
+        return self.session.http.get(self.LIVE_API_URL, schema=validate.Schema(
+            validate.parse_json(),
+            {"livestreams": {
+                live_id: {
+                    validate.optional("cdns"): validate.all(
+                        [{"streams": [{
+                            "url": validate.url()
+                        }]}],
+                        validate.transform(lambda x: [urls["url"] for y in x for urls in y["streams"]])
+                    )
+                }
+            }},
+            validate.get(("livestreams", live_id, "cdns"))
+        ))
 
-        return data.get("cdns")
+    def _get_vod_streams(self, data):
+        schema_vod_list = validate.Schema(
+            validate.any(
+                validate.all(
+                    {"video": {"videoStory": dict}},
+                    validate.get(("video", "videoStory"))
+                ),
+                validate.all(
+                    {"quicktakeVideo": {"videoStory": dict}},
+                    validate.get(("quicktakeVideo", "videoStory"))
+                )
+            ),
+            {"video": {
+                "bmmrId": validate.text
+            }},
+            validate.get(("video", "bmmrId"))
+        )
+        schema_url = validate.all(
+            {"url": validate.url()},
+            validate.get("url")
+        )
 
-    def _get_vod_streams(self):
-        res = self.session.http.get(self.url, headers=self._headers)
-
-        match = self._re_preload_state.search(res.text)
-        if match is None:
-            return
-
-        videos = self._schema_vod_list.validate(match.group(1))
-        video_id = next((v["video"] for v in videos if v["slug"] in self.url), None)
-        if video_id is None:
+        try:
+            video_id = schema_vod_list.validate(data)
+        except PluginError:
+            log.error("Could not find videoId")
             return
 
         log.debug("Found videoId: {0}".format(video_id))
-        res = self.session.http.get(self.VOD_API_URL.format(video_id), headers=self._headers)
-        streams = self.session.http.json(res, schema=self._schema_vod_streams)
+        vod_url = self.VOD_API_URL.format(video_id)
+        secureStreams, streams, self.title = self.session.http.get(vod_url, schema=validate.Schema(
+            validate.parse_json(),
+            {
+                validate.optional("secureStreams"): [schema_url],
+                validate.optional("streams"): [schema_url],
+                "title": validate.text
+            },
+            validate.union_get("secureStreams", "streams", "title")
+        ))
 
-        return streams
+        return secureStreams or streams
 
     def _get_streams(self):
+        self.session.http.headers.update({
+            "authority": "www.bloomberg.com",
+            "upgrade-insecure-requests": "1",
+            "dnt": "1",
+            "accept": ";".join([
+                "text/html,application/xhtml+xml,application/xml",
+                "q=0.9,image/webp,image/apng,*/*",
+                "q=0.8,application/signed-exchange",
+                "v=b3"
+            ])
+        })
+
+        try:
+            data = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'window.__PRELOADED_STATE__')][1]/text()"),
+                validate.text,
+                validate.transform(re.compile(r"^\s*window\.__PRELOADED_STATE__\s*=\s*({.+})\s*;?\s*$", re.DOTALL).search),
+                validate.get(1),
+                validate.parse_json()
+            ))
+        except PluginError:
+            log.error("Could not find JSON data. Invalid URL or bot protection...")
+            return
+
         channel = self.match.group("channel")
-
-        self.session.http.headers.update({"User-Agent": useragents.CHROME})
         if channel:
-            streams = self._get_live_streams(channel) or []
+            streams = self._get_live_streams(data, channel)
         else:
-            streams = self._get_vod_streams() or []
+            streams = self._get_vod_streams(data)
 
-        for video_url in streams:
-            log.debug("Found stream: {0}".format(video_url))
-            parsed = urlparse(video_url)
-            if parsed.path.endswith(".f4m"):
-                for s in HDSStream.parse_manifest(self.session, video_url).items():
-                    yield s
-            elif parsed.path.endswith(".m3u8"):
-                for s in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                    yield s
-            elif parsed.path.endswith(".mp4"):
-                match = self._re_mp4_bitrate.match(video_url)
-                bitrate = "vod" if match is None else "{0}k".format(match.group('bitrate'))
-                yield bitrate, HTTPStream(self.session, video_url)
+        if streams:
+            # just return the first stream
+            return HLSStream.parse_variant_playlist(self.session, streams[0])
 
 
 __plugin__ = Bloomberg
