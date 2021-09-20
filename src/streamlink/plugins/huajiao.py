@@ -8,7 +8,8 @@ import uuid
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.useragents import CHROME as USER_AGENT
-from streamlink.stream import (HLSStream, HTTPStream)
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 HUAJIAO_URL = "http://www.huajiao.com/l/{}"
 LAPI_URL = "http://g2.live.360.cn/liveplay?stype=flv&channel={}&bid=huajiao&sn={}&sid={}&_rate=xd&ts={}&r={}" \

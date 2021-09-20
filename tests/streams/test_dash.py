@@ -2,8 +2,7 @@ import unittest
 from unittest.mock import ANY, MagicMock, Mock, call, patch
 
 from streamlink import PluginError
-from streamlink.stream import DASHStream
-from streamlink.stream.dash import DASHStreamWorker
+from streamlink.stream.dash import DASHStream, DASHStreamWorker
 from streamlink.stream.dash_manifest import MPD
 from tests.resources import text, xml
 

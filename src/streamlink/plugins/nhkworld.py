@@ -1,7 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 
 API_URL = "http://{}.nhk.or.jp/nhkworld/app/tv/hlslive_web.json"
 

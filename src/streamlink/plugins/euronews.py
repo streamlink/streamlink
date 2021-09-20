@@ -3,7 +3,8 @@ from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 

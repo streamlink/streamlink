@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 
 
 @pluginmatcher(re.compile(

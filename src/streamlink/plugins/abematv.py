@@ -15,8 +15,7 @@ from requests.adapters import BaseAdapter
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HLSStream
-from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)

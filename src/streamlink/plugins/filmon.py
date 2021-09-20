@@ -6,8 +6,8 @@ from urllib.parse import urlparse, urlunparse
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, hls_playlist
-from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker, Sequence
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, Sequence
+from streamlink.stream.hls_playlist import load as load_hls_playlist
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class FilmOnHLSStreamWorker(HLSStreamWorker):
             raise err
 
         try:
-            playlist = hls_playlist.load(res.text, res.url)
+            playlist = load_hls_playlist(res.text, res.url)
         except ValueError as err:
             raise StreamError(err)
 

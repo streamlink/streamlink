@@ -3,7 +3,8 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import DASHStream, HLSStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.data import search_dict
 from streamlink.utils.url import update_scheme
 

@@ -10,7 +10,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad
 
 from streamlink.session import Streamlink
-from streamlink.stream import hls
+from streamlink.stream.hls import HLSStream, HLSStreamReader
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.resources import text
 
@@ -63,10 +63,10 @@ class TestHLSStreamRepr(unittest.TestCase):
     def test_repr(self):
         session = Streamlink()
 
-        stream = hls.HLSStream(session, "https://foo.bar/playlist.m3u8")
+        stream = HLSStream(session, "https://foo.bar/playlist.m3u8")
         self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', None)>")
 
-        stream = hls.HLSStream(session, "https://foo.bar/playlist.m3u8", "https://foo.bar/master.m3u8")
+        stream = HLSStream(session, "https://foo.bar/playlist.m3u8", "https://foo.bar/master.m3u8")
         self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', 'https://foo.bar/master.m3u8')>")
 
 
@@ -84,7 +84,7 @@ class TestHLSVariantPlaylist(unittest.TestCase):
 
             session = Streamlink(options)
 
-            return hls.HLSStream.parse_variant_playlist(session, url)
+            return HLSStream.parse_variant_playlist(session, url)
 
     def test_variant_playlist(self):
         streams = self.subject("hls/test_master.m3u8")
@@ -94,16 +94,16 @@ class TestHLSVariantPlaylist(unittest.TestCase):
             "Finds all streams in master playlist"
         )
         self.assertTrue(
-            all([isinstance(stream, hls.HLSStream) for stream in streams.values()]),
+            all([isinstance(stream, HLSStream) for stream in streams.values()]),
             "Returns HLSStream instances"
         )
 
 
-class EventedHLSReader(hls.HLSStreamReader):
+class EventedHLSReader(HLSStreamReader):
     __writer__ = EventedHLSStreamWriter
 
 
-class EventedHLSStream(hls.HLSStream):
+class EventedHLSStream(HLSStream):
     __reader__ = EventedHLSReader
 
 
@@ -432,7 +432,7 @@ class TestHlsExtAudio(unittest.TestCase):
         if audio_select:
             streamlink.set_option("hls-audio-select", audio_select)
 
-        master_stream = hls.HLSStream.parse_variant_playlist(streamlink, playlist)
+        master_stream = HLSStream.parse_variant_playlist(streamlink, playlist)
 
         return master_stream
 
