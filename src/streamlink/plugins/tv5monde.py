@@ -3,7 +3,9 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugins.common_jwplayer import _js_to_json
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
 
 
 @pluginmatcher(re.compile(

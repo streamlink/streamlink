@@ -5,7 +5,8 @@ from urllib.parse import urljoin
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import DASHStream, HLSStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
 

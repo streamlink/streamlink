@@ -19,7 +19,8 @@ from urllib.parse import quote
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import DASHStream, HLSStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
 

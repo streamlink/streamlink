@@ -2,7 +2,7 @@ import json
 import re
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 
 _json_re = re.compile(r'<div class="jsb_ jsb_VideoPlaylist" data-jsb="(?P<json>[^"]+)">')
 

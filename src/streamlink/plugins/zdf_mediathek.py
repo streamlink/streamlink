@@ -4,7 +4,7 @@ from urllib.parse import urlparse, urlunparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import url_concat
 
 log = logging.getLogger(__name__)

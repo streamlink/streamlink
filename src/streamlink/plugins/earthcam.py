@@ -3,7 +3,8 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, RTMPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.rtmpdump import RTMPStream
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)

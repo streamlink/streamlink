@@ -10,7 +10,7 @@ from Crypto.Hash import SHA256
 from Crypto.Util.Padding import pad, unpad
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)

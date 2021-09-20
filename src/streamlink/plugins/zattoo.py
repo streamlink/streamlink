@@ -5,7 +5,8 @@ import uuid
 from streamlink.cache import Cache
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import DASHStream, HLSStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.args import comma_list_filter
 
 log = logging.getLogger(__name__)

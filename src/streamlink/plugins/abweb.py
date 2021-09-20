@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_scheme, url_concat
 
 log = logging.getLogger(__name__)

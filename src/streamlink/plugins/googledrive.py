@@ -3,7 +3,7 @@ import re
 from urllib.parse import parse_qsl
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.stream import HTTPStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

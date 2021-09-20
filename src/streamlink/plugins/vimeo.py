@@ -5,8 +5,10 @@ from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import DASHStream, HLSStream, HTTPStream
+from streamlink.stream.dash import DASHStream
 from streamlink.stream.ffmpegmux import MuxedStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

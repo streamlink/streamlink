@@ -5,7 +5,7 @@ from urllib.parse import urljoin, urlparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
 from streamlink.plugins.brightcove import BrightcovePlayer
-from streamlink.stream import HTTPStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

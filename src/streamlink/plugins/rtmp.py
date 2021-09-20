@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.plugin import parse_params
-from streamlink.stream import RTMPStream
+from streamlink.stream.rtmpdump import RTMPStream
 
 log = logging.getLogger(__name__)
 

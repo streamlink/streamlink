@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
 
 log = logging.getLogger(__name__)

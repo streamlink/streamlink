@@ -5,7 +5,7 @@ import pytest
 
 from streamlink import StreamError
 from streamlink import Streamlink
-from streamlink.stream import StreamProcess
+from streamlink.stream.streamprocess import StreamProcess
 
 
 @pytest.mark.parametrize("parameters,arguments,expected", [

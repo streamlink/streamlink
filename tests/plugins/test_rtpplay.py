@@ -4,7 +4,7 @@ import requests_mock
 
 from streamlink import Streamlink
 from streamlink.plugins.rtpplay import RTPPlay
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from tests.plugins import PluginCanHandleUrl
 from tests.resources import text
 

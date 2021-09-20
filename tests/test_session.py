@@ -8,7 +8,10 @@ from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import NoPluginError, Streamlink
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
-from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream
+from streamlink.stream.akamaihd import AkamaiHDStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
 
 
 class EmptyPlugin(Plugin):
