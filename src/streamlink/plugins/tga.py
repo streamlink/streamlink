@@ -3,7 +3,9 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
 
 CHANNEL_INFO_URL = "http://api.plu.cn/tga/streams/%s"
 QQ_STREAM_INFO_URL = "http://info.zb.qq.com/?cnlid=%d&cmd=2&stream=%d&system=1&sdtfrom=113"

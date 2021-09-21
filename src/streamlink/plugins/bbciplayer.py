@@ -8,8 +8,9 @@ from hashlib import sha1
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HDSStream, HLSStream
 from streamlink.stream.dash import DASHStream
+from streamlink.stream.hds import HDSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)

@@ -2,7 +2,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HTTPStream
+from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 

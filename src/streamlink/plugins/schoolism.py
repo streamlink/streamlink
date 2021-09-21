@@ -6,7 +6,8 @@ from functools import partial
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

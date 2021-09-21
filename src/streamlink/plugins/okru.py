@@ -5,7 +5,9 @@ import re
 from streamlink.compat import html_unescape, unquote
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
 
 log = logging.getLogger(__name__)
 

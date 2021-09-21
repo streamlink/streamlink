@@ -10,7 +10,7 @@ from streamlink import logger
 from streamlink.compat import unquote_plus, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 

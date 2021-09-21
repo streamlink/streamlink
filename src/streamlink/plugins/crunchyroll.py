@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
 

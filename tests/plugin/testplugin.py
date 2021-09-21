@@ -6,7 +6,11 @@ from streamlink import NoStreamsError
 from streamlink.options import Options
 from streamlink.plugin import PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugins import Plugin
-from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
+from streamlink.stream.akamaihd import AkamaiHDStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
+from streamlink.stream.stream import Stream
 
 
 class TestStream(Stream):

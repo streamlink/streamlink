@@ -4,7 +4,7 @@ import re
 from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
 

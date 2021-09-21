@@ -2,11 +2,11 @@ import unittest
 
 from streamlink import Streamlink
 from streamlink.plugins.filmon import FilmOnHLS
-from streamlink.stream import AkamaiHDStream
-from streamlink.stream import HDSStream
-from streamlink.stream import HLSStream
-from streamlink.stream import HTTPStream
-from streamlink.stream import RTMPStream
+from streamlink.stream.akamaihd import AkamaiHDStream
+from streamlink.stream.hds import HDSStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
 from streamlink.stream.stream import Stream
 from streamlink_cli.utils import stream_to_url
 from tests.mock import PropertyMock, patch

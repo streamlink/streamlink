@@ -7,7 +7,8 @@ from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)

@@ -8,7 +8,9 @@ from streamlink.packages.flashmedia import AMFMessage, AMFPacket
 from streamlink.packages.flashmedia.types import AMF3ObjectBase
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
 
 log = logging.getLogger(__name__)
 

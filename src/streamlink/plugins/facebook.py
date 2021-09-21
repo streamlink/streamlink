@@ -4,7 +4,8 @@ import re
 from streamlink.compat import bytes, html_unescape, is_py3, unquote_plus, urlencode
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api.utils import itertags
-from streamlink.stream import DASHStream, HTTPStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.http import HTTPStream
 from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)

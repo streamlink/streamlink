@@ -4,8 +4,8 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, RTMPStream
-from streamlink.stream.hls import HLSStreamReader, HLSStreamWorker
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
+from streamlink.stream.rtmpdump import RTMPStream
 
 log = logging.getLogger(__name__)
 

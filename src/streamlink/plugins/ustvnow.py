@@ -11,7 +11,7 @@ from Crypto.Hash import SHA256
 
 from streamlink.compat import urljoin, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.crypto import pad, unpad
 
 log = logging.getLogger(__name__)

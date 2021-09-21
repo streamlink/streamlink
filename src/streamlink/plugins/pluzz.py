@@ -7,7 +7,8 @@ from isodate import LOCAL as LOCALTIMEZONE
 from streamlink.compat import urlparse
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream import DASHStream, HLSStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)

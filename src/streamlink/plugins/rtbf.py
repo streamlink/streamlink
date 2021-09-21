@@ -5,7 +5,9 @@ import re
 from streamlink.compat import html_unescape
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import DASHStream, HLSStream, HTTPStream
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

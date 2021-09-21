@@ -2,7 +2,8 @@ import logging
 import re
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
-from streamlink.stream import HLSStream, HTTPStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

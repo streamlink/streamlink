@@ -7,8 +7,9 @@ from Crypto.Cipher import Blowfish
 from streamlink.compat import bytes, is_py3, urlparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream, HTTPStream
 from streamlink.stream.ffmpegmux import MuxedStream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 

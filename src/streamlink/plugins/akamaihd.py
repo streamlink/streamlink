@@ -3,7 +3,7 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.plugin import parse_params
-from streamlink.stream import AkamaiHDStream
+from streamlink.stream.akamaihd import AkamaiHDStream
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)

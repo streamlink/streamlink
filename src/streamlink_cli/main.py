@@ -23,7 +23,7 @@ from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __ve
 from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import PluginOptions
-from streamlink.stream import StreamProcess
+from streamlink.stream.streamprocess import StreamProcess
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink_cli.argparser import build_parser

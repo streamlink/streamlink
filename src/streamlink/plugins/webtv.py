@@ -7,7 +7,7 @@ from Crypto.Cipher import AES
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream import HLSStream
+from streamlink.stream.hls import HLSStream
 from streamlink.utils.crypto import unpad_pkcs5
 from streamlink.utils.parse import parse_json
 from streamlink.utils.url import update_scheme
