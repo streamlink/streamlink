@@ -4,7 +4,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.stream.rtmpdump import RTMPStream
+from streamlink.utils.parse import parse_qsd
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
@@ -14,87 +14,52 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?earthcam\.com/"
 ))
 class EarthCam(Plugin):
-    playpath_re = re.compile(r"(?P<folder>/.*/)(?P<file>.*?\.flv)")
-    swf_url = "http://static.earthcam.com/swf/streaming/stream_viewer_v3.swf"
-    json_base_re = re.compile(r"""var[ ]+json_base[^=]+=.*?(\{.*?});""", re.DOTALL)
-    cam_name_re = re.compile(r"""var[ ]+currentName[^=]+=[ \t]+(?P<quote>["'])(?P<name>\w+)(?P=quote);""", re.DOTALL)
-    cam_data_schema = validate.Schema(
-        validate.transform(json_base_re.search),
-        validate.any(
-            None,
-            validate.all(
-                validate.get(1),
-                validate.transform(lambda d: d.replace("\\/", "/")),
-                validate.parse_json(),
-            )
-        )
-    )
+    _re_json_base = re.compile(r"""var\s+json_base\s*=\s*(?P<json>{.*?});""", re.DOTALL)
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        m = self.cam_name_re.search(res.text)
-        cam_name = m and m.group("name")
-        json_base = self.cam_data_schema.validate(res.text)
+        data = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(self._re_json_base.search),
+            validate.any(None, validate.all(
+                validate.get("json"),
+                validate.parse_json(),
+                {"cam": {
+                    str: {
+                        "live_type": str,
+                        "html5_streamingdomain": str,
+                        "html5_streampath": str,
+                        "group": str,
+                        "location": str,
+                        "title": str,
+                        "liveon": str,
+                        "defaulttab": str,
+                    }
+                }},
+                validate.get("cam")
+            ))
+        ))
+        if not data:
+            return
 
-        cam_data = json_base["cam"][cam_name]
+        cam_name = parse_qsd(self.url).get("cam") or next(iter(data.keys()), None)
+        cam_data = data.get(cam_name)
+        if not cam_data:
+            return
 
-        log.debug("Found cam for {0} - {1}".format(cam_data["group"], cam_data["title"]))
+        # exclude everything other than live video streams
+        if cam_data["live_type"] != "flashvideo" or cam_data["liveon"] != "true" or cam_data["defaulttab"] != "live":
+            return
 
-        is_live = (cam_data["liveon"] == "true" and cam_data["defaulttab"] == "live")
-
-        # HLS data
+        log.debug(f"Found cam {cam_name}")
         hls_domain = cam_data["html5_streamingdomain"]
         hls_playpath = cam_data["html5_streampath"]
 
-        # RTMP data
-        rtmp_playpath = ""
-        if is_live:
-            n = "live"
-            rtmp_domain = cam_data["streamingdomain"]
-            rtmp_path = cam_data["livestreamingpath"]
-            rtmp_live = cam_data["liveon"]
+        self.author = cam_data["group"]
+        self.category = cam_data["location"]
+        self.title = cam_data["title"]
 
-            if rtmp_path:
-                match = self.playpath_re.search(rtmp_path)
-                rtmp_playpath = match.group("file")
-                rtmp_url = rtmp_domain + match.group("folder")
-        else:
-            n = "vod"
-            rtmp_domain = cam_data["archivedomain"]
-            rtmp_path = cam_data["archivepath"]
-            rtmp_live = cam_data["archiveon"]
-
-            if rtmp_path:
-                rtmp_playpath = rtmp_path
-                rtmp_url = rtmp_domain
-
-        # RTMP stream
-        if rtmp_playpath:
-            log.debug("RTMP URL: {0}{1}".format(rtmp_url, rtmp_playpath))
-
-            params = {
-                "rtmp": rtmp_url,
-                "playpath": rtmp_playpath,
-                "pageUrl": self.url,
-                "swfUrl": self.swf_url,
-                "live": rtmp_live
-            }
-
-            yield n, RTMPStream(self.session, params)
-
-        # HLS stream
-        if hls_playpath and is_live:
-            hls_url = hls_domain + hls_playpath
-            hls_url = update_scheme(self.url, hls_url)
-
-            log.debug("HLS URL: {0}".format(hls_url))
-
+        if hls_playpath:
+            hls_url = update_scheme(self.url, f"{hls_domain}{hls_playpath}")
             yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
-
-        if not (rtmp_playpath or hls_playpath):
-            log.error("This cam stream appears to be in offline or "
-                      "snapshot mode and not live stream can be played.")
-            return
 
 
 __plugin__ = EarthCam
