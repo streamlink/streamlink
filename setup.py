@@ -65,7 +65,16 @@ if is_wheel_for_windows():
     entry_points["gui_scripts"] = ["streamlinkw=streamlink_cli.main:main"]
 
 
+# optional data files
 additional_files = [
+    # shell completions
+    #  requires pre-built completion files via shtab (dev-requirements.txt)
+    #  `./script/build-shell-completions.sh`
+    ("share/bash-completion/completions", ["build/shtab/bash/streamlink"]),
+    ("share/zsh/site-functions", ["build/shtab/zsh/_streamlink"]),
+    # man page
+    #  requires pre-built man page file via sphinx (docs-requirements.txt)
+    #  `make --directory=docs clean man`
     ("share/man/man1", ["docs/_build/man/streamlink.1"])
 ]
 
