@@ -5,11 +5,10 @@ import re
 from collections import defaultdict
 from hashlib import sha1
 
-from streamlink.compat import urlparse
+from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
-from streamlink.stream.hds import HDSStream
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.parse import parse_json
 
@@ -84,6 +83,10 @@ class BBCiPlayer(Plugin):
         ),
     )
 
+    def __init__(self, url):
+        super(BBCiPlayer, self).__init__(url)
+        self.url = urlunparse(urlparse(self.url)._replace(scheme="https"))
+
     @classmethod
     def _hash_vpid(cls, vpid):
         return sha1(cls.hash + str(vpid).encode("utf8")).hexdigest()
@@ -132,10 +135,6 @@ class BBCiPlayer(Plugin):
             log.debug("{0} {1} streams", len(urls), stream_type)
             for url in list(urls):
                 try:
-                    if stream_type == "hds":
-                        for s in HDSStream.parse_manifest(self.session,
-                                                          url).items():
-                            yield s
                     if stream_type == "hls":
                         for s in HLSStream.parse_variant_playlist(self.session,
                                                                   url).items():
