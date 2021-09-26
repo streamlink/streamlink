@@ -5,7 +5,7 @@ from datetime import datetime
 from time import time
 from urllib.parse import urljoin, urlparse
 
-from streamlink.exceptions import NoStreamsError
+from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
@@ -24,13 +24,15 @@ class OnePlusOneHLS(HLSStream):
         self._first_netloc = first_parsed.netloc
         self._first_path_chunklist = first_parsed.path.split("/")[-1]
         self.watch_timeout = int(first_parsed.path.split("/")[2]) - 15
-        self._next_watch_timeout()
-
         self.api = OnePlusOneAPI(session_, self_url)
 
     def _next_watch_timeout(self):
         _next = datetime.fromtimestamp(self.watch_timeout).isoformat(" ")
         log.debug(f"next watch_timeout at {_next}")
+
+    def open(self):
+        self._next_watch_timeout()
+        return super().open()
 
     @property
     def url(self):
@@ -65,7 +67,7 @@ class OnePlusOneAPI:
             url=self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//iframe[@name='twttrHubFrameSecure']/@src")))
+                validate.xml_xpath_string(".//iframe[@src][@name='twttrHubFrameSecure']/@src")))
         if not url_parts:
             raise NoStreamsError("Missing url_parts")
 
@@ -77,7 +79,8 @@ class OnePlusOneAPI:
                 url=urljoin(self.url, url_parts),
                 schema=validate.Schema(
                     validate.parse_html(),
-                    validate.xml_xpath_string(".//script[@type='text/javascript'][contains(text(),'ovva-player')]"),
+                    validate.xml_xpath_string(".//script[@type='text/javascript'][contains(text(),'ovva-player')]/text()"),
+                    str,
                     validate.transform(self._re_data.search),
                     validate.get(1),
                     validate.transform(lambda x: b64decode(x).decode()),
@@ -85,7 +88,7 @@ class OnePlusOneAPI:
                     {"balancer": validate.url()},
                     validate.get("balancer")
                 ))
-        except TypeError as err:
+        except (PluginError, TypeError) as err:
             log.error(f"ovva-player: {err}")
             return
 
@@ -94,16 +97,9 @@ class OnePlusOneAPI:
             url=url_ovva,
             schema=validate.Schema(
                 validate.transform(lambda x: x.split("=")),
-                ["302", validate.url(path=lambda y: y.endswith(".m3u8"))],
+                ["302", validate.url(path=validate.endswith(".m3u8"))],
                 validate.get(1)))
         return url_hls
-
-    def get_streams(self):
-        url_hls = self.get_hls_url()
-        if not url_hls:
-            return
-        for q, s in HLSStream.parse_variant_playlist(self.session, url_hls).items():
-            yield q, OnePlusOneHLS(self.session, s.url, self_url=self.url)
 
 
 @pluginmatcher(re.compile(
@@ -112,7 +108,11 @@ class OnePlusOneAPI:
 class OnePlusOne(Plugin):
     def _get_streams(self):
         self.api = OnePlusOneAPI(self.session, self.url)
-        return self.api.get_streams()
+        url_hls = self.api.get_hls_url()
+        if not url_hls:
+            return
+        for q, s in HLSStream.parse_variant_playlist(self.session, url_hls).items():
+            yield q, OnePlusOneHLS(self.session, s.url, self_url=self.url)
 
 
 __plugin__ = OnePlusOne
