@@ -25,12 +25,12 @@ _re_uri_implicit_scheme = re.compile(r"""^[a-z0-9][a-z0-9.+-]*://""", re.IGNOREC
 
 def update_scheme(current: str, target: str) -> str:
     """
-    Take the scheme from the current URL and apply it to the
-    target URL if the target URL starts with // or is missing a scheme
+    Take the scheme from the current URL and apply it to the target URL
     :param current: current URL
     :param target: target URL
-    :return: target URL with the current URLs scheme
+    :return: target URL with the current URL's scheme
     """
+    current_p = urlparse(current)
     target_p = urlparse(target)
 
     if (
@@ -42,14 +42,10 @@ def update_scheme(current: str, target: str) -> str:
         # target URLs without scheme and netloc: ("http://", "foo.bar/foo") -> "http://foo.bar/foo"
         or not target_p.scheme and not target_p.netloc
     ):
-        return f"{urlparse(current).scheme}://{urlunparse(target_p)}"
-
-    # target URLs without scheme but with netloc: ("http://", "//foo.bar/foo") -> "http://foo.bar/foo"
-    if not target_p.scheme and target_p.netloc:
-        return f"{urlparse(current).scheme}:{urlunparse(target_p)}"
+        return f"{current_p.scheme}://{urlunparse(target_p)}"
 
     # target URLs with scheme
-    return target
+    return urlunparse(target_p._replace(scheme=current_p.scheme))
 
 
 def url_equal(first, second, ignore_scheme=False, ignore_netloc=False, ignore_path=False, ignore_params=False,
