@@ -1,5 +1,6 @@
 import logging
 import re
+from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -15,71 +16,66 @@ log = logging.getLogger(__name__)
     (?:\?tab=videos&id=(?P<vod_id>\d+))?
 """, re.VERBOSE))
 class Picarto(Plugin):
-    channel_schema = validate.Schema({
-        'channel': validate.any(None, {
-            'stream_name': str,
-            'title': str,
-            'online': bool,
-            'private': bool,
-            'categories': [{'label': str}],
-        }),
-        'getLoadBalancerUrl': {'origin': str},
-        'getMultiStreams': validate.any(None, {
-            'multistream': bool,
-            'streams': [{
-                'name': str,
-                'online': bool,
-            }],
-        }),
-    })
-    vod_schema = validate.Schema({
-        'data': {
-            'video': validate.any(None, {
-                'id': str,
-                'title': str,
-                'file_name': str,
-                'channel': {'name': str},
-            }),
-        },
-    }, validate.get('data'), validate.get('video'))
-
-    HLS_URL = 'https://{origin}.picarto.tv/stream/hls/{file_name}/index.m3u8'
+    API_URL_LIVE = "https://ptvintern.picarto.tv/api/channel/detail/{username}"
+    API_URL_VOD = "https://ptvintern.picarto.tv/ptvapi"
+    HLS_URL = "https://{netloc}/stream/hls/{file_name}/index.m3u8"
 
     def get_live(self, username):
-        res = self.session.http.get(f'https://ptvintern.picarto.tv/api/channel/detail/{username}')
-        channel_data = self.session.http.json(res, schema=self.channel_schema)
-        log.trace(f'channel_data={channel_data!r}')
-
-        if not channel_data['channel'] or not channel_data['getMultiStreams']:
-            log.debug('Missing channel or streaming data')
+        netloc = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//script[contains(@src,'/stream/player.js')][1]/@src"),
+            validate.any(None, validate.transform(lambda src: urlparse(src).netloc))
+        ))
+        if not netloc:
+            log.error("Could not find server netloc")
             return
 
-        if channel_data['channel']['private']:
-            log.info('This is a private stream')
+        channel, multistreams = self.session.http.get(self.API_URL_LIVE.format(username=username), schema=validate.Schema(
+            validate.parse_json(),
+            {
+                "channel": validate.any(None, {
+                    "stream_name": str,
+                    "title": str,
+                    "online": bool,
+                    "private": bool,
+                    "categories": [{"label": str}],
+                }),
+                "getMultiStreams": validate.any(None, {
+                    "multistream": bool,
+                    "streams": [{
+                        "name": str,
+                        "online": bool,
+                    }],
+                }),
+            },
+            validate.union_get("channel", "getMultiStreams")
+        ))
+        if not channel or not multistreams:
+            log.debug("Missing channel or streaming data")
             return
 
-        if channel_data['getMultiStreams']['multistream']:
-            msg = 'Found multistream: '
-            i = 1
-            for user in channel_data['getMultiStreams']['streams']:
-                msg += user['name']
-                msg += ' (online)' if user['online'] else ' (offline)'
-                if i < len(channel_data['getMultiStreams']['streams']):
-                    msg += ', '
-                i += 1
-            log.info(msg)
+        log.trace(f"netloc={netloc!r}")
+        log.trace(f"channel={channel!r}")
+        log.trace(f"multistreams={multistreams!r}")
 
-        if not channel_data['channel']['online']:
-            log.error('User is not online')
+        if not channel["online"]:
+            log.error("User is not online")
+            return
+
+        if channel["private"]:
+            log.info("This is a private stream")
             return
 
         self.author = username
-        self.category = channel_data['channel']['categories'][0]['label']
-        self.title = channel_data['channel']['title']
+        self.category = channel["categories"][0]["label"]
+        self.title = channel["title"]
 
-        return HLSStream.parse_variant_playlist(self.session,
-                                                self.HLS_URL.format(file_name=channel_data['channel']['stream_name'],
-                                                                    origin=channel_data['getLoadBalancerUrl']['origin']))
+        hls_url = self.HLS_URL.format(
+            netloc=netloc,
+            file_name=channel["stream_name"]
+        )
+
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
     def get_vod(self, vod_id):
         data = {
@@ -89,6 +85,7 @@ class Picarto(Plugin):
                 '    id\n'
                 '    title\n'
                 '    file_name\n'
+                '    video_recording_image_url\n'
                 '    channel {\n'
                 '      name\n'
                 '      }'
@@ -97,19 +94,37 @@ class Picarto(Plugin):
             ),
             'variables': {'videoId': vod_id},
         }
-        res = self.session.http.post('https://ptvintern.picarto.tv/ptvapi', json=data)
-        vod_data = self.session.http.json(res, schema=self.vod_schema)
-        log.trace(f'vod_data={vod_data!r}')
+        vod_data = self.session.http.post(self.API_URL_VOD, json=data, schema=validate.Schema(
+            validate.parse_json(),
+            {"data": {
+                "video": validate.any(None, {
+                    "id": str,
+                    "title": str,
+                    "file_name": str,
+                    "video_recording_image_url": str,
+                    "channel": {"name": str},
+                }),
+            }},
+            validate.get(("data", "video"))
+        ))
+
         if not vod_data:
-            log.debug('Missing video data')
+            log.debug("Missing video data")
             return
 
-        self.author = vod_data['channel']['name']
-        self.category = 'VOD'
-        self.title = vod_data['title']
-        return HLSStream.parse_variant_playlist(self.session,
-                                                self.HLS_URL.format(file_name=vod_data['file_name'],
-                                                                    origin='recording-eu-1'))
+        log.trace(f"vod_data={vod_data!r}")
+
+        self.author = vod_data["channel"]["name"]
+        self.category = "VOD"
+        self.title = vod_data["title"]
+
+        netloc = urlparse(vod_data["video_recording_image_url"]).netloc
+        hls_url = self.HLS_URL.format(
+            netloc=netloc,
+            file_name=vod_data["file_name"]
+        )
+
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
     def _get_streams(self):
         m = self.match.groupdict()
