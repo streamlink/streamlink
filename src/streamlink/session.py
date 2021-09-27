@@ -231,12 +231,13 @@ class Streamlink:
                 urllib3_connection.allowed_gai_family = allowed_gai_family
 
         elif key == "http-proxy":
-            self.http.proxies["http"] = update_scheme("http://", value)
+            self.http.proxies["http"] = update_scheme("http://", value, force=False)
             if "https" not in self.http.proxies:
-                self.http.proxies["https"] = update_scheme("http://", value)
+                self.http.proxies["https"] = update_scheme("http://", value, force=False)
 
         elif key == "https-proxy":
             self.http.proxies["https"] = update_scheme("https://", value)
+
         elif key == "http-cookies":
             if isinstance(value, dict):
                 self.http.cookies.update(value)
@@ -353,7 +354,7 @@ class Streamlink:
         :param follow_redirect: follow redirects
 
         """
-        url = update_scheme("http://", url)
+        url = update_scheme("http://", url, force=False)
 
         matcher: Matcher
         candidate: Optional[Type[Plugin]] = None
