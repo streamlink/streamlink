@@ -58,7 +58,7 @@ class EarthCam(Plugin):
         self.title = cam_data["title"]
 
         if hls_playpath:
-            hls_url = update_scheme(self.url, f"{hls_domain}{hls_playpath}")
+            hls_url = update_scheme("https://", f"{hls_domain}{hls_playpath}")
             yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
 
 

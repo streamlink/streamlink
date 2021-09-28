@@ -38,7 +38,7 @@ class Delfi(Plugin):
         data = self.session.http.json(res)
         if data["success"]:
             for x in itertools.chain(*data['data']['versions'].values()):
-                src = update_scheme(self.url, x['src'])
+                src = update_scheme("https://", x["src"], force=False)
                 if x['type'] == "application/x-mpegurl":
                     yield from HLSStream.parse_variant_playlist(self.session, src).items()
                 elif x['type'] == "application/dash+xml":

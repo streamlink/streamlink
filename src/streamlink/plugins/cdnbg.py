@@ -62,7 +62,7 @@ class CDNBG(Plugin):
                 for iframe in itertags(res.text, "iframe"):
                     iframe_url = iframe.attributes.get("src")
                     if iframe_url and "cdn.bg" in iframe_url:
-                        iframe_url = update_scheme(self.url, html_unescape(iframe_url))
+                        iframe_url = update_scheme("https://", html_unescape(iframe_url), force=False)
                         break
                 else:
                     return
