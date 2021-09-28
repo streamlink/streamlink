@@ -28,7 +28,7 @@ class TV999(Plugin):
         validate.transform(hls_re.search),
         validate.any(None, validate.all(
             validate.get(1),
-            validate.transform(lambda x: update_scheme('http:', x)),
+            validate.transform(lambda x: update_scheme("https://", x)),
             validate.url(),
         )),
     )

@@ -17,7 +17,7 @@ class NBC(Plugin):
         platform_url = m and m.group("url")
 
         if platform_url:
-            url = update_scheme(self.url, platform_url)
+            url = update_scheme("https://", platform_url)
             # hand off to ThePlatform plugin
             p = ThePlatform(url)
             p.bind(self.session, "plugin.nbc")

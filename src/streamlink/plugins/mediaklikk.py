@@ -67,7 +67,7 @@ class Mediaklikk(Plugin):
                 validate.get("playlist"),
                 validate.filter(lambda p: p["type"] == "hls"),
                 validate.filter(lambda p: not skip_vods or "vod" not in p["file"]),
-                validate.map(lambda p: update_scheme(self.url, p["file"]))
+                validate.map(lambda p: update_scheme("https://", p["file"]))
             ))
         ))
 
