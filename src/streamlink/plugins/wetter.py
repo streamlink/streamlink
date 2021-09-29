@@ -38,8 +38,12 @@ class Wetter(Plugin):
         streams = self.session.http.get(self.url, schema=self._stream_schema)
         for stream in streams:
             if stream["stream-type"] == "hls":
-                for s in HLSStream.parse_variant_playlist(self.session, stream["url"]).items():
-                    yield s
+                streams = HLSStream.parse_variant_playlist(self.session, stream["url"]).items()
+                if streams:
+                    for s in streams:
+                        yield s
+                else:
+                    yield "live", HLSStream(self.session, stream["url"])
             elif stream["stream-type"] == "rtmp":
                 yield "0_live", RTMPStream(self.session, {"rtmp": stream["url"]})
             elif stream["stream-type"] == "endpoint":
