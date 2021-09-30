@@ -23,14 +23,43 @@ def test_prepend_www(url, expected):
     assert expected == prepend_www(url)
 
 
-def test_update_scheme():
-    assert update_scheme("https://other.com/bar", "//example.com/foo") == "https://example.com/foo", "should become https"
-    assert update_scheme("http://other.com/bar", "//example.com/foo") == "http://example.com/foo", "should become http"
-    assert update_scheme("https://other.com/bar", "http://example.com/foo") == "http://example.com/foo", "should remain http"
-    assert update_scheme("https://other.com/bar", "example.com/foo") == "https://example.com/foo", "should become https"
-    assert update_scheme("http://", "127.0.0.1:1234/foo") == "http://127.0.0.1:1234/foo", "implicit scheme with IPv4+port"
-    assert update_scheme("http://", "foo.bar:1234/foo") == "http://foo.bar:1234/foo", "implicit scheme with hostname+port"
-    assert update_scheme("http://", "foo.1+2-bar://baz") == "foo.1+2-bar://baz", "correctly parses all kinds of schemes"
+@pytest.mark.parametrize("assertion,args,expected", [
+    ("current scheme overrides target scheme (https)",
+     ("https://other.com/bar", "http://example.com/foo"),
+     "https://example.com/foo"),
+    ("current scheme overrides target scheme (http)",
+     ("http://other.com/bar", "https://example.com/foo"),
+     "http://example.com/foo"),
+    ("current scheme does not override target scheme if force is False (https)",
+     ("http://other.com/bar", "https://example.com/foo", False),
+     "https://example.com/foo"),
+    ("current scheme does not override target scheme if force is False (http)",
+     ("https://other.com/bar", "http://example.com/foo", False),
+     "http://example.com/foo"),
+    ("current scheme gets applied to scheme-less target",
+     ("https://other.com/bar", "//example.com/foo"),
+     "https://example.com/foo"),
+    ("current scheme gets applied to scheme-less target, even if force is False",
+     ("https://other.com/bar", "//example.com/foo", False),
+     "https://example.com/foo"),
+    ("current scheme gets added to target string",
+     ("https://other.com/bar", "example.com/foo"),
+     "https://example.com/foo"),
+    ("current scheme gets added to target string, even if force is False",
+     ("https://other.com/bar", "example.com/foo", False),
+     "https://example.com/foo"),
+    ("implicit scheme with IPv4+port",
+     ("http://", "127.0.0.1:1234/foo"),
+     "http://127.0.0.1:1234/foo"),
+    ("implicit scheme with hostname+port",
+     ("http://", "foo.bar:1234/foo"),
+     "http://foo.bar:1234/foo"),
+    ("correctly parses all kinds of schemes",
+     ("foo.1+2-bar://baz", "FOO.1+2-BAR://qux"),
+     "foo.1+2-bar://qux"),
+])
+def test_update_scheme(assertion, args, expected):
+    assert update_scheme(*args) == expected, assertion
 
 
 def test_url_equal():
