@@ -253,11 +253,14 @@ class YouTube(Plugin):
             params={"key": _i_api_key},
             data=json.dumps({
                 "videoId": _i_video_id,
+                "contentCheckOk": True,
+                "racyCheckOk": True,
                 "context": {
                     "client": {
-                        "clientName": "WEB_EMBEDDED_PLAYER",
+                        "clientName": "WEB",
                         "clientVersion": _i_version,
                         "platform": "DESKTOP",
+                        "clientScreen": "EMBED",
                         "clientFormFactor": "UNKNOWN_FORM_FACTOR",
                         "browserName": "Chrome",
                     },
