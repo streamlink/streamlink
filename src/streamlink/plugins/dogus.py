@@ -36,7 +36,7 @@ class Dogus(Plugin):
 
         # Next check for HLS URL with token
         mobile_url_m = self.mobile_url_re.search(res.text)
-        mobile_url = mobile_url_m and update_scheme(self.url, mobile_url_m.group("url"))
+        mobile_url = mobile_url_m and update_scheme("https://", mobile_url_m.group("url"), force=False)
         if mobile_url:
             log.debug("Found mobile stream: {0}".format(mobile_url_m.group(0)))
 

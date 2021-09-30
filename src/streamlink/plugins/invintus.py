@@ -38,7 +38,7 @@ class InvintusMedia(Plugin):
             return
 
         hls_url = api_response["data"]["streamingURIs"]["main"]
-        return HLSStream.parse_variant_playlist(self.session, update_scheme(self.url, hls_url))
+        return HLSStream.parse_variant_playlist(self.session, update_scheme("https://", hls_url))
 
 
 __plugin__ = InvintusMedia

@@ -61,7 +61,7 @@ class WebTV(Plugin):
             for source in sdata:
                 log.debug("Found stream of type: {}".format(source[u'type']))
                 if source[u'type'] == u"application/vnd.apple.mpegurl":
-                    url = update_scheme(self.url, source[u"src"])
+                    url = update_scheme("https://", self.url, source[u"src"], force=False)
 
                     try:
                         # try to parse the stream as a variant playlist
