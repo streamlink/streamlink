@@ -1,9 +1,9 @@
 import logging
 import re
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 
-from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api.utils import itertags
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.plugins.brightcove import BrightcovePlayer
 from streamlink.stream.http import HTTPStream
 
@@ -11,80 +11,103 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://(?:[\w-]+\.)+(?:bfmtv|01net)\.com'
+    r"https?://(?:[\w-]+\.)+(?:bfmtv|01net)\.com"
 ))
 class BFMTV(Plugin):
-    _dailymotion_url = 'https://www.dailymotion.com/embed/video/{}'
-    _brightcove_video_re = re.compile(
-        r'accountid="(?P<account_id>[0-9]+).*?videoid="(?P<video_id>[0-9]+)"',
-        re.DOTALL
-    )
-    _brightcove_video_alt_re = re.compile(
-        r'data-account="(?P<account_id>[0-9]+).*?data-video-id="(?P<video_id>[0-9]+)"',
-        re.DOTALL
-    )
-    _embed_video_id_re = re.compile(
-        r'<iframe.*?src=".*?/(?P<video_id>\w+)"',
-        re.DOTALL
-    )
-    _main_js_url_re = re.compile(r'src="([\w/]+/main\.\w+\.js)"')
-    _js_brightcove_video_re = re.compile(
-        r'i\?\([A-Z]="[^"]+",y="(?P<video_id>[0-9]+).*"data-account"\s*:\s*"(?P<account_id>[0-9]+)',
-    )
+    def _brightcove(self, account_id, video_id):
+        log.debug(f"Account ID: {account_id}")
+        log.debug(f"Video ID: {video_id}")
+        player = BrightcovePlayer(self.session, account_id)
+
+        return dict(player.get_streams(video_id))
+
+    def _streams_brightcove(self, root):
+        schema_brightcove = validate.Schema(validate.any(
+            validate.all(
+                validate.xml_find(".//*[@accountid][@videoid]"),
+                validate.union_get("accountid", "videoid")
+            ),
+            validate.all(
+                validate.xml_find(".//*[@data-account][@data-video-id]"),
+                validate.union_get("data-account", "data-video-id")
+            )
+        ))
+        try:
+            account_id, video_id = schema_brightcove.validate(root)
+        except PluginError:
+            return
+
+        return self._brightcove(account_id, video_id)
+
+    def _streams_brightcove_js(self, root):
+        re_js_src = re.compile(r"^[\w/]+/main\.\w+\.js$")
+        re_js_brightcove_video = re.compile(
+            r'i\?\([A-Z]="[^"]+",y="(?P<video_id>[0-9]+).*"data-account"\s*:\s*"(?P<account_id>[0-9]+)',
+        )
+        schema_brightcove_js = validate.Schema(
+            validate.xml_findall(r".//script[@src]"),
+            validate.filter(lambda elem: re_js_src.search(elem.attrib.get("src"))),
+            validate.get(0),
+            str,
+            validate.transform(lambda src: urljoin(self.url, src))
+        )
+        schema_brightcove_js2 = validate.Schema(
+            validate.transform(re_js_brightcove_video.search),
+            validate.union_get("account_id", "video_id")
+        )
+        try:
+            js_url = schema_brightcove_js.validate(root)
+            log.debug(f"JS URL: {js_url}")
+            account_id, video_id = self.session.http.get(js_url, schema=schema_brightcove_js2)
+        except (PluginError, TypeError):
+            return
+
+        return self._brightcove(account_id, video_id)
+
+    def _streams_dailymotion(self, root):
+        schema_dailymotion = validate.Schema(
+            validate.xml_xpath_string(".//iframe[contains(@src,'dailymotion.com/')][1]/@src"),
+            str,
+            validate.transform(lambda src: src.split("/")[-1])
+        )
+        try:
+            video_id = schema_dailymotion.validate(root)
+        except PluginError:
+            return
+
+        log.debug(f"Found dailymotion video ID: {video_id}")
+
+        return self.session.streams(f"https://www.dailymotion.com/embed/video/{video_id}")
+
+    def _streams_audio(self, root):
+        schema_audio = validate.Schema(validate.any(
+            validate.all(
+                validate.xml_xpath_string(".//audio/source[contains(@src,'.mp3')][1]/@src"),
+                str
+            ),
+            validate.all(
+                validate.xml_xpath_string(".//div[contains(@class,'audio-player')][@data-media-url][1]/@data-media-url"),
+                str
+            )
+        ))
+        try:
+            audio_url = schema_audio.validate(root)
+        except PluginError:
+            return
+
+        return {"audio": HTTPStream(self.session, audio_url)}
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
+        root = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html()
+        ))
 
-        m = self._brightcove_video_re.search(res.text) or self._brightcove_video_alt_re.search(res.text)
-        if m:
-            account_id = m.group('account_id')
-            log.debug(f'Account ID: {account_id}')
-            video_id = m.group('video_id')
-            log.debug(f'Video ID: {video_id}')
-            player = BrightcovePlayer(self.session, account_id)
-            yield from player.get_streams(video_id)
-            return
-
-        # Try to find the Dailymotion video ID
-        m = self._embed_video_id_re.search(res.text)
-        if m:
-            video_id = m.group('video_id')
-            log.debug(f'Video ID: {video_id}')
-            yield from self.session.streams(self._dailymotion_url.format(video_id)).items()
-            return
-
-        # Try the JS for Brightcove video data
-        m = self._main_js_url_re.search(res.text)
-        if m:
-            log.debug(f'JS URL: {urljoin(self.url, m.group(1))}')
-            res = self.session.http.get(urljoin(self.url, m.group(1)))
-            m = self._js_brightcove_video_re.search(res.text)
-            if m:
-                account_id = m.group('account_id')
-                log.debug(f'Account ID: {account_id}')
-                video_id = m.group('video_id')
-                log.debug(f'Video ID: {video_id}')
-                player = BrightcovePlayer(self.session, account_id)
-                yield from player.get_streams(video_id)
-                return
-
-        # Audio Live
-        audio_url = None
-        for source in itertags(res.text, 'source'):
-            url = source.attributes.get('src')
-            if url:
-                p_url = urlparse(url)
-                if p_url.path.endswith(('.mp3')):
-                    audio_url = url
-
-        # Audio VOD
-        for div in itertags(res.text, 'div'):
-            if div.attributes.get('class') == 'audio-player':
-                audio_url = div.attributes.get('data-media-url')
-
-        if audio_url:
-            yield 'audio', HTTPStream(self.session, audio_url)
-            return
+        return (
+            self._streams_brightcove(root)
+            or self._streams_dailymotion(root)
+            or self._streams_brightcove_js(root)
+            or self._streams_audio(root)
+        )
 
 
 __plugin__ = BFMTV
