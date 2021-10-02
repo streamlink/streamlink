@@ -279,12 +279,13 @@ class YouTube(Plugin):
                 if videoId is not None:
                     return videoId
 
-    def _data_status(self, data):
+    def _data_status(self, data, errorlog=False):
         if not data:
             return False
         status, reason = self._schema_playabilitystatus(data)
         if status != "OK":
-            log.error(f"Could not get video info - {status}: {reason}")
+            if errorlog:
+                log.error(f"Could not get video info - {status}: {reason}")
             return False
         return True
 
@@ -303,7 +304,7 @@ class YouTube(Plugin):
         data = self._get_data_from_regex(res, self._re_ytInitialPlayerResponse, "initial player response")
         if not self._data_status(data):
             data = self._get_data_from_api(res)
-            if not self._data_status(data):
+            if not self._data_status(data, True):
                 return
 
         video_id, self.author, self.title, is_live = self._schema_videodetails(data)
