@@ -4,10 +4,9 @@ import json
 import logging
 import re
 
-from streamlink.compat import html_unescape, urlparse, urlunparse
+from streamlink.compat import html_unescape as unescape, urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.plugin.api.utils import itertags
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -107,6 +106,23 @@ class YouTube(Plugin):
             weight, group = Plugin.stream_weight(stream)
 
         return weight, group
+
+    @staticmethod
+    def _schema_consent(data):
+        schema_consent = validate.Schema(
+            validate.parse_html(),
+            validate.xml_findall(".//input[@type='hidden']")
+        )
+        return schema_consent.validate(data)
+
+    def _schema_canonical(self, data):
+        schema_canonical = validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//link[@rel='canonical'][1]/@href"),
+            validate.transform(self.matcher.match),
+            validate.get("video_id")
+        )
+        return schema_canonical.validate(data)
 
     @classmethod
     def _schema_playabilitystatus(cls, data):
@@ -218,10 +234,10 @@ class YouTube(Plugin):
     def _get_res(self, url):
         res = self.session.http.get(url)
         if urlparse(res.url).netloc == "consent.youtube.com":
-            c_data = {}
-            for _i in itertags(res.text, "input"):
-                if _i.attributes.get("type") == "hidden":
-                    c_data[_i.attributes.get("name")] = html_unescape(_i.attributes.get("value"))
+            c_data = {
+                elem.attrib.get("name"): unescape(elem.attrib.get("value"))
+                for elem in self._schema_consent(res.text)
+            }
             log.debug("c_data_keys: {}".format(', '.join(c_data.keys())))
             res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
             consent = self.session.http.cookies.get('CONSENT', domain='.youtube.com')
@@ -240,14 +256,9 @@ class YouTube(Plugin):
     def _get_data_from_api(self, res):
         _i_video_id = self.match.group("video_id")
         if _i_video_id is None:
-            for link in itertags(res.text, "link"):
-                if link.attributes.get("rel") == "canonical":
-                    try:
-                        _i_video_id = self.matcher.match(link.attributes.get("href")).group("video_id")
-                    except AttributeError:
-                        return
-                    break
-            else:
+            try:
+                _i_video_id = self._schema_canonical(res.text)
+            except (PluginError, TypeError):
                 return
 
         try:
