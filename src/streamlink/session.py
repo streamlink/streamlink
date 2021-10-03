@@ -267,7 +267,7 @@ class Streamlink(object):
                 self.http.proxies["https"] = update_scheme("http://", value, force=False)
 
         elif key == "https-proxy":
-            self.http.proxies["https"] = update_scheme("https://", value)
+            self.http.proxies["https"] = update_scheme("https://", value, force=False)
 
         elif key == "http-cookies":
             if isinstance(value, dict):

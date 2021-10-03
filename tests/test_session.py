@@ -345,3 +345,17 @@ class TestSession(unittest.TestCase):
 
         self.assertFalse("http" in session.http.proxies)
         self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
+
+    def test_http_proxy_socks(self):
+        session = self.subject(load_plugins=False)
+        session.set_option("http-proxy", "socks5://localhost:1234")
+
+        self.assertEqual("socks5://localhost:1234", session.http.proxies["http"])
+        self.assertEqual("socks5://localhost:1234", session.http.proxies["https"])
+
+    def test_https_proxy_socks(self):
+        session = self.subject(load_plugins=False)
+        session.set_option("https-proxy", "socks5://localhost:1234")
+
+        self.assertNotIn("http", session.http.proxies)
+        self.assertEqual("socks5://localhost:1234", session.http.proxies["https"])
