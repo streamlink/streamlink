@@ -9,6 +9,7 @@ class TestPluginCanHandleUrlMediaVitrina(PluginCanHandleUrl):
         "https://chetv.ru/online/",
         "https://ctc.ru/online/",
         "https://ctclove.ru/online/",
+        "https://ren.tv/live",
         "https://player.mediavitrina.ru/5tv/moretv_web/player.html",
         "https://player.mediavitrina.ru/che/che_web/player.html",
         "https://player.mediavitrina.ru/ctc_ext/moretv_web/player.html",
