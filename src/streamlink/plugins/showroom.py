@@ -20,12 +20,6 @@ class ShowroomHLSStreamReader(HLSStreamReader):
 class ShowroomHLSStream(HLSStream):
     __reader__ = ShowroomHLSStreamReader
 
-    @classmethod
-    def _get_variant_playlist(cls, res):
-        if res.headers["Content-Type"] != "application/x-mpegURL":  # content_region_permission
-            raise ValueError(f"invalid Content-Type {res.headers['Content-Type']}")
-        return super()._get_variant_playlist(res)
-
 
 @pluginmatcher(re.compile(
     r"https?://(?:\w+\.)?showroom-live\.com/"
@@ -40,8 +34,8 @@ class Showroom(Plugin):
                 validate.any(None, validate.all(
                     validate.parse_json(),
                     {"is_live": int,
-                        "room_id": int,
-                        validate.optional("room"): {"content_region_permission": int, "is_free": int}},
+                     "room_id": int,
+                     validate.optional("room"): {"content_region_permission": int, "is_free": int}},
                 ))
             )
         )
@@ -59,15 +53,19 @@ class Showroom(Plugin):
             schema=validate.Schema(
                 validate.parse_json(),
                 {"streaming_url_list": [{
+                    "type": str,
                     "url": validate.url(),
-                    "type": validate.text,
                 }]},
                 validate.get("streaming_url_list"),
                 validate.filter(lambda p: p["type"] == "hls_all"),
                 validate.get((0, "url"))
             ),
         )
-        return ShowroomHLSStream.parse_variant_playlist(self.session, url, acceptable_status=(200, 403, 404))
+        res = self.session.http.get(url, acceptable_status=(200, 403, 404))
+        if res.headers["Content-Type"] != "application/x-mpegURL":
+            log.error("This stream is restricted")
+            return
+        return ShowroomHLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = Showroom
