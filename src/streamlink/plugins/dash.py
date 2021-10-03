@@ -4,6 +4,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.plugin import LOW_PRIORITY, stream_weight
 from streamlink.stream.dash import DASHStream
+from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class MPEGDASH(Plugin):
             return stream_weight(stream)
 
     def _get_streams(self):
-        url = self.match.group(1)
+        url = update_scheme("https://", self.match.group(1), force=False)
         log.debug(f"Parsing MPD URL: {url}")
 
         return DASHStream.parse_manifest(self.session, url)

@@ -18,8 +18,8 @@ class TestPluginStream(unittest.TestCase):
             self.assertEqual(b[key], value)
 
     def _test_akamaihd(self, surl, url):
-        channel = self.session.resolve_url(surl)
-        streams = channel.streams()
+        plugin = self.session.resolve_url(surl)
+        streams = plugin.streams()
 
         self.assertTrue("live" in streams)
 
@@ -27,55 +27,55 @@ class TestPluginStream(unittest.TestCase):
         self.assertTrue(isinstance(stream, AkamaiHDStream))
         self.assertEqual(stream.url, url)
 
-    @patch('streamlink.stream.HLSStream.parse_variant_playlist')
+    @patch("streamlink.stream.HLSStream.parse_variant_playlist")
     def _test_hls(self, surl, url, mock_parse):
         mock_parse.return_value = {}
 
-        channel = self.session.resolve_url(surl)
-        streams = channel.streams()
+        plugin = self.session.resolve_url(surl)
+        streams = plugin.streams()
 
-        self.assertTrue("live" in streams)
+        self.assertIn("live", streams)
         mock_parse.assert_called_with(self.session, url)
 
         stream = streams["live"]
-        self.assertTrue(isinstance(stream, HLSStream))
+        self.assertIsInstance(stream, HLSStream)
         self.assertEqual(stream.url, url)
 
-    @patch('streamlink.stream.HLSStream.parse_variant_playlist')
+    @patch("streamlink.stream.HLSStream.parse_variant_playlist")
     def _test_hlsvariant(self, surl, url, mock_parse):
         mock_parse.return_value = {"best": HLSStream(self.session, url)}
 
-        channel = self.session.resolve_url(surl)
-        streams = channel.streams()
+        plugin = self.session.resolve_url(surl)
+        streams = plugin.streams()
 
         mock_parse.assert_called_with(self.session, url)
 
-        self.assertFalse("live" in streams)
-        self.assertTrue("best" in streams)
+        self.assertNotIn("live", streams)
+        self.assertIn("best", streams)
 
         stream = streams["best"]
-        self.assertTrue(isinstance(stream, HLSStream))
+        self.assertIsInstance(stream, HLSStream)
         self.assertEqual(stream.url, url)
 
     def _test_rtmp(self, surl, url, params):
-        channel = self.session.resolve_url(surl)
-        streams = channel.streams()
+        plugin = self.session.resolve_url(surl)
+        streams = plugin.streams()
 
-        self.assertTrue("live" in streams)
+        self.assertIn("live", streams)
 
         stream = streams["live"]
-        self.assertTrue(isinstance(stream, RTMPStream))
+        self.assertIsInstance(stream, RTMPStream)
         self.assertEqual(stream.params["rtmp"], url)
         self.assertDictHas(params, stream.params)
 
     def _test_http(self, surl, url, params):
-        channel = self.session.resolve_url(surl)
-        streams = channel.streams()
+        plugin = self.session.resolve_url(surl)
+        streams = plugin.streams()
 
-        self.assertTrue("live" in streams)
+        self.assertIn("live", streams)
 
         stream = streams["live"]
-        self.assertTrue(isinstance(stream, HTTPStream))
+        self.assertIsInstance(stream, HTTPStream)
         self.assertEqual(stream.url, url)
         self.assertDictHas(params, stream.args)
 
@@ -94,32 +94,30 @@ class TestPluginStream(unittest.TestCase):
                         dict(conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']))
 
     def test_plugin_hls(self):
-        self._test_hls("hls://https://hostname.se/playlist.m3u8",
-                       "https://hostname.se/playlist.m3u8")
+        self._test_hls("hls://hostname.se/foo", "https://hostname.se/foo")
+        self._test_hls("hls://http://hostname.se/foo", "http://hostname.se/foo")
+        self._test_hls("hls://https://hostname.se/foo", "https://hostname.se/foo")
 
-        self._test_hls("hls://hostname.se/playlist.m3u8",
-                       "http://hostname.se/playlist.m3u8")
+        self._test_hls("hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
+        self._test_hls("http://hostname.se/playlist.m3u8", "http://hostname.se/playlist.m3u8")
+        self._test_hls("https://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
 
-        self._test_hlsvariant("hls://hostname.se/playlist.m3u8",
-                              "http://hostname.se/playlist.m3u8")
-
-        self._test_hlsvariant("hls://https://hostname.se/playlist.m3u8",
-                              "https://hostname.se/playlist.m3u8")
+        self._test_hlsvariant("hls://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
+        self._test_hlsvariant("hls://http://hostname.se/playlist.m3u8", "http://hostname.se/playlist.m3u8")
+        self._test_hlsvariant("hls://https://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
 
     def test_plugin_akamaihd(self):
-        self._test_akamaihd("akamaihd://http://hostname.se/stream",
-                            "http://hostname.se/stream")
-
-        self._test_akamaihd("akamaihd://hostname.se/stream",
-                            "http://hostname.se/stream")
+        self._test_akamaihd("akamaihd://http://hostname.se/stream", "http://hostname.se/stream")
+        self._test_akamaihd("akamaihd://https://hostname.se/stream", "https://hostname.se/stream")
+        self._test_akamaihd("akamaihd://hostname.se/stream", "https://hostname.se/stream")
 
     def test_plugin_http(self):
+        self._test_http("httpstream://hostname.se/auth.php auth=('test','test2')",
+                        "https://hostname.se/auth.php", dict(auth=("test", "test2")))
         self._test_http("httpstream://http://hostname.se/auth.php auth=('test','test2')",
                         "http://hostname.se/auth.php", dict(auth=("test", "test2")))
-
-        self._test_http("httpstream://hostname.se/auth.php auth=('test','test2')",
-                        "http://hostname.se/auth.php", dict(auth=("test", "test2")))
-
+        self._test_http("httpstream://https://hostname.se/auth.php auth=('test','test2')",
+                        "https://hostname.se/auth.php", dict(auth=("test", "test2")))
         self._test_http("httpstream://https://hostname.se/auth.php verify=False params={'key': 'a value'}",
                         "https://hostname.se/auth.php?key=a+value", dict(verify=False, params=dict(key='a value')))
 
