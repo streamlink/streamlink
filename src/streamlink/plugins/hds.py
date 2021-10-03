@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 class HDSPlugin(Plugin):
     def _get_streams(self):
         data = self.match.groupdict()
-        url = update_scheme("http://", data.get("url"), force=False)
+        url = update_scheme("https://", data.get("url"), force=False)
         params = parse_params(data.get("params"))
         log.debug(f"URL={url}; params={params}")
 
