@@ -1,5 +1,3 @@
-import unittest
-
 from streamlink.plugins.showroom import Showroom
 from tests.plugins import PluginCanHandleUrl
 
@@ -15,20 +13,3 @@ class TestPluginCanHandleUrlShowroom(PluginCanHandleUrl):
         "https://www.showroom-live.com/157941217780",
         "https://www.showroom-live.com/madokacom"
     ]
-
-    should_not_match = [
-        "https://www.showroom-live.com/payment/payment_start",
-        "https://www.showroom-live.com/s/licence",
-    ]
-
-
-class TestPluginShowroom(unittest.TestCase):
-    stream_weights = {
-        'high': (720, "quality"),
-        'other': (360, "quality"),
-        'low': (160, "quality")
-    }
-
-    def test_stream_weight(self):
-        for name, weight in self.stream_weights.items():
-            self.assertEqual(Showroom.stream_weight(name), weight)
