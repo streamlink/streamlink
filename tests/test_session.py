@@ -64,27 +64,50 @@ class TestSession(unittest.TestCase):
         self.assertTrue(isinstance(plugin, plugins["testplugin"]))
         self.assertTrue(hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache")
 
+    def test_resolve_url_scheme(self):
+        @pluginmatcher(re.compile("http://insecure"))
+        class PluginHttp(EmptyPlugin):
+            pass
+
+        @pluginmatcher(re.compile("https://secure"))
+        class PluginHttps(EmptyPlugin):
+            pass
+
+        session = self.subject(load_plugins=False)
+        session.plugins = {
+            "insecure": PluginHttp,
+            "secure": PluginHttps,
+        }
+
+        self.assertRaises(NoPluginError, session.resolve_url, "insecure")
+        self.assertIsInstance(session.resolve_url("http://insecure"), PluginHttp)
+        self.assertRaises(NoPluginError, session.resolve_url, "https://insecure")
+
+        self.assertIsInstance(session.resolve_url("secure"), PluginHttps)
+        self.assertRaises(NoPluginError, session.resolve_url, "http://secure")
+        self.assertIsInstance(session.resolve_url("https://secure"), PluginHttps)
+
     def test_resolve_url_priority(self):
         @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
-            "http://(high|normal|low|no)$"
+            "https://(high|normal|low|no)$"
         ))
         class HighPriority(EmptyPlugin):
             pass
 
         @pluginmatcher(priority=NORMAL_PRIORITY, pattern=re.compile(
-            "http://(normal|low|no)$"
+            "https://(normal|low|no)$"
         ))
         class NormalPriority(EmptyPlugin):
             pass
 
         @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-            "http://(low|no)$"
+            "https://(low|no)$"
         ))
         class LowPriority(EmptyPlugin):
             pass
 
         @pluginmatcher(priority=NO_PRIORITY, pattern=re.compile(
-            "http://(no)$"
+            "https://(no)$"
         ))
         class NoPriority(EmptyPlugin):
             pass
@@ -117,7 +140,7 @@ class TestSession(unittest.TestCase):
     def test_resolve_deprecated(self, mock_log):
         # type: (Mock)
         @pluginmatcher(priority=LOW_PRIORITY, pattern=re.compile(
-            "http://low"
+            "https://low"
         ))
         class LowPriority(EmptyPlugin):
             pass
