@@ -20,15 +20,22 @@ jobs:
       # please remember to change the `codecov.notify.after_n_builds` value in .codecov.yml
       # when changing the build matrix and changing the number of test runners
       matrix:
-        os: [ubuntu-20.04, windows-latest]
-        python: [3.6, 3.7, 3.8, 3.9]
-        include:
-          - python: 3.10-dev
-            os: ubuntu-20.04
-            continue: true
-          - python: 3.10-dev
-            os: windows-latest
-            continue: true
+        os:
+          - ubuntu-20.04
+          - windows-latest
+        python:
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
+          - "3.10"
+        # include:
+        #   - python: "3.11-dev"
+        #     os: ubuntu-20.04
+        #     continue: true
+        #   - python: "3.11-dev"
+        #     os: windows-latest
+        #     continue: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
