@@ -11,7 +11,7 @@ FILE_REMOVED="${DIR_PLUGINS}/.removed"
 [[ -f "${FILE_REMOVED}" ]] || { echo >&2 "Missing file: ${FILE_REMOVED}"; exit 1; }
 
 get_plugin_names() {
-    grep -E '\.py$' | LC_ALL=C sort -u | xargs -I@ basename @ .py
+    grep -E '\.py$' | xargs -I@ basename @ .py | LC_ALL=C sort -u
 }
 
 header=$(sed -e '/^[^#;]/d' "${FILE_REMOVED}")
@@ -19,7 +19,14 @@ content=$(
     `# Only show plugin names which are unique to the first list` \
     comm -23 --nocheck-order \
         `# Find all deleted and renamed files in the plugins directory` \
-        <(git log --diff-filter=DR --name-status --pretty=tformat: "${DIR_PLUGINS}" | cut -f2 | get_plugin_names) \
+        `# Merge output from the git log and the current git status` \
+        <(
+            (
+                git log --diff-filter=DR --name-status --pretty=tformat: -- "${DIR_PLUGINS}" | cut -f2
+                git status --porcelain=v1 -- "${DIR_PLUGINS}" | awk '/^[DR]/ {print $2}'
+            ) \
+            | get_plugin_names
+        ) \
         `# Find all current plugin names` \
         <(find "${DIR_PLUGINS}" -type f | get_plugin_names)
 )
