@@ -29,9 +29,11 @@ class TestUtilsParse(unittest.TestCase):
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
-    def test_parse_xml_ns_ignore_tab(self):
-        expected = Element("test", {"foo": "bar"})
         actual = parse_xml("""<test	foo="bar"	xmlns="foo:bar"/>""", ignore_ns=True)
+        self.assertEqual(expected.tag, actual.tag)
+        self.assertEqual(expected.attrib, actual.attrib)
+
+        actual = parse_xml("""<test\nfoo="bar"\nxmlns="foo:bar"/>""", ignore_ns=True)
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
 
