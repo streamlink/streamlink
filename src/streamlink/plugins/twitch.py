@@ -185,12 +185,33 @@ class UsherService:
 
 
 class TwitchAPI:
-    headers = {
-        "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-    }
+    CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko"
 
     def __init__(self, session):
         self.session = session
+        self._headers = None
+
+    @property
+    def headers(self):
+        headers = self._headers
+
+        if headers is not None:
+            return headers
+
+        oauth_token = self.session.get_plugin_option("twitch", "oauth-token")
+        device_id = self.session.get_plugin_option("twitch", "device-id")
+        self._headers = headers = {
+            "Client-ID": self.CLIENT_ID,
+        }
+
+        if oauth_token:
+            headers["Authorization"] = f"OAuth {oauth_token}"
+
+        if device_id:
+            headers["X-Device-Id"] = device_id
+            headers["Device-ID"] = device_id
+
+        return headers
 
     def call(self, data, schema=None):
         res = self.session.http.post(
@@ -465,6 +486,29 @@ class Twitch(Plugin):
             Note: Low latency streams have to be enabled by the broadcasters on Twitch themselves.
             Regular streams can cause buffering issues with this option enabled due to the reduced --hls-live-edge value.
             """
+        ),
+        PluginArgument(
+            "oauth-token",
+            sensitive=True,
+            metavar="OAUTH_TOKEN",
+            help="""
+            User's oauth token.
+
+            Users with Twitch Turbo subscription or if user is a subscriber of the channel with enabled "Ad-Free Viewing" do
+            not receive server-side ads.
+
+            Web version of Twitch stores it in the auth-token cookie.
+            """,
+        ),
+        PluginArgument(
+            "device-id",
+            sensitive=True,
+            metavar="DEVICE_ID",
+            help="""
+            User's unique device id. Used to identify users across sessions.
+
+            Web version of Twitch stores it in the unique_id cookie.
+            """,
         )
     )
 
