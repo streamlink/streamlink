@@ -1,4 +1,4 @@
-pip>=6
+pip>=9
 pytest
 pytest-cov
 coverage
