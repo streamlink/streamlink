@@ -1,5 +1,56 @@
 # Changelog
 
+## streamlink 1.27.8.0 (2021-10-09)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (31):
+      docs.install.rst: changed python 3.5 to 3.6
+      docs: bump furo docs req to 2021.09.08 (#4000)
+      http_session: override urllib3 percent-encoding (#4003)
+      plugins.ardlive: rewrite plugin (#4005)
+      utils: replace LazyFormatter with new Formatter (#4008)
+      utils: move all URL methods to utils.url (#4016)
+      plugins.viutv: removed (#4018)
+      tests: fix Accept-Encoding headers in stream_json (#4022)
+      plugins: clean up imports of parse_* utils (#4023)
+      utils: split into submodules and fix imports (#4025)
+      plugins.artetv: rewrite plugin using v2 API (#4029)
+      plugins.bloomberg: rewrite plugin (#4031)
+      stream: clean up imports (#4034)
+      plugins.bbciplayer: remove HDSStream, upgrade scheme (#4041)
+      plugins.earthcam: rewrite plugin, remove rtmp (#4043)
+      plugins.skylinewebcams: add yt supp.
+      plugins.oneplusone: cleanup and add auto session reload (#4049)
+      plugins.picarto: fix HLS URL hostname (#4052)
+      plugins.wetter: fix hls streams
+      utils.url: make update_scheme always update target (#4053)
+      plugins: fix update_scheme calls (#4053)
+      plugins.bfmtv: rewrite plugin using XPath (#4061)
+      plugins.youtube: replace itertags with XPath (#4060)
+      plugins.youtube: better API age-gate bypassing (#4058)
+      plugins.pandalive: new plugin (#4064)
+      plugins.showroom: cleanup (#4065)
+      session: move from http to https as default scheme (#4068)
+      plugins.brightcove: rewrite plugin (#4070)
+      plugins.tv5monde: re-implement plugin (#4077)
+
+back-to <backto@protonmail.ch> (2):
+      stream.hls: Fix error msg for 'Unable to decrypt cipher ...'
+      plugins.webcast_india_gov: removed
+
+bastimeyer <mail@bastimeyer.de> (9):
+      docs: fix CLI argument example in manpage
+      tests: fix typo in pytest skipif marker
+      plugins.pluzz: rewrite plugin
+      tests: move tests/streams to tests/stream
+      tests: fix partial coverage in can_handle_url
+      session: don't override https-proxy scheme
+      utils.parse: fix ignore_ns in parse_xml
+      script: fix update-removed-plugins bash script
+      plugins.tv5monde: re-implement plugin
+```
+
+
 ## streamlink 1.27.7.0 (2021-09-07)
 
 ```text
