@@ -10,40 +10,29 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://(?:www\.)?tv999\.bg/live\.html'
+    r"https?://(?:www\.)?tv999\.bg/live"
 ))
 class TV999(Plugin):
-    iframe_re = re.compile(r'<iframe.*src="([^"]+)"')
-    hls_re = re.compile(r'src="([^"]+)"\s+type="application/x-mpegURL"')
+    title = "TV999"
 
-    iframe_schema = validate.Schema(
-        validate.transform(iframe_re.search),
-        validate.any(None, validate.all(
-            validate.get(1),
-            validate.url(),
-        )),
-    )
-
-    hls_schema = validate.Schema(
-        validate.transform(hls_re.search),
-        validate.any(None, validate.all(
-            validate.get(1),
-            validate.transform(lambda x: update_scheme("https://", x)),
-            validate.url(),
-        )),
-    )
+    def _get_xpath_string(self, url, xpath):
+        return self.session.http.get(
+            url,
+            schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(xpath),
+                validate.any(None, validate.url())
+            )
+        )
 
     def _get_streams(self):
-        iframe_url = self.session.http.get(self.url, schema=self.iframe_schema)
-
+        iframe_url = self._get_xpath_string(self.url, ".//iframe[@src]/@src")
         if not iframe_url:
-            log.error('Failed to find IFRAME URL')
             return
-
-        hls_url = self.session.http.get(iframe_url, schema=self.hls_schema)
-
-        if hls_url:
-            return {'live': HLSStream(self.session, hls_url)}
+        hls_url = self._get_xpath_string(iframe_url, ".//source[contains(@src,'m3u8')]/@src")
+        if not hls_url:
+            return
+        return {"live": HLSStream(self.session, update_scheme("http://", hls_url))}
 
 
 __plugin__ = TV999
