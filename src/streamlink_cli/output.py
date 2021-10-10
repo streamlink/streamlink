@@ -4,7 +4,9 @@ import re
 import shlex
 import subprocess
 import sys
+from pathlib import Path
 from time import sleep
+from typing import BinaryIO, Optional
 
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.constants import PLAYER_ARGS_INPUT_DEFAULT, PLAYER_ARGS_INPUT_FALLBACK, SUPPORTED_PLAYERS
@@ -47,7 +49,12 @@ class Output:
 
 
 class FileOutput(Output):
-    def __init__(self, filename=None, fd=None, record=None):
+    def __init__(
+        self,
+        filename: Optional[Path] = None,
+        fd: Optional[BinaryIO] = None,
+        record: Optional["FileOutput"] = None
+    ):
         super().__init__()
         self.filename = filename
         self.fd = fd
@@ -55,6 +62,7 @@ class FileOutput(Output):
 
     def _open(self):
         if self.filename:
+            self.filename.parent.mkdir(parents=True, exist_ok=True)
             self.fd = open(self.filename, "wb")
 
         if self.record:

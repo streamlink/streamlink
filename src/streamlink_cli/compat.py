@@ -1,12 +1,13 @@
 import os
 import sys
 from pathlib import Path
+from typing import BinaryIO
 
 
 is_darwin = sys.platform == "darwin"
 is_win32 = os.name == "nt"
 
-stdout = sys.stdout.buffer
+stdout: BinaryIO = sys.stdout.buffer
 
 
 class DeprecatedPath(type(Path())):

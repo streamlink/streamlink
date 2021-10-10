@@ -174,43 +174,57 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
 
 
 class TestCLIMainCheckFileOutput(unittest.TestCase):
-    @patch("streamlink_cli.main.os.path.isfile", Mock(return_value=False))
+    @staticmethod
+    def mock_path(path, is_file=True):
+        return Mock(
+            spec=Path(path),
+            is_file=Mock(return_value=is_file),
+            __str__=Mock(return_value=path)
+        )
+
     def test_check_file_output(self):
-        output = check_file_output("foo", False)
+        path = self.mock_path("foo", is_file=False)
+        output = check_file_output(path, False)
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, "foo")
+        self.assertIs(output.filename, path)
 
-    @patch("streamlink_cli.main.os.path.isfile", Mock(return_value=True))
     def test_check_file_output_exists_force(self):
-        output = check_file_output("foo", True)
+        path = self.mock_path("foo", is_file=True)
+        output = check_file_output(path, True)
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, "foo")
+        self.assertIs(output.filename, path)
 
-    @patch("streamlink_cli.main.console", Mock(ask=Mock(return_value="y")))
-    @patch("streamlink_cli.main.os.path.isfile", Mock(return_value=True))
+    @patch("streamlink_cli.main.console")
     @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_ask_yes(self, mock_sys: Mock):
+    def test_check_file_output_exists_ask_yes(self, mock_sys: Mock, mock_console: Mock):
         mock_sys.stdin.isatty.return_value = True
-        output = check_file_output("foo", False)
+        mock_console.ask = Mock(return_value="y")
+        path = self.mock_path("foo", is_file=True)
+        output = check_file_output(path, False)
+        self.assertEqual(mock_console.ask.call_args_list, [call("File foo already exists! Overwrite it? [y/N] ")])
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, "foo")
+        self.assertIs(output.filename, path)
 
-    @patch("streamlink_cli.main.console", Mock(ask=Mock(return_value="N")))
-    @patch("streamlink_cli.main.os.path.isfile", Mock(return_value=True))
+    @patch("streamlink_cli.main.console")
     @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_ask_no(self, mock_sys: Mock):
+    def test_check_file_output_exists_ask_no(self, mock_sys: Mock, mock_console: Mock):
         mock_sys.stdin.isatty.return_value = True
         mock_sys.exit.side_effect = SystemExit
+        mock_console.ask = Mock(return_value="N")
+        path = self.mock_path("foo", is_file=True)
         with self.assertRaises(SystemExit):
-            check_file_output("foo", False)
+            check_file_output(path, False)
+        self.assertEqual(mock_console.ask.call_args_list, [call("File foo already exists! Overwrite it? [y/N] ")])
 
-    @patch("streamlink_cli.main.os.path.isfile", Mock(return_value=True))
+    @patch("streamlink_cli.main.console")
     @patch("streamlink_cli.main.sys")
-    def test_check_file_output_exists_notty(self, mock_sys: Mock):
+    def test_check_file_output_exists_notty(self, mock_sys: Mock, mock_console: Mock):
         mock_sys.stdin.isatty.return_value = False
         mock_sys.exit.side_effect = SystemExit
+        path = self.mock_path("foo", is_file=True)
         with self.assertRaises(SystemExit):
-            check_file_output("foo", False)
+            check_file_output(path, False)
+        self.assertEqual(mock_console.ask.call_args_list, [])
 
 
 class TestCLIMainCreateOutput(unittest.TestCase):
@@ -239,74 +253,81 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         self.assertIsInstance(output, PlayerOutput)
         self.assertEqual(output.title, "foo - bar")
 
-    @patch("streamlink_cli.main.os.path.isfile")
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console", Mock())
-    def test_create_output_file_output(self, args: Mock, mock_isfile):
+    @patch("streamlink_cli.main.check_file_output")
+    def test_create_output_file_output(self, mock_check_file_output: Mock, args: Mock):
         formatter = Formatter({})
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
         args.output = "foo"
+        args.stdout = None
+        args.record = None
+        args.record_and_pipe = None
         args.force = False
         args.fs_safe_rules = None
-        mock_isfile.return_value = False
 
         output = create_output(formatter)
+        self.assertEqual(mock_check_file_output.call_args_list, [call(Path("foo"), False)])
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, "foo")
-        self.assertEqual(output.fd, None)
-        self.assertEqual(output.record, None)
+        self.assertEqual(output.filename, Path("foo"))
+        self.assertIsNone(output.fd)
+        self.assertIsNone(output.record)
 
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console", Mock())
     def test_create_output_stdout(self, args: Mock):
         formatter = Formatter({})
         args.output = None
         args.stdout = True
+        args.record = None
+        args.record_and_pipe = None
 
         output = create_output(formatter)
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, None)
-        self.assertEqual(output.fd, stdout)
-        self.assertEqual(output.record, None)
+        self.assertIsNone(output.filename)
+        self.assertIs(output.fd, stdout)
+        self.assertIsNone(output.record)
 
         args.output = "-"
         args.stdout = False
         output = create_output(formatter)
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, None)
-        self.assertEqual(output.fd, stdout)
-        self.assertEqual(output.record, None)
+        self.assertIsNone(output.filename)
+        self.assertIs(output.fd, stdout)
+        self.assertIsNone(output.record)
 
-    @patch("streamlink_cli.main.os.path.isfile")
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console", Mock())
-    def test_create_output_record_and_pipe(self, args: Mock, mock_isfile: Mock):
+    @patch("streamlink_cli.main.check_file_output")
+    def test_create_output_record_and_pipe(self, mock_check_file_output: Mock, args: Mock):
         formatter = Formatter({})
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
         args.output = None
         args.stdout = None
         args.record_and_pipe = "foo"
+        args.force = False
         args.fs_safe_rules = None
-        mock_isfile.return_value = False
 
         output = create_output(formatter)
+        self.assertEqual(mock_check_file_output.call_args_list, [call(Path("foo"), False)])
         self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, None)
-        self.assertEqual(output.fd, stdout)
+        self.assertIsNone(output.filename)
+        self.assertIs(output.fd, stdout)
         self.assertIsInstance(output.record, FileOutput)
-        self.assertEqual(output.record.filename, "foo")
-        self.assertEqual(output.record.fd, None)
-        self.assertEqual(output.record.record, None)
+        self.assertEqual(output.record.filename, Path("foo"))
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
 
     @patch("streamlink_cli.main.args")
-    @patch("streamlink_cli.main.console", Mock())
+    @patch("streamlink_cli.main.check_file_output")
     @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
-    def test_create_output_record(self, args: Mock):
+    def test_create_output_record(self, mock_check_file_output: Mock, args: Mock):
         formatter = Formatter({
             "author": lambda: "foo"
         })
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
         args.output = None
         args.stdout = None
         args.record = "foo"
         args.record_and_pipe = None
+        args.force = False
         args.fs_safe_rules = None
         args.title = None
         args.url = "URL"
@@ -319,18 +340,18 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         self.assertIsInstance(output, PlayerOutput)
         self.assertEqual(output.title, "URL")
         self.assertIsInstance(output.record, FileOutput)
-        self.assertEqual(output.record.filename, "foo")
-        self.assertEqual(output.record.fd, None)
-        self.assertEqual(output.record.record, None)
+        self.assertEqual(output.record.filename, Path("foo"))
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
 
         args.title = "{author} - {title}"
         output = create_output(formatter)
         self.assertIsInstance(output, PlayerOutput)
         self.assertEqual(output.title, "foo - bar")
         self.assertIsInstance(output.record, FileOutput)
-        self.assertEqual(output.record.filename, "foo")
-        self.assertEqual(output.record.fd, None)
-        self.assertEqual(output.record.record, None)
+        self.assertEqual(output.record.filename, Path("foo"))
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.console")
