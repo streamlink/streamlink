@@ -11,9 +11,11 @@ from streamlink.utils.parse import parse_json
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?facebook(?:\.com|corewwwi\.onion)/[^/]+/(?:posts|videos)/(?P<video_id>\d+)"
-))
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?facebook
+    (?:\.com|wkhpilnemxj7asaniu7vnjjbiltxjqhye3mhbshg7kx5tfyd\.onion)
+    /[^/]+/(?:posts|videos)/(?P<video_id>\d+)
+""", re.VERBOSE))
 class Facebook(Plugin):
     _src_re = re.compile(r'''(sd|hd)_src["']?\s*:\s*(?P<quote>["'])(?P<url>.+?)(?P=quote)''')
     _dash_manifest_re = re.compile(r'''dash_manifest["']?\s*:\s*["'](?P<manifest>.+?)["'],''')
