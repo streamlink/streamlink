@@ -1,10 +1,12 @@
 import re
-from typing import Optional
+from pathlib import Path
+from typing import Callable, Optional, Union
 
 from streamlink_cli.compat import is_win32
 
 
 REPLACEMENT = "_"
+SPECIAL_PATH_PARTS = (".", "..")
 
 _UNPRINTABLE = "".join(chr(c) for c in range(32))
 _UNSUPPORTED_POSIX = "/"
@@ -18,7 +20,7 @@ else:
     RE_CHARS = RE_CHARS_POSIX
 
 
-def replace_chars(path, charmap: Optional[str] = None, replacement=REPLACEMENT):
+def replace_chars(path: str, charmap: Optional[str] = None, replacement: str = REPLACEMENT) -> str:
     if charmap is None:
         pattern = RE_CHARS
     else:
@@ -31,3 +33,11 @@ def replace_chars(path, charmap: Optional[str] = None, replacement=REPLACEMENT):
             raise ValueError("Invalid charmap")
 
     return pattern.sub(replacement, path)
+
+
+def replace_path(pathlike: Union[str, Path], mapper: Callable[[str], str]) -> Path:
+    def get_part(part):
+        newpart = mapper(part)
+        return REPLACEMENT if part != newpart and newpart in SPECIAL_PATH_PARTS else newpart
+
+    return Path(*(get_part(part) for part in Path(pathlike).parts))

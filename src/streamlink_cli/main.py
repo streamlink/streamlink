@@ -67,22 +67,22 @@ def get_formatter(plugin: Plugin):
     )
 
 
-def check_file_output(filename, force):
+def check_file_output(path: Path, force):
     """Checks if file already exists and ask the user if it should
     be overwritten if it does."""
 
     log.debug("Checking file output")
 
-    if os.path.isfile(filename) and not force:
+    if path.is_file() and not force:
         if sys.stdin.isatty():
-            answer = console.ask(f"File {filename} already exists! Overwrite it? [y/N] ")
+            answer = console.ask(f"File {path} already exists! Overwrite it? [y/N] ")
             if answer.lower() != "y":
                 sys.exit()
         else:
-            log.error(f"File {filename} already exists, use --force to overwrite it.")
+            log.error(f"File {path} already exists, use --force to overwrite it.")
             sys.exit()
 
-    return FileOutput(filename)
+    return FileOutput(path)
 
 
 def create_output(formatter: Formatter):
@@ -103,11 +103,11 @@ def create_output(formatter: Formatter):
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
-            out = check_file_output(formatter.filename(args.output, args.fs_safe_rules), args.force)
+            out = check_file_output(formatter.path(args.output, args.fs_safe_rules), args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
     elif args.record_and_pipe:
-        record = check_file_output(formatter.filename(args.record_and_pipe, args.fs_safe_rules), args.force)
+        record = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
         http = namedpipe = record = None
@@ -126,7 +126,7 @@ def create_output(formatter: Formatter):
             http = create_http_server()
 
         if args.record:
-            record = check_file_output(formatter.filename(args.record, args.fs_safe_rules), args.force)
+            record = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
 
         log.info(f"Starting player: {args.player}")
 
