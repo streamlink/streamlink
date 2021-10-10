@@ -146,7 +146,7 @@ class UsherService:
         self.session = session
 
     def _create_url(self, endpoint, **extra_params):
-        url = "https://usher.ttvnw.net{0}".format(endpoint)
+        url = f"https://usher.ttvnw.net{endpoint}"
         params = {
             "player": "twitchweb",
             "p": int(random() * 999999),
@@ -163,11 +163,25 @@ class UsherService:
         return req.url
 
     def channel(self, channel, **extra_params):
-        return self._create_url("/api/channel/hls/{0}.m3u8".format(channel),
-                                **extra_params)
+        try:
+            extra_params_debug = validate.Schema(
+                validate.get("token"),
+                validate.parse_json(),
+                {
+                    "adblock": bool,
+                    "geoblock_reason": str,
+                    "hide_ads": bool,
+                    "server_ads": bool,
+                    "show_ads": bool,
+                }
+            ).validate(extra_params)
+            log.debug(f"{extra_params_debug!r}")
+        except PluginError:
+            pass
+        return self._create_url(f"/api/channel/hls/{channel}.m3u8", **extra_params)
 
     def video(self, video_id, **extra_params):
-        return self._create_url("/vod/{0}".format(video_id), **extra_params)
+        return self._create_url(f"/vod/{video_id}", **extra_params)
 
 
 class TwitchAPI:
@@ -573,24 +587,6 @@ class Twitch(Plugin):
         })
         sig, token, restricted_bitrates = self._access_token(True, self.channel)
         url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
-
-        try:
-            urldebug = validate.Schema(
-                validate.parse_qsd(),
-                validate.get("token"),
-                validate.parse_json(),
-                {
-                    "adblock": bool,
-                    "geoblock_reason": str,
-                    "expires": int,
-                    "hide_ads": bool,
-                    "server_ads": bool,
-                    "show_ads": bool,
-                }
-            ).validate(urlparse(url).query)
-            log.debug(f"{urldebug!r}")
-        except Exception:
-            pass
 
         return self._get_hls_streams(url, restricted_bitrates)
 
