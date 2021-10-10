@@ -204,15 +204,6 @@ twitch                  twitch.tv            Yes   Yes
 ustreamtv               - ustream.tv         Yes   Yes
                         - video.ibm.com
 ustvnow                 ustvnow.com          Yes   --    All streams require an account, some streams require a subscription.
-viasat                  - juicyplay.dk       Yes   Yes   Streams may be geo-restricted.
-                        - skaties.lv
-                        - tv3.dk
-                        - tv3.ee
-                        - tv3.lt
-                        - tv6play.no
-                        - viafree.dk
-                        - viafree.no
-                        - viafree.se
 vidio                   vidio.com            Yes   Yes
 vimeo                   vimeo.com            Yes   Yes   Password-protected videos are not supported.
 vinhlongtv              thvli.vn             Yes   No    Streams are geo-restricted to Vietnam
