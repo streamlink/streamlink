@@ -2,10 +2,9 @@ import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.rtmpdump import RTMPStream
 
 log = logging.getLogger(__name__)
 
@@ -14,51 +13,35 @@ log = logging.getLogger(__name__)
     r"https?://17\.live/.+/live/(?P<channel>[^/&?]+)"
 ))
 class App17(Plugin):
-    API_URL = "https://wap-api.17app.co/api/v1/lives/{0}/viewers/alive"
-
-    _api_schema = validate.Schema(
-        {
-            "rtmpUrls": [{
-                validate.optional("provider"): validate.any(int, None),
-                "url": validate.url(),
-            }],
-        },
-        validate.get("rtmpUrls"),
-    )
-
     def _get_streams(self):
         channel = self.match.group("channel")
-
-        self.session.http.headers.update({'User-Agent': useragents.CHROME, 'Referer': self.url})
-
-        data = '{"liveStreamID":"%s"}' % (channel)
-
-        try:
-            res = self.session.http.post(self.API_URL.format(channel), data=data)
-            res_json = self.session.http.json(res, schema=self._api_schema)
-            log.trace("{0!r}".format(res_json))
-            http_url = res_json[0]["url"]
-        except Exception as e:
-            log.info("Stream currently unavailable.")
-            log.debug(str(e))
+        self.session.http.headers.update({"Referer": self.url})
+        data = self.session.http.post(
+            f"https://wap-api.17app.co/api/v1/lives/{channel}/viewers/alive",
+            data={"liveStreamID": channel},
+            schema=validate.Schema(
+                validate.parse_json(),
+                validate.any(
+                    {"rtmpUrls": [{
+                        validate.optional("provider"): validate.any(int, None),
+                        "url": validate.url(path=validate.endswith(".flv")),
+                    }]},
+                    {"errorCode": int, "errorMessage": str},
+                ),
+            ),
+            acceptable_status=(200, 403, 404, 420))
+        log.trace(f"{data!r}")
+        if data.get("errorCode"):
+            log.error(f"{data['errorCode']} - {data['errorMessage'].replace('Something wrong: ', '')}")
             return
 
-        https_url = http_url.replace("http:", "https:")
-        yield "live", HTTPStream(self.session, https_url)
+        flv_url = data["rtmpUrls"][0]["url"]
+        yield "live", HTTPStream(self.session, flv_url)
 
-        if 'pull-rtmp' in http_url:
-            rtmp_url = http_url.replace("http:", "rtmp:").replace(".flv", "")
-            stream = RTMPStream(self.session, {
-                "rtmp": rtmp_url,
-                "live": True,
-                "pageUrl": self.url,
-            })
-            yield "live", stream
-
-        if 'wansu-' in http_url:
-            hls_url = http_url.replace(".flv", "/playlist.m3u8")
+        if "wansu-" in flv_url:
+            hls_url = flv_url.replace(".flv", "/playlist.m3u8")
         else:
-            hls_url = http_url.replace("live-hdl", "live-hls").replace(".flv", ".m3u8")
+            hls_url = flv_url.replace("live-hdl", "live-hls").replace(".flv", ".m3u8")
 
         s = HLSStream.parse_variant_playlist(self.session, hls_url)
         if not s:
