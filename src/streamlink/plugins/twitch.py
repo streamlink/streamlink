@@ -172,7 +172,9 @@ class UsherService:
 
 class TwitchAPI:
     headers = {
-        "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko"
+        "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+        "Device-ID": "twitch-web-wall-mason",
+        "X-Device-Id": "twitch-web-wall-mason",
     }
 
     def __init__(self, session):
@@ -571,6 +573,24 @@ class Twitch(Plugin):
         })
         sig, token, restricted_bitrates = self._access_token(True, self.channel)
         url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
+
+        try:
+            urldebug = validate.Schema(
+                validate.parse_qsd(),
+                validate.get("token"),
+                validate.parse_json(),
+                {
+                    "adblock": bool,
+                    "geoblock_reason": str,
+                    "expires": int,
+                    "hide_ads": bool,
+                    "server_ads": bool,
+                    "show_ads": bool,
+                }
+            ).validate(urlparse(url).query)
+            log.debug(f"{urldebug!r}")
+        except Exception:
+            pass
 
         return self._get_hls_streams(url, restricted_bitrates)
 
