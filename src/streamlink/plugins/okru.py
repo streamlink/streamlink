@@ -2,12 +2,12 @@
 import logging
 import re
 
-from streamlink.compat import html_unescape, unquote
+from streamlink.compat import unquote
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
+from streamlink.stream.dash import DASHStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.rtmpdump import RTMPStream
 
 log = logging.getLogger(__name__)
 
@@ -16,97 +16,93 @@ log = logging.getLogger(__name__)
     r'https?://(?:www\.)?ok\.ru/'
 ))
 class OKru(Plugin):
-    _data_re = re.compile(r'''data-options=(?P<q>["'])(?P<data>{[^"']+})(?P=q)''')
-
-    _metadata_schema = validate.Schema(
-        validate.parse_json(),
-        validate.any({
-            'videos': validate.any(
-                [],
-                [
-                    {
-                        'name': validate.text,
-                        'url': validate.text,
-                    }
-                ]
-            ),
-            validate.optional('hlsManifestUrl'): validate.text,
-            validate.optional('hlsMasterPlaylistUrl'): validate.text,
-            validate.optional('liveDashManifestUrl'): validate.text,
-            validate.optional('rtmpUrl'): validate.text,
-        }, None)
-    )
-    _data_schema = validate.Schema(
-        validate.all(
-            validate.transform(_data_re.search),
-            validate.get('data'),
-            validate.transform(html_unescape),
-            validate.parse_json(),
-            validate.get('flashvars'),
-            validate.any({
-                'metadata': _metadata_schema
-            }, {
-                'metadataUrl': validate.transform(unquote)
-            }, None)
-        )
-    )
-
     QUALITY_WEIGHTS = {
-        'full': 1080,
-        '1080': 1080,
-        'hd': 720,
-        '720': 720,
-        'sd': 480,
-        '480': 480,
-        '360': 360,
-        'low': 360,
-        'lowest': 240,
-        'mobile': 144,
+        "full": 1080,
+        "1080": 1080,
+        "hd": 720,
+        "720": 720,
+        "sd": 480,
+        "480": 480,
+        "360": 360,
+        "low": 360,
+        "lowest": 240,
+        "mobile": 144,
     }
 
     @classmethod
     def stream_weight(cls, key):
         weight = cls.QUALITY_WEIGHTS.get(key)
         if weight:
-            return weight, 'okru'
+            return weight, "okru"
 
-        return Plugin.stream_weight(key)
+        return super().stream_weight(key)
 
     def _get_streams(self):
-        self.session.http.headers.update({'Referer': self.url})
+        schema_metadata = validate.Schema(
+            validate.parse_json(),
+            {
+                validate.optional("author"): validate.all({"name": validate.text}, validate.get("name")),
+                validate.optional("movie"): validate.all({"title": validate.text}, validate.get("title")),
+                validate.optional("hlsManifestUrl"): validate.url(),
+                validate.optional("hlsMasterPlaylistUrl"): validate.url(),
+                validate.optional("liveDashManifestUrl"): validate.url(),
+                validate.optional("videos"): [validate.all(
+                    {
+                        "name": validate.text,
+                        "url": validate.url()
+                    },
+                    validate.union_get("name", "url")
+                )]
+            }
+        )
 
         try:
-            data = self.session.http.get(self.url, schema=self._data_schema)
+            metadata, metadata_url = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//*[@data-options]"),
+                validate.get("data-options"),
+                validate.parse_json(),
+                {"flashvars": {
+                    validate.optional("metadata"): validate.text,
+                    validate.optional("metadataUrl"): validate.all(
+                        validate.transform(unquote),
+                        validate.url()
+                    )
+                }},
+                validate.get("flashvars"),
+                validate.union_get("metadata", "metadataUrl")
+            ))
         except PluginError:
-            log.error('unable to validate _data_schema for {0}'.format(self.url))
+            log.error("Could not find metadata")
             return
 
-        metadata = data.get('metadata')
-        metadata_url = data.get('metadataUrl')
-        if metadata_url and not metadata:
-            metadata = self.session.http.post(metadata_url,
-                                              schema=self._metadata_schema)
+        self.session.http.headers.update({"Referer": self.url})
 
-        if metadata:
-            log.trace('{0!r}'.format(metadata))
-            for hls_url in [metadata.get('hlsManifestUrl'),
-                            metadata.get('hlsMasterPlaylistUrl')]:
-                if hls_url is not None:
-                    for s in HLSStream.parse_variant_playlist(self.session, hls_url).items():
-                        yield s
+        if not metadata and metadata_url:
+            metadata = self.session.http.post(metadata_url).text
 
-            if metadata.get('videos'):
-                for http_stream in metadata['videos']:
-                    http_name = http_stream['name']
-                    http_url = http_stream['url']
-                    try:
-                        http_name = '{0}p'.format(self.QUALITY_WEIGHTS[http_name])
-                    except KeyError:
-                        pass
-                    yield http_name, HTTPStream(self.session, http_url)
+        log.trace("{0!r}".format(metadata))
 
-            if metadata.get('rtmpUrl'):
-                yield 'live', RTMPStream(self.session, params={'rtmp': metadata['rtmpUrl']})
+        try:
+            data = schema_metadata.validate(metadata)
+        except PluginError:
+            log.error("Could not parse metadata")
+            return
+
+        self.author = data.get("author")
+        self.title = data.get("movie")
+
+        for hls_url in data.get("hlsManifestUrl"), data.get("hlsMasterPlaylistUrl"):
+            if hls_url is not None:
+                return HLSStream.parse_variant_playlist(self.session, hls_url)
+
+        if data.get("liveDashManifestUrl"):
+            return DASHStream.parse_manifest(self.session, data.get("liveDashManifestUrl"))
+
+        return {
+            "{0}p".format(self.QUALITY_WEIGHTS[name]) if name in self.QUALITY_WEIGHTS else name: HTTPStream(self.session, url)
+            for name, url in data.get("videos", [])
+        }
 
 
 __plugin__ = OKru
