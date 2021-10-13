@@ -65,7 +65,7 @@ jobs:
       - name: Upload coverage data
         if: github.event_name != 'schedule'
         continue-on-error: ${{ matrix.continue || false }}
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           name: os:${{ matrix.os }} py:${{ matrix.python }}
 
