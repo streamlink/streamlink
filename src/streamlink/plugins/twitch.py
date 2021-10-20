@@ -190,8 +190,6 @@ class UsherService(object):
 class TwitchAPI:
     headers = {
         "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-        "Device-ID": "twitch-web-wall-mason",
-        "X-Device-Id": "twitch-web-wall-mason",
     }
 
     def __init__(self, session):
