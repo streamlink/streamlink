@@ -150,7 +150,7 @@ if a package is not available for your distro or platform, or if it's out of dat
 .. _NetBSD (pkgsrc): https://pkgsrc.se/multimedia/streamlink
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _OpenBSD: https://openports.se/multimedia/streamlink
-.. _Solus: https://dev.solus-project.com/source/streamlink/
+.. _Solus: https://dev.getsol.us/source/streamlink/
 .. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
