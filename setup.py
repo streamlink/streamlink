@@ -61,11 +61,6 @@ else:
     deps.append("iso-639")
     deps.append("iso3166")
 
-# When we build an egg for the Win32 bootstrap we don"t want dependency
-# information built into it.
-if environ.get("NO_DEPS"):
-    deps = []
-
 
 def is_wheel_for_windows():
     if "bdist_wheel" in argv:
