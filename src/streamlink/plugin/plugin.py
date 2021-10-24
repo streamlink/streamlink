@@ -438,13 +438,13 @@ class Plugin:
         )
 
     def get_title(self) -> Optional[str]:
-        return self.title
+        return None if self.title is None else str(self.title).strip()
 
     def get_author(self) -> Optional[str]:
-        return self.author
+        return None if self.author is None else str(self.author).strip()
 
     def get_category(self) -> Optional[str]:
-        return self.category
+        return None if self.category is None else str(self.category).strip()
 
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """

@@ -5,10 +5,16 @@ import unittest
 from unittest.mock import Mock, call, patch
 
 import freezegun
+import pytest
 import requests.cookies
 
 from streamlink.plugin import HIGH_PRIORITY, NORMAL_PRIORITY, Plugin, pluginmatcher
 from streamlink.plugin.plugin import Matcher
+
+
+class FakePlugin(Plugin):
+    def _get_streams(self):
+        pass  # pragma: no cover
 
 
 class TestPlugin(unittest.TestCase):
@@ -160,9 +166,8 @@ class TestPluginMatcher(unittest.TestCase):
 
         @pluginmatcher(re.compile("foo", re.VERBOSE))
         @pluginmatcher(re.compile("bar"), priority=HIGH_PRIORITY)
-        class Bar(Plugin):
-            def _get_streams(self):
-                pass  # pragma: no cover
+        class Bar(FakePlugin):
+            pass
 
         self.assertEqual(Bar.matchers, [
             Matcher(re.compile("foo", re.VERBOSE), NORMAL_PRIORITY),
@@ -173,9 +178,8 @@ class TestPluginMatcher(unittest.TestCase):
         @pluginmatcher(re.compile("http://(foo)"))
         @pluginmatcher(re.compile("http://(bar)"))
         @pluginmatcher(re.compile("http://(baz)"))
-        class MyPlugin(Plugin):
-            def _get_streams(self):
-                pass  # pragma: no cover
+        class MyPlugin(FakePlugin):
+            pass
 
         MyPlugin.bind(Mock(), "tests.test_plugin")
 
@@ -202,3 +206,23 @@ class TestPluginMatcher(unittest.TestCase):
         self.assertEqual([m is not None for m in plugin.matches], [False, False, False])
         self.assertEqual(plugin.matcher, None)
         self.assertEqual(plugin.match, None)
+
+
+@pytest.mark.parametrize("attr", ["author", "category", "title"])
+def test_plugin_metadata(attr):
+    plugin = FakePlugin("https://foo.bar/")
+    getter = getattr(plugin, f"get_{attr}")
+    assert callable(getter)
+
+    assert getattr(plugin, attr) is None
+    assert getter() is None
+
+    setattr(plugin, attr, " foo bar ")
+    assert getter() == "foo bar"
+
+    class Foo:
+        def __str__(self):
+            return " baz qux "
+
+    setattr(plugin, attr, Foo())
+    assert getter() == "baz qux"
