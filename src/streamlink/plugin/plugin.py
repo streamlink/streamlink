@@ -441,17 +441,25 @@ class Plugin(object):
     def _get_streams(self):
         raise NotImplementedError
 
+    def get_metadata(self):
+        # type: () -> Dict[str, Optional[str]]
+        return dict(
+            author=self.get_author(),
+            category=self.get_category(),
+            title=self.get_title()
+        )
+
     def get_title(self):
         # type: () -> Optional[str]
-        return self.title
+        return None if self.title is None else str(self.title).strip()
 
     def get_author(self):
         # type: () -> Optional[str]
-        return self.author
+        return None if self.author is None else str(self.author).strip()
 
     def get_category(self):
         # type: () -> Optional[str]
-        return self.category
+        return None if self.category is None else str(self.category).strip()
 
     def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
         """
