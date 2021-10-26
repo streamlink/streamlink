@@ -64,7 +64,7 @@ class BrightcovePlayer:
         )
 
         for source in sources:
-            if source.get("type") == "application/vnd.apple.mpegurl":
+            if source.get("type") in ("application/vnd.apple.mpegurl", "application/x-mpegURL"):
                 for s in HLSStream.parse_variant_playlist(self.session, source.get("src")).items():
                     yield s
 
