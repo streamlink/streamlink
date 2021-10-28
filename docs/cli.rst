@@ -367,10 +367,11 @@ Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 Proxy Support
 -------------
 
-You can use the :option:`--http-proxy` or :option:`--https-proxy` options to
-change the proxy server that Streamlink will use for HTTP and HTTPS requests respectively.
-For convenience reasons, :option:`--http-proxy` will automatically set the
-value of :option:`--https-proxy` as well, if it has not been set by the user.
+You can use the :option:`--http-proxy` option to change the proxy server
+that Streamlink will use for HTTP and HTTPS requests. :option:`--http-proxy` sets
+the proxy for all HTTP and HTTPS requests, including WebSocket connections.
+If separate proxies for each protocol are required, they can be set using
+environment variables - see `Requests Proxies Documentation`_
 
 Both HTTP and SOCKS proxies are supported, as well as authentication in each of them.
 
@@ -381,8 +382,10 @@ Both HTTP and SOCKS proxies are supported, as well as authentication in each of 
 
 .. code-block:: console
 
-    $ streamlink --http-proxy "http://user:pass@10.10.1.10:3128/" --https-proxy "socks5://10.10.1.10:1242"
-    $ streamlink --http-proxy "socks4a://10.10.1.10:1235" --https-proxy "socks5h://10.10.1.10:1234"
+    $ streamlink --http-proxy "http://address:port"
+    $ streamlink --http-proxy "https://address:port"
+    $ streamlink --http-proxy "socks4a://address:port"
+    $ streamlink --http-proxy "socks5h://address:port"
 
 
 Command-line usage
@@ -396,3 +399,5 @@ Command-line usage
 .. argparse::
     :module: streamlink_cli.main
     :attr: parser_helper
+
+.. _Requests Proxies Documentation: https://2.python-requests.org/en/master/user/advanced/#proxies
