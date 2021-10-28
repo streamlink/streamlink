@@ -1,6 +1,16 @@
 Deprecations
 ============
 
+streamlink next
+---------------
+
+Removal of separate https-proxy option
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:ref:`HTTPS proxy CLI option <cli:HTTP options>` and the respective :ref:`Session options <api:Session>`
+have been deprecated in favor of a single :option:`--http-proxy` that sets the proxy for all HTTP and
+HTTPS requests, including WebSocket connections.
+
 streamlink 2.4.0
 ----------------
 
