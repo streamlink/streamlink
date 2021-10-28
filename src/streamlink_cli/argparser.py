@@ -1162,21 +1162,12 @@ def build_parser():
         "--http-proxy",
         metavar="HTTP_PROXY",
         help="""
-        A HTTP proxy to use for all HTTP requests, including WebSocket connections.
-        By default this proxy will be used for all HTTPS requests too.
+        A HTTP proxy to use for all HTTP and HTTPS requests, including WebSocket connections.
 
         Example: "http://hostname:port/"
         """
     )
-    http.add_argument(
-        "--https-proxy",
-        metavar="HTTPS_PROXY",
-        help="""
-        A HTTPS capable proxy to use for all HTTPS requests.
-
-        Example: "https://hostname:port/"
-        """
-    )
+    http.add_argument("--https-proxy", help=argparse.SUPPRESS)
     http.add_argument(
         "--http-cookie",
         metavar="KEY=VALUE",

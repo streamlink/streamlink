@@ -230,13 +230,11 @@ class Streamlink:
             else:
                 urllib3_connection.allowed_gai_family = allowed_gai_family
 
-        elif key == "http-proxy":
+        elif key in ("http-proxy", "https-proxy"):
             self.http.proxies["http"] = update_scheme("https://", value, force=False)
-            if "https" not in self.http.proxies:
-                self.http.proxies["https"] = update_scheme("https://", value, force=False)
-
-        elif key == "https-proxy":
-            self.http.proxies["https"] = update_scheme("https://", value, force=False)
+            self.http.proxies["https"] = self.http.proxies["http"]
+            if key == "https-proxy":
+                log.info("The https-proxy option has been deprecated in favour of a single http-proxy option")
 
         elif key == "http-cookies":
             if isinstance(value, dict):

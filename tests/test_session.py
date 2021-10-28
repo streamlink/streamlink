@@ -358,21 +358,21 @@ class TestSession(unittest.TestCase):
         session.set_option("http-proxy", "http://testproxy.com")
 
         self.assertEqual("http://testproxy.com", session.http.proxies['http'])
-        self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
+        self.assertEqual("http://testproxy.com", session.http.proxies['https'])
 
     def test_https_proxy_default_override(self):
         session = self.subject(load_plugins=False)
         session.set_option("http-proxy", "http://testproxy.com")
         session.set_option("https-proxy", "https://testhttpsproxy.com")
 
-        self.assertEqual("http://testproxy.com", session.http.proxies['http'])
+        self.assertEqual("https://testhttpsproxy.com", session.http.proxies['http'])
         self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
 
     def test_https_proxy_set_only(self):
         session = self.subject(load_plugins=False)
         session.set_option("https-proxy", "https://testhttpsproxy.com")
 
-        self.assertFalse("http" in session.http.proxies)
+        self.assertEqual("https://testhttpsproxy.com", session.http.proxies['http'])
         self.assertEqual("https://testhttpsproxy.com", session.http.proxies['https'])
 
     def test_http_proxy_socks(self):
@@ -386,5 +386,5 @@ class TestSession(unittest.TestCase):
         session = self.subject(load_plugins=False)
         session.set_option("https-proxy", "socks5://localhost:1234")
 
-        self.assertNotIn("http", session.http.proxies)
+        self.assertEqual("socks5://localhost:1234", session.http.proxies["http"])
         self.assertEqual("socks5://localhost:1234", session.http.proxies["https"])
