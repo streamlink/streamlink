@@ -46,11 +46,6 @@ else:
     deps.append("iso-639")
     deps.append("iso3166")
 
-# When we build an egg for the Win32 bootstrap we don"t want dependency
-# information built into it.
-if environ.get("NO_DEPS"):
-    deps = []
-
 this_directory = path.abspath(path.dirname(__file__))
 srcdir = path.join(this_directory, "src/")
 sys_path.insert(0, srcdir)
