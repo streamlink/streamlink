@@ -6,10 +6,10 @@ class TestPluginCanHandleUrlLtvLsmLv(PluginCanHandleUrl):
     __plugin__ = LtvLsmLv
 
     should_match = [
-        "https://ltv.lsm.lv/lv/tieshraide/example/",
-        "http://ltv.lsm.lv/lv/tieshraide/example/",
-        "https://ltv.lsm.lv/lv/tieshraide/example/live.123/",
-        "http://ltv.lsm.lv/lv/tieshraide/example/live.123/",
+        "https://ltv.lsm.lv/lv/tiesraide/example/",
+        "https://ltv.lsm.lv/lv/tiesraide/example/",
+        "https://ltv.lsm.lv/lv/tiesraide/example/live.123/",
+        "https://ltv.lsm.lv/lv/tiesraide/example/live.123/",
     ]
 
     should_not_match = [
@@ -21,4 +21,5 @@ class TestPluginCanHandleUrlLtvLsmLv(PluginCanHandleUrl):
         "http://ltv.lsm.lv/other-site/",
         "https://ltv.lsm.lv/lv/other-site/",
         "http://ltv.lsm.lv/lv/other-site/",
+        "https://ltv.lsm.lv/lv/tieshraide/example/",
     ]
