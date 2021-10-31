@@ -171,9 +171,6 @@ teamliquid              - teamliquid.net     Yes   --
 telefe                  telefe.com           No    Yes   Streams are geo-restricted to Argentina.
 tf1                     - tf1.fr             Yes   No    Streams may be geo-restricted to France.
                         - lci.fr
-tga                     - star.plu.cn        Yes   No
-                        - star.tga.plu.cn
-                        - star.longzhu.com
 theplatform             player.thepl... [7]_ No    Yes
 tlctr                   tlctv.com.tr         Yes   No
 turkuvaz                - atv.com.tr         Yes   No    Streams may be geo-restricted.
