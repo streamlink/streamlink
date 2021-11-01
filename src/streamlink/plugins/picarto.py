@@ -13,9 +13,15 @@ log = logging.getLogger(__name__)
 
 @pluginmatcher(re.compile(r"""
     https?://(?:www\.)?picarto\.tv/
-    (?:(?P<po>streampopout|videopopout)/)?
-    (?P<user>[^&?/]+)
-    (?:\?tab=videos&id=(?P<vod_id>\d+))?
+    (?:
+        streampopout/(?P<po_user>[^/]+)/public
+    |
+        videopopout/(?P<po_vod_id>\d+)
+    |
+        [^/]+/videos/(?P<vod_id>\d+)
+    |
+        (?P<user>[^/?&]+)
+    )$
 """, re.VERBOSE))
 class Picarto(Plugin):
     API_URL_LIVE = "https://ptvintern.picarto.tv/api/channel/detail/{username}"
@@ -131,13 +137,12 @@ class Picarto(Plugin):
     def _get_streams(self):
         m = self.match.groupdict()
 
-        if (m['po'] == 'streampopout' or not m['po']) and m['user'] and not m['vod_id']:
-            log.debug('Type=Live')
-            return self.get_live(m['user'])
-        elif m['po'] == 'videopopout' or (m['user'] and m['vod_id']):
+        if m['po_vod_id'] or m['vod_id']:
             log.debug('Type=VOD')
-            vod_id = m['vod_id'] if m['vod_id'] else m['user']
-            return self.get_vod(vod_id)
+            return self.get_vod(m['po_vod_id'] or m['vod_id'])
+        elif m['po_user'] or m['user']:
+            log.debug('Type=Live')
+            return self.get_live(m['po_user'] or m['user'])
 
 
 __plugin__ = Picarto
