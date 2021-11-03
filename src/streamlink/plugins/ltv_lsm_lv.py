@@ -1,47 +1,129 @@
 import logging
 import re
 
-from streamlink.compat import urlparse
+from streamlink.compat import urlsplit, urlunsplit
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api.utils import itertags
-from streamlink.stream.hls import HLSStream
+from streamlink.plugin.api import validate
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
 
 log = logging.getLogger(__name__)
 
 
+def copy_query_url(to, from_):
+    """
+    Replace the query string in one URL with the query string from another URL
+    """
+    return urlunsplit(urlsplit(to)._replace(query=urlsplit(from_).query))
+
+
+class LTVHLSStreamWorker(HLSStreamWorker):
+    def process_sequences(self, playlist, sequences):
+        super(LTVHLSStreamWorker, self).process_sequences(playlist, sequences)
+        # update the segment URLs with the query string from the playlist URL
+        self.playlist_sequences = [
+            sequence._replace(
+                segment=sequence.segment._replace(
+                    uri=copy_query_url(sequence.segment.uri, self.stream.url)
+                )
+            )
+            for sequence in self.playlist_sequences
+        ]
+
+
+class LTVHLSStreamReader(HLSStreamReader):
+    __worker__ = LTVHLSStreamWorker
+
+
+class LTVHLSStream(HLSStream):
+    __reader__ = LTVHLSStreamReader
+
+    @classmethod
+    def parse_variant_playlist(cls, *args, **kwargs):
+        streams = super(LTVHLSStream, cls).parse_variant_playlist(*args, **kwargs)
+
+        for stream in streams.values():
+            stream.args["url"] = copy_query_url(stream.args["url"], stream.url_master)
+
+        return streams
+
+
 @pluginmatcher(re.compile(
-    r"https?://ltv\.lsm\.lv/lv/tieshraide"
+    r"https://ltv\.lsm\.lv/lv/tiesraide"
 ))
 class LtvLsmLv(Plugin):
     """
     Support for Latvian live channels streams on ltv.lsm.lv
     """
+
+    def __init__(self, url):
+        super(LtvLsmLv, self).__init__(url)
+        self._json_data_re = re.compile(r'teliaPlayer\((\{.*?\})\);', re.DOTALL)
+
+        self.main_page_schema = validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//iframe[contains(@src, 'ltv.lsm.lv/embed')][1]/@src"),
+            validate.url()
+        )
+
+        self.embed_code_schema = validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//live[1]/@*[name()=':embed-data']"),
+            validate.text,
+            validate.parse_json(),
+            {"source": {"embed_code": validate.text}},
+            validate.get(("source", "embed_code")),
+            validate.parse_html(),
+            validate.xml_xpath_string(".//iframe[@src][1]/@src"),
+        )
+
+        self.player_apicall_schema = validate.Schema(
+            validate.transform(self._json_data_re.search),
+            validate.any(
+                None,
+                validate.all(
+                    validate.get(1),
+                    validate.transform(lambda s: s.replace("'", '"')),
+                    validate.transform(lambda s: re.sub(r",\s*\}", "}", s, flags=re.DOTALL)),
+                    validate.parse_json(),
+                    {"channel": validate.text},
+                    validate.get("channel")
+                )
+            )
+        )
+
+        self.sources_schema = validate.Schema(
+            validate.parse_json(),
+            {
+                "source": {
+                    "sources": validate.all(
+                        [{"type": validate.text, "src": validate.url()}],
+                        validate.filter(lambda src: src["type"] == "application/x-mpegURL"),
+                        validate.map(lambda src: src.get("src"))
+                    ),
+                }},
+            validate.get(("source", "sources"))
+        )
+
     def _get_streams(self):
+        api_url = "https://player.cloudycdn.services/player/ltvlive/channel/{channel_id}/"
+
         self.session.http.headers.update({"Referer": self.url})
 
-        iframe_url = None
-        res = self.session.http.get(self.url)
-        for iframe in itertags(res.text, "iframe"):
-            if "embed.lsm.lv" in iframe.attributes.get("src"):
-                iframe_url = iframe.attributes.get("src")
-                break
+        iframe_url = self.session.http.get(self.url, schema=self.main_page_schema)
+        log.debug("Found embed iframe: {0}".format(iframe_url))
+        player_iframe_url = self.session.http.get(iframe_url, schema=self.embed_code_schema)
+        log.debug("Found player iframe: {0}".format(player_iframe_url))
+        channel_id = self.session.http.get(player_iframe_url, schema=self.player_apicall_schema)
+        log.debug("Found channel ID: {0}".format(channel_id))
 
-        if not iframe_url:
-            log.error("Could not find player iframe")
-            return
-
-        log.debug("Found iframe: {0}".format(iframe_url))
-        res = self.session.http.get(iframe_url)
-        for source in itertags(res.text, "source"):
-            if source.attributes.get("src"):
-                stream_url = source.attributes.get("src")
-                url_path = urlparse(stream_url).path
-                if url_path.endswith(".m3u8"):
-                    for s in HLSStream.parse_variant_playlist(self.session,
-                                                              stream_url).items():
-                        yield s
-                else:
-                    log.debug("Not used URL path: {0}".format(url_path))
+        stream_sources = self.session.http.post(api_url.format(channel_id=channel_id),
+                                                data=dict(refer="ltv.lsm.lv",
+                                                          playertype="regular",
+                                                          protocol="hls"),
+                                                schema=self.sources_schema)
+        for surl in stream_sources:
+            for s in LTVHLSStream.parse_variant_playlist(self.session, surl).items():
+                yield s
 
 
 __plugin__ = LtvLsmLv
