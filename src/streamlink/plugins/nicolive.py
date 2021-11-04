@@ -25,7 +25,7 @@ _login_url_params = {
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/lv\d*"
+    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d*"
 ))
 class NicoLive(Plugin):
     arguments = PluginArguments(
