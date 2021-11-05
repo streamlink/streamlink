@@ -1,13 +1,13 @@
 import logging
 from datetime import datetime
-from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARN
+from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARNING
 from threading import Lock
 
 TRACE = 5
 _levelToName = {
     CRITICAL: "critical",
     ERROR: "error",
-    WARN: "warning",
+    WARNING: "warning",
     INFO: "info",
     DEBUG: "debug",
     TRACE: "trace",
@@ -93,7 +93,7 @@ REMOVE_BASE = ["streamlink", "streamlink_cli"]
 
 logging.setLoggerClass(StreamlinkLogger)
 root = logging.getLogger("streamlink")
-root.setLevel(logging.WARNING)
+root.setLevel(WARNING)
 
 
-__all__ = ["StreamlinkLogger", "basicConfig", "root", "levels"]
+__all__ = ["StreamlinkLogger", "TRACE", "basicConfig", "root", "levels"]
