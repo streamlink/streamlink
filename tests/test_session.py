@@ -285,12 +285,12 @@ class TestSession(unittest.TestCase):
         self.assertEqual(session.localization.language.alpha2, "en")
         self.assertEqual(session.localization.language_code, "en_US")
 
-    @patch("streamlink.session.api")
-    def test_interface(self, mock_api):
+    @patch("streamlink.session.HTTPSession")
+    def test_interface(self, mock_httpsession):
         adapter_http = Mock(poolmanager=Mock(connection_pool_kw={}))
         adapter_https = Mock(poolmanager=Mock(connection_pool_kw={}))
         adapter_foo = Mock(poolmanager=Mock(connection_pool_kw={}))
-        mock_api.HTTPSession.return_value = Mock(adapters={
+        mock_httpsession.return_value = Mock(adapters={
             "http://": adapter_http,
             "https://": adapter_https,
             "foo://": adapter_foo
