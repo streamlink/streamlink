@@ -14,8 +14,8 @@ from streamlink.compat import is_win32
 from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
-from streamlink.plugin import Plugin, api
-from streamlink.plugin.plugin import Matcher, NORMAL_PRIORITY, NO_PRIORITY
+from streamlink.plugin.api.http_session import HTTPSession
+from streamlink.plugin.plugin import Matcher, NORMAL_PRIORITY, NO_PRIORITY, Plugin
 from streamlink.utils.l10n import Localization
 from streamlink.utils.module import load_module
 from streamlink.utils.url import update_scheme
@@ -34,7 +34,7 @@ class Streamlink:
        options and log settings."""
 
     def __init__(self, options=None):
-        self.http = api.HTTPSession()
+        self.http = HTTPSession()
         self.options = Options({
             "interface": None,
             "ipv4": False,
