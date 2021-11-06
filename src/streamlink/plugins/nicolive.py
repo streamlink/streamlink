@@ -1,230 +1,60 @@
-import json
 import logging
 import re
-import threading
-import time
-from urllib.parse import unquote_plus, urlparse
+from threading import Event
 
-import websocket
-
-from streamlink import logger
-from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
-from streamlink.plugin.api import useragents
-from streamlink.stream.hls import HLSStream
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
+from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api.websocket import WebsocketClient
+from streamlink.stream.hls import HLSStream, HLSStreamReader
+from streamlink.utils.parse import parse_json
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
 
-_log = logging.getLogger(__name__)
-
-_login_url = "https://account.nicovideo.jp/login/redirector"
-
-_login_url_params = {
-    "show_button_twitter": 1,
-    "show_button_facebook": 1,
-    "next_url": "/"}
+log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d*"
-))
-class NicoLive(Plugin):
-    arguments = PluginArguments(
-        PluginArgument(
-            "email",
-            argument_name="niconico-email",
-            sensitive=True,
-            metavar="EMAIL",
-            help="The email or phone number associated with your "
-                 "Niconico account"),
-        PluginArgument(
-            "password",
-            argument_name="niconico-password",
-            sensitive=True,
-            metavar="PASSWORD",
-            help="The password of your Niconico account"),
-        PluginArgument(
-            "user-session",
-            argument_name="niconico-user-session",
-            sensitive=True,
-            metavar="VALUE",
-            help="Value of the user-session token \n(can be used in "
-                 "case you do not want to put your password here)"),
-        PluginArgument(
-            "purge-credentials",
-            argument_name="niconico-purge-credentials",
-            action="store_true",
-            help="""
-        Purge cached Niconico credentials to initiate a new session
-        and reauthenticate.
-        """),
-        PluginArgument(
-            "timeshift-offset",
-            type=hours_minutes_seconds,
-            argument_name="niconico-timeshift-offset",
-            metavar="[HH:]MM:SS",
-            default=None,
-            help="Amount of time to skip from the beginning of a stream. "
-                 "Default is 00:00:00."))
+class NicoLiveWsClient(WebsocketClient):
+    STREAM_OPENED_TIMEOUT = 6
 
-    is_stream_ready = False
-    is_stream_ended = False
-    watching_interval = 30
-    watching_interval_worker_thread = None
-    stream_reader = None
-    _ws = None
+    ready: Event
+    opened: Event
+    hls_stream_url: str
 
-    frontend_id = None
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.opened = Event()
+        self.ready = Event()
 
-    def _get_streams(self):
-        if self.options.get("purge_credentials"):
-            self.clear_cookies()
-            _log.info("All credentials were successfully removed")
-
-        self.url = self.url.split("?")[0]
-        self.session.http.headers.update({
-            "User-Agent": useragents.CHROME,
-        })
-
-        self.niconico_web_login()
-        if not self.get_wss_api_url():
-            _log.error(
-                "Failed to get wss_api_url. "
-                "Please check if the URL is correct, "
-                "and make sure your account has access to the video.")
-            return None
-
-        self.api_connect(self.wss_api_url)
-
-        i = 0
-        while not self.is_stream_ready:
-            if i % 10 == 0:
-                _log.debug("Waiting for permit...")
-            if i == 600:
-                _log.error("Waiting for permit timed out.")
-                return None
-            if self.is_stream_ended:
-                return None
-            time.sleep(0.1)
-            i += 1
-
-        streams = HLSStream.parse_variant_playlist(
-            self.session, self.hls_stream_url)
-
-        nico_streams = {}
-        for s in streams:
-            nico_stream = NicoHLSStream(streams[s], self)
-            nico_streams[s] = nico_stream
-
-        return nico_streams
-
-    def get_wss_api_url(self):
-        _log.debug("Getting video page: {0}".format(self.url))
-        resp = self.session.http.get(self.url)
-
-        try:
-            self.wss_api_url = extract_text(
-                resp.text, "&quot;webSocketUrl&quot;:&quot;", "&quot;")
-            if not self.wss_api_url:
-                return False
-        except Exception as e:
-            _log.debug(e)
-            _log.debug("Failed to extract wss api url")
-            return False
-
-        try:
-            self.frontend_id = extract_text(
-                resp.text, "&quot;frontendId&quot;:", ",&quot;")
-        except Exception as e:
-            _log.debug(e)
-            _log.warning("Failed to extract frontend id")
-
-        self.wss_api_url = "{0}&frontend_id={1}".format(self.wss_api_url, self.frontend_id)
-
-        _log.debug("Video page response code: {0}".format(resp.status_code))
-        _log.trace("Video page response body: {0}".format(resp.text))
-        _log.debug("Got wss_api_url: {0}".format(self.wss_api_url))
-        _log.debug("Got frontend_id: {0}".format(self.frontend_id))
-
-        return self.wss_api_url.startswith("wss://")
-
-    def api_on_open(self):
+    def on_open(self, wsapp):
+        super().on_open(wsapp)
         self.send_playerversion()
-        require_new_stream = not self.is_stream_ready
-        self.send_getpermit(require_new_stream=require_new_stream)
+        self.send_getpermit()
 
-    def api_on_error(self, ws, error=None):
-        if error:
-            _log.warning(error)
-        _log.warning("wss api disconnected.")
-        _log.warning("Attempting to reconnect in 5 secs...")
-        time.sleep(5)
-        self.api_connect(self.wss_api_url)
+    def on_message(self, wsapp, data: str):
+        log.debug(f"Received: {data}")
+        message = parse_json(data)
+        msgtype = message.get("type")
+        msgdata = message.get("data", {})
 
-    def api_connect(self, url):
-        # Proxy support adapted from the UStreamTV plugin (ustreamtv.py)
-        proxy_url = self.session.get_option("https-proxy")
-        if proxy_url is None:
-            proxy_url = self.session.get_option("http-proxy")
-        proxy_options = parse_proxy_url(proxy_url)
-        if proxy_options.get('http_proxy_host'):
-            _log.debug("Using proxy ({0}://{1}:{2})".format(
-                proxy_options.get('proxy_type') or "http",
-                proxy_options.get('http_proxy_host'),
-                proxy_options.get('http_proxy_port') or 80))
+        if msgtype == "ping":
+            self.send_pong()
 
-        _log.debug("Connecting: {0}".format(url))
-        if logger.root.level <= logger.TRACE:
-            websocket.enableTrace(True, _log)
+        elif msgtype == "stream" and msgdata.get("protocol") == "hls" and msgdata.get("uri"):
+            self.hls_stream_url = msgdata.get("uri")
+            self.ready.set()
+            if self.opened.wait(self.STREAM_OPENED_TIMEOUT):
+                log.debug("Stream opened, keeping websocket connection alive")
+            else:
+                log.info("Closing websocket connection")
+                self.close()
 
-        def on_error(wssapp, error):
-            return self.api_on_error(wssapp, error)
-
-        def on_message(wssapp, message):
-            return self.handle_api_message(message)
-
-        def on_open(wssapp):
-            return self.api_on_open()
-
-        self._ws = websocket.WebSocketApp(
-            url,
-            header=["User-Agent: {0}".format(useragents.CHROME)],
-            on_open=on_open,
-            on_message=on_message,
-            on_error=on_error)
-        self.ws_worker_thread = threading.Thread(
-            target=self._ws.run_forever,
-            kwargs=proxy_options)
-        self.ws_worker_thread.daemon = True
-        self.ws_worker_thread.start()
-
-    def send_message(self, type_, body):
-        msg = {"type": type_, "body": body}
-        msg_json = json.dumps(msg)
-        _log.debug(f"Sending: {msg_json}")
-        if self._ws and self._ws.sock.connected:
-            self._ws.send(msg_json)
-        else:
-            _log.warning("wss api is not connected.")
-
-    def send_no_body_message(self, type_):
-        msg = {"type": type_}
-        msg_json = json.dumps(msg)
-        _log.debug(f"Sending: {msg_json}")
-        if self._ws and self._ws.sock.connected:
-            self._ws.send(msg_json)
-        else:
-            _log.warning("wss api is not connected.")
-
-    def send_custom_message(self, msg):
-        msg_json = json.dumps(msg)
-        _log.debug(f"Sending: {msg_json}")
-        if self._ws and self._ws.sock.connected:
-            self._ws.send(msg_json)
-        else:
-            _log.warning("wss api is not connected.")
+        elif msgtype == "disconnect":
+            reason = msgdata.get("reason", "Unknown reason")
+            log.info(f"Received disconnect message: {reason}")
+            self.close()
 
     def send_playerversion(self):
-        body = {
+        self.send_json({
             "type": "startWatching",
             "data": {
                 "stream": {
@@ -239,86 +69,162 @@ class NicoLive(Plugin):
                 },
                 "reconnect": False
             }
-        }
-        self.send_custom_message(body)
+        })
 
-    def send_getpermit(self, require_new_stream=True):
-        body = {
+    def send_getpermit(self):
+        self.send_json({
             "type": "getAkashic",
             "data": {
                 "chasePlay": False
             }
-        }
-        self.send_custom_message(body)
-
-    def send_watching(self):
-        body = {
-            "command": "watching",
-            "params": [self.broadcast_id, "-1", "0"]
-        }
-        self.send_message("watch", body)
+        })
 
     def send_pong(self):
-        self.send_no_body_message("pong")
-        self.send_no_body_message("keepSeat")
+        self.send_json({"type": "pong"})
+        self.send_json({"type": "keepSeat"})
 
-    def handle_api_message(self, message):
-        _log.debug(f"Received: {message}")
-        message_parsed = json.loads(message)
 
-        if message_parsed["type"] == "stream":
-            data = message_parsed["data"]
-            self.hls_stream_url = data["uri"]
-            # load in the offset for timeshift live videos
-            offset = self.get_option("timeshift-offset")
-            if offset and 'timeshift' in self.wss_api_url:
-                self.hls_stream_url = update_qsd(self.hls_stream_url, {"start": offset})
-            self.is_stream_ready = True
+class NicoLiveHLSStreamReader(HLSStreamReader):
+    stream: "NicoLiveHLSStream"
 
-        if message_parsed["type"] == "watch":
-            body = message_parsed["body"]
-            command = body["command"]
+    def open(self):
+        self.stream.wsclient.opened.set()
+        super().open()
 
-            if command == "currentstream":
-                current_stream = body["currentStream"]
-                self.hls_stream_url = current_stream["uri"]
-                self.is_stream_ready = True
+    def close(self):
+        super().close()
+        self.stream.wsclient.close()
 
-            elif command == "watchinginterval":
-                self.watching_interval = int(body["params"][0])
-                _log.debug("Got watching_interval: {0}".format(
-                    self.watching_interval))
 
-                if self.watching_interval_worker_thread is None:
-                    _log.debug("send_watching_scheduler starting.")
-                    self.watching_interval_worker_thread = threading.Thread(
-                        target=self.send_watching_scheduler)
-                    self.watching_interval_worker_thread.daemon = True
-                    self.watching_interval_worker_thread.start()
+class NicoLiveHLSStream(HLSStream):
+    __reader__ = NicoLiveHLSStreamReader
+    wsclient: NicoLiveWsClient
 
-                else:
-                    _log.debug("send_watching_scheduler already running.")
+    def set_wsclient(self, wsclient: NicoLiveWsClient):
+        self.wsclient = wsclient
 
-            elif command == "disconnect":
-                _log.info("Websocket API closed.")
-                _log.info("Stream ended.")
-                self.is_stream_ended = True
 
-                if self.stream_reader is not None:
-                    self.stream_reader.close()
-                    _log.info("Stream reader closed.")
+@pluginmatcher(re.compile(
+    r"https?://(?P<domain>live\d*\.nicovideo\.jp)/watch/(lv|co)\d+"
+))
+class NicoLive(Plugin):
+    arguments = PluginArguments(
+        PluginArgument(
+            "email",
+            argument_name="niconico-email",
+            sensitive=True,
+            metavar="EMAIL",
+            help="The email or phone number associated with your Niconico account"
+        ),
+        PluginArgument(
+            "password",
+            argument_name="niconico-password",
+            sensitive=True,
+            metavar="PASSWORD",
+            help="The password of your Niconico account"
+        ),
+        PluginArgument(
+            "user-session",
+            argument_name="niconico-user-session",
+            sensitive=True,
+            metavar="VALUE",
+            help="Value of the user-session token \n(can be used in "
+                 "case you do not want to put your password here)"
+        ),
+        PluginArgument(
+            "purge-credentials",
+            argument_name="niconico-purge-credentials",
+            action="store_true",
+            help="Purge cached Niconico credentials to initiate a new session and reauthenticate."
+        ),
+        PluginArgument(
+            "timeshift-offset",
+            type=hours_minutes_seconds,
+            argument_name="niconico-timeshift-offset",
+            metavar="[HH:]MM:SS",
+            default=None,
+            help="Amount of time to skip from the beginning of a stream. Default is 00:00:00."
+        )
+    )
 
-        elif message_parsed["type"] == "ping":
-            self.send_pong()
+    STREAM_READY_TIMEOUT = 6
+    LOGIN_URL = "https://account.nicovideo.jp/login/redirector"
+    LOGIN_URL_PARAMS = {
+        "show_button_twitter": 1,
+        "show_button_facebook": 1,
+        "next_url": "/",
+    }
 
-    def send_watching_scheduler(self):
-        """
-        Periodically send "watching" command to the API.
-        This is necessary to keep the session alive.
-        """
-        while not self.is_stream_ended:
-            self.send_watching()
-            time.sleep(self.watching_interval)
+    wsclient: NicoLiveWsClient
+
+    def _get_streams(self):
+        if self.get_option("purge_credentials"):
+            self.clear_cookies()
+            log.info("All credentials were successfully removed")
+
+        self.session.http.headers.update({
+            "User-Agent": useragents.CHROME,
+        })
+
+        self.niconico_web_login()
+
+        wss_api_url = self.get_wss_api_url()
+        if not wss_api_url:
+            log.error(
+                "Failed to get wss_api_url. "
+                "Please check if the URL is correct, "
+                "and make sure your account has access to the video."
+            )
+            return
+
+        self.wsclient = NicoLiveWsClient(self.session, wss_api_url)
+        self.wsclient.start()
+
+        hls_stream_url = self._get_hls_stream_url()
+        if not hls_stream_url:
+            return
+
+        offset = self.get_option("timeshift-offset")
+        if offset and "timeshift" in wss_api_url:
+            hls_stream_url = update_qsd(self.hls_stream_url, {"start": offset})
+
+        for quality, stream in NicoLiveHLSStream.parse_variant_playlist(self.session, hls_stream_url).items():
+            stream.set_wsclient(self.wsclient)
+            yield quality, stream
+
+    def _get_hls_stream_url(self):
+        log.debug(f"Waiting for permit (for at most {self.STREAM_READY_TIMEOUT} seconds)...")
+        if not self.wsclient.ready.wait(self.STREAM_READY_TIMEOUT) or not self.wsclient.is_alive():
+            log.error("Waiting for permit timed out.")
+            self.wsclient.close()
+            return
+
+        return self.wsclient.hls_stream_url
+
+    def get_wss_api_url(self):
+        try:
+            data = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_find(".//script[@id='embedded-data'][@data-props]"),
+                validate.get("data-props"),
+                validate.parse_json(),
+                {"site": {
+                    "relive": {
+                        "webSocketUrl": validate.url(scheme="wss")
+                    },
+                    validate.optional("frontendId"): int
+                }},
+                validate.get("site"),
+                validate.union_get(("relive", "webSocketUrl"), "frontendId")
+            ))
+        except PluginError:
+            return
+
+        wss_api_url, frontend_id = data
+        if frontend_id is not None:
+            wss_api_url = update_qsd(wss_api_url, {"frontend_id": frontend_id})
+
+        return wss_api_url
 
     def niconico_web_login(self):
         user_session = self.get_option("user-session")
@@ -326,88 +232,36 @@ class NicoLive(Plugin):
         password = self.get_option("password")
 
         if user_session is not None:
-            _log.info("User session cookie is provided. Using it.")
+            log.info("Logging in via provided user session cookie")
             self.session.http.cookies.set(
                 "user_session",
                 user_session,
                 path="/",
-                domain="nicovideo.jp")
+                domain="nicovideo.jp"
+            )
             self.save_cookies()
-            return True
+
         elif self.session.http.cookies.get("user_session"):
-            _log.info("cached session cookie is provided. Using it.")
-            return True
+            log.info("Logging in via cached user session cookie")
+
         elif email is not None and password is not None:
-            _log.info("Email and password are provided. Attemping login.")
+            log.info("Logging in via provided email and password")
+            msg = self.session.http.post(
+                self.LOGIN_URL,
+                data={"mail_tel": email, "password": password},
+                params=self.LOGIN_URL_PARAMS,
+                schema=validate.Schema(
+                    validate.parse_html(),
+                    validate.xml_xpath_string(".//p[@class='notice__text']/text()")
+                )
+            )
 
-            payload = {"mail_tel": email, "password": password}
-            resp = self.session.http.post(_login_url, data=payload,
-                                          params=_login_url_params)
-
-            _log.debug("Login response code: {0}".format(resp.status_code))
-            _log.trace("Login response body: {0}".format(resp.text))
-            _log.debug("Cookies: {0}".format(
-                self.session.http.cookies.get_dict()))
-
+            log.debug(f"Cookies: {self.session.http.cookies.get_dict()}")
             if self.session.http.cookies.get("user_session") is None:
-                try:
-                    msg = extract_text(
-                        resp.text, '<p class="notice__text">', "</p>")
-                except Exception as e:
-                    _log.debug(e)
-                    msg = "unknown reason"
-                _log.warning("Login failed. {0}".format(msg))
-                return False
+                log.warning(f"Login failed: {msg or 'unknown reason'}")
             else:
-                _log.info("Logged in.")
+                log.info("Logged in.")
                 self.save_cookies()
-                return True
-        else:
-            return False
-
-
-class NicoHLSStream(HLSStream):
-
-    def __init__(self, hls_stream, nicolive_plugin):
-        super().__init__(
-            hls_stream.session,
-            force_restart=hls_stream.force_restart,
-            start_offset=hls_stream.start_offset,
-            duration=hls_stream.duration,
-            **hls_stream.args)
-        # url is already in hls_stream.args
-
-        self.nicolive_plugin = nicolive_plugin
-
-    def open(self):
-        reader = super().open()
-        self.nicolive_plugin.stream_reader = reader
-        return reader
-
-
-def extract_text(text, left, right):
-    """Extract text from HTML"""
-    result = re.findall("{0}(.*?){1}".format(left, right), text)
-    if len(result) != 1:
-        raise Exception("Failed to extract string. "
-                        "Expected 1, found {0}".format(len(result)))
-    return result[0]
-
-
-def parse_proxy_url(purl):
-    """Adapted from UStreamTV plugin (ustreamtv.py)"""
-
-    proxy_options = {}
-    if purl:
-        p = urlparse(purl)
-        proxy_options['proxy_type'] = p.scheme
-        proxy_options['http_proxy_host'] = p.hostname
-        if p.port:
-            proxy_options['http_proxy_port'] = p.port
-        if p.username:
-            proxy_options['http_proxy_auth'] = \
-                (unquote_plus(p.username), unquote_plus(p.password or ""))
-    return proxy_options
 
 
 __plugin__ = NicoLive
