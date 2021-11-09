@@ -42,6 +42,7 @@ class Streamlink:
             "hds-live-edge": 10.0,
             "hls-live-edge": 3,
             "hls-segment-ignore-names": [],
+            "hls-segment-stream-data": False,
             "hls-playlist-reload-attempts": 3,
             "hls-playlist-reload-time": "default",
             "hls-start-offset": 0,
