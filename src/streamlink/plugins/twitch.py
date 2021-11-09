@@ -7,7 +7,7 @@ from random import random
 
 import requests
 
-from streamlink.compat import str, urlparse
+from streamlink.compat import lru_cache, str, urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
@@ -15,6 +15,7 @@ from streamlink.stream.hls import HLSStream, HLSStreamWorker
 from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
 from streamlink.stream.hls_playlist import M3U8, M3U8Parser, load as load_hls_playlist
 from streamlink.stream.http import HTTPStream
+from streamlink.utils.args import keyvalue
 from streamlink.utils.parse import parse_json, parse_qsd
 from streamlink.utils.times import hours_minutes_seconds
 from streamlink.utils.url import update_qsd
@@ -188,12 +189,20 @@ class UsherService(object):
 
 
 class TwitchAPI:
-    headers = {
-        "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
-    }
-
     def __init__(self, session):
         self.session = session
+
+    @property
+    @lru_cache()
+    def headers(self):
+        _headers = {
+            "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
+        }
+        user_api_header = self.session.get_plugin_option("twitch", "api-header")
+        if user_api_header:
+            for k, v in user_api_header:
+                _headers[k] = v
+        return _headers
 
     def call(self, data, schema=None):
         res = self.session.http.post(
@@ -303,7 +312,7 @@ class TwitchAPI:
             login=channel_or_vod if is_live else "",
             isVod=not is_live,
             vodID=channel_or_vod if not is_live else "",
-            playerType="embed"
+            playerType="site"
         )
         subschema = validate.any(None, validate.all(
             {
@@ -469,6 +478,17 @@ class Twitch(Plugin):
             Note: Low latency streams have to be enabled by the broadcasters on Twitch themselves.
             Regular streams can cause buffering issues with this option enabled due to the reduced --hls-live-edge value.
             """.format(LOW_LATENCY_MAX_LIVE_EDGE)
+        ),
+        PluginArgument(
+            "api-header",
+            metavar="KEY=VALUE",
+            type=keyvalue,
+            action="append",
+            help="""
+            A header to add to each Twitch API HTTP request.
+
+            Can be repeated to add multiple headers.
+            """
         )
     )
 
@@ -583,10 +603,6 @@ class Twitch(Plugin):
 
         # only get the token once the channel has been resolved
         log.debug("Getting live HLS streams for {0}".format(self.channel))
-        self.session.http.headers.update({
-            "referer": "https://player.twitch.tv",
-            "origin": "https://player.twitch.tv",
-        })
         sig, token, restricted_bitrates = self._access_token(True, self.channel)
         url = self.usher.channel(self.channel, sig=sig, token=token, fast_bread=True)
 
