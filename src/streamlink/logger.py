@@ -189,7 +189,7 @@ class LoggerModule(object):
         self.manager.msg(self.module, ERROR, msg, *args, **kwargs)
 
     def warning(self, msg, *args, **kwargs):
-        self.manager.msg(self.module, WARN, msg, *args, **kwargs)
+        self.manager.msg(self.module, WARNING, msg, *args, **kwargs)
 
     def info(self, msg, *args, **kwargs):
         self.manager.msg(self.module, INFO, msg, *args, **kwargs)
