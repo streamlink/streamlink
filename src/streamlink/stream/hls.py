@@ -40,6 +40,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         self.key_data = None
         self.key_uri = None
         self.key_uri_override = options.get("hls-segment-key-uri")
+        self.stream_data = options.get("hls-segment-stream-data")
 
         self.ignore_names = False
         ignore_names = {*options.get("hls-segment-ignore-names")}
@@ -127,7 +128,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
     def fetch(self, sequence: Sequence) -> Optional[Response]:
         try:
-            return self._fetch(sequence.segment, not sequence.segment.key)
+            return self._fetch(sequence.segment, self.stream_data and not sequence.segment.key)
         except StreamError as err:  # pragma: no cover
             log.error(f"Failed to fetch segment {sequence.num}: {err}")
 

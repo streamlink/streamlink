@@ -910,6 +910,13 @@ def build_parser():
         """
     )
     transport_hls.add_argument(
+        "--hls-segment-stream-data",
+        action="store_true",
+        help="""
+        Immediately write segment data into output buffer while downloading.
+        """
+    )
+    transport_hls.add_argument(
         "--hls-playlist-reload-attempts",
         type=num(int, min=0),
         metavar="ATTEMPTS",
@@ -1023,7 +1030,6 @@ def build_parser():
     transport_hls.add_argument("--hls-segment-attempts", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-segment-threads", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-segment-timeout", help=argparse.SUPPRESS)
-    transport_hls.add_argument("--hls-segment-stream-data", action="store_true", help=argparse.SUPPRESS)
     transport_hls.add_argument("--hls-timeout", help=argparse.SUPPRESS)
 
     transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
