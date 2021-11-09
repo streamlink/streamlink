@@ -1,16 +1,23 @@
 import logging
 import sys
 import warnings
-from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARN
+from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARNING
 from threading import Lock
 
 from streamlink.compat import is_py2
 from streamlink.utils.encoding import maybe_encode
 
 TRACE = 5
-_levelToName = dict([(CRITICAL, "critical"), (ERROR, "error"), (WARN, "warning"), (INFO, "info"), (DEBUG, "debug"),
-                     (TRACE, "trace"), (NOTSET, "none")])
-_nameToLevel = dict([(name, level) for level, name in _levelToName.items()])
+_levelToName = {
+    CRITICAL: "critical",
+    ERROR: "error",
+    WARNING: "warning",
+    INFO: "info",
+    DEBUG: "debug",
+    TRACE: "trace",
+    NOTSET: "none",
+}
+_nameToLevel = {name: level for level, name in _levelToName.items()}
 
 for level, name in _levelToName.items():
     logging.addLevelName(level, name)
@@ -221,4 +228,4 @@ def basicConfig(**kwargs):
     return handler
 
 
-__all__ = ["StreamlinkLogger", "Logger", "basicConfig", "root", "levels"]
+__all__ = ["StreamlinkLogger", "Logger", "TRACE", "basicConfig", "root", "levels"]
