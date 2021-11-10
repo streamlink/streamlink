@@ -136,6 +136,7 @@ class TwitchHLSStream(HLSStream):
         if self.low_latency:
             live_edge = max(1, min(LOW_LATENCY_MAX_LIVE_EDGE, self.session.options.get("hls-live-edge")))
             self.session.options.set("hls-live-edge", live_edge)
+            self.session.options.set("hls-segment-stream-data", True)
             log.info("Low latency streaming (HLS live edge: {0})".format(live_edge))
 
         return super(TwitchHLSStream, self).open()
@@ -467,8 +468,8 @@ class Twitch(Plugin):
             action="store_true",
             help="""
             Enables low latency streaming by prefetching HLS segments.
-            Sets --hls-live-edge to {0}, if it is higher.
-            Reducing it to 1 will result in the lowest latency possible, but will most likely cause buffering.
+            Sets --hls-segment-stream-data to true and --hls-live-edge to {0}, if it is higher.
+            Reducing --hls-live-edge to 1 will result in the lowest latency possible, but will most likely cause buffering.
 
             In order to achieve true low latency streaming during playback, the player's caching/buffering settings will
             need to be adjusted and reduced to a value as low as possible, but still high enough to not cause any buffering.
