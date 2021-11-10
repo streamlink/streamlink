@@ -3,7 +3,7 @@ import pkgutil
 from collections import OrderedDict
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
-from typing import Dict, Optional, Type
+from typing import Dict, Optional, Tuple, Type
 
 import requests
 import requests.packages.urllib3.util.connection as urllib3_connection
@@ -341,10 +341,10 @@ class Streamlink:
             return plugin.get_option(key)
 
     @lru_cache(maxsize=128)
-    def resolve_url(self, url: str, follow_redirect: bool = True) -> Plugin:
+    def resolve_url(self, url: str, follow_redirect: bool = True) -> Tuple[Type[Plugin], str]:
         """Attempts to find a plugin that can use this URL.
 
-        The default protocol (http) will be prefixed to the URL if
+        The default protocol (https) will be prefixed to the URL if
         not specified.
 
         Raises :exc:`NoPluginError` on failure.
@@ -373,11 +373,12 @@ class Streamlink:
                     priority = prio
 
         if candidate:
-            return candidate(url)
+            return candidate, url
 
         if follow_redirect:
             # Attempt to handle a redirect URL
             try:
+                # noinspection PyArgumentList
                 res = self.http.head(url, allow_redirects=True, acceptable_status=[501])
 
                 # Fall back to GET request if server doesn't handle HEAD.
@@ -391,10 +392,10 @@ class Streamlink:
 
         raise NoPluginError
 
-    def resolve_url_no_redirect(self, url):
+    def resolve_url_no_redirect(self, url: str) -> Tuple[Type[Plugin], str]:
         """Attempts to find a plugin that can use this URL.
 
-        The default protocol (http) will be prefixed to the URL if
+        The default protocol (https) will be prefixed to the URL if
         not specified.
 
         Raises :exc:`NoPluginError` on failure.
@@ -404,7 +405,7 @@ class Streamlink:
         """
         return self.resolve_url(url, follow_redirect=False)
 
-    def streams(self, url, **params):
+    def streams(self, url: str, **params):
         """Attempts to find a plugin and extract streams from the *url*.
 
         *params* are passed to :func:`Plugin.streams`.
@@ -412,7 +413,9 @@ class Streamlink:
         Raises :exc:`NoPluginError` if no plugin is found.
         """
 
-        plugin = self.resolve_url(url)
+        pluginclass, resolved_url = self.resolve_url(url)
+        plugin = pluginclass(resolved_url)
+
         return plugin.streams(**params)
 
     def get_plugins(self):

@@ -4,6 +4,7 @@ import unittest
 from socket import AF_INET, AF_INET6
 from unittest.mock import Mock, call, patch
 
+import requests_mock
 from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import NoPluginError, Streamlink
@@ -20,7 +21,18 @@ class EmptyPlugin(Plugin):
 
 
 class TestSession(unittest.TestCase):
+    mocker: requests_mock.Mocker
+
     plugin_path = os.path.join(os.path.dirname(__file__), "plugin")
+
+    def setUp(self):
+        self.mocker = requests_mock.Mocker()
+        self.mocker.register_uri(requests_mock.ANY, requests_mock.ANY, text="")
+        self.mocker.start()
+
+    def tearDown(self):
+        self.mocker.stop()
+        Streamlink.resolve_url.cache_clear()
 
     def subject(self, load_plugins=True):
         session = Streamlink()
@@ -29,9 +41,18 @@ class TestSession(unittest.TestCase):
 
         return session
 
-    def test_exceptions(self):
-        session = self.subject()
-        self.assertRaises(NoPluginError, session.resolve_url, "invalid url", follow_redirect=False)
+    @staticmethod
+    def _resolve_url(method, *args, **kwargs) -> Plugin:
+        pluginclass, resolved_url = method(*args, **kwargs)
+        return pluginclass(resolved_url)
+
+    def resolve_url(self, session: Streamlink, url: str, *args, **kwargs) -> Plugin:
+        return self._resolve_url(session.resolve_url, url, *args, **kwargs)
+
+    def resolve_url_no_redirect(self, session: Streamlink, url: str, *args, **kwargs) -> Plugin:
+        return self._resolve_url(session.resolve_url_no_redirect, url, *args, **kwargs)
+
+    # ----
 
     def test_load_plugins(self):
         session = self.subject()
@@ -76,10 +97,44 @@ class TestSession(unittest.TestCase):
     def test_resolve_url(self):
         session = self.subject()
         plugins = session.get_plugins()
-        plugin = session.resolve_url("http://test.se/channel")
-        self.assertTrue(isinstance(plugin, Plugin))
-        self.assertTrue(isinstance(plugin, plugins["testplugin"]))
+
+        pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
+        self.assertTrue(issubclass(pluginclass, Plugin))
+        self.assertIs(pluginclass, plugins["testplugin"])
+        self.assertEqual(resolved_url, "http://test.se/channel")
         self.assertTrue(hasattr(session.resolve_url, "cache_info"), "resolve_url has a lookup cache")
+
+    def test_resolve_url__noplugin(self):
+        session = self.subject()
+        self.mocker.get("http://invalid2", status_code=301, headers={"Location": "http://invalid3"})
+
+        self.assertRaises(NoPluginError, session.resolve_url, "http://invalid1")
+        self.assertRaises(NoPluginError, session.resolve_url, "http://invalid2")
+
+    def test_resolve_url__redirected(self):
+        session = self.subject()
+        plugins = session.get_plugins()
+        self.mocker.head("http://redirect1", status_code=501)
+        self.mocker.get("http://redirect1", status_code=301, headers={"Location": "http://redirect2"})
+        self.mocker.head("http://redirect2", status_code=301, headers={"Location": "http://test.se/channel"})
+
+        pluginclass, resolved_url = session.resolve_url("http://redirect1")
+        self.assertTrue(issubclass(pluginclass, Plugin))
+        self.assertIs(pluginclass, plugins["testplugin"])
+        self.assertEqual(resolved_url, "http://test.se/channel")
+
+    def test_resolve_url_no_redirect(self):
+        session = self.subject()
+        plugins = session.get_plugins()
+
+        pluginclass, resolved_url = session.resolve_url_no_redirect("http://test.se/channel")
+        self.assertTrue(issubclass(pluginclass, Plugin))
+        self.assertIs(pluginclass, plugins["testplugin"])
+        self.assertEqual(resolved_url, "http://test.se/channel")
+
+    def test_resolve_url_no_redirect__noplugin(self):
+        session = self.subject()
+        self.assertRaises(NoPluginError, session.resolve_url_no_redirect, "http://invalid")
 
     def test_resolve_url_scheme(self):
         @pluginmatcher(re.compile("http://insecure"))
@@ -96,13 +151,13 @@ class TestSession(unittest.TestCase):
             "secure": PluginHttps,
         }
 
-        self.assertRaises(NoPluginError, session.resolve_url, "insecure")
-        self.assertIsInstance(session.resolve_url("http://insecure"), PluginHttp)
-        self.assertRaises(NoPluginError, session.resolve_url, "https://insecure")
+        self.assertRaises(NoPluginError, self.resolve_url, session, "insecure")
+        self.assertIsInstance(self.resolve_url(session, "http://insecure"), PluginHttp)
+        self.assertRaises(NoPluginError, self.resolve_url, session, "https://insecure")
 
-        self.assertIsInstance(session.resolve_url("secure"), PluginHttps)
-        self.assertRaises(NoPluginError, session.resolve_url, "http://secure")
-        self.assertIsInstance(session.resolve_url("https://secure"), PluginHttps)
+        self.assertIsInstance(self.resolve_url(session, "secure"), PluginHttps)
+        self.assertRaises(NoPluginError, self.resolve_url, session, "http://secure")
+        self.assertIsInstance(self.resolve_url(session, "https://secure"), PluginHttps)
 
     def test_resolve_url_priority(self):
         @pluginmatcher(priority=HIGH_PRIORITY, pattern=re.compile(
@@ -136,10 +191,10 @@ class TestSession(unittest.TestCase):
             "low": LowPriority,
             "no": NoPriority,
         }
-        no = session.resolve_url_no_redirect("no")
-        low = session.resolve_url_no_redirect("low")
-        normal = session.resolve_url_no_redirect("normal")
-        high = session.resolve_url_no_redirect("high")
+        no = self.resolve_url_no_redirect(session, "no")
+        low = self.resolve_url_no_redirect(session, "low")
+        normal = self.resolve_url_no_redirect(session, "normal")
+        high = self.resolve_url_no_redirect(session, "high")
 
         self.assertIsInstance(no, HighPriority)
         self.assertIsInstance(low, HighPriority)
@@ -151,7 +206,7 @@ class TestSession(unittest.TestCase):
             "no": NoPriority,
         }
         with self.assertRaises(NoPluginError):
-            session.resolve_url_no_redirect("no")
+            self.resolve_url_no_redirect(session, "no")
 
     @patch("streamlink.session.log")
     def test_resolve_deprecated(self, mock_log: Mock):
@@ -182,18 +237,11 @@ class TestSession(unittest.TestCase):
             "dep-high": DeprecatedHighPriority,
         }
 
-        self.assertIsInstance(session.resolve_url_no_redirect("low"), DeprecatedHighPriority)
+        self.assertIsInstance(self.resolve_url_no_redirect(session, "low"), DeprecatedHighPriority)
         self.assertEqual(mock_log.info.mock_calls, [
             call("Resolved plugin dep-normal-one with deprecated can_handle_url API"),
             call("Resolved plugin dep-high with deprecated can_handle_url API")
         ])
-
-    def test_resolve_url_no_redirect(self):
-        session = self.subject()
-        plugin = session.resolve_url_no_redirect("http://test.se/channel")
-        plugins = session.get_plugins()
-        self.assertTrue(isinstance(plugin, Plugin))
-        self.assertTrue(isinstance(plugin, plugins["testplugin"]))
 
     def test_options(self):
         session = self.subject()
@@ -209,7 +257,7 @@ class TestSession(unittest.TestCase):
 
     def test_plugin(self):
         session = self.subject()
-        plugin = session.resolve_url("http://test.se/channel")
+        plugin = self.resolve_url(session, "http://test.se/channel")
         streams = plugin.streams()
 
         self.assertTrue("best" in streams)
@@ -223,7 +271,7 @@ class TestSession(unittest.TestCase):
 
     def test_plugin_stream_types(self):
         session = self.subject()
-        plugin = session.resolve_url("http://test.se/channel")
+        plugin = self.resolve_url(session, "http://test.se/channel")
         streams = plugin.streams(stream_types=["http", "rtmp"])
 
         self.assertTrue(isinstance(streams["480p"], HTTPStream))
@@ -236,7 +284,7 @@ class TestSession(unittest.TestCase):
 
     def test_plugin_stream_sorting_excludes(self):
         session = self.subject()
-        plugin = session.resolve_url("http://test.se/channel")
+        plugin = self.resolve_url(session, "http://test.se/channel")
 
         streams = plugin.streams(sorting_excludes=[])
         self.assertTrue("best" in streams)
@@ -268,7 +316,7 @@ class TestSession(unittest.TestCase):
         self.assertTrue(streams["worst-unfiltered"] is streams["350k"])
         self.assertTrue(streams["best-unfiltered"] is streams["1080p"])
 
-        plugin = session.resolve_url("http://test.se/UnsortableStreamNames")
+        plugin = self.resolve_url(session, "http://test.se/UnsortableStreamNames")
         streams = plugin.streams()
         self.assertFalse("best" in streams)
         self.assertFalse("worst" in streams)
