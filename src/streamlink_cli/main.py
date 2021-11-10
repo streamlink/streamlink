@@ -44,7 +44,6 @@ QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
 args = None
 console: ConsoleOutput = None
 output: Output = None
-plugin: Plugin = None
 stream_fd: StreamIO = None
 streamlink: Streamlink = None
 
@@ -560,8 +559,9 @@ def handle_url():
     """
 
     try:
-        plugin = streamlink.resolve_url(args.url)
-        setup_plugin_options(streamlink, plugin)
+        pluginclass, resolved_url = streamlink.resolve_url(args.url)
+        setup_plugin_options(streamlink, pluginclass)
+        plugin = pluginclass(resolved_url)
         log.info(f"Found matching plugin {plugin.module} for URL {args.url}")
 
         if args.retry_max or args.retry_streams:
@@ -571,8 +571,7 @@ def handle_url():
                 retry_streams = args.retry_streams
             if args.retry_max:
                 retry_max = args.retry_max
-            streams = fetch_streams_with_retry(plugin, retry_streams,
-                                               retry_max)
+            streams = fetch_streams_with_retry(plugin, retry_streams, retry_max)
         else:
             streams = fetch_streams(plugin)
     except NoPluginError:
@@ -683,9 +682,9 @@ def setup_config_args(parser, ignore_unknown=False):
     if streamlink and args.url:
         # Only load first available plugin config
         with ignored(NoPluginError):
-            plugin = streamlink.resolve_url(args.url)
+            pluginclass, resolved_url = streamlink.resolve_url(args.url)
             for config_file in CONFIG_FILES:
-                config_file = config_file.with_name(f"{config_file.name}.{plugin.module}")
+                config_file = config_file.with_name(f"{config_file.name}.{pluginclass.module}")
                 if not config_file.is_file():
                     continue
                 if type(config_file) is DeprecatedPath:
