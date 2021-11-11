@@ -18,17 +18,15 @@ class AtTheShore(Plugin):
     _stream_schema = validate.Schema(validate.transform(_stream_re.search), validate.get("value"), validate.url())
 
     def _get_streams(self):
-        res = self._url_re.search(self.url)
-        if res:
-            try:
-                res = self.session.http.get(
-                    self._videoapi_url.format(camid=res.group(1)), headers={"Referer": self.url}, schema=self._stream_schema
-                )
-            except PluginError as err:
-                log.debug(err)
-            else:
-                if ".m3u8" in res:
-                    return HLSStream.parse_variant_playlist(self.session, res)
+        try:
+            res = self.session.http.get(
+                self._videoapi_url.format(camid=self.match.group(1)), headers={"Referer": self.url}, schema=self._stream_schema
+            )
+        except PluginError as err:
+            log.debug(err)
+        else:
+            if ".m3u8" in res:
+                return HLSStream.parse_variant_playlist(self.session, res)
 
 
 __plugin__ = AtTheShore
