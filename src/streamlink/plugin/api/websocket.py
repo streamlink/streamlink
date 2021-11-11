@@ -1,6 +1,6 @@
 import json
 import logging
-from threading import Thread
+from threading import RLock, Thread
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote_plus, urlparse
 
@@ -15,6 +15,8 @@ log = logging.getLogger(__name__)
 
 class WebsocketClient(Thread):
     _id: int = 0
+
+    ws: WebSocketApp
 
     def __init__(
         self,
@@ -51,22 +53,12 @@ class WebsocketClient(Thread):
             if p.username:  # pragma: no branch
                 proxy_options["http_proxy_auth"] = unquote_plus(p.username), unquote_plus(p.password or "")
 
+        self._reconnect = False
+        self._reconnect_lock = RLock()
+
         self.session = session
-        self.ws = WebSocketApp(
-            url=url,
-            subprotocols=subprotocols,
-            header=header,
-            cookie=cookie,
-            on_open=self.on_open,
-            on_error=self.on_error,
-            on_close=self.on_close,
-            on_ping=self.on_ping,
-            on_pong=self.on_pong,
-            on_message=self.on_message,
-            on_cont_message=self.on_cont_message,
-            on_data=self.on_data
-        )
-        self._data = dict(
+        self._ws_init(url, subprotocols, header, cookie)
+        self._ws_rundata = dict(
             sockopt=sockopt,
             sslopt=sslopt,
             host=host,
@@ -84,10 +76,55 @@ class WebsocketClient(Thread):
             daemon=True
         )
 
+    def _ws_init(self, url, subprotocols, header, cookie):
+        self.ws = WebSocketApp(
+            url=url,
+            subprotocols=subprotocols,
+            header=header,
+            cookie=cookie,
+            on_open=self.on_open,
+            on_error=self.on_error,
+            on_close=self.on_close,
+            on_ping=self.on_ping,
+            on_pong=self.on_pong,
+            on_message=self.on_message,
+            on_cont_message=self.on_cont_message,
+            on_data=self.on_data
+        )
+
     def run(self) -> None:
-        self.ws.run_forever(**self._data)
+        while True:
+            log.debug(f"Connecting to: {self.ws.url}")
+            self.ws.run_forever(**self._ws_rundata)
+            # check if closed via a reconnect() call
+            with self._reconnect_lock:
+                if not self._reconnect:
+                    return
+                self._reconnect = False
 
     # ----
+
+    def reconnect(
+        self,
+        url: str = None,
+        subprotocols: Optional[List[str]] = None,
+        header: Optional[Union[List, Dict]] = None,
+        cookie: Optional[str] = None,
+        closeopts: Optional[Dict] = None
+    ) -> None:
+        with self._reconnect_lock:
+            # ws connection is not active (anymore)
+            if not self.ws.keep_running:
+                return
+            log.debug("Reconnecting...")
+            self._reconnect = True
+            self.ws.close(**(closeopts or {}))
+            self._ws_init(
+                url=self.ws.url if url is None else url,
+                subprotocols=self.ws.subprotocols if subprotocols is None else subprotocols,
+                header=self.ws.header if header is None else header,
+                cookie=self.ws.cookie if cookie is None else cookie
+            )
 
     def close(self, status: int = STATUS_NORMAL, reason: Union[str, bytes] = "", timeout: int = 3) -> None:
         self.ws.close(status=status, reason=bytes(reason, encoding="utf-8"), timeout=timeout)
