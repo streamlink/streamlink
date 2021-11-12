@@ -91,6 +91,3 @@ ffmpeg-ffmpeg=ffmpeg.exe
 
 # Number of threads to use when streaming HLS streams
 #hls-segment-threads=1
-
-# Number of threads to use when streaming HDS streams
-#hds-segment-threads=1

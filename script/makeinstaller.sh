@@ -103,8 +103,7 @@ pypi_wheels=certifi==2021.5.30
             urllib3==1.26.6
             websocket-client==1.2.1
 
-files=${ROOT}/win32/THIRD-PARTY.txt > \$INSTDIR
-      ${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs
+files=${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs
       ${ROOT}/build/lib/streamlink_cli > \$INSTDIR\pkgs
 
 [Command streamlink]
