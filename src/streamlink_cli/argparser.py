@@ -752,7 +752,7 @@ def build_parser():
         not listed will be omitted from the available streams list.  A ``*`` can
         be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
-        Default is "rtmp,hls,hds,http,akamaihd,*".
+        Default is "rtmp,hls,http,*".
         """
     )
     stream.add_argument(
@@ -787,7 +787,6 @@ def build_parser():
     )
 
     transport = parser.add_argument_group("Stream transport options")
-    transport_hds = transport.add_argument_group("HDS options")
     transport_hls = transport.add_argument_group("HLS options")
     transport_rtmp = transport.add_argument_group("RTMP options")
     transport_subprocess = transport.add_argument_group("Subprocess options")
@@ -813,7 +812,7 @@ def build_parser():
         Default is "16M".
 
         Note: A smaller size is recommended on lower end systems (such as Raspberry Pi) when playing stream types that require
-        some extra processing (such as HDS) to avoid unnecessary background processing.
+        some extra processing to avoid unnecessary background processing.
         """
     )
     transport.add_argument(
@@ -823,7 +822,7 @@ def build_parser():
         help="""
         How many attempts should be done to download each segment before giving up.
 
-        This applies to all different kinds of segmented stream types, such as DASH, HDS, HLS, etc.
+        This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
 
         Default is 3.
         """
@@ -835,7 +834,7 @@ def build_parser():
         help="""
         The size of the thread pool used to download segments. Minimum value is 1 and maximum is 10.
 
-        This applies to all different kinds of segmented stream types, such as DASH, HDS, HLS, etc.
+        This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
 
         Default is 1.
         """
@@ -847,7 +846,7 @@ def build_parser():
         help="""
         Segment connect and read timeout.
 
-        This applies to all different kinds of segmented stream types, such as DASH, HDS, HLS, etc.
+        This applies to all different kinds of segmented stream types, such as DASH, HLS, etc.
 
         Default is 10.0.
         """
@@ -859,7 +858,7 @@ def build_parser():
         help="""
         Timeout for reading data from streams.
 
-        This applies to all different kinds of stream types, such as DASH, HDS, HLS, HTTP, RTMP, etc.
+        This applies to all different kinds of stream types, such as DASH, HLS, HTTP, RTMP, etc.
 
         Default is 60.0.
         """
@@ -873,21 +872,6 @@ def build_parser():
         Needs to be supported by the used plugin.
         """
     )
-
-    transport_hds.add_argument(
-        "--hds-live-edge",
-        type=num(float, min=0),
-        metavar="SECONDS",
-        help="""
-        The time live HDS streams will start from the edge of the stream.
-
-        Default is 10.0.
-        """
-    )
-    transport_hds.add_argument("--hds-segment-attempts", help=argparse.SUPPRESS)
-    transport_hds.add_argument("--hds-segment-threads", help=argparse.SUPPRESS)
-    transport_hds.add_argument("--hds-segment-timeout", help=argparse.SUPPRESS)
-    transport_hds.add_argument("--hds-timeout", help=argparse.SUPPRESS)
 
     transport_hls.add_argument(
         "--hls-live-edge",

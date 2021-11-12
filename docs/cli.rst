@@ -340,11 +340,11 @@ and ``params`` will be passed as a Python dict:
     {'token': 'magicToken'}
 
 Most streaming protocols only require you to pass a simple URL.
-This is an Adobe HDS stream:
+This is an HLS stream:
 
 .. code-block:: console
 
-    $ streamlink hds://streaming.server.net/playpath/manifest.f4m
+    $ streamlink hls://https://streaming.server.net/playlist.m3u8
 
 Supported streaming protocols
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -352,8 +352,6 @@ Supported streaming protocols
 ============================== =================================================
 Name                           Prefix
 ============================== =================================================
-Adobe HTTP Dynamic Streaming   hds://
-Akamai HD Adaptive Streaming   akamaihd://
 Apple HTTP Live Streaming      hls:// [1]_
 MPEG-DASH [2]_                 dash://
 Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://

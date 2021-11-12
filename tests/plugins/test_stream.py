@@ -5,7 +5,6 @@ import requests_mock
 
 from streamlink import Streamlink
 from streamlink.plugin.plugin import parse_params, stream_weight
-from streamlink.stream.akamaihd import AkamaiHDStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.rtmpdump import RTMPStream
@@ -24,16 +23,6 @@ class TestPluginStream(unittest.TestCase):
     def assertDictHas(self, a, b):
         for key, value in a.items():
             self.assertEqual(b[key], value)
-
-    def _test_akamaihd(self, surl, url):
-        plugin = self.resolve_url(surl)
-        streams = plugin.streams()
-
-        self.assertTrue("live" in streams)
-
-        stream = streams["live"]
-        self.assertTrue(isinstance(stream, AkamaiHDStream))
-        self.assertEqual(stream.url, url)
 
     @patch("streamlink.stream.HLSStream.parse_variant_playlist")
     def _test_hls(self, surl, url, mock_parse):
@@ -113,11 +102,6 @@ class TestPluginStream(unittest.TestCase):
         self._test_hlsvariant("hls://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
         self._test_hlsvariant("hls://http://hostname.se/playlist.m3u8", "http://hostname.se/playlist.m3u8")
         self._test_hlsvariant("hls://https://hostname.se/playlist.m3u8", "https://hostname.se/playlist.m3u8")
-
-    def test_plugin_akamaihd(self):
-        self._test_akamaihd("akamaihd://http://hostname.se/stream", "http://hostname.se/stream")
-        self._test_akamaihd("akamaihd://https://hostname.se/stream", "https://hostname.se/stream")
-        self._test_akamaihd("akamaihd://hostname.se/stream", "https://hostname.se/stream")
 
     def test_plugin_http(self):
         self._test_http("httpstream://hostname.se/auth.php auth=('test','test2')",

@@ -12,7 +12,7 @@ class TestPluginMeta(unittest.TestCase):
     """
     longMessage = False
     built_in_plugins = [
-        "akamaihd", "http", "hds", "rtmp", "hls", "dash", "stream"
+        "http", "rtmp", "hls", "dash", "stream"
     ]
 
     title_re = re.compile(r"\n[= ]+\n")

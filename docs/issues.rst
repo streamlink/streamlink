@@ -28,7 +28,7 @@ Use the :option:`--player-args` or :option:`--player` option to pass these optio
 Multi-threaded streaming
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-On segmented streaming protocols (such as HLS and HDS) it's possible to use
+On segmented streaming protocols (such as HLS and DASH) it's possible to use
 multiple threads for downloading multiple segments at the same time to
 potentially increase the throughput. This can be done via Streamlink's
 :option:`--stream-segment-threads` argument.
