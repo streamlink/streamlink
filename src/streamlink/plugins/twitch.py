@@ -7,7 +7,7 @@ from random import random
 
 import requests
 
-from streamlink.compat import lru_cache, str, urlparse
+from streamlink.compat import str, urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
@@ -192,18 +192,10 @@ class UsherService(object):
 class TwitchAPI:
     def __init__(self, session):
         self.session = session
-
-    @property
-    @lru_cache()
-    def headers(self):
-        _headers = {
+        self.headers = {
             "Client-ID": "kimne78kx3ncx6brgo4mv6wki5h1ko",
         }
-        user_api_header = self.session.get_plugin_option("twitch", "api-header")
-        if user_api_header:
-            for k, v in user_api_header:
-                _headers[k] = v
-        return _headers
+        self.headers.update(**{k: v for k, v in session.get_plugin_option("twitch", "api-header") or []})
 
     def call(self, data, schema=None):
         res = self.session.http.post(
