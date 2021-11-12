@@ -768,9 +768,6 @@ def setup_options():
     if args.mux_subtitles:
         streamlink.set_option("mux-subtitles", args.mux_subtitles)
 
-    if args.hds_live_edge:
-        streamlink.set_option("hds-live-edge", args.hds_live_edge)
-
     if args.hls_live_edge:
         streamlink.set_option("hls-live-edge", args.hls_live_edge)
     if args.hls_segment_stream_data:
@@ -801,14 +798,6 @@ def setup_options():
         streamlink.set_option("rtmp-proxy", args.rtmp_proxy)
 
     # deprecated
-    if args.hds_segment_attempts:
-        streamlink.set_option("hds-segment-attempts", args.hds_segment_attempts)
-    if args.hds_segment_threads:
-        streamlink.set_option("hds-segment-threads", args.hds_segment_threads)
-    if args.hds_segment_timeout:
-        streamlink.set_option("hds-segment-timeout", args.hds_segment_timeout)
-    if args.hds_timeout:
-        streamlink.set_option("hds-timeout", args.hds_timeout)
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
     if args.hls_segment_threads:

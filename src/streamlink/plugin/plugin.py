@@ -267,7 +267,7 @@ class Plugin:
 
     @classmethod
     def default_stream_types(cls, streams):
-        stream_types = ["rtmp", "hls", "hds", "http"]
+        stream_types = ["rtmp", "hls", "http"]
 
         for name, stream in iterate_streams(streams):
             stream_type = type(stream).shortname()
