@@ -56,9 +56,6 @@ different properties are available depending on stream type.
 .. autoclass:: HTTPStream
     :members:
 
-.. autoclass:: RTMPStream
-    :members:
-
 .. autoclass:: DASHStream
     :members:
 

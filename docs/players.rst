@@ -89,11 +89,6 @@ MPlayer tries to play Twitch streams at the wrong FPS
 This is a bug in MPlayer, using the MPlayer fork `mpv`_ instead
 is recommended.
 
-VLC hangs when buffering and no playback starts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Some versions of 64-bit VLC seem to be unable to read the stream created by
-rtmpdump. Using the 32-bit version of VLC might help.
-
 Youtube Live does not work with VLC
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 VLC versions below 3 cannot play Youtube Live streams. Please update your

@@ -5,7 +5,6 @@ from streamlink import Streamlink
 from streamlink.plugins.filmon import FilmOnHLS
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.rtmpdump import RTMPStream
 from streamlink.stream.stream import Stream
 from streamlink_cli.utils import stream_to_url
 
@@ -28,16 +27,6 @@ class TestStreamToURL(unittest.TestCase):
     def test_hls_stream(self):
         expected = "http://test.se/stream.m3u8"
         stream = HLSStream(self.session, expected)
-        self.assertEqual(expected, stream_to_url(stream))
-        self.assertEqual(expected, stream.to_url())
-
-    def test_rtmp_stream(self):
-        stream = RTMPStream(self.session, {"rtmp": "rtmp://test.se/app/play_path",
-                                           "swfVfy": "http://test.se/player.swf",
-                                           "swfhash": "test",
-                                           "swfsize": 123456,
-                                           "playPath": "play_path"})
-        expected = "rtmp://test.se/app/play_path playPath=play_path swfUrl=http://test.se/player.swf swfVfy=1"
         self.assertEqual(expected, stream_to_url(stream))
         self.assertEqual(expected, stream.to_url())
 

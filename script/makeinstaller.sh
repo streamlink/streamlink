@@ -180,15 +180,6 @@ cat > "${build_dir}/installer_tmpl.nsi" <<EOF
 [% block sections %]
 [[ super()  ]]
 SubSection /e "Bundled tools" bundled
-    Section "rtmpdump" rtmpdump
-        SetOutPath "\$INSTDIR\rtmpdump"
-        File /r "${files_dir}\rtmpdump\*.*"
-        SetShellVarContext current
-        \${ConfigWrite} "\$APPDATA\streamlink\config" "rtmpdump=" "\$INSTDIR\rtmpdump\rtmpdump.exe" \$R0
-        SetShellVarContext all
-        SetOutPath -
-    SectionEnd
-
     Section "FFMPEG" ffmpeg
         SetOutPath "\$INSTDIR\ffmpeg"
         File /r "${files_dir}\ffmpeg\*.*"
@@ -224,7 +215,6 @@ SubSectionEnd
 
 [% block uninstall_files %]
     [[ super() ]]
-    RMDir /r "\$INSTDIR\rtmpdump"
     RMDir /r "\$INSTDIR\ffmpeg"
 [% endblock %]
 
@@ -253,9 +243,6 @@ StrCmp \$0 \${sec_app} "" +2
 
 StrCmp \$0 \${bundled} "" +2
   SendMessage \$R0 \${WM_SETTEXT} 0 "STR:Extra tools used to play some streams"
-
-StrCmp \$0 \${rtmpdump} "" +2
-  SendMessage \$R0 \${WM_SETTEXT} 0 "STR:rtmpdump is used to play RTMP streams"
 
 StrCmp \$0 \${ffmpeg} "" +2
   SendMessage \$R0 \${WM_SETTEXT} 0 "STR:FFMPEG is used to mux separate video and audio streams, for example high quality YouTube videos or DASH streams"

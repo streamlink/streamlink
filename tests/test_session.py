@@ -11,7 +11,6 @@ from streamlink import NoPluginError, Streamlink
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.rtmpdump import RTMPStream
 
 
 class EmptyPlugin(Plugin):
@@ -263,21 +262,20 @@ class TestSession(unittest.TestCase):
         self.assertTrue("worst" in streams)
         self.assertTrue(streams["best"] is streams["1080p"])
         self.assertTrue(streams["worst"] is streams["350k"])
-        self.assertTrue(isinstance(streams["rtmp"], RTMPStream))
         self.assertTrue(isinstance(streams["http"], HTTPStream))
         self.assertTrue(isinstance(streams["hls"], HLSStream))
 
     def test_plugin_stream_types(self):
         session = self.subject()
         plugin = self.resolve_url(session, "http://test.se/channel")
-        streams = plugin.streams(stream_types=["http", "rtmp"])
+        streams = plugin.streams(stream_types=["http", "hls"])
 
         self.assertTrue(isinstance(streams["480p"], HTTPStream))
-        self.assertTrue(isinstance(streams["480p_rtmp"], RTMPStream))
+        self.assertTrue(isinstance(streams["480p_hls"], HLSStream))
 
-        streams = plugin.streams(stream_types=["rtmp", "http"])
+        streams = plugin.streams(stream_types=["hls", "http"])
 
-        self.assertTrue(isinstance(streams["480p"], RTMPStream))
+        self.assertTrue(isinstance(streams["480p"], HLSStream))
         self.assertTrue(isinstance(streams["480p_http"], HTTPStream))
 
     def test_plugin_stream_sorting_excludes(self):
