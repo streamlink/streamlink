@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+
 import unittest
 from threading import Event
 
@@ -121,3 +123,61 @@ class TestWebsocketClient(unittest.TestCase):
                 timeout=3
             )
         ])
+
+    @patch("streamlink.plugin.api.websocket.WebSocketApp")
+    def test_reconnect_disconnected(self, mock_wsapp):
+        # type: (Mock)
+        client = WebsocketClient(self.session, "wss://localhost:0")
+        event_run_forever_entered = Event()
+
+        # noinspection PyUnusedLocal
+        def mock_run_forever(**data):
+            client.ws.keep_running = False
+            event_run_forever_entered.set()
+
+        client.ws.keep_running = True
+        client.ws.run_forever.side_effect = mock_run_forever
+
+        client.start()
+        self.assertTrue(event_run_forever_entered.wait(1), "Enters run_forever loop on ws client thread")
+        self.assertEqual(mock_wsapp.call_count, 1)
+        client.reconnect()
+        self.assertEqual(mock_wsapp.call_count, 1, "Doesn't reconnect if disconnected")
+        client.join()
+
+    @patch("streamlink.plugin.api.websocket.WebSocketApp")
+    def test_reconnect_once(self, mock_wsapp):
+        # type: (Mock)
+        client = WebsocketClient(self.session, "wss://localhost:0")
+        run_forever_entered = Event()
+        run_forever_ended = Event()
+
+        # noinspection PyUnusedLocal
+        def mock_run_forever(**data):
+            run_forever_entered.set()
+            run_forever_ended.wait(1)
+            run_forever_ended.clear()
+
+        client.ws.keep_running = True
+        client.ws.run_forever.side_effect = mock_run_forever
+
+        client.start()
+        self.assertEqual(client.ws.close.call_count, 0)
+        self.assertEqual(mock_wsapp.call_count, 1, "Creates initial connection")
+        self.assertFalse(client._reconnect, "Has not set the _reconnect state")
+        self.assertTrue(run_forever_entered.wait(1), "Enters run_forever loop on client thread")
+        run_forever_entered.clear()
+
+        client.reconnect()
+        self.assertEqual(client.ws.close.call_count, 1)
+        self.assertEqual(mock_wsapp.call_count, 2, "Creates new connection")
+        self.assertTrue(client._reconnect, "Has set the _reconnect state")
+
+        run_forever_ended.set()
+        self.assertTrue(run_forever_entered.wait(1), "Enters run_forever loop on client thread again")
+        self.assertFalse(client._reconnect, "Has reset the _reconnect state")
+
+        run_forever_ended.set()
+        client.join(1)
+        self.assertFalse(client.is_alive())
+        self.assertEqual(mock_wsapp.call_count, 2, "Connection has ended regularly")
