@@ -66,7 +66,7 @@
 # Please note that the player needs to support the streaming protocol
 # and that custom stream implementations in plugins will become unavailable,
 # same as buffering options and those which change the network behavior.
-#player-passthrough=http,hls,rtmp
+#player-passthrough=http,hls
 
 # By default, Streamlink will close the player when the stream is over.
 # Use this option to let the player stay or close itself instead.
@@ -74,11 +74,6 @@
 
 # Show the player's console output
 #verbose-player
-
-# RTMP streams are downloaded using rtmpdump. A full or relative path
-# to the rtmpdump exe should be specified here.
-#rtmp-rtmpdump=C:\Program Files (x86)\Streamlink\rtmpdump\rtmpdump.exe
-rtmp-rtmpdump=rtmpdump.exe
 
 # FFMPEG is used to mux separate video and audio streams in to a single
 # stream so that they can be played. The full or relative path to ffmpeg

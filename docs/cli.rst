@@ -306,45 +306,41 @@ Streamlink supports most of them. It's possible to tell Streamlink
 to access a streaming protocol directly instead of relying on a plugin
 to extract the streams from a URL for you.
 
-A protocol can be accessed directly by specifying it in the URL format::
-
-  protocol://path [key=value]
-
-Accessing a stream that requires extra parameters to be passed along
-(e.g. RTMP):
+A streaming protocol can be accessed directly by specifying it in the ``protocol://URL`` format
+with an optional list of parameters, like so:
 
 .. code-block:: console
 
-    $ streamlink "rtmp://streaming.server.net/playpath live=1 swfVfy=http://server.net/flashplayer.swf"
+    $ streamlink "protocol://https://streamingserver/path key1=value1 key2=value2"
 
-When passing parameters to the built-in stream plugins, the values will either
-be treated as plain strings, as is the case in the example above for ``swfVry``,
-or they will be interpreted as Python literals. For example, you can pass a
-Python dict or Python list as one of the parameters.
+Depending on the input URL, the explicit protocol scheme may be omitted.
+The following example shows HLS streams (``.m3u8``) and DASH streams (``.mdp``):
 
 .. code-block:: console
 
-    $ streamlink "rtmp://streaming.server.net/playpath conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']"
-    $ streamlink "hls://streaming.server.net/playpath params={'token': 'magicToken'}"
+    $ streamlink "https://streamingserver/playlist.m3u8"
+    $ streamlink "https://streamingserver/manifest.mpd"
 
-In the examples above, ``conn`` will be passed as a Python list:
+When passing parameters to the built-in streaming protocols, the values will either be treated as plain strings
+or they will be interpreted as Python literals:
+
+.. code-block:: console
+
+    $ streamlink "httpstream://https://streamingserver/path params={'abc':123} json=['foo','bar','baz']"
 
 .. code-block:: python
 
-    ['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']
+    params={"key": 123}
+    json=["foo", "bar", "baz"]
 
-and ``params`` will be passed as a Python dict:
+The parameters from the example above are used to make an HTTP ``GET`` request with ``abc=123`` added
+to the query string and ``["foo", "bar", "baz"]`` used as the content of the HTTP request's body (the serialized JSON data).
 
-.. code-block:: python
-
-    {'token': 'magicToken'}
-
-Most streaming protocols only require you to pass a simple URL.
-This is an HLS stream:
+Some parameters allow you to configure the behavior of the streaming protocol implementation directly:
 
 .. code-block:: console
 
-    $ streamlink hls://https://streaming.server.net/playlist.m3u8
+    $ streamlink "hls://https://streamingserver/path start_offset=123 duration=321 force_restart=True"
 
 Supported streaming protocols
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -354,7 +350,6 @@ Name                           Prefix
 ============================== =================================================
 Apple HTTP Live Streaming      hls:// [1]_
 MPEG-DASH [2]_                 dash://
-Real Time Messaging Protocol   rtmp:// rtmpe:// rtmps:// rtmpt:// rtmpte://
 Progressive HTTP, HTTPS, etc   httpstream:// [1]_
 ============================== =================================================
 
