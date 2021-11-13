@@ -326,14 +326,15 @@ or they will be interpreted as Python literals:
 
 .. code-block:: console
 
-    $ streamlink "httpstream://https://streamingserver/path params={'abc':123} json=['foo','bar','baz']"
+    $ streamlink "httpstream://https://streamingserver/path method=POST params={'abc':123} json=['foo','bar','baz']"
 
 .. code-block:: python
 
+    method="POST"
     params={"key": 123}
     json=["foo", "bar", "baz"]
 
-The parameters from the example above are used to make an HTTP ``GET`` request with ``abc=123`` added
+The parameters from the example above are used to make an HTTP ``POST`` request with ``abc=123`` added
 to the query string and ``["foo", "bar", "baz"]`` used as the content of the HTTP request's body (the serialized JSON data).
 
 Some parameters allow you to configure the behavior of the streaming protocol implementation directly:
