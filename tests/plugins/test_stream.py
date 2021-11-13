@@ -7,7 +7,6 @@ from streamlink import Streamlink
 from streamlink.plugin.plugin import parse_params, stream_weight
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.rtmpdump import RTMPStream
 
 
 class TestPluginStream(unittest.TestCase):
@@ -54,17 +53,6 @@ class TestPluginStream(unittest.TestCase):
         self.assertIsInstance(stream, HLSStream)
         self.assertEqual(stream.url, url)
 
-    def _test_rtmp(self, surl, url, params):
-        plugin = self.resolve_url(surl)
-        streams = plugin.streams()
-
-        self.assertIn("live", streams)
-
-        stream = streams["live"]
-        self.assertIsInstance(stream, RTMPStream)
-        self.assertEqual(stream.params["rtmp"], url)
-        self.assertDictHas(params, stream.params)
-
     def _test_http(self, surl, url, params):
         plugin = self.resolve_url(surl)
         streams = plugin.streams()
@@ -75,20 +63,6 @@ class TestPluginStream(unittest.TestCase):
         self.assertIsInstance(stream, HTTPStream)
         self.assertEqual(stream.url, url)
         self.assertDictHas(params, stream.args)
-
-    def test_plugin_rtmp(self):
-        self._test_rtmp("rtmp://hostname.se/stream",
-                        "rtmp://hostname.se/stream", dict())
-
-        self._test_rtmp("rtmp://hostname.se/stream live=1 qarg='a \\'string' noq=test",
-                        "rtmp://hostname.se/stream", dict(live=True, qarg='a \'string', noq="test"))
-
-        self._test_rtmp("rtmp://hostname.se/stream live=1 num=47",
-                        "rtmp://hostname.se/stream", dict(live=True, num=47))
-
-        self._test_rtmp("rtmp://hostname.se/stream conn=['B:1','S:authMe','O:1','NN:code:1.23','NS:flag:ok','O:0']",
-                        "rtmp://hostname.se/stream",
-                        dict(conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']))
 
     def test_plugin_hls(self):
         self._test_hls("hls://hostname.se/foo", "https://hostname.se/foo")

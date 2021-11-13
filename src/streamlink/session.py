@@ -10,7 +10,6 @@ import requests.packages.urllib3.util.connection as urllib3_connection
 from requests.packages.urllib3.util.connection import allowed_gai_family
 
 from streamlink import __version__, plugins
-from streamlink.compat import is_win32
 from streamlink.exceptions import NoPluginError, PluginError
 from streamlink.logger import StreamlinkLogger
 from streamlink.options import Options
@@ -47,14 +46,10 @@ class Streamlink:
             "hls-start-offset": 0,
             "hls-duration": None,
             "ringbuffer-size": 1024 * 1024 * 16,  # 16 MB
-            "rtmp-rtmpdump": is_win32 and "rtmpdump.exe" or "rtmpdump",
-            "rtmp-proxy": None,
             "stream-segment-attempts": 3,
             "stream-segment-threads": 1,
             "stream-segment-timeout": 10.0,
             "stream-timeout": 60.0,
-            "subprocess-errorlog": False,
-            "subprocess-errorlog-path": None,
             "ffmpeg-ffmpeg": None,
             "ffmpeg-fout": None,
             "ffmpeg-video-transcode": None,
@@ -133,22 +128,9 @@ class Streamlink:
                                  requests except the ones covered by
                                  other options, default: ``20.0``
 
-        subprocess-errorlog      (bool) Log errors from subprocesses to
-                                 a file located in the temp directory
-
-        subprocess-errorlog-path (str) Log errors from subprocesses to
-                                 a specific file
-
         ringbuffer-size          (int) The size of the internal ring
                                  buffer used by most stream types,
                                  default: ``16777216`` (16MB)
-
-        rtmp-proxy               (str) Specify a proxy (SOCKS) that RTMP
-                                 streams will use
-
-        rtmp-rtmpdump            (str) Specify the location of the
-                                 rtmpdump executable used by RTMP streams,
-                                 e.g. ``/usr/local/bin/rtmpdump``
 
         ffmpeg-ffmpeg            (str) Specify the location of the
                                  ffmpeg executable use by Muxing streams
@@ -275,8 +257,8 @@ class Streamlink:
         # deprecated: {dash,hls}-segment-timeout
         elif key in ("dash-segment-timeout", "hls-segment-timeout"):
             self.options.set("stream-segment-timeout", float(value))
-        # deprecated: {hls,rtmp,dash,http-stream}-timeout
-        elif key in ("dash-timeout", "hls-timeout", "http-stream-timeout", "rtmp-timeout"):
+        # deprecated: {hls,dash,http-stream}-timeout
+        elif key in ("dash-timeout", "hls-timeout", "http-stream-timeout"):
             self.options.set("stream-timeout", float(value))
 
         else:

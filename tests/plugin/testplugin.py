@@ -7,7 +7,6 @@ from streamlink.plugin import PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugins import Plugin
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
-from streamlink.stream.rtmpdump import RTMPStream
 from streamlink.stream.stream import Stream
 
 
@@ -58,7 +57,6 @@ class TestPlugin(Plugin):
 
         streams = {}
         streams["test"] = TestStream(self.session)
-        streams["rtmp"] = RTMPStream(self.session, dict(rtmp="rtmp://test.se"))
         streams["hls"] = HLSStream(self.session, "http://test.se/playlist.m3u8")
         streams["http"] = HTTPStream(self.session, "http://test.se/stream")
 
@@ -71,8 +69,10 @@ class TestPlugin(Plugin):
         streams["1500k"] = HTTPStream(self.session, "http://test.se/stream")
         streams["3000k"] = HTTPStream(self.session, "http://test.se/stream")
 
-        streams["480p"] = [HTTPStream(self.session, "http://test.se/stream"),
-                           RTMPStream(self.session, dict(rtmp="rtmp://test.se"))]
+        streams["480p"] = [
+            HTTPStream(self.session, "http://test.se/stream"),
+            HLSStream(self.session, "http://test.se/playlist.m3u8")
+        ]
 
         return streams
 

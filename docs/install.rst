@@ -295,7 +295,6 @@ Name                                 Notes
 
 **Optional**
 --------------------------------------------------------------------------------
-`RTMPDump`_                          Required to play RTMP streams.
 `ffmpeg`_                            Required to play streams that are made up of separate
                                      audio and video streams, eg. YouTube 1080p+
 ==================================== ===========================================
@@ -314,7 +313,6 @@ With these two environment variables it is possible to use `pycrypto`_ instead o
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://pypi.org/project/setuptools/
 .. _python-requests: https://docs.python-requests.org/en/master/
-.. _RTMPDump: https://rtmpdump.mplayerhq.hu/
 .. _pycountry: https://pypi.org/project/pycountry/
 .. _pycrypto: https://www.dlitz.net/software/pycrypto/
 .. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
@@ -362,9 +360,7 @@ Release                              Notes
 
 These installers contain:
 
-- A compiled version of Streamlink that **does not require an existing Python
-  installation**
-- `RTMPDump`_ for viewing RTMP streams
+- A compiled version of Streamlink that **does not require an existing Python installation**
 - `ffmpeg`_ for muxing streams
 
 and perform the following tasks:

@@ -25,7 +25,6 @@ from streamlink.cache import Cache
 from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginOptions
 from streamlink.stream.stream import Stream, StreamIO
-from streamlink.stream.streamprocess import StreamProcess
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink_cli.argparser import build_parser
 from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
@@ -39,7 +38,7 @@ try:
     ACCEPTABLE_ERRNO += (errno.WSAECONNABORTED,)
 except AttributeError:
     pass  # Not windows
-QUIET_OPTIONS = ("json", "stream_url", "subprocess_cmdline", "quiet")
+QUIET_OPTIONS = ("json", "stream_url", "quiet")
 
 args = None
 console: ConsoleOutput = None
@@ -400,8 +399,8 @@ def handle_stream(plugin: Plugin, streams: Streams, stream_name: str) -> None:
     """Decides what to do with the selected stream.
 
     Depending on arguments it can be one of these:
-     - Output internal command-line
      - Output JSON represenation
+     - Output the stream URL
      - Continuously output the stream over HTTP
      - Output stream data to selected output
 
@@ -410,21 +409,8 @@ def handle_stream(plugin: Plugin, streams: Streams, stream_name: str) -> None:
     stream_name = resolve_stream_name(streams, stream_name)
     stream = streams[stream_name]
 
-    # Print internal command-line if this stream
-    # uses a subprocess.
-    if args.subprocess_cmdline:
-        if isinstance(stream, StreamProcess):
-            try:
-                cmdline = stream.cmdline()
-            except StreamError as err:
-                console.exit(err)
-
-            console.msg(cmdline)
-        else:
-            console.exit("The stream specified cannot be translated to a command")
-
     # Print JSON representation of the stream
-    elif args.json:
+    if args.json:
         console.msg_json(
             stream,
             metadata=plugin.get_metadata()
@@ -790,13 +776,6 @@ def setup_options():
     if args.hls_live_restart:
         streamlink.set_option("hls-live-restart", args.hls_live_restart)
 
-    if args.rtmp_rtmpdump:
-        streamlink.set_option("rtmp-rtmpdump", args.rtmp_rtmpdump)
-    elif args.rtmpdump:
-        streamlink.set_option("rtmp-rtmpdump", args.rtmpdump)
-    if args.rtmp_proxy:
-        streamlink.set_option("rtmp-proxy", args.rtmp_proxy)
-
     # deprecated
     if args.hls_segment_attempts:
         streamlink.set_option("hls-segment-attempts", args.hls_segment_attempts)
@@ -808,8 +787,6 @@ def setup_options():
         streamlink.set_option("hls-timeout", args.hls_timeout)
     if args.http_stream_timeout:
         streamlink.set_option("http-stream-timeout", args.http_stream_timeout)
-    if args.rtmp_timeout:
-        streamlink.set_option("rtmp-timeout", args.rtmp_timeout)
 
     # generic stream- arguments take precedence over deprecated stream-type arguments
     if args.stream_segment_attempts:
@@ -838,8 +815,6 @@ def setup_options():
     if args.ffmpeg_start_at_zero:
         streamlink.set_option("ffmpeg-start-at-zero", args.ffmpeg_start_at_zero)
 
-    streamlink.set_option("subprocess-errorlog", args.subprocess_errorlog)
-    streamlink.set_option("subprocess-errorlog-path", args.subprocess_errorlog_path)
     streamlink.set_option("locale", args.locale)
 
 

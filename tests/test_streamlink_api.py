@@ -17,9 +17,7 @@ def get_session():
 class TestStreamlinkAPI(unittest.TestCase):
     @patch('streamlink.api.Streamlink', side_effect=get_session)
     def test_find_test_plugin(self, session):
-        self.assertTrue(
-            "rtmp" in streams("test.se")
-        )
+        self.assertIn("hls", streams("test.se"))
 
     @patch('streamlink.api.Streamlink', side_effect=get_session)
     def test_no_streams_exception(self, session):
@@ -31,18 +29,16 @@ class TestStreamlinkAPI(unittest.TestCase):
 
     @patch('streamlink.api.Streamlink', side_effect=get_session)
     def test_stream_type_filter(self, session):
-        stream_types = ["rtmp", "hls"]
+        stream_types = ["hls"]
         available_streams = streams("test.se", stream_types=stream_types)
-        self.assertTrue("rtmp" in available_streams)
-        self.assertTrue("hls" in available_streams)
-        self.assertTrue("test" not in available_streams)
-        self.assertTrue("http" not in available_streams)
+        self.assertIn("hls", available_streams)
+        self.assertNotIn("test", available_streams)
+        self.assertNotIn("http", available_streams)
 
     @patch('streamlink.api.Streamlink', side_effect=get_session)
     def test_stream_type_wildcard(self, session):
-        stream_types = ["rtmp", "hls", "*"]
+        stream_types = ["hls", "*"]
         available_streams = streams("test.se", stream_types=stream_types)
-        self.assertTrue("rtmp" in available_streams)
-        self.assertTrue("hls" in available_streams)
-        self.assertTrue("test" in available_streams)
-        self.assertTrue("http" in available_streams)
+        self.assertIn("hls", available_streams)
+        self.assertIn("test", available_streams)
+        self.assertIn("http", available_streams)

@@ -752,7 +752,7 @@ def build_parser():
         not listed will be omitted from the available streams list.  A ``*`` can
         be used as a wildcard to match any other type of stream, eg. muxed-stream.
 
-        Default is "rtmp,hls,http,*".
+        Default is "hls,http,*".
         """
     )
     stream.add_argument(
@@ -788,8 +788,6 @@ def build_parser():
 
     transport = parser.add_argument_group("Stream transport options")
     transport_hls = transport.add_argument_group("HLS options")
-    transport_rtmp = transport.add_argument_group("RTMP options")
-    transport_subprocess = transport.add_argument_group("Subprocess options")
     transport_ffmpeg = transport.add_argument_group("FFmpeg options")
 
     transport.add_argument(
@@ -858,7 +856,7 @@ def build_parser():
         help="""
         Timeout for reading data from streams.
 
-        This applies to all different kinds of stream types, such as DASH, HLS, HTTP, RTMP, etc.
+        This applies to all different kinds of stream types, such as DASH, HLS, HTTP, etc.
 
         Default is 60.0.
         """
@@ -1017,59 +1015,6 @@ def build_parser():
     transport_hls.add_argument("--hls-timeout", help=argparse.SUPPRESS)
 
     transport.add_argument("--http-stream-timeout", help=argparse.SUPPRESS)
-
-    transport_rtmp.add_argument(
-        "--rtmp-rtmpdump",
-        metavar="FILENAME",
-        help="""
-        RTMPDump is used to access RTMP streams. You can specify the
-        location of the rtmpdump executable if it is not in your PATH.
-
-        Example: "/usr/local/bin/rtmpdump"
-        """
-    )
-    transport_rtmp.add_argument(
-        "--rtmp-proxy",
-        metavar="PROXY",
-        help="""
-        A SOCKS proxy that RTMP streams will use.
-
-        Example: 127.0.0.1:9050
-        """
-    )
-    transport_rtmp.add_argument("--rtmpdump", help=argparse.SUPPRESS)
-    transport_rtmp.add_argument("--rtmp-timeout", help=argparse.SUPPRESS)
-
-    transport_subprocess.add_argument(
-        "--subprocess-cmdline",
-        action="store_true",
-        help="""
-        Print the command-line used internally to play the stream.
-
-        This is only available on RTMP streams.
-        """
-    )
-    transport_subprocess.add_argument(
-        "--subprocess-errorlog",
-        action="store_true",
-        help="""
-        Log possible errors from internal subprocesses to a temporary file. The
-        file will be saved in your systems temporary directory.
-
-        Useful when debugging rtmpdump related issues.
-        """
-    )
-    transport_subprocess.add_argument(
-        "--subprocess-errorlog-path",
-        type=str,
-        metavar="PATH",
-        help="""
-        Log the subprocess errorlog to a specific file rather than a temporary
-        file. Takes precedence over subprocess-errorlog.
-
-        Useful when debugging rtmpdump related issues.
-        """
-    )
 
     transport_ffmpeg.add_argument(
         "--ffmpeg-ffmpeg",

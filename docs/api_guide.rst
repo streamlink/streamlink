@@ -93,7 +93,7 @@ or set options like this:
 
 .. code-block:: python
 
-    >>> session.set_option("rtmp-rtmpdump", "/path/to/rtmpdump")
+    >>> session.set_option("stream-timeout", 30)
 
 
 See :func:`Streamlink.set_option` to see which options are available.
