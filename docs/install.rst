@@ -284,10 +284,9 @@ Name                                 Notes
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`iso-639`_                           Used for localization settings, provides language information
-`iso3166`_                           Used for localization settings, provides country information
 `isodate`_                           Used for parsing ISO8601 strings
 `lxml`_                              Used for processing HTML and XML data
+`pycountry`_                         Used for localization settings, provides country and language data
 `pycryptodome`_                      Used for decrypting encrypted streams
 `PySocks`_                           Used for SOCKS Proxies
 `requests`_                          Used for making any kind of HTTP/HTTPS request
@@ -301,20 +300,9 @@ Name                                 Notes
                                      - HLS streams optionally need to get remuxed depending on the stream selection.
 ==================================== ===========================================
 
-Alternative dependencies
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-With this environment variable it is possible to use `pycountry`_ instead of `iso-639`_ and `iso3166`_.
-
-.. code-block:: console
-
-    $ export STREAMLINK_USE_PYCOUNTRY="true"
-
 .. _Python: https://www.python.org/
 .. _python-setuptools: https://setuptools.pypa.io/en/latest/
 
-.. _iso-639: https://pypi.org/project/iso-639/
-.. _iso3166: https://pypi.org/project/iso3166/
 .. _isodate: https://pypi.org/project/isodate/
 .. _lxml: https://lxml.de/
 .. _pycountry: https://pypi.org/project/pycountry/

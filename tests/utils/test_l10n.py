@@ -3,23 +3,8 @@ from unittest.mock import patch
 
 import streamlink.utils.l10n as l10n
 
-try:
-    import iso639  # noqa: F401
-    import iso3166  # noqa: F401
 
-    ISO639 = True
-except ImportError:  # pragma: no cover
-    ISO639 = False
-
-try:
-    import pycountry  # noqa: F401
-
-    PYCOUNTRY = True
-except ImportError:  # pragma: no cover
-    PYCOUNTRY = False
-
-
-class LocalizationTestsMixin:
+class TestLocalization(unittest.TestCase):
     def test_language_code_us(self):
         locale = l10n.Localization("en_US")
         self.assertEqual("en_US", locale.language_code)
@@ -116,29 +101,6 @@ class LocalizationTestsMixin:
         self.assertEqual(a.alpha3, "des")
         self.assertEqual(a.name, "Desano")
         self.assertEqual(a.bibliographic, "")
-
-
-@unittest.skipIf(not ISO639, "iso639+iso3166 modules are required to test iso639+iso3166 Localization")
-class TestLocalization(LocalizationTestsMixin, unittest.TestCase):
-    def setUp(self):
-        l10n.PYCOUNTRY = False
-
-    def test_pycountry(self):
-        self.assertEqual(False, l10n.PYCOUNTRY)
-
-
-@unittest.skipIf(not PYCOUNTRY, "pycountry module required to test pycountry Localization")
-class TestLocalizationPyCountry(LocalizationTestsMixin, unittest.TestCase):
-    """Duplicate of all the Localization tests but using PyCountry instead of the iso* modules"""
-
-    def setUp(self):
-        from pycountry import languages, countries
-        l10n.countries = countries
-        l10n.languages = languages
-        l10n.PYCOUNTRY = True
-
-    def test_pycountry(self):
-        self.assertEqual(True, l10n.PYCOUNTRY)
 
     # issue #3057: generic "en" lookups via pycountry yield the "En" language, but not "English"
     def test_language_en(self):

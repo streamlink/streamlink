@@ -89,11 +89,10 @@ format=bundled
 
 [Include]
 packages=pkg_resources
-         iso639
+         pycountry
 pypi_wheels=certifi==2021.5.30
             charset-normalizer==2.0.4
             idna==3.2
-            iso3166==1.0.1
             isodate==0.6.0
             lxml==4.6.4
             pycryptodome==3.10.1

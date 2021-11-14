@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from os import environ, path
+from os import path
 from sys import argv, exit, version_info
 from textwrap import dedent
 
@@ -103,7 +103,6 @@ data_files = [
 setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    install_requires=deps,
     entry_points=entry_points,
     data_files=data_files,
 )
