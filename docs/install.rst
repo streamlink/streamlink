@@ -280,49 +280,51 @@ To install Streamlink from source you will need these dependencies.
 Name                                 Notes
 ==================================== ===========================================
 `Python`_                            At least version **3.6**.
-`python-setuptools`_
+`python-setuptools`_                 At least version **42.0.0**.
 
 **Automatically installed by the setup script**
 --------------------------------------------------------------------------------
-`python-requests`_                   At least version **2.26.0**
-`pycryptodome`_                      Required to play some encrypted streams
 `iso-639`_                           Used for localization settings, provides language information
 `iso3166`_                           Used for localization settings, provides country information
-`isodate`_                           Used for MPEG-DASH streams
+`isodate`_                           Used for parsing ISO8601 strings
 `lxml`_                              Used for processing HTML and XML data
+`pycryptodome`_                      Used for decrypting encrypted streams
 `PySocks`_                           Used for SOCKS Proxies
-`websocket-client`_                  At least version **0.58.0**. (used for some plugins)
+`requests`_                          Used for making any kind of HTTP/HTTPS request
+`websocket-client`_                  Used for making websocket connections
 
 **Optional**
 --------------------------------------------------------------------------------
-`ffmpeg`_                            Required to play streams that are made up of separate
-                                     audio and video streams, eg. YouTube 1080p+
+`ffmpeg`_                            Required for `muxing`_ multiple video/audio/subtitle streams into a single output stream.
+
+                                     - DASH streams with video and audio content always have to get remuxed.
+                                     - HLS streams optionally need to get remuxed depending on the stream selection.
 ==================================== ===========================================
 
-Using pycrypto and pycountry
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Alternative dependencies
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-With these two environment variables it is possible to use `pycrypto`_ instead of
-`pycryptodome`_ and `pycountry`_ instead of `iso-639`_ and `iso3166`_.
+With this environment variable it is possible to use `pycountry`_ instead of `iso-639`_ and `iso3166`_.
 
 .. code-block:: console
 
-    $ export STREAMLINK_USE_PYCRYPTO="true"
     $ export STREAMLINK_USE_PYCOUNTRY="true"
 
 .. _Python: https://www.python.org/
-.. _python-setuptools: https://pypi.org/project/setuptools/
-.. _python-requests: https://docs.python-requests.org/en/master/
-.. _pycountry: https://pypi.org/project/pycountry/
-.. _pycrypto: https://www.dlitz.net/software/pycrypto/
-.. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
-.. _ffmpeg: https://www.ffmpeg.org/
+.. _python-setuptools: https://setuptools.pypa.io/en/latest/
+
 .. _iso-639: https://pypi.org/project/iso-639/
 .. _iso3166: https://pypi.org/project/iso3166/
 .. _isodate: https://pypi.org/project/isodate/
 .. _lxml: https://lxml.de/
+.. _pycountry: https://pypi.org/project/pycountry/
+.. _pycryptodome: https://pycryptodome.readthedocs.io/en/latest/
 .. _PySocks: https://github.com/Anorov/PySocks
+.. _requests: https://docs.python-requests.org/en/master/
 .. _websocket-client: https://pypi.org/project/websocket-client/
+
+.. _ffmpeg: https://www.ffmpeg.org/
+.. _muxing: https://en.wikipedia.org/wiki/Multiplexing#Video_processing
 
 
 Windows binaries
