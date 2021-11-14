@@ -39,11 +39,9 @@ if "test" in argv:
 
 
 deps = [
-    "requests>=2.26.0,<3.0",
     "isodate",
     "lxml>=4.6.4,<5.0",
-    "websocket-client>=1.2.1,<2.0",
-    # Support for SOCKS proxies
+    "pycryptodome>=3.4.3,<4",
     "PySocks!=1.5.7,>=1.5.6",
     # win-inet-pton is missing a dependency in PySocks, this has been fixed but not released yet
     # Required due to missing socket.inet_ntop & socket.inet_pton method in Windows Python 2.x
@@ -52,14 +50,9 @@ deps = [
     'backports.shutil_which;python_version<"3.3"',
     'backports.shutil_get_terminal_size;python_version<"3.3"',
     "js2py"
+    "requests>=2.26.0,<3.0",
+    "websocket-client>=1.2.1,<2.0",
 ]
-
-# for encrypted streams
-if environ.get("STREAMLINK_USE_PYCRYPTO"):
-    deps.append("pycrypto")
-else:
-    # this version of pycryptodome is known to work and has a Windows wheel for py2.7, py3.3-3.6
-    deps.append("pycryptodome>=3.4.3,<4")
 
 # for localization
 if environ.get("STREAMLINK_USE_PYCOUNTRY"):
