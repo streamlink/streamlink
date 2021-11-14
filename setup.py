@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from os import environ, path
+from os import path
 from sys import argv, exit, version_info
 from textwrap import dedent
 
@@ -36,23 +36,6 @@ if "test" in argv:
         Streamlink requires pytest for collecting and running tests, via one of these commands:
         `pytest` or `python -m pytest` (see the pytest docs for more infos about this)
     """))
-
-
-deps = [
-    "isodate",
-    "lxml>=4.6.4,<5.0",
-    "pycryptodome>=3.4.3,<4",
-    "PySocks!=1.5.7,>=1.5.6",
-    "requests>=2.26.0,<3.0",
-    "websocket-client>=1.2.1,<2.0",
-]
-
-# for localization
-if environ.get("STREAMLINK_USE_PYCOUNTRY"):
-    deps.append("pycountry")
-else:
-    deps.append("iso-639")
-    deps.append("iso3166")
 
 
 def is_wheel_for_windows():
@@ -96,7 +79,6 @@ data_files = [
 setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    install_requires=deps,
     entry_points=entry_points,
     data_files=data_files,
 )
