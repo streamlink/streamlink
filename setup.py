@@ -87,8 +87,8 @@ data_files = [
     # shell completions
     #  requires pre-built completion files via shtab (dev-requirements.txt)
     #  `./script/build-shell-completions.sh`
-    ("share/bash-completion/completions", ["build/shtab/bash/streamlink"]),
-    ("share/zsh/site-functions", ["build/shtab/zsh/_streamlink"]),
+    ("share/bash-completion/completions", ["completions/bash/streamlink"]),
+    ("share/zsh/site-functions", ["completions/zsh/_streamlink"]),
     # man page
     #  requires pre-built man page file via sphinx (docs-requirements.txt)
     #  `make --directory=docs clean man`
