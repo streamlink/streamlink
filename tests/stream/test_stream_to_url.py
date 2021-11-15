@@ -2,8 +2,6 @@ import unittest
 
 from streamlink import Streamlink
 from streamlink.plugins.filmon import FilmOnHLS
-from streamlink.stream.akamaihd import AkamaiHDStream
-from streamlink.stream.hds import HDSStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.rtmpdump import RTMPStream
@@ -32,16 +30,6 @@ class TestStreamToURL(unittest.TestCase):
         stream = HLSStream(self.session, expected)
         self.assertEqual(expected, stream_to_url(stream))
         self.assertEqual(expected, stream.to_url())
-
-    def test_hds_stream(self):
-        stream = HDSStream(self.session, "http://test.se/", "http://test.se/stream.f4m", "http://test.se/stream/1.bootstrap")
-        self.assertEqual(None, stream_to_url(stream))
-        self.assertRaises(TypeError, stream.to_url)
-
-    def test_akamai_stream(self):
-        stream = AkamaiHDStream(self.session, "http://akamai.test.se/stream")
-        self.assertEqual(None, stream_to_url(stream))
-        self.assertRaises(TypeError, stream.to_url)
 
     def test_rtmp_stream(self):
         stream = RTMPStream(self.session, {"rtmp": "rtmp://test.se/app/play_path",

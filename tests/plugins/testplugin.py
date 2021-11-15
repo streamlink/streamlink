@@ -5,7 +5,7 @@ from streamlink import NoStreamsError
 from streamlink.options import Options
 from streamlink.plugin import PluginArgument, PluginArguments
 from streamlink.plugins import Plugin
-from streamlink.stream import AkamaiHDStream, HLSStream, HTTPStream, RTMPStream, Stream
+from streamlink.stream import HLSStream, HTTPStream, RTMPStream, Stream
 
 
 class TestStream(Stream):
@@ -64,7 +64,6 @@ class TestPlugin(Plugin):
         streams["rtmp"] = RTMPStream(self.session, dict(rtmp="rtmp://test.se"))
         streams["hls"] = HLSStream(self.session, "http://test.se/playlist.m3u8")
         streams["http"] = HTTPStream(self.session, "http://test.se/stream")
-        streams["akamaihd"] = AkamaiHDStream(self.session, "http://test.se/stream")
 
         streams["240p"] = HTTPStream(self.session, "http://test.se/stream")
         streams["360p"] = HTTPStream(self.session, "http://test.se/stream")

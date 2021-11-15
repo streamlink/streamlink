@@ -9,7 +9,6 @@ from streamlink import NoPluginError, Streamlink
 from streamlink.compat import is_py2
 from streamlink.plugin import HIGH_PRIORITY, LOW_PRIORITY, NORMAL_PRIORITY, NO_PRIORITY, Plugin, pluginmatcher
 from streamlink.session import print_small_exception
-from streamlink.stream.akamaihd import AkamaiHDStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.rtmpdump import RTMPStream
@@ -205,7 +204,6 @@ class TestSession(unittest.TestCase):
         self.assertTrue(isinstance(streams["rtmp"], RTMPStream))
         self.assertTrue(isinstance(streams["http"], HTTPStream))
         self.assertTrue(isinstance(streams["hls"], HLSStream))
-        self.assertTrue(isinstance(streams["akamaihd"], AkamaiHDStream))
 
     def test_plugin_stream_types(self):
         channel = self.session.resolve_url("http://test.se/channel")

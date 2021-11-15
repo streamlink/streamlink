@@ -120,8 +120,7 @@ packages=pkg_resources
          isodate
 pypi_wheels=pycryptodome==3.6.4
 
-files=${ROOT}/win32/THIRD-PARTY.txt > \$INSTDIR
-      ${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs
+files=${ROOT}/build/lib/streamlink > \$INSTDIR\pkgs
       ${ROOT}/build/lib/streamlink_cli > \$INSTDIR\pkgs
 
 [Command streamlink]

@@ -59,7 +59,6 @@ class Streamlink(object):
             "interface": None,
             "ipv4": False,
             "ipv6": False,
-            "hds-live-edge": 10.0,
             "hls-live-edge": 3,
             "hls-segment-ignore-names": [],
             "hls-segment-stream-data": False,
@@ -119,9 +118,6 @@ class Streamlink(object):
                                  This option overrides ipv6, default: ``False``
         ipv6                     (bool) Resolve address names to IPv6 only.
                                  This option overrides ipv4, default: ``False``
-        hds-live-edge            (float) Specify the time live HDS
-                                 streams will start from the edge of
-                                 stream, default: ``10.0``
 
         hls-live-edge            (int) How many segments from the end
                                  to start live streams on, default: ``3``
@@ -301,17 +297,17 @@ class Streamlink(object):
         elif key == "http-timeout":
             self.http.timeout = value
 
-        # deprecated: {dash,hds,hls}-segment-attempts
-        elif key in ("dash-segment-attempts", "hds-segment-attempts", "hls-segment-attempts"):
+        # deprecated: {dash,hls}-segment-attempts
+        elif key in ("dash-segment-attempts", "hls-segment-attempts"):
             self.options.set("stream-segment-attempts", int(value))
-        # deprecated: {dash,hds,hls}-segment-threads
-        elif key in ("dash-segment-threads", "hds-segment-threads", "hls-segment-threads"):
+        # deprecated: {dash,hls}-segment-threads
+        elif key in ("dash-segment-threads", "hls-segment-threads"):
             self.options.set("stream-segment-threads", int(value))
-        # deprecated: {dash,hds,hls}-segment-timeout
-        elif key in ("dash-segment-timeout", "hds-segment-timeout", "hls-segment-timeout"):
+        # deprecated: {dash,hls}-segment-timeout
+        elif key in ("dash-segment-timeout", "hls-segment-timeout"):
             self.options.set("stream-segment-timeout", float(value))
-        # deprecated: {hds,hls,rtmp,dash,http-stream}-timeout
-        elif key in ("dash-timeout", "hds-timeout", "hls-timeout", "http-stream-timeout", "rtmp-timeout"):
+        # deprecated: {hls,rtmp,dash,http-stream}-timeout
+        elif key in ("dash-timeout", "hls-timeout", "http-stream-timeout", "rtmp-timeout"):
             self.options.set("stream-timeout", float(value))
 
         else:
