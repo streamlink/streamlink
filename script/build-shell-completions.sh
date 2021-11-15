@@ -3,7 +3,7 @@ set -e
 
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$(readlink -f "${0}")")/..")
 
-DIST="${ROOT}/build/shtab"
+DIST="${ROOT}/completions"
 PYTHON_DEPS=(streamlink_cli shtab)
 
 declare -A COMPLETIONS=(

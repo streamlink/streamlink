@@ -13,20 +13,23 @@ nbproject
 *.sublime-workspace
 .idea
 
+/build/
+/completions/
+/docs/_build/
+/dist/
+
 *.mo
 *.egg-info
 *.egg
 *.EGG
 *.EGG-INFO
 bin
-build
 build-win32
 develop-eggs
 downloads
 eggs
 fake-eggs
 parts
-dist
 .installed.cfg
 .mr.developer.cfg
 .hg
@@ -36,7 +39,6 @@ dist
 *.pyo
 *.tmp*
 *.swp
-docs/_build
 include/
 lib/
 local/
