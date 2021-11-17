@@ -39,6 +39,9 @@ _api_schema = validate.Schema({
 })
 _media_schema = validate.Schema(
     {
+        "name": validate.text,
+        "series_name": validate.text,
+        "media_type": validate.text,
         "stream_data": validate.any(
             None,
             {
@@ -54,8 +57,7 @@ _media_schema = validate.Schema(
                 )
             }
         )
-    },
-    validate.get("stream_data")
+    }
 )
 _login_schema = validate.Schema({
     "auth": validate.any(validate.text, None),
@@ -302,7 +304,8 @@ class Crunchyroll(Plugin):
 
         try:
             # the media.stream_data field is required, no stream data is returned otherwise
-            info = api.get_info(media_id, fields=["media.stream_data"], schema=_media_schema)
+            info = api.get_info(media_id, fields=["media.name", "media.series_name",
+                                "media.media_type", "media.stream_data"], schema=_media_schema)
         except CrunchyrollAPIError as err:
             raise PluginError(f"Media lookup error: {err.msg}")
 
@@ -310,6 +313,12 @@ class Crunchyroll(Plugin):
             return
 
         streams = {}
+
+        self.title = info["name"]
+        self.author = info["series_name"]
+        self.category = info["media_type"].capitalize()
+
+        info = info["stream_data"]
 
         # The adaptive quality stream sometimes a subset of all the other streams listed, ultra is no included
         has_adaptive = any([s["quality"] == "adaptive" for s in info["streams"]])
