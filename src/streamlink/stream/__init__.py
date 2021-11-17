@@ -1,5 +1,4 @@
 from streamlink.stream.dash import DASHStream
-from streamlink.stream.flvconcat import extract_flv_header_tags
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.rtmpdump import RTMPStream
