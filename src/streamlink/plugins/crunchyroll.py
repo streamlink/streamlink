@@ -39,9 +39,9 @@ _api_schema = validate.Schema({
 })
 _media_schema = validate.Schema(
     {
-        "name": validate.text,
-        "series_name": validate.text,
-        "media_type": validate.text,
+        validate.optional("name"): validate.any(validate.text, None),
+        validate.optional("series_name"): validate.any(validate.text, None),
+        validate.optional("media_type"): validate.any(validate.text, None),
         "stream_data": validate.any(
             None,
             {
@@ -298,6 +298,11 @@ class Crunchyroll(Plugin):
 
         return Plugin.stream_weight(key)
 
+    def get_category(self):
+        if self.category:
+            self.category = self.category.capitalize()
+        return self.category
+
     def _get_streams(self):
         api = self._create_api()
         media_id = int(self.match.group("media_id"))
@@ -314,9 +319,9 @@ class Crunchyroll(Plugin):
 
         streams = {}
 
-        self.title = info["name"]
-        self.author = info["series_name"]
-        self.category = info["media_type"].capitalize()
+        self.title = info.get("name")
+        self.author = info.get("series_name")
+        self.category = info.get("media_type")
 
         info = info["stream_data"]
 
