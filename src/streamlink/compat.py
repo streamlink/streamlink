@@ -21,6 +21,7 @@ if is_py2:
     _str = str
     str = unicode
     range = xrange
+    from collections import Mapping
     from itertools import izip
 
     def bytes(b, enc="ascii"):
@@ -31,6 +32,7 @@ elif is_py3:
     str = str
     range = range
     izip = zip
+    from collections.abc import Mapping
 
 try:
     from urllib.parse import (
@@ -61,7 +63,7 @@ except ImportError:
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
-__all__ = ["is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
+__all__ = ["Mapping", "is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qsl", "quote", "quote_plus",
            "unquote", "unquote_plus", "queue", "range", "urlencode", "devnull", "which",
            "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape", "lru_cache"]
