@@ -1,5 +1,20 @@
 # Changelog
 
+## streamlink 3.0.1 (2021-11-17)
+
+Patch release:
+
+- Fixed: broken pycountry import in Windows installer's Python environment ([#4180](https://github.com/streamlink/streamlink/pull/4180))
+
+Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17) for all the breaking and regular changes of this major release.
+
+
+```text
+bastimeyer <mail@bastimeyer.de> (1):
+      installer: rewrite wheels config, fix pycountry
+```
+
+
 ## streamlink 3.0.0 (2021-11-17)
 
 Breaking changes:
