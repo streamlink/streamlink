@@ -1,5 +1,7 @@
 import unittest
 
+import requests_mock
+
 from streamlink import Streamlink
 from streamlink.plugin.plugin import parse_params, stream_weight
 from streamlink.stream.hls import HLSStream
@@ -12,6 +14,12 @@ class TestPluginStream(unittest.TestCase):
     def setUp(self):
         self.session = Streamlink()
 
+    def resolve_url(self, url):
+        with requests_mock.Mocker() as mock:
+            mock.register_uri(requests_mock.ANY, requests_mock.ANY, text="")
+            pluginclass, resolved_url = self.session.resolve_url(url)
+            return pluginclass(resolved_url)
+
     def assertDictHas(self, a, b):
         for key, value in a.items():
             self.assertEqual(b[key], value)
@@ -20,7 +28,7 @@ class TestPluginStream(unittest.TestCase):
     def _test_hls(self, surl, url, mock_parse):
         mock_parse.return_value = {}
 
-        plugin = self.session.resolve_url(surl)
+        plugin = self.resolve_url(surl)
         streams = plugin.streams()
 
         self.assertIn("live", streams)
@@ -34,7 +42,7 @@ class TestPluginStream(unittest.TestCase):
     def _test_hlsvariant(self, surl, url, mock_parse):
         mock_parse.return_value = {"best": HLSStream(self.session, url)}
 
-        plugin = self.session.resolve_url(surl)
+        plugin = self.resolve_url(surl)
         streams = plugin.streams()
 
         mock_parse.assert_called_with(self.session, url)
@@ -47,7 +55,7 @@ class TestPluginStream(unittest.TestCase):
         self.assertEqual(stream.url, url)
 
     def _test_rtmp(self, surl, url, params):
-        plugin = self.session.resolve_url(surl)
+        plugin = self.resolve_url(surl)
         streams = plugin.streams()
 
         self.assertIn("live", streams)
@@ -58,7 +66,7 @@ class TestPluginStream(unittest.TestCase):
         self.assertDictHas(params, stream.params)
 
     def _test_http(self, surl, url, params):
-        plugin = self.session.resolve_url(surl)
+        plugin = self.resolve_url(surl)
         streams = plugin.streams()
 
         self.assertIn("live", streams)

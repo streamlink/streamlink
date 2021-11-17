@@ -13,6 +13,7 @@ except ImportError:
 import requests.cookies
 
 from streamlink.cache import Cache
+from streamlink.compat import str
 from streamlink.exceptions import FatalPluginError, NoStreamsError, PluginError
 from streamlink.options import Arguments, Options
 

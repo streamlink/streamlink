@@ -426,7 +426,10 @@ def handle_stream(plugin, streams, stream_name):
 
     # Print JSON representation of the stream
     elif console.json:
-        console.msg_json(stream)
+        console.msg_json(
+            stream,
+            metadata=plugin.get_metadata()
+        )
 
     elif args.stream_url:
         try:
@@ -565,8 +568,9 @@ def handle_url():
     """
 
     try:
-        plugin = streamlink.resolve_url(args.url)
-        setup_plugin_options(streamlink, plugin)
+        pluginclass, resolved_url = streamlink.resolve_url(args.url)
+        setup_plugin_options(streamlink, pluginclass)
+        plugin = pluginclass(resolved_url)
         log.info("Found matching plugin {0} for URL {1}".format(plugin.module, args.url))
 
         if args.retry_max or args.retry_streams:
@@ -576,8 +580,7 @@ def handle_url():
                 retry_streams = args.retry_streams
             if args.retry_max:
                 retry_max = args.retry_max
-            streams = fetch_streams_with_retry(plugin, retry_streams,
-                                               retry_max)
+            streams = fetch_streams_with_retry(plugin, retry_streams, retry_max)
         else:
             streams = fetch_streams(plugin)
     except NoPluginError:
@@ -603,13 +606,21 @@ def handle_url():
                "found".format(", ".join(args.stream)))
 
         if console.json:
-            console.msg_json(dict(streams=streams, plugin=plugin.module,
-                                  error=err))
+            console.msg_json(
+                plugin=plugin.module,
+                metadata=plugin.get_metadata(),
+                streams=streams,
+                error=err
+            )
         else:
             console.exit("{0}.\n       Available streams: {1}",
                          err, validstreams)
     elif console.json:
-        console.msg_json(dict(plugin=plugin.module, streams=streams))
+        console.msg_json(
+            plugin=plugin.module,
+            metadata=plugin.get_metadata(),
+            streams=streams,
+        )
     elif args.stream_url:
         try:
             console.msg("{0}", streams[list(streams)[-1]].to_manifest_url())
@@ -670,11 +681,6 @@ def setup_args(parser, config_files=[], ignore_unknown=False):
 def setup_config_args(parser, ignore_unknown=False):
     config_files = []
 
-    if streamlink and args.url:
-        with ignored(NoPluginError):
-            plugin = streamlink.resolve_url(args.url)
-            config_files += ["{0}.{1}".format(fn, plugin.module) for fn in CONFIG_FILES]
-
     if args.config:
         # We want the config specified last to get highest priority
         config_files += list(reversed(args.config))
@@ -683,6 +689,12 @@ def setup_config_args(parser, ignore_unknown=False):
         for config_file in filter(os.path.isfile, CONFIG_FILES):
             config_files.append(config_file)
             break
+
+    if streamlink and args.url:
+        # Only load first available plugin config
+        with ignored(NoPluginError):
+            pluginclass, resolved_url = streamlink.resolve_url(args.url)
+            config_files += ["{0}.{1}".format(fn, pluginclass(resolved_url).module) for fn in CONFIG_FILES]
 
     if config_files:
         setup_args(parser, config_files, ignore_unknown=ignore_unknown)

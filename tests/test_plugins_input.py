@@ -52,6 +52,7 @@ class TestPluginUserInput(unittest.TestCase):
             session = Streamlink({"user-input-requester": console_input})
             session.load_plugins(os.path.join(os.path.dirname(__file__), "plugins"))
 
-            p = session.resolve_url("http://test.se/channel")
+            pluginclass, resolved_url = session.resolve_url("http://test.se/channel")
+            p = pluginclass(resolved_url)
             self.assertEqual("username", p.input_ask("username"))
             self.assertEqual("password", p.input_ask_password("password"))

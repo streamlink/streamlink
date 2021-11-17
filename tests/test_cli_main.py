@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
+
 import os
 import sys
 import tempfile
 import unittest
 
 import streamlink_cli.main
-from streamlink.plugin.plugin import Plugin
 from streamlink.session import Streamlink
 from streamlink_cli.compat import is_win32
 from streamlink_cli.main import (
@@ -17,12 +18,19 @@ from streamlink_cli.main import (
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
 from tests.mock import Mock, call, patch
+from tests.plugins.testplugin import TestPlugin as _TestPlugin
 
 
-class FakePlugin:
-    @classmethod
-    def stream_weight(cls, stream):
-        return Plugin.stream_weight(stream)
+class FakePlugin(_TestPlugin):
+    module = "fake"
+    arguments = []
+    _streams = {}
+
+    def streams(self, *args, **kwargs):
+        return self._streams
+
+    def _get_streams(self):  # pragma: no cover
+        pass
 
 
 class TestCLIMain(unittest.TestCase):
@@ -116,7 +124,7 @@ class TestCLIMain(unittest.TestCase):
             "best": c
         }
         self.assertEqual(
-            format_valid_streams(FakePlugin, streams),
+            format_valid_streams(_TestPlugin, streams),
             ", ".join([
                 "audio",
                 "720p (worst)",
@@ -132,7 +140,7 @@ class TestCLIMain(unittest.TestCase):
             "best-unfiltered": c
         }
         self.assertEqual(
-            format_valid_streams(FakePlugin, streams),
+            format_valid_streams(_TestPlugin, streams),
             ", ".join([
                 "audio",
                 "720p (worst-unfiltered)",
@@ -140,16 +148,25 @@ class TestCLIMain(unittest.TestCase):
             ])
         )
 
-    @patch("streamlink_cli.main.args", stream_url=True, subprocess_cmdline=False)
+    @patch("streamlink_cli.main.args", json=True, stream_url=True, subprocess_cmdline=False)
     @patch("streamlink_cli.main.console", json=True)
     def test_handle_stream_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(best=stream)
-        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
+
+        plugin = FakePlugin("")
+        plugin._streams = streams
 
         handle_stream(plugin, streams, "best")
         self.assertEqual(console.msg.mock_calls, [])
-        self.assertEqual(console.msg_json.mock_calls, [call(stream)])
+        self.assertEqual(console.msg_json.mock_calls, [call(
+            stream,
+            metadata=dict(
+                author=u"Tѥst Āuƭhǿr",
+                category=None,
+                title=u"Test Title"
+            )
+        )])
         self.assertEqual(console.error.mock_calls, [])
         console.msg_json.mock_calls *= 0
 
@@ -166,17 +183,27 @@ class TestCLIMain(unittest.TestCase):
         self.assertEqual(console.msg_json.mock_calls, [])
         self.assertEqual(console.exit.mock_calls, [call("The stream specified cannot be translated to a URL")])
 
-    @patch("streamlink_cli.main.args", stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
+    @patch("streamlink_cli.main.args", json=True, stream_url=True, stream=[], default_stream=[], retry_max=0, retry_streams=0)
     @patch("streamlink_cli.main.console", json=True)
     def test_handle_url_with_json_and_stream_url(self, console, args):
         stream = Mock()
         streams = dict(worst=Mock(), best=stream)
-        plugin = Mock(FakePlugin(), module="fake", arguments=[], streams=Mock(return_value=streams))
 
-        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=plugin)):
+        class _FakePlugin(FakePlugin):
+            _streams = streams
+
+        with patch("streamlink_cli.main.streamlink", resolve_url=Mock(return_value=(_FakePlugin, ""))):
             handle_url()
             self.assertEqual(console.msg.mock_calls, [])
-            self.assertEqual(console.msg_json.mock_calls, [call(dict(plugin="fake", streams=streams))])
+            self.assertEqual(console.msg_json.mock_calls, [call(
+                plugin="fake",
+                metadata=dict(
+                    author=u"Tѥst Āuƭhǿr",
+                    category=None,
+                    title=u"Test Title"
+                ),
+                streams=streams
+            )])
             self.assertEqual(console.error.mock_calls, [])
             console.msg_json.mock_calls *= 0
 

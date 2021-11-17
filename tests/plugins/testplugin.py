@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+import re
 from io import BytesIO
 
 from streamlink import NoStreamsError
 from streamlink.options import Options
-from streamlink.plugin import PluginArgument, PluginArguments
+from streamlink.plugin import PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugins import Plugin
-from streamlink.stream import HLSStream, HTTPStream, RTMPStream, Stream
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.http import HTTPStream
+from streamlink.stream.rtmpdump import RTMPStream
+from streamlink.stream.stream import Stream
 
 
 class TestStream(Stream):
@@ -15,6 +19,9 @@ class TestStream(Stream):
         return BytesIO(b'x' * 8192 * 2)
 
 
+@pluginmatcher(re.compile(
+    r"https?://test\.se"
+))
 class TestPlugin(Plugin):
     arguments = PluginArguments(
         PluginArgument(
@@ -32,18 +39,9 @@ class TestPlugin(Plugin):
         "a_option": "default"
     })
 
-    @classmethod
-    def can_handle_url(self, url):
-        return "test.se" in url
-
-    def get_title(self):
-        return "Test Title"
-
-    def get_author(self):
-        return u"Tѥst Āuƭhǿr"
-
-    def get_category(self):
-        return None
+    author = u"Tѥst Āuƭhǿr"
+    category = None
+    title = "Test Title"
 
     def _get_streams(self):
         if "empty" in self.url:
