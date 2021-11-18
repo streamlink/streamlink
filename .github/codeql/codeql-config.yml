@@ -1,0 +1,8 @@
+paths:
+  - src/
+  - tests/
+paths-ignore:
+  - 'src/**/packages/'
+  - src/streamlink/_version.py
+queries:
+  - uses: security-and-quality
