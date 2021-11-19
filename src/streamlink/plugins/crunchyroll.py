@@ -298,11 +298,6 @@ class Crunchyroll(Plugin):
 
         return Plugin.stream_weight(key)
 
-    def get_category(self):
-        if self.category:
-            self.category = self.category.capitalize()
-        return self.category
-
     def _get_streams(self):
         api = self._create_api()
         media_id = int(self.match.group("media_id"))
