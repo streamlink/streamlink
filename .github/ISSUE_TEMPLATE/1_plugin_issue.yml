@@ -55,6 +55,8 @@ body:
 
         Use the [`--loglevel debug`](https://streamlink.github.io/latest/cli.html#cmdoption-loglevel) parameter and avoid using parameters which suppress log output.
         Debug log includes important details about your platform. Don't remove it.
+
+        If the log output is too long and repetitive parts can't be truncated, or if you have multiple log outputs to share, please post a link to a [GitHub gist](https://gist.github.com/) with the log output instead.
       placeholder: |
         Don't post screenshots of the log output and instead copy the text from your terminal application.
 
