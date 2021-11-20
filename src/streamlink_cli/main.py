@@ -685,7 +685,9 @@ def setup_config_args(parser, ignore_unknown=False):
 
 
 def setup_signals():
-    # Handle SIGTERM just like SIGINT
+    # restore default behavior of raising a KeyboardInterrupt on SIGINT (and SIGTERM)
+    # so cleanup code can be run when the user stops execution
+    signal.signal(signal.SIGINT, signal.default_int_handler)
     signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
@@ -1005,8 +1007,6 @@ def main():
     log_file = args.logfile if log_level != "none" else None
     setup_logger_and_console(console_out, log_file, log_level, args.json)
 
-    setup_signals()
-
     setup_streamlink()
     # load additional plugins
     setup_plugins(args.plugin_dirs)
@@ -1024,6 +1024,8 @@ def main():
     log_root_warning()
     log_current_versions()
     log_current_arguments(streamlink, parser)
+
+    setup_signals()
 
     if args.version_check or args.auto_version_check:
         with ignored(Exception):

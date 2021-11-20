@@ -20,7 +20,6 @@ from streamlink_cli.main import (
     format_valid_streams,
     handle_stream,
     handle_url,
-    log_current_arguments,
     resolve_stream_name,
     setup_config_args
 )
@@ -500,14 +499,13 @@ class _TestCLIMainLogging(unittest.TestCase):
         session = Streamlink()
         session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
-        def _log_current_arguments(*args, **kwargs):
-            log_current_arguments(*args, **kwargs)
-            raise SystemExit
+        # stop test execution at the setup_signals() call, as we're not interested in what comes afterwards
+        class StopTest(Exception):
+            pass
 
         with patch("streamlink_cli.main.streamlink", session), \
-             patch("streamlink_cli.main.log_current_arguments", side_effect=_log_current_arguments), \
+             patch("streamlink_cli.main.setup_signals", side_effect=StopTest), \
              patch("streamlink_cli.main.CONFIG_FILES", []), \
-             patch("streamlink_cli.main.setup_signals"), \
              patch("streamlink_cli.main.setup_streamlink"), \
              patch("streamlink_cli.main.setup_plugins"), \
              patch("streamlink_cli.main.setup_http_session"), \
@@ -516,7 +514,7 @@ class _TestCLIMainLogging(unittest.TestCase):
             mock_argv.__getitem__.side_effect = lambda x: argv[x]
             try:
                 streamlink_cli.main.main()
-            except SystemExit:
+            except StopTest:
                 pass
 
     def tearDown(self):
