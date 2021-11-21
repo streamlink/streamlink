@@ -1,9 +1,18 @@
 import os
+import signal
 import warnings
 
 import pytest
 
+# import streamlink_cli as early as possible to execute its default signal overrides
+# noinspection PyUnresolvedReferences
+import streamlink_cli  # noqa: F401
 from streamlink.compat import is_py2, is_py3
+
+
+# immediately restore default signal handlers for the test runner
+signal.signal(signal.SIGINT, signal.default_int_handler)
+signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
 def catch_warnings(record=False, module=None):
