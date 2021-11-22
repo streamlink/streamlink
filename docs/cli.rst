@@ -302,6 +302,9 @@ and ``params`` will be passed as a Python dict:
 .. code-block:: python
 
     {'token': 'magicToken'}
+
+.. code-block:: console
+
     $ streamlink "httpstream://https://streamingserver/path method=POST params={'abc':123} json=['foo','bar','baz']"
 
 .. code-block:: python
