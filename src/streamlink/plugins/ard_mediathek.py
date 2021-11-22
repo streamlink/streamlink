@@ -4,29 +4,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.stream.http import HTTPStream
-from streamlink.utils.url import update_scheme
 
-MEDIA_URL = "http://www.ardmediathek.de/play/media/{0}"
-QUALITY_MAP = {
-    "auto": "auto",
-    4: "1080p",
-    3: "720p",
-    2: "544p",
-    1: "360p",
-    0: "144p"
-}
-
-_media_id_re = re.compile(r"/play/(?:media|config|sola)/(\d+)")
-_media_schema = validate.Schema({
-    "_mediaArray": [{
-        "_mediaStreamArray": [{
-            validate.optional("_server"): validate.text,
-            "_stream": validate.any(validate.text, [validate.text]),
-            "_quality": validate.any(int, validate.text)
-        }]
-    }]
-})
 
 log = logging.getLogger(__name__)
 
@@ -35,55 +13,63 @@ log = logging.getLogger(__name__)
     r"https?://(?:(\w+\.)?ardmediathek\.de/|mediathek\.daserste\.de/)"
 ))
 class ARDMediathek(Plugin):
-    def _get_http_streams(self, info):
-        name = QUALITY_MAP.get(info["_quality"], "vod")
-        urls = info["_stream"]
-        if not isinstance(info["_stream"], list):
-            urls = [urls]
-
-        for url in urls:
-            stream = HTTPStream(self.session, update_scheme("https://", url))
-            yield name, stream
-
-    def _get_hls_streams(self, info):
-        return HLSStream.parse_variant_playlist(self.session, update_scheme("https://", info["_stream"])).items()
-
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        match = _media_id_re.search(res.text)
-        if match:
-            media_id = match.group(1)
-        else:
+        data_json = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_findtext(".//script[@id='fetchedContextValue'][@type='application/json']"),
+            validate.any(None, validate.all(
+                validate.parse_json(),
+                {validate.text: dict},
+                validate.transform(lambda obj: list(obj.items())),
+                validate.filter(lambda item: item[0].startswith("https://api.ardmediathek.de/page-gateway/pages/")),
+                validate.any(validate.get((0, 1)), [])
+            ))
+        ))
+        if not data_json:
             return
 
-        log.debug("Found media id: {0}".format(media_id))
-        res = self.session.http.get(MEDIA_URL.format(media_id))
-        media = self.session.http.json(res, schema=_media_schema)
-        log.trace("{0!r}".format(media))
+        schema_data = validate.Schema({
+            "id": validate.text,
+            "widgets": validate.all(
+                [dict],
+                validate.filter(lambda item: item.get("mediaCollection")),
+                validate.get(0),
+                {
+                    "geoblocked": bool,
+                    "publicationService": {
+                        "name": validate.text,
+                    },
+                    "title": validate.text,
+                    "mediaCollection": {
+                        "embedded": {
+                            "_mediaArray": [{
+                                "_mediaStreamArray": [{
+                                    "_quality": validate.any(validate.text, int),
+                                    "_stream": validate.url()
+                                }]
+                            }]
+                        }
+                    }
+                }
+            )
+        })
+        data = schema_data.validate(data_json)
 
-        for media in media["_mediaArray"]:
+        log.debug("Found media id: {0}".format(data['id']))
+        data_media = data["widgets"]
+
+        if data_media["geoblocked"]:
+            log.info("The content is not available in your region")
+            return
+
+        self.author = data_media["publicationService"]["name"]
+        self.title = data_media["title"]
+
+        for media in data_media["mediaCollection"]["embedded"]["_mediaArray"]:
             for stream in media["_mediaStreamArray"]:
-                stream_ = stream["_stream"]
-                if isinstance(stream_, list):
-                    if not stream_:
-                        continue
-                    stream_ = stream_[0]
-
-                stream_ = update_scheme("https://", stream_)
-                if ".m3u8" in stream_:
-                    parser = self._get_hls_streams
-                    parser_name = "HLS"
-                elif (".mp4" in stream_ and ".f4m" not in stream_):
-                    parser = self._get_http_streams
-                    parser_name = "HTTP"
-                else:
-                    log.error("Unexpected stream type: '{0}'".format(stream_))
-
-                try:
-                    for s in parser(stream):
-                        yield s
-                except IOError as err:
-                    log.error("Failed to extract {0} streams: {1}".format(parser_name, err))
+                if stream["_quality"] != "auto" or ".m3u8" not in stream["_stream"]:
+                    continue
+                return HLSStream.parse_variant_playlist(self.session, stream["_stream"])
 
 
 __plugin__ = ARDMediathek
