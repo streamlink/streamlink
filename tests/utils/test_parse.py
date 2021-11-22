@@ -5,7 +5,7 @@ from lxml.etree import Element
 from streamlink.exceptions import PluginError
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.validate import xml_element
-from streamlink.utils.parse import parse_json, parse_qsd, parse_xml
+from streamlink.utils.parse import parse_html, parse_json, parse_qsd, parse_xml
 
 
 class TestUtilsParse(unittest.TestCase):
@@ -68,6 +68,26 @@ class TestUtilsParse(unittest.TestCase):
         )
         self.assertEqual(expected.tag, actual.tag)
         self.assertEqual(expected.attrib, actual.attrib)
+
+    def test_parse_xml_encoding(self):
+        tree = parse_xml("""<?xml version="1.0" encoding="UTF-8"?><test>ä</test>""")
+        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        tree = parse_xml("""<test>ä</test>""")
+        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        tree = parse_xml(b"""<?xml version="1.0" encoding="UTF-8"?><test>\xC3\xA4</test>""")
+        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+        tree = parse_xml(b"""<test>\xC3\xA4</test>""")
+        self.assertEqual(tree.xpath(".//text()"), ["ä"])
+
+    def test_parse_html_encoding(self):
+        tree = parse_html("""<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body>ä</body></html>""")
+        self.assertEqual(tree.xpath(".//body/text()"), ["ä"])
+        tree = parse_html("""<!DOCTYPE html><html><body>ä</body></html>""")
+        self.assertEqual(tree.xpath(".//body/text()"), ["ä"])
+        tree = parse_html(b"""<!DOCTYPE html><html><meta charset="utf-8"/><body>\xC3\xA4</body></html>""")
+        self.assertEqual(tree.xpath(".//body/text()"), ["ä"])
+        tree = parse_html(b"""<!DOCTYPE html><html><body>\xC3\xA4</body></html>""")
+        self.assertEqual(tree.xpath(".//body/text()"), ["Ã¤"])
 
     def test_parse_qsd(self):
         self.assertEqual(
