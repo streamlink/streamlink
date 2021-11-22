@@ -4,9 +4,10 @@ matrix:
   include:
   - python: '2.7'
   - python: '3.6'
-    env: BUILD_DOCS=yes
   - python: '3.7'
   - python: '3.8'
+    env: BUILD_DOCS=no
+  - python: '3.9'
     dist: xenial
     sudo: true
 
