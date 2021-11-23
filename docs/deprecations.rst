@@ -1,8 +1,8 @@
 Deprecations
 ============
 
-streamlink next
----------------
+streamlink 2.27.0.0
+-------------------
 
 Removal of separate https-proxy option
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
