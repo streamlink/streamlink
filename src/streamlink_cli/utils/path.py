@@ -40,4 +40,4 @@ def replace_path(pathlike: Union[str, Path], mapper: Callable[[str], str]) -> Pa
         newpart = mapper(part)
         return REPLACEMENT if part != newpart and newpart in SPECIAL_PATH_PARTS else newpart
 
-    return Path(*(get_part(part) for part in Path(pathlike).parts))
+    return Path(*(get_part(part) for part in Path(pathlike).expanduser().parts))
