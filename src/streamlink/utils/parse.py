@@ -48,13 +48,8 @@ def parse_html(
     """Wrapper around lxml.etree.HTML with some extras.
 
     Provides these extra features:
-     - Handles incorrectly encoded HTML
      - Wraps errors in custom exception with a snippet of the data in the message
     """
-    if is_py2 and isinstance(data, unicode):
-        data = data.encode("utf8")
-    elif is_py3 and isinstance(data, str):
-        data = bytes(data, "utf8")
 
     return _parse(HTML, data, name, exception, schema, *args, **kwargs)
 
