@@ -122,6 +122,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
         self.assertEqual(console.msg_json.mock_calls, [call(
             stream,
             metadata=dict(
+                id="test-id-1234-5678",
                 author="Tѥst Āuƭhǿr",
                 category=None,
                 title="Test Title"
@@ -158,6 +159,7 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
             self.assertEqual(console.msg_json.mock_calls, [call(
                 plugin="fake",
                 metadata=dict(
+                    id="test-id-1234-5678",
                     author="Tѥst Āuƭhǿr",
                     category=None,
                     title="Test Title"
