@@ -1,5 +1,69 @@
 # Changelog
 
+## streamlink 2.27.0.0 (2021-11-23)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (34):
+      plugins.viasat: removed (#4087)
+      plugin.api: remove StreamMapper (#4088)
+      plugins.okru: rewrite plugin, drop RTMP (#4090)
+      plugin: trim metadata strings (#4117)
+      plugins.brightcove: add more HLS source types (#4119)
+      setup: remove NO_DEPS env var (#4115)
+      cli: deprecate the --https-proxy option as well as the Session options (#4120)
+      plugins.earthcam: fix hls_url
+      plugins.openrectv: be able to get subscription video (#4130)
+      plugins.tga: remove plugin (#4129)
+      plugins.ltv_lsm_lv: update the plugin for the new page layout (#4138)
+      logger: fix warning import and trace export (#4151)
+      plugin.api: implement WebsocketClient (#4153)
+      plugins.twitcasting: re-implement websocket client (#4154)
+      plugins.twitch: new plugin command --twitch-api-header (#4156)
+      plugins.nicolive: re-implement plugin (#4155)
+      revert: stream.hls: remove hls-segment-stream-data option (#4159)
+      plugins.attheshore: fix camid
+      plugin.api.websocket: add reconnect method (#4164)
+      stream.http: fix custom method argument (#4171)
+      streams: remove HDS/AkamaiHD
+      plugins.ustreamtv: re-implement plugin
+      stream.flvconcat: remove
+      remove flashmedia
+      cli: override default signal handlers (#4190)
+      plugins.twitch: set playerType back to embed (#4194)
+      session.resolve_url: return plugin class + URL
+      plugins.ard_mediathek: rewrite plugin (#4200)
+      Update .travis.yml
+      Update cli.rst
+      utils.parse: fix encoding in parse_html (#4201)
+      plugins.ard_mediathek: fix plugin (#4202)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (2):
+      plugins.facebook: update onion address
+      plugins.picarto: update URL regex and logic
+
+back-to <backto@protonmail.ch> (7):
+      plugins.tv999: use parse_html
+      plugins.ssh101: use parse_html
+      plugins.app17: remove RTMPStream, cleanup
+      plugins.twitch: add device-id headers (#4086)
+      plugin.api: update useragents
+      plugins.goltelevision: fix api url and update plugin url
+      plugins.tviplayer: new plugin
+
+bastimeyer <mail@bastimeyer.de> (4):
+      plugins.twitch: remove device-id headers
+      ci.github: check for unicode bidi control chars
+      plugins.twitch: refactor api-headers
+      plugins.twitch: avg duration for prefetch segments
+
+kyldery <kyldery@protonmail.com> (1):
+      plugins.crunchyroll: add metadata attributes (#4185)
+
+nnrm <91910832+nnrm@users.noreply.github.com> (1):
+      plugins.nicolive: add support for community urls
+```
+
+
 ## streamlink 1.27.8.0 (2021-10-09)
 
 ```text
