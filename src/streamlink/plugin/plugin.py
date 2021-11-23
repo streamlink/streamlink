@@ -203,6 +203,7 @@ class Plugin:
     match: Match
 
     # plugin metadata attributes
+    id: Optional[str] = None
     author: Optional[str] = None
     category: Optional[str] = None
     title: Optional[str] = None
@@ -432,10 +433,14 @@ class Plugin:
 
     def get_metadata(self) -> Dict[str, Optional[str]]:
         return dict(
+            id=self.get_id(),
             author=self.get_author(),
             category=self.get_category(),
             title=self.get_title()
         )
+
+    def get_id(self) -> Optional[str]:
+        return None if self.id is None else str(self.id).strip()
 
     def get_title(self) -> Optional[str]:
         return None if self.title is None else str(self.title).strip()

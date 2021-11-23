@@ -55,6 +55,7 @@ def get_formatter(plugin: Plugin):
     return Formatter(
         {
             "url": lambda: args.url,
+            "id": lambda: plugin.get_id(),
             "author": lambda: plugin.get_author(),
             "category": lambda: plugin.get_category(),
             "game": lambda: plugin.get_category(),
