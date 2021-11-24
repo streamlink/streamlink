@@ -320,7 +320,7 @@ class TestTwitchMetadata(unittest.TestCase):
         session = Streamlink()
         Twitch.bind(session, "tests.plugins.test_twitch")
         plugin = Twitch(url)
-        return plugin.get_author(), plugin.get_title(), plugin.get_category()
+        return plugin.get_id(), plugin.get_author(), plugin.get_category(), plugin.get_title()
 
     def mock_request_channel(self, data=True):
         return self.mock.post(
@@ -333,9 +333,12 @@ class TestTwitchMetadata(unittest.TestCase):
                     "lastBroadcast": {
                         "title": "channel status"
                     },
-                    "stream": {"game": {
-                        "name": "channel game"
-                    }}
+                    "stream": {
+                        "id": "stream id",
+                        "game": {
+                            "name": "channel game"
+                        }
+                    }
                 }}}
             ]
         )
@@ -344,6 +347,7 @@ class TestTwitchMetadata(unittest.TestCase):
         return self.mock.post(
             "https://gql.twitch.tv/gql",
             json={"data": {"video": None if not data else {
+                "id": "video id",
                 "title": "video title",
                 "game": {
                     "displayName": "video game"
@@ -354,12 +358,37 @@ class TestTwitchMetadata(unittest.TestCase):
             }}}
         )
 
+    def mock_request_clip(self, data=True):
+        return self.mock.post(
+            "https://gql.twitch.tv/gql",
+            json=[
+                {"data": {
+                    "clip": None if not data else {
+                        "id": "clip id",
+                        "broadcaster": {
+                            "displayName": "channel name"
+                        },
+                        "game": {
+                            "name": "game name"
+                        }
+                    }
+                }},
+                {"data": {
+                    "clip": None if not data else {
+                        "title": "clip title"
+                    }
+                }}
+            ]
+        )
+
     def test_metadata_channel(self):
         mock = self.mock_request_channel()
-        author, title, category = self.subject("https://twitch.tv/foo")
+        _id, author, category, title = self.subject("https://twitch.tv/foo")
+        self.assertEqual(_id, "stream id")
         self.assertEqual(author, "channel name")
-        self.assertEqual(title, "channel status")
         self.assertEqual(category, "channel game")
+        self.assertEqual(title, "channel status")
+        self.assertEqual(mock.call_count, 1)
         self.assertEqual(mock.request_history[0].json(), [
             {
                 "operationName": "ChannelShell",
@@ -390,17 +419,20 @@ class TestTwitchMetadata(unittest.TestCase):
 
     def test_metadata_channel_no_data(self):
         self.mock_request_channel(data=False)
-        author, title, category = self.subject("https://twitch.tv/foo")
+        _id, author, category, title = self.subject("https://twitch.tv/foo")
+        self.assertEqual(_id, None)
         self.assertEqual(author, None)
-        self.assertEqual(title, None)
         self.assertEqual(category, None)
+        self.assertEqual(title, None)
 
     def test_metadata_video(self):
         mock = self.mock_request_video()
-        author, title, category = self.subject("https://twitch.tv/videos/1337")
+        _id, author, category, title = self.subject("https://twitch.tv/videos/1337")
+        self.assertEqual(_id, "video id")
         self.assertEqual(author, "channel name")
-        self.assertEqual(title, "video title")
         self.assertEqual(category, "video game")
+        self.assertEqual(title, "video title")
+        self.assertEqual(mock.call_count, 1)
         self.assertEqual(
             mock.request_history[0].json(),
             {
@@ -420,10 +452,54 @@ class TestTwitchMetadata(unittest.TestCase):
 
     def test_metadata_video_no_data(self):
         self.mock_request_video(data=False)
-        author, title, category = self.subject("https://twitch.tv/videos/1337")
+        _id, author, category, title = self.subject("https://twitch.tv/videos/1337")
+        self.assertEqual(_id, None)
         self.assertEqual(author, None)
-        self.assertEqual(title, None)
         self.assertEqual(category, None)
+        self.assertEqual(title, None)
+
+    def test_metadata_clip(self):
+        mock = self.mock_request_clip()
+        _id, author, category, title = self.subject("https://clips.twitch.tv/foo")
+        self.assertEqual(_id, "clip id")
+        self.assertEqual(author, "channel name")
+        self.assertEqual(category, "game name")
+        self.assertEqual(title, "clip title")
+        self.assertEqual(mock.call_count, 1)
+        self.assertEqual(mock.request_history[0].json(), [
+            {
+                "operationName": "ClipsView",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f"
+                    }
+                },
+                "variables": {
+                    "slug": "foo"
+                }
+            },
+            {
+                "operationName": "ClipsTitle",
+                "extensions": {
+                    "persistedQuery": {
+                        "version": 1,
+                        "sha256Hash": "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4"
+                    }
+                },
+                "variables": {
+                    "slug": "foo"
+                }
+            }
+        ])
+
+    def test_metadata_clip_no_data(self):
+        self.mock_request_clip(data=False)
+        _id, author, category, title = self.subject("https://clips.twitch.tv/foo")
+        self.assertEqual(_id, None)
+        self.assertEqual(author, None)
+        self.assertEqual(category, None)
+        self.assertEqual(title, None)
 
 
 @patch("streamlink.plugins.twitch.log")
