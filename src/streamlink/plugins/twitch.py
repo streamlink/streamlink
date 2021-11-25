@@ -251,6 +251,7 @@ class TwitchAPI:
 
         return self.call(query, schema=validate.Schema(
             {"data": {"video": {
+                "id": str,
                 "owner": {
                     "displayName": validate.text
                 },
@@ -261,9 +262,10 @@ class TwitchAPI:
             }}},
             validate.get(("data", "video")),
             validate.union_get(
+                "id",
                 ("owner", "displayName"),
-                "title",
-                ("game", "displayName")
+                ("game", "displayName"),
+                "title"
             )
         ))
 
@@ -294,16 +296,57 @@ class TwitchAPI:
                         "lastBroadcast": {
                             "title": validate.text
                         },
-                        "stream": {"game": {
-                            "name": validate.text
-                        }}
+                        "stream": {
+                            "id": validate.text,
+                            "game": {
+                                "name": validate.text
+                            }
+                        }
                     }}}
                 )
             ],
             validate.union_get(
+                (1, "data", "user", "stream", "id"),
                 (0, "data", "userOrError", "displayName"),
-                (1, "data", "user", "lastBroadcast", "title"),
-                (1, "data", "user", "stream", "game", "name")
+                (1, "data", "user", "stream", "game", "name"),
+                (1, "data", "user", "lastBroadcast", "title")
+            )
+        ))
+
+    def metadata_clips(self, clipname):
+        queries = [
+            self._gql_persisted_query(
+                "ClipsView",
+                "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f",
+                slug=clipname
+            ),
+            self._gql_persisted_query(
+                "ClipsTitle",
+                "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4",
+                slug=clipname
+            )
+        ]
+
+        return self.call(queries, schema=validate.Schema(
+            [
+                validate.all(
+                    {"data": {"clip": {
+                        "id": validate.text,
+                        "broadcaster": {"displayName": validate.text},
+                        "game": {"name": validate.text}
+                    }}},
+                    validate.get(("data", "clip"))
+                ),
+                validate.all(
+                    {"data": {"clip": {"title": validate.text}}},
+                    validate.get(("data", "clip"))
+                )
+            ],
+            validate.union_get(
+                (0, "id"),
+                (0, "broadcaster", "displayName"),
+                (0, "game", "name"),
+                (1, "title")
             )
         ))
 
@@ -341,61 +384,37 @@ class TwitchAPI:
         ))
 
     def clips(self, clipname):
-        queries = [
-            self._gql_persisted_query(
-                "VideoAccessToken_Clip",
-                "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11",
-                slug=clipname
-            ),
-            self._gql_persisted_query(
-                "ClipsView",
-                "4480c1dcc2494a17bb6ef64b94a5213a956afb8a45fe314c66b0d04079a93a8f",
-                slug=clipname
-            ),
-            self._gql_persisted_query(
-                "ClipsTitle",
-                "f6cca7f2fdfbfc2cecea0c88452500dae569191e58a265f97711f8f2a838f5b4",
-                slug=clipname
-            )
-        ]
+        query = self._gql_persisted_query(
+            "VideoAccessToken_Clip",
+            "36b89d2507fce29e5ca551df756d27c1cfe079e2609642b4390aa4c35796eb11",
+            slug=clipname
+        )
 
-        return self.call(queries, schema=validate.Schema([
-            validate.all(
-                {"data": {"clip": {
-                    "playbackAccessToken": validate.all(
-                        {
-                            "signature": validate.text,
-                            "value": validate.text
-                        },
-                        validate.union_get("signature", "value")
-                    ),
-                    "videoQualities": [
-                        validate.all({
-                            "frameRate": validate.transform(int),
-                            "quality": validate.text,
-                            "sourceURL": validate.url()
-                        }, validate.transform(lambda q: (
-                            "{0}p{1}".format(q['quality'], q['frameRate']),
-                            q["sourceURL"]
-                        )))
-                    ]
-                }}},
-                validate.get(("data", "clip")),
-                validate.union_get("playbackAccessToken", "videoQualities")
-            ),
-            validate.all(
-                {"data": {"clip": {
-                    "broadcaster": {"displayName": validate.text},
-                    "game": {"name": validate.text}
-                }}},
-                validate.get(("data", "clip")),
-                validate.union_get(("broadcaster", "displayName"), ("game", "name"))
-            ),
-            validate.all(
-                {"data": {"clip": {"title": validate.text}}},
-                validate.get(("data", "clip", "title"))
+        return self.call(query, schema=validate.Schema(
+            {"data": {"clip": {
+                "playbackAccessToken": {
+                    "signature": validate.text,
+                    "value": validate.text
+                },
+                "videoQualities": [validate.all(
+                    {
+                        "frameRate": validate.transform(int),
+                        "quality": validate.text,
+                        "sourceURL": validate.url()
+                    },
+                    validate.transform(lambda q: (
+                        "{0}p{1}".format(q['quality'], q['frameRate']),
+                        q["sourceURL"]
+                    ))
+                )]
+            }}},
+            validate.get(("data", "clip")),
+            validate.union_get(
+                ("playbackAccessToken", "signature"),
+                ("playbackAccessToken", "value"),
+                "videoQualities"
             )
-        ]))
+        ))
 
     def stream_metadata(self, channel):
         query = self._gql_persisted_query(
@@ -504,6 +523,7 @@ class Twitch(Plugin):
         self.video_id = None
         self.channel = None
         self.clip_name = None
+        self._checked_metadata = False
 
         if self.subdomain == "player":
             # pop-out player
@@ -521,29 +541,30 @@ class Twitch(Plugin):
         self.api = TwitchAPI(session=self.session)
         self.usher = UsherService(session=self.session)
 
-    def get_title(self):
-        if self.title is None:
-            self._get_metadata()
-        return self.title
+        def method_factory(parent_method):
+            def inner():
+                if not self._checked_metadata:
+                    self._checked_metadata = True
+                    self._get_metadata()
+                return parent_method()
+            return inner
 
-    def get_author(self):
-        if self.author is None:
-            self._get_metadata()
-        return self.author
-
-    def get_category(self):
-        if self.category is None:
-            self._get_metadata()
-        return self.category
+        parent = super(Twitch, self)
+        for metadata in "id", "author", "category", "title":
+            method = "get_{0}".format(metadata)
+            setattr(self, method, method_factory(getattr(parent, method)))
 
     def _get_metadata(self):
         try:
             if self.video_id:
-                (self.author, self.title, self.category) = self.api.metadata_video(self.video_id)
+                data = self.api.metadata_video(self.video_id)
             elif self.clip_name:
-                self._get_clips()
+                data = self.api.metadata_clips(self.clip_name)
             elif self.channel:
-                (self.author, self.title, self.category) = self.api.metadata_channel(self.channel)
+                data = self.api.metadata_channel(self.channel)
+            else:  # pragma: no cover
+                return
+            self.id, self.author, self.category, self.title = data
         except (PluginError, TypeError):
             pass
 
@@ -648,7 +669,7 @@ class Twitch(Plugin):
 
     def _get_clips(self):
         try:
-            (((sig, token), streams), (self.author, self.category), self.title) = self.api.clips(self.clip_name)
+            sig, token, streams = self.api.clips(self.clip_name)
         except (PluginError, TypeError):
             return
 
