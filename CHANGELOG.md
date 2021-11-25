@@ -1,12 +1,51 @@
 # Changelog
 
+## streamlink 3.0.2 (2021-11-25)
+
+Patch release:
+
+- Added: support for the `id` plugin metadata property ([#4203](https://github.com/streamlink/streamlink/pull/4203))
+- Updated: Twitch access token request parameter regarding embedded ads ([#4194](https://github.com/streamlink/streamlink/pull/4194))
+- Fixed: early `SIGINT`/`SIGTERM` signal handling ([#4190](https://github.com/streamlink/streamlink/pull/4190))
+- Fixed: broken character set decoding when parsing HTML documents ([#4201](https://github.com/streamlink/streamlink/pull/4201))
+- Fixed: missing home directory expansion (tilde character) in file output paths ([#4204](https://github.com/streamlink/streamlink/pull/4204))
+- New plugin: tviplayer ([#4199](https://github.com/streamlink/streamlink/pull/4199))
+
+Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17), as it contains breaking changes that may require user interaction.
+
+
+```text
+back-to <backto@protonmail.ch> (1):
+      plugins.tviplayer: new plugin
+
+bastimeyer <mail@bastimeyer.de> (14):
+      cli: override default signal handlers
+      chore: add GH gist link to issue templates
+      plugins.twitch: set playerType back to embed
+      plugins.twitch: add type annotations
+      plugins.twitch: avg duration for prefetch segments
+      plugins.ard_mediathek: rewrite plugin
+      utils.parse: fix encoding in parse_html
+      plugins.ard_mediathek: fix plugin
+      cli: expand user in file output paths
+      cli.output: remove MPV title variable escape logic
+      plugin: add 'id' metadata property
+      plugins.youtube: add 'id' metadata
+      plugins.twitch: add 'id' metadata
+      docs: add dedicated metadata variables section
+
+kyldery <kyldery@protonmail.com> (1):
+      plugins.crunchyroll: add metadata attributes (#4185)
+```
+
+
 ## streamlink 3.0.1 (2021-11-17)
 
 Patch release:
 
 - Fixed: broken pycountry import in Windows installer's Python environment ([#4180](https://github.com/streamlink/streamlink/pull/4180))
 
-Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17) for all the breaking and regular changes of this major release.
+Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17), as it contains breaking changes that may require user interaction.
 
 
 ```text
@@ -33,7 +72,7 @@ Breaking changes:
 - BREAKING/API: changed `Session.resolve_url()` and `Session.resolve_url_no_redirect()` to return a tuple of a plugin class and the resolved URL instead of an initialized plugin class instance. This fixes the availability of plugin options in a plugin's constructor. ([#4163](https://github.com/streamlink/streamlink/pull/4163))
 - BREAKING/requirements: dropped alternative dependency `pycrypto` and removed the `STREAMLINK_USE_PYCRYPTO` env var switch ([#4174](https://github.com/streamlink/streamlink/pull/4174))
 - BREAKING/requirements: switched from `iso-639`+`iso3166` to `pycountry` and removed the `STREAMLINK_USE_PYCOUNTRY` env var switch ([#4175](https://github.com/streamlink/streamlink/pull/4175))
-- BREAKING/setup: disabled unsupported Python versions, disabled the deprecated `test` setuptools command, removed the `NO_DEPS` env var, and switched to declarative package data via `setup.cfg` ([#4079](https://github.com/streamlink/streamlink/pull/4079), [#4107](https://github.com/streamlink/streamlink/pull/4107), [#4115](https://github.com/streamlink/streamlink/pull/4115) [#4113](https://github.com/streamlink/streamlink/pull/4113))
+- BREAKING/setup: disabled unsupported Python versions, disabled the deprecated `test` setuptools command, removed the `NO_DEPS` env var, and switched to declarative package data via `setup.cfg` ([#4079](https://github.com/streamlink/streamlink/pull/4079), [#4107](https://github.com/streamlink/streamlink/pull/4107), [#4115](https://github.com/streamlink/streamlink/pull/4115), [#4113](https://github.com/streamlink/streamlink/pull/4113))
 
 Release highlights:
 
