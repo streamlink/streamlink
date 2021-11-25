@@ -331,8 +331,8 @@ class YouTube(Plugin):
             if not self._data_status(data, True):
                 return
 
-        video_id, self.author, self.title, is_live = self._schema_videodetails(data)
-        log.debug("Using video ID: {0}".format(video_id))
+        self.id, self.author, self.title, is_live = self._schema_videodetails(data)
+        log.debug("Using video ID: {0}".format(self.id))
 
         if is_live:
             log.debug("This video is live.")
