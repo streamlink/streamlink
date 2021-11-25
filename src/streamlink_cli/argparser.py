@@ -531,18 +531,6 @@ def build_parser():
             A full list of the format codes VLC uses is available here:
             https://wiki.videolan.org/Documentation:Format_String/
 
-        mpv specific information:
-            mpv has certain codes you can use inside your title.
-            These are accessible inside --title by using a backslash
-            before the dollar sign mpv uses to denote a format character.
-
-            e.g. to put the current version of mpv running inside your
-            mpv window title, the string "\\${{{{mpv-version}}}}" could be
-            inserted inside your --title string.
-
-            A full list of the format codes mpv uses is available here:
-            https://mpv.io/manual/stable/#property-list
-
         Formatting variables available to use in --title:
 
         {{title}}
@@ -572,8 +560,6 @@ def build_parser():
         Examples:
 
             %(prog)s -p vlc --title "{{title}} -!- {{author}} -!- {{category}} \\$A" <url> [stream]
-            %(prog)s -p mpv --title "{{title}} -- {{author}} -- {{category}} -- (\\${{{{mpv-version}}}})" <url> [stream]
-
         """.format(', '.join(sorted(SUPPORTED_PLAYERS.keys())),
                    DEFAULT_STREAM_METADATA['title'],
                    DEFAULT_STREAM_METADATA['author'],
