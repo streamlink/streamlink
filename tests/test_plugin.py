@@ -213,7 +213,7 @@ class TestPluginMatcher(unittest.TestCase):
         self.assertEqual(plugin.match, None)
 
 
-@pytest.mark.parametrize("attr", ["author", "category", "title"])
+@pytest.mark.parametrize("attr", ["id", "author", "category", "title"])
 def test_plugin_metadata(attr):
     plugin = FakePlugin("https://foo.bar/")
     getter = getattr(plugin, "get_{0}".format(attr))

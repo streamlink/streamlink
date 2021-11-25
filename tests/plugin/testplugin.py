@@ -39,6 +39,7 @@ class TestPlugin(Plugin):
         "a_option": "default"
     })
 
+    id = "test-id-1234-5678"
     author = "Tѥst Āuƭhǿr"
     category = None
     title = "Test Title"

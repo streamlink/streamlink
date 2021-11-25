@@ -207,6 +207,8 @@ class Plugin(object):
     # match: Match
 
     # plugin metadata attributes
+    id = None
+    # type: Optional[str]
     author = None
     # type: Optional[str]
     category = None
@@ -445,10 +447,15 @@ class Plugin(object):
     def get_metadata(self):
         # type: () -> Dict[str, Optional[str]]
         return dict(
+            id=self.get_id(),
             author=self.get_author(),
             category=self.get_category(),
             title=self.get_title()
         )
+
+    def get_id(self):
+        # type: () -> Optional[str]
+        return None if self.id is None else str(self.id).strip()
 
     def get_title(self):
         # type: () -> Optional[str]

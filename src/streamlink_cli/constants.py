@@ -8,6 +8,7 @@ PLAYER_ARGS_INPUT_DEFAULT = "playerinput"
 PLAYER_ARGS_INPUT_FALLBACK = "filename"
 
 DEFAULT_STREAM_METADATA = {
+    "id": u"Unknown ID",
     "title": u"Unknown Title",
     "author": u"Unknown Author",
     "category": u"No Category",

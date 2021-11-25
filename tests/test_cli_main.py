@@ -162,6 +162,7 @@ class TestCLIMain(unittest.TestCase):
         self.assertEqual(console.msg_json.mock_calls, [call(
             stream,
             metadata=dict(
+                id=u"test-id-1234-5678",
                 author=u"Tѥst Āuƭhǿr",
                 category=None,
                 title=u"Test Title"
@@ -198,6 +199,7 @@ class TestCLIMain(unittest.TestCase):
             self.assertEqual(console.msg_json.mock_calls, [call(
                 plugin="fake",
                 metadata=dict(
+                    id=u"test-id-1234-5678",
                     author=u"Tѥst Āuƭhǿr",
                     category=None,
                     title=u"Test Title"
