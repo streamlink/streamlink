@@ -607,6 +607,25 @@ def build_parser():
             %(prog)s --record-and-pipe "~/recordings/{author}/{category}/{id}-{time:%Y%m%d%H%M%S}.ts" <URL> [STREAM]
         """
     )
+    output.add_argument(
+        "--fs-safe-rules",
+        choices=["POSIX", "Windows"],
+        type=str,
+        help="""
+        The rules used to make formatting variables filesystem-safe are chosen
+        automatically according to the type of system in use. This overrides
+        the automatic detection.
+
+        Intended for use when Streamlink is running on a UNIX-like OS but writing
+        to Windows filesystems such as NTFS; USB devices using VFAT or exFAT; CIFS
+        shares that are enforcing Windows filename limitations, etc.
+
+        These characters are replaced with an underscore for the rules in use:
+
+          POSIX  : \\x00-\\x1F /
+          Windows: \\x00-\\x1F \\x7F " * / : < > ? \\ |
+        """
+    )
 
     stream = parser.add_argument_group("Stream options")
     stream.add_argument(

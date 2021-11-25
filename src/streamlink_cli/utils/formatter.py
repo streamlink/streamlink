@@ -5,7 +5,7 @@ from streamlink_cli.utils.path import replace_chars
 
 
 class Formatter(_BaseFormatter):
-    def filename(self, filename, charmap=None):
+    def path(self, filename, charmap=None):
         # type: (str, Optional[str]) -> str
         return self._format(filename, lambda s: replace_chars(s, charmap), {})
 

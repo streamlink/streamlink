@@ -54,7 +54,7 @@ def get_formatter(plugin):
             "category": lambda: plugin.get_category(),
             "game": lambda: plugin.get_category(),
             "title": lambda: plugin.get_title(),
-            "time": lambda: datetime.now()
+            "time": lambda: datetime.datetime.now()
         },
         {
             "time": lambda dt, fmt: dt.strftime(fmt)
@@ -82,7 +82,8 @@ def check_file_output(filename, force):
     return FileOutput(filename)
 
 
-def create_output(plugin):
+def create_output(formatter):
+    # type: (Formatter)
     """Decides where to write the stream.
 
     Depending on arguments it can be one of these:
@@ -100,11 +101,11 @@ def create_output(plugin):
         if args.output == "-":
             out = FileOutput(fd=stdout)
         else:
-            out = check_file_output(args.output, args.force)
+            out = check_file_output(formatter.path(args.output, args.fs_safe_rules), args.force)
     elif args.stdout:
         out = FileOutput(fd=stdout)
     elif args.record_and_pipe:
-        record = check_file_output(args.record_and_pipe, args.force)
+        record = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
         out = FileOutput(fd=stdout, record=record)
     else:
         http = namedpipe = record = None
@@ -122,10 +123,8 @@ def create_output(plugin):
         elif args.player_http:
             http = create_http_server()
 
-        title = create_title(plugin)
-
         if args.record:
-            record = check_file_output(args.record, args.force)
+            record = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
 
         log.info("Starting player: {0}".format(args.player))
 
@@ -133,7 +132,8 @@ def create_output(plugin):
                            quiet=not args.verbose_player,
                            kill=not args.player_no_close,
                            namedpipe=namedpipe, http=http,
-                           record=record, title=title)
+                           record=record,
+                           title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url)
 
     return out
 
@@ -249,16 +249,15 @@ def output_stream_http(plugin, initial_streams, external=False, port=0):
     server.close()
 
 
-def output_stream_passthrough(plugin, stream):
+def output_stream_passthrough(formatter, stream):
     """Prepares a filename to be passed to the player."""
     global output
 
-    title = create_title(plugin)
     filename = '"{0}"'.format(stream_to_url(stream))
     output = PlayerOutput(args.player, args=args.player_args,
                           filename=filename, call=True,
                           quiet=not args.verbose_player,
-                          title=title)
+                          title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url)
 
     try:
         log.info("Starting player: {0}".format(args.player))
@@ -301,7 +300,7 @@ def open_stream(stream):
     return stream_fd, prebuffer
 
 
-def output_stream(plugin, stream, last_stream):
+def output_stream(formatter, stream, last_stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
@@ -321,7 +320,7 @@ def output_stream(plugin, stream, last_stream):
         else:
             return False
 
-    output = create_output(plugin)
+    output = create_output(formatter)
 
     try:
         output.open()
@@ -448,6 +447,9 @@ def handle_stream(plugin, streams, stream_name):
         alt_streams = list(filter(lambda k: _name_contains_alt(k),
                                   sorted(streams.keys())))
         file_output = args.output or args.stdout
+
+        formatter = get_formatter(plugin)
+
         stream_names = [stream_name] + alt_streams
         count = 0
         for stream_name in stream_names:
@@ -458,7 +460,7 @@ def handle_stream(plugin, streams, stream_name):
             if stream_type in args.player_passthrough and not file_output:
                 log.info("Opening stream: {0} ({1})".format(stream_name,
                                                             stream_type))
-                success = output_stream_passthrough(plugin, stream)
+                success = output_stream_passthrough(formatter, stream)
             elif args.player_external_http:
                 return output_stream_http(plugin, streams, external=True,
                                           port=args.player_external_http_port)
@@ -467,7 +469,7 @@ def handle_stream(plugin, streams, stream_name):
             else:
                 log.info("Opening stream: {0} ({1})".format(stream_name,
                                                             stream_type))
-                success = output_stream(plugin, stream, count == len(stream_names))
+                success = output_stream(formatter, stream, count == len(stream_names))
 
             if success:
                 break

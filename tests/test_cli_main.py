@@ -7,8 +7,9 @@ import unittest
 
 import streamlink_cli.main
 from streamlink.session import Streamlink
-from streamlink_cli.compat import is_win32
+from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.main import (
+    Formatter,
     check_file_output,
     create_output,
     format_valid_streams,
@@ -235,16 +236,26 @@ class TestCLIMain(unittest.TestCase):
         args.player_args = ""
         self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
 
-    def test_create_output_file_output(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        try:
-            streamlink_cli.main.args = args = Mock()
-            streamlink_cli.main.console = Mock()
-            args.output = tmpfile.name
-            self.assertTrue(os.path.exists(tmpfile.name))
-            self.assertIsInstance(create_output(FakePlugin), FileOutput)
-        finally:
-            tmpfile.close()
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.check_file_output")
+    def test_create_output_file_output(self, mock_check_file_output, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({})
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
+        formatter = Formatter({})
+        args.output = "foo"
+        args.stdout = None
+        args.record = None
+        args.record_and_pipe = None
+        args.force = False
+        args.fs_safe_rules = None
+
+        output = create_output(formatter)
+        self.assertEqual(mock_check_file_output.call_args_list, [call("foo", False)])
+        self.assertIsInstance(output, FileOutput)
+        self.assertEqual(output.filename, "foo")
+        self.assertIsNone(output.fd)
+        self.assertIsNone(output.record)
 
     def test_create_output_stdout(self):
         streamlink_cli.main.console = Mock()
@@ -253,34 +264,66 @@ class TestCLIMain(unittest.TestCase):
         args.stdout = True
         self.assertIsInstance(create_output(FakePlugin), FileOutput)
 
-    def test_create_output_record_and_pipe(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        try:
-            streamlink_cli.main.console = Mock()
-            streamlink_cli.main.args = args = Mock()
-            args.output = None
-            args.stdout = None
-            args.record_and_pipe = tmpfile.name
-            self.assertIsInstance(create_output(FakePlugin), FileOutput)
-        finally:
-            tmpfile.close()
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.check_file_output")
+    def test_create_output_record_and_pipe(self, mock_check_file_output, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({})
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
+        args.output = None
+        args.stdout = None
+        args.record_and_pipe = "foo"
+        args.force = False
+        args.fs_safe_rules = None
 
-    def test_create_output_record(self):
-        tmpfile = tempfile.NamedTemporaryFile()
-        try:
-            streamlink_cli.main.console = Mock()
-            streamlink_cli.main.args = args = Mock()
-            args.output = None
-            args.stdout = None
-            args.record = tmpfile.name
-            args.record_and_pipe = None
-            args.title = None
-            args.player = "mpv"
-            args.player_args = ""
-            args.player_fifo = None
-            self.assertIsInstance(create_output(FakePlugin), PlayerOutput)
-        finally:
-            tmpfile.close()
+        output = create_output(formatter)
+        self.assertEqual(mock_check_file_output.call_args_list, [call("foo", False)])
+        self.assertIsInstance(output, FileOutput)
+        self.assertIsNone(output.filename)
+        self.assertIs(output.fd, stdout)
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertEqual(output.record.filename, "foo")
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
+
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.check_file_output")
+    @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
+    def test_create_output_record(self, mock_check_file_output, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({
+            "author": lambda: "foo"
+        })
+        mock_check_file_output.side_effect = lambda path, force: FileOutput(path)
+        args.output = None
+        args.stdout = None
+        args.record = "foo"
+        args.record_and_pipe = None
+        args.force = False
+        args.fs_safe_rules = None
+        args.title = None
+        args.url = "URL"
+        args.player = "mpv"
+        args.player_args = ""
+        args.player_fifo = None
+        args.player_http = None
+
+        output = create_output(formatter)
+        self.assertIsInstance(output, PlayerOutput)
+        self.assertEqual(output.title, "URL")
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertEqual(output.record.filename, "foo")
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
+
+        args.title = "{author} - {title}"
+        output = create_output(formatter)
+        self.assertIsInstance(output, PlayerOutput)
+        self.assertEqual(output.title, "foo - bar")
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertEqual(output.record.filename, "foo")
+        self.assertIsNone(output.record.fd)
+        self.assertIsNone(output.record.record)
 
     def test_create_output_record_and_other_file_output(self):
         streamlink_cli.main.console = console = Mock()
