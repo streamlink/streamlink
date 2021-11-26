@@ -548,7 +548,7 @@ def build_parser():
 
         Example:
 
-            %(prog)s --output "~/recordings/{author}/{category}/{id}-{time:%Y%m%d%H%M%S}.ts" <URL> [STREAM]
+            %(prog)s --output "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
         """
     )
     output.add_argument(
@@ -587,7 +587,7 @@ def build_parser():
 
         Example:
 
-            %(prog)s --record "~/recordings/{author}/{category}/{id}-{time:%Y%m%d%H%M%S}.ts" <URL> [STREAM]
+            %(prog)s --record "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
         """
     )
     output.add_argument(
@@ -604,7 +604,7 @@ def build_parser():
 
         Example:
 
-            %(prog)s --record-and-pipe "~/recordings/{author}/{category}/{id}-{time:%Y%m%d%H%M%S}.ts" <URL> [STREAM]
+            %(prog)s --record-and-pipe "~/recordings/{author}/{category}/{id}-{time:%%Y%%m%%d%%H%%M%%S}.ts" <URL> [STREAM]
         """
     )
     output.add_argument(
