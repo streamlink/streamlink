@@ -3,6 +3,7 @@ import os
 import sys
 import unittest
 from pathlib import Path, PosixPath, WindowsPath
+from textwrap import dedent
 from unittest.mock import Mock, call, patch
 
 import freezegun
@@ -740,3 +741,78 @@ class TestCLIMainLoggingLogfileWindows(_TestCLIMainLogging):
             mock_write=mock_open("C:\\foo\\2000-01-02_03-04-05.log", "a").write,
             mock_stdout=mock_stdout
         )
+
+
+class TestCLIMainPrint(unittest.TestCase):
+    def subject(self):
+        with patch.object(Streamlink, "load_builtin_plugins"), \
+             patch.object(Streamlink, "resolve_url") as mock_resolve_url, \
+             patch.object(Streamlink, "resolve_url_no_redirect") as mock_resolve_url_no_redirect:
+            session = Streamlink()
+            session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
+            with patch("streamlink_cli.main.streamlink", session), \
+                 patch("streamlink_cli.main.CONFIG_FILES", []), \
+                 patch("streamlink_cli.main.setup_streamlink"), \
+                 patch("streamlink_cli.main.setup_plugins"), \
+                 patch("streamlink_cli.main.setup_http_session"), \
+                 patch("streamlink_cli.main.setup_signals"), \
+                 patch("streamlink_cli.main.setup_options") as mock_setup_options:
+                with self.assertRaises(SystemExit) as cm:
+                    streamlink_cli.main.main()
+                self.assertEqual(cm.exception.code, 0)
+                mock_resolve_url.assert_not_called()
+                mock_resolve_url_no_redirect.assert_not_called()
+                mock_setup_options.assert_not_called()
+
+    @staticmethod
+    def get_stdout(mock_stdout):
+        return "".join([call_arg[0][0] for call_arg in mock_stdout.write.call_args_list])
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink"])
+    def test_print_usage(self, mock_stdout):
+        self.subject()
+        self.assertEqual(
+            self.get_stdout(mock_stdout),
+            "usage: streamlink [OPTIONS] <URL> [STREAM]\n\n"
+            + "Use -h/--help to see the available options or read the manual at https://streamlink.github.io\n"
+        )
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink", "--help"])
+    def test_print_help(self, mock_stdout):
+        self.subject()
+        output = self.get_stdout(mock_stdout)
+        self.assertIn(
+            "usage: streamlink [OPTIONS] <URL> [STREAM]",
+            output
+        )
+        self.assertIn(
+            dedent("""
+                Streamlink is a command-line utility that extracts streams from various
+                services and pipes them into a video player of choice.
+            """),
+            output
+        )
+        self.assertIn(
+            dedent("""
+                For more in-depth documentation see:
+                  https://streamlink.github.io
+
+                Please report broken plugins or bugs to the issue tracker on Github:
+                  https://github.com/streamlink/streamlink/issues
+            """),
+            output
+        )
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink", "--plugins"])
+    def test_print_plugins(self, mock_stdout):
+        self.subject()
+        self.assertEqual(self.get_stdout(mock_stdout), "Loaded plugins: testplugin\n")
+
+    @patch("sys.stdout")
+    @patch("sys.argv", ["streamlink", "--plugins", "--json"])
+    def test_print_plugins_json(self, mock_stdout):
+        self.subject()
+        self.assertEqual(self.get_stdout(mock_stdout), """[\n  "testplugin"\n]\n""")
