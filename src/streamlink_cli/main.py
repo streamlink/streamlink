@@ -1032,7 +1032,9 @@ def main():
         with ignored(Exception):
             check_version(force=args.version_check)
 
-    if args.plugins:
+    if args.help:
+        parser.print_help()
+    elif args.plugins:
         print_plugins()
     elif args.can_handle_url:
         try:
@@ -1065,8 +1067,6 @@ def main():
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
-    elif args.help:
-        parser.print_help()
     else:
         usage = parser.format_usage()
         console.msg(
