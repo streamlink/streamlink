@@ -1016,7 +1016,7 @@ def setup_logger_and_console(stream=sys.stdout, filename=None, level="info", jso
         datefmt="%H:%M:%S"
     )
 
-    console = ConsoleOutput(streamhandler.stream, json)
+    console = ConsoleOutput(streamhandler.stream, streamlink, json)
 
 
 def main():
@@ -1064,7 +1064,9 @@ def main():
         with ignored(Exception):
             check_version(force=args.version_check)
 
-    if args.plugins:
+    if args.help:
+        parser.print_help()
+    elif args.plugins:
         print_plugins()
     elif args.can_handle_url:
         try:
@@ -1097,15 +1099,19 @@ def main():
                     stream_fd.close()
                 except KeyboardInterrupt:
                     error_code = 130
-    elif args.help:
-        parser.print_help()
     else:
         usage = parser.format_usage()
+        """
         msg = (
             "{usage}\nUse -h/--help to see the available options or "
             "read the manual at https://Billy2011.github.io/streamlink-27"
         ).format(usage=usage)
         console.msg(msg)
+        """
+        console.msg(
+            "{usage}\n"
+            "Use -h/--help to see the available options or read the manual at https://streamlink.github.io".format(usage=usage)
+        )
 
     sys.exit(error_code)
 
