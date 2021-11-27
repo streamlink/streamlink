@@ -93,6 +93,12 @@ class TestUtilsParse(unittest.TestCase):
         tree = parse_html(b"""<!DOCTYPE html><html><body>\xC3\xA4</body></html>""")
         self.assertEqual(tree.xpath(".//body/text()"), ["Ã¤"])
 
+    def test_parse_html_xhtml5(self):
+        tree = parse_html("""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>ä?></body></html>""")
+        self.assertEqual(tree.xpath(".//body/text()"), ["ä?>"])
+        tree = parse_html(b"""<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html><html><body>\xC3\xA4?></body></html>""")
+        self.assertEqual(tree.xpath(".//body/text()"), ["ä?>"])
+
     def test_parse_qsd(self):
         self.assertEqual(
             {"test": "1", "foo": "bar"},

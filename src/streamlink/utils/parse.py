@@ -3,7 +3,7 @@ import re
 
 from lxml.etree import HTML, XML
 
-from streamlink.compat import is_py2, is_py3, parse_qsl
+from streamlink.compat import is_py2, is_py3, parse_qsl, str
 from streamlink.plugin import PluginError
 
 
@@ -48,8 +48,11 @@ def parse_html(
     """Wrapper around lxml.etree.HTML with some extras.
 
     Provides these extra features:
+     - Removes XML declarations of invalid XHTML5 documents
      - Wraps errors in custom exception with a snippet of the data in the message
     """
+    if isinstance(data, str) and data.lstrip().startswith("<?xml"):
+        data = re.sub(r"^\s*<\?xml.+?\?>", "", data)
 
     return _parse(HTML, data, name, exception, schema, *args, **kwargs)
 
