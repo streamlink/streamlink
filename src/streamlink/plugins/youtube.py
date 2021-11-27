@@ -135,23 +135,34 @@ class YouTube(Plugin):
     @classmethod
     def _schema_videodetails(cls, data):
         schema = validate.Schema(
-            {"videoDetails": {
-                "videoId": str,
-                "author": str,
-                "title": str,
-                validate.optional("isLive"): validate.transform(bool),
-                validate.optional("isLiveContent"): validate.transform(bool),
-                validate.optional("isLiveDvrEnabled"): validate.transform(bool),
-                validate.optional("isLowLatencyLiveStream"): validate.transform(bool),
-                validate.optional("isPrivate"): validate.transform(bool),
-            }},
-            validate.get("videoDetails"),
+            {
+                "videoDetails": {
+                    "videoId": str,
+                    "author": str,
+                    "title": str,
+                    validate.optional("isLive"): validate.transform(bool),
+                    validate.optional("isLiveContent"): validate.transform(bool),
+                    validate.optional("isLiveDvrEnabled"): validate.transform(bool),
+                    validate.optional("isLowLatencyLiveStream"): validate.transform(bool),
+                    validate.optional("isPrivate"): validate.transform(bool),
+                },
+                "microformat": {
+                    "playerMicroformatRenderer": {
+                        "category": str
+                    }
+                }
+            },
+            validate.union_get(
+                ("videoDetails", "videoId"),
+                ("videoDetails", "author"),
+                ("microformat", "playerMicroformatRenderer", "category"),
+                ("videoDetails", "title"),
+                ("videoDetails", "isLive")
+            )
         )
         videoDetails = validate.validate(schema, data)
         log.trace(f"videoDetails = {videoDetails!r}")
-        return validate.validate(
-            validate.union_get("videoId", "author", "title", "isLive"),
-            videoDetails)
+        return videoDetails
 
     @classmethod
     def _schema_streamingdata(cls, data):
@@ -318,7 +329,7 @@ class YouTube(Plugin):
             if not self._data_status(data, True):
                 return
 
-        self.id, self.author, self.title, is_live = self._schema_videodetails(data)
+        self.id, self.author, self.category, self.title, is_live = self._schema_videodetails(data)
         log.debug(f"Using video ID: {self.id}")
 
         if is_live:
