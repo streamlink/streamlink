@@ -1,5 +1,23 @@
 # Changelog
 
+## streamlink 3.0.3 (2021-11-27)
+
+Patch release:
+
+- Fixed: broken output of the `--help` CLI argument ([#4213](https://github.com/streamlink/streamlink/pull/4213))
+- Fixed: parsing of invalid HTML5 documents ([#4210](https://github.com/streamlink/streamlink/pull/4210))
+
+Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17), as it contains breaking changes that may require user interaction.
+
+
+```text
+bastimeyer <mail@bastimeyer.de> (3):
+      utils.parse: parse invalid XHTML5 documents
+      cli: prioritize --help and fix its output
+      plugins.youtube: add category metadata
+```
+
+
 ## streamlink 3.0.2 (2021-11-25)
 
 Patch release:
@@ -10,8 +28,6 @@ Patch release:
 - Fixed: broken character set decoding when parsing HTML documents ([#4201](https://github.com/streamlink/streamlink/pull/4201))
 - Fixed: missing home directory expansion (tilde character) in file output paths ([#4204](https://github.com/streamlink/streamlink/pull/4204))
 - New plugin: tviplayer ([#4199](https://github.com/streamlink/streamlink/pull/4199))
-
-Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17), as it contains breaking changes that may require user interaction.
 
 
 ```text
@@ -44,8 +60,6 @@ kyldery <kyldery@protonmail.com> (1):
 Patch release:
 
 - Fixed: broken pycountry import in Windows installer's Python environment ([#4180](https://github.com/streamlink/streamlink/pull/4180))
-
-Please see the [changelog of 3.0.0](https://streamlink.github.io/changelog.html#streamlink-3-0-0-2021-11-17), as it contains breaking changes that may require user interaction.
 
 
 ```text
