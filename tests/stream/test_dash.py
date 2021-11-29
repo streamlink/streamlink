@@ -276,6 +276,29 @@ class TestDASHStream(unittest.TestCase):
             sorted(["720p", "1080p", "1080p_alt", "1080p_alt2"])
         )
 
+    @patch('streamlink.stream.dash.MPD')
+    def test_parse_manifest_with_duplicated_resolutions_sorted_bandwidth(self, mpdClass):
+        """
+            Verify the fix for https://github.com/streamlink/streamlink/issues/4217
+        """
+        mpdClass.return_value = Mock(periods=[
+            Mock(adaptationSets=[
+                Mock(contentProtection=None,
+                     representations=[
+                         Mock(id=1, mimeType="video/mp4", height=1080, bandwidth=64.0),
+                         Mock(id=2, mimeType="video/mp4", height=1080, bandwidth=128.0),
+                         Mock(id=3, mimeType="video/mp4", height=1080, bandwidth=32.0),
+                     ])
+            ])
+        ])
+
+        streams = DASHStream.parse_manifest(self.session, self.test_url)
+        mpdClass.assert_called_with(ANY, base_url="http://test.bar", url="http://test.bar/foo.mpd")
+
+        self.assertEqual(streams["1080p"].video_representation.bandwidth, 128.0)
+        self.assertEqual(streams["1080p_alt"].video_representation.bandwidth, 64.0)
+        self.assertEqual(streams["1080p_alt2"].video_representation.bandwidth, 32.0)
+
 
 class TestDASHStreamWorker(unittest.TestCase):
     @patch("streamlink.stream.dash_manifest.time.sleep")
