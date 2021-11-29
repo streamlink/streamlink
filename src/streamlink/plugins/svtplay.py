@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r'https?://(?:www\.)?(?:svtplay|oppetarkiv)\.se(/(kanaler/)?)'
+    r'https?://(?:www\.)?(?:svtplay|oppetarkiv)\.se(/(kanaler/)?.*)'
 ))
 class SVTPlay(Plugin):
     api_url = 'https://api.svt.se/videoplayer-api/video/{0}'
