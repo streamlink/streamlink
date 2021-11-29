@@ -249,6 +249,12 @@ class DASHStream(Stream):
         ret_new = {}
         for q in dict_value_list:
             items = dict_value_list[q]
+
+            try:
+                items = sorted(items, key=lambda k: k.video_representation.bandwidth, reverse=True)
+            except AttributeError:
+                pass
+
             for n in range(len(items)):
                 if n == 0:
                     ret_new[q] = items[n]
