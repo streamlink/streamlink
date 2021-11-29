@@ -146,16 +146,26 @@ class YouTube(Plugin):
                     validate.optional("isLowLatencyLiveStream"): validate.transform(bool),
                     validate.optional("isPrivate"): validate.transform(bool),
                 },
-                "microformat": {
-                    "playerMicroformatRenderer": {
+                "microformat": validate.all(
+                    validate.any(
+                        validate.all(
+                            {"playerMicroformatRenderer": dict},
+                            validate.get("playerMicroformatRenderer")
+                        ),
+                        validate.all(
+                            {"microformatDataRenderer": dict},
+                            validate.get("microformatDataRenderer")
+                        )
+                    ),
+                    {
                         "category": str
                     }
-                }
+                )
             },
             validate.union_get(
                 ("videoDetails", "videoId"),
                 ("videoDetails", "author"),
-                ("microformat", "playerMicroformatRenderer", "category"),
+                ("microformat", "category"),
                 ("videoDetails", "title"),
                 ("videoDetails", "isLive")
             )
