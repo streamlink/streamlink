@@ -23,7 +23,13 @@ class TestPluginCanHandleUrlPluto(PluginCanHandleUrl):
         'http://www.pluto.tv/lc/on-demand/series/leverage/season/1/episode/the-nigerian-job-2009-1-1',
         'http://pluto.tv/lc/on-demand/series/fear-factor-usa-(lf)/season/5/episode/underwater-safe-bob-car-ramp-2004-5-3',
         'https://www.pluto.tv/lc/on-demand/movies/dr.-no-1963-1-1',
+        'https://www.pluto.tv/lc/on-demand/movies/dr.-no-1963-1-1/',
         'http://pluto.tv/lc/on-demand/movies/the-last-dragon-(1985)-1-1',
+        'http://pluto.tv/lc/on-demand/movies/the-last-dragon-(1985)-1-1/',
+        'https://pluto.tv/en/on-demand/series/great-british-menu-ptv1/episode/north-west-fish-2009-5-7-ptv1',
+        'https://pluto.tv/en/on-demand/series/great-british-menu-ptv1/episode/north-west-fish-2009-5-7-ptv1/',
+        'https://www.pluto.tv/en/on-demand/series/great-british-menu-ptv1/episode/north-west-fish-2009-5-7-ptv1',
+        'https://www.pluto.tv/en/on-demand/series/great-british-menu-ptv1/episode/north-west-fish-2009-5-7-ptv1/',
     ]
 
     should_not_match = [
@@ -47,4 +53,8 @@ class TestPluginCanHandleUrlPluto(PluginCanHandleUrl):
         'http://pluto.tv/lc/on-demand/series/dr.-no-1963-1-1',
         'http://pluto.tv/lc/on-demand/movies/leverage/season/1/episode/the-nigerian-job-2009-1-1',
         'http://pluto.tv/lc/on-demand/fear-factor-usa-(lf)/season/5/episode/underwater-safe-bob-car-ramp-2004-5-3',
+        'https://pluto.tv/en/on-demand/series/great-british-menu-ptv1/episode/north-west-fish-2009-5-7-ptv1/extra',
+        'https://pluto.tv/en/on-demand/series/great-british-menu-ptv1/season/5/episode/north-west-fish-2009-5-7-ptv1/extra',
+        'https://www.pluto.tv/en/on-demand/series/great-british-menu-ptv1/episode/north-west-fish-2009-5-7-ptv1/extra',
+        'https://www.pluto.tv/en/on-demand/series/great-british-menu-ptv1/season/5/episode/north-west-fish-2009-5-7-ptv1/extra',
     ]
