@@ -1,6 +1,8 @@
 import logging
 from threading import Event
 
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, StreamConsumedError
+
 from streamlink.stream.hls import HLSStreamReader, HLSStreamWriter
 
 log = logging.getLogger(__name__)
@@ -19,11 +21,21 @@ class FilteredHLSStreamWriter(HLSStreamWriter):
                 if not self.reader.filter_event.is_set():
                     log.info("Resuming stream output")
                     self.reader.filter_event.set()
+        else:
+            self._write_discard(sequence, *args, **kwargs)
+            # block reader thread if filtering out segments
+            if self.reader.filter_event.is_set():
+                log.info("Filtering out segments and pausing stream output")
+                self.reader.filter_event.clear()
 
-        # block reader thread if filtering out segments
-        elif self.reader.filter_event.is_set():
-            log.info("Filtering out segments and pausing stream output")
-            self.reader.filter_event.clear()
+    def _write_discard(self, sequence, res, chunk_size=8192):
+        # The full response needs to actually be read from the socket
+        # even if there isn't any intention of using the payload
+        try:
+            for _ in res.iter_content(chunk_size):
+                pass
+        except (ChunkedEncodingError, ContentDecodingError, ConnectionError, StreamConsumedError):
+            pass
 
 
 class FilteredHLSStreamReader(HLSStreamReader):
