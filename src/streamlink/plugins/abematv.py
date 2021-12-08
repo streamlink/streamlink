@@ -16,18 +16,19 @@ from streamlink.compat import range
 from streamlink.exceptions import NoStreamsError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWriter
+from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
 
 
-class AbemaTVHLSStreamWriter(HLSStreamWriter):
+class AbemaTVHLSStreamWriter(FilteredHLSStreamWriter):
     def should_filter_sequence(self, sequence):
-        return "/tsad/" in sequence.segment.uri or super().should_filter_sequence(sequence)
+        return "/tsad/" in sequence.segment.uri or super(AbemaTVHLSStreamWriter, self).should_filter_sequence(sequence)
 
 
-class AbemaTVHLSStreamReader(HLSStreamReader):
+class AbemaTVHLSStreamReader(FilteredHLSStreamReader):
     __writer__ = AbemaTVHLSStreamWriter
 
 
