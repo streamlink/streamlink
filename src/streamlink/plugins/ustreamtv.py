@@ -55,7 +55,7 @@ class Segment(namedtuple("Segment", "num duration available_at hash path")):
 
 
 class UStreamTVWsClient(WebsocketClient):
-    API_URL = "wss://r{0}-1-{1}-{2}-ws-{3}.ums.ustream.tv:1935/1/ustream"
+    API_URL = "wss://r{0}-1-{1}-{2}-ws-{3}.ums.services.video.ibm.com/1/ustream"
     APP_ID = 3
     APP_VERSION = 2
 
