@@ -8,6 +8,9 @@ class TestPluginCanHandleUrlOneTV(PluginCanHandleUrl):
     should_match = [
         "https://www.1tv.ru/live",
         "http://www.1tv.ru/live",
+        "https://static.1tv.ru/eump/embeds/1tv_live_orbit-plus-4.html?muted=no",
+        "https://static.1tv.ru/eump/pages/1tv_live.html",
+        "https://static.1tv.ru/eump/pages/1tv_live_orbit-plus-4.html",
     ]
 
     should_not_match = [
