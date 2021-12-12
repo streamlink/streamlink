@@ -157,7 +157,7 @@ showroom                showroom-live.com    Yes   No
 sportal                 sportal.bg           Yes   No
 sportschau              sportschau.de        Yes   No
 ssh101                  ssh101.com           Yes   No
-stadium                 watchstadium.com     Yes   No
+stadium                 watchstadium.com     Yes   Yes
 steam                   steamcommunity.com   Yes   No    Some streams will require a Steam account.
 streamable              streamable.com       -     Yes
 streann                 ott.streann.com      Yes   Yes
