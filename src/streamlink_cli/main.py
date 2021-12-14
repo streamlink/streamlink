@@ -305,6 +305,9 @@ def output_stream(stream, formatter: Formatter):
     """Open stream, create output and finally write the stream to output."""
     global output
 
+    # create output before opening the stream, so file outputs can prompt on existing output
+    output = create_output(formatter)
+
     success_open = False
     for i in range(args.retry_open):
         try:
@@ -315,9 +318,7 @@ def output_stream(stream, formatter: Formatter):
             log.error(f"Try {i + 1}/{args.retry_open}: Could not open stream {stream} ({err})")
 
     if not success_open:
-        console.exit(f"Could not open stream {stream}, tried {args.retry_open} times, exiting")
-
-    output = create_output(formatter)
+        return console.exit(f"Could not open stream {stream}, tried {args.retry_open} times, exiting")
 
     try:
         output.open()
