@@ -304,6 +304,9 @@ def output_stream(formatter, stream, last_stream):
     """Open stream, create output and finally write the stream to output."""
     global output
 
+    # create output before opening the stream, so file outputs can prompt on existing output
+    output = create_output(formatter)
+
     success_open = False
     for i in range(args.retry_open):
         try:
@@ -315,22 +318,15 @@ def output_stream(formatter, stream, last_stream):
                 i + 1, args.retry_open, stream, err))
 
     if not success_open:
-        if last_stream:
-            console.exit("Could not open stream {0}, tried {1} times, exiting", stream, args.retry_open)
-        else:
-            return False
-
-    output = create_output(formatter)
+        return console.exit("Could not open stream {0}, tried {1} times, exiting".format(stream, args.retry_open))
 
     try:
         output.open()
     except (IOError, OSError) as err:
         if isinstance(output, PlayerOutput):
-            console.exit("Failed to start player: {0} ({1})",
-                         args.player, err)
+            console.exit("Failed to start player: {0} ({1})".format(args.player, err))
         else:
-            console.exit("Failed to open output: {0} ({1})",
-                         args.output, err)
+            console.exit("Failed to open output: {0} ({1})".format(args.output, err))
 
     with closing(output):
         log.debug("Writing stream to output")

@@ -7,6 +7,7 @@ import unittest
 from textwrap import dedent
 
 import streamlink_cli.main
+from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
 from streamlink_cli.compat import is_win32, stdout
 from streamlink_cli.main import (
@@ -16,6 +17,7 @@ from streamlink_cli.main import (
     format_valid_streams,
     handle_stream,
     handle_url,
+    output_stream,
     resolve_stream_name,
 )
 from streamlink_cli.output import FileOutput, PlayerOutput
@@ -335,6 +337,33 @@ class TestCLIMain(unittest.TestCase):
         args.record_and_pipe = True
         create_output(FakePlugin)
         console.exit.assert_called_with("Cannot use record options with other file output options.")
+
+
+class TestCLIMainOutputStream(unittest.TestCase):
+    @patch("streamlink_cli.main.args", Mock(retry_open=2))
+    @patch("streamlink_cli.main.log")
+    @patch("streamlink_cli.main.console")
+    def test_stream_failure_no_output_open(self, mock_console, mock_log):
+        # type: (Mock, Mock)
+        output = Mock()
+        stream = Mock(
+            __str__=lambda _: "fake-stream",
+            open=Mock(side_effect=StreamError("failure"))
+        )
+        formatter = Formatter({})
+
+        with patch("streamlink_cli.main.output", Mock()), \
+             patch("streamlink_cli.main.create_output", return_value=output):
+            output_stream(formatter, stream, True)
+
+        self.assertEqual(mock_log.error.call_args_list, [
+            call("Try 1/2: Could not open stream fake-stream (Could not open stream: failure)"),
+            call("Try 2/2: Could not open stream fake-stream (Could not open stream: failure)"),
+        ])
+        self.assertEqual(mock_console.exit.call_args_list, [
+            call("Could not open stream fake-stream, tried 2 times, exiting")
+        ])
+        self.assertFalse(output.open.called, "Does not open the output on stream error")
 
 
 class _TestCLIMainLogging(unittest.TestCase):
