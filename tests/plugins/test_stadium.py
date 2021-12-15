@@ -10,8 +10,5 @@ class TestPluginCanHandleUrlStadium(PluginCanHandleUrl):
         "https://www.watchstadium.com/live",
         "https://watchstadium.com/live",
         "http://watchstadium.com/live",
-    ]
-
-    should_not_match = [
-        "http://www.watchstadium.com/anything/else"
+        "https://watchstadium.com/sport/college-football/",
     ]
