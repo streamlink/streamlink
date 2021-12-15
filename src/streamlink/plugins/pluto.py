@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class PlutoHLSStreamWriter(HLSStreamWriter):
-    ad_re = re.compile(r"_ad/creative/|dai\.google\.com")
+    ad_re = re.compile(r"_ad/creative/|dai\.google\.com|Pluto_TV_OandO/.*Bumper")
 
     def should_filter_sequence(self, sequence):
         return self.ad_re.search(sequence.segment.uri) is not None or super().should_filter_sequence(sequence)
