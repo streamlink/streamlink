@@ -3,7 +3,7 @@ import re
 from uuid import uuid4
 
 from streamlink.compat import parse_qs, str, urljoin
-from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.hls_filtered import FilteredHLSStreamReader, FilteredHLSStreamWriter
@@ -13,12 +13,10 @@ log = logging.getLogger(__name__)
 
 
 class PlutoHLSStreamWriter(FilteredHLSStreamWriter):
-    ad_re = re.compile(r"_ad/creative/|dai\.google\.com")
+    ad_re = re.compile(r"_ad/creative/|dai\.google\.com|Pluto_TV_OandO/.*Bumper")
 
     def should_filter_sequence(self, sequence):
-        return self.ad_re.search(sequence.segment.uri) is not None or super(PlutoHLSStreamWriter, self).should_filter_sequence(
-            sequence
-        )
+        return self.stream.disable_ads and self.ad_re.search(sequence.segment.uri)
 
 
 class PlutoHLSStreamReader(FilteredHLSStreamReader):
@@ -28,6 +26,10 @@ class PlutoHLSStreamReader(FilteredHLSStreamReader):
 class PlutoHLSStream(HLSStream):
     __shortname__ = "hls-pluto"
     __reader__ = PlutoHLSStreamReader
+
+    def __init__(self, *args, **kwargs):
+        super(PlutoHLSStream, self).__init__(*args, **kwargs)
+        self.disable_ads = self.session.get_plugin_option("pluto", "disable-ads")
 
 
 @pluginmatcher(re.compile(r"""
@@ -40,6 +42,17 @@ class PlutoHLSStream(HLSStream):
     )/?$
 """, re.VERBOSE))
 class Pluto(Plugin):
+    arguments = PluginArguments(
+        PluginArgument(
+            "disable-ads",
+            action="store_true",
+            help="""
+            Skip embedded advertisement segments and bumpers during a stream.
+            Will cause these segments to be missing from the stream.
+            """
+        ),
+    )
+
     def _get_api_data(self, type, slug, filter=None):
         log.debug("slug={0}".format(slug))
         app_version = self.session.http.get(
