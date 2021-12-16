@@ -1,59 +1,155 @@
-"""
-Support for the live streams on Albavision sites
-    - http://www.tvc.com.ec/envivo
-    - http://www.rts.com.ec/envivo
-    - http://www.elnueve.com.ar/en-vivo
-    - http://www.atv.pe/envivo/ATV
-    - http://www.atv.pe/envivo/ATVMas
-"""
 import logging
 import re
 import time
 
-from streamlink.compat import quote, range, urlencode, urlparse
-from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.compat import range
+from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.url import update_scheme
+from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?:www\.)?(tvc\.com\.ec|rts\.com\.ec|elnueve\.com\.ar|atv\.pe)/en-?vivo(?:/ATV(?:Mas)?)?"
-))
+@pluginmatcher(re.compile(r"""
+    https?://(?:www\.)?
+    (
+        antena7\.com\.do
+        |
+        atv\.pe
+        |
+        c9n\.com\.py
+        |
+        canal10\.com\.ni
+        |
+        canal12\.com\.sv
+        |
+        chapintv\.com
+        |
+        elnueve\.com\.ar
+        |
+        redbolivision\.tv\.bo
+        |
+        repretel\.com
+        |
+        rts\.com\.ec
+        |
+        snt\.com\.py
+        |
+        tvc\.com\.ec
+        |
+        vtv\.com\.hn
+    )
+    /
+    (?:
+        (?:
+            en-?vivo(?:-atv(?:mas)?|-canal-?\d{1,2})?
+        )
+        |
+        upptv
+    )
+    (?:/|\#)?$
+""", re.VERBOSE))
 class Albavision(Plugin):
-    _token_input_re = re.compile(r"Math.floor\(Date.now\(\) / 3600000\),'([a-f0-9OK]+)'")
-    _live_url_re = re.compile(r"LIVE_URL = '(.*?)';")
-    _playlist_re = re.compile(r"file:\s*'(http.*m3u8)'")
-    _token_url_re = re.compile(r"https://.*/token/.*?\?rsk=")
-
-    _channel_urls = {
-        'ATV': 'http://dgrzfw9otv9ra.cloudfront.net/player_atv.html?iut=',
-        'ATVMas': 'http://dgrzfw9otv9ra.cloudfront.net/player_atv_mas.html?iut=',
-        'Canal5': 'http://dxejh4fchgs18.cloudfront.net/player_televicentro.html?iut=',
-        'Guayaquil': 'http://d2a6tcnofawcbm.cloudfront.net/player_rts.html?iut=',
-        'Quito': 'http://d3aacg6baj4jn0.cloudfront.net/reproductor_rts_o_quito.html?iut=',
-    }
-
     def __init__(self, url):
         super(Albavision, self).__init__(url)
         self._page = None
 
     @property
     def page(self):
-        if not self._page:
-            self._page = self.session.http.get(self.url)
+        if self._page is None:
+            self._page = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+            ))
         return self._page
 
-    def _get_token_url(self, channelnumber):
-        token = self._get_live_url_token(channelnumber)
-        if token:
-            m = self._token_url_re.findall(self.page.text)
-            token_url = m and m[channelnumber]
-            if token_url:
-                return token_url + token
-        else:
-            log.error("Could not find site token")
+    def _is_token_based_site(self):
+        schema = validate.Schema(
+            validate.xml_xpath_string(".//script[contains(text(), 'jQuery.get')]/text()"),
+        )
+        is_token_based_site = validate.validate(schema, self.page) is not None
+        log.debug("is_token_based_site={0}".format(is_token_based_site))
+        return is_token_based_site
+
+    def _get_live_url(self):
+        live_url_re = re.compile(r"""LIVE_URL\s*=\s*['"]([^'"]+)['"]""")
+        schema = validate.Schema(
+            validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
+            validate.any(None, validate.all(
+                validate.transform(live_url_re.search),
+                validate.any(None, validate.all(
+                    validate.get(1),
+                    validate.url(),
+                )),
+            )),
+        )
+        live_url = validate.validate(schema, self.page)
+        log.debug("live_url={0}".format(live_url))
+        return live_url
+
+    def _get_token_req_url(self):
+        token_req_host_re = re.compile(r"""jQuery\.get\s*\(['"]([^'"]+)['"]""")
+        schema = validate.Schema(
+            validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
+            validate.any(None, validate.all(
+                validate.transform(token_req_host_re.search),
+                validate.any(None, validate.all(
+                    validate.get(1),
+                    validate.url(),
+                )),
+            )),
+        )
+        token_req_host = validate.validate(schema, self.page)
+        log.debug("token_req_host={0}".format(token_req_host))
+
+        token_req_str_re = re.compile(r"""Math\.floor\(Date\.now\(\)\s*/\s*3600000\),\s*['"]([^'"]+)['"]""")
+        schema = validate.Schema(
+            validate.xml_xpath_string(".//script[contains(text(), 'LIVE_URL')]/text()"),
+            validate.any(None, validate.all(
+                validate.transform(token_req_str_re.search),
+                validate.any(None, validate.all(
+                    validate.get(1),
+                    validate.text,
+                )),
+            )),
+        )
+        token_req_str = validate.validate(schema, self.page)
+        log.debug("token_req_str={0}".format(token_req_str))
+        if not token_req_str:
+            return
+
+        date = int(time.time() // 3600)
+        token_req_token = self.transform_token(token_req_str, date) or self.transform_token(token_req_str, date - 1)
+
+        if token_req_host and token_req_token:
+            return update_qsd(token_req_host, {"rsk": token_req_token})
+
+    def _get_token(self):
+        token_req_url = self._get_token_req_url()
+        if not token_req_url:
+            return
+
+        res = self.session.http.get(token_req_url, schema=validate.Schema(
+            validate.parse_json(), {
+                "success": bool,
+                validate.optional("error"): int,
+                validate.optional("token"): validate.text,
+            },
+        ))
+
+        if not res["success"]:
+            if res["error"]:
+                log.error("Token request failed with error: {0}".format(res['error']))
+            else:
+                log.error("Token request failed")
+            return
+
+        if not res["token"]:
+            log.error("Token not found in response")
+            return
+        token = res["token"]
+        log.debug("token={0}".format(token))
+        return token
 
     @staticmethod
     def transform_token(token_in, date):
@@ -69,57 +165,19 @@ class Albavision(Plugin):
         else:
             log.error("Invalid site token: {0} => {1}".format(token_in, token_out))
 
-    def _get_live_url_token(self, channelnumber):
-        m = self._token_input_re.findall(self.page.text)
-        log.debug("Token input: {0}".format(m[channelnumber]))
-        if m:
-            date = int(time.time() // 3600)
-            return self.transform_token(m[channelnumber], date) or self.transform_token(m[channelnumber], date - 1)
-
-    def _get_token(self, channelnumber):
-        token_url = self._get_token_url(channelnumber)
-        if token_url:
-            res = self.session.http.get(token_url)
-            data = self.session.http.json(res)
-            if data['success']:
-                return data['token']
-
     def _get_streams(self):
-        m = self._live_url_re.search(self.page.text)
-        playlist_url = m and update_scheme("https://", m.group(1), force=False)
-        player_url = self.url
-        live_channel = None
-        p = urlparse(player_url)
-        channelnumber = 0
-        if p.netloc.endswith("tvc.com.ec"):
-            live_channel = "Canal5"
-        elif p.netloc.endswith("rts.com.ec"):
-            live_channel = "Guayaquil"
-        elif p.netloc.endswith("atv.pe"):
-            if p.path.endswith(("ATVMas", "ATVMas/")):
-                live_channel = "ATVMas"
-                channelnumber = 1
-            else:
-                live_channel = "ATV"
-        token = self._get_token(channelnumber)
-        log.debug("token {0}".format(token))
-        if playlist_url:
-            log.debug("Found playlist URL in the page")
-        else:
-            if live_channel:
-                log.debug("Live channel: {0}".format(live_channel))
-                player_url = self._channel_urls[live_channel] + quote(token)
-                page = self.session.http.get(player_url, raise_for_status=False)
-                if "block access from your country." in page.text:
-                    raise PluginError("Content is geo-locked")
-                m = self._playlist_re.search(page.text)
-                playlist_url = m and update_scheme("https://", m.group(1), force=False)
-            else:
-                log.error("Could not find the live channel")
+        live_url = self._get_live_url()
+        if not live_url:
+            log.info("This stream may be off-air or not available in your country")
+            return
 
-        if playlist_url:
-            stream_url = "{0}?{1}".format(playlist_url, urlencode({"iut": token}))
-            return HLSStream.parse_variant_playlist(self.session, stream_url, headers={"referer": player_url})
+        if self._is_token_based_site():
+            token = self._get_token()
+            if not token:
+                return
+            return HLSStream.parse_variant_playlist(self.session, update_qsd(live_url, {"iut": token}))
+        else:
+            return HLSStream.parse_variant_playlist(self.session, live_url)
 
 
 __plugin__ = Albavision
