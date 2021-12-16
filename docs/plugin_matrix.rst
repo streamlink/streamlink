@@ -13,10 +13,19 @@ abematv                 abema.tv             Yes   Yes   Streams are geo-restric
 abweb                   abweb.com            Yes   No    Requires a login and a subscription.
 adultswim               adultswim.com        Yes   Yes   Streams may be geo-restricted, some VOD streams are protected by DRM.
 afreeca                 play.afreecatv.com   Yes   No
-albavision              - tvc.com.ec         Yes   No    Some streams are geo-restricted.
-                        - rts.com.ec
-                        - elnueve.com.ar
+albavision              - antena7.com.do     Yes   No    Some streams are geo-restricted.
                         - atv.pe
+                        - c9n.com.py
+                        - canal10.com.ni
+                        - canal12.com.sv
+                        - chapintv.com
+                        - elnueve.com.ar
+                        - redbolivis... [4]_
+                        - repretel.com
+                        - rts.com.ec
+                        - snt.com.py
+                        - tvc.com.ec
+                        - vtv.com.hn
 app17                   17app.co             Yes   --
 ard_live                daserste.de          Yes   Yes   Streams may be geo-restricted to Germany.
 ard_mediathek           - ardmediathek.de    Yes   Yes   Streams may be geo-restricted to Germany.
@@ -224,6 +233,7 @@ zhanqi                  zhanqi.tv            Yes   No
 ======================= ==================== ===== ===== ===========================
 
 
+.. [4] redbolivision.tv.bo
 .. [5] mediathek.daserste.de
 .. [6] players.brightcove.net
 .. [7] player.theplatform.com
