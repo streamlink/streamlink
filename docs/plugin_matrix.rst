@@ -51,7 +51,7 @@ cdnbg                   - armymedia.bg       Yes   No    Streams may be geo-rest
                         - i.cdn.bg
                         - nova.bg
                         - mu-vi.tv
-ceskatelevize           ceskatelevize.cz     Yes   Yes   Streams may be geo-restricted to Czechia.
+ceskatelevize           ceskatelevize.cz     Yes   No    Streams may be geo-restricted to Czechia.
 cinergroup              - showtv.com.tr      Yes   No
                         - haberturk.com
                         - showmax.com.tr
