@@ -48,6 +48,8 @@ class ConsoleOutput:
         return getpass(prompt, self.output)
 
     def msg(self, msg: str) -> None:
+        if self.json:
+            return
         self.output.write(f"{msg}\n")
 
     def msg_json(self, *objs: Any, **keywords: Any) -> None:
@@ -77,7 +79,7 @@ class ConsoleOutput:
             out.update(**keywords)
 
         msg = dumps(out, cls=JSONEncoder, indent=2)
-        self.msg(msg)
+        self.output.write(f"{msg}\n")
 
         if type(out) is dict and out.get("error"):
             sys.exit(1)

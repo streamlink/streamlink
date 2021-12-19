@@ -6,21 +6,17 @@ from streamlink_cli.console import ConsoleOutput
 
 
 class TestConsoleOutput(unittest.TestCase):
-    def test_msg_format(self):
+    def test_msg(self):
         output = StringIO()
         console = ConsoleOutput(output)
         console.msg("foo")
+        console.msg_json({"test": 1})
         self.assertEqual("foo\n", output.getvalue())
-
-    def test_msg_json_not_set(self):
-        output = StringIO()
-        console = ConsoleOutput(output)
-        self.assertEqual(None, console.msg_json({"test": 1}))
-        self.assertEqual("", output.getvalue())
 
     def test_msg_json(self):
         output = StringIO()
         console = ConsoleOutput(output, json=True)
+        console.msg("foo")
         console.msg_json({"test": 1})
         self.assertEqual('{\n  "test": 1\n}\n', output.getvalue())
 
