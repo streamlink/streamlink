@@ -15,6 +15,34 @@ class TestLogging(unittest.TestCase):
         logger.basicConfig(stream=output, format=format, style=style, **params)
         return logging.getLogger("streamlink.test"), output
 
+    def test_level_names(self):
+        self.assertEqual(logger.levels, [
+            "none", "critical", "error", "warning", "info", "debug", "trace"
+        ])
+        self.assertEqual(logging.getLevelName(logger.NONE), "none")
+        self.assertEqual(logging.getLevelName(logger.CRITICAL), "critical")
+        self.assertEqual(logging.getLevelName(logger.ERROR), "error")
+        self.assertEqual(logging.getLevelName(logger.WARNING), "warning")
+        self.assertEqual(logging.getLevelName(logger.INFO), "info")
+        self.assertEqual(logging.getLevelName(logger.DEBUG), "debug")
+        self.assertEqual(logging.getLevelName(logger.TRACE), "trace")
+
+        self.assertEqual(logging.getLevelName("none"), logger.NONE)
+        self.assertEqual(logging.getLevelName("critical"), logger.CRITICAL)
+        self.assertEqual(logging.getLevelName("error"), logger.ERROR)
+        self.assertEqual(logging.getLevelName("warning"), logger.WARNING)
+        self.assertEqual(logging.getLevelName("info"), logger.INFO)
+        self.assertEqual(logging.getLevelName("debug"), logger.DEBUG)
+        self.assertEqual(logging.getLevelName("trace"), logger.TRACE)
+
+        self.assertEqual(logging.getLevelName("NONE"), logger.NONE)
+        self.assertEqual(logging.getLevelName("CRITICAL"), logger.CRITICAL)
+        self.assertEqual(logging.getLevelName("ERROR"), logger.ERROR)
+        self.assertEqual(logging.getLevelName("WARNING"), logger.WARNING)
+        self.assertEqual(logging.getLevelName("INFO"), logger.INFO)
+        self.assertEqual(logging.getLevelName("DEBUG"), logger.DEBUG)
+        self.assertEqual(logging.getLevelName("TRACE"), logger.TRACE)
+
     def test_level(self):
         log, output = self._new_logger()
         logger.root.setLevel("info")
@@ -24,6 +52,17 @@ class TestLogging(unittest.TestCase):
         logger.root.setLevel("debug")
         log.debug("test")
         self.assertNotEqual(output.tell(), 0)
+
+    def test_level_none(self):
+        log, output = self._new_logger()
+        logger.root.setLevel("none")
+        log.critical("test")
+        log.error("test")
+        log.warning("test")
+        log.info("test")
+        log.debug("test")
+        log.trace("test")
+        self.assertEqual(output.tell(), 0)
 
     def test_output(self):
         log, output = self._new_logger()
