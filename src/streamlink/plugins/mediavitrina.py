@@ -1,5 +1,6 @@
 import logging
 import re
+from urllib.parse import urlparse
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -9,45 +10,72 @@ from streamlink.utils.url import update_qsd
 log = logging.getLogger(__name__)
 
 
-@pluginmatcher(re.compile(
-    r"https?://(?P<channel>ctc(?:love)?|chetv|domashniy|5-tv)\.ru/(?:online|live)"
-))
-@pluginmatcher(re.compile(
-    r"https?://(?P<channel>ren)\.tv/live"
-))
-@pluginmatcher(re.compile(
-    r"https?://player\.mediavitrina\.ru/(?P<channel>[^/?]+.)(?:/[^/]+)?/\w+/player\.html"
-))
+@pluginmatcher(re.compile(r"""https?://(?:www\.)?(?:
+    5-tv
+    |
+    chetv
+    |
+    ctc(?:love)?
+    |
+    domashniy
+)\.ru/(?:live|online)""", re.VERBOSE))
+@pluginmatcher(re.compile(r"https?://ren\.tv/live"))
+@pluginmatcher(re.compile(r"https?://player\.mediavitrina\.ru/.+/player\.html"))
 class MediaVitrina(Plugin):
+    _re_url_json = re.compile(r"https://media\.mediavitrina\.ru/(?:proxy)?api/v2/\w+/playlist/[\w-]+_as_array\.json")
+
     def _get_streams(self):
-        channel = self.match.group("channel")
-        channels = [
-            # ((channels), (path, channel))
-            (("5-tv", "tv-5", "5tv"), ("tv5", "tv-5")),
-            (("chetv", "ctc-che", "che_ext"), ("ctc", "ctc-che")),
-            (("ctc"), ("ctc", "ctc")),
-            (("ctclove", "ctc-love", "ctc_love_ext"), ("ctc", "ctc-love")),
-            (("domashniy", "ctc-dom", "domashniy_ext"), ("ctc", "ctc-dom")),
-            (("iz"), ("iz", "iz")),
-            (("mir"), ("mtrkmir", "mir")),
-            (("muztv"), ("muztv", "muztv")),
-            (("ren", "ren-tv", "rentv"), ("nmg", "ren-tv")),
-            (("russia1"), ("vgtrk", "russia1")),
-            (("russia24"), ("vgtrk", "russia24")),
-            (("russiak", "kultura"), ("vgtrk", "russiak")),
-            (("spas"), ("spas", "spas")),
-            (("tvc"), ("tvc", "tvc")),
-            (("tvzvezda", "zvezda"), ("zvezda", "zvezda")),
-            (("u", "u_ott"), ("utv", "u_ott")),
-        ]
-        for c in channels:
-            if channel in c[0]:
-                path, channel = c[1]
-                break
+        self.session.http.headers.update({"Referer": self.url})
+
+        p_netloc = urlparse(self.url).netloc
+        if p_netloc == "player.mediavitrina.ru":
+            # https://player.mediavitrina.ru/
+            url_player = self.url
+        elif p_netloc.endswith("ctc.ru"):
+            # https://ctc.ru/online/
+            url_player = self.session.http.get(
+                "https://ctc.ru/api/page/v1/online/",
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {"content": validate.all(
+                        [dict],
+                        validate.filter(lambda n: n.get("type") == "on-air"),
+                        [{"onAirLink": validate.url(netloc="player.mediavitrina.ru")}],
+                        validate.get((0, "onAirLink"))
+                    )},
+                    validate.get("content")
+                )
+            )
         else:
-            log.error(f"Unsupported channel: {channel}")
+            # https://chetv.ru/online/
+            # https://ctclove.ru/online/
+            # https://domashniy.ru/online/
+            # https://ren.tv/live
+            # https://www.5-tv.ru/online/
+            url_player = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//iframe[starts-with(@src,'https://player.mediavitrina.ru/')]/@src"),
+            ))
+
+        if not url_player:
             return
 
+        log.debug(f"url_player={url_player}")
+        script_data = self.session.http.get(url_player, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//script[contains(text(),'media.mediavitrina.ru/')]/text()"),
+        ))
+        if not script_data:
+            log.debug("invalid script_data")
+            return
+
+        m = self._re_url_json.search(script_data)
+        if not m:
+            log.debug("invalid url_json")
+            return
+
+        url_json = m.group(0)
+        log.debug(f"url_json={url_json}")
         res_token = self.session.http.get(
             "https://media.mediavitrina.ru/get_token",
             schema=validate.Schema(
@@ -56,12 +84,11 @@ class MediaVitrina(Plugin):
                 validate.get("result"),
             ))
         url = self.session.http.get(
-            update_qsd(f"https://media.mediavitrina.ru/api/v2/{path}/playlist/{channel}_as_array.json", qsd=res_token),
+            update_qsd(url_json, qsd=res_token),
             schema=validate.Schema(
                 validate.parse_json(),
                 {"hls": [validate.url()]},
-                validate.get("hls"),
-                validate.get(0),
+                validate.get(("hls", 0)),
             ))
 
         if not url:
@@ -71,7 +98,7 @@ class MediaVitrina(Plugin):
             log.error("Stream is geo-restricted")
             return
 
-        yield from HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}").items()
+        return HLSStream.parse_variant_playlist(self.session, url, name_fmt="{pixels}_{bitrate}")
 
 
 __plugin__ = MediaVitrina
