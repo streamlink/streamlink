@@ -1,4 +1,5 @@
 import datetime
+import logging
 import os
 import sys
 import unittest
@@ -526,7 +527,7 @@ class TestCLIMainSetupConfigArgs(unittest.TestCase):
 
 class _TestCLIMainLogging(unittest.TestCase):
     @classmethod
-    def subject(cls, argv):
+    def subject(cls, argv, **kwargs):
         session = Streamlink()
         session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
@@ -552,12 +553,16 @@ class _TestCLIMainLogging(unittest.TestCase):
         streamlink_cli.main.logger.root.handlers.clear()
 
     # python >=3.7.2: https://bugs.python.org/issue35046
-    _write_calls = (
-        ([call("[cli][info] foo\n")]
-         if sys.version_info >= (3, 7, 2)
-         else [call("[cli][info] foo"), call("\n")])
-        + [call("bar\n")]
+    _write_call_log_cli_info = (
+        [call("[cli][info] foo\n")]
+        if sys.version_info >= (3, 7, 2) else
+        [call("[cli][info] foo"), call("\n")]
     )
+    _write_call_console_msg = [call("bar\n")]
+    _write_call_console_msg_error = [call("error: bar\n")]
+    _write_call_console_msg_json = [call("{\n  \"error\": \"bar\"\n}\n")]
+
+    _write_calls = _write_call_log_cli_info + _write_call_console_msg
 
     def write_file_and_assert(self, mock_mkdir: Mock, mock_write: Mock, mock_stdout: Mock):
         streamlink_cli.main.log.info("foo")
@@ -567,7 +572,59 @@ class _TestCLIMainLogging(unittest.TestCase):
         self.assertFalse(mock_stdout.write.called)
 
 
-class TestCLIMainLogging(_TestCLIMainLogging):
+class TestCLIMainLoggingStreams(_TestCLIMainLogging):
+    # python >=3.7.2: https://bugs.python.org/issue35046
+    _write_call_log_testcli_err = (
+        [call("[test_cli_main][error] baz\n")]
+        if sys.version_info >= (3, 7, 2) else
+        [call("[test_cli_main][error] baz"), call("\n")]
+    )
+
+    def subject(self, argv, stream=None):
+        super().subject(argv)
+        childlogger = logging.getLogger("streamlink.test_cli_main")
+
+        with self.assertRaises(SystemExit):
+            streamlink_cli.main.log.info("foo")
+            childlogger.error("baz")
+            streamlink_cli.main.console.exit("bar")
+
+        self.assertIs(streamlink_cli.main.log.parent.handlers[0].stream, stream)
+        self.assertIs(childlogger.parent.handlers[0].stream, stream)
+        self.assertIs(streamlink_cli.main.console.output, stream)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_no_pipe_no_json(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink"], mock_stdout)
+        self.assertEqual(mock_stdout.write.mock_calls,
+                         self._write_call_log_cli_info + self._write_call_log_testcli_err + self._write_call_console_msg_error)
+        self.assertEqual(mock_stderr.write.mock_calls, [])
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_no_pipe_json(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--json"], mock_stdout)
+        self.assertEqual(mock_stdout.write.mock_calls, self._write_call_console_msg_json)
+        self.assertEqual(mock_stderr.write.mock_calls, [])
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_pipe_no_json(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--stdout"], mock_stderr)
+        self.assertEqual(mock_stdout.write.mock_calls, [])
+        self.assertEqual(mock_stderr.write.mock_calls,
+                         self._write_call_log_cli_info + self._write_call_log_testcli_err + self._write_call_console_msg_error)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_pipe_json(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--stdout", "--json"], mock_stderr)
+        self.assertEqual(mock_stdout.write.mock_calls, [])
+        self.assertEqual(mock_stderr.write.mock_calls, self._write_call_console_msg_json)
+
+
+class TestCLIMainLoggingInfos(_TestCLIMainLogging):
     @unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
     @patch("streamlink_cli.main.log")
     @patch("streamlink_cli.main.os.geteuid", Mock(return_value=0))
