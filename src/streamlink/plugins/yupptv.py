@@ -4,9 +4,28 @@ import time
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents
-from streamlink.stream.hls import HLSStream
+from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
 
 log = logging.getLogger(__name__)
+
+def override_encoding(resp, *args, **kwargs):
+    resp.encoding = "utf-8"
+
+class YuppTVHLSStreamWorker(HLSStreamWorker):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs);
+        self.reader.request_params.update(hooks={'response': override_encoding})
+ 
+class YuppTVHLSStreamReader(HLSStreamReader):
+    __worker__ = YuppTVHLSStreamWorker
+
+
+class YuppTVHLSStream(HLSStream):
+    __reader__ = YuppTVHLSStreamReader
+    @classmethod
+    def _get_variant_playlist(cls, res):
+        res.encoding = "UTF-8"
+        return super()._get_variant_playlist(res)
 
 
 @pluginmatcher(re.compile(
@@ -71,6 +90,7 @@ class YuppTV(Plugin):
 
     def _get_streams(self):
         self.session.http.headers.update({"User-Agent": useragents.CHROME})
+        self.session.http.headers.update({"Origin": "https://www.yupptv.com"})
 
         login_box_id = self.get_option("boxid")
         login_yuppflix_token = self.get_option("yuppflixtoken")
@@ -104,7 +124,7 @@ class YuppTV(Plugin):
                     log.error("This stream requires a subscription")
                 return
 
-            return HLSStream.parse_variant_playlist(self.session, stream_url)
+            return YuppTVHLSStream.parse_variant_playlist(self.session, stream_url)
         elif "btnsignup" in page.text:
             log.error("This stream requires you to login")
         elif "btnsubscribe" in page.text:
