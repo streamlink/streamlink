@@ -66,6 +66,8 @@ class ConsoleOutput(object):
             return ""
 
     def msg(self, msg, *args, **kwargs):
+        if self.json:
+            return
         formatted = msg.format(*args, **kwargs)
         formatted = u"{0}\n".format(formatted)
 
@@ -80,7 +82,7 @@ class ConsoleOutput(object):
 
         msg = json.dumps(obj, cls=JSONEncoder,
                          indent=2)
-        self.msg(u"{0}", msg)
+        self.output.write(u"{0}\n".format(msg))
 
         if isinstance(obj, dict) and obj.get("error"):
             sys.exit(1)

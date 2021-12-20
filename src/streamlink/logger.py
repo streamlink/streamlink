@@ -1,28 +1,36 @@
 import logging
 import sys
 import warnings
-from logging import CRITICAL, DEBUG, ERROR, INFO, NOTSET, WARNING
+from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from threading import Lock
 
 from streamlink.compat import is_py2
 from streamlink.utils.encoding import maybe_encode
 
+FORMAT_BASE = "[{name}][{levelname}] {message}"
+FORMAT_STYLE = "{"
+FORMAT_DATE = "%H:%M:%S"
+REMOVE_BASE = ["streamlink", "streamlink_cli"]
+
 TRACE = 5
-_levelToName = {
+NONE = sys.maxsize
+
+# Define Streamlink's log levels (and register both lowercase and uppercase names)
+_levelToNames = {
+    NONE: "none",
     CRITICAL: "critical",
     ERROR: "error",
     WARNING: "warning",
     INFO: "info",
     DEBUG: "debug",
     TRACE: "trace",
-    NOTSET: "none",
 }
-_nameToLevel = {name: level for level, name in _levelToName.items()}
 
-for level, name in _levelToName.items():
-    logging.addLevelName(level, name)
+for _level, _name in _levelToNames.items():
+    logging.addLevelName(_level, _name.upper())
+    logging.addLevelName(_level, _name)
 
-levels = [name for _, name in _levelToName.items()]
+levels = list(_levelToNames.values())
 _config_lock = Lock()
 
 
@@ -147,7 +155,7 @@ class StringFormatter(logging.Formatter):
 
 class Logger(object):
     Levels = levels
-    Format = "[{name}][{levelname}] {message}"
+    Format = FORMAT_BASE
     root_name = "streamlink_old"
 
     def __init__(self):
@@ -198,11 +206,6 @@ class LoggerModule(object):
         self.manager.msg(self.module, DEBUG, msg, *args, **kwargs)
 
 
-BASIC_FORMAT = "[{name}][{levelname}] {message}"
-FORMAT_STYLE = "{"
-REMOVE_BASE = ["streamlink", "streamlink_cli"]
-
-
 def basicConfig(**kwargs):
     with _config_lock:
         filename = kwargs.get("filename")
@@ -212,9 +215,9 @@ def basicConfig(**kwargs):
         else:
             stream = kwargs.get("stream")
             handler = logging.StreamHandler(stream)
-        fs = kwargs.get("format", BASIC_FORMAT)
+        fs = kwargs.get("format", FORMAT_BASE)
         style = kwargs.get("style", FORMAT_STYLE)
-        dfs = kwargs.get("datefmt", None)
+        dfs = kwargs.get("datefmt", FORMAT_DATE)
         remove_base = kwargs.get("remove_base", REMOVE_BASE)
 
         formatter = StringFormatter(fs, dfs, style=style, remove_base=remove_base)
@@ -228,4 +231,11 @@ def basicConfig(**kwargs):
     return handler
 
 
-__all__ = ["StreamlinkLogger", "Logger", "TRACE", "basicConfig", "root", "levels"]
+__all__ = [
+    "NONE",
+    "TRACE",
+    "StreamlinkLogger",
+    "basicConfig",
+    "root",
+    "levels",
+]
