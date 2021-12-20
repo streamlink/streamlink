@@ -4,27 +4,27 @@ import time
 
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
+from streamlink.stream.hls import HLSStream, HLSStreamReader
 
 log = logging.getLogger(__name__)
 
-def override_encoding(resp, *args, **kwargs):
-    resp.encoding = "utf-8"
 
-class YuppTVHLSStreamWorker(HLSStreamWorker):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs);
-        self.reader.request_params.update(hooks={'response': override_encoding})
- 
 class YuppTVHLSStreamReader(HLSStreamReader):
-    __worker__ = YuppTVHLSStreamWorker
+    def __init__(self, stream):
+        super().__init__(stream)
+        self.request_params.update(hooks={"response": stream.override_encoding})
 
 
 class YuppTVHLSStream(HLSStream):
     __reader__ = YuppTVHLSStreamReader
+
+    @staticmethod
+    def override_encoding(res, **kwargs):
+        res.encoding = "utf-8"
+
     @classmethod
     def _get_variant_playlist(cls, res):
-        res.encoding = "UTF-8"
+        cls.override_encoding(res)
         return super()._get_variant_playlist(res)
 
 
