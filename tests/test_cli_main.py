@@ -254,6 +254,7 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.stdout = None
         args.record = None
         args.record_and_pipe = None
+        args.player_fifo = False
         args.title = None
         args.url = "URL"
         args.player = "mpv"
