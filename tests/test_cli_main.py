@@ -234,6 +234,7 @@ class TestCLIMain(unittest.TestCase):
         args.stdout = None
         args.record = None
         args.record_and_pipe = None
+        args.player_fifo = False
         args.title = None
         args.player = "mpv"
         args.player_args = ""
