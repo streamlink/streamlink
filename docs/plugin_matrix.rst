@@ -101,7 +101,6 @@ invintus                player.invintus.com  Yes   Yes
 kugou                   fanxing.kugou.com    Yes   --
 latina                  latina.pe            Yes   No    Streams may be geo-restricted to Peru.
 linelive                live.line.me         Yes   Yes
-live_russia_tv          live.russia.tv       Yes   --
 liveme                  liveme.com           Yes   --
 livespotting            livespotting.tv      Yes   No
 livestream              livestream.com       Yes   --
