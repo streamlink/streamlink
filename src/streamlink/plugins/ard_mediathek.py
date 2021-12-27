@@ -94,7 +94,7 @@ class ARDMediathek(Plugin):
             log.info("The content is not available in your region")
             return
         if show:
-            self.title = "{0}: {1}".format(show, self.title)
+            self.title = u"{0}: {1}".format(show, self.title)
 
         if media.get("auto"):
             for s in HLSStream.parse_variant_playlist(self.session, media.get("auto")).items():
