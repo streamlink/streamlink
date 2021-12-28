@@ -16,13 +16,12 @@ class TestPluginCanHandleUrlStreann(PluginCanHandleUrl):
         + "c6b5P51020dUrkuJCgEJCbJBE/MYFuC5xlhmzf6kcN5GlBrTuwyHYBkkVi1nvjOm1QS0iQw36UgJx9JS3DDTf7BzlAimLV5M1rXS/ME3XpllejHV0aL3"
         + "sghCBzc4f4AAz1IoTsl4qEamWBxyfy2kdNJRQ==",
         # URL with iframe
-        "http://centroecuador.ec/tv-radio/",
-        "http://crc.cr/estaciones/crc-89-1/",
+        "https://centroecuador.ec/tv-radio/",
+        "https://crc.cr/estaciones/crc-89-1/",
         "https://columnaestilos.com/",
         "https://crc.cr/estaciones/azul-999/",
         "https://evtv.online/noticias-de-venezuela/",
         "https://telecuracao.com/",
-        "https://willax.tv/en-vivo/",
     ]
 
     should_not_match = [
