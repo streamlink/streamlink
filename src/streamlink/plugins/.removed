@@ -1,6 +1,7 @@
 # Removed plugin files
 # https://github.com/streamlink/streamlink/pull/2003
 # https://github.com/streamlink/streamlink/issues/1223
+abweb
 afreecatv
 aftonbladet
 akamaihd
