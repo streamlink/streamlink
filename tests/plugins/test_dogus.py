@@ -6,12 +6,9 @@ class TestPluginCanHandleUrlDogus(PluginCanHandleUrl):
     __plugin__ = Dogus
 
     should_match = [
-        'http://eurostartv.com.tr/canli-izle',
-        'http://kralmuzik.com.tr/tv/',
-        'http://ntv.com.tr/canli-yayin/ntv',
-        'http://startv.com.tr/canli-yayin',
-    ]
-
-    should_not_match = [
-        'http://www.ntvspor.net/canli-yayin',
+        "http://eurostartv.com.tr/canli-izle",
+        "https://www.kralmuzik.com.tr/tv/kral-pop-tv",
+        "https://www.kralmuzik.com.tr/tv/kral-tv",
+        "https://www.ntv.com.tr/canli-yayin/ntv?youtube=true",
+        "https://www.startv.com.tr/canli-yayin",
     ]
