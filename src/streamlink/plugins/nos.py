@@ -1,11 +1,9 @@
 import logging
 import re
 
-from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.plugin.api.utils import itertags
 from streamlink.stream.hls import HLSStream
-from streamlink.utils.parse import parse_json
 
 log = logging.getLogger(__name__)
 
@@ -21,58 +19,76 @@ class NOS(Plugin):
     }
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        for script in itertags(res.text, "script"):
-            _type = script.attributes.get("type")
-            if not (_type and _type == "application/json"):
-                continue
+        try:
+            scripts = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_findall(".//script[@type='application/json'][@data-ssr-name]"),
+                [
+                    validate.union((
+                        validate.get("data-ssr-name"),
+                        validate.all(
+                            validate.getattr("text"),
+                            validate.parse_json()
+                        )
+                    ))
+                ]
+            ))
+        except PluginError:
+            log.error("Could not find any stream data")
+            return
 
+        for _data_ssr_name, _data_json in scripts:
             video_url = None
-            _data_ssr_name = script.attributes.get("data-ssr-name")
-            if not _data_ssr_name:
-                continue
-
             log.trace("Found _data_ssr_name={0}".format(_data_ssr_name))
+
             if _data_ssr_name == "pages/Broadcasts/Broadcasts":
-                self.title, video_url, is_live = parse_json(script.text, schema=validate.Schema({
-                    "currentLivestream": {
+                self.title, video_url, is_live = validate.Schema(
+                    {"currentLivestream": {
                         "is_live": bool,
                         "title": validate.text,
                         "stream": validate.url(),
                     }},
                     validate.get("currentLivestream"),
-                    validate.union_get("title", "stream", "is_live")))
+                    validate.union_get("title", "stream", "is_live")
+                ).validate(_data_json)
                 if not is_live:
                     log.error(self._msg_live_offline)
                     continue
+
             elif _data_ssr_name == "pages/Livestream/Livestream":
-                self.title, video_url, is_live = parse_json(script.text, schema=validate.Schema({
-                    "streamIsLive": bool,
-                    "title": validate.text,
-                    "stream": validate.url(),
-                }, validate.union_get("title", "stream", "streamIsLive")))
+                self.title, video_url, is_live = validate.Schema(
+                    {
+                        "streamIsLive": bool,
+                        "title": validate.text,
+                        "stream": validate.url(),
+                    },
+                    validate.union_get("title", "stream", "streamIsLive")
+                ).validate(_data_json)
                 if not is_live:
                     log.error(self._msg_live_offline)
                     continue
+
             elif _data_ssr_name in self.vod_keys.keys():
                 _key = self.vod_keys[_data_ssr_name]
-                self.title, video_url = parse_json(script.text, schema=validate.Schema({
-                    _key: {
+                self.title, video_url = validate.Schema(
+                    {_key: {
                         "title": validate.text,
                         "aspect_ratios": {
-                            "profiles": validate.all([{
-                                "name": validate.text,
-                                "url": validate.url(),
-                            }], validate.filter(lambda n: n["name"] == "hls_unencrypted"))
+                            "profiles": validate.all(
+                                [{
+                                    "name": validate.text,
+                                    "url": validate.url(),
+                                }],
+                                validate.filter(lambda p: p["name"] == "hls_unencrypted")
+                            )
                         }
                     }},
                     validate.get(_key),
-                    validate.union_get("title", ("aspect_ratios", "profiles", 0, "url"))))
+                    validate.union_get("title", ("aspect_ratios", "profiles", 0, "url"))
+                ).validate(_data_json)
 
             if video_url is not None:
-                for s in HLSStream.parse_variant_playlist(self.session, video_url).items():
-                    yield s
-                break
+                return HLSStream.parse_variant_playlist(self.session, video_url)
 
 
 __plugin__ = NOS
