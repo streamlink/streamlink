@@ -10,11 +10,11 @@ Full documentation is available at https://Billy2011.github.io/streamlink-27.
 
 """
 __version__ = "2.27.0.0-dev"
-__version_date__ = "2021-11-23"
+__version_date__ = "2022-01-01"
 __title__ = "streamlink-27"
 __license__ = "Simplified BSD"
 __author__ = "Streamlink, Billy2011"
-__copyright__ = "Copyright 2021 Streamlink, Billy2011"
+__copyright__ = "Copyright 2022 Streamlink, Billy2011"
 __credits__ = ["https://github.com/streamlink/streamlink/blob/master/AUTHORS"]
 
 from streamlink.api import streams

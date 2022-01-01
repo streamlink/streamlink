@@ -40,7 +40,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'Streamlink[-27]'
-copyright = '2021, Streamlink, Billy2011'
+copyright = '2022, Streamlink, Billy2011'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
