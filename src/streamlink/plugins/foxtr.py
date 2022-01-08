@@ -1,6 +1,7 @@
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 
@@ -8,13 +9,12 @@ from streamlink.stream.hls import HLSStream
     r"https?://(?:www\.)?fox(?:play)?\.com\.tr/"
 ))
 class FoxTR(Plugin):
-    playervars_re = re.compile(r"source\s*:\s*\[\s*\{\s*videoSrc\s*:\s*(?:mobilecheck\(\)\s*\?\s*)?'([^']+)'")
-
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        match = self.playervars_re.search(res.text)
-        if match:
-            stream_url = match.group(1)
+        re_streams = re.compile(r"""(['"])(?P<url>https://\S+/foxtv\.m3u8\S+)\1""")
+        res = self.session.http.get(self.url, schema=validate.Schema(
+            validate.transform(re_streams.findall)
+        ))
+        for _, stream_url in res:
             return HLSStream.parse_variant_playlist(self.session, stream_url)
 
 
