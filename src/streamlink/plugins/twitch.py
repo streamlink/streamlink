@@ -452,11 +452,11 @@ class TwitchAPI:
     (?:
         videos/(?P<videos_id>\d+)
         |
-        (?P<channel>[^/]+)
+        (?P<channel>[^/?]+)
         (?:
             /video/(?P<video_id>\d+)
             |
-            /clip/(?P<clip_name>[\w-]+)
+            /clip/(?P<clip_name>[^/?]+)
         )?
     )
 """, re.VERBOSE))
