@@ -151,7 +151,7 @@ if a package is not available for your distro or platform, or if it's out of dat
 .. _NixOS: https://github.com/NixOS/nixpkgs/tree/master/pkgs/applications/video/streamlink
 .. _OpenBSD: https://openports.se/multimedia/streamlink
 .. _Solus: https://dev.getsol.us/source/streamlink/
-.. _Ubuntu: http://ppa.launchpad.net/nilarimogard/webupd8/ubuntu/pool/main/s/streamlink/
+.. _Ubuntu: https://launchpad.net/~nilarimogard/+archive/ubuntu/webupd8/+packages?field.name_filter=streamlink&field.status_filter=published&field.series_filter=
 .. _Void: https://github.com/void-linux/void-packages/tree/master/srcpkgs/streamlink
 
 .. _Installing AUR packages: https://wiki.archlinux.org/index.php/Arch_User_Repository#Installing_packages
@@ -176,9 +176,9 @@ Gentoo                               soredake <fdsfgs at krutt.org>
 NetBSD                               Maya Rashish <maya at netbsd.org>
 NixOS                                Tuomas Tynkkynen <tuomas.tynkkynen at iki.fi>
 OpenBSD                              Brian Callahan <bcallah at openbsd.org>
-Solus                                Bryan T. Meyers <bmeyers at datadrake.com>
+Solus                                Joey Riches <josephriches at gmail.com>
 Ubuntu                               Alin Andrei <andrew at webupd8.org>
-Void                                 wkuipers <wietse at kuiprs.nl>
+Void                                 Michal Vasilek <michal at vasilek.cz>
 Windows binaries                     beardypig <beardypig at protonmail.com>
 Windows port. version                beardypig <beardypig at protonmail.com>
 ==================================== ===========================================
