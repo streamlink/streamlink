@@ -1,65 +1,113 @@
-"""
-Plugin to support the videos from Delfi.lt
-
-https://en.wikipedia.org/wiki/Delfi_(web_portal)
-"""
 import itertools
 import logging
 import re
 
-from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api.utils import itertags
-from streamlink.stream.dash import DASHStream
+from streamlink.compat import str, urlparse
+from streamlink.plugin import Plugin, PluginError, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-from streamlink.stream.http import HTTPStream
+from streamlink.utils.parse import parse_qsd
 from streamlink.utils.url import update_scheme
 
 log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:[\w-]+\.)?delfi\.(lt|lv|ee)"
+    r"https?://(?:[\w-]+\.)?delfi\.(?P<tld>lt|lv|ee)"
 ))
 class Delfi(Plugin):
     _api = {
-        "lt": "http://g2.dcdn.lt/vfe/data.php",
-        "lv": "http://g.delphi.lv/vfe/data.php",
-        "ee": "http://g4.nh.ee/vfe/data.php"
+        "lt": "https://g2.dcdn.lt/vfe/data.php",
+        "lv": "https://g.delphi.lv/vfe/data.php",
+        "ee": "https://g4.nh.ee/vfe/data.php",
     }
 
-    @property
-    def api_server(self):
-        domain = self.match.group(1)
-        return self._api.get(domain, "lt")  # fallback to lt
-
     def _get_streams_api(self, video_id):
-        res = self.session.http.get(self.api_server,
-                                    params=dict(video_id=video_id))
-        data = self.session.http.json(res)
-        if data["success"]:
-            for x in itertools.chain(*data['data']['versions'].values()):
-                src = update_scheme("https://", x["src"], force=False)
-                if x['type'] == "application/x-mpegurl":
-                    for s in HLSStream.parse_variant_playlist(self.session, src).items():
-                        yield s
-                elif x['type'] == "application/dash+xml":
-                    for s in DASHStream.parse_manifest(self.session, src).items():
-                        yield s
-                elif x['type'] == "video/mp4":
-                    yield "{0}p".format(x['res']), HTTPStream(self.session, src)
-        else:
-            log.error("Failed to get streams: {0} ({1})".format(
-                data['message'], data['code']
+        log.debug("Found video ID: {0}".format(video_id))
+
+        tld = self.match.group("tld")
+        try:
+            data = self.session.http.get(
+                self._api.get(tld, "lt"),
+                params=dict(video_id=video_id),
+                schema=validate.Schema(
+                    validate.parse_json(),
+                    {
+                        "success": True,
+                        "data": {
+                            "versions": {
+                                validate.text: validate.all(
+                                    [{
+                                        "type": validate.text,
+                                        "src": validate.text,
+                                    }],
+                                    validate.filter(lambda item: item["type"] == "application/x-mpegurl")
+                                )
+                            }
+                        }
+                    },
+                    validate.get(("data", "versions"))
+                )
+            )
+        except PluginError:
+            log.error("Failed to get streams from API")
+            return
+
+        for stream in itertools.chain(*data.values()):
+            src = update_scheme("https://", stream["src"], force=False)
+            for s in HLSStream.parse_variant_playlist(self.session, src).items():
+                yield s
+
+    def _get_streams_delfi(self, src):
+        try:
+            data = self.session.http.get(src, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(),'embedJs.setAttribute(')][1]/text()"),
+                validate.any(None, validate.all(
+                    validate.text,
+                    validate.transform(re.compile(r"embedJs\.setAttribute\('src',\s*'(.+?)'").search),
+                    validate.any(None, validate.all(
+                        validate.get(1),
+                        validate.transform(lambda url: parse_qsd(urlparse(url).fragment)),
+                        {"stream": validate.text},
+                        validate.get("stream"),
+                        validate.parse_json(),
+                        {"versions": [{
+                            "hls": validate.text
+                        }]},
+                        validate.get("versions")
+                    ))
+                ))
             ))
+        except PluginError:
+            log.error("Failed to get streams from iframe")
+            return
+
+        for stream in data:
+            src = update_scheme("https://", stream["hls"], force=False)
+            for s in HLSStream.parse_variant_playlist(self.session, src).items():
+                yield s
 
     def _get_streams(self):
-        res = self.session.http.get(self.url)
-        for div in itertags(res.text, 'div'):
-            if div.attributes.get("data-provider") == "dvideo":
-                video_id = div.attributes.get("data-id")
-                log.debug("Found video ID: {0}".format(video_id))
-                for s in self._get_streams_api(video_id):
-                    yield s
+        root = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html()
+        ))
+
+        video_id = root.xpath("string(.//div[@data-provider='dvideo'][@data-id][1]/@data-id)")
+        if video_id:
+            return self._get_streams_api(str(video_id))
+
+        yt_id = root.xpath("string(.//script[contains(@src,'/yt.js')][@data-video]/@data-video)")
+        if yt_id:
+            return self.session.streams("https://www.youtube.com/watch?v={0}".format(yt_id))
+
+        yt_iframe = root.xpath("string(.//iframe[starts-with(@src,'https://www.youtube.com/')][1]/@src)")
+        if yt_iframe:
+            return self.session.streams(str(yt_iframe))
+
+        delfi = root.xpath("string(.//iframe[@name='delfi-stream'][@src][1]/@src)")
+        if delfi:
+            return self._get_streams_delfi(str(delfi))
 
 
 __plugin__ = Delfi
