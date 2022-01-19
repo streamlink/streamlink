@@ -27,7 +27,7 @@ class ExtInf(NamedTuple):
 # EXT-X-BYTERANGE
 class ByteRange(NamedTuple):  # version >= 4
     range: int
-    offset: int
+    offset: Optional[int]
 
 
 # EXT-X-DATERANGE
@@ -152,7 +152,7 @@ class M3U8:
 class M3U8Parser:
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
-    _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")
+    _range_re = re.compile(r"(?P<range>\d+)(?:@(?P<offset>\d+))?")
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
 
@@ -214,7 +214,10 @@ class M3U8Parser:
 
     def parse_byterange(self, value: str) -> Optional[ByteRange]:
         match = self._range_re.match(value)
-        return None if match is None else ByteRange(int(match.group("range")), int(match.group("offset") or 0))
+        if match is None:
+            return None
+        _range, offset = match.groups()
+        return ByteRange(int(_range), int(offset) if offset is not None else None)
 
     def parse_extinf(self, value: str) -> Tuple[float, Optional[str]]:
         match = self._extinf_re.match(value)
