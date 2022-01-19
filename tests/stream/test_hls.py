@@ -25,10 +25,13 @@ class EncryptedBase:
 
 
 class TagMap(Tag):
-    def __init__(self, num, namespace):
+    def __init__(self, num, namespace, attrs=None):
         self.path = f"map{num}"
         self.content = f"[map{num}]".encode("ascii")
-        super().__init__("EXT-X-MAP", {"URI": self.val_quoted_string(self.url(namespace))})
+        super().__init__("EXT-X-MAP", {
+            "URI": self.val_quoted_string(self.url(namespace)),
+            **(attrs or {})
+        })
 
 
 class TagMapEnc(EncryptedBase, TagMap):
@@ -144,6 +147,103 @@ class TestHLSStream(TestMixinStreamHLS, unittest.TestCase):
         ]))
         self.assertTrue(self.called(map1, once=True), "Downloads first map only once")
         self.assertTrue(self.called(map2, once=True), "Downloads second map only once")
+
+
+@patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
+class TestHLSStreamByterange(TestMixinStreamHLS, unittest.TestCase):
+    __stream__ = EventedHLSStream
+
+    # The dummy segments in the error tests are required because the writer's run loop would otherwise continue forever
+    # due to the segment's future result being None (no requests result), and we can't await the end of the stream
+    # without waiting for the stream's timeout error. The dummy segments ensure that we can call await_write for these
+    # successful segments, so we can close the stream afterwards and safely make the test assertions.
+    # The EventedHLSStreamWriter could also implement await_fetch, but this is unnecessarily more complex than it already is.
+
+    @patch("streamlink.stream.hls.log")
+    def test_unknown_offset(self, mock_log: Mock):
+        thread, _ = self.subject([
+            Playlist(0, [
+                Tag("EXT-X-BYTERANGE", "3"), Segment(0),
+                Segment(1)
+            ], end=True)
+        ])
+
+        self.await_write(2 - 1)
+        self.thread.close()
+
+        self.assertEqual(mock_log.error.call_args_list, [
+            call("Failed to fetch segment 0: Missing BYTERANGE offset")
+        ])
+        self.assertFalse(self.called(Segment(0)))
+
+    @patch("streamlink.stream.hls.log")
+    def test_unknown_offset_map(self, mock_log: Mock):
+        map1 = TagMap(1, self.id(), {"BYTERANGE": "\"1234\""})
+        self.mock("GET", self.url(map1), content=map1.content)
+        thread, _ = self.subject([
+            Playlist(0, [
+                Segment(0),
+                map1,
+                Segment(1)
+            ], end=True)
+        ])
+
+        self.await_write(3 - 1)
+        self.thread.close()
+
+        self.assertEqual(mock_log.error.call_args_list, [
+            call("Failed to fetch map for segment 1: Missing BYTERANGE offset")
+        ])
+        self.assertFalse(self.called(map1))
+
+    @patch("streamlink.stream.hls.log")
+    def test_invalid_offset_reference(self, mock_log: Mock):
+        thread, _ = self.subject([
+            Playlist(0, [
+                Tag("EXT-X-BYTERANGE", "3@0"), Segment(0),
+                Segment(1),
+                Tag("EXT-X-BYTERANGE", "5"), Segment(2),
+                Segment(3)
+            ], end=True)
+        ])
+
+        self.await_write(4 - 1)
+        self.thread.close()
+
+        self.assertEqual(mock_log.error.call_args_list, [
+            call("Failed to fetch segment 2: Missing BYTERANGE offset")
+        ])
+        self.assertEqual(self.mocks[self.url(Segment(0))].last_request._request.headers["Range"], "bytes=0-2")
+        self.assertFalse(self.called(Segment(2)))
+
+    def test_offsets(self):
+        map1 = TagMap(1, self.id(), {"BYTERANGE": "\"1234@0\""})
+        map2 = TagMap(2, self.id(), {"BYTERANGE": "\"42@1337\""})
+        self.mock("GET", self.url(map1), content=map1.content)
+        self.mock("GET", self.url(map2), content=map2.content)
+        s1, s2, s3, s4, s5 = Segment(0), Segment(1), Segment(2), Segment(3), Segment(4)
+
+        self.subject([
+            Playlist(0, [
+                map1,
+                Tag("EXT-X-BYTERANGE", "5@3"), s1,
+                Tag("EXT-X-BYTERANGE", "7"), s2,
+                map2,
+                Tag("EXT-X-BYTERANGE", "11"), s3,
+                Tag("EXT-X-BYTERANGE", "17@13"), s4,
+                Tag("EXT-X-BYTERANGE", "19"), s5,
+            ], end=True)
+        ])
+
+        self.await_write(5 * 2)
+        self.await_read(read_all=True)
+        self.assertEqual(self.mocks[self.url(map1)].last_request._request.headers["Range"], "bytes=0-1233")
+        self.assertEqual(self.mocks[self.url(map2)].last_request._request.headers["Range"], "bytes=1337-1378")
+        self.assertEqual(self.mocks[self.url(s1)].last_request._request.headers["Range"], "bytes=3-7")
+        self.assertEqual(self.mocks[self.url(s2)].last_request._request.headers["Range"], "bytes=8-14")
+        self.assertEqual(self.mocks[self.url(s3)].last_request._request.headers["Range"], "bytes=15-25")
+        self.assertEqual(self.mocks[self.url(s4)].last_request._request.headers["Range"], "bytes=13-29")
+        self.assertEqual(self.mocks[self.url(s5)].last_request._request.headers["Range"], "bytes=30-48")
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
