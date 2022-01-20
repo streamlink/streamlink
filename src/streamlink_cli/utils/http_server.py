@@ -33,9 +33,9 @@ class HTTPServer:
 
         addrs = set()
         try:
-            for info in socket.getaddrinfo(socket.gethostname(), self.port,
-                                           socket.AF_INET):
-                addrs.add(info[4][0])
+            addrs = {info[4][0] 
+                     for info in socket.getaddrinfo(socket.gethostname(), self.port, 
+                                                    socket.AF_INET)}
         except socket.gaierror:
             pass
 
