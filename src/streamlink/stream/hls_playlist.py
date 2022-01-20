@@ -84,7 +84,7 @@ class M3U8(object):
 class M3U8Parser(object):
     _extinf_re = re.compile(r"(?P<duration>\d+(\.\d+)?)(,(?P<title>.+))?")
     _attr_re = re.compile(r"([A-Z\-]+)=(\d+\.\d+|0x[0-9A-z]+|\d+x\d+|\d+|\"(.+?)\"|[0-9A-z\-]+)")
-    _range_re = re.compile(r"(?P<range>\d+)(@(?P<offset>.+))?")
+    _range_re = re.compile(r"(?P<range>\d+)(?:@(?P<offset>\d+))?")
     _tag_re = re.compile(r"#(?P<tag>[\w-]+)(:(?P<value>.+))?")
     _res_re = re.compile(r"(\d+)x(\d+)")
 
@@ -139,7 +139,10 @@ class M3U8Parser(object):
 
     def parse_byterange(self, value):
         match = self._range_re.match(value)
-        return None if match is None else ByteRange(int(match.group("range")), int(match.group("offset") or 0))
+        if match is None:
+            return None
+        _range, offset = match.groups()
+        return ByteRange(int(_range), int(offset) if offset is not None else None)
 
     def parse_extinf(self, value):
         match = self._extinf_re.match(value)
