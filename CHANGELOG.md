@@ -1,5 +1,72 @@
 # Changelog
 
+## streamlink 3.1.0 (2022-01-22)
+
+Release highlights:
+
+- Changed: file overwrite prompt to wait for user input before opening streams ([#4252](https://github.com/streamlink/streamlink/pull/4252))
+- Fixed: log messages appearing in `--json` output ([#4258](https://github.com/streamlink/streamlink/pull/4258))
+- Fixed: keep-alive TCP connections when filtering out HLS segments ([#4229](https://github.com/streamlink/streamlink/pull/4229))
+- Fixed: sort order of DASH streams with the same video resolution ([#4220](https://github.com/streamlink/streamlink/pull/4220))
+- Fixed: HLS segment byterange offsets ([#4301](https://github.com/streamlink/streamlink/pull/4301), [#4302](https://github.com/streamlink/streamlink/pull/4302))
+- Fixed: YouTube /live URLs ([#4222](https://github.com/streamlink/streamlink/pull/4222))
+- Fixed: UStream websocket address ([#4238](https://github.com/streamlink/streamlink/pull/4238))
+- Fixed: Pluto desync issues by filtering out bumper segments ([#4255](https://github.com/streamlink/streamlink/pull/4255))
+- Fixed: various plugin issues - please see the changelog down below
+- Removed plugins: abweb ([#4270](https://github.com/streamlink/streamlink/pull/4270)), latina ([#4269](https://github.com/streamlink/streamlink/pull/4269)), live_russia_tv ([#4263](https://github.com/streamlink/streamlink/pull/4263)), liveme ([#4264](https://github.com/streamlink/streamlink/pull/4264))
+
+
+```text
+Christian Kündig <christian@kuendig.info> (1):
+      plugins.yupptv: override encoding, set Origin header (#4261)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (4):
+      plugins.pluto: rewrite/fix
+      plugins.albavision: fix/update
+      plugins.albavision: update plugin_matrix.rst
+      plugins.pluto: add filtering of bumper segments
+
+PleasantMachine9 <65126927+PleasantMachine9@users.noreply.github.com> (1):
+      stream.hls: read and discard filtered sequences properly
+
+back-to <backto@protonmail.ch> (8):
+      stream.dash: sort video duplicated resolutions by bandwidth
+      plugins.onetv: added support for channel with different timezone +4
+      plugins.ceskatelevize: Fix Livestreams
+      plugins.mediavitrina: better support for different channel names
+      plugins.live_russia_tv: removed outdated plugin
+      plugins.liveme: removed
+      plugins.abweb: removed
+      plugins.dogus: update and cleanup
+
+bastimeyer <mail@bastimeyer.de> (21):
+      plugins.youtube: fix metadata on /live URLs
+      plugins.ustreamtv: fix websocket address
+      plugins.steam: refactor plugin
+      plugins.stadium: rewrite
+      cli: create file output before opening the stream
+      logger: change NONE loglevel to sys.maxsize
+      cli.console: ignore msg() calls if json=True
+      tests: fix named pipe being created in CLI tests
+      plugins.vtvgo: remove itertags
+      plugins.vk: rewrite and remove itertags
+      plugins.latina: remove plugin
+      plugins.streann: remove itertags
+      plugins.nos: remove itertags
+      tests: rewrite plugins_meta tests
+      2022
+      plugins.foxtr: fix regex
+      plugins.delfi: rewrite plugin
+      plugins.twitch: fix pluginmatcher regex
+      docs: fix linux package infos
+      stream.hls: fix byterange parser
+      stream.hls: refactor segment byterange calculation
+
+zappepappe <zappepappe@users.noreply.github.com> (1):
+      plugins.svtplay: fix live channel URL matching (#4219)
+```
+
+
 ## streamlink 3.0.3 (2021-11-27)
 
 Patch release:
