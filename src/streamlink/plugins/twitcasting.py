@@ -4,7 +4,7 @@ import re
 
 from streamlink.buffers import RingBuffer
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.stream import Stream
 from streamlink.stream.stream import StreamIO
@@ -29,11 +29,11 @@ class TwitCasting(Plugin):
     _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
 
     _STREAM_INFO_SCHEMA = validate.Schema({
-        "movie": {
+        validate.optional("movie"): {
             "id": int,
             "live": bool
         },
-        "fmp4": {
+        validate.optional("fmp4"): {
             "host": validate.text,
             "proto": validate.text,
             "source": bool,
@@ -44,14 +44,16 @@ class TwitCasting(Plugin):
     def __init__(self, url):
         super(TwitCasting, self).__init__(url)
         self.channel = self.match.group("channel")
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def _get_streams(self):
         stream_info = self._get_stream_info()
         log.debug("Live stream info: {}".format(stream_info))
 
-        if not stream_info["movie"]["live"]:
+        if not stream_info.get("movie") or not stream_info["movie"]["live"]:
             raise PluginError("The live stream is offline")
+
+        if not stream_info.get("fmp4"):
+            raise PluginError("Login required")
 
         # Keys are already validated by schema above
         proto = stream_info["fmp4"]["proto"]
