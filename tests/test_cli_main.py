@@ -379,6 +379,22 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         create_output(formatter)
         console.exit.assert_called_with("Cannot use record options with other file output options.")
 
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.console")
+    def test_create_output_no_default_player(self, console: Mock, args: Mock):
+        formatter = Formatter({})
+        args.output = None
+        args.stdout = False
+        args.record_and_pipe = False
+        args.player = None
+        console.exit.side_effect = SystemExit
+        with self.assertRaises(SystemExit):
+            create_output(formatter)
+        self.assertRegex(
+            console.exit.call_args_list[0][0][0],
+            r"^The default player \(\w+\) does not seem to be installed\."
+        )
+
 
 class TestCLIMainHandleStream(unittest.TestCase):
     @patch("streamlink_cli.main.output_stream")
