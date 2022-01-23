@@ -4,7 +4,7 @@ import re
 
 from streamlink.buffers import RingBuffer
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
-from streamlink.plugin.api import useragents, validate
+from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
 from streamlink.stream.stream import Stream
 from streamlink.stream.stream import StreamIO
@@ -30,13 +30,13 @@ class TwitCasting(Plugin):
     _STREAM_REAL_URL = "{proto}://{host}/ws.app/stream/{movie_id}/fmp4/bd/1/1500?mode={mode}"
 
     _STREAM_INFO_SCHEMA = validate.Schema({
-        "movie": {
+        validate.optional("movie"): {
             "id": int,
             "live": bool
         },
-        "fmp4": {
-            "host": validate.text,
-            "proto": validate.text,
+        validate.optional("fmp4"): {
+            "host": str,
+            "proto": str,
             "source": bool,
             "mobilesource": bool
         }
@@ -45,14 +45,16 @@ class TwitCasting(Plugin):
     def __init__(self, url):
         super().__init__(url)
         self.channel = self.match.group("channel")
-        self.session.http.headers.update({'User-Agent': useragents.CHROME})
 
     def _get_streams(self):
         stream_info = self._get_stream_info()
-        log.debug("Live stream info: {}".format(stream_info))
+        log.debug(f"Live stream info: {stream_info}")
 
-        if not stream_info["movie"]["live"]:
+        if not stream_info.get("movie") or not stream_info["movie"]["live"]:
             raise PluginError("The live stream is offline")
+
+        if not stream_info.get("fmp4"):
+            raise PluginError("Login required")
 
         # Keys are already validated by schema above
         proto = stream_info["fmp4"]["proto"]
@@ -67,7 +69,7 @@ class TwitCasting(Plugin):
             mode = "base"  # Low quality
 
         if (proto == '') or (host == '') or (not movie_id):
-            raise PluginError("No stream available for user {}".format(self.channel))
+            raise PluginError(f"No stream available for user {self.channel}")
 
         real_stream_url = self._STREAM_REAL_URL.format(proto=proto, host=host, movie_id=movie_id, mode=mode)
 
@@ -76,7 +78,7 @@ class TwitCasting(Plugin):
             password_hash = hashlib.md5(password.encode()).hexdigest()
             real_stream_url = update_qsd(real_stream_url, {"word": password_hash})
 
-        log.debug("Real stream url: {}".format(real_stream_url))
+        log.debug(f"Real stream url: {real_stream_url}")
 
         return {mode: TwitCastingStream(session=self.session, url=real_stream_url)}
 
