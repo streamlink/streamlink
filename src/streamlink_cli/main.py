@@ -116,7 +116,9 @@ def create_output(formatter: Formatter):
         if not args.player:
             console.exit("The default player (VLC) does not seem to be "
                          "installed. You must specify the path to a player "
-                         "executable with --player.")
+                         "executable with --player, a filepath to save the "
+                         "stream with --output, or pipe the stream to "
+                         "another program with --stdout.")
 
         if args.player_fifo:
             try:
