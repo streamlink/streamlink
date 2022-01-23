@@ -9,7 +9,7 @@ from textwrap import dedent
 import streamlink_cli.main
 from streamlink.exceptions import StreamError
 from streamlink.session import Streamlink
-from streamlink_cli.compat import is_win32, stdout
+from streamlink_cli.compat import is_py2, is_win32, stdout
 from streamlink_cli.main import (
     Formatter,
     check_file_output,
@@ -338,6 +338,30 @@ class TestCLIMain(unittest.TestCase):
         args.record_and_pipe = True
         create_output(FakePlugin)
         console.exit.assert_called_with("Cannot use record options with other file output options.")
+
+    @patch("streamlink_cli.main.console")
+    def test_create_output_no_default_player(self, console):
+        # type: (Mock, Mock)
+        streamlink_cli.main.args = args = Mock()
+        console.exit = Mock()
+        formatter = Formatter({})
+        args.output = None
+        args.stdout = False
+        args.record_and_pipe = False
+        args.player = None
+        console.exit.side_effect = SystemExit
+        with self.assertRaises(SystemExit):
+            create_output(formatter)
+        if is_py2:
+            self.assertRegexpMatches(
+                console.exit.call_args_list[0][0][0],
+                r"^The default player \(\w+\) does not seem to be installed\."
+            )
+        else:
+            self.assertRegex(
+                console.exit.call_args_list[0][0][0],
+                r"^The default player \(\w+\) does not seem to be installed\."
+            )
 
 
 class TestCLIMainOutputStream(unittest.TestCase):

@@ -107,13 +107,16 @@ def create_output(formatter):
     elif args.record_and_pipe:
         record = check_file_output(formatter.path(args.record_and_pipe, args.fs_safe_rules), args.force)
         out = FileOutput(fd=stdout, record=record)
+    elif not args.player:
+        console.exit(
+            "The default player (VLC) does not seem to be "
+            "installed. You must specify the path to a player "
+            "executable with --player, a file path to save the "
+            "stream with --output, or pipe the stream to "
+            "another program with --stdout."
+        )
     else:
         http = namedpipe = record = None
-
-        if not args.player:
-            console.exit("The default player (VLC) does not seem to be "
-                         "installed. You must specify the path to a player "
-                         "executable with --player.")
 
         if args.player_fifo:
             try:
