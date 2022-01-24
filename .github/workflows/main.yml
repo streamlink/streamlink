@@ -107,7 +107,7 @@ jobs:
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
-          python -m pip install pynsist wheel
+          python -m pip install wheel pynsist==2.7 distlib==0.3.3
           sudo apt update
           sudo apt install -y nsis imagemagick inkscape
       - name: Installer file name
