@@ -1,5 +1,24 @@
 # Changelog
 
+## streamlink 3.1.1 (2022-01-25)
+
+Patch release:
+
+- Fixed: broken `streamlink.exe`/`streamlinkw.exe` executables in Windows installer ([#4308](https://github.com/streamlink/streamlink/pull/4308))
+
+
+```text
+Mozi <29089388+pzhlkj6612@users.noreply.github.com> (1):
+      cli: tell users the stream could be saved or piped
+
+back-to <backto@protonmail.ch> (1):
+      plugins.twitcasting: Fix error messages
+
+bastimeyer <mail@bastimeyer.de> (1):
+      installer: set pynsist to 2.7 and distlib to 0.3.3
+```
+
+
 ## streamlink 3.1.0 (2022-01-22)
 
 Release highlights:
