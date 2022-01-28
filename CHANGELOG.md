@@ -1,5 +1,70 @@
 # Changelog
 
+## streamlink 2.27.1.0 (2022-01-28)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (38):
+      cli.output: remove MPV title variable escape logic (#4206)
+      plugin: add 'id' metadata property (#4203)
+      plugins.youtube: add 'id' metadata (#4203)
+      plugins.twitch: add 'id' metadata (#4203)
+      docs: add dedicated metadata variables section (#4207)
+      CLI: fix file output
+      utils.parse: parse invalid XHTML5 documents (#4210)
+      cli: prioritize --help and fix its output (#4213)
+      plugins.youtube: add category metadata (#4214)
+      plugins.youtube: fix metadata on /live URLs (#4222)
+      stream.hls: read and discard filtered sequences properly
+      plugins.abematv: fix HLS filtering
+      plugins.steam: refactor plugin (#4244)
+      plugins.onetv: added support for channel with different timezone +4 (#4247)
+      plugins.pluto: rewrite/fix (#4232)
+      plugins.stadium: rewrite (#4246)
+      cli: create file output before opening the stream (#4252)
+      plugins.albavision: fix/update (#4254)
+      plugins.pluto: make ads filtering optional
+      cli.console: ignore msg() calls if json=True
+      plugins.ceskatelevize: Fix Livestreams (#4260)
+      plugins.mediavitrina: better support for different channel names (#4259)
+      plugins.live_russia_tv: removed outdated plugin (#4263)
+      plugins.liveme: removed (#4264)
+      plugins.vtvgo: remove itertags (#4266)
+      plugins.vk: rewrite and remove itertags (#4267)
+      plugins.ard_mediathek: fix encode error
+      plugins.streann: remove itertags (#4268)
+      plugins.abweb: removed (#4270)
+      plugins.nos: remove itertags (#4272)
+      tests: rewrite plugins_meta tests (#4274)
+      2022
+      plugins.delfi: rewrite plugin (#4273)
+      stream.hls: fix byterange parser (#4301)
+
+Christian Kündig <christian@kuendig.info> (1):
+      plugins.yupptv: override encoding, set Origin header (#4261)
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (1):
+      plugins.albavision: update plugin_matrix.rst
+
+Mozi <29089388+pzhlkj6612@users.noreply.github.com> (1):
+      cli: tell users the stream could be saved or piped
+
+back-to <backto@protonmail.ch> (3):
+      stream.dash: sort video duplicated resolutions by bandwidth
+      plugins.dogus: update and cleanup
+      plugins.twitcasting: Fix error messages
+
+bastimeyer <mail@bastimeyer.de> (5):
+      plugins.ustreamtv: fix websocket address
+      tests: fix named pipe being created in CLI tests
+      plugins.latina: remove plugin
+      plugins.foxtr: fix regex
+      plugins.twitch: fix pluginmatcher regex
+
+zappepappe <zappepappe@users.noreply.github.com> (1):
+      plugins.svtplay: fix live channel URL matching (#4219)
+```
+
+
 ## streamlink 2.27.0.0 (2021-11-23)
 
 ```text
