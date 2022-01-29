@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?skylinewebcams\.com/(?:[\w-]+/){5}.+\.html"
 ))
 class SkylineWebcams(Plugin):
-    _source_re = re.compile(r"(source):\s*'(.+?)'")
+    _source_re = re.compile(r"""(?:url|source)\s*:\s*(["\'])(livee\.m3u8(\?a=\w+))\1""")
     _yt_source_re = re.compile(r"YT\.Player\('live'.*?(videoId):\s*'(.+?)'")
     _HD_AUTH_BASE = "https://hd-auth.skylinewebcams.com/"
 
@@ -20,7 +20,7 @@ class SkylineWebcams(Plugin):
         res = self.session.http.get(self.url)
         m = self._source_re.search(res.text) or self._yt_source_re.search(res.text)
         if m:
-            if m.group(1) == "source" and ".m3u8" in m.group(2):
+            if ".m3u8" in m.group(2):
                 url = urljoin(self._HD_AUTH_BASE, m.group(2))
                 url = url.replace("livee.", "live.")
                 log.debug(url)
