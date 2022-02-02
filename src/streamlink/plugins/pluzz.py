@@ -98,7 +98,7 @@ class Pluzz(Plugin):
             validate.parse_json(),
             {
                 "video": {
-                    "workflow": "token-akamai",
+                    "workflow": validate.any("token-akamai", "dai"),
                     "format": validate.any("dash", "hls"),
                     "token": validate.url(),
                     "url": validate.url()
