@@ -6,8 +6,10 @@ from urllib.parse import urlparse, urlunparse
 from streamlink.exceptions import PluginError, StreamError
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
+from streamlink.plugin.api.http_session import TLSSecLevel1Adapter
 from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker, Sequence
 from streamlink.stream.hls_playlist import load as load_hls_playlist
+from streamlink.stream.http import HTTPStream
 
 log = logging.getLogger(__name__)
 
@@ -122,24 +124,32 @@ class FilmOnAPI:
     def __init__(self, session):
         self.session = session
 
-    channel_url = "http://www.filmon.com/api-v2/channel/{0}?protocol=hls"
-    vod_url = "http://www.filmon.com/vod/info/{0}"
+    channel_url = "https://www.filmon.com/ajax/getChannelInfo"
+    vod_url = "https://vms-admin.filmon.com/api/video/movie?id={0}"
 
     stream_schema = {
-        "quality": validate.text,
+        "quality": str,
         "url": validate.url(),
         "watch-timeout": int
     }
-    api_schema = validate.Schema(
+    channel_schema = validate.Schema(
         {
-            "data": {
+            "streams": validate.any(
+                {str: stream_schema},
+                [stream_schema]
+            )
+        }
+    )
+    vod_schema = validate.Schema(
+        {
+            "response": {
                 "streams": validate.any(
-                    {validate.text: stream_schema},
+                    {str: stream_schema},
                     [stream_schema]
                 )
             }
         },
-        validate.get("data")
+        validate.get("response")
     )
 
     def channel(self, channel):
@@ -150,11 +160,13 @@ class FilmOnAPI:
 
             # retry for 50X errors
             try:
-                res = self.session.http.get(self.channel_url.format(channel))
+                res = self.session.http.post(self.channel_url,
+                                             data={"channel_id": channel, "quality": "low"},
+                                             headers={"X-Requested-With": "XMLHttpRequest"})
                 if res:
                     # retry for invalid response data
                     try:
-                        return self.session.http.json(res, schema=self.api_schema)
+                        return self.session.http.json(res, schema=self.channel_schema)
                     except PluginError:
                         log.debug("invalid or non-JSON data received")
                         continue
@@ -165,7 +177,7 @@ class FilmOnAPI:
 
     def vod(self, vod_id):
         res = self.session.http.get(self.vod_url.format(vod_id))
-        return self.session.http.json(res, schema=self.api_schema)
+        return self.session.http.json(res, schema=self.vod_schema)
 
 
 @pluginmatcher(re.compile(r"""
@@ -183,7 +195,7 @@ class FilmOnAPI:
             (?P<is_group>group/)
         )(?:channel_id=)?(?P<channel>[-_\w]+)
         |
-        vod/view/(?P<vod_id>\d+)-
+        vod/view/(?P<vod_id>[^/?&]+)
     )
 """, re.VERBOSE))
 class Filmon(Plugin):
@@ -220,14 +232,28 @@ class Filmon(Plugin):
         vod_id = self.match.group("vod_id")
         is_group = self.match.group("is_group")
 
+        adapter = TLSSecLevel1Adapter()
+        self.session.http.mount("https://filmon.com", adapter)
+        self.session.http.mount("https://www.filmon.com", adapter)
+        self.session.http.mount("https://vms-admin.filmon.com/", adapter)
+
+        # get cookies
+        self.session.http.get(self.url)
+
         if vod_id:
             data = self.api.vod(vod_id)
             for _, stream in data["streams"].items():
-                streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
-                if not streams:
-                    yield stream["quality"], HLSStream(self.session, stream["url"])
+                if stream["url"].endswith(".m3u8"):
+                    streams = HLSStream.parse_variant_playlist(self.session, stream["url"])
+                    if not streams:
+                        yield stream["quality"], HLSStream(self.session, stream["url"])
+                    else:
+                        yield from streams.items()
+                elif stream["url"].endswith(".mp4"):
+                    yield stream["quality"], HTTPStream(self.session, stream["url"])
                 else:
-                    yield from streams.items()
+                    log.error("Unsupported stream type")
+                    return
         else:
             if channel and not channel.isdigit():
                 _id = self.cache.get(channel)
