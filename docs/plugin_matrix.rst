@@ -80,7 +80,7 @@ egame                   egame.qq.com         Yes   No
 eltrecetv               eltrecetv.com.ar     Yes   Yes   Streams may be geo-restricted to Argentina.
 euronews                euronews.com         Yes   No
 facebook                facebook.com         Yes   Yes
-filmon                  filmon.com           Yes   Yes   Only SD quality streams.
+filmon                  filmon.com           Yes   Yes   Some VODs are mp4 which may not stream, use -o to download
 foxtr                   fox.com.tr           Yes   No
 funimationnow           - funimation.com     --    Yes   :ref:`Requires session cookies <cli:Authenticating with FunimationNow>`
                         - funimationnow.uk
