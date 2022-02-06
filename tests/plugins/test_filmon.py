@@ -30,7 +30,10 @@ class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
     ('https://www.filmon.com/tv/channel-4', [None, 'channel-4', None]),
     ('https://www.filmon.tv/tv/55', [None, '55', None]),
     ('http://www.filmon.tv/group/comedy', ['group/', 'comedy', None]),
-    ('http://www.filmon.tv/vod/view/10250-0-crime-boss', [None, None, '10250'])
+    ('http://www.filmon.tv/vod/view/10250-0-crime-boss', [None, None, '10250-0-crime-boss']),
+    ('http://www.filmon.tv/vod/view/10250-0-crime-boss/extra', [None, None, '10250-0-crime-boss']),
+    ('http://www.filmon.tv/vod/view/10250-0-crime-boss?extra', [None, None, '10250-0-crime-boss']),
+    ('http://www.filmon.tv/vod/view/10250-0-crime-boss&extra', [None, None, '10250-0-crime-boss'])
 ])
 def test_match_url(url, expected):
     Filmon.bind(Mock(), "tests.plugins.test_filmon")
