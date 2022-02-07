@@ -72,6 +72,7 @@ def check_file_output(path: Path, force):
     """Checks if file already exists and ask the user if it should
     be overwritten if it does."""
 
+    log.info(f"Writing output to\n{path.resolve()}")
     log.debug("Checking file output")
 
     if path.is_file() and not force:
