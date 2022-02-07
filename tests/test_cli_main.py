@@ -190,18 +190,22 @@ class TestCLIMainJsonAndStreamUrl(unittest.TestCase):
 
 class TestCLIMainCheckFileOutput(unittest.TestCase):
     @staticmethod
-    def mock_path(path, is_file=True):
+    def mock_path(path, is_file=True, resolve=""):
         return Mock(
             spec=Path(path),
             is_file=Mock(return_value=is_file),
+            resolve=Mock(return_value=resolve),
             __str__=Mock(return_value=path)
         )
 
-    def test_check_file_output(self):
-        path = self.mock_path("foo", is_file=False)
+    @patch("streamlink_cli.main.log")
+    def test_check_file_output(self, mock_log: Mock):
+        path = self.mock_path("foo", is_file=False, resolve="/path/to/foo")
         output = check_file_output(path, False)
         self.assertIsInstance(output, FileOutput)
         self.assertIs(output.filename, path)
+        self.assertEqual(mock_log.info.call_args_list, [call("Writing output to\n/path/to/foo")])
+        self.assertEqual(mock_log.debug.call_args_list, [call("Checking file output")])
 
     def test_check_file_output_exists_force(self):
         path = self.mock_path("foo", is_file=True)
