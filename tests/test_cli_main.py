@@ -38,9 +38,11 @@ class FakePlugin(_TestPlugin):
 
 
 class TestCLIMain(unittest.TestCase):
-    def test_check_file_output(self):
+    @patch("streamlink_cli.main.log")
+    def test_check_file_output(self, mock_log):
         streamlink_cli.main.console = Mock()
-        self.assertIsInstance(check_file_output("test", False), FileOutput)
+        self.assertIsInstance(check_file_output("foo", False), FileOutput)
+        self.assertEqual(mock_log.debug.call_args_list, [call("Checking file output")])
 
     def test_check_file_output_exists(self):
         tmpfile = tempfile.NamedTemporaryFile()
