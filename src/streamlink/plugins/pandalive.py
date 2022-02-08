@@ -12,19 +12,11 @@ log = logging.getLogger(__name__)
     r"https?://(?:www\.)?pandalive\.co\.kr/"
 ))
 class Pandalive(Plugin):
-    _room_id_re = re.compile(r"roomid\s*=\s*String\.fromCharCode\((.*)\)")
-
     def _get_streams(self):
+        re_media_code = re.compile(r"""routePath:\s*(["'])(\\u002F|/)live(\\u002F|/)play(\\u002F|/)(?P<id>\d+)\1""")
         media_code = self.session.http.get(self.url, schema=validate.Schema(
-            validate.parse_html(),
-            validate.xml_xpath_string(".//script[contains(text(), 'roomid')]/text()"),
-            validate.any(None, validate.all(
-                validate.transform(self._room_id_re.search),
-                validate.any(None, validate.all(
-                    validate.get(1),
-                    validate.transform(lambda s: "".join(map(lambda c: chr(int(c)), s.split(",")))),
-                )),
-            )),
+            validate.transform(re_media_code.search),
+            validate.any(None, validate.get("id"))
         ))
 
         if not media_code:
@@ -34,10 +26,14 @@ class Pandalive(Plugin):
 
         json = self.session.http.post(
             "https://api.pandalive.co.kr/v1/live/play",
-            data={"action": "watch", "mediaCode": media_code},
+            data={
+                "action": "watch",
+                "userIdx": media_code
+            },
             schema=validate.Schema(
-                validate.parse_json(), {
-                    validate.optional("media"): {
+                validate.parse_json(),
+                {
+                    "media": {
                         "title": str,
                         "userId": str,
                         "userNick": str,
@@ -45,14 +41,20 @@ class Pandalive(Plugin):
                         "isLive": bool,
                         "liveType": str,
                     },
-                    validate.optional("PlayList"): {
-                        "hls2": [{
+                    "PlayList": {
+                        validate.optional("hls"): [{
+                            "url": validate.url(),
+                        }],
+                        validate.optional("hls2"): [{
+                            "url": validate.url(),
+                        }],
+                        validate.optional("hls3"): [{
                             "url": validate.url(),
                         }],
                     },
                     "result": bool,
                     "message": str,
-                },
+                }
             )
         )
 
@@ -73,7 +75,12 @@ class Pandalive(Plugin):
         self.author = f"{json['media']['userNick']} ({json['media']['userId']})"
         self.title = f"{json['media']['title']}"
 
-        return HLSStream.parse_variant_playlist(self.session, json["PlayList"]["hls2"][0]["url"])
+        playlist = json["PlayList"]
+        for key in ("hls", "hls2", "hls3"):
+            # use the first available HLS stream
+            if key in playlist and playlist[key]:
+                # all stream qualities share the same URL, so just use the first one
+                return HLSStream.parse_variant_playlist(self.session, playlist[key][0]["url"])
 
 
 __plugin__ = Pandalive
