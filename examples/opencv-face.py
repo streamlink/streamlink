@@ -19,7 +19,7 @@ def stream_to_url(url, quality='best'):
     if streams:
         return streams[quality].to_url()
     else:
-        raise ValueError("No steams were available")
+        raise ValueError("No streams were available")
 
 
 def detect_faces(cascade, frame, scale_factor=1.1, min_neighbors=5):
