@@ -27,11 +27,15 @@ from streamlink.stream.streamprocess import StreamProcess
 from streamlink.utils.encoding import get_filesystem_encoding, maybe_decode
 from streamlink.utils.named_pipe import NamedPipe
 from streamlink_cli.argparser import build_parser
-from streamlink_cli.compat import is_win32, stdout
+from streamlink_cli.compat import is_py2, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGINS_DIR, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, PlayerOutput
 from streamlink_cli.utils import Formatter, HTTPServer, ignored, progress, stream_to_url
+
+if is_py2:
+    reload(sys)  # noqa: F821
+    sys.setdefaultencoding(get_filesystem_encoding())
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
