@@ -33,7 +33,7 @@ class OPENRECtv(Plugin):
         validate.optional("subs_trial_media"): {
             "url": validate.any(None, validate.url()),
             "url_ull": validate.any(None, validate.url()),
-        }        
+        }
     })
 
     _subscription_schema = validate.Schema({
