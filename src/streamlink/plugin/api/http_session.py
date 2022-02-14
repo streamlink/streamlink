@@ -1,12 +1,15 @@
+import ssl
 import time
 try:
     from typing import Any, Callable, List, Pattern, Tuple
 except ImportError:
     pass
 
+import requests
 import urllib3
 from requests import Session
 
+from streamlink.compat import is_py3
 from streamlink.exceptions import PluginError
 from streamlink.packages.requests_file import FileAdapter
 from streamlink.plugin.api import useragents
@@ -24,9 +27,6 @@ try:
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 except (ImportError, AttributeError):
     pass
-
-__all__ = ["HTTPSession"]
-
 
 # Never convert percent-encoded characters to uppercase in urllib3>=1.25.4.
 # This is required for sites which compare request URLs byte for byte and return different responses depending on that.
@@ -202,3 +202,17 @@ class HTTPSession(Session):
             res = schema.validate(res.text, name="response text", exception=PluginError)
 
         return res
+
+
+if is_py3:
+    class TLSSecLevel1Adapter(requests.adapters.HTTPAdapter):
+        def init_poolmanager(self, *args, **kwargs):
+            ctx = ssl.create_default_context()
+            ctx.set_ciphers("DEFAULT:@SECLEVEL=1")
+            kwargs["ssl_context"] = ctx
+            return super().init_poolmanager(*args, **kwargs)
+else:
+    class TLSSecLevel1Adapter(object):
+        pass
+
+__all__ = ["HTTPSession", "TLSSecLevel1Adapter"]
