@@ -29,7 +29,11 @@ class OPENRECtv(Plugin):
             "url": validate.any(None, validate.url()),
             "url_public": validate.any(None, validate.url()),
             "url_ull": validate.any(None, validate.url()),
-        }
+        },
+        validate.optional("subs_trial_media"): {
+            "url": validate.any(None, validate.url()),
+            "url_ull": validate.any(None, validate.url()),
+        }        
     })
 
     _subscription_schema = validate.Schema({
@@ -133,7 +137,7 @@ class OPENRECtv(Plugin):
                 m3u8_file = subs_data["data"]["items"][0]["media"]["url"]
             # streaming
             elif mdata["onair_status"] == 1:
-                m3u8_file = mdata["media"]["url_ull"]
+                m3u8_file = mdata["media"]["url_ull"] or mdata["subs_trial_media"]["url_ull"]
             # archive
             elif mdata["onair_status"] == 2 and mdata["media"]["url_public"] is not None:
                 m3u8_file = mdata["media"]["url_public"].replace("public.m3u8", "playlist.m3u8")
