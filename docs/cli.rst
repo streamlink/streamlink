@@ -286,6 +286,9 @@ be treated as plain strings, as is the case in the example above for ``swfVry``,
 or they will be interpreted as Python literals. For example, you can pass a
 Python dict or Python list as one of the parameters.
 
+Depending on the input URL, the explicit protocol scheme may be omitted.
+The following example shows HLS streams (``.m3u8``) and DASH streams (``.mpd``):
+
 .. code-block:: console
 
     $ streamlink "rtmp://streaming.server.net/playpath conn=['B:1', 'S:authMe', 'O:1', 'NN:code:1.23', 'NS:flag:ok', 'O:0']"
