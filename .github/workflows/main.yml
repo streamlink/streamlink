@@ -92,9 +92,22 @@ jobs:
       - name: Build
         run: make --directory=docs html man
 
+  version:
+    name: Generate version number
+    runs-on: ubuntu-20.04
+    outputs:
+      version: ${{ steps.getVersion.outputs.version }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate verison number
+        id: getVersion
+        run: echo ::set-output name=version::$(python setup.py --version | sed 's/+/_/')
+
   windows-installer:
     name: Windows installer
     runs-on: ubuntu-20.04
+    needs:
+      - version
     steps:
       - uses: actions/checkout@v2
         with:
@@ -112,7 +125,7 @@ jobs:
           sudo apt install -y nsis imagemagick inkscape
       - name: Installer file name
         id: installer
-        run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
+        run: echo ::set-output name=filename::streamlink-${{ needs.version.outputs.version }}
       - name: Build
         run: ./script/makeinstaller.sh "${{ steps.installer.outputs.filename }}"
       - name: Upload artifact
@@ -154,8 +167,11 @@ jobs:
     name: New release
     if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     needs:
+      - version
       - deploy-documentation
     runs-on: ubuntu-20.04
+    outputs:
+      exeSha: ${{ steps.generateSha.outputs.exeSha }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -176,7 +192,7 @@ jobs:
         run: make --directory=docs man
       - name: Installer file name
         id: installer
-        run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
+        run: echo ::set-output name=filename::streamlink-${{ needs.version.outputs.version }}
       - name: Download installer artifact
         uses: actions/download-artifact@v2-preview
         with:
@@ -186,6 +202,10 @@ jobs:
         env:
           RELEASE_KEY_PASSPHRASE: ${{ secrets.RELEASE_KEY_PASSPHRASE }}
         run: ./script/build-and-sign.sh
+      - name: Generate sha256 for chocolatey release
+        id: generateSha
+        run: |
+          echo "::set-output name=exeSha::$(sha256sum "${STREAMLINK_DIST_DIR}/${{ steps.installer.outputs.filename }}.exe" | awk '{ print $1}')"
       - name: Github release
         env:
           RELEASES_API_KEY: ${{ secrets.RELEASES_API_KEY }}
@@ -195,3 +215,28 @@ jobs:
           PYPI_USER: streamlink
           PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: ./script/deploy-pypi.sh
+  chocolatey:
+    name: Chocolatey release
+    needs:
+      - release
+      - version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Prepare nuspec and script files
+        run: |
+          $version = "${{ needs.version.outputs.version }}"
+          (Get-Content -Path "./release/chocolatey/streamlink.nuspec") -replace "<!-- version number -->", "$version" | Set-Content "./release/chocolatey/streamlink.nuspec"
+          (Get-Content -Path "./release/chocolatey/tools/chocolateyinstall.ps1") -replace "checksum      = '' # checksum", "checksum      = '${{  needs.release.outputs.exeSha  }}'" | Set-Content "./release/chocolatey/tools/chocolateyinstall.ps1"
+        shell: pwsh
+
+      - name: Package release
+        working-directory: release/chocolatey
+        run: |
+          choco pack
+        shell: pwsh
+      - name: Push release
+        working-directory: release/chocolatey
+        run: |
+          $version = "${{ needs.version.outputs.version }}"
+          choco push --api-key ${{ secrets.CHOCOLATEY_API_KEY }} streamlink.$version.nupkg

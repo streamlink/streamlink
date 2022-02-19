@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Do not remove this test for UTF-8: if “Ω” doesn’t appear as greek uppercase omega letter enclosed in quotation marks, you should use an editor that supports UTF-8, not this one. -->
+<package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
+  <metadata>
+    <id>streamlink</id>
+    <version><!-- version number --></version>
+    <packageSourceUrl>https://github.com/streamlink/streamlink</packageSourceUrl>
+    <owners>Scott Walters</owners>
+    <iconUrl>https://cdn.rawgit.com/streamlink/streamlink/master/icon.svg</iconUrl>
+
+    <title>Streamlink</title>
+    <authors>streamlink</authors>
+    <projectUrl>https://streamlink.github.io/</projectUrl>
+    <copyright>Copyright (c) 2011-2016, Christopher Rosell
+Copyright (c) 2016-2022, Streamlink Team</copyright>
+    <licenseUrl>https://github.com/streamlink/streamlink/blob/master/LICENSE</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <projectSourceUrl>https://github.com/streamlink/streamlink</projectSourceUrl>
+    <docsUrl>https://streamlink.github.io/</docsUrl>
+    <bugTrackerUrl>https://github.com/streamlink/streamlink/issues</bugTrackerUrl>
+    <tags>streamlink streaming livestream twitch youtube livestreamer</tags>
+    <summary>Streamlink is a command-line utility which pipes video streams from various services into a video player, such as VLC.</summary>
+    <description>Streamlink is a command-line utility which pipes video streams from various services into a video player, such as VLC.
+
+The main purpose of Streamlink is to avoid resource-heavy and unoptimized websites, while still allowing the user to enjoy various streamed content.
+
+Streamlink was forked from [Livestreamer](https://github.com/chrippa/livestreamer), which is no longer maintained.</description>
+    <releaseNotes>https://github.com/streamlink/streamlink/releases/tag/<!-- version number --></releaseNotes>
+  </metadata>
+  <files>
+    <file src="tools\**" target="tools" />
+  </files>
+</package>

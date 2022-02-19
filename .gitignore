@@ -53,3 +53,6 @@ pip-selfcheck.json
 .coverage
 coverage.xml
 htmlcov
+
+# chocolatey output
+*.nupkg
