@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
     r"https?://((www|live)\.)?daserste\.de/"
 ))
 class ARDLive(Plugin):
+    _URL_DATA_BASE = "https://www.daserste.de/"
     _QUALITY_MAP = {
         4: "1080p",
         3: "720p",
@@ -30,24 +31,24 @@ class ARDLive(Plugin):
                 validate.get("data-ctrl-player"),
                 validate.transform(lambda s: s.replace("'", "\"")),
                 validate.parse_json(),
-                {"url": str},
+                {"url": validate.text},
                 validate.get("url")
             ))
         except PluginError:
             return
 
-        data_url = urljoin(self.url, data_url)
+        data_url = urljoin(self._URL_DATA_BASE, data_url)
         log.debug("Player URL: '{0}'", data_url)
 
         self.title, media = self.session.http.get(data_url, schema=validate.Schema(
             validate.parse_json(name="MEDIAINFO"),
             {"mc": {
-                validate.optional("_title"): str,
+                validate.optional("_title"): validate.text,
                 "_mediaArray": [validate.all(
                     {
                         "_mediaStreamArray": [validate.all(
                             {
-                                "_quality": validate.any(str, int),
+                                "_quality": validate.any(validate.text, int),
                                 "_stream": [validate.url()],
                             },
                             validate.union_get("_quality", ("_stream", 0))
