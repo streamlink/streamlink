@@ -13,13 +13,34 @@ from tests.plugins import PluginCanHandleUrl
 class TestPluginCanHandleUrlTwitch(PluginCanHandleUrl):
     __plugin__ = Twitch
 
-    should_match = [
-        'https://www.twitch.tv/twitch',
-        'https://www.twitch.tv/videos/150942279',
-        'https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor',
-        'https://www.twitch.tv/weplaydota/clip/FurryIntelligentDonutAMPEnergyCherry-akPRxv7Y3w58WmFq'
-        'https://www.twitch.tv/twitch/video/292713971',
-        'https://www.twitch.tv/twitch/v/292713971',
+    should_match_groups = [
+        ("https://www.twitch.tv/twitch", {
+            "subdomain": "www",
+            "channel": "twitch",
+        }),
+        ("https://www.twitch.tv/videos/150942279", {
+            "subdomain": "www",
+            "videos_id": "150942279",
+        }),
+        ("https://clips.twitch.tv/ObservantBenevolentCarabeefPhilosoraptor", {
+            "subdomain": "clips",
+            "channel": "ObservantBenevolentCarabeefPhilosoraptor",
+        }),
+        ("https://www.twitch.tv/weplaydota/clip/FurryIntelligentDonutAMPEnergyCherry-akPRxv7Y3w58WmFq", {
+            "subdomain": "www",
+            "channel": "weplaydota",
+            "clip_name": "FurryIntelligentDonutAMPEnergyCherry-akPRxv7Y3w58WmFq",
+        }),
+        ("https://www.twitch.tv/twitch/video/292713971", {
+            "subdomain": "www",
+            "channel": "twitch",
+            "video_id": "292713971",
+        }),
+        ("https://www.twitch.tv/twitch/v/292713971", {
+            "subdomain": "www",
+            "channel": "twitch",
+            "video_id": "292713971",
+        }),
     ]
 
     should_not_match = [
