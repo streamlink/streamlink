@@ -14,6 +14,11 @@ signal.signal(signal.SIGINT, signal.default_int_handler)
 signal.signal(signal.SIGTERM, signal.default_int_handler)
 
 
+# make pytest rewrite assertions in dynamically parametrized plugin tests
+# https://docs.pytest.org/en/stable/how-to/writing_plugins.html#assertion-rewriting
+pytest.register_assert_rewrite("tests.plugins")
+
+
 def catch_warnings(record=False, module=None):
     def _catch_warnings_wrapper(f):
         def _catch_warnings(*args, **kwargs):
