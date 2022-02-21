@@ -464,7 +464,7 @@ class TwitchAPI:
         |
         (?P<channel>[^/?]+)
         (?:
-            /video/(?P<video_id>\d+)
+            /v(?:ideo)?/(?P<video_id>\d+)
             |
             /clip/(?P<clip_name>[^/?]+)
         )?

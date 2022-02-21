@@ -34,6 +34,19 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
         "https://youtu.be/0123456789A",
     ]
 
+    should_match_groups = [
+        ("https://www.youtube.com/v/aqz-KE-bpKQ", {
+            "video_id": "aqz-KE-bpKQ",
+        }),
+        ("https://www.youtube.com/embed/aqz-KE-bpKQ", {
+            "embed": "embed",
+            "video_id": "aqz-KE-bpKQ",
+        }),
+        ("https://www.youtube.com/watch?v=aqz-KE-bpKQ", {
+            "video_id": "aqz-KE-bpKQ",
+        }),
+    ]
+
     should_not_match = [
         "https://accounts.google.com/",
         "https://www.youtube.com",
@@ -45,18 +58,6 @@ class TestPluginCanHandleUrlYouTube(PluginCanHandleUrl):
         "https://youtu.be/c/CHANNELNAME",
         "https://youtu.be/c/CHANNELNAME/live",
     ]
-
-
-@pytest.mark.parametrize("url,group,expected", [
-    ("https://www.youtube.com/v/aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
-    ("https://www.youtube.com/embed/aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
-    ("https://www.youtube.com/watch?v=aqz-KE-bpKQ", "video_id", "aqz-KE-bpKQ"),
-])
-def test_match_url(url, group, expected):
-    YouTube.bind(Mock(), "tests.plugins.test_youtube")
-    plugin = YouTube(url)
-    assert plugin.match is not None
-    assert plugin.match.group(group) == expected
 
 
 @pytest.mark.parametrize("url,expected", [
