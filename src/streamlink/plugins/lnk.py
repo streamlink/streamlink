@@ -2,6 +2,7 @@ import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
@@ -18,20 +19,38 @@ class LNK(Plugin):
         "btv": 137534,
         "2tv": 95343,
         "infotv": 137748,
-        "tv1": 106791
+        "tv1": 106791,
     }
 
     def _get_streams(self):
-        match = self.match.groupdict()
-        channel = match["channel"] or "lnk"
-        try:
-            channel_id = self.CHANNEL_MAP[channel]
-        except KeyError:
-            log.error("Unknown channel: {0}", channel)
+        channel = self.match.groupdict().get("channel", "lnk")
+        if channel not in self.CHANNEL_MAP:
+            log.error(f"Unknown channel: {channel}")
+            return
 
-        data = self.session.http.get(self.API_URL.format(channel_id)).json()
-        hls_url = data["videoInfo"]["videoUrl"]
-        yield from HLSStream.parse_variant_playlist(self.session, hls_url).items()
+        self.id = self.CHANNEL_MAP.get(channel)
+        self.author, self.category, self.title, hls_url = self.session.http.get(
+            self.API_URL.format(self.id),
+            schema=validate.Schema(
+                validate.parse_json(),
+                {"videoInfo": {
+                    "channel": str,
+                    "genre": validate.any(None, str),
+                    "title": validate.any(None, str),
+                    "videoUrl": validate.any(
+                        "",
+                        validate.url(path=validate.endswith(".m3u8"))
+                    )
+                }},
+                validate.get("videoInfo"),
+                validate.union_get("channel", "genre", "title", "videoUrl")
+            )
+        )
+        if not hls_url:
+            log.error("The stream is not available in your region")
+            return
+
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = LNK
