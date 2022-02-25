@@ -23,7 +23,7 @@ class LNK(Plugin):
     }
 
     def _get_streams(self):
-        channel = self.match.groupdict().get("channel", "lnk")
+        channel = self.match.groupdict().get("channel") or "lnk"
         if channel not in self.CHANNEL_MAP:
             log.error(f"Unknown channel: {channel}")
             return
