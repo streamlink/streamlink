@@ -98,6 +98,7 @@ invintus                player.invintus.com  Yes   Yes
 kugou                   fanxing.kugou.com    Yes   --
 linelive                live.line.me         Yes   Yes
 livestream              livestream.com       Yes   --
+lnk                     lnk.lt               Yes   No    Streams may be geo-restricted to Lithuania.
 lrt                     lrt.lt               Yes   No
 ltv_lsm_lv              ltv.lsm.lv           Yes   No    Streams may be geo-restricted to Latvia.
 mediaklikk              - mediaklikk.hu      Yes   No    Streams may be geo-restricted to Hungary.
