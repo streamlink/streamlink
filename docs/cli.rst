@@ -164,7 +164,7 @@ Unix-like (POSIX) - $XDG_CONFIG_HOME/streamlink/config\ **.twitch**
 Windows           %APPDATA%\\streamlink\\streamlinkrc\ **.youtube**
 ================= ====================================================
 
-Have a look at the :ref:`list of plugins <plugin_matrix:Plugins>`, or
+Have a look at the :ref:`list of plugins <plugins:Plugins>`, or
 check the :option:`--plugins` option to see the name of each built-in plugin.
 
 
