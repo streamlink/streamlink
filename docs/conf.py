@@ -21,6 +21,7 @@ extensions = [
     'sphinx.ext.autosectionlabel',
     'ext_argparse',
     'ext_github',
+    'ext_plugins',
     'ext_releaseref',
     'recommonmark'
 ]
