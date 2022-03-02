@@ -1,3 +1,8 @@
+"""
+$url 1plus1.video
+$type live
+"""
+
 import logging
 import re
 from base64 import b64decode

@@ -1,3 +1,8 @@
+"""
+$url dw.com
+$type live, vod
+"""
+
 import logging
 import re
 from urllib.parse import parse_qsl, urlparse

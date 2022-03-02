@@ -1,3 +1,8 @@
+"""
+$url openrec.tv
+$type live, vod
+"""
+
 import logging
 import re
 

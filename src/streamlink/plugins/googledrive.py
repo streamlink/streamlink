@@ -1,3 +1,9 @@
+"""
+$url docs.google.com
+$url drive.google.com
+$type vod
+"""
+
 import logging
 import re
 from urllib.parse import parse_qsl

@@ -1,3 +1,8 @@
+"""
+$url player.invintus.com
+$type live, vod
+"""
+
 import json
 import re
 

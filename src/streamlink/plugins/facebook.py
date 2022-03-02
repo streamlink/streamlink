@@ -1,3 +1,8 @@
+"""
+$url facebook.com
+$type live, vod
+"""
+
 import logging
 import re
 from html import unescape as html_unescape

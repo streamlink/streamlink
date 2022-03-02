@@ -1,3 +1,8 @@
+"""
+$url showroom-live.com
+$type live
+"""
+
 import logging
 import re
 

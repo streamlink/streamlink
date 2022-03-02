@@ -1,3 +1,9 @@
+"""
+$url bfmtv.com
+$url 01net.com
+$type live, vod
+"""
+
 import logging
 import re
 from urllib.parse import urljoin

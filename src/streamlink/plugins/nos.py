@@ -1,3 +1,9 @@
+"""
+$url nos.nl
+$type live, vod
+$region Netherlands
+"""
+
 import logging
 import re
 

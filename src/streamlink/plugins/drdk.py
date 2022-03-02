@@ -1,3 +1,9 @@
+"""
+$url dr.dk
+$type live
+$region Denmark
+"""
+
 import logging
 import re
 

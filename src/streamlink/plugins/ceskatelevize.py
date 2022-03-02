@@ -1,3 +1,9 @@
+"""
+$url ceskatelevize.cz
+$type live
+$region Czechia
+"""
+
 import logging
 import re
 

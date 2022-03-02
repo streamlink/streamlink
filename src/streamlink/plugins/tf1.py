@@ -1,3 +1,10 @@
+"""
+$url tf1.fr
+$url lci.fr
+$type live
+$region France
+"""
+
 import logging
 import re
 

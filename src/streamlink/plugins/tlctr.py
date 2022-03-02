@@ -1,3 +1,8 @@
+"""
+$url tlctv.com.tr
+$type live
+"""
+
 import logging
 import re
 

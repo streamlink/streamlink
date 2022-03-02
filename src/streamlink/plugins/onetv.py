@@ -1,3 +1,9 @@
+"""
+$url 1tv.ru
+$type live
+$region Russia
+"""
+
 import logging
 import random
 import re

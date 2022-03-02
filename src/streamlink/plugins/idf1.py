@@ -1,3 +1,8 @@
+"""
+$url idf1.fr
+$type live, vod
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

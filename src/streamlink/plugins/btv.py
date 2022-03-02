@@ -1,3 +1,9 @@
+"""
+$url btvplus.bg
+$type live
+$region Bulgaria
+"""
+
 import logging
 import re
 

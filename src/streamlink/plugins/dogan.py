@@ -1,3 +1,12 @@
+"""
+$url cnnturk.com
+$url dreamturk.com.tr
+$url dreamtv.com.tr
+$url kanald.com.tr
+$url teve2.com.tr
+$type live, vod
+"""
+
 import logging
 import re
 from urllib.parse import urljoin

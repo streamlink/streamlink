@@ -1,3 +1,8 @@
+"""
+$url tvtoya.pl
+$type live
+"""
+
 import logging
 import re
 

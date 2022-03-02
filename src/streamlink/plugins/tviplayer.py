@@ -1,3 +1,8 @@
+"""
+$url tviplayer.iol.pt
+$type live, vod
+"""
+
 import logging
 import re
 

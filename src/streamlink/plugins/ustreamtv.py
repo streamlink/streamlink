@@ -1,3 +1,9 @@
+"""
+$url ustream.tv
+$url video.ibm.com
+$type live, vod
+"""
+
 import logging
 import re
 from collections import deque

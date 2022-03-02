@@ -1,3 +1,12 @@
+"""
+$url showtv.com.tr
+$url haberturk.com
+$url showmax.com.tr
+$url showturk.com.tr
+$url bloomberght.com
+$type live
+"""
+
 import json
 import re
 from urllib.parse import unquote

@@ -1,3 +1,8 @@
+"""
+$url ssh101.com
+$type live
+"""
+
 import logging
 import re
 

@@ -1,3 +1,8 @@
+"""
+$url sketch.pixiv.net
+$type live
+"""
+
 import logging
 import re
 

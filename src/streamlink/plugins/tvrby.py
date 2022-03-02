@@ -1,3 +1,9 @@
+"""
+$url tvr.by
+$type live
+$region Belarus
+"""
+
 import logging
 import re
 

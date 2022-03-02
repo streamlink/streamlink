@@ -1,3 +1,8 @@
+"""
+$url ok.ru
+$type live, vod
+"""
+
 import logging
 import re
 from urllib.parse import unquote

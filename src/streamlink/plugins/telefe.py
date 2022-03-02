@@ -1,3 +1,9 @@
+"""
+$url telefe.com
+$type vod
+$region Argentina
+"""
+
 import logging
 import re
 

@@ -1,7 +1,6 @@
 """
-Plugin for vidio.com
-- https://www.vidio.com/live/5075-dw-tv-stream
-- https://www.vidio.com/watch/766861-5-rekor-fantastis-zidane-bersama-real-madrid
+$url vidio.com
+$type live, vod
 """
 import logging
 import re

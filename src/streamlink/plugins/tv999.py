@@ -1,3 +1,9 @@
+"""
+$url tv999.bg
+$type live
+$region Bulgaria
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url player.stv.tv
+$type live
+$region United Kingdom
+"""
+
 import logging
 import re
 
