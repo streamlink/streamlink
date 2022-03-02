@@ -18,7 +18,7 @@ class TestPluginMeta(unittest.TestCase):
         cls.session = Streamlink()
         docs_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../docs"))
 
-        with open(os.path.join(docs_dir, "plugin_matrix.rst")) as plfh:
+        with open(os.path.join(docs_dir, "plugins.rst")) as plfh:
             parts = re.split(r"\n[= ]+\n", plfh.read())
             cls.plugins_in_docs = list(re.findall(r"^([\w_]+)\s", parts[3], re.MULTILINE))
 
