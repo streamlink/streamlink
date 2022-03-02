@@ -1,7 +1,6 @@
 import os.path
 import re
 import unittest
-from glob import glob
 
 from streamlink import Streamlink, plugins as streamlinkplugins
 from streamlink_cli.argparser import build_parser
@@ -28,13 +27,8 @@ class TestPluginMeta(unittest.TestCase):
         with open(os.path.join(plugins_dir, ".removed")) as rmfh:
             cls.plugins_removed = [pname for pname in rmfh.read().split("\n") if pname and not pname.startswith("#")]
 
-        tests_plugins_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "plugins"))
-        tests_plugin_files = glob(os.path.join(tests_plugins_dir, "test_*.py"))
-
         cls.plugins = cls.session.plugins.keys()
-        cls.plugin_tests = [re.sub(r"^test_(.+)\.py$", r"\1", os.path.basename(file)) for file in tests_plugin_files]
         cls.plugins_no_protocols = [pname for pname in cls.plugins if pname not in cls.protocol_tests]
-        cls.plugin_tests_no_protocols = [pname for pname in cls.plugin_tests if pname not in cls.protocol_tests]
 
     def test_plugin_has_docs_matrix(self):
         for pname in self.plugins_no_protocols:
@@ -43,14 +37,6 @@ class TestPluginMeta(unittest.TestCase):
     def test_docs_matrix_has_plugin(self):
         for pname in self.plugins_in_docs:
             self.assertIn(pname, self.plugins_no_protocols, f"{pname} plugin does not exist")
-
-    def test_plugin_has_tests(self):
-        for pname in self.plugins_no_protocols:
-            self.assertIn(pname, self.plugin_tests, f"{pname} has no tests")
-
-    def test_unknown_plugin_has_tests(self):
-        for pname in self.plugin_tests_no_protocols:
-            self.assertIn(pname, self.plugins_no_protocols, f"{pname} is not a plugin but has tests")
 
     def test_plugin_not_in_removed_list(self):
         for pname in self.plugins:
