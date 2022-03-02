@@ -1,3 +1,9 @@
+"""
+$url ltv.lsm.lv
+$type live
+$region Latvia
+"""
+
 import logging
 import re
 from urllib.parse import urlsplit, urlunsplit

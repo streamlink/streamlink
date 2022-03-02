@@ -1,3 +1,8 @@
+"""
+$url huya.com
+$type live
+"""
+
 import base64
 import logging
 import re

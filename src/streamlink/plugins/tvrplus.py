@@ -1,3 +1,9 @@
+"""
+$url tvrplus.ro
+$type live
+$region Romania
+"""
+
 import logging
 import re
 

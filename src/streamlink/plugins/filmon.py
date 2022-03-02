@@ -1,3 +1,9 @@
+"""
+$url filmon.com
+$type live, vod
+$notes Some VODs are mp4 which may not stream, use -o to download
+"""
+
 import logging
 import re
 import time

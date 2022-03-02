@@ -1,4 +1,8 @@
-"""Plugin for RUV, the Icelandic national television."""
+"""
+$url ruv.is
+$type live, vod
+$region Iceland
+"""
 
 import re
 

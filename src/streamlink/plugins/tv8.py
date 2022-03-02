@@ -1,3 +1,8 @@
+"""
+$url tv8.com.tr
+$type live
+"""
+
 import logging
 import re
 

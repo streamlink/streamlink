@@ -1,3 +1,8 @@
+"""
+$url news.now.com
+$type live
+"""
+
 import json
 import logging
 import re

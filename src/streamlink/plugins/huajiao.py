@@ -1,3 +1,8 @@
+"""
+$url huajiao.com
+$type live
+"""
+
 import base64
 import json
 import random

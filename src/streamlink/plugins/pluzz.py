@@ -1,3 +1,10 @@
+"""
+$url france.tv
+$url francetvinfo.fr
+$type live, vod
+$region France, Andorra, Monaco
+"""
+
 import logging
 import re
 from datetime import datetime

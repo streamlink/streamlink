@@ -1,3 +1,8 @@
+"""
+$url cnews.fr
+$type live, vod
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

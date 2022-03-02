@@ -1,3 +1,8 @@
+"""
+$url zhanqi.tv
+$type live
+"""
+
 import logging
 import re
 

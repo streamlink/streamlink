@@ -1,3 +1,8 @@
+"""
+$url arte.tv
+$type live, vod
+"""
+
 import logging
 import re
 from operator import itemgetter

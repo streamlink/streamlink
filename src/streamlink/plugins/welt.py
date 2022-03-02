@@ -1,3 +1,9 @@
+"""
+$url welt.de
+$type live, vod
+$region Germany
+"""
+
 import re
 from urllib.parse import quote
 

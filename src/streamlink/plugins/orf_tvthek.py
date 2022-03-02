@@ -1,3 +1,8 @@
+"""
+$url tvthek.orf.at
+$type live, vod
+"""
+
 import json
 import re
 

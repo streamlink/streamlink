@@ -1,3 +1,9 @@
+"""
+$url bbc.co.uk/iplayer
+$type live, vod
+$region United Kingdom
+"""
+
 import base64
 import logging
 import re

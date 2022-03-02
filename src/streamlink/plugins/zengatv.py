@@ -1,3 +1,8 @@
+"""
+$url zengatv.com
+$type live
+"""
+
 import logging
 import re
 

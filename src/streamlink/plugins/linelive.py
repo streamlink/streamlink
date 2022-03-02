@@ -1,3 +1,8 @@
+"""
+$url live.line.me
+$type live, vod
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

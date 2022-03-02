@@ -1,3 +1,9 @@
+"""
+$url goltelevision.com
+$type live
+$region Spain
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

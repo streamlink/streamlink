@@ -1,3 +1,8 @@
+"""
+$url galatasaray.com
+$type live
+"""
+
 import logging
 import re
 

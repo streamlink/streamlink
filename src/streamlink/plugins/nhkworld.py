@@ -1,3 +1,8 @@
+"""
+$url nhk.or.jp/nhkworld
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

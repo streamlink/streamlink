@@ -1,3 +1,8 @@
+"""
+$url live.qq.com
+$type live
+"""
+
 import logging
 import re
 

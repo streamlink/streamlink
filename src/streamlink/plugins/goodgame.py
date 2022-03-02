@@ -1,3 +1,8 @@
+"""
+$url goodgame.ru
+$type live
+"""
+
 import logging
 import re
 

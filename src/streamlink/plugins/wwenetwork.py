@@ -1,3 +1,9 @@
+"""
+$url network.wwe.com
+$type live, vod
+$account Required
+"""
+
 import json
 import logging
 import re

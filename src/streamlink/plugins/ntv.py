@@ -1,3 +1,8 @@
+"""
+$url ntv.ru
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

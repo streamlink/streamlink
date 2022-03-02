@@ -1,3 +1,9 @@
+"""
+$url atresplayer.com
+$type live
+$region Spain
+"""
+
 import logging
 import re
 

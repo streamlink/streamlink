@@ -1,3 +1,10 @@
+"""
+$url srf.ch
+$url rsi.ch
+$type live
+$region Switzerland
+"""
+
 import logging
 import re
 from urllib.parse import parse_qsl, urlparse, urlunparse

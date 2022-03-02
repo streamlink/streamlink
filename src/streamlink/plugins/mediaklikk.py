@@ -1,3 +1,10 @@
+"""
+$url mediaklikk.hu
+$url m4sport.hu
+$type live
+$region Hungary
+"""
+
 import logging
 import re
 from urllib.parse import unquote, urlparse
