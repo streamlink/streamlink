@@ -38,15 +38,6 @@ class TestPluginMeta(unittest.TestCase):
         for pname in self.plugins_in_docs:
             self.assertIn(pname, self.plugins_no_protocols, f"{pname} plugin does not exist")
 
-    def test_plugin_not_in_removed_list(self):
-        for pname in self.plugins:
-            self.assertNotIn(pname, self.plugins_removed, f"{pname} is in removed plugins list")
-
-    def test_removed_list_is_sorted(self):
-        plugins_removed_sorted = self.plugins_removed.copy()
-        plugins_removed_sorted.sort()
-        self.assertEqual(self.plugins_removed, plugins_removed_sorted, "Removed plugins list is not sorted alphabetically")
-
     def test_plugin_has_valid_global_args(self):
         parser = build_parser()
         global_arg_dests = [action.dest for action in parser._actions]
