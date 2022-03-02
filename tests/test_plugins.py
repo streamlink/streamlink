@@ -1,5 +1,6 @@
 import pkgutil
 import re
+import tokenize
 from pathlib import Path
 
 import pytest
@@ -34,6 +35,14 @@ plugintests = [
     for finder, tname, ispkg in pkgutil.iter_modules([plugintests_path])
     if tname.startswith("test_") and tname not in plugintests_ignore
 ]
+
+
+def unique(iterable):
+    seen = set()
+    for item in iterable:
+        if item not in seen:
+            seen.add(item)
+            yield item
 
 
 class TestPlugins:
@@ -82,6 +91,104 @@ class TestPluginTests:
     @pytest.mark.parametrize("plugintest", plugintests)
     def test_test_has_plugin(self, plugintest):
         assert plugintest in plugins, "Plugin exists for test module"
+
+
+class TestPluginMetadata:
+    @pytest.fixture(scope="class")
+    def metadata_keys_all(self):
+        return (
+            "description",
+            "url",
+            "type",
+            "region",
+            "account",
+            "notes",
+        )
+
+    @pytest.fixture(scope="class")
+    def metadata_keys_required(self):
+        return (
+            "url",
+            "type",
+        )
+
+    @pytest.fixture(scope="class")
+    def metadata_keys_repeat(self):
+        return (
+            "url",
+        )
+
+    @pytest.fixture(scope="class")
+    def metadata_keys_no_repeat(self, metadata_keys_all, metadata_keys_repeat):
+        return tuple(
+            key
+            for key in metadata_keys_all
+            if key not in metadata_keys_repeat
+        )
+
+    @pytest.fixture(scope="class", params=plugins_no_protocols)
+    def tokeninfo(self, request):
+        with (Path(plugins_path) / f"{request.param}.py").open() as handle:
+            for tokeninfo in tokenize.generate_tokens(handle.readline):  # pragma: no branch
+                break
+
+        assert type(tokeninfo) is tokenize.TokenInfo, "Parses the first token"
+        assert tokeninfo.type == tokenize.STRING, "First token is a string"
+
+        return tokeninfo
+
+    @pytest.fixture(scope="class")
+    def metadata_items(self, tokeninfo):
+        match = re.search(r"^\"\"\"\n(?P<metadata>.+)\n\"\"\"$", tokeninfo.string, re.DOTALL)
+        assert match is not None, "String is a properly formatted long string"
+
+        lines = [
+            re.search(r"^\$(?P<key>\w+) (?P<value>\S.+)$", line)
+            for line in match.group("metadata").split("\n")
+        ]
+        assert all(lines), "All lines are properly formatted using the '$key value' format"
+
+        return [(match.group("key"), match.group("value")) for match in lines]
+
+    @pytest.fixture(scope="class")
+    def metadata_keys(self, metadata_items):
+        return tuple(key for key, value in metadata_items)
+
+    @pytest.fixture(scope="class")
+    def metadata_dict(self, metadata_keys_no_repeat, metadata_items):
+        return {k: v for k, v in metadata_items if k in metadata_keys_no_repeat}
+
+    def test_no_unknown(self, metadata_keys_all, metadata_keys):
+        assert not any(True for key in metadata_keys if key not in metadata_keys_all), \
+            "No unknown metadata keys are set"
+
+    def test_required(self, metadata_keys_required, metadata_keys):
+        assert all(True for tag in metadata_keys_required if tag in metadata_keys), \
+            "All required metadata keys are set"
+
+    def test_order(self, metadata_keys_all, metadata_keys):
+        keys = tuple(key for key in metadata_keys_all if key in metadata_keys)
+        assert keys == tuple(unique(metadata_keys)), \
+            "All metadata keys are defined in order"
+        assert tuple(reversed(keys)) == tuple(unique(reversed(metadata_keys))), \
+            "All repeatable metadata keys are defined in order"
+
+    def test_repeat(self, metadata_keys_repeat, metadata_keys, metadata_items):
+        items = {key: tuple(v for k, v in metadata_items if k == key) for key in metadata_keys if key in metadata_keys_repeat}
+        assert items == {key: tuple(unique(value)) for key, value in items.items()}, \
+            "Repeatable keys don't have any duplicates"
+
+    def test_no_repeat(self, metadata_keys_no_repeat, metadata_keys):
+        keys = tuple(key for key in metadata_keys if key in metadata_keys_no_repeat)
+        assert keys == tuple(unique(keys)), "Non-repeatable keys are set at most only once"
+
+    def test_key_url(self, metadata_items):
+        assert not any(re.match("^https?://", val) for key, val in metadata_items if key == "url"), \
+            "URL metadata values don't start with http:// or https://"
+
+    def test_key_type(self, metadata_dict):
+        assert metadata_dict.get("type") in ("live", "vod", "live, vod"), \
+            "Type metadata has the correct value"
 
 
 class TestRemovedPluginsFile:
