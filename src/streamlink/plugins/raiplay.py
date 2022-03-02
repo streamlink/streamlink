@@ -1,3 +1,9 @@
+"""
+$url raiplay.it
+$type live
+$region Italy
+"""
+
 import logging
 import re
 from urllib.parse import urlparse, urlunparse

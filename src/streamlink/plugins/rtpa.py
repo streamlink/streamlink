@@ -1,3 +1,8 @@
+"""
+$url rtpa.es
+$type live, vod
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

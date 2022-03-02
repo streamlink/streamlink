@@ -1,3 +1,8 @@
+"""
+$url sportal.bg
+$type live
+"""
+
 import logging
 import re
 

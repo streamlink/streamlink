@@ -1,3 +1,11 @@
+"""
+$url tv4play.se
+$url fotbollskanalen.se
+$type live, vod
+$region Sweden
+$notes Only non-premium streams are supported
+"""
+
 import logging
 import re
 from urllib.parse import urljoin

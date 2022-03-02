@@ -1,3 +1,10 @@
+"""
+$url funimation.com
+$url funimationnow.uk
+$type vod
+$notes :ref:`Requires session cookies <cli:Authenticating with FunimationNow>`
+"""
+
 import logging
 import random
 import re

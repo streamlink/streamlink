@@ -1,3 +1,11 @@
+"""
+$url eurostartv.com.tr
+$url kralmuzik.com.tr
+$url ntv.com.tr
+$url startv.com.tr
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

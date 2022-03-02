@@ -1,3 +1,8 @@
+"""
+$url player.tvibo.com
+$type live
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url abema.tv
+$type live, vod
+$region Japan
+"""
+
 import hashlib
 import hmac
 import logging

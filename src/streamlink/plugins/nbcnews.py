@@ -1,3 +1,8 @@
+"""
+$url nbcnews.com
+$type live
+"""
+
 import logging
 import re
 

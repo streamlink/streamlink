@@ -1,3 +1,9 @@
+"""
+$url eltrecetv.com.ar
+$type live, vod
+$region Argentina
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url vimeo.com
+$type live, vod
+$notes Password protected streams are not supported
+"""
+
 import logging
 import re
 from html import unescape as html_unescape

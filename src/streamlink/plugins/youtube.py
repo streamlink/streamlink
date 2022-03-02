@@ -1,3 +1,10 @@
+"""
+$url youtube.com
+$url youtu.be
+$type live, vod
+$notes Protected videos are not supported
+"""
+
 import json
 import logging
 import re

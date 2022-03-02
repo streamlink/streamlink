@@ -1,3 +1,8 @@
+"""
+$url euronews.com
+$type live
+"""
+
 import re
 from urllib.parse import urlparse
 

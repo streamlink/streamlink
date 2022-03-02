@@ -1,3 +1,8 @@
+"""
+$url fox.com.tr
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

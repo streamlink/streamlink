@@ -1,3 +1,9 @@
+"""
+$url 13tv.co.il
+$type live, vod
+$region Israel
+"""
+
 import logging
 import re
 from urllib.parse import urljoin, urlunparse

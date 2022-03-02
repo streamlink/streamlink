@@ -1,3 +1,8 @@
+"""
+$url nimo.tv
+$type live
+"""
+
 import logging
 import re
 

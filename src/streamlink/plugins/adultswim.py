@@ -1,3 +1,10 @@
+"""
+$url adultswim.com
+$type live, vod
+$region various
+$notes VODs may be protected by DRM
+"""
+
 import logging
 import re
 from urllib.parse import urlparse, urlunparse

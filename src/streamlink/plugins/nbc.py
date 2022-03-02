@@ -1,3 +1,10 @@
+"""
+$url nbc.com
+$type vod
+$region United States of America
+$account Authentication is unsupported
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

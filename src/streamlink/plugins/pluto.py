@@ -1,3 +1,8 @@
+"""
+$url pluto.tv
+$type live, vod
+"""
+
 import logging
 import re
 from urllib.parse import parse_qs, urljoin

@@ -1,3 +1,8 @@
+"""
+$url live.bilibili.com
+$type live
+"""
+
 import logging
 import re
 from urllib.parse import urlparse
