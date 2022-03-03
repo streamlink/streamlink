@@ -110,7 +110,7 @@ class Mildom(Plugin):
             log.debug(data.get("message", "Mildom API returned an error"))
             return
         token = data["body"]["data"][0]["token"]
-        
+
         # Create stream URLs
         data = self.session.http.get(
             "https://cloudac.mildom.com/nonolive/gappserv/live/liveserver",
