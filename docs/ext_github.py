@@ -29,7 +29,7 @@ class GithubReferences(Transform):
 
         for node in self.document.traverse(nodes.Text):
             parent = node.parent
-            if isinstance(parent, (nodes.literal, nodes.FixedTextElement)):
+            if isinstance(parent, (nodes.reference, nodes.literal, nodes.FixedTextElement)):
                 continue
 
             text = str(node)
