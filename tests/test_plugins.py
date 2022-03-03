@@ -1,8 +1,6 @@
-import os.path
 import pkgutil
-import unittest
 
-import six
+import pytest
 
 import streamlink.plugins
 # from streamlink.plugins import Plugin
@@ -10,44 +8,35 @@ from streamlink.plugin.plugin import Matcher, Plugin
 from streamlink.utils.module import load_module
 
 
-class PluginTestMeta(type):
-    def __new__(mcs, name, bases, dict):
-        plugin_path = os.path.dirname(streamlink.plugins.__file__)
-        plugins = []
-        for loader, pname, ispkg in pkgutil.iter_modules([plugin_path]):
-            module = load_module(pname, plugin_path)
-            if hasattr(module, "__plugin__"):
-                plugins.append((loader, pname))
-
-        def gentest(loader, pname):
-            def load_plugin_test(self):
-                plugin = loader.find_module(pname).load_module(pname)
-                assert hasattr(plugin, "__plugin__"), "It exports __plugin__"
-
-                pluginclass = plugin.__plugin__
-                assert issubclass(plugin.__plugin__, Plugin), "__plugin__ is an instance of the Plugin class"
-
-                classname = pluginclass.__name__
-                assert classname == classname[0].upper() + classname[1:], "__plugin__ class name starts with uppercase letter"
-                assert "_" not in classname, "__plugin__ class name does not contain underscores"
-
-                assert isinstance(pluginclass.matchers, list) and len(pluginclass.matchers) > 0, "Has at least one matcher"
-                assert all(isinstance(matcher, Matcher) for matcher in pluginclass.matchers), "Only has valid matchers"
-
-                assert not hasattr(pluginclass, "can_handle_url"), "Does not implement deprecated can_handle_url(url)"
-                assert not hasattr(pluginclass, "priority"), "Does not implement deprecated priority(url)"
-                assert callable(pluginclass._get_streams), "Implements _get_streams()"
-
-            return load_plugin_test
-
-        for loader, pname in plugins:
-            dict["test_{0}_load".format(pname)] = gentest(loader, pname)
-
-        return type.__new__(mcs, name, bases, dict)
+plugins_path = streamlink.plugins.__path__[0]
+plugins = [
+    pname
+    for finder, pname, ispkg in pkgutil.iter_modules([plugins_path])
+    if not pname.startswith("common_")
+]
 
 
-@six.add_metaclass(PluginTestMeta)
-class TestPlugins(unittest.TestCase):
-    """
-    Test that each plugin can be loaded and does not fail when calling can_handle_url.
-    """
+class TestPlugins:
+    @pytest.fixture(scope="class", params=plugins)
+    def plugin(self, request):
+        return load_module(request.param, plugins_path)
+
+    def test_exports_plugin(self, plugin):
+        assert hasattr(plugin, "__plugin__"), "Plugin module exports __plugin__"
+        assert issubclass(plugin.__plugin__, Plugin), "__plugin__ is an instance of the Plugin class"
+
+    def test_classname(self, plugin):
+        classname = plugin.__plugin__.__name__
+        assert classname == classname[0].upper() + classname[1:], "__plugin__ class name starts with uppercase letter"
+        assert "_" not in classname, "__plugin__ class name does not contain underscores"
+
+    def test_matchers(self, plugin):
+        pluginclass = plugin.__plugin__
+        assert isinstance(pluginclass.matchers, list) and len(pluginclass.matchers) > 0, "Has at least one matcher"
+        assert all(isinstance(matcher, Matcher) for matcher in pluginclass.matchers), "Only has valid matchers"
+
+    def test_plugin_api(self, plugin):
+        pluginclass = plugin.__plugin__
+        assert not hasattr(pluginclass, "can_handle_url"), "Does not implement deprecated can_handle_url(url)"
+        assert not hasattr(pluginclass, "priority"), "Does not implement deprecated priority(url)"
+        assert callable(pluginclass._get_streams), "Implements _get_streams()"
