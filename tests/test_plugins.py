@@ -1,3 +1,4 @@
+import os.path
 import pkgutil
 import re
 
@@ -69,3 +70,19 @@ class TestPluginTests:
     @pytest.mark.parametrize("plugintest", plugintests)
     def test_test_has_plugin(self, plugintest):
         assert plugintest in plugins, "Plugin exists for test module"
+
+
+class TestRemovedPluginsFile:
+    @pytest.fixture(scope="class")
+    def removedplugins(self):
+        with open(os.path.join(plugins_path, ".removed"), "r") as handle:
+            return [line.strip() for line in handle.readlines() if not line.strip().startswith("#")]
+
+    @pytest.mark.parametrize("plugin", plugins)
+    def test_plugin_not_in_file(self, plugin, removedplugins):
+        assert plugin not in removedplugins, "Existing plugin is not in removed plugins list"
+
+    def test_is_sorted(self, removedplugins):
+        removedplugins_sorted = removedplugins[:]
+        removedplugins_sorted.sort()
+        assert removedplugins_sorted == removedplugins, "Removed plugins list is sorted alphabetically"
