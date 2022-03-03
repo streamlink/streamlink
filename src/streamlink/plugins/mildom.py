@@ -1,5 +1,6 @@
 import logging
 import re
+from uuid import uuid4
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -82,6 +83,34 @@ class Mildom(Plugin):
         for quality_info in data["body"]["ext"]["cmode_params"]:
             qualities.append((quality_info["name"], "_" + quality_info["cmode"] if quality_info["cmode"] != "raw" else ""))
 
+        # Get token
+        data = self.session.http.post(
+            "https://cloudac.mildom.com/nonolive/gappserv/live/token",
+            params={
+                "__platform": "web",
+                "__guest_id": "pc-gp-{}".format(uuid4()),
+            },
+            headers={"Accept-Language": "en"},
+            json={"host_id": channel_id, "type": "hls"},
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "code": int,
+                    validate.optional("message"): str,
+                    validate.optional("body"): {
+                        "data": [
+                            {"token": str, }
+                        ],
+                    }
+                }
+            )
+        )
+        log.trace(f"{data!r}")
+        if data["code"] != 0:
+            log.debug(data.get("message", "Mildom API returned an error"))
+            return
+        token = data["body"]["data"][0]["token"]
+
         # Create stream URLs
         data = self.session.http.get(
             "https://cloudac.mildom.com/nonolive/gappserv/live/liveserver",
@@ -106,7 +135,7 @@ class Mildom(Plugin):
         if data["code"] != 0:
             log.debug(data.get("message", "Mildom API returned an error"))
             return
-        base_url = url_concat(data["body"]["stream_server"], f"{channel_id}{{}}.m3u8")
+        base_url = url_concat(data["body"]["stream_server"], f"{channel_id}{{}}.m3u8?{token}")
         self.session.http.headers.update({"Referer": "https://www.mildom.com/"})
         for quality in qualities:
             yield quality[0], HLSStream(self.session, base_url.format(quality[1]))
