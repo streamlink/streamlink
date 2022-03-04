@@ -251,6 +251,26 @@ table.table-custom-layout.table-custom-layout-platform-locations code {
   list-style: none;
 }
 
+section#plugins dl.field-list {
+  margin: 0 0 0 1rem;
+}
+section#plugins dl.field-list > dt {
+  float: left;
+  width: 8rem;
+  margin: 0;
+}
+section#plugins dl.field-list > dd {
+  margin: 0 0 0 8rem;
+}
+section#plugins dl.field-list ul,
+section#plugins dl.field-list p {
+  margin: 0;
+  padding: 0;
+}
+section#plugins dl.field-list li {
+  list-style: none;
+}
+
 /*
   Utils
 */
