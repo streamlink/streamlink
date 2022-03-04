@@ -140,13 +140,13 @@ Adding plugins
    .. code-block:: python
 
       """
-      $description: A brief description of the website, streaming service, etc.
-      $url: A URL which matches the plugin. No http:// or https:// scheme prefixes allowed.
-      $url: Multiple URLs can be set. Duplicates are not allowed.
-      $type: The type of content. Needs to be either "live", "vod", or "live, vod", without quotes.
-      $region: A comma-separated list of countries if region-lock applies. (optional)
-      $account: A brief note about account or subscription requirements. (optional)
-      $notes: Further short notes that may be useful. (optional)
+      $description A brief description of the website, streaming service, etc.
+      $url A URL which matches the plugin. No http:// or https:// scheme prefixes allowed.
+      $url Multiple URLs can be set. Duplicates are not allowed.
+      $type The type of content. Needs to be either "live", "vod", or "live, vod", without quotes.
+      $region A comma-separated list of countries if region-lock applies. (optional)
+      $account A brief note about account or subscription requirements. (optional)
+      $notes Further short notes that may be useful. (optional)
       """
 
 2. Add at least tests for the URL regex matching in ``tests/plugins/test_pluginname.py``.
