@@ -1,3 +1,8 @@
+"""
+$url skylinewebcams.com
+$type live
+"""
+
 import logging
 import re
 

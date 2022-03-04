@@ -1,3 +1,9 @@
+"""
+$url yupptv.com
+$type live, vod
+$account Some streams require an account and subscription
+"""
+
 import logging
 import re
 import time

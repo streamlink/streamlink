@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+$url 1tv.ru
+$type live
+$region Russia
+"""
 
 import logging
 import random

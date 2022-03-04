@@ -1,3 +1,9 @@
+"""
+$url senate.gov
+$type vod
+$notes Supports hearing streams
+"""
+
 import logging
 import re
 

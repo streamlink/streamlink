@@ -1,3 +1,8 @@
+"""
+$url vtvgo.vn
+$type live
+"""
+
 import logging
 import re
 

@@ -1,3 +1,8 @@
+"""
+$url euronews.com
+$type live
+"""
+
 import re
 
 from streamlink.compat import urlparse

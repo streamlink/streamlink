@@ -1,4 +1,9 @@
-from __future__ import print_function
+"""
+$url srf.ch
+$url rsi.ch
+$type live
+$region Switzerland
+"""
 
 import logging
 import re

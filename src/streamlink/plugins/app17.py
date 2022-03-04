@@ -1,3 +1,8 @@
+"""
+$url 17app.co
+$type live
+"""
+
 import logging
 import re
 

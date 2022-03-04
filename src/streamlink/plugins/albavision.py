@@ -1,3 +1,21 @@
+"""
+$url antena7.com.do
+$url atv.pe
+$url c9n.com.py
+$url canal10.com.ni
+$url canal12.com.sv
+$url chapintv.com
+$url elnueve.com.ar
+$url redbolivision.tv.bo
+$url repretel.com
+$url rts.com.ec
+$url snt.com.py
+$url tvc.com.ec
+$url vtv.com.hn
+$type live
+$region various
+"""
+
 import logging
 import re
 import time

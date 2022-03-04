@@ -1,3 +1,10 @@
+"""
+$url live.nicovideo.jp
+$type live, vod
+$account Required by some streams
+$notes Timeshift is supported
+"""
+
 import logging
 import re
 from threading import Event

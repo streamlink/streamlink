@@ -1,3 +1,9 @@
+"""
+$url mediavitrina.ru
+$type live
+$region Russia
+"""
+
 import logging
 import re
 

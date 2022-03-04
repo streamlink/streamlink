@@ -1,3 +1,8 @@
+"""
+$url attheshore.com
+$type live
+"""
+
 import logging
 import re
 

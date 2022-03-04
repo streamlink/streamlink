@@ -1,3 +1,10 @@
+"""
+$url olympicchannel.com
+$url olympics.com
+$type live, vod
+$notes Only non-premium content is available
+"""
+
 import logging
 import re
 from time import time

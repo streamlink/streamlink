@@ -1,3 +1,21 @@
+"""
+$url zattoo.com
+$url iptv.glattvision.ch
+$url www.saktv.ch
+$url www.vtxtv.ch
+$url mobiltv.quickline.com
+$url www.quantum-tv.com
+$url tvonline.ewe.de
+$url nettv.netcologne.de
+$url tvplus.m-net.de
+$url player.waly.tv
+$url www.1und1.tv
+$url www.netplus.tv
+$url www.bbv-tv.net
+$url www.meinewelt.cc
+$type live, vod
+"""
+
 import logging
 import re
 import uuid

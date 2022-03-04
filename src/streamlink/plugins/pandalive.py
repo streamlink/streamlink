@@ -1,3 +1,8 @@
+"""
+$url pandalive.co.kr
+$type live
+"""
+
 import logging
 import re
 

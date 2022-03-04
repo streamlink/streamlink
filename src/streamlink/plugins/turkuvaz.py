@@ -1,3 +1,17 @@
+"""
+$url atv.com.tr
+$url a2tv.com.tr
+$url ahaber.com.tr
+$url anews.com.tr
+$url aspor.com.tr
+$url atvavrupa.tv
+$url minikacocuk.com.tr
+$url minikago.com.tr
+$url sabah.com.tr
+$type live
+$region various
+"""
+
 import logging
 import re
 

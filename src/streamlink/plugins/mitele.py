@@ -1,3 +1,9 @@
+"""
+$url mitele.es
+$type live
+$region Spain
+"""
+
 import logging
 import re
 

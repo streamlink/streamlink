@@ -1,4 +1,8 @@
-from __future__ import print_function
+"""
+$url network.wwe.com
+$type live, vod
+$account Required
+"""
 
 import json
 import logging

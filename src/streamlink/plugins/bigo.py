@@ -1,3 +1,9 @@
+"""
+$url live.bigo.tv
+$url bigoweb.co
+$type live
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

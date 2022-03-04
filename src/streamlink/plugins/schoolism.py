@@ -1,4 +1,9 @@
-from __future__ import print_function
+"""
+$url schoolism.com
+$type vod
+$account Login and subscription required
+"""
+
 
 import logging
 import re

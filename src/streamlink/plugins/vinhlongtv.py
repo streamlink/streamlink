@@ -1,3 +1,9 @@
+"""
+$url thvli.vn
+$type live
+$region Vietnam
+"""
+
 import logging
 import re
 

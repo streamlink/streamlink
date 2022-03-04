@@ -1,3 +1,8 @@
+"""
+$url dailymotion.com
+$type live, vod
+"""
+
 import logging
 import re
 

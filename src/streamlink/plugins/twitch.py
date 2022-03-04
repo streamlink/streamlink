@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+"""
+$url twitch.tv
+$type live, vod
+$notes Low latency streaming is supported
+"""
+
 import json
 import logging
 import re

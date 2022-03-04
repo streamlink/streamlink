@@ -1,3 +1,9 @@
+"""
+$url daserste.de
+$type live, vod
+$region Germany
+"""
+
 import logging
 import re
 

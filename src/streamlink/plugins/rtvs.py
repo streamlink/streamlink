@@ -1,3 +1,9 @@
+"""
+$url rtvs.sk
+$type live
+$region Slovakia
+"""
+
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher

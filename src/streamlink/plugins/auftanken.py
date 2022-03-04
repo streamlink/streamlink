@@ -1,3 +1,9 @@
+"""
+$url auftanken.tv
+$type live
+$notes VOD streams are hosted on youtube
+"""
+
 import logging
 import re
 

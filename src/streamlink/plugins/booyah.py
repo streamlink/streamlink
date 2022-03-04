@@ -1,3 +1,8 @@
+"""
+$url booyah.live
+$type live, vod
+"""
+
 import logging
 import re
 import sys

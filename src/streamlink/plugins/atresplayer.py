@@ -1,4 +1,8 @@
-from __future__ import print_function
+"""
+$url atresplayer.com
+$type live
+$region Spain
+"""
 
 import logging
 import re

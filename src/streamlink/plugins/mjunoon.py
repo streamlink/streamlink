@@ -1,3 +1,9 @@
+"""
+$url mjunoon.tv
+$type live, vod
+$region Pakistan
+"""
+
 import binascii
 import logging
 import re

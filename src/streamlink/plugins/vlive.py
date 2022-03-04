@@ -1,3 +1,9 @@
+"""
+$url vlive.tv
+$type live
+$notes Embedded Naver VODs are not supported
+"""
+
 import logging
 import re
 

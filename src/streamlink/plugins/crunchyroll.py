@@ -1,3 +1,8 @@
+"""
+$url crunchyroll.com
+$type vod
+"""
+
 import datetime
 import logging
 import re

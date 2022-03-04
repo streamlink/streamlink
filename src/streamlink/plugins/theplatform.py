@@ -1,3 +1,8 @@
+"""
+$url player.theplatform.com
+$type vod
+"""
+
 import logging
 import re
 

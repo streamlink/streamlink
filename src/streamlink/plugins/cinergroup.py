@@ -1,4 +1,11 @@
-from __future__ import print_function
+"""
+$url showtv.com.tr
+$url haberturk.com
+$url showmax.com.tr
+$url showturk.com.tr
+$url bloomberght.com
+$type live
+"""
 
 import json
 import re

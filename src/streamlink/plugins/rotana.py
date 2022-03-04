@@ -1,3 +1,9 @@
+"""
+$url rotana.net
+$type live
+$region Saudi Arabia
+"""
+
 import logging
 import re
 

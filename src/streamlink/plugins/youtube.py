@@ -1,3 +1,10 @@
+"""
+$url youtube.com
+$url youtu.be
+$type live, vod
+$notes Protected videos are not supported
+"""
+
 from __future__ import unicode_literals
 
 import json

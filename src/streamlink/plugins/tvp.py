@@ -1,3 +1,9 @@
+"""
+$url tvpstream.vod.tvp.pl
+$type live
+$region Poland
+"""
+
 import logging
 import re
 

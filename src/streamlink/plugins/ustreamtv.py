@@ -1,3 +1,9 @@
+"""
+$url ustream.tv
+$url video.ibm.com
+$type live, vod
+"""
+
 import copy
 import logging
 import re

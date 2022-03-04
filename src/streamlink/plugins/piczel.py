@@ -1,3 +1,8 @@
+"""
+$url piczel.tv
+$type live
+"""
+
 import logging
 import re
 

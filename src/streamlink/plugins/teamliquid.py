@@ -1,3 +1,9 @@
+"""
+$url teamliquid.net
+$url tl.net
+$type live
+"""
+
 import logging
 import re
 

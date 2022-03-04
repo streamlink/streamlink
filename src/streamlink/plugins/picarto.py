@@ -1,4 +1,7 @@
-from __future__ import print_function
+"""
+$url picarto.tv
+$type live, vod
+"""
 
 import logging
 import re

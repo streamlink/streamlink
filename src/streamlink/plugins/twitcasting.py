@@ -1,3 +1,8 @@
+"""
+$url twitcasting.tv
+$type live
+"""
+
 import hashlib
 import logging
 import re

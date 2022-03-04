@@ -1,3 +1,10 @@
+"""
+$url svtplay.se
+$url oppetarkiv.se
+$type live, vod
+$region Sweden
+"""
+
 import logging
 import re
 

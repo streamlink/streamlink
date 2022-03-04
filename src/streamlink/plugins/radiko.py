@@ -1,3 +1,9 @@
+"""
+$url radiko.jp
+$type live, vod
+$region Japan
+"""
+
 import base64
 import datetime
 import hashlib

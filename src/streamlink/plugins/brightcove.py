@@ -1,3 +1,8 @@
+"""
+$url players.brightcove.net
+$type live, vod
+"""
+
 import logging
 import re
 

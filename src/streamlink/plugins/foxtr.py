@@ -1,4 +1,7 @@
-from __future__ import print_function
+"""
+$url fox.com.tr
+$type live
+"""
 
 import re
 

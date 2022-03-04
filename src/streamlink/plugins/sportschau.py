@@ -1,3 +1,8 @@
+"""
+$url sportschau.de
+$type live
+"""
+
 import logging
 import re
 

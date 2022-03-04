@@ -1,3 +1,10 @@
+"""
+$url steamcommunity.com
+$url steam.tv
+$type live
+$account Some streams require a login
+"""
+
 import base64
 import logging
 import re

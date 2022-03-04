@@ -1,3 +1,8 @@
+"""
+$url dlive.tv
+$type live, vod
+"""
+
 import json
 import logging
 import re

@@ -1,3 +1,8 @@
+"""
+$url wasd.tv
+$type live
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url rtve.es
+$type live, vod
+$region Spain
+"""
+
 import base64
 import logging
 import re

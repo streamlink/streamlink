@@ -1,3 +1,16 @@
+"""
+$url armymedia.bg
+$url bgonair.bg
+$url bloombergtv.bg
+$url bnt.bg
+$url live.bstv.bg
+$url i.cdn.bg
+$url nova.bg
+$url mu-vi.tv
+$type live
+$region Bulgaria
+"""
+
 import logging
 import re
 

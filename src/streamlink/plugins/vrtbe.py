@@ -1,3 +1,8 @@
+"""
+$url vrt.be/vrtnu
+$type live, vod
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url ccma.cat
+$type live, vod
+$region Spain
+"""
+
 import logging
 import re
 

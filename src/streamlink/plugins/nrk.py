@@ -1,3 +1,10 @@
+"""
+$url tv.nrk.no
+$url radio.nrk.no
+$type live, vod
+$region Norway
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url play.mrt.com.mk
+$type live, vod
+$region North Macedonia
+"""
+
 import logging
 import re
 

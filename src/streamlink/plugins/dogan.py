@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
+"""
+$url cnnturk.com
+$url dreamturk.com.tr
+$url dreamtv.com.tr
+$url kanald.com.tr
+$url teve2.com.tr
+$type live, vod
+"""
 
 import logging
 import re

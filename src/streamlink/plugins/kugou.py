@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+$url fanxing.kugou.com
+$type live
+"""
+
 import logging
 import re
 import time

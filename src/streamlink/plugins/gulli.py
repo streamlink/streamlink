@@ -1,3 +1,9 @@
+"""
+$url replay.gulli.fr
+$type live, vod
+$region France
+"""
+
 import logging
 import re
 

@@ -1,3 +1,9 @@
+"""
+$url reuters.com
+$url reuters.tv
+$type live, vod
+"""
+
 import logging
 import re
 

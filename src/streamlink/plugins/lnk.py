@@ -1,3 +1,9 @@
+"""
+$url lnk.lt
+$type live
+$region Lithuania
+"""
+
 import logging
 import re
 

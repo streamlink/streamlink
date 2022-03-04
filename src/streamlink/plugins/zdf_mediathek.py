@@ -1,3 +1,9 @@
+"""
+$url zdf.de
+$type live, vod
+$region Germany
+"""
+
 import logging
 import re
 

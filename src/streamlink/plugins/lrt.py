@@ -1,3 +1,8 @@
+"""
+$url lrt.lt
+$type live
+"""
+
 import logging
 import re
 

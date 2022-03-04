@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+$url sketch.pixiv.net
+$type live
+"""
+
 from __future__ import unicode_literals
 
 import logging

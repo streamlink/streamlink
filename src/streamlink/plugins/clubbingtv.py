@@ -1,3 +1,9 @@
+"""
+$url clubbingtv.com
+$type live, vod
+$account Login required
+"""
+
 import logging
 import re
 

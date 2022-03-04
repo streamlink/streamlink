@@ -1,3 +1,9 @@
+"""
+$url rtp.pt/play
+$type live, vod
+$region Portugal
+"""
+
 import re
 from base64 import b64decode
 

@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+$url vk.com
+$type live, vod
+"""
+
 import logging
 import re
 
