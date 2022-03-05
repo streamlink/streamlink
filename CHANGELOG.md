@@ -1,5 +1,67 @@
 # Changelog
 
+## streamlink 3.2.0 (2022-03-05)
+
+Release highlights:
+
+- Added: log message for the resolved path when writing output to file ([#4336](https://github.com/streamlink/streamlink/pull/4336))
+- Added: new plugins for rtpa.es ([#4344](https://github.com/streamlink/streamlink/pull/4344)) and lnk.lt ([#4364](https://github.com/streamlink/streamlink/pull/4364))
+- Changed: metadata requirements for built-in plugins ([#4374](https://github.com/streamlink/streamlink/pull/4374))
+- Improved: plugins documentation ([#4374](https://github.com/streamlink/streamlink/pull/4374))
+- Fixed: filmon plugin, requires at least OpenSSL 1.1.0 ([#4335](https://github.com/streamlink/streamlink/pull/4335), [#4345](https://github.com/streamlink/streamlink/pull/4345))
+- Fixed: mildom plugin ([#4375](https://github.com/streamlink/streamlink/pull/4375))
+- Fixed: nicolive email logins with confirmation codes ([#4380](https://github.com/streamlink/streamlink/pull/4380))
+- Fixed: various other plugin issues, see the changelog down below
+- Upgraded: Windows installer's Python and dependency versions ([#4330](https://github.com/streamlink/streamlink/pull/4330), [#4347](https://github.com/streamlink/streamlink/pull/4347))
+
+
+```text
+Dylan <71848660+dylan-roussin@users.noreply.github.com> (1):
+      typo of "steams" to "streams" in opencv-face.py
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (3):
+      plugin.api.http_session: add class TLSSecLevel1Adapter()
+      plugins.filmon: fix/update
+      docs: correct minor typo
+
+Justinas Stankevičius <justinas@users.noreply.github.com> (1):
+      plugins.lnk: add new plugin (#4364)
+
+back-to <backto@protonmail.ch> (1):
+      plugins.nicolive: fix login via email (#4380)
+
+bastimeyer <mail@bastimeyer.de> (22):
+      plugins.pluzz: fix workflow value in API schema
+      installer: upgrade python from 3.9.8 to 3.9.10
+      cli: log resolved file output path
+      plugins.rtpa: add new plugin
+      installer: update wheels to latest versions
+      plugins.pandalive: fix plugin
+      plugins.ard_live: fix live.daserste.de inputs
+      tests.plugins: implement should_match_groups
+      tests.plugins: test URL capture groups
+      plugins.goltelevision: fix API URL
+      tests: rewrite TestPlugins using pytest fixtures
+      tests: add parametrized TestPluginTests
+      tests: add parametrized TestRemovedPluginsFile
+      tests: move global plugin arguments test
+      docs: update Streamlink Twitch GUI image
+      docs: fix GithubReferences transform
+      docs: add icon to external links
+      plugins: add metadata header comments
+      docs: rename plugin_matrix to plugins
+      docs: dynamically build list of plugins
+      docs: update developing page
+      docs: fix plugin metadata example
+
+fireattack <human.peng@gmail.com> (1):
+      plugins.openrectv: get URLs from subs_trial_media (#4349)
+
+vvto33 <54504675+vvto33@users.noreply.github.com> (1):
+      plugins.mildom: get token for livestream (#4375)
+```
+
+
 ## streamlink 3.1.1 (2022-01-25)
 
 Patch release:
