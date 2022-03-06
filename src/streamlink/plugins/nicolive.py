@@ -9,6 +9,8 @@ import logging
 import re
 from threading import Event
 
+from streamlink.compat import urljoin
+from streamlink.exceptions import FatalPluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.plugin.api.websocket import WebsocketClient
@@ -244,19 +246,38 @@ class NicoLive(Plugin):
 
         elif email is not None and password is not None:
             log.info("Logging in via provided email and password")
-            msg = self.session.http.post(
+            root = self.session.http.post(
                 self.LOGIN_URL,
                 data={"mail_tel": email, "password": password},
                 params=self.LOGIN_URL_PARAMS,
-                schema=validate.Schema(
-                    validate.parse_html(),
-                    validate.xml_xpath_string(".//p[@class='notice__text']/text()")
-                )
-            )
+                schema=validate.Schema(validate.parse_html()))
 
+            input_with_value = {}
+            for elem in root.xpath(".//input"):
+                if elem.attrib.get("value"):
+                    input_with_value[elem.attrib.get("name")] = elem.attrib.get("value")
+                else:
+                    if elem.attrib.get("id") == "oneTimePw":
+                        maxlength = int(elem.attrib.get("maxlength"))
+                        try:
+                            oneTimePw = self.input_ask("Enter the 6 digit number included in email")
+                            if len(oneTimePw) > maxlength:
+                                log.error("invalid user input")
+                                return
+                        except FatalPluginError:
+                            return
+                        input_with_value[elem.attrib.get("name")] = oneTimePw
+                    else:
+                        log.debug("unknown input: {0}".format(elem.attrib.get('name')))
+
+            root = self.session.http.post(
+                urljoin("https://account.nicovideo.jp", root.xpath("string(.//form[@action]/@action)")),
+                data=input_with_value,
+                schema=validate.Schema(validate.parse_html()))
             log.debug("Cookies: {0}".format(self.session.http.cookies.get_dict()))
             if self.session.http.cookies.get("user_session") is None:
-                log.warning("Login failed: {0}".format(msg or 'unknown reason'))
+                error = root.xpath("string(//div[@class='formError']/div/text())")
+                log.warning("Login failed: {0}".format(error or 'unknown reason'))
             else:
                 log.info("Logged in.")
                 self.save_cookies()
