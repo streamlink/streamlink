@@ -5,14 +5,19 @@ matrix:
   - python: '2.7'
   - python: '3.6'
   - python: '3.7'
+    env: P37=yes
   - python: '3.8'
-    env: BUILD_DOCS=no
+    env: BUILD_DOCS=yes
   - python: '3.9'
     dist: xenial
     sudo: true
 
 before_install:
-  - pip install --upgrade pip setuptools
+  - if [[ $P37 == 'yes' ]]; then
+      pip install --upgrade pip setuptools==60.9.0;
+    else
+      pip install --upgrade pip setuptools;
+    fi
   - pip install --upgrade -r dev-requirements.txt
   - if [[ $BUILD_DOCS == 'yes' ]]; then
       pip install --upgrade -r docs-requirements.txt;
