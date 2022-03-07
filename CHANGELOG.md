@@ -1253,7 +1253,7 @@ beardypig <beardypig@protonmail.com> (1):
 lanroth <github.com@lanroth.com> (1):
       plugins.radionet: fix plugin so it works with new page format (#3018)
 
-resloved <bfriesen95@gmail.com> (1):
+resolved <bfriesen95@gmail.com> (1):
       fixed typo
 
 steven7851 <steven7851@msn.com> (1):
@@ -1853,7 +1853,7 @@ Vinny <vincent.aceto@gmail.com> (1):
       docs: Added documentation for the Funimation plugin (#2091)
 
 Visatouch Deeying <xerodotc@gmail.com> (1):
-      Fix crash on missing output.record when using player-continous-http
+      Fix crash on missing output.record when using player-continuous-http
 
 back-to <backto@protonmail.ch> (48):
       plugins.EuropaPlusTV: Fix for "No connection adapters were found"
@@ -2789,9 +2789,9 @@ back-to <back-to@users.noreply.github.com> (9):
       [chaturbate] New API for HLS url
       [chaturbate] Fixed python 3.5 bug and added regex tests
       [VRTbe] new plugin for vrt.be/vrtnu
-      [oldlivestream] New regex for cdn subdomains and embeded streams
-      [tv1channel.org] New Plugin for embeded streams on tv1channel.org
-      [cyro] New plugin for embeded streams from cyro.se
+      [oldlivestream] New regex for cdn subdomains and embedded streams
+      [tv1channel.org] New Plugin for embedded streams on tv1channel.org
+      [cyro] New plugin for embedded streams from cyro.se
       [Facebook] Added unittests
       [ArteTV] new regex, removed rtmp and better result for available streams
       [NRK.NO] fixed regex for _api_baseurl_re
@@ -3747,7 +3747,7 @@ chvrn <chev@protonmail.com> (4):
       added entry for expressen
 
 e00E <vakevk+git@gmail.com> (1):
-      Fix Twitch plugin not working because bandwith was parsed as an int when it is really a float
+      Fix Twitch plugin not working because bandwidth was parsed as an int when it is really a float
 
 fat deer <fatdeer@foxmail.com> (1):
       Add Panda.tv Plugin.

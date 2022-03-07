@@ -45,10 +45,10 @@ class Pluzz(Plugin):
         # Retrieve geolocation data
         country_code = self.session.http.get(self.GEO_URL, schema=validate.Schema(
             validate.parse_json(),
-            {"reponse": {"geo_info": {
+            {"response": {"geo_info": {
                 "country_code": str
             }}},
-            validate.get(("reponse", "geo_info", "country_code"))
+            validate.get(("response", "geo_info", "country_code"))
         ))
         log.debug(f"Country: {country_code}")
 
