@@ -21,6 +21,6 @@ class TestPluginCanHandleUrlOneTV(PluginCanHandleUrl):
         "http://www.chetv.ru/online",
         "https://www.ctclove.ru/online",
         "http://www.ctclove.ru/online",
-        "https://www.domashny.ru/online"
-        "http://www.domashny.ru/online"
+        "https://www.domashny.ru/online",
+        "http://www.domashny.ru/online",
     ]
