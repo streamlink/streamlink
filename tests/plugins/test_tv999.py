@@ -8,7 +8,7 @@ class TestPluginCanHandleUrlTV999(PluginCanHandleUrl):
     should_match = [
         "http://tv999.bg/live.html",
         "http://www.tv999.bg/live.html",
-        "https://tv999.bg/live"
+        "https://tv999.bg/live",
         "https://tv999.bg/live.html",
         "https://www.tv999.bg/live.html",
     ]
