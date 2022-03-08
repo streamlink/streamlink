@@ -1,5 +1,51 @@
 # Changelog
 
+## streamlink 2.27.2.0 (2022-03-08)
+
+```text
+Billy2011 <kschmidt2007@googlemail.com> (20):
+      plugins.skylinewebcams: fix source extraction
+      cli: log absolute file output path
+      cli.main: prevent py2 UnicodeDecodeError
+      plugin.api.http_session: add class TLSSecLevel1Adapter() (#4345)
+      plugins.filmon: fix/update (#4335)
+      plugins.pandalive: fix plugin (#4338)
+      docs: correct minor typo (#4351)
+      plugins.ard_live: fix live.daserste.de inputs (#4355)
+      tests.plugins: test URL capture groups (#4363)
+      tests: rewrite TestPlugins using pytest fixtures (#4372)
+      tests: add parametrized TestPluginTests (#4372)
+      tests: add parametrized TestRemovedPluginsFile (#4372)
+      tests: move global plugin arguments test (#4372)
+      plugins.mildom: get token for livestream (#4375)
+      plugins: add metadata header comments (#4374)
+      docs: dynamically build list of plugins (#4374)
+      plugins.nicolive: fix login via email (#4380)
+      Update .travis.yml
+
+Dylan <71848660+dylan-roussin@users.noreply.github.com> (1):
+      typo of "steams" to "streams" in opencv-face.py
+
+Justinas Stankevičius <justinas@users.noreply.github.com> (1):
+      plugins.lnk: add new plugin (#4364)
+
+bastimeyer <mail@bastimeyer.de> (10):
+      plugins.pluzz: fix workflow value in API schema
+      plugins.rtpa: add new plugin
+      tests.plugins: implement should_match_groups
+      plugins.goltelevision: fix API URL
+      docs: update Streamlink Twitch GUI image
+      docs: fix GithubReferences transform
+      docs: add icon to external links
+      docs: rename plugin_matrix to plugins
+      docs: update developing page
+      docs: fix plugin metadata example
+
+fireattack <human.peng@gmail.com> (1):
+      plugins.openrectv: get URLs from subs_trial_media (#4349)
+```
+
+
 ## streamlink 2.27.1.0 (2022-01-28)
 
 ```text
