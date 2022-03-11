@@ -1,4 +1,5 @@
 """
+$description Bulgarian CDN hosting live content for various websites in Bulgaria.
 $url armymedia.bg
 $url bgonair.bg
 $url bloombergtv.bg

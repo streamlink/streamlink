@@ -1,4 +1,5 @@
 """
+$description Turkish live TV channel owned by Acun Medya Group.
 $url tv8.com.tr
 $type live
 """

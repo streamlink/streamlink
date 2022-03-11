@@ -1,4 +1,5 @@
 """
+$description Global video hosting platform.
 $url streamable.com
 $type vod
 """

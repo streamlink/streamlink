@@ -1,4 +1,5 @@
 """
+$description Turkish live TV channels from Dogus Group, including Euro Star, Star and NTV.
 $url eurostartv.com.tr
 $url kralmuzik.com.tr
 $url ntv.com.tr

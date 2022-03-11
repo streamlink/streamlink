@@ -1,4 +1,5 @@
 """
+$description Live TV channels from RSI and SRF, operations of SRG SSR, a Swiss public broadcaster.
 $url srf.ch
 $url rsi.ch
 $type live

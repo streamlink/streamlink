@@ -1,4 +1,5 @@
 """
+$description American live TV channel and video on-demand service owned by Warner Bros.
 $url adultswim.com
 $type live, vod
 $region various

@@ -1,4 +1,5 @@
 """
+$description Japanese live streaming and video hosting platform for live video game broadcasts and individual live streams.
 $url mildom.com
 $type live, vod
 """

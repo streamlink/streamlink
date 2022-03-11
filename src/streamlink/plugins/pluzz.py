@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from france.tv, a French public, state-owned broadcaster.
 $url france.tv
 $url francetvinfo.fr
 $type live, vod

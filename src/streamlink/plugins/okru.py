@@ -1,4 +1,5 @@
 """
+$description Russian live streaming and video hosting social platform.
 $url ok.ru
 $type live, vod
 """

@@ -1,4 +1,5 @@
 """
+$description Turkish live TV channel owned by Galatasaray TV.
 $url galatasaray.com
 $type live
 """
