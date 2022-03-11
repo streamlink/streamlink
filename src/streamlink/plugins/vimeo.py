@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video hosting social platform.
 $url vimeo.com
 $type live, vod
 $notes Password protected streams are not supported

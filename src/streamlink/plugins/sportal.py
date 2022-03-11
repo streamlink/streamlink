@@ -1,4 +1,5 @@
 """
+$description Sporting channel live stream owned by Sportal, a Bulgarian sports media website.
 $url sportal.bg
 $type live
 """

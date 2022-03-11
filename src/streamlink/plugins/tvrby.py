@@ -1,4 +1,5 @@
 """
+$description Live TV channels from BTRC, a Belarusian public, state-owned broadcaster.
 $url tvr.by
 $type live
 $region Belarus

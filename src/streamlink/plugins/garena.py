@@ -1,4 +1,5 @@
 """
+$description Live video game broadcasts of Garena member games.
 $url garena.live
 $type live
 """

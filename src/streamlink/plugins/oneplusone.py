@@ -1,4 +1,5 @@
 """
+$description Ukrainian live TV channels from 1 + 1 Media group, including 1 + 1, 2 + 2, PLUSPLUS, TET and UNIAN.
 $url 1plus1.video
 $type live
 """

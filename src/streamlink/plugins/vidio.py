@@ -1,4 +1,5 @@
 """
+$description Indonesian & international live TV channels and video on-demand service. OTT service from Vidio.
 $url vidio.com
 $type live, vod
 """

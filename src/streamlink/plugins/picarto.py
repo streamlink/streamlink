@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video hosting platform for the creative community.
 $url picarto.tv
 $type live, vod
 """

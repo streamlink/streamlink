@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video hosting platform.
 $url player.tvibo.com
 $type live
 """

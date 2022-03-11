@@ -1,4 +1,5 @@
 """
+$description Global live streaming platform for live video game broadcasts and individual live streams.
 $url live.bigo.tv
 $url bigoweb.co
 $type live

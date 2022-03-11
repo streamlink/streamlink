@@ -1,4 +1,5 @@
 """
+$description Russian live streaming platform for live video game broadcasts.
 $url goodgame.ru
 $type live
 """

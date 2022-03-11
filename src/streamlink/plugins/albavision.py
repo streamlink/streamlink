@@ -1,4 +1,5 @@
 """
+$description TV network with multiple live TV channels broadcasting across various Latin American countries.
 $url antena7.com.do
 $url atv.pe
 $url c9n.com.py

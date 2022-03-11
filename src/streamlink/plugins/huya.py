@@ -1,4 +1,5 @@
 """
+$description Chinese live streaming platform for live video game broadcasts and individual live streams.
 $url huya.com
 $type live
 """

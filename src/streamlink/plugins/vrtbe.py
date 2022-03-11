@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from VRT, a Flemish public, community-owned broadcaster.
 $url vrt.be/vrtnu
 $type live, vod
 """

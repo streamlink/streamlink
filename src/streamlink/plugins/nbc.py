@@ -1,4 +1,5 @@
 """
+$description American video on-demand service owned by NBC Network.
 $url nbc.com
 $type vod
 $region United States of America

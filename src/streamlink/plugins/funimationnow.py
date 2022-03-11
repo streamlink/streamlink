@@ -1,4 +1,5 @@
 """
+$description Anime video on-demand service.
 $url funimation.com
 $url funimationnow.uk
 $type vod

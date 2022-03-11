@@ -1,4 +1,5 @@
 """
+$description Sporting live stream and video content, owned by Silver Chalice and Sinclair Broadcast Group.
 $url watchstadium.com
 $type live, vod
 """

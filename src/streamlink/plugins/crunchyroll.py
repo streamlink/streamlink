@@ -1,4 +1,5 @@
 """
+$description Video streaming service focused on anime, manga, and dorama.
 $url crunchyroll.com
 $type vod
 """
