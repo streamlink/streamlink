@@ -1,4 +1,5 @@
 """
+$description Turkish live TV channel owned by Discovery, Inc.
 $url tlctv.com.tr
 $type live
 """

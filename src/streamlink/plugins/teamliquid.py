@@ -1,4 +1,5 @@
 """
+$description Live streams from Team Liquid, a multi-regional professional e-sports organisation based in the Netherlands.
 $url teamliquid.net
 $url tl.net
 $type live

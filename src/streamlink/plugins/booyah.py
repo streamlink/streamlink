@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video hosting community platform designed for gaming enthusiasts.
 $url booyah.live
 $type live, vod
 """

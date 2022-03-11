@@ -1,4 +1,5 @@
 """
+$description European live TV channels and video on-demand service. OTT service from Zattoo.
 $url zattoo.com
 $url iptv.glattvision.ch
 $url www.saktv.ch

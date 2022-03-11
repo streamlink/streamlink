@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from TV4, a Swedish free-to-air broadcaster.
 $url tv4play.se
 $url fotbollskanalen.se
 $type live, vod

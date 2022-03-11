@@ -1,4 +1,5 @@
 """
+$description Russian live TV channel owned by Gazprom Media.
 $url ntv.ru
 $type live
 """

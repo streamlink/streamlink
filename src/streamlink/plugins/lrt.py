@@ -1,4 +1,5 @@
 """
+$description Live TV channels from LRT, a Lithuanian public, state-owned broadcaster.
 $url lrt.lt
 $type live
 """

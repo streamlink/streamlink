@@ -1,4 +1,5 @@
 """
+$description Spanish live TV sports channel owned by Gol Network.
 $url goltelevision.com
 $type live
 $region Spain

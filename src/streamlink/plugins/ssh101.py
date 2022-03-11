@@ -1,4 +1,5 @@
 """
+$description Global live streaming platform.
 $url ssh101.com
 $type live
 """

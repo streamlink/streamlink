@@ -1,4 +1,5 @@
 """
+$description Turkish live TV channels and video on-demand service from Dogan Group, including CNN Turk and Kanal D.
 $url cnnturk.com
 $url dreamturk.com.tr
 $url dreamtv.com.tr

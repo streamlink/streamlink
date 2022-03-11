@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from the BBC, a British public, state-owned broadcaster.
 $url bbc.co.uk/iplayer
 $type live, vod
 $region United Kingdom

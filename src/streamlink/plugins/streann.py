@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video on-demand hosting platform.
 $url ott.streann.com
 $url centroecuador.ec
 $url columnaestilos.com

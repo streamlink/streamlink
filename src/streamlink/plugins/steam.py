@@ -1,4 +1,5 @@
 """
+$description Live streaming video game broadcasts from the Steam gaming community.
 $url steamcommunity.com
 $url steam.tv
 $type live

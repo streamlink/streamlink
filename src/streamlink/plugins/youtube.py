@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video hosting social platform owned by Google.
 $url youtube.com
 $url youtu.be
 $type live, vod

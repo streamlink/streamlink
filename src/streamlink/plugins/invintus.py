@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video on-demand hosting platform.
 $url player.invintus.com
 $type live, vod
 """
