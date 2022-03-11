@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video on-demand hosting platform.
 $url livestream.com
 $type live
 """

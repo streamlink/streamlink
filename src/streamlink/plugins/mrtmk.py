@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from MRT, a North Macedonian public, state-owned broadcaster.
 $url play.mrt.com.mk
 $type live, vod
 $region North Macedonia

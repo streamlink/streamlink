@@ -1,4 +1,5 @@
 """
+$description Lithuanian live TV channels from LNK Group, including 2TV, BTV, Info TV, LNK and TV1.
 $url lnk.lt
 $type live
 $region Lithuania

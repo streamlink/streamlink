@@ -1,4 +1,5 @@
 """
+$description Indian live TV channels. OTT service from Zenga TV.
 $url zengatv.com
 $type live
 """

@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from ZDF, a German public, independent broadcaster.
 $url zdf.de
 $type live, vod
 $region Germany

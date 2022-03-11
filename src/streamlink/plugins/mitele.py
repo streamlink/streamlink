@@ -1,4 +1,5 @@
 """
+$description Spanish live TV channels from Mediaset Group, including Boing, Cuatro, Divinity, Energy, FDF and Telecinco.
 $url mitele.es
 $type live
 $region Spain

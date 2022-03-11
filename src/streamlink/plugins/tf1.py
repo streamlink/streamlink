@@ -1,4 +1,5 @@
 """
+$description French live TV channels from TF1 Group, including LCI and TF1.
 $url tf1.fr
 $url lci.fr
 $type live

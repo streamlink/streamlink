@@ -1,4 +1,5 @@
 """
+$description Turkish live TV channels from Turkuvaz Media Group, including Ahaber, ATV, Minika COCUK and MinikaGO.
 $url atv.com.tr
 $url a2tv.com.tr
 $url ahaber.com.tr

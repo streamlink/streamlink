@@ -1,4 +1,5 @@
 """
+$description German sports magazine live stream, owned by ARD.
 $url sportschau.de
 $type live
 """

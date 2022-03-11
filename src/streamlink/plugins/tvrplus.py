@@ -1,4 +1,5 @@
 """
+$description Live TV channels from TVR, a Romanian public, state-owned broadcaster.
 $url tvrplus.ro
 $type live
 $region Romania

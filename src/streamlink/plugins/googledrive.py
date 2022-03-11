@@ -1,4 +1,5 @@
 """
+$description Stream videos stored in Google Drive.
 $url docs.google.com
 $url drive.google.com
 $type vod

@@ -1,4 +1,5 @@
 """
+$description French free-to-air news channel, providing 24-hour national and global news coverage.
 $url cnews.fr
 $type live, vod
 """

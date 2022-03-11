@@ -1,4 +1,5 @@
 """
+$description Global and country-specific websites for live radio simulcasts for over 40,000 stations.
 $url radio.net
 $url radio.at
 $url radio.de

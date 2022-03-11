@@ -1,4 +1,5 @@
 """
+$description Live TV channels from LTV, a Latvian public, state-owned broadcaster.
 $url ltv.lsm.lv
 $type live
 $region Latvia

@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from NOS, a Dutch public, state-owned broadcaster.
 $url nos.nl
 $type live, vod
 $region Netherlands

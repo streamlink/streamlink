@@ -1,4 +1,5 @@
 """
+$description Global business, financial, national and international news.
 $url reuters.com
 $url reuters.tv
 $type live, vod

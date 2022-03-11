@@ -1,4 +1,5 @@
 """
+$description French live TV channel and video on-demand service owned by Gulli.
 $url replay.gulli.fr
 $type live, vod
 $region France

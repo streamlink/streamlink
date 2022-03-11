@@ -1,4 +1,5 @@
 """
+$description French live TV channels, live streams and video content, owned by NextRadioTV.
 $url bfmtv.com
 $url 01net.com
 $type live, vod

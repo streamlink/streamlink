@@ -1,4 +1,5 @@
 """
+$description German news and documentaries TV channel, owned by Axel Springer SE.
 $url welt.de
 $type live, vod
 $region Germany

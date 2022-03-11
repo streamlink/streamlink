@@ -1,4 +1,5 @@
 """
+$description 24-hour world, US and local news channel, based in the United States of America.
 $url nbcnews.com
 $type live
 """

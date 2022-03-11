@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+$description Chinese live streaming platform for live video game broadcasts and live sports game related streams.
 $url live.qq.com
 $type live
 """

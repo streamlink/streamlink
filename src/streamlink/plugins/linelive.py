@@ -1,4 +1,5 @@
 """
+$description Japanese live streaming and video hosting social platform.
 $url live.line.me
 $type live, vod
 """

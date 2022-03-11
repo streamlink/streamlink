@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from RUV, an Icelandic public, state-owned broadcaster.
 $url ruv.is
 $type live, vod
 $region Iceland

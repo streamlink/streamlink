@@ -1,4 +1,5 @@
 """
+$description Japanese live streaming and video hosting social platform.
 $url live.nicovideo.jp
 $type live, vod
 $account Required by some streams

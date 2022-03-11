@@ -1,4 +1,5 @@
 """
+$description Global live streaming and video hosting social platform.
 $url facebook.com
 $type live, vod
 """

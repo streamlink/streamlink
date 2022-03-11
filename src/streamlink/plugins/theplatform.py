@@ -1,4 +1,5 @@
 """
+$description Global video on-demand hosting platform owned by Comcast.
 $url player.theplatform.com
 $type vod
 """

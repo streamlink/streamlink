@@ -1,4 +1,5 @@
 """
+$description Live TV and video on-demand service owned by Paramount Streaming.
 $url pluto.tv
 $type live, vod
 """

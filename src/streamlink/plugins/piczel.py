@@ -1,4 +1,5 @@
 """
+$description Global live streaming platform for the creative community.
 $url piczel.tv
 $type live
 """

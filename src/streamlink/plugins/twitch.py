@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+$description Global live streaming and video hosting social platform owned by Amazon.
 $url twitch.tv
 $type live, vod
 $notes Low latency streaming is supported

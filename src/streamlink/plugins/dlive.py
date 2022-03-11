@@ -1,4 +1,5 @@
 """
+$description Global live streaming platform owned by BitTorrent, Inc.
 $url dlive.tv
 $type live, vod
 """

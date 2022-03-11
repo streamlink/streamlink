@@ -1,4 +1,5 @@
 """
+$description Live TV channels and video on-demand service from NRK, a Norwegian public, state-owned broadcaster.
 $url tv.nrk.no
 $url radio.nrk.no
 $type live, vod

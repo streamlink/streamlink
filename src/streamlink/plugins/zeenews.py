@@ -1,4 +1,5 @@
 """
+$description Indian Hindi-language news channel covering world & Indian news, business, entertainment and sport.
 $url zeenews.india.com
 $type live
 """

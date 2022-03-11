@@ -1,4 +1,5 @@
 """
+$description A privately owned Bulgarian live TV channel.
 $url btvplus.bg
 $type live
 $region Bulgaria
