@@ -555,7 +555,7 @@ def build_parser():
         "-f", "--force",
         action="store_true",
         help="""
-        When using -o or -r, always write to file even if it already exists.
+        When using -o or -r, always write to file even if it already exists (overwrite).
         """
     )
     output.add_argument(
