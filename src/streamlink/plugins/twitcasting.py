@@ -12,8 +12,7 @@ from streamlink.buffers import RingBuffer
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, PluginError, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.plugin.api.websocket import WebsocketClient
-from streamlink.stream.stream import Stream
-from streamlink.stream.stream import StreamIO
+from streamlink.stream.stream import Stream, StreamIO
 from streamlink.utils.url import update_qsd
 
 log = logging.getLogger(__name__)
