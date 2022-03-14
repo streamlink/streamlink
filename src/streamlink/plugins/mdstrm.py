@@ -1,6 +1,8 @@
 """
 $description CDN hosting live content for various websites in the Americas.
 $url mdstrm.com
+$url latina.pe/tvenvivo
+$url saltillo.multimedios.com/video
 $type live
 """
 import logging
