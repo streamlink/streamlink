@@ -73,7 +73,7 @@ class OnePlusOneAPI:
             url=self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//iframe[@src][@name='twttrHubFrameSecure']/@src")))
+                validate.xml_xpath_string(".//iframe[contains(@src,'embed')]/@src")))
         if not url_parts:
             raise NoStreamsError("Missing url_parts")
 
