@@ -4,6 +4,8 @@ $url eurostartv.com.tr
 $url kralmuzik.com.tr
 $url ntv.com.tr
 $url startv.com.tr
+$url tlctv.com.tr
+$url dmax.com.tr
 $type live
 """
 
