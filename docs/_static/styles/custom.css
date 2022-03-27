@@ -44,6 +44,10 @@ code.literal {
   font-size: var(--font-size--small);
 }
 
+code.literal.xref.std-option {
+  white-space: nowrap;
+}
+
 strong.command {
   padding: .1em .2em;
   border-radius: .2em;
