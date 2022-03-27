@@ -16,15 +16,15 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.url import update_scheme
 
+
 @pluginmatcher(re.compile(r"https?://(?:www\.)?eurostartv\.com\.tr/canli-izle"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?kralmuzik\.com\.tr/tv/.+"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?ntv\.com\.tr/canli-yayin/ntv"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?startv\.com\.tr/canli-yayin"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?tlctv\.com\.tr/canli-izle"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?dmax\.com\.tr/canli-izle"))
-
 class Dogus(Plugin):
-    _re_live_hls = re.compile(r"[\"|']((?:https?:)?//[^']+/live/hls/[^']+?)[\"|']")
+    _re_live_hls = re.compile(r"""["']((?:https?:)?//[^"']+/live/hls/[^"']+?)["']""")
     _re_live_hls2 = re.compile(r"'(https?://[^']+\.m3u8[^']+)'")
     _re_yt_script = re.compile(r"youtube\.init\('([\w-]{11})'")
 
