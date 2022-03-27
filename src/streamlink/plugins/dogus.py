@@ -14,7 +14,7 @@ import re
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-
+from streamlink.utils.url import update_scheme
 
 @pluginmatcher(re.compile(r"https?://(?:www\.)?eurostartv\.com\.tr/canli-izle"))
 @pluginmatcher(re.compile(r"https?://(?:www\.)?kralmuzik\.com\.tr/tv/.+"))
@@ -24,8 +24,8 @@ from streamlink.stream.hls import HLSStream
 @pluginmatcher(re.compile(r"https?://(?:www\.)?dmax\.com\.tr/canli-izle"))
 
 class Dogus(Plugin):
-    _re_live_hls = re.compile(r"(https?://|//|http://[^']+/live/hls/[^']+?)['|\"]")
-    _re_live_hls2 = re.compile(r"'(https?://[^']+.m3u8[^']+)'")
+    _re_live_hls = re.compile(r"[\"|']((?:https?:)?//[^']+/live/hls/[^']+?)[\"|']")
+    _re_live_hls2 = re.compile(r"'(https?://[^']+\.m3u8[^']+)'")
     _re_yt_script = re.compile(r"youtube\.init\('([\w-]{11})'")
 
     def _get_streams(self):
@@ -52,10 +52,8 @@ class Dogus(Plugin):
         dd_script2 = root.xpath("string(.//script[contains(text(), 'daionUrl')][1]/text())")
         if dd_script:
             m = self._re_live_hls.search(dd_script)
-            if m and "startv" in m.group(1):
-                return HLSStream.parse_variant_playlist(self.session, m.group(1).replace("//", "http://"))
-            elif m:
-                return HLSStream.parse_variant_playlist(self.session, m.group(1))
+            if m:
+                return HLSStream.parse_variant_playlist(self.session, update_scheme("http://", m.group(1), force=False))
         # https://www.tlctv.com.tr/canli-izle
         # https://www.dmax.com.tr/canli-izle
         elif dd_script2:
