@@ -11,4 +11,6 @@ class TestPluginCanHandleUrlDogus(PluginCanHandleUrl):
         "https://www.kralmuzik.com.tr/tv/kral-tv",
         "https://www.ntv.com.tr/canli-yayin/ntv?youtube=true",
         "https://www.startv.com.tr/canli-yayin",
+        "https://www.tlctv.com.tr/canli-izle",
+        "https://www.dmax.com.tr/canli-izle",
     ]
