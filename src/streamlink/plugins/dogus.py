@@ -49,14 +49,14 @@ class Dogus(Plugin):
 
         # http://eurostartv.com.tr/canli-izle
         dd_script = root.xpath("string(.//script[contains(text(), '/live/hls/')][1]/text())")
-        dd_script2 = root.xpath("string(.//script[contains(text(), 'daionUrl')][1]/text())")
         if dd_script:
             m = self._re_live_hls.search(dd_script)
             if m:
                 return HLSStream.parse_variant_playlist(self.session, update_scheme("http://", m.group(1), force=False))
         # https://www.tlctv.com.tr/canli-izle
         # https://www.dmax.com.tr/canli-izle
-        elif dd_script2:
+        dd_script2 = root.xpath("string(.//script[contains(text(), 'daionUrl')][1]/text())")
+        if dd_script2:
             m = self._re_live_hls2.search(dd_script2)
             if m:
                 return HLSStream.parse_variant_playlist(self.session, m.group(1))
