@@ -92,43 +92,12 @@ jobs:
       - name: Build
         run: make --directory=docs html man
 
-  windows-installer:
-    name: Windows installer
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 300
-      - name: Fetch tags
-        run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
-      - uses: actions/setup-python@v1
-        with:
-          python-version: 3.9
-      - name: Install dependencies
-        run: |
-          ./script/install-dependencies.sh
-          python -m pip install wheel pynsist==2.7 distlib==0.3.3
-          sudo apt update
-          sudo apt install -y nsis imagemagick inkscape
-      - name: Installer file name
-        id: installer
-        run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
-      - name: Build
-        run: ./script/makeinstaller.sh "${{ steps.installer.outputs.filename }}"
-      - name: Upload artifact
-        if: github.repository == 'streamlink/streamlink' && (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') || github.event_name == 'schedule')
-        uses: actions/upload-artifact@v2-preview
-        with:
-          name: ${{ steps.installer.outputs.filename }}-win32
-          path: ${{ env.STREAMLINK_DIST_DIR }}/${{ steps.installer.outputs.filename }}.exe
-
   deploy-documentation:
     name: Deploy docs
     if: github.repository == 'streamlink/streamlink' && github.event_name == 'push' && (github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/'))
     needs:
       - test
       - documentation
-      - windows-installer
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -174,14 +143,6 @@ jobs:
         run: ./script/build-shell-completions.sh
       - name: Build man page
         run: make --directory=docs man
-      - name: Installer file name
-        id: installer
-        run: echo ::set-output name=filename::streamlink-$(python setup.py --version | sed 's/+/_/')
-      - name: Download installer artifact
-        uses: actions/download-artifact@v2-preview
-        with:
-          name: ${{ steps.installer.outputs.filename }}-win32
-          path: ${{ env.STREAMLINK_DIST_DIR }}
       - name: sdist and wheels
         env:
           RELEASE_KEY_PASSPHRASE: ${{ secrets.RELEASE_KEY_PASSPHRASE }}
@@ -189,7 +150,7 @@ jobs:
       - name: Github release
         env:
           RELEASES_API_KEY: ${{ secrets.RELEASES_API_KEY }}
-        run: ./script/github_releases.py "${STREAMLINK_DIST_DIR}/"*{.exe,.tar.gz{,.asc}}
+        run: ./script/github_releases.py "${STREAMLINK_DIST_DIR}/"*{.tar.gz{,.asc}}
       - name: PyPI release
         env:
           PYPI_USER: streamlink
