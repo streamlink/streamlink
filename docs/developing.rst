@@ -191,4 +191,3 @@ Removing plugins
 ^^^^^^^^^^^^^^^^
 
 1. Remove the plugin file from ``src/streamlink/plugins/`` and the test file from ``tests/plugins/``
-2. Run ``script/update-removed-plugins.sh`` once to update ``src/streamlink/plugins/.removed``
