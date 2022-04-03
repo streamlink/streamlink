@@ -1,63 +1,80 @@
 API Reference
 =============
 
-.. module:: streamlink
+This is a reference of all the available API methods in Streamlink.
 
-This ia reference of all the available API methods in Streamlink.
 
 Streamlink
 ------------
 
-.. autofunction:: streams
+.. autofunction:: streamlink.streams
 
 
 Session
 -------
 
-.. autoclass:: Streamlink
-    :members:
+.. autoclass:: streamlink.Streamlink
+    :member-order: bysource
 
 
 Plugins
 -------
+
+Plugin
+^^^^^^
+
 .. module:: streamlink.plugin
+
 .. autoclass:: Plugin
-    :members:
+    :private-members: _get_streams
+    :member-order: bysource
+
+PluginArgument
+^^^^^^^^^^^^^^
 
 .. module:: streamlink.options
-.. autoclass:: Arguments
-    :members:
 
 .. autoclass:: Argument
-    :members:
 
-    .. automethod:: __init__
+.. autoclass:: Arguments
 
 
 Streams
 -------
 
+.. module:: streamlink.stream
+
 All streams inherit from the :class:`Stream` class.
 
-.. module:: streamlink.stream
+Stream
+^^^^^^
+
 .. autoclass:: Stream
-    :members:
 
+MuxedStream
+^^^^^^^^^^^
 
-Stream subclasses
-^^^^^^^^^^^^^^^^^
+.. autoclass:: MuxedStream
 
-You are able to inspect the parameters used by each stream,
-different properties are available depending on stream type.
-
-.. autoclass:: HLSStream
-    :members:
+HTTPStream
+^^^^^^^^^^
 
 .. autoclass:: HTTPStream
-    :members:
+
+HLSStream
+^^^^^^^^^
+
+.. autoclass:: HLSStream
+
+MuxedHLSStream
+^^^^^^^^^^^^^^
+
+.. autoclass:: MuxedHLSStream
+
+DASHStream
+^^^^^^^^^^
 
 .. autoclass:: DASHStream
-    :members:
 
 
 Exceptions

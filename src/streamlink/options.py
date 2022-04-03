@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from typing import List, Optional
 
 
 def _normalise_option_name(name):
@@ -13,9 +14,10 @@ class Options:
     """
     For storing options to be used by plugins, with default values.
 
-    Note: Option names are normalised by replacing "-" with "_", this means that the keys
+    Note: Option names are normalised by replacing "-" with "_". This means that the keys
     ``example-one`` and ``example_one`` are equivalent.
     """
+
     def __init__(self, defaults=None):
         if not defaults:
             defaults = {}
@@ -45,25 +47,35 @@ class Options:
 
 class Argument:
     """
-        :class:`Argument` accepts most of the same parameters as :func:`ArgumentParser.add_argument`,
-        except requires is a special case as in this case it is only enforced if the plugin is in use.
-        In addition the name parameter is the name relative to the plugin eg. username, password, etc.
-
-
+    :class:`Argument` accepts most of the parameters accepted by :func:`ArgumentParser.add_argument`,
+    except that ``requires`` is a special case which is only enforced if the plugin is in use.
+    In addition, the ``argument_name`` parameter is the name relative to the plugin, e.g. username, password, etc.
     """
-    def __init__(self, name, required=False, requires=None, prompt=None, sensitive=False, argument_name=None,
-                 dest=None, is_global=False, **options):
+
+    def __init__(
+        self,
+        name: str,
+        required: bool = False,
+        requires: Optional[List[str]] = None,
+        prompt: Optional[str] = None,
+        sensitive: bool = False,
+        argument_name: Optional[str] = None,
+        dest: Optional[str] = None,
+        is_global: bool = False,
+        **options
+    ):
         """
-        :param name: name of the argument, without -- or plugin name prefixes, eg. ``"password"``, ``"mux-subtitles"``, etc.
-        :param required (bool): if the argument is required for the plugin
-        :param requires: list of the arguments which this argument requires, eg ``["password"]``
-        :param prompt: if the argument is required and not given, this prompt will show at run time
-        :param sensitive (bool): if the argument is sensitive (passwords, etc) and should be masked in logs and if
-                              prompted use askpass
-        :param argument_name:
-        :param option_name:
-        :param options: arguments passed to :func:`ArgumentParser.add_argument`, excluding requires, and dest
+        :param name: Argument name, without ``--`` or plugin name prefixes, e.g. ``"password"``, ``"mux-subtitles"``, etc.
+        :param required: Whether the argument is required for the plugin
+        :param requires: List of arguments which this argument requires, eg ``["password"]``
+        :param prompt: If the argument is required and not set, this prompt message will be shown instead
+        :param sensitive: Whether the argument is sensitive (passwords, etc.) and should be masked
+        :param argument_name: Custom CLI argument name
+        :param dest: Custom plugin option name
+        :param is_global: Whether this plugin argument refers to a global CLI argument
+        :param options: Arguments passed to :meth:`ArgumentParser.add_argument`, excluding ``requires`` and ``dest``
         """
+
         self.required = required
         self.name = name
         self.options = options
@@ -99,22 +111,29 @@ class Arguments:
 
     .. code-block:: python
 
+        from streamlink.plugin import Plugin, PluginArgument, PluginArguments
+
+
         class PluginExample(Plugin):
             arguments = PluginArguments(
-                PluginArgument("username",
-                               help="The username for your account.",
-                               metavar="EMAIL",
-                               requires=["password"]),  // requires the password too
-                PluginArgument("password",
-                               sensitive=True,  // should be masked in logs, etc.
-                               help="The password for your account.",
-                               metavar="PASSWORD")
+                PluginArgument(
+                    "username",
+                    metavar="EMAIL",
+                    requires=["password"],
+                    help="The username for your account.",
+                ),
+                PluginArgument(
+                    "password",
+                    metavar="PASSWORD",
+                    sensitive=True,
+                    help="The password for your account.",
+                ),
             )
 
     This will add the ``--plugin-username`` and ``--plugin-password`` arguments to the CLI
     (assuming the plugin module is ``plugin``).
-
     """
+
     def __init__(self, *args):
         self.arguments = OrderedDict((arg.name, arg) for arg in args)
 
@@ -132,6 +151,7 @@ class Arguments:
 
         :return: list of dependant arguments
         """
+
         results = {name}
         argument = self.get(name)
         for reqname in argument.requires:

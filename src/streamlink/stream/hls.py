@@ -4,7 +4,7 @@ import struct
 from collections import OrderedDict
 from concurrent.futures import Future
 from threading import Event
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urlparse
 
 # noinspection PyPackageRequirements
@@ -449,9 +449,32 @@ class HLSStreamReader(SegmentedStreamReader):
 
 
 class MuxedHLSStream(MuxedStream):
+    """
+    Muxes multiple HLS video and audio streams into one output stream.
+    """
+
     __shortname__ = "hls-multi"
 
-    def __init__(self, session, video, audio, url_master=None, force_restart=False, ffmpeg_options=None, **args):
+    def __init__(
+        self,
+        session,
+        video: str,
+        audio: Union[str, List[str]],
+        url_master: Optional[str] = None,
+        force_restart: bool = False,
+        ffmpeg_options: Optional[Dict[str, Any]] = None,
+        **args
+    ):
+        """
+        :param streamlink.Streamlink session: Streamlink session instance
+        :param video: Video stream URL
+        :param audio: Audio stream URL or list of URLs
+        :param url_master: The URL of the HLS playlist's master/variant playlist
+        :param force_restart: Start from the beginning after reaching the playlist's end
+        :param ffmpeg_options: Additional keyword arguments passed to :class:`ffmpegmux.FFMPEGMuxer`
+        :param args: Additional keyword arguments passed to :class:`HLSStream`
+        """
+
         tracks = [video]
         maps = ["0:v?", "0:a?"]
         if audio:
@@ -472,20 +495,33 @@ class MuxedHLSStream(MuxedStream):
 
 
 class HLSStream(HTTPStream):
-    """Implementation of the Apple HTTP Live Streaming protocol
-
-    *Attributes:*
-
-    - :attr:`url` The URL to the HLS playlist.
-    - :attr:`args` A :class:`dict` containing keyword arguments passed
-      to :meth:`requests.request`, such as headers and cookies.
-
+    """
+    Implementation of the Apple HTTP Live Streaming protocol.
     """
 
     __shortname__ = "hls"
     __reader__ = HLSStreamReader
 
-    def __init__(self, session_, url, url_master=None, force_restart=False, start_offset=0, duration=None, **args):
+    def __init__(
+        self,
+        session_,
+        url: str,
+        url_master: Optional[str] = None,
+        force_restart: bool = False,
+        start_offset: float = 0,
+        duration: Optional[float] = None,
+        **args
+    ):
+        """
+        :param streamlink.Streamlink session_: Streamlink session instance
+        :param url: The URL of the HLS playlist
+        :param url_master: The URL of the HLS playlist's master/variant playlist
+        :param force_restart: Start from the beginning after reaching the playlist's end
+        :param start_offset: Number of seconds to be skipped from the beginning
+        :param duration: Number of seconds until ending the stream
+        :param args: Additional keyword arguments passed to :meth:`requests.request`
+        """
+
         super().__init__(session_, url, **args)
         self.url_master = url_master
         self.force_restart = force_restart
@@ -521,22 +557,34 @@ class HLSStream(HTTPStream):
         return load_hls_playlist(res.text, base_uri=res.url)
 
     @classmethod
-    def parse_variant_playlist(cls, session_, url, name_key="name",
-                               name_prefix="", check_streams=False,
-                               force_restart=False, name_fmt=None,
-                               start_offset=0, duration=None,
-                               **request_params):
-        """Attempts to parse a variant playlist and return its streams.
-
-        :param url: The URL of the variant playlist.
-        :param name_key: Prefer to use this key as stream name, valid keys are:
-                         name, pixels, bitrate.
-        :param name_prefix: Add this prefix to the stream names.
-        :param check_streams: Only allow streams that are accessible.
-        :param force_restart: Start at the first segment even for a live stream
-        :param name_fmt: A format string for the name, allowed format keys are
-                         name, pixels, bitrate.
+    def parse_variant_playlist(
+        cls,
+        session_,
+        url: str,
+        name_key: str = "name",
+        name_prefix: str = "",
+        check_streams: bool = False,
+        force_restart: bool = False,
+        name_fmt: Optional[str] = None,
+        start_offset: float = 0,
+        duration: Optional[float] = None,
+        **request_params
+    ) -> Dict[str, Union["HLSStream", "MuxedHLSStream"]]:
         """
+        Parse a variant playlist and return its streams.
+
+        :param streamlink.Streamlink session_: Streamlink session instance
+        :param url: The URL of the variant playlist
+        :param name_key: Prefer to use this key as stream name, valid keys are: name, pixels, bitrate
+        :param name_prefix: Add this prefix to the stream names
+        :param check_streams: Only allow streams that are accessible
+        :param force_restart: Start at the first segment even for a live stream
+        :param name_fmt: A format string for the name, allowed format keys are: name, pixels, bitrate
+        :param start_offset: Number of seconds to be skipped from the beginning
+        :param duration: Number of second until ending the stream
+        :param request_params: Additional keyword arguments passed to :class:`HLSStream` or :py:meth:`requests.request`
+        """
+
         locale = session_.localization
         audio_select = session_.options.get("hls-audio-select") or []
 

@@ -1,3 +1,5 @@
+from typing import Dict
+
 import requests
 
 from streamlink.exceptions import StreamError
@@ -20,21 +22,30 @@ def valid_args(args):
 
 
 class HTTPStream(Stream):
-    """A HTTP stream using the requests library.
-
-    *Attributes:*
-
-    - :attr:`url`  The URL to the stream, prepared by requests.
-    - :attr:`args` A :class:`dict` containing keyword arguments passed
-      to :meth:`requests.request`, such as headers and cookies.
-
+    """
+    An HTTP stream using the :mod:`requests` library.
     """
 
     __shortname__ = "http"
 
-    def __init__(self, session_, url, buffered=True, **args):
-        Stream.__init__(self, session_)
+    args: Dict
+    """A dict of keyword arguments passed to :meth:`requests.request`, such as method, headers, cookies, etc."""
 
+    def __init__(
+        self,
+        session_,
+        url: str,
+        buffered: bool = True,
+        **args
+    ):
+        """
+        :param streamlink.Streamlink session_: Streamlink session instance
+        :param url: The URL of the HTTP stream
+        :param buffered: Wrap stream output in an additional reader-thread
+        :param args: Additional keyword arguments passed to :meth:`requests.request`
+        """
+
+        super().__init__(session_)
         self.args = dict(url=url, **args)
         self.buffered = buffered
 
@@ -54,7 +65,11 @@ class HTTPStream(Stream):
                     body=req.body)
 
     @property
-    def url(self):
+    def url(self) -> str:
+        """
+        The URL to the stream, prepared by :mod:`requests` with parameters read from :attr:`args`.
+        """
+
         args = self.args.copy()
         method = args.pop("method", "GET")
         return requests.Request(method=method, **valid_args(args)).prepare().url

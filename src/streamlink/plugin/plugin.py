@@ -187,26 +187,34 @@ class Matcher(NamedTuple):
 
 
 class Plugin:
-    """A plugin can retrieve stream information from the URL specified.
-
-    :param url: URL that the plugin will operate on
+    """
+    Plugin base class for retrieving streams and metadata from the URL specified.
     """
 
-    # the list of plugin matchers (URL pattern + priority)
-    # use the streamlink.plugin.pluginmatcher decorator for initializing this list
     matchers: ClassVar[List[Matcher]] = None
-    # a tuple of `re.Match` results of all defined matchers
+    """
+    The list of plugin matchers (URL pattern + priority).
+    Use the :meth:`streamlink.plugin.pluginmatcher` decorator for initializing this list.
+    """
+
     matches: Sequence[Optional[Match]]
-    # a reference to the compiled `re.Pattern` of the first matching matcher
+    """A tuple of :class:`re.Match` results of all defined matchers"""
+
     matcher: Pattern
-    # a reference to the `re.Match` result of the first matching matcher
+    """A reference to the compiled :class:`re.Pattern` of the first matching matcher"""
+
     match: Match
+    """A reference to the :class:`re.Match` result of the first matching matcher"""
 
     # plugin metadata attributes
     id: Optional[str] = None
-    author: Optional[str] = None
-    category: Optional[str] = None
+    """Metadata 'id' attribute: unique stream ID, etc."""
     title: Optional[str] = None
+    """Metadata 'title' attribute: the stream's short descriptive title"""
+    author: Optional[str] = None
+    """Metadata 'author' attribute: the channel or broadcaster name, etc."""
+    category: Optional[str] = None
+    """Metadata 'category' attribute: name of a game being played, a music genre, etc."""
 
     cache = None
     logger = None
@@ -232,6 +240,11 @@ class Plugin:
 
     @property
     def url(self) -> str:
+        """
+        The plugin's input URL.
+        Setting a new value will automatically update the :attr:`matches`, :attr:`matcher` and :attr:`match` data.
+        """
+
         return self._url
 
     @url.setter
@@ -242,7 +255,11 @@ class Plugin:
         self.matches = tuple(m for p, m in matches)
         self.matcher, self.match = next(((p, m) for p, m in matches if m is not None), (None, None))
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str):
+        """
+        :param str url: URL that the plugin will operate on
+        """
+
         self.url = url
 
         try:
@@ -297,14 +314,15 @@ class Plugin:
         return decorator
 
     def streams(self, stream_types=None, sorting_excludes=None):
-        """Attempts to extract available streams.
+        """
+        Attempts to extract available streams.
 
         Returns a :class:`dict` containing the streams, where the key is
-        the name of the stream, most commonly the quality and the value
-        is a :class:`Stream` object.
+        the name of the stream (most commonly the quality name), with the value
+        being a :class:`Stream` instance.
 
         The result can contain the synonyms **best** and **worst** which
-        points to the streams which are likely to be of highest and
+        point to the streams which are likely to be of highest and
         lowest quality respectively.
 
         If multiple streams with the same name are found, the order of
@@ -312,24 +330,22 @@ class Plugin:
         gets to keep the name while the rest will be renamed to
         "<name>_<stream type>".
 
-        The synonyms can be fine tuned with the *sorting_excludes*
-        parameter. This can be either of these types:
+        The synonyms can be fine-tuned with the *sorting_excludes*
+        parameter, which can be one of these types:
 
             - A list of filter expressions in the format
-              *[operator]<value>*. For example the filter ">480p" will
+              ``[operator]<value>``. For example the filter ">480p" will
               exclude streams ranked higher than "480p" from the list
-              used in the synonyms ranking. Valid operators are >, >=, <
-              and <=. If no operator is specified then equality will be
-              tested.
+              used in the synonyms ranking. Valid operators are ``>``, ``>=``, ``<``
+              and ``<=``. If no operator is specified then equality will be tested.
 
-            - A function that is passed to filter() with a list of
+            - A function that is passed to :meth:`filter` with a list of
               stream names as input.
 
 
-        :param stream_types: A list of stream types to return.
-        :param sorting_excludes: Specify which streams to exclude from
-                                 the best/worst synonyms.
-
+        :param stream_types: A list of stream types to return
+        :param sorting_excludes: Specify which streams to exclude from the best/worst synonyms
+        :returns: A :class:`dict` of stream names and :class:`streamlink.stream.Stream` instances
         """
 
         try:
@@ -429,6 +445,13 @@ class Plugin:
         return final_sorted_streams
 
     def _get_streams(self):
+        """
+        Implement the stream and metadata retrieval here.
+
+        Needs to return either a dict of :class:`streamlink.stream.Stream` instances mapped by stream name, or needs to act
+        as a generator which yields tuples of stream names and :class:`streamlink.stream.Stream` instances.
+        """
+
         raise NotImplementedError
 
     def get_metadata(self) -> Dict[str, Optional[str]]:
@@ -451,18 +474,21 @@ class Plugin:
     def get_category(self) -> Optional[str]:
         return None if self.category is None else str(self.category).strip()
 
-    def save_cookies(self, cookie_filter=None, default_expires=60 * 60 * 24 * 7):
+    def save_cookies(
+        self,
+        cookie_filter: Optional[Callable] = None,
+        default_expires: int = 60 * 60 * 24 * 7
+    ) -> List[str]:
         """
-        Store the cookies from ``http`` in the plugin cache until they expire. The cookies can be filtered
-        by supplying a filter method. eg. ``lambda c: "auth" in c.name``. If no expiry date is given in the
+        Store the cookies from :attr:`session.http` in the plugin cache until they expire. The cookies can be filtered
+        by supplying a filter method. e.g. ``lambda c: "auth" in c.name``. If no expiry date is given in the
         cookie then the ``default_expires`` value will be used.
 
         :param cookie_filter: a function to filter the cookies
-        :type cookie_filter: function
         :param default_expires: time (in seconds) until cookies with no expiry will expire
-        :type default_expires: int
         :return: list of the saved cookie names
         """
+
         if not self.session or not self.cache:
             raise RuntimeError("Cannot cache cookies in unbound plugin")
 
@@ -490,12 +516,13 @@ class Plugin:
             self.logger.debug("Saved cookies: {0}".format(", ".join(saved)))
         return saved
 
-    def load_cookies(self):
+    def load_cookies(self) -> List[str]:
         """
         Load any stored cookies for the plugin that have not expired.
 
         :return: list of the restored cookie names
         """
+
         if not self.session or not self.cache:
             raise RuntimeError("Cannot load cached cookies in unbound plugin")
 
@@ -511,15 +538,16 @@ class Plugin:
             self.logger.debug("Restored cookies: {0}".format(", ".join(restored)))
         return restored
 
-    def clear_cookies(self, cookie_filter=None):
+    def clear_cookies(self, cookie_filter: Optional[Callable] = None) -> List[str]:
         """
-        Removes all of the saved cookies for this Plugin. To filter the cookies that are deleted
+        Removes all saved cookies for this plugin. To filter the cookies that are deleted
         specify the ``cookie_filter`` argument (see :func:`save_cookies`).
 
         :param cookie_filter: a function to filter the cookies
         :type cookie_filter: function
         :return: list of the removed cookie names
         """
+
         if not self.session or not self.cache:
             raise RuntimeError("Cannot clear cached cookies in unbound plugin")
 
