@@ -4,12 +4,13 @@ import itertools
 import logging
 import os.path
 from collections import defaultdict
+from typing import Dict, Optional
 from urllib.parse import urlparse, urlunparse
 
 import requests
 
 from streamlink import PluginError, StreamError
-from streamlink.stream.dash_manifest import MPD, freeze_timeline, sleep_until, sleeper, utc
+from streamlink.stream.dash_manifest import MPD, Representation, freeze_timeline, sleep_until, sleeper, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
 from streamlink.stream.http import normalize_key, valid_args
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
@@ -140,15 +141,30 @@ class DASHStreamReader(SegmentedStreamReader):
 
 
 class DASHStream(Stream):
+    """
+    Implementation of the "Dynamic Adaptive Streaming over HTTP" protocol (MPEG-DASH)
+    """
+
     __shortname__ = "dash"
 
-    def __init__(self,
-                 session,
-                 mpd,
-                 video_representation=None,
-                 audio_representation=None,
-                 period=0,
-                 **args):
+    def __init__(
+        self,
+        session,
+        mpd: MPD,
+        video_representation: Optional[Representation] = None,
+        audio_representation: Optional[Representation] = None,
+        period: float = 0,
+        **args
+    ):
+        """
+        :param streamlink.Streamlink session: Streamlink session instance
+        :param mpd: Parsed MPD manifest
+        :param video_representation: Video representation
+        :param audio_representation: Audio representation
+        :param period: Update period
+        :param args: Additional keyword arguments passed to :meth:`requests.request`
+        """
+
         super().__init__(session)
         self.mpd = mpd
         self.video_representation = video_representation
@@ -164,13 +180,18 @@ class DASHStream(Stream):
         return dict(type=type(self).shortname(), url=req.url, headers=headers)
 
     @classmethod
-    def parse_manifest(cls, session, url_or_manifest, **args):
+    def parse_manifest(
+        cls,
+        session,
+        url_or_manifest: str,
+        **args
+    ) -> Dict[str, "DASHStream"]:
         """
-        Attempt to parse a DASH manifest file and return its streams
+        Parse a DASH manifest file and return its streams.
 
-        :param session: Streamlink session instance
+        :param streamlink.Streamlink session: Streamlink session instance
         :param url_or_manifest: URL of the manifest file or an XML manifest string
-        :return: a dict of name -> DASHStream instances
+        :param args: Additional keyword arguments passed to :meth:`requests.request`
         """
 
         if url_or_manifest.startswith('<?xml'):

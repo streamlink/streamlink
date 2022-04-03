@@ -58,8 +58,8 @@ If an error occurs while opening a stream, a :exc:`StreamError` will be raised.
 Inspecting streams
 ------------------
 
-It's also possible to inspect streams internal parameters, go to
-:ref:`Stream subclasses <api:Stream subclasses>` to see what attributes are available
+It's also possible to inspect the stream's internal parameters. Go to
+:ref:`Stream subclasses <api:Streams>` to see which attributes are available
 for inspection for each stream type.
 
 For example this is a :class:`HLSStream <stream.HLSStream>` object which
