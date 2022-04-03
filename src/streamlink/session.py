@@ -3,7 +3,7 @@ import pkgutil
 from collections import OrderedDict
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
-from typing import Dict, Optional, Tuple, Type
+from typing import Any, Dict, Optional, Tuple, Type
 
 import requests
 import requests.packages.urllib3.util.connection as urllib3_connection
@@ -29,10 +29,24 @@ class PythonDeprecatedWarning(UserWarning):
 
 
 class Streamlink:
-    """A Streamlink session is used to keep track of plugins,
-       options and log settings."""
+    """
+    The Streamlink session is used to load and resolve plugins, and to store options used by plugins and stream implementations.
+    """
 
-    def __init__(self, options=None):
+    http: HTTPSession
+    """
+    An instance of Streamlink's :class:`requests.Session` subclass.
+    Used for any kind of HTTP request made by plugin and stream implementations.
+    """
+
+    def __init__(
+        self,
+        options: Optional[Dict[str, Any]] = None
+    ):
+        """
+        :param options: Custom options
+        """
+
         self.http = HTTPSession()
         self.options = Options({
             "interface": None,
@@ -65,9 +79,9 @@ class Streamlink:
         self.plugins: Dict[str, Type[Plugin]] = OrderedDict({})
         self.load_builtin_plugins()
 
-    def set_option(self, key, value):
-        """Sets general options used by plugins and streams originating
-        from this session object.
+    def set_option(self, key: str, value: Any):
+        """
+        Sets general options used by plugins and streams originating from this session object.
 
         :param key: key of the option
         :param value: value to set the option to
@@ -93,28 +107,28 @@ class Streamlink:
         hls-segment-stream-data  (bool) Stream HLS segment downloads,
                                  default: ``False``
 
-        http-proxy               (str) Specify a HTTP proxy to use for
+        http-proxy               (str) Specify an HTTP proxy to use for
                                  all HTTP requests
 
-        https-proxy              (str) Specify a HTTPS proxy to use for
+        https-proxy              (str) Specify an HTTPS proxy to use for
                                  all HTTPS requests
 
-        http-cookies             (dict or str) A dict or a semi-colon (;)
+        http-cookies             (dict or str) A dict or a semicolon ``;``
                                  delimited str of cookies to add to each
                                  HTTP request, e.g. ``foo=bar;baz=qux``
 
-        http-headers             (dict or str) A dict or semi-colon (;)
+        http-headers             (dict or str) A dict or semicolon ``;``
                                  delimited str of headers to add to each
                                  HTTP request, e.g. ``foo=bar;baz=qux``
 
-        http-query-params        (dict or str) A dict or a ampersand (&)
+        http-query-params        (dict or str) A dict or an ampersand ``&``
                                  delimited string of query parameters to
                                  add to each HTTP request,
                                  e.g. ``foo=bar&baz=qux``
 
         http-trust-env           (bool) Trust HTTP settings set in the
                                  environment, such as environment
-                                 variables (HTTP_PROXY, etc) and
+                                 variables (HTTP_PROXY, etc.) and
                                  ~/.netrc authentication
 
         http-ssl-verify          (bool) Verify SSL certificates,
@@ -157,7 +171,7 @@ class Streamlink:
         ffmpeg-copyts            (bool) When used with ffmpeg, do not shift input timestamps.
 
         ffmpeg-start-at-zero     (bool) When used with ffmpeg and copyts,
-                                 shift input timestamps so they start at zero
+                                 shift input timestamps, so they start at zero
                                  default: ``False``
 
         mux-subtitles            (bool) Mux available subtitles into the
@@ -176,7 +190,7 @@ class Streamlink:
                                  stream, default: ``60.0``.
 
         locale                   (str) Locale setting, in the RFC 1766 format
-                                 eg. en_US or es_ES
+                                 e.g. en_US or es_ES
                                  default: ``system locale``.
 
         user-input-requester     (UserInputRequester) instance of UserInputRequester
@@ -184,7 +198,6 @@ class Streamlink:
                                  set before the plugins are loaded.
                                  default: ``UserInputRequester``.
         ======================== =========================================
-
         """
 
         if key == "interface":
@@ -264,8 +277,9 @@ class Streamlink:
         else:
             self.options.set(key, value)
 
-    def get_option(self, key):
-        """Returns current value of specified option.
+    def get_option(self, key: str):
+        """
+        Returns the current value of the specified option.
 
         :param key: key of the option
 
@@ -292,26 +306,25 @@ class Streamlink:
         else:
             return self.options.get(key)
 
-    def set_plugin_option(self, plugin, key, value):
-        """Sets plugin specific options used by plugins originating
-        from this session object.
+    def set_plugin_option(self, plugin: str, key: str, value: Any):
+        """
+        Sets plugin specific options used by plugins originating from this session object.
 
         :param plugin: name of the plugin
         :param key: key of the option
         :param value: value to set the option to
-
         """
 
         if plugin in self.plugins:
             plugin = self.plugins[plugin]
             plugin.set_option(key, value)
 
-    def get_plugin_option(self, plugin, key):
-        """Returns current value of plugin specific option.
+    def get_plugin_option(self, plugin: str, key: str):
+        """
+        Returns the current value of the plugin specific option.
 
         :param plugin: name of the plugin
         :param key: key of the option
-
         """
 
         if plugin in self.plugins:
@@ -319,18 +332,23 @@ class Streamlink:
             return plugin.get_option(key)
 
     @lru_cache(maxsize=128)
-    def resolve_url(self, url: str, follow_redirect: bool = True) -> Tuple[Type[Plugin], str]:
-        """Attempts to find a plugin that can use this URL.
+    def resolve_url(
+        self,
+        url: str,
+        follow_redirect: bool = True
+    ) -> Tuple[Type[Plugin], str]:
+        """
+        Attempts to find a plugin that can use this URL.
 
-        The default protocol (https) will be prefixed to the URL if
-        not specified.
+        The default protocol (https) will be prefixed to the URL if not specified.
 
-        Raises :exc:`NoPluginError` on failure.
+        Return values of this method are cached via :meth:`functools.lru_cache`.
 
         :param url: a URL to match against loaded plugins
         :param follow_redirect: follow redirects
-
+        :raises NoPluginError: on plugin resolve failure
         """
+
         url = update_scheme("https://", url, force=False)
 
         matcher: Matcher
@@ -371,24 +389,25 @@ class Streamlink:
         raise NoPluginError
 
     def resolve_url_no_redirect(self, url: str) -> Tuple[Type[Plugin], str]:
-        """Attempts to find a plugin that can use this URL.
+        """
+        Attempts to find a plugin that can use this URL.
 
-        The default protocol (https) will be prefixed to the URL if
-        not specified.
-
-        Raises :exc:`NoPluginError` on failure.
+        The default protocol (https) will be prefixed to the URL if not specified.
 
         :param url: a URL to match against loaded plugins
-
+        :raises NoPluginError: on plugin resolve failure
         """
+
         return self.resolve_url(url, follow_redirect=False)
 
     def streams(self, url: str, **params):
-        """Attempts to find a plugin and extract streams from the *url*.
+        """
+        Attempts to find a plugin and extracts streams from the *url* if a plugin was found.
 
-        *params* are passed to :func:`Plugin.streams`.
-
-        Raises :exc:`NoPluginError` if no plugin is found.
+        :param url: a URL to match against loaded plugins
+        :param params: Additional keyword arguments passed to :meth:`streamlink.plugin.Plugin.streams`
+        :raises NoPluginError: on plugin resolve failure
+        :return: A :class:`dict` of stream names and :class:`streamlink.stream.Stream` instances
         """
 
         pluginclass, resolved_url = self.resolve_url(url)
@@ -405,11 +424,13 @@ class Streamlink:
         self.load_plugins(plugins.__path__[0])
 
     def load_plugins(self, path: str) -> bool:
-        """Attempt to load plugins from the path specified.
+        """
+        Attempt to load plugins from the path specified.
 
         :param path: full path to a directory where to look for plugins
         :return: success
         """
+
         success = False
         user_input_requester = self.get_option("user-input-requester")
         for loader, name, ispkg in pkgutil.iter_modules([path]):

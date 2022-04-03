@@ -13,9 +13,25 @@ log = logging.getLogger(__name__)
 
 
 class MuxedStream(Stream):
+    """
+    Muxes multiple streams into one output stream.
+    """
+
     __shortname__ = "muxed-stream"
 
-    def __init__(self, session, *substreams, **options):
+    def __init__(
+        self,
+        session,
+        *substreams: Stream,
+        **options
+    ):
+        """
+        :param streamlink.Streamlink session: Streamlink session instance
+        :param substreams: Video and/or audio streams
+        :param options: Additional keyword arguments passed to :class:`ffmpegmux.FFMPEGMuxer`.
+                        Subtitle streams need to be set via the ``subtitles`` keyword.
+        """
+
         super().__init__(session)
         self.substreams = substreams
         self.subtitles = options.pop("subtitles", {})

@@ -87,6 +87,19 @@ exclude_patterns = ['_build', '_applications.rst']
 
 github_project = 'streamlink/streamlink'
 
+
+# -- Options for autodoc ---------------------------------------------------
+
+autodoc_default_options = {
+    "show-inheritance": True,
+    "members": True,
+    "member-order": "groupwise",  # autodoc_member_order
+    "class-doc-from": "both",  # autoclass_content
+}
+autodoc_inherit_docstrings = False
+autodoc_typehints = "description"
+
+
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

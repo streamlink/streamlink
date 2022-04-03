@@ -6,14 +6,18 @@ log = logging.getLogger(__name__)
 
 
 class Stream:
-    __shortname__ = "stream"
-
     """
     This is a base class that should be inherited when implementing
     different stream types. Should only be created by plugins.
     """
 
+    __shortname__ = "stream"
+
     def __init__(self, session):
+        """
+        :param streamlink.Streamlink session: Streamlink session instance
+        """
+
         self.session = session
 
     def __repr__(self):
@@ -22,13 +26,14 @@ class Stream:
     def __json__(self):
         return dict(type=type(self).shortname())
 
-    def open(self):
+    def open(self) -> "StreamIO":
         """
         Attempts to open a connection to the stream.
         Returns a file-like object that can be used to read the stream data.
 
-        Raises :exc:`StreamError` on failure.
+        :raises StreamError: on failure
         """
+
         raise NotImplementedError
 
     @property
