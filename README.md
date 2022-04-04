@@ -82,7 +82,7 @@ Support this project by becoming a sponsor. Your logo will show up here with a l
 
 
   [streamlink-website]: https://streamlink.github.io
-  [streamlink-plugins]: https://streamlink.github.io/plugin_matrix.html
+  [streamlink-plugins]: https://streamlink.github.io/plugins.html
   [streamlink-documentation]: https://streamlink.github.io/cli.html
   [streamlink-installation]: https://streamlink.github.io/install.html
   [streamlink-installation-windows]: https://streamlink.github.io/install.html#windows
