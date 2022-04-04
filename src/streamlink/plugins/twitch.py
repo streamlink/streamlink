@@ -1,8 +1,8 @@
 """
-$description Global live streaming and video hosting social platform owned by Amazon.
+$description Global live-streaming and video hosting social platform owned by Amazon.
 $url twitch.tv
 $type live, vod
-$notes Low latency streaming is supported
+$notes :ref:`Low latency streaming <cli/plugins/twitch:Low latency streaming>` is supported
 """
 
 import json

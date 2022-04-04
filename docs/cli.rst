@@ -2,6 +2,7 @@ Command-Line Interface
 ======================
 
 .. toctree::
+    :maxdepth: 3
     :caption: Table of Contents
 
     Command-line usage <self>

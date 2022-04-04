@@ -3,7 +3,7 @@ $description Anime video on-demand service.
 $url funimation.com
 $url funimationnow.uk
 $type vod
-$notes :ref:`Requires session cookies <cli/plugins:Authenticating with FunimationNow>`
+$notes :ref:`Requires session cookies <cli/plugins/funimationnow:Authentication>`
 """
 
 import logging
