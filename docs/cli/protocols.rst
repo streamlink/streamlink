@@ -68,3 +68,24 @@ Some parameters allow you to configure the behavior of the streaming protocol im
 .. code-block:: console
 
     $ streamlink "hls://https://streamingserver/path start_offset=123 duration=321 force_restart=True"
+
+
+Available parameters
+--------------------
+
+Parameters are passed to the following methods of their respective stream implementations:
+
+.. rst-class:: table-custom-layout
+
+==================== =======================
+Protocol prefix      Method references
+==================== =======================
+``httpstream://``    - :py:meth:`streamlink.stream.HTTPStream`
+                     - :py:meth:`requests.request`
+``hls://``           - :py:meth:`streamlink.stream.HLSStream.parse_variant_playlist`
+                     - :py:meth:`streamlink.stream.HLSStream`
+                     - :py:meth:`streamlink.stream.MuxedHLSStream`
+                     - :py:meth:`requests.request`
+``dash://``          - :py:meth:`streamlink.stream.DASHStream.parse_manifest`
+                     - :py:meth:`requests.request`
+==================== =======================
