@@ -162,7 +162,7 @@ class DASHStream(Stream):
         :param video_representation: Video representation
         :param audio_representation: Audio representation
         :param period: Update period
-        :param args: Additional keyword arguments passed to :meth:`requests.request`
+        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
         super().__init__(session)
@@ -191,7 +191,7 @@ class DASHStream(Stream):
 
         :param streamlink.Streamlink session: Streamlink session instance
         :param url_or_manifest: URL of the manifest file or an XML manifest string
-        :param args: Additional keyword arguments passed to :meth:`requests.request`
+        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
         if url_or_manifest.startswith('<?xml'):

@@ -81,11 +81,11 @@ Parameters are passed to the following methods of their respective stream implem
 Protocol prefix      Method references
 ==================== =======================
 ``httpstream://``    - :py:meth:`streamlink.stream.HTTPStream`
-                     - :py:meth:`requests.request`
+                     - :py:meth:`requests.Session.request`
 ``hls://``           - :py:meth:`streamlink.stream.HLSStream.parse_variant_playlist`
                      - :py:meth:`streamlink.stream.HLSStream`
                      - :py:meth:`streamlink.stream.MuxedHLSStream`
-                     - :py:meth:`requests.request`
+                     - :py:meth:`requests.Session.request`
 ``dash://``          - :py:meth:`streamlink.stream.DASHStream.parse_manifest`
-                     - :py:meth:`requests.request`
+                     - :py:meth:`requests.Session.request`
 ==================== =======================
