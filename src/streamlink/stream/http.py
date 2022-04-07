@@ -29,7 +29,7 @@ class HTTPStream(Stream):
     __shortname__ = "http"
 
     args: Dict
-    """A dict of keyword arguments passed to :meth:`requests.request`, such as method, headers, cookies, etc."""
+    """A dict of keyword arguments passed to :meth:`requests.Session.request`, such as method, headers, cookies, etc."""
 
     def __init__(
         self,
@@ -42,7 +42,7 @@ class HTTPStream(Stream):
         :param streamlink.Streamlink session_: Streamlink session instance
         :param url: The URL of the HTTP stream
         :param buffered: Wrap stream output in an additional reader-thread
-        :param args: Additional keyword arguments passed to :meth:`requests.request`
+        :param args: Additional keyword arguments passed to :meth:`requests.Session.request`
         """
 
         super().__init__(session_)
