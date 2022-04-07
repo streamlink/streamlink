@@ -26,6 +26,7 @@ The :option:`--json` argument always lists the standard plugin metadata: ``id``,
 Variable                       Description
 ============================== =================================================
 ``id``                         The unique ID of the stream, eg. an internal numeric ID or randomized string.
+``plugin``                     The plugin name. See :ref:`Plugins <plugins:Plugins>` for the name of each built-in plugin.
 ``title``                      The stream's title, usually a short descriptive text.
 ``author``                     The stream's author, eg. a channel or broadcaster name.
 ``category``                   The stream's category, eg. the name of a game being played, a music genre, etc.

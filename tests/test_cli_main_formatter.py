@@ -25,6 +25,7 @@ def plugin():
 
 @pytest.mark.parametrize("formatterinput,expected", [
     ("{url}", "https://foo/bar"),
+    ("{plugin}", "FAKE"),
     ("{id}", "ID"),
     ("{author}", "AUTHOR"),
     ("{category}", "CATEGORY"),
