@@ -404,24 +404,17 @@ class TestCLIMainHandleStream(unittest.TestCase):
     @patch("streamlink_cli.main.output_stream")
     @patch("streamlink_cli.main.args")
     def test_handle_stream_output_stream(self, args: Mock, mock_output_stream: Mock):
-        """
-        Test that the formatter does define the correct variables
-        """
         args.json = False
         args.subprocess_cmdline = False
         args.stream_url = False
         args.output = False
         args.stdout = False
-        args.url = "URL"
         args.player_passthrough = []
         args.player_external_http = False
         args.player_continuous_http = False
         mock_output_stream.return_value = True
 
-        plugin = _TestPlugin("")
-        plugin.author = "AUTHOR"
-        plugin.category = "CATEGORY"
-        plugin.title = "TITLE"
+        plugin = FakePlugin("")
         stream = Stream(session=Mock())
         streams = {"best": stream}
 
@@ -430,10 +423,6 @@ class TestCLIMainHandleStream(unittest.TestCase):
         paramStream, paramFormatter = mock_output_stream.call_args[0]
         self.assertIs(paramStream, stream)
         self.assertIsInstance(paramFormatter, Formatter)
-        self.assertEqual(
-            paramFormatter.title("{url} - {author} - {category}/{game} - {title}"),
-            "URL - AUTHOR - CATEGORY/CATEGORY - TITLE"
-        )
 
 
 class TestCLIMainOutputStream(unittest.TestCase):
