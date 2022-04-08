@@ -7,3 +7,4 @@ freezegun>=1.0.0
 flake8
 flake8-import-order
 shtab
+versioningit >=1.1.1, <2

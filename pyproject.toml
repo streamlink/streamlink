@@ -1,0 +1,27 @@
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools >=45",
+  "wheel",
+  "versioningit >=1.1.1, <2",
+]
+
+
+# https://versioningit.readthedocs.io/en/stable/index.html
+[tool.versioningit]
+default-version = "0.0.0+unknown"
+
+[tool.versioningit.vcs]
+method = "git"
+
+[tool.versioningit.format]
+distance = "{version}+{distance}.{vcs}{rev}"
+dirty = "{version}+{distance}.{vcs}{rev}.dirty"
+distance-dirty = "{version}+{distance}.{vcs}{rev}.dirty"
+
+[tool.versioningit.next-version]
+method = "null"
+
+[tool.versioningit.onbuild]
+source-file = "src/streamlink/_version.py"
+build-file = "streamlink/_version.py"
