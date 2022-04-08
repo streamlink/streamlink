@@ -7,7 +7,6 @@ source =
 omit =
   src/streamlink/packages/*
   src/streamlink_cli/packages/*
-  src/streamlink/_version.py
 
 exclude_lines =
     pragma: no cover

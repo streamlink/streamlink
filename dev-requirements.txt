@@ -8,3 +8,4 @@ flake8
 flake8-import-order
 shtab
 js2py
+versioningit >=1.1.1, <2

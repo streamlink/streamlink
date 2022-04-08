@@ -4,8 +4,7 @@ from sys import argv, exit, version_info
 from textwrap import dedent
 
 from setuptools import setup
-
-import versioneer
+from versioningit import get_cmdclasses
 
 
 def format_msg(text, *args, **kwargs):
@@ -101,8 +100,7 @@ data_files = [
 
 
 setup(
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
+    cmdclass=get_cmdclasses(),
     entry_points=entry_points,
     data_files=data_files,
 )
