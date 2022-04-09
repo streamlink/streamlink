@@ -66,8 +66,20 @@ Funding = "https://streamlink.github.io/latest/donate.html"
 
 
 # https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
+# https://setuptools.pypa.io/en/stable/userguide/package_discovery.html
+# https://setuptools.pypa.io/en/stable/userguide/datafiles.html
 [tool.setuptools]
 license-files = ["LICENSE"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = false
+
+[tool.setuptools.package-data]
+streamlink = [
+  "py.typed",
+]
 
 
 # https://versioningit.readthedocs.io/en/stable/index.html
