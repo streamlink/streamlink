@@ -1,4 +1,5 @@
-pip>=9
+pip >=21.0.0
+
 pytest >=6.0.0
 pytest-asyncio
 pytest-cov

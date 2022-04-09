@@ -317,7 +317,7 @@ Type      Name                       Notes
 ========= ========================= ===========================================
 python    `Python`_                 At least version **3.7**.
 
-build     `setuptools`_             At least version **45.0.0**. |br| Used as build backend.
+build     `setuptools`_             At least version **64.0.0**. |br| Used as build backend.
 build     `wheel`_                  Used by the build frontend for creating Python wheels.
 build     `versioningit`_           At least version **2.0.0**. |br| Used for generating the version string from git
                                     when building, or when running in an editable install.

@@ -1,10 +1,73 @@
 [build-system]
 build-backend = "setuptools.build_meta"
 requires = [
-  "setuptools >=45",
+  "setuptools >=64",
   "wheel",
   "versioningit >=2.0.0, <3",
 ]
+
+
+# https://peps.python.org/pep-0621/
+[project]
+name = "streamlink"
+description = "Streamlink is a command-line utility that extracts streams from various services and pipes them into a video player of choice."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [
+  { name = "Streamlink" },
+  { email = "streamlink@protonmail.com" }
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "License :: OSI Approved :: BSD License",
+  "Environment :: Console",
+  "Intended Audience :: End Users/Desktop",
+  "Operating System :: POSIX",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Multimedia :: Sound/Audio",
+  "Topic :: Multimedia :: Video",
+  "Topic :: Utilities",
+]
+
+dynamic = [
+  "version",
+  "entry-points",
+]
+
+requires-python = ">=3.7, <4"
+dependencies = [
+  "certifi",
+  "importlib-metadata ; python_version<\"3.8\"",
+  "isodate",
+  "lxml >=4.6.4, <5.0",
+  "pycountry",
+  "pycryptodome >=3.4.3, <4",
+  "PySocks !=1.5.7, >=1.5.6",
+  "requests >=2.26.0, <3.0",
+  "urllib3 >=1.26.0",
+  "websocket-client >=1.2.1, <2.0",
+]
+
+[project.urls]
+Home-Page = "https://github.com/streamlink/streamlink"
+Documentation = "https://streamlink.github.io/"
+Tracker = "https://github.com/streamlink/streamlink/issues"
+Source = "https://github.com/streamlink/streamlink"
+Funding = "https://streamlink.github.io/latest/donate.html"
+
+
+# https://setuptools.pypa.io/en/stable/userguide/pyproject_config.html
+[tool.setuptools]
+license-files = ["LICENSE"]
 
 
 # https://versioningit.readthedocs.io/en/stable/index.html
