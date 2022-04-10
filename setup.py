@@ -3,9 +3,6 @@ from os import path
 from sys import argv, exit, version_info
 from textwrap import dedent
 
-from setuptools import setup
-from versioningit import get_cmdclasses
-
 
 def format_msg(text, *args, **kwargs):
     return dedent(text).strip(" \n").format(*args, **kwargs)
@@ -75,8 +72,12 @@ data_files = [
 ]
 
 
-setup(
-    cmdclass=get_cmdclasses(),
-    entry_points=entry_points,
-    data_files=data_files,
-)
+if __name__ == "__main__":
+    from setuptools import setup
+    from versioningit import get_cmdclasses
+
+    setup(
+        cmdclass=get_cmdclasses(),
+        entry_points=entry_points,
+        data_files=data_files,
+    )
