@@ -13,7 +13,6 @@ import re
 from streamlink.compat import range
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import useragents, validate
-from streamlink.plugin.api.utils import itertags
 from streamlink.stream.ffmpegmux import MuxedStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
@@ -146,10 +145,10 @@ class Experience(object):
         return self.session.http.json(res)
 
     def login_csrf(self):
-        r = self.session.http.get(self.login_url)
-        for input in itertags(r.text, "input"):
-            if input.attributes.get("name") == self.CSRF_NAME:
-                return input.attributes.get("value")
+        return self.session.http.get(self.login_url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//input[@name='{0}'][1]/@value".format(self.CSRF_NAME))
+        ))
 
     def login(self, email, password):
         log.debug("Attempting to login as {0}".format(email))
