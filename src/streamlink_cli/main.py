@@ -132,7 +132,10 @@ def create_output(formatter: Formatter):
             http = create_http_server()
 
         if args.record:
-            record = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
+            if args.record == "-":
+                record = FileOutput(fd=stdout)
+            else:
+                record = check_file_output(formatter.path(args.record, args.fs_safe_rules), args.force)
 
         log.info(f"Starting player: {args.player}")
 
@@ -1003,7 +1006,7 @@ def main():
 
     # Console output should be on stderr if we are outputting
     # a stream to stdout.
-    if args.stdout or args.output == "-" or args.record_and_pipe:
+    if args.stdout or args.output == "-" or args.record == "-" or args.record_and_pipe:
         console_out = sys.stderr
     else:
         console_out = sys.stdout
