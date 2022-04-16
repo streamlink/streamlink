@@ -374,6 +374,33 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         self.assertIsNone(output.record.record)
 
     @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
+    def test_create_output_record_stdout(self, args: Mock):
+        formatter = Formatter({
+            "author": lambda: "foo"
+        })
+        args.output = None
+        args.stdout = None
+        args.record = "-"
+        args.record_and_pipe = None
+        args.force = False
+        args.fs_safe_rules = None
+        args.title = "{author} - {title}"
+        args.url = "URL"
+        args.player = "mpv"
+        args.player_args = ""
+        args.player_fifo = None
+        args.player_http = None
+
+        output = create_output(formatter)
+        self.assertIsInstance(output, PlayerOutput)
+        self.assertEqual(output.title, "foo - bar")
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertIsNone(output.record.filename)
+        self.assertEqual(output.record.fd, stdout)
+        self.assertIsNone(output.record.record)
+
+    @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.console")
     def test_create_output_record_and_other_file_output(self, console: Mock, args: Mock):
         formatter = Formatter({})
@@ -602,6 +629,36 @@ class TestCLIMainLoggingStreams(_TestCLIMainLogging):
         self.assertIs(streamlink_cli.main.log.parent.handlers[0].stream, stream)
         self.assertIs(childlogger.parent.handlers[0].stream, stream)
         self.assertIs(streamlink_cli.main.console.output, stream)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_stdout(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--stdout"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_output_eq_file(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--output=foo"], mock_stdout)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_output_eq_dash(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--output=-"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_record_eq_file(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--record=foo"], mock_stdout)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_record_eq_dash(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--record=-"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_record_and_pipe(self, mock_stdout: Mock, mock_stderr: Mock):
+        self.subject(["streamlink", "--record-and-pipe=foo"], mock_stderr)
 
     @patch("sys.stderr")
     @patch("sys.stdout")
