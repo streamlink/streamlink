@@ -1,6 +1,5 @@
 import unittest
 from binascii import hexlify
-from collections import OrderedDict
 from functools import partial
 from threading import Event, Thread
 
@@ -279,7 +278,7 @@ class TestMixinStreamHLS(unittest.TestCase):
     def subject(self, playlists, options=None, streamoptions=None, threadoptions=None, start=True, *args, **kwargs):
         # filter out tags and duplicate segments between playlist responses while keeping index order
         segments_all = [item for playlist in playlists for item in playlist.items if isinstance(item, Segment)]
-        segments = OrderedDict([(segment.num, segment) for segment in segments_all])
+        segments = dict((segment.num, segment) for segment in segments_all)
 
         self.mock("GET", self.url(playlists[0]), [{"text": pl.build(self.id())} for pl in playlists])
         for segment in segments.values():
