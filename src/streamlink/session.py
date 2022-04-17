@@ -1,6 +1,5 @@
 import logging
 import pkgutil
-from collections import OrderedDict
 from functools import lru_cache
 from socket import AF_INET, AF_INET6
 from typing import Any, Dict, Optional, Tuple, Type
@@ -76,7 +75,7 @@ class Streamlink:
         })
         if options:
             self.options.update(options)
-        self.plugins: Dict[str, Type[Plugin]] = OrderedDict({})
+        self.plugins: Dict[str, Type[Plugin]] = {}
         self.load_builtin_plugins()
 
     def set_option(self, key: str, value: Any):

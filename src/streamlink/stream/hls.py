@@ -1,7 +1,6 @@
 import logging
 import re
 import struct
-from collections import OrderedDict
 from concurrent.futures import Future
 from threading import Event
 from typing import Any, Dict, List, NamedTuple, Optional, Tuple, Union
@@ -596,7 +595,7 @@ class HLSStream(HTTPStream):
         except ValueError as err:
             raise OSError("Failed to parse playlist: {0}".format(err))
 
-        streams = OrderedDict()
+        streams = {}
         for playlist in filter(lambda p: not p.is_iframe, parser.playlists):
             names = dict(name=None, pixels=None, bitrate=None)
             audio_streams = []
