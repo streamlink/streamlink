@@ -5,7 +5,6 @@ import os
 import platform
 import signal
 import sys
-from collections import OrderedDict
 from contextlib import closing
 from distutils.version import StrictVersion
 from functools import partial
@@ -861,7 +860,7 @@ def setup_plugin_args(session, parser):
 def setup_plugin_options(session: Streamlink, plugin: Type[Plugin]):
     """Sets Streamlink plugin options."""
     pname = plugin.module
-    required = OrderedDict({})
+    required = {}
 
     for parg in plugin.arguments:
         if parg.options.get("help") == argparse.SUPPRESS:

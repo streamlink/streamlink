@@ -3,7 +3,6 @@ import logging
 import operator
 import re
 import time
-from collections import OrderedDict
 from functools import partial
 from typing import Any, Callable, ClassVar, Dict, List, Match, NamedTuple, Optional, Pattern, Sequence, Type
 
@@ -426,7 +425,7 @@ class Plugin:
         elif callable(sorting_excludes):
             sorted_streams = list(filter(sorting_excludes, sorted_streams))
 
-        final_sorted_streams = OrderedDict()
+        final_sorted_streams = {}
 
         for stream_name in sorted(streams, key=stream_weight_only):
             final_sorted_streams[stream_name] = streams[stream_name]

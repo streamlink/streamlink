@@ -1,4 +1,3 @@
-from collections import OrderedDict
 from typing import List, Optional
 
 
@@ -135,7 +134,7 @@ class Arguments:
     """
 
     def __init__(self, *args):
-        self.arguments = OrderedDict((arg.name, arg) for arg in args)
+        self.arguments = dict((arg.name, arg) for arg in args)
 
     def __iter__(self):
         return iter(self.arguments.values())
