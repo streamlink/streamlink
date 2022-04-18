@@ -1,6 +1,18 @@
 Deprecations
 ============
 
+streamlink 4.0.0
+----------------
+
+Removal of streamlink.plugin.api.utils
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``streamlink.plugin.api.utils`` module including the ``itertags`` function and export aliases for ``streamlink.utils.parse``
+has been removed. Import the parse functions directly and find data in XML/HTML by parsing it via ``parse_{xml,html}`` and
+applying XPath queries to the parsed result via the available methods provided by the ``lxml.etree`` API. The
+``streamlink.plugin.api.validate`` module also has the necessary validation schema functions for this.
+
+
 streamlink 3.0.0
 ----------------
 
@@ -10,6 +22,7 @@ Removal of separate https-proxy option
 :ref:`HTTPS proxy CLI option <cli:HTTP options>` and the respective :ref:`Session options <api:Session>`
 have been deprecated in favor of a single :option:`--http-proxy` that sets the proxy for all HTTP and
 HTTPS requests, including WebSocket connections.
+
 
 streamlink 2.4.0
 ----------------
