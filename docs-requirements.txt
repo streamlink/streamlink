@@ -1,3 +1,4 @@
 sphinx>=3.0
 furo==2021.09.08
 recommonmark>=0.5.0
+versioningit >=1.1.1, <2
