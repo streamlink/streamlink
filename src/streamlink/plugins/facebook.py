@@ -1,5 +1,5 @@
 """
-$description Global live streaming and video hosting social platform.
+$description Global live-streaming and video hosting social platform.
 $url facebook.com
 $type live, vod
 """
@@ -7,9 +7,9 @@ $type live, vod
 import logging
 import re
 
-from streamlink.compat import bytes, html_unescape, is_py3, unquote_plus, urlencode
+from streamlink.compat import bytes, is_py3, unquote_plus, urlencode
 from streamlink.plugin import Plugin, pluginmatcher
-from streamlink.plugin.api.utils import itertags
+from streamlink.plugin.api import validate
 from streamlink.stream.dash import DASHStream
 from streamlink.stream.http import HTTPStream
 from streamlink.utils.parse import parse_json
@@ -30,35 +30,25 @@ class Facebook(Plugin):
     _pc_re = re.compile(r'''pkg_cohort["']\s*:\s*["'](.+?)["']''')
     _rev_re = re.compile(r'''client_revision["']\s*:\s*(\d+),''')
     _dtsg_re = re.compile(r'''DTSGInitialData["'],\s*\[\],\s*{\s*["']token["']\s*:\s*["'](.+?)["']''')
-    _title_re = re.compile(r'<meta property="og:title" content="([^\"]+)"')
     _DEFAULT_PC = "PHASED:DEFAULT"
     _DEFAULT_REV = 4681796
     _TAHOE_URL = "https://www.facebook.com/video/tahoe/async/{0}/?chain=true&isvideo=true&payloadtype=primary"
 
-    def get_title(self):
-        res = self.session.http.get(self.url)
-        m = self._title_re.search(res.text)
-        if m:
-            return html_unescape(m.group(1))
-
     def _parse_streams(self, res):
-        _found_stream_url = False
-        for meta in itertags(res.text, "meta"):
-            if meta.attributes.get("property") == "og:video:url":
-                stream_url = html_unescape(meta.attributes.get("content"))
-                if ".mpd" in stream_url:
-                    for s in DASHStream.parse_manifest(self.session, stream_url).items():
-                        yield s
-                        _found_stream_url = True
-                elif ".mp4" in stream_url:
-                    yield "vod", HTTPStream(self.session, stream_url)
-                    _found_stream_url = True
-                break
-        else:
+        stream_url = validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//head/meta[@property='og:video:url'][@content][1]/@content")
+        ).validate(res.text)
+        if not stream_url:
             log.debug("No meta og:video:url")
-
-        if _found_stream_url:
-            return
+        else:
+            if ".mpd" in stream_url:
+                for s in DASHStream.parse_manifest(self.session, stream_url).items():
+                    yield s
+                return
+            elif ".mp4" in stream_url:
+                yield "vod", HTTPStream(self.session, stream_url)
+                return
 
         for match in self._src_re.finditer(res.text):
             stream_url = match.group("url")
@@ -95,10 +85,18 @@ class Facebook(Plugin):
         done = False
         res = self.session.http.get(self.url)
         log.trace("{0}".format(res.url))
-        for title in itertags(res.text, "title"):
-            if title.text.startswith("Log into Facebook"):
-                log.error("Video is not available, You must log in to continue.")
-                return
+
+        title, canonical, self.title = validate.Schema(
+            validate.parse_html(),
+            validate.union((
+                validate.xml_xpath_string(".//head/title[1]/text()"),
+                validate.xml_xpath_string(".//head/meta[@res='canonical'][@href][1]/@href"),
+                validate.xml_xpath_string(".//head/meta[@property='og:title'][@content][1]/@content"),
+            ))
+        ).validate(res.text)
+        if canonical == "https://www.facebook.com/login/" or "log in" in title.lower():
+            log.error("This URL requires a login or may be accessible from a different IP address.")
+            return
 
         for s in self._parse_streams(res):
             done = True
