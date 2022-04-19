@@ -56,11 +56,11 @@ class FileOutput(Output):
         self.record = record
 
     def _open(self):
-        head = os.path.dirname(self.filename)
-        if head and not os.path.isdir(head):
-            os.makedirs(head)
-
         if self.filename:
+            head = os.path.dirname(self.filename)
+            if head and not os.path.isdir(head):
+                os.makedirs(head)
+
             self.fd = open(self.filename, "wb")
 
         if self.record:

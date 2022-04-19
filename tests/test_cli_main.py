@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 import os
 import sys
 import tempfile
@@ -331,14 +332,43 @@ class TestCLIMain(unittest.TestCase):
         self.assertIsNone(output.record.fd)
         self.assertIsNone(output.record.record)
 
-    def test_create_output_record_and_other_file_output(self):
-        streamlink_cli.main.console = console = Mock()
-        streamlink_cli.main.args = args = Mock()
-        console.exit = Mock()
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
+    def test_create_output_record_stdout(self, args):
+        # type: (Mock)
+        formatter = Formatter({
+            "author": lambda: "foo"
+        })
+        args.output = None
+        args.stdout = None
+        args.record = "-"
+        args.record_and_pipe = None
+        args.force = False
+        args.fs_safe_rules = None
+        args.title = "{author} - {title}"
+        args.url = "URL"
+        args.player = "mpv"
+        args.player_args = ""
+        args.player_fifo = None
+        args.player_http = None
+
+        output = create_output(formatter)
+        self.assertIsInstance(output, PlayerOutput)
+        self.assertEqual(output.title, "foo - bar")
+        self.assertIsInstance(output.record, FileOutput)
+        self.assertIsNone(output.record.filename)
+        self.assertEqual(output.record.fd, stdout)
+        self.assertIsNone(output.record.record)
+
+    @patch("streamlink_cli.main.args")
+    @patch("streamlink_cli.main.console")
+    def test_create_output_record_and_other_file_output(self, console, args):
+        # type: (Mock, Mock)
+        formatter = Formatter({})
         args.output = None
         args.stdout = True
         args.record_and_pipe = True
-        create_output(FakePlugin)
+        create_output(formatter)
         console.exit.assert_called_with("Cannot use record options with other file output options.")
 
     @patch("streamlink_cli.main.console")
@@ -421,12 +451,116 @@ class _TestCLIMainLogging(unittest.TestCase):
         streamlink_cli.main.logger.root.handlers *= 0
 
     # python >=3.7.2: https://bugs.python.org/issue35046
-    _write_calls = (
+    _write_call_log_cli_info = (
         ([call("[cli][info] foo\n")]
          if sys.version_info >= (3, 7, 2) or sys.version_info < (3, 0, 0)
          else [call("[cli][info] foo"), call("\n")])
-        + [call("bar\n")]
     )
+    _write_call_console_msg = [call("bar\n")]
+    _write_call_console_msg_error = [call("error: bar\n")]
+    _write_call_console_msg_json = [call("{\n  \"error\": \"bar\"\n}\n")]
+
+    _write_calls = _write_call_log_cli_info + _write_call_console_msg
+
+    def write_file_and_assert(self, mock_mkdir, mock_write, mock_stdout):
+        # type: (Mock, Mock, Mock)
+        streamlink_cli.main.log.info("foo")
+        streamlink_cli.main.console.msg("bar")
+        self.assertEqual(mock_mkdir.mock_calls, [call(parents=True, exist_ok=True)])
+        self.assertEqual(mock_write.mock_calls, self._write_calls)
+        self.assertFalse(mock_stdout.write.called)
+
+
+class TestCLIMainLoggingStreams(_TestCLIMainLogging):
+    # python >=3.7.2: https://bugs.python.org/issue35046
+    _write_call_log_testcli_err = (
+        [call("[test_cli_main][error] baz\n")]
+        if sys.version_info >= (3, 7, 2) or sys.version_info < (3, 0, 0) else
+        [call("[test_cli_main][error] baz"), call("\n")]
+    )
+
+    def subject(self, argv, stream=None):
+        super(TestCLIMainLoggingStreams, self).subject(argv)
+        childlogger = logging.getLogger("streamlink.test_cli_main")
+
+        with self.assertRaises(SystemExit):
+            streamlink_cli.main.log.info("foo")
+            childlogger.error("baz")
+            streamlink_cli.main.console.exit("bar")
+
+        self.assertIs(streamlink_cli.main.log.parent.handlers[0].stream, stream)
+        self.assertIs(childlogger.parent.handlers[0].stream, stream)
+        self.assertIs(streamlink_cli.main.console.output, stream)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_stdout(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--stdout"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_output_eq_file(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--output=foo"], mock_stdout)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_output_eq_dash(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--output=-"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_record_eq_file(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--record=foo"], mock_stdout)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_record_eq_dash(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--record=-"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_stream_record_and_pipe(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--record-and-pipe=foo"], mock_stderr)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_no_pipe_no_json(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink"], mock_stdout)
+        self.assertEqual(mock_stdout.write.mock_calls,
+                         self._write_call_log_cli_info + self._write_call_log_testcli_err + self._write_call_console_msg_error)
+        self.assertEqual(mock_stderr.write.mock_calls, [])
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_no_pipe_json(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--json"], mock_stdout)
+        self.assertEqual(mock_stdout.write.mock_calls, self._write_call_console_msg_json)
+        self.assertEqual(mock_stderr.write.mock_calls, [])
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_pipe_no_json(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--stdout"], mock_stderr)
+        self.assertEqual(mock_stdout.write.mock_calls, [])
+        self.assertEqual(mock_stderr.write.mock_calls,
+                         self._write_call_log_cli_info + self._write_call_log_testcli_err + self._write_call_console_msg_error)
+
+    @patch("sys.stderr")
+    @patch("sys.stdout")
+    def test_pipe_json(self, mock_stdout, mock_stderr):
+        # type: (Mock, Mock)
+        self.subject(["streamlink", "--stdout", "--json"], mock_stderr)
+        self.assertEqual(mock_stdout.write.mock_calls, [])
+        self.assertEqual(mock_stderr.write.mock_calls, self._write_call_console_msg_json)
 
 
 class TestCLIMainLogging(_TestCLIMainLogging):

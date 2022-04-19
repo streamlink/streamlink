@@ -538,7 +538,8 @@ def build_parser():
         "-o", "--output",
         metavar="FILENAME",
         help="""
-        Write stream data to FILENAME instead of playing it.
+        Write stream data to FILENAME instead of playing it. If FILENAME is set to - (dash), then the stream data will be
+        written to stdout, similar to the --stdout argument.
 
         You will be prompted if the file already exists.
 
@@ -577,7 +578,8 @@ def build_parser():
         "-r", "--record",
         metavar="FILENAME",
         help="""
-        Open the stream in the player, while at the same time writing it to FILENAME.
+        Open the stream in the player, while at the same time writing it to FILENAME. If FILENAME is set to - (dash), then the
+        stream data will be written to stdout, similar to the --stdout argument, while still opening the player.
 
         You will be prompted if the file already exists.
 
