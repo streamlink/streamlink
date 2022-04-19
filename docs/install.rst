@@ -92,10 +92,10 @@ Python pip                           See the `PyPI package and source code`_ sec
 `Debian (stable)`_                   .. code-block:: bash
 
                                         # If you don't have Debian backports already (see link below):
-                                        echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
+                                        echo "deb http://deb.debian.org/debian bullseye-backports main" | sudo tee "/etc/apt/sources.list.d/streamlink.list"
 
                                         sudo apt update
-                                        sudo apt -t buster-backports install streamlink
+                                        sudo apt -t bullseye-backports install streamlink
 
                                      `Installing Debian backported packages`_
 
