@@ -541,6 +541,8 @@ def build_parser():
         Write stream data to FILENAME instead of playing it. If FILENAME is set to - (dash), then the stream data will be
         written to stdout, similar to the --stdout argument.
 
+        Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
+
         You will be prompted if the file already exists.
 
         Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
@@ -581,6 +583,8 @@ def build_parser():
         Open the stream in the player, while at the same time writing it to FILENAME. If FILENAME is set to - (dash), then the
         stream data will be written to stdout, similar to the --stdout argument, while still opening the player.
 
+        Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
+
         You will be prompted if the file already exists.
 
         Please see the "Metadata variables" section of Streamlink's CLI documentation for all available metadata variables.
@@ -597,6 +601,8 @@ def build_parser():
         metavar="FILENAME",
         help="""
         Write stream data to stdout, while at the same time writing it to FILENAME.
+
+        Non-existent directories and subdirectories will be created if they do not exist, if filesystem permissions allow.
 
         You will be prompted if the file already exists.
 
