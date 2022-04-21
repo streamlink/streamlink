@@ -1,7 +1,7 @@
 pip>=9
 pytest
 pytest-cov
-coverage
+coverage[toml]
 requests-mock
 freezegun>=1.0.0
 flake8
