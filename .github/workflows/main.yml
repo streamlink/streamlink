@@ -49,7 +49,7 @@ jobs:
         run: bash ./script/install-dependencies.sh
       - name: Lint (flake8)
         continue-on-error: ${{ matrix.continue || false }}
-        run: flake8 --count
+        run: flake8
       - name: Lint (line terminators)
         if: startsWith(matrix.os, 'ubuntu')
         run: "! grep 'with CRLF line terminators' <(git ls-files | file -nNf-)"
