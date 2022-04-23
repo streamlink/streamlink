@@ -1,12 +1,16 @@
 {changelog}
 
-## Installation
+## ⚙️ Installation and configuration
 
-See the detailed [installation instructions](https://streamlink.github.io/install.html) on Streamlink's website.
+Please see the detailed [installation instructions](https://streamlink.github.io/install.html) and [CLI guide](https://streamlink.github.io/cli.html) on Streamlink's website.
 
-## Supporting Streamlink
+**⚠️ PLEASE NOTE ⚠️**  
+Streamlink's Windows installers have been moved to [streamlink/windows-installer](https://github.com/streamlink/windows-installer/releases).
 
-If you think that this application is helpful, please consider supporting the maintainers by [donating via the Open collective](https://opencollective.com/streamlink). Not only becoming a backer, but also a sponsor for the (open source) project.
+## ❤️ Support
+
+If you think that Streamlink is useful and if you want to keep the project alive, then please consider supporting its maintainers by sending a small and optionally recurring tip via the [available options](https://streamlink.github.io/donate.html).  
+Your support is very much appreciated, thank you!
 
 
 {gitlog}
