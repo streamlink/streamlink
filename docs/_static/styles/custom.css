@@ -62,8 +62,8 @@ a[href^="https://"]:not([href^="https://streamlink.github.io/"]) {
   word-break: break-word;
 }
 
-a[href^="http://"],
-a[href^="https://"]:not([href^="https://streamlink.github.io/"])::after {
+a[href^="http://"]:not(.no-external-link-icon)::after,
+a[href^="https://"]:not(.no-external-link-icon):not([href^="https://streamlink.github.io/"])::after {
   content: "\f35d";
   display: inline-block;
   padding-left: .4em;
