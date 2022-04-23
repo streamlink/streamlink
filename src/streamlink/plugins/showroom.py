@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-$description Japanese live streaming service used primarily by Japanese idols & voice actors and their fans.
+$description Japanese live-streaming service used primarily by Japanese idols & voice actors and their fans.
 $url showroom-live.com
 $type live
 """
@@ -10,53 +10,64 @@ import re
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
-from streamlink.stream.hls import HLSStream, HLSStreamReader, HLSStreamWorker
+from streamlink.stream.hls import HLSStream
 
 log = logging.getLogger(__name__)
-
-
-class ShowroomHLSStreamWorker(HLSStreamWorker):
-    def _playlist_reload_time(self, playlist, sequences):
-        return 1.5
-
-
-class ShowroomHLSStreamReader(HLSStreamReader):
-    __worker__ = ShowroomHLSStreamWorker
-
-
-class ShowroomHLSStream(HLSStream):
-    __reader__ = ShowroomHLSStreamReader
 
 
 @pluginmatcher(re.compile(
     r"https?://(?:\w+\.)?showroom-live\.com/"
 ))
 class Showroom(Plugin):
+    LIVE_STATUS = 2
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.session.set_option("hls-playlist-reload-time", "segment")
+
     def _get_streams(self):
-        data = self.session.http.get(
+        re_room_id = re.compile(r"share_url:\"https:[^?]+?\?room_id=(?P<room_id>\d+)\"")
+        room_id = self.session.http.get(
             self.url,
             schema=validate.Schema(
                 validate.parse_html(),
-                validate.xml_xpath_string(".//script[@id='js-live-data'][@data-json]/@data-json"),
+                validate.xml_xpath_string(".//script[contains(text(),'share_url:\"https:')][1]/text()"),
                 validate.any(None, validate.all(
-                    validate.parse_json(),
-                    {"is_live": int,
-                     "room_id": int,
-                     validate.optional("room"): {"content_region_permission": int, "is_free": int}},
+                    validate.transform(re_room_id.search),
+                    validate.any(None, validate.get("room_id"))
                 ))
             )
         )
-        if not data:  # URL without livestream
+        if not room_id:
             return
 
-        log.debug("{0!r}".format(data))
-        if data["is_live"] != 1:
+        live_status, self.title = self.session.http.get(
+            "https://www.showroom-live.com/api/live/live_info",
+            params={
+                "room_id": room_id
+            },
+            schema=validate.Schema(
+                validate.parse_json(),
+                {
+                    "live_status": int,
+                    "room_name": validate.text,
+                },
+                validate.union_get(
+                    "live_status",
+                    "room_name",
+                )
+            )
+        )
+        if live_status != self.LIVE_STATUS:
             log.info("This stream is currently offline")
             return
 
         url = self.session.http.get(
             "https://www.showroom-live.com/api/live/streaming_url",
-            params={"room_id": data["room_id"], "abr_available": 1},
+            params={
+                "room_id": room_id,
+                "abr_available": 1,
+            },
             schema=validate.Schema(
                 validate.parse_json(),
                 {"streaming_url_list": [{
@@ -68,11 +79,13 @@ class Showroom(Plugin):
                 validate.get((0, "url"))
             ),
         )
+
         res = self.session.http.get(url, acceptable_status=(200, 403, 404))
         if res.headers["Content-Type"] != "application/x-mpegURL":
             log.error("This stream is restricted")
             return
-        return ShowroomHLSStream.parse_variant_playlist(self.session, url)
+
+        return HLSStream.parse_variant_playlist(self.session, url)
 
 
 __plugin__ = Showroom
