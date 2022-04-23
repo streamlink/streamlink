@@ -18,6 +18,13 @@ as payment for future work.
 
 .. raw:: html
 
+   <a href="https://opencollective.com/streamlink" target="_blank" class="no-external-link-icon">
+     <img alt="Donate to our collective" src="https://opencollective.com/streamlink/donate/button@2x.png?color=white" width="300" height="50">
+   </a>
+
+
+.. raw:: html
+
    <h1>Individual team member donations</h1>
 
 Bastimeyer
@@ -33,7 +40,7 @@ Bastimeyer
       - `Github <https://github.com/bastimeyer>`__
       - `Github Sponsors <https://github.com/sponsors/bastimeyer>`__
       - `Paypal <https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=YUCGRLVALHS8C&item_name=Streamlink%20Twitch%20GUI>`__
-      - `Bitcoin <https://blockchain.info/qr?data=1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8>`__ :code:`1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8`
+      - `Bitcoin <https://www.blockchain.com/btc/address/1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8>`__ :code:`1EZg8eBz4RdPb8pEzYD9JEzr9Fyitzj8j8`
 
 Beardypig
 ^^^^^^^^^
@@ -46,7 +53,7 @@ Beardypig
    .. container::
 
       - `Github <https://github.com/beardypig>`__
-      - `Bitcoin <https://blockchain.info/qr?data=1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh>`__ :code:`1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh`
+      - `Bitcoin <https://www.blockchain.com/btc/address/1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh>`__ :code:`1Ey3KZ9SwTj6QyASE6vgJVebUiJsW1HuRh`
 
 Gravyboat
 ^^^^^^^^^
@@ -59,6 +66,5 @@ Gravyboat
    .. container::
 
       - `Github <https://github.com/gravyboat>`__
-      - `Bitcoin <https://blockchain.info/qr?data=1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`__ :code:`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`
+      - `Bitcoin <https://www.blockchain.com/btc/address/1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`__ :code:`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`
       - `Flattr <https://flattr.com/@gravyboat>`__
-      - `Gratipay <https://gratipay.com/~gravyboat/>`__
