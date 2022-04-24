@@ -108,6 +108,7 @@ class TestPluginMetadata:
     @pytest.fixture(scope="class")
     def metadata_keys_required(self):
         return (
+            "description",
             "url",
             "type",
         )
