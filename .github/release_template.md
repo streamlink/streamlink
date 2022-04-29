@@ -1,4 +1,4 @@
-{changelog}
+{{ changelog }}
 
 ## ⚙️ Installation and configuration
 
@@ -11,6 +11,18 @@ Streamlink's Windows installers have been moved to [streamlink/windows-installer
 
 If you think that Streamlink is useful and if you want to keep the project alive, then please consider supporting its maintainers by sending a small and optionally recurring tip via the [available options](https://streamlink.github.io/donate.html).  
 Your support is very much appreciated, thank you!
+{%- if contributors %}
 
+## 🙏 Contributors
+{% for contributor in contributors %}
+- {{ contributor.commits }}: @{{ contributor.name }}
+{%- endfor %}
+{%- endif %}
+{%- if gitshortlog %}
 
-{gitlog}
+## 🗒️ Full changelog
+
+```text
+{{ gitshortlog }}
+```
+{%- endif %}

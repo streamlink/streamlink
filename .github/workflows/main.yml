@@ -127,17 +127,17 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          fetch-depth: 300
+          fetch-depth: 0
       - name: Fetch tags
         run: git fetch --depth=300 origin +refs/tags/*:refs/tags/*
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: "3.10"
       - name: Install dependencies
         run: |
           ./script/install-dependencies.sh
           python -m pip install -r docs-requirements.txt
-          python -m pip install --upgrade wheel twine
+          python -m pip install --upgrade Jinja2 wheel twine
       - name: Build shell completions
         run: ./script/build-shell-completions.sh
       - name: Build man page
@@ -149,7 +149,7 @@ jobs:
       - name: Github release
         env:
           RELEASES_API_KEY: ${{ secrets.RELEASES_API_KEY }}
-        run: ./script/github_releases.py "${STREAMLINK_DIST_DIR}"/*
+        run: ./script/github_releases.py "${STREAMLINK_DIST_DIR}"/*.tar.gz{,.asc}
       - name: PyPI release
         env:
           PYPI_USER: streamlink
