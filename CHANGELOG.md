@@ -1,5 +1,98 @@
 # Changelog
 
+## streamlink 4.0.0 (2022-05-01)
+
+Breaking changes:
+
+- BREAKING: dropped support for Python 3.6 ([#4442](https://github.com/streamlink/streamlink/pull/4442))
+- BREAKING/API: removed [`streamlink.plugin.api.utils`](https://streamlink.github.io/deprecations.html#removal-of-streamlink-plugin-api-utils) module ([#4467](https://github.com/streamlink/streamlink/pull/4467))
+- BREAKING/setup: switched to PEP 518 build system declaration and replaced versioneer in favor of versioningit ([#4440](https://github.com/streamlink/streamlink/pull/4440))
+- BREAKING/packaging: replaced Windows installers with new ones built at [streamlink/windows-installer](https://github.com/streamlink/windows-installer) ([#4405](https://github.com/streamlink/streamlink/pull/4405))
+  - Added: new embedded Python builds for 3.8 and 3.10, both x86 and x86_64
+  - Updated: embedded FFmpeg to 5.0
+
+Release highlights:
+
+- Added: support for `--record=-`, for writing data to stdout while watching at the same time ([#4462](https://github.com/streamlink/streamlink/pull/4462))
+- Added: `plugin` variable for `--title`, `--output`, `--record` and `--record-and-pipe` ([#4437](https://github.com/streamlink/streamlink/pull/4437))
+- Added: missing CLI protocol parameter support for DASH streams ([#4434](https://github.com/streamlink/streamlink/pull/4434))
+- Updated: CLI and API documentation ([#4415](https://github.com/streamlink/streamlink/pull/4415), [#4424](https://github.com/streamlink/streamlink/pull/4424), [#4430](https://github.com/streamlink/streamlink/pull/4430))
+- Updated: plugin description documentation ([#4391](https://github.com/streamlink/streamlink/pull/4391))
+- Fixed: nicolive email logins ([#4380](https://github.com/streamlink/streamlink/pull/4380))
+- Fixed: various other plugin issues (see the changelog down below)
+- New plugins: cmmedia ([#4416](https://github.com/streamlink/streamlink/pull/4416)), htv ([#4431](https://github.com/streamlink/streamlink/pull/4431)), mdstrm ([#4395](https://github.com/streamlink/streamlink/pull/4395)), trovo ([#4471](https://github.com/streamlink/streamlink/pull/4471))
+- Removed plugins: abweb ([#4270](https://github.com/streamlink/streamlink/pull/4270)), garena ([#4460](https://github.com/streamlink/streamlink/pull/4460)), senategov ([#4458](https://github.com/streamlink/streamlink/pull/4458)), teamliquid ([#4393](https://github.com/streamlink/streamlink/pull/4393)), tlctr ([#4432](https://github.com/streamlink/streamlink/pull/4432)), vrtbe ([#4459](https://github.com/streamlink/streamlink/pull/4459))
+
+
+```text
+Ekang Monyet <ekangmonyet@posteo.net> (1):
+      plugins.nicolive: fix timeshift-offset option
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (7):
+      plugins: add missing "description" metadata tags
+      plugins.teamliquid: plugin removal
+      plugins.cmmedia: new plugin
+      docs: README.md update link to plugins list
+      plugins.htv: new plugin
+      cli.argparser: update help with dir/subdir creation info
+      plugins.trovo: new plugin
+
+Mozi <29089388+pzhlkj6612@users.noreply.github.com> (1):
+      cli: add "overwrite" to --force help text (#4396)
+
+back-to <backto@protonmail.ch> (4):
+      plugins.mdstrm: new plugin for mdstrm.com livestreams (#4395)
+      plugins.oneplusone: fix iframe
+      plugins.tlctr: remove plugin
+      plugins.garena: remove plugin
+
+bastimeyer <mail@bastimeyer.de> (34):
+      chore: clean up some imports
+      installer: bump python to 3.9.11
+      chore: remove unneeded release script
+      docs: fix CLI argument line breaks
+      docs: split CLI into submenus
+      installer: drop Windows installer build config
+      docs: split cli/plugin, add cli/plugin/twitch
+      docs: update API page, add type annotations
+      plugins.dash: add support for parameters
+      docs: add protocol-plugin parameters documentation
+      docs: add intersphinx config
+      tests: add proper tests for CLI metadata variables
+      cli: add `plugin` metadata variable
+      build: drop removed plugins file from package_data
+      chore: drop support for Python 3.6
+      build: add pyproject.toml, switch to versioningit
+      build: move imports in setup.py
+      plugins.cdnbg: rewrite plugin
+      plugins.funimationnow: replace itertags
+      plugins.vrtbe: remove plugin
+      plugins.senategov: remove plugin
+      cli: add support for --record=-
+      chore: remove unnecessary collection.OrderedDict
+      ci: fix netlify PR preview builds
+      plugins.facebook: replace itertags
+      plugin.api: remove utils module
+      docs: update debian backports info
+      plugins.showroom: fix plugin
+      chore: move coverage config to pyproject.toml
+      chore: clean up flake8 config
+      chore: update GitHub release template
+      docs: update and fix donations page
+      docs: fix incorrect min setuptools version
+      tests.plugins: make description metadata mandatory
+
+code-review-doctor <72647856+code-review-doctor@users.noreply.github.com> (1):
+      tests: fix accidental URL string concatenation (#4387)
+
+iwconfig <snelhingst@gmail.com> (1):
+      plugins.svtplay: oppetarkiv.se is not functional anymore (#4443)
+
+takayuki <nirasawa@gmail.com> (1):
+      plugins.linelive: fix API URL
+```
+
+
 ## streamlink 3.2.0 (2022-03-05)
 
 Release highlights:
