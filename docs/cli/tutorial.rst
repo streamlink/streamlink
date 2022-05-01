@@ -32,7 +32,7 @@ This command will tell Streamlink to attempt to extract streams from the URL
 specified, and if it's successful, print out a list of available streams to choose
 from.
 
-In some cases (see `Supported streaming protocols <cli/protocols>`_), local files are supported
+In some cases (see `Supported streaming protocols <protocols>`_), local files are supported
 using the ``file://`` protocol, for example a local HLS playlist can be played.
 Relative file paths and absolute paths are supported. All path separators are ``/``,
 even on Windows.
