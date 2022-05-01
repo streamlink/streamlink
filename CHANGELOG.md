@@ -1,5 +1,19 @@
 # Changelog
 
+## streamlink 4.0.1 (2022-05-01)
+
+No code changes.  
+Please see the [changelog of the `4.0.0` release](https://streamlink.github.io/changelog.html#streamlink-4-0-0-2022-05-01), as it contains breaking changes.
+
+- Fixed: missing source-dist tarballs on GitHub release page ([#4503](https://github.com/streamlink/streamlink/pull/4503))
+
+
+```text
+bastimeyer <mail@bastimeyer.de> (1):
+      ci: fix github deploy config
+```
+
+
 ## streamlink 4.0.0 (2022-05-01)
 
 Breaking changes:
