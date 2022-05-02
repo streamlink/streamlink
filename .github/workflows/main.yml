@@ -149,7 +149,7 @@ jobs:
       - name: Github release
         env:
           RELEASES_API_KEY: ${{ secrets.RELEASES_API_KEY }}
-        run: ./script/github_releases.py "${STREAMLINK_DIST_DIR}"/*.tar.gz{,.asc}
+        run: ./script/github-release.py "${STREAMLINK_DIST_DIR}"/*.tar.gz{,.asc}
       - name: PyPI release
         env:
           PYPI_USER: streamlink
