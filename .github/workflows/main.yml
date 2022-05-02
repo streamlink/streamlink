@@ -124,6 +124,8 @@ jobs:
     needs:
       - deploy-documentation
     runs-on: ubuntu-20.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v2
         with:
@@ -148,7 +150,7 @@ jobs:
         run: ./script/build-and-sign.sh
       - name: Github release
         env:
-          RELEASES_API_KEY: ${{ secrets.RELEASES_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./script/github-release.py "${STREAMLINK_DIST_DIR}"/*.tar.gz{,.asc}
       - name: PyPI release
         env:
