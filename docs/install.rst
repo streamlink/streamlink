@@ -273,34 +273,43 @@ Dependencies
 
 To install Streamlink from source you will need these dependencies.
 
-.. rst-class:: table-custom-layout
+Since :ref:`4.0.0 <changelog:streamlink 4.0.0 (2022-05-01)>`,
+Streamlink defines a `build system <pyproject.toml_>`__ according to `PEP-517`_ / `PEP-518`_.
 
-==================================== ===========================================
-Name                                 Notes
-==================================== ===========================================
-`Python`_                            At least version **3.7**.
-`python-setuptools`_                 At least version **45.0.0**.
+.. rst-class:: table-custom-layout table-custom-layout-dependencies
 
-**Automatically installed by the setup script**
---------------------------------------------------------------------------------
-`isodate`_                           Used for parsing ISO8601 strings
-`lxml`_                              Used for processing HTML and XML data
-`pycountry`_                         Used for localization settings, provides country and language data
-`pycryptodome`_                      Used for decrypting encrypted streams
-`PySocks`_                           Used for SOCKS Proxies
-`requests`_                          Used for making any kind of HTTP/HTTPS request
-`websocket-client`_                  Used for making websocket connections
+========= ========================= ===========================================
+Type      Name                       Notes
+========= ========================= ===========================================
+python    `Python`_                 At least version **3.7**.
 
-**Optional**
---------------------------------------------------------------------------------
-`ffmpeg`_                            Required for `muxing`_ multiple video/audio/subtitle streams into a single output stream.
+build     `setuptools`_             At least version **45.0.0**. |br| Used as build backend.
+build     `wheel`_                  Used by the build frontend for creating Python wheels.
+build     `versioningit`_           At least version **1.1.1**. |br| Used for generating the version string from git
+                                    when building, or when running in an editable install.
+
+runtime   `isodate`_                Used for parsing ISO8601 strings
+runtime   `lxml`_                   Used for processing HTML and XML data
+runtime   `pycountry`_              Used for localization settings, provides country and language data
+runtime   `pycryptodome`_           Used for decrypting encrypted streams
+runtime   `PySocks`_                Used for SOCKS Proxies
+runtime   `requests`_               Used for making any kind of HTTP/HTTPS request
+runtime   `websocket-client`_       Used for making websocket connections
+
+optional  `FFmpeg`_                 Required for `muxing`_ multiple video/audio/subtitle streams into a single output stream.
 
                                      - DASH streams with video and audio content always have to get remuxed.
                                      - HLS streams optionally need to get remuxed depending on the stream selection.
-==================================== ===========================================
+========= ========================= ===========================================
+
+.. _pyproject.toml: https://github.com/streamlink/streamlink/blob/master/pyproject.toml
+.. _PEP-517: https://peps.python.org/pep-0517/
+.. _PEP-518: https://peps.python.org/pep-0518/
 
 .. _Python: https://www.python.org/
-.. _python-setuptools: https://setuptools.pypa.io/en/latest/
+.. _setuptools: https://setuptools.pypa.io/en/latest/
+.. _wheel: https://wheel.readthedocs.io/en/stable/
+.. _versioningit: https://versioningit.readthedocs.io/en/stable/
 
 .. _isodate: https://pypi.org/project/isodate/
 .. _lxml: https://lxml.de/
@@ -310,7 +319,7 @@ Name                                 Notes
 .. _requests: https://docs.python-requests.org/en/master/
 .. _websocket-client: https://pypi.org/project/websocket-client/
 
-.. _ffmpeg: https://www.ffmpeg.org/
+.. _FFmpeg: https://www.ffmpeg.org/
 .. _muxing: https://en.wikipedia.org/wiki/Multiplexing#Video_processing
 
 
