@@ -96,16 +96,14 @@ class CrunchyrollAPIError(Exception):
 class CrunchyrollAPI:
     _api_url = "https://api.crunchyroll.com/{0}.0.json"
     _default_locale = "en_US"
-    _user_agent = "Dalvik/1.6.0 (Linux; U; Android 4.4.2; Android SDK built for x86 Build/KK)"
-    _version_code = 444
-    _version_name = "2.1.10"
-    _access_token = "WveH9VkPLrXvuNm"
-    _access_type = "com.crunchyroll.crunchyroid"
+    _version_name = "1.3.1.0"
+    _access_token = "LNDJgOit5yaRIWN"
+    _access_type = "com.crunchyroll.windows.desktop"
 
     def __init__(self, cache, session, session_id=None, locale=_default_locale):
         """Abstract the API to access to Crunchyroll data.
 
-        Can take saved credentials to use on it's calls to the API.
+        Can take saved credentials to use on its calls to the API.
         """
         self.cache = cache
         self.session = session
@@ -116,17 +114,6 @@ class CrunchyrollAPI:
             self.auth = cache.get("auth")
         self.device_id = cache.get("device_id") or self.generate_device_id()
         self.locale = locale
-        self.headers = {
-            "X-Android-Device-Is-GoogleTV": "0",
-            "X-Android-Device-Product": "google_sdk_x86",
-            "X-Android-Device-Model": "Android SDK built for x86",
-            "Using-Brightcove-Player": "1",
-            "X-Android-Release": "4.4.2",
-            "X-Android-SDK": "19",
-            "X-Android-Application-Version-Name": self._version_name,
-            "X-Android-Application-Version-Code": str(self._version_code),
-            'User-Agent': self._user_agent
-        }
 
     def _api_call(self, entrypoint, params=None, schema=None):
         """Makes a call against the api.
@@ -148,17 +135,17 @@ class CrunchyrollAPI:
                 "device_id": self.device_id,
                 "device_type": self._access_type,
                 "access_token": self._access_token,
-                "version": self._version_code
             })
         params.update({
-            "locale": self.locale.replace('_', ''),
+            "locale": self.locale.replace("_", ""),
+            "version": self._version_name,
+            "connectivity_type": "ethernet",
         })
 
         if self.session_id:
             params["session_id"] = self.session_id
 
-        # The certificate used by Crunchyroll cannot be verified in some environments.
-        res = self.session.http.post(url, data=params, headers=self.headers, verify=False)
+        res = self.session.http.post(url, data=params)
         json_res = self.session.http.json(res, schema=_api_schema)
 
         if json_res["error"]:
@@ -175,7 +162,7 @@ class CrunchyrollAPI:
     def generate_device_id(self):
         device_id = str(uuid4())
         # cache the device id
-        self.cache.set("device_id", 365 * 24 * 60 * 60)
+        self.cache.set("device_id", device_id, expires=365 * 24 * 60 * 60)
         log.debug("Device ID: {0}".format(device_id))
         return device_id
 
@@ -212,7 +199,7 @@ class CrunchyrollAPI:
             data = self._api_call("authenticate", {"auth": self.auth}, schema=_login_schema)
         except CrunchyrollAPIError:
             self.auth = None
-            self.cache.set("auth", None, expires_at=0)
+            self.cache.set("auth", None, expires=0)
             log.warning("Saved credentials have expired")
             return
 
@@ -248,10 +235,17 @@ class CrunchyrollAPI:
     (?:
         /(en-gb|es|es-es|pt-pt|pt-br|fr|de|ar|it|ru)
     )?
-    (?:/[^/&?]+)?
-    /[^/&?]+-(?P<media_id>\d+)
+    (?:
+        (?:
+            (?:/[^/&?]+)?
+            /[^/&?]+-(?P<media_id>\d+)
+        )
+        |
+        /watch/(?P<beta_id>\w+)/[\w-]+
+    )
 """, re.VERBOSE))
 class Crunchyroll(Plugin):
+
     arguments = PluginArguments(
         PluginArgument(
             "username",
@@ -305,9 +299,34 @@ class Crunchyroll(Plugin):
         return Plugin.stream_weight(key)
 
     def _get_streams(self):
-        api = self._create_api()
-        media_id = int(self.match.group("media_id"))
+        beta_json_re = re.compile(r"window.__INITIAL_STATE__\s*=\s*({.*});")
 
+        beta_id = self.match.group("beta_id")
+        if beta_id:
+            json = self.session.http.get(self.url, schema=validate.Schema(
+                validate.parse_html(),
+                validate.xml_xpath_string(".//script[contains(text(), 'window.__INITIAL_STATE__')]/text()"),
+                validate.any(None, validate.all(
+                    validate.transform(beta_json_re.search),
+                    validate.any(None, validate.all(
+                        validate.get(1),
+                        validate.parse_json(),
+                        validate.any(None, validate.all(
+                            {"content": {"byId": {str: {"external_id": validate.all(
+                                validate.transform(lambda s: int(s.replace("EPI.", ""))),
+                            )}}}},
+                            validate.get(("content", "byId")),
+                        )),
+                    )),
+                )),
+            ))
+            if not json or beta_id not in json:
+                return
+            media_id = json[beta_id]["external_id"]
+        else:
+            media_id = int(self.match.group("media_id"))
+
+        api = self._create_api()
         try:
             # the media.stream_data field is required, no stream data is returned otherwise
             info = api.get_info(media_id, fields=["media.name", "media.series_name",
@@ -320,6 +339,7 @@ class Crunchyroll(Plugin):
 
         streams = {}
 
+        self.id = media_id
         self.title = info.get("name")
         self.author = info.get("series_name")
         self.category = info.get("media_type")
@@ -352,14 +372,13 @@ class Crunchyroll(Plugin):
         return streams
 
     def _create_api(self):
-        """Creates a new CrunchyrollAPI object, initiates it's session and
+        """Creates a new CrunchyrollAPI object, initiates its session and
         tries to authenticate it either by using saved credentials or the
         user's username and password.
         """
         if self.options.get("purge_credentials"):
-            self.cache.set("session_id", None, 0)
-            self.cache.set("auth", None, 0)
-            self.cache.set("session_id", None, 0)
+            self.cache.set("device_id", None, expires=0)
+            self.cache.set("auth", None, expires=0)
 
         # use the crunchyroll locale as an override, for backwards compatibility
         locale = self.get_option("locale") or self.session.localization.language_code
