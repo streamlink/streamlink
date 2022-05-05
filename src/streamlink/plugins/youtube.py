@@ -1,5 +1,5 @@
 """
-$description Global live streaming and video hosting social platform owned by Google.
+$description Global live-streaming and video hosting social platform owned by Google.
 $url youtube.com
 $url youtu.be
 $type live, vod
@@ -9,7 +9,6 @@ $notes Protected videos are not supported
 import json
 import logging
 import re
-from html import unescape
 from urllib.parse import urlparse, urlunparse
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
@@ -115,7 +114,18 @@ class YouTube(Plugin):
     def _schema_consent(data):
         schema_consent = validate.Schema(
             validate.parse_html(),
-            validate.xml_findall(".//input[@type='hidden']")
+            validate.any(
+                validate.xml_find(".//form[@action='https://consent.youtube.com/s']"),
+                validate.all(
+                    validate.xml_xpath(".//form[@action='https://consent.youtube.com/save']"),
+                    validate.filter(lambda elem: elem.xpath(".//input[@type='hidden'][@name='set_ytc'][@value='true']")),
+                    validate.get(0),
+                )
+            ),
+            validate.union((
+                validate.get("action"),
+                validate.xml_xpath(".//input[@type='hidden']"),
+            )),
         )
         return schema_consent.validate(data)
 
@@ -253,12 +263,14 @@ class YouTube(Plugin):
     def _get_res(self, url):
         res = self.session.http.get(url)
         if urlparse(res.url).netloc == "consent.youtube.com":
+            target, elems = self._schema_consent(res.text)
             c_data = {
-                elem.attrib.get("name"): unescape(elem.attrib.get("value"))
-                for elem in self._schema_consent(res.text)
+                elem.attrib.get("name"): elem.attrib.get("value")
+                for elem in elems
             }
-            log.debug(f"c_data_keys: {', '.join(c_data.keys())}")
-            res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
+            log.debug(f"consent target: {target}")
+            log.debug(f"consent data: {', '.join(c_data.keys())}")
+            res = self.session.http.post(target, data=c_data)
         return res
 
     @staticmethod
