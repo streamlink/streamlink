@@ -29,7 +29,8 @@ _url_re = re.compile(
     douyu.com/
     (?:
         show/(?P<vid>[^/&?]+)|
-        (?P<roomid>\d+)
+        (?P<roomid>\d+)|
+        topic/\w+\?rid=(?P<rid>\d+)
     )
 """, re.VERBOSE)
 
@@ -215,7 +216,7 @@ class Douyutv(Plugin):
 
         # 以https://www.douyu.com/90016为例, url后缀数字为90016, 但对应roomid为532152
         # https://www.douyu.com/99999999 符合正则匹配, 但是却无效
-        room_id = Douyutv.__valid_address(html.text, r'room_id ?=(\d*);', int)
+        room_id = Douyutv.__valid_address(html.text, r'room_id ?= ?(\d*);', int)
         if not room_id:
             self.logger.warn(
                 "{target} is recognized by Douyutv, but is not valid.".format(
