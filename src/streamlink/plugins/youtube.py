@@ -1,5 +1,5 @@
 """
-$description Global live streaming and video hosting social platform owned by Google.
+$description Global live-streaming and video hosting social platform owned by Google.
 $url youtube.com
 $url youtu.be
 $type live, vod
@@ -12,7 +12,7 @@ import json
 import logging
 import re
 
-from streamlink.compat import html_unescape as unescape, urlparse, urlunparse
+from streamlink.compat import urlparse, urlunparse
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate
 from streamlink.stream.ffmpegmux import MuxedStream
@@ -119,7 +119,18 @@ class YouTube(Plugin):
     def _schema_consent(data):
         schema_consent = validate.Schema(
             validate.parse_html(),
-            validate.xml_findall(".//input[@type='hidden']")
+            validate.any(
+                validate.xml_find(".//form[@action='https://consent.youtube.com/s']"),
+                validate.all(
+                    validate.xml_xpath(".//form[@action='https://consent.youtube.com/save']"),
+                    validate.filter(lambda elem: elem.xpath(".//input[@type='hidden'][@name='set_ytc'][@value='true']")),
+                    validate.get(0),
+                )
+            ),
+            validate.union((
+                validate.get("action"),
+                validate.xml_xpath(".//input[@type='hidden']"),
+            )),
         )
         return schema_consent.validate(data)
 
@@ -263,12 +274,14 @@ class YouTube(Plugin):
     def _get_res(self, url):
         res = self.session.http.get(url)
         if urlparse(res.url).netloc == "consent.youtube.com":
+            target, elems = self._schema_consent(res.text)
             c_data = {
-                elem.attrib.get("name"): unescape(elem.attrib.get("value"))
-                for elem in self._schema_consent(res.text)
+                elem.attrib.get("name"): elem.attrib.get("value")
+                for elem in elems
             }
-            log.debug("c_data_keys: {}".format(', '.join(c_data.keys())))
-            res = self.session.http.post("https://consent.youtube.com/s", data=c_data)
+            log.debug("consent target: {0}".form(target))
+            log.debug("consent data: {0}".format(', '.join(c_data.keys())))
+            res = self.session.http.post(target, data=c_data)
             consent = self.session.http.cookies.get('CONSENT', domain='.youtube.com')
             if 'YES' in consent:
                 self.cache.set("consent_ck", consent)
