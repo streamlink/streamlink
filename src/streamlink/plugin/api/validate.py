@@ -16,6 +16,7 @@
 """
 
 
+from collections import abc
 from copy import copy as copy_obj
 from functools import singledispatch
 from re import Match
@@ -327,16 +328,18 @@ def parse_qsd(*args, **kwargs):
 
 @singledispatch
 def validate(schema, value):
-    if callable(schema):
-        if schema(value):
-            return value
-        else:
-            raise ValueError("{0}({1!r}) is not true".format(schema.__name__, value))
+    if schema != value:
+        raise ValueError(f"{value!r} does not equal {schema!r}")
 
-    if schema == value:
-        return value
-    else:
-        raise ValueError("{0!r} does not equal {1!r}".format(value, schema))
+    return value
+
+
+@validate.register(abc.Callable)
+def validate_callable(schema: abc.Callable, value):
+    if not schema(value):
+        raise ValueError(f"{schema.__name__}({value!r}) is not true")
+
+    return value
 
 
 @validate.register(any)
@@ -386,7 +389,7 @@ def validate_getitem(schema: get, value):
 
 @validate.register(transform)
 def validate_transform(schema: transform, value):
-    validate(callable, schema.func)
+    validate(abc.Callable, schema.func)
     return schema.func(value, *schema.args, **schema.kwargs)
 
 
