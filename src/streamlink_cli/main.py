@@ -1073,6 +1073,10 @@ def main():
                 try:
                     log.info("Closing currently open stream...")
                     stream_fd.close()
+                    try:
+                        stream_fd.final_wait()
+                    except AttributeError:
+                        pass
                 except KeyboardInterrupt:
                     error_code = 130
     else:

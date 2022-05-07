@@ -228,6 +228,10 @@ class SegmentedStreamReader(StreamIO):
         self.writer.close()
         self.buffer.close()
 
+    def final_wait(self):
+        self.writer.join()
+        self.worker.join()
+
     def read(self, size):
         return self.buffer.read(
             size,
