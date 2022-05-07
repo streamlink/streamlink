@@ -425,7 +425,7 @@ class TestCLIMainOutputStream(unittest.TestCase):
 
 class _TestCLIMainLogging(unittest.TestCase):
     @classmethod
-    def subject(cls, argv):
+    def subject(cls, argv, **kwargs):
         session = Streamlink()
         session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
 
@@ -433,7 +433,8 @@ class _TestCLIMainLogging(unittest.TestCase):
         class StopTest(Exception):
             pass
 
-        with patch("streamlink_cli.main.streamlink", session), \
+        with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=kwargs.get("euid", 1000))), \
+             patch("streamlink_cli.main.streamlink", session), \
              patch("streamlink_cli.main.setup_signals", side_effect=StopTest), \
              patch("streamlink_cli.main.CONFIG_FILES", ["/dev/null"]), \
              patch("streamlink_cli.main.setup_streamlink"), \
@@ -566,9 +567,8 @@ class TestCLIMainLoggingStreams(_TestCLIMainLogging):
 class TestCLIMainLogging(_TestCLIMainLogging):
     @unittest.skipIf(is_win32, "test only applicable on a POSIX OS")
     @patch("streamlink_cli.main.log")
-    @patch("streamlink_cli.main.os.geteuid", Mock(return_value=0))
     def test_log_root_warning(self, mock_log):
-        self.subject(["streamlink"])
+        self.subject(["streamlink"], euid=0)
         self.assertEqual(mock_log.info.mock_calls, [call("streamlink is running as root! Be careful!")])
 
     @patch("streamlink_cli.main.log")
@@ -670,7 +670,8 @@ class TestCLIMainPrint(unittest.TestCase):
              patch.object(Streamlink, "resolve_url_no_redirect") as mock_resolve_url_no_redirect:
             session = Streamlink()
             session.load_plugins(os.path.join(os.path.dirname(__file__), "plugin"))
-            with patch("streamlink_cli.main.streamlink", session), \
+            with patch("streamlink_cli.main.os.geteuid", create=True, new=Mock(return_value=1000)), \
+                 patch("streamlink_cli.main.streamlink", session), \
                  patch("streamlink_cli.main.CONFIG_FILES", []), \
                  patch("streamlink_cli.main.setup_streamlink"), \
                  patch("streamlink_cli.main.setup_plugins"), \
