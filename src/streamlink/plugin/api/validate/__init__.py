@@ -1,3 +1,4 @@
+from streamlink.plugin.api.validate._exception import ValidationError  # noqa: F401
 # noinspection PyPep8Naming,PyShadowingBuiltins
 from streamlink.plugin.api.validate._schemas import (  # noqa: I101, F401
     SchemaContainer,
