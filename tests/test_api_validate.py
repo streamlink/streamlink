@@ -146,7 +146,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(get(("one", "two", "invalidkey")), data) is None, "Default value is None"
         assert validate(get(("one", "two", "invalidkey"), "default"), data) == "default", "Custom default value"
 
-        with self.assertRaisesRegex(ValueError, "Object \"{'two': {'three': 'value1'}}\" does not have item \"invalidkey\""):
+        with self.assertRaisesRegex(ValueError, "Item \"invalidkey\" was not found in object \"{'two': {'three': 'value1'}}\""):
             validate(get(("one", "invalidkey", "three")), data)
         with self.assertRaisesRegex(ValueError, "'NoneType' object is not subscriptable"):
             validate(all(get("one"), get("invalidkey"), get("three")), data)
