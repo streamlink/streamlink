@@ -18,6 +18,7 @@
 
 from copy import copy as copy_obj
 from functools import singledispatch
+from re import Match
 from typing import Any, Tuple, Union
 from urllib.parse import urlparse
 
@@ -50,13 +51,6 @@ _filter = filter
 _map = map
 
 
-_re_match_attr = ("group", "groups", "groupdict", "re")
-
-
-def _is_re_match(value):
-    return _all(_hasattr(value, a) for a in _re_match_attr)
-
-
 class SchemaContainer:
     def __init__(self, schema):
         self.schema = schema
@@ -78,6 +72,21 @@ class all(SchemaContainer):
 
     def __init__(self, *schemas):
         super().__init__(schemas)
+
+
+class get:
+    """
+    Get item from input.
+
+    Unless strict is set to True, item can be a tuple of items for recursive lookups.
+    If the item is not found in the last object of a recursive lookup, return the default.
+    Handles XML elements, regex matches and anything that has __getitem__.
+    """
+
+    def __init__(self, item: Union[Any, Tuple[Any]], default: Any = None, strict: bool = False):
+        self.item = item
+        self.default = default
+        self.strict = strict
 
 
 class transform:
@@ -165,43 +174,6 @@ def contains(string):
         return True
 
     return contains_str
-
-
-def get(item: Union[Any, Tuple[Any]], default: Any = None, strict: bool = False):
-    """Get item from value (value[item]).
-
-    Unless strict is set to True, item can be a tuple of items for recursive lookups.
-
-    If the item is not found in the last object of a recursive lookup, return the default.
-
-    Handles XML elements, regex matches and anything that has __getitem__.
-    """
-
-    if type(item) is not tuple or strict:
-        item = (item,)
-
-    def getter(value):
-        idx = 0
-        try:
-            for key in item:
-                if iselement(value):
-                    value = value.attrib[key]
-                # Use .group() if this is a regex match object
-                elif _is_re_match(value):
-                    value = value.group(key)
-                else:
-                    value = value[key]
-                idx += 1
-            return value
-        except (KeyError, IndexError):
-            # only return default value on last item in nested lookup
-            if idx < len(item) - 1:
-                raise ValueError(f"Object \"{value}\" does not have item \"{key}\"")
-            return default
-        except (TypeError, AttributeError) as err:
-            raise ValueError(err)
-
-    return transform(getter)
 
 
 def getattr(attr, default=None):
@@ -386,6 +358,30 @@ def validate_all(schema, value):
         value = validate(schema, value)
 
     return value
+
+
+@validate.register(get)
+def validate_getitem(schema: get, value):
+    item = schema.item if type(schema.item) is tuple and not schema.strict else (schema.item,)
+    idx = 0
+    key = None
+    try:
+        for key in item:
+            if iselement(value):
+                value = value.attrib[key]
+            elif isinstance(value, Match):
+                value = value.group(key)
+            else:
+                value = value[key]
+            idx += 1
+        return value
+    except (KeyError, IndexError):
+        # only return default value on last item in nested lookup
+        if idx < len(item) - 1:
+            raise ValueError(f"Item \"{key}\" was not found in object \"{value}\"")
+        return schema.default
+    except (TypeError, AttributeError) as err:
+        raise ValueError(err)
 
 
 @validate.register(transform)
