@@ -3,6 +3,7 @@ from urllib.parse import urlparse
 
 from lxml.etree import iselement
 
+from streamlink.plugin.api.validate._exception import ValidationError
 from streamlink.plugin.api.validate._schemas import AllSchema, AnySchema, TransformSchema
 from streamlink.plugin.api.validate._validate import validate
 from streamlink.utils.parse import (
@@ -22,7 +23,7 @@ def validator_length(number: int) -> Callable[[str], bool]:
 
     def min_len(value):
         if not len(value) >= number:
-            raise ValueError(f"Minimum length is {number} but value is {len(value)}")
+            raise ValidationError(f"Minimum length is {number}, but value is {len(value)}", schema="length")
 
         return True
 
@@ -37,7 +38,7 @@ def validator_startswith(string: str) -> Callable[[str], bool]:
     def starts_with(value):
         validate(str, value)
         if not value.startswith(string):
-            raise ValueError(f"'{value}' does not start with '{string}'")
+            raise ValidationError(f"'{value}' does not start with '{string}'", schema="startswith")
 
         return True
 
@@ -52,7 +53,7 @@ def validator_endswith(string: str) -> Callable[[str], bool]:
     def ends_with(value):
         validate(str, value)
         if not value.endswith(string):
-            raise ValueError(f"'{value}' does not end with '{string}'")
+            raise ValidationError(f"'{value}' does not end with '{string}'", schema="endswith")
 
         return True
 
@@ -67,7 +68,7 @@ def validator_contains(string: str) -> Callable[[str], bool]:
     def contains_str(value):
         validate(str, value)
         if string not in value:
-            raise ValueError(f"'{value}' does not contain '{string}'")
+            raise ValidationError(f"'{value}' does not contain '{string}'", schema="contains")
 
         return True
 
@@ -87,16 +88,16 @@ def validator_url(**attributes) -> Callable[[str], bool]:
         validate(str, value)
         parsed = urlparse(value)
         if not parsed.netloc:
-            raise ValueError(f"'{value}' is not a valid URL")
+            raise ValidationError(f"'{value}' is not a valid URL", schema="url")
 
         for name, schema in attributes.items():
             if not hasattr(parsed, name):
-                raise ValueError(f"Invalid URL attribute '{name}'")
+                raise ValidationError(f"Invalid URL attribute '{name}'", schema="url")
 
             try:
                 validate(schema, getattr(parsed, name))
-            except ValueError as err:
-                raise ValueError(f"Unable to validate URL attribute '{name}': {err}")
+            except ValidationError as err:
+                raise ValidationError(f"Unable to validate URL attribute '{name}'", schema="url", context=err)
 
         return True
 
@@ -185,7 +186,7 @@ def validator_xml_find(xpath: str) -> TransformSchema:
         validate(iselement, value)
         value = value.find(xpath)
         if value is None:
-            raise ValueError(f"XPath '{xpath}' did not return an element")
+            raise ValidationError(f"XPath '{xpath}' did not return an element", schema="xml_find")
 
         return validate(iselement, value)
 
@@ -244,7 +245,7 @@ def validator_parse_json(*args, **kwargs) -> TransformSchema:
     Parse JSON data via the :func:`streamlink.utils.parse.parse_json` utility function.
     """
 
-    return TransformSchema(_parse_json, *args, **kwargs, exception=ValueError, schema=None)
+    return TransformSchema(_parse_json, *args, **kwargs, exception=ValidationError, schema=None)
 
 
 def validator_parse_html(*args, **kwargs) -> TransformSchema:
@@ -252,7 +253,7 @@ def validator_parse_html(*args, **kwargs) -> TransformSchema:
     Parse HTML data via the :func:`streamlink.utils.parse.parse_html` utility function.
     """
 
-    return TransformSchema(_parse_html, *args, **kwargs, exception=ValueError, schema=None)
+    return TransformSchema(_parse_html, *args, **kwargs, exception=ValidationError, schema=None)
 
 
 def validator_parse_xml(*args, **kwargs) -> TransformSchema:
@@ -260,7 +261,7 @@ def validator_parse_xml(*args, **kwargs) -> TransformSchema:
     Parse XML data via the :func:`streamlink.utils.parse.parse_xml` utility function.
     """
 
-    return TransformSchema(_parse_xml, *args, **kwargs, exception=ValueError, schema=None)
+    return TransformSchema(_parse_xml, *args, **kwargs, exception=ValidationError, schema=None)
 
 
 def validator_parse_qsd(*args, **kwargs) -> TransformSchema:
@@ -268,4 +269,4 @@ def validator_parse_qsd(*args, **kwargs) -> TransformSchema:
     Parse a query string via the :func:`streamlink.utils.parse.parse_qsd` utility function.
     """
 
-    return TransformSchema(_parse_qsd, *args, **kwargs, exception=ValueError, schema=None)
+    return TransformSchema(_parse_qsd, *args, **kwargs, exception=ValidationError, schema=None)
