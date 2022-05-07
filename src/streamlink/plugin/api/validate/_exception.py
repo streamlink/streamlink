@@ -1,11 +1,31 @@
 from textwrap import indent
+from typing import Optional, Sequence, Union
 
 
 class ValidationError(ValueError):
-    def __init__(self, *errors, schema=None, context: "ValidationError" = None):
+    MAX_LENGTH = 60
+
+    def __init__(
+        self,
+        *error: Union[str, Exception, Sequence[Union[str, Exception]]],
+        schema: Optional[Union[str, object]] = None,
+        context: Optional[Union[Exception]] = None,
+        **errkeywords
+    ):
         self.schema = schema
-        self.errors = errors
         self.context = context
+        if len(error) == 1 and type(error[0]) is str:
+            self.errors = (self._truncate(error[0], **errkeywords), )
+        else:
+            self.errors = error
+
+    def _ellipsis(self, string: str):
+        return string if len(string) <= self.MAX_LENGTH else f"<{string[:self.MAX_LENGTH - 5]}...>"
+
+    def _truncate(self, template: str, **kwargs):
+        return str(template).format(
+            **{k: self._ellipsis(str(v)) for k, v in kwargs.items()}
+        )
 
     def _get_schema_name(self) -> str:
         if not self.schema:
