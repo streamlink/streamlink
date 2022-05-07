@@ -893,7 +893,7 @@ def setup_plugin_options(session: Streamlink, plugin: Type[Plugin]):
 
 
 def log_root_warning():
-    if hasattr(os, "getuid"):
+    if hasattr(os, "geteuid"):  # pragma: no branch
         if os.geteuid() == 0:
             log.info("streamlink is running as root! Be careful!")
 
