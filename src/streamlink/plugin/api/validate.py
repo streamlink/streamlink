@@ -57,21 +57,27 @@ def _is_re_match(value):
     return _all(_hasattr(value, a) for a in _re_match_attr)
 
 
-class any(tuple):
-    """At least one of the schemas must be valid."""
-    def __new__(cls, *args):
-        return super().__new__(cls, args)
-
-
-class all(tuple):
-    """All schemas must be valid."""
-    def __new__(cls, *args):
-        return super().__new__(cls, args)
-
-
 class SchemaContainer:
     def __init__(self, schema):
         self.schema = schema
+
+
+class any(SchemaContainer):
+    """
+    Collection of schemas where at least one schema must be valid.
+    """
+
+    def __init__(self, *schemas):
+        super().__init__(schemas)
+
+
+class all(SchemaContainer):
+    """
+    Collection of schemas where every schema must be valid.
+    """
+
+    def __init__(self, *schemas):
+        super().__init__(schemas)
 
 
 class transform:
@@ -364,7 +370,7 @@ def validate(schema, value):
 @validate.register(any)
 def validate_any(schema, value):
     errors = []
-    for subschema in schema:
+    for subschema in schema.schema:
         try:
             return validate(subschema, value)
         except ValueError as err:
@@ -375,8 +381,8 @@ def validate_any(schema, value):
 
 
 @validate.register(all)
-def validate_all(schemas, value):
-    for schema in schemas:
+def validate_all(schema, value):
+    for schema in schema.schema:
         value = validate(schema, value)
 
     return value
