@@ -6,6 +6,7 @@ from re import Match
 from lxml.etree import Element, iselement
 
 from streamlink.exceptions import PluginError
+from streamlink.plugin.api.validate._exception import ValidationError
 from streamlink.plugin.api.validate._schemas import (
     AllSchema,
     AnySchema,
@@ -27,7 +28,7 @@ class Schema(AllSchema):
     def validate(self, value, name="result", exception=PluginError):
         try:
             return validate(self, value)
-        except ValueError as err:
+        except ValidationError as err:
             raise exception(f"Unable to validate {name}: {err}")
 
 
@@ -37,7 +38,7 @@ class Schema(AllSchema):
 @singledispatch
 def validate(schema, value):
     if schema != value:
-        raise ValueError(f"{value!r} does not equal {schema!r}")
+        raise ValidationError(f"{value!r} does not equal {schema!r}", schema="equality")
 
     return value
 
@@ -45,7 +46,7 @@ def validate(schema, value):
 @validate.register(type)
 def _validate_type(schema, value):
     if not isinstance(value, schema):
-        raise ValueError(f"Type of {value!r} should be '{schema.__name__}', but is '{type(value).__name__}'")
+        raise ValidationError(f"Type of {value!r} should be '{schema.__name__}', but is '{type(value).__name__}'", schema=type)
 
     return value
 
@@ -77,16 +78,24 @@ def _validate_dict(schema, value):
 
         if type(key) in (type, AllSchema, AnySchema, TransformSchema, UnionSchema):
             for subkey, subvalue in value.items():
-                new[validate(key, subkey)] = validate(subschema, subvalue)
+                try:
+                    newkey = validate(key, subkey)
+                except ValidationError as err:
+                    raise ValidationError("Unable to validate key", schema=dict, context=err)
+                try:
+                    newvalue = validate(subschema, subvalue)
+                except ValidationError as err:
+                    raise ValidationError("Unable to validate value", schema=dict, context=err)
+                new[newkey] = newvalue
             break
-        else:
-            if key not in value:
-                raise ValueError(f"Key '{key}' not found in {value!r}")
 
-            try:
-                new[key] = validate(subschema, value[key])
-            except ValueError as err:
-                raise ValueError(f"Unable to validate key '{key}': {err}")
+        if key not in value:
+            raise ValidationError(f"Key '{key}' not found in {value!r}", schema=dict)
+
+        try:
+            new[key] = validate(subschema, value[key])
+        except ValidationError as err:
+            raise ValidationError(f"Unable to validate value of key '{key}'", schema=dict, context=err)
 
     return new
 
@@ -94,7 +103,7 @@ def _validate_dict(schema, value):
 @validate.register(abc.Callable)
 def _validate_callable(schema: abc.Callable, value):
     if not schema(value):
-        raise ValueError(f"{schema.__name__}({value!r}) is not true")
+        raise ValidationError(f"{schema.__name__}({value!r}) is not true", schema=abc.Callable)
 
     return value
 
@@ -113,11 +122,10 @@ def _validate_anyschema(schema: AnySchema, value):
     for subschema in schema.schema:
         try:
             return validate(subschema, value)
-        except ValueError as err:
+        except ValidationError as err:
             errors.append(err)
-    else:
-        err = " or ".join(map(str, errors))
-        raise ValueError(err)
+
+    raise ValidationError(*errors, schema=AnySchema)
 
 
 @validate.register(TransformSchema)
@@ -144,21 +152,25 @@ def _validate_getitemschema(schema: GetItemSchema, value):
     except (KeyError, IndexError):
         # only return default value on last item in nested lookup
         if idx < len(item) - 1:
-            raise ValueError(f"Item \"{key}\" was not found in object \"{value}\"")
+            raise ValidationError(f"Item \"{key}\" was not found in object \"{value}\"", schema=GetItemSchema)
         return schema.default
     except (TypeError, AttributeError) as err:
-        raise ValueError(err)
+        raise ValidationError(f"Could not get key \"{key}\" from object \"{value}\"", schema=GetItemSchema, context=err)
 
 
 @validate.register(AttrSchema)
 def _validate_attrschema(schema: AttrSchema, value):
     new = copy(value)
 
-    for key, schema in schema.schema.items():
+    for key, subschema in schema.schema.items():
         if not hasattr(value, key):
-            raise ValueError(f"Attribute \"{key}\" not found on object \"{value}\"")
+            raise ValidationError(f"Attribute \"{key}\" not found on object \"{value}\"", schema=AttrSchema)
 
-        value = validate(schema, getattr(value, key))
+        try:
+            value = validate(subschema, getattr(value, key))
+        except ValidationError as err:
+            raise ValidationError(f"Could not validate attribute \"{key}\"", schema=AttrSchema, context=err)
+
         setattr(new, key, value)
 
     return new
@@ -175,26 +187,26 @@ def _validate_xmlelementschema(schema: XmlElementSchema, value):
     if schema.tag is not None:
         try:
             tag = validate(schema.tag, value.tag)
-        except ValueError as err:
-            raise ValueError(f"Unable to validate XML tag: {err}")
+        except ValidationError as err:
+            raise ValidationError("Unable to validate XML tag", schema=XmlElementSchema, context=err)
 
     if schema.attrib is not None:
         try:
             attrib = validate(schema.attrib, dict(value.attrib))
-        except ValueError as err:
-            raise ValueError(f"Unable to validate XML attributes: {err}")
+        except ValidationError as err:
+            raise ValidationError("Unable to validate XML attributes", schema=XmlElementSchema, context=err)
 
     if schema.text is not None:
         try:
             text = validate(schema.text, value.text)
-        except ValueError as err:
-            raise ValueError(f"Unable to validate XML text: {err}")
+        except ValidationError as err:
+            raise ValidationError("Unable to validate XML text", schema=XmlElementSchema, context=err)
 
     if schema.tail is not None:
         try:
             tail = validate(schema.tail, value.tail)
-        except ValueError as err:
-            raise ValueError(f"Unable to validate XML tail: {err}")
+        except ValidationError as err:
+            raise ValidationError("Unable to validate XML tail", schema=XmlElementSchema, context=err)
 
     new = Element(tag, attrib)
     new.text = text
@@ -214,7 +226,10 @@ def _validate_uniongetschema(schema: UnionGetSchema, value):
 
 @validate.register(UnionSchema)
 def _validate_unionschema(schema: UnionSchema, value):
-    return validate_union(schema.schema, value)
+    try:
+        return validate_union(schema.schema, value)
+    except ValidationError as err:
+        raise ValidationError("Could not validate union", schema=UnionSchema, context=err)
 
 
 # ----
@@ -223,7 +238,7 @@ def _validate_unionschema(schema: UnionSchema, value):
 # noinspection PyUnusedLocal
 @singledispatch
 def validate_union(schema, value):
-    raise ValueError(f"Invalid union type: {type(schema).__name__}")
+    raise ValidationError(f"Invalid union type: {type(schema).__name__}")
 
 
 @validate_union.register(dict)
@@ -236,11 +251,11 @@ def _validate_union_dict(schema, value):
 
         try:
             new[key] = validate(schema, value)
-        except ValueError as err:
+        except ValidationError as err:
             if is_optional:
                 continue
 
-            raise ValueError(f"Unable to validate union '{key}': {err}")
+            raise ValidationError(f"Unable to validate union \"{key}\"", schema=dict, context=err)
 
     return new
 
