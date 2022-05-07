@@ -4,9 +4,11 @@ import unittest
 from lxml.etree import Element
 
 from streamlink.plugin.api.validate import (
+    Schema,
     all,
     any,
     attr,
+    contains,
     endswith,
     filter,
     get,
@@ -35,30 +37,76 @@ from streamlink.plugin.api.validate import (
 )
 
 
+def test_text_is_str():
+    assert text is str, "Exports text as str alias for backwards compatiblity"
+
+
 class TestPluginAPIValidate(unittest.TestCase):
     def test_basic(self):
         assert validate(1, 1) == 1
 
         assert validate(int, 1) == 1
 
-        assert validate(text, "abc") == "abc"
-        assert validate(text, "日本語") == "日本語"
+        assert validate(str, "abc") == "abc"
+        assert validate(str, "日本語") == "日本語"
 
         assert validate(list, ["a", 1]) == ["a", 1]
         assert validate(dict, {"a": 1}) == {"a": 1}
 
         assert validate(lambda n: 0 < n < 5, 3) == 3
 
+    def test_schema(self):
+        assert validate(
+            Schema(
+                int,
+                lambda n: n > 0,
+                Schema(int, lambda n: n < 2)
+            ),
+            1
+        ) == 1
+
+    def test_type(self):
+        class A:
+            def __repr__(self):
+                return self.__class__.__name__.lower()
+
+        class B(A):
+            pass
+
+        a = A()
+        b = B()
+        assert validate(A, b) is b
+
+        with self.assertRaises(ValueError) as cm:
+            validate(B, a)
+        assert str(cm.exception) == "Type of a should be 'B', but is 'A'"
+
+    def test_callable(self):
+        def check(n):
+            return n > 0
+
+        assert validate(check, 1)
+
+        with self.assertRaises(ValueError) as cm:
+            validate(check, 0)
+        assert str(cm.exception) == "check(0) is not true"
+
     def test_all(self):
         assert validate(all(int, lambda n: 0 < n < 5), 3) == 3
 
         assert validate(all(transform(int), lambda n: 0 < n < 5), 3.33) == 3
+
+        with self.assertRaises(ValueError):
+            validate(all(int, float), 123)
 
     def test_any(self):
         assert validate(any(int, dict), 5) == 5
         assert validate(any(int, dict), {}) == {}
 
         assert validate(any(int), 4) == 4
+
+        with self.assertRaises(ValueError):
+            validate(any(int, float), "123")
 
     def test_transform(self):
         assert validate(transform(int), "1") == 1
@@ -104,13 +152,13 @@ class TestPluginAPIValidate(unittest.TestCase):
                         {"n": 5, "f": 3.14}) == {"n": 5, "f": 3.14}
 
     def test_dict_keys(self):
-        assert validate({text: int},
+        assert validate({str: int},
                         {"a": 1, "b": 2}) == {"a": 1, "b": 2}
-        assert validate({transform(text): transform(int)},
+        assert validate({transform(str): transform(int)},
                         {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
 
     def test_nested_dict_keys(self):
-        assert validate({text: {text: int}},
+        assert validate({str: {str: int}},
                         {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
 
     def test_dict_optional_keys(self):
@@ -267,7 +315,11 @@ class TestPluginAPIValidate(unittest.TestCase):
         el = Element("foo")
         el.text = "bar"
 
-        assert validate(attr({"text": text}), el).text == "bar"
+        assert validate(attr({"text": str}), el).text == "bar"
+
+        with self.assertRaises(ValueError) as cm:
+            validate(attr({"foo": str}), {"bar": "baz"})
+        assert str(cm.exception) == "Attribute \"foo\" not found on object \"{'bar': 'baz'}\""
 
     def test_url(self):
         url_ = "https://google.se/path"
@@ -276,11 +328,38 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(url(scheme="http"), url_)
         assert validate(url(path="/path"), url_)
 
+        with self.assertRaises(ValueError) as cm:
+            validate(url(), "foo")
+        assert str(cm.exception) == "'foo' is not a valid URL"
+
+        with self.assertRaises(ValueError) as cm:
+            validate(url(foo="bar"), "https://foo")
+        assert str(cm.exception) == "Invalid URL attribute 'foo'"
+
+        with self.assertRaises(ValueError) as cm:
+            validate(url(path=endswith(".m3u8")), "https://foo/bar.mpd")
+        assert str(cm.exception) == "Unable to validate URL attribute 'path': '/bar.mpd' does not end with '.m3u8'"
+
     def test_startswith(self):
         assert validate(startswith("abc"), "abcedf")
 
+        with self.assertRaises(ValueError) as cm:
+            validate(startswith("bar"), "foo")
+        assert str(cm.exception) == "'foo' does not start with 'bar'"
+
     def test_endswith(self):
         assert validate(endswith("åäö"), "xyzåäö")
+
+        with self.assertRaises(ValueError) as cm:
+            validate(endswith("bar"), "foo")
+        assert str(cm.exception) == "'foo' does not end with 'bar'"
+
+    def test_contains(self):
+        assert validate(contains("foo"), "foobar")
+
+        with self.assertRaises(ValueError) as cm:
+            validate(contains("bar"), "foo")
+        assert str(cm.exception) == "'foo' does not contain 'bar'"
 
     def test_parse_json(self):
         assert validate(parse_json(), '{"a": ["b", true, false, null, 1, 2.3]}') == {"a": ["b", True, False, None, 1, 2.3]}
