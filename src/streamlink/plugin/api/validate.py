@@ -15,7 +15,7 @@
 
 """
 
-from copy import copy as copy_obj
+from copy import copy, deepcopy
 try:
     from typing import Any, Tuple, Union
 except ImportError:
@@ -116,13 +116,16 @@ class union_get(object):
         self.seq = kw.get("seq", tuple)
 
 
-class xml_element(object):
-    """A XML element."""
+class xml_element:
+    """
+    Validate an XML element.
+    """
 
-    def __init__(self, tag=None, text=None, attrib=None):
+    def __init__(self, tag=None, text=None, attrib=None, tail=None):
         self.tag = tag
         self.text = text
         self.attrib = attrib
+        self.tail = tail
 
 
 # ----
@@ -466,6 +469,7 @@ def validate_xml_element(schema, value):
     _tag = value.tag
     _attrib = value.attrib
     _text = value.text
+    _tail = value.tail
 
     if schema.attrib is not None:
         try:
@@ -485,17 +489,24 @@ def validate_xml_element(schema, value):
         except ValueError as err:
             raise ValueError("Unable to validate XML text: {0}".format(err))
 
+    if schema.tail is not None:
+        try:
+            _tail = validate(schema.tail, value.tail)
+        except ValueError as err:
+            raise ValueError("Unable to validate XML text: {0}".format(err))
+
     new = Element(_tag, _attrib)
     new.text = _text
+    new.tail = _tail
     for child in value:
-        new.append(child)
+        new.append(deepcopy(child))
 
     return new
 
 
 @validate.register(attr)
 def validate_attr(schema, value):
-    new = copy_obj(value)
+    new = copy(value)
 
     for attr, schema in schema.schema.items():
         if not _hasattr(value, attr):

@@ -191,10 +191,14 @@ class TestPluginAPIValidate(unittest.TestCase):
         upper = transform(str.upper)
         newelem = validate(xml_element(tag=upper, text=upper, attrib={upper: upper}), el)
 
+        assert newelem is not el
         assert newelem.tag == "TAG"
         assert newelem.text == "TEST"
         assert newelem.attrib == {"KEY": "VALUE"}
-        assert list(newelem.iterchildren()) == [childA, childB]
+        assert newelem[0].tag == "childA"
+        assert newelem[1].tag == "childB"
+        assert newelem[0] is not childA
+        assert newelem[1] is not childB
 
         with self.assertRaises(ValueError) as cm:
             validate(xml_element(tag="invalid"), el)
