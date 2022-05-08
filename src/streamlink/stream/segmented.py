@@ -2,7 +2,7 @@ import logging
 from concurrent import futures
 from concurrent.futures.thread import ThreadPoolExecutor
 from sys import version_info
-from threading import Event, Thread
+from threading import Event, Thread, current_thread
 
 from streamlink.buffers import RingBuffer
 from streamlink.compat import queue
@@ -221,6 +221,12 @@ class SegmentedStreamReader(StreamIO):
         self.worker.close()
         self.writer.close()
         self.buffer.close()
+
+        current = current_thread()
+        if current is not self.worker:  # pragma: no branch
+            self.worker.join(timeout=self.timeout)
+        if current is not self.writer:  # pragma: no branch
+            self.writer.join(timeout=self.timeout)
 
     def read(self, size):
         if not self.buffer:
