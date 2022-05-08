@@ -279,7 +279,7 @@ class YouTube(Plugin):
                 elem.attrib.get("name"): elem.attrib.get("value")
                 for elem in elems
             }
-            log.debug("consent target: {0}".form(target))
+            log.debug("consent target: {0}".format(target))
             log.debug("consent data: {0}".format(', '.join(c_data.keys())))
             res = self.session.http.post(target, data=c_data)
             consent = self.session.http.cookies.get('CONSENT', domain='.youtube.com')
