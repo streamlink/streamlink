@@ -81,7 +81,7 @@ class all(SchemaContainer):
         super(all, self).__init__(schemas)
 
 
-class get:
+class get(object):
     """
     Get item from input.
 
@@ -132,7 +132,7 @@ class union_get(object):
         self.seq = kw.get("seq", tuple)
 
 
-class xml_element:
+class xml_element(object):
     """
     Validate an XML element.
     """
@@ -567,19 +567,13 @@ def validate_unions(schema, value):
     return validate_union(schema.schema, value)
 
 
-class Schema(object):
-    """Wraps a validator schema into a object."""
-
-    def __init__(self, *schemas):
-        self.schema = all(*schemas)
+class Schema(all):
+    """
+    Wrapper class for :class:`all` with a validate method which raises :class:`PluginError` by default on error.
+    """
 
     def validate(self, value, name="result", exception=PluginError):
         try:
-            return validate(self.schema, value)
+            return validate(self, value)
         except ValueError as err:
             raise exception("Unable to validate {0}: {1}".format(name, err))
-
-
-@validate.register(Schema)
-def validate_schema(schema, value):
-    return schema.validate(value, exception=ValueError)
