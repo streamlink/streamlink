@@ -15,6 +15,10 @@
 
 """
 
+try:
+    from collections.abc import Callable
+except ImportError:
+    from typing import Callable
 from copy import copy, deepcopy
 from typing import Any, Match, Tuple, Union
 
@@ -349,16 +353,19 @@ def parse_qsd(*args, **kwargs):
 
 @singledispatch
 def validate(schema, value):
-    if callable(schema):
-        if schema(value):
-            return value
-        else:
-            raise ValueError("{0}({1!r}) is not true".format(schema.__name__, value))
-
-    if schema == value:
-        return value
-    else:
+    if schema != value:
         raise ValueError("{0!r} does not equal {1!r}".format(value, schema))
+
+    return value
+
+
+@validate.register(Callable)
+def validate_callable(schema, value):
+    # type: (Callable)
+    if not schema(value):
+        raise ValueError("{0}({1!r}) is not true".format(schema.__name__, value))
+
+    return value
 
 
 @validate.register(any)
@@ -410,7 +417,7 @@ def validate_getitem(schema, value):
 @validate.register(transform)
 def validate_transform(schema, value):
     # type: (transform)
-    validate(callable, schema.func)
+    validate(Callable, schema.func)
     return schema.func(value, *schema.args, **schema.kwargs)
 
 
