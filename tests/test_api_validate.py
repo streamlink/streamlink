@@ -146,7 +146,7 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(get(("one", "two", "invalidkey"), "default"), data) == "default", "Custom default value"
 
         with six.assertRaisesRegex(
-            self, ValueError, "Object \"{'two': {'three': 'value1'}}\" does not have item \"invalidkey\""
+            self, ValueError, "Item \"invalidkey\" was not found in object \"{'two': {'three': 'value1'}}\""
         ):
             validate(get(("one", "invalidkey", "three")), data)
         if six.PY2:

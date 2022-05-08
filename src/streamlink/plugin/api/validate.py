@@ -16,10 +16,7 @@
 """
 
 from copy import copy, deepcopy
-try:
-    from typing import Any, Tuple, Union
-except ImportError:
-    pass
+from typing import Any, Match, Tuple, Union
 
 from lxml.etree import Element, iselement
 
@@ -57,13 +54,6 @@ _filter = filter
 _map = map
 
 
-_re_match_attr = ("group", "groups", "groupdict", "re")
-
-
-def _is_re_match(value):
-    return _all(_hasattr(value, a) for a in _re_match_attr)
-
-
 class SchemaContainer(object):
     def __init__(self, schema):
         self.schema = schema
@@ -85,6 +75,22 @@ class all(SchemaContainer):
 
     def __init__(self, *schemas):
         super(all, self).__init__(schemas)
+
+
+class get:
+    """
+    Get item from input.
+
+    Unless strict is set to True, item can be a tuple of items for recursive lookups.
+    If the item is not found in the last object of a recursive lookup, return the default.
+    Handles XML elements, regex matches and anything that has __getitem__.
+    """
+
+    def __init__(self, item, default=None, strict=False):
+        # type: (Union[Any, Tuple[Any]], Any, bool)
+        self.item = item
+        self.default = default
+        self.strict = strict
 
 
 class transform(object):
@@ -180,44 +186,6 @@ def contains(string):
         return True
 
     return contains_str
-
-
-def get(item, default=None, strict=False):
-    # type: (Union[Any, Tuple[Any]], Any, bool)
-    """Get item from value (value[item]).
-
-    Unless strict is set to True, item can be a tuple of items for recursive lookups.
-
-    If the item is not found in the last object of a recursive lookup, return the default.
-
-    Handles XML elements, regex matches and anything that has __getitem__.
-    """
-
-    if type(item) is not tuple or strict:
-        item = (item,)
-
-    def getter(value):
-        idx = 0
-        try:
-            for key in item:
-                if iselement(value):
-                    value = value.attrib[key]
-                # Use .group() if this is a regex match object
-                elif _is_re_match(value):
-                    value = value.group(key)
-                else:
-                    value = value[key]
-                idx += 1
-            return value
-        except (KeyError, IndexError):
-            # only return default value on last item in nested lookup
-            if idx < len(item) - 1:
-                raise ValueError("Object \"{0}\" does not have item \"{1}\"".format(value, key))
-            return default
-        except (TypeError, AttributeError) as err:
-            raise ValueError(err)
-
-    return transform(getter)
 
 
 def getattr(attr, default=None):
@@ -412,6 +380,31 @@ def validate_all(schema, value):
         value = validate(schema, value)
 
     return value
+
+
+@validate.register(get)
+def validate_getitem(schema, value):
+    # type: (get,)
+    item = schema.item if type(schema.item) is tuple and not schema.strict else (schema.item,)
+    idx = 0
+    key = None
+    try:
+        for key in item:
+            if iselement(value):
+                value = value.attrib[key]
+            elif isinstance(value, Match):
+                value = value.group(key)
+            else:
+                value = value[key]
+            idx += 1
+        return value
+    except (KeyError, IndexError):
+        # only return default value on last item in nested lookup
+        if idx < len(item) - 1:
+            raise ValueError("Item \"{0}\" was not found in object \"{1}\"".format(key, value))
+        return schema.default
+    except (TypeError, AttributeError) as err:
+        raise ValueError(err)
 
 
 @validate.register(transform)
