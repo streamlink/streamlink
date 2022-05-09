@@ -1,15 +1,19 @@
 # -*- coding: utf-8 -*-
 import re
 import unittest
+from textwrap import dedent
 
 import six
 from lxml.etree import Element
 
 from streamlink.compat import is_py2
 from streamlink.plugin.api.validate import (
+    Schema,
+    ValidationError,
     all,
     any,
     attr,
+    contains,
     endswith,
     filter,
     get,
@@ -38,6 +42,14 @@ from streamlink.plugin.api.validate import (
 )
 
 
+def assert_validationerror(exception, expected):
+    assert str(exception) == dedent(expected).strip("\n")
+
+
+def test_text_is_str():
+    assert text is text, "Exports text as str alias for backwards compatiblity"
+
+
 class TestPluginAPIValidate(unittest.TestCase):
     def test_basic(self):
         assert validate(1, 1) == 1
@@ -45,17 +57,66 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(int, 1) == 1
 
         assert validate(text, "abc") == "abc"
-        assert validate(text, u"日本語") == u"日本語"
+        assert validate(text, "日本語") == "日本語"
 
         assert validate(list, ["a", 1]) == ["a", 1]
         assert validate(dict, {"a": 1}) == {"a": 1}
 
         assert validate(lambda n: 0 < n < 5, 3) == 3
 
+    def test_schema(self):
+        assert validate(
+            Schema(
+                int,
+                lambda n: n > 0,
+                Schema(int, lambda n: n < 2)
+            ),
+            1
+        ) == 1
+
+    def test_type(self):
+        class A(object):
+            def __repr__(self):
+                return self.__class__.__name__.lower()
+
+        class B(A):
+            pass
+
+        a = A()
+        b = B()
+        assert validate(A, b) is b
+
+        with self.assertRaises(ValueError) as cm:
+            validate(B, a)
+            assert_validationerror(cm.exception, """
+                ValidationError(type):
+                  Type of a should be 'B', but is 'A'
+            """)
+
+    def test_callable(self):
+        def check(n):
+            return n > 0
+
+        assert validate(check, 1)
+
+        with self.assertRaises(ValueError) as cm:
+            validate(check, 0)
+            assert_validationerror(cm.exception, """
+                ValidationError(Callable):
+                  check(0) is not true
+            """)
+
     def test_all(self):
         assert validate(all(int, lambda n: 0 < n < 5), 3) == 3
 
         assert validate(all(transform(int), lambda n: 0 < n < 5), 3.33) == 3
+
+        with self.assertRaises(ValueError) as cm:
+            validate(all(int, float), 123)
+            assert_validationerror(cm.exception, """
+                ValidationError(type):
+                  Type of 123 should be 'float', but is 'int'
+            """)
 
     def test_any(self):
         assert validate(any(int, dict), 5) == 5
@@ -63,9 +124,19 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(any(int), 4) == 4
 
+        with self.assertRaises(ValueError) as cm:
+            validate(any(int, float), "123")
+            assert_validationerror(cm.exception, """
+                ValidationError(AnySchema):
+                  ValidationError(type):
+                    Type of '123' should be 'int', but is 'str'
+                  ValidationError(type):
+                    Type of '123' should be 'float', but is 'str'
+            """)
+
     def test_transform(self):
         assert validate(transform(int), "1") == 1
-        assert validate(transform(str), 1) == "1"
+        assert validate(transform(text), 1) == "1"
         assert validate(
             transform(
                 lambda value, *args, **kwargs: "{0}{1}{2}".format(value, args, kwargs),
@@ -105,11 +176,14 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate({"n": int, "f": float}, {"n": 5, "f": 3.14}) == {"n": 5, "f": 3.14}
 
     def test_dict_keys(self):
-        assert validate({text: int}, {"a": 1, "b": 2}) == {"a": 1, "b": 2}
-        assert validate({transform(text): transform(int)}, {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
+        assert validate({text: int},
+                        {"a": 1, "b": 2}) == {"a": 1, "b": 2}
+        assert validate({transform(text): transform(int)},
+                        {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
 
     def test_nested_dict_keys(self):
-        assert validate({text: {text: int}}, {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
+        assert validate({text: {text: int}},
+                        {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
 
     def test_dict_optional_keys(self):
         assert validate({"a": 1, optional("b"): 2}, {"a": 1}) == {"a": 1}
@@ -132,12 +206,22 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(get(3, "default"), [0, 1, 2]) == "default"
         assert validate(get("attr"), Element("foo", {"attr": "value"})) == "value"
 
-        if six.PY2:
-            with six.assertRaisesRegex(self, ValueError, "'NoneType' object has no attribute '__getitem__'"):
-                validate(get("key"), None)
-        else:
-            with six.assertRaisesRegex(self, ValueError, "'NoneType' object is not subscriptable"):
-                validate(get("key"), None)
+        with self.assertRaises(ValueError) as cm:
+            validate(get("key"), None)
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError(GetItemSchema):
+                      Could not get key "key" from object "None"
+                      Context:
+                        'NoneType' object has no attribute \'__getitem__\'
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError(GetItemSchema):
+                    Could not get key "key" from object "None"
+                    Context:
+                      'NoneType' object is not subscriptable
+                """)
 
         data = {"one": {"two": {"three": "value1"}}, ("one", "two", "three"): "value2"}
         assert validate(get(("one", "two", "three")), data) == "value1", "Recursive lookup"
@@ -145,16 +229,29 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(get(("one", "two", "invalidkey")), data) is None, "Default value is None"
         assert validate(get(("one", "two", "invalidkey"), "default"), data) == "default", "Custom default value"
 
-        with six.assertRaisesRegex(
-            self, ValueError, "Item \"invalidkey\" was not found in object \"{'two': {'three': 'value1'}}\""
-        ):
+        with self.assertRaises(ValueError) as cm:
             validate(get(("one", "invalidkey", "three")), data)
-        if six.PY2:
-            with six.assertRaisesRegex(self, ValueError, "'NoneType' object has no attribute '__getitem__'"):
-                validate(all(get("one"), get("invalidkey"), get("three")), data)
-        else:
-            with six.assertRaisesRegex(self, ValueError, "'NoneType' object is not subscriptable"):
-                validate(all(get("one"), get("invalidkey"), get("three")), data)
+            assert_validationerror(cm.exception, """
+                ValidationError(GetItemSchema):
+                  Item "invalidkey" was not found in object "{'two': {'three': 'value1'}}"
+            """)
+
+        with self.assertRaises(ValueError) as cm:
+            validate(all(get("one"), get("invalidkey"), get("three")), data)
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError(GetItemSchema):
+                      Could not get key "three" from object "None"
+                      Context:
+                        'NoneType' object has no attribute \'__getitem__\'
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError(GetItemSchema):
+                    Could not get key "three" from object "None"
+                    Context:
+                        'NoneType' object is not subscriptable
+                """)
 
     def test_get_re(self):
         m = re.match(r"(\d+)p", "720p")
@@ -182,7 +279,7 @@ class TestPluginAPIValidate(unittest.TestCase):
     def test_xml_element(self):
         el = Element("tag")
         el.set("key", "value")
-        el.text = "test"
+        el.text = "text"
         childA = Element("childA")
         childB = Element("childB")
         el.append(childA)
@@ -193,7 +290,7 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert newelem is not el
         assert newelem.tag == "TAG"
-        assert newelem.text == "TEST"
+        assert newelem.text == "TEXT"
         assert newelem.attrib == {"KEY": "VALUE"}
         assert newelem[0].tag == "childA"
         assert newelem[1].tag == "childB"
@@ -202,15 +299,48 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             validate(xml_element(tag="invalid"), el)
-        assert str(cm.exception).startswith("Unable to validate XML tag: ")
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError(XmlElementSchema):
+                      Unable to validate XML tag
+                      Context(equality):
+                        'tag' does not equal 'invalid'
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError(XmlElementSchema):
+                      Unable to validate XML tag
+                      Context(equality):
+                        'tag' does not equal 'invalid'
+                """)
 
         with self.assertRaises(ValueError) as cm:
             validate(xml_element(text="invalid"), el)
-        assert str(cm.exception).startswith("Unable to validate XML text: ")
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError(XmlElementSchema):
+                    Unable to validate XML tag
+                    Context(equality):
+                        'tag' does not equal 'invalid'
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError(XmlElementSchema):
+                    Unable to validate XML text
+                    Context(equality):
+                        'text' does not equal 'invalid'
+                """)
 
         with self.assertRaises(ValueError) as cm:
             validate(xml_element(attrib={"key": "invalid"}), el)
-        assert str(cm.exception).startswith("Unable to validate XML attributes: ")
+            assert_validationerror(cm.exception, """
+                ValidationError(XmlElementSchema):
+                  Unable to validate XML attributes
+                  Context(dict):
+                    Unable to validate value of key 'key'
+                    Context(equality):
+                      'value' does not equal 'invalid'
+            """)
 
     def test_xml_find(self):
         el = Element("parent")
@@ -221,7 +351,10 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         with self.assertRaises(ValueError) as cm:
             validate(xml_find("baz"), el)
-        assert str(cm.exception) == "XPath 'baz' did not return an element"
+            assert_validationerror(cm.exception, """
+                ValidationError(xml_find):
+                  XPath 'baz' did not return an element
+            """)
 
     def test_xml_findtext(self):
         el = Element("foo")
@@ -274,6 +407,13 @@ class TestPluginAPIValidate(unittest.TestCase):
 
         assert validate(attr({"text": text}), el).text == "bar"
 
+        with self.assertRaises(ValueError) as cm:
+            validate(attr({"foo": text}), {"bar": "baz"})
+            assert_validationerror(cm.exception, """
+                ValidationError(AttrSchema):
+                  Attribute "foo" not found on object "{'bar': 'baz'}"
+            """)
+
     def test_url(self):
         url_ = "https://google.se/path"
 
@@ -281,38 +421,241 @@ class TestPluginAPIValidate(unittest.TestCase):
         assert validate(url(scheme="http"), url_)
         assert validate(url(path="/path"), url_)
 
+        with self.assertRaises(ValueError) as cm:
+            validate(url(), "foo")
+            assert_validationerror(cm.exception, """
+                ValidationError:
+                  'foo' is not a valid URL
+            """)
+
+        with self.assertRaises(ValueError) as cm:
+            validate(url(foo="bar"), "https://foo")
+            assert_validationerror(cm.exception, """
+                ValidationError(url):
+                  Invalid URL attribute 'foo'
+            """)
+
+        with self.assertRaises(ValueError) as cm:
+            validate(url(path=endswith(".m3u8")), "https://foo/bar.mpd")
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError(url):
+                      Unable to validate URL attribute 'path'
+                      Context(endswith):
+                        '/bar.mpd' does not end with '.m3u8'
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError(url):
+                    Unable to validate URL attribute 'path'
+                    Context(endswith):
+                        '/bar.mpd' does not end with '.m3u8'
+                """)
+
     def test_startswith(self):
         assert validate(startswith("abc"), "abcedf")
 
+        with self.assertRaises(ValueError) as cm:
+            validate(startswith("bar"), "foo")
+            assert_validationerror(cm.exception, """
+                ValidationError(startswith):
+                  'foo' does not start with 'bar'
+            """)
+
     def test_endswith(self):
-        assert validate(endswith(u"åäö"), u"xyzåäö")
+        assert validate(endswith("åäö"), "xyzåäö")
+
+        with self.assertRaises(ValueError) as cm:
+            validate(endswith("bar"), "foo")
+            assert_validationerror(cm.exception, """
+                ValidationError(endswith):
+                  'foo' does not end with 'bar'
+            """)
+
+    def test_contains(self):
+        assert validate(contains("foo"), "foobar")
+
+        with self.assertRaises(ValueError) as cm:
+            validate(contains("bar"), "foo")
+            assert_validationerror(cm.exception, """
+                ValidationError(contains):
+                  'foo' does not contain 'bar'
+            """)
 
     def test_parse_json(self):
         assert validate(parse_json(), '{"a": ["b", true, false, null, 1, 2.3]}') == {"a": ["b", True, False, None, 1, 2.3]}
         with self.assertRaises(ValueError) as cm:
             validate(parse_json(), "invalid")
-        if is_py2:
-            assert str(cm.exception) == "Unable to parse JSON: No JSON object could be decoded ('invalid')"
-        else:
-            assert str(cm.exception) == "Unable to parse JSON: Expecting value: line 1 column 1 (char 0) ('invalid')"
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError:
+                      Unable to parse JSON: No JSON object could be decoded ('invalid')
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError:
+                    Unable to parse JSON: Expecting value: line 1 column 1 (char 0) ('invalid')
+                """)
 
     def test_parse_html(self):
         assert validate(parse_html(), '<!DOCTYPE html><body>&quot;perfectly&quot;<a>valid<div>HTML').tag == "html"
         with self.assertRaises(ValueError) as cm:
             validate(parse_html(), None)
-        assert str(cm.exception) == "Unable to parse HTML: can only parse strings (None)"
+            assert_validationerror(cm.exception, """
+                ValidationError:
+                  Unable to parse HTML: can only parse strings (None)
+            """)
 
     def test_parse_xml(self):
         assert validate(parse_xml(), '<?xml version="1.0" encoding="utf-8"?><root></root>').tag == "root"
         with self.assertRaises(ValueError) as cm:
             validate(parse_xml(), None)
-        assert str(cm.exception) == "Unable to parse XML: can only parse strings (None)"
+            assert_validationerror(cm.exception, """
+                ValidationError:
+                  Unable to parse XML: can only parse strings (None)
+            """)
 
     def test_parse_qsd(self):
         assert validate(parse_qsd(), 'foo=bar&foo=baz') == {"foo": "baz"}
         with self.assertRaises(ValueError) as cm:
             validate(parse_qsd(), 123)
-        if is_py2:
-            assert str(cm.exception) == "Unable to parse query string: 'int' object has no attribute 'split' (123)"
-        else:
-            assert str(cm.exception) == "Unable to parse query string: 'int' object has no attribute 'decode' (123)"
+            if is_py2:
+                assert_validationerror(cm.exception, """
+                    ValidationError:
+                      Unable to parse query string: 'int' object has no attribute 'split' (123)
+                """)
+            else:
+                assert_validationerror(cm.exception, """
+                    ValidationError:
+                    Unable to parse query string: 'int' object has no attribute 'decode' (123)
+                """)
+
+
+class TestValidationError:
+    def test_subclass(self):
+        assert issubclass(ValidationError, ValueError)
+
+    def test_empty(self):
+        assert str(ValidationError()) == "ValidationError:"
+        assert str(ValidationError("")) == "ValidationError:"
+        assert str(ValidationError(ValidationError())) == "ValidationError:\n  ValidationError:"
+        assert str(ValidationError(ValidationError(""))) == "ValidationError:\n  ValidationError:"
+
+    def test_single(self):
+        assert str(ValidationError("foo")) == "ValidationError:\n  foo"
+        assert str(ValidationError(ValueError("bar"))) == "ValidationError:\n  bar"
+
+    def test_single_nested(self):
+        err = ValidationError(ValidationError("baz"))
+        assert_validationerror(err, """
+            ValidationError:
+              ValidationError:
+                baz
+        """)
+
+    def test_multiple_nested(self):
+        err = ValidationError(
+            "a",
+            ValidationError("b", "c"),
+            "d",
+            ValidationError("e"),
+            "f",
+        )
+        assert_validationerror(err, """
+            ValidationError:
+              a
+              ValidationError:
+                b
+                c
+              d
+              ValidationError:
+                e
+              f
+        """)
+
+    def test_context(self):
+        err = ValidationError(
+            "a",
+            context=ValidationError(
+                "b",
+                context=ValidationError(
+                    "c",
+                )
+            )
+        )
+        assert_validationerror(err, """
+            ValidationError:
+              a
+              Context:
+                b
+                Context:
+                  c
+        """)
+
+    def test_multiple_nested_context(self):
+        err = ValidationError(
+            "a",
+            "b",
+            context=ValidationError(
+                ValidationError(
+                    "c",
+                    context=ValidationError("d", "e")
+                ),
+                ValidationError(
+                    "f",
+                    context=ValidationError("g")
+                ),
+                context=ValidationError("h", "i")
+            )
+        )
+        assert_validationerror(err, """
+            ValidationError:
+              a
+              b
+              Context:
+                ValidationError:
+                  c
+                  Context:
+                    d
+                    e
+                ValidationError:
+                  f
+                  Context:
+                    g
+                Context:
+                  h
+                  i
+        """)
+
+    def test_schema(self):
+        err = ValidationError(
+            ValidationError(
+                "foo",
+                schema=dict
+            ),
+            ValidationError(
+                "bar",
+                schema="something"
+            ),
+            schema=any
+        )
+        assert_validationerror(err, """
+            ValidationError(AnySchema):
+              ValidationError(dict):
+                foo
+              ValidationError(something):
+                bar
+        """)
+
+    def test_recursion(self):
+        err1 = ValidationError("foo")
+        err2 = ValidationError("bar", context=err1)
+        err1.context = err2
+        assert_validationerror(err1, """
+            ValidationError:
+              foo
+              Context:
+                bar
+                Context:
+                  ...
+        """)

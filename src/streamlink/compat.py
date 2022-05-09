@@ -24,10 +24,20 @@ if is_py2:
     from collections import Mapping
     from itertools import izip
     from singledispatch import singledispatch
-    from typing import Callable, Match
+    from typing import Callable
 
     def bytes(b, enc="ascii"):
         return _str(b)
+
+    def indent(text, prefix, predicate=None):
+        if predicate is None:
+            def predicate(line):
+                return line.strip()
+    
+        def prefixed_lines():
+            for line in text.splitlines(True):
+                yield (prefix + line if predicate(line) else line)
+        return ''.join(prefixed_lines())
 
 elif is_py3:
     bytes = bytes
@@ -36,7 +46,12 @@ elif is_py3:
     izip = zip
     from collections.abc import Callable, Mapping
     from functools import singledispatch
+    from textwrap import indent
+
+try:
     from re import Match
+except ImportError:
+    from typing import Match
 
 try:
     from urllib.parse import (
@@ -68,7 +83,7 @@ except ImportError:
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
-__all__ = ["Callable", "Mapping", "Match", "is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
+__all__ = ["Callable", "Mapping", "Match", "indent", "is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qs", "parse_qsl", "quote", "quote_plus",
            "unquote", "unquote_plus", "queue", "range", "singledispatch", "urlencode", "devnull", "which",
            "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape", "lru_cache"]
