@@ -1,4 +1,11 @@
-from streamlink.plugins.filmon import Filmon
+import datetime
+from unittest.mock import PropertyMock, patch
+
+import freezegun
+import pytest
+
+from streamlink import Streamlink
+from streamlink.plugins.filmon import FilmOnHLS, Filmon
 from tests.plugins import PluginCanHandleUrl
 
 
@@ -31,3 +38,24 @@ class TestPluginCanHandleUrlFilmon(PluginCanHandleUrl):
         ('http://www.filmon.tv/vod/view/10250-0-crime-boss?extra', (None, None, '10250-0-crime-boss')),
         ('http://www.filmon.tv/vod/view/10250-0-crime-boss&extra', (None, None, '10250-0-crime-boss')),
     ]
+
+
+@pytest.fixture()
+def filmonhls():
+    with freezegun.freeze_time(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)), \
+         patch("streamlink.plugins.filmon.FilmOnHLS.url", new_callable=PropertyMock) as url:
+        url.return_value = "http://filmon.tv/test.m3u8"
+        session = Streamlink()
+        yield FilmOnHLS(session, channel="test")
+
+
+def test_filmonhls_to_url(filmonhls):
+    filmonhls.watch_timeout = datetime.datetime(2000, 1, 1, 0, 0, 0, 0).timestamp()
+    assert filmonhls.to_url() == "http://filmon.tv/test.m3u8"
+
+
+def test_filmonhls_to_url_expired(filmonhls):
+    filmonhls.watch_timeout = datetime.datetime(1999, 12, 31, 23, 59, 59, 9999).timestamp()
+    with pytest.raises(TypeError) as cm:
+        filmonhls.to_url()
+    assert str(cm.value) == "Stream has expired and cannot be translated to a URL"

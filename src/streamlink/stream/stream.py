@@ -13,6 +13,10 @@ class Stream:
 
     __shortname__ = "stream"
 
+    @classmethod
+    def shortname(cls):
+        return cls.__shortname__
+
     def __init__(self, session):
         """
         :param streamlink.Streamlink session: Streamlink session instance
@@ -21,10 +25,28 @@ class Stream:
         self.session = session
 
     def __repr__(self):
-        return "<Stream()>"
+        params = [repr(self.shortname())]
+        for method in self.to_url, self.to_manifest_url:
+            try:
+                params.append(repr(method()))
+            except TypeError:
+                pass
+
+        return f"<{self.__class__.__name__} [{', '.join(params)}]>"
 
     def __json__(self):
         return dict(type=self.shortname())
+
+    @property
+    def json(self):
+        obj = self.__json__()
+        return json.dumps(obj)
+
+    def to_url(self):
+        raise TypeError(f"<{self.__class__.__name__} [{self.shortname()}]> cannot be translated to a URL")
+
+    def to_manifest_url(self):
+        raise TypeError(f"<{self.__class__.__name__} [{self.shortname()}]> cannot be translated to a manifest URL")
 
     def open(self) -> "StreamIO":
         """
@@ -35,21 +57,6 @@ class Stream:
         """
 
         raise NotImplementedError
-
-    @property
-    def json(self):
-        obj = self.__json__()
-        return json.dumps(obj)
-
-    @classmethod
-    def shortname(cls):
-        return cls.__shortname__
-
-    def to_url(self):
-        raise TypeError("{0} cannot be converted to a URL".format(self.shortname()))
-
-    def to_manifest_url(self):
-        raise TypeError("{0} cannot be converted to a URL".format(self.shortname()))
 
 
 class StreamIO(io.IOBase):
