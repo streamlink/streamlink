@@ -534,7 +534,7 @@ class HLSStream(HTTPStream):
         json = super().__json__()
 
         if self.url_master:
-            json["master"] = self.url_master
+            json["master"] = self.to_manifest_url()
 
         # Pretty sure HLS is GET only.
         del json["method"]
@@ -543,7 +543,13 @@ class HLSStream(HTTPStream):
         return json
 
     def to_manifest_url(self):
-        return self.url_master
+        if self.url_master is None:
+            return None
+
+        args = self.args.copy()
+        args.update(url=self.url_master)
+
+        return self.session.http.prepare_new_request(**args).url
 
     def open(self):
         reader = self.__reader__(self)
