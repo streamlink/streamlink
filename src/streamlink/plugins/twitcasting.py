@@ -147,8 +147,8 @@ class TwitCastingStream(Stream):
         super().__init__(session)
         self.url = url
 
-    def __repr__(self):
-        return f"<TwitCastingStream({self.url!r})>"
+    def to_url(self):
+        return self.url
 
     def open(self):
         reader = TwitCastingReader(self)

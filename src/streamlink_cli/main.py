@@ -30,7 +30,7 @@ from streamlink_cli.compat import DeprecatedPath, is_win32, stdout
 from streamlink_cli.console import ConsoleOutput, ConsoleUserInputRequester
 from streamlink_cli.constants import CONFIG_FILES, DEFAULT_STREAM_METADATA, LOG_DIR, PLUGIN_DIRS, STREAM_SYNONYMS
 from streamlink_cli.output import FileOutput, Output, PlayerOutput
-from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored, progress, stream_to_url
+from streamlink_cli.utils import Formatter, HTTPServer, datetime, ignored, progress
 
 ACCEPTABLE_ERRNO = (errno.EPIPE, errno.EINVAL, errno.ECONNRESET)
 try:
@@ -257,11 +257,16 @@ def output_stream_passthrough(stream, formatter: Formatter):
     """Prepares a filename to be passed to the player."""
     global output
 
-    filename = f'"{stream_to_url(stream)}"'
+    try:
+        url = stream.to_url()
+    except TypeError:
+        console.exit("The stream specified cannot be translated to a URL")
+        return False
+
     output = PlayerOutput(
         args.player,
         args=args.player_args,
-        filename=filename,
+        filename=f'"{url}"',
         call=True,
         quiet=not args.verbose_player,
         title=formatter.title(args.title, defaults=DEFAULT_STREAM_METADATA) if args.title else args.url

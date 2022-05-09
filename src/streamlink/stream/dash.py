@@ -184,6 +184,13 @@ class DASHStream(Stream):
 
         return json
 
+    def to_url(self):
+        if self.mpd.url is None:
+            return super().to_url()
+
+        # the MPD URL has already been prepared by the initial request in `parse_manifest`
+        return self.mpd.url
+
     @classmethod
     def parse_manifest(
         cls,
@@ -305,9 +312,3 @@ class DASHStream(Stream):
             return video
         elif self.audio_representation:
             return audio
-
-    def to_url(self):
-        return self.mpd.url
-
-    def to_manifest_url(self):
-        return self.mpd.url
