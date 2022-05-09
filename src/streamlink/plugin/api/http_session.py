@@ -1,10 +1,10 @@
 import ssl
 import time
-from typing import Any, Callable, List, Pattern, Tuple
+from typing import Any, Callable, Dict, List, Pattern, Tuple
 
 import requests.adapters
 import urllib3
-from requests import Session
+from requests import PreparedRequest, Request, Session
 
 from streamlink.exceptions import PluginError
 from streamlink.packages.requests_file import FileAdapter
@@ -96,6 +96,10 @@ def _parse_keyvalue_list(val):
             continue
 
 
+# requests.Request.__init__ keywords, except for "hooks"
+_VALID_REQUEST_ARGS = "method", "url", "headers", "files", "data", "params", "auth", "cookies", "json"
+
+
 class HTTPSession(Session):
     def __init__(self):
         super().__init__()
@@ -167,6 +171,18 @@ class HTTPSession(Session):
     def resolve_url(self, url):
         """Resolves any redirects and returns the final URL."""
         return self.get(url, stream=True).url
+
+    @staticmethod
+    def valid_request_args(**req_keywords) -> Dict:
+        return {k: v for k, v in req_keywords.items() if k in _VALID_REQUEST_ARGS}
+
+    def prepare_new_request(self, **req_keywords) -> PreparedRequest:
+        valid_args = self.valid_request_args(**req_keywords)
+        valid_args.setdefault("method", "GET")
+        request = Request(**valid_args)
+
+        # prepare request with the session context, which might add params, headers, cookies, etc.
+        return self.prepare_request(request)
 
     def request(self, method, url, *args, **kwargs):
         acceptable_status = kwargs.pop("acceptable_status", [])

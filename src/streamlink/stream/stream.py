@@ -24,7 +24,7 @@ class Stream:
         return "<Stream()>"
 
     def __json__(self):
-        return dict(type=type(self).shortname())
+        return dict(type=self.shortname())
 
     def open(self) -> "StreamIO":
         """
