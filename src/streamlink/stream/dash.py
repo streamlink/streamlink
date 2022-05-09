@@ -7,12 +7,9 @@ from collections import defaultdict
 from typing import Dict, Optional
 from urllib.parse import urlparse, urlunparse
 
-import requests
-
 from streamlink import PluginError, StreamError
 from streamlink.stream.dash_manifest import MPD, Representation, freeze_timeline, sleep_until, sleeper, utc
 from streamlink.stream.ffmpegmux import FFMPEGMuxer
-from streamlink.stream.http import normalize_key, valid_args
 from streamlink.stream.segmented import SegmentedStreamReader, SegmentedStreamWorker, SegmentedStreamWriter
 from streamlink.stream.stream import Stream
 from streamlink.utils.l10n import Language
@@ -173,11 +170,19 @@ class DASHStream(Stream):
         self.args = args
 
     def __json__(self):
-        req = requests.Request(method="GET", url=self.mpd.url, **valid_args(self.args))
-        req = req.prepare()
+        json = dict(type=self.shortname())
 
-        headers = dict(map(normalize_key, req.headers.items()))
-        return dict(type=type(self).shortname(), url=req.url, headers=headers)
+        if self.mpd.url:
+            args = self.args.copy()
+            args.update(url=self.mpd.url)
+            req = self.session.http.prepare_new_request(**args)
+            json.update(
+                # the MPD URL has already been prepared by the initial request in `parse_manifest`
+                url=self.mpd.url,
+                headers=dict(req.headers),
+            )
+
+        return json
 
     @classmethod
     def parse_manifest(
@@ -197,7 +202,7 @@ class DASHStream(Stream):
         if url_or_manifest.startswith('<?xml'):
             mpd = MPD(parse_xml(url_or_manifest, ignore_ns=True))
         else:
-            res = session.http.get(url_or_manifest, **args)
+            res = session.http.get(url_or_manifest, **session.http.valid_request_args(**args))
             url = res.url
 
             urlp = list(urlparse(url))

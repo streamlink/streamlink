@@ -13,8 +13,6 @@ from random import random
 from typing import List, NamedTuple, Optional
 from urllib.parse import urlparse
 
-import requests
-
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
 from streamlink.plugin.api import validate
@@ -190,8 +188,7 @@ class UsherService:
         }
         params.update(extra_params)
 
-        req = requests.Request("GET", url, params=params)
-        req = self.session.http.prepare_request(req)
+        req = self.session.http.prepare_new_request(url=url, params=params)
 
         return req.url
 
