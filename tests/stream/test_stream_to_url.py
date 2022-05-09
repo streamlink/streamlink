@@ -1,54 +1,99 @@
-import unittest
-from unittest.mock import PropertyMock, patch
+from unittest.mock import Mock
+
+import pytest
 
 from streamlink import Streamlink
-from streamlink.plugins.filmon import FilmOnHLS
+from streamlink.stream.dash import DASHStream
+from streamlink.stream.file import FileStream
 from streamlink.stream.hls import HLSStream
 from streamlink.stream.http import HTTPStream
 from streamlink.stream.stream import Stream
-from streamlink_cli.utils import stream_to_url
 
 
-class TestStreamToURL(unittest.TestCase):
-    def setUp(self):
-        self.session = Streamlink()
+@pytest.fixture(scope="module")
+def session():
+    return Streamlink()
 
-    def test_base_stream(self):
-        stream = Stream(self.session)
-        self.assertEqual(None, stream_to_url(stream))
-        self.assertRaises(TypeError, stream.to_url)
 
-    def test_http_stream(self):
-        expected = "http://test.se/stream"
-        stream = HTTPStream(self.session, expected, invalid_arg="invalid")
-        self.assertEqual(expected, stream_to_url(stream))
-        self.assertEqual(expected, stream.to_url())
+@pytest.fixture(scope="module")
+def common_args():
+    return dict(
+        params={"queryparamkey": "queryparamval"},
+        unknown="invalid",
+    )
 
-    def test_hls_stream(self):
-        expected = "http://test.se/stream.m3u8"
-        stream = HLSStream(self.session, expected)
-        self.assertEqual(expected, stream_to_url(stream))
-        self.assertEqual(expected, stream.to_url())
 
-    @patch("time.time")
-    @patch("streamlink.plugins.filmon.FilmOnHLS.url", new_callable=PropertyMock)
-    def test_filmon_stream(self, url, time):
-        stream = FilmOnHLS(self.session, channel="test")
-        url.return_value = "http://filmon.test.se/test.m3u8"
-        stream.watch_timeout = 10
-        time.return_value = 1
-        expected = "http://filmon.test.se/test.m3u8"
+def test_base_stream(session):
+    stream = Stream(session)
+    with pytest.raises(TypeError) as cm:
+        stream.to_url()
+    assert str(cm.value) == "<Stream [stream]> cannot be translated to a URL"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<Stream [stream]> cannot be translated to a manifest URL"
 
-        self.assertEqual(expected, stream_to_url(stream))
-        self.assertEqual(expected, stream.to_url())
 
-    @patch("time.time")
-    @patch("streamlink.plugins.filmon.FilmOnHLS.url", new_callable=PropertyMock)
-    def test_filmon_expired_stream(self, url, time):
-        stream = FilmOnHLS(self.session, channel="test")
-        url.return_value = "http://filmon.test.se/test.m3u8"
-        stream.watch_timeout = 0
-        time.return_value = 1
+def test_file_stream_handle(session):
+    stream = FileStream(session, None, Mock())
+    with pytest.raises(TypeError) as cm:
+        stream.to_url()
+    assert str(cm.value) == "<FileStream [file]> cannot be translated to a URL"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<FileStream [file]> cannot be translated to a manifest URL"
 
-        self.assertEqual(None, stream_to_url(stream))
-        self.assertRaises(TypeError, stream.to_url)
+
+def test_file_stream_path(session):
+    stream = FileStream(session, "/path/to/file")
+    assert stream.to_url() == "/path/to/file"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<FileStream [file]> cannot be translated to a manifest URL"
+
+
+def test_http_stream(session, common_args):
+    stream = HTTPStream(session, "http://host/stream?foo=bar", **common_args)
+    assert stream.to_url() == "http://host/stream?foo=bar&queryparamkey=queryparamval"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<HTTPStream [http]> cannot be translated to a manifest URL"
+
+
+def test_hls_stream(session, common_args):
+    stream = HLSStream(session, "http://host/stream.m3u8?foo=bar", **common_args)
+    assert stream.to_url() == "http://host/stream.m3u8?foo=bar&queryparamkey=queryparamval"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<HLSStream [hls]> cannot be translated to a manifest URL"
+
+
+def test_hls_stream_master(session, common_args):
+    stream = HLSStream(session, "http://host/stream.m3u8?foo=bar", "http://host/master.m3u8?foo=bar", **common_args)
+    assert stream.to_url() == "http://host/stream.m3u8?foo=bar&queryparamkey=queryparamval"
+    assert stream.to_manifest_url() == "http://host/master.m3u8?foo=bar&queryparamkey=queryparamval"
+
+
+def test_dash_stream(session):
+    mpd = Mock(url=None)
+    stream = DASHStream(session, mpd)
+    with pytest.raises(TypeError) as cm:
+        stream.to_url()
+    assert str(cm.value) == "<DASHStream [dash]> cannot be translated to a URL"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<DASHStream [dash]> cannot be translated to a manifest URL"
+
+
+def test_dash_stream_url(session, common_args):
+    # DASHStream requires an MPD instance as input:
+    # The URL of the MPD instance was already prepared by DASHStream.parse_manifest, so copy this behavior here.
+    # This test verifies that session params are added to the URL, without duplicates.
+    args = common_args.copy()
+    args.update(url="http://host/stream.mpd?foo=bar")
+    url = session.http.prepare_new_request(**args).url
+    mpd = Mock(url=url)
+    stream = DASHStream(session, mpd, **common_args)
+    assert stream.to_url() == "http://host/stream.mpd?foo=bar&queryparamkey=queryparamval"
+    with pytest.raises(TypeError) as cm:
+        stream.to_manifest_url()
+    assert str(cm.value) == "<DASHStream [dash]> cannot be translated to a manifest URL"

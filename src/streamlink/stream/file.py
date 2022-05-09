@@ -22,5 +22,11 @@ class FileStream(Stream):
 
         return json
 
+    def to_url(self):
+        if self.path is None:
+            return super().to_url()
+
+        return self.path
+
     def open(self):
         return self.fileobj or open(self.path)
