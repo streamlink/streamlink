@@ -23,6 +23,8 @@ if is_py2:
     range = xrange
     from collections import Mapping
     from itertools import izip
+    from singledispatch import singledispatch
+    from typing import Callable, Match
 
     def bytes(b, enc="ascii"):
         return _str(b)
@@ -32,7 +34,9 @@ elif is_py3:
     str = str
     range = range
     izip = zip
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
+    from functools import singledispatch
+    from re import Match
 
 try:
     from urllib.parse import (
@@ -64,7 +68,7 @@ except ImportError:
 getargspec = getattr(inspect, "getfullargspec", inspect.getargspec)
 
 
-__all__ = ["Mapping", "is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
+__all__ = ["Callable", "Mapping", "Match", "is_py2", "is_py3", "is_py33", "is_win32", "str", "bytes",
            "urlparse", "urlunparse", "urljoin", "parse_qs", "parse_qsl", "quote", "quote_plus",
-           "unquote", "unquote_plus", "queue", "range", "urlencode", "devnull", "which",
+           "unquote", "unquote_plus", "queue", "range", "singledispatch", "urlencode", "devnull", "which",
            "izip", "urlsplit", "urlunsplit", "getargspec", "html_unescape", "lru_cache"]
