@@ -15,21 +15,12 @@
 
 """
 
-try:
-    from collections.abc import Callable
-except ImportError:
-    from typing import Callable
 from copy import copy, deepcopy
-from typing import Any, Match, Tuple, Union
+from typing import Any, Tuple, Union
 
 from lxml.etree import Element, iselement
 
-try:
-    from functools import singledispatch
-except ImportError:
-    from singledispatch import singledispatch
-
-from streamlink.compat import is_py2, urlparse
+from streamlink.compat import Callable, Match, is_py2, singledispatch, urlparse
 from streamlink.exceptions import PluginError
 from streamlink.utils.parse import (
     parse_html as _parse_html,
