@@ -3,6 +3,7 @@ import time
 from typing import Any, Callable, List, Pattern, Tuple
 
 import requests.adapters
+# noinspection PyPackageRequirements
 import urllib3
 from requests import Session
 
@@ -13,14 +14,6 @@ from streamlink.utils.parse import parse_json, parse_xml
 
 
 urllib3_version = tuple(map(int, urllib3.__version__.split(".")[:3]))
-
-
-try:
-    # We tell urllib3 to disable warnings about unverified HTTPS requests,
-    # because in some plugins we have to do unverified requests intentionally.
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-except AttributeError:
-    pass
 
 
 class _HTTPResponse(urllib3.response.HTTPResponse):
