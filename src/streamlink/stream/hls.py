@@ -11,7 +11,7 @@ from Crypto.Cipher import AES
 # noinspection PyPackageRequirements
 from Crypto.Util.Padding import unpad
 from requests import Response
-from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError, StreamConsumedError
+from requests.exceptions import ChunkedEncodingError, ConnectionError, ContentDecodingError
 
 from streamlink.exceptions import StreamError
 from streamlink.stream.ffmpegmux import FFMPEGMuxer, MuxedStream
@@ -190,32 +190,27 @@ class HLSStreamWriter(SegmentedStreamWriter):
     def should_filter_sequence(self, sequence: Sequence) -> bool:
         return self.ignore_names and self.ignore_names.search(sequence.segment.uri) is not None
 
-    def write(self, sequence: Sequence, *args, **kwargs):
+    def write(self, sequence: Sequence, result: Response, *data):
         if not self.should_filter_sequence(sequence):
             try:
-                return self._write(sequence, *args, **kwargs)
+                return self._write(sequence, result, *data)
             finally:
                 # unblock reader thread after writing data to the buffer
                 if not self.reader.filter_event.is_set():
                     log.info("Resuming stream output")
                     self.reader.filter_event.set()
+
         else:
-            self._write_discard(sequence, *args, **kwargs)
+            # Read and discard any remaining HTTP response data in the response connection.
+            # Unread data in the HTTPResponse connection blocks the connection from being released back to the pool.
+            result.raw.drain_conn()
+
             # block reader thread if filtering out segments
             if self.reader.filter_event.is_set():
                 log.info("Filtering out segments and pausing stream output")
                 self.reader.filter_event.clear()
 
-    def _write_discard(self, sequence: Sequence, res: Response, is_map: bool):
-        # The full response needs to actually be read from the socket
-        # even if there isn't any intention of using the payload
-        try:
-            for _ in res.iter_content(self.WRITE_CHUNK_SIZE):
-                pass
-        except (ChunkedEncodingError, ContentDecodingError, ConnectionError, StreamConsumedError):
-            pass
-
-    def _write(self, sequence: Sequence, res: Response, is_map: bool):
+    def _write(self, sequence: Sequence, result: Response, is_map: bool):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key, sequence.num)
@@ -224,7 +219,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            data = res.content
+            data = result.content
             # If the input data is not a multiple of 16, cut off any garbage
             garbage_len = len(data) % AES.block_size
             if garbage_len:
@@ -235,9 +230,10 @@ class HLSStreamWriter(SegmentedStreamWriter):
 
             chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
             self.reader.buffer.write(chunk)
+
         else:
             try:
-                for chunk in res.iter_content(self.WRITE_CHUNK_SIZE):
+                for chunk in result.iter_content(self.WRITE_CHUNK_SIZE):
                     self.reader.buffer.write(chunk)
             except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
                 log.error(f"Download of segment {sequence.num} failed ({err})")
