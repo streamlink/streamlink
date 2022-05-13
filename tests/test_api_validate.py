@@ -3,7 +3,6 @@ import re
 import unittest
 from textwrap import dedent
 
-import six
 from lxml.etree import Element
 
 from streamlink.compat import is_py2
@@ -90,7 +89,7 @@ class TestPluginAPIValidate(unittest.TestCase):
             validate(B, a)
             assert_validationerror(cm.exception, """
                 ValidationError(type):
-                  Type of a should be 'B', but is 'A'
+                  Type of a should be B, but is A
             """)
 
     def test_callable(self):
@@ -115,7 +114,7 @@ class TestPluginAPIValidate(unittest.TestCase):
             validate(all(int, float), 123)
             assert_validationerror(cm.exception, """
                 ValidationError(type):
-                  Type of 123 should be 'float', but is 'int'
+                  Type of 123 should be float, but is int
             """)
 
     def test_any(self):
@@ -129,9 +128,7 @@ class TestPluginAPIValidate(unittest.TestCase):
             assert_validationerror(cm.exception, """
                 ValidationError(AnySchema):
                   ValidationError(type):
-                    Type of '123' should be 'int', but is 'str'
-                  ValidationError(type):
-                    Type of '123' should be 'float', but is 'str'
+                    Type of 123 should be int, but is str
             """)
 
     def test_transform(self):
@@ -233,7 +230,7 @@ class TestPluginAPIValidate(unittest.TestCase):
             validate(get(("one", "invalidkey", "three")), data)
             assert_validationerror(cm.exception, """
                 ValidationError(GetItemSchema):
-                  Item "invalidkey" was not found in object "{'two': {'three': 'value1'}}"
+                  Item 'invalidkey' was not found in object {'two': {'three': 'value1'}}
             """)
 
         with self.assertRaises(ValueError) as cm:
@@ -241,14 +238,14 @@ class TestPluginAPIValidate(unittest.TestCase):
             if is_py2:
                 assert_validationerror(cm.exception, """
                     ValidationError(GetItemSchema):
-                      Could not get key "three" from object "None"
+                      Could not get key 'three' from object None
                       Context:
                         'NoneType' object has no attribute \'__getitem__\'
                 """)
             else:
                 assert_validationerror(cm.exception, """
                     ValidationError(GetItemSchema):
-                    Could not get key "three" from object "None"
+                    Could not get key 'three' from object None
                     Context:
                         'NoneType' object is not subscriptable
                 """)
@@ -411,7 +408,7 @@ class TestPluginAPIValidate(unittest.TestCase):
             validate(attr({"foo": text}), {"bar": "baz"})
             assert_validationerror(cm.exception, """
                 ValidationError(AttrSchema):
-                  Attribute "foo" not found on object "{'bar': 'baz'}"
+                  Attribute 'foo' not found on object {'bar': 'baz'}
             """)
 
     def test_url(self):
@@ -659,3 +656,14 @@ class TestValidationError:
                 Context:
                   ...
         """)
+
+    def test_truncate(self):
+        err = ValidationError(
+            "foo {foo} bar {bar} baz",
+            foo="Some really long error message that exceeds the maximum error message length",
+            bar=repr("Some really long error message that exceeds the maximum error message length"),
+        )
+        assert_validationerror(err, """
+            ValidationError:
+              foo <Some really long error message that exceeds the maximum...> bar <'Some really long error message that exceeds the maximu...> baz
+        """)  # noqa: 501

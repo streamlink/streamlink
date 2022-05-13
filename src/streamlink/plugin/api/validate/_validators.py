@@ -24,7 +24,12 @@ def validator_length(number):
 
     def min_len(value):
         if not len(value) >= number:
-            raise ValidationError("Minimum length is {0} but value is {1}".format(number, len(value)), schema="length")
+            raise ValidationError(
+                "Minimum length is {number}, but value is {value}",
+                number=repr(number),
+                value=len(value),
+                schema="length",
+            )
 
         return True
 
@@ -40,7 +45,12 @@ def validator_startswith(string):
     def starts_with(value):
         validate(str, value)
         if not value.startswith(string):
-            raise ValidationError("'{0}' does not start with '{1}'".format(value, string), schema="startswith")
+            raise ValidationError(
+                "{value} does not start with {string}",
+                value=repr(value),
+                string=repr(string),
+                schema="startswith",
+            )
 
         return True
 
@@ -56,7 +66,12 @@ def validator_endswith(string):
     def ends_with(value):
         validate(str, value)
         if not value.endswith(string):
-            raise ValidationError("'{0}' does not end with '{1}'".format(value, string), schema="endswith")
+            raise ValidationError(
+                "{value} does not end with {string}",
+                value=repr(value),
+                string=repr(string),
+                schema="endswith",
+            )
 
         return True
 
@@ -72,7 +87,12 @@ def validator_contains(string):
     def contains_str(value):
         validate(str, value)
         if string not in value:
-            raise ValidationError("'{0}' does not contain '{1}'".format(value, string), schema="contains")
+            raise ValidationError(
+                "{value} does not contain {string}",
+                value=repr(value),
+                string=repr(string),
+                schema="contains",
+            )
 
         return True
 
@@ -93,16 +113,29 @@ def validator_url(**attributes):
         validate(str, value)
         parsed = urlparse(value)
         if not parsed.netloc:
-            raise ValidationError("'{0}' is not a valid URL".format(value))
+            raise ValidationError(
+                "{value} is not a valid URL",
+                value=repr(value),
+                schema="url",
+            )
 
         for name, schema in attributes.items():
             if not hasattr(parsed, name):
-                raise ValidationError("Invalid URL attribute '{0}'".format(name), schema="url")
+                raise ValidationError(
+                    "Invalid URL attribute {name}",
+                    name=repr(name),
+                    schema="url",
+                )
 
             try:
                 validate(schema, getattr(parsed, name))
             except ValidationError as err:
-                raise ValidationError("Unable to validate URL attribute '{0}': {1}".format(name, err), context=err)
+                raise ValidationError(
+                    "Unable to validate URL attribute {name}",
+                    name=repr(name),
+                    schema="url",
+                    context=err,
+                )
 
         return True
 
@@ -196,7 +229,11 @@ def validator_xml_find(xpath):
         validate(iselement, value)
         value = value.find(xpath)
         if value is None:
-            raise ValidationError("XPath '{0}' did not return an element".format(xpath), schema="xml_find")
+            raise ValidationError(
+                "XPath {xpath} did not return an element",
+                xpath=repr(xpath),
+                schema="xml_find",
+            )
 
         return validate(iselement, value)
 

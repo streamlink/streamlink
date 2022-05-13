@@ -1,12 +1,31 @@
+from typing import Optional, Sequence, Union
+
 from streamlink.compat import indent
 
 
 class ValidationError(ValueError):
-    def __init__(self, *errors, **kwargs):
-        # type: ("ValidationError")
-        self.schema = kwargs.get("schema")
-        self.errors = errors
-        self.context = kwargs.get("context")
+    MAX_LENGTH = 60
+
+    def __init__(self, *error, **kwargs):
+        # type: (Union[str, Exception, Sequence[Union[str, Exception]]])
+        self.schema = kwargs.pop("schema", None)
+        # type: Optional[Union[str, object]]
+        self.context = kwargs.pop("context", None)
+        # type: Optional[Union[Exception]]
+        if len(error) == 1 and type(error[0]) is str:
+            self.errors = (self._truncate(error[0], **kwargs), )
+        else:
+            self.errors = error
+
+    def _ellipsis(self, string):
+        # type: (str)
+        return string if len(string) <= self.MAX_LENGTH else "<{}...>".format(string[:self.MAX_LENGTH - 5])
+
+    def _truncate(self, template, **kwargs):
+        # type: (str)
+        return str(template).format(
+            **{k: self._ellipsis(str(v)) for k, v in kwargs.items()}
+        )
 
     def _get_schema_name(self):
         # type: () -> str

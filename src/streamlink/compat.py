@@ -33,7 +33,7 @@ if is_py2:
         if predicate is None:
             def predicate(line):
                 return line.strip()
-    
+
         def prefixed_lines():
             for line in text.splitlines(True):
                 yield (prefix + line if predicate(line) else line)

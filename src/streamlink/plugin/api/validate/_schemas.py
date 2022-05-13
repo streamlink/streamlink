@@ -110,6 +110,7 @@ class UnionGetSchema(object):
     def __init__(self, *getters, **kw):
         self.getters = tuple(GetItemSchema(getter) for getter in getters)
         self.seq = kw.get("seq", tuple)
+        # type: Type[Union[List, FrozenSet, Set, Tuple]]
 
 
 class UnionSchema(SchemaContainer):

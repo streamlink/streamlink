@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from copy import copy, deepcopy
 
 from lxml.etree import Element, iselement
@@ -36,7 +37,12 @@ class Schema(AllSchema):
 @singledispatch
 def validate(schema, value):
     if schema != value:
-        raise ValidationError("{0!r} does not equal {1!r}".format(value, schema), schema="equality")
+        raise ValidationError(
+            "{value} does not equal {expected}",
+            value=repr(value),
+            expected=repr(schema),
+            schema="equality",
+        )
 
     return value
 
@@ -49,7 +55,11 @@ def _validate_type(schema, value):
         schema = str
     if not isinstance(value, schema):
         raise ValidationError(
-            "Type of {0!r} should be '{1}', but is '{2}'".format(value, schema.__name__, type(value).__name__), schema=type
+            "Type of {value} should be {expected}, but is {actual}",
+            value=repr(value),
+            expected=schema.__name__,
+            actual=type(value).__name__,
+            schema=type,
         )
 
     return value
@@ -94,12 +104,22 @@ def _validate_dict(schema, value):
             break
 
         if key not in value:
-            raise ValidationError("Key '{0}' not found in {1!r}".format(key, value), schema=dict)
+            raise ValidationError(
+                "Key {key} not found in {value}",
+                key=repr(key),
+                value=repr(value),
+                schema=dict,
+            )
 
         try:
             new[key] = validate(subschema, value[key])
         except ValidationError as err:
-            raise ValidationError("Unable to validate value of key '{0}'".format(key), schema=dict, context=err)
+            raise ValidationError(
+                "Unable to validate value of key {key}",
+                key=repr(key),
+                schema=dict,
+                context=err,
+            )
 
     return new
 
@@ -108,7 +128,11 @@ def _validate_dict(schema, value):
 def _validate_callable(schema, value):
     # type: (Callable)
     if not schema(value):
-        raise ValidationError("{0}({1!r}) is not true".format(schema.__name__, value), schema=Callable)
+        raise ValidationError(
+            "{callable} is not true",
+            callable="{0}({1!r})".format(schema.__name__, value),
+            schema=Callable,
+        )
 
     return value
 
@@ -161,12 +185,20 @@ def _validate_getitemschema(schema, value):
     except (KeyError, IndexError):
         # only return default value on last item in nested lookup
         if idx < len(item) - 1:
-            raise ValidationError("Item \"{0}\" was not found in object \"{1}\"".format(key, value), schema=GetItemSchema)
+            raise ValidationError(
+                "Item {key} was not found in object {value}",
+                key=repr(key),
+                value=repr(value),
+                schema=GetItemSchema,
+            )
         return schema.default
     except (TypeError, AttributeError) as err:
         raise ValidationError(
-            "Could not get key \"{0}\" from object \"{1}\"".format(key, value), schema=GetItemSchema,
-            context=err
+            "Could not get key {key} from object {value}",
+            key=repr(key),
+            value=repr(value),
+            schema=GetItemSchema,
+            context=err,
         )
 
 
@@ -177,12 +209,22 @@ def _validate_attrschema(schema, value):
 
     for key, subschema in schema.schema.items():
         if not hasattr(value, key):
-            raise ValidationError("Attribute \"{0}\" not found on object \"{1}\"".format(key, value), schema=AttrSchema)
+            raise ValidationError(
+                "Attribute {key} not found on object {value}",
+                key=repr(key),
+                value=repr(value),
+                schema=AttrSchema,
+            )
 
         try:
             value = validate(subschema, getattr(value, key))
         except ValidationError as err:
-            raise ValidationError("Could not validate attribute \"{0}\"".format(key), schema=AttrSchema, context=err)
+            raise ValidationError(
+                "Could not validate attribute {key}",
+                key=repr(key),
+                schema=AttrSchema,
+                context=err,
+            )
 
         setattr(new, key, value)
 
@@ -206,7 +248,7 @@ def _validate_xmlelementschema(schema, value):
 
     if schema.attrib is not None:
         try:
-            attrib = validate(schema.attrib, dict(value.attrib))
+            attrib = validate(schema.attrib, OrderedDict(value.attrib))
         except ValidationError as err:
             raise ValidationError("Unable to validate XML attributes: {0}".format(err), schema=XmlElementSchema, context=err)
 
@@ -254,7 +296,10 @@ def _validate_unionschema(schema, value):
 # noinspection PyUnusedLocal
 @singledispatch
 def validate_union(schema, value):
-    raise ValidationError("Invalid union type: {0}".format(type(schema).__name__))
+    raise ValidationError(
+        "Invalid union type: {type}",
+        type=type(schema).__name__,
+    )
 
 
 @validate_union.register(dict)
@@ -271,7 +316,12 @@ def _validate_union_dict(schema, value):
             if is_optional:
                 continue
 
-            raise ValidationError("Unable to validate union '{0}': {1}".format(key, err), schema=dict, context=err)
+            raise ValidationError(
+                "Unable to validate union {key}",
+                key=repr(key),
+                schema=dict,
+                context=err,
+            )
 
     return new
 
