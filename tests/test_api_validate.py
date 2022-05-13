@@ -1,44 +1,13 @@
 # -*- coding: utf-8 -*-
 import re
-import unittest
 from textwrap import dedent
 
-from lxml.etree import Element
+import pytest
+from lxml.etree import Element, tostring as etree_tostring
 
-from streamlink.compat import is_py2
-from streamlink.plugin.api.validate import (
-    Schema,
-    ValidationError,
-    all,
-    any,
-    attr,
-    contains,
-    endswith,
-    filter,
-    get,
-    getattr,
-    hasattr,
-    length,
-    map,
-    optional,
-    parse_html,
-    parse_json,
-    parse_qsd,
-    parse_xml,
-    startswith,
-    text,
-    transform,
-    union,
-    union_get,
-    url,
-    validate,
-    xml_element,
-    xml_find,
-    xml_findall,
-    xml_findtext,
-    xml_xpath,
-    xml_xpath_string,
-)
+from streamlink.compat import str as text_type
+from streamlink.exceptions import PluginError
+from streamlink.plugin.api import validate
 
 
 def assert_validationerror(exception, expected):
@@ -46,504 +15,1118 @@ def assert_validationerror(exception, expected):
 
 
 def test_text_is_str():
-    assert text is text, "Exports text as str alias for backwards compatiblity"
+    assert validate.text is text_type, "Exports text as str alias for backwards compatiblity"
 
 
-class TestPluginAPIValidate(unittest.TestCase):
-    def test_basic(self):
-        assert validate(1, 1) == 1
+class TestSchema(object):
+    @pytest.fixture(scope="class")
+    def schema(self):
+        return validate.Schema(str, "foo")
 
-        assert validate(int, 1) == 1
+    @pytest.fixture(scope="class")
+    def schema_nested(self, schema):
+        # type: (validate.Schema)
+        return validate.Schema(schema)
 
-        assert validate(text, "abc") == "abc"
-        assert validate(text, "日本語") == "日本語"
+    def test_validate_success(self, schema):
+        # type: ( validate.Schema)
+        assert schema.validate("foo") == "foo"
 
-        assert validate(list, ["a", 1]) == ["a", 1]
-        assert validate(dict, {"a": 1}) == {"a": 1}
+    def test_validate_failure(self, schema):
+        # type: (validate.Schema)
+        with pytest.raises(PluginError) as cm:
+            schema.validate("bar")
+            assert_validationerror(cm.value, """
+                Unable to validate result: ValidationError(equality):
+                'bar' does not equal 'foo'
+            """)
 
-        assert validate(lambda n: 0 < n < 5, 3) == 3
+    def test_validate_failure_custom(self, schema):
+        # type: (validate.Schema)
+        class CustomError(PluginError):
+            pass
 
-    def test_schema(self):
-        assert validate(
-            Schema(
-                int,
-                lambda n: n > 0,
-                Schema(int, lambda n: n < 2)
-            ),
-            1
-        ) == 1
+        with pytest.raises(CustomError) as cm:
+            schema.validate("bar", name="data", exception=CustomError)
+            assert_validationerror(cm.value, """
+                Unable to validate data: ValidationError(equality):
+                'bar' does not equal 'foo'
+            """)
 
-    def test_type(self):
+    def test_nested_success(self, schema_nested):
+        # type: (validate.Schema)
+        assert schema_nested.validate("foo") == "foo"
+
+    def test_nested_failure(self, schema_nested):
+        # type: (validate.Schema)
+        with pytest.raises(PluginError) as cm:
+            schema_nested.validate("bar")
+            assert_validationerror(cm.value, """
+                Unable to validate result: ValidationError(equality):
+                'bar' does not equal 'foo'
+            """)
+
+
+class TestEquality(object):
+    def test_success(self):
+        assert validate.validate("foo", "foo") == "foo"
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate("foo", "bar")
+            assert_validationerror(cm.value, """
+                ValidationError(equality):
+                'bar' does not equal 'foo'
+            """)
+
+
+class TestType(object):
+    def test_success(self):
         class A(object):
-            def __repr__(self):
-                return self.__class__.__name__.lower()
+            pass
 
         class B(A):
             pass
 
         a = A()
         b = B()
-        assert validate(A, b) is b
+        assert validate.validate(A, a) is a
+        assert validate.validate(B, b) is b
+        assert validate.validate(A, b) is b
 
-        with self.assertRaises(ValueError) as cm:
-            validate(B, a)
-            assert_validationerror(cm.exception, """
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(int, "1")
+            assert_validationerror(cm.value, """
                 ValidationError(type):
-                  Type of a should be B, but is A
+                Type of '1' should be int, but is str
             """)
 
-    def test_callable(self):
-        def check(n):
-            return n > 0
 
-        assert validate(check, 1)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(check, 0)
-            assert_validationerror(cm.exception, """
-                ValidationError(Callable):
-                  check(0) is not true
-            """)
-
-    def test_all(self):
-        assert validate(all(int, lambda n: 0 < n < 5), 3) == 3
-
-        assert validate(all(transform(int), lambda n: 0 < n < 5), 3.33) == 3
-
-        with self.assertRaises(ValueError) as cm:
-            validate(all(int, float), 123)
-            assert_validationerror(cm.exception, """
-                ValidationError(type):
-                  Type of 123 should be float, but is int
-            """)
-
-    def test_any(self):
-        assert validate(any(int, dict), 5) == 5
-        assert validate(any(int, dict), {}) == {}
-
-        assert validate(any(int), 4) == 4
-
-        with self.assertRaises(ValueError) as cm:
-            validate(any(int, float), "123")
-            assert_validationerror(cm.exception, """
-                ValidationError(AnySchema):
-                  ValidationError(type):
-                    Type of 123 should be int, but is str
-            """)
-
-    def test_transform(self):
-        assert validate(transform(int), "1") == 1
-        assert validate(transform(text), 1) == "1"
-        assert validate(
-            transform(
-                lambda value, *args, **kwargs: "{0}{1}{2}".format(value, args, kwargs),
-                *("b", "c"),
-                **dict(d="d", e="e")
-            ),
-            "a"
-        ) == "a('b', 'c'){'e': 'e', 'd': 'd'}" if is_py2 else "a('b', 'c'){'d': 'd', 'e': 'e'}"
-
-        def no_args():
-            pass  # pragma: no cover
-
-        self.assertRaises(TypeError, validate, transform(no_args), "some value")
-
-    def test_union(self):
-        assert validate(union((get("foo"), get("bar"))), {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
-
-    def test_union_get(self):
-        assert validate(union_get("foo", "bar"), {"foo": "alpha", "bar": "beta"}) == ("alpha", "beta")
-        assert validate(union_get("foo", "bar", seq=list), {"foo": "alpha", "bar": "beta"}) == ["alpha", "beta"]
-        assert validate(union_get(("foo", "bar"), ("baz", "qux")),
-                        {"foo": {"bar": "alpha"}, "baz": {"qux": "beta"}}) == ("alpha", "beta")
-
-    def test_list(self):
-        assert validate([1, 0], [1, 0, 1, 1]) == [1, 0, 1, 1]
-        assert validate([1, 0], []) == []
-        assert validate(all([0, 1], lambda l: len(l) > 2), [0, 1, 0]) == [0, 1, 0]
-
-    def test_list_tuple_set_frozenset(self):
-        assert validate([int], [1, 2])
-        assert validate(set([int]), set([1, 2])) == set([1, 2])
-        assert validate(tuple([int]), tuple([1, 2])) == tuple([1, 2])
-
-    def test_dict(self):
-        assert validate({"key": 5}, {"key": 5}) == {"key": 5}
-        assert validate({"key": int}, {"key": 5}) == {"key": 5}
-        assert validate({"n": int, "f": float}, {"n": 5, "f": 3.14}) == {"n": 5, "f": 3.14}
-
-    def test_dict_keys(self):
-        assert validate({text: int},
-                        {"a": 1, "b": 2}) == {"a": 1, "b": 2}
-        assert validate({transform(text): transform(int)},
-                        {1: 3.14, 3.14: 1}) == {"1": 3, "3.14": 1}
-
-    def test_nested_dict_keys(self):
-        assert validate({text: {text: int}},
-                        {"a": {"b": 1, "c": 2}}) == {"a": {"b": 1, "c": 2}}
-
-    def test_dict_optional_keys(self):
-        assert validate({"a": 1, optional("b"): 2}, {"a": 1}) == {"a": 1}
-        assert validate({"a": 1, optional("b"): 2}, {"a": 1, "b": 2}) == {"a": 1, "b": 2}
-
-    def test_filter(self):
-        assert validate(filter(lambda i: i > 5), [10, 5, 4, 6, 7]) == [10, 6, 7]
-
-    def test_map(self):
-        assert validate(map(lambda v: v[0]), [(1, 2), (3, 4)]) == [1, 3]
-
-    def test_map_dict(self):
-        assert validate(map(lambda k, v: (v, k)), {"foo": "bar"}) == {"bar": "foo"}
-
-    def test_get(self):
-        assert validate(get("key"), {"key": "value"}) == "value"
-        assert validate(get("key"), re.match(r"(?P<key>.+)", "value")) == "value"
-        assert validate(get("invalidkey"), {"key": "value"}) is None
-        assert validate(get("invalidkey", "default"), {"key": "value"}) == "default"
-        assert validate(get(3, "default"), [0, 1, 2]) == "default"
-        assert validate(get("attr"), Element("foo", {"attr": "value"})) == "value"
-
-        with self.assertRaises(ValueError) as cm:
-            validate(get("key"), None)
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError(GetItemSchema):
-                      Could not get key "key" from object "None"
-                      Context:
-                        'NoneType' object has no attribute \'__getitem__\'
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError(GetItemSchema):
-                    Could not get key "key" from object "None"
-                    Context:
-                      'NoneType' object is not subscriptable
-                """)
-
-        data = {"one": {"two": {"three": "value1"}}, ("one", "two", "three"): "value2"}
-        assert validate(get(("one", "two", "three")), data) == "value1", "Recursive lookup"
-        assert validate(get(("one", "two", "three"), strict=True), data) == "value2", "Strict tuple-key lookup"
-        assert validate(get(("one", "two", "invalidkey")), data) is None, "Default value is None"
-        assert validate(get(("one", "two", "invalidkey"), "default"), data) == "default", "Custom default value"
-
-        with self.assertRaises(ValueError) as cm:
-            validate(get(("one", "invalidkey", "three")), data)
-            assert_validationerror(cm.exception, """
-                ValidationError(GetItemSchema):
-                  Item 'invalidkey' was not found in object {'two': {'three': 'value1'}}
-            """)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(all(get("one"), get("invalidkey"), get("three")), data)
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError(GetItemSchema):
-                      Could not get key 'three' from object None
-                      Context:
-                        'NoneType' object has no attribute \'__getitem__\'
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError(GetItemSchema):
-                    Could not get key 'three' from object None
-                    Context:
-                        'NoneType' object is not subscriptable
-                """)
-
-    def test_get_re(self):
-        m = re.match(r"(\d+)p", "720p")
-        assert validate(get(1), m) == "720"
-
-    def test_getattr(self):
-        el = Element("foo")
-
-        assert validate(getattr("tag"), el) == "foo"
-        assert validate(getattr("invalid", "default"), el) == "default"
-
-    def test_hasattr(self):
-        el = Element("foo")
-
-        assert validate(hasattr("tag"), el) == el
-
-    def test_length(self):
-        assert validate(length(1), [1, 2, 3]) == [1, 2, 3]
-
-        def invalid_length():
-            validate(length(2), [1])
-
-        self.assertRaises(ValueError, invalid_length)
-
-    def test_xml_element(self):
-        el = Element("tag")
-        el.set("key", "value")
-        el.text = "text"
-        childA = Element("childA")
-        childB = Element("childB")
-        el.append(childA)
-        el.append(childB)
-
-        upper = transform(str.upper)
-        newelem = validate(xml_element(tag=upper, text=upper, attrib={upper: upper}), el)
-
-        assert newelem is not el
-        assert newelem.tag == "TAG"
-        assert newelem.text == "TEXT"
-        assert newelem.attrib == {"KEY": "VALUE"}
-        assert newelem[0].tag == "childA"
-        assert newelem[1].tag == "childB"
-        assert newelem[0] is not childA
-        assert newelem[1] is not childB
-
-        with self.assertRaises(ValueError) as cm:
-            validate(xml_element(tag="invalid"), el)
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError(XmlElementSchema):
-                      Unable to validate XML tag
-                      Context(equality):
-                        'tag' does not equal 'invalid'
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError(XmlElementSchema):
-                      Unable to validate XML tag
-                      Context(equality):
-                        'tag' does not equal 'invalid'
-                """)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(xml_element(text="invalid"), el)
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError(XmlElementSchema):
-                    Unable to validate XML tag
-                    Context(equality):
-                        'tag' does not equal 'invalid'
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError(XmlElementSchema):
-                    Unable to validate XML text
-                    Context(equality):
-                        'text' does not equal 'invalid'
-                """)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(xml_element(attrib={"key": "invalid"}), el)
-            assert_validationerror(cm.exception, """
-                ValidationError(XmlElementSchema):
-                  Unable to validate XML attributes
-                  Context(dict):
-                    Unable to validate value of key 'key'
-                    Context(equality):
-                      'value' does not equal 'invalid'
-            """)
-
-    def test_xml_find(self):
-        el = Element("parent")
-        el.append(Element("foo"))
-        el.append(Element("bar"))
-
-        assert validate(xml_find("bar"), el).tag == "bar"
-
-        with self.assertRaises(ValueError) as cm:
-            validate(xml_find("baz"), el)
-            assert_validationerror(cm.exception, """
-                ValidationError(xml_find):
-                  XPath 'baz' did not return an element
-            """)
-
-    def test_xml_findtext(self):
-        el = Element("foo")
-        el.text = "bar"
-
-        assert validate(xml_findtext("."), el) == "bar"
-
-    def test_xml_findall(self):
-        el = Element("parent")
-        children = [Element("child") for i in range(10)]
-        for child in children:
-            el.append(child)
-
-        assert validate(xml_findall("child"), el) == children
-
-    def test_xml_xpath(self):
-        root = Element("root")
-        foo = Element("foo")
-        bar = Element("bar")
-        baz = Element("baz")
-        root.append(foo)
-        root.append(bar)
-        foo.append(baz)
-
-        assert validate(xml_xpath("./descendant-or-self::node()"), root) == [root, foo, baz, bar], "Returns correct node set"
-        assert validate(xml_xpath("./child::qux"), root) is None, "Returns None when node set is empty"
-        assert validate(xml_xpath("name(.)"), root) == "root", "Returns function values instead of node sets"
-        self.assertRaises(ValueError, validate, xml_xpath("."), "not an Element")
-
-    def test_xml_xpath_string(self):
-        root = Element("root")
-        foo = Element("foo")
-        bar = Element("bar")
-        root.set("attr", "")
-        foo.set("attr", "FOO")
-        bar.set("attr", "BAR")
-        root.append(foo)
-        root.append(bar)
-
-        assert validate(xml_xpath_string("./baz"), root) is None, "Returns None if nothing was found"
-        assert validate(xml_xpath_string("./@attr"), root) is None, "Returns None if string is empty"
-        assert validate(xml_xpath_string("./foo/@attr"), root) == "FOO", "Returns the attr value of foo"
-        assert validate(xml_xpath_string("./bar/@attr"), root) == "BAR", "Returns the attr value of bar"
-        assert validate(xml_xpath_string("count(./*)"), root) == "2", "Wraps arbitrary functions"
-        assert validate(xml_xpath_string("./*/@attr"), root) == "FOO", "Returns the first item of a set of nodes"
-
-    def test_attr(self):
-        el = Element("foo")
-        el.text = "bar"
-
-        assert validate(attr({"text": text}), el).text == "bar"
-
-        with self.assertRaises(ValueError) as cm:
-            validate(attr({"foo": text}), {"bar": "baz"})
-            assert_validationerror(cm.exception, """
-                ValidationError(AttrSchema):
-                  Attribute 'foo' not found on object {'bar': 'baz'}
-            """)
-
-    def test_url(self):
-        url_ = "https://google.se/path"
-
-        assert validate(url(), url_)
-        assert validate(url(scheme="http"), url_)
-        assert validate(url(path="/path"), url_)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(url(), "foo")
-            assert_validationerror(cm.exception, """
-                ValidationError:
-                  'foo' is not a valid URL
-            """)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(url(foo="bar"), "https://foo")
-            assert_validationerror(cm.exception, """
-                ValidationError(url):
-                  Invalid URL attribute 'foo'
-            """)
-
-        with self.assertRaises(ValueError) as cm:
-            validate(url(path=endswith(".m3u8")), "https://foo/bar.mpd")
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError(url):
-                      Unable to validate URL attribute 'path'
-                      Context(endswith):
-                        '/bar.mpd' does not end with '.m3u8'
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError(url):
-                    Unable to validate URL attribute 'path'
-                    Context(endswith):
-                        '/bar.mpd' does not end with '.m3u8'
-                """)
-
-    def test_startswith(self):
-        assert validate(startswith("abc"), "abcedf")
-
-        with self.assertRaises(ValueError) as cm:
-            validate(startswith("bar"), "foo")
-            assert_validationerror(cm.exception, """
-                ValidationError(startswith):
-                  'foo' does not start with 'bar'
-            """)
-
-    def test_endswith(self):
-        assert validate(endswith("åäö"), "xyzåäö")
-
-        with self.assertRaises(ValueError) as cm:
-            validate(endswith("bar"), "foo")
-            assert_validationerror(cm.exception, """
-                ValidationError(endswith):
-                  'foo' does not end with 'bar'
-            """)
-
-    def test_contains(self):
-        assert validate(contains("foo"), "foobar")
-
-        with self.assertRaises(ValueError) as cm:
-            validate(contains("bar"), "foo")
-            assert_validationerror(cm.exception, """
-                ValidationError(contains):
-                  'foo' does not contain 'bar'
-            """)
-
-    def test_parse_json(self):
-        assert validate(parse_json(), '{"a": ["b", true, false, null, 1, 2.3]}') == {"a": ["b", True, False, None, 1, 2.3]}
-        with self.assertRaises(ValueError) as cm:
-            validate(parse_json(), "invalid")
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError:
-                      Unable to parse JSON: No JSON object could be decoded ('invalid')
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError:
-                    Unable to parse JSON: Expecting value: line 1 column 1 (char 0) ('invalid')
-                """)
-
-    def test_parse_html(self):
-        assert validate(parse_html(), '<!DOCTYPE html><body>&quot;perfectly&quot;<a>valid<div>HTML').tag == "html"
-        with self.assertRaises(ValueError) as cm:
-            validate(parse_html(), None)
-            assert_validationerror(cm.exception, """
-                ValidationError:
-                  Unable to parse HTML: can only parse strings (None)
-            """)
-
-    def test_parse_xml(self):
-        assert validate(parse_xml(), '<?xml version="1.0" encoding="utf-8"?><root></root>').tag == "root"
-        with self.assertRaises(ValueError) as cm:
-            validate(parse_xml(), None)
-            assert_validationerror(cm.exception, """
-                ValidationError:
-                  Unable to parse XML: can only parse strings (None)
-            """)
-
-    def test_parse_qsd(self):
-        assert validate(parse_qsd(), 'foo=bar&foo=baz') == {"foo": "baz"}
-        with self.assertRaises(ValueError) as cm:
-            validate(parse_qsd(), 123)
-            if is_py2:
-                assert_validationerror(cm.exception, """
-                    ValidationError:
-                      Unable to parse query string: 'int' object has no attribute 'split' (123)
-                """)
-            else:
-                assert_validationerror(cm.exception, """
-                    ValidationError:
-                    Unable to parse query string: 'int' object has no attribute 'decode' (123)
-                """)
-
-
-class TestValidationError:
-    def test_subclass(self):
-        assert issubclass(ValidationError, ValueError)
+class TestSequence(object):
+    @pytest.mark.parametrize(
+        "schema, value",
+        [
+            ([3, 2, 1, 0], [1, 2]),
+            ((3, 2, 1, 0), (1, 2)),
+            ({3, 2, 1, 0}, {1, 2}),
+            (frozenset((3, 2, 1, 0)), frozenset((1, 2))),
+        ],
+        ids=[
+            "list",
+            "tuple",
+            "set",
+            "frozenset",
+        ],
+    )
+    def test_sequences(self, schema, value):
+        result = validate.validate(schema, value)
+        assert result == value
+        assert result is not value
 
     def test_empty(self):
-        assert str(ValidationError()) == "ValidationError:"
-        assert str(ValidationError("")) == "ValidationError:"
-        assert str(ValidationError(ValidationError())) == "ValidationError:\n  ValidationError:"
-        assert str(ValidationError(ValidationError(""))) == "ValidationError:\n  ValidationError:"
+        assert validate.validate([1, 2, 3], []) == []
+
+    def test_failure_items(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate([1, 2, 3], [3, 4, 5])
+            assert_validationerror(cm.value, """
+                ValidationError(AnySchema):
+                ValidationError(equality):
+                    4 does not equal 1
+                ValidationError(equality):
+                    4 does not equal 2
+                ValidationError(equality):
+                    4 does not equal 3
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate([1, 2, 3], {1, 2, 3})
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of {1, 2, 3} should be list, but is set
+            """)
+
+
+class TestDict(object):
+    def test_simple(self):
+        schema = {"foo": "FOO", "bar": str}
+        value = {"foo": "FOO", "bar": "BAR", "baz": "BAZ"}
+        result = validate.validate(schema, value)
+        assert result == {"foo": "FOO", "bar": "BAR"}
+        assert result is not value
+
+    @pytest.mark.parametrize(
+        "value, expected",
+        [
+            ({"foo": "foo"}, {"foo": "foo"}),
+            ({"bar": "bar"}, {}),
+        ],
+        ids=[
+            "existing",
+            "missing",
+        ]
+    )
+    def test_optional(self, value, expected):
+        assert validate.validate({validate.optional("foo"): "foo"}, value) == expected
+
+    @pytest.mark.parametrize(
+        "schema, value, expected",
+        [
+            (
+                {str: {int: str}},
+                {"foo": {1: "foo"}},
+                {"foo": {1: "foo"}},
+            ),
+            (
+                {validate.all(str, "foo"): str},
+                {"foo": "foo"},
+                {"foo": "foo"},
+            ),
+            (
+                {validate.any(int, str): str},
+                {"foo": "foo"},
+                {"foo": "foo"},
+            ),
+            (
+                {validate.transform(lambda s: s.upper()): str},
+                {"foo": "foo"},
+                {"FOO": "foo"},
+            ),
+            (
+                {validate.union((str,)): str},
+                {"foo": "foo"},
+                {("foo", ): "foo"},
+            ),
+        ],
+        ids=[
+            "type",
+            "AllSchema",
+            "AnySchema",
+            "TransformSchema",
+            "UnionSchema",
+        ],
+    )
+    def test_keys(self, schema, value, expected):
+        assert validate.validate(schema, value) == expected
+
+    def test_failure_key(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate({str: int}, {"foo": 1, 2: 3})
+            assert_validationerror(cm.value, """
+                ValidationError(dict):
+                Unable to validate key
+                Context(type):
+                    Type of 2 should be str, but is int
+            """)
+
+    def test_failure_key_value(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate({str: int}, {"foo": "bar"})
+            assert_validationerror(cm.value, """
+                ValidationError(dict):
+                Unable to validate value
+                Context(type):
+                    Type of 'bar' should be int, but is str
+            """)
+
+    def test_failure_notfound(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate({"foo": "bar"}, {"baz": "qux"})
+            assert_validationerror(cm.value, """
+                ValidationError(dict):
+                Key 'foo' not found in {'baz': 'qux'}
+            """)
+
+    def test_failure_value(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate({"foo": "bar"}, {"foo": 1})
+            assert_validationerror(cm.value, """
+                ValidationError(dict):
+                Unable to validate value of key 'foo'
+                Context(equality):
+                    1 does not equal 'bar'
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate({}, 1)
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of 1 should be dict, but is int
+            """)
+
+
+class TestCallable(object):
+    @staticmethod
+    def subject(v):
+        return v is not None
+
+    def test_success(self):
+        value = object()
+        assert validate.validate(self.subject, value) is value
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(self.subject, None)
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                subject(None) is not true
+            """)
+
+
+class TestAllSchema(object):
+    @pytest.fixture(scope="class")
+    def schema(self):
+        return validate.all(
+            str,
+            lambda string: string.startswith("f"),
+            "foo",
+        )
+
+    def test_success(self, schema):
+        assert validate.validate(schema, "foo") == "foo"
+
+    @pytest.mark.parametrize(
+        "value, error",
+        [
+            (
+                123,
+                """
+                    ValidationError(type):
+                      Type of 123 should be str, but is int
+                """
+            ),
+            (
+                "bar",
+                """
+                    ValidationError(Callable):
+                      <lambda>('bar') is not true
+                """
+            ),
+            (
+                "failure",
+                """
+                    ValidationError(equality):
+                      'failure' does not equal 'foo'
+                """
+            ),
+        ],
+        ids=[
+            "first",
+            "second",
+            "third",
+        ]
+    )
+    def test_failure(self, schema, value, error):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(schema, value)
+            assert_validationerror(cm.value, error)
+
+
+class TestAnySchema(object):
+    @pytest.fixture(scope="class")
+    def schema(self):
+        return validate.any(
+            "foo",
+            str,
+            lambda data: data is not None,
+        )
+
+    @pytest.mark.parametrize(
+        "value",
+        [
+            "foo",
+            "success",
+            object(),
+        ],
+        ids=[
+            "first",
+            "second",
+            "third",
+        ]
+    )
+    def test_success(self, schema, value):
+        assert validate.validate(schema, value) is value
+
+    def test_failure(self, schema):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(schema, None)
+            assert_validationerror(cm.value, """
+                ValidationError(AnySchema):
+                ValidationError(equality):
+                    None does not equal 'foo'
+                ValidationError(type):
+                    Type of None should be str, but is NoneType
+                ValidationError(Callable):
+                    <lambda>(None) is not true
+            """)
+
+
+class TestTransformSchema(object):
+    def test_success(self):
+        def callback(string, *args, **kwargs):
+            # type: (str)
+            return string.format(*args, **kwargs)
+
+        assert validate.validate(
+            validate.transform(callback, "foo", "bar", baz="qux"),
+            "{0} {1} {baz}",
+        ) == "foo bar qux"
+
+    def test_failure_signature(self):
+        def callback():
+            pass  # pragma: no cover
+
+        with pytest.raises(TypeError) as cm:
+            validate.validate(
+                validate.transform(callback),
+                "foo",
+            )
+            assert str(cm.value).endswith("takes 0 positional arguments but 1 was given")
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            # noinspection PyTypeChecker
+            validate.validate(
+                validate.transform("not a callable"),
+                "foo",
+            )
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of 'not a callable' should be Callable, but is str
+            """)
+
+
+class TestGetItemSchema(object):
+    class Container(object):
+        def __init__(self, exception):
+            self.exception = exception
+
+        def __getitem__(self, item):
+            raise self.exception
+
+        def __repr__(self):
+            return self.__class__.__name__
+
+    @pytest.mark.parametrize(
+        "obj",
+        [
+            {"foo": "bar"},
+            Element("elem", {"foo": "bar"}),
+            re.match(r"(?P<foo>.+)", "bar"),
+        ],
+        ids=[
+            "dict",
+            "lxml.etree.Element",
+            "re.Match",
+        ],
+    )
+    def test_simple(self, obj):
+        assert validate.validate(validate.get("foo"), obj) == "bar"
+
+    @pytest.mark.parametrize("exception", [KeyError, IndexError])
+    def test_getitem_no_default(self, exception):
+        container = self.Container(exception())
+        assert validate.validate(validate.get("foo"), container) is None
+
+    @pytest.mark.parametrize("exception", [KeyError, IndexError])
+    def test_getitem_default(self, exception):
+        container = self.Container(exception("failure"))
+        assert validate.validate(validate.get("foo", default="default"), container) == "default"
+
+    @pytest.mark.parametrize("exception", [TypeError, AttributeError])
+    def test_getitem_error(self, exception):
+        container = self.Container(exception("failure"))
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.get("foo", default="default"), container)
+            assert_validationerror(cm.value, """
+                ValidationError(GetItemSchema):
+                Could not get key 'foo' from object Container
+                Context:
+                    failure
+            """)
+
+    def test_nested(self):
+        dictionary = {"foo": {"bar": {"baz": "qux"}}}
+        assert validate.validate(validate.get(("foo", "bar", "baz")), dictionary) == "qux"
+
+    def test_nested_default(self):
+        dictionary = {"foo": {"bar": {"baz": "qux"}}}
+        assert validate.validate(validate.get(("foo", "bar", "qux"), default="default"), dictionary) == "default"
+
+    def test_nested_failure(self):
+        dictionary = {"foo": {"bar": {"baz": "qux"}}}
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.get(("foo", "qux", "baz"), default="default"), dictionary)
+            assert_validationerror(cm.value, """
+                ValidationError(GetItemSchema):
+                Item 'qux' was not found in object {'bar': {'baz': 'qux'}}
+            """)
+
+    def test_strict(self):
+        dictionary = {
+            ("foo", "bar", "baz"): "foo-bar-baz",
+            "foo": {"bar": {"baz": "qux"}}
+        }
+        assert validate.validate(validate.get(("foo", "bar", "baz"), strict=True), dictionary) == "foo-bar-baz"
+
+
+class TestAttrSchema(object):
+    class Subject(object):
+        foo = 1
+        bar = 2
+
+        def __repr__(self):
+            return self.__class__.__name__
+
+    @pytest.fixture(scope="function")
+    def obj(self):
+        obj1 = self.Subject()
+        obj2 = self.Subject()
+        setattr(obj1, "bar", obj2)
+
+        return obj1
+
+    def test_success(self, obj):
+        schema = validate.attr({"foo": validate.transform(lambda num: num + 1)})
+        newobj = validate.validate(schema, obj)
+        assert obj.foo == 1
+        assert newobj is not obj
+        assert newobj.foo == 2
+        assert newobj.bar is obj.bar
+
+    def test_failure_missing(self, obj):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.attr({"missing": int}), obj)
+            assert_validationerror(cm.value, """
+                ValidationError(AttrSchema):
+                Attribute 'missing' not found on object Subject
+            """)
+
+    def test_failure_subschema(self, obj):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.attr({"foo": str}), obj)
+            assert_validationerror(cm.value, """
+                ValidationError(AttrSchema):
+                Could not validate attribute 'foo'
+                Context(type):
+                    Type of 1 should be str, but is int
+            """)
+
+
+class TestXmlElementSchema(object):
+    upper = validate.transform(str.upper)
+
+    @pytest.fixture(scope="function")
+    def element(self):
+        childA = Element("childA", {"a": "1"})
+        childB = Element("childB", {"b": "2"})
+        childC = Element("childC")
+        childA.text = "childAtext"
+        childA.tail = "childAtail"
+        childB.text = "childBtext"
+        childB.tail = "childBtail"
+        childB.append(childC)
+
+        parent = Element("parent", {"attrkey1": "attrval1", "attrkey2": "attrval2"})
+        parent.text = "parenttext"
+        parent.tail = "parenttail"
+        parent.append(childA)
+        parent.append(childB)
+
+        return parent
+
+    @pytest.mark.parametrize(
+        "schema, expected",
+        [
+            (
+                validate.xml_element(),
+                (
+                    "<parent attrkey1=\"attrval1\" attrkey2=\"attrval2\">"
+                    "parenttext"
+                    "<childA a=\"1\">childAtext</childA>"
+                    "childAtail"
+                    "<childB b=\"2\">childBtext<childC/></childB>"
+                    "childBtail"
+                    "</parent>"
+                    "parenttail"
+                ),
+            ),
+            (
+                validate.xml_element(tag=upper, attrib={upper: upper}, text=upper, tail=upper),
+                (
+                    "<PARENT ATTRKEY1=\"ATTRVAL1\" ATTRKEY2=\"ATTRVAL2\">"
+                    "PARENTTEXT"
+                    "<childA a=\"1\">childAtext</childA>"
+                    "childAtail"
+                    "<childB b=\"2\">childBtext<childC/></childB>"
+                    "childBtail"
+                    "</PARENT>"
+                    "PARENTTAIL"
+                ),
+            ),
+        ],
+        ids=[
+            "empty",
+            "subschemas",
+        ],
+    )
+    def test_success(self, element, schema, expected):
+        newelement = validate.validate(schema, element)
+        assert etree_tostring(newelement).decode("utf-8") == expected
+        assert newelement is not element
+        assert newelement[0] is not element[0]
+        assert newelement[1] is not element[1]
+        assert newelement[1][0] is not element[1][0]
+
+    @pytest.mark.parametrize(
+        "schema, error",
+        [
+            (
+                validate.xml_element(tag="invalid"),
+                """
+                    ValidationError(XmlElementSchema):
+                      Unable to validate XML tag
+                      Context(equality):
+                        'parent' does not equal 'invalid'
+                """,
+            ),
+            (
+                validate.xml_element(attrib={"invalid": "invalid"}),
+                """
+                    ValidationError(XmlElementSchema):
+                      Unable to validate XML attributes
+                      ValidationError(dict):
+                        Key 'invalid' not found in {'attrkey1': 'attrval1', 'attrkey2': 'attrval2'}
+                """,
+            ),
+            (
+                validate.xml_element(text="invalid"),
+                """
+                    ValidationError(XmlElementSchema):
+                      Unable to validate XML text
+                      Context(equality):
+                        'parenttext' does not equal 'invalid'
+                """,
+            ),
+            (
+                validate.xml_element(tail="invalid"),
+                """
+                    ValidationError(XmlElementSchema):
+                      Unable to validate XML tail
+                      Context(equality):
+                        'parenttail' does not equal 'invalid'
+                """,
+            ),
+        ],
+        ids=[
+            "tag",
+            "attrib",
+            "text",
+            "tail",
+        ]
+    )
+    def test_failure(self, element, schema, error):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(schema, element)
+            assert_validationerror(cm.value, error)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_element(), "not-an-element")
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                iselement('not-an-element') is not true
+            """)
+
+
+class TestUnionGetSchema(object):
+    def test_simple(self):
+        assert validate.validate(
+            validate.union_get("foo", "bar"),
+            {"foo": 1, "bar": 2},
+        ) == (1, 2)
+
+    def test_sequence_type(self):
+        assert validate.validate(
+            validate.union_get("foo", "bar", seq=list),
+            {"foo": 1, "bar": 2},
+        ) == [1, 2]
+
+    def test_nested(self):
+        assert validate.validate(
+            validate.union_get(
+                ("foo", "bar"),
+                ("baz", "qux"),
+            ),
+            {"foo": {"bar": 1}, "baz": {"qux": 2}},
+        ) == (1, 2)
+
+
+class TestUnionSchema(object):
+    upper = validate.transform(str.upper)
+
+    def test_dict_success(self):
+        schema = validate.union({
+            "foo": str,
+            "bar": self.upper,
+            validate.optional("baz"): int,
+        })
+        assert validate.validate(schema, "value") == {"foo": "value", "bar": "VALUE"}
+
+    def test_dict_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.union({"foo": int}), "value")
+            assert_validationerror(cm.value, """
+                ValidationError(UnionSchema):
+                Could not validate union
+                Context(dict):
+                    Unable to validate union 'foo'
+                    Context(type):
+                    Type of 'value' should be int, but is str
+            """)
+
+    @pytest.mark.parametrize(
+        "schema, expected",
+        [
+            (validate.union([str, upper]), ["value", "VALUE"]),
+            (validate.union((str, upper)), ("value", "VALUE")),
+            (validate.union({str, upper}), {"value", "VALUE"}),
+            (validate.union(frozenset((str, upper))), frozenset(("value", "VALUE"))),
+        ],
+        ids=[
+            "list",
+            "tuple",
+            "set",
+            "frozenset",
+        ],
+    )
+    def test_sequence(self, schema, expected):
+        result = validate.validate(schema, "value")
+        assert result == expected
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.union(None), None)
+            assert_validationerror(cm.value, """
+                ValidationError(UnionSchema):
+                Could not validate union
+                Context:
+                    Invalid union type: NoneType
+            """)
+
+
+class TestLengthValidator(object):
+    @pytest.mark.parametrize(
+        "minlength, value",
+        [(3, "foo"), (3, [1, 2, 3])]
+    )
+    def test_success(self, minlength, value):
+        assert validate.validate(validate.length(minlength), value)
+
+    @pytest.mark.parametrize(
+        "minlength, value",
+        [(3, "foo"), (3, [1, 2, 3])]
+    )
+    def test_failure(self, minlength, value):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.length(minlength + 1), value)
+            assert_validationerror(cm.value, """
+                ValidationError(length):
+                Minimum length is 4, but value is 3
+            """)
+
+
+class TestStartsWithValidator(object):
+    def test_success(self):
+        assert validate.validate(validate.startswith("foo"), "foo bar baz")
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.startswith("invalid"), "foo bar baz")
+            assert_validationerror(cm.value, """
+                ValidationError(startswith):
+                'foo bar baz' does not start with 'invalid'
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.startswith("invalid"), 1)
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of 1 should be str, but is int
+            """)
+
+
+class TestEndsWithValidator(object):
+    def test_success(self):
+        assert validate.validate(validate.endswith("baz"), "foo bar baz")
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.endswith("invalid"), "foo bar baz")
+            assert_validationerror(cm.value, """
+                ValidationError(endswith):
+                'foo bar baz' does not end with 'invalid'
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.endswith("invalid"), 1)
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of 1 should be str, but is int
+            """)
+
+
+class TestContainsValidator(object):
+    def test_success(self):
+        assert validate.validate(validate.contains("bar"), "foo bar baz")
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.contains("invalid"), "foo bar baz")
+            assert_validationerror(cm.value, """
+                ValidationError(contains):
+                'foo bar baz' does not contain 'invalid'
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.contains("invalid"), 1)
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of 1 should be str, but is int
+            """)
+
+
+class TestUrlValidator(object):
+    url = "https://user:pass@sub.host.tld:1234/path.m3u8?query#fragment"
+
+    @pytest.mark.parametrize(
+        "params",
+        [
+            dict(scheme="http"),
+            dict(scheme="https"),
+            dict(netloc="user:pass@sub.host.tld:1234", username="user", password="pass", hostname="sub.host.tld", port=1234),
+            dict(path=validate.endswith(".m3u8")),
+        ],
+        ids=[
+            "implicit https",
+            "explicit https",
+            "multiple attributes",
+            "subschemas",
+        ],
+    )
+    def test_success(self, params):
+        assert validate.validate(validate.url(**params), self.url)
+
+    def test_failure_valid_url(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.url(), "foo")
+            assert_validationerror(cm.value, """
+                ValidationError(url):
+                'foo' is not a valid URL
+            """)
+
+    def test_failure_url_attribute(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.url(invalid=str), self.url)
+            assert_validationerror(cm.value, """
+                ValidationError(url):
+                Invalid URL attribute 'invalid'
+            """)
+
+    def test_failure_subschema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.url(hostname="invalid"), self.url)
+            assert_validationerror(cm.value, """
+                ValidationError(url):
+                Unable to validate URL attribute 'hostname'
+                Context(equality):
+                    'sub.host.tld' does not equal 'invalid'
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.url(), 1)
+            assert_validationerror(cm.value, """
+                ValidationError(type):
+                Type of 1 should be str, but is int
+            """)
+
+
+class TestGetAttrValidator(object):
+    @pytest.fixture(scope="class")
+    def subject(self):
+        class Subject(object):
+            foo = 1
+
+        return Subject()
+
+    def test_simple(self, subject):
+        assert validate.validate(validate.getattr("foo"), subject) == 1
+
+    def test_default(self, subject):
+        assert validate.validate(validate.getattr("bar", 2), subject) == 2
+
+    def test_no_default(self, subject):
+        assert validate.validate(validate.getattr("bar"), subject) is None
+        assert validate.validate(validate.getattr("baz"), None) is None
+
+
+class TestHasAttrValidator(object):
+    class Subject(object):
+        foo = 1
+
+        def __repr__(self):
+            return self.__class__.__name__
+
+    def test_success(self,):
+        assert validate.validate(validate.hasattr("foo"), self.Subject())
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.hasattr("bar"), self.Subject())
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                getter(Subject) is not true
+            """)
+
+
+class TestFilterValidator(object):
+    def test_dict(self):
+        schema = validate.filter(lambda k, v: k < 2 and v > 0)
+        value = {0: 0, 1: 1, 2: 0, 3: 1}
+        assert validate.validate(schema, value) == {1: 1}
+
+    def test_sequence(self):
+        schema = validate.filter(lambda k: k < 2)
+        value = (0, 1, 2, 3)
+        assert validate.validate(schema, value) == (0, 1)
+
+
+class TestMapValidator(object):
+    def test_dict(self):
+        schema = validate.map(lambda k, v: (k + 1, v + 1))
+        value = {0: 0, 1: 1, 2: 0, 3: 1}
+        assert validate.validate(schema, value) == {1: 1, 2: 2, 3: 1, 4: 2}
+
+    def test_sequence(self):
+        schema = validate.map(lambda k: k + 1)
+        value = (0, 1, 2, 3)
+        assert validate.validate(schema, value) == (1, 2, 3, 4)
+
+
+class TestXmlFindValidator(object):
+    def test_success(self):
+        element = Element("foo")
+        assert validate.validate(validate.xml_find("."), element) is element
+
+    def test_failure_no_element(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_find("*"), Element("foo"))
+            assert_validationerror(cm.value, """
+                ValidationError(xml_find):
+                XPath '*' did not return an element
+            """)
+
+    def test_failure_not_found(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_find("invalid"), Element("foo"))
+            assert_validationerror(cm.value, """
+                ValidationError(xml_find):
+                XPath 'invalid' did not return an element
+            """)
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_find("."), "not-an-element")
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                iselement('not-an-element') is not true
+            """)
+
+
+class TestXmlFindallValidator(object):
+    @pytest.fixture(scope="class")
+    def element(self):
+        element = Element("root")
+        for child in Element("foo"), Element("bar"), Element("baz"):
+            element.append(child)
+
+        return element
+
+    def test_simple(self, element):
+        assert validate.validate(validate.xml_findall("*"), element) == [element[0], element[1], element[2]]
+
+    def test_empty(self, element):
+        assert validate.validate(validate.xml_findall("missing"), element) == []
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_findall("*"), "not-an-element")
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                iselement('not-an-element') is not true
+            """)
+
+
+class TestXmlFindtextValidator(object):
+    def test_simple(self):
+        element = Element("foo")
+        element.text = "bar"
+        assert validate.validate(validate.xml_findtext("."), element) == "bar"
+
+    def test_empty(self):
+        element = Element("foo")
+        assert validate.validate(validate.xml_findtext("."), element) is None
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_findtext("."), "not-an-element")
+        assert_validationerror(cm.value, """
+            ValidationError(Callable):
+              iselement('not-an-element') is not true
+        """)
+
+
+class TestXmlXpathValidator(object):
+    @pytest.fixture(scope="class")
+    def element(self):
+        element = Element("root")
+        for child in Element("foo"), Element("bar"), Element("baz"):
+            child.text = child.tag.upper()
+            element.append(child)
+
+        return element
+
+    def test_simple(self, element):
+        assert validate.validate(validate.xml_xpath("*"), element) == [element[0], element[1], element[2]]
+        assert validate.validate(validate.xml_xpath("*/text()"), element) == ["FOO", "BAR", "BAZ"]
+
+    def test_empty(self, element):
+        assert validate.validate(validate.xml_xpath("invalid"), element) is None
+
+    def test_other(self, element):
+        assert validate.validate(validate.xml_xpath("local-name(.)"), element) == "root"
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_xpath("."), "not-an-element")
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                iselement('not-an-element') is not true
+            """)
+
+
+class TestXmlXpathStringValidator(object):
+    @pytest.fixture(scope="class")
+    def element(self):
+        element = Element("root")
+        for child in Element("foo"), Element("bar"), Element("baz"):
+            child.text = child.tag.upper()
+            element.append(child)
+
+        return element
+
+    def test_simple(self, element):
+        assert validate.validate(validate.xml_xpath_string("./foo/text()"), element) == "FOO"
+
+    def test_empty(self, element):
+        assert validate.validate(validate.xml_xpath_string("./text()"), element) is None
+
+    def test_failure_schema(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.xml_xpath_string("."), "not-an-element")
+            assert_validationerror(cm.value, """
+                ValidationError(Callable):
+                iselement('not-an-element') is not true
+            """)
+
+
+class TestParseJsonValidator(object):
+    def test_success(self):
+        assert validate.validate(
+            validate.parse_json(),
+            """{"a": ["b", true, false, null, 1, 2.3]}""",
+        ) == {"a": ["b", True, False, None, 1, 2.3]}
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.parse_json(), "invalid")
+            assert_validationerror(cm.value, """
+                ValidationError:
+                Unable to parse JSON: Expecting value: line 1 column 1 (char 0) ('invalid')
+            """)
+
+
+class TestParseHtmlValidator(object):
+    def test_success(self):
+        assert validate.validate(
+            validate.parse_html(),
+            """<!DOCTYPE html><body>&quot;perfectly&quot;<a>valid<div>HTML""",
+        ).tag == "html"
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.parse_html(), None)
+            assert_validationerror(cm.value, """
+                ValidationError:
+                Unable to parse HTML: can only parse strings (None)
+            """)
+
+
+class TestParseXmlValidator(object):
+    def test_success(self):
+        assert validate.validate(
+            validate.parse_xml(),
+            """<?xml version="1.0" encoding="utf-8"?><root></root>""",
+        ).tag == "root"
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.parse_xml(), None)
+            assert_validationerror(cm.value, """
+                ValidationError:
+                Unable to parse XML: can only parse strings (None)
+            """)
+
+
+class TestParseQsdValidator(object):
+    def test_success(self):
+        assert validate.validate(
+            validate.parse_qsd(),
+            "foo=bar&foo=baz&qux=quux",
+        ) == {"foo": "baz", "qux": "quux"}
+
+    def test_failure(self):
+        with pytest.raises(validate.ValidationError) as cm:
+            validate.validate(validate.parse_qsd(), 123)
+            assert_validationerror(cm.value, """
+                ValidationError:
+                Unable to parse query string: 'int' object has no attribute 'decode' (123)
+            """)
+
+
+class TestValidationError(object):
+    def test_subclass(self):
+        assert issubclass(validate.ValidationError, ValueError)
+
+    def test_empty(self):
+        assert str(validate.ValidationError()) == "ValidationError:"
+        assert str(validate.ValidationError("")) == "ValidationError:"
+        assert str(validate.ValidationError(validate.ValidationError())) == "ValidationError:\n  ValidationError:"
+        assert str(validate.ValidationError(validate.ValidationError(""))) == "ValidationError:\n  ValidationError:"
 
     def test_single(self):
-        assert str(ValidationError("foo")) == "ValidationError:\n  foo"
-        assert str(ValidationError(ValueError("bar"))) == "ValidationError:\n  bar"
+        assert str(validate.ValidationError("foo")) == "ValidationError:\n  foo"
+        assert str(validate.ValidationError(ValueError("bar"))) == "ValidationError:\n  bar"
 
     def test_single_nested(self):
-        err = ValidationError(ValidationError("baz"))
+        err = validate.ValidationError(validate.ValidationError("baz"))
         assert_validationerror(err, """
             ValidationError:
               ValidationError:
@@ -551,11 +1134,11 @@ class TestValidationError:
         """)
 
     def test_multiple_nested(self):
-        err = ValidationError(
+        err = validate.ValidationError(
             "a",
-            ValidationError("b", "c"),
+            validate.ValidationError("b", "c"),
             "d",
-            ValidationError("e"),
+            validate.ValidationError("e"),
             "f",
         )
         assert_validationerror(err, """
@@ -571,11 +1154,11 @@ class TestValidationError:
         """)
 
     def test_context(self):
-        err = ValidationError(
+        err = validate.ValidationError(
             "a",
-            context=ValidationError(
+            context=validate.ValidationError(
                 "b",
-                context=ValidationError(
+                context=validate.ValidationError(
                     "c",
                 )
             )
@@ -590,19 +1173,19 @@ class TestValidationError:
         """)
 
     def test_multiple_nested_context(self):
-        err = ValidationError(
+        err = validate.ValidationError(
             "a",
             "b",
-            context=ValidationError(
-                ValidationError(
+            context=validate.ValidationError(
+                validate.ValidationError(
                     "c",
-                    context=ValidationError("d", "e")
+                    context=validate.ValidationError("d", "e")
                 ),
-                ValidationError(
+                validate.ValidationError(
                     "f",
-                    context=ValidationError("g")
+                    context=validate.ValidationError("g")
                 ),
-                context=ValidationError("h", "i")
+                context=validate.ValidationError("h", "i")
             )
         )
         assert_validationerror(err, """
@@ -625,16 +1208,16 @@ class TestValidationError:
         """)
 
     def test_schema(self):
-        err = ValidationError(
-            ValidationError(
+        err = validate.ValidationError(
+            validate.ValidationError(
                 "foo",
                 schema=dict
             ),
-            ValidationError(
+            validate.ValidationError(
                 "bar",
                 schema="something"
             ),
-            schema=any
+            schema=validate.any
         )
         assert_validationerror(err, """
             ValidationError(AnySchema):
@@ -645,8 +1228,8 @@ class TestValidationError:
         """)
 
     def test_recursion(self):
-        err1 = ValidationError("foo")
-        err2 = ValidationError("bar", context=err1)
+        err1 = validate.ValidationError("foo")
+        err2 = validate.ValidationError("bar", context=err1)
         err1.context = err2
         assert_validationerror(err1, """
             ValidationError:
@@ -658,7 +1241,7 @@ class TestValidationError:
         """)
 
     def test_truncate(self):
-        err = ValidationError(
+        err = validate.ValidationError(
             "foo {foo} bar {bar} baz",
             foo="Some really long error message that exceeds the maximum error message length",
             bar=repr("Some really long error message that exceeds the maximum error message length"),
