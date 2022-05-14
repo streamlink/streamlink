@@ -341,6 +341,9 @@ class MuxedHLSStream(MuxedStream):
         self.url_master = url_master
 
     def to_manifest_url(self):
+        if self.url_master is None:
+            return super(MuxedHLSStream, self).to_manifest_url()
+
         return self.url_master
 
 
@@ -359,14 +362,11 @@ class HLSStream(HTTPStream):
     __reader__ = HLSStreamReader
 
     def __init__(self, session_, url, url_master=None, force_restart=False, start_offset=0, duration=None, **args):
-        HTTPStream.__init__(self, session_, url, **args)
+        super(HLSStream, self).__init__(session_, url, **args)
         self.url_master = url_master
         self.force_restart = force_restart
         self.start_offset = start_offset
         self.duration = duration
-
-    def __repr__(self):
-        return "<HLSStream({0!r}, {1!r})>".format(self.url, self.url_master)
 
     def __json__(self):
         json = HTTPStream.__json__(self)
@@ -382,7 +382,7 @@ class HLSStream(HTTPStream):
 
     def to_manifest_url(self):
         if self.url_master is None:
-            return None
+            return super(HLSStream, self).to_manifest_url()
 
         args = self.args.copy()
         args.update(url=self.url_master)

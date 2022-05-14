@@ -5,11 +5,10 @@ from streamlink_cli.utils.formatter import Formatter
 from streamlink_cli.utils.http_server import HTTPServer
 from streamlink_cli.utils.player import find_default_player
 from streamlink_cli.utils.progress import progress
-from streamlink_cli.utils.stream import stream_to_url
 
 __all__ = [
     "Formatter", "HTTPServer", "JSONEncoder",
-    "find_default_player", "ignored", "progress", "stream_to_url"
+    "find_default_player", "ignored", "progress",
 ]
 
 

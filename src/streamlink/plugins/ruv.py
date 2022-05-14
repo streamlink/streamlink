@@ -44,7 +44,7 @@ _multi_re = re.compile(r"""(?P<base_url>http://[0-9a-zA-Z\-\.]*/
 """, re.VERBOSE))
 class Ruv(Plugin):
     def __init__(self, url):
-        super().__init__(url)
+        super(Ruv, self).__init__(url)
 
         self.live = self.matches[0] is not None
         if self.live:

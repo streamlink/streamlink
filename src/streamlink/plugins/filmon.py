@@ -124,7 +124,7 @@ class FilmOnHLS(HLSStream):
         url = self.url
         expires = self.watch_timeout - time.time()
         if expires < 0:
-            raise TypeError("Stream has expired and cannot be converted to a URL")
+            raise TypeError("Stream has expired and cannot be translated to a URL")
         return url
 
 

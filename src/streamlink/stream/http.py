@@ -22,9 +22,6 @@ class HTTPStream(Stream):
         self.args = dict(url=url, **args)
         self.buffered = buffered
 
-    def __repr__(self):
-        return "<HTTPStream({0!r})>".format(self.url)
-
     def __json__(self):
         req = self.session.http.prepare_new_request(**self.args)
 
@@ -35,6 +32,9 @@ class HTTPStream(Stream):
             headers=dict(req.headers),
             body=req.body,
         )
+
+    def to_url(self):
+        return self.url
 
     @property
     def url(self):
@@ -60,6 +60,3 @@ class HTTPStream(Stream):
             fd = StreamIOThreadWrapper(self.session, fd, timeout=timeout)
 
         return fd
-
-    def to_url(self):
-        return self.url

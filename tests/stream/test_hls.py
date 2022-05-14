@@ -49,10 +49,10 @@ class TestHLSStreamRepr(unittest.TestCase):
         session = Streamlink()
 
         stream = HLSStream(session, "https://foo.bar/playlist.m3u8")
-        self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', None)>")
+        self.assertEqual(repr(stream), "<HLSStream ['hls', 'https://foo.bar/playlist.m3u8']>")
 
         stream = HLSStream(session, "https://foo.bar/playlist.m3u8", "https://foo.bar/master.m3u8")
-        self.assertEqual(repr(stream), "<HLSStream('https://foo.bar/playlist.m3u8', 'https://foo.bar/master.m3u8')>")
+        self.assertEqual(repr(stream), "<HLSStream ['hls', 'https://foo.bar/playlist.m3u8', 'https://foo.bar/master.m3u8']>")
 
 
 class TestHLSVariantPlaylist(unittest.TestCase):

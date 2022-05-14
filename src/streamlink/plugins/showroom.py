@@ -22,7 +22,7 @@ class Showroom(Plugin):
     LIVE_STATUS = 2
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super(Showroom, self).__init__(*args, **kwargs)
         self.session.set_option("hls-playlist-reload-time", "segment")
 
     def _get_streams(self):

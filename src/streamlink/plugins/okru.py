@@ -41,7 +41,7 @@ class OKru(Plugin):
         if weight:
             return weight, "okru"
 
-        return super().stream_weight(key)
+        return super(OKru, cls).stream_weight(key)
 
     def _get_streams(self):
         schema_metadata = validate.Schema(
