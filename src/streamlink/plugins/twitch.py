@@ -12,8 +12,6 @@ import re
 from collections import namedtuple
 from random import random
 
-import requests
-
 from streamlink.compat import str, urlparse
 from streamlink.exceptions import NoStreamsError, PluginError
 from streamlink.plugin import Plugin, PluginArgument, PluginArguments, pluginmatcher
@@ -179,8 +177,7 @@ class UsherService(object):
         }
         params.update(extra_params)
 
-        req = requests.Request("GET", url, params=params)
-        req = self.session.http.prepare_request(req)
+        req = self.session.http.prepare_new_request(url=url, params=params)
 
         return req.url
 

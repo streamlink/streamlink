@@ -1,22 +1,6 @@
-import requests
-
 from streamlink.exceptions import StreamError
 from streamlink.stream.stream import Stream
 from streamlink.stream.wrappers import StreamIOIterWrapper, StreamIOThreadWrapper
-
-
-VALID_ARGS = ("method", "url", "params", "headers", "cookies", "auth", "data", "json", "files")
-
-
-def normalize_key(keyval):
-    key, val = keyval
-    key = hasattr(key, "decode") and key.decode("utf8", "ignore") or key
-
-    return key, val
-
-
-def valid_args(args):
-    return {k: v for k, v in args.items() if k in VALID_ARGS}
 
 
 class HTTPStream(Stream):
@@ -42,33 +26,33 @@ class HTTPStream(Stream):
         return "<HTTPStream({0!r})>".format(self.url)
 
     def __json__(self):
-        args = self.args.copy()
-        method = args.pop("method", "GET")
-        req = requests.Request(method=method, **valid_args(args))
-        req = self.session.http.prepare_request(req)
+        req = self.session.http.prepare_new_request(**self.args)
 
-        headers = dict(map(normalize_key, req.headers.items()))
-
-        return dict(type=type(self).shortname(), url=req.url,
-                    method=req.method, headers=headers,
-                    body=req.body)
+        return dict(
+            type=self.shortname(),
+            method=req.method,
+            url=req.url,
+            headers=dict(req.headers),
+            body=req.body,
+        )
 
     @property
     def url(self):
-        args = self.args.copy()
-        method = args.pop("method", "GET")
-        return requests.Request(method=method, **valid_args(args)).prepare().url
+        """
+        The URL to the stream, prepared by :mod:`requests` with parameters read from :attr:`args`.
+        """
+
+        return self.session.http.prepare_new_request(**self.args).url
 
     def open(self):
-        args = self.args.copy()
-        method = args.pop("method", "GET")
+        reqargs = self.session.http.valid_request_args(**self.args)
+        reqargs.setdefault("method", "GET")
         timeout = self.session.options.get("stream-timeout")
         res = self.session.http.request(
-            method=method,
             stream=True,
             exception=StreamError,
             timeout=timeout,
-            **valid_args(args)
+            **reqargs
         )
 
         fd = StreamIOIterWrapper(res.iter_content(8192))

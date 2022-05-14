@@ -14,5 +14,13 @@ class FileStream(Stream):
         if not self.path and not self.fileobj:
             raise ValueError("path or fileobj must be set")
 
+    def __json__(self):
+        json = super(FileStream, self).__json__()
+
+        if self.path:
+            json["path"] = self.path
+
+        return json
+
     def open(self):
         return self.fileobj or open(self.path)
