@@ -117,7 +117,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             log.error("Failed to open segment {0}: {1}", sequence.num, err)
             return
 
-    def write(self, sequence, res, chunk_size=8192):
+    def write(self, sequence, result, chunk_size=8192):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key,
@@ -127,7 +127,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            data = res.content
+            data = result.content
             # If the input data is not a multiple of 16, cut off any garbage
             garbage_len = len(data) % AES.block_size
             if garbage_len:
@@ -141,7 +141,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             self.reader.buffer.write(chunk)
         else:
             try:
-                for chunk in res.iter_content(chunk_size):
+                for chunk in result.iter_content(chunk_size):
                     self.reader.buffer.write(chunk)
             except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
                 log.error("Download of segment {0} failed ({1})".format(sequence.num, err))
