@@ -6,6 +6,7 @@ except ImportError:
     pass
 
 import requests
+# noinspection PyPackageRequirements
 import urllib3
 from requests import Session
 
@@ -18,15 +19,6 @@ from streamlink.utils.parse import parse_json, parse_xml
 
 urllib3_version = tuple(map(int, urllib3.__version__.split(".")[:3]))
 
-
-try:
-    from requests.packages import urllib3
-
-    # We tell urllib3 to disable warnings about unverified HTTPS requests,
-    # because in some plugins we have to do unverified requests intentionally.
-    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-except (ImportError, AttributeError):
-    pass
 
 # Never convert percent-encoded characters to uppercase in urllib3>=1.25.4.
 # This is required for sites which compare request URLs byte for byte and return different responses depending on that.
