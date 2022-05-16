@@ -1,5 +1,77 @@
 # Changelog
 
+## streamlink 2.27.3.0 (2022-05-16)
+
+```text
+Alexis Murzeau <amubtdx@gmail.com> (1):
+      tests: mock user euid to be able to run tests as root
+
+Billy2011 <kschmidt2007@googlemail.com> (30):
+      plugins.teamliquid: plugin removal (#4393)
+      chore: clean up some imports (#4394)
+      plugins.dash: add support for parameters (#4434)
+      plugins.cdnbg: rewrite plugin (#4456)
+      plugins.vrtbe: remove plugin (#4459)
+      plugins.senategov: remove plugin (#4458)
+      plugins.garena: remove plugin (#4460)#
+      plugins.facebook: replace itertags (#4465)
+      cli: add support for --record=- (#4462)
+      plugins.showroom: fix plugin (#4473)
+      plugins.youtube: fix consent dialog (#4515)
+      Update youtube.py
+      stream.segmented: join worker+writer on close (#4517)
+      plugin.api.validate: fix xml_element (#4514)
+      plugin.api.validate: refactor all + any (#4514)
+      plugin.api.validate: refactor get (#4514)
+      plugin.api.validate: refactor callable (#4514)
+      plugin.api.validate: refactor Schema class (#4514)
+      Update compat.py
+      Update validate.py
+      plugin.api.validate: turn module into package (#4514)
+      plugin.api.validate: truncate error messages (#4514)
+      plugin.api.validate: rewrite tests (#4514)
+      http_session: don't disable InsecureRequestWarning (#4525)
+      plugin.api.http_session: add prepare_new_request (#4521)
+      stream: refactor to_url and string representation (#4521)
+      stream.hls_filtered: simplify discard logic in writer
+      docs: rewrite API guide (#4527)
+
+Ekang Monyet <ekangmonyet@posteo.net> (1):
+      plugins.nicolive: fix timeshift-offset option
+
+Ian Cameron <1661072+mkbloke@users.noreply.github.com> (8):
+      plugins: add missing "description" metadata tags
+      plugins.cmmedia: new plugin
+      plugins.htv: new plugin
+      plugins.trovo: new plugin
+      cli.argparser: update help with dir/subdir creation info
+      plugins.rotana: plugin removal
+      plugins.hiplayer: new plugin
+      plugins.crunchyroll: update/fix
+
+Mozi <29089388+pzhlkj6612@users.noreply.github.com> (1):
+      cli: add "overwrite" to --force help text (#4396)
+
+back-to <backto@protonmail.ch> (2):
+      plugins.oneplusone: fix iframe
+      plugins.tlctr: remove plugin
+
+bastimeyer <mail@bastimeyer.de> (3):
+      docs: fix CLI argument line breaks
+      plugins.funimationnow: replace itertags
+      tests: move FileStream tests
+
+code-review-doctor <72647856+code-review-doctor@users.noreply.github.com> (1):
+      tests: fix accidental URL string concatenation (#4387)
+
+iwconfig <snelhingst@gmail.com> (1):
+      plugins.svtplay: oppetarkiv.se is not functional anymore (#4443)
+
+takayuki <nirasawa@gmail.com> (1):
+      plugins.linelive: fix API URL
+```
+
+
 ## streamlink 2.27.2.0 (2022-03-08)
 
 ```text
