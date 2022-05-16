@@ -89,7 +89,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
             raise StreamError(f"Unable to decrypt cipher {key.method}")
 
         if not self.key_uri_override and not key.uri:
-            raise StreamError("Missing URI to decryption key")
+            raise StreamError("Missing URI for decryption key")
 
         if self.key_uri_override:
             p = urlparse(key.uri)
@@ -159,7 +159,7 @@ class HLSStreamWriter(SegmentedStreamWriter):
         try:
             return self._fetch(
                 sequence.segment.uri,
-                stream=self.stream_data and not sequence.segment.key,
+                stream=self.stream_data,
                 **self.create_request_params(sequence.num, sequence.segment, False)
             )
         except StreamError as err:
@@ -214,29 +214,33 @@ class HLSStreamWriter(SegmentedStreamWriter):
         if sequence.segment.key and sequence.segment.key.method != "NONE":
             try:
                 decryptor = self.create_decryptor(sequence.segment.key, sequence.num)
-            except StreamError as err:
+            except (StreamError, ValueError) as err:
                 log.error(f"Failed to create decryptor: {err}")
                 self.close()
                 return
 
-            data = result.content
-            # If the input data is not a multiple of 16, cut off any garbage
-            garbage_len = len(data) % AES.block_size
-            if garbage_len:
-                log.debug(f"Cutting off {garbage_len} bytes of garbage before decrypting")
-                decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
-            else:
-                decrypted_chunk = decryptor.decrypt(data)
-
-            chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
-            self.reader.buffer.write(chunk)
+            try:
+                # Unlike plaintext segments, encrypted segments can't be written to the buffer in small chunks
+                # because of the byte padding at the end of the decrypted data, which means that decrypting in
+                # smaller chunks is unnecessary if the entire segment needs to be kept in memory anyway, unless
+                # we defer the buffer writes by one read call and apply the unpad call only to the last read call.
+                encrypted_chunk = result.content
+                decrypted_chunk = decryptor.decrypt(encrypted_chunk)
+                chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
+                self.reader.buffer.write(chunk)
+            except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
+                log.error(f"Download of segment {sequence.num} failed: {err}")
+                return
+            except ValueError as err:
+                log.error(f"Error while decrypting segment {sequence.num}: {err}")
+                return
 
         else:
             try:
                 for chunk in result.iter_content(self.WRITE_CHUNK_SIZE):
                     self.reader.buffer.write(chunk)
             except (ChunkedEncodingError, ContentDecodingError, ConnectionError) as err:
-                log.error(f"Download of segment {sequence.num} failed ({err})")
+                log.error(f"Download of segment {sequence.num} failed: {err}")
                 return
 
         if is_map:
