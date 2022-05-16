@@ -113,7 +113,7 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
             # don't write again during teardown
             if not self.closed:
                 super().write(*args, **kwargs)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self.write_error = err
             self.reader.close()
         finally:
@@ -236,7 +236,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.reader.worker.join(timeout)
         thread.join(timeout)
 
-    # make one write call on the write thread and wait until it has finished
+    # make write calls on the write-thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=TIMEOUT_AWAIT_WRITE):
         writer = self.thread.reader.writer
         if not writer.is_alive():  # pragma: no cover
@@ -245,7 +245,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         for write_call in range(write_calls):
             writer.write_wait.set()
             done = writer.write_done.wait(timeout)
-            if writer.write_error:
+            if writer.write_error:  # pragma: no cover
                 raise writer.write_error
             if not done:  # pragma: no cover
                 raise RuntimeError(f"Await write timeout: write_call={write_call + 1}")
@@ -262,7 +262,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         done = thread.read_done.wait(timeout)
 
         try:
-            if thread.error:
+            if thread.error:  # pragma: no cover
                 raise thread.error
             if not done:  # pragma: no cover
                 raise RuntimeError(f"Await read timeout: read_all={read_all}")
