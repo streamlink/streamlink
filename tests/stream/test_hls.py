@@ -339,38 +339,46 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
         data = self.await_read(read_all=True)
         expected = self.content(segments, prop="content_plain")
         self.assertEqual(data, expected, "Removes garbage data from segments")
-        self.assertIn(call("Cutting off 1 bytes of garbage before decrypting"), mock_log.debug.mock_calls)
-        self.assertIn(call("Cutting off 15 bytes of garbage before decrypting"), mock_log.debug.mock_calls)
+        self.assertIn(call("Cutting off 1 bytes of garbage before decrypting segment 0"), mock_log.debug.mock_calls)
+        self.assertIn(call("Cutting off 15 bytes of garbage before decrypting segment 1"), mock_log.debug.mock_calls)
 
-    def test_hls_encrypted_aes128_incorrect_padding_length(self):
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_aes128_incorrect_padding_length(self, mock_log: Mock):
         aesKey, aesIv, key = self.gen_key()
 
         padding = b"\x00" * (AES.block_size - len(b"[0]"))
         self.subject([
             Playlist(0, [key, SegmentEnc(0, aesKey, aesIv, padding=padding)], end=True)
         ])
+        self.await_write()
 
-        # close read thread early
-        self.thread.close()
+        data = self.await_read(read_all=True)
+        self.assertEqual(data, b"", "Doesn't write to buffer on error")
+        self.assertTrue(self.thread.reader.writer.closed, "Closes writer on error")
+        self.assertIn(
+            call("Error while decrypting segment 0: Padding is incorrect."),
+            mock_log.error.mock_calls,
+            "Crypto.Util.Padding.unpad ValueError",
+        )
 
-        with self.assertRaises(ValueError) as cm:
-            self.await_write()
-        self.assertEqual(str(cm.exception), "Padding is incorrect.", "Crypto.Util.Padding.unpad exception")
-
-    def test_hls_encrypted_aes128_incorrect_padding_content(self):
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_aes128_incorrect_padding_content(self, mock_log: Mock):
         aesKey, aesIv, key = self.gen_key()
 
         padding = (b"\x00" * (AES.block_size - len(b"[0]") - 1)) + bytes([AES.block_size])
         self.subject([
             Playlist(0, [key, SegmentEnc(0, aesKey, aesIv, padding=padding)], end=True)
         ])
+        self.await_write()
 
-        # close read thread early
-        self.thread.close()
-
-        with self.assertRaises(ValueError) as cm:
-            self.await_write()
-        self.assertEqual(str(cm.exception), "PKCS#7 padding is incorrect.", "Crypto.Util.Padding.unpad exception")
+        data = self.await_read(read_all=True)
+        self.assertEqual(data, b"", "Doesn't write to buffer on error")
+        self.assertTrue(self.thread.reader.writer.closed, "Closes writer on error")
+        self.assertIn(
+            call("Error while decrypting segment 0: PKCS#7 padding is incorrect."),
+            mock_log.error.mock_calls,
+            "Crypto.Util.Padding.unpad ValueError",
+        )
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))

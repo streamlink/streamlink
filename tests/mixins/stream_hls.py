@@ -113,7 +113,7 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
             # don't write again during teardown
             if not self.closed:
                 super().write(*args, **kwargs)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self.write_error = err
             self.reader.close()
         finally:

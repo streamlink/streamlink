@@ -219,16 +219,23 @@ class HLSStreamWriter(SegmentedStreamWriter):
                 self.close()
                 return
 
-            data = result.content
-            # If the input data is not a multiple of 16, cut off any garbage
-            garbage_len = len(data) % AES.block_size
-            if garbage_len:
-                log.debug(f"Cutting off {garbage_len} bytes of garbage before decrypting")
-                decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
-            else:
-                decrypted_chunk = decryptor.decrypt(data)
+            try:
+                data = result.content
+                # If the input data is not a multiple of AES.block_size (16 bytes), cut off any garbage
+                garbage_len = len(data) % AES.block_size
+                if garbage_len:
+                    log.debug(f"Cutting off {garbage_len} bytes of garbage before decrypting segment {sequence.num}")
+                    decrypted_chunk = decryptor.decrypt(data[:-garbage_len])
+                else:
+                    decrypted_chunk = decryptor.decrypt(data)
 
-            chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
+                chunk = unpad(decrypted_chunk, AES.block_size, style="pkcs7")
+
+            except ValueError as err:
+                log.error(f"Error while decrypting segment {sequence.num}: {err}")
+                self.close()
+                return
+
             self.reader.buffer.write(chunk)
 
         else:
