@@ -66,5 +66,4 @@ Gravyboat
    .. container::
 
       - `Github <https://github.com/gravyboat>`__
-      - `Bitcoin <https://www.blockchain.com/btc/address/1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj>`__ :code:`1PpdFh9LkTsjtG2AAcrWqk6RiFrC2iTCxj`
-      - `Flattr <https://flattr.com/@gravyboat>`__
+      - `Github Sponsors <https://github.com/sponsors/gravyboat>`__
