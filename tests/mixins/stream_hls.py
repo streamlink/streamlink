@@ -99,7 +99,7 @@ class EventedHLSStreamWriter(_HLSStreamWriter):
             # don't write again during teardown
             if not self.closed:
                 super(EventedHLSStreamWriter, self).write(*args, **kwargs)
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             self.write_error = err
             self.reader.close()
         finally:
@@ -207,8 +207,11 @@ class TestMixinStreamHLS(unittest.TestCase):
     def url(self, item):
         return item.url(self.id())
 
-    def content(self, segments, prop="content", cond=None):
-        return b"".join([getattr(segment, prop) for segment in segments.values() if cond is None or cond(segment)])
+    @staticmethod
+    def content(segments, prop="content", cond=None):
+        if isinstance(segments, dict):
+            segments = segments.values()
+        return b"".join([getattr(segment, prop) for segment in segments if cond is None or cond(segment)])
 
     # close read thread and make sure that all threads have terminated before moving on
     def close_thread(self):
@@ -222,14 +225,14 @@ class TestMixinStreamHLS(unittest.TestCase):
             thread.reader.worker.join()
             thread.join()
 
-    # make one write call on the write thread and wait until it has finished
+    # make write calls on the write-thread and wait until it has finished
     def await_write(self, write_calls=1, timeout=5):
         writer = self.thread.reader.writer
         for _ in range(write_calls):
             writer.write_wait.set()
             writer.write_done.wait(timeout)
             writer.write_done.clear()
-            if writer.write_error:
+            if writer.write_error:  # pragma: no cover
                 raise writer.write_error
 
     # make one read call on the read thread and wait until it has finished
@@ -241,7 +244,7 @@ class TestMixinStreamHLS(unittest.TestCase):
         thread.read_done.clear()
 
         try:
-            if thread.error:
+            if thread.error:  # pragma: no cover
                 raise thread.error
             return b"".join(thread.data)
         finally:

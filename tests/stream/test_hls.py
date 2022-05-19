@@ -4,13 +4,39 @@ import unittest
 import pytest
 import requests_mock
 
-from streamlink.compat import is_py3, str
+from streamlink.compat import str
 from streamlink.session import Streamlink
 from streamlink.stream.hls import HLSStream, HLSStreamReader
 from streamlink.utils.crypto import AES, pad
 from tests.mixins.stream_hls import EventedHLSStreamWriter, Playlist, Segment, Tag, TestMixinStreamHLS
 from tests.mock import Mock, call, patch
 from tests.resources import text
+
+
+class EncryptedBase(object):
+    def __init__(self, num, key, iv, *args, **kwargs):
+        content = kwargs.pop("content", None)
+        padding = kwargs.pop("padding", b"")
+        append = kwargs.pop("append", b"")
+        super(EncryptedBase, self).__init__(num, *args, **kwargs)
+        aesCipher = AES.new(key, AES.MODE_CBC, iv)
+        content = self.content if content is None else content
+        padded = content + padding if padding else pad(content, AES.block_size, style="pkcs7")
+        self.content_plain = content
+        self.content = aesCipher.encrypt(padded) + append
+
+
+class TagMap(Tag):
+    def __init__(self, num, namespace, attrs=None):
+        self.path = "map{0}".format(num)
+        self.content = "[map{0}]".format(num).encode("ascii")
+        d = {"URI": self.val_quoted_string(self.url(namespace))}
+        d.update(attrs or {})
+        super(TagMap, self).__init__("EXT-X-MAP", d)
+
+
+class TagMapEnc(EncryptedBase, TagMap):
+    pass
 
 
 class TagKey(Tag):
@@ -33,15 +59,8 @@ class TagKey(Tag):
         return self.uri.format(namespace=namespace) if self.uri else super(TagKey, self).url(namespace)
 
 
-class SegmentEnc(Segment):
-    def __init__(self, num, key, iv, *args, **kwargs):
-        padding = kwargs.pop("padding", b"")
-        append = kwargs.pop("append", b"")
-        super(SegmentEnc, self).__init__(num, *args, **kwargs)
-        aesCipher = AES.new(key, AES.MODE_CBC, iv)
-        padded = self.content + padding if padding else pad(self.content, AES.block_size, style="pkcs7")
-        self.content_plain = self.content
-        self.content = aesCipher.encrypt(padded) + append
+class SegmentEnc(EncryptedBase, Segment):
+    pass
 
 
 class TestHLSStreamRepr(unittest.TestCase):
@@ -129,16 +148,47 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
         return aes_key, aes_iv, key
 
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_invalid_method(self, mock_log):
+        # type: (Mock)
+        aesKey, aesIv, key = self.gen_key(method="INVALID")
+
+        self.subject([
+            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True)
+        ])
+        self.await_write()
+
+        assert self.thread.reader.writer.closed
+        assert b"".join(self.thread.data) == b""
+        assert mock_log.error.mock_calls == [
+            call("Failed to create decryptor: Unable to decrypt cipher INVALID")
+        ]
+
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_missing_uri(self, mock_log):
+        # type: (Mock)
+        aesKey, aesIv, key = self.gen_key(uri=False)
+
+        self.subject([
+            Playlist(0, [key, SegmentEnc(1, aesKey, aesIv)], end=True)
+        ])
+        self.await_write()
+
+        assert self.thread.reader.writer.closed
+        assert b"".join(self.thread.data) == b""
+        assert mock_log.error.mock_calls == [
+            call("Failed to create decryptor: Missing URI for decryption key")
+        ]
+
     def test_hls_encrypted_aes128(self):
         aesKey, aesIv, key = self.gen_key()
+        long = b"Test cipher block chaining mode by using a long bytes string"
 
         # noinspection PyTypeChecker
-        thread, segments = self.subject(
-            [
-                Playlist(0, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 4)]),
-                Playlist(4, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(4, 8)], end=True),
-            ]
-        )
+        thread, segments = self.subject([
+            Playlist(0, [key] + [SegmentEnc(num, aesKey, aesIv) for num in range(0, 4)]),
+            Playlist(4, [key] + [SegmentEnc(num, aesKey, aesIv, content=long) for num in range(4, 8)], end=True)
+        ])
 
         self.await_write(3 + 4)
         data = self.await_read(read_all=True)
@@ -174,52 +224,67 @@ class TestHLSStreamEncrypted(TestMixinStreamHLS, unittest.TestCase):
 
     @patch("streamlink.stream.hls.log")
     def test_hls_encrypted_aes128_incorrect_block_length(self, mock_log):
+        # type: (Mock)
         aesKey, aesIv, key = self.gen_key()
 
-        # noinspection PyTypeChecker
-        thread, segments = self.subject(
-            [
-                Playlist(
-                    0,
-                    [key]
-                    + [
-                        SegmentEnc(0, aesKey, aesIv, append=b"?" * 1),
-                        SegmentEnc(1, aesKey, aesIv, append=b"?" * (AES.block_size - 1)),
-                    ],
-                    end=True,
-                )
-            ]
-        )
+        thread, segments = self.subject([
+            Playlist(0, [
+                key,
+                SegmentEnc(0, aesKey, aesIv, append=b"?"),
+                SegmentEnc(1, aesKey, aesIv),
+            ], end=True)
+        ])
+        self.await_write()
+        assert self.thread.reader.writer.closed is not True
 
-        self.await_write(2)
+        self.await_write()
         data = self.await_read(read_all=True)
-        expected = self.content(segments, prop="content_plain")
-        self.assertEqual(data, expected, "Removes garbage data from segments")
-        self.assertIn(call("Cutting off 1 bytes of garbage before decrypting"), mock_log.debug.mock_calls)
-        self.assertIn(call("Cutting off 15 bytes of garbage before decrypting"), mock_log.debug.mock_calls)
+        assert data == self.content([segments[1]], prop="content_plain")
+        assert mock_log.error.mock_calls == [
+            call("Error while decrypting segment 0: Data must be padded to 16 byte boundary in CBC mode")
+        ]
 
-    def test_hls_encrypted_aes128_incorrect_padding_length(self):
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_aes128_incorrect_padding_length(self, mock_log):
+        # type: (Mock)
         aesKey, aesIv, key = self.gen_key()
 
         padding = b"\x00" * (AES.block_size - len(b"[0]"))
-        self.subject([Playlist(0, [key, SegmentEnc(0, aesKey, aesIv, padding=padding)], end=True)])
+        thread, segments = self.subject([
+            Playlist(0, [
+                key,
+                SegmentEnc(0, aesKey, aesIv, padding=padding),
+                SegmentEnc(1, aesKey, aesIv),
+            ], end=True)
+        ])
+        self.await_write()
+        assert self.thread.reader.writer.closed is not True
 
-        with self.assertRaises(ValueError) as cm:
-            self.await_write()
-        self.assertEqual(str(cm.exception), "Padding is incorrect.", "Crypto.Util.Padding.unpad exception")
+        self.await_write()
+        data = self.await_read(read_all=True)
+        assert data == self.content([segments[1]], prop="content_plain")
+        assert mock_log.error.mock_calls == [call("Error while decrypting segment 0: Padding is incorrect.")]
 
-    def test_hls_encrypted_aes128_incorrect_padding_content(self):
+    @patch("streamlink.stream.hls.log")
+    def test_hls_encrypted_aes128_incorrect_padding_content(self, mock_log):
+        # type: (Mock)
         aesKey, aesIv, key = self.gen_key()
 
-        padding = (b"\x00" * (AES.block_size - len(b"[0]") - 1)) + bytes([AES.block_size])
-        with self.assertRaises(ValueError) as cm:
-            self.subject([Playlist(0, [key, SegmentEnc(0, aesKey, aesIv, padding=padding)], end=True)])
-            self.await_write()
-        if is_py3:
-            self.assertEqual(str(cm.exception), "PKCS#7 padding is incorrect.", "Crypto.Util.Padding.unpad exception")
-        else:
-            self.assertEqual(str(cm.exception), "Data must be padded to 16 byte boundary in CBC mode",
-                             "streamlink.utils.crypto.unpad exception")
+        padding = (b"\x00" * (AES.block_size - len(b"[0]") - 1)) + b"\x10"  # bytes([AES.block_size])
+        thread, segments = self.subject([
+            Playlist(0, [
+                key,
+                SegmentEnc(0, aesKey, aesIv, padding=padding),
+                SegmentEnc(1, aesKey, aesIv),
+            ], end=True)
+        ])
+        self.await_write()
+        assert self.thread.reader.writer.closed is not True
+
+        self.await_write()
+        data = self.await_read(read_all=True)
+        assert data == self.content([segments[1]], prop="content_plain")
+        assert mock_log.error.mock_calls == [call("Error while decrypting segment 0: PKCS#7 padding is incorrect.")]
 
 
 @patch("streamlink.stream.hls.HLSStreamWorker.wait", Mock(return_value=True))
