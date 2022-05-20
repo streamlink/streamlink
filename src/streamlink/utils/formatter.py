@@ -11,13 +11,17 @@ def _identity(obj):
 
 
 class Formatter:
-    def __init__(self, mapping: Dict[str, Callable], formatting: Optional[Dict[str, Callable]] = None):
+    def __init__(
+        self,
+        mapping: Dict[str, Callable[[], Any]],
+        formatting: Optional[Dict[str, Callable[[Any, str], Any]]] = None,
+    ):
         super().__init__()
-        self.mapping = mapping
-        self.formatting = formatting or {}
-        self.cache = {}
+        self.mapping: Dict[str, Callable[[], Any]] = mapping
+        self.formatting: Dict[str, Callable[[Any, str], Any]] = formatting or {}
+        self.cache: Dict[str, Any] = {}
 
-    def _get_value(self, field_name: str, format_spec: str, defaults: Dict[str, str]) -> Any:
+    def _get_value(self, field_name: str, format_spec: Optional[str], defaults: Dict[str, str]) -> Any:
         if field_name not in self.mapping:
             return defaults.get(field_name, f"{{{field_name}}}" if not format_spec else f"{{{field_name}:{format_spec}}}")
 

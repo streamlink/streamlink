@@ -18,6 +18,7 @@ class TestLocalization(unittest.TestCase):
 
     def test_equivalent(self):
         locale = l10n.Localization("en_CA")
+        self.assertTrue(locale.equivalent())
         self.assertTrue(locale.equivalent(language="eng"))
         self.assertTrue(locale.equivalent(language="en"))
         self.assertTrue(locale.equivalent(language="en", country="CA"))
@@ -37,6 +38,8 @@ class TestLocalization(unittest.TestCase):
         self.assertFalse(locale.equivalent(language="en", country="Canada"))
         self.assertFalse(locale.equivalent(language="en", country="ES"))
         self.assertFalse(locale.equivalent(language="en", country="Spain"))
+        self.assertFalse(locale.equivalent(language="en", country="UNKNOWN"))
+        self.assertFalse(locale.equivalent(language="UNKNOWN", country="Spain"))
 
     @patch("locale.getdefaultlocale")
     def test_default(self, getdefaultlocale):
