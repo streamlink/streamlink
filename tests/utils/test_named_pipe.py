@@ -3,10 +3,10 @@ import unittest
 from unittest.mock import Mock, call, patch
 
 from streamlink.compat import is_win32
-from streamlink.utils.named_pipe import NamedPipe, NamedPipePosix, NamedPipeWindows
+from streamlink.utils.named_pipe import NamedPipe, NamedPipeBase, NamedPipePosix, NamedPipeWindows
 
 if is_win32:
-    from ctypes import windll, create_string_buffer, c_ulong, byref
+    from ctypes import windll, create_string_buffer, c_ulong, byref  # type: ignore[attr-defined]
 
 
 GENERIC_READ = 0x80000000
@@ -14,7 +14,7 @@ OPEN_EXISTING = 3
 
 
 class ReadNamedPipeThread(threading.Thread):
-    def __init__(self, pipe: NamedPipe):
+    def __init__(self, pipe: NamedPipeBase):
         super().__init__(daemon=True)
         self.path = str(pipe.path)
         self.error = None
