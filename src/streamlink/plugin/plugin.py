@@ -136,7 +136,7 @@ def stream_sorting_filter(expr, stream_weight):
 
 
 def parse_params(params: Optional[str] = None) -> Dict[str, Any]:
-    rval = {}
+    rval: Dict[str, Any] = {}
     if not params:
         return rval
 
@@ -190,7 +190,7 @@ class Plugin:
     Plugin base class for retrieving streams and metadata from the URL specified.
     """
 
-    matchers: ClassVar[List[Matcher]] = None
+    matchers: ClassVar[Optional[List[Matcher]]] = None
     """
     The list of plugin matchers (URL pattern + priority).
     Use the :meth:`streamlink.plugin.pluginmatcher` decorator for initializing this list.
@@ -199,10 +199,10 @@ class Plugin:
     matches: Sequence[Optional[Match]]
     """A tuple of :class:`re.Match` results of all defined matchers"""
 
-    matcher: Pattern
+    matcher: Optional[Pattern]
     """A reference to the compiled :class:`re.Pattern` of the first matching matcher"""
 
-    match: Match
+    match: Optional[Match]
     """A reference to the :class:`re.Match` result of the first matching matcher"""
 
     # plugin metadata attributes
@@ -221,8 +221,13 @@ class Plugin:
     options = Options()
     arguments = Arguments()
     session = None
-    _url: str = None
+    _url: Optional[str] = None
     _user_input_requester = None
+
+    # deprecated
+    can_handle_url: Callable[[str], bool]
+    # deprecated
+    priority: Callable[[str], int]
 
     @classmethod
     def bind(cls, session, module, user_input_requester=None):
@@ -238,7 +243,7 @@ class Plugin:
                 raise RuntimeError("user-input-requester must be an instance of UserInputRequester")
 
     @property
-    def url(self) -> str:
+    def url(self) -> Optional[str]:
         """
         The plugin's input URL.
         Setting a new value will automatically update the :attr:`matches`, :attr:`matcher` and :attr:`match` data.
