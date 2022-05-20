@@ -135,7 +135,7 @@ class M3U8:
         self.segments: List[Segment] = []
 
     @classmethod
-    def is_date_in_daterange(cls, date: Segment.date, daterange: DateRange):
+    def is_date_in_daterange(cls, date: Optional[datetime], daterange: DateRange):
         if date is None or daterange.start_date is None:
             return None
 
@@ -181,36 +181,34 @@ class M3U8Parser:
     def create_stream_info(self, streaminf: Dict[str, Optional[str]], cls=None):
         program_id = streaminf.get("PROGRAM-ID")
 
-        bandwidth = streaminf.get("BANDWIDTH")
-        if bandwidth:
-            bandwidth = round(int(bandwidth), 1 - int(math.log10(int(bandwidth))))
+        _bandwidth = streaminf.get("BANDWIDTH")
+        bandwidth = 0 if not _bandwidth else round(int(_bandwidth), 1 - int(math.log10(int(_bandwidth))))
 
-        resolution = streaminf.get("RESOLUTION")
-        if resolution:
-            resolution = self.parse_resolution(resolution)
+        _resolution = streaminf.get("RESOLUTION")
+        resolution = None if not _resolution else self.parse_resolution(_resolution)
 
-        codecs = streaminf.get("CODECS", "").split(",")
+        codecs = (streaminf.get("CODECS") or "").split(",")
 
         if cls == IFrameStreamInfo:
             return IFrameStreamInfo(
-                bandwidth,
-                program_id,
-                codecs,
-                resolution,
-                streaminf.get("VIDEO")
+                bandwidth=bandwidth,
+                program_id=program_id,
+                codecs=codecs,
+                resolution=resolution,
+                video=streaminf.get("VIDEO"),
             )
         else:
             return StreamInfo(
-                bandwidth,
-                program_id,
-                codecs,
-                resolution,
-                streaminf.get("AUDIO"),
-                streaminf.get("VIDEO"),
-                streaminf.get("SUBTITLES")
+                bandwidth=bandwidth,
+                program_id=program_id,
+                codecs=codecs,
+                resolution=resolution,
+                audio=streaminf.get("AUDIO"),
+                video=streaminf.get("VIDEO"),
+                subtitles=streaminf.get("SUBTITLES"),
             )
 
-    def split_tag(self, line):
+    def split_tag(self, line: str) -> Union[Tuple[str, str], Tuple[None, None]]:
         match = self._tag_re.match(line)
 
         if match:
@@ -233,12 +231,22 @@ class M3U8Parser:
         match = self._range_re.match(value)
         if match is None:
             return None
-        _range, offset = match.groups()
-        return ByteRange(int(_range), int(offset) if offset is not None else None)
 
-    def parse_extinf(self, value: str) -> Tuple[float, Optional[str]]:
+        _range, offset = match.groups()
+        return ByteRange(
+            range=int(_range),
+            offset=int(offset) if offset is not None else None,
+        )
+
+    def parse_extinf(self, value: str) -> ExtInf:
         match = self._extinf_re.match(value)
-        return ExtInf(0, None) if match is None else ExtInf(float(match.group("duration")), match.group("title"))
+        if match is None:
+            return ExtInf(0, None)
+
+        return ExtInf(
+            duration=float(match.group("duration")),
+            title=match.group("title"),
+        )
 
     @staticmethod
     def parse_hex(value: Optional[str]) -> Optional[bytes]:
@@ -264,13 +272,13 @@ class M3U8Parser:
 
     def parse_resolution(self, value: str) -> Resolution:
         match = self._res_re.match(value)
+        if match is None:
+            return Resolution(width=0, height=0)
 
-        if match:
-            width, height = int(match.group(1)), int(match.group(2))
-        else:
-            width, height = 0, 0
-
-        return Resolution(width, height)
+        return Resolution(
+            width=int(match.group(1)),
+            height=int(match.group(2)),
+        )
 
     # ----
 
@@ -513,7 +521,7 @@ class M3U8Parser:
     def parse_line(self, line: str) -> None:
         if line.startswith("#"):
             tag, value = self.split_tag(line)
-            if not tag or tag not in self._TAGS:
+            if not tag or value is None or tag not in self._TAGS:
                 return
             self._TAGS[tag](self, value)
         elif self.state.pop("expect_segment", None):
