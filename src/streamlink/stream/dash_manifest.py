@@ -7,24 +7,11 @@ import time
 from collections import defaultdict, namedtuple
 from contextlib import contextmanager
 from itertools import count, repeat
+from typing import Optional
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
-from isodate import Duration, parse_datetime, parse_duration
+from isodate import Duration, UTC as utc, parse_datetime, parse_duration
 
-if hasattr(datetime, "timezone"):
-    utc = datetime.timezone.utc
-else:
-    class UTC(datetime.tzinfo):
-        def utcoffset(self, dt):
-            return datetime.timedelta(0)
-
-        def tzname(self, dt):
-            return "UTC"
-
-        def dst(self, dt):
-            return datetime.timedelta(0)
-
-    utc = UTC()
 
 log = logging.getLogger(__name__)
 epoch_start = datetime.datetime(1970, 1, 1, tzinfo=utc)
@@ -134,7 +121,7 @@ class MPDParsingError(Exception):
 
 
 class MPDNode:
-    __tag__ = None
+    __tag__: Optional[str] = None
 
     def __init__(self, node, root=None, parent=None, *args, **kwargs):
         self.node = node
