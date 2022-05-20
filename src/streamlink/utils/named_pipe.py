@@ -9,7 +9,7 @@ from pathlib import Path
 from streamlink.compat import is_win32
 
 if is_win32:
-    from ctypes import windll, cast, c_ulong, c_void_p, byref
+    from ctypes import windll, cast, c_ulong, c_void_p, byref  # type: ignore[attr-defined]
 
 
 log = logging.getLogger(__name__)
