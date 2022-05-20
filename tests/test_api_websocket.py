@@ -37,6 +37,11 @@ class TestWebsocketClient(unittest.TestCase):
             "User-Agent: foo"
         ])
 
+        client = WebsocketClient(self.session, "wss://localhost:0", header={"User-Agent": "bar"})
+        self.assertEqual(client.ws.header, [
+            "User-Agent: bar"
+        ])
+
     def test_args_and_proxy(self):
         self.session.set_option("http-proxy", "https://username:password@hostname:1234")
         client = WebsocketClient(

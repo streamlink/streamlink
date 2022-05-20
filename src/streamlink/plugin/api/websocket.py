@@ -23,7 +23,7 @@ class WebsocketClient(Thread):
         session: Streamlink,
         url: str,
         subprotocols: Optional[List[str]] = None,
-        header: Optional[Union[List, Dict]] = None,
+        header: Optional[Union[List[str], Dict[str, str]]] = None,
         cookie: Optional[str] = None,
         sockopt: Optional[Tuple] = None,
         sslopt: Optional[Dict] = None,
@@ -39,10 +39,12 @@ class WebsocketClient(Thread):
 
         if not header:
             header = []
+        elif isinstance(header, dict):
+            header = [f"{str(k)}: {str(v)}" for k, v in header.items()]
         if not any(True for h in header if h.startswith("User-Agent: ")):
-            header.append(f"User-Agent: {session.http.headers['User-Agent']}")
+            header.append(f"User-Agent: {str(session.http.headers['User-Agent'])}")
 
-        proxy_options = {}
+        proxy_options: Dict[str, Any] = {}
         http_proxy: Optional[str] = session.get_option("http-proxy")
         if http_proxy:
             p = urlparse(http_proxy)
@@ -127,7 +129,9 @@ class WebsocketClient(Thread):
             )
 
     def close(self, status: int = STATUS_NORMAL, reason: Union[str, bytes] = "", timeout: int = 3) -> None:
-        self.ws.close(status=status, reason=bytes(reason, encoding="utf-8"), timeout=timeout)
+        if type(reason) is str:  # pragma: no branch
+            reason = bytes(reason, encoding="utf-8")
+        self.ws.close(status=status, reason=reason, timeout=timeout)
         if self.is_alive():  # pragma: no branch
             self.join()
 

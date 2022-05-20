@@ -121,7 +121,7 @@ def _validate_dict(schema, value):
     return new
 
 
-@validate.register(abc.Callable)
+@validate.register
 def _validate_callable(schema: abc.Callable, value):
     if not schema(value):
         raise ValidationError(
@@ -133,7 +133,7 @@ def _validate_callable(schema: abc.Callable, value):
     return value
 
 
-@validate.register(AllSchema)
+@validate.register
 def _validate_allschema(schema: AllSchema, value):
     for schema in schema.schema:
         value = validate(schema, value)
@@ -141,7 +141,7 @@ def _validate_allschema(schema: AllSchema, value):
     return value
 
 
-@validate.register(AnySchema)
+@validate.register
 def _validate_anyschema(schema: AnySchema, value):
     errors = []
     for subschema in schema.schema:
@@ -153,13 +153,13 @@ def _validate_anyschema(schema: AnySchema, value):
     raise ValidationError(*errors, schema=AnySchema)
 
 
-@validate.register(TransformSchema)
+@validate.register
 def _validate_transformschema(schema: TransformSchema, value):
     validate(abc.Callable, schema.func)
     return schema.func(value, *schema.args, **schema.kwargs)
 
 
-@validate.register(GetItemSchema)
+@validate.register
 def _validate_getitemschema(schema: GetItemSchema, value):
     item = schema.item if type(schema.item) is tuple and not schema.strict else (schema.item,)
     idx = 0
@@ -194,7 +194,7 @@ def _validate_getitemschema(schema: GetItemSchema, value):
         )
 
 
-@validate.register(AttrSchema)
+@validate.register
 def _validate_attrschema(schema: AttrSchema, value):
     new = copy(value)
 
@@ -222,7 +222,7 @@ def _validate_attrschema(schema: AttrSchema, value):
     return new
 
 
-@validate.register(XmlElementSchema)
+@validate.register
 def _validate_xmlelementschema(schema: XmlElementSchema, value):
     validate(iselement, value)
     tag = value.tag
@@ -263,14 +263,14 @@ def _validate_xmlelementschema(schema: XmlElementSchema, value):
     return new
 
 
-@validate.register(UnionGetSchema)
+@validate.register
 def _validate_uniongetschema(schema: UnionGetSchema, value):
     return schema.seq(
         validate(getter, value) for getter in schema.getters
     )
 
 
-@validate.register(UnionSchema)
+@validate.register
 def _validate_unionschema(schema: UnionSchema, value):
     try:
         return validate_union(schema.schema, value)
