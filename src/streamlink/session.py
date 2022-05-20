@@ -25,7 +25,7 @@ log = logging.getLogger(__name__)
 
 
 # noinspection PyUnresolvedReferences
-_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family
+_original_allowed_gai_family = urllib3_util_connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
 class PythonDeprecatedWarning(UserWarning):
@@ -222,13 +222,13 @@ class Streamlink:
         elif key == "ipv4" or key == "ipv6":
             self.options.set(key, value)
             if not value:
-                urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family
+                urllib3_util_connection.allowed_gai_family = _original_allowed_gai_family  # type: ignore[attr-defined]
             elif key == "ipv4":
                 self.options.set("ipv6", False)
-                urllib3_util_connection.allowed_gai_family = (lambda: AF_INET)
+                urllib3_util_connection.allowed_gai_family = (lambda: AF_INET)  # type: ignore[attr-defined]
             else:
                 self.options.set("ipv4", False)
-                urllib3_util_connection.allowed_gai_family = (lambda: AF_INET6)
+                urllib3_util_connection.allowed_gai_family = (lambda: AF_INET6)  # type: ignore[attr-defined]
 
         elif key in ("http-proxy", "https-proxy"):
             self.http.proxies["http"] = update_scheme("https://", value, force=False)
@@ -261,11 +261,14 @@ class Streamlink:
             self.http.verify = value
 
         elif key == "http-disable-dh":
-            # noinspection PyUnresolvedReferences
-            default_ciphers = list(item for item in urllib3_util_ssl.DEFAULT_CIPHERS.split(":") if item != "!DH")
+            default_ciphers = list(
+                item
+                for item in urllib3_util_ssl.DEFAULT_CIPHERS.split(":")  # type: ignore[attr-defined]
+                if item != "!DH"
+            )
             if value:
                 default_ciphers.append("!DH")
-            urllib3_util_ssl.DEFAULT_CIPHERS = ":".join(default_ciphers)
+            urllib3_util_ssl.DEFAULT_CIPHERS = ":".join(default_ciphers)  # type: ignore[attr-defined]
 
         elif key == "http-ssl-cert":
             self.http.cert = value
@@ -318,7 +321,7 @@ class Streamlink:
         else:
             return self.options.get(key)
 
-    def set_plugin_option(self, plugin: str, key: str, value: Any):
+    def set_plugin_option(self, plugin: str, key: str, value: Any) -> None:
         """
         Sets plugin specific options used by plugins originating from this session object.
 
@@ -328,10 +331,10 @@ class Streamlink:
         """
 
         if plugin in self.plugins:
-            plugin = self.plugins[plugin]
-            plugin.set_option(key, value)
+            plugincls = self.plugins[plugin]
+            plugincls.set_option(key, value)
 
-    def get_plugin_option(self, plugin: str, key: str):
+    def get_plugin_option(self, plugin: str, key: str) -> Optional[Any]:
         """
         Returns the current value of the plugin specific option.
 
@@ -340,8 +343,8 @@ class Streamlink:
         """
 
         if plugin in self.plugins:
-            plugin = self.plugins[plugin]
-            return plugin.get_option(key)
+            plugincls = self.plugins[plugin]
+            return plugincls.get_option(key)
 
     @lru_cache(maxsize=128)
     def resolve_url(
@@ -386,8 +389,7 @@ class Streamlink:
         if follow_redirect:
             # Attempt to handle a redirect URL
             try:
-                # noinspection PyArgumentList
-                res = self.http.head(url, allow_redirects=True, acceptable_status=[501])
+                res = self.http.head(url, allow_redirects=True, acceptable_status=[501])  # type: ignore[call-arg]
 
                 # Fall back to GET request if server doesn't handle HEAD.
                 if res.status_code == 501:
