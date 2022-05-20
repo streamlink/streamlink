@@ -4,7 +4,7 @@ from datetime import datetime
 from logging import CRITICAL, DEBUG, ERROR, INFO, WARNING
 from pathlib import Path
 from threading import Lock
-from typing import IO, List, Optional, Union
+from typing import IO, List, Optional, TYPE_CHECKING, Union
 
 
 FORMAT_STYLE = "{"
@@ -39,7 +39,13 @@ for _level, _name in _levelToNames.items():
 _config_lock = Lock()
 
 
-class StreamlinkLogger(logging.getLoggerClass()):
+if TYPE_CHECKING:  # pragma: no cover
+    _BaseLoggerClass = logging.Logger
+else:
+    _BaseLoggerClass = logging.getLoggerClass()
+
+
+class StreamlinkLogger(_BaseLoggerClass):
     def trace(self, message, *args, **kws):
         if self.isEnabledFor(TRACE):
             self._log(TRACE, message, args, **kws)
@@ -84,16 +90,18 @@ def basicConfig(
     stream: Optional[IO] = None,
     level: Optional[str] = None,
     format: str = FORMAT_BASE,
-    style: str = FORMAT_STYLE,
+    style: str = FORMAT_STYLE,  # TODO: py38: Literal["%", "{", "$"]
     datefmt: str = FORMAT_DATE,
     remove_base: Optional[List[str]] = None
-) -> Union[logging.FileHandler, logging.StreamHandler]:
+) -> logging.StreamHandler:
     with _config_lock:
+        handler: logging.StreamHandler
         if filename is not None:
             handler = logging.FileHandler(filename, filemode)
         else:
             handler = logging.StreamHandler(stream)
 
+        # noinspection PyTypeChecker
         formatter = StringFormatter(
             format,
             datefmt,
