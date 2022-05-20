@@ -15,7 +15,7 @@ from streamlink.stream.http import HTTPStream
 
 
 # noinspection PyUnresolvedReferences
-_original_allowed_gai_family = urllib3.util.connection.allowed_gai_family
+_original_allowed_gai_family = urllib3.util.connection.allowed_gai_family  # type: ignore[attr-defined]
 
 
 class EmptyPlugin(Plugin):

@@ -94,6 +94,8 @@ _VALID_REQUEST_ARGS = "method", "url", "headers", "files", "data", "params", "au
 
 
 class HTTPSession(Session):
+    params: Dict
+
     def __init__(self):
         super().__init__()
 
