@@ -5,19 +5,21 @@ from typing import Optional, Sequence, Union
 class ValidationError(ValueError):
     MAX_LENGTH = 60
 
+    errors: Union[str, Exception, Sequence[Union[str, Exception]]]
+
     def __init__(
         self,
-        *error: Union[str, Exception, Sequence[Union[str, Exception]]],
+        *errors,
         schema: Optional[Union[str, object]] = None,
         context: Optional[Union[Exception]] = None,
         **errkeywords
     ):
         self.schema = schema
         self.context = context
-        if len(error) == 1 and type(error[0]) is str:
-            self.errors = (self._truncate(error[0], **errkeywords), )
+        if len(errors) == 1 and type(errors[0]) is str:
+            self.errors = (self._truncate(errors[0], **errkeywords), )
         else:
-            self.errors = error
+            self.errors = errors
 
     def _ellipsis(self, string: str):
         return string if len(string) <= self.MAX_LENGTH else f"<{string[:self.MAX_LENGTH - 5]}...>"
@@ -32,7 +34,7 @@ class ValidationError(ValueError):
             return ""
         if type(self.schema) is str:
             return f"({self.schema})"
-        return f"({self.schema.__name__})"
+        return f"({self.schema.__name__})"  # type: ignore[attr-defined]
 
     def __str__(self):
         cls = self.__class__

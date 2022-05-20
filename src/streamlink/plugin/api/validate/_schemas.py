@@ -1,4 +1,4 @@
-from typing import Any, Callable, FrozenSet, List, Optional, Set, Tuple, Type, Union
+from typing import Any, Callable, FrozenSet, List, Optional, Sequence, Set, Tuple, Type, Union
 
 
 class SchemaContainer:
@@ -108,7 +108,7 @@ class UnionGetSchema:
         *getters,
         seq: Type[Union[List, FrozenSet, Set, Tuple]] = tuple,
     ):
-        self.getters: Tuple[GetItemSchema] = tuple(GetItemSchema(getter) for getter in getters)
+        self.getters: Sequence[GetItemSchema] = tuple(GetItemSchema(getter) for getter in getters)
         self.seq = seq
 
 
