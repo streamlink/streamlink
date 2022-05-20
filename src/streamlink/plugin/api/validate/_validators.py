@@ -167,7 +167,7 @@ def validator_hasattr(attr: Any) -> Callable[[Any], bool]:
 # Sequence related validators
 
 
-def validator_filter(func: Callable[[Any], bool]) -> TransformSchema:
+def validator_filter(func: Callable[..., bool]) -> TransformSchema:
     """
     Filter out unwanted items from the input using the specified function.
 
@@ -187,7 +187,7 @@ def validator_filter(func: Callable[[Any], bool]) -> TransformSchema:
     return TransformSchema(filter_values)
 
 
-def validator_map(func: Callable[[Any], Any]) -> TransformSchema:
+def validator_map(func: Callable[..., Any]) -> TransformSchema:
     """
     Transform items from the input using the specified function.
 
