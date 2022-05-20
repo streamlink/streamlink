@@ -279,12 +279,19 @@ class DASHStream(Stream):
         for k, v in ret:
             dict_value_list[k].append(v)
 
+        def sortby_bandwidth(dash_stream: DASHStream) -> int:
+            if dash_stream.video_representation:
+                return dash_stream.video_representation.bandwidth
+            if dash_stream.audio_representation:
+                return dash_stream.audio_representation.bandwidth
+            return 0  # pragma: no cover
+
         ret_new = {}
         for q in dict_value_list:
             items = dict_value_list[q]
 
             try:
-                items = sorted(items, key=lambda k: k.video_representation.bandwidth, reverse=True)
+                items = sorted(items, key=sortby_bandwidth, reverse=True)
             except AttributeError:
                 pass
 
