@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional, Sequence, Union
 
 
 def _normalise_option_name(name):
@@ -55,7 +55,7 @@ class Argument:
         self,
         name: str,
         required: bool = False,
-        requires: Optional[List[str]] = None,
+        requires: Optional[Union[str, Sequence[str]]] = None,
         prompt: Optional[str] = None,
         sensitive: bool = False,
         argument_name: Optional[str] = None,
@@ -80,7 +80,8 @@ class Argument:
         self.options = options
         self._argument_name = argument_name  # override the cli argument name
         self._dest = dest  # override for the plugin option name
-        self.requires = requires and (list(requires) if isinstance(requires, (list, tuple)) else [requires]) or []
+        requires = requires or []
+        self.requires = list(requires) if isinstance(requires, (list, tuple)) else [requires]
         self.prompt = prompt
         self.sensitive = sensitive
         self._default = options.get("default")
