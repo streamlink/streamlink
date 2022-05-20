@@ -5,7 +5,7 @@ from operator import attrgetter
 from unittest.mock import Mock
 
 from freezegun import freeze_time
-from freezegun.api import FakeDatetime
+from freezegun.api import FakeDatetime  # type: ignore[attr-defined]
 
 from streamlink.stream.dash_manifest import MPD, MPDParsers, MPDParsingError, Representation, utc
 from tests.resources import xml
@@ -13,8 +13,8 @@ from tests.resources import xml
 
 class TestMPDParsers(unittest.TestCase):
     def test_utc(self):
-        self.assertIn(utc.tzname(None), ("UTC", "UTC+00:00"))  # depends on the implementation
-        self.assertIn(utc.dst(None), (None, datetime.timedelta(0)))  # depends on the implementation
+        self.assertEqual(utc.tzname(None), "UTC")
+        self.assertEqual(utc.dst(None), datetime.timedelta(0))
         self.assertEqual(utc.utcoffset(None), datetime.timedelta(0))
 
     def test_bool_str(self):
