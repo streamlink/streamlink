@@ -33,8 +33,8 @@ from tests.plugin.testplugin import TestPlugin as _TestPlugin
 
 class FakePlugin(_TestPlugin):
     module = "fake"
-    arguments = []
-    _streams = {}
+    arguments = []  # type: ignore
+    _streams = {}  # type: ignore
 
     def streams(self, *args, **kwargs):
         return self._streams
@@ -237,6 +237,17 @@ class TestCLIMainCheckFileOutput(unittest.TestCase):
 
     @patch("streamlink_cli.main.console")
     @patch("streamlink_cli.main.sys")
+    def test_check_file_output_exists_ask_error(self, mock_sys: Mock, mock_console: Mock):
+        mock_sys.stdin.isatty.return_value = True
+        mock_sys.exit.side_effect = SystemExit
+        mock_console.ask = Mock(return_value=None)
+        path = self.mock_path("foo", is_file=True)
+        with self.assertRaises(SystemExit):
+            check_file_output(path, False)
+        self.assertEqual(mock_console.ask.call_args_list, [call("File foo already exists! Overwrite it? [y/N] ")])
+
+    @patch("streamlink_cli.main.console")
+    @patch("streamlink_cli.main.sys")
     def test_check_file_output_exists_notty(self, mock_sys: Mock, mock_console: Mock):
         mock_sys.stdin.isatty.return_value = False
         mock_sys.exit.side_effect = SystemExit
@@ -265,13 +276,13 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.player_args = ""
 
         output = create_output(formatter)
-        self.assertIsInstance(output, PlayerOutput)
-        self.assertEqual(output.title, "URL")
+        assert type(output) is PlayerOutput
+        assert output.title == "URL"
 
         args.title = "{author} - {title}"
         output = create_output(formatter)
-        self.assertIsInstance(output, PlayerOutput)
-        self.assertEqual(output.title, "foo - bar")
+        assert type(output) is PlayerOutput
+        assert output.title == "foo - bar"
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.check_file_output")
@@ -286,11 +297,11 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.fs_safe_rules = None
 
         output = create_output(formatter)
-        self.assertEqual(mock_check_file_output.call_args_list, [call(Path("foo"), False)])
-        self.assertIsInstance(output, FileOutput)
-        self.assertEqual(output.filename, Path("foo"))
-        self.assertIsNone(output.fd)
-        self.assertIsNone(output.record)
+        assert mock_check_file_output.call_args_list == [call(Path("foo"), False)]
+        assert type(output) is FileOutput
+        assert output.filename == Path("foo")
+        assert output.fd is None
+        assert output.record is None
 
     @patch("streamlink_cli.main.args")
     def test_create_output_stdout(self, args: Mock):
@@ -301,18 +312,18 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.record_and_pipe = None
 
         output = create_output(formatter)
-        self.assertIsInstance(output, FileOutput)
-        self.assertIsNone(output.filename)
-        self.assertIs(output.fd, stdout)
-        self.assertIsNone(output.record)
+        assert type(output) is FileOutput
+        assert output.filename is None
+        assert output.fd is stdout
+        assert output.record is None
 
         args.output = "-"
         args.stdout = False
         output = create_output(formatter)
-        self.assertIsInstance(output, FileOutput)
-        self.assertIsNone(output.filename)
-        self.assertIs(output.fd, stdout)
-        self.assertIsNone(output.record)
+        assert type(output) is FileOutput
+        assert output.filename is None
+        assert output.fd is stdout
+        assert output.record is None
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.check_file_output")
@@ -326,14 +337,14 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.fs_safe_rules = None
 
         output = create_output(formatter)
-        self.assertEqual(mock_check_file_output.call_args_list, [call(Path("foo"), False)])
-        self.assertIsInstance(output, FileOutput)
-        self.assertIsNone(output.filename)
-        self.assertIs(output.fd, stdout)
-        self.assertIsInstance(output.record, FileOutput)
-        self.assertEqual(output.record.filename, Path("foo"))
-        self.assertIsNone(output.record.fd)
-        self.assertIsNone(output.record.record)
+        assert mock_check_file_output.call_args_list == [call(Path("foo"), False)]
+        assert type(output) is FileOutput
+        assert output.filename is None
+        assert output.fd is stdout
+        assert type(output.record) is FileOutput
+        assert output.record.filename == Path("foo")
+        assert output.record.fd is None
+        assert output.record.record is None
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.check_file_output")
@@ -357,21 +368,21 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.player_http = None
 
         output = create_output(formatter)
-        self.assertIsInstance(output, PlayerOutput)
-        self.assertEqual(output.title, "URL")
-        self.assertIsInstance(output.record, FileOutput)
-        self.assertEqual(output.record.filename, Path("foo"))
-        self.assertIsNone(output.record.fd)
-        self.assertIsNone(output.record.record)
+        assert type(output) is PlayerOutput
+        assert output.title == "URL"
+        assert type(output.record) is FileOutput
+        assert output.record.filename == Path("foo")
+        assert output.record.fd is None
+        assert output.record.record is None
 
         args.title = "{author} - {title}"
         output = create_output(formatter)
-        self.assertIsInstance(output, PlayerOutput)
-        self.assertEqual(output.title, "foo - bar")
-        self.assertIsInstance(output.record, FileOutput)
-        self.assertEqual(output.record.filename, Path("foo"))
-        self.assertIsNone(output.record.fd)
-        self.assertIsNone(output.record.record)
+        assert type(output) is PlayerOutput
+        assert output.title == "foo - bar"
+        assert type(output.record) is FileOutput
+        assert output.record.filename == Path("foo")
+        assert output.record.fd is None
+        assert output.record.record is None
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.DEFAULT_STREAM_METADATA", {"title": "bar"})
@@ -393,12 +404,12 @@ class TestCLIMainCreateOutput(unittest.TestCase):
         args.player_http = None
 
         output = create_output(formatter)
-        self.assertIsInstance(output, PlayerOutput)
-        self.assertEqual(output.title, "foo - bar")
-        self.assertIsInstance(output.record, FileOutput)
-        self.assertIsNone(output.record.filename)
-        self.assertEqual(output.record.fd, stdout)
-        self.assertIsNone(output.record.record)
+        assert type(output) is PlayerOutput
+        assert output.title == "foo - bar"
+        assert type(output.record) is FileOutput
+        assert output.record.filename is None
+        assert output.record.fd is stdout
+        assert output.record.record is None
 
     @patch("streamlink_cli.main.args")
     @patch("streamlink_cli.main.console")
