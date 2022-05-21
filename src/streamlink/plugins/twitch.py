@@ -49,7 +49,7 @@ class TwitchSequence(NamedTuple):
 
 
 class TwitchM3U8(M3U8):
-    segments: List[TwitchSegment]
+    segments: List[TwitchSegment]  # type: ignore[assignment]
 
     def __init__(self):
         super().__init__()
@@ -85,7 +85,7 @@ class TwitchM3U8Parser(M3U8Parser):
         if is_ad:
             self.m3u8.dateranges_ads.append(daterange)
 
-    def get_segment(self, uri: str) -> TwitchSegment:
+    def get_segment(self, uri: str) -> TwitchSegment:  # type: ignore[override]
         extinf: ExtInf = self.state.pop("extinf", None) or ExtInf(0, None)
         date = self.state.pop("date", None)
         ad = any(self.m3u8.is_date_in_daterange(date, daterange) for daterange in self.m3u8.dateranges_ads)
@@ -112,13 +112,13 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
     def _reload_playlist(self, *args):
         return load_hls_playlist(*args, parser=TwitchM3U8Parser, m3u8=TwitchM3U8)
 
-    def _playlist_reload_time(self, playlist: TwitchM3U8, sequences: List[TwitchSequence]):
+    def _playlist_reload_time(self, playlist: TwitchM3U8, sequences: List[TwitchSequence]):  # type: ignore[override]
         if self.stream.low_latency and sequences:
             return sequences[-1].segment.duration
 
-        return super()._playlist_reload_time(playlist, sequences)
+        return super()._playlist_reload_time(playlist, sequences)  # type: ignore[arg-type]
 
-    def process_sequences(self, playlist: TwitchM3U8, sequences: List[TwitchSequence]):
+    def process_sequences(self, playlist: TwitchM3U8, sequences: List[TwitchSequence]):  # type: ignore[override]
         # ignore prefetch segments if not LL streaming
         if not self.stream.low_latency:
             sequences = [seq for seq in sequences if not seq.segment.prefetch]
@@ -140,11 +140,11 @@ class TwitchHLSStreamWorker(HLSStreamWorker):
         if self.stream.disable_ads and self.playlist_sequence == -1 and not self.had_content:
             log.info("Waiting for pre-roll ads to finish, be patient")
 
-        return super().process_sequences(playlist, sequences)
+        return super().process_sequences(playlist, sequences)  # type: ignore[arg-type]
 
 
 class TwitchHLSStreamWriter(HLSStreamWriter):
-    def should_filter_sequence(self, sequence: TwitchSequence):
+    def should_filter_sequence(self, sequence: TwitchSequence):  # type: ignore[override]
         return self.stream.disable_ads and sequence.segment.ad
 
 

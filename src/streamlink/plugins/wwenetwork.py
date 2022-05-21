@@ -94,7 +94,7 @@ class WWENetwork(Plugin):
 
         return self.auth_token
 
-    @property
+    @property  # type: ignore
     @lru_cache(maxsize=128)
     def item_config(self):
         log.debug("Loading page config")
