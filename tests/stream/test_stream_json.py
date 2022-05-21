@@ -2,7 +2,7 @@ from unittest.mock import Mock
 
 import pytest
 # noinspection PyUnresolvedReferences
-from requests.utils import DEFAULT_ACCEPT_ENCODING
+from requests.utils import DEFAULT_ACCEPT_ENCODING  # type: ignore[attr-defined]
 
 from streamlink import Streamlink
 from streamlink.stream.dash import DASHStream
