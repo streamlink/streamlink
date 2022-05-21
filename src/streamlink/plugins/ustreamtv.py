@@ -1,5 +1,5 @@
 """
-$description Global live streaming and video on-demand platform owned by IBM.
+$description Global live-streaming and video on-demand platform owned by IBM.
 $url ustream.tv
 $url video.ibm.com
 $type live, vod
@@ -11,7 +11,7 @@ from collections import deque
 from datetime import datetime, timedelta
 from random import randint
 from threading import Event, RLock
-from typing import Any, Callable, Deque, Dict, List, NamedTuple, Union
+from typing import Any, Callable, Deque, Dict, List, NamedTuple, Optional, Union
 from urllib.parse import urljoin, urlunparse
 
 from requests import Response
@@ -56,9 +56,9 @@ class Segment(NamedTuple):
     path: str
 
     # the segment URLs depend on the CDN and the chosen stream format and its segment template string
-    def url(self, base: str, template: str) -> str:
+    def url(self, base: Optional[str], template: str) -> str:
         return urljoin(
-            base,
+            base or "",
             f"{self.path}/{template.replace('%', str(self.num), 1).replace('%', self.hash, 1)}"
         )
 
@@ -117,10 +117,10 @@ class UStreamTVWsClient(WebsocketClient):
         "hashes": {validate.transform(int): str}
     })
 
-    stream_cdn: str = None
-    stream_formats_video: List[StreamFormatVideo] = None
-    stream_formats_audio: List[StreamFormatAudio] = None
-    stream_initial_id: int = None
+    stream_cdn: Optional[str] = None
+    stream_formats_video: Optional[List[StreamFormatVideo]] = None
+    stream_formats_audio: Optional[List[StreamFormatAudio]] = None
+    stream_initial_id: Optional[int] = None
 
     def __init__(
         self,
@@ -213,8 +213,8 @@ class UStreamTVWsClient(WebsocketClient):
 
         cmd: str = parsed["cmd"]
         args: List[Dict] = parsed["args"]
-        log.trace(f"Received '{cmd}' command")
-        log.trace(f"{args!r}")
+        log.trace(f"Received '{cmd}' command")  # type: ignore[attr-defined]
+        log.trace(f"{args!r}")  # type: ignore[attr-defined]
 
         handlers = self._MESSAGE_HANDLERS.get(cmd)
         if handlers is not None:
@@ -358,7 +358,7 @@ class UStreamTVStreamWriter(SegmentedStreamWriter):
             self.queue(segment, self.executor.submit(self.fetch, segment, False))
 
     # noinspection PyMethodOverriding
-    def fetch(self, segment: Segment, is_init: bool):
+    def fetch(self, segment: Segment, is_init: bool):  # type: ignore[override]
         if self.closed:  # pragma: no cover
             return
 
