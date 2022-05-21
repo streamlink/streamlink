@@ -9,3 +9,9 @@ flake8-import-order
 shtab
 js2py
 versioningit >=1.1.1, <2
+
+mypy
+lxml-stubs
+types-freezegun
+types-requests
+types-urllib3

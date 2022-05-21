@@ -45,6 +45,7 @@ local/
 share/
 pip-selfcheck.json
 .pytest_cache/
+.mypy_cache/
 
 # ignore any key files
 *.key
