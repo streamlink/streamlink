@@ -46,3 +46,12 @@ exclude_lines = [
   "raise NotImplementedError",
   "if __name__ == \"__main__\":",
 ]
+
+
+# https://mypy.readthedocs.io/en/stable/config_file.html
+[tool.mypy]
+python_version = 3.7
+show_error_codes = true
+show_error_context = true
+show_column_numbers = true
+warn_no_return = false
