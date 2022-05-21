@@ -1,5 +1,5 @@
 """
-$description Chinese live streaming platform for live video game broadcasts and individual live streams.
+$description Chinese live-streaming platform for live video game broadcasts and individual live streams.
 $url huya.com
 $type live
 """
@@ -8,6 +8,7 @@ import base64
 import logging
 import re
 from html import unescape as html_unescape
+from typing import Any, Dict
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -49,7 +50,7 @@ class Huya(Plugin):
         validate.get(0),
         validate.get('gameStreamInfoList'),
     )
-    QUALITY_WEIGHTS = {}
+    QUALITY_WEIGHTS: Dict[str, Any] = {}
 
     @classmethod
     def stream_weight(cls, key):
