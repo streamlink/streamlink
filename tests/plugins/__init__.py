@@ -1,3 +1,5 @@
+from typing import Dict, List, Sequence, Tuple, Type, Union
+
 from streamlink.plugin import Plugin
 
 
@@ -9,25 +11,25 @@ generic_negative_matches = [
 
 
 class PluginCanHandleUrl:
-    __plugin__ = None
+    __plugin__: Type[Plugin]
 
     # A list of URLs that should match any of the plugin's URL regexes.
     #   ["https://foo", "https://bar"]
-    should_match = []
+    should_match: List[str] = []
 
     # A list of URL+capturegroup tuples, where capturegroup can be a dict (re.Match.groupdict()) or a tuple (re.Match.groups()).
     # URLs defined in this list automatically get appended to the should_match list.
     # Values in capturegroup dictionaries that are None get ignored when comparing and can be omitted in the test fixtures.
     #   [("https://foo", {"foo": "foo"}), ("https://bar", ("bar", None))]
-    should_match_groups = []
+    should_match_groups: List[Union[Tuple[str, Dict], Tuple[str, Sequence]]] = []
 
     # A list of URLs that should not match any of the plugin's URL regexes.
     #   ["https://foo", "https://bar"]
-    should_not_match = []
+    should_not_match: List[str] = []
 
     def test_class_setup(self):
         assert issubclass(self.__plugin__, Plugin), "Test has a __plugin__ that is a subclass of streamlink.plugin.Plugin"
-        assert len(self.should_match + self.should_match_groups) > 0, "Test has at least one positive URL"
+        assert len(self.should_match) + len(self.should_match_groups) > 0, "Test has at least one positive URL"
 
     def test_matchers(self):
         should_match = self.should_match + [url for url, groups in self.should_match_groups]

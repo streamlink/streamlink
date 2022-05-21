@@ -2,6 +2,7 @@ import unittest
 from binascii import hexlify
 from functools import partial
 from threading import Event, Thread
+from typing import ByteString, List
 
 import requests_mock
 
@@ -132,7 +133,7 @@ class HLSStreamReadThread(Thread):
         self.read_once = Event()
         self.read_done = Event()
         self.read_all = False
-        self.data = []
+        self.data: List[ByteString] = []
         self.error = None
 
         self.session = session
