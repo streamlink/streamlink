@@ -4,8 +4,29 @@ from datetime import datetime, timedelta
 # noinspection PyPackageRequirements
 from isodate import tzinfo
 
-from streamlink.stream.hls_playlist import DateRange, Media, Resolution, Segment, StreamInfo, load
+from streamlink.stream.hls_playlist import DateRange, M3U8Parser, Media, Resolution, Segment, StreamInfo, load
 from tests.resources import text
+
+
+def test_parse_tag_callback_cache():
+    class M3U8ParserSubclass(M3U8Parser):
+        def parse_tag_foo_bar(self):  # pragma: no cover
+            pass
+
+    parent = M3U8Parser()
+    assert hasattr(parent, "_TAGS")
+    assert "EXT-X-VERSION" in parent._TAGS
+
+    childA = M3U8ParserSubclass()
+    assert hasattr(childA, "_TAGS")
+    assert "FOO-BAR" in childA._TAGS
+
+    childB = M3U8ParserSubclass()
+    assert hasattr(childB, "_TAGS")
+    assert "FOO-BAR" in childB._TAGS
+
+    assert parent._TAGS is not childA._TAGS
+    assert childA._TAGS is childB._TAGS
 
 
 class TestHLSPlaylist(unittest.TestCase):
