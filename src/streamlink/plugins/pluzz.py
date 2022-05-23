@@ -11,7 +11,7 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
-from isodate import LOCAL as LOCALTIMEZONE
+from isodate import LOCAL as LOCALTIMEZONE  # type: ignore[import]
 
 from streamlink.plugin import Plugin, PluginError, pluginmatcher
 from streamlink.plugin.api import useragents, validate

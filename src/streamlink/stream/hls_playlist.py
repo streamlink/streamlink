@@ -8,8 +8,7 @@ from itertools import starmap
 from typing import Any, Callable, ClassVar, Dict, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
 
-# noinspection PyPackageRequirements
-from isodate import ISO8601Error, parse_datetime
+from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
 
 log = logging.getLogger(__name__)
 

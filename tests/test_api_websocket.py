@@ -2,7 +2,7 @@ import unittest
 from threading import Event
 from unittest.mock import Mock, call, patch
 
-from websocket import ABNF, STATUS_NORMAL
+from websocket import ABNF, STATUS_NORMAL  # type: ignore[import]
 
 from streamlink.logger import DEBUG, TRACE
 from streamlink.plugin.api.websocket import WebsocketClient
