@@ -2,7 +2,7 @@ import locale
 import logging
 from typing import Optional
 
-from pycountry import countries, languages
+from pycountry import countries, languages  # type: ignore[import]
 
 DEFAULT_LANGUAGE = "en"
 DEFAULT_COUNTRY = "US"

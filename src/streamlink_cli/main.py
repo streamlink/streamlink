@@ -15,8 +15,8 @@ from time import sleep
 from typing import Any, Dict, List, Optional, Type, Union
 
 import requests
-from socks import __version__ as socks_version
-from websocket import __version__ as websocket_version
+from socks import __version__ as socks_version  # type: ignore[import]
+from websocket import __version__ as websocket_version  # type: ignore[import]
 
 import streamlink.logger as logger
 from streamlink import NoPluginError, PluginError, StreamError, Streamlink, __version__ as streamlink_version

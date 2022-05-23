@@ -1,8 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
 
-# noinspection PyPackageRequirements
-from isodate import tzinfo
+from isodate import tzinfo  # type: ignore[import]
 
 from streamlink.stream.hls_playlist import DateRange, M3U8Parser, Media, Resolution, Segment, StreamInfo, load
 from tests.resources import text

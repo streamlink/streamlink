@@ -1,10 +1,6 @@
 import socket
+from http.server import BaseHTTPRequestHandler
 from io import BytesIO
-
-try:
-    from BaseHTTPServer import BaseHTTPRequestHandler
-except ImportError:
-    from http.server import BaseHTTPRequestHandler
 
 
 class HTTPRequest(BaseHTTPRequestHandler):
