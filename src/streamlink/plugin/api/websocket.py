@@ -4,7 +4,7 @@ from threading import RLock, Thread
 from typing import Any, Dict, List, Optional, Tuple, Union
 from urllib.parse import unquote_plus, urlparse
 
-from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace
+from websocket import ABNF, STATUS_NORMAL, WebSocketApp, enableTrace  # type: ignore[import]
 
 from streamlink.logger import TRACE, root as rootlogger
 from streamlink.session import Streamlink

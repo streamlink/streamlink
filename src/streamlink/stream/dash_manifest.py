@@ -10,7 +10,7 @@ from itertools import count, repeat
 from typing import Optional
 from urllib.parse import urljoin, urlparse, urlsplit, urlunparse, urlunsplit
 
-from isodate import Duration, UTC as utc, parse_datetime, parse_duration
+from isodate import Duration, UTC as utc, parse_datetime, parse_duration  # type: ignore[import]
 
 
 log = logging.getLogger(__name__)
