@@ -1,0 +1,54 @@
+name: Lint
+
+on:
+  pull_request: {}
+
+jobs:
+  files:
+    name: Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - name: File permissions
+        run: "! grep -Ev '^644' <(git ls-files src/ tests/ | xargs stat '--format=%a %n')"
+      - name: File encodings
+        run: "! grep -E -e 'UTF-[^8]' -e 'UTF-[^ ]+ \\(with BOM\\)' <(git ls-files src/ tests/ | xargs stat '--format=%a %n')"
+      - name: Line terminators
+        run: "! grep 'with CRLF line terminators' <(git ls-files | file -nNf-)"
+      - name: No unicode bidirectional control characters
+        run: "! git grep -EIn $'[\\u2066\\u2067\\u2068\\u2069\\u202A\\u202B\\u202C\\u202D\\u202E]'"
+
+  style:
+    name: Code style
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.7"
+      - name: Install dependencies
+        run: ./script/install-dependencies.sh
+      - name: flake8
+        run: >
+          python -m flake8
+
+  typing:
+    name: Typing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+      - name: Install dependencies
+        run: ./script/install-dependencies.sh
+      - name: mypy
+        run: >
+          python -m mypy
+          --no-incremental
+          src/streamlink/
+          src/streamlink_cli/
+          tests/
