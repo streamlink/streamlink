@@ -5,6 +5,7 @@ $type live, vod
 """
 
 import re
+import logging
 
 from streamlink.plugin import Plugin, pluginmatcher
 from streamlink.plugin.api import validate
@@ -42,6 +43,8 @@ class UseeTV(Plugin):
             return HLSStream.parse_variant_playlist(self.session, url)
         elif url and ".mpd" in url:
             return DASHStream.parse_manifest(self.session, url)
+        elif not url:
+            log.error("No streams have been found, you may be subject to geo-restrictions, or this channnel needs a subscription")
 
 
 __plugin__ = UseeTV
