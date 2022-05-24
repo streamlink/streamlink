@@ -47,22 +47,11 @@ jobs:
       - name: Install dependencies
         continue-on-error: ${{ matrix.continue || false }}
         run: bash ./script/install-dependencies.sh
-      - name: Lint (flake8)
-        continue-on-error: ${{ matrix.continue || false }}
-        run: flake8
-      - name: Lint (line terminators)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: "! grep 'with CRLF line terminators' <(git ls-files | file -nNf-)"
-      - name: Lint (unicode bidirectional control characters)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: "! git grep -EIn $'[\\u2066\\u2067\\u2068\\u2069\\u202A\\u202B\\u202C\\u202D\\u202E]'"
-      - name: Lint (file permissions)
-        if: startsWith(matrix.os, 'ubuntu')
-        run: "! grep -Ev '^644' <(git ls-files src/ tests/ | xargs stat '--format=%a %n')"
       - name: Test
         continue-on-error: ${{ matrix.continue || false }}
         run: pytest -r a --cov --cov-branch --cov-report=xml --durations 10
       - name: Build shell completions
+        continue-on-error: ${{ matrix.continue || false }}
         run: bash ./script/build-shell-completions.sh
       - name: Upload coverage data
         if: github.event_name != 'schedule'
