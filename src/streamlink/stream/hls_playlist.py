@@ -5,10 +5,11 @@ import re
 from binascii import unhexlify
 from datetime import datetime, timedelta
 from itertools import starmap
-from typing import Any, Callable, ClassVar, Dict, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
+from typing import Any, Callable, ClassVar, Dict, Iterator, List, Mapping, NamedTuple, Optional, Tuple, Type, Union
 from urllib.parse import urljoin, urlparse
 
 from isodate import ISO8601Error, parse_datetime  # type: ignore[import]
+from requests import Response
 
 log = logging.getLogger(__name__)
 
@@ -530,8 +531,13 @@ class M3U8Parser:
             playlist = self.get_playlist(self.uri(line))
             self.m3u8.playlists.append(playlist)
 
-    def parse(self, data: str) -> M3U8:
-        lines = iter(filter(bool, data.splitlines()))
+    def parse(self, data: Union[str, Response]) -> M3U8:
+        lines: Iterator[str]
+        if isinstance(data, str):
+            lines = iter(filter(bool, data.splitlines()))
+        else:
+            lines = iter(filter(bool, data.iter_lines(decode_unicode=True)))
+
         try:
             line = next(lines)
         except StopIteration:
@@ -589,14 +595,22 @@ class M3U8Parser:
         )
 
 
-def load(data: str, base_uri: Optional[str] = None, parser: Type[M3U8Parser] = M3U8Parser, **kwargs) -> M3U8:
-    """Attempts to parse an M3U8 playlist from a string of data.
+def load(
+    data: Union[str, Response],
+    base_uri: Optional[str] = None,
+    parser: Type[M3U8Parser] = M3U8Parser,
+    **kwargs,
+) -> M3U8:
+    """
+    Parse an M3U8 playlist from a string of data or an HTTP response.
 
     If specified, *base_uri* is the base URI that relative URIs will
     be joined together with, otherwise relative URIs will be as is.
 
-    If specified, *parser* can be a M3U8Parser subclass to be used
+    If specified, *parser* can be an M3U8Parser subclass to be used
     to parse the data.
-
     """
+    if base_uri is None and isinstance(data, Response):
+        base_uri = data.url
+
     return parser(base_uri, **kwargs).parse(data)
