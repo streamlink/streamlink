@@ -7,8 +7,9 @@ from datetime import timedelta
 from itertools import starmap
 
 from isodate import ISO8601Error, parse_datetime
+from requests import Response
 
-from streamlink.compat import urljoin, urlparse
+from streamlink.compat import str, urljoin, urlparse
 
 log = logging.getLogger(__name__)
 
@@ -301,7 +302,11 @@ class M3U8Parser(object):
             self.m3u8.playlists.append(playlist)
 
     def parse(self, data):
-        lines = iter(filter(bool, data.splitlines()))
+        if isinstance(data, str):
+            lines = iter(filter(bool, data.splitlines()))
+        else:
+            lines = iter(filter(bool, data.iter_lines(decode_unicode=True)))
+
         try:
             line = next(lines)
         except StopIteration:
@@ -356,13 +361,16 @@ class M3U8Parser(object):
 
 
 def load(data, base_uri=None, parser=M3U8Parser, **kwargs):
-    """Attempts to parse a M3U8 playlist from a string of data.
+    """
+    Parse an M3U8 playlist from a string of data or an HTTP response.
 
     If specified, *base_uri* is the base URI that relative URIs will
     be joined together with, otherwise relative URIs will be as is.
 
-    If specified, *parser* can be a M3U8Parser subclass to be used
+    If specified, *parser* can be an M3U8Parser subclass to be used
     to parse the data.
-
     """
+    if base_uri is None and isinstance(data, Response):
+        base_uri = data.url
+
     return parser(base_uri, **kwargs).parse(data)

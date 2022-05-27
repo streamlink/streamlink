@@ -195,8 +195,8 @@ class HLSStreamWorker(SegmentedStreamWorker):
                       self.duration_offset_start, self.duration_limit,
                       self.playlist_sequence, self.playlist_end))
 
-    def _reload_playlist(self, text, url):
-        return load_hls_playlist(text, url)
+    def _reload_playlist(self, *args, **kwargs):
+        return load_hls_playlist(*args, **kwargs)
 
     def reload_playlist(self):
         if self.closed:
@@ -204,12 +204,15 @@ class HLSStreamWorker(SegmentedStreamWorker):
 
         self.reader.buffer.wait_free()
         log.debug("Reloading playlist")
-        res = self.session.http.get(self.stream.url,
-                                    exception=StreamError,
-                                    retries=self.playlist_reload_retries,
-                                    **self.reader.request_params)
+        res = self.session.http.get(
+            self.stream.url,
+            exception=StreamError,
+            retries=self.playlist_reload_retries,
+            **self.reader.request_params
+        )
+        res.encoding = "utf-8"
         try:
-            playlist = self._reload_playlist(res.text, res.url)
+            playlist = self._reload_playlist(res)
         except ValueError as err:
             raise StreamError(err)
 
@@ -399,8 +402,8 @@ class HLSStream(HTTPStream):
         return reader
 
     @classmethod
-    def _get_variant_playlist(cls, res):
-        return load_hls_playlist(res.text, base_uri=res.url)
+    def _get_variant_playlist(cls, *args, **kwargs):
+        return load_hls_playlist(*args, **kwargs)
 
     @classmethod
     def parse_variant_playlist(cls, session_, url, name_key="name",
@@ -423,6 +426,7 @@ class HLSStream(HTTPStream):
         audio_select = session_.options.get("hls-audio-select") or []
 
         res = session_.http.get(url, exception=IOError, **request_params)
+        res.encoding = "utf-8"
 
         try:
             parser = cls._get_variant_playlist(res)
