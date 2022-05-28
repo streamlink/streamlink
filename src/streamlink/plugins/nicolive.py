@@ -251,10 +251,16 @@ class NicoLive(Plugin):
                 self.LOGIN_URL,
                 data={"mail_tel": email, "password": password},
                 params=self.LOGIN_URL_PARAMS,
-                schema=validate.Schema(validate.parse_html()))
+                schema=validate.Schema(validate.parse_html()),
+            )
+
+            if self.session.http.cookies.get("user_session"):
+                log.info("Logged in.")
+                self.save_cookies()
+                return
 
             input_with_value = {}
-            for elem in root.xpath(".//input"):
+            for elem in root.xpath(".//form[@action]//input"):
                 if elem.attrib.get("value"):
                     input_with_value[elem.attrib.get("name")] = elem.attrib.get("value")
                 else:
@@ -274,7 +280,8 @@ class NicoLive(Plugin):
             root = self.session.http.post(
                 urljoin("https://account.nicovideo.jp", root.xpath("string(.//form[@action]/@action)")),
                 data=input_with_value,
-                schema=validate.Schema(validate.parse_html()))
+                schema=validate.Schema(validate.parse_html()),
+            )
             log.debug("Cookies: {0}".format(self.session.http.cookies.get_dict()))
             if self.session.http.cookies.get("user_session") is None:
                 error = root.xpath("string(//div[@class='formError']/div/text())")
