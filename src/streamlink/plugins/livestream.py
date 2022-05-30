@@ -12,8 +12,6 @@ from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
 from streamlink.utils.parse import parse_json
 
-import json
-
 log = logging.getLogger(__name__)
 
 
