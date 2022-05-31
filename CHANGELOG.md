@@ -1,5 +1,23 @@
 # Changelog
 
+## streamlink 4.1.0 (2022-05-30)
+
+Release highlights:
+
+- Improved: decryption of HLS streams ([#4533](https://github.com/streamlink/streamlink/pull/4533))
+- Improved: HLS playlist parsing ([#4540](https://github.com/streamlink/streamlink/pull/4540), [#4552](https://github.com/streamlink/streamlink/pull/4552))
+- Improved: string representations of `Stream` implementations ([#4521](https://github.com/streamlink/streamlink/pull/4521))
+- Fixed: new YouTube consent dialog ([#4515](https://github.com/streamlink/streamlink/pull/4515))
+- Fixed: crunchyroll plugin ([#4510](https://github.com/streamlink/streamlink/pull/4510))
+- Fixed: nicolive email logins ([#4553](https://github.com/streamlink/streamlink/pull/4553))
+- Fixed: threading issue when closing segmented streams ([#4517](https://github.com/streamlink/streamlink/pull/4517))
+- Removed: suppression of `InsecureRequestWarning` ([#4525](https://github.com/streamlink/streamlink/pull/4525))
+- New plugins: blazetv ([#4548](https://github.com/streamlink/streamlink/pull/4548)), hiplayer ([#4507](https://github.com/streamlink/streamlink/pull/4507)), useetv ([#4536](https://github.com/streamlink/streamlink/pull/4536))
+- Removed plugins: rotana ([#4512](https://github.com/streamlink/streamlink/pull/4512))
+
+[Full changelog](https://github.com/streamlink/streamlink/compare/4.0.1...4.1.0)
+
+
 ## streamlink 4.0.1 (2022-05-01)
 
 No code changes.  
