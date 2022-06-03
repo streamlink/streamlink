@@ -1,7 +1,9 @@
 name: Test, build and deploy
 
 on:
-  push: {}
+  push:
+    branches-ignore:
+      - 'automated/**'
   pull_request: {}
   schedule:
     - cron: '0 0 * * *'
