@@ -4,30 +4,29 @@ $url tvtoya.pl
 $type live
 """
 
-import logging
 import re
 
 from streamlink.plugin import Plugin, pluginmatcher
+from streamlink.plugin.api import validate
 from streamlink.stream.hls import HLSStream
-
-log = logging.getLogger(__name__)
 
 
 @pluginmatcher(re.compile(
-    r"https?://(?:www\.)?tvtoya\.pl/live"
+    r"https?://(?:www\.)?tvtoya\.pl/player/live$"
 ))
 class TVToya(Plugin):
-    _playlist_re = re.compile(r'<source src="([^"]+)" type="application/x-mpegURL">')
-
     def _get_streams(self):
         self.session.set_option('hls-live-edge', 10)
-        res = self.session.http.get(self.url)
-        playlist_m = self._playlist_re.search(res.text)
-
-        if playlist_m:
-            return HLSStream.parse_variant_playlist(self.session, playlist_m.group(1))
-        else:
-            log.debug("Could not find stream data")
+        hls_url = self.session.http.get(self.url, schema=validate.Schema(
+            validate.parse_html(),
+            validate.xml_xpath_string(".//script[@id='__NEXT_DATA__']/text()"),
+            validate.parse_json(),
+            {"props": {"pageProps": {"url": validate.all(
+                validate.transform(lambda s: s.replace("//", "/")), validate.url(),
+            )}}},
+            validate.get(("props", "pageProps", "url")),
+        ))
+        return HLSStream.parse_variant_playlist(self.session, hls_url)
 
 
 __plugin__ = TVToya
