@@ -51,8 +51,8 @@ class TwitchSequence(NamedTuple):
 class TwitchM3U8(M3U8):
     segments: List[TwitchSegment]  # type: ignore[assignment]
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.dateranges_ads = []
 
 
